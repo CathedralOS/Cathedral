@@ -29,6 +29,7 @@ def exercise(output, click, key, scan, width, height, resumed):
         selected = log().count('Cathedral participant: private route selected')
         click(width-8-256+205,18)
         scan(lambda w,d: log().count('Cathedral participant: private route selected')>selected and cursor(w,d), 'synthetic route and visible scoped cursor')
+        assert 'Cathedral participant: shared broker and producer ready; storage denied' in log()
         # Select the other document with physical input while the synthetic
         # keyboard continues using its own selection.
         click(13,160); key('h'); left += 'h'

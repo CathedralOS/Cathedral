@@ -48,11 +48,11 @@ impl Capture {
             children::image::read_offered(scope, id, imports::INTERACTION | imports::CAPTURE)?;
         let launch = Executable::from_object(&code, 0)?.reserve(
             Limits {
-                // The viewer retains a sealed reader and allocates no private pixels.
-                // Keep output funding in this provider until the masked image is frozen.
-                private_pages: 0,
-                reader_pages: 32,
-                channels: 0,
+                // Two mailbox writers/readers, plus the sealed capture reader.
+                // Pixel output remains funded by this provider.
+                private_pages: 2,
+                reader_pages: 34,
+                channels: 2,
             },
             0,
             abi::MAX_ADMISSION_FRAMES as u64,

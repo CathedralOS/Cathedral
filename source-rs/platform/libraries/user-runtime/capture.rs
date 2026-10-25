@@ -1,8 +1,8 @@
 //! Capture recipient. Receiver: the matrix's separately supplied capture endpoint.
 //! Results are sealed and already masked; no unmasked backing is accepted here.
-use crate::{Error, abi, memory::Object, services::Pair};
+use crate::{Error, abi, connection::Client, memory::Object, services::Pair, time};
 use cathedral_platform_contracts::{capture as wire, matrix};
-pub struct Capture(pub Pair);
+pub struct Capture(Client);
 pub struct Image {
     pub width: u64,
     pub height: u64,
@@ -10,8 +10,19 @@ pub struct Image {
     pub object: Object,
 }
 impl Capture {
-    pub fn begin(&self) -> Result<u64, Error> {
-        let reply = crate::matrix::upstream::call(self.0, [wire::BEGIN, 0, 0, 0, 0, 0, 0, 0])?;
+    /// Takes custody of the separately granted capture connection.
+    pub fn connect(pair: Pair) -> Result<Self, Error> {
+        Ok(Self(Client::connect(pair, time::after(300)?)?))
+    }
+    pub fn request(&mut self, words: matrix::Packet) -> Result<matrix::Packet, Error> {
+        let (bytes, len) = self.0.call_retained(&matrix::encode(words))?;
+        matrix::decode(&bytes[..len]).ok_or_else(|| {
+            self.0.retire();
+            Error(abi::IO_ERROR as i64)
+        })
+    }
+    pub fn begin(&mut self) -> Result<u64, Error> {
+        let reply = self.request([wire::BEGIN, 0, 0, 0, 0, 0, 0, 0])?;
         if reply[0] != 0 {
             return Err(Error(reply[0] as i64));
         }
@@ -20,12 +31,11 @@ impl Capture {
         }
         Ok(reply[1])
     }
-    pub fn take(&self, ticket: u64) -> Result<Option<Image>, Error> {
-        self.0
-            .0
-            .send(&matrix::encode([wire::TAKE, ticket, 0, 0, 0, 0, 0, 0]))?;
-        let mut bytes = [0; 64];
-        let (len, object) = self.0.1.receive_memory(&mut bytes)?;
+    pub fn take(&mut self, ticket: u64) -> Result<Option<Image>, Error> {
+        let (bytes, len, object) = self.0.call_retained_memory(
+            &matrix::encode([wire::TAKE, ticket, 0, 0, 0, 0, 0, 0]),
+            None,
+        )?;
         match (matrix::decode(&bytes[..len]), object) {
             (Some([0, t, w, h, stride, 0, 0, 0]), Some(object))
                 if t == ticket
@@ -50,7 +60,10 @@ impl Capture {
             }
             (Some([wire::PENDING, 0, 0, 0, 0, 0, 0, 0]), None) => Ok(None),
             (Some([code, 0, 0, 0, 0, 0, 0, 0]), None) if code != 0 => Err(Error(code as i64)),
-            _ => Err(Error(abi::IO_ERROR as i64)),
+            _ => {
+                self.0.retire();
+                Err(Error(abi::IO_ERROR as i64))
+            }
         }
     }
 }

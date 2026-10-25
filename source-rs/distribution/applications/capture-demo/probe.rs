@@ -4,19 +4,17 @@ use cathedral_platform_contracts::{capture as wire, matrix, services};
 use cathedral_user_runtime::{
     Error,
     capture::{Capture, Image},
-    matrix::upstream,
-    services::Pair,
 };
-pub fn refusals(pair: Pair) -> Result<(), Error> {
+pub fn refusals(capture: &mut Capture) -> Result<(), Error> {
     for words in [
         [wire::BEGIN, 99, 0, 0, 0, 0, 0, 0],
         services::request(cathedral_platform_contracts::imports::STORAGE, 1, 1, 0),
     ] {
-        assert_eq!(upstream::call(pair, words)?, matrix::error(abi::DENIED));
+        assert_eq!(capture.request(words)?, matrix::error(abi::DENIED));
     }
     Ok(())
 }
-pub fn image(image: &mut Image, capture: &Capture, ticket: u64) -> Result<(), Error> {
+pub fn image(image: &mut Image, capture: &mut Capture, ticket: u64) -> Result<(), Error> {
     assert_eq!((image.width, image.height, image.stride), (200, 104, 200));
     let bytes = image.object.map()?;
     assert_eq!(&bytes[..4], &0x9b7028u32.to_le_bytes());

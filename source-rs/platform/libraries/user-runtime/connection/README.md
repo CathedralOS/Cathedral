@@ -131,9 +131,10 @@ Omega app hosts and independent Split now use one
 [Services transport owner](../services/transport.rs) for broker acquisition and
 interaction. It keeps correlation across lazy acquisitions, accepts moved endpoints
 only for acquisition, and routes immutable drawing objects through the same shared
-connection. Split selects shared interaction and storage for its Notes/nested
-children. Control links, wake hints, producer/capture clients and explicitly copied
-fixtures remain to migrate. These app adapters remain synchronous; this change
+connection. Split selects all eight child service slots before admission,
+including separate broker/data connections for its input producer and masked
+capture viewer. Control links, wake hints and explicitly copied fixtures remain
+to migrate. These app adapters remain synchronous; this change
 alone does not make an app process input while its drawing call is pending.
 
 ## Immutable attachments
@@ -277,8 +278,13 @@ interaction uses two; the opted-in server pipeline has the four-call bound above
 
 Omega leaf, Split, Background and the separate Omega UI demo use the shared
 service owner described above. The UI presenter borrows that owner across atomic
-image publication rather than creating another client over its pair. Control/wake,
-producer/capture and explicitly copied fixtures remain to migrate. The ordinary
+image publication rather than creating another client over its pair. The installed
+producer and capture viewer likewise own shared broker and acquired-service
+Clients. A fully populated Split retains ten connections (thirty notification
+handles); each auxiliary child funds two notifications and two writer/reader pages,
+plus its service-specific work. Capture uses correlated immutable replies and
+then forwards the same sealed result for presentation. Control/wake and explicitly
+copied fixtures remain to migrate. The ordinary
 user matrix keeps eleven connections (thirty-three notification handles) with its
 upstream, chrome, background and three app pairs. The metadata ceiling is now
 forty-eight; object/page funding and the thirty-two-interest wait limit remain

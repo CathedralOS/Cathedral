@@ -30,6 +30,7 @@ def exercise(output, click, key, scan, width, height, resumed, mode):
         click(width-8-256+205,18)
         marker = 'Cathedral receiver probe: stalled' if mode=='pressure' else 'Cathedral participant probe: holding pointer and key'
         scan(lambda w,d: marker in log()[start:] and cursor(w,d), 'producer active with captured input')
+        assert 'Cathedral participant: shared broker and producer ready; storage denied' in log()[start:]
         if mode!='pressure':
             right+='a';note(1,right,True)
         click(13,160);key('h');left+='h';note(0,left,True)

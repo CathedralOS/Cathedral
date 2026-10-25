@@ -4,16 +4,20 @@
 mod preview;
 #[cfg(feature = "capture-probe")]
 mod probe;
-cathedral_user_runtime::service_bootstrap!(&[
-    cathedral_platform_contracts::imports::Import::v1(
-        cathedral_platform_contracts::imports::INTERACTION,
-        true
-    ),
-    cathedral_platform_contracts::imports::Import::v1(
-        cathedral_platform_contracts::imports::CAPTURE,
-        true
-    ),
-]);
+cathedral_user_runtime::service_bootstrap!(
+    &[
+        cathedral_platform_contracts::imports::Import::v1(
+            cathedral_platform_contracts::imports::INTERACTION,
+            true
+        ),
+        cathedral_platform_contracts::imports::Import::v1(
+            cathedral_platform_contracts::imports::CAPTURE,
+            true
+        ),
+    ],
+    2,
+    0
+);
 cathedral_user_runtime::entry_with_services!(main);
 fn main(_: u64, _: u64, services: cathedral_user_runtime::services::Services) -> u64 {
     match preview::run(services) {

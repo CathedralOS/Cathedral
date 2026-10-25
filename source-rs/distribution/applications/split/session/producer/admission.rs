@@ -53,9 +53,10 @@ impl Producer {
         self.cursor = Some((grant.epoch, reply[1]));
         let launch = Executable::from_object(&code, 0)?.reserve(
             Limits {
-                private_pages: 16,
-                reader_pages: 0,
-                channels: 0,
+                // Two shared connections retain a writer, reader and notification each.
+                private_pages: 18,
+                reader_pages: 2,
+                channels: 2,
             },
             0,
             abi::MAX_ADMISSION_FRAMES as u64,

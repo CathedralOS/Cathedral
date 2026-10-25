@@ -49,6 +49,7 @@ def exercise(output, click, key, scan, width, height, resumed, capture=False):
                  and pixel(w,d,21,169)==bytes.fromhex('9b7028')
                  and pixel(w,d,31,189)==bytes(3), 'separate consumer displays fresh masked capture')
             assert log().count('Cathedral capture: recipient verified redaction, padding and single delivery')==round+1
+            assert log().count('Cathedral capture: shared broker and capture ready')==round+1
             # Capturing has not revealed the source, and demand stops afterward.
             scan(lambda w,d: pixel(w,d,positions[1][0]+5,50)==bytes.fromhex('101827')
                  and log()[start:].count('STORAGE_TRACE note-demand 0')>=2, 'capture releases demand without revealing source')

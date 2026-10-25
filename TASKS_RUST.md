@@ -21,11 +21,13 @@ slice execute on x86-64 and ARM64. Ordinary F5 now uses them for physical input
 to the root matrix, root display commands/images, root storage and separate
 parent-storage and pipelined interaction streams between stock matrices, Omega app
 broker/interaction/storage, independent Split interaction/storage forwarding,
-Background and the separate Omega UI presenter. The scoped storage fixture also
+Background, the separate Omega UI presenter, and Split's input producer and masked
+capture viewer. The scoped storage fixture also
 exercises both private-root provider connections. See the evidence below. Remaining acceptance:
 
 - Continue the shared service migration through the remaining ordinary service
-  clients, control/wake streams and producer/capture. Independently selected control/data streams
+  clients, control/wake streams and explicitly copied fixtures. Independently
+  selected control/data streams
   now multiplex; immutable attachments execute through ordinary display and
   storage, including nested stock matrices, Omega leaves and Split. Shared endpoint
   replies now retain custody through the Omega/Split service broker. Preserve
@@ -221,6 +223,64 @@ not perfect timing indistinguishability or mandatory agent badges. Existing
 default/hidden cursor evidence remains valid for its scope, not the full asset API.
 
 ## Current implementation evidence
+
+Implementation update 2026-10-25: **shared input-producer and masked-capture connections**,
+over `8d67be75`.
+
+The installed [AUTO participant](source-rs/distribution/applications/input-demo/participant.rs)
+and [capture viewer](source-rs/distribution/applications/capture-demo/preview.rs)
+now select shared Services before acquiring their separate service connections.
+Each keeps one broker owner and one acquired-service Client. The producer's
+storage-acquisition attempt is denied on its production endpoint, then valid input
+continues on that same connection. Capture retains correlated immutable reply
+custody and forwards the sealed result for presentation; its interaction endpoint
+still cannot capture, and the capture endpoint cannot acquire storage.
+
+[Split's entrance](source-rs/distribution/applications/split/session/session.rs)
+selects all eight child slots before admission. Its producer gets two writer and
+reader pages plus two notifications in addition to its previous private grant;
+the capture viewer gets two mailbox writers/readers and notifications beside its
+32-page capture reader grant. Split declares 38 channel/notification allowances:
+18 for two Notes, two upstream notifications, and nine per auxiliary child. With
+both auxiliaries it retains ten connections/thirty notification handles, below
+the existing 48-handle ceiling. The stock owner's child-matrix ceiling is now
+168 private/144 reader pages, retaining masked output and mailbox backing beside
+child loans. Ordinary leaves and the bounded nested Split loan are unchanged.
+No kernel capacity or Omega ABI/source changes were needed.
+
+The first capture run exposed a real routing bug: dispatch replaced the broker's
+transport slot with the viewer's world slot, then replied using that changed slot.
+Copied sends tolerated this; shared correlation did not. Dispatch now restores
+the broker slot before either plain or image replies. Shared Server removal also
+retires producer/capture endpoint names before admission cleanup; cleanup tolerates
+only BAD_HANDLE for these exact, never-reused names, as for interaction/storage.
+
+Verification:
+
+- Ordinary participant routing, repeated stop/start, resize withdrawal and cold
+  saved-state restoration pass. Producer hold, disconnect and pressure variants
+  pass actual receiver cancellation, unaffected input, fresh identities, repeated
+  grants and cold reopen. Fault fixtures require the shared/denied-storage marker.
+- Masked capture passes byte inspection, zeroed padding, single delivery, hidden
+  source behavior and simultaneous AUTO input. Ordinary delivery, source death,
+  recipient death and expiry each pass three grants, sibling survival, subtree
+  reuse and cold reopen. Capture fixtures require shared-connection markers.
+- Same-code nested Split passes dirty-close propagation, capacity refusal,
+  repeated collection and cold persistence. Normal F5 passes three simultaneous
+  Notes, slot reuse and exact saved-state restoration.
+- Host policy tests, userspace/kernel checks, changed-app all-feature Clippy,
+  ARM64 portability, source layout and formatting pass.
+
+Logs: `build/omega-component/producer-capture-*.log`; each guest log names its
+`build/boot-harness-rs/desktop/` artifact directory. These are bounded single-CPU
+correctness/lifecycle proofs, not a latency or throughput result.
+
+**Next:** replace the ordinary copied lifecycle/control links and input wake
+hints, then migrate explicitly copied fixtures and retire unused copied-payload
+consumers. Preserve loss/health correlation, cancellation and authority across
+notification coalescing; retain both endpoint funding and pending reply custody.
+The stock producer-acquisition fault fixture still deliberately uses copied
+traffic; the installed Split participant and capture viewer no longer do.
 
 Implementation update 2026-10-25: **shared Background and Omega UI presentation**,
 over `67b45f7e`.

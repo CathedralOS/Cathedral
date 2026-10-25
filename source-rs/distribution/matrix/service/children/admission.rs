@@ -118,9 +118,9 @@ impl Children {
             // A bounded child-matrix share covers a 117-page nested workspace
             // beside its owner's old/new 14-page headers. Owner offers still cap it.
             let (private, readers) = if resources.is_some_and(|(_, descendants)| descendants > 0) {
-                // The nested loan includes five additional reader pages; the
-                // owner also retains its own and the child's shared mailboxes.
-                (152, 136)
+                // Retain headers, masked capture output and all shared mailboxes
+                // beside optional producer/capture loans or the nested workspace.
+                (168, 144)
             } else {
                 (128, 128)
             };

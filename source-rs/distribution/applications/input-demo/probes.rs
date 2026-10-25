@@ -3,27 +3,27 @@
 use crate::participant::send;
 use cathedral_kernel_contracts::user as abi;
 use cathedral_platform_contracts::{input, matrix as wire};
-use cathedral_user_runtime::{Error, event, matrix::upstream::Pair, server::Server, time, write};
+use cathedral_user_runtime::{Error, connection::Client, event, server::Server, time, write};
 fn delay(ticks: u64) -> Result<(), Error> {
     match event::wait(&[], time::after(ticks)?) {
         Err(Error(code)) if code == abi::TIMED_OUT as i64 => Ok(()),
         result => Err(result.err().unwrap_or(Error(abi::IO_ERROR as i64))),
     }
 }
-pub fn run(mut server: Server, pair: Pair, info: wire::Packet) -> Result<(), Error> {
+pub fn run(mut server: Server, mut client: Client, info: wire::Packet) -> Result<(), Error> {
     let generation = info[1];
     time::storage_sample("producer-generation", &[generation]);
     let x = info[2] * 3 / 4;
     let y = info[3] / 2;
     for buttons in [0, 1] {
         send(
-            pair,
+            &mut client,
             [wire::PRODUCER_POINTER, generation, 1, x, y, buttons, 0, 0],
         )?;
     }
     if cfg!(feature = "pressure-probe") {
         send(
-            pair,
+            &mut client,
             [
                 wire::PRODUCER_KEY,
                 generation,
@@ -39,7 +39,7 @@ pub fn run(mut server: Server, pair: Pair, info: wire::Packet) -> Result<(), Err
         write(b"Cathedral participant probe: flooding one channel\n")?;
         for _ in 0..64 {
             send(
-                pair,
+                &mut client,
                 [
                     wire::PRODUCER_KEY,
                     generation,
@@ -53,7 +53,7 @@ pub fn run(mut server: Server, pair: Pair, info: wire::Packet) -> Result<(), Err
             )?;
         }
         send(
-            pair,
+            &mut client,
             [
                 wire::PRODUCER_KEY,
                 generation,
@@ -69,7 +69,7 @@ pub fn run(mut server: Server, pair: Pair, info: wire::Packet) -> Result<(), Err
         delay(300)?;
         for state in [input::PRESS, input::RELEASE] {
             send(
-                pair,
+                &mut client,
                 [
                     wire::PRODUCER_KEY,
                     generation,
@@ -82,11 +82,14 @@ pub fn run(mut server: Server, pair: Pair, info: wire::Packet) -> Result<(), Err
                 ],
             )?;
         }
-        send(pair, [wire::PRODUCER_POINTER, generation, 1, x, y, 0, 0, 0])?;
+        send(
+            &mut client,
+            [wire::PRODUCER_POINTER, generation, 1, x, y, 0, 0, 0],
+        )?;
         write(b"Cathedral participant probe: fresh input after pressure\n")?;
     } else {
         send(
-            pair,
+            &mut client,
             [
                 wire::PRODUCER_KEY,
                 generation,
@@ -103,8 +106,7 @@ pub fn run(mut server: Server, pair: Pair, info: wire::Packet) -> Result<(), Err
         // requires its trace before accepting the retirement proof.
         if cfg!(feature = "disconnect-probe") {
             delay(150)?;
-            pair.0.close()?;
-            pair.1.close()?;
+            client.retire();
             write(b"Cathedral participant probe: producer endpoint closed\n")?;
             return Ok(());
         }

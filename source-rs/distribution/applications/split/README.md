@@ -102,12 +102,13 @@ The desktop lends Split at most sixteen surfaces, leaving room for ordinary
 sibling apps while funding its optional producer and capture viewer.
 Split grants nine surfaces and a bounded two-child budget to its nested
 matrix. Its inner DEEPER refuses with **NO ROOM** while preserving live notes.
-Split declares thirty channel/notification allowances and four descendants:
+Split declares thirty-eight channel/notification allowances and four descendants:
 its two Notes use eighteen allowances (five queues plus two notifications at each
 end per child), its own interaction/storage connections use two notifications,
-the optional producer uses five queues, and the optional capture viewer five.
-The viewer reserves zero private pages and 32 reader pages; capture output stays
-funded by Split until all readers release it. Before admitting the viewer, Split
+the optional producer and capture viewer each use five queues plus two
+notifications at each end. The producer reserves 18 private and two reader pages;
+the viewer reserves two private pages for mailboxes and 34 reader pages. Capture
+output stays funded by Split until all readers release it. Before admitting the viewer, Split
 requests any missing physical backing through its owner's `FUND` protocol. It
 retains a process-load allowance plus its private-page budget for its own work;
 owner refusal leaves the existing applications running and shows CANNOT CAPTURE.
@@ -117,9 +118,9 @@ no room for AUTO alongside its two Notes. The private grant covers both 41-page
 Omega Notes reservations, two 14-page header versions during replacement and
 shared mailbox writers. Each Notes also receives six reader pages and two
 notification allowances. The enclosing desktop's ordinary
-app share is capped at 152 private and 136 reader pages, covering that loan, its
-mailboxes and retained/replacement images for programs requesting descendant
-capacity (ordinary leaves retain their 128-page ceiling). Root/user budgets come
+app share is capped at 168 private and 144 reader pages, covering that loan or
+its optional children, mailboxes, masked output and retained/replacement images
+for programs requesting descendant capacity (ordinary leaves retain their 128-page ceiling). Root/user budgets come
 from the current distribution composition
 and owner admission policy. No child acquires devices or
 ambient code/storage authority. Each Notes host creates its interaction and
@@ -131,9 +132,15 @@ so request IDs do not restart when a temporary Scope is dropped. Forwarding yiel
 on IPC lifetime and notification interests, bounded by the original storage and
 partial-attachment deadlines. Parent failure retires the connection without replay.
 Broker acquisition and interaction share one persistent `Services` client, owned
-by Output across drawing, polling and later service acquisition. Both child
-interaction slots are selected for shared transport before admission. Producer and
-capture clients, control links and input wake hints retain copied streams.
+by Output across drawing, polling and later service acquisition. All eight child
+slots are selected for shared transport before admission: two interaction, two
+storage, producer broker/data and capture broker/data. Each producer/viewer owns
+one broker Client and a separate service Client, preserving request IDs and
+immutable image custody through later replies. Capture dispatch temporarily uses
+the viewer's world slot, then restores the broker slot before replying; transport
+correlation never uses the remapped world slot. Control links and input wake hints
+retain copied streams. Removal retires shared slots before closing remaining child
+rights; only BAD_HANDLE for the exact, never-reused endpoint names is harmless.
 
 Scope restrictions are folded only after upstream containment checks; a shared
 absolute deadline bounds the full exchange. See the platform

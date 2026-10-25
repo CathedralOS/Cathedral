@@ -44,6 +44,7 @@ def exercise(output, click, key, scan, width, height, resumed, mode):
             assert 'Cathedral capture: masked result received and presented' not in log()[start:]
             assert 'capture-viewer-failed' not in log()[start:]
         scan(lambda w,d: 'Cathedral capture: consumer and retained result retired' in log()[start:], 'capture viewer retired')
+        assert 'Cathedral capture: shared broker and capture ready' in log()[start:]
         # A sibling remains usable, then teardown and readmission must recover all
         # grants. Cold boot independently checks both saved documents again.
         click(13,160); key('h'); left += 'h'; note(0,left,True); key('f1'); note(0,left)

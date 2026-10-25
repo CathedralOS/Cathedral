@@ -52,6 +52,9 @@ impl Capture {
                     } else {
                         world.request(SLOT, request.incarnation, words)
                     };
+                    // World uses the participant slot; transport correlation must
+                    // retain the actual broker slot that received this request.
+                    request.client = Some(BROKER);
                     server.reply(&request, &wire::encode(reply))?;
                 } else if request.client == Some(ENDPOINT)
                     && request.incarnation == child.capture.unwrap().0.raw()
@@ -67,6 +70,9 @@ impl Capture {
                 if request.client == Some(BROKER) && request.incarnation == child.data.0.raw() {
                     request.client = Some(SLOT);
                     let reply = output.image(world, &request, object)?;
+                    // World uses the participant slot; transport correlation must
+                    // retain the actual broker slot that received this request.
+                    request.client = Some(BROKER);
                     server.reply(&request, &wire::encode(reply))?;
                 } else if child.services.as_ref().unwrap().capture_ready() {
                     server.reply(&request, &wire::encode(wire::error(abi::DENIED)))?;

@@ -22,19 +22,13 @@ pub fn run(mut services: Services) -> Result<(), Error> {
     let storage = services.storage(1, 1)?;
     let mut server = Server::open_clients(8)?;
     server.enable_memory();
-    static mut INTERACTION: [cathedral_user_runtime::server::SharedSlot; 2] =
-        [const { cathedral_user_runtime::server::SharedSlot::empty() }; 2];
-    let slots = &raw mut INTERACTION;
-    // SAFETY: One process entry owns these disjoint child interaction slots.
+    static mut CONNECTIONS: [cathedral_user_runtime::server::SharedSlot; 8] =
+        [const { cathedral_user_runtime::server::SharedSlot::empty() }; 8];
+    let slots = &raw mut CONNECTIONS;
+    // SAFETY: One process entry lends disjoint persistent slots: two child
+    // interactions, two storage streams, producer broker/data, capture broker/data.
     for (index, slot) in unsafe { &mut *slots }.iter_mut().enumerate() {
         server.enable_shared(index, slot)?;
-    }
-    static mut STORAGE: [cathedral_user_runtime::server::SharedSlot; 2] =
-        [const { cathedral_user_runtime::server::SharedSlot::empty() }; 2];
-    let slots = &raw mut STORAGE;
-    // SAFETY: One process entry lends disjoint persistent child storage slots.
-    for (index, slot) in unsafe { &mut *slots }.iter_mut().enumerate() {
-        server.enable_shared(index + 2, slot)?;
     }
     static mut WORLD: World = World::empty();
     let arena = &raw mut WORLD;

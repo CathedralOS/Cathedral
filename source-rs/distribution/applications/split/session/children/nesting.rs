@@ -66,7 +66,7 @@ impl Children {
         let launch = Executable::from_object(&code, 0)?.reserve(
             Limits {
                 // Two 41-page Notes grants plus two 14-page header versions
-                // during replacement. The enclosing 152-page grant still funds
+                // during replacement. The enclosing 168-page grant still funds
                 // its own retained/replacement headers alongside this loan.
                 private_pages: 117,
                 reader_pages: 69,

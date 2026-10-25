@@ -109,17 +109,12 @@ impl Admitted {
         for endpoint in [self.control.0, self.control.1, self.notify] {
             endpoint.close()?;
         }
-        // Selected shared interaction slots may already close these exact names.
-        for endpoint in [self.data.0, self.data.1] {
-            match endpoint.close() {
-                Ok(()) => (),
-                Err(Error(code)) if code == abi::BAD_HANDLE as i64 => (),
-                Err(error) => return Err(error),
-            }
-        }
-        if let Some((input, output)) = self.storage {
-            // A selected shared Server slot may already have retired these local
-            // names. Names are never reused; only that exact absence is harmless.
+        // Server removal may already retire selected shared slots. Endpoint
+        // names are never reused: only absence of these exact names is harmless.
+        for (input, output) in [Some(self.data), self.storage, self.producer, self.capture]
+            .into_iter()
+            .flatten()
+        {
             for endpoint in [input, output] {
                 match endpoint.close() {
                     Ok(()) => (),
@@ -127,14 +122,6 @@ impl Admitted {
                     Err(error) => return Err(error),
                 }
             }
-        }
-        if let Some((input, output)) = self.producer {
-            input.close()?;
-            output.close()?;
-        }
-        if let Some((input, output)) = self.capture {
-            input.close()?;
-            output.close()?;
         }
         Ok(())
     }

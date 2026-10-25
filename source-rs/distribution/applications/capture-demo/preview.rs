@@ -4,14 +4,15 @@ use cathedral_platform_contracts::{matrix as wire, services as service};
 use cathedral_user_runtime::{
     Error,
     capture::Capture,
-    matrix::upstream,
     server::{Event, Server},
     services::Services,
     time,
 };
 pub fn run(mut services: Services) -> Result<(), Error> {
-    let interaction = services.interaction(1, 1)?;
-    let capture = Capture(services.capture(1, 1)?);
+    services.enable_shared()?;
+    services.interaction(1, 1)?;
+    let mut capture = Capture::connect(services.capture(1, 1)?)?;
+    cathedral_user_runtime::write(b"Cathedral capture: shared broker and capture ready\n")?;
     cathedral_user_runtime::write(b"Cathedral capture: recipient services acquired\n")?;
     assert_eq!(
         services.storage(1, 1).err(),
@@ -19,8 +20,7 @@ pub fn run(mut services: Services) -> Result<(), Error> {
     );
     // The capture endpoint cannot acquire services, and interaction cannot capture.
     assert_eq!(
-        upstream::call(
-            interaction.pair,
+        services.request_interaction(
             [
                 cathedral_platform_contracts::capture::BEGIN,
                 0,
@@ -30,12 +30,13 @@ pub fn run(mut services: Services) -> Result<(), Error> {
                 0,
                 0,
                 0
-            ]
+            ],
+            None
         )?,
         wire::error(abi::DENIED)
     );
     #[cfg(feature = "capture-probe")]
-    crate::probe::refusals(capture.0)?;
+    crate::probe::refusals(&mut capture)?;
     let ticket = capture.begin()?;
     cathedral_user_runtime::write(b"Cathedral capture: recipient frame requested\n")?;
     if cfg!(feature = "capture-recipient-exit") {
@@ -66,20 +67,17 @@ pub fn run(mut services: Services) -> Result<(), Error> {
             && !painted
         {
             #[cfg(feature = "capture-probe")]
-            crate::probe::image(image, &capture, ticket)?;
-            let view = upstream::call(interaction.pair, [wire::POLL, 0, 0, 0, 0, 0, 0, 0])?;
+            crate::probe::image(image, &mut capture, ticket)?;
+            let view = services.request_interaction([wire::POLL, 0, 0, 0, 0, 0, 0, 0], None)?;
             if view[0] != 0 {
                 return Err(Error(view[0] as i64));
             }
-            let created = upstream::call(
-                interaction.pair,
-                [wire::SURFACE_CREATE, view[1], 0, 0, 0, 0, 0, 0],
-            )?;
+            let created = services
+                .request_interaction([wire::SURFACE_CREATE, view[1], 0, 0, 0, 0, 0, 0], None)?;
             if created[0] != 0 {
                 return Err(Error(created[0] as i64));
             }
-            let reply = upstream::exchange(
-                interaction.pair,
+            let reply = services.request_interaction(
                 [
                     wire::SURFACE_IMAGE,
                     view[1],

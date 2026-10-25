@@ -6,6 +6,11 @@ The installed Split matrix's CAPTURE control admits this ordinary process.
 waits for completion and presents the sealed result in its local rectangle.
 It receives no source identity, storage or input-production service, and needs
 no private pixel allocation. Its owner chooses source, crop, mask and placement.
+The broker/interaction and separate capture connection use shared mailboxes with
+notifications. The viewer funds two private writer pages, two mailbox readers and
+two notifications alongside its 32-page image reader grant. One retained Client
+owns capture correlation and the installed immutable reply; no copied fallback or
+second reply reader exists. Control/health still uses the supplied copied link.
 
 Follow [the wire](../../../platform/contracts/capture.rs) and
 [client](../../../platform/libraries/user-runtime/capture.rs) to Split's
