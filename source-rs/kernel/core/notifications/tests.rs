@@ -1,4 +1,30 @@
 use super::*;
+#[test]
+fn mixed_observers_do_not_consume_or_survive_slot_reuse() {
+    let mut n = Notifications::new(2).unwrap();
+    let [wait, signal, control] = n.create(0).unwrap();
+    let peer = grant(&mut n, 0, wait, 1);
+    assert_eq!(n.ready(0, signal), Err(abi::DENIED));
+    n.observe(1, peer).unwrap();
+    n.signal(0, signal, false).unwrap();
+    assert_eq!(n.take_changed(), 2);
+    assert_eq!(n.ready(1, peer), Ok(true));
+    assert_eq!(n.ready(1, peer), Ok(true));
+    assert_eq!(n.wait(1, peer, Some(0), 0), Ok(Some(abi::NOTIFY_SIGNALED)));
+    n.unobserve(1);
+    n.signal(0, signal, false).unwrap();
+    assert_eq!(n.take_changed(), 0);
+    n.observe(1, peer).unwrap();
+    n.control(0, control, abi::NOTIFY_CLOSE).unwrap();
+    assert_eq!(n.take_changed(), 2);
+    assert_eq!(n.ready(1, peer), Err(abi::PEER_CLOSED));
+    n.close_task(1);
+    let [fresh, s, _] = n.create(0).unwrap();
+    n.signal(0, s, false).unwrap();
+    assert_eq!(n.take_changed(), 0);
+    assert_eq!(n.ready(1, peer), Err(abi::BAD_HANDLE));
+    assert_eq!(n.ready(0, fresh), Ok(true));
+}
 fn grant(n: &mut Notifications, from: usize, handle: u64, to: usize) -> u64 {
     let escrow = n.reserve(from, handle, to).unwrap();
     n.publish(to, escrow)

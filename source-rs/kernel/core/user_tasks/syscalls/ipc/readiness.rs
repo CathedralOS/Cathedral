@@ -1,4 +1,4 @@
-//! Bounded IPC/device readiness waits. Observing readiness never consumes an event.
+//! Bounded IPC/device/notification readiness waits. Observing readiness never consumes an event.
 use crate::user_tasks::syscalls::{Session, complete};
 use crate::{scheduler::Event, user_tasks::time as deadline};
 use cathedral_kernel_contracts::user as abi;
@@ -13,6 +13,7 @@ fn ready(session: &Session, slot: usize, wait: Wait, now: u64) -> Result<Option<
     wait.select(now, |kind, handle| match kind {
         abi::WAIT_IPC => session.ipc.ready(slot, handle),
         abi::WAIT_DEVICE => session.devices.ready(slot, handle),
+        abi::WAIT_NOTIFICATION => session.ipc.notifications.ready(slot, handle),
         _ => Err(abi::INVALID_ARGUMENT),
     })
 }
@@ -53,6 +54,16 @@ pub(in crate::user_tasks) fn syscall(
     if let Some(index) = ready(session, slot, wait, now)? {
         return Ok(index);
     }
+    // Whole set validated above, kernel serialized: registration cannot miss a signal.
+    for i in 0..wait.count {
+        if wait.kinds[i] == abi::WAIT_NOTIFICATION {
+            session
+                .ipc
+                .notifications
+                .observe(slot, wait.handles[i])
+                .expect("validated notification");
+        }
+    }
     session.tasks[slot].report.readiness_blocked += 1;
     session.tasks[slot].notify = Some(wait);
     session.waits.register(
@@ -73,6 +84,9 @@ pub(in crate::user_tasks) fn wake(session: &mut Session, slot: usize, now: u64) 
         Ok(Some(index)) => Ok(index),
         Err(error) => Err(error),
     };
+    if wait.kinds[..wait.count].contains(&abi::WAIT_NOTIFICATION) {
+        session.ipc.notifications.unobserve(slot);
+    }
     session.tasks[slot].notify = None;
     session.waits.remove(slot);
     complete(session, slot, result);

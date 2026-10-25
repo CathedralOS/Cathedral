@@ -22,6 +22,7 @@ ROOT = HERE.parents[1]
 
 def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=False, service_imports=None, nested=False, nested_saved=False, deep=False, nested_desktop=False, user_check=None, allowed_panics=(), latency=False, pointer_stress=False, interaction_delay=False, nested_depth=3, soak=0, collection_pressure=False):
     assert 'Cathedral: object storage ready' in serial
+    assert 'Cathedral input: shared source connection ready' in serial
     position = [40, 40]
     motion_step = 0
     timings = desktop_timing.Timings(output, reboot)

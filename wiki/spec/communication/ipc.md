@@ -207,8 +207,12 @@ or peer progress. Failure and reclamation must preserve outstanding obligations.
   transferable read-only views. The [platform mailbox proof](../../../source-rs/platform/libraries/user-runtime/memory/shared/README.md)
   exchanges bounded payloads over two buffers and notifications on x86-64 and
   ARM64. It exercises malformed headers, backpressure, mapping protections and
-  retained funding. It is not a coordination service or ordinary desktop transport;
-  arbitrary multi-writer mapping is not implemented.
+  retained funding. Arbitrary multi-writer mapping is not implemented.
+- The [shared service connection](../../../source-rs/platform/libraries/user-runtime/connection/README.md)
+  now carries normal F5 physical input to the root matrix. It adds explicit setup,
+  request correlation, mixed notification/lifetime waits and failed-connection
+  retirement. Nested forwarding, other services and Omega bindings remain to migrate;
+  this is not a coordination service or proof of complete desktop migration.
 - [Omega boot](../../../source/kernel/boot/uefi/README.md) exercises early memory
   ownership and mappings, not this complete cross-process service.
 

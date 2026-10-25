@@ -1,10 +1,11 @@
-//! One wait for driver control, IRQ readiness and a deadline. The selected event
-//! remains pending until the caller receives the message or consumes the IRQ.
+//! One wait for IPC, IRQ/notification readiness and a deadline. Observing a ready
+//! interest does not consume its message, IRQ or notification indication.
 use crate::{Error, abi, arch, device::Device, ipc::Handle};
 #[derive(Clone, Copy)]
 pub enum Interest {
     Ipc(Handle),
     Device(Device),
+    Notification(crate::notification::Notification),
 }
 
 pub fn wait(interests: &[Interest], deadline: u64) -> Result<usize, Error> {
@@ -18,6 +19,7 @@ pub fn wait(interests: &[Interest], deadline: u64) -> Result<usize, Error> {
         let (kind, handle) = match *interest {
             Interest::Ipc(h) => (abi::WAIT_IPC, h.raw()),
             Interest::Device(d) => (abi::WAIT_DEVICE, d.raw()),
+            Interest::Notification(n) => (abi::WAIT_NOTIFICATION, n.raw()),
         };
         words[0] = kind.to_le();
         words[1] = handle.to_le();

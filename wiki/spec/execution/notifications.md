@@ -143,9 +143,11 @@ The Rust [notification primitive and ordinary-worker proof](../../../source-rs/k
 implement bounded notification objects, separate rights, checked grant handoff,
 remembered signals, combined calls and completion/lifetime handling. Its live
 round trips exchange notifications. The subsequent [shared mailbox proof](../../../source-rs/platform/libraries/user-runtime/memory/shared/README.md)
-exchanges actual payloads using those notifications on x86-64 and ARM64; ordinary
-desktop migration remains open. Existing copied-channel tests are not evidence
-for that migration. The complete implementation
+exchanges actual payloads using those notifications on x86-64 and ARM64. The
+[first service connection](../../../source-rs/platform/libraries/user-runtime/connection/README.md)
+uses non-consuming mixed readiness waits for the F5 physical-input/root-matrix
+connection. Broader desktop migration remains open. Existing copied-channel tests
+are not evidence for that migration. The complete implementation
 must demonstrate early signal, signal/register races, coalescing, wake-one/all,
 combined-call failure phases, closure/cancellation/deadline races, denied unrelated
 signals, stale handles, authorized cross-process transfer, and charge conservation

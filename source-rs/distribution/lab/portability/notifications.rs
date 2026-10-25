@@ -1,9 +1,11 @@
 //! Shared mailbox payloads and notifications through SVC, using the same runtime.
 use crate::Handle;
 use cathedral_user_runtime::{
+    event::{self, Interest},
     mailbox::Mailbox,
     memory::shared::{Reader, Writer},
     notification::{Notification as N, Outcome},
+    time,
 };
 pub(super) fn server(input: Handle, output: Handle) {
     let reader = Reader::accept(input).unwrap();
@@ -52,7 +54,17 @@ pub(super) fn client(input: Handle, output: Handle) {
                 assert_eq!(bytes, [round; 256]);
                 break;
             }
-            assert_eq!(reply[0].wait(None), Ok(Outcome::Signaled));
+            assert_eq!(
+                event::wait(
+                    &[Interest::Notification(reply[0]), Interest::Ipc(input)],
+                    time::after(300).unwrap()
+                ),
+                Ok(0)
+            );
+            assert_eq!(
+                reply[0].wait(Some(time::now().unwrap())),
+                Ok(Outcome::Signaled)
+            );
         }
     }
     for grant in request.into_iter().chain(reply) {

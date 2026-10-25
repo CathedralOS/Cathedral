@@ -29,7 +29,10 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 1296127058,
-        "keyboard": true
+        "keyboard": true,
+        "private_pages": 1,
+        "shared_pages": 1,
+        "ipc_channels": 1
       },
       {
         "package": "cathedral-stock-matrix",
@@ -37,9 +40,9 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 0,
-        "ipc_channels": 20,
-        "private_pages": 16,
-        "shared_pages": 8
+        "ipc_channels": 21,
+        "private_pages": 17,
+        "shared_pages": 9
       },
       {
         "package": "cathedral-storage-service",

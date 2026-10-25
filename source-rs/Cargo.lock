@@ -101,6 +101,7 @@ name = "cathedral-channels-lab"
 version = "0.0.0"
 dependencies = [
  "cathedral-kernel-contracts",
+ "cathedral-platform-contracts",
  "cathedral-user-runtime",
 ]
 

@@ -20,6 +20,7 @@ impl Notifications {
             }
             _ => abi::NOTIFY_CANCELLED,
         };
+        self.changed |= object.observers;
         let waiters = object.waiters;
         self.finish_set(grant.object, waiters, outcome);
         Ok(())
@@ -44,6 +45,7 @@ impl Notifications {
         }
     }
     pub(crate) fn close_task(&mut self, task: usize) {
+        self.unobserve(task);
         if let Some(wait) = self.waits[task].take() {
             self.objects[wait.object].as_mut().unwrap().waiters &= !(1 << task);
             self.unref(wait.object);

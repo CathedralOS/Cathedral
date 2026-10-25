@@ -28,22 +28,24 @@ pub(super) fn assign(root: Launch) -> Result<(), Error> {
 }
 
 pub(super) fn limits() -> cathedral_user_runtime::resources::Limits {
+    // Small lab profiles reserve one writer, reader and notification for SOURCE
+    // beside their original child/image allowance. F5 already has hub capacity.
     cathedral_user_runtime::resources::Limits {
         private_pages: if cfg!(feature = "shell") {
             1024
         } else if cfg!(feature = "notes") {
-            128
+            129
         } else {
-            16
+            17
         },
         reader_pages: if cfg!(feature = "shell") {
             4096
         } else if cfg!(feature = "notes") {
-            128
+            129
         } else {
-            8
+            9
         },
-        channels: if cfg!(feature = "shell") { 180 } else { 20 },
+        channels: if cfg!(feature = "shell") { 180 } else { 21 },
     }
 }
 

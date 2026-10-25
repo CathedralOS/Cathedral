@@ -4,7 +4,9 @@ use cathedral_input_service::decoder::{Decoder, mouse::Mouse};
 use cathedral_kernel_contracts::user as abi;
 use cathedral_platform_contracts::input;
 use cathedral_platform_contracts::matrix as wire;
-use cathedral_user_runtime::{Error, ipc::Handle, keyboard, task::Environment, time};
+use cathedral_user_runtime::{
+    Error, connection::Client, ipc::Handle, keyboard, task::Environment, time,
+};
 pub fn run(extent: u64, environment: Environment) -> u64 {
     serve(extent, environment).unwrap();
     0
@@ -17,13 +19,15 @@ fn serve(extent: u64, environment: Environment) -> Result<(), Error> {
         environment.endpoint(0).unwrap(),
         environment.endpoint(1).unwrap(),
     );
+    let mut connection = Client::connect(pair, time::after(300)?)?;
     super::controller::initialize_mouse()?;
     #[cfg(feature = "absolute-pointer")]
     let mut absolute = super::absolute::Pointer::open();
     let mut mouse = Mouse::default();
     let mut keys = Decoder::source();
     let (mut x, mut y) = (40, 40);
-    publish(pair, [wire::POINTER_SOURCE, x, y, 0, 0, 0, 0, 0])?;
+    publish(&mut connection, [wire::POINTER_SOURCE, x, y, 0, 0, 0, 0, 0])?;
+    cathedral_user_runtime::write(b"Cathedral input: shared source connection ready\n")?;
     Handle::bootstrap(1)?.send(b"ready")?;
     loop {
         #[cfg(feature = "absolute-pointer")]
@@ -32,7 +36,10 @@ fn serve(extent: u64, environment: Environment) -> Result<(), Error> {
                 Ok(Some((px, py, buttons))) => {
                     x = px;
                     y = py;
-                    publish(pair, [wire::POINTER_SOURCE, x, y, buttons, 0, 0, 0, 0])?;
+                    publish(
+                        &mut connection,
+                        [wire::POINTER_SOURCE, x, y, buttons, 0, 0, 0, 0],
+                    )?;
                 }
                 Ok(None) => break,
                 Err(_) => {
@@ -40,7 +47,7 @@ fn serve(extent: u64, environment: Environment) -> Result<(), Error> {
                     mouse.reset();
                     keys.reset();
                     publish(
-                        pair,
+                        &mut connection,
                         [wire::KEY_SOURCE, input::RESET as u64, 0, 0, 0, 0, 0, 0],
                     )?;
                     break;
@@ -56,7 +63,7 @@ fn serve(extent: u64, environment: Environment) -> Result<(), Error> {
             mouse.reset();
             keys.reset();
             publish(
-                pair,
+                &mut connection,
                 [wire::KEY_SOURCE, input::RESET as u64, 0, 0, 0, 0, 0, 0],
             )?;
         } else if byte & keyboard::AUX != 0 {
@@ -69,12 +76,12 @@ fn serve(extent: u64, environment: Environment) -> Result<(), Error> {
                 y = (y as i64 + motion.dy as i64).clamp(0, height as i64 - 1) as u64;
                 if motion.reset {
                     publish(
-                        pair,
+                        &mut connection,
                         [wire::KEY_SOURCE, input::RESET as u64, 0, 0, 0, 0, 0, 0],
                     )?;
                 }
                 publish(
-                    pair,
+                    &mut connection,
                     [
                         wire::POINTER_SOURCE,
                         x,
@@ -95,7 +102,7 @@ fn serve(extent: u64, environment: Environment) -> Result<(), Error> {
                 "source-key"
             });
             publish(
-                pair,
+                &mut connection,
                 [
                     wire::KEY_SOURCE,
                     event.key as u64,
@@ -110,12 +117,13 @@ fn serve(extent: u64, environment: Environment) -> Result<(), Error> {
         }
     }
 }
-fn publish(pair: (Handle, Handle), words: wire::Packet) -> Result<(), Error> {
+fn publish(connection: &mut Client, words: wire::Packet) -> Result<(), Error> {
     #[cfg(feature = "trace-input")]
     if words[0] == wire::KEY_SOURCE {
         time::input_sample("source", &[words[1], words[2], time::now()?]);
     }
-    if cathedral_user_runtime::matrix::upstream::call(pair, words)?[0] == 0 {
+    let (bytes, n) = connection.call_retained(&wire::encode(words))?;
+    if wire::decode(&bytes[..n]).is_some_and(|reply| reply[0] == 0) {
         Ok(())
     } else {
         Err(Error(abi::IO_ERROR as i64))

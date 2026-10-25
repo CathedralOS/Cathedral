@@ -17,6 +17,7 @@ struct Object {
     closed: bool,
     withdrawn: bool,
     waiters: u32,
+    observers: u32,
 }
 #[derive(Clone, Copy)]
 struct Grant {
@@ -79,6 +80,7 @@ impl Notifications {
             closed: false,
             withdrawn: false,
             waiters: 0,
+            observers: 0,
         });
         self.charges[task] += 1;
         for (i, right) in [Right::Wait, Right::Signal, Right::Control]
@@ -107,6 +109,7 @@ impl Notifications {
     }
     fn signal_object(&mut self, object: usize, all: bool) {
         let obj = self.objects[object].as_mut().unwrap();
+        self.changed |= obj.observers;
         let mut waiters = obj.waiters;
         if waiters == 0 {
             obj.pending = true;

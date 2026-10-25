@@ -15,6 +15,7 @@ test = false
 bench = false
 
 [dependencies]
+cathedral-platform-contracts.workspace = true
 cathedral-user-runtime.workspace = true
 cathedral-kernel-contracts.workspace = true
 

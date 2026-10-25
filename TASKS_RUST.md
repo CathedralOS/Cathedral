@@ -17,11 +17,13 @@ reply-dispatch/launch work; its correlation and cancellation rules remain servic
 requirements, not a reason to freeze the copied-channel ABI.
 
 Kernel notifications and a first reusable single-writer shared-memory/mailbox
-slice execute on x86-64 and ARM64; see the evidence below. Remaining acceptance:
+slice execute on x86-64 and ARM64. The first real F5 connection now uses them:
+physical input to the root matrix. See the evidence below. Remaining acceptance:
 
-- Integrate the exercised shared backing and bounded platform mailbox into real
-  service connection/request/reply ownership. Preserve mapping isolation,
-  hostile-writer validation and live-reader lifetime; waking proves none of them.
+- Extend the first shared service connection beyond its one explicitly enabled
+  stream and 64-byte request/reply frames to attachment custody and broader
+  multiplexing. Preserve mapping isolation, hostile-writer validation and
+  live-reader lifetime; waking proves none of them.
 - Demonstrate real cross-process ping-pong, including early reply/next-request,
   signal/register races, coalescing, closure/cancel/deadline races, revoked wait
   rights, denied foreign handles, stale incarnations and retained funding through
@@ -34,8 +36,8 @@ slice execute on x86-64 and ARM64; see the evidence below. Remaining acceptance:
 Done means the normal service path uses shared-memory data plus notifications,
 not only a standalone lab. Pin focused host/race controls and real guest evidence
 for that path and its invalid-authority controls. Shared-payload round trips now
-exercise publication and backpressure; they do not establish ordinary service
-migration or a performance result.
+exercise publication and backpressure. The physical-input/root-matrix migration
+is real ordinary service evidence, not a performance result or complete migration.
 
 ## Independent installation and component-owned activation
 
@@ -104,6 +106,75 @@ for this outcome. This docs ratification claims no runtime implementation.
 
 ## Current implementation evidence
 
+Implementation update 2026-10-25: **first shared-payload F5 service connection**,
+over `c2b11a6c`.
+
+Start at [the connection entrance and custody guide](source-rs/platform/libraries/user-runtime/connection/README.md),
+then [server integration](source-rs/platform/libraries/user-runtime/server/shared.rs)
+and [the input consumer](source-rs/platform/services/input/matrix.rs). Ordinary F5
+physical input now sends pointer/key requests through two single-writer mailboxes
+and notifications. Existing endpoints mediate typed setup and observe lifetime;
+after setup they never serve as a copied-payload fallback. The owner still runs
+source-authority rejection probes before handing the armed connection to input.
+
+Kernel EVENT_WAIT now admits notification interests alongside IPC/device interests.
+It validates the whole set, observes without consuming pending signals and wakes
+only affected observers through the existing bounded readiness coordinator.
+Notification drain remains separate. Observer cleanup precedes task-slot reuse;
+no application frame or request protocol enters the kernel.
+
+The platform client correlates one outstanding request and retires on transport
+failure without replay. A retained call waits through slow service work, preserving
+input's existing behavior under delayed presentations. The server advances setup
+one grant/ack per dispatch, expires abandoned setup, and binds replies to the
+original endpoint incarnation. A final published reply may be read after peer exit.
+The profiles fund input's one writer page, reader page and notification object.
+Small lab roots reserve the matching server resources beside their old child/image
+allowances; the F5 hub already has capacity.
+
+Scope is deliberately limited: one enabled shared stream per Server, 64-byte
+payloads, no response attachments. Other desktop services, nested forwarding and
+Omega host bindings still use the previous transport. This does not complete the
+shared IPC outcome, change accepted cancellation semantics, establish SMP safety
+or demonstrate a speedup.
+
+Verification:
+
+- Default host tests, kernel Clippy, core all-feature/test Clippy, userspace
+  workspace Clippy and all-feature channels Clippy pass. The new guest connection
+  proof covers 64 calls, wrong reply IDs, timeout retirement, peer death, partial
+  and expired setup, independent control progress, stale replies and exact refunds.
+- Normal F5 fresh/cold desktop and storage oracle pass:
+  `desktop/20261025T184352430898Z`. Later desktop runs explicitly require the
+  shared-source marker as well as visible input behavior.
+- Three nested desktops with held presentation/delayed interaction pass fresh/cold,
+  including protected close, persistence and repeated subtree reclamation:
+  `desktop/20261025T185404985548Z`.
+- Selection `late-stop` passes fresh/cold:
+  `desktop/20261025T185720984150Z`.
+- Transient input death/stall bootstrap recovery passes with exact reclamation:
+  `bootstrap/20261025T185935140537Z`. The host test now derives expected process
+  capacity from the profile instead of assuming four slots. Use the documented
+  minimal source image `launcher-recovery/20261024T054041211303Z/clean/guest.raw`;
+  the first run on the full desktop fixture correctly refused an upgrade above
+  its root quota before boot. No production quota was relaxed for that test.
+- Full x86 smoke and kernel-only smoke pass. The latter's expected marker boundary
+  now matches `lab/lab.rs`: device/shared-object proofs require bundled-user.
+- ARM64 mailbox exchanges with mixed notification/IPC readiness pass, including
+  exact session frame/heap reclamation. This is not full ARM64 service migration.
+- Layout (73 Omega / 151 Rust edges), eight boundary checks, formatting and diff
+  checks pass. Logs live under `build/omega-component/connection-*.log`.
+- The smaller matrix-desktop profile passes visible focus, clipping, subtree recovery
+  and cold color persistence after explicitly funding the server half of SOURCE:
+  `matrix-desktop-test` / `connection-matrix-desktop.log`. Notes and database-recovery
+  profiles received matching allowances; their dedicated recovery suites were not
+  rerun in this slice.
+
+**Next:** migrate an attachment-bearing service connection, keeping typed grant
+acceptance separate from payload publication; extend bounded multiplexing and
+preserve storage/launch custody. Then move Omega-facing adapters onto the same
+boundary. Do not bypass the existing slow-response and cancellation regressions.
+
 Implementation update 2026-10-25: **reusable shared buffers and platform mailbox**,
 over `3748fda4`.
 
@@ -152,11 +223,11 @@ Verification:
 - Logs: `build/omega-component/shared-{host,core-clippy,kernel-check,
   userspace-clippy,channels-clippy,ipc-final,arm64,desktop,smoke,nested,selection}.log`.
 
-**Next:** a real service connection using this transport: explicit setup grants,
-request correlation, response/attachment custody, cancellation/death/deadline
-handling and bounded multiplexing. Preserve current launch/selection semantics
-and migrate Omega host bindings with their consumers. F5 still uses copied service
-messages; copied setup/grant handoff remains temporary. Do not call the encompassing
+**Follow-up:** the first real service connection is implemented above. Remaining
+work includes response/attachment custody and broader bounded multiplexing.
+Preserve launch/selection semantics and migrate Omega host bindings with their
+consumers. Other F5 connections still use copied messages; copied setup/grant
+handoff remains temporary. Do not call the encompassing
 outcome complete or infer a latency improvement from this lab. No owner decision
 was needed; this exploratory Rust direction is explicitly authorized.
 
@@ -7145,7 +7216,7 @@ picker retired, so the owner's SURFACE_LIMIT for the retiring picker replaced
 the user's grant epoch and its background saw NO_MEMORY on its first placement.
 [children.rs](source-rs/distribution/matrix/service/children/children.rs) now
 recognizes an owner RUN_OBJECT of the realm's `Login` over its `Users` in slot
-zero as the picker, and [launch.rs](source-rs/distribution/matrix/service/children/launch.rs)
+zero as the picker, and [launch.rs](source-rs/distribution/matrix/service/children/launch/launch.rs)
 retires it before admitting the user it chooses, so the user's first grant is
 final; the owner keeps that picker's recovery
 ([lifetime.rs](source-rs/distribution/matrix/service/children/startup/lifetime.rs)).

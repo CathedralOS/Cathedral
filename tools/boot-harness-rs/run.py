@@ -498,7 +498,8 @@ def main():
     position = 0
     markers = MARKERS
     if args.kernel_only:
-        markers = MARKERS[:MARKERS.index("Cathedral Rust lab: ELF instances exited [17, 29]")] + ("CATHEDRAL_RS_BOOT_OK",)
+        # lab/lab.rs gates devices and every subsequent proof on bundled-user.
+        markers = MARKERS[:MARKERS.index("Cathedral Rust lab: device capabilities, masked IRQ delivery and driver replacement reclaimed all state")] + ("CATHEDRAL_RS_BOOT_OK",)
     if args.fault:
         markers = MARKERS[:MARKERS.index("Cathedral Rust lab: timer ticks=")] + ("CATHEDRAL_RS_FAULT:", "CATHEDRAL_RS_EXPECTED_FAULT")
     for marker in markers:

@@ -104,12 +104,12 @@ impl Registry {
         while let Some(slot) = self.deadlines.pop_due(self.ticks) {
             due |= 1 << slot;
         }
+        let notifications = core::mem::take(&mut self.notification_changes);
         [
             (ipc | due) & self.active[Kind::Receive as usize],
-            (ipc | devices | due) & self.active[Kind::Readiness as usize],
+            (ipc | devices | notifications | due) & self.active[Kind::Readiness as usize],
             (core::mem::take(&mut self.changed_children) | due) & self.active[Kind::Child as usize],
-            (core::mem::take(&mut self.notification_changes) | due)
-                & self.active[Kind::Notification as usize],
+            (notifications | due) & self.active[Kind::Notification as usize],
         ]
     }
 

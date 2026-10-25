@@ -187,6 +187,8 @@ pub const RESOURCE_GROW: u64 = 71;
 pub const TASK_IMAGE_RELEASE: u64 = 72;
 pub const WAIT_IPC: u64 = 0;
 pub const WAIT_DEVICE: u64 = 1;
+/// Readiness observes a pending notification without consuming it.
+pub const WAIT_NOTIFICATION: u64 = 2;
 
 // Notification facility: typed caller-local rights, independent of payload IPC.
 pub const NOTIFY_CREATE: u64 = 73; // writable [wait, signal, control], zero, zero

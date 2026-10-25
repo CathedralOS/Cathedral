@@ -45,6 +45,7 @@ impl Server {
             closed: [None; MAX_CLIENTS],
             paused: 0,
             replies: None,
+            shared: None,
         })
     }
     /// Whether a local slot can accept an explicitly supplied connection.
@@ -65,13 +66,20 @@ impl Server {
         self.clients[index] = Some(pair);
         Ok(())
     }
-    /// Detach a dynamic client. The caller closes its endpoints and invalidates state.
+    /// Detach a dynamic client and invalidate its transport state. Active shared
+    /// setup/peers own and close their endpoints; copied clients leave that to caller.
     pub fn remove(&mut self, index: usize) {
+        if self.shared.as_ref().is_some_and(|s| s.client == index) {
+            self.shared = None;
+        }
         assert!(index < self.count && self.links[index].is_none());
         self.clients[index] = None;
         self.closed[index] = None;
     }
     pub(super) fn disconnect(&mut self, client: usize) {
+        if self.shared.as_ref().is_some_and(|s| s.client == client) {
+            self.shared = None;
+        }
         if let Some(pair) = self.clients[client].take() {
             self.closed[client] = Some(pair.0.raw());
         }

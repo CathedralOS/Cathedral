@@ -9,6 +9,7 @@ pub struct Request {
     pub client: Option<usize>,
     pub incarnation: u64,
     reply: Handle,
+    shared_id: u64,
 }
 pub enum Event {
     Request(Request),
@@ -26,6 +27,7 @@ pub struct Server {
     closed: [Option<u64>; MAX_CLIENTS],
     paused: u32,
     replies: Option<&'static mut Replies>,
+    shared: Option<shared::Shared>,
 }
 impl Server {
     fn control_only(&self) -> bool {
@@ -89,6 +91,7 @@ impl Server {
                 client: None,
                 incarnation: self.control.0.raw(),
                 reply: self.control.1,
+                shared_id: 0,
             };
             return Ok(Some(match object {
                 Some(object) => Event::Memory(request, object),
@@ -97,6 +100,7 @@ impl Server {
         }
         loop {
             self.flush_replies();
+            self.expire_shared()?;
             if let Some(event) = self.take_disconnection() {
                 return Ok(Some(event));
             }
@@ -110,6 +114,9 @@ impl Server {
         }
     }
     pub fn reply(&mut self, request: &Request, bytes: &[u8]) -> Result<(), Error> {
+        if request.shared_id != 0 {
+            return self.shared_reply(request, bytes);
+        }
         if !request.control && self.replies.is_some() {
             return self.retained_reply(request, bytes);
         }
@@ -132,6 +139,9 @@ impl Server {
         bytes: &[u8],
         object: &crate::memory::Object,
     ) -> Result<(), Error> {
+        if request.shared_id != 0 {
+            return Err(Error(abi::DENIED as i64));
+        }
         request.reply.send_memory(bytes, object)
     }
 }
@@ -145,6 +155,9 @@ impl Server {
         bytes: &[u8],
         endpoint: Handle,
     ) -> Result<(), Error> {
+        if request.shared_id != 0 {
+            return Err(Error(abi::DENIED as i64));
+        }
         request.reply.send_with(bytes, endpoint)
     }
 }

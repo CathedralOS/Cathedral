@@ -71,6 +71,7 @@ pub fn run(environment: Environment) -> Result<(), Error> {
                 environment.endpoint(3).unwrap(),
             ),
         )?;
+        server.enable_shared(SOURCE)?;
     }
     // Page allowances and use at startup, so a refused attachment is diagnosable.
     if let Ok(budget) = cathedral_user_runtime::resources::budget() {

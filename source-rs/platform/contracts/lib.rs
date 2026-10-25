@@ -5,6 +5,7 @@
 //! owns recursive local-world messages; storage owns private object messages.
 //! Experimental contracts, not a frozen ABI.
 pub mod capture;
+pub mod connection;
 pub mod display;
 pub mod imports;
 pub mod input;

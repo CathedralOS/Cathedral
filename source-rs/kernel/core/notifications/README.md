@@ -9,8 +9,9 @@ queue layout or memory-publication rule enters this subsystem.
 The [accepted contract](../../../../wiki/spec/execution/notifications.md) is broader
 than this implementation slice. The kernel primitive and real userspace wakeup
 tests exist. A subsequent [shared-buffer and mailbox slice](../../../platform/libraries/user-runtime/memory/shared/README.md)
-now exchanges real payloads. Ordinary desktop migration remains open; the original
-notification-only test still establishes wakeups, not application completion.
+now exchanges real payloads. The [first ordinary service connection](../../../platform/libraries/user-runtime/connection/README.md)
+carries F5 physical input to the root matrix. Broader desktop migration remains open;
+the original notification-only test establishes wakeups, not application completion.
 
 ## Kernel integration
 
@@ -44,6 +45,20 @@ only its currently registered waits. These operations do not cancel application
 work or revoke memory. A dropped grant does not close the shared object. Creator
 death drops its grants and wait, without withdrawing independently accepted peers'
 rights. A pending completion pins its object even if its original grant was dropped.
+
+## Mixed readiness
+
+[readiness.rs](readiness.rs) supports EVENT_WAIT beside IPC and device interests.
+It validates every capability before parking and observes pending state without
+consuming it; NOTIFY_WAIT consumes the indication. Observer bits select affected
+tasks through the existing Readiness coordinator. Completion and task death remove
+subscriptions before task-slot reuse. Removing observers scans the fixed object
+arena only for waits that registered them; ordinary IPC waits do not pay that scan.
+
+Close/withdrawal wakes observers to recheck authority. Cancellation of direct
+notification waits does not cancel an EVENT_WAIT observation. A direct waiter can
+consume a signal before an observer rechecks; readiness is a hint, not a reserved
+completion. The single-CPU kernel serializes validation, subscription and signal.
 
 ## Funding and transitional handoff
 

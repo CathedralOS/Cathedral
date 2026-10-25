@@ -57,7 +57,8 @@ ARM64 runs 32 full-size exchanges with the same mailbox and checks exact session
 frame/heap reclamation. Kernel host tests cover irreversible mode, typed escrow,
 forwarding after creator death, name reuse prevention and quotas.
 
-This is an experimental transport proof, not an ordinary service migration.
-Connection setup still uses copied grant messages. F5 services and Omega host
-bindings still use their existing transport; service request correlation,
-cancellation, attachments and fair multiplexing are the next integration work.
+The [shared service connection](../../connection/README.md) now carries normal F5
+physical input to the root matrix, with request correlation, lifecycle observation
+and explicit setup custody. Setup still uses copied grant messages. Other desktop
+connections, nested forwarding and Omega host bindings remain on their existing
+transport; attachment custody and broader multiplexing are subsequent work.

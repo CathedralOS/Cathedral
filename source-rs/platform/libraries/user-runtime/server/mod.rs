@@ -3,6 +3,7 @@
 mod connections;
 mod polling;
 mod replies;
+mod shared;
 pub use replies::Replies;
 
 include!("server.rs");

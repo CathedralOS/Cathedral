@@ -20,7 +20,7 @@ STAGES = {'display': 0, 'input': 1, 'root': 2}
 MODES = {'death': 1, 'stall': 2, 'malformed': 3, 'refusal': 4}
 
 
-def exercise(stream, folder, stage, mode, repeat):
+def exercise(stream, folder, stage, mode, repeat, dynamic_tasks):
     def log():
         text = (folder / 'serial.log').read_text(errors='replace').replace('Cathedral Rust lab: ', '')
         assert 'user panic:' not in text and 'CATHEDRAL_RS_PANIC' not in text, text[-4000:]
@@ -42,7 +42,7 @@ def exercise(stream, folder, stage, mode, repeat):
         assert int(error) == expected % (1 << 64), (mode, error, text)
     reclaimed = re.findall(r'bootstrap-reclaimed ([\d ]+)', text)
     assert len(reclaimed) == count and len(set(reclaimed)) == 1, text
-    assert all(line.split()[0] == '4' for line in reclaimed), 'process capacity not restored'
+    assert all(int(line.split()[0]) == dynamic_tasks for line in reclaimed), 'process capacity not restored'
     # The guest compares every rollback to the measured pre-attempt limits,
     # frame charge, page charge and channel charge; panics fail this fixture.
     if repeat:
@@ -104,7 +104,7 @@ def run(source, selected):
                 command += disk_image.arguments(image)
                 capture.run(command, folder, 180, subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0,
                             'Cathedral desktop: bootstrap attempt',
-                            lambda stream, folder, serial: exercise(stream, folder, stage, mode, repeat),
+                            lambda stream, folder, serial: exercise(stream, folder, stage, mode, repeat, composition['startup']['dynamic_tasks']),
                             allow_initial_exit=repeat and stage == 'display')
                 if repeat:
                     assert image.read_bytes() == before, 'failed bootstrap changed storage'

@@ -2,7 +2,8 @@
 use super::{Event, Request, Server};
 use crate::{
     Error, abi,
-    ipc::{self, Handle},
+    event::{self, Interest},
+    ipc::Handle,
     time,
 };
 
@@ -24,6 +25,19 @@ impl Server {
             }) else {
                 continue;
             };
+            if channel != 0 && self.shared_active(channel - 1) {
+                match self.shared_poll(channel - 1, pair) {
+                    Ok(Some(request)) => {
+                        self.cursor = (channel + 1) % (self.count + 1);
+                        return Ok(Some(Event::Request(request)));
+                    }
+                    Ok(None) => continue,
+                    Err(_) => {
+                        self.disconnect(channel - 1);
+                        return Ok(self.take_disconnection());
+                    }
+                }
+            }
             let mut bytes = [0; 64];
             let received = if self.memory {
                 pair.0.try_receive_memory(&mut bytes)
@@ -33,6 +47,15 @@ impl Server {
             match received {
                 Ok((len, object)) => {
                     self.cursor = (channel + 1) % (self.count + 1);
+                    if channel != 0
+                        && object.is_none()
+                        && self.shared_open(channel - 1, pair, &bytes[..len])
+                    {
+                        if let Some(event) = self.take_disconnection() {
+                            return Ok(Some(event));
+                        }
+                        continue;
+                    }
                     let request = Request {
                         bytes,
                         len,
@@ -40,6 +63,7 @@ impl Server {
                         client: channel.checked_sub(1),
                         incarnation: pair.0.raw(),
                         reply: pair.1,
+                        shared_id: 0,
                     };
                     return Ok(Some(match object {
                         Some(object) => Event::Memory(request, object),
@@ -49,11 +73,8 @@ impl Server {
                 Err(Error(code))
                     if code == abi::TIMED_OUT as i64 || code == abi::WOULD_BLOCK as i64 => {}
                 Err(_) if channel != 0 => {
-                    self.clients[channel - 1] = None;
-                    return Ok(Some(Event::Disconnected {
-                        client: channel - 1,
-                        incarnation: pair.0.raw(),
-                    }));
+                    self.disconnect(channel - 1);
+                    return Ok(self.take_disconnection());
                 }
                 Err(error) => return Err(error),
             }
@@ -68,7 +89,7 @@ impl Server {
     pub(super) fn wait(&mut self, extra: &[Handle], deadline: Option<u64>) -> Result<bool, Error> {
         // Watch every live channel together. The bounded maintenance timeout
         // retries absent links; quiet connected clients generate no poll traffic.
-        let mut handles = [self.control.0; abi::MAX_WAIT_HANDLES];
+        let mut handles = [Interest::Ipc(self.control.0); abi::MAX_WAIT_HANDLES];
         let mut channels = [0; abi::MAX_WAIT_HANDLES];
         let mut count = 0;
         if self.paused & 1 == 0 {
@@ -78,16 +99,33 @@ impl Server {
             if (self.paused | self.reply_paused()) & (1 << (index + 1)) == 0
                 && let Some(pair) = self.clients[index]
             {
-                handles[count] = pair.0;
+                handles[count] = Interest::Ipc(pair.0);
                 channels[count] = index + 1;
                 count += 1;
             }
         }
+        if let Some((client, wake)) = self.shared_wake()
+            && (self.paused | self.reply_paused()) & (1 << (client + 1)) == 0
+        {
+            if count == handles.len() {
+                return Err(Error(abi::INVALID_ARGUMENT as i64));
+            }
+            handles[count] = Interest::Notification(wake);
+            channels[count] = client + 1;
+            count += 1;
+        }
         if count + extra.len() > handles.len() {
             return Err(Error(abi::INVALID_ARGUMENT as i64));
         }
-        handles[count..count + extra.len()].copy_from_slice(extra);
+        for (out, &handle) in handles[count..count + extra.len()].iter_mut().zip(extra) {
+            *out = Interest::Ipc(handle);
+        }
         let mut until = deadline.unwrap_or(time::after(100)?);
+        if let Some(setup) = self.shared_deadline()
+            && time::reached(until, setup)
+        {
+            until = setup;
+        }
         if self.reply_paused() != 0 {
             let retry = time::after(1)?;
             if time::reached(until, retry) {
@@ -97,7 +135,7 @@ impl Server {
         if count + extra.len() == 0 {
             return Err(Error(abi::INVALID_ARGUMENT as i64));
         }
-        match ipc::wait_many(&handles[..count + extra.len()], until) {
+        match event::wait(&handles[..count + extra.len()], until) {
             Ok(index) if index >= count => return Ok(true),
             Ok(index) => self.cursor = channels[index],
             Err(Error(code)) if code == abi::TIMED_OUT as i64 && deadline.is_some() => {

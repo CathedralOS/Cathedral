@@ -6,6 +6,11 @@ input and publishes coordinates/buttons/keys into the root matrix. Matrices
 then attenuate and translate input recursively; apps never use the hardware
 transport.
 
+The matrix-source path uses the [shared connection client](../../libraries/user-runtime/connection/README.md):
+one shared page and notification per direction, initialized from the owner's
+explicit endpoint handoff. Input requests retain their identity through slow replies;
+they do not time out and retry mutations. Nested forwarding is a separate migration.
+
 The default distribution enables `absolute-pointer`. [absolute.rs](absolute.rs)
 negotiates QEMU's VMMouse protocol, drains bounded packets and maps its 16-bit
 absolute axes to the local screen extent. It ignores the accompanying PS/2
