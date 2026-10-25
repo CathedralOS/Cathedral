@@ -95,6 +95,8 @@ router and recovery choices. Its saved configuration validation and placement
 now execute the shared [Omega configuration](../../source/distribution/matrix/configuration/README.md);
 the chooser calls the same codec directly. Stock close/loss aggregation and
 wait/refuse/stop decisions also execute [Omega lifecycle policy](../../source/distribution/matrix/lifecycle/README.md).
+Bounded launcher retry and fallback decisions execute
+[Omega recovery policy](../../source/distribution/matrix/recovery/README.md).
 Authenticated IPC custody, stale reply draining and task reclamation stay in Rust.
 The Rust data representation remains
 for installer/tools and independent conformance checks. Its extension contract lives beside it in

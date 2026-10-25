@@ -1,0 +1,51 @@
+// Stock launcher recovery. The host supplies verified facts, never raw task IDs.
+// State 16 is opaque to Rust: automatic -> spent; explicit attempts never rearm it.
+const AUTOMATIC: u64 = 1u64;
+const SPENT: u64 = 2u64;
+const READ_PENDING: u64 = 3u64;
+const READING: u64 = 4u64;
+const NEED_FALLBACK: u64 = 5u64;
+const FALLBACK: u64 = 6u64;
+const REQUESTED: u64 = 7u64;
+public machine recovery_decision(p: &mut [u64; 128]) -> u64 {
+    transition p[1] {
+        0u64 -> initialize(p) 1u64 -> retired(p) 2u64 -> ready(p)
+        3u64 -> next(p) 4u64 -> read_started(p) 5u64 -> read_finished(p)
+        6u64 -> fallback_finished(p) 7u64 -> request(p)
+        8u64 -> fallback_changed(p) 9u64 -> explicit_retired(p) _ -> (0u64)
+    }
+}
+machine set(p: &mut [u64; 128], state: u64) -> u64 { p[16] = state; 1u64 }
+machine discard(p: &mut [u64; 128]) -> u64 { p[16] = 0u64; 0u64 }
+machine initialize(p: &mut [u64; 128]) -> u64 { transition p[16] == 0u64 { true -> set(p, AUTOMATIC) _ -> (0u64) } }
+machine retired(p: &mut [u64; 128]) -> u64 {
+    transition p[2] == 1u64 { true -> failure(p) _ -> discard(p) }
+    state failure(p: &mut [u64; 128]) -> u64 {
+        transition p[16] { AUTOMATIC -> set(p, READ_PENDING) SPENT -> set(p, NEED_FALLBACK) _ -> discard(p) }
+    }
+}
+machine pending(state: u64) -> bool { state == READ_PENDING || state == READING || state == NEED_FALLBACK || state == REQUESTED }
+machine ready(p: &[u64; 128]) -> u64 { transition pending(p[16]) && p[2] == 0u64 { true -> (1u64) _ -> (0u64) } }
+// Actions: wait, cancel, retire fallback, start read, admit result, show fallback.
+machine next(p: &[u64; 128]) -> u64 {
+    transition pending(p[16]) { true -> authority(p) _ -> (0u64) }
+    state authority(p: &[u64; 128]) -> u64 { transition p[2] == 1u64 { true -> selected(p) _ -> (1u64) } }
+    state selected(p: &[u64; 128]) -> u64 { transition p[16] == REQUESTED { true -> (2u64) _ -> vacant(p) } }
+    state vacant(p: &[u64; 128]) -> u64 { transition p[3] == 1u64 { true -> advance(p) _ -> (1u64) } }
+    state advance(p: &[u64; 128]) -> u64 { transition p[16] { NEED_FALLBACK -> (5u64) READ_PENDING -> (3u64) _ -> result(p) } }
+    state result(p: &[u64; 128]) -> u64 { transition p[4] == 1u64 { true -> (4u64) _ -> (0u64) } }
+}
+machine read_started(p: &mut [u64; 128]) -> u64 { transition p[16] == READ_PENDING { true -> set(p, READING) _ -> (0u64) } }
+machine read_finished(p: &mut [u64; 128]) -> u64 {
+    transition p[16] == READING { true -> result(p) _ -> (0u64) }
+    state result(p: &mut [u64; 128]) -> u64 { transition p[2] == 1u64 { true -> set(p, SPENT) _ -> set(p, NEED_FALLBACK) } }
+}
+machine fallback_finished(p: &mut [u64; 128]) -> u64 {
+    transition p[16] == NEED_FALLBACK { true -> result(p) _ -> (0u64) }
+    state result(p: &mut [u64; 128]) -> u64 { transition p[2] == 1u64 { true -> set(p, FALLBACK) _ -> discard(p) } }
+}
+machine request(p: &mut [u64; 128]) -> u64 { transition p[16] == FALLBACK && p[2] == 1u64 { true -> set(p, REQUESTED) _ -> (0u64) } }
+machine fallback_changed(p: &mut [u64; 128]) -> u64 {
+    transition p[2] == 1u64 && (p[16] == AUTOMATIC || p[16] == SPENT) { true -> (1u64) _ -> discard(p) }
+}
+machine explicit_retired(p: &mut [u64; 128]) -> u64 { transition p[16] == REQUESTED { true -> set(p, READ_PENDING) _ -> (0u64) } }

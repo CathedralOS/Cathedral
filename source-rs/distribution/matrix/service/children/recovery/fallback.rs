@@ -20,11 +20,10 @@ impl Children {
         // the first fallback. That initial supply does not revoke the running
         // launcher's retry policy. Replacement/revocation still invalidates the
         // saved context, and cannot be undone by a queued fallback request.
-        if !initial
-            || self
-                .launcher
-                .as_ref()
-                .is_some_and(|l| !matches!(l.phase, Phase::Running { .. }))
+        if self
+            .launcher
+            .as_mut()
+            .is_some_and(|l| !l.policy.fallback_changed(initial))
         {
             self.launcher = None;
         }
@@ -34,15 +33,13 @@ impl Children {
         let Some(launcher) = &mut self.launcher else {
             return wire::error(abi::DENIED);
         };
-        if self.fallback.is_none()
-            || request.client != Some(0)
-            || request.incarnation != launcher.incarnation
-            || launcher.phase != Phase::Fallback
-            || self.slots[0].as_ref().map(|child| child.task.raw()) != Some(launcher.task)
-        {
+        let authenticated = self.fallback.is_some()
+            && request.client == Some(0)
+            && request.incarnation == launcher.incarnation
+            && self.slots[0].as_ref().map(|child| child.task.raw()) == Some(launcher.task);
+        if !launcher.policy.request(authenticated) {
             return wire::error(abi::DENIED);
         }
-        launcher.phase = Phase::Requested;
         [0; 8]
     }
     pub(super) fn show_fallback(
@@ -73,6 +70,7 @@ impl Children {
                     .restore(placement, server.incarnation(0).unwrap(), false)
                     .map_err(|c| Error(c as i64))
             });
+        let keep = launcher.policy.fallback_finished(result.is_ok());
         if let Err(error) = result {
             if self.slots[0].is_some() {
                 self.stop(0, server, world, parent)?;
@@ -82,7 +80,7 @@ impl Children {
         }
         launcher.task = self.slots[0].as_ref().unwrap().task.raw();
         launcher.incarnation = server.incarnation(0).unwrap();
-        launcher.phase = Phase::Fallback;
+        assert!(keep, "successful fallback transition");
         self.launcher = Some(launcher);
         self.notify(world)?;
         cathedral_user_runtime::write(b"Cathedral matrix: launcher fallback admitted\n")?;

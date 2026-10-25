@@ -56,12 +56,9 @@ impl Children {
         }
     }
     pub(in crate::service) fn recovery_pending(&self) -> bool {
-        self.launcher.as_ref().is_some_and(|l| {
-            matches!(
-                l.phase,
-                Phase::Reading { .. } | Phase::NeedFallback | Phase::Requested
-            )
-        })
+        self.launcher
+            .as_ref()
+            .is_some_and(|l| l.policy.ready(false))
     }
     pub(in crate::service) fn recover(
         &mut self,
@@ -69,49 +66,58 @@ impl Children {
         world: &mut World,
         server: &mut Server,
     ) -> Result<bool, Error> {
-        if !self.recovery_pending()
-            || parent.upstream_busy()
+        let blocked = parent.upstream_busy()
             || parent.storing()
             || self.loss.is_some()
-            || self.pending.iter().any(Option::is_some)
+            || self.pending.iter().any(Option::is_some);
+        if !self
+            .launcher
+            .as_ref()
+            .is_some_and(|l| l.policy.ready(blocked))
         {
             return Ok(false);
         }
         parent.refresh(world)?;
         let launcher = self.launcher.as_ref().unwrap();
         let (placement, binding) = launcher.snapshot.expect("captured before retirement");
-        if !world.parent_matches(placement) || parent.storage_identity() != Some(binding) {
-            #[cfg(feature = "trace-storage")]
-            time::storage_sample("launcher-recovery-parent-changed", &[]);
-            self.launcher = None;
-            return Ok(false);
-        }
-        if launcher.phase == Phase::Requested {
-            // Acknowledge before collecting the requesting fallback, with no
-            // context installed for teardown to mistake it for a launcher fault.
-            let mut launcher = self.launcher.take().unwrap();
-            self.stop(0, server, world, parent)?;
-            launcher.phase = Phase::Reading { started: false };
-            self.launcher = Some(launcher);
-            cathedral_user_runtime::write(b"Cathedral matrix: explicit launcher retry\n")?;
-            return Ok(true);
-        }
-        if self.slots[0].is_some() || !server.available(0) {
-            #[cfg(feature = "trace-storage")]
-            time::storage_sample("launcher-recovery-slot-replaced", &[]);
-            self.launcher = None;
-            return Ok(false);
-        }
-        if launcher.phase == Phase::NeedFallback {
-            return self.show_fallback(parent, world, server);
-        }
-        if launcher.phase == (Phase::Reading { started: false }) {
-            parent.storage_recover(launcher.plan)?;
-            self.launcher.as_mut().unwrap().phase = Phase::Reading { started: true };
-            return Ok(true);
-        }
-        if launcher.result.is_none() {
-            return Ok(false);
+        let authority_matches =
+            world.parent_matches(placement) && parent.storage_identity() == Some(binding);
+        let vacant = self.slots[0].is_none() && server.available(0);
+        match launcher
+            .policy
+            .action(authority_matches, vacant, launcher.result.is_some())
+        {
+            Action::Wait => return Ok(false),
+            Action::Cancel => {
+                #[cfg(feature = "trace-storage")]
+                time::storage_sample(
+                    if authority_matches {
+                        "launcher-recovery-slot-replaced"
+                    } else {
+                        "launcher-recovery-parent-changed"
+                    },
+                    &[],
+                );
+                self.launcher = None;
+                return Ok(false);
+            }
+            Action::RetireFallback => {
+                // The request was acknowledged first. Remove context while stopping
+                // fallback so its death cannot become another automatic attempt.
+                let mut launcher = self.launcher.take().unwrap();
+                self.stop(0, server, world, parent)?;
+                launcher.policy.explicit_retired();
+                self.launcher = Some(launcher);
+                cathedral_user_runtime::write(b"Cathedral matrix: explicit launcher retry\n")?;
+                return Ok(true);
+            }
+            Action::Fallback => return self.show_fallback(parent, world, server),
+            Action::Read => {
+                parent.storage_recover(launcher.plan)?;
+                self.launcher.as_mut().unwrap().policy.read_started();
+                return Ok(true);
+            }
+            Action::Admit => (),
         }
         let mut launcher = self.launcher.take().unwrap();
         let status = match launcher.result.take().unwrap() {
@@ -130,18 +136,17 @@ impl Children {
                 }
             }
         };
+        launcher.policy.read_finished(status.is_ok());
         if let Err(code) = status {
             if self.slots[0].is_some() {
                 self.stop(0, server, world, parent)?;
             }
-            launcher.phase = Phase::NeedFallback;
             time::storage_sample("launcher-recovery-refused", &[code]);
         } else {
             self.saved_storage[0] = Some((0, 0));
             launcher.task = self.slots[0].as_ref().unwrap().task.raw();
             launcher.incarnation = server.incarnation(0).unwrap();
             launcher.snapshot = None;
-            launcher.phase = Phase::Running { automatic: false };
             self.management
                 .grant(0, launcher.incarnation, self.active.unwrap_or(1))
                 .map_err(|c| Error(c as i64))?;

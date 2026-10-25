@@ -1,4 +1,5 @@
-// Stock policies execute in Omega: configuration/placement here; close/loss in lifecycle.rs.
+// Stock policies execute in Omega: configuration/placement here; close/loss in
+// lifecycle.rs; bounded launcher retry/fallback in recovery.rs.
 // Cross-language entrance: source/distribution/matrix/policy/main.omg.
 // These synchronous values carry no capability, endpoint or task identity.
 use cathedral_desktop_matrix_contracts::matrix::config::Config;

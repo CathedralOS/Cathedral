@@ -1,5 +1,57 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-24: **stock launcher recovery decisions execute
+in Omega**, over `029f3a43`. Artifact directory stamps below are UTC.
+
+Start at [the stock Omega matrix guide](source/distribution/matrix/README.md), then
+[recovery/main.omg](source/distribution/matrix/recovery/main.omg). The existing
+single native export now dispatches configuration, close/loss and recovery.
+Omega owns the opaque retry phase and the wait/cancel/read/admit/fallback actions.
+The Rust phase enum is gone. One automatic attempt is still allowed; authenticated
+explicit retries each permit one attempt without replenishing it. Clean exits,
+owner stop/revocation and fallback failure never become automatic retry requests.
+
+Rust retains exact task/endpoint authentication, saved placement and storage
+identity, asynchronous parent reads, image custody and teardown. Policy receives
+only verified value facts. This does not migrate the full stock matrix event loop,
+change capability grants or add a desktop workflow. Initial fallback supply still
+preserves a running launcher's budget; replacement/revocation cancels pending work,
+including an acknowledged retry.
+
+Verification:
+
+- All seven launcher recovery modes pass: recovery, clean exit, startup fault,
+  owner stop, owner revoke, fallback clean exit and fallback fault. Fresh/cold
+  recovery preserves the sibling Notes draft, later input, close protection and
+  save, with exact restart counts and repeated explicit retries. Artifacts:
+  `launcher-recovery/20261025T025437249273Z`.
+- The fixture upgrades recognized stock code before injecting its launcher fault.
+  Input: `launcher-recovery/20261024T054041211303Z/clean/guest.raw`, a minimal
+  one-user image, verified unchanged. The first attempt used the full default
+  desktop image and the fault installer refused its extra code at the root quota
+  before QEMU started (`launcher-recovery/20261025T025329841253Z`). No quota or
+  production storage policy was relaxed; use the small fixture for this test.
+- Normal F5 fresh/cold desktop passes: three Notes instances, independent drafts,
+  protected close, slot reuse, Colors, save/discard/cancel and the storage oracle.
+  Artifacts: `desktop/20261025T025649933604Z`.
+- Default host `cargo test --locked` passes, including twelve compiled stock
+  policy tests. Five new recovery tests exercise retry exhaustion, repeated
+  manual attempts, admission/read failure, authority/slot cancellation, busy
+  waits, fallback changes and authenticated-request facts.
+- Stock matrix guest all-feature and host-test Clippy pass. Layout (71 Omega /
+  150 Rust edges), eight boundary tests, Rust formatting and diff checks pass.
+  Full kernel/ARM64 and unrelated runtime suites were not rerun.
+- Logs: `build/omega-component/recovery-{host-tests,launcher,launcher-recheck,
+  desktop}.log`.
+
+**Next:** move the remaining local picker/background startup recovery choices
+from `source-rs/distribution/matrix/service/children/startup/lifetime.rs` into
+Omega. Preserve owner-managed versus locally managed picker recovery, bounded
+attempts, nested selection failure and sibling survival; keep actual admission
+and cleanup in Rust. This is a proposed next slice, not an owner semantic change.
+The earlier intermittent partial-key observation remains open. Do not promote the
+independent matrix lab's synchronous parent adapter into the desktop event loop.
+
 Implementation update 2026-10-24: **normal F5 close/loss decisions execute in
 Omega**, over `ce2e94f9`. Artifact directory stamps below are UTC.
 
