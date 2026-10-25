@@ -17,8 +17,10 @@ The Rust private catalog proves a bounded transaction/recovery path; the host
 chunk-layout lab measures representation costs. Neither implements this chapter.
 Live watches and durable capture are now governed by the accepted
 [change-watch contract](../../spec/storage/change_watches.md). Historical file-byte
-retention is separate. Unresolved deduplication/erasure and isolation choices remain
-in [owner questions](../../../OWNER_QUESTIONS.md).
+retention is separate. [Atomic batches](../../spec/storage/atomic_batches.md) settle
+explicit revision prerequisites and all-or-nothing mutations; general query-aware
+isolation is deferred, not a prerequisite for that API. Unresolved
+deduplication/erasure choices remain in [owner questions](../../../OWNER_QUESTIONS.md).
 
 ## The Legacy Model
 

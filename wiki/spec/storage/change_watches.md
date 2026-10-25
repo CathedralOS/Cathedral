@@ -180,7 +180,9 @@ Remaining acceptance is tracked in the
 [watch outcome](../../../TASKS_RUST.md#object-rooted-watches-and-durable-capture).
 
 Wire spelling, queue layout, physical log segmentation and indexing remain
-engineering work. General transaction isolation, aliases, cross-domain
+engineering work. [Explicit atomic batches](atomic_batches.md) settle revision
+prerequisites and all-or-nothing mutations in one service transaction domain, not
+general query-aware isolation. Aliases, cross-domain
 deduplication and historical-content erasure are not settled here. Surface new
 semantic or trust gaps through [owner questions](../../../OWNER_QUESTIONS.md), not
 by silently weakening this contract.

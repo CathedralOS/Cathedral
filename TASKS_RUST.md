@@ -104,6 +104,34 @@ durable recovery under these controls, not only a log/queue lab. Summarization i
 library work; historical file-byte retention and replica merging are not required
 for this outcome. This docs ratification claims no runtime implementation.
 
+## Explicit atomic storage batches
+
+**Open; scope ratified, not a general isolation blocker.** Expose the
+[atomic batch contract](wiki/spec/storage/atomic_batches.md) through the ordinary
+storage service and client API. Reuse `source-rs/platform/libraries/database-objects/`
+transactions, `source-rs/platform/services/storage/service.rs` and
+`source-rs/platform/contracts/storage.rs`; internal atomic helpers do not establish
+the public N-prerequisite/M-mutation path.
+
+- Demonstrate a client replacing two files together after checking both revisions,
+  plus checking an input-only file while writing a different output. A competing
+  change to any prerequisite must refuse the entire batch with no partial writes.
+- Carry authority, exact incarnation/revision identity and stable request/payload
+  custody across the service boundary. Reject foreign objects, missing write
+  authority, stale/reused identities and post-validation shared-buffer mutation.
+- Admit funded, bounded work without holding transaction-wide locks during caller
+  preparation. Capacity/oversize refusal must not split or partially apply a batch.
+  Preserve existing storage and required change-capture policies.
+- Exercise crash/restart before and after commit and lost replies. Reconcile the
+  exact request's outcome; uncertainty must not become a false refusal or blind
+  retry. State and fund reconciliation retention, and reject identity reuse with
+  different contents. Pin focused invalid controls and real service evidence.
+
+Done is a usable service batch with recovery and refusal evidence, not only a host
+engine test. Query/predicate tracking, automatic read-set capture, CRDT merging and
+cross-service distributed commit are not acceptance requirements. No runtime
+implementation is claimed by this ratification.
+
 ## Current implementation evidence
 
 Implementation update 2026-10-25: **first shared-payload F5 service connection**,

@@ -6,6 +6,12 @@ service's responsibilities. It is not implemented by the current request protoco
 see the [watch outcome](../../../../TASKS_RUST.md#object-rooted-watches-and-durable-capture).
 The kernel supplies mapping and notifications, not storage-event history.
 
+The accepted [atomic batch contract](../../../../wiki/spec/storage/atomic_batches.md)
+adds explicit N-revision prerequisites and M mutations in one commit. Existing
+per-operation engine transactions are building blocks, not the public batch API
+or its request-outcome reconciliation. Follow the
+[batch outcome](../../../../TASKS_RUST.md#explicit-atomic-storage-batches).
+
 A separate user task owns the exclusive boot-granted disk controller and the
 [object store](../../libraries/database-objects/README.md). [main.rs](main.rs)
 funds the heap, opens the guarded volume and recovers the engine, then

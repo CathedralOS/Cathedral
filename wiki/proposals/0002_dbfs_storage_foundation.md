@@ -18,8 +18,9 @@ Neither this proposal nor the host lab freezes a hash encoding or on-disk ABI.
 Storage policy, object semantics, queries, version retention and subscriptions
 belong in the common userspace platform. The kernel supplies isolation, IPC,
 memory and device authority. Distribution supplies defaults and user experience.
-Atomic changes spanning durable storage and kernel authority remain the existing
-[owner question](../../OWNER_QUESTIONS.md#kernel-mechanisms-versus-platform-orchestration).
+The accepted [atomic batch](../spec/storage/atomic_batches.md) is confined to one
+storage service's transaction domain. Atomic changes spanning durable storage and
+kernel authority are not part of that contract or a prerequisite for implementing it.
 
 The immediate requirement is a bounded foundation for small objects and large
 byte streams, with efficient range edits and explicit committed versions. Its
@@ -270,8 +271,11 @@ The [change-watch contract](../spec/storage/change_watches.md) now settles live
 delivery, durable capture and subscriber funding: platform storage owns capture,
 caller-funded memory carries live events, and required durable records commit with
 mutations. The historical candidate discussion here does not reopen that ruling.
-[Owner questions](../../OWNER_QUESTIONS.md) retain unresolved deduplication/erasure
-and cross-record isolation decisions. Aliases and general historical-content
+[Atomic batches](../spec/storage/atomic_batches.md) settle explicit revision
+prerequisites and all-or-nothing mutation within one service transaction domain.
+General query-aware isolation is deferred pending a concrete customer, not required
+to implement batches. [Owner questions](../../OWNER_QUESTIONS.md) retain unresolved
+deduplication/erasure decisions. Aliases and general historical-content
 retention remain outside the watch contract. Chunk sizes, fanout, benchmark
 fixtures and engine comparisons are engineering work, not owner decisions.
 

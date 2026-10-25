@@ -57,35 +57,6 @@ keep hash existence and placement private. Do not promise global sharing or
 immediate physical erasure. Charge retained backing to an identified sponsor and
 define key/reference lifetime before enabling cross-domain deduplication.
 
-### DBFS isolation for cross-record invariants
-
-**Requirement and tension.** The transaction design proposes snapshot reads and
-first-committer-wins write conflicts while also promising transactional invariants
-over several records. Disjoint writes based on a shared predicate can violate an
-invariant under snapshot isolation even when neither write conflicts directly.
-This blocks selecting the general transaction contract and its conflict indexes.
-
-**Contracts checked.** The [transaction chapter](wiki/design/part_4_storage/01_transactions_and_consistency.md)
-has no accepted read-set/predicate-conflict rule. The
-[specification index](wiki/spec/README.md) leaves storage unspecified, and the
-[Rust object store](source-rs/platform/libraries/database-objects/README.md) uses
-a per-object expected revision rather than general snapshot transactions or queries.
-
-The [host publication experiment](tools/storage-lab/engines/stress/README.md#preparation-and-publication)
-now checks expected revisions under the engine writer, including whole-batch
-rejection. It protects those explicit object revisions; predicates, independently
-read objects and the general application isolation promise remain unspecified.
-
-**Owner choice.** Require serializable transactions for general multi-record
-operations, or expose weaker isolation with explicit invariant guards/stronger
-transaction modes. The former requires conflict tracking or serialization; the
-latter makes application obligations and retry behavior part of the public API.
-
-**Recommendation (unaccepted).** Target serializable semantics for general
-metadata transactions, initially allowing coarse serialization in the lab.
-Specify bounded transaction sizes and retry outcomes before optimizing concurrency.
-Do not equate copy-on-write, snapshot reads and serializability.
-
 ### Recursive cursor presentation and attribution
 
 **Settled boundary.** The [presentation contract](wiki/spec/human_surface/rendering.md#cursor-presentations)
