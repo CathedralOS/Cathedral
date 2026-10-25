@@ -250,6 +250,7 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     assert stopped in log and ready in log and log.index(stopped) < log.index(ready), log[-2000:]
     assert 'Cathedral matrix: shared parent interaction ready' in log, log[-2000:]
     assert 'Cathedral matrix: shared parent storage ready' in log, log[-2000:]
+    assert 'Cathedral matrix: brokered startup and notification input wake ready' in log, log[-2000:]
     assert 'Cathedral Omega host: shared storage ready' in log, log[-2000:]
     assert 'Cathedral Omega host: shared interaction broker ready' in log, log[-2000:]
     assert 'Cathedral Omega host: notification input wake ready' in log, log[-2000:]

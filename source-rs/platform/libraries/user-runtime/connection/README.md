@@ -122,7 +122,10 @@ retires a peer with pending work. The
 also removes a pipeline with published, queued and app-held replies, then verifies
 fresh setup and rejection of the old incarnation's reply.
 
-The ordinary stock matrix uses `Pipeline<2>` for its parent interaction stream.
+The ordinary stock matrix acquires its wait right and storage pair through
+`ServiceBindings<2>`, then moves the same `Pipeline<2>` into its parent interaction
+dispatcher. Negotiation and request IDs survive that move; it never opens a second
+connection on the same pair after acquisition.
 Its [dispatcher](../../../../distribution/matrix/service/parent/interaction/interaction.rs)
 keeps tagged input and presentation as separate owners; the connection adapter
 binds each owner to the returned transport ID before accepting an application
@@ -135,7 +138,7 @@ only for acquisition, and routes immutable drawing objects through the same shar
 connection. Split selects all eight child service slots before admission,
 including separate broker/data connections for its input producer and masked
 capture viewer. Brokered input hints use separate notification wait rights.
-Control links, positional matrix wakes and explicitly copied fixtures remain
+Control links and explicitly copied fixtures (including their positional wakes) remain
 to migrate. These app adapters remain synchronous; this change
 alone does not make an app process input while its drawing call is pending.
 
@@ -239,7 +242,8 @@ The [service broker](../services/offer.rs) now uses this handoff for brokered ap
 input wakes. [Admission](../matrix/admission/admission.rs) creates the notification
 in place of a wake queue, retaining signal/control while offering only wait authority.
 Omega host, Background, Split and UI consumers use mixed event waits. Positional
-stock-matrix startup and explicit fixtures retain copied wake adapters.
+fixtures retain copied wake adapters; installed stock matrices acquire their wake
+through the same broker with a two-call window.
 Keeping input hints separate from reply hints prevents an unrelated retained call
 from consuming the app's only pending indication that input needs polling.
 

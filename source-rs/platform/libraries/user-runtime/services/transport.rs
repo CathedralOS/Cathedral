@@ -1,13 +1,13 @@
 //! One selected transport owns acquisition and interaction correlation. Optional
 //! service discovery remains lazy; an upgraded binding never falls back to copies.
 use super::*;
-use crate::{connection::Client, memory::Object};
+use crate::{connection::Pipeline, memory::Object};
 enum Acquired {
     Endpoint(crate::connection::Endpoint),
     Notification(crate::connection::NotificationGrant),
 }
 
-impl Services {
+impl<const WIDTH: usize> ServiceBindings<WIDTH> {
     /// Select shared transport before using this supplied broker. Repeated
     /// selection preserves its request sequence and any previously acquired rights.
     pub fn enable_shared(&mut self) -> Result<(), Error> {
@@ -15,7 +15,7 @@ impl Services {
             return Err(Error(abi::PEER_CLOSED as i64));
         }
         if self.shared.is_none() {
-            match Client::connect(self.broker, time::after(300)?) {
+            match Pipeline::connect(self.broker, time::after(300)?) {
                 Ok(client) => self.shared = Some(client),
                 Err(error) => {
                     self.failed = true;
@@ -24,6 +24,21 @@ impl Services {
             }
         }
         Ok(())
+    }
+    /// Finish acquisition and transfer the same negotiated connection to an event
+    /// loop. Already returned service rights remain caller-owned. There is no new
+    /// handshake, request-ID reset or implicit release of those cached aliases.
+    pub fn into_shared_transport(mut self) -> Result<Pipeline<WIDTH>, Error> {
+        if self.failed {
+            return Err(Error(abi::PEER_CLOSED as i64));
+        }
+        match self.shared.take() {
+            Some(client) => Ok(client),
+            None => {
+                self.retire_binding();
+                Err(Error(abi::DENIED as i64))
+            }
+        }
     }
     /// The acquired interaction and broker share this connection. Never construct
     /// a new client from its raw pair or reset IDs between the two operation kinds.

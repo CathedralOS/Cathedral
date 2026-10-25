@@ -27,7 +27,7 @@ The scoped storage fixture also
 exercises both private-root provider connections. See the evidence below. Remaining acceptance:
 
 - Continue the shared service migration through the remaining ordinary service
-  clients, lifecycle/control links, positional matrix wakes and explicitly copied
+  clients, lifecycle/control links and explicitly copied
   fixtures. Independently
   selected control/data streams
   now multiplex; immutable attachments execute through ordinary display and
@@ -257,6 +257,64 @@ not perfect timing indistinguishability or mandatory agent badges. Existing
 default/hidden cursor evidence remains valid for its scope, not the full asset API.
 
 ## Current implementation evidence
+
+Implementation update 2026-10-25: **installed stock matrices acquire their startup
+services**, over `54254685`.
+
+The ordinary user/workspace matrix now starts with the same scoped broker shape
+as its apps. [Parent initialization](source-rs/distribution/matrix/service/parent/parent.rs)
+selects `ServiceBindings<2>`, acquires its notification wait right and storage pair,
+then moves the existing broker pipeline into its input/presentation dispatcher.
+No second handshake or request-ID reset occurs. The default `Services` alias keeps
+ordinary apps at width one; callers explicitly select a larger negotiated window.
+`into_shared_transport` consumes the acquisition owner, preserving its transport
+and leaving previously returned service rights with the caller.
+
+The normal stock image declares `CTHIMP02` broker startup without changing its
+owner-selected resource share. The `desktop-host` image declares `CTHIMP05`: the
+same required resource profile as before, now explicitly brokered. The retired
+positional `CTHIMP04` profile is rejected; there is no legacy image conversion or
+silent reinterpretation. All installed matrices rebuild with the selected entry
+protocol. Host import tests check the new selection, unchanged resource/service
+ceilings, truncated profiles, and refusal of the old profile.
+
+Each matrix's input hint is now independent of RPC reply hints, with only wait
+authority in the child. A fully populated user matrix adds one local wait right
+to the prior 43-handle count (44 of 48); object/page allowances and kernel limits
+are unchanged. Root hardware/display adapters keep their explicit boot wiring.
+Three/five-endpoint copied-wake bundles remain only for explicitly wired fixtures,
+not the installed user or Nested programs.
+
+Verification:
+
+- Default F5 passes independent Notes, switching, protected close/slot reuse,
+  Colors persistence and cold reboot (`desktop/20261025T231805476392Z`).
+- Four nested desktops pass repeated teardown, protected close, saved state and
+  cold reopen (`desktop/20261025T231959803234Z`). The desktop harness requires the
+  matrix broker/wake marker; the nested harness requires one for each workspace
+  and user matrix, not just the outer user.
+- The three-level delayed-interaction fixture passes on fresh and cold boots:
+  input progresses while presentation is held, late replies retain their owners,
+  and recursive close/state restoration remain usable
+  (`desktop/20261025T232136121656Z`).
+- `--matrix-test` and `--matrix-storage-test` pass their explicit positional
+  compositions, recursive attenuation, revocation, replacement and stored-program
+  launch checks. Notes recovery passes both boots with exact text/history/quota
+  (`matrix-database/20261025T232413795127Z`). The recovery provider remains 239/240
+  load pages; the ordinary stock matrix is 88/240.
+- Host tests, userspace checks, stock matrix all-feature Clippy, source layout,
+  formatting, whitespace and local links in changed documents pass. No failed
+  guest run in this slice. This is x86-64 desktop service evidence; the ARM64
+  portability suite was not rerun for this platform-only change.
+- Logs: `build/omega-component/matrix-broker-*.log`.
+
+**Next:** lifecycle/control messages remain copied. Their shared setup must yield
+while newly admitted children acquire upstream services; blocking the parent in
+that handshake would deadlock. Preserve separate control authority, correlated
+LOSS/HEALTH replies, pending custody and cancellation through replacement/death.
+Account for control connections' backing and notification metadata before enabling
+all child slots. Explicit copied fixtures also remain to migrate. The broader
+shared-service outcome is still open; no latency improvement is claimed here.
 
 Implementation update 2026-10-25: **brokered input wakes use notifications**, over
 `b8a943ca`.

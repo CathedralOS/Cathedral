@@ -89,10 +89,11 @@ This prevents ordinary leaf programs from reserving the budget of an entire matr
 The older formats retain owner-offered resource policy for saved-code compatibility.
 
 
-`CTHIMP04` adds three little-endian u64 words after the 144-byte import record:
+`CTHIMP05` adds three little-endian u64 words after the 144-byte import record:
 private pages, reader pages and surface demand. Its channel/descendant header
-matches `CTHIMP03`, but it uses the ordered environment bootstrap currently used
-by the stock matrix. All five resource values are required funding for this form:
+matches `CTHIMP03` and it selects scoped broker startup. The retired positional
+`CTHIMP04` record is rejected, not silently interpreted as a broker. All five
+resource values are required funding for this form:
 stock admission refuses an insufficient owner offer before spawning. Resource
 requests never widen imports, storage scope, CPU authority or executable grants.
 The owner still enforces conserving budgets and may refuse an otherwise valid

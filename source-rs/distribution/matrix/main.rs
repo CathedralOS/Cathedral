@@ -4,7 +4,8 @@
 //! Desktop configuration and lifecycle policy live here, not in platform. The
 //! platform matrix library supplies the local authority machinery. The environment
 //! selects the adapter: provider links make a storage root, four endpoints a display root,
-//! an upstream matrix bundle a nested world. A hosted matrix reads its realm to
+//! a scoped two-endpoint broker a nested world (positional bundles remain in fixtures).
+//! A hosted matrix reads its realm to
 //! become a workspace or a desktop; no argument or build selects that, and the
 //! realm never supplies capabilities or bypasses an enclosing matrix. The
 //! `desktop-host` build only declares the funding a desktop needs when it is
@@ -13,7 +14,12 @@ mod service;
 #[cfg(feature = "bootstrap-probes")]
 mod startup_probe;
 #[cfg(not(feature = "desktop-host"))]
-cathedral_user_runtime::service_imports!(&cathedral_platform_contracts::imports::REQUIRED);
+#[unsafe(no_mangle)]
+#[unsafe(link_section = ".cathedral.imports")]
+pub static CATHEDRAL_IMPORTS: [u8; cathedral_platform_contracts::imports::RECORD_BYTES] =
+    cathedral_platform_contracts::imports::encode_brokered(
+        &cathedral_platform_contracts::imports::REQUIRED,
+    );
 #[cfg(feature = "desktop-host")]
 #[unsafe(no_mangle)]
 #[unsafe(link_section = ".cathedral.imports")]

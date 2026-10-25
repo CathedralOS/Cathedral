@@ -160,7 +160,7 @@ fn profile_requires_its_complete_load_segment_and_preserves_service_requirements
     assert!(from_elf(&bytes).is_err()); // Old segment size cannot contain the extension.
     bytes[96..104].copy_from_slice(&(PROFILE_BYTES as u64).to_le_bytes());
     let declaration = from_elf(&bytes).unwrap().unwrap();
-    assert!(!declaration.brokered);
+    assert!(declaration.brokered);
     assert_eq!(declaration.resources, Some((40, 5)));
     assert_eq!(declaration.profile, Some([320, 512, 24]));
     assert_eq!(
@@ -168,6 +168,9 @@ fn profile_requires_its_complete_load_segment_and_preserves_service_requirements
         Err(Refusal::Missing(STORAGE))
     );
     assert!(from_elf(&bytes[..128 + PROFILE_BYTES - 1]).is_err());
+    bytes[128..136].copy_from_slice(b"CTHIMP04");
+    assert!(from_elf(&bytes).is_err()); // Retired positional profile is not a broker.
+    bytes[128..136].copy_from_slice(&PROFILE_MAGIC.to_le_bytes());
     bytes[137] = 1;
     assert!(from_elf(&bytes).is_err());
 }

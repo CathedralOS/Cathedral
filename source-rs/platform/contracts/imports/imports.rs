@@ -9,7 +9,7 @@ pub const ALL: u64 = INTERACTION | STORAGE;
 pub const SUPPORTED: u64 = ALL | INPUT_PRODUCER | CAPTURE;
 pub const MAX_IMPORTS: usize = 4;
 pub const RECORD_BYTES: usize = 16 + MAX_IMPORTS * 32;
-pub const PROFILE_MAGIC: u64 = u64::from_le_bytes(*b"CTHIMP04");
+pub const PROFILE_MAGIC: u64 = u64::from_le_bytes(*b"CTHIMP05");
 pub const PROFILE_BYTES: usize = RECORD_BYTES + 24;
 pub const FUNDED_MAGIC: u64 = u64::from_le_bytes(*b"CTHIMP03");
 pub const BROKER_MAGIC: u64 = u64::from_le_bytes(*b"CTHIMP02");
@@ -154,7 +154,7 @@ impl Declaration {
             return Err(Refusal::Malformed);
         }
         let mut declaration = Self {
-            brokered: matches!(word(bytes, 0)?, BROKER_MAGIC | FUNDED_MAGIC),
+            brokered: matches!(word(bytes, 0)?, BROKER_MAGIC | FUNDED_MAGIC | PROFILE_MAGIC),
             profile: if word(bytes, 0)? == PROFILE_MAGIC {
                 Some([
                     word(bytes, RECORD_BYTES)?,
@@ -245,7 +245,7 @@ pub const fn encode_funded(
     bytes
 }
 
-/// Explicit resource requirements with the existing ordered matrix entry protocol.
+/// Explicit resource requirements with scoped broker startup.
 /// The host refuses insufficient offers before spawning; this record grants nothing.
 pub const fn encode_profile(
     imports: &[Import],

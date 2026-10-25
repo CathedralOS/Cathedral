@@ -213,7 +213,9 @@ The visible desktop admits children with separate interaction and catalog pairs,
 plus a wake right. [Shared admission](../../platform/libraries/user-runtime/matrix/admission/admission.rs)
 owns channel/notification construction, transfer and rollback. Brokered apps acquire
 a wait-only notification through [Services](../../platform/libraries/user-runtime/services/services.rs);
-positional matrices still use the [runtime bundle](../../platform/libraries/user-runtime/matrix/matrix.rs)
+installed stock matrices use the same broker with a two-call window, moving that
+connection into their input/presentation dispatcher after acquisition. Explicit
+positional fixtures still use the [runtime bundle](../../platform/libraries/user-runtime/matrix/matrix.rs)
 with a copied wake receiver. Child storage forwarding resumes from the service
 loop without occupying the upstream interaction pair, and the matrix yields its
 turn right after forwarding upstream or answering a child, since the scheduler
@@ -360,7 +362,7 @@ policy, never authority. A program the matrix runs from its realm receives its
 own object number above a role byte as its launch argument, so a launcher knows
 which tile it is without a read; the argument conveys no authority either.
 
-Desktop app declarations may request explicit funding via `CTHIMP04`; insufficient
+Desktop app declarations may request explicit funding via `CTHIMP05`; insufficient
 offers refuse before spawn. A failed reservation releases provisional geometry.
 App selection uses [scene publication](service/parent/scene/scene.rs) to stage the old
 and new app surfaces together. A rejected stage/commit is aborted and local

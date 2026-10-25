@@ -44,10 +44,12 @@ processes that establish brokers still require explicit kernel-supplied grants.
 ## Rust bootstrap version 2
 
 `service_bootstrap!` emits the import record `CTHIMP03`, including resource
-ceilings. `CTHIMP02` also selects broker startup; both use the declarations
+ceilings. `CTHIMP02` also selects broker startup; `CTHIMP05` adds required resource
+profiles for installed matrices. All use the declarations
 documented in [imports](../imports/README.md), instead of the old
-three/five-endpoint bundle. The sealed image determines this choice. Old records
-and undeclared legacy images keep their documented startup behavior. Kernel
+three/five-endpoint bundle. The sealed image determines this choice. Supported
+positional records and undeclared fixture images keep their documented startup
+behavior; the retired `CTHIMP04` profile is rejected. Kernel
 admission never interprets either platform record.
 
 The initial environment contains exactly two endpoints: broker request sender,
@@ -151,6 +153,16 @@ The cache does not revive closed/revoked handles; callers still handle operation
 errors. Storage transfer has two wire steps; failure after the first closes that
 received endpoint and teardown reclaims whatever remains at the broker.
 Input-production transfer follows the same two-step custody rule.
+
+`Services` is the ordinary one-call binding. A caller choosing a larger negotiated
+window uses `ServiceBindings<WIDTH>` from the start; acquisition itself still runs
+serially. `into_shared_transport` consumes the bindings and transfers that same
+pipeline into the caller's event loop, preserving its request IDs and negotiated
+window. Previously returned service rights remain caller-owned. The stock matrix
+uses this with width two: acquire its wait right and storage pair, then move the
+broker into its existing input/presentation dispatcher. It does not reconnect or
+reset correlation after acquisition. Installed stock matrices declare broker
+startup; positional bundles remain only in explicitly wired fixture compositions.
 
 [The independent matrix proof](../../../distribution/lab/matrix-composition/README.md)
 exercises acquisition, refusal, repeat requests, replacement and interrupted

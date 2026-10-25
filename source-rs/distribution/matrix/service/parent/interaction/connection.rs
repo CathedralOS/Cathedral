@@ -29,6 +29,10 @@ pub(in super::super) enum Connection {
 impl Connection {
     pub fn shared(pair: Pair) -> Result<Self, Error> {
         let client = Pipeline::connect(pair, time::after(300)?)?;
+        Self::from_shared(client)
+    }
+    /// Broker acquisition and steady-state calls share one ID sequence/window.
+    pub fn from_shared(client: Pipeline<2>) -> Result<Self, Error> {
         cathedral_user_runtime::write(b"Cathedral matrix: shared parent interaction ready\n")?;
         Ok(Self::Shared {
             client: RefCell::new(client),

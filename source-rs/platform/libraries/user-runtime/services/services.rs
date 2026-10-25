@@ -14,9 +14,11 @@ pub struct Interaction {
     pub pair: Pair,
     pub wake: Wake,
 }
-pub struct Services {
+/// Ordinary apps serialize calls; owners may choose a larger negotiated window.
+pub type Services = ServiceBindings<1>;
+pub struct ServiceBindings<const WIDTH: usize> {
     broker: Pair,
-    shared: Option<crate::connection::Client>,
+    shared: Option<crate::connection::Pipeline<WIDTH>>,
     interaction: Option<Interaction>,
     storage: Option<Pair>,
     storage_absent: bool,
@@ -27,7 +29,7 @@ pub struct Services {
     failed: bool,
     brokered: bool,
 }
-impl Services {
+impl<const WIDTH: usize> ServiceBindings<WIDTH> {
     pub fn load(environment: &Environment) -> Result<Self, Error> {
         if environment.len() == 2 {
             return Ok(Self {

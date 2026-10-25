@@ -146,7 +146,8 @@ impl Parent {
             self.storage_links[0] = Some(storage::Provider::at(0)?);
             self.storage_links[1] = Some(storage::Provider::at(1)?);
         }
-        self.separate_storage = environment.len() == 5 || (storage_root && environment.len() == 4);
+        self.separate_storage =
+            matches!(environment.len(), 2 | 5) || (storage_root && environment.len() == 4);
         self.upstream = matches!(environment.len(), 2 | 3 | 5);
         let pair = || {
             (
@@ -154,8 +155,8 @@ impl Parent {
                 environment.endpoint(1).unwrap(),
             )
         };
-        self.interaction = (self.upstream && environment.len() != 5)
-            .then(|| interaction::Connection::Copied(pair()));
+        self.interaction =
+            (environment.len() == 3).then(|| interaction::Connection::Copied(pair()));
         self.display = if environment.len() == 4 {
             Some(display::Display::connect(pair())?)
         } else {
@@ -164,7 +165,21 @@ impl Parent {
         self.wake = (environment.len() == 3).then(|| {
             cathedral_user_runtime::services::Wake::Copied(environment.endpoint(2).unwrap())
         });
-        if environment.len() == 5 {
+        if environment.len() == 2 {
+            let mut services =
+                cathedral_user_runtime::services::ServiceBindings::<2>::load(environment)?;
+            services.enable_shared()?;
+            let interaction = services.interaction(1, 1)?;
+            let storage = services.storage(1, 1)?;
+            self.wake = Some(interaction.wake);
+            self.interaction = Some(interaction::Connection::from_shared(
+                services.into_shared_transport()?,
+            )?);
+            self.storage_upstream = Some(storage::Upstream::connect(storage)?);
+            cathedral_user_runtime::write(
+                b"Cathedral matrix: brokered startup and notification input wake ready\n",
+            )?;
+        } else if environment.len() == 5 {
             let connections = cathedral_user_runtime::matrix::Connections::load(environment)?;
             self.interaction = Some(interaction::Connection::shared(connections.interaction)?);
             self.storage_upstream = Some(storage::Upstream::connect(connections.storage)?);
