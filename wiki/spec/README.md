@@ -35,6 +35,7 @@ subject. A current specification may precede implementation.
 | Components and matrices: policy ownership and supplied authority | [Components and matrices](execution/components_and_matrices.md) | Partial | Partial |
 | Hardware separation and exclusion of PCC-based single address space | [Program isolation](execution/isolation.md) | Partial | Partial |
 | Scoped coordination and checked shared-memory IPC | [Coordination and IPC](communication/ipc.md) | Partial | Partial |
+| Capability-controlled signals, waits and combined signal-and-wait | [Notifications and parking](execution/notifications.md) | Partial | None |
 | Replaceable desktop programs and protected outer recovery chrome | [Compositor and seat](human_surface/compositor_and_seat.md) | Partial | Partial |
 | Scoped input delivery, representations, interaction targets and mappings | [Input delivery and interaction](human_surface/input.md) | Partial | Partial |
 | Logical input channels, stable identity and scoped discovery | [Input channels and discovery](human_surface/input_channels.md) | Partial | None |

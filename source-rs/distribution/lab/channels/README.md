@@ -1,5 +1,14 @@
 # Ordinary application channels
 
+This page records the **existing copied-channel lab**, not the selected production
+transport. The accepted [IPC](../../../../wiki/spec/communication/ipc.md) and
+[notification](../../../../wiki/spec/execution/notifications.md) contracts put
+payload protocols in shared-memory libraries and retain kernel authority transfer,
+mapping and parking. The [migration outcome](../../../../TASKS_RUST.md#shared-memory-ipc-and-notification-outcome)
+must preserve the custody/authority evidence below without promoting these copied
+queue syscalls into a second permanent transport. No runtime change is implied by
+this documentation update.
+
 Run from the repository root:
 
 ```powershell
@@ -202,8 +211,10 @@ An accepted move survives the sending process's death, including when the grant
 is still in escrow. Receiver death, bootstrap revocation, or replacement discards
 unaccepted attachments. A failed delivery does not resurrect the sender's old name.
 Process death closes all remaining owned and reserved grants; the last two closed
-ends release the dynamic channel slot. These rules are lab choices; the production
-transport/revocation question remains in [OWNER_QUESTIONS.md](../../../../OWNER_QUESTIONS.md).
+ends release the dynamic channel slot. These are existing lab transaction rules,
+not the production notification contract. Migration must preserve exact grant
+custody and rejection behavior while moving payload commit/discard policy into
+the owning library protocol; notification closure alone cannot undo accepted grants.
 
 ## Bounds and remaining work
 

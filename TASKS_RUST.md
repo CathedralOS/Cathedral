@@ -1,5 +1,46 @@
 # Rust reference OS: tasks and handoff
 
+## Shared-memory IPC and notification outcome
+
+**Open; accepted architecture, not an owner blocker.** Carry the
+[IPC contract](wiki/spec/communication/ipc.md) and
+[notification contract](wiki/spec/execution/notifications.md) into ordinary service
+use, replacing kernel-copied application message queues rather than adding a
+permanent second transport. This is implementation work across the Rust reference
+and its Omega-facing boundary; it is not an upstream-library translation task.
+
+Start at `source-rs/kernel/core/ipc/ipc.rs`, the wait entrance
+`source-rs/kernel/core/user_tasks/execution/waits/waits.rs`, shared backing in
+`source-rs/kernel/core/user_tasks/memory/memory.rs`, and the platform runtime
+`source-rs/platform/libraries/user-runtime/server/server.rs`. Preserve the active
+reply-dispatch/launch work; its correlation and cancellation rules remain service
+requirements, not a reason to freeze the copied-channel ABI.
+
+Remaining acceptance:
+
+- Implement funded notification objects with separate wait/signal rights,
+  authorized recipient installation, coalescing pending signals, wake-one/all,
+  and signal-and-wait with distinguishable pre/post-signal failures. No PID-based
+  ambient wake, shared-page authorization or kernel-written per-request wake ID.
+- Implement reusable authorized shared backing and platform-owned publication,
+  custody and request/reply protocols. Keep mapping isolation, hostile-writer
+  validation and live-reader lifetime guarantees; waking proves none of them.
+- Demonstrate real cross-process ping-pong, including early reply/next-request,
+  signal/register races, coalescing, closure/cancel/deadline races, revoked wait
+  rights, denied foreign handles, stale incarnations and retained funding through
+  death/transfer/final release. A successful wake is not message completion.
+- Migrate the ordinary desktop's service path and Omega host bindings, preserve
+  nested input/rendering, launch cancellation and storage behavior, and retire
+  copied payload syscall consumers once migrated. Keep grant-installation checks
+  and existing custody evidence; do not reinterpret old queue tests as new proof.
+
+Done means the normal service path uses shared-memory data plus notifications,
+not only a standalone lab. Pin focused host/race controls and real guest evidence
+for that path and its invalid-authority controls. The docs ratification runs no
+new OS code and establishes no execution or performance result.
+
+## Current implementation evidence
+
 Implementation update 2026-10-24: **tagged input progresses beside asynchronous
 presentation**, over `73cb81f5`. Artifact directory stamps below are UTC.
 
@@ -65,7 +106,6 @@ commit/abort, cancellation custody, and a coherent scene/focus visibility bounda
 The transport prerequisite is now in place; those launch steps themselves are
 still synchronous. The earlier intermittent partial-key observation remains open;
 this milestone is not a latency-bound or complete input-loss fix.
-
 
 Implementation update 2026-10-24: **ordinary launch storage binding yields to
 the service loop**, over `4c884a94`. Artifact directory stamps below are UTC.
@@ -1739,8 +1779,11 @@ authority over established peers. Services enforce ongoing permission/cancellati
 in their own protocols; the first participant gains no implicit power to revoke
 peer mappings or independent rights. See the
 [accepted boundary](wiki/spec/communication/ipc.md#established-connections-and-service-authority).
-Connection closure must preserve live memory-view obligations. Exact queued-message,
-pending-transfer and blocked-wait outcomes still need transport contracts.
+Connection closure must preserve live memory-view obligations. The 2026-10-24
+[notification contract](wiki/spec/execution/notifications.md) now settles kernel
+wait outcomes; library protocols own message publication, cancellation and grant
+acceptance. Follow the [implementation outcome](#shared-memory-ipc-and-notification-outcome),
+not the superseded copied-transport owner question.
 
 Owner clarification 2026-10-23: a failed or terminated matrix takes down its
 entire owned subtree. No surviving descendant adoption; restart admits new
@@ -1842,7 +1885,8 @@ interrupted streams still require scoped cancellation and held-input cleanup.
 Select-only versus select-and-deliver is local policy. Router-owned events are
 cancelled on interruption; published IPC events are not assumed retractable.
 The old topology and queued-focus questions are superseded; cursor presentation
-handoff and general IPC commit/closure remain open in OWNER_QUESTIONS.md.
+handoff remains open in OWNER_QUESTIONS.md. IPC wait closure is now specified;
+application commit/cancellation belongs to each protocol.
 Follow-up evidence should cover independent groups, denied cross-group control,
 click recursion, held-input switches, capture independence, stopped upstream
 forwarding with independent local input, and safe route retirement. This is a
@@ -1868,11 +1912,12 @@ Queued coordination slice after the current input milestone: add funded coordina
 broker and prove simultaneous first registration, rejected identity spoofing,
 constraint combinations, accepted/refused introductions and dead-holder cleanup.
 Exercise duplicate Nested launches through F5 while unrelated apps keep running.
-Build on existing endpoint transfer first; reusable shared-memory mailbox access
-needs its checked/admitted provider and lifecycle before exposing stable leases.
-Do not label the present Rust copied channels or sealed attachments as that
-complete implementation. Path rename semantics, transport commit/closure rules
-and general capability revocation remain outside the accepted partial contract.
+Reuse the existing grant-transfer and custody checks while moving transport to
+the [shared-memory and notification outcome](#shared-memory-ipc-and-notification-outcome).
+Reusable mailbox access needs its checked/admitted provider and lifecycle before
+exposing stable leases. Present copied channels and sealed attachments are not
+that complete implementation. Path rename semantics remain separate; notification
+closure and actual-enforcement revocation are no longer owner blockers.
 
 Updated 2026-10-22 (local date). Current milestone: **the hop on hardware, and
 global shared leaves**, on baseline `f8bab679` (where a forwarded request
@@ -7672,8 +7717,10 @@ authority into an idle child; admission publishes fresh local names after load.
 The matrix desktop uses this path recursively. This adopts copying for the lab,
 not a production revocation contract: changing the launch's staging does not revoke
 an independently installed grant, and selected dynamic code remains executable
-by descendants within supplied process/resource budgets. General IPC transfer,
-revocation and production sponsorship remain the choices above. Idle-child
+by descendants within supplied process/resource budgets. Executable-grant lifetime
+remains a separate contract; local IPC notification withdrawal and retained-resource
+accounting now follow the [accepted notification rules](wiki/spec/execution/notifications.md).
+Idle-child
 CPU ceiling assignment preserves ancestor enforcement and debt; it confers no
 priority or permission to charge an unrelated service's work to a caller.
 

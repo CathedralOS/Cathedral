@@ -5,7 +5,7 @@
 | Contract status | Current |
 | Specification coverage | Partial |
 | Implementation coverage | Partial |
-| Last reviewed | 2026-10-23 |
+| Last reviewed | 2026-10-24 |
 
 ## Scope and ownership
 
@@ -22,6 +22,13 @@ process isolation, endpoint and memory authority, mapping lifetime and resource
 accounting; it need not interpret application names, filesystem paths or singleton
 policy. The owner accepted this supported operation on 2026-10-23. This page
 does not claim that the complete service is already implemented.
+
+The owner ratified the transport split on 2026-10-24: shared memory is the local
+IPC data path; capability-controlled [notifications and parking](../execution/notifications.md)
+supply wakeups. Queues, mailboxes, message copying, request/reply and backpressure
+are library protocols, not additional kernel message-delivery transports. The
+kernel still owns authorized grant installation, mapping and scheduling; passing
+rights may require kernel mediation even when payload bytes do not.
 
 ## Scoped participation and identity
 
@@ -82,6 +89,9 @@ and admit a competing first participant while its previous holder remains active
 Coordination across separate hosts requires an explicitly shared authority;
 independent parent-local registries do not imply global exclusivity.
 
+Here a mailbox is a bounded library queue over shared storage plus notification
+rights. Registration does not require a kernel-owned application-message queue.
+
 ## Established connections and service authority
 
 The owner accepted this boundary on 2026-10-23: coordination controls
@@ -107,15 +117,21 @@ Callers are authenticated through established communication rights, not a sender
 number written in a payload. Unrestricted mutually untrusted writers cannot use
 separate slots in one shared writable page as an isolation boundary. Direct mapped
 paths need separate backing at the hardware protection granularity, or the checked
-access discipline described below. Kernel-mediated authenticated endpoints need
-not allocate a shared page per participant. The kernel still enforces isolation,
-rights, resource accounting and safe mapping lifetime beneath these protocols.
+access discipline described below. Notification handles authenticate authority to
+signal their object, not the author of arbitrary bytes in a shared page. Libraries
+must arrange their authorized writers and connection identities accordingly. The
+kernel still enforces isolation, rights, resource accounting and safe mapping
+lifetime beneath these protocols.
 
 Closing a connection does not silently invalidate a live safe-language memory
 view. Existing custody and backing obligations must be discharged by release or
-safe teardown. This acceptance does not choose the exact transport outcome for
-queued messages, pending capability transfers or blocked operations on closure;
-those require explicit commit and wakeup rules before their APIs are frozen.
+safe teardown. Notification closure completes its waits according to the
+[notification contract](../execution/notifications.md#closure-cancellation-and-revocation).
+Whether an application drains or discards published messages, retracts an offer,
+or finishes a request is that library's explicit contract, not a universal kernel
+receive rule. Publication, authority acceptance and service completion are distinct
+commit points. Pending grant handoffs must retain or reclaim every right; closing
+communication does not undo an independently accepted grant or completed effect.
 
 ## Shared regions and capacity
 
@@ -163,6 +179,13 @@ an unrestricted alias cannot coexist with a claimed stable payload lease.
 This permits a checked shared-memory hot path without remapping each message.
 Notification and parking do not themselves establish publication or custody.
 
+Cross-process atomics operate on the same physical backing with compatible
+mapping attributes, alignment, widths and release/acquire semantics; virtual
+addresses may differ. Shared layouts normally use offsets or indices, not another
+process's pointers. An implementation using a process-private lock fallback does
+not provide the required interprocess atomic operation. The selected protocol must
+handle crashes and lifetime explicitly, even among cooperative peers.
+
 A hostile unrestricted writer cannot establish stability merely by supplying
 well-formed bytes, claiming release, or matching an executable identity. Such a
 boundary requires a private copy followed by validation, or enforced withdrawal
@@ -177,6 +200,8 @@ or peer progress. Failure and reclamation must preserve outstanding obligations.
   Its current services are interaction and storage; coordination is not wired in.
 - [Ordinary app channels](../../../source-rs/distribution/lab/channels/README.md)
   exercise channel creation, endpoint transfer and initial handoff in the Rust lab.
+  Their kernel-copied message queues are migration scaffolding, not the selected
+  production transport.
 - [Page objects](../../../source-rs/kernel/contracts/memory.rs) provide private
   writable storage and sealed, transferable read rights. They do not implement
   the reusable writable shared-region protocol described above.
@@ -186,7 +211,8 @@ or peer progress. Failure and reclamation must preserve outstanding obligations.
 The service wire format, concrete matching and registration APIs, crash-recovery
 implementation, shared-buffer layout and Omega provider implementations remain
 engineering work. The precise path-identity behavior needs specification before
-its implementation is frozen. This contract does not select shared memory as the
-only production transport, ratify the copied-message syscall ABI, or settle
-transport closure/commit semantics and general capability revocation. Those
-remaining choices are tracked in [owner questions](../../../OWNER_QUESTIONS.md).
+its implementation is frozen. The kernel-copied message ABI is not ratified.
+Notifications have a separate accepted contract; individual application protocols
+still owe their publication, cancellation, grant-acceptance and recovery rules.
+Remote networking and durable capability representation are outside this local
+IPC settlement. See the [implementation outcome](../../../TASKS_RUST.md#shared-memory-ipc-and-notification-outcome).

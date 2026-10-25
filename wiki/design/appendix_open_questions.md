@@ -10,7 +10,7 @@ Cross-cutting unknowns that do not belong to a single chapter. Each chapter has 
 
 - **Single address space vs. hardware isolation.** Theseus-style language-level isolation buys zero-copy IPC and clean hot swap, but interacts with untrusted code, the driver model, and the kernel's trusted base. Recurs across [[kernel_architecture]], [[memory_and_persistence]], [[ipc_and_service_invocation]], [[driver_model]].
 - **Runtime representation of a held capability.** What is it, together with its serialized, at-rest, and over-the-wire forms, such that it stays unforgeable and revocable across IPC, reboot, and migration? Drives [[capability_lifecycle]], [[ipc_and_service_invocation]], [[distributed_boundary]], [[updates_and_hot_swap]].
-- **Eager vs. lazy revocation.** Whether revoking a capability revokes its delegated sub-tree by default. The cost model is unknown ([[capability_model]], [[capability_lifecycle]]).
+- **Durable and distributed grant representation.** Local withdrawal follows the [accepted enforcement rule](../spec/execution/notifications.md#closure-cancellation-and-revocation), not a universal eager/lazy policy. Durable delegation graphs and cross-host leases still need concrete representation and failure contracts ([[capability_lifecycle]], [[distributed_boundary]]).
 - **Replaceable-realization representation.** The semantic unit is a selected provider realization plus its owned code/state/resource closure, distinct from package, boundary, task, and principal. Cathedral still must choose its binding-era algorithm, live-era bound, replacement/disposition receipts, mapping-cohort manifest, stack-provision strategy, and migration/cancellation interfaces ([[component_model]], [[updates_and_hot_swap]]).
 
 ## Proof & Language

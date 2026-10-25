@@ -39,28 +39,43 @@ Capability<Accelerator::Budget(npu_share)>
 
 This folds resource governance into the one authority model ([[capability_model]]). The scheduler is not a separate subsystem with its own rules. It is the enforcement arm of resource capabilities.
 
-### Tasks and the one wait primitive
+### Tasks and the notification facility
 
-The schedulable unit is the task: a running state machine. An instance is one or more tasks. The scheduler sees tasks, while budgets and accounting attach to the instance and component.
+The schedulable unit is the task. An instance may own several tasks. Budgets and
+accounting attach to the executing program and its enclosing ownership ceilings.
 
-A runnable task may be timer-preempted and resumed at any instruction. When it must wait, the scheduler offers one wait primitive: park the task until a condition is signaled, then unpark it. A condition is one of three things:
+The accepted [notification contract](../../spec/execution/notifications.md) owns
+parking: a funded kernel object has separate wait and signal rights. Local and
+cross-process callers use the same service. Neither a PID nor a shared page
+authorizes waking another task.
 
-- a shared word reaches a value (the producer/consumer case from [[ipc_and_service_invocation]]),
-- a channel changes state (a message arrived, or space freed),
-- a clock reaches a time ([[time_and_clocks]]).
+A task checks its library predicate, then waits using the library's lost-wakeup
+protocol. Kernel wait registration atomically consumes a remembered signal or
+parks; an early signal cannot disappear between registration and sleep. The
+kernel does not interpret arbitrary shared words, locks or channel layouts.
+Signal-one and signal-all operate on registered waiters; queue counts and
+consumer selection belong to libraries. A wake makes a task runnable, not
+necessarily the next task to execute, and does not prove the predicate still true.
 
-Everything that blocks reduces to this. A sleep or a timer is parking on a clock condition. A blocking receive is parking on a channel condition. A device interrupt is the device unparking a driver task ([[driver_model]]). There is no separate timer subsystem and no separate blocking-IPC subsystem. They are one primitive with different conditions. The adaptive default is spin-then-park: spin briefly to catch the common case with no scheduler round-trip, then park if the condition has not arrived.
+The same facility supplies signal, wait and combined signal-and-wait. The combined
+operation needs only two authorized notification handles: payload publication
+precedes it in userspace. It does not accept an IPC page pointer or publish a new
+wake identifier. The [request/reply example](../../spec/execution/notifications.md#combined-signal-and-wait)
+shows a client and server alternating work without an intervening syscall to
+advertise each wait.
 
-Park returns a **wake reason** rather than just resuming, because the thing a task waits on can also die. A parked task must wake on more than its happy condition, or it sleeps forever on a dead peer:
+Wait completion distinguishes signal, object closure, authority loss, cancellation
+and deadline. These are not application-success results. Cancellation ends a wait,
+not the request already signalled. A peer's death affects a wait only through an
+explicit lifecycle relationship, not because any holder of a shared region died.
+Dropping one handle is not closing an independently held object.
 
-- **Signaled.** The condition was met: word reached, message arrived, time came. The normal case.
-- **PeerDied.** A holder of the thing being waited on is gone. This is the one liveness fact only the OS can supply, sourced from the grant arena ([[capability_lifecycle]]). The waited-on region or endpoint is an object with tracked capability-holders, and a holder's death drops its arena entry, which fires this wake to anyone parked on it. A blocking receive on a dead producer returns `PeerDied`, not an eternal sleep.
-- **Revoked.** The capability backing the waited-on object was revoked (the mapped-grant teardown, [[capability_lifecycle]]). The straggler wakes here rather than faulting where it can.
-- **Timeout.** A deadline on the park elapsed.
-
-Liveness is not a separate subsystem, and it is not a header polled out of the shared page, which a hostile peer could forge. It is the arena and the scheduler meeting at the wake. The arena knows who holds a region. The scheduler delivers death as one reason among the normal ones. A spinning task that never parks reads the same fact from an OS-owned, peer-read-only status word instead: push when parked, pull when spinning.
-
-Ownership removes accidental shared mutation, not all synchronization. Most Cathedral state stays single-owner, but shared protocol state may use atomics and library `Mutex` values under Omega's sanctioned sharing rules. A contended acquisition is written `block mutex.lock()`, or uses a suspend-based lock when the interface promises parking, so both the wait and the held-guard analysis are visible. At the scheduler boundary it still reduces to parking on a word, channel, or clock condition. Priority inheritance and wait-cycle proofs remain real concerns; ownership does not wish them away.
+Timer/deadline and admitted device-event producers join the scheduler's wake
+machinery without making mailbox or RPC protocols kernel responsibilities.
+Spinning versus parking is a library/implementation policy, not a requirement to
+add an independent communication mechanism. Shared protocol state may use atomics
+or library mutexes; their data access and lock ownership are separate from wake
+authority. Priority inversion and deadlock remain protocol concerns.
 
 ### Preemption, suspension, and semantic safe points
 
@@ -105,7 +120,10 @@ Declared intent is checked where Omega has the corresponding theorem and measure
 
 Preemption needs no source cooperation. The hardware timer is always armed, and Cathedral's checked context-switch path can stop native or foreign execution at an arbitrary instruction. A forked compiler cannot remove fairness by omitting polls. Memory safety remains the non-negotiable admission condition for unwalled SAS execution, since timer preemption does not contain a forged pointer. Semantic safe points solve a different problem, structured lifecycle response. Their presence and maximum distance are checked and reported only when a contract promises such a response.
 
-Budgets reclaim on crash by the generation bump. A budget is an arena capability. Instance death bumps the generations of its arena entries, invalidating every capability it held, budgets included, by lazy revocation. There is no leak window. Reclamation is reachability-based, the same as grants and borrows.
+Death invalidates the departed instance's authority, but an arena generation
+change is not physical reclamation. Retained resources stay charged until their
+actual custody ends; independently accepted grants do not disappear to refund
+their creator. See [notification funding](../../spec/execution/notifications.md#funding-and-implementation-acceptance).
 
 Global energy and thermal as a true shared budget, with arbitration under contention, belongs to [[power_management]].
 
@@ -129,7 +147,7 @@ Core partitioning alone does not bound shared-cache, memory-bus, interconnect, o
 - **Per-component budgets & accounting.** Every instance ([[component_model]]) is a billable entity, and the OS can always answer "what is this spending."
 - **Heterogeneous compute.** The CPU is one of several engines. The NPU, GPU, and DPU are schedulable, isolated, budgeted resources, multiplexed like any shared device ([[driver_model]]). An agent's inference ([[agents_as_principals]]) is scheduled and metered on the NPU the same way CPU time is on the CPU.
 - **Deadline & realtime-ish scheduling.** `realtime_audio` and `interactive_ui` need bounded latency without the hard real-time guarantees most apps cannot honor.
-- **Park/unpark on a condition.** The one blocking primitive: a task parks until a word, channel, or clock condition is signaled, and the signaler unparks it. Park returns a wake reason (`Signaled`, `PeerDied`, `Revoked`, `Timeout`), so a parked task wakes on the death or revocation of what it waits on, not only its happy condition. `PeerDied` and `Revoked` are sourced from the grant arena's region membership ([[capability_lifecycle]]), the one liveness fact only the OS can supply. Spin-then-park is the default policy. Pure spinning is reserved for dedicated cores and reads the same death fact from an OS-owned read-only status word ([[ipc_and_service_invocation]], [[time_and_clocks]]).
+- **Capability-controlled parking.** Use the [notification facility](../../spec/execution/notifications.md): signal, wait and signal-and-wait, with remembered signals and explicit wait/signal rights. Libraries own shared-word and queue predicates; closure, cancellation, deadline and authority loss resolve waits without implying application completion. Peer lifecycle coupling must be explicit.
 - **Side-channel isolation class.** A domain carries a declared `IsolationClass` (`baseline → flush → partition → exclusive`, [[kernel_architecture]]), and the scheduler is its enforcement arm, the same role it plays for budgets. At each context switch it reads the pair of levels and does the temporal defense: exit-flush the outgoing domain's cache footprint if it was hardened (PRIME+PROBE), and entry-flush branch predictors before an incoming hardened domain runs (Spectre-v2). `baseline↔baseline` flushes nothing. For `partition` and `exclusive` it makes the spatial placement call. The unit is the physical core, whose SMT threads share L1 and predictors, so `exclusive` gives a hardened domain the whole core and `partition` co-locates only equally-trusted work, plus L3 partitioning. The level is raised statically (a component field) or per-span (an ownership-scoped guard). Declaring above `baseline` is gated at spawn by capability, and a missing grant fails admission and never silently downgrades.
 - **Priority inversion.** A high-priority component can block on a low-priority one holding a resource. Inheritance or donation must be modeled, not accidental.
 - **Backpressure propagation.** When a downstream service is budget-saturated, pressure must flow upstream as a typed signal the caller can act on ([[error_model_and_recovery]], [[ipc_and_service_invocation]]).

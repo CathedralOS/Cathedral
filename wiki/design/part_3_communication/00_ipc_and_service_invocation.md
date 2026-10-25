@@ -1,143 +1,168 @@
 # Chapter 00: IPC & Service Invocation
 
-The current [coordination and IPC specification](../../spec/communication/ipc.md)
-accepts scoped introductions and protocol-controlled shared memory. This design
-chapter's stronger claim of one exclusive transport, and general pending-operation
-revocation policy, are not ratified by that partial contract. Opaque boundary data
-requires checked protocol or admitted-provider evidence before it can establish
-stable shared access.
+The accepted contracts are [coordination and shared-memory IPC](../../spec/communication/ipc.md)
+and [notifications and parking](../../spec/execution/notifications.md). The owner
+ratified the transport split on 2026-10-24. This chapter explains that split; it
+does not freeze syscall spelling, a ring layout or a service wire ABI.
 
-The accepted contract also assigns ongoing service permission and cancellation
-to userspace protocols. Coordination controls introductions; it does not gain
-authority to revoke established peers' independent rights or live memory views.
-Exact transport closure and pending-delivery outcomes remain unspecified.
+## Two responsibilities, one communication model
 
-> One IPC primitive: a capability-scoped shared memory region. Every named pattern (pipes, sockets, queues, pub/sub, RPC) is a library over it. Notification and blocking belong to the scheduler; protocol semantics are a library layer, while placed-access safety is mandatory.
+Shared memory carries the data. Capability-controlled kernel notifications make
+waiters runnable. Queues, mailboxes, pipes, request/reply, publication, backpressure
+and cancellation are library protocols over those mechanisms, not a growing list
+of kernel transports.
 
-## The Legacy Model
+| Owner | Responsibility |
+| --- | --- |
+| Kernel / mapping provider | Authorized backing, mappings, grants, isolation, notification objects, parking and resource accounting |
+| Platform libraries | Shared layouts, atomic publication, slot custody, queues, request/reply and connection lifecycle |
+| Services / distribution | Accepted requests, ongoing permission checks, cancellation policy, quotas and recovery |
 
-Unix offers many half-overlapping IPC mechanisms: pipes, FIFOs, Unix domain sockets, shared memory, signals, message queues, `ioctl`, and a userspace bus layer (dbus-ish) bolted on top. Every one of them, at the bottom, treats IPC as byte movement, and each is a separate kernel mechanism with its own setup, lifetime, and quirks. Two things go wrong at once. The mechanism count explodes, with N incompatible ways to move bytes. And the semantics (schema, versioning, call/reply, auth, backpressure) are reinvented by hand over each one, incompatibly. Authority rides along ambiently, if at all: the receiver trusts the sender's uid.
+The existing Rust kernel-copied channels are laboratory scaffolding to migrate,
+not a second accepted production transport. This does not ban copying: a library
+can copy from a shared buffer into private storage, and must do so when that is
+the chosen way to obtain stable data from a hostile writer. Kernel authority
+transfer remains mediated; arbitrary application payload delivery does not.
 
-## The Cathedral Model
+## Establish once, exchange repeatedly
 
-Cathedral has one IPC mechanism: a **capability-scoped shared memory region**. The OS maps it once, gated by a capability to the endpoint. It does not hand either peer an unrestricted `&mut [u8]`. The mapping yields an Extent loan with an admitted offset-keyed profile, and the protocol package places a validated `LayoutPlan + AccessPlan` view over it. Atomic control words use exact declared granularity. Slot payloads become writable or readable only under the protocol's ownership handoff. After placement, the hot path is accessor operations over shared memory with no kernel intervention: the producer claims and writes a slot, publishes it with a release store, and the consumer acquires and reads it. Pipes, sockets, queues, pub/sub, and RPC are libraries over this, not kernel features, so the mechanism count stops growing.
+A connection establishes authorized shared backing and the necessary notification
+rights. Mapping the same physical backing at different virtual addresses is fine.
+The layout uses offsets or indices where another process's pointer would not work.
 
-Communication is not an OS concept. A shared page and atomics are a complete message-passing mechanism on their own. The OS is involved only at the edges:
+A notification is a kernel-created object, with separately granted wait and
+signal rights. Each recipient receives its own authorized handle through grant
+acceptance. Writing the sender's handle number into shared memory grants nothing.
+Possessing a page, matching a PID or guessing an object number does not authorize
+waking another process.
 
-- **The region is mapped once**, because only the OS can map the same physical pages into two protection domains, and it gates that on a capability.
-- **The OS leases the lifetime of the region**, so a dead peer's memory is reclaimed instead of leaked.
+Setup normally creates these objects once per connection. The per-message path
+does not generate a new wakeup ID. A library may use a dedicated per-request
+object when independent lifetime is useful; it is not required by parking.
 
-The map is the one declared `boundary` in the whole mechanism, in the sense of the [ch19](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md) keyword and not just the discipline. Only the kernel can map the same frames into two protection domains, so the map is a capability-gated `MemoryMap` boundary service. Calling it contributes that service identity to the reach row. There is no global `memory_map` keyword.
+Conceptual request/reply, not literal Omega API syntax:
 
-```omega
-// The map is a capability-scoped, kernel-provided boundary service.
-boundary trait MemoryMap {
-    machine grant_region(channel: Channel, slots: usize) -> SharedRegion<Untrusted>
-    requires channel in Channel::Mappable
-}
-
-// What it hands back is access, not truth: a sea of bytes another principal
-// can mutate. The hot path is plain memory; no syscall, no kernel.
-let ring: SharedRegion<Untrusted> = channel.grant_region(slots: 1024);
-ring.publish(slot);   // body write, then release store on the index
+```text
+Client:                              Server:
+                                     wait(request_ready)
+repeat:                              repeat:
+    write and publish request            acquire and consume request
+    signal_and_wait(                      do the requested work
+        request_ready, reply_ready)       write and publish reply
+    acquire and consume reply            signal_and_wait(
+                                             reply_ready, request_ready)
 ```
 
-The boundary proves one thing: that the crossing was legitimate and these frames are yours to see. It proves nothing about the contents. Everything above it is ordinary Omega proof imposed incrementally on the bytes. The membrane passes bytes, not proofs, and the typed layer described below rebuilds the proofs on this side.
+The client holds signal(request_ready) and wait(reply_ready); the server holds
+the complementary rights. Each name denotes the same underlying object at both
+ends, not necessarily the same process-local number.
 
-Notification and blocking are not IPC concerns. As long as a consumer is running it just reads the region. The OS is involved only when a consumer would rather sleep than spin. Waking a sleeping consumer is a scheduling operation (park/unpark on a condition, the same wait primitive timers and interrupts use), which belongs to the scheduler. See [[scheduler_and_resources]] for parking, wakeups, and the spin-versus-sleep policy. This chapter owns the data path; the scheduler owns the wait path.
+Signal-and-wait takes the two handles, not the shared page or an out-pointer for
+a new identifier. Publication happens before the call. A signal that arrives
+before registration remains pending, so the server can reply immediately without
+stranding the client. Coalescing is allowed: queue state records actual work.
+After waking, recheck the protocol predicate.
 
-The primitive is unopinionated: C, C++, Rust, and Omega all see the same `memcpy`-able region. People build their own framing over whatever we expose, so the floor presumes no paradigm. It still beats POSIX `shm`. The region is capability-scoped, not an ambient `/dev/shm` name anyone can guess; its lifetime is leased; and its mappings are MMU-enforced.
+Standalone signal lets a sender continue other work. Standalone wait supplies the
+server's first wait. Combining them reduces crossings when nothing belongs
+between them; it does not require a separate IPC model or immediate CPU handoff.
 
-### Shared-extent lifetime is a lease
+## Publication and custody
 
-The OS owns the physical frames, and the peers hold **leases** on the region, not ownership. A lease is a revocable, liveness-tied grant of access: the region lives only while some lease is valid. It ends when the last holder is gone (every capability dropped, including by process death), when a holder with revoke authority tears it down, or when a timed lease expires without renewal. At that point the OS unmaps the region from anyone still holding it and frees the frames. A straggler that still had it mapped faults on next access, which is the safe outcome rather than a silent use-after-free. The rights differ: an ordinary use-holder can only drop its own handle, while only a revoke-capable holder can reclaim the region out from under others ([[capability_lifecycle]]). A crashed peer cannot leak the region, because its life was never the peer's to leak.
+A reusable mailbox can reserve a slot, write it, publish it, acquire a read lease
+and release it for reuse. Publication ends incompatible write custody before the
+peer can read. A notification neither establishes those facts nor permits an
+exclusive mutable borrow to survive an incompatible handoff.
 
-### Handing off a buffer: trust decides the enforcer
+The library supplies release/acquire ordering and a race-free predicate/wait
+protocol. Shared atomics require compatible mapping attributes, alignment and
+access widths; a hidden process-private lock fallback is not sufficient across
+processes. Hardware sharing does not solve peer crashes, queue capacity or
+backing reclamation.
 
-"Give this buffer to the peer" has two implementations, picked by trust, not by syntax:
+One-to-one, many-to-one mailbox, work distribution and broadcast are library
+disciplines. No particular ring, slot-count, actor model or queue layout is a
+kernel requirement. Signal-one/all support wake selection; designated consumers
+can have distinct notifications. Neither wake operation promises FIFO fairness.
 
-- **Both ends Omega-checked:** a type-level ownership move. The sender statically loses access. No MMU operation, single-writer by construction.
-- **A foreign or untrusted peer:** an MMU-enforced page grant/revoke. Grant the region exclusively to the peer and unmap it from the sender, so a buggy or hostile sender faults on its stale pointer instead of corrupting anyone. It costs a TLB shootdown and needs no cooperation from the other side.
+## Trust and stable contents
 
-### Typed safety is an opt-in layer
+Both peers being written in Omega does not establish that their independently
+admitted providers, mappings and protocols agree. A checked handoff must cover
+all relevant aliases and both sides' custody; otherwise the selected provider
+must explicitly admit the missing fact.
 
-A safe language can wrap the raw shared extent as a typed, single-writer channel: ordinary numbered data, a selected layout/codec policy, capabilities passed as values, and a declared lineage policy. This is structure imposed on the sea of bytes. Each field read is a refinement check that re-earns a proof the boundary did not provide: in range, valid tag, and snapshot-then-validate so a concurrent writer cannot change the value between check and use. Between two checked peers the compiler already knows the writer's discipline, so it elides the checks, and the channel is zero-copy and race-free by construction. At a boundary with C the checks stay, validating incoming bytes on ingress. This is how you build safety over the primitive, not a tax the kernel imposes.
+A peer retaining unrestricted write access can change bytes after validation.
+Use private-copy-then-validation, or enforced withdrawal of write access with
+the required coherence acknowledgement, before claiming a stable payload.
+Copying payloads in a library does not reintroduce kernel message queues.
 
-```omega
-data PlaceOrder {
-    #1 item_id: u64;
-    #2 quantity: u32;
-    #3 idempotency_key: Uuid;   // replay safety in the schema
-}
+For pixel streaming, a contract may permit changing contents or tearing where
+those values cannot control unsafe memory access. That is a weaker payload
+contract, not permission to claim an immutable read lease over changing bytes.
+Control lengths, offsets and tags still require a sound validation protocol.
 
-boundary trait OrderService {
-    machine place(req: PlaceOrder, pay: Capability<Payment::Charge>) -> OrderId;
-    machine watch(id: OrderId, updates: &mut UpdateChannel);
-}
+## Lifetime, failure and authority
 
-// The protocol package selects a transport layout/codec for PlaceOrder.
-```
+Closing a notification wakes its waiters; cancellation and deadline end the
+particular wait. Neither action undoes a committed signal or application work.
+A combined-call result distinguishes pre-signal rejection from failure of the
+subsequent wait. Libraries define draining, discard, request identity, stale-reply
+handling and whether a timed-out operation may still complete.
 
-Because the typed layer lowers to the same region whether the peer is local or remote, a service can move from local to remote without the caller rewriting its security model ([[distributed_boundary]]). The capability to call `place` is a held value; the payment authority is passed in the call, not ambient.
+Peer death is an authenticated lifecycle fact only when that relationship is
+explicitly established. One arbitrary holder dying does not close everyone else's
+notification or mapping. Notification rights and memory rights are independent.
 
-The cost: for foreign-language components the OS tracks authority and lifetime at region and endpoint granularity, not message granularity. Message-level authority flow is available only to components that use the typed layer. That is a gradient, not a gate.
+A revoking owner must actually control the action it promises to stop. Invalidating
+a handle can stop future admitted calls, but cannot by itself withdraw a live
+mapping or erase already copied data. Mapping withdrawal needs the actual hardware
+transition and safe-language custody handling. A graceful drain and a hard revoke
+are different contracts, selected by the authority owner, not universal timing
+policies attached to every capability.
 
-### Trust coordination is type-enforced, not a new memory category
+Retained backing and wait registrations stay funded until released. Death or
+handle transfer does not erase charges; a funding transfer needs authorized
+acceptance. Live independent readers cannot be invalidated merely to refund an
+account. The mapping contract governs safe teardown and any explicit revocable
+mapping; ordinary connection closure is not an excuse to invalidate a live borrow.
 
-Two facts answer the untrusted-shared-memory worry.
+## Reaching a service
 
-Between two proved-Omega peers, IPC is safe by construction. It is a protection-domain boundary (separate components), not a trust boundary. The compiler checks both sides' discipline, so the move and borrow hand-offs above are provably race-free and zero-copy. This reads as unsafe the way a syscall into the kernel reads as unsafe, and is safe for the same reason: the other side is Omega too. `SharedRegion<Untrusted>` exists only for a foreign, non-Omega peer.
+A service connection bundles authorized memory and notification roles with its
+library protocol. The kernel knows the mechanisms, not the service's message
+schema, application name or singleton policy.
 
-At a foreign boundary, no new memory category is needed, but validation requires stable bytes. Untrusted bytes arrive with no proven invariants. A value may only use facts that have been established, so control indices, lengths, tags, and embedded references must be validated before use. Against a peer that retains a writable mapping, a protocol lease does not make those bytes stable: the peer may change them after validation. Cathedral must copy control bytes into private memory before validating, or revoke or remap the peer's write permission and complete TLB/coherence acknowledgement first. Protocol-only leases suffice only among compliant or proved peers. `SharedRegion<Untrusted>` is therefore not a language memory category. It is a package over an authorized mapped extent, ordinary byte/data layouts, and either private-copy validation or hardware-backed write revocation. Empty invariants alone do not close TOCTOU while a hostile writer remains mapped.
+Scoped brokers introduce peers under supplied authority. A host can forward
+attenuated rights or supply its own service. Once a connection is accepted, the
+broker does not acquire continuing control over independently held rights.
+A filtering service still has to execute its policy: shared memory does not erase
+that hop or permit exposing unrelated ancestor data.
 
-The consequence is the validate-control / zero-copy-payload split. Snapshot and validate the small control data (indices, sizes, offsets), bounds-checked against the granted allocation. Read the large payload zero-copy within those validated bounds. Where the consumer makes no memory-safety decision on payload values (a compositor blitting pixels), a concurrent adversarial write is benign tearing, so the payload stays zero-copy even from a hostile writer. For a "this buffer is yours" hand-off, zero-copy comes from MMU ownership transfer, never a defensive copy: unmap the writer, which needs no cooperation, and a hostile writer faults on its stale pointer.
+Passing a capability requires authorized installation and acceptance in the
+recipient's authority table. Numeric payload bits are designation, not authority.
+A library handoff must distinguish publication, recipient acceptance and service
+completion, retain custody on partial failure, and not imply that closing the
+notification retracts an already accepted right.
 
-### Local invocation is remote invocation with the same contract
+Hardware isolation remains the [program isolation contract](../../spec/execution/isolation.md).
+This design does not revive PCC-based single-address-space invocation. Remote
+networking adapts service contracts separately; a local shared region does not
+itself become a network transport.
 
-Local invocation is remote invocation with the same contract, not a hidden fast path. Every capability call carries the remote-grade contract: it may suspend through an ordinary call, returns a fallible result, and may take unbounded time under a caller-set deadline. A suspension-capable direct call carries Omega's required source acknowledgement. That marker exposes the selected contract but does not create a future or change invocation semantics. This is the inverse of transparent RPC (Waldo, *A Note on Distributed Computing*). Rather than hide remote's hardness behind a local-looking API, the local call exposes it, so a caller written against the contract works whether the provider is local, cross-wall, remote, or synthetic. A timed-out call carries the `Unknown` outcome disposition (it may have happened; reconcile via idempotency key), distinct from `Rejected` (it did not happen; safe to retry) ([[error_model_and_recovery]]).
+## Implementation boundary
 
-### Reaching a service: endpoints, and there is no global name
-
-A service is reached through a capability to an **endpoint**. The kernel knows only endpoints, generic objects a message is delivered to, created by a `create_endpoint` syscall; it never knows services. There is no global identifier and no name registry. An endpoint is anonymous, and the only way to reach it is to hold a capability to it: designation by unforgeable reference, not by name, for the same reason there are no environment variables and no registry. The first capability propagates by delegation from whoever spawned the service: the spawner receives the endpoint capability and hands it down. A holder that needs a service it was not given finds it through a **broker** it holds a capability to, a context-scoped resolver its host populated ("give me a PDF handler" yields a capability to a provider), never a flat global lookup ([[service_activation]]).
-
-The cross-Matrix story follows from this. The Matrix boundary is enforced at grant time, not call time. By the time you hold an endpoint capability, your host has already chosen to **forward** it (a membrane onto the real, external endpoint, revocable and attenuable) or to **synthesize** it (an endpoint the host implements itself). At invocation the kernel routes to the endpoint the capability names. There is no per-call "may I cross into the parent Matrix" check, because holding the capability is the authorization. Compositing is the synthesized, nested case taken to its limit: every Matrix is its own compositor for its children, presenting its composited surface up to its parent's compositor, so a draw routes one hop up at each level by design ([[windowing_and_compositor]]).
-
-Whether that routing is a kernel-mediated trap or a direct call is the substrate split from [[capability_model]]. Between two proved-Omega peers in one address space the capability is a checked reference and the invocation is a direct call with no kernel in the path. Across a wall it is a `{slot, generation}` handle and the invocation traps to the core, which checks the generation and rights and delivers the opaque message to the endpoint. Same call site; placement picks the path.
-
-## Concerns & Design Space
-
-- **Cardinalities are ring disciplines, not separate mechanisms.** One ring backs them all. The cardinality is how each side advances its index: a plain bump for a sole owner, or an atomic claim (plus a per-slot publish flag, since claimed slots fill out of order) for many. The primitive MUST expose the atomic claim-a-slot / claim-an-item hooks, or the multi-sided cardinalities are unbuildable on top and foreclosed at the floor.
-- **The blessed cardinality set.** Named for legibility over SPSC/MPSC: `one_to_one` (private streams and replies; the cheapest, with no claim on either side), `many_to_one` (the actor **mailbox**; atomic-claim writes, sole reader), `one_to_many_distribute` (a work pool; each item to exactly one worker), and `broadcast` (each item to every reader). Distribute-versus-broadcast is the axis SPSC/MPSC omits. `one_to_one` can drop below a ring entirely: a single cell, a single-use oneshot, or a capacity-0 rendezvous.
-- **The mailbox is `many_to_one`, and that is the actor.** A single consumer processing one message at a time is what lets its `self` state mutate lock-free, since only one task ever touches it. This is the blessed concurrency shape: producers post variants of one sum, and the consumer does one wait plus one transition (the no-select model, [Omega ch18](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_18_concurrency.md)). Request/reply either rides the shared mailbox with a correlation token (to discard stale or late replies) or uses a dedicated **oneshot**, where the channel's identity is the correlation. The oneshot is ring-free and token-free, at the cost of a channel per outstanding request.
-- **No userspace async runtime.** The executor and reactor that frameworks like tokio reimplement in userspace, because the host scheduler is blind to cheap tasks, are the OS here. An admitted start/scheduling provider starts ordinary machines, and the wait provider parks their fixed stacks on IO and events. Omega has no `async` machine species and no `Future` wrapper. A direct call whose contract may suspend is acknowledged with `suspend`; a call that may stop the current thread is acknowledged with `block`. Those markers expose wait sites without creating a second function type ([Omega ch18](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_18_concurrency.md)). Channels and supervisors remain ordinary library data.
-- **Extent/mapping lifetime.** Leases tie a shared mapped extent to peer liveness. In-flight capability tickets die at redemption after revocation, but mapped bytes require a provider protocol: unmap, cross-core TLB shootdown and acknowledgement, then reuse. A stale untrusted pointer faults only after that hardware transition completes.
-- **Grant/revoke cost.** Page grant/revoke costs TLB shootdowns. Decide when copying a small payload is cheaper than a remap.
-- **Capability passing.** Transferring a capability is a kernel insert into the receiver's table, checked against the receiver's manifest ceiling at insert and recording the parent edge, with the handle bits riding the region as ordinary payload ([[capability_model]], [[capability_lifecycle]]). The bits alone convey nothing; only the insert moves authority.
-- **Typed-layer semantics.** Call shapes, versioned protocols, replay/idempotency, and deadlock detection over the wait-for graph are the library's concern, built on the primitive. Backpressure, deadlines, and cancellation cross into the scheduler ([[scheduler_and_resources]]).
-- **Zero value.** The channel/ring data may have a meaningful empty zero. An authority-bearing mapped extent or live endpoint claim is establishment-gated; optional handles use an `Empty | Live` sum. Zero-fill never mints a mapping, grant, lease, or silent message sink ([[omega_substrate]]).
-
-## Key Questions
-
-- What is the exact minimal kernel surface (`grant_region`, `set_permissions`, `revoke`, `send_capability`), and is any of those itself a library? The set looks irreducible; refine it in implementation.
-- What shared-ring layout does the substrate bless, given that C must use it with a plain struct and offsets? This is a library-level interop ABI, not a kernel concern. The ring is a stdlib structure over the raw region, and blessing one layout is only so C and Omega agree on offsets.
-
-## Omega Leverage
-
-- **The extent/mapping and lease managers are themselves Omega**, so the small part of IPC that must be trusted is checked code, not hand-audited C.
-- **Ordinary numbered data and selected layout/codec policies** form the typed layer's schema for local and remote transport alike. Each channel declares its compatibility window and unknown-member behavior. See Omega [Wire Protocols](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_14_traits.md#wire-protocols).
-- **Capabilities as values** mean authority travels in the payload as a typed argument, not as an ambient sender identity. See Omega [Capabilities, Reach, And Boundaries](https://github.com/CathedralOS/Omega/blob/main/wiki/language_guide/chapter_19_capabilities_effects_boundaries.md).
-- **Ownership and borrowing** give the zero-copy local hand-off: a moved buffer is statically unreachable by the sender.
-
-## Open Questions
-
-- Can single-writer safety be more than convention when a foreign peer holds a read/write mapping, short of grant/revoke per message?
-- How much of the local fast path can be proved equivalent to the remote path rather than tested?
-- What is the exact set of trust-coordinating primitives: the Omega↔Omega move/borrow set, and the foreign-boundary `<Untrusted>`-region plus page-grant/transfer set? This is enumeration, not a hard problem.
+The [implementation outcome](../../../TASKS_RUST.md#shared-memory-ipc-and-notification-outcome)
+owns the migration from copied queues through ordinary service integration.
+Exact ABI shapes, shared layouts, grant-transfer transactions and fast-path
+choices are engineering work under the accepted contracts, not reasons to add
+another transport. Coordinated application registration also still needs its
+identity and recovery implementation.
 
 ## Related
-- [[scheduler_and_resources]] — parking, wakeups, and the spin-versus-sleep wait path.
-- [[capability_model]] — the endpoint and region are capabilities; passing one is a graph edge.
-- [[capability_lifecycle]] — region leases and buffer hand-off are lifecycle events.
-- [[memory_and_persistence]] — shared regions, ownership move, and page grant/revoke.
-- [[kernel_architecture]] — single address space makes the local hand-off a pointer move with no MMU in the path.
-- [[distributed_boundary]] — the same primitive when the peer escapes the machine.
+
+- [[scheduler_and_resources]] — parking, wake selection and execution accounting.
+- [[capability_lifecycle]] — grants, acceptance and effective withdrawal.
+- [[memory_and_persistence]] — backing, mapping and reclamation.
+- [[service_activation]] — scoped introductions and service admission.
+- [[distributed_boundary]] — crossing hosts rather than protection domains.
