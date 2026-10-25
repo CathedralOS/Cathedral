@@ -23,7 +23,10 @@ to install one scoped broker connection. No static peer links remain. It tests l
 requests, input confined to the third region, revocation and connection replacement.
 Replacement cannot inherit the old grant, and unrelated peers keep their views.
 The relays have no launch or device authority and no peer links. Sixteen busy
-spawn failures and sixteen partial allocation failures preserve channel charges.
+spawn failures and sixteen partial allocation failures preserve object charges
+and notification handle counts. With object funding spare, a full notification
+handle table separately forces wake creation to fail after channel allocation;
+sixteen attempts unwind exactly, and subsequent admissions still work.
 Sixteen replacements reuse the middle slot without changing siblings. Killing
 the matrix collects its whole subtree and returns the loans for a fresh matrix.
 
@@ -34,8 +37,12 @@ storage provider. Unknown/ungranted services, incompatible versions and forged
 identity fields refuse. Repeat wire acquisition cannot duplicate a transferred
 right; repeat runtime calls return the cached binding. Sixteen cycles cancel a
 child before any acquisition or halfway through storage transfer, then replace
-it without consuming its siblings' resources. The matrix has thirteen channels:
-eleven for the three children and two spare for partial-allocation rollback.
+it without consuming its siblings' resources. Peers assert that the supplied wake
+is a notification, cannot signal or close it, and gain exactly one local wait right
+despite repeated cached acquisition. The matrix has thirteen transport allowances:
+eleven for the three children's channels/notifications and two spare for partial
+allocation rollback. These peers keep copied broker payloads as an explicit
+fixture; ordinary F5 uses shared broker payloads with the same wait-right handoff.
 
 The lab's owner probe envelope routes to a child with the high 32-bit word of
 the opcode (slot + 1); the low word remains its requested operation. This is

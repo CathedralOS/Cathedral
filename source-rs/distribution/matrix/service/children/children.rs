@@ -22,7 +22,7 @@ struct Owned {
     // Some(true): activated once, even if subsequently closed/revoked. Preserve
     // this state so interaction cannot become a fallback production endpoint.
     producer_started: Option<bool>,
-    notify: Handle,
+    notify: cathedral_user_runtime::services::WakeSource,
 }
 /// What the owner lets a child's launch put into a slot: the child's pages,
 /// channels, descendant slots, CPU ceiling and surfaces, and where it goes.
@@ -123,7 +123,7 @@ impl Children {
             if world.take_notification(slot)
                 && let Some(child) = child
             {
-                match child.notify.send(&[]) {
+                match child.notify.signal() {
                     Ok(()) => (),
                     // A queued hint already guarantees a wake. Death is handled
                     // through the data connection and structured child lifetime.

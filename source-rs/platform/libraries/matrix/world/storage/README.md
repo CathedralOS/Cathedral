@@ -116,12 +116,13 @@ grants; regranting the ancestor never implicitly revives descendants. Each
 request checks its revision at every hop, including requests already in flight
 when authority changes. Connection replacement requires explicit grants. Proofs
 are discarded with their binding on revocation, regrant or upstream changes.
-The visible desktop supplies interaction send/reply and a wake receiver, plus
-catalog send/reply only when storage is bound. [Declared imports](../../../../contracts/imports/README.md)
-are resolved before store-based admission: Notes can omit storage entirely,
-receiving three endpoints and no realm binding; required storage refuses launch
-when withheld. The [named runtime connections](../../../user-runtime/matrix/matrix.rs)
-expose those roles without service discovery, and the
+The visible desktop supplies interaction and a wake right, plus catalog send/reply
+only when storage is bound. [Declared imports](../../../../contracts/imports/README.md)
+are resolved before store-based admission: Notes can omit storage and its realm
+binding entirely; required storage refuses launch when withheld. Brokered apps
+acquire these through [Services](../../../user-runtime/services/services.rs), with
+a notification wait right for input; positional matrices retain the
+[named runtime bundle](../../../user-runtime/matrix/matrix.rs). The
 [runtime scope](../../../user-runtime/storage.rs) performs a child's
 scoped exchanges and reports its realm. Authority is bound to the catalog
 connection's incarnation, independently of the interaction connection. Neither

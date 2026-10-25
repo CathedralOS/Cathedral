@@ -42,11 +42,7 @@ impl Parent {
             return Ok(());
         }
         assert!(self.can_poll());
-        let notified = match self.wake.unwrap().receive_until(&mut [0; 64], time::now()?) {
-            Ok(_) => true,
-            Err(Error(code)) if code == abi::TIMED_OUT as i64 => false,
-            Err(error) => return Err(error),
-        };
+        let notified = self.wake.unwrap().take()?;
         if !self.refresh_due && !notified {
             return Ok(());
         }

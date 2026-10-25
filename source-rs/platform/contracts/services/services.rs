@@ -1,16 +1,16 @@
 // Scoped service acquisition. The authenticated endpoint selects the grant ceiling.
-// Version 1 reuses the broker pair for interaction and transfers other endpoints.
+// Version 2 hands interaction a notification wait right; other parts move endpoints.
 // Coordination is accepted in wiki/spec/communication/ipc.md, but has no wire
 // operations in this version. These constants do not implement its protocol.
 use crate::{imports, matrix::Packet};
 pub const ACQUIRE: u64 = 0x53525601;
-pub const VERSION: u64 = 1;
+pub const VERSION: u64 = 2;
 pub const UNAVAILABLE: u64 = 0x53520001;
 pub const INCOMPATIBLE: u64 = 0x53520002;
 pub const INVALID: u64 = 0x53520003;
 pub const TAKEN: u64 = 0x53520004;
 
-/// Select a preallocated endpoint: interaction wake, storage send/receive,
+/// Select a preallocated right: interaction wait, storage send/receive,
 /// input-producer send/receive, capture send/receive. Selection grants no scope.
 /// No caller identity or desired scope comes from the request bytes.
 pub fn select(granted: u64, words: Packet) -> Result<usize, u64> {

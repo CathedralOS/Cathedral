@@ -69,9 +69,10 @@ impl Children {
         child.task.wait()?;
         child.close_connections()
     }
-    /// Repeated failures must return both endpoint slots and channel charges.
+    /// Repeated failures return endpoint/notification handles and object charges.
     pub fn prove_rollback(&self, expected: u64) -> Result<(), Error> {
         let before = resources::budget()?;
+        let notifications = cathedral_user_runtime::notification::budget()?;
         if expected == abi::NO_MEMORY {
             assert_eq!(before.limits.channels - before.used.channels, 2);
         }
@@ -80,7 +81,59 @@ impl Children {
                 matches!(admission::spawn_brokered(Launch::at(0)?, 0, &[], cathedral_platform_contracts::imports::INTERACTION), Err(Error(code)) if code == expected as i64)
             );
             assert_eq!(resources::budget()?, before);
+            assert_eq!(
+                cathedral_user_runtime::notification::budget()?,
+                notifications
+            );
+        }
+        if expected == abi::BUSY {
+            prove_wake_capacity()?;
         }
         Ok(())
     }
+}
+
+/// Spare object funding cannot compensate for exhausted local notification metadata.
+/// Admission must unwind the channels allocated before it tries to create the wake.
+fn prove_wake_capacity() -> Result<(), Error> {
+    use cathedral_user_runtime::{
+        ipc,
+        notification::{self, Notification},
+    };
+    let before = resources::budget()?;
+    let notifications = notification::budget()?;
+    let (send, receive) = ipc::channel()?;
+    let rights = Notification::create()?;
+    let mut copies = [None; abi::NOTIFY_HANDLES];
+    let available = notification::budget()?;
+    for copy in copies
+        .iter_mut()
+        .take((available[2] - available[3]) as usize)
+    {
+        rights[0].delegate(send, b"fill")?;
+        *copy = Notification::try_accept(receive, &mut [0; 64])?.1;
+        assert!(copy.is_some());
+    }
+    let full = notification::budget()?;
+    assert_eq!(full[2], full[3]);
+    let funded = resources::budget()?;
+    assert!(funded.limits.channels - funded.used.channels >= 3);
+    for _ in 0..16 {
+        assert!(
+            matches!(admission::spawn_brokered(Launch::at(0)?, 0, &[], cathedral_platform_contracts::imports::INTERACTION), Err(Error(code)) if code == abi::NO_MEMORY as i64)
+        );
+        assert_eq!(resources::budget()?, funded);
+        assert_eq!(notification::budget()?, full);
+    }
+    for right in copies.into_iter().flatten().chain(rights) {
+        right.release()?;
+    }
+    send.close()?;
+    receive.close()?;
+    assert_eq!(resources::budget()?, before);
+    assert_eq!(notification::budget()?, notifications);
+    cathedral_user_runtime::write(
+        b"Cathedral matrix admission: notification capacity rollback passed\n",
+    )?;
+    Ok(())
 }

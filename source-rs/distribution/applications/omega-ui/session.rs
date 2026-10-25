@@ -5,13 +5,7 @@ use cathedral_kernel_contracts::user as abi;
 use cathedral_matrix::reception::Pointers;
 use cathedral_omega_ui::{Presenter, Stats, Ui};
 use cathedral_platform_contracts::matrix as wire;
-use cathedral_user_runtime::{
-    Error,
-    ipc::{self, Handle},
-    memory::Private,
-    services::Services,
-    time,
-};
+use cathedral_user_runtime::{Error, ipc::Handle, memory::Private, services::Services, time};
 const WIDTH: i32 = 360;
 const HEIGHT: i32 = 336;
 fn origin(view: wire::Packet) -> (usize, usize) {
@@ -125,12 +119,15 @@ pub fn run(mut services: Services) -> u64 {
             continue;
         }
         let mut bytes = [0; 64];
-        match ipc::wait_many(
-            &[connection.wake, control.0],
+        match cathedral_user_runtime::event::wait(
+            &[
+                connection.wake.interest(),
+                cathedral_user_runtime::event::Interest::Ipc(control.0),
+            ],
             time::after(if stats.animating { 1 } else { 100 }).unwrap(),
         ) {
             Ok(0) => {
-                connection.wake.receive(&mut bytes).unwrap();
+                connection.wake.take().unwrap();
             }
             Ok(_) => {
                 let length = control.0.receive(&mut bytes).unwrap();

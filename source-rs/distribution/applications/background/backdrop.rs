@@ -3,7 +3,8 @@
 use cathedral_platform_contracts::matrix as wire;
 use cathedral_user_runtime::{
     Error,
-    ipc::{self, Handle},
+    event::{self, Interest},
+    ipc::Handle,
     services::Services,
     time,
 };
@@ -54,9 +55,12 @@ pub fn run(mut services: Services) -> Result<(), Error> {
                 return Err(Error(reply[0] as i64));
             }
         }
-        match ipc::wait_many(&[control.0, interaction.wake], time::after(100)?) {
+        match event::wait(
+            &[Interest::Ipc(control.0), interaction.wake.interest()],
+            time::after(100)?,
+        ) {
             Ok(1) => {
-                interaction.wake.receive_until(&mut [0; 64], time::now()?)?;
+                interaction.wake.take()?;
             }
             Ok(_) => {
                 let mut bytes = [0; 64];

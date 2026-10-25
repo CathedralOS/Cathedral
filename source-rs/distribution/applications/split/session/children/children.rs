@@ -89,7 +89,7 @@ impl Children {
                     .is_some_and(|s| s.interaction_ready())
                 && world.take_notification(slot)
             {
-                match child.notify.send(&wire::encode([0; 8])) {
+                match child.notify.signal() {
                     Ok(()) => (),
                     Err(Error(c))
                         if c == abi::WOULD_BLOCK as i64 || c == abi::PEER_CLOSED as i64 => {}

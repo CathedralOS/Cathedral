@@ -4,12 +4,7 @@
 use cathedral_desktop_matrix_contracts::matrix as wire;
 use cathedral_kernel_contracts::user as abi;
 use cathedral_platform_contracts::input;
-use cathedral_user_runtime::{
-    Error,
-    ipc::{self, Handle},
-    task::Environment,
-    time,
-};
+use cathedral_user_runtime::{Error, ipc::Handle, task::Environment, time};
 pub type Pair = (Handle, Handle);
 use cathedral_chooser::policy::{self, Action, Operation};
 pub use policy::{ENTRIES, NEW, USER_ENTRIES};
@@ -216,9 +211,15 @@ pub fn run(
             continue;
         }
         let mut bytes = [0; 64];
-        match ipc::wait_many(&[connections.wake, control.0], time::after(100).unwrap()) {
+        match cathedral_user_runtime::event::wait(
+            &[
+                connections.wake.interest(),
+                cathedral_user_runtime::event::Interest::Ipc(control.0),
+            ],
+            time::after(100).unwrap(),
+        ) {
             Ok(0) => {
-                connections.wake.receive(&mut bytes).unwrap();
+                connections.wake.take().unwrap();
             }
             Ok(_) => {
                 // Settings drafts participate in ordinary close/loss reporting.

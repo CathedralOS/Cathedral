@@ -13,7 +13,7 @@ pub struct Admitted {
     pub task: Child,
     pub control: Pair,
     pub data: Pair,
-    pub notify: Handle,
+    pub notify: crate::services::WakeSource,
     pub storage: Option<Pair>,
     pub producer: Option<Pair>,
     pub capture: Option<Pair>,
@@ -58,7 +58,8 @@ fn spawn_mode(
     let producer =
         granted.is_some_and(|g| g & cathedral_platform_contracts::imports::INPUT_PRODUCER != 0);
     let capture = granted.is_some_and(|g| g & cathedral_platform_contracts::imports::CAPTURE != 0);
-    let connections = connections::Connections::create(storage, producer, capture)?;
+    let connections =
+        connections::Connections::create(storage, producer, capture, granted.is_some())?;
     let child = match target.spawn_tree(
         argument,
         if granted.is_some() {
@@ -87,8 +88,9 @@ fn spawn_mode(
         }
     };
     Ok(Admitted {
-        services: granted
-            .map(|granted| crate::services::Offer::new(granted, connections.deferred())),
+        services: granted.map(|granted| {
+            crate::services::Offer::new(granted, connections.deferred(), connections.wake.unwrap())
+        }),
         task: child,
         control,
         data: connections.data,
@@ -106,7 +108,8 @@ impl Admitted {
         if let Some(services) = self.services {
             services.close()?;
         }
-        for endpoint in [self.control.0, self.control.1, self.notify] {
+        self.notify.close()?;
+        for endpoint in [self.control.0, self.control.1] {
             endpoint.close()?;
         }
         // Server removal may already retire selected shared slots. Endpoint

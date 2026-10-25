@@ -2,6 +2,11 @@
 //! service discovery remains lazy; an upgraded binding never falls back to copies.
 use super::*;
 use crate::{connection::Client, memory::Object};
+enum Acquired {
+    Endpoint(crate::connection::Endpoint),
+    Notification(crate::connection::NotificationGrant),
+}
+
 impl Services {
     /// Select shared transport before using this supplied broker. Repeated
     /// selection preserves its request sequence and any previously acquired rights.
@@ -60,6 +65,12 @@ impl Services {
             let _ = self.broker.1.close();
         }
     }
+    pub(super) fn acquire_wake(&mut self, minimum: u64, maximum: u64) -> Result<Wake, Error> {
+        match self.acquire_right(imports::INTERACTION, minimum, maximum, 0, true)? {
+            Acquired::Notification(right) => Ok(Wake::Notification(right.into_handle())),
+            Acquired::Endpoint(_) => unreachable!("typed acquisition"),
+        }
+    }
     pub(super) fn acquire(
         &mut self,
         contract: u64,
@@ -67,15 +78,33 @@ impl Services {
         maximum: u64,
         part: u64,
     ) -> Result<Handle, Error> {
+        match self.acquire_right(contract, minimum, maximum, part, false)? {
+            Acquired::Endpoint(right) => Ok(right.into_handle()),
+            Acquired::Notification(_) => unreachable!("typed acquisition"),
+        }
+    }
+    fn acquire_right(
+        &mut self,
+        contract: u64,
+        minimum: u64,
+        maximum: u64,
+        part: u64,
+        notification: bool,
+    ) -> Result<Acquired, Error> {
         if self.failed {
             return Err(Error(abi::PEER_CLOSED as i64));
         }
         let mut refused = false;
         let result = (|| {
             let (bytes, len, endpoint) = if let Some(client) = &mut self.shared {
-                client.call_retained_endpoint(&matrix::encode(wire::request(
-                    contract, minimum, maximum, part,
-                )))?
+                let request = matrix::encode(wire::request(contract, minimum, maximum, part));
+                if notification {
+                    let (bytes, len, right) = client.call_retained_notification(&request)?;
+                    (bytes, len, right.map(Acquired::Notification))
+                } else {
+                    let (bytes, len, right) = client.call_retained_endpoint(&request)?;
+                    (bytes, len, right.map(Acquired::Endpoint))
+                }
             } else {
                 self.broker.0.send(&matrix::encode(wire::request(
                     contract, minimum, maximum, part,
@@ -90,15 +119,29 @@ impl Services {
                     Ok(_) => (),
                 }
                 let mut bytes = [0; 64];
-                let (len, endpoint) = self.broker.1.receive_with(&mut bytes)?;
-                (
-                    bytes,
-                    len,
-                    endpoint.map(crate::connection::Endpoint::received),
-                )
+                if notification {
+                    let (len, right) =
+                        crate::notification::Notification::accept(self.broker.1, &mut bytes)?;
+                    (
+                        bytes,
+                        len,
+                        right
+                            .map(crate::connection::NotificationGrant::received)
+                            .map(Acquired::Notification),
+                    )
+                } else {
+                    let (len, right) = self.broker.1.receive_with(&mut bytes)?;
+                    (
+                        bytes,
+                        len,
+                        right
+                            .map(crate::connection::Endpoint::received)
+                            .map(Acquired::Endpoint),
+                    )
+                }
             };
             match (matrix::decode(&bytes[..len]), endpoint) {
-                (Some([0, 1, 0, 0, 0, 0, 0, 0]), Some(endpoint)) => Ok(endpoint.into_handle()),
+                (Some([0, 1, 0, 0, 0, 0, 0, 0]), Some(endpoint)) => Ok(endpoint),
                 (Some([code, 0, 0, 0, 0, 0, 0, 0]), None) if code != 0 => {
                     refused = true;
                     Err(Error(code as i64))

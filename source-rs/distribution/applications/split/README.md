@@ -138,8 +138,9 @@ storage, producer broker/data and capture broker/data. Each producer/viewer owns
 one broker Client and a separate service Client, preserving request IDs and
 immutable image custody through later replies. Capture dispatch temporarily uses
 the viewer's world slot, then restores the broker slot before replying; transport
-correlation never uses the remapped world slot. Control links and input wake hints
-retain copied streams. Removal retires shared slots before closing remaining child
+correlation never uses the remapped world slot. Input wake hints use independent
+notifications: the owner retains signal/control and the child acquires only wait
+authority. Control links retain copied streams. Removal retires shared slots before closing remaining child
 rights; only BAD_HANDLE for the exact, never-reused endpoint names is harmless.
 
 Scope restrictions are folded only after upstream containment checks; a shared

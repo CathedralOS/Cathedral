@@ -11,12 +11,29 @@ pub fn run(environment: cathedral_user_runtime::task::Environment, mode: u64) ->
     assert_eq!(environment.len(), 2);
     assert!(bindings.is_brokered());
     let before = cathedral_user_runtime::resources::budget().unwrap();
+    let notification_before = cathedral_user_runtime::notification::budget().unwrap();
     let parent = (
         environment.endpoint(0).unwrap(),
         environment.endpoint(1).unwrap(),
     );
     if mode != 4 {
         let interaction = bindings.interaction(1, 1).unwrap();
+        let cathedral_user_runtime::services::Wake::Notification(wait) = interaction.wake else {
+            panic!("brokered interaction must supply a notification");
+        };
+        assert_eq!(
+            wait.signal(false),
+            Err(cathedral_user_runtime::Error(
+                cathedral_kernel_contracts::user::DENIED as i64
+            ))
+        );
+        assert_eq!(
+            wait.close_object(),
+            Err(cathedral_user_runtime::Error(
+                cathedral_kernel_contracts::user::DENIED as i64
+            ))
+        );
+        assert!(!interaction.wake.take().unwrap());
         assert_eq!(interaction.pair.0.raw(), parent.0.raw());
         if mode == 3 {
             // Die later with one storage endpoint received and its partner still
@@ -59,6 +76,12 @@ pub fn run(environment: cathedral_user_runtime::task::Environment, mode: u64) ->
         }
     }
     assert_eq!(cathedral_user_runtime::resources::budget().unwrap(), before);
+    let mut expected_notifications = notification_before;
+    expected_notifications[3] += u64::from(mode != 4);
+    assert_eq!(
+        cathedral_user_runtime::notification::budget().unwrap(),
+        expected_notifications
+    );
     let control = (Handle::bootstrap(0).unwrap(), Handle::bootstrap(1).unwrap());
     loop {
         let mut bytes = [0; 64];

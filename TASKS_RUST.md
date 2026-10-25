@@ -22,11 +22,13 @@ to the root matrix, root display commands/images, root storage and separate
 parent-storage and pipelined interaction streams between stock matrices, Omega app
 broker/interaction/storage, independent Split interaction/storage forwarding,
 Background, the separate Omega UI presenter, and Split's input producer and masked
-capture viewer. The scoped storage fixture also
+capture viewer. Brokered child input hints now use separate wait-only notifications.
+The scoped storage fixture also
 exercises both private-root provider connections. See the evidence below. Remaining acceptance:
 
 - Continue the shared service migration through the remaining ordinary service
-  clients, control/wake streams and explicitly copied fixtures. Independently
+  clients, lifecycle/control links, positional matrix wakes and explicitly copied
+  fixtures. Independently
   selected control/data streams
   now multiplex; immutable attachments execute through ordinary display and
   storage, including nested stock matrices, Omega leaves and Split. Shared endpoint
@@ -255,6 +257,75 @@ not perfect timing indistinguishability or mandatory agent badges. Existing
 default/hidden cursor evidence remains valid for its scope, not the full asset API.
 
 ## Current implementation evidence
+
+Implementation update 2026-10-25: **brokered input wakes use notifications**, over
+`b8a943ca`.
+
+The [admission coordinator](source-rs/platform/libraries/user-runtime/matrix/admission/admission.rs)
+replaces each brokered child's wake queue with one kernel notification. The matrix
+keeps signal/control rights; [Offer](source-rs/platform/libraries/user-runtime/services/offer.rs)
+retains a wait right until acquisition and releases its source copy after receiver
+custody commits. The child receives only wait authority. Failed creation/spawn,
+interrupted acquisition and child collection include notification cleanup.
+Bootstrap version 2 distinguishes this typed handoff from version 1's endpoint
+reply; individual service versions remain 1. Old bootstrap requests are refused,
+not silently interpreted as notification requests.
+
+[Wake](source-rs/platform/libraries/user-runtime/services/wake.rs) exposes mixed
+readiness and consume-before-poll behavior. The notification is independent of the
+shared connection's reply bell, so unrelated RPC completion cannot consume an input
+hint. Omega hosts, Background, Split, the separate UI presenter and Rust probe
+loops use it; existing control-first dispatch remains control-first. Coalescing
+applies only to readiness, not to the input event queue. No new kernel ABI or
+Omega application operation is required.
+
+Object allowances do not grow: one notification replaces one queue. Notification
+metadata is separately bounded at 48 local handles. A fully acquired stock matrix
+with eleven shared connections and five brokered children uses 33 connection
+handles plus ten signal/control handles (43); unacquired wait rights are temporary
+additional custody. A fully populated Split has thirty connection handles, eight
+child signal/control handles and its own wait right (39). This does not reserve
+unlimited room for future control connections; that migration must account for its
+own metadata and backings.
+
+Verification:
+
+- Independent matrix guest passes repeat acquisition, interrupted handoffs,
+  replacement, subtree retirement and exact resource refunds. Peers assert denied
+  signal/close calls and exactly one wait handle despite cached acquisition. New
+  metadata-exhaustion coverage leaves object funding spare, fails wake creation
+  after channel allocation sixteen times, and verifies exact object/handle refunds
+  before continuing admissions (`matrix-composition/20261025T230612852253Z`).
+- Normal F5 passes three independent Notes, capacity refusal, close/slot reuse,
+  saved Colors and cold reboot (`desktop/20261025T230615695014Z`). Its harness now
+  requires the ordinary Omega host's notification-wake marker. Host tests,
+  userspace checks and all-feature Clippy for
+  changed app/proof packages pass. ARM64's existing portability suite passes;
+  it exercises the generic notification transport, not this desktop service path.
+- Four nested desktops pass repeated teardown, protected close, confined persistence
+  and cold reopen (`desktop/20261025T230721235986Z`). Independent participants pass
+  input/cursor routing, resize revocation and repeated grants on both boots
+  (`desktop/20261025T230951707705Z`). Masked capture passes recipient byte checks,
+  hidden input, restoration and cold reopen (`desktop/20261025T231055177851Z`).
+- Notes recovery passes both boots with exact saved text/history/quota
+  (`matrix-database/20261025T231206411751Z`); its provider remains 239/240 load pages.
+  The Omega UI guest passes controls, editing, close/reopen and cold boot
+  (`omega-ui/20261025T231252818214Z`). The independent Omega matrix's upstream proof
+  passes nested attenuation, revocation and subtree reclamation
+  (`omega-matrix-upstream/20261025T231427471109Z`).
+- Layout, formatting, whitespace and local links in changed documents pass.
+  Logs: `build/omega-component/wake-*.log`. No failed guest run in this slice.
+
+**Next:** positional stock-matrix wakes still use the explicit copied adapter;
+lifecycle/control links and copied fixtures also remain. Migrate these without
+adding a permanent alternative transport. Stock interaction already owns a
+two-call pipeline: broker startup must preserve its request sequence and negotiated
+window rather than constructing a new client on the same pair after acquisition.
+Control setup must yield while the child
+acquires/calls upstream services, not block inside admission. Preserve correlated
+LOSS/HEALTH replies, cancellation and exact custody across early exit. The overall
+shared-service outcome remains open; this slice is correctness evidence, not a
+desktop latency improvement claim.
 
 Implementation update 2026-10-25: **correlated notification-right replies**, over
 `cbbacfa8`.

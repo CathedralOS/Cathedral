@@ -5,12 +5,7 @@
 use cathedral_desktop_matrix_contracts::matrix as wire;
 use cathedral_kernel_contracts::user as abi;
 use cathedral_platform_contracts::input;
-use cathedral_user_runtime::{
-    Error,
-    ipc::{self, Handle},
-    task::Environment,
-    time,
-};
+use cathedral_user_runtime::{Error, ipc::Handle, task::Environment, time};
 pub(crate) type Pair = (Handle, Handle);
 
 pub(crate) fn call(pair: Pair, packet: wire::Packet) -> wire::Packet {
@@ -106,9 +101,15 @@ pub(crate) fn run(environment: Environment, argument: u64) -> u64 {
         if snapshot[5] & wire::MORE != 0 {
             continue;
         }
-        match ipc::wait_many(&[connections.wake, control.0], time::after(100).unwrap()) {
+        match cathedral_user_runtime::event::wait(
+            &[
+                connections.wake.interest(),
+                cathedral_user_runtime::event::Interest::Ipc(control.0),
+            ],
+            time::after(100).unwrap(),
+        ) {
             Ok(0) => {
-                connections.wake.receive(&mut [0; 64]).unwrap();
+                connections.wake.take().unwrap();
             }
             Ok(_) => {
                 let mut bytes = [0; 64];

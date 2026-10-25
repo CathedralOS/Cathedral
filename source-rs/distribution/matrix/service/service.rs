@@ -318,7 +318,7 @@ pub fn run(environment: Environment) -> Result<(), Error> {
             && input_ready
             && let Some(wake) = parent.wake
         {
-            extra[count] = Interest::Ipc(wake);
+            extra[count] = wake.interest();
             count += 1;
         }
         #[cfg(not(feature = "interaction-delay"))]

@@ -34,7 +34,7 @@ pub(super) struct Parent {
     pub separate_storage: bool,
     pub grant: Grant,
     display: Option<display::Display>,
-    pub wake: Option<Handle>,
+    pub wake: Option<cathedral_user_runtime::services::Wake>,
     /// MORE from the last snapshot; drain it on another service turn.
     pub refresh_due: bool,
     /// Test-only (delay_probe): F4 arrived from upstream; the next close then
@@ -161,7 +161,9 @@ impl Parent {
         } else {
             None
         };
-        self.wake = (environment.len() == 3).then(|| environment.endpoint(2).unwrap());
+        self.wake = (environment.len() == 3).then(|| {
+            cathedral_user_runtime::services::Wake::Copied(environment.endpoint(2).unwrap())
+        });
         if environment.len() == 5 {
             let connections = cathedral_user_runtime::matrix::Connections::load(environment)?;
             self.interaction = Some(interaction::Connection::shared(connections.interaction)?);

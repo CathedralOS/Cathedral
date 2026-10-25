@@ -12,7 +12,7 @@ pub type Pair = (Handle, Handle);
 #[derive(Clone, Copy)]
 pub struct Interaction {
     pub pair: Pair,
-    pub wake: Handle,
+    pub wake: Wake,
 }
 pub struct Services {
     broker: Pair,
@@ -74,7 +74,7 @@ impl Services {
         if let Some(connection) = self.interaction {
             return Ok(connection);
         }
-        let wake = self.acquire(imports::INTERACTION, minimum, maximum, 0)?;
+        let wake = self.acquire_wake(minimum, maximum)?;
         let connection = Interaction {
             pair: self.broker,
             wake,

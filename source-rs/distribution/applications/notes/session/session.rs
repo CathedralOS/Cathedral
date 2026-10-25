@@ -4,12 +4,7 @@ use cathedral_desktop_matrix_contracts::matrix as wire;
 use cathedral_kernel_contracts::user as abi;
 use cathedral_notes::document::Document;
 use cathedral_platform_contracts::input;
-use cathedral_user_runtime::{
-    Error,
-    ipc::{self, Handle},
-    services::Services,
-    time,
-};
+use cathedral_user_runtime::{Error, ipc::Handle, services::Services, time};
 type Pair = (Handle, Handle);
 fn call(pair: Pair, words: wire::Packet) -> wire::Packet {
     pair.0.send(&wire::encode(words)).unwrap();
@@ -331,15 +326,15 @@ pub fn run(style: u64, mut services: Services) {
             continue;
         }
         let mut bytes = [0; 64];
-        let mut handles = [connections.wake; 2];
+        let mut handles = [connections.wake.interest(); 2];
         let mut count = 1;
         if let Some(control) = control {
-            handles[1] = control.0;
+            handles[1] = cathedral_user_runtime::event::Interest::Ipc(control.0);
             count = 2;
         }
-        match ipc::wait_many(&handles[..count], time::after(100).unwrap()) {
+        match cathedral_user_runtime::event::wait(&handles[..count], time::after(100).unwrap()) {
             Ok(0) => {
-                connections.wake.receive(&mut bytes).unwrap();
+                connections.wake.take().unwrap();
             }
             Ok(_) => {
                 let pair = control.unwrap();

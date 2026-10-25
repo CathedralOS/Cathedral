@@ -46,6 +46,9 @@ fn acquisition_cannot_widen_the_resolved_manifest() {
 }
 #[test]
 fn version_shape_and_endpoint_selection_are_independent() {
+    let mut obsolete = request(imports::INTERACTION, 1, 1, 0);
+    obsolete[1] = 1; // Version 1 expects an endpoint, not a notification wait right.
+    assert_eq!(select(imports::ALL, obsolete), Err(INCOMPATIBLE));
     assert_eq!(
         select(imports::ALL, request(imports::STORAGE, 1, 2, 0)),
         Ok(1)

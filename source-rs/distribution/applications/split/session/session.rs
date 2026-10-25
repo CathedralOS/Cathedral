@@ -47,11 +47,7 @@ pub fn run(mut services: Services) -> Result<(), Error> {
         storage.progress(&mut server)?;
         // Consume the wake before polling. A notification racing the poll stays
         // queued, so sleeping below cannot lose it.
-        match interaction.wake.receive_until(&mut [0; 64], time::now()?) {
-            Ok(_) => refresh = true,
-            Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
-            Err(e) => return Err(e),
-        }
+        refresh |= interaction.wake.take()?;
         for _ in 0..8 {
             if !refresh || !world.input_ready() {
                 break;
@@ -169,7 +165,7 @@ pub fn run(mut services: Services) -> Result<(), Error> {
         if refresh && world.input_ready() {
             continue;
         }
-        let mut wake = [Interest::Ipc(interaction.wake); 5];
+        let mut wake = [interaction.wake.interest(); 5];
         let mut count = 1;
         if let Some(s) = &survey {
             for slot in 0..2 {

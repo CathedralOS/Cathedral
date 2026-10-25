@@ -5,7 +5,8 @@ use cathedral_kernel_contracts::user as abi;
 use cathedral_platform_contracts::matrix as wire;
 use cathedral_user_runtime::{
     Error,
-    ipc::{self, Handle},
+    event::{self, Interest},
+    ipc::Handle,
     memory::Private,
     services::{Interaction, Services},
     storage::Scope,
@@ -76,7 +77,18 @@ impl Host {
     fn dispatch(&mut self, operation: u64, packet: &mut [u64; PACKET_WORDS]) -> Result<(), Error> {
         match operation {
             1 => {
-                self.interaction = Some(self.services.interaction(packet[0], packet[1])?);
+                let interaction = self.services.interaction(packet[0], packet[1])?;
+                if self.interaction.is_none()
+                    && matches!(
+                        interaction.wake,
+                        cathedral_user_runtime::services::Wake::Notification(_)
+                    )
+                {
+                    cathedral_user_runtime::write(
+                        b"Cathedral Omega host: notification input wake ready\n",
+                    )?;
+                }
+                self.interaction = Some(interaction);
             }
             2 => {
                 let pair = self.services.storage(packet[0], packet[1])?;
@@ -127,13 +139,18 @@ impl Host {
         };
         loop {
             // A continuous wake stream must not starve owner lifecycle questions.
-            let handles = [self.control.as_ref().map_or(wake, |pair| pair.0), wake];
+            let handles = [
+                self.control
+                    .as_ref()
+                    .map_or(wake.interest(), |pair| Interest::Ipc(pair.0)),
+                wake.interest(),
+            ];
             let active = if self.control.is_some() {
                 &handles[..]
             } else {
                 &handles[..1]
             };
-            let ready = match ipc::wait_many(active, deadline.unwrap_or(time::after(100)?)) {
+            let ready = match event::wait(active, deadline.unwrap_or(time::after(100)?)) {
                 Err(Error(code)) if code == abi::TIMED_OUT as i64 => {
                     if deadline.is_none() {
                         continue;
@@ -147,13 +164,19 @@ impl Host {
             };
             let mut bytes = [0; 64];
             let is_control = ready == 0 && self.control.is_some();
-            let len = match active[ready].receive(&mut bytes) {
-                Ok(len) => len,
-                Err(_) if is_control => {
-                    self.control = None;
+            let len = if is_control {
+                match self.control.unwrap().0.receive(&mut bytes) {
+                    Ok(len) => len,
+                    Err(_) => {
+                        self.control = None;
+                        continue;
+                    }
+                }
+            } else {
+                if !wake.take()? {
                     continue;
                 }
-                Err(error) => return Err(error),
+                0
             };
             packet[..8].fill(0);
             if is_control {

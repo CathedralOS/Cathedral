@@ -5,12 +5,7 @@
 use cathedral_desktop_matrix_contracts::matrix as wire;
 use cathedral_kernel_contracts::user as abi;
 use cathedral_platform_contracts::input;
-use cathedral_user_runtime::{
-    Error,
-    ipc::{self, Handle},
-    task::Launch,
-    time,
-};
+use cathedral_user_runtime::{Error, ipc::Handle, task::Launch, time};
 pub type Pair = (Handle, Handle);
 use cathedral_user_runtime::task::Environment;
 pub const LEFT: u64 = 0x315ca8;
@@ -199,9 +194,15 @@ pub fn run_services<const PROBES: bool>(
         }
         let mut bytes = [0; 64];
         loop {
-            match ipc::wait_many(&[wake, control.0], time::after(100).unwrap()) {
+            match cathedral_user_runtime::event::wait(
+                &[
+                    wake.interest(),
+                    cathedral_user_runtime::event::Interest::Ipc(control.0),
+                ],
+                time::after(100).unwrap(),
+            ) {
                 Ok(0) => {
-                    wake.receive(&mut bytes).unwrap();
+                    wake.take().unwrap();
                     wakes += 1;
                     break;
                 }

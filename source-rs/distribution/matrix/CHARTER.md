@@ -33,7 +33,7 @@ endpoint into separate keyboard/pointer channels sharing one local focus group.
 [recovery.rs](service/children/recovery/recovery.rs) reloads a failed configured launcher;
 [fallback.rs](service/children/recovery/fallback.rs) admits explicitly supplied recovery code.
 [world entrance](../../platform/libraries/matrix/world/world.rs) owns grant changes and child dispatch; descend into
-[children.rs](../../platform/libraries/matrix/world/children.rs) for views/epochs/queues and
+[children.rs](../../platform/libraries/matrix/world/children/children.rs) for views/epochs/queues and
 [input.rs](../../platform/libraries/matrix/world/input/input.rs) for focus, capture and key attenuation.
 
 ## Child boundary
@@ -210,9 +210,11 @@ through the same matrix chain, independently of display grants, with sealed
 attachments forwarded in both directions. Owner assignment
 is exclusive between siblings; every request checks a local binding revision.
 The visible desktop admits children with separate interaction and catalog pairs,
-plus a wake receiver. [Shared admission](../../platform/libraries/user-runtime/matrix/admission/admission.rs)
-owns channel construction, endpoint transfer and rollback; the [runtime bundle](../../platform/libraries/user-runtime/matrix/matrix.rs)
-names the child-visible roles. Child storage forwarding resumes from the service
+plus a wake right. [Shared admission](../../platform/libraries/user-runtime/matrix/admission/admission.rs)
+owns channel/notification construction, transfer and rollback. Brokered apps acquire
+a wait-only notification through [Services](../../platform/libraries/user-runtime/services/services.rs);
+positional matrices still use the [runtime bundle](../../platform/libraries/user-runtime/matrix/matrix.rs)
+with a copied wake receiver. Child storage forwarding resumes from the service
 loop without occupying the upstream interaction pair, and the matrix yields its
 turn right after forwarding upstream or answering a child, since the scheduler
 would otherwise run the rest of its turn before the woken next hop. Root provider failures
@@ -360,7 +362,7 @@ which tile it is without a read; the argument conveys no authority either.
 
 Desktop app declarations may request explicit funding via `CTHIMP04`; insufficient
 offers refuse before spawn. A failed reservation releases provisional geometry.
-App selection uses [scene publication](service/parent/scene.rs) to stage the old
+App selection uses [scene publication](service/parent/scene/scene.rs) to stage the old
 and new app surfaces together. A rejected stage/commit is aborted and local
 selection restored; unrelated hidden apps need no replay. This does not make
 startup, layout editing or process teardown one atomic scene transaction.

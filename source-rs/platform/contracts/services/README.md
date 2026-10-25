@@ -41,7 +41,7 @@ the Rust transport below is a bounded experimental version, not a frozen ABI or 
 claim that every driver and initial boot process already enters this way. Early
 processes that establish brokers still require explicit kernel-supplied grants.
 
-## Rust version 1
+## Rust bootstrap version 2
 
 `service_bootstrap!` emits the import record `CTHIMP03`, including resource
 ceilings. `CTHIMP02` also selects broker startup; both use the declarations
@@ -60,27 +60,40 @@ An acquisition is eight little-endian u64 words:
 
 `[ACQUIRE, bootstrap_version, contract, minimum, maximum, part, 0, 0]`
 
-A success is `[0, service_version, 0, 0, 0, 0, 0, 0]` with one transferred endpoint.
-A refusal is `[status, 0, 0, 0, 0, 0, 0, 0]` without an endpoint. Unknown/ungranted
+A success is `[0, service_version, 0, 0, 0, 0, 0, 0]` with one typed right:
+interaction supplies a notification wait right; other services move an endpoint.
+A refusal is `[status, 0, 0, 0, 0, 0, 0, 0]` without a right. Unknown/ungranted
 contracts return UNAVAILABLE; incompatible versions return INCOMPATIBLE;
 malformed shapes return INVALID. An already-transferred part returns TAKEN.
 Neither rejection nor repeated requests allocate channels. The kernel reserves
-recipient custody before committing each endpoint transfer.
+recipient custody before committing each handoff. Bootstrap version 1 is refused:
+its interaction acquisition expected a copied-channel receiver.
 
 The current services are interaction, storage, input production and capture, all version 1. Interaction
-part 0 transfers its wake receiver; its ordinary RPCs reuse the broker pair.
+part 0 delegates a notification wait right; its ordinary RPCs reuse the broker pair.
+This hint is independent of the connection's reply notification, so processing a
+reply cannot consume pending input readiness. The matrix retains signal/control
+rights; the child cannot signal or close the object. Mixed event waits observe
+readiness without consuming it; [Wake](../../libraries/user-runtime/services/wake.rs)
+consumes the hint before polling input state. Signals coalesce, not input events.
 Storage, input-production and capture parts 0 and 1 each transfer a separate request sender
 and reply receiver. All service
-channels are preallocated from the owner's budget at admission. This slice delays
+channels and the wake notification are preallocated from the owner's budget at
+admission. The notification replaces one queue's object allowance; its local
+handle metadata is separately bounded. This slice delays
 handoff, not allocation or provider startup. It does not implement arbitrary
 service enumeration, dynamic grants or new permission prompts.
 
 The broker retains unsent rights until acquisition or child teardown. Successful
-transfer clears that exact retained right; failure preserves it. Teardown closes
+handoff clears that exact retained right; notification delegation releases the
+broker's source wait copy once receiver custody commits. Failure before publication
+preserves it. Teardown closes
 untransferred rights too, including when the child exits halfway through acquiring
-a pair. A failed acquisition never silently mints another connection. Wake state
-stays pending until its receiver transfers: the kernel refuses to transfer a
-receive endpoint with queued data.
+a pair. A failed acquisition never silently mints another connection. The owner
+keeps input hints in its local state until wait-right handoff, then signals the
+notification. Teardown closes its object and releases the owner's signal/control
+rights. Positional startup compositions retain an explicit copied-wake adapter;
+they do not use this acquisition protocol.
 
 The stock version requires interaction and separate storage streams. It preserves
 the child's existing realm binding, parent mediation and provider checks. The
@@ -128,7 +141,8 @@ they share a reply stream. Omega hosts and Split select shared transport through
 [transport owner](../../libraries/user-runtime/services/transport.rs) retains the
 same request sequence across both operation kinds. Acquiring optional storage
 later does not create a second client over that pair. Moved endpoint replies are
-explicitly accepted; interaction replies reject unexpected rights. Remaining
+explicitly accepted, and interaction acquisition accepts only notification replies;
+ordinary interaction replies reject unexpected rights. Remaining
 copied consumers opt in separately; failure never switches transports.
 The runtime caches successful bindings and absent storage/production. A complete refusal, including
 capacity refusal, leaves the broker usable. It closes an ambiguously failed broker

@@ -134,7 +134,8 @@ interaction. It keeps correlation across lazy acquisitions, accepts moved endpoi
 only for acquisition, and routes immutable drawing objects through the same shared
 connection. Split selects all eight child service slots before admission,
 including separate broker/data connections for its input producer and masked
-capture viewer. Control links, wake hints and explicitly copied fixtures remain
+capture viewer. Brokered input hints use separate notification wait rights.
+Control links, positional matrix wakes and explicitly copied fixtures remain
 to migrate. These app adapters remain synchronous; this change
 alone does not make an app process input while its drawing call is pending.
 
@@ -234,9 +235,11 @@ and signal failure after committed delegation. Every case checks final logical,
 physical and notification-handle refunds. ARM64 checks nonblocking typed acceptance
 and actual wait-only use through SVC; the full shared reply cases run on x86-64.
 
-This is the handoff needed to replace an app's copied input-wake endpoint with a
-separate wait right. Ordinary desktop wake hints still use copied channels; the
-new handoff does not by itself migrate acquisition, startup or wake consumers.
+The [service broker](../services/offer.rs) now uses this handoff for brokered app
+input wakes. [Admission](../matrix/admission/admission.rs) creates the notification
+in place of a wake queue, retaining signal/control while offering only wait authority.
+Omega host, Background, Split and UI consumers use mixed event waits. Positional
+stock-matrix startup and explicit fixtures retain copied wake adapters.
 Keeping input hints separate from reply hints prevents an unrelated retained call
 from consuming the app's only pending indication that input needs polling.
 

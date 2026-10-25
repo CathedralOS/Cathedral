@@ -139,7 +139,7 @@ impl Children {
                 .ok_or(Error(abi::INVALID_ARGUMENT as i64))?,
         );
         // The control pair belongs to the reserved process slot. Interaction,
-        // wake, storage and producer queues charge this creator. A selected
+        // storage/producer queues and the wake object charge this creator. A selected
         // shared storage/interaction slot needs its own writer, reader and
         // notification. Retain both transport allowances here before lending
         // capacity; copied leaf interaction does not allocate its reserved end.
