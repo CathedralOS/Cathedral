@@ -53,8 +53,9 @@ while advancing setup and replies. It also checks abandonment, malformed input,
 expiry and peer closure at every partial phase, a wrong notification right,
 completion consumed once, accepted/queued backing surviving abandonment, and exact
 logical, physical and notification refunds. The ordinary F5 callers use the same
-setup through `connect`; ordinary lifecycle-control migration still needs its
-event-loop integration and explicit funding.
+setup through `connect`. Split now drives yielding setup for both Notes children
+and its nested copy. Stock lifecycle-control migration still needs event-loop
+integration and explicit funding.
 
 Original endpoints remain the setup, typed-grant and lifetime/abort connection. After COMMIT,
 ordinary payloads travel only through the shared mailbox, never by copied-message
@@ -347,15 +348,27 @@ Omega leaf, Split, Background and the separate Omega UI demo use the shared
 service owner described above. The UI presenter borrows that owner across atomic
 image publication rather than creating another client over its pair. The installed
 producer and capture viewer likewise own shared broker and acquired-service
-Clients. A fully populated Split retains ten connections (thirty notification
-handles); each auxiliary child funds two notifications and two writer/reader pages,
+Clients. Split adds two child-control connections to its ten service connections;
+when nested it also accepts a shared owner control connection. The ordinary outer
+stock control stream remains copied. Each auxiliary child funds two notifications and two writer/reader pages,
 plus its service-specific work. Capture uses correlated immutable replies and
-then forwards the same sealed result for presentation. Control/wake and explicitly
+then forwards the same sealed result for presentation. Stock lifecycle/control and explicitly
 copied fixtures remain to migrate. The ordinary
 user matrix keeps eleven connections (thirty-three notification handles) with its
-upstream, chrome, background and three app pairs. The metadata ceiling is now
+upstream, chrome, background and three app pairs. Brokered wake objects/rights
+are charged separately; the fully populated stock matrix uses 44 handles.
+The metadata ceiling is now
 forty-eight; object/page funding and the thirty-two-interest wait limit remain
 independent. Additional streams still require a capacity review.
 Shared mailbox pooling may reduce per-connection backing/metadata costs later; current
 bounds refuse excess setup safely. No performance improvement or final production
 wire ABI is claimed here.
+
+[Owner-only reception](../server/owner.rs) is shared by the Omega host and Rust
+Notes probes. It selects zero service-client slots, joins control readiness with
+one independent caller interest, and retains one authenticated request until
+reply. A second receive while a request is pending is BUSY; an unsolicited or
+second reply is DENIED. Unsupported attachment custody is released and refused.
+Control closure disables that receiver without treating the app as dead. The
+opening guest exercises pending/double-reply rejection and an independent wake
+after the owner closes its connection or sends an invalid setup grant.

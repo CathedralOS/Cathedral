@@ -109,14 +109,18 @@ impl Admitted {
             services.close()?;
         }
         self.notify.close()?;
-        for endpoint in [self.control.0, self.control.1] {
-            endpoint.close()?;
-        }
-        // Server removal may already retire selected shared slots. Endpoint
+        // A caller-owned control client or server removal may already retire
+        // selected shared slots. Drop those owners before closing here. Endpoint
         // names are never reused: only absence of these exact names is harmless.
-        for (input, output) in [Some(self.data), self.storage, self.producer, self.capture]
-            .into_iter()
-            .flatten()
+        for (input, output) in [
+            Some(self.control),
+            Some(self.data),
+            self.storage,
+            self.producer,
+            self.capture,
+        ]
+        .into_iter()
+        .flatten()
         {
             for endpoint in [input, output] {
                 match endpoint.close() {

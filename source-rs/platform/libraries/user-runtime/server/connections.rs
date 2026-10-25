@@ -11,12 +11,13 @@ impl Server {
     pub fn open() -> Result<Self, Error> {
         Self::open_clients(1)
     }
+    /// Zero selects only the owner control port, without discovering service links.
     pub fn open_clients(count: usize) -> Result<Self, Error> {
         Self::open_clients_from(0, count)
     }
     /// Reserve earlier links for an upstream provider; serve only this local range.
     pub fn open_clients_from(first: u64, count: usize) -> Result<Self, Error> {
-        if count == 0 || count > MAX_CLIENTS {
+        if count > MAX_CLIENTS {
             return Err(Error(abi::INVALID_ARGUMENT as i64));
         }
         let mut links = [None; MAX_CLIENTS];

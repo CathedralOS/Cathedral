@@ -1,5 +1,5 @@
 //! Ask descendants asynchronously; silence and malformed replies mean keep open.
-//! A timed-out uncorrelated control stream stays uncertain until that child exits.
+//! A timed-out request stays owned by its connection; it is never a fresh answer.
 use super::*;
 use cathedral_user_runtime::server::Request;
 pub struct Survey {
@@ -17,13 +17,11 @@ impl Survey {
             clean: true,
         };
         for slot in 0..2 {
-            if let Some(child) = &children.slots[slot] {
+            if children.slots[slot].is_some() {
                 if children.uncertain[slot]
-                    || child
-                        .control
-                        .0
-                        .send(&wire::encode([wire::LOSS, 0, 0, 0, 0, 0, 0, 0]))
-                        .is_err()
+                    || children.controls[slot]
+                        .as_mut()
+                        .is_none_or(|control| control.ask().is_err())
                 {
                     s.clean = false;
                 } else {
@@ -39,19 +37,17 @@ impl Survey {
             if self.waiting & (1 << slot) == 0 {
                 continue;
             }
-            let Some(child) = &children.slots[slot] else {
+            let Some(control) = &mut children.controls[slot] else {
                 self.waiting &= !(1 << slot);
                 continue;
             };
-            let mut bytes = [0; 64];
-            match child.control.1.receive_until(&mut bytes, now) {
-                Ok(len) => {
-                    self.clean &= wire::decode(&bytes[..len]) == Some([0; 8]);
+            match control.answer() {
+                Ok(Some(clean)) => {
+                    self.clean &= clean;
                     self.waiting &= !(1 << slot);
                 }
-                Err(Error(code))
-                    if code == abi::TIMED_OUT as i64 && !time::reached(now, self.deadline) => {}
-                Err(_) => {
+                Ok(None) if !time::reached(now, self.deadline) => (),
+                Ok(None) | Err(_) => {
                     self.clean = false;
                     children.uncertain[slot] = true;
                     self.waiting &= !(1 << slot);

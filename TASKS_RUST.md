@@ -258,6 +258,77 @@ default/hidden cursor evidence remains valid for its scope, not the full asset A
 
 ## Current implementation evidence
 
+Implementation update 2026-10-25: **Split lifecycle links use shared control**, over
+`d4a780a0`.
+
+The installed Split now opens separate shared control links to its two Notes
+children and to its own nested copy. Its
+[control owner](source-rs/distribution/applications/split/session/children/control.rs)
+advances setup while the ordinary loop serves child acquisition, input and storage.
+LOSS requests use the connection's exact request identity. Timeout keeps loss
+unknown until that child exits; neither timeout nor failed setup kills a child,
+replays the question, or treats a late answer as a new observation. The stock
+matrix's link into the outer Split remains copied pending stock migration.
+
+[OwnerControl](source-rs/platform/libraries/user-runtime/server/owner.rs) opens
+only the process's owner port, without discovering service clients. Both the
+Omega host and Rust Notes fault fixtures use it. It retains one authenticated
+request until the app answers, rejects a second receive while pending and rejects
+unsolicited/double replies. Invalid attachment custody is released and refused.
+Closed or malformed owner links release their local resources while independent
+input remains usable. The guest opening proof exercises the real owner port,
+upstream progress, pending/double-reply refusal, closure, malformed setup and a
+subsequent independent wake, with exact enclosing resource refunds.
+
+Funding is explicit: Split declares 43 channel/notification allowances (was 38),
+each Notes receives 42 private pages, seven reader pages and three notification
+allowances, and nested Split receives 122/74 pages and 25 channel/notification
+allowances. Shared controls retain the same separate authority as the old owner
+port. No kernel ABI, wire version or metadata ceiling increases. Control clients
+are dropped before admission cleanup; only BAD_HANDLE for an already-closed,
+never-reused endpoint name is harmless.
+
+The untraced desktop exposed a separate installation-headroom issue: the failed
+image had 2,095,660 retained bytes against the lab's 2,097,152-byte root allowance,
+leaving only 1,492 bytes for a new user's hierarchy. NEW USER correctly refused
+instead of partially publishing. The traced build fit, so a traced pass alone was
+insufficient evidence. The lab root allowance is now 4 MiB; physical volume capacity
+remains independently enforced. This also doubles the collection scan ceiling and
+moves its half-quota trigger; it is not a production storage policy or a bounded
+latency improvement. `inspect-hierarchy` now prints charged bytes and the limit.
+Failed artifacts are `desktop/20261025T234422029760Z` and
+`desktop/20261025T234736697008Z`; the quota inspection is recorded in
+`build/omega-component/split-control-quota.log`.
+
+Verification:
+
+- Untraced normal F5 passes user creation, three Notes instances, protected close,
+  slot reuse, Colors and exact cold restoration (`desktop/20261025T234910734214Z`).
+- Untraced deep Split passes two Notes, dirty-close protection, resize, repeated
+  reclamation, same-code nesting, bounded deeper refusal and cold restoration
+  (`desktop/20261025T235005742718Z`). The harness requires shared-control readiness
+  for all six initial leaf admissions and all sixteen leaf/nested admissions
+  over its complete deep workflow, on each boot.
+- Masked capture passes hidden editing, sibling input, recipient byte inspection,
+  restore and cold reopen with the Rust Notes fixture
+  (`desktop/20261025T235050664466Z`).
+- Full IPC suite passes the owner-receiver and connection cases. Notes recovery
+  passes both boots, exact text/history/quota and capacity refusal
+  (`matrix-database/20261025T235251467261Z`); provider size remains 239/240 pages.
+- Host tests, sixteen host volume tests, userspace checks, all-feature
+  Split/Omega-host/Notes/channels Clippy, layout, format and whitespace checks pass.
+  ARM64 portability passes; it does not run the Split or owner-receiver fixture.
+- Logs: `build/omega-component/split-control-*.log`. The two pre-fix untraced
+  runs above failed user creation; subsequent untraced runs pass.
+
+**Next:** stock lifecycle/control still needs its opening/ready/retired owner
+states, explicit backing/notification funding, and migration of Background and
+other control receivers. Preserve stock's late LOSS/HEALTH handling and distinguish
+an unhealthy link from process death. Its fully populated user matrix already
+uses 44/48 notification handles; Split's successful bounded composition does not
+prove that stock's extra streams fit. Root provider supervision and explicitly
+copied fixtures also remain. The broader shared-service migration is open.
+
 Implementation update 2026-10-25: **client connection setup yields to upstream
 work**, over `067750c8`.
 

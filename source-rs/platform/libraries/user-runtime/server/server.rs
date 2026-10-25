@@ -1,5 +1,6 @@
 // Fair, bounded service control and explicitly admitted client connections.
 // Client identity comes from the installed connection, never from message contents.
+// owner.rs retains one lifecycle request for apps with no service-client slots.
 use crate::{Error, abi, ipc::Handle, link::Link};
 #[derive(Clone, Copy)]
 pub struct Request {

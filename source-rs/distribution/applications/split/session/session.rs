@@ -22,6 +22,11 @@ pub fn run(mut services: Services) -> Result<(), Error> {
     let storage = services.storage(1, 1)?;
     let mut server = Server::open_clients(8)?;
     server.enable_memory();
+    static mut CONTROL: cathedral_user_runtime::server::SharedSlot =
+        cathedral_user_runtime::server::SharedSlot::empty();
+    let control = &raw mut CONTROL;
+    // SAFETY: One entry owns the control slot, separately from service clients.
+    server.enable_shared_control(unsafe { &mut *control })?;
     static mut CONNECTIONS: [cathedral_user_runtime::server::SharedSlot; 8] =
         [const { cathedral_user_runtime::server::SharedSlot::empty() }; 8];
     let slots = &raw mut CONNECTIONS;
@@ -44,6 +49,9 @@ pub fn run(mut services: Services) -> Result<(), Error> {
     let mut pointers = cathedral_matrix::reception::Pointers::default();
     let mut refresh = true;
     loop {
+        for control in children.controls.iter_mut().flatten() {
+            control.progress();
+        }
         storage.progress(&mut server)?;
         // Consume the wake before polling. A notification racing the poll stays
         // queued, so sleeping below cannot lose it.
@@ -99,9 +107,9 @@ pub fn run(mut services: Services) -> Result<(), Error> {
                     && output.deepen_hit(event[3], event[4])
                 {
                     if output.can_deepen()
-                        // The current limit excludes the four notification
+                        // The current limit excludes the six notification
                         // allowances lent to Notes; collection returns them.
-                        && cathedral_user_runtime::resources::budget()?.limits.channels >= 26
+                        && cathedral_user_runtime::resources::budget()?.limits.channels >= 31
                     {
                         deepen = true;
                         survey = Some(loss::Survey::start(None, &mut children)?);
@@ -165,13 +173,21 @@ pub fn run(mut services: Services) -> Result<(), Error> {
         if refresh && world.input_ready() {
             continue;
         }
-        let mut wake = [interaction.wake.interest(); 5];
+        let mut wake = [interaction.wake.interest(); 7];
         let mut count = 1;
-        if let Some(s) = &survey {
-            for slot in 0..2 {
-                if s.waiting & (1 << slot) != 0 {
-                    wake[count] = Interest::Ipc(children.slots[slot].as_ref().unwrap().control.1);
+        let mut control_deadline: Option<u64> = None;
+        for (slot, control) in children.controls.iter().enumerate() {
+            if let Some(control) = control {
+                let pending = survey
+                    .as_ref()
+                    .is_some_and(|s| s.waiting & (1 << slot) != 0);
+                let (interests, until) = control.wait(pending);
+                for interest in interests.into_iter().flatten() {
+                    wake[count] = interest;
                     count += 1;
+                }
+                if let Some(until) = until {
+                    control_deadline = Some(control_deadline.map_or(until, |d| d.min(until)));
                 }
             }
         }
@@ -204,6 +220,10 @@ pub fn run(mut services: Services) -> Result<(), Error> {
             (a, b) => a.or(b),
         };
         let deadline = match (deadline, storage.transfer_deadline()) {
+            (Some(a), Some(b)) => Some(a.min(b)),
+            (a, b) => a.or(b),
+        };
+        let deadline = match (deadline, control_deadline) {
             (Some(a), Some(b)) => Some(a.min(b)),
             (a, b) => a.or(b),
         };

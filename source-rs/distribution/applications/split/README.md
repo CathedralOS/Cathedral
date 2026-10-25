@@ -140,7 +140,12 @@ immutable image custody through later replies. Capture dispatch temporarily uses
 the viewer's world slot, then restores the broker slot before replying; transport
 correlation never uses the remapped world slot. Input wake hints use independent
 notifications: the owner retains signal/control and the child acquires only wait
-authority. Control links retain copied streams. Removal retires shared slots before closing remaining child
+authority. [Child control](session/children/control.rs) opens a separate shared
+connection while the service loop continues answering startup requests. LOSS
+queries use exact transport correlation; timeout leaves that child's loss unknown
+until it exits, without killing it or reusing its late answer. The same Split
+program accepts this control protocol when nested. Its outer stock owner still
+uses copied control pending that owner's migration. Removal retires shared slots before closing remaining child
 rights; only BAD_HANDLE for the exact, never-reused endpoint names is harmless.
 
 Scope restrictions are folded only after upstream containment checks; a shared
@@ -188,3 +193,11 @@ area, correct restored content, repeated admission and exact cold-open text.
 The observers add no authority and compile out of ordinary F5. Visibility replay
 is per surface; this demo does not promise an atomic multi-surface transition.
 Capture-generated demand and masks are not implemented by this workflow.
+
+The manifest requests 43 channel/notification allowances and four descendant slots.
+Each Notes child receives 42 private pages, seven reader pages and three
+notification allowances, including its control mailbox. Nested Split receives
+122 private pages, 74 reader pages and 25 channel/notification allowances. These
+are explicit lab grants; the kernel's notification-handle ceiling is unchanged.
+The deep harness requires successful shared-control setup for every admitted
+leaf and nested Split, alongside its visible close/persistence assertions.

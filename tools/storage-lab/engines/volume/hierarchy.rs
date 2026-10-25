@@ -272,6 +272,9 @@ pub fn inspect(path: &Path, offset: u64, bytes: u64) -> Result<()> {
     let db = open(Region::new(Arc::new(Image::open(path)?), offset, bytes)?)?;
     let tx = db.begin_read()?;
     let table = tx.open_table(TableDefinition::<&[u8], &[u8]>::new("private-objects-v3"))?;
+    let charged = table.get([0, b'q'].as_slice())?.ok_or("missing root quota")?;
+    let charged = u64::from_le_bytes(charged.value().try_into()?);
+    println!("QUOTA root=0 charged={charged} limit={}", cathedral_database_objects::ROOT_QUOTA);
     for row in table.iter()? {
         let (k, v) = row?;
         let k = k.value();

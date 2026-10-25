@@ -35,7 +35,7 @@ pub const INLINE_BYTES: usize = 128;
 /// It also bounds one collection pass's scan.
 // Installed code and saved nested snapshots share this lab allowance with data.
 // The volume's physical extent remains an independent capacity limit.
-pub const ROOT_QUOTA: u64 = 2 * 1024 * 1024;
+pub const ROOT_QUOTA: u64 = 4 * 1024 * 1024;
 /// Objects one tree copy may produce; it bounds one request's work, not the
 /// root's size.
 pub const COPY_LIMIT: usize = 64;

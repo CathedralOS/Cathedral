@@ -65,12 +65,12 @@ impl Children {
         let (code, granted) = image::read(&mut scope, root)?;
         let launch = Executable::from_object(&code, 0)?.reserve(
             Limits {
-                // Two 41-page Notes grants plus two 14-page header versions
+                // Two 42-page Notes grants plus two 14-page header versions
                 // during replacement. The enclosing 168-page grant still funds
                 // its own retained/replacement headers alongside this loan.
-                private_pages: 117,
-                reader_pages: 69,
-                channels: 20,
+                private_pages: 122,
+                reader_pages: 74,
+                channels: 25,
             },
             2,
             abi::MAX_ADMISSION_FRAMES as u64,
@@ -85,6 +85,7 @@ impl Children {
         server.install(0, child.data)?;
         server.install(2, child.storage.unwrap())?;
         self.launches[0] = Some(launch);
+        self.controls[0] = Some(control::Control::start(child.control));
         self.slots[0] = Some(child);
         self.uncertain = [false; 2];
         let realm = scope.realm();

@@ -88,7 +88,7 @@ or the complete named content/index set, with an exact quota ledger. A retry aft
 an unobserved committed result collides without allocating another object.
 
 History is retained until collection. Before mutations, the provider calls
-`collect_under_pressure`: below half the 2 MiB root quota it performs no
+`collect_under_pressure`: below half the 4 MiB root quota it performs no
 writer/scan, and otherwise runs one bounded pass. This watermark is independent
 of the maximum object size; exact quota admission still happens inside every writer.
 Explicit `collect` is unconditional. Unpinned history has no retention guarantee;
@@ -129,7 +129,7 @@ result is quota-checked before publication; standalone migrations still enforce
 their own final quota. Guest
 `Store::collect` still runs one pass per transaction with unchanged semantics.
 
-The lab allowance is 2 MiB per root, including installed code and nested snapshots.
+The lab allowance is 4 MiB per root, including installed code and nested snapshots.
 Accounting includes exact retained keys and values, including the ledger itself.
 It excludes redb pages, allocator overhead and free-space reserves.
 

@@ -5,9 +5,8 @@ use cathedral_kernel_contracts::user as abi;
 use cathedral_platform_contracts::matrix as wire;
 use cathedral_user_runtime::{
     Error,
-    event::{self, Interest},
-    ipc::Handle,
     memory::Private,
+    server::{OwnerControl, SharedSlot},
     services::{Interaction, Services},
     storage::Scope,
     time,
@@ -17,7 +16,7 @@ pub(super) struct Host {
     services: Services,
     pub interaction: Option<Interaction>,
     pub storage: Option<Scope<'static>>,
-    control: Option<(Handle, Handle)>,
+    control: OwnerControl,
     staged: Option<attachments::Staged>,
 }
 /// # Safety
@@ -53,11 +52,15 @@ pub unsafe fn run_with_argument(
     app.packet[12] = argument;
     services.enable_shared()?;
     cathedral_user_runtime::write(b"Cathedral Omega host: shared interaction broker ready\n")?;
+    static mut CONTROL: SharedSlot = SharedSlot::empty();
+    let control = &raw mut CONTROL;
+    // SAFETY: The single app entry owns this slot throughout its lifetime.
+    let control = OwnerControl::open(unsafe { &mut *control })?;
     let mut host = Host {
         services,
         interaction: None,
         storage: None,
-        control: Some((Handle::bootstrap(0)?, Handle::bootstrap(1)?)),
+        control,
         staged: None,
     };
     loop {
@@ -107,10 +110,7 @@ impl Host {
             6 => self.wait(packet)?,
             7 => self
                 .control
-                .as_ref()
-                .ok_or(Error(abi::DENIED as i64))?
-                .1
-                .send(&wire::encode(packet[..8].try_into().unwrap()))?,
+                .reply(&wire::encode(packet[..8].try_into().unwrap()))?,
             8 => cathedral_user_runtime::write(exchange::payload(packet)?)?,
             9 => attachments::append(&mut self.staged, packet)?,
             10 => self.staged = None,
@@ -138,53 +138,25 @@ impl Host {
             Some(time::after(refresh)?)
         };
         loop {
-            // A continuous wake stream must not starve owner lifecycle questions.
-            let handles = [
-                self.control
-                    .as_ref()
-                    .map_or(wake.interest(), |pair| Interest::Ipc(pair.0)),
-                wake.interest(),
-            ];
-            let active = if self.control.is_some() {
-                &handles[..]
-            } else {
-                &handles[..1]
-            };
-            let ready = match event::wait(active, deadline.unwrap_or(time::after(100)?)) {
-                Err(Error(code)) if code == abi::TIMED_OUT as i64 => {
-                    if deadline.is_none() {
+            let words = match self.control.next(wake.interest(), deadline)? {
+                Some((bytes, len)) => match wire::decode(&bytes[..len]) {
+                    Some(words) => Some(words),
+                    None => {
+                        self.control
+                            .reply(&wire::encode(wire::error(abi::INVALID_ARGUMENT)))?;
                         continue;
                     }
-                    packet[..8].fill(0);
-                    packet[9] = 0;
-                    packet[10] = time::cpu_us().unwrap_or(0);
-                    return Ok(());
+                },
+                None if wake.take()?
+                    || deadline
+                        .is_some_and(|d| time::now().is_ok_and(|now| time::reached(now, d))) =>
+                {
+                    None
                 }
-                result => result?,
+                None => continue,
             };
-            let mut bytes = [0; 64];
-            let is_control = ready == 0 && self.control.is_some();
-            let len = if is_control {
-                match self.control.unwrap().0.receive(&mut bytes) {
-                    Ok(len) => len,
-                    Err(_) => {
-                        self.control = None;
-                        continue;
-                    }
-                }
-            } else {
-                if !wake.take()? {
-                    continue;
-                }
-                0
-            };
-            packet[..8].fill(0);
-            if is_control {
-                packet[..8].copy_from_slice(
-                    &wire::decode(&bytes[..len]).ok_or(Error(abi::IO_ERROR as i64))?,
-                );
-            }
-            packet[9] = u64::from(is_control);
+            packet[..8].copy_from_slice(&words.unwrap_or([0; 8]));
+            packet[9] = u64::from(words.is_some());
             packet[10] = time::cpu_us().unwrap_or(0);
             return Ok(());
         }

@@ -27,7 +27,12 @@ one persistent `Services` client, including moved endpoint replies and immutable
 images. Interaction acquisition supplies a separate notification wait right;
 the matrix owns its signal/control rights. Mixed event waits consume input hints
 independently of reply notifications and preserve control-first dispatch. Lifecycle
-control payloads remain copied. See the
+control reception uses [OwnerControl](../user-runtime/server/owner.rs), which
+opens only the process's owner port and retains the exact received request until
+operation 7 answers it. It discovers no service links and trusts no supplied PID.
+Split selects shared control; stock owners still send copied lifecycle requests
+until their migration. A disconnected owner control link leaves input usable.
+See the
 [transport boundary](../user-runtime/connection/README.md).
 
 ## ABI 1

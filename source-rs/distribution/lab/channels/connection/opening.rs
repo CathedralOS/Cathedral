@@ -4,7 +4,7 @@ use cathedral_user_runtime::{
     connection::Connecting,
     memory::shared::{Reader, Writer},
     notification,
-    server::{Event, Server, SharedSlot},
+    server::{OwnerControl, SharedSlot},
 };
 
 pub(super) fn run(launch: Launch) {
@@ -24,6 +24,7 @@ pub(super) fn run(launch: Launch) {
     assert_eq!(resources::budget().unwrap(), baseline);
     assert_eq!(resources::physical_budget().unwrap(), physical);
     assert_eq!(notification::budget().unwrap(), handles);
+    bad_owner(launch);
     queued_grant();
     assert_eq!(resources::budget().unwrap(), baseline);
     assert_eq!(resources::physical_budget().unwrap(), physical);
@@ -86,6 +87,7 @@ fn dependency(launch: Launch) {
     }
     assert_eq!(serviced, 9);
     client.retire();
+    reply.send(b"control closed; independent wake").unwrap();
     assert_eq!(
         child.wait_until(time::after(300).unwrap()).unwrap(),
         Outcome::Returned(0)
@@ -105,22 +107,36 @@ pub(super) fn worker(env: Environment) -> u64 {
         assert_eq!(&bytes[..n], b"served");
     };
     call_parent();
-    let mut server = Server::open().unwrap();
     static mut SHARED: SharedSlot = SharedSlot::empty();
     let slot = &raw mut SHARED;
     // SAFETY: One worker entry owns the slot until process exit.
-    server.enable_shared_control(unsafe { &mut *slot }).unwrap();
+    let mut owner = OwnerControl::open(unsafe { &mut *slot }).unwrap();
+    let independent = env.endpoint(1).unwrap();
+    let mut calls = 0;
     loop {
-        match server.next_event() {
-            Ok(Event::Request(request)) => {
-                assert!(request.control && request.client.is_none());
+        match owner
+            .next(Interest::Ipc(independent), Some(time::after(300).unwrap()))
+            .unwrap()
+        {
+            Some((bytes, len)) => {
+                assert_eq!(
+                    owner.next(Interest::Ipc(independent), None),
+                    Err(Error(abi::BUSY as i64))
+                );
                 call_parent();
-                server
-                    .reply(&request, &request.bytes[..request.len])
-                    .unwrap();
+                owner.reply(&bytes[..len]).unwrap();
+                assert_eq!(owner.reply(&bytes[..len]), Err(Error(abi::DENIED as i64)));
+                calls += 1;
             }
-            Err(Error(c)) if c == abi::PEER_CLOSED as i64 => return 0,
-            _ => panic!("unexpected opening event"),
+            None => {
+                assert_eq!(calls, 8);
+                let mut bytes = [0; 64];
+                let n = independent
+                    .receive_until(&mut bytes, time::now().unwrap())
+                    .unwrap();
+                assert_eq!(&bytes[..n], b"control closed; independent wake");
+                return 0;
+            }
         }
     }
 }
@@ -232,4 +248,51 @@ fn queued_grant() {
     let reader = Reader::accept(peer.input).unwrap();
     assert_eq!(reader.load(0).unwrap(), 0);
     drop(reader);
+}
+
+// Invalid setup must disable only the owner receiver, without spinning on its
+// now-closed endpoints or consuming the independent input source.
+fn bad_owner(launch: Launch) {
+    let (wake, input) = ipc::channel().unwrap();
+    let child = launch.spawn_with(102, &[input]).unwrap();
+    let pair = Port::bootstrap().unwrap().connect().unwrap();
+    pair.0.send(wire::OPEN).unwrap();
+    let mut bytes = [0; 64];
+    let n = pair
+        .1
+        .receive_until(&mut bytes, time::after(300).unwrap())
+        .unwrap();
+    assert_eq!(&bytes[..n], wire::ACK);
+    pair.0.send(b"not a writer grant").unwrap();
+    assert_eq!(
+        pair.1.receive_until(&mut bytes, time::after(300).unwrap()),
+        Err(Error(abi::PEER_CLOSED as i64))
+    );
+    wake.send(b"still alive").unwrap();
+    assert_eq!(
+        child.wait_until(time::after(300).unwrap()).unwrap(),
+        Outcome::Returned(0)
+    );
+    pair.0.close().unwrap();
+    pair.1.close().unwrap();
+    wake.close().unwrap();
+}
+pub(super) fn worker_fault(env: Environment) -> u64 {
+    static mut SHARED: SharedSlot = SharedSlot::empty();
+    let slot = &raw mut SHARED;
+    // SAFETY: This process enters this worker once.
+    let mut owner = OwnerControl::open(unsafe { &mut *slot }).unwrap();
+    let input = env.endpoint(0).unwrap();
+    assert!(
+        owner
+            .next(Interest::Ipc(input), Some(time::after(300).unwrap()))
+            .unwrap()
+            .is_none()
+    );
+    let mut bytes = [0; 64];
+    let n = input
+        .receive_until(&mut bytes, time::now().unwrap())
+        .unwrap();
+    assert_eq!(&bytes[..n], b"still alive");
+    0
 }

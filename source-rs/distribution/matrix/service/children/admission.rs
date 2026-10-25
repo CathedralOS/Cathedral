@@ -115,7 +115,7 @@ impl Children {
             pages = [private, readers];
             self.requested_surfaces[plan.slot] = Some(surfaces);
         } else if self.desktop && (1..BACKGROUND).contains(&plan.slot) {
-            // A bounded child-matrix share covers a 117-page nested workspace
+            // A bounded child-matrix share covers a 122-page nested workspace
             // beside its owner's old/new 14-page headers. Owner offers still cap it.
             let (private, readers) = if resources.is_some_and(|(_, descendants)| descendants > 0) {
                 // Retain headers, masked capture output and all shared mailboxes

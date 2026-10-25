@@ -21,8 +21,9 @@ No placement, storage scope or management right is conferred by this helper.
 The caller also owns executable selection, funding/reservation release, launch
 loans, child-slot selection, teardown ordering and recovery. There is no implicit
 Drop cancellation. `close_connections` is used after task reclamation and server
-detachment; callers with separately retired control connections can retain their
-own explicit cleanup, as the stock matrix does.
+detachment. A shared control client must be dropped first; cleanup tolerates only
+BAD_HANDLE for its already-retired, never-reused endpoint names. Stock currently
+retains its separate explicit cleanup.
 
 The [stock admission coordinator](../../../../../distribution/matrix/service/children/admission.rs)
 uses this path for template, catalogue and stored-object admissions. The

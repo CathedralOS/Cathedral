@@ -13,6 +13,7 @@ pub struct Children {
     pub slots: [Option<Admitted>; 2],
     launches: [Option<Launch>; 2],
     pub uncertain: [bool; 2],
+    pub controls: [Option<control::Control>; 2],
 }
 impl Children {
     pub fn empty() -> Self {
@@ -20,6 +21,7 @@ impl Children {
             slots: [None, None],
             launches: [None, None],
             uncertain: [false; 2],
+            controls: [None, None],
         }
     }
     pub fn start(
@@ -43,9 +45,9 @@ impl Children {
                 Limits {
                     // Omega host (9) + old/new text (24) + small retained
                     // decorations and storage publication, all app-charged.
-                    private_pages: 41,
-                    reader_pages: 6,
-                    channels: 2,
+                    private_pages: 42,
+                    reader_pages: 7,
+                    channels: 3,
                 },
                 0,
                 abi::MAX_ADMISSION_FRAMES as u64,
@@ -73,6 +75,7 @@ impl Children {
             server.install(slot + 2, child.storage.unwrap())?;
             forwarding.install(slot, server.incarnation(slot + 2).unwrap());
             self.launches[slot] = Some(launch);
+            self.controls[slot] = Some(control::Control::start(child.control));
             self.slots[slot] = Some(child);
         }
         cathedral_user_runtime::write(
@@ -105,6 +108,7 @@ impl Children {
             server.remove(slot + 2);
             child.task.cancel()?;
             child.task.wait()?;
+            self.controls[slot] = None;
             child.close_connections()?;
             self.launches[slot].take().unwrap().release()?;
         }

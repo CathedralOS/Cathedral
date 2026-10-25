@@ -4,7 +4,13 @@ use cathedral_desktop_matrix_contracts::matrix as wire;
 use cathedral_kernel_contracts::user as abi;
 use cathedral_notes::document::Document;
 use cathedral_platform_contracts::input;
-use cathedral_user_runtime::{Error, ipc::Handle, services::Services, time};
+use cathedral_user_runtime::{
+    Error,
+    ipc::Handle,
+    server::{OwnerControl, SharedSlot},
+    services::Services,
+    time,
+};
 type Pair = (Handle, Handle);
 fn call(pair: Pair, words: wire::Packet) -> wire::Packet {
     pair.0.send(&wire::encode(words)).unwrap();
@@ -14,8 +20,14 @@ fn call(pair: Pair, words: wire::Packet) -> wire::Packet {
     wire::decode(&bytes[..n]).unwrap()
 }
 /// Owner control reply: revision, length, last error, dirty, note count, note index.
-fn report(control: Pair, notes: &storage::Notes, draft: &Document, dirty: bool, error: u64) {
-    let _ = control.1.send(&wire::encode([
+fn report(
+    control: &mut OwnerControl,
+    notes: &storage::Notes,
+    draft: &Document,
+    dirty: bool,
+    error: u64,
+) {
+    let _ = control.reply(&wire::encode([
         0,
         notes.revision,
         draft.len as u64,
@@ -92,7 +104,10 @@ pub fn run(style: u64, mut services: Services) {
         );
     }
     // The owner may retire this control link; the app keeps serving its world.
-    let mut control = Some((Handle::bootstrap(0).unwrap(), Handle::bootstrap(1).unwrap()));
+    static mut CONTROL: SharedSlot = SharedSlot::empty();
+    let slot = &raw mut CONTROL;
+    // SAFETY: The single probe entry owns its control connection until exit.
+    let mut control = OwnerControl::open(unsafe { &mut *slot }).unwrap();
     let mut notes = storage::Notes::new(connections.storage, style);
     let mut draft = Document::default();
     let mut confirmed = draft;
@@ -325,41 +340,26 @@ pub fn run(style: u64, mut services: Services) {
         if snapshot[5] & wire::MORE != 0 {
             continue;
         }
-        let mut bytes = [0; 64];
-        let mut handles = [connections.wake.interest(); 2];
-        let mut count = 1;
-        if let Some(control) = control {
-            handles[1] = cathedral_user_runtime::event::Interest::Ipc(control.0);
-            count = 2;
-        }
-        match cathedral_user_runtime::event::wait(&handles[..count], time::after(100).unwrap()) {
-            Ok(0) => {
-                connections.wake.take().unwrap();
-            }
-            Ok(_) => {
-                let pair = control.unwrap();
-                match pair.0.receive(&mut bytes) {
-                    // Closing asks what would be lost: an unconfirmed draft.
-                    Ok(len)
-                        if wire::decode(&bytes[..len])
-                            .is_some_and(|words| words[0] == wire::LOSS) =>
-                    {
-                        let _ = pair.1.send(&wire::encode([
-                            0,
-                            u64::from(draft != confirmed),
-                            0,
-                            0,
-                            0,
-                            0,
-                            0,
-                            0,
-                        ]));
-                    }
-                    Ok(_) => report(pair, &notes, &draft, draft != confirmed, error),
-                    Err(_) => control = None,
+        match control.next(connections.wake.interest(), Some(time::after(100).unwrap())) {
+            Ok(Some((bytes, len))) => {
+                if wire::decode(&bytes[..len]).is_some_and(|words| words[0] == wire::LOSS) {
+                    let _ = control.reply(&wire::encode([
+                        0,
+                        u64::from(draft != confirmed),
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                    ]));
+                } else {
+                    report(&mut control, &notes, &draft, draft != confirmed, error);
                 }
             }
-            Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
+            Ok(None) => {
+                connections.wake.take().unwrap();
+            }
             Err(e) => panic!("notes wait {e:?}"),
         }
     }
