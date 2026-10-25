@@ -6,21 +6,25 @@ def configure(composition, mode, stage="read"):
     def enable(value):
         if isinstance(value, dict):
             if value.get('package') == 'cathedral-stock-matrix':
-                value.setdefault('features', []).extend(['binding-delay' if stage == 'bind' else 'launch-delay', 'trace-storage'])
+                value.setdefault('features', []).extend([{'bind': 'binding-delay', 'read': 'launch-delay', 'scene': 'scene-delay'}[stage], 'trace-storage'])
+                if mode in ('late-revoke', 'late-stop-target'): value['features'].append('scene-commit-hold')
+                if mode == 'failure': value['features'].append('scene-failure')
                 if mode == 'timeout': value['features'].append('binding-drop-reply')
                 if mode in ('bind', 'place'): value['features'].append('launch-' + mode + '-failure')
             for child in value.values(): enable(child)
         elif isinstance(value, list):
             for child in value: enable(child)
     enable(composition)
-    if mode in ('stop', 'revoke'):
-        composition['startup']['initial']['features'].append('launch-read-' + mode + '-probe')
-        if stage == 'bind': composition['startup']['initial']['features'].append('launch-pending-loss-probe')
+    if mode in ('stop', 'revoke', 'late-revoke', 'late-stop-target'):
+        if mode == 'late-stop-target': composition['startup']['initial']['features'].append('launch-target-stop-probe')
+        else: composition['startup']['initial']['features'].append('launch-read-' + ('revoke' if mode == 'late-revoke' else mode) + '-probe')
+        if stage in ('bind', 'scene'): composition['startup']['initial']['features'].append('launch-pending-loss-probe')
 
 
 def exercise(output, click, key, scan, width, height, reboot, mode, stage="read"):
     n = Nested(click, key, scan, width, height)
     held, released = ('launch-bind-held', 'launch-bind-released') if stage == 'bind' else ('launch-read-held', 'launch-read-released')
+    if stage == 'scene': held, released = 'launch-scene-held', 'launch-scene-released'
     def log(): return (output / 'serial.log').read_text(encoding='utf-8', errors='replace')
     n.enter(1, not reboot); n.launch(1, 0)
     base = 'ab' if reboot and mode != 'timeout' else ''
@@ -28,7 +32,13 @@ def exercise(output, click, key, scan, width, height, reboot, mode, stage="read"
     before = len(log())
     n.launch(1, 1)
     scan(lambda sw,d: held in log()[before:], f'ordinary launch {stage} held')
-    n.focus_note(1); key('b'); n.note(1, base+'ab', True)
+    n.focus_note(1); key('b')
+    if stage == 'scene':
+        # Physical B is code 16 in the shared input contract. Require this
+        # new key, not a late release from the earlier draft edit.
+        scan(lambda sw,d: any(line.endswith(' 16') for line in log()[before:].splitlines() if 'launch-scene-input' in line), 'B input during staged scene')
+    else:
+        n.note(1, base+'ab', True)
     assert released not in log()[before:], 'input waited for launch read'
     print(f'PASS: sibling input during ordinary launch {stage}', flush=True)
     scan(lambda sw,d: released in log()[before:], f'ordinary launch {stage} released')
@@ -36,18 +46,20 @@ def exercise(output, click, key, scan, width, height, reboot, mode, stage="read"
         n.color(1, False); n.app_close(1)
     else:
         scan(lambda sw,d: 'stored-launch-refused' in log()[before:], 'cancelled or rolled back launch')
-        if mode in ('stop', 'revoke'):
+        if mode in ('stop', 'revoke', 'late-revoke', 'late-stop-target'):
             scan(lambda sw,d: 'read cancellation acknowledged' in log()[before:], 'routed owner cancellation')
             transcript=log()[before:]
             assert transcript.index('read cancellation requested') < transcript.index(released)
-            if stage == 'bind':
+            if stage in ('bind', 'scene'):
                 assert 'pending launch loss busy' in transcript
                 assert 'stored-launch-admitted 2 ' in transcript
                 assert 'matrix-reclaimed 2 ' in transcript
-                assert 'launch-bind-committed 2 ' not in transcript
+                if stage == 'bind': assert 'launch-bind-committed 2 ' not in transcript
+                else: assert any(line.endswith(f' {(1<<64)-13} {int(mode.startswith("late-"))}') for line in transcript.splitlines() if 'launch-scene-complete' in line)
             else:
                 assert 'stored-launch-admitted 2 ' not in transcript
             assert 'stored-launch-published 2 ' not in transcript
+            if mode.startswith('late-'): assert 'launch-scene-restored' in transcript
         elif mode == 'timeout':
             assert 'launch-bind-reply-dropped' in log()[before:]
             assert f'launch-bind-retired {(1 << 64) - 110}' in log()[before:]
@@ -56,7 +68,8 @@ def exercise(output, click, key, scan, width, height, reboot, mode, stage="read"
             assert 'launch-bind-committed 2 ' not in log()[before:]
             assert 'stored-launch-published 2 ' not in log()[before:]
         else:
-            assert 'launch-stage-failure' in log()[before:]
+            if stage != 'scene': assert 'launch-stage-failure' in log()[before:]
+            else: assert any(line.endswith(f' {(1<<64)-5} 0') for line in log()[before:].splitlines() if 'launch-scene-complete' in line)
             assert 'stored-launch-admitted 2 ' in log()[before:]
             assert 'matrix-reclaimed 2 ' in log()[before:], 'admitted task was not reclaimed'
             assert 'stored-launch-published 2 ' not in log()[before:]

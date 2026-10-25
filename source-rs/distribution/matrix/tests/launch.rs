@@ -122,3 +122,21 @@ fn pending_binding_accepts_only_its_live_completion_and_cancel_requires_rollback
     step(&mut s, t, C::Rollback, false);
     step(&mut s, t, C::Finish, false);
 }
+
+#[test]
+fn cancelled_activation_never_advances_to_publication_on_a_late_commit() {
+    let (mut s, t, wrong) = start(false, true, true);
+    for c in [C::Read, C::Admit, C::Place] {
+        step(&mut s, t, c, false);
+    }
+    assert_eq!(s.command(), Some(C::Activate));
+    assert!(s.accepts(t, C::Activate));
+    assert!(!s.accepts(wrong, C::Activate));
+    assert_eq!(s.command(), None);
+    s.cancel(44);
+    assert!(!s.complete(t, C::Activate, 0, false));
+    step(&mut s, t, C::Rollback, false);
+    step(&mut s, t, C::Finish, false);
+    assert_eq!(s.status(), 44);
+    assert_eq!(s.command(), None);
+}

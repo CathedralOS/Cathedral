@@ -41,6 +41,70 @@ new OS code and establishes no execution or performance result.
 
 ## Current implementation evidence
 
+Implementation update 2026-10-25: **ordinary launch activation yields and
+publication is local**, over `4a191eff`. Artifact directory stamps below are UTC.
+
+Start at [the launch boundary guide](source/distribution/matrix/launch/README.md),
+then [launch/scene.rs](source-rs/distribution/matrix/service/children/launch/scene.rs)
+for task/ticket custody and
+[parent/scene/scene.rs](source-rs/distribution/matrix/service/parent/scene/scene.rs)
+for the prepared visual transaction. Omega's existing Activate command now yields
+between begin, surface updates, commit and abort. Tagged input progresses on the
+shared interaction link; visual mutations remain serialized. Preparation changes
+neither live visibility nor input routes. Successful commit installs the selection.
+Publication only notifies children and records login state: the admitted child's
+startup requests remain held through Finish, so it has no drawn surfaces to replay.
+
+Authenticated owner changes and caller disconnects cancel pending scenes. Before
+COMMIT, cancellation aborts; after submission, a successful commit must be
+compensated by restoring the previous exact task before rollback. Cancellation
+already known at the reply leaves local input/selection unchanged. Restoration
+also handles an owner that already reclaimed the admitted task, without touching
+a replacement task. Unknown transport outcomes and failed abort/restoration fail
+closed. Compensation can briefly expose the accepted scene before restoration.
+Kernel, public ABI and compiled Omega launch sequencing are unchanged.
+
+Live tests found and fixed two cancellation edges: LOSS was deferred behind the
+visual gate instead of promptly answering BUSY, and restoring the previous scene
+was incorrectly skipped if an owner STOP had already emptied the admitted slot.
+
+Verification:
+
+- Six `desktop_test.py --scene-async MODE --timeout 120` cases pass fresh/cold:
+  `complete` (`desktop/20261025T065153479916Z`), `revoke`
+  (`desktop/20261025T065428190687Z`), requester `stop`
+  (`desktop/20261025T065530817785Z`), staged `failure`
+  (`desktop/20261025T065927555667Z`), `late-revoke`
+  (`desktop/20261025T070107363686Z`) and `late-stop-target`
+  (`desktop/20261025T070725315265Z`). Each requires fresh B-key delivery during
+  the three-second hold, the preserved sibling draft, protected close, save/cold
+  reopen and subtree reclamation. Canceled launches must not publish; same-slot
+  retry succeeds when the launcher survives. Both late cases require an accepted
+  commit and explicit restoration. This proves routed input during visual waits;
+  it does not promise an app blocked in its own drawing call consumes it then.
+- Normal F5 fresh/cold desktop, independent Notes, Colors and storage oracle:
+  `desktop/20261025T070139489076Z`.
+- Three nested desktops with `--interaction-delay`, fresh/cold: input through all
+  seven matrix realms during a held presentation, delayed poll/image recovery,
+  protected drafts, persistence and repeated subtree reclamation:
+  `desktop/20261025T070355451990Z`.
+- Default host `cargo test --locked` passes, including the new compiled-Omega
+  canceled-Activate case and immutable scene projection test. Guest all-feature
+  matrix Clippy, host matrix Clippy and desktop owner-probe Clippy pass. Layout
+  (73 Omega / 150 Rust edges), eight boundary checks, formatting and diff checks
+  pass. Full kernel/ARM64 and unrelated launch/runtime suites were not rerun.
+- Logs: `build/omega-component/launch-scene-{complete,revoke2,stop,failure,
+  late-final,late-stop-target,desktop,nested,final-host}.log`.
+
+**Next within launch/scene work:** extend yielding visual transactions to selecting
+already-running apps. The shared-memory IPC outcome above is the broader transport
+frontier; retain this milestone's custody and cancellation evidence during migration.
+That path, teardown/compensation, task admission/retirement, root physical-source
+dispatch and some startup/recovery/image helpers still contain synchronous work.
+The matrix is not fully nonblocking and pixel commits are not concurrent. The
+earlier intermittent partial-key observation remains open; this milestone is not
+a latency bound or complete input-loss fix. No owner decision blocks this work.
+
 Implementation update 2026-10-24: **tagged input progresses beside asynchronous
 presentation**, over `73cb81f5`. Artifact directory stamps below are UTC.
 

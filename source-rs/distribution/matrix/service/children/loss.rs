@@ -19,7 +19,7 @@ impl Children {
         parent: &Parent,
         server: &mut Server,
     ) -> Result<bool, Error> {
-        if parent.refreshing()
+        if (parent.refreshing() || parent.scene_active())
             && let Event::Request(request) = event
             && request.control
             && wire::decode(&request.bytes[..request.len])

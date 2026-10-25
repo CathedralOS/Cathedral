@@ -76,6 +76,7 @@ impl Parent {
             // A view replacement can invalidate the surface arena. Retain that
             // exact snapshot until the outstanding scene commits or aborts.
             if self.publishing() && !world.poll_preserves_view(reply) {
+                self.cancel_scene(abi::DENIED);
                 return Ok(());
             }
             let p = self.polling.take().unwrap();
@@ -89,7 +90,17 @@ impl Parent {
                     &[self.storage_realm, p.id as u64, wire::poll_event(reply)[3]],
                 );
             }
+            #[cfg(feature = "scene-delay")]
+            if self.scene_active() && wire::poll_event(reply)[2] == wire::KEY {
+                time::storage_sample(
+                    "launch-scene-input",
+                    &[self.storage_realm, wire::poll_event(reply)[3]],
+                );
+            }
             self.inherit_reply(world, reply);
+            if self.scene_active() && !world.poll_preserves_view(reply) {
+                return Err(Error(abi::DENIED as i64));
+            }
             // Malformed upstream input must fail closed, never let publication
             // proceed against revoked local bindings.
             if self.pending.as_ref().is_some_and(|p| {

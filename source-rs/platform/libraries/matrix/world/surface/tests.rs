@@ -1,5 +1,39 @@
 use super::*;
 #[test]
+fn visibility_preview_preserves_live_demand_geometry_and_surface_contents() {
+    let mut w = world();
+    place(&mut w, 0, 10, 20);
+    let epoch = view(&mut w, 0)[1];
+    let name = surface(&mut w, 0, 0, 1);
+    let original = w
+        .surface(0, 7, [wire::PAINT, epoch, name, 5, 7, 400, 400, 0x123456])
+        .unwrap();
+    w.take_notification(0);
+    let hidden = w.preview_replay(0, 0, false).unwrap();
+    assert_eq!(&hidden[3..7], &[0; 4]);
+    assert_eq!(w.preview_replay(0, 0, true), Some(original));
+    assert_eq!(w.replay(0, 0), Some(original));
+    assert!(!w.take_notification(0));
+    assert!(wire::poll_frames(w.request(
+        0,
+        7,
+        [wire::POLL, 0, 0, 0, 0, 0, 0, 0]
+    )));
+    w.visible(0, false).unwrap();
+    w.take_notification(0);
+    assert_eq!(w.preview_replay(0, 0, true), Some(original));
+    assert_eq!(w.replay(0, 0), Some(hidden));
+    assert!(!w.take_notification(0));
+    assert!(!wire::poll_frames(w.request(
+        0,
+        7,
+        [wire::POLL, 0, 0, 0, 0, 0, 0, 0]
+    )));
+    w.revoke(0).unwrap();
+    assert_eq!(w.preview_replay(0, 0, true), None);
+}
+
+#[test]
 fn cursor_surface_is_clipped_retained_and_confined_like_other_surfaces() {
     let mut outer = world();
     place(&mut outer, 0, 100, 100);

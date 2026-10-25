@@ -41,3 +41,7 @@ binding-drop-reply = []
 launch-bind-failure = []
 launch-place-failure = []
 input-producer-probe = []
+
+scene-delay = []
+scene-failure = ["scene-delay"]
+scene-commit-hold = ["scene-delay"]

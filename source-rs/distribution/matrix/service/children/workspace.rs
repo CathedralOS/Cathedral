@@ -79,6 +79,20 @@ impl Children {
             }
             return Ok(status);
         }
+        self.commit_activation(slot, world, server)?;
+        Ok(0)
+    }
+    pub(super) fn commit_activation(
+        &mut self,
+        slot: usize,
+        world: &mut World,
+        server: &Server,
+    ) -> Result<(), Error> {
+        for sibling in 1..BACKGROUND {
+            world
+                .visible(sibling, sibling == slot)
+                .map_err(|c| Error(c as i64))?;
+        }
         // This desktop's app-switch policy deactivates the former app's routes.
         // Visibility itself is neutral: other matrices may keep hidden control.
         if let Some(previous) = self.active {
@@ -93,7 +107,7 @@ impl Children {
                 .map_err(|c| Error(c as i64))?;
         }
         world.notify(0);
-        Ok(0)
+        Ok(())
     }
 }
 

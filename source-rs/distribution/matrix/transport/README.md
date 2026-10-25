@@ -41,7 +41,9 @@ full reply channels, ordering, stale incarnations and queue overflow directly.
 
 This proves input delivery through nested matrix routers during asynchronous
 presentation. An app blocked in its own synchronous drawing call still cannot
-process that input until it returns. Root physical-source dispatch, image calls,
-launch activation and launch publication retain synchronous work. An atomic scene
+process that input until it returns. Launch activation now uses the same dispatcher
+through [scene/scene.rs](../service/parent/scene/scene.rs); publication is a local
+startup handoff. Root physical-source dispatch, image calls, switching existing
+apps and teardown/compensation retain synchronous work. An atomic scene
 still serializes visual commits. This is not a claim of end-to-end latency bounds
 or that sibling pixels can commit into another app's open scene transaction.

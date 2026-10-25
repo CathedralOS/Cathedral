@@ -6,6 +6,10 @@ pub(in crate::service) use storage::{Bound, LaunchOrigin, LaunchRequest, Launche
 pub(super) struct Parent {
     recovery: recovery::Recovery,
     pending: Option<presentation::Pending>,
+    scene: Option<scene::Pending>,
+    scene_packets: [wire::Packet; wire::MAX_SURFACES],
+    #[cfg(feature = "scene-delay")]
+    scene_probe_used: bool,
     storage_pending: Option<storage::Pending>,
     binding_pending: Option<storage::Binding>,
     /// Requests from an admitted task wait until its launch is published or rolled back.
@@ -87,6 +91,10 @@ impl Parent {
         Self {
             recovery: recovery::Recovery::empty(),
             pending: None,
+            scene: None,
+            scene_packets: [[0; 8]; wire::MAX_SURFACES],
+            #[cfg(feature = "scene-delay")]
+            scene_probe_used: false,
             storage_pending: None,
             binding_pending: None,
             admitting: None,

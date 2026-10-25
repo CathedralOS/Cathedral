@@ -48,7 +48,9 @@ impl Probe {
         };
         let mut words = [
             op,
-            if ordinary && op == wire::STORAGE_REVOKE {
+            if ordinary
+                && (op == wire::STORAGE_REVOKE || cfg!(feature = "launch-target-stop-probe"))
+            {
                 2
             } else {
                 0

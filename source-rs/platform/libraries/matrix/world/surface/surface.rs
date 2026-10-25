@@ -224,6 +224,28 @@ impl<const N: usize> World<N> {
         words[1] = child.grant.epoch;
         self.surface(slot, child.incarnation, words).ok()
     }
+    /// Prepare an owner visibility change without changing routes, demand or
+    /// cached child content. The owner freezes geometry until commit/abort.
+    pub fn preview_replay(&self, slot: usize, rank: usize, visible: bool) -> Option<wire::Packet> {
+        let child = self.children.get(slot)?;
+        if !child.grant.valid() {
+            return None;
+        }
+        let surface = child.surfaces.get(rank)?.as_ref()?;
+        let mut words = surface.draw?;
+        let placement = child.rect?;
+        words[1] = self.parent.epoch;
+        words[2] = surface.upstream;
+        words[5] = words[5].min(child.grant.width.saturating_sub(words[3]));
+        words[6] = words[6].min(child.grant.height.saturating_sub(words[4]));
+        if !visible || words[5] == 0 || words[6] == 0 {
+            words[3..7].fill(0);
+        } else {
+            words[3] += placement.x;
+            words[4] += placement.y;
+        }
+        Some(words)
+    }
     pub(super) fn retire_surfaces(&mut self, slot: usize) {
         for surface in &mut self.children[slot].surfaces {
             if let Some(surface) = surface.take() {

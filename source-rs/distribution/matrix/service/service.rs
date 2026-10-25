@@ -142,6 +142,7 @@ pub fn run(environment: Environment) -> Result<(), Error> {
             children.complete_binding(bound);
         }
         parent.progress_presentation(world, &mut server)?;
+        children.progress_launch_scene(parent, world, &server)?;
         // A replacement snapshot retained behind publication is already in
         // memory: consume it now, rather than parking on an empty receiver.
         if parent.refresh_ready() && !parent.publishing() {
@@ -203,9 +204,13 @@ pub fn run(environment: Environment) -> Result<(), Error> {
                 }
             }));
         }
-        for (receive, until) in [parent.refresh_wait(), parent.presentation_wait()]
-            .into_iter()
-            .flatten()
+        for (receive, until) in [
+            parent.refresh_wait(),
+            parent.presentation_wait(),
+            parent.scene_wait(),
+        ]
+        .into_iter()
+        .flatten()
         {
             // Both exchanges may wait on the same interaction receiver.
             if !extra[..count].iter().any(|h| h.raw() == receive.raw()) {
@@ -306,6 +311,7 @@ pub fn run(environment: Environment) -> Result<(), Error> {
         if ready_launch.is_none() && children.query_during_refresh(&event, parent, &mut server)? {
             continue;
         }
+        children.cancel_scene_event(&event, parent);
         if deferred::Deferred::blocks(&event, parent) {
             #[cfg(feature = "trace-storage")]
             deferred::trace_loss(&event, parent);

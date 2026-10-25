@@ -67,16 +67,20 @@ impl Children {
                 }
             }
             Command::Activate => {
-                self.next_ticket += 1;
-                self.running[slot] = Some((self.next_ticket, l.plan.object));
-                let code = self.activate(slot, parent, world, server)?;
-                if code != 0 {
-                    return Err(Error(code as i64));
-                }
+                l.previous = self.active;
+                l.previous_task = self
+                    .active
+                    .and_then(|s| self.slots[s].as_ref())
+                    .map(|c| c.task.raw());
+                parent.begin_scene(l.ticket, world, self.active, slot)?;
             }
             Command::Publish => {
-                super::super::requests::flush(parent, world)?;
-                super::super::requests::replay(parent, world, slot)?;
+                // Admitted-child requests stay held through this command. No
+                // child surface exists yet, so publication needs no replay IPC.
+                debug_assert!(
+                    (0..wire::MAX_SURFACES)
+                        .all(|rank| world.preview_replay(slot, rank, true).is_none())
+                );
                 self.notify(world)?;
                 #[cfg(feature = "trace-storage")]
                 time::storage_sample("stored-launch-published", &[slot as u64, l.ticket.raw()]);
@@ -88,6 +92,7 @@ impl Children {
                 }
             }
             Command::Rollback => {
+                self.restore_launch_scene(l, parent, world, server)?;
                 // Never reclaim a replacement task that happens to occupy the same slot.
                 if self.slots[slot].as_ref().map(|c| c.task.raw()) == l.task && l.task.is_some() {
                     self.stop(slot, server, world, parent)?;

@@ -3,7 +3,6 @@
 //! Slow replies retain ownership and never trigger a replay.
 use super::*;
 use cathedral_platform_contracts::display;
-use cathedral_platform_contracts::display::composition;
 use cathedral_user_runtime::server::Request;
 
 pub(super) struct Pending {
@@ -21,7 +20,7 @@ pub(super) struct Pending {
 }
 impl Parent {
     pub(in super::super) fn publishing(&self) -> bool {
-        self.pending.is_some()
+        self.pending.is_some() || self.scene_active()
     }
     pub(in super::super) fn presentation_wait(&self) -> Option<(Handle, Option<u64>)> {
         self.pending.as_ref().map(|p| {
@@ -44,7 +43,7 @@ impl Parent {
         local_revision: u64,
         prepared: [wire::Packet; wire::PRESENT_LIMIT],
     ) -> Result<(), Error> {
-        assert!(self.pending.is_none());
+        assert!(!self.publishing());
         self.next_revision = self
             .next_revision
             .checked_add(1)
@@ -195,14 +194,6 @@ impl Parent {
         time::trace("present-done");
         Ok(())
     }
-    fn output(&self) -> Result<(Handle, Handle), Error> {
-        (if self.upstream {
-            self.pair
-        } else {
-            self.display
-        })
-        .ok_or(Error(abi::DENIED as i64))
-    }
     fn send_presentation(&self, world: &mut World) -> Result<(), Error> {
         let p = self.pending.as_ref().unwrap();
         let batch = &self.batches[p.request.client.unwrap()];
@@ -228,54 +219,18 @@ impl Parent {
             n if n == wire::PRESENT_LIMIT + 2 => wire::PRESENT_ABORT,
             _ => 0,
         };
-        let (bytes, object) = if op != 0 {
-            let bytes = if self.upstream {
-                wire::encode([op, self.grant.epoch, p.revision, 0, 0, 0, 0, 0])
-            } else {
-                let op = match op {
-                    wire::PRESENT_BEGIN => composition::MATRIX_BEGIN,
-                    wire::PRESENT_COMMIT => composition::MATRIX_COMMIT,
-                    _ => composition::MATRIX_ABORT,
-                };
-                let mut bytes = [0; 64];
-                bytes[..48].copy_from_slice(&display::encode([op, p.revision, 0, 0, 0, 0]));
-                bytes
-            };
-            (bytes, None)
+        let (words, object) = if op != 0 {
+            ([op, self.grant.epoch, p.revision, 0, 0, 0, 0, 0], None)
         } else {
             let local = batch.entries[p.step - 1].as_ref().unwrap().0;
             let words = world
                 .preview_surface(p.request.client.unwrap(), p.request.incarnation, local)
                 .expect("publication holds geometry stable");
-            let object = batch.entries[p.step - 1].as_ref().unwrap().1.as_ref();
-            let bytes = if self.upstream {
-                wire::encode(words)
-            } else {
-                let [_, _, key, x, y, w, h, value] = words;
-                if key == 0 || key > composition::MATRIX_TILES as u64 {
-                    return Err(Error(abi::BAD_HANDLE as i64));
-                }
-                let op = if object.is_some() {
-                    composition::MATRIX_IMAGE
-                } else if words[0] == wire::SURFACE_CURSOR {
-                    composition::MATRIX_CURSOR
-                } else {
-                    composition::MATRIX_RECT
-                };
-                let mut values = [op | ((key - 1) << 16), x, y, w, h, value];
-                if words[0] == wire::ERASE {
-                    values[1..].fill(0);
-                }
-                let mut bytes = [0; 64];
-                bytes[..48].copy_from_slice(&display::encode(values));
-                bytes
-            };
-            (bytes, object)
+            (
+                words,
+                batch.entries[p.step - 1].as_ref().unwrap().1.as_ref(),
+            )
         };
-        let bytes = &bytes[..if self.upstream { 64 } else { 48 }];
-        match object {
-            Some(object) => send.send_memory(bytes, object),
-            None => send.send(bytes),
-        }
+        self.send_output(words, object)
     }
 }

@@ -17,6 +17,9 @@ pub(super) struct Pending {
     selection: bool,
     binding: Option<[u64; 4]>,
     bound: Option<Result<usize, u64>>,
+    previous: Option<usize>,
+    previous_task: Option<u64>,
+    scene_committed: bool,
     #[cfg(any(feature = "launch-bind-failure", feature = "launch-place-failure"))]
     probe: bool,
 }
@@ -57,6 +60,9 @@ impl Children {
             selection,
             binding: parent.storage_identity(),
             bound: None,
+            previous: None,
+            previous_task: None,
+            scene_committed: false,
             #[cfg(any(feature = "launch-bind-failure", feature = "launch-place-failure"))]
             probe,
         });
@@ -101,7 +107,7 @@ impl Children {
             return Ok(false);
         };
         self.finish_binding(&mut l, parent, server)?;
-        // Read and binding yield. Other steps currently use synchronous host mechanisms.
+        // Read, binding and scene activation yield; publication releases startup locally.
         while let Some(command) = l.policy.command() {
             if !matches!(
                 command,
@@ -138,7 +144,7 @@ impl Children {
             ) {
                 result.as_ref().map_err(|e| Error(e.0))?;
             }
-            if command == Command::Bind && result.is_ok() {
+            if matches!(command, Command::Bind | Command::Activate) && result.is_ok() {
                 self.launching = Some(l);
                 return Ok(true);
             }
