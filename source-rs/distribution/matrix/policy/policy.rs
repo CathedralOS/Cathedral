@@ -1,5 +1,5 @@
-// Validate saved desktop configuration and calculate placement in Omega.
-// Cross-language entrance: source/distribution/matrix/configuration/main.omg.
+// Stock policies execute in Omega: configuration/placement here; close/loss in lifecycle.rs.
+// Cross-language entrance: source/distribution/matrix/policy/main.omg.
 // These synchronous values carry no capability, endpoint or task identity.
 use cathedral_desktop_matrix_contracts::matrix::config::Config;
 

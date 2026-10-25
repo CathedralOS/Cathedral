@@ -1,5 +1,63 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-24: **normal F5 close/loss decisions execute in
+Omega**, over `ce2e94f9`. Artifact directory stamps below are UTC.
+
+Start at [the stock Omega matrix guide](source/distribution/matrix/README.md).
+The shared native export now dispatches configuration/placement and
+[lifecycle policy](source/distribution/matrix/lifecycle/main.omg). The former
+`configuration-native` consumer is now `native`; configuration is a plain package
+that the chooser still imports directly. Lifecycle owns survey admission,
+pending-answer aggregation, conservative loss, close wait/refuse/stop and the
+already-stopped result. It carries only value facts and two survey state words.
+
+Rust retains authenticated requests, exact task/endpoint identity, asynchronous
+parent/storage progress, deadlines, stale FIFO reply draining and reclamation.
+The temporary bridge packet is isolated from callers' deep IPC stacks. No kernel
+mechanism, capability grant, desktop budget or UI workflow changed. This is a
+bounded production policy migration, not the entire matrix event loop in Omega.
+
+A clean LOSS answer must now be exactly eight zero words. Previously the matrix
+ignored reserved reply fields when deciding that no work would be lost. Malformed
+clean-looking replies now preserve the app; the contract documents canonical
+reserved fields. The real nested IPC fixture injects this case. Existing delayed
+clean/then-dirty replies, control failure, replacement and close/exit races remain
+covered, without treating transport failure as task death.
+
+Verification:
+
+- Normal F5 fresh/cold desktop, Notes save/discard/cancel, Colors and independent
+  storage oracle: `desktop/20261025T022949628899Z`.
+- Three-level nested desktop, continuous pointer movement, delayed parent work,
+  close during the storage hold, recursive dirty-close protection, repeated
+  reclamation and cold reopen: `desktop/20261025T023133829682Z`.
+- `--matrix-test --release`: malformed reserved replies, recursive loss,
+  stale clean FIFO replies, isolation and replacement pass.
+- `--matrix-storage-test --release`: control failure, close/exit races and
+  replacement receipts pass. Its first run found an obsolete fixture assumption:
+  bit 4 now means INPUT_PRODUCER. The invalid-flag probe now uses unsupported
+  bits instead, and the complete rerun passes.
+- Default host `cargo test --locked` passes. Stock matrix has seven compiled
+  policy tests: three configuration/placement oracles plus four lifecycle tests
+  covering all 32 child subsets, all admission-busy flags, errors, malformed
+  words and monotonic uncertainty.
+- Targeted Clippy passes: stock matrix guest all features and host tests;
+  desktop guest default and storage-lab/trace-storage. The attempted desktop
+  all-features union hits the existing unused `database_fresh` field because it
+  combines alternative lab entry paths; no unrelated code was changed for it.
+- Layout (70 Omega / 150 Rust edges), eight layout boundary tests, Rust formatting
+  and diff checks pass. Full kernel/ARM64 runtime suites were not rerun.
+- Logs: `build/omega-component/lifecycle-{desktop,nested,host-tests,matrix-test,
+  matrix-storage-test,matrix-storage-recheck}.log`. Guest logs are under the paths above or
+  `build/boot-harness-rs/{matrix-test,matrix-storage-test}`.
+
+**Next:** migrate the stock launcher's bounded crash/retry/fallback decisions to
+Omega while retaining exact task/authority checks and asynchronous reads in Rust.
+Exercise the existing launcher recovery fixture with a healthy sibling holding
+an unsaved draft. Do not promote the independent matrix lab's synchronous parent
+adapter into the desktop loop. The earlier intermittent partial-key observation
+remains open. No new owner semantic decision is required for this migration.
+
 Implementation update 2026-10-25: **Omega matrix accepts a real upstream grant
 and attenuates it to nested children**, over `eb28b007`.
 

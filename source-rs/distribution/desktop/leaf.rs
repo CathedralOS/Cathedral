@@ -39,6 +39,7 @@ pub fn run(environment: cathedral_user_runtime::task::Environment) -> u64 {
     let mut storage_epoch = 0;
     let mut last = wire::error(abi::WOULD_BLOCK);
     let (mut loss, mut loss_delay, mut next_loss) = (0, 0, 0);
+    let mut loss_reserved = 0;
     let mut held_losses = None;
     let mut drop_loss_reply = false;
     let mut exit_on_loss = false;
@@ -76,8 +77,9 @@ pub fn run(environment: cathedral_user_runtime::task::Environment) -> u64 {
             control.1.send(&wire::encode(last)).unwrap();
             continue;
         }
-        if let [LOSS_PROBE, value, delay, next, 0, 0, 0, 0] = words {
+        if let [LOSS_PROBE, value, delay, next, reserved, 0, 0, 0] = words {
             (loss, loss_delay, next_loss) = (value, delay, next);
+            loss_reserved = reserved;
             control.1.send(&wire::encode([0; 8])).unwrap();
             continue;
         }
@@ -125,7 +127,7 @@ pub fn run(environment: cathedral_user_runtime::task::Environment) -> u64 {
                 (loss, loss_delay, next_loss) = (1, 0, 1);
                 continue;
             }
-            let answer = [0, loss, 0, 0, 0, 0, 0, 0];
+            let answer = [0, loss, 0, 0, 0, 0, 0, loss_reserved];
             let until = time::after(loss_delay).unwrap();
             while !time::reached(time::now().unwrap(), until) {
                 cathedral_user_runtime::yield_now();

@@ -248,7 +248,19 @@ pub(super) fn sibling(f: &Fixture) {
         wire::error(cathedral_platform_contracts::imports::MISSING)
     );
     assert_eq!(
-        f.query(3, [wire::LAUNCH, 9, 4, 0, 0, 0, 0, 0]),
+        f.query(
+            3,
+            [
+                wire::LAUNCH,
+                9,
+                !cathedral_platform_contracts::imports::SUPPORTED,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        ),
         wire::error(abi::INVALID_ARGUMENT)
     );
 

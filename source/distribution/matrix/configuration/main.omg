@@ -3,10 +3,6 @@
 // Rust reference bridge, never a service protocol or capability grant.
 use encoding;
 use placement;
-public boundary trait Configuration { machine decide(p: &mut [u64; 128]) -> u64; }
-public ConfigurationProvider satisfies Configuration {
-    machine decide(p: &mut [u64; 128]) -> u64 { decision(p) }
-}
 public machine decision(p: &mut [u64; 128]) -> u64 {
     transition p[0] { 1u64 -> decode(p) 2u64 -> place(p) _ -> (0u64) }
 }
@@ -25,7 +21,4 @@ machine decode(p: &mut [u64; 128]) -> u64 {
     state output(p: &mut [u64; 128], bytes: &[u8; 104], i: u64) -> u64 requires i < 104u64 {
         p[16u64 + i] = bytes[i] as u64; transition { _ -> publish(p, bytes, i + 1u64) }
     }
-}
-public machine component_entry() reaches Configuration invokes Configuration; {
-    let mut p: [u64; 128]; let result: u64 = Configuration::decide(&mut p);
 }

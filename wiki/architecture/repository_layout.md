@@ -93,7 +93,10 @@ The Rust stock matrix is also a distribution program: `distribution/matrix/`
 owns its launcher/app roles, saved desktop configuration, child control
 router and recovery choices. Its saved configuration validation and placement
 now execute the shared [Omega configuration](../../source/distribution/matrix/configuration/README.md);
-the chooser calls the same codec directly. The Rust data representation remains
+the chooser calls the same codec directly. Stock close/loss aggregation and
+wait/refuse/stop decisions also execute [Omega lifecycle policy](../../source/distribution/matrix/lifecycle/README.md).
+Authenticated IPC custody, stale reply draining and task reclamation stay in Rust.
+The Rust data representation remains
 for installer/tools and independent conformance checks. Its extension contract lives beside it in
 `distribution/matrix/contracts/`. Other distributions need not implement it.
 `platform/libraries/matrix/` supplies reusable local authority, input, geometry,

@@ -17,5 +17,5 @@ pub(super) fn decide(packet: &mut [u64; 128]) -> u64 {
 
 #[cfg(not(any(target_os = "none", all(test, windows))))]
 pub(super) fn decide(_: &mut [u64; 128]) -> u64 {
-    panic!("matrix configuration policy runs in the x86-64 guest or Windows conformance fixture")
+    panic!("matrix policy runs in the x86-64 guest or Windows conformance fixture")
 }

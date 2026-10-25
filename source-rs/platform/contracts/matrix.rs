@@ -200,8 +200,9 @@ pub fn producer_operation(op: u64) -> bool {
 pub const SPAWN: u64 = 106; // local child slot, current launch index, loan bitmask, argument
 pub const STOP: u64 = 107; // local child slot; return after complete subtree reclamation
 /// Host to child over its control link before a lifecycle decision: [LOSS, 0..].
-/// The reply's word one is the work the child would lose
-/// if stopped now, zero meaning none. A child that does not answer is kept.
+/// Reply: [0, loss, 0, 0, 0, 0, 0, 0]. Word one is the work the child would lose
+/// if stopped now, zero meaning none. Reserved words must be zero. A child that
+/// does not answer is kept.
 /// A matrix asynchronously asks all its direct children and returns a boolean
 /// aggregate. Unknown/busy/error answers count as loss; descendants are never
 /// stopped by the query. This is an advisory observation, not a freeze/commit

@@ -1,0 +1,7 @@
+machine build(builder: &mut Build) {
+    Build::package(builder, "cathedral_matrix_policy");
+    Build::depend_as(builder, "configuration", Source::Path { location: "../configuration" });
+    Build::depend_as(builder, "lifecycle", Source::Path { location: "../lifecycle" });
+    Build::select_provider<Policy, PolicyProvider>(builder);
+    Build::bind(builder, linux_x86_64::ProgramEntry, policy_entry);
+}

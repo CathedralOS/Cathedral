@@ -1,0 +1,46 @@
+// Stock close policy. Endpoint identity, FIFO custody and teardown stay with the host.
+// State words 16/17 hold pending-child bits and conservative loss; no authority.
+public machine lifecycle_decision(p: &mut [u64; 128]) -> u64 {
+    transition p[0] {
+        3u64 -> begin(p) 4u64 -> sent(p) 5u64 -> answered(p)
+        6u64 -> finish(p) 7u64 -> close(p) 8u64 -> gate(p) _ -> (0u64)
+    }
+}
+machine begin(p: &mut [u64; 128]) -> u64 {
+    transition p[1] == 0u64 { true -> ready(p) _ -> (0u64) }
+    state ready(p: &mut [u64; 128]) -> u64 { p[16] = 0u64; p[17] = 0u64; 1u64 }
+}
+machine sent(p: &mut [u64; 128]) -> u64 {
+    transition p[1] < 5u64 { true -> record(p) _ -> (0u64) }
+    state record(p: &mut [u64; 128]) -> u64 requires p[1] < 5u64 {
+        transition p[2] == 1u64 { true -> waiting(p) _ -> uncertain(p) }
+    }
+    state waiting(p: &mut [u64; 128]) -> u64 requires p[1] < 5u64 { p[16] = p[16] | (1u64 << p[1]); 1u64 }
+}
+machine uncertain(p: &mut [u64; 128]) -> u64 { p[17] = 1u64; 1u64 }
+machine answered(p: &mut [u64; 128]) -> u64 {
+    transition p[1] < 5u64 { true -> expected(p) _ -> (0u64) }
+    state expected(p: &mut [u64; 128]) -> u64 requires p[1] < 5u64 {
+        transition (p[16] & (1u64 << p[1])) != 0u64 { true -> consume(p) _ -> (0u64) }
+    }
+    state consume(p: &mut [u64; 128]) -> u64 requires p[1] < 5u64 {
+        let bit: u64 = 1u64 << p[1]; p[16] = p[16] ^ bit;
+        transition clean(p) { true -> (1u64) _ -> uncertain(p) }
+    }
+}
+machine clean(p: &[u64; 128]) -> bool {
+    // Success, no loss, and canonical reserved words. Unknown is never consent.
+    p[2] == 1u64 && p[24] == 0u64 && p[25] == 0u64 && p[26] == 0u64 && p[27] == 0u64
+        && p[28] == 0u64 && p[29] == 0u64 && p[30] == 0u64 && p[31] == 0u64
+}
+machine finish(p: &[u64; 128]) -> u64 {
+    transition p[16] != 0u64 { true -> (0u64) _ -> complete(p) }
+    state complete(p: &[u64; 128]) -> u64 { transition p[17] != 0u64 || p[1] != 0u64 { true -> (2u64) _ -> (1u64) } }
+}
+machine close(p: &[u64; 128]) -> u64 {
+    transition p[1] != 0u64 { true -> (3u64) _ -> live(p) }
+    state live(p: &[u64; 128]) -> u64 { transition clean(p) { true -> (2u64) _ -> (1u64) } }
+}
+machine gate(p: &[u64; 128]) -> u64 {
+    transition p[1] != 0u64 && p[2] != 0u64 { true -> (1u64) _ -> (0u64) }
+}

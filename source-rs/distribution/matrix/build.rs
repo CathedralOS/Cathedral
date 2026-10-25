@@ -11,14 +11,14 @@ fn prepare() {
     println!("cargo:rerun-if-changed={}", script.display());
     let output = Command::new(env::var_os("PYTHON").unwrap_or_else(|| "python".into()))
         .arg(script)
-        .arg(root.join("source/distribution/matrix/configuration-native"))
+        .arg(root.join("source/distribution/matrix/native"))
         .arg("--cargo")
         .env("PYTHONIOENCODING", "utf-8")
         .output()
-        .expect("prepare Omega matrix configuration");
+        .expect("prepare Omega matrix policy");
     assert!(
         output.status.success(),
-        "Omega matrix configuration preparation:\n{}\n{}",
+        "Omega matrix policy preparation:\n{}\n{}",
         String::from_utf8_lossy(&output.stdout),
         String::from_utf8_lossy(&output.stderr)
     );

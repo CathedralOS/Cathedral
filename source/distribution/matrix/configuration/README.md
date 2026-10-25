@@ -9,7 +9,7 @@ supplied grants before applying any result.
 
 The chooser calls the codec directly. The Rust stock matrix calls the compiled
 export through [its policy entrance](../../../../source-rs/distribution/matrix/policy/policy.rs).
-[configuration-native](../configuration-native/main.omg) packages that temporary
+[native](../native/main.omg) packages that temporary
 synchronous bridge: 128 u64 words; operation 1 normalizes 104 bytes stored one per
 word at 16, operation 2 takes margin/bar/gap/width/height in words 1-5 and returns
 two rectangles in 16-23. Success is 1, refusal 0. This is not an IPC wire format.
@@ -21,5 +21,6 @@ UTF-8 names, and 100,000 placement combinations including u64 overflow boundarie
 The default Rust host test command includes them on Windows. Other host targets
 must not silently substitute Rust behavior for the native export.
 
-This is the first stock matrix policy slice in Omega. Admission, supervision,
-IPC dispatch and upstream rendering/storage adaptation are still Rust.
+The shared [policy entrance](../policy/main.omg) also selects the
+[lifecycle decisions](../lifecycle/README.md). Admission, IPC custody and upstream
+rendering/storage adaptation remain Rust.

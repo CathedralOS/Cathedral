@@ -10,6 +10,7 @@
 //! One request may be pending per child: the owner's own, or a loss query
 //! sent before a sibling's close request, acted on when it answers.
 use super::*;
+use cathedral_stock_matrix::policy::lifecycle as decisions;
 
 /// Unanswered requests tolerated before the control link is retired.
 pub(super) const MAX_STALE: u8 = 8;
@@ -63,7 +64,7 @@ impl Children {
                 });
                 continue;
             };
-            if teardown_busy && matches!(purpose, Purpose::Close) {
+            if decisions::wait(matches!(purpose, Purpose::Close), teardown_busy) {
                 continue;
             }
             let until = if self.retiring[slot].is_none() {
@@ -134,7 +135,10 @@ impl Children {
         // answer queued until that stream is free; ordinary polling must not
         // turn a clean answer into a spurious refusal. wait() excludes this
         // receiver meanwhile so a ready reply cannot cause a busy loop.
-        if matches!(purpose, Purpose::Close) && (parent.upstream_busy() || parent.storing()) {
+        if decisions::wait(
+            matches!(purpose, Purpose::Close),
+            parent.upstream_busy() || parent.storing(),
+        ) {
             // The sibling may already have answered; nobody is looking. Its
             // deadline must not run out while this matrix is the one that is
             // busy, or the first poll afterwards would refuse a clean answer
@@ -248,20 +252,22 @@ impl Children {
             (Purpose::Owner, Ok(words)) => words,
             (Purpose::Owner, Err(code)) => wire::error(code),
             // The sibling goes only if it answered and reported nothing it would lose.
-            (Purpose::Close, Ok(words)) if words[0] == 0 && words[1] == 0 => {
-                self.stop(slot, server, world, parent)?;
-                retired = true;
-                [0; 8]
-            }
-            (Purpose::Close, _) if retired => [0; 8],
-            (Purpose::Close, answer) => {
-                let (status, loss) = match answer {
-                    Ok(words) => (words[0], words[1]),
-                    Err(code) => (code, 0),
-                };
-                time::storage_sample("matrix-close-refused", &[slot as u64, status, loss]);
-                wire::error(abi::BUSY)
-            }
+            (Purpose::Close, answer) => match decisions::close(retired, answer) {
+                decisions::Close::Stop => {
+                    self.stop(slot, server, world, parent)?;
+                    retired = true;
+                    [0; 8]
+                }
+                decisions::Close::AlreadyStopped => [0; 8],
+                decisions::Close::Refuse => {
+                    let (status, loss) = match answer {
+                        Ok(words) => (words[0], words[1]),
+                        Err(code) => (code, 0),
+                    };
+                    time::storage_sample("matrix-close-refused", &[slot as u64, status, loss]);
+                    wire::error(abi::BUSY)
+                }
+            },
         };
         server.reply(&request, &wire::encode(response))?;
         Ok(retired)

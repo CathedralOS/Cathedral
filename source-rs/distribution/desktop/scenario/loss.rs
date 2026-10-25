@@ -5,6 +5,13 @@ impl Fixture {
     pub(super) fn loss(&self) {
         let probe = [wire::LOSS, 0, 0, 0, 0, 0, 0, 0];
         self.owner(0, probe);
+        // A nominally clean reply with reserved data is malformed, not consent.
+        for reserved in [1, u64::MAX] {
+            self.owner(2, [crate::leaf::LOSS_PROBE, 0, 0, 0, reserved, 0, 0, 0]);
+            assert_ne!(self.query(0, probe), [0; 8]);
+            self.sibling_close(abi::BUSY);
+            assert_eq!(self.view(2)[0], 0);
+        }
         self.owner(2, [crate::leaf::LOSS_PROBE, 1, 0, 1, 0, 0, 0, 0]);
         assert_ne!(self.query(0, probe), [0; 8]);
         assert_eq!(self.view(2)[0], 0);

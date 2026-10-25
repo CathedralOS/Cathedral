@@ -1,0 +1,6 @@
+machine build(builder: &mut Build) {
+    Build::application(builder, "cathedral_matrix_policy_native");
+    Build::depend_as(builder, "policy", Source::Path { location: "../policy" });
+    Build::select_provider<policy::Policy, policy::PolicyProvider>(builder, CompositionMode::Independent);
+    Build::bind(builder, linux_x86_64::ProgramEntry, main);
+}
