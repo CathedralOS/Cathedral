@@ -4,10 +4,11 @@ Matrix nesting need not require a new sample buffer or mixing stage at every
 ancestor. This investigation separates routing authority from sample transport
 and records questions for a future audio prototype.
 
-Status: exploratory notes, not an accepted contract or implementation plan.
-The permanent design owner is [Audio](../design/part_6_human_surface/06_audio.md).
-Promote concrete candidate behavior to a proposal when an experiment needs it;
-move durable rationale into that chapter and delete this draft once incorporated.
+Status: shared-buffer playback and policy-only forwarding are now accepted in
+[the playback contract](../spec/human_surface/audio.md). Retained sample assets,
+general DSP graphs and capture choices below remain exploratory. The permanent
+design owner is [Audio](../design/part_6_human_surface/06_audio.md).
+These notes are not implementation evidence.
 
 ## Resource analogy
 
@@ -30,11 +31,12 @@ shared memory alone does not provide that guarantee against native code.
 
 ## Authority tree and processing graph
 
-An app can publish a stream through its host's authority while the eventual mixer
-reads authorized backing directly. Ancestors contribute routing and bounded
-controls without necessarily touching samples. This is a candidate optimization,
-not permission to bypass ancestor mute, capture restrictions, revocation or
-observation rights. Flattening must preserve those controls and their lifetimes.
+An app publishes a stream through its host's authority while the eventual mixer
+reads authorized backing directly. The accepted baseline permits ancestors to
+contribute routing and controls without touching samples. This does not bypass
+ancestor mute, revocation or separately authorized observation rights. Flattening
+preserves the effective controls and their lifetimes; it is not blanket authority
+to map every descendant's audio.
 
 Introduce an actual processing node where signal semantics require one. Nested
 scalar gains can often combine, subject to automation and numeric behavior.
@@ -65,9 +67,9 @@ model, isolation guarantees or a latency target on its hardware.
 
 ## Timing and evidence still needed
 
-The current Rust lab's [shared buffers](../../source-rs/README.md#bounded-private-pages-and-shared-buffers)
-are sealed once and released after use. They establish neither reusable streaming
-rings nor an audio driver, graph scheduler or real-time service guarantee.
+The Rust lab now has [reusable shared backing](../../source-rs/platform/libraries/user-runtime/memory/shared/README.md)
+and service connections. Those establish transport building blocks, not an audio
+driver, streaming protocol, graph scheduler or real-time service guarantee.
 
 A future experiment should separate transport copies, signal-processing work and
 buffering delay. Measure the same sources under increasing Matrix depth, with
@@ -82,8 +84,8 @@ misses its deadline cannot hold every other stream indefinitely. Silence or
 another explicit concealment policy is a choice to test, not an implicit replay
 of stale samples.
 
-The existing chapter's exclusive-device handoff also conflicts with its reserved
-system channel remaining audible. The
-[owner question](../../OWNER_QUESTIONS.md#exclusive-audio-and-the-reserved-system-channel)
-records that trust choice. Its concrete latency claims need measured hardware
-evidence before becoming a Cathedral guarantee.
+Exclusive output remains a [separate deferred decision](../../OWNER_QUESTIONS.md#exclusive-audio-and-the-reserved-system-channel).
+Shared playback retains final service mixing; no raw handoff is selected.
+A future proposal must distinguish single-stream service policy from device
+delegation and resolve reserved-channel enforcement. Neither hypothetical handoff
+nor another platform's latency result establishes a Cathedral guarantee.

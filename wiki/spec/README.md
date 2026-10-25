@@ -46,6 +46,7 @@ subject. A current specification may precede implementation.
 | Exclusive focus-group control, recursive local selection and input transitions | [Focus groups and routes](human_surface/focus_routes.md) | Partial | Partial |
 | Owner-managed placement, rendering demand, scoped fullscreen and backend boundaries | [Rendering and presentation](human_surface/rendering.md) | Partial | Partial |
 | Authorized image versions, local/remote backing and safe reclamation | [Rendering resources](human_surface/rendering_resources.md) | Partial | Partial |
+| Shared-buffer playback, policy hierarchy and final mixing | [Audio playback](human_surface/audio.md) | Partial | None |
 
 ## Owned but unwritten subjects
 

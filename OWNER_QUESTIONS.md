@@ -61,28 +61,19 @@ cursor as authenticated or expose hidden participant identities by default.
 
 ### Exclusive audio and the reserved system channel
 
-**Requirement and tension.** The [audio design](wiki/design/part_6_human_surface/06_audio.md)
-offers exclusive device handoff that silences other streams, while promising a
-reserved channel for alarms, accessibility and system sounds that apps cannot
-suppress. On an output with no independently enforced mixing path, direct client
-ownership cannot provide both guarantees at once.
+**Deferred; does not block shared playback.** The owner ratified the
+[shared-buffer playback baseline](wiki/spec/human_surface/audio.md): caller-funded
+sample rings, authority-preserving forwarding and final platform mixing. There is
+no promised exclusive path or automatic raw device handoff.
 
-**Contracts checked.** The [specification index](wiki/spec/README.md) contains no
-accepted audio contract. The [source contracts charter](source/contracts/CHARTER.md)
-defines no audio handoff or preemption semantics. The Rust lab has no audio
-driver, graph or device lease implementing either promise.
+A later exclusive-output proposal must distinguish a service admitting only one
+stream from delegating actual device control. On an output without an independent
+enforced path, unrestricted handoff cannot also guarantee reserved mixing.
+That proposal must identify its customer, measured need, delegated authority,
+reserved-channel policy and failure/reclamation behavior.
 
-**Owner choice.** Keep platform mixing for outputs that must carry the reserved
-channel, allow an explicit policy exception during exclusive playback, or require
-an independent enforceable path for reserved sound. Reclaiming a device on demand
-is another possible policy, but requires a specified interruption bound and is
-not uninterrupted reserved-channel availability.
-
-**Recommendation (unaccepted).** Preserve platform mixing where the reserved
-channel is required. Treat exclusive handoff as conditional on a defined policy
-exception or an independently enforced output path. Measure reclaim behavior
-before promising a bound. The [audio notes](wiki/drafts/audio_graph_notes.md)
-leave this decision open until the device and interaction requirements are known.
+No exclusive-mode option is selected. Keep it out of the shared playback
+acceptance; return for a separate decision when a concrete use case requires it.
 
 ### Validation scope for an optional PCID optimization
 

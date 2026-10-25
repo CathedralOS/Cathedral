@@ -167,6 +167,34 @@ and independent copies. Track that remaining acceptance here; do not close it on
 the refusal control or assume realm encryption already implements it. No encryption
 implementation is claimed by this docs change.
 
+## Shared-buffer audio playback
+
+**Open; shared playback ratified, exclusive mode deferred.** Implement the
+[playback contract](wiki/spec/human_surface/audio.md) through a platform audio
+service, an audio driver and an ordinary consumer. Reuse shared-buffer custody in
+`source-rs/platform/libraries/user-runtime/memory/shared/` and notification/connection
+mechanisms; keep new service protocol and driver responsibilities in their platform
+owners, not the kernel. Generic shared-memory tests are not playback evidence.
+
+- Play two independently funded client streams through one final mixer and a real
+  device-facing path; preserve independent stream controls and reject unauthorized
+  playback, mappings and control of another stream.
+- Carry playback through nested policy-only Matrices without per-ancestor sample
+  copies or submix buffers, while enforcing ancestor mute/routing and revocation.
+  Materialize processing only for actual signal transformations, not hierarchy.
+- Define and test bounded frame publication/reuse, malformed positions/lengths,
+  slow or dead producers, concurrent mutation and closure. A stalled source cannot
+  indefinitely stall healthy output. Retain funding/backing through last consumer
+  or device access; prove teardown does not permit stale DMA or mapping reuse.
+- Observe actual output and record format, device period, buffering, work and
+  underruns. Compare policy-only nesting with genuine processing depth. Do not
+  claim pro-audio latency from fewer copies or host-only mixer tests.
+
+Done is ordinary shared playback with real output and invalid-authority/custody
+controls, not a ring-buffer lab. Exclusive output, raw device handoff, microphone
+capture and a general DSP graph are not prerequisites. No runtime implementation
+or real-time performance result is claimed by this docs ratification.
+
 ## Current implementation evidence
 
 Implementation update 2026-10-25: **shared endpoint-reply custody**, over `ab24fa34`.
