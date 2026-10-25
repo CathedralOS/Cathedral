@@ -6,16 +6,18 @@ descriptions, resource backing, execution and presentation.
 
 | Status | Scope |
 | --- | --- |
-| Proposed | Candidate architecture, not an accepted Cathedral contract |
+| Partially incorporated | Accepted boundaries live in the specification; detailed protocols remain proposed |
 | Specification coverage | Partial [presentation contract](../spec/human_surface/rendering.md); drawing vocabulary and resource-policy alternatives remain proposed |
 | Implementation evidence | Bounded Rust drawing, shared pages and a two-client retained compositor experiment; no production scene contract or GPU backend |
 
 The accepted presentation contract now owns placement, rendering demand, scoped
 fullscreen and backend-independent forwarding/custody boundaries. It supersedes
 conflicting assumptions here without selecting the proposed drawing vocabulary,
-resource residency policy or GPU mechanisms. The accepted
+exact residency guarantees or GPU mechanisms. Optional drawing alongside images
+and prepared glyph rasterization are accepted. The accepted
 [resource contract](../spec/human_surface/rendering_resources.md) owns local/remote
-backing and reclamation. Read those accepted rules first; remaining proposal
+backing, destination-host sponsorship, submission-specific miss feedback and
+reclamation. Read those accepted rules first; remaining proposal
 sections are rationale and candidate mechanisms within those boundaries.
 
 ## Read by responsibility
@@ -110,7 +112,7 @@ component specifications listed in the index. This proposal introduces no
 production wire schema.
 
 Owner choices live in [OWNER_QUESTIONS.md](../../OWNER_QUESTIONS.md), particularly
-platform drawing placement, writable spans, and accepted-lease revocation. The
+writable spans and stronger shared-cache/residency guarantees. The
 [evidence page](0000_rendering_and_composition/evidence_and_acceptance.md) links
 each conflict and separates experiments from acceptance requirements.
 

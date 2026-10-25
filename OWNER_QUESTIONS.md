@@ -103,67 +103,24 @@ keeps row borrows as a possible renderer implementation detail and evaluates
 bounded scene submission as a separate route. It does not grant direct target
 access to processes merely because Cathedral ships them.
 
-### Platform drawing and text placement
+### Shared render-cache sponsorship and stronger residency guarantees
 
-**Requirement and tension.** A common renderer could execute bounded paths and
-glyph runs from nested Matrices without requiring each app or ancestor to create
-an intermediate image. The [media chapter](wiki/design/part_6_human_surface/02_media_and_graphics.md#text-and-fonts)
-instead places all text rasterization in app libraries and states that the
-compositor never sees a glyph. Its font-parser containment argument depends on
-that placement. This blocks choosing the production drawing boundary, not further
-measurement of either route.
+**Remaining choice; not a blocker for the baseline.** The owner accepted both
+drawing commands and completed images, destination-host-funded or explicitly
+sponsored uploads, and omission of unavailable draws with submission-specific
+feedback. Active acquisitions retain backing until readers finish. These rules
+live in the [resource contract](wiki/spec/human_surface/rendering_resources.md).
 
-**Contracts checked.** The [presentation contract](wiki/spec/human_surface/rendering.md)
-settles placement, demand and backend boundaries but leaves drawing/text placement open.
-[Source contracts](source/contracts/CHARTER.md) contain no accepted glyph or scene
-protocol. The [Rust display contract](source-rs/platform/contracts/display/display.rs) has fixed
-ASCII text, rectangle and sealed-pixel requests, all experimental. It does not
-establish general font parsing, shaping or retained glyph semantics.
+A production shared image/font cache may still need a policy choosing the paying
+account when several consumers retain one derived allocation, and any availability
+promise stronger than registration plus bounded acquisition. The existing Rust
+page contract does not implement that shared-cache service or GPU residency.
 
-**Owner choice.** Keep the platform limited to completed images with all text/path
-rasterization in app libraries, or also offer bounded platform drawing commands.
-The latter lets the platform combine ordinary UI drawing but expands its rendering
-and validation responsibility. Shaping/layout can remain reusable library work in
-either choice. A trusted renderer parsing arbitrary font/image files has a larger
-trust boundary than one consuming prepared, validated resources.
-
-**Recommendation (unaccepted).** Evaluate optional platform drawing alongside
-completed-image presentation, as described in the
-[scene proposal](wiki/proposals/0000_rendering_and_composition/scene_submission.md).
-Keep resource preparation and final target writes separable. Specify which font
-and path interpretation enters the renderer's trust boundary before accepting
-that route. Glyph drawing must not implicitly grant accessibility or text capture.
-
-### Render-resource residency and sponsor liability
-
-**Settled boundary.** The [resource contract](wiki/spec/human_surface/rendering_resources.md)
-accepts leaf-funded local backing, authorized image versions, destination-side
-uploads/conversions and safe deferred reclamation. Confirmed leaf death retires
-live registrations, not memory still in use or independently held copies.
-Accounting survives producer death until actual reclamation. Remote silence is
-not proof of death. Registration alone is no blanket permanent-residency promise.
-
-**Remaining requirement.** Derived caches and remote destinations need explicit
-funding and missing-resource behavior before promising production availability.
-Local source funding does not fund unlimited destination storage or descriptors.
-
-**Contracts checked.** The accepted resource and presentation contracts leave
-cache residency, exact sponsor selection and outage/miss presentation policy
-open. The [Rust page contract](source-rs/kernel/contracts/memory.rs) exercises
-fixed local grants and pinned readers, not a general remote resource service.
-
-**Owner choice.** Select residency guarantees for particular accepted acquisitions,
-cache eviction/reacquisition policy and the paying account for derived or remote
-storage. Choose whether missing content retains authorized last pixels, shows a
-placeholder or removes the contribution. These are not choices about whether
-live readers may access reclaimed memory; that is already disallowed.
-
-**Recommendation (unaccepted).** Negotiate bounded acquisitions separately from
-registrations, account for derived/destination storage explicitly, and select a
-miss/outage policy per service session. Keep source-independent copied resources
-subject to their own authority and lifetime. The
-[resource proposal](wiki/proposals/0000_rendering_and_composition/resource_custody.md)
-retains the alternatives; no current remote/GPU implementation is implied.
+Do not reopen missing-resource appearance or remote upload ownership to implement
+the accepted route. Bring a concrete shared-cache or residency-guarantee customer,
+funding policy and reclamation acceptance before selecting those additional
+guarantees. GPU import, synchronization and presentation efficiency remain open
+engineering, not evidence that caller-funded local rendering must wait.
 
 ### A parent exercising a child's binding to warm the chain's proofs
 

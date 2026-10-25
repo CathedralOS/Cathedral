@@ -5,7 +5,7 @@
 | Contract status | Current |
 | Specification coverage | Partial |
 | Implementation coverage | Partial |
-| Last reviewed | 2026-10-24 |
+| Last reviewed | 2026-10-25 |
 
 ## Identity, authority and backing
 
@@ -46,6 +46,42 @@ producer's death does not physically delete an already received copy. Retention,
 retirement and authorized reuse follow the applicable resource/session policy.
 Private-resource identity must not grant unrelated consumers import or capture.
 
+### Remote hosting
+
+The owner accepted the remote-hosting boundary on 2026-10-25. A destination-side
+viewer/host owns or explicitly sponsors local backing for uploaded resources and
+submits through the ordinary local drawing/image interface. It may forward
+validated commands to the rendering service; it need not rasterize them itself.
+Remote names resolve only to authorized local resource versions, never directly
+to local memory authority. Hosting one app or a desktop subtree uses this boundary.
+
+Commands can reuse uploaded images/font resources until their versions change or
+their backing is released. Arbitrary changing framebuffers still need pixel
+transfer, possibly through a negotiated codec. Network transport, compression and
+device import remain engineering choices; there is no network-shared pointer.
+
+## Unavailable resources and submission results
+
+The owner accepted omission rather than implicit fallback on 2026-10-25. If a
+resource is unavailable when needed for drawing, skip the draw requiring it and
+continue unrelated work. Do not silently substitute a stale version, a reused
+identifier's new object, a placeholder or retained old pixels for that draw.
+The host may explicitly submit authorized fallback content as ordinary work.
+Output generation must not accidentally retain an omitted draw from an older
+frame merely because the renderer uses incremental updates.
+
+Report unavailable resources in a result associated with the exact submission;
+asynchronous completion is allowed. A global last-error slot is not sufficient.
+The host can supply/reacquire resources and submit again. Slow or absent providers
+must not indefinitely block unrelated rendering. This is an availability outcome,
+not permission to accept invalid commands or unauthorized resource access.
+
+Missing before acquisition differs from disappearance during use. Successful
+acquisition retains stable, authorized backing until CPU/device readers finish;
+eviction, producer exit and reuse cannot invalidate an active reader. Registration
+alone does not promise residency. Results, outstanding requests and resource
+lists require bounded accounting along with backing and render work.
+
 ## Retirement and physical reclamation
 
 Confirmed death of a leaf retires its live resource registrations for new work.
@@ -60,10 +96,11 @@ valid through the failure; an untrusted producer cannot promise them away.
 This governs live registrations, not deletion of durable source files or separately
 authorized copies already transferred to another owner.
 
-A remote outage or timeout is not confirmed process death. The receiver's session
-policy determines whether to retain an authorized last image, show a placeholder
-or remove the presentation. The baseline does not select one outage policy or
-promise distributed death detection. Retaining bytes never extends expired
+A remote outage or timeout is not confirmed process death. Locally available,
+authorized copies do not become missing solely because the remote source is
+silent. Unavailable resources follow the omission rule above. Whether a disconnected
+session retires its entire presentation is separate lifecycle policy; this does
+not promise distributed death detection. Retaining bytes never extends expired
 presentation/capture authority.
 
 ## Bounded retention and work
@@ -74,9 +111,10 @@ pixels do not fund unlimited compositor descriptors or submissions. Destination
 capacity must be admitted even when source memory is already funded.
 
 Charges persist until actual reclamation/use completion; killing or restarting a
-producer must not reset the bill for retained storage. Exact sponsor selection,
-cross-host funding, cache eviction and service guarantees under missing resources
-remain separate policy choices. Registration is not, by itself, a blanket promise
+producer must not reset the bill for retained storage. Destination hosts fund or
+explicitly sponsor their local uploads; source funding is not destination credit.
+Shared derived-cache sponsor selection, cache eviction and any stronger residency
+guarantees remain separate policy choices. Registration is not a blanket promise
 that all decoded resources remain resident forever.
 
 ## Evidence and limits
@@ -96,7 +134,7 @@ raster dispatch. Source/recipient failure tests and ordinary delivery are record
 in [the handoff](../../../TASKS_RUST.md). Fixed owner-selected masks and one Notes
 source do not establish a general privacy metadata protocol, recursive capture
 readiness, remote transfer or GPU lifetime behavior.
-Derived image/font caches, fallback appearance, negotiated capacities and precise
+Derived image/font cache policy, negotiated capacities and precise
 publication/transfer schemas remain engineering and policy work. The
 [resource proposal](../../proposals/0000_rendering_and_composition/resource_custody.md)
 retains alternatives for those unresolved choices.

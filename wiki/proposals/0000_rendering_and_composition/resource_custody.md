@@ -14,11 +14,13 @@ through its supplied provider. A compatible local provider could supply a backin
 lease; another could upload a representation. Exact acquisition/residency promises
 remain to be chosen.
 
-Resource waits should stay outside final drawing so a slow provider does not block
-unrelated output. Missing-resource policy may preserve an authorized prior image,
-omit content or show a placeholder. No fallback can extend revoked presentation
-or capture authority. These policies remain proposed, including remote outages;
-silence is not confirmed producer death.
+The accepted [missing-resource rule](../../spec/human_surface/rendering_resources.md#unavailable-resources-and-submission-results)
+skips unavailable draws, continues unrelated rendering and reports misses against
+the exact submission. Slow providers do not indefinitely block final drawing.
+Hosts may explicitly supply authorized fallback content, but the renderer does not
+silently substitute it. Active acquisitions retain backing through completed use.
+Remote silence is not confirmed death; available local copies retain their own
+authority and lifetime.
 
 ## Representations and text
 
@@ -68,5 +70,5 @@ Admission considers the whole batch before exposing it as accepted work.
 Evicting unused derived caches and releasing inactive imports can reduce pressure.
 Active readers or device work cannot be discarded to satisfy an accounting
 counter. Shared cache costs and sponsor liability after producer failure need the
-[owner decision](../../../OWNER_QUESTIONS.md#render-resource-residency-and-sponsor-liability)
+[shared-cache decision](../../../OWNER_QUESTIONS.md#shared-render-cache-sponsorship-and-stronger-residency-guarantees)
 before this becomes a platform guarantee.

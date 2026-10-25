@@ -2,8 +2,9 @@
 
 The accepted [presentation contract](../../spec/human_surface/rendering.md)
 owns placement, rendering demand, scoped fullscreen and backend-independent image
-forwarding/completion boundaries. Concrete GPU, drawing/text and resource-policy
-choices below remain design work, not implemented or accepted device guarantees.
+forwarding/completion boundaries, optional bounded drawing and prepared glyph
+rasterization alongside completed images. Concrete GPU mechanisms, drawing
+encodings and shared-cache policy below remain design work, not device guarantees.
 
 > The low-level pipeline beneath the window manager: display server, GPU, decode, and audio. Each is capability-gated and kept narrow, because graphics stacks are historically a major source of OS complexity and instability.
 
@@ -38,17 +39,19 @@ Cathedral cannot prove the vendor's shader compiler, cannot make coarse hardware
 
 ## Text and fonts
 
-The app-only rasterization position below conflicts with the optional platform
-glyph/path execution considered in the
-[rendering proposal](../../proposals/0000_rendering_and_composition/scene_submission.md#text-commands-and-legibility).
-The [owner question](../../../OWNER_QUESTIONS.md#platform-drawing-and-text-placement)
-records the placement and trust choice. Neither position is an accepted rendering
-contract. Text shaping, glyph rasterization and annotation access are separate
-responsibilities whichever placement is chosen.
+The owner accepted optional platform drawing alongside completed images on
+2026-10-25; see [drawing and image submission](../../spec/human_surface/rendering.md#drawing-commands-and-completed-images).
+App libraries own shaping, layout and positioned glyph selection. Apps may
+rasterize their own images, or submit prepared glyphs and shapes for the platform
+renderer to draw. Custom engines retain the image path. File parsing/resource
+preparation stays isolated from final target writes; prepared inputs still need
+validation, work budgets and backing custody. The kernel interprets neither
+fonts nor drawing commands.
 
-Text rendering, shaping, layout, and locale formatting are userspace libraries rather than OS services. Turning codepoints and a font into positioned glyphs, and glyphs into pixels, is pure computation with no capabilities and no I/O, so it belongs in a shared standard library that renders into the app's own surface. The OS owns only two thin touchpoints, both covered elsewhere. The compositor supplies DPI and scale and composites the finished surface without ever seeing a glyph ([[windowing_and_compositor]]). Input methods are a capability-held stage in the input pipeline.
+Glyph drawing does not implicitly publish source strings or grant accessibility
+or capture rights. The annotation mechanisms below remain a separate design.
 
-Because shaping is where every string becomes glyphs, the text stack is also where legibility falls out for free. A surface may publish **text-run annotations**: small ordinary records under a selected wire codec carrying the source string, visibility, and run and ordering ids. They are retained, not streamed. A run is announced once, updated when its string changes, and removed when it dies, so steady-state legibility costs nothing and a 60 fps scene with an unchanged HUD emits nothing per frame.
+The text stack is a possible producer of separately authorized **text-run annotations**: ordinary records under a selected wire codec carrying the source string, visibility, and run and ordering ids. The proposed records are retained: a run is announced once, updated when its string changes, and removed when it dies. This can avoid retransmitting unchanged text each frame; it does not make storage, geometry queries or access checks free.
 
 Geometry is pulled, never pushed. "Where is this run right now" is a query the renderer answers from the transforms it already holds, and the answer is what the draw call computed, not screen boxes. The general form of that answer is per-cluster placement: every glyph cluster with its own position and orientation. That is exactly the data any layout produces in order to draw at all, so text on an arc or along a path answers as naturally as a flat label. A run whose clusters share one plane collapses to the compact form, the string plus a single transform of its line box. That is the common case, an optimization rather than the model. Only text whose final geometry never exists CPU-side (warped in a shader after submission) falls back to a coarse hull with an approximate flag, and the pixel tier supplies exact geometry if anyone needs it. For reading, the string and rough location were always the payload.
 
@@ -56,7 +59,7 @@ The OS owns the schema, not the library. The standard text crate emits by defaul
 
 Fonts and locale data are content-addressed shared assets ([[filesystem_as_database]]), not a special subsystem. The system ships a core UI font plus a broad Unicode coverage floor, open-licensed, with large scripts and emoji as on-demand content-addressed packs. The chrome pins its own fonts by hash so the trusted path always renders. An app declares the fonts it renders in by hash, so the system set is a dedup cache and a coverage floor rather than an ambient dependency. A font the system already holds is shared for free, one it does not is shipped by the app, and either way the result is reproducible. This is why shipping fonts does not reintroduce the implicit-host-dependency problem that realms otherwise kill.
 
-Installing a font adds it to the user's font collection in the user realm, discoverable by querying font-typed objects, and is never a write into the immutable system realm. Changing the system set is a versioned update or an org policy ([[multi_user_and_org_control]]) rather than a drop into a global folder. Because the text library is pure and confined, the historical font-parser remote-code-execution vector shrinks to corrupting at most the one surface being drawn, with no escape and no reach into the system chrome.
+Installing a font adds it to the user's font collection in the user realm, discoverable by querying font-typed objects, and is never a write into the immutable system realm. Changing the system set is a versioned update or an org policy ([[multi_user_and_org_control]]) rather than a drop into a global folder. Parser containment depends on actual process/memory authority and validation, not on calling a library pure. Preparing resources outside the final target writer reduces that writer's input responsibilities; it does not prove a parser cannot compromise its own host.
 
 ## Concerns & Design Space
 

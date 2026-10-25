@@ -30,6 +30,31 @@ preferences. Global desktop position, sibling layouts and physical display
 topology are not required app knowledge. Moving a presentation between
 arrangements does not reparent its process or change its storage/sandbox authority.
 
+## Drawing commands and completed images
+
+On 2026-10-25 the owner accepted both completed-image presentation and optional
+bounded platform drawing. Apps may submit prepared drawing commands, completed
+images, or a mixture. Custom renderers and games need not express their rendering
+as UI commands. This selects the routes, not a fixed opcode set or GPU ABI.
+
+App libraries own layout, text shaping and positioned glyph selection. The
+rendering service may rasterize prepared glyphs and shapes and composite images.
+Font/image file parsing and resource preparation stay isolated from final target
+writes; prepared resources still require validation and bounded work. Drawing
+glyphs does not grant accessibility, text extraction or capture authority.
+
+Participating matrices may forward commands and authorized resource references
+with placement/clipping instead of rasterizing an image at every level. They
+retain their policy and interception rights. Effects or incompatible resources
+may still require intermediate images; neither route promises zero-copy or a
+latency improvement without measurement.
+
+The rendering service accesses admitted shared backing. The kernel supplies
+mapping, isolation and notification mechanisms, not image fetching, glyph
+interpretation or a mandatory rendering-resource store. Resource availability,
+destination funding and submission feedback follow the
+[resource contract](rendering_resources.md#unavailable-resources-and-submission-results).
+
 ## Owner-managed placement
 
 Each presentation has a placement owner; other participants request changes
@@ -229,7 +254,7 @@ uses the [platform lease/raster mechanisms](../../../source-rs/platform/librarie
 This is leaf-source software evidence: it does not implement app-published masks,
 recursive source readiness, arbitrary views, remote capture or GPU synchronization.
 
-The accepted policy does not freeze that lab encoding. Drawing/text placement,
-detailed cache residency/sponsorship, direct-writer admission, exact scene/mask
+The accepted policy does not freeze that lab encoding. Exact drawing vocabulary,
+shared-cache residency/sponsorship, direct-writer admission, exact scene/mask
 publication, view APIs and device-failure recovery remain outside this contract.
 Alternatives remain in the [rendering proposal](../../proposals/0000_rendering_and_composition.md).

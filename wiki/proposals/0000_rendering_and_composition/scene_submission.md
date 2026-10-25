@@ -6,7 +6,9 @@ require a private pixel image for each scene node or Matrix.
 Status: proposed behavior under [rendering and composition](../0000_rendering_and_composition.md).
 The accepted [presentation contract](../../spec/human_surface/rendering.md) owns
 placement authority and the ability to forward without ancestor pixel buffers;
-this page's scene vocabulary, revision scheme and text placement remain proposed.
+optional bounded drawing alongside images and prepared glyph rasterization are
+now accepted there. This page's exact scene vocabulary and revision scheme remain
+proposed.
 Its accepted hit-test baseline does not wait for a matching displayed frame.
 The revision scheme below must not be read as requiring cross-matrix atomic
 display/input commits or guaranteed screenshot-to-click matching.

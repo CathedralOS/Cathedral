@@ -170,6 +170,38 @@ and independent copies. Track that remaining acceptance here; do not close it on
 the refusal control or assume realm encryption already implements it. No encryption
 implementation is claimed by this docs change.
 
+## Drawing, images and resource availability
+
+**Open; baseline ratified 2026-10-25.** Implement the
+[drawing boundary](wiki/spec/human_surface/rendering.md#drawing-commands-and-completed-images)
+and [resource contract](wiki/spec/human_surface/rendering_resources.md) in the
+ordinary desktop path. Existing ASCII/rectangle/sealed-pixel requests are partial
+evidence, not general glyph resources, remote hosting or GPU support.
+
+- Carry bounded prepared drawing and completed images together through nested
+  matrices, preserving clips, interception and resource authority without mandatory
+  per-ancestor image materialization. Keep layout/shaping with app libraries;
+  isolate file/resource preparation from final target writes. Reject malformed,
+  over-budget and unauthorized inputs; drawing grants no text/capture access.
+- Demonstrate one missing image alongside successful unrelated drawing. Skip the
+  unavailable draw, remove its prior-frame contribution, and report exact
+  submission/resource identities without a global last-error slot. Reacquire and
+  resubmit successfully. Reject stale-generation substitutions; slow providers
+  cannot indefinitely stall unrelated output.
+- Preserve backing through active CPU/device use, producer exit and attempted
+  eviction/reuse. Charge actual retained storage and bounded metadata/work until
+  release; do not replace caller-funded backing with a kernel image store.
+- Demonstrate a destination host uploading a remote resource into its own funded
+  or explicitly sponsored local backing, forwarding commands through the ordinary
+  interface and reusing unchanged resources. Remote names grant no local authority;
+  resource replacement/disconnect must not violate active-use custody.
+
+Use focused invalid controls and real desktop evidence; do not relabel existing
+lab evidence as completion. GPU import, synchronization, presentation efficiency,
+wire encoding and codecs remain separate work. No zero-copy/latency claim follows
+from this architecture. Shared-cache sponsorship and stronger residency promises
+remain scoped in OWNER_QUESTIONS.md and do not block the baseline.
+
 ## Shared-buffer audio playback
 
 **Open; shared playback ratified, exclusive mode deferred.** Implement the
@@ -2977,8 +3009,10 @@ and copied resources follow destination/session lifetime and authority.
 
 Older entries below that leave all focus, cursor handoff, scene/input selection
 or capture-mask boundaries open are superseded by these partial specifications.
-Drawing/text vocabulary, protected cursor indicators, precise scene/mask and IPC
-publication, cache sponsorship/residency and remote outage appearance remain open.
+Exact drawing vocabulary, precise scene/mask and IPC publication, and shared-cache
+sponsorship/residency remain open. Later accepted drawing/resource rules above
+supersede the old platform-text and miss-appearance questions; protected owner UI
+is separate from cursor provenance.
 Documentation only: relative-link/anchor and whitespace checks; no runtime changes,
 GPU/remote implementation, performance measurements or new QEMU verification.
 Follow-up evidence should test consistent local targeting during layout changes,
