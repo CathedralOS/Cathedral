@@ -175,10 +175,10 @@ impl Children {
             object,
             scope: 0,
             argument: cathedral_desktop_matrix_contracts::matrix::launch_argument(0, object),
-            channels: 0,
+            channels: 1,
             descendants: 0,
             cpu: 0,
-            pages: Some([4, 0]),
+            pages: Some([4, 1]),
             stamp: 0,
             imports: cathedral_platform_contracts::imports::INTERACTION,
         };

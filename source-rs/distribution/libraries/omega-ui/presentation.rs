@@ -3,10 +3,8 @@
 //! their surfaces in the same commit. No distribution code is imported here.
 use crate::{Error, Node, Rectangle, Stats, Ui};
 use cathedral_platform_contracts::matrix as wire;
-use cathedral_user_runtime::{ipc::Handle, memory::Private, resources};
-type Pair = (Handle, Handle);
+use cathedral_user_runtime::{memory::Private, resources, services::Services};
 pub struct Presenter {
-    parent: Pair,
     epoch: u64,
     width: u64,
     height: u64,
@@ -17,14 +15,14 @@ pub struct Presenter {
     painted_nodes: [Node; wire::MAX_SURFACES],
 }
 impl Presenter {
-    /// The supplied interaction binding owns this presenter exclusively. A new
-    /// view epoch retires its surfaces; create a new presenter for that epoch.
-    pub fn new(parent: Pair, view: wire::Packet) -> Result<Self, Error> {
+    /// Presentation state belongs to one supplied interaction binding. Borrow
+    /// that same Services owner for every operation; never create a second client
+    /// for its pair. A new view epoch requires a new presenter.
+    pub fn new(view: wire::Packet) -> Result<Self, Error> {
         if view[0] != 0 || view[1] == 0 || view[2] == 0 || view[3] == 0 {
             return Err(Error::Rectangle);
         }
         Ok(Self {
-            parent,
             epoch: view[1],
             width: view[2],
             height: view[3],
@@ -42,6 +40,7 @@ impl Presenter {
     /// to the supplied view. Budget refusal happens before starting a batch.
     pub fn present(
         &mut self,
+        services: &mut Services,
         ui: &mut Ui<'_, '_>,
         nodes: &[Node],
         origin: (usize, usize),
@@ -98,7 +97,7 @@ impl Presenter {
         for rank in 0..desired {
             if self.names[rank] == 0 {
                 let reply = call(
-                    self.parent,
+                    services,
                     [wire::SURFACE_CREATE, self.epoch, rank as u64, 0, 0, 0, 0, 0],
                 )?;
                 self.names[rank] = reply[1];
@@ -107,7 +106,7 @@ impl Presenter {
         }
         self.revision = self.revision.checked_add(1).ok_or(Error::Capacity)?;
         call(
-            self.parent,
+            services,
             [
                 wire::PRESENT_BEGIN,
                 self.epoch,
@@ -119,8 +118,8 @@ impl Presenter {
                 0,
             ],
         )?;
-        let staged = self.stage(ui, &rectangles[..nodes.len()], origin);
-        self.finish(staged)?;
+        let staged = self.stage(services, ui, &rectangles[..nodes.len()], origin);
+        self.finish(services, staged)?;
         self.names[desired..].fill(0);
         self.count = desired;
         self.painted = Some(signature);
@@ -129,13 +128,13 @@ impl Presenter {
     }
     /// Release every owned surface while the binding is still live. Teardown
     /// after view revocation belongs to the parent, not a blocking Drop call.
-    pub fn retire(&mut self) -> Result<(), Error> {
+    pub fn retire(&mut self, services: &mut Services) -> Result<(), Error> {
         if self.count == 0 {
             return Ok(());
         }
         self.revision = self.revision.checked_add(1).ok_or(Error::Capacity)?;
         call(
-            self.parent,
+            services,
             [
                 wire::PRESENT_BEGIN,
                 self.epoch,
@@ -148,19 +147,19 @@ impl Presenter {
             ],
         )?;
         let staged = self.names[..self.count].iter().try_for_each(|name| {
-            call(self.parent, [wire::ERASE, self.epoch, *name, 0, 0, 0, 0, 0]).map(|_| ())
+            call(services, [wire::ERASE, self.epoch, *name, 0, 0, 0, 0, 0]).map(|_| ())
         });
-        self.finish(staged)?;
+        self.finish(services, staged)?;
         self.names.fill(0);
         self.count = 0;
         self.painted = None;
         self.painted_nodes.fill(Node::NONE);
         Ok(())
     }
-    fn finish(&self, staged: Result<(), Error>) -> Result<(), Error> {
+    fn finish(&self, services: &mut Services, staged: Result<(), Error>) -> Result<(), Error> {
         let result = staged.and_then(|()| {
             call(
-                self.parent,
+                services,
                 [
                     wire::PRESENT_COMMIT,
                     self.epoch,
@@ -176,7 +175,7 @@ impl Presenter {
         });
         if let Err(error) = result {
             call(
-                self.parent,
+                services,
                 [
                     wire::PRESENT_ABORT,
                     self.epoch,
@@ -194,12 +193,13 @@ impl Presenter {
     }
     fn stage(
         &self,
+        services: &mut Services,
         ui: &mut Ui<'_, '_>,
         rectangles: &[Rectangle],
         origin: (usize, usize),
     ) -> Result<(), Error> {
         call(
-            self.parent,
+            services,
             [
                 wire::PAINT,
                 self.epoch,
@@ -227,10 +227,9 @@ impl Presenter {
             }
             let mut image = image.freeze().map_err(platform)?;
             image.unmap().map_err(platform)?;
-            self.parent
-                .0
-                .send_memory(
-                    &wire::encode([
+            let reply = services
+                .request_interaction(
+                    [
                         wire::SURFACE_IMAGE,
                         self.epoch,
                         self.names[index + 1],
@@ -239,14 +238,14 @@ impl Presenter {
                         rectangle.width as u64,
                         rectangle.height as u64,
                         rectangle.width as u64,
-                    ]),
-                    &image,
+                    ],
+                    Some(&image),
                 )
                 .map_err(platform)?;
-            receive(self.parent, wire::SURFACE_IMAGE)?;
+            accepted(reply)?;
         }
         for name in &self.names[rectangles.len() + 1..self.count] {
-            call(self.parent, [wire::ERASE, self.epoch, *name, 0, 0, 0, 0, 0])?;
+            call(services, [wire::ERASE, self.epoch, *name, 0, 0, 0, 0, 0])?;
         }
         Ok(())
     }
@@ -254,16 +253,14 @@ impl Presenter {
 fn platform(error: cathedral_user_runtime::Error) -> Error {
     Error::Platform(error.0)
 }
-fn call(pair: Pair, packet: wire::Packet) -> Result<wire::Packet, Error> {
-    pair.0.send(&wire::encode(packet)).map_err(platform)?;
-    receive(pair, packet[0])
+fn call(services: &mut Services, packet: wire::Packet) -> Result<wire::Packet, Error> {
+    accepted(
+        services
+            .request_interaction(packet, None)
+            .map_err(platform)?,
+    )
 }
-fn receive(pair: Pair, operation: u64) -> Result<wire::Packet, Error> {
-    let mut bytes = [0; 64];
-    let length =
-        cathedral_user_runtime::matrix::upstream::receive(pair.1, &mut bytes, operation, 300)
-            .map_err(platform)?;
-    let reply = wire::decode(&bytes[..length]).ok_or(Error::Layout)?;
+fn accepted(reply: wire::Packet) -> Result<wire::Packet, Error> {
     if reply[0] != 0 {
         return Err(Error::Platform(reply[0] as i64));
     }

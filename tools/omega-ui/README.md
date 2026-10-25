@@ -83,7 +83,8 @@ These commands use the same compiler selection as the component builder.
    Advance `tick(elapsed_ms)` and build while `stats().animating` is true. The host
    owns scheduling; widgets never poll global devices.
 5. Read paint bounds from the completed build's `Node` values and rows through
-   `Ui::row`, or use `Presenter` with the supplied interaction pair and view. The
+   `Ui::row`, or create `Presenter` for the supplied view and borrow the app's
+   `Services` owner for presentation. The
    app selects regions covering its painted content to fit its granted image
    backing. Publish once after a bounded input batch, rather than per input edge.
 
@@ -99,7 +100,12 @@ Delete and Backspace when those events are supplied. Malformed packets, invalid
 frame phases, duplicate IDs, overflow and unfinished nesting are refused. A failed
 view invalidates its scene; a subsequent valid build recovers the instance.
 
-`Presenter` owns its surface names for one supplied view epoch. It creates and
+`Presenter` owns its surface names for one supplied view epoch, but no raw endpoint
+pair or second transport client. `present` and `retire` borrow the same mutable
+`Services` owner used by input polling and acquisition. The demo selects shared
+transport before its first acquisition; image grants retain their immutable
+custody while application packets use shared backing. Its manifest funds one
+notification, private mailbox page and accepted reader page. It creates and
 retires region surfaces as the app's composition changes, committing images and
 removals atomically. It refuses insufficient backing before beginning a batch;
 later staging failures abort the batch. Call `Presenter::retire` to release its surfaces on a live binding. A retired

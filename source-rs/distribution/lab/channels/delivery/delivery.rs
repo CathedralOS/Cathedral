@@ -54,12 +54,25 @@ pub(super) fn abandoned() {
     recv.close().unwrap();
 }
 pub(super) fn quota() {
-    let limit = ipc::budget().unwrap().channel_limit as usize;
+    use cathedral_user_runtime::notification::Notification;
+    let before = ipc::budget().unwrap();
+    let available = (before.channel_limit - before.charged_channels) as usize;
+    let handles = (before.handle_limit - before.charged_handles) as usize;
+    let limit = available.min(handles / 2 - 1);
+    // The service fixture funds more objects than fit as endpoint pairs. Charge
+    // the excess as notifications so this still proves object-quota refusal
+    // with endpoint metadata spare, rather than hitting the handle ceiling first.
+    let mut bells = [None; abi::NOTIFY_HANDLES / 3];
+    for bell in &mut bells[..available - limit] {
+        *bell = Some(Notification::create().unwrap());
+    }
     let mut channels = [None; abi::MAX_DYNAMIC_HANDLES / 2];
-    assert!(limit <= channels.len());
     for slot in &mut channels[..limit] {
         *slot = Some(ipc::channel().unwrap());
     }
+    let full = ipc::budget().unwrap();
+    assert_eq!(full.charged_channels, full.channel_limit);
+    assert!(full.charged_handles + 2 <= full.handle_limit);
     assert!(matches!(ipc::channel(), Err(Error(code)) if code == abi::NO_MEMORY as i64));
     let (send, recv) = channels[0].unwrap();
     send.send(b"held").unwrap();
@@ -70,6 +83,15 @@ pub(super) fn quota() {
         send.close().unwrap();
         recv.close().unwrap();
     }
+    for handles in bells.into_iter().flatten() {
+        handles[2].close_object().unwrap();
+        for handle in handles {
+            handle.release().unwrap();
+        }
+    }
+    let after = ipc::budget().unwrap();
+    assert_eq!(after.charged_channels, before.charged_channels);
+    assert_eq!(after.charged_handles, before.charged_handles);
 }
 
 pub(super) fn closed_wait() {

@@ -20,8 +20,9 @@ Kernel notifications and a first reusable single-writer shared-memory/mailbox
 slice execute on x86-64 and ARM64. Ordinary F5 now uses them for physical input
 to the root matrix, root display commands/images, root storage and separate
 parent-storage and pipelined interaction streams between stock matrices, Omega app
-broker/interaction/storage and independent Split interaction/storage forwarding. The scoped storage fixture also exercises both
-private-root provider connections. See the evidence below. Remaining acceptance:
+broker/interaction/storage, independent Split interaction/storage forwarding,
+Background and the separate Omega UI presenter. The scoped storage fixture also
+exercises both private-root provider connections. See the evidence below. Remaining acceptance:
 
 - Continue the shared service migration through the remaining ordinary service
   clients, control/wake streams and producer/capture. Independently selected control/data streams
@@ -220,6 +221,62 @@ not perfect timing indistinguishability or mandatory agent badges. Existing
 default/hidden cursor evidence remains valid for its scope, not the full asset API.
 
 ## Current implementation evidence
+
+Implementation update 2026-10-25: **shared Background and Omega UI presentation**,
+over `67b45f7e`.
+
+[Background](source-rs/distribution/applications/background/backdrop.rs) and the
+[separate UI demo](source-rs/distribution/applications/omega-ui/session.rs) now
+select the existing shared Services owner before acquisition. Background performs
+its denied optional-storage request after the first interaction poll, then keeps
+drawing; a refusal does not reset IDs or poison the stream. Its owner supplies
+one notification and reader page alongside its existing private grant.
+
+The [UI presenter](source-rs/distribution/libraries/omega-ui/presentation.rs) holds
+surface state for one view epoch and borrows that same Services owner for every
+present/retire operation. It no longer retains raw endpoints or implements a
+second reply reader. Conditional surface removal, immutable image custody,
+begin/commit/abort and the authored Omega UI library stay unchanged. Both apps
+request one notification in their manifests. This is Rust boundary work; it
+introduces no new Omega app behavior or global service lookup.
+
+With upstream connections, chrome, Background and three ordinary app pairs, a user
+matrix retains eleven connections and thirty-three notification rights. The
+per-task notification metadata limit is forty-eight, independent of page/object
+funding and the unchanged thirty-two-interest wait limit. The IPC fixture funds
+32 objects so its six-stream test can exhaust notification metadata with spare
+object funding. That exposed an old quota test assuming every funded object fit
+as two endpoint handles. It now charges excess funding with notifications, fills
+channel quota while endpoint slots remain free, and checks exact refunds. This
+preserves the distinction between object funding and handle exhaustion.
+
+Verification:
+
+- F5 with Background and three simultaneous Notes passes slot reuse and exact
+  cold persistence (`desktop/20261025T222116177415Z`). The harness requires the
+  shared Background/denied-storage marker after entering a user.
+- UI widgets, animated switch, conditional image removal, text editing,
+  clear/reset, close/reopen and cold boot pass over the shared presenter
+  (`omega-ui/20261025T222248143107Z`).
+- Three nested desktops pass held input/images/presentation and cold restoration
+  (`desktop/20261025T222611794446Z`). Four nested desktops also pass isolated
+  saves, protected recursive close, repeated collection and cold reopening
+  (`desktop/20261025T222827606536Z`).
+- The complete IPC guest passes both object-quota refusal with endpoint slots
+  spare and notification-metadata exhaustion with object funding spare, alongside
+  the existing shared custody, stale reply and final-refund cases.
+- ARM64 portability, host tests, userspace/kernel and changed-package all-feature
+  Clippy, layout, formatting, whitespace and changed Markdown links pass.
+
+Logs: `build/omega-component/consumers-{desktop,ui,ipc,nested,four,arm64,host,
+check-final,kernel,features,layout,format}.log`. These are single-CPU correctness
+and lifecycle proofs; no latency improvement or production capacity is claimed.
+
+**Next:** migrate input-producer/capture broker and data connections, preserving
+source authorization, immutable masked output, interruption and cleanup. Then
+move control/wake streams and explicit copied fixtures. Those changes must fund
+both ends before lending child budgets; shared transport is not complete yet.
+
 
 Implementation update 2026-10-25: **shared app broker and interaction**, over
 `c28fb499` (including the incoming deletion/erasure documentation).

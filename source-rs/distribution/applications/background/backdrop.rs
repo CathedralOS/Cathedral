@@ -4,34 +4,40 @@ use cathedral_platform_contracts::matrix as wire;
 use cathedral_user_runtime::{
     Error,
     ipc::{self, Handle},
-    matrix::upstream,
     services::Services,
     time,
 };
 pub fn run(mut services: Services) -> Result<(), Error> {
+    services.enable_shared()?;
     let interaction = services.interaction(1, 1)?;
-    assert!(
-        matches!(services.storage(1, 1), Err(Error(code)) if code == cathedral_platform_contracts::services::UNAVAILABLE as i64)
-    );
     let control = (Handle::bootstrap(0)?, Handle::bootstrap(1)?);
     let mut epoch = 0;
     let mut surface = 0;
+    let mut checked_scope = false;
     loop {
-        let view = upstream::call(interaction.pair, [wire::POLL, 0, 0, 0, 0, 0, 0, 0])?;
+        let view = services.request_interaction([wire::POLL, 0, 0, 0, 0, 0, 0, 0], None)?;
+        if !checked_scope {
+            // Exercise a refused lazy acquisition after interaction has begun.
+            // It must retain this broker's sequence and leave drawing usable.
+            assert!(
+                matches!(services.storage(1, 1), Err(Error(code)) if code == cathedral_platform_contracts::services::UNAVAILABLE as i64)
+            );
+            checked_scope = true;
+            cathedral_user_runtime::write(
+                b"Cathedral background: shared interaction ready; storage denied\n",
+            )?;
+        }
         if view[0] == 0 && epoch != view[1] {
             epoch = view[1];
             if surface == 0 {
-                let reply = upstream::call(
-                    interaction.pair,
-                    [wire::SURFACE_CREATE, epoch, 0, 0, 0, 0, 0, 0],
-                )?;
+                let reply = services
+                    .request_interaction([wire::SURFACE_CREATE, epoch, 0, 0, 0, 0, 0, 0], None)?;
                 if reply[0] != 0 {
                     return Err(Error(reply[0] as i64));
                 }
                 surface = reply[1];
             }
-            let reply = upstream::call(
-                interaction.pair,
+            let reply = services.request_interaction(
                 [
                     wire::PAINT,
                     epoch,
@@ -42,6 +48,7 @@ pub fn run(mut services: Services) -> Result<(), Error> {
                     view[3],
                     0x101827,
                 ],
+                None,
             )?;
             if reply[0] != 0 {
                 return Err(Error(reply[0] as i64));

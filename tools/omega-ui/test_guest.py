@@ -41,6 +41,7 @@ def exercise(stream, output, click, key, scan, width, height, reboot):
 
     # The fifth ordinary launcher entry follows Notes, Colors, Split and Nested.
     click(256, height - 48)
+    marker('Cathedral Omega UI: shared interaction ready')
     marker('Omega UI surface ready')
     point(2, 2)
     _, _, initial = pointer_test.read_scanout(stream, output)

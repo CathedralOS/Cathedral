@@ -7,5 +7,12 @@ not compositor code. The matrix resolves the `Background` executable in its own
 realm, so replacing that object changes the backdrop without changing the kernel,
 platform compositor or chrome. No storage or keyboard service is granted.
 
-The current implementation is a solid fill. Role selection UI, animation, wallpaper
-storage grants and automatic background restart are future distribution policy.
+The process selects the shared Services transport before acquisition. It requests
+storage once after its first interaction poll and requires refusal, then continues
+drawing through the same broker. Its manifest and owner grant fund one notification,
+one private mailbox page and one accepted reader page. Lifecycle controls and wake
+hints still use copied channels.
+
+The current implementation is a solid fill. Role selection UI, animation and
+wallpaper storage grants remain distribution policy. Startup retry and fallback
+belong to the owning matrix, not to this background process.

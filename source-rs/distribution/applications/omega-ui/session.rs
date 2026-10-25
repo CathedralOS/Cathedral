@@ -12,7 +12,6 @@ use cathedral_user_runtime::{
     services::Services,
     time,
 };
-type Pair = (Handle, Handle);
 const WIDTH: i32 = 360;
 const HEIGHT: i32 = 336;
 fn origin(view: wire::Packet) -> (usize, usize) {
@@ -22,8 +21,9 @@ fn origin(view: wire::Packet) -> (usize, usize) {
     )
 }
 pub fn run(mut services: Services) -> u64 {
+    services.enable_shared().unwrap();
     let connection = services.interaction(1, 1).unwrap();
-    let parent = connection.pair;
+    cathedral_user_runtime::write(b"Cathedral Omega UI: shared interaction ready\n").unwrap();
     let control = (Handle::bootstrap(0).unwrap(), Handle::bootstrap(1).unwrap());
     let api = cathedral_omega_ui::native_api();
     let (bytes, _) = api.layout().unwrap();
@@ -45,7 +45,9 @@ pub fn run(mut services: Services) -> u64 {
             stats = rebuild(&mut demo, &mut ui);
         }
         last_ms = now_ms;
-        let mut snapshot = call(parent, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
+        let mut snapshot = services
+            .request_interaction([wire::POLL, 0, 0, 0, 0, 0, 0, 0], None)
+            .unwrap();
         let mut view = wire::poll_view(snapshot);
         let mut more = false;
         for index in 0..16 {
@@ -59,7 +61,7 @@ pub fn run(mut services: Services) -> u64 {
                 pointers.reset();
                 ui.resize(WIDTH, HEIGHT).unwrap();
                 stats = rebuild(&mut demo, &mut ui);
-                scene = Some(Presenter::new(parent, view).unwrap());
+                scene = Some(Presenter::new(view).unwrap());
                 announced = false;
             }
             let event = wire::poll_event(snapshot);
@@ -92,7 +94,7 @@ pub fn run(mut services: Services) -> u64 {
             }
             if demo.closed {
                 if let Some(scene) = scene.as_mut() {
-                    scene.retire().unwrap();
+                    scene.retire(&mut services).unwrap();
                 }
                 return 0;
             }
@@ -100,12 +102,19 @@ pub fn run(mut services: Services) -> u64 {
             if !more || index == 15 {
                 break;
             }
-            snapshot = call(parent, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
+            snapshot = services
+                .request_interaction([wire::POLL, 0, 0, 0, 0, 0, 0, 0], None)
+                .unwrap();
         }
         // Apply every edge, then publish the final model once per bounded batch.
         if let Some(scene) = scene.as_mut() {
             scene
-                .present(&mut ui, &demo.regions[..demo.region_count], origin(view))
+                .present(
+                    &mut services,
+                    &mut ui,
+                    &demo.regions[..demo.region_count],
+                    origin(view),
+                )
                 .unwrap();
             if !announced {
                 cathedral_user_runtime::write(b"Omega UI surface ready\n").unwrap();
@@ -177,12 +186,4 @@ fn rebuild(demo: &mut Demo, ui: &mut Ui<'_, '_>) -> Stats {
         }
     }
     stats
-}
-fn call(pair: Pair, packet: wire::Packet) -> wire::Packet {
-    pair.0.send(&wire::encode(packet)).unwrap();
-    let mut bytes = [0; 64];
-    let length =
-        cathedral_user_runtime::matrix::upstream::receive(pair.1, &mut bytes, packet[0], 300)
-            .unwrap();
-    wire::decode(&bytes[..length]).unwrap()
 }
