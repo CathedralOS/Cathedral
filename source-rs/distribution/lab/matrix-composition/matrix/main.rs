@@ -2,10 +2,16 @@
 #![no_main]
 //! A different matrix program: three equal local views, no launcher or persistence.
 mod children;
+#[cfg(feature = "omega")]
+mod host;
 mod probes;
+#[cfg(not(feature = "omega"))]
 mod session;
 cathedral_user_runtime::entry!(main);
 fn main(_: u64, _: u64) -> u64 {
+    #[cfg(not(feature = "omega"))]
     session::run().unwrap();
+    #[cfg(feature = "omega")]
+    host::run().unwrap();
     0
 }

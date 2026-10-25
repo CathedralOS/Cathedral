@@ -3,6 +3,7 @@
 use super::*;
 use cathedral_desktop_matrix_contracts::matrix::config;
 use cathedral_platform_contracts::storage;
+use cathedral_stock_matrix::policy;
 use cathedral_user_runtime::storage::Scope;
 
 impl Children {
@@ -44,7 +45,7 @@ impl Children {
                 None => scope.lookup(config::NAME).map_err(|c| Error(c as i64))?,
             };
             let mut bytes = read(scope, object, Some(config::SIZE))?;
-            let saved = config::Config::decode(&bytes.map()?[..config::SIZE])
+            let saved = policy::decode(&bytes.map()?[..config::SIZE])
                 .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
             drop(bytes);
             // One listing names the launcher and the background together.
@@ -62,9 +63,14 @@ impl Children {
         if saved.keys & !parent.grant.keys != 0 {
             return Err(Error(abi::DENIED as i64));
         }
-        let rects = saved
-            .rectangles(parent.grant.width, parent.grant.height)
-            .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
+        let rects = policy::rectangles(
+            saved.margin,
+            saved.launcher_height,
+            saved.gap,
+            parent.grant.width,
+            parent.grant.height,
+        )
+        .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
         let plan = parent::LaunchRequest {
             slot: 0,
             object: launcher,
@@ -215,7 +221,7 @@ impl Children {
             return Ok(wire::error(abi::INVALID_ARGUMENT));
         };
         let grant = parent.grant;
-        let Some(rects) = config::rectangles(margin, bar, gap, grant.width, grant.height) else {
+        let Some(rects) = policy::rectangles(margin, bar, gap, grant.width, grant.height) else {
             return Ok(wire::error(abi::INVALID_ARGUMENT));
         };
         let pair = rects.map(rect);

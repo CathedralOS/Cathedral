@@ -1,0 +1,6 @@
+machine build(builder: &mut Build) {
+    Build::application(builder, "cathedral_matrix_configuration_native");
+    Build::depend_as(builder, "configuration", Source::Path { location: "../configuration" });
+    Build::select_provider<configuration::Configuration, configuration::ConfigurationProvider>(builder, CompositionMode::Independent);
+    Build::bind(builder, linux_x86_64::ProgramEntry, main);
+}

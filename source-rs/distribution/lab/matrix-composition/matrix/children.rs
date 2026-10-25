@@ -11,6 +11,7 @@ use cathedral_user_runtime::{
 
 pub struct Children(pub [Option<Admitted>; 3]);
 impl Children {
+    #[cfg(not(feature = "omega"))]
     pub fn start(
         &mut self,
         slot: usize,
@@ -18,19 +19,33 @@ impl Children {
         server: &mut Server,
         world: &mut World<3>,
     ) -> Result<(), Error> {
-        if self.0[slot].is_some() || !server.available(slot) {
-            return Err(Error(abi::BUSY as i64));
-        }
-        let child = admission::spawn_brokered(
-            Launch::at(slot as u64)?,
+        self.start_with(
+            slot,
             if mode == 0 { slot as u64 } else { mode + 2 },
-            &[],
             if slot == 2 {
                 cathedral_platform_contracts::imports::ALL
             } else {
                 cathedral_platform_contracts::imports::INTERACTION
             },
-        )?;
+            server,
+            world,
+        )
+    }
+    pub fn start_with(
+        &mut self,
+        slot: usize,
+        argument: u64,
+        granted: u64,
+        server: &mut Server,
+        world: &mut World<3>,
+    ) -> Result<(), Error> {
+        if slot >= self.0.len() {
+            return Err(Error(abi::INVALID_ARGUMENT as i64));
+        }
+        if self.0[slot].is_some() || !server.available(slot) {
+            return Err(Error(abi::BUSY as i64));
+        }
+        let child = admission::spawn_brokered(Launch::at(slot as u64)?, argument, &[], granted)?;
         world.disconnected(slot);
         server
             .install(slot, child.data)
@@ -44,6 +59,9 @@ impl Children {
         server: &mut Server,
         world: &mut World<3>,
     ) -> Result<(), Error> {
+        if slot >= self.0.len() {
+            return Err(Error(abi::INVALID_ARGUMENT as i64));
+        }
         let child = self.0[slot].take().ok_or(Error(abi::PEER_CLOSED as i64))?;
         server.remove(slot);
         world.disconnected(slot);

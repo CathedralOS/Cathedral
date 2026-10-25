@@ -90,8 +90,11 @@ export remains only for decision tests and explicit Rust fault probes; ordinary
 F5 calls that policy directly from Omega. See the
 [chooser boundary](../../source/distribution/applications/chooser/README.md).
 The Rust stock matrix is also a distribution program: `distribution/matrix/`
-owns its launcher/app roles, saved desktop configuration, two-child control
-router and recovery choices. Its extension contract lives beside it in
+owns its launcher/app roles, saved desktop configuration, child control
+router and recovery choices. Its saved configuration validation and placement
+now execute the shared [Omega configuration](../../source/distribution/matrix/configuration/README.md);
+the chooser calls the same codec directly. The Rust data representation remains
+for installer/tools and independent conformance checks. Its extension contract lives beside it in
 `distribution/matrix/contracts/`. Other distributions need not implement it.
 `platform/libraries/matrix/` supplies reusable local authority, input, geometry,
 surface, storage-scope and task-management state with caller-selected child
@@ -100,7 +103,12 @@ The stock program's IPC loop still composes these mechanisms directly; a
 general-purpose matrix server runtime is not yet a separate platform package.
 The independent Rust `distribution/lab/matrix-composition/matrix` program uses
 the shared runtime server and matrix commands for three local peers without any
-stock distribution import. This verifies that subset over actual IPC; it does
+stock distribution import. The same proof now also runs an
+[Omega matrix program](../../source/distribution/lab/matrix-composition/README.md)
+over a private lab bridge to those mechanisms. It chooses admission, service
+grants, placement and lifecycle; the bridge retains authenticated request custody.
+The common app host has not acquired matrix-specific operations.
+This verifies that subset over actual IPC; it does
 not yet share the stock program's rendering or upstream adapters. Child connection
 construction, spawn and failure rollback are shared through
 `platform/libraries/user-runtime/matrix/admission/`; each program retains code,

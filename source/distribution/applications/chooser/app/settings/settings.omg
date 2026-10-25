@@ -5,7 +5,7 @@ use state;
 use transport;
 use session::session;
 use settings::persistence;
-use settings::encoding;
+use configuration::encoding;
 public machine settings_dirty(s: &State) -> bool { s.uncertain || !equal(&s.saved, &s.draft) }
 public machine settings_input(s: &mut State, p: &mut [u64; 4096]) -> u64 {
     transition s.snapshot[5] & 255u64 { POINTER -> pointer(s, p) KEY -> keyboard(s, p) _ -> after_input(s, p) }

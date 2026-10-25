@@ -185,6 +185,24 @@ impl Parent {
     }
     fn inherit_reply(&mut self, world: &mut World, reply: wire::Packet) {
         #[cfg(feature = "trace-input")]
+        {
+            let event = wire::poll_event(reply);
+            if event[2] != wire::NONE && event[2] != wire::POINTER {
+                time::input_sample(
+                    "matrix",
+                    &[
+                        self.storage_realm,
+                        event[2],
+                        event[3],
+                        event[4],
+                        event[6],
+                        event[7],
+                        time::now().unwrap_or(0),
+                    ],
+                );
+            }
+        }
+        #[cfg(feature = "trace-input")]
         if wire::poll_event(reply)[2] == wire::KEY
             && wire::poll_event(reply)[4] != cathedral_platform_contracts::input::RELEASE as u64
         {

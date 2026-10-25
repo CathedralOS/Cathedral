@@ -1,0 +1,5 @@
+use matrix::main;
+use matrix::state;
+machine main() reaches Matrix {
+    let mut s: State; let mut p: [u64; 4096]; let result: u64 = Matrix::step(&mut s, &mut p);
+}

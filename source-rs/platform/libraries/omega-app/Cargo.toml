@@ -10,6 +10,7 @@ path = "lib.rs"
 
 [features]
 trace-storage = []
+trace-input = []
 
 [dev-dependencies]
 cathedral-platform-contracts.workspace = true

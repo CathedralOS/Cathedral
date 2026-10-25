@@ -1,9 +1,13 @@
 [package]
+autotests = false
 name = "cathedral-stock-matrix"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
+
+[lib]
+path = "lib.rs"
 
 [[bin]]
 name = "cathedral-stock-matrix"

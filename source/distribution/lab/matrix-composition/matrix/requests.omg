@@ -1,0 +1,43 @@
+// Caller facts occupy 10-13, outside the untrusted eight-word message.
+use state;
+use bridge;
+use session;
+use protocol::main;
+public machine dispatch(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition p[9] == 0u64 { true -> event(s, p) _ -> (0u64) }
+    state event(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition p[12] { 2u64 -> disconnected(s, p) 1u64 -> message(s, p) _ -> deny(s, p) } }
+    state disconnected(s: &mut State, p: &mut [u64; 4096]) -> u64 { p[0] = p[10]; s.phase = 5u64; STOP }
+    state message(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition p[13] == 64u64 { true -> caller(s, p) _ -> deny(s, p) } }
+    state caller(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition p[10] == 3u64 { true -> owner(s, p) _ -> child(s, p) } }
+}
+machine child(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition p[0] == 1397904897u64 { true -> acquire(s) _ -> request(s) }
+    state acquire(s: &mut State) -> u64 { s.phase = 5u64; OFFER }
+    state request(s: &mut State) -> u64 { s.phase = 7u64; CHILD_REQUEST }
+}
+machine owner(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition p[0] >> 32u64 != 0u64 { true -> probe(s) _ -> command(s, p) }
+    state probe(s: &mut State) -> u64 { s.phase = 5u64; RELAY_PROBE }
+    state command(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition p[0] { 106u64 -> launch(s, p) 107u64 -> stop(s, p) 103u64 -> source(s) 104u64 -> source(s) _ -> local(s) }
+    }
+    state source(s: &mut State) -> u64 { s.phase = 7u64; SOURCE_COMMAND }
+    state local(s: &mut State) -> u64 { s.phase = 7u64; OWNER_COMMAND }
+}
+machine stop(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition p[1] < 3u64 && p[2] == 0u64 && p[3] == 0u64 && p[4] == 0u64 && p[5] == 0u64 && p[6] == 0u64 && p[7] == 0u64 {
+        true -> stop_child(s, p) _ -> deny(s, p)
+    }
+    state stop_child(s: &mut State, p: &mut [u64; 4096]) -> u64 { p[0] = p[1]; s.phase = 7u64; STOP }
+}
+machine launch(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition p[1] < 3u64 && p[2] <= 2u64 && p[3] == 0u64 && p[4] == 0u64 && p[5] == 0u64 && p[6] == 0u64 && p[7] == 0u64 {
+        true -> mode(s, p) _ -> deny(s, p)
+    }
+    state mode(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition p[2] == 0u64 { true -> spawn(s, p, p[1]) _ -> interrupted(s, p) } }
+    state interrupted(s: &mut State, p: &mut [u64; 4096]) -> u64 requires p[2] <= 2u64 { transition { _ -> spawn(s, p, p[2] + 2u64) } }
+    state spawn(s: &mut State, p: &mut [u64; 4096], argument: u64) -> u64 {
+        let slot: u64 = p[1]; packet(p, slot, argument, services(slot), 0u64, 0u64, 0u64, 0u64, 0u64); s.phase = 7u64; SPAWN
+    }
+}
+machine deny(s: &mut State, p: &mut [u64; 4096]) -> u64 { packet(p, DENIED, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64); reply(s, p) }

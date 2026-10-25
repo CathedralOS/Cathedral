@@ -1,5 +1,79 @@
 # Rust reference OS: tasks and handoff
 
+Implementation update 2026-10-25: **diagnostic boot repaired; shared matrix
+configuration/placement and an independent matrix execute in Omega**, over `aa84ff7c`.
+
+The traced display failure was a user-stack guard fault: vector 14, error 6,
+address `0x80001ffffc`, instruction `0x800000e067` inside `time::trace` in the
+then-built display ELF. The diagnostic writer's 4096-aligned scratch array was
+inlined into callers, inflating their frames by several KiB. The crossing-page
+write now uses isolated, 256-aligned scratch (the maximum diagnostic write),
+which still cannot cross a page. No task stack or resource grant grew. Failed
+bootstrap collection now logs returned/fault outcomes before consuming them.
+Reproduction: `desktop/20261024T235906067468Z`; fixed full traced four-level
+fresh/cold proof: `desktop/20261024T235947413509Z`.
+
+`--trace-input` now also records key/state at source and non-motion event contents,
+local channel/group and realm at nested receipt and native Omega delivery. It
+includes cancellation/retirement, and the chooser opts into the common host trace.
+This is opt-in diagnostic output, not a new input protocol or global identity.
+The prior `deep` -> `de` occurrence remains unexplained: it did not recur in either
+full replay. The new records expose transport receipt, not app-side acceptance.
+
+The [shared distribution configuration](source/distribution/matrix/configuration/README.md)
+now owns the Omega CTHMAT codec and checked bottom-bar placement. The chooser
+imports it instead of owning a private copy. Stock matrix startup and authorized
+live layout execute its compiled export through
+[source-rs/distribution/matrix/policy/policy.rs](source-rs/distribution/matrix/policy/policy.rs).
+Authority checks, admission and IPC remain with their existing owners. The Rust
+contract representation stays as the installer/tool format and test oracle.
+
+Verification: compiled conformance covers all 26,624 single-byte mutations,
+resource-limit/legacy cases, UTF-8 names and 100,000 geometry combinations. Full
+host tests, all-userspace Clippy and source-layout (68 Omega / 149 Rust edges)
+pass. The final traced four-level fresh/cold desktop with the shared configuration
+also passes: `desktop/20261025T000330943022Z`, log
+`build/omega-component/matrix-input-events.log`. Ordinary F5 fresh/cold proof:
+`desktop/20261025T000847314830Z`. Settings cancel/live apply/retention/cold
+persistence and lost-save reconciliation:
+`settings/20261025T001104625287Z`, log `matrix-settings.log`. The first settings
+attempt used the heavily populated traced nested disk and correctly refused an
+upgrade above its root quota; the successful run used the documented one-user
+fixture. No quota was raised or user data removed. No kernel mechanism changed.
+
+The [independent three-peer Omega matrix](source/distribution/lab/matrix-composition/README.md)
+also runs the unchanged live IPC isolation/supervision proof. Omega selects
+admission, per-child service grants, placement, request dispatch and lifecycle.
+Its private lab adapter executes the existing World/server/admission mechanisms,
+retaining endpoint-authenticated Request custody across native calls. It does
+not add matrix-specific operations to the common application host. The Omega
+profile explicitly funds nine state/packet pages. Storage endpoints prove
+custody only, not actual filesystem scopes or storage forwarding.
+
+- `python tools/boot-harness-rs/matrix_composition_test.py --omega`:
+  `omega-matrix/20261025T001808889160Z` (final), with the first pass at
+  `omega-matrix/20261025T001303384827Z`.
+- Original Rust comparison proof after shared admission refactor:
+  `matrix-composition/20261025T001435958058Z`.
+- Four compiled Omega matrix tests: refusal before placement, forged child
+  commands stay child dispatch, replacements retain service policy, malformed
+  requests/disconnects and admission errors. Run with `cargo test --locked
+  -p cathedral-three-peer-matrix --lib --features omega`.
+- Default host tests include the stock matrix configuration tests. All-userspace
+  and affected all-feature guest Clippy, both matrix host library/test Clippy,
+  layout boundary tests (8), packaging tests (5), ARM64 user-runtime Clippy
+  and formatting pass.
+- Artifacts/logs: `build/omega-component/{matrix-*,omega-matrix-*.log,rust-matrix-proof.log}`.
+  Kernel/ARM64 runtime suites and every specialized fault fixture were not rerun.
+
+**Next:** the independent Omega matrix should accept a real upstream connection
+and attenuate one nested child's view/input through it. Keep the current lab
+bridge private until that second composition proves reusable operations. Then
+move a bounded stock lifecycle branch to Omega using those operations; the
+stock matrix's supervision/rendering/storage loop remains Rust. The partial-key
+observation is still open, with source/nested/native-delivery traces now available.
+No owner semantic decision blocks these engineering steps.
+
 Implementation update 2026-10-24: **installed chooser session moved to Omega**,
 over `95163d36`. Normal F5's login picker and desktop taskbar now run the
 [complete Omega chooser](source/distribution/applications/chooser/README.md),

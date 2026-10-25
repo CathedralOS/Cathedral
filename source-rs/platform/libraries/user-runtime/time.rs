@@ -35,9 +35,16 @@ pub fn storage_trace(label: &str, scope: u64, opcode: u64) {
 }
 /// Bounded numeric diagnostic record. Callers compile this out in ordinary builds.
 pub fn storage_sample(label: &str, values: &[u64]) {
+    sample("STORAGE_TRACE ", label, values);
+}
+/// Diagnostic-only local input facts, not identities or authority visible to apps.
+pub fn input_sample(label: &str, values: &[u64]) {
+    sample("INPUT_EVENT ", label, values);
+}
+fn sample(prefix: &str, label: &str, values: &[u64]) {
     let mut bytes = [0; 256];
     let mut len = 0;
-    for text in ["STORAGE_TRACE ", label] {
+    for text in [prefix, label] {
         let count = text.len().min(32);
         bytes[len..len + count].copy_from_slice(&text.as_bytes()[..count]);
         len += count;

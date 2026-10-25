@@ -1,6 +1,6 @@
 use state;
 use transport;
-use settings::encoding;
+use configuration::encoding;
 use rendering::rendering;
 use rendering::text;
 public machine settings_pixel(s: &State, x: u64, y: u64) -> u64 {

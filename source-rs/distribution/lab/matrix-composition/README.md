@@ -3,7 +3,8 @@
 This proof boots a different matrix executable with three equal virtual input
 regions. It has no launcher/app roles, saved desktop configuration, framebuffer,
 storage provider or dependency on the stock matrix contract. The layout checker
-rejects distribution dependencies in both proof packages.
+rejects stock distribution dependencies; the Omega native consumer may depend
+on its own proof package.
 
 Start at [matrix/main.rs](matrix/main.rs), then [matrix/session.rs](matrix/session.rs).
 That program chooses its arrangement and serves three peer connections using
@@ -55,3 +56,20 @@ connection rollback. It does not prove nested upstream adaptation, drawing,
 storage forwarding or alternative dynamic-reservation policy. Those paths remain in
 the stock program and are candidates for extraction when another consumer needs
 them. Shared mechanisms should grow from those actual requirements.
+
+## Omega implementation of the same matrix
+
+`matrix_composition_test.py --omega` runs this unchanged supervisor/peer proof
+against [the Omega matrix](../../../../source/distribution/lab/matrix-composition/README.md).
+The `omega` feature selects [host/host.rs](matrix/host/host.rs) instead of the Rust
+session. Omega owns admission order, service-grant choices, layout, dispatch and
+lifecycle requests. The adapter executes them through the same platform World,
+runtime server and admission library used above. It retains authenticated Request
+custody across the native call; message contents cannot supply caller identity.
+Nine private pages are explicitly funded in the separate profile.
+
+The original Rust session remains the default comparison proof. The Omega bridge
+is deliberately local to this lab, including its probe relay and rollback check;
+those operations do not enter the common app host or claim to be a final runtime.
+Storage is still only a custody proof, not persistent realm forwarding. F5's
+stock matrix is not yet running this event loop.

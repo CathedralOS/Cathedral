@@ -52,6 +52,15 @@ class OwnershipTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             check_edge('distribution/matrix/contracts', 'distribution/matrix')
 
+    def test_independent_omega_matrix_can_compose_only_its_own_distribution_pieces(self):
+        check_edge('distribution/lab/matrix-composition/native', 'distribution/lab/matrix-composition/matrix')
+        for target in ('distribution/matrix/configuration', 'distribution/lab/matrix-composition-extra',
+                       'distribution/applications/chooser/app'):
+            with self.assertRaises(ValueError):
+                check_edge('distribution/lab/matrix-composition/native', target)
+        with self.assertRaises(ValueError):
+            check_edge('distribution/applications/split', 'distribution/lab/matrix-composition/matrix')
+
     def test_alternative_matrix_is_independent_of_stock_distribution(self):
         for source in ('distribution/lab/matrix-composition/matrix', 'distribution/applications/split'):
             check_edge(source, 'platform/libraries/matrix')

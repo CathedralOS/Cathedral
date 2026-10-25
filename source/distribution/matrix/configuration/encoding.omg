@@ -1,5 +1,5 @@
 // CTHMAT02: preserve startup-only authority fields while editing geometry.
-use settings::name;
+use name;
 public machine word(bytes: &[u8; 104], at: u64) -> u64 {
     transition at <= 96u64 { true -> read(bytes, at, 0u64, 0u64) _ -> (0u64) }
     state read(bytes: &[u8; 104], at: u64, i: u64, value: u64) -> u64 { transition at <= 96u64 && i < 8u64 { true -> byte(bytes, at, i, value) _ -> (value) } }

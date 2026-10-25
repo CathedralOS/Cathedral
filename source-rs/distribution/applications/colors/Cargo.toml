@@ -16,7 +16,7 @@ test = false
 bench = false
 
 [features]
-trace-input = []
+trace-input = ["cathedral-omega-app/trace-input"]
 trace-storage = ["cathedral-omega-app/trace-storage"]
 
 [dependencies]

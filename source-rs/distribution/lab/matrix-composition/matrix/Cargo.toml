@@ -1,9 +1,13 @@
 [package]
+autotests = false
 name = "cathedral-three-peer-matrix"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
+
+[lib]
+path = "lib.rs"
 
 [[bin]]
 name = "cathedral-three-peer-matrix"
@@ -11,11 +15,17 @@ path = "main.rs"
 test = false
 bench = false
 
+[features]
+omega = []
+
 [dependencies]
+cathedral-omega-app.workspace = true
 cathedral-matrix.workspace = true
-cathedral-user-runtime.workspace = true
 cathedral-kernel-contracts.workspace = true
 cathedral-platform-contracts.workspace = true
+
+[target.'cfg(target_os = "none")'.dependencies]
+cathedral-user-runtime.workspace = true
 
 [lints]
 workspace = true

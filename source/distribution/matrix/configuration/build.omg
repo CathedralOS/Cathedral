@@ -1,0 +1,5 @@
+machine build(builder: &mut Build) {
+    Build::package(builder, "cathedral_matrix_configuration");
+    Build::select_provider<Configuration, ConfigurationProvider>(builder);
+    Build::bind(builder, linux_x86_64::ProgramEntry, component_entry);
+}

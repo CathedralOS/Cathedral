@@ -111,6 +111,10 @@ fn serve(extent: u64, environment: Environment) -> Result<(), Error> {
     }
 }
 fn publish(pair: (Handle, Handle), words: wire::Packet) -> Result<(), Error> {
+    #[cfg(feature = "trace-input")]
+    if words[0] == wire::KEY_SOURCE {
+        time::input_sample("source", &[words[1], words[2], time::now()?]);
+    }
     if cathedral_user_runtime::matrix::upstream::call(pair, words)?[0] == 0 {
         Ok(())
     } else {

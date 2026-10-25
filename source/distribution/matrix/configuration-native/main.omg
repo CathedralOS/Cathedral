@@ -1,0 +1,4 @@
+use configuration::main;
+machine main() reaches Configuration {
+    let mut p: [u64; 128]; let result: u64 = Configuration::decide(&mut p);
+}

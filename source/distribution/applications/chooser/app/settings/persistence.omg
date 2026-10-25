@@ -6,7 +6,7 @@ use state;
 use transport;
 use session::session;
 use settings::settings;
-use settings::encoding;
+use configuration::encoding;
 public machine load_settings(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.phase = SETTING_BOUND; BIND }
 public machine setting_bound(s: &mut State, p: &mut [u64; 4096]) -> u64 {
     transition failed(p) { true -> load_error(s, p) _ -> lookup(s, p) }

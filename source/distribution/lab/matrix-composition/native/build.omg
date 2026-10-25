@@ -1,0 +1,6 @@
+machine build(builder: &mut Build) {
+    Build::application(builder, "cathedral_three_peer_matrix_native");
+    Build::depend_as(builder, "matrix", Source::Path { location: "../matrix" });
+    Build::select_provider<matrix::Matrix, matrix::MatrixProvider>(builder, CompositionMode::Independent);
+    Build::bind(builder, linux_x86_64::ProgramEntry, main);
+}

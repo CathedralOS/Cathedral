@@ -110,6 +110,24 @@ pub(super) fn exchange(
         }
         reply
     };
+    #[cfg(feature = "trace-input")]
+    if operation == 5 && words[0] == wire::POLL {
+        let event = wire::poll_event(reply);
+        if event[2] != wire::NONE && event[2] != wire::POINTER {
+            cathedral_user_runtime::time::input_sample(
+                "omega",
+                &[
+                    host.storage.as_ref().map_or(0, |scope| scope.realm()),
+                    event[2],
+                    event[3],
+                    event[4],
+                    event[6],
+                    event[7],
+                    cathedral_user_runtime::time::now().unwrap_or(0),
+                ],
+            );
+        }
+    }
     packet[..8].copy_from_slice(&reply);
     Ok(())
 }

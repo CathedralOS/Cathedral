@@ -74,13 +74,32 @@ impl Attempt {
     }
 }
 pub(super) fn retire_task(child: task::Child) {
-    match child.wait_until(time::now().unwrap()) {
-        Ok(_) => (),
-        Err(Error(code)) if code == abi::BAD_HANDLE as i64 => (),
+    let outcome = match child.wait_until(time::now().unwrap()) {
+        Ok(outcome) => outcome,
+        Err(Error(code)) if code == abi::BAD_HANDLE as i64 => return,
         Err(Error(code)) if code == abi::TIMED_OUT as i64 => {
             child.cancel().unwrap();
-            child.wait().unwrap();
+            child.wait().unwrap()
         }
         Err(error) => panic!("bootstrap collection: {error:?}"),
+    };
+    match outcome {
+        task::Outcome::Fault {
+            vector,
+            error,
+            address,
+            instruction,
+        } => {
+            // Collection consumes the outcome. Preserve the fault before rollback
+            // erases the only explanation for a closed bootstrap connection.
+            time::storage_sample(
+                "bootstrap-child-fault",
+                &[child.raw(), vector, error, address, instruction],
+            );
+        }
+        task::Outcome::Returned(code) => {
+            time::storage_sample("bootstrap-child-returned", &[child.raw(), code]);
+        }
+        task::Outcome::Cancelled => (),
     }
 }

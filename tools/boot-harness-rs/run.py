@@ -367,7 +367,7 @@ def main():
             user_features.append("desktop-probes")
         if args.matrix_desktop_test and user["package"] == "cathedral-storage-service":
             user_features.append("recovery-lab")
-        if args.trace_input and user["package"] in ("cathedral-stock-matrix", "cathedral-input-service", "cathedral-display-service", "cathedral-desktop", "cathedral-colors", "cathedral-notes", "cathedral-omega-ui-demo"):
+        if args.trace_input and user["package"] in ("cathedral-stock-matrix", "cathedral-input-service", "cathedral-display-service", "cathedral-desktop", "cathedral-colors", "cathedral-notes", "cathedral-chooser", "cathedral-omega-ui-demo"):
             user_features.append("trace-input")
         if args.trace_storage and user["package"] in ("cathedral-stock-matrix", "cathedral-desktop", "cathedral-storage-service", "cathedral-notes", "cathedral-colors"):
             user_features.append("trace-storage")

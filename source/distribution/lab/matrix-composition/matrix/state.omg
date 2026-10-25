@@ -1,0 +1,1 @@
+public data State { phase: u64; slot: u64; }
