@@ -1,6 +1,10 @@
 # Local startup recovery
 
 [main.omg](main.omg) owns the stock matrix's picker and background retry state.
+Start with `Startup`, `ChildRole` and `Context`, then `child_retired` for failure
+routing. `take_picker` and `take_background` consume queued work; `picker_started`
+counts attempts and selects the display mode. Results are named `RetirementEffect`,
+`PickerAction` and `PickerMode` values. This policy never indexes a native packet.
 The picker gets two total admission attempts. Once exhausted, the host returns
 failure so its owner can report the failed nested desktop. A new explicit launch
 creates a fresh matrix. A failed selected user, or rejected admission after the
@@ -24,8 +28,9 @@ task identity and authority. The selected-user admission path reports rejection
 only after checking its actual remaining slots. No ancestor reads the inner realm
 to select a replacement program.
 
-The [native adapter](../../../../../../source-rs/distribution/matrix/policy/startup.rs)
-holds five opaque words. Private bridge operation 10 uses event in word 1, value
+The [Omega bridge](../../../bridge/policy/startup.omg) translates those values
+for the [Rust native adapter](../../../../../../source-rs/distribution/matrix/policy/startup.rs),
+which holds five opaque words. Private bridge operation 10 uses event in word 1, value
 facts in 2-7 and policy state in 16-20. Events report retirement, count picker
 admission, report selection failure, report initial background admission failure,
 take pending picker work and take pending background work. Busy checks retain

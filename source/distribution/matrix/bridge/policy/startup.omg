@@ -1,0 +1,93 @@
+module startup;
+
+// Temporary native encoding. Retry budgets, child roles and recovery decisions
+// belong to the typed startup policy; no kernel identity enters this packet.
+use service::children::startup::main;
+
+const RETIRED: u64 = 0u64;
+const PICKER_STARTED: u64 = 1u64;
+const SELECTION_FAILED: u64 = 2u64;
+const BACKGROUND_FAILED: u64 = 3u64;
+const TAKE_PICKER: u64 = 4u64;
+const TAKE_BACKGROUND: u64 = 5u64;
+
+public machine startup_decision(packet: &mut [u64; 128]) -> u64 {
+    let mut startup: service::children::startup::main::Startup;
+    startup.picker_attempts = packet[16];
+    startup.picker_pending = packet[17] == 1u64;
+    startup.selection_failed = packet[18] == 1u64;
+    startup.background_pending = packet[19] == 1u64;
+    startup.background_retry_spent = packet[20] != 0u64;
+    let result: u64 = apply(packet, &mut startup);
+    packet[16] = startup.picker_attempts;
+    packet[17] = boolean(startup.picker_pending);
+    packet[18] = boolean(startup.selection_failed);
+    packet[19] = boolean(startup.background_pending);
+    packet[20] = boolean(startup.background_retry_spent);
+    result
+}
+
+machine apply(packet: &[u64; 128], startup: &mut service::children::startup::main::Startup) -> u64 {
+    transition packet[1] {
+        RETIRED -> retired(packet, startup)
+        PICKER_STARTED -> mode(service::children::startup::main::picker_started(startup))
+        SELECTION_FAILED -> retirement(service::children::startup::main::selection_failed(startup, packet[2] != 0u64))
+        BACKGROUND_FAILED -> background(startup)
+        TAKE_PICKER -> picker(service::children::startup::main::take_picker(startup, packet[2] != 0u64))
+        TAKE_BACKGROUND -> boolean(service::children::startup::main::take_background(startup, packet[2] != 0u64))
+        _ -> (0u64)
+    }
+    machine retired(packet: &[u64; 128], startup: &mut service::children::startup::main::Startup) -> u64 {
+        let mut context: service::children::startup::main::Context;
+        context.login = packet[4] == 1u64;
+        context.entered = packet[5] == 1u64;
+        context.workspace = packet[6] == 1u64;
+        context.owner_recovers = packet[7] == 1u64;
+        let effect: service::children::startup::main::RetirementEffect = service::children::startup::main::child_retired(
+            startup, role(packet[2]), packet[3] == 1u64, &context
+        );
+        retirement(effect)
+    }
+    machine background(startup: &mut service::children::startup::main::Startup) -> u64 {
+        service::children::startup::main::background_failed(startup);
+        0u64
+    }
+}
+
+machine role(value: u64) -> service::children::startup::main::ChildRole {
+    transition value {
+        0u64 -> (service::children::startup::main::ChildRole::Picker)
+        1u64 -> (service::children::startup::main::ChildRole::User)
+        2u64 -> (service::children::startup::main::ChildRole::Background)
+        _ -> (service::children::startup::main::ChildRole::Other)
+    }
+}
+
+machine retirement(effect: service::children::startup::main::RetirementEffect) -> u64 {
+    transition effect {
+        service::children::startup::main::RetirementEffect::ReturnToPicker -> (1u64)
+        _ -> (0u64)
+    }
+}
+
+machine mode(value: service::children::startup::main::PickerMode) -> u64 {
+    transition value {
+        service::children::startup::main::PickerMode::SelectionFailed -> (2u64)
+        _ -> (1u64)
+    }
+}
+
+machine picker(action: service::children::startup::main::PickerAction) -> u64 {
+    transition action {
+        service::children::startup::main::PickerAction::Restart -> (1u64)
+        service::children::startup::main::PickerAction::Exhausted -> (2u64)
+        _ -> (0u64)
+    }
+}
+
+machine boolean(value: bool) -> u64 {
+    transition value {
+        true -> (1u64)
+        _ -> (0u64)
+    }
+}

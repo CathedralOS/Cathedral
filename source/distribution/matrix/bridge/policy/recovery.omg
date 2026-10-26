@@ -1,0 +1,105 @@
+module recovery;
+
+// Temporary native encoding of the recovery policy. Numeric phases are private
+// host storage, not service protocol tags or process identities.
+use service::children::recovery::main;
+use service::children::recovery::main::Command;
+
+const CONFIGURE: u64 = 0u64;
+const RETIRED: u64 = 1u64;
+const READY: u64 = 2u64;
+const NEXT_WORK: u64 = 3u64;
+const READ_STARTED: u64 = 4u64;
+const READ_COMPLETED: u64 = 5u64;
+const FALLBACK_FINISHED: u64 = 6u64;
+const REQUEST_RETRY: u64 = 7u64;
+const FALLBACK_CHANGED: u64 = 8u64;
+const FALLBACK_RETIRED: u64 = 9u64;
+const READ_UNAVAILABLE: u64 = 10u64;
+const ADMISSION_FINISHED: u64 = 11u64;
+
+public machine recovery_decision(packet: &mut [u64; 128]) -> u64 {
+    let mut recovery: service::children::recovery::main::Recovery;
+    recovery.phase = decode_phase(packet[16]);
+    recovery.ticket = packet[17];
+    let result: u64 = apply(packet, &mut recovery);
+    packet[16] = encode_phase(recovery.phase);
+    packet[17] = recovery.ticket;
+    result
+}
+
+machine apply(packet: &mut [u64; 128], recovery: &mut service::children::recovery::main::Recovery) -> u64 {
+    transition packet[1] {
+        CONFIGURE -> boolean(service::children::recovery::main::configure(recovery))
+        RETIRED -> boolean(service::children::recovery::main::retired(recovery, packet[2] == 1u64))
+        READY -> boolean(service::children::recovery::main::ready(recovery, packet[2] != 0u64))
+        NEXT_WORK -> next(packet, recovery)
+        READ_STARTED -> boolean(service::children::recovery::main::read_started(recovery, packet[4]))
+        READ_COMPLETED -> boolean(service::children::recovery::main::read_completed(recovery, packet[4], packet[2] == 1u64))
+        FALLBACK_FINISHED -> boolean(service::children::recovery::main::fallback_finished(recovery, packet[2] == 1u64))
+        REQUEST_RETRY -> boolean(service::children::recovery::main::request_retry(recovery, packet[2] == 1u64))
+        FALLBACK_CHANGED -> boolean(service::children::recovery::main::fallback_changed(recovery, packet[2] == 1u64))
+        FALLBACK_RETIRED -> boolean(service::children::recovery::main::fallback_retired(recovery))
+        READ_UNAVAILABLE -> boolean(service::children::recovery::main::read_unavailable(recovery))
+        ADMISSION_FINISHED -> boolean(service::children::recovery::main::admission_finished(recovery, packet[4], packet[2] == 1u64))
+        _ -> (0u64)
+    }
+    machine next(packet: &mut [u64; 128], recovery: &mut service::children::recovery::main::Recovery) -> u64 {
+        let command: service::children::recovery::main::Command = service::children::recovery::main::next_work(recovery, packet[2] == 1u64, packet[3] == 1u64);
+        encode_command(packet, command)
+    }
+}
+
+machine encode_command(packet: &mut [u64; 128], command: service::children::recovery::main::Command) -> u64 {
+    transition command {
+        Command::Cancel -> (1u64)
+        Command::RetireFallback -> (2u64)
+        Command::Read -> (3u64)
+        Command::Admit { ticket } -> admission(packet, ticket)
+        Command::ShowFallback -> (5u64)
+        _ -> (0u64)
+    }
+    machine admission(packet: &mut [u64; 128], ticket: u64) -> u64 {
+        packet[24] = ticket;
+        4u64
+    }
+}
+
+machine decode_phase(value: u64) -> service::children::recovery::main::Phase {
+    transition value {
+        1u64 -> (service::children::recovery::main::Phase::AutomaticAvailable)
+        2u64 -> (service::children::recovery::main::Phase::AutomaticSpent)
+        3u64 -> (service::children::recovery::main::Phase::ReadPending)
+        4u64 -> (service::children::recovery::main::Phase::Reading)
+        5u64 -> (service::children::recovery::main::Phase::NeedFallback)
+        6u64 -> (service::children::recovery::main::Phase::Fallback)
+        7u64 -> (service::children::recovery::main::Phase::RetryRequested)
+        8u64 -> (service::children::recovery::main::Phase::StartingRead)
+        9u64 -> (service::children::recovery::main::Phase::ReadReady)
+        10u64 -> (service::children::recovery::main::Phase::Admitting)
+        _ -> (service::children::recovery::main::Phase::Disabled)
+    }
+}
+
+machine encode_phase(phase: service::children::recovery::main::Phase) -> u64 {
+    transition phase {
+        service::children::recovery::main::Phase::AutomaticAvailable -> (1u64)
+        service::children::recovery::main::Phase::AutomaticSpent -> (2u64)
+        service::children::recovery::main::Phase::ReadPending -> (3u64)
+        service::children::recovery::main::Phase::Reading -> (4u64)
+        service::children::recovery::main::Phase::NeedFallback -> (5u64)
+        service::children::recovery::main::Phase::Fallback -> (6u64)
+        service::children::recovery::main::Phase::RetryRequested -> (7u64)
+        service::children::recovery::main::Phase::StartingRead -> (8u64)
+        service::children::recovery::main::Phase::ReadReady -> (9u64)
+        service::children::recovery::main::Phase::Admitting -> (10u64)
+        _ -> (0u64)
+    }
+}
+
+machine boolean(value: bool) -> u64 {
+    transition value {
+        true -> (1u64)
+        _ -> (0u64)
+    }
+}

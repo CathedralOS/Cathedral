@@ -63,11 +63,13 @@ adding more packet-driven policy ports. The stock matrix now follows the Rust
 `service/children/` tree in one service package, with an explicit temporary native
 `bridge/`. Close/loss policy uses named survey, answer and outcome types; service
 turns use commands, observed facts and event kinds. Their native adapters own the
-numeric packet encoding. Package/module imports must retain this hierarchy.
+numeric packet encoding. Local startup and launcher recovery now use named
+state and outcomes as well, with their encoding in `bridge/policy/`.
+Package/module imports must retain this hierarchy.
 
-This is not a completed tree-wide cleanup. Launch, recovery, startup, workspace,
-requests and configuration still need their packet-shaped domain interfaces
-replaced; retain the existing host regression cases while doing that. Avoid
+This is not a completed tree-wide cleanup. Launch, workspace, requests, realm
+setup, configuration and resource policies still need their packet-shaped domain
+interfaces replaced; retain the existing host regression cases while doing that. Avoid
 adding features to these representations. The Omega kernel also still mixes x86
 paging, PIC/PIT and interrupt profiles in `kernel/core/`; split shared ownership
 from ISA/board mechanisms before expanding that prototype. Start the audit at
@@ -90,6 +92,25 @@ reboot; the durable oracle verifies 1,689 records. Artifacts are under
 This run used the exact producer above, not an arbitrary current-main compiler.
 The normal session profile also builds through the default compiler path without
 `OMEGA_BIN` (`matrix-default-build.log`).
+
+Follow-up over `6dee9044`: startup recovery uses `Startup`, `ChildRole`,
+`Context`, `PickerAction`, `PickerMode` and `RetirementEffect`. Launcher recovery
+uses `Recovery`, `Phase` and a `Command::Admit` carrying its correlation ticket.
+The domain entrances contain no native packet slots or numeric operation dispatch.
+Their adapters preserve the existing Rust host interface; the host still owns
+real tickets, images, authenticated connections and task custody.
+
+Verification: the 97 compiled matrix tests pass with the supported compiler
+selected through the default path. Three nested desktops, protected close, saved
+state, repeated subtree reclamation and cold reopen pass. Picker, selected-user
+and background fault injection all retain bounded local recovery and preserve the
+outer draft. Asynchronous launcher recovery and owner revocation both pass with
+input during the pending read and cold reopen; revocation permits no late
+admission or fallback. Layout checks and navigation links pass. Logs are
+`build/omega-component/matrix-recovery-{typed-tests,nested,startup-faults,async-recover,async-revoke}.log`.
+Guest artifacts: `desktop/20261026T233346922557Z`,
+`nested-failures/20261026T233732612252Z`, `desktop/20261026T233946964061Z` and
+`desktop/20261026T234107883140Z` under `build/boot-harness-rs/`.
 
 ## Memory budgets and allocator delegation
 

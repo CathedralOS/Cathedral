@@ -1,6 +1,12 @@
 # Asynchronous launcher recovery
 
-[main.omg](main.omg) decides whether the stock matrix waits, reads the launcher's
+[main.omg](main.omg) owns named `Recovery` state and its `Phase`. Start at
+`next_work` for authority/vacancy checks and command selection; follow
+`read_started`, `read_completed` and `admission_finished` for matching completion
+handling. `Command::Admit` carries its correlation ticket as a case payload.
+The policy never reads or writes native packet slots.
+
+It decides whether the stock matrix waits, reads the launcher's
 stored program, admits the result, or shows owner-supplied fallback code. A failed
 initial launcher gets one automatic attempt. Failure after that goes to fallback.
 An authenticated fallback request permits one explicit attempt; it never restores
@@ -32,8 +38,9 @@ only the captured authority and reclaims failed admissions. Sibling processes ke
 running; restarting the launcher does not restart its matrix or recover its private
 unsaved state.
 
-This private native bridge uses operation 9, event in word 1, value facts in
-2-4, phase/ticket state in 16-17 and an admission-command ticket in 24. Events
+The [Omega bridge](../../../bridge/policy/recovery.omg) alone translates
+phases, commands and results to host words. This private native bridge uses
+operation 9, event in word 1, value facts in 2-4, phase/ticket state in 16-17 and an admission-command ticket in 24. Events
 0-3 initialize, retire, check readiness and advance the workflow. Events 4-5
 report the issued ticket and read completion; 6-9 finish fallback, request retry,
 change fallback and finish explicit retirement; 10 refuses an unavailable read;

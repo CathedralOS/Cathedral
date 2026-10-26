@@ -1,204 +1,248 @@
 module children::recovery::main;
 
-// Stock launcher recovery. The host supplies verified facts, never raw task IDs.
-// State 16..17 holds the phase and outstanding host ticket. Commands are issued once.
-const AUTOMATIC: u64 = 1u64;
-const SPENT: u64 = 2u64;
-const READ_PENDING: u64 = 3u64;
-const READING: u64 = 4u64;
-const NEED_FALLBACK: u64 = 5u64;
-const FALLBACK: u64 = 6u64;
-const REQUESTED: u64 = 7u64;
-const STARTING: u64 = 8u64;
-const READ_READY: u64 = 9u64;
-const ADMITTING: u64 = 10u64;
-public machine recovery_decision(p: &mut [u64; 128]) -> u64 {
-    transition p[1] {
-        0u64 -> initialize(p)
-        1u64 -> retired(p)
-        2u64 -> ready(p)
-        3u64 -> next(p)
-        4u64 -> read_started(p)
-        5u64 -> read_completed(p)
-        6u64 -> fallback_finished(p)
-        7u64 -> request(p)
-        8u64 -> fallback_changed(p)
-        9u64 -> explicit_retired(p)
-        10u64 -> read_unavailable(p)
-        11u64 -> admission_finished(p)
-        _ -> (0u64)
+// One automatic retry, then owner-supplied fallback. Explicit retries never
+// replenish the automatic allowance. Tickets correlate work; they grant no access.
+public data Phase [copy] {
+    case Disabled;
+    case AutomaticAvailable;
+    case AutomaticSpent;
+    case ReadPending;
+    case StartingRead;
+    case Reading;
+    case ReadReady;
+    case Admitting;
+    case NeedFallback;
+    case Fallback;
+    case RetryRequested;
+}
+
+public data Recovery {
+    phase: Phase;
+    ticket: u64;
+}
+
+public data Command [copy] {
+    case Wait;
+    case Cancel;
+    case RetireFallback;
+    case Read;
+    case Admit(ticket: u64);
+    case ShowFallback;
+}
+
+public machine configure(recovery: &mut Recovery) -> bool {
+    transition recovery.phase {
+        Phase::Disabled -> arm(recovery)
+        _ -> (false)
+    }
+    machine arm(recovery: &mut Recovery) -> bool {
+        recovery.phase = Phase::AutomaticAvailable;
+        true
     }
 }
 
-machine set(p: &mut [u64; 128], state: u64) -> u64 {
-    p[16] = state;
-    1u64
-}
-
-machine discard(p: &mut [u64; 128]) -> u64 {
-    p[16] = 0u64;
-    p[17] = 0u64;
-    0u64
-}
-
-machine initialize(p: &mut [u64; 128]) -> u64 {
-    transition p[16] == 0u64 {
-        true -> set(p, AUTOMATIC)
-        _ -> (0u64)
+public machine retired(recovery: &mut Recovery, failed: bool) -> bool {
+    transition failed {
+        true -> after_failure(recovery)
+        _ -> discard(recovery)
     }
-}
-
-machine retired(p: &mut [u64; 128]) -> u64 {
-    transition p[2] == 1u64 {
-        true -> failure(p)
-        _ -> discard(p)
-    }
-    state failure(p: &mut [u64; 128]) -> u64 {
-        transition p[16] {
-            AUTOMATIC -> set(p, READ_PENDING)
-            SPENT -> set(p, NEED_FALLBACK)
-            _ -> discard(p)
+    machine after_failure(recovery: &mut Recovery) -> bool {
+        transition recovery.phase {
+            Phase::AutomaticAvailable -> retry(recovery)
+            Phase::AutomaticSpent -> fallback(recovery)
+            _ -> discard(recovery)
         }
     }
-}
-
-machine pending(state: u64) -> bool {
-    state == READ_PENDING || state == READING || state == NEED_FALLBACK || state == REQUESTED || state == STARTING || state == READ_READY || state == ADMITTING
-}
-
-machine ready(p: &[u64; 128]) -> u64 {
-    transition pending(p[16]) && p[2] == 0u64 {
-        true -> (1u64)
-        _ -> (0u64)
+    machine retry(recovery: &mut Recovery) -> bool {
+        recovery.phase = Phase::ReadPending;
+        true
+    }
+    machine fallback(recovery: &mut Recovery) -> bool {
+        recovery.phase = Phase::NeedFallback;
+        true
     }
 }
-// Commands: wait, cancel, retire fallback, start read, admit ticket, show fallback.
-machine next(p: &mut [u64; 128]) -> u64 {
-    transition pending(p[16]) {
-        true -> authority(p)
-        _ -> (0u64)
+
+public machine ready(recovery: &Recovery, blocked: bool) -> bool {
+    pending(recovery.phase) && !blocked
+}
+
+// Validate the captured authority before selecting work. An explicit retry may
+// retire its own fallback; other recovery work requires an empty launcher slot.
+public machine next_work(recovery: &mut Recovery, authority_matches: bool, vacant: bool) -> Command {
+    transition pending(recovery.phase) {
+        true -> authority(recovery, authority_matches, vacant)
+        _ -> (Command::Wait)
     }
-    state authority(p: &mut [u64; 128]) -> u64 {
-        transition p[2] == 1u64 {
-            true -> selected(p)
-            _ -> cancel(p)
+    machine authority(recovery: &mut Recovery, matches: bool, vacant: bool) -> Command {
+        transition matches {
+            true -> selected(recovery, vacant)
+            _ -> cancel(recovery)
         }
     }
-    state selected(p: &mut [u64; 128]) -> u64 {
-        transition p[16] == REQUESTED {
-            true -> (2u64)
-            _ -> vacant(p)
+    machine selected(recovery: &mut Recovery, vacant: bool) -> Command {
+        transition recovery.phase {
+            Phase::RetryRequested -> (Command::RetireFallback)
+            _ -> require_vacancy(recovery, vacant)
         }
     }
-    state vacant(p: &mut [u64; 128]) -> u64 {
-        transition p[3] == 1u64 {
-            true -> advance(p)
-            _ -> cancel(p)
+    machine require_vacancy(recovery: &mut Recovery, vacant: bool) -> Command {
+        transition vacant {
+            true -> advance(recovery)
+            _ -> cancel(recovery)
         }
     }
-    state advance(p: &mut [u64; 128]) -> u64 {
-        transition p[16] {
-            NEED_FALLBACK -> (5u64)
-            READ_PENDING -> start(p)
-            READ_READY -> admit(p)
-            _ -> (0u64)
+    machine advance(recovery: &mut Recovery) -> Command {
+        transition recovery.phase {
+            Phase::NeedFallback -> (Command::ShowFallback)
+            Phase::ReadPending -> start_read(recovery)
+            Phase::ReadReady -> admit(recovery)
+            _ -> (Command::Wait)
         }
     }
-    state cancel(p: &mut [u64; 128]) -> u64 {
-        p[16] = 0u64;
-        p[17] = 0u64;
-        1u64
+    machine start_read(recovery: &mut Recovery) -> Command {
+        recovery.phase = Phase::StartingRead;
+        Command::Read
     }
-    state start(p: &mut [u64; 128]) -> u64 {
-        p[16] = STARTING;
-        3u64
+    machine admit(recovery: &mut Recovery) -> Command {
+        recovery.phase = Phase::Admitting;
+        Command::Admit { ticket: recovery.ticket }
     }
-    state admit(p: &mut [u64; 128]) -> u64 {
-        p[16] = ADMITTING;
-        p[24] = p[17];
-        4u64
+    machine cancel(recovery: &mut Recovery) -> Command {
+        let discarded: bool = discard(recovery);
+        Command::Cancel
     }
 }
 
-machine read_started(p: &mut [u64; 128]) -> u64 {
-    transition p[16] == STARTING && p[4] != 0u64 {
-        true -> remember(p)
-        _ -> (0u64)
+public machine read_started(recovery: &mut Recovery, ticket: u64) -> bool {
+    transition (recovery.phase in Phase::StartingRead) && ticket != 0u64 {
+        true -> remember(recovery, ticket)
+        _ -> (false)
     }
-    state remember(p: &mut [u64; 128]) -> u64 {
-        p[17] = p[4];
-        set(p, READING)
-    }
-}
-
-machine read_unavailable(p: &mut [u64; 128]) -> u64 {
-    transition p[16] == STARTING {
-        true -> set(p, NEED_FALLBACK)
-        _ -> (0u64)
+    machine remember(recovery: &mut Recovery, ticket: u64) -> bool {
+        recovery.ticket = ticket;
+        recovery.phase = Phase::Reading;
+        true
     }
 }
 
-machine read_completed(p: &mut [u64; 128]) -> u64 {
-    transition p[16] == READING && p[17] == p[4] && p[4] != 0u64 {
-        true -> result(p)
-        _ -> (0u64)
+public machine read_unavailable(recovery: &mut Recovery) -> bool {
+    transition recovery.phase {
+        Phase::StartingRead -> fallback(recovery)
+        _ -> (false)
     }
-    state result(p: &mut [u64; 128]) -> u64 {
-        transition p[2] == 1u64 {
-            true -> set(p, READ_READY)
-            _ -> failed(p)
+    machine fallback(recovery: &mut Recovery) -> bool {
+        recovery.phase = Phase::NeedFallback;
+        true
+    }
+}
+
+public machine read_completed(recovery: &mut Recovery, ticket: u64, success: bool) -> bool {
+    transition (recovery.phase in Phase::Reading) && ticket != 0u64 && recovery.ticket == ticket {
+        true -> completed(recovery, success)
+        _ -> (false)
+    }
+    machine completed(recovery: &mut Recovery, success: bool) -> bool {
+        transition success {
+            true -> retain_image(recovery)
+            _ -> fallback(recovery)
         }
     }
-    state failed(p: &mut [u64; 128]) -> u64 {
-        p[17] = 0u64;
-        set(p, NEED_FALLBACK)
+    machine retain_image(recovery: &mut Recovery) -> bool {
+        recovery.phase = Phase::ReadReady;
+        true
+    }
+    machine fallback(recovery: &mut Recovery) -> bool {
+        recovery.ticket = 0u64;
+        recovery.phase = Phase::NeedFallback;
+        true
     }
 }
 
-machine admission_finished(p: &mut [u64; 128]) -> u64 {
-    transition p[16] == ADMITTING && p[17] == p[4] && p[4] != 0u64 {
-        true -> result(p)
-        _ -> (0u64)
+public machine admission_finished(recovery: &mut Recovery, ticket: u64, success: bool) -> bool {
+    transition (recovery.phase in Phase::Admitting) && ticket != 0u64 && recovery.ticket == ticket {
+        true -> completed(recovery, success)
+        _ -> (false)
     }
-    state result(p: &mut [u64; 128]) -> u64 {
-        p[17] = 0u64;
-        transition p[2] == 1u64 {
-            true -> set(p, SPENT)
-            _ -> set(p, NEED_FALLBACK)
+    machine completed(recovery: &mut Recovery, success: bool) -> bool {
+        recovery.ticket = 0u64;
+        transition success {
+            true -> running(recovery)
+            _ -> fallback(recovery)
         }
     }
+    machine running(recovery: &mut Recovery) -> bool {
+        recovery.phase = Phase::AutomaticSpent;
+        true
+    }
+    machine fallback(recovery: &mut Recovery) -> bool {
+        recovery.phase = Phase::NeedFallback;
+        true
+    }
 }
 
-machine fallback_finished(p: &mut [u64; 128]) -> u64 {
-    transition p[16] == NEED_FALLBACK {
-        true -> result(p)
-        _ -> (0u64)
+public machine fallback_finished(recovery: &mut Recovery, success: bool) -> bool {
+    transition recovery.phase {
+        Phase::NeedFallback -> completed(recovery, success)
+        _ -> (false)
     }
-    state result(p: &mut [u64; 128]) -> u64 {
-        transition p[2] == 1u64 {
-            true -> set(p, FALLBACK)
-            _ -> discard(p)
+    machine completed(recovery: &mut Recovery, success: bool) -> bool {
+        transition success {
+            true -> running(recovery)
+            _ -> discard(recovery)
         }
     }
-}
-
-machine request(p: &mut [u64; 128]) -> u64 {
-    transition p[16] == FALLBACK && p[2] == 1u64 {
-        true -> set(p, REQUESTED)
-        _ -> (0u64)
+    machine running(recovery: &mut Recovery) -> bool {
+        recovery.phase = Phase::Fallback;
+        true
     }
 }
 
-machine fallback_changed(p: &mut [u64; 128]) -> u64 {
-    transition p[2] == 1u64 && (p[16] == AUTOMATIC || p[16] == SPENT) {
-        true -> (1u64)
-        _ -> discard(p)
+public machine request_retry(recovery: &mut Recovery, authenticated: bool) -> bool {
+    transition (recovery.phase in Phase::Fallback) && authenticated {
+        true -> request(recovery)
+        _ -> (false)
+    }
+    machine request(recovery: &mut Recovery) -> bool {
+        recovery.phase = Phase::RetryRequested;
+        true
     }
 }
 
-machine explicit_retired(p: &mut [u64; 128]) -> u64 {
-    transition p[16] == REQUESTED {
-        true -> set(p, READ_PENDING)
-        _ -> (0u64)
+public machine fallback_changed(recovery: &mut Recovery, initial_supply: bool) -> bool {
+    transition initial_supply && ((recovery.phase in Phase::AutomaticAvailable)
+        || (recovery.phase in Phase::AutomaticSpent)) {
+        true -> (true)
+        _ -> discard(recovery)
     }
+}
+
+public machine fallback_retired(recovery: &mut Recovery) -> bool {
+    transition recovery.phase {
+        Phase::RetryRequested -> retry(recovery)
+        _ -> (false)
+    }
+    machine retry(recovery: &mut Recovery) -> bool {
+        recovery.phase = Phase::ReadPending;
+        true
+    }
+}
+
+machine pending(phase: Phase) -> bool {
+    transition phase {
+        Phase::ReadPending -> (true)
+        Phase::StartingRead -> (true)
+        Phase::Reading -> (true)
+        Phase::ReadReady -> (true)
+        Phase::Admitting -> (true)
+        Phase::NeedFallback -> (true)
+        Phase::RetryRequested -> (true)
+        _ -> (false)
+    }
+}
+
+machine discard(recovery: &mut Recovery) -> bool {
+    recovery.phase = Phase::Disabled;
+    recovery.ticket = 0u64;
+    false
 }

@@ -1,113 +1,147 @@
 module children::startup::main;
 
-// Local picker/background recovery. State 16..20 remains opaque to Rust:
-// picker attempts, picker pending, failed selection, background pending, retry spent.
-public machine startup_decision(p: &mut [u64; 128]) -> u64 {
-    transition p[1] {
-        0u64 -> retired(p)
-        1u64 -> picker_started(p)
-        2u64 -> selection_failed(p)
-        3u64 -> background_failed(p)
-        4u64 -> take_picker(p)
-        5u64 -> take_background(p)
-        _ -> (0u64)
-    }
+// Local startup recovery. The picker gets two admission attempts; the background
+// gets one retry. Owner-managed login recovery belongs to the owner instead.
+public data Startup {
+    picker_attempts: u64;
+    picker_pending: bool;
+    selection_failed: bool;
+    background_pending: bool;
+    background_retry_spent: bool;
 }
 
-machine retired(p: &mut [u64; 128]) -> u64 {
-    // Facts: role (picker/user/background/other), failed, login, entered,
-    // workspace, owner-managed picker. Only a verified failure can schedule work.
-    transition p[3] == 1u64 && !(p[4] == 1u64 && p[7] == 1u64) {
-        true -> local(p)
-        _ -> (0u64)
+public data ChildRole [copy] {
+    case Picker;
+    case User;
+    case Background;
+    case Other;
+}
+
+public data Context {
+    login: bool;
+    entered: bool;
+    workspace: bool;
+    owner_recovers: bool;
+}
+
+public data RetirementEffect [copy] {
+    case KeepSelection;
+    case ReturnToPicker;
+}
+
+public data PickerAction [copy] {
+    case Wait;
+    case Restart;
+    case Exhausted;
+}
+
+public data PickerMode [copy] {
+    case Normal;
+    case SelectionFailed;
+}
+
+public machine child_retired(
+    startup: &mut Startup, role: ChildRole, failed: bool, context: &Context
+) -> RetirementEffect {
+    transition failed && !(context.login && context.owner_recovers) {
+        true -> local(startup, role, context)
+        _ -> (RetirementEffect::KeepSelection)
     }
-    state local(p: &mut [u64; 128]) -> u64 {
-        transition p[4] == 1u64 && p[2] == 1u64 && p[5] == 1u64 {
-            true -> reset_picker(p)
-            _ -> picker(p)
+    machine local(startup: &mut Startup, role: ChildRole, context: &Context) -> RetirementEffect {
+        transition role {
+            ChildRole::User -> user_retired(startup, context)
+            ChildRole::Picker -> picker_retired(startup, context)
+            ChildRole::Background -> background_retired(startup, context)
+            _ -> (RetirementEffect::KeepSelection)
         }
     }
-    state picker(p: &mut [u64; 128]) -> u64 {
-        transition p[4] == 1u64 && p[2] == 0u64 && p[5] == 0u64 {
-            true -> queue_picker(p)
-            _ -> background(p)
+    machine user_retired(startup: &mut Startup, context: &Context) -> RetirementEffect {
+        transition context.login && context.entered {
+            true -> reset_picker(startup)
+            _ -> (RetirementEffect::KeepSelection)
         }
     }
-    state background(p: &mut [u64; 128]) -> u64 {
-        transition p[6] == 1u64 && p[2] == 2u64 && p[20] == 0u64 {
-            true -> background_failed(p)
-            _ -> (0u64)
+    machine picker_retired(startup: &mut Startup, context: &Context) -> RetirementEffect {
+        transition context.login && !context.entered {
+            true -> queue_picker(startup)
+            _ -> (RetirementEffect::KeepSelection)
         }
     }
-}
-
-machine selection_failed(p: &mut [u64; 128]) -> u64 {
-    // Owner-managed admission failures belong to the same owner as task failures.
-    transition p[2] == 0u64 {
-        true -> reset_picker(p)
-        _ -> (0u64)
-    }
-}
-
-machine reset_picker(p: &mut [u64; 128]) -> u64 {
-    p[16] = 0u64;
-    p[17] = 1u64;
-    p[18] = 1u64;
-    1u64
-}
-
-machine queue_picker(p: &mut [u64; 128]) -> u64 {
-    p[17] = 1u64;
-    0u64
-}
-
-machine picker_started(p: &mut [u64; 128]) -> u64 {
-    // Saturation preserves exhaustion even if a host accidentally repeats admission.
-    transition p[16] < 2u64 {
-        true -> increment(p)
-        _ -> mode(p)
-    }
-    state increment(p: &mut [u64; 128]) -> u64 {
-        p[16] = p[16] + 1u64;
-        transition true {
-            true -> mode(p)
+    machine background_retired(startup: &mut Startup, context: &Context) -> RetirementEffect {
+        transition context.workspace && !startup.background_retry_spent {
+            true -> queue_background(startup)
+            _ -> (RetirementEffect::KeepSelection)
         }
     }
-    state mode(p: &[u64; 128]) -> u64 {
-        transition p[18] == 1u64 {
-            true -> (2u64)
-            _ -> (1u64)
-        }
+    machine queue_picker(startup: &mut Startup) -> RetirementEffect {
+        startup.picker_pending = true;
+        RetirementEffect::KeepSelection
+    }
+    machine queue_background(startup: &mut Startup) -> RetirementEffect {
+        background_failed(startup);
+        RetirementEffect::KeepSelection
     }
 }
 
-machine background_failed(p: &mut [u64; 128]) -> u64 {
-    p[19] = 1u64;
-    0u64
+public machine selection_failed(startup: &mut Startup, owner_recovers: bool) -> RetirementEffect {
+    transition owner_recovers {
+        true -> (RetirementEffect::KeepSelection)
+        _ -> reset_picker(startup)
+    }
 }
 
-machine take_picker(p: &mut [u64; 128]) -> u64 {
-    transition p[2] == 0u64 && p[17] == 1u64 {
-        true -> consume(p)
-        _ -> (0u64)
+machine reset_picker(startup: &mut Startup) -> RetirementEffect {
+    startup.picker_attempts = 0u64;
+    startup.picker_pending = true;
+    startup.selection_failed = true;
+    RetirementEffect::ReturnToPicker
+}
+
+public machine picker_started(startup: &mut Startup) -> PickerMode {
+    // Repeated host notifications must not wrap an exhausted budget.
+    transition startup.picker_attempts < 2u64 {
+        true -> count_attempt(startup)
+        _ -> display_mode(startup)
     }
-    state consume(p: &mut [u64; 128]) -> u64 {
-        p[17] = 0u64;
-        transition p[16] >= 2u64 {
-            true -> (2u64)
-            _ -> (1u64)
+    machine count_attempt(startup: &mut Startup) -> PickerMode
+        requires startup.picker_attempts < 2u64 {
+        startup.picker_attempts = startup.picker_attempts + 1u64;
+        display_mode(startup)
+    }
+    machine display_mode(startup: &Startup) -> PickerMode {
+        transition startup.selection_failed {
+            true -> (PickerMode::SelectionFailed)
+            _ -> (PickerMode::Normal)
         }
     }
 }
 
-machine take_background(p: &mut [u64; 128]) -> u64 {
-    transition p[2] == 0u64 && p[19] == 1u64 {
-        true -> consume(p)
-        _ -> (0u64)
+public machine background_failed(startup: &mut Startup) {
+    startup.background_pending = true;
+}
+
+public machine take_picker(startup: &mut Startup, blocked: bool) -> PickerAction {
+    transition !blocked && startup.picker_pending {
+        true -> consume(startup)
+        _ -> (PickerAction::Wait)
     }
-    state consume(p: &mut [u64; 128]) -> u64 {
-        p[19] = 0u64;
-        p[20] = 1u64;
-        1u64
+    machine consume(startup: &mut Startup) -> PickerAction {
+        startup.picker_pending = false;
+        transition startup.picker_attempts >= 2u64 {
+            true -> (PickerAction::Exhausted)
+            _ -> (PickerAction::Restart)
+        }
+    }
+}
+
+public machine take_background(startup: &mut Startup, blocked: bool) -> bool {
+    transition !blocked && startup.background_pending {
+        true -> consume(startup)
+        _ -> (false)
+    }
+    machine consume(startup: &mut Startup) -> bool {
+        startup.background_pending = false;
+        startup.background_retry_spent = true;
+        true
     }
 }
