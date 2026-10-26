@@ -13,13 +13,14 @@ The app catalogue, instance tickets, current selection, switch admission,
 fallback choice, cancellation and scene restoration now execute in
 `source/distribution/matrix/workspace/`; see the verification below. Rust retains
 opaque catalogue/workflow state, exact request/task identity, asynchronous scene
-transport and resource custody. Next, continue toward an Omega-owned stock matrix
-service loop: the authenticated request dispatcher and launch/startup role choices
-still compose these pieces in Rust. Start at `service/requests/requests.rs` and
-`service/children/launch/request.rs`; distinguish owner/child/source request facts
-from the exact capabilities retained by the host. The independent Omega matrix
-is a useful precedent, but its synchronous parent refresh must not replace the
-desktop's yielding path.
+transport and resource custody. The service-turn sequence now executes in
+`source/distribution/matrix/session/`, through `service/host/` operations; the
+Rust service entrance only drives that session. Next, move detailed authenticated
+request routing and launch/startup role choices into the Omega program. Start at
+`service/requests/requests.rs` and `service/children/launch/request.rs`; distinguish
+owner/child/source request facts from the exact capabilities retained by the host.
+The independent Omega matrix is a useful precedent, but its synchronous parent
+refresh must not replace the desktop's yielding path.
 
 Notes, Colors and the chooser already execute their ordinary app behavior in
 Omega. Matrix configuration, lifecycle, launcher/local recovery and ordinary
@@ -367,6 +368,43 @@ not perfect timing indistinguishability or mandatory agent badges. Existing
 default/hidden cursor evidence remains valid for its scope, not the full asset API.
 
 ## Current implementation evidence
+
+Implementation update 2026-10-26: **Omega sequences the stock matrix service turn**,
+over `cbb8e464`.
+
+`source/distribution/matrix/session/main.omg` owns upstream progress order,
+admission gates, child workflow/reclamation ordering, launch/recovery priority,
+waiting, loss/cancellation handling, deferral and retained-event category dispatch.
+Its named completion transitions show the actual sequence. Omega asks for only
+the observations needed by each gate; ordinary progress does not scan deferred
+events. One issued command completes once; a wake without an event restarts
+progress rather than manufacturing a request.
+
+The former large loop in `service/service.rs` is replaced by initialization and
+command/execute/complete. `service/host/` owns connections, exact requests, child
+handles, pending reads, backing and waits. Detailed request operations, role
+choices and local world mutations still execute in Rust; this is service
+orchestration in Omega, not a fully Omega matrix or native kernel. The private
+host command vocabulary is not a new standard service protocol.
+
+The first guest run caught stack duplication from returning the large host state
+by value: root matrix faulted below its guarded 32 KiB stack before reaching the
+loop. Server and child records now live in process-owned arenas initialized once,
+as the parent/world/deferred records already do. No stack allowance, kernel or
+authority changes. The failed boot is retained under
+`build/boot-harness-rs/desktop/20261026T185708394471Z`.
+
+All 47 matrix host tests pass, including eight new compiled-Omega session tests
+for ordering, progress restart, wrong/duplicate completion, event disposition,
+ready-request/input fairness and bounded gates across all 1,024 fact combinations.
+The full host workspace, default/all-feature matrix x86-64 Clippy, layout and
+format checks pass. Final ordinary F5 and cold reboot pass, including the
+1,647-record durable oracle. Four nested desktops with interaction delay,
+asynchronous launcher recovery, delayed launch reads and storage binding, and
+late-stop launch/selection restoration all pass, including cold reopen. The
+targeted cases verify sibling input, protected drafts and subtree reclamation;
+they do not establish a latency guarantee. Logs are
+`build/omega-component/session-*.log`.
 
 Implementation update 2026-10-26: **Omega owns the stock app catalogue and selection
 state**, over `b40c71d3`.

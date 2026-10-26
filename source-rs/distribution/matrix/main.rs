@@ -1,6 +1,7 @@
 #![no_std]
 #![no_main]
 //! Cathedral's stock matrix program, reused at every level of its distribution.
+//! service/service.rs drives the Omega session; service/host retains its resources.
 //! Desktop configuration and lifecycle policy live here, not in platform. The
 //! platform matrix library supplies the local authority machinery. The environment
 //! selects the adapter: provider links make a storage root, four endpoints a display root,

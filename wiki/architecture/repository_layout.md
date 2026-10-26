@@ -112,7 +112,9 @@ for installer/tools and independent conformance checks. Its extension contract l
 `platform/libraries/matrix/` supplies reusable local authority, input, geometry,
 surface, storage-scope and task-management state with caller-selected child
 capacity. It imposes no launcher, desktop strip or persisted configuration.
-The stock program's IPC loop still composes these mechanisms directly; a
+The stock program's [Omega session](../../source/distribution/matrix/session/README.md)
+sequences progress, work priority and event dispatch through a Rust resource host.
+Detailed request operations still compose these mechanisms directly; a
 general-purpose matrix server runtime is not yet a separate platform package.
 The independent Rust `distribution/lab/matrix-composition/matrix` program uses
 the shared runtime server and matrix commands for three local peers without any

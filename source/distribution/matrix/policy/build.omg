@@ -6,6 +6,7 @@ machine build(builder: &mut Build) {
     Build::depend_as(builder, "startup", Source::Path { location: "../startup" });
     Build::depend_as(builder, "launch", Source::Path { location: "../launch" });
     Build::depend_as(builder, "workspace", Source::Path { location: "../workspace" });
+    Build::depend_as(builder, "session", Source::Path { location: "../session" });
     Build::select_provider<Policy, PolicyProvider>(builder);
     Build::bind(builder, linux_x86_64::ProgramEntry, policy_entry);
 }
