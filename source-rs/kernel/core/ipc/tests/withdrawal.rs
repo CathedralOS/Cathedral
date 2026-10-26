@@ -48,7 +48,7 @@ fn full_channel_arena_closes_last_task_preserves_peers_and_restarts_with_fresh_n
     limits[VICTIM] = abi::MAX_DYNAMIC_HANDLES / 2;
     let mut remaining = abi::MAX_DYNAMIC_CHANNELS - limits[VICTIM];
     for limit in &mut limits[..VICTIM] {
-        *limit = remaining.min(6);
+        *limit = remaining.min(9);
         remaining -= *limit;
     }
     assert_eq!(remaining, 0);
@@ -116,7 +116,7 @@ fn full_hidden_receive_chain_closes_without_consuming_unrelated_channels() {
     limits[0] = abi::MAX_DYNAMIC_HANDLES;
     let mut remaining = abi::MAX_DYNAMIC_CHANNELS - limits[0];
     for limit in &mut limits[1..VICTIM] {
-        *limit = remaining.min(6);
+        *limit = remaining.min(9);
         remaining -= *limit;
     }
     assert_eq!(remaining, 0);

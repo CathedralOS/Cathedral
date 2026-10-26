@@ -98,8 +98,8 @@ pub const IPC_SEND_CAP: u64 = 36;
 /// RECEIVE_CAP: arg0 receiver, arg1 writable packet, arg2 zero. Blocks like RECEIVE.
 pub const IPC_RECEIVE_CAP: u64 = 37;
 pub const IPC_PACKET_BYTES: usize = 80;
-pub const MAX_DYNAMIC_CHANNELS: usize = 192;
-pub const MAX_CREATED_CHANNELS: usize = 188;
+pub const MAX_DYNAMIC_CHANNELS: usize = 256;
+pub const MAX_CREATED_CHANNELS: usize = 252;
 pub const MAX_DYNAMIC_HANDLES: usize = 48;
 
 /// Move up to five dynamic endpoints into a newly admitted child. arg0 launch,

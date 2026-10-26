@@ -4,8 +4,8 @@ pub use cathedral_platform_contracts::matrix::*;
 pub mod config;
 
 /// Reader pages a chooser is lent: it maps one listing page of its realm at a
-/// time while naming tiles or users, plus the two shared connection readers.
-pub const CHOOSER_READERS: u64 = 3;
+/// time while naming tiles or users, plus shared interaction, storage and owner-control readers.
+pub const CHOOSER_READERS: u64 = 4;
 
 /// The entry argument a stock matrix gives a program it runs from its realm:
 /// the program's own object number above a role byte, so the program knows

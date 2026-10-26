@@ -17,6 +17,7 @@ bench = false
 
 [features]
 rust-probes = []
+control-delay-probe = ["rust-probes"]
 capture-source-exit = ["rust-probes"]
 capture-source-stall = ["rust-probes"]
 render-demand-probe = ["rust-probes"]

@@ -144,8 +144,8 @@ authority. [Child control](session/children/control.rs) opens a separate shared
 connection while the service loop continues answering startup requests. LOSS
 queries use exact transport correlation; timeout leaves that child's loss unknown
 until it exits, without killing it or reusing its late answer. The same Split
-program accepts this control protocol when nested. Its outer stock owner still
-uses copied control pending that owner's migration. Removal retires shared slots before closing remaining child
+program accepts this control protocol when nested. Its outer stock owner also uses shared control. Removal retires shared slots
+before closing remaining child
 rights; only BAD_HANDLE for the exact, never-reused endpoint names is harmless.
 
 Scope restrictions are folded only after upstream containment checks; a shared

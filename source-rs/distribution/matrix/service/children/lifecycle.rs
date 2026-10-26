@@ -55,6 +55,16 @@ impl Children {
         let child = self.slots[slot]
             .take()
             .ok_or(Error(abi::PEER_CLOSED as i64))?;
+        // Authorized stop quiesces the task before withdrawing its services.
+        // Upstream erasure can park us: a still-running child must not observe
+        // half-removed bindings and fault before we get back to cancellation.
+        let outcome = match child.outcome {
+            Some(outcome) => outcome,
+            None => {
+                child.task.cancel()?;
+                child.task.wait()?
+            }
+        };
         self.saved_storage[slot] = None;
         self.running[slot] = None;
         if self.desktop && slot != 0 {
@@ -76,13 +86,6 @@ impl Children {
         world.disconnected(slot);
         // Release retained upstream image readers before returning descendant funding.
         crate::service::requests::flush(parent, world)?;
-        let outcome = match child.outcome {
-            Some(outcome) => outcome,
-            None => {
-                child.task.cancel()?;
-                child.task.wait()?
-            }
-        };
         let state = match outcome {
             cathedral_user_runtime::task::Outcome::Returned(0) => wire::LAUNCH_EXITED,
             cathedral_user_runtime::task::Outcome::Cancelled => wire::LAUNCH_STOPPED,
@@ -143,6 +146,7 @@ impl Children {
             input.close()?;
             output.close()?;
         }
+        drop(child.control);
         if let Some(reservation) = child.reservation {
             reservation.release()?;
             // Creator death returns descendant reservations with fresh local names.
@@ -217,14 +221,8 @@ impl Children {
         if self.pending[target].is_some() {
             return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
         }
-        let Some(child) = self.slots[target].as_ref() else {
+        let Some(child) = self.slots[target].as_mut() else {
             return server.reply(&request, &wire::encode(wire::error(abi::PEER_CLOSED)));
-        };
-        if child.stale >= control::MAX_STALE {
-            return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
-        }
-        let Some(control) = child.control else {
-            return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
         };
         #[cfg(feature = "interaction-delay")]
         if core::mem::take(&mut parent.hold_storage_armed) {
@@ -240,9 +238,9 @@ impl Children {
             self.retiring[target] = None;
             return Ok(());
         }
-        if control
-            .0
-            .send(&wire::encode([wire::LOSS, 0, 0, 0, 0, 0, 0, 0]))
+        if child
+            .control
+            .ask([wire::LOSS, 0, 0, 0, 0, 0, 0, 0])
             .is_err()
         {
             // A closed control channel alone is not permission to discard work.
@@ -266,12 +264,9 @@ impl Children {
             if !core::mem::take(&mut self.held_loss[slot]) {
                 continue;
             }
-            if let Some(control) = self.slots[slot].as_ref().and_then(|child| child.control) {
+            if let Some(child) = &mut self.slots[slot] {
                 // A failed send leaves the pending close to time out as it would.
-                control
-                    .0
-                    .send(&wire::encode([wire::LOSS, 0, 0, 0, 0, 0, 0, 0]))
-                    .ok();
+                child.control.ask([wire::LOSS, 0, 0, 0, 0, 0, 0, 0]).ok();
             }
         }
     }

@@ -160,8 +160,8 @@ only for acquisition, and routes immutable drawing objects through the same shar
 connection. Split selects all eight child service slots before admission,
 including separate broker/data connections for its input producer and masked
 capture viewer. Brokered input hints use separate notification wait rights.
-Control links and explicitly copied fixtures (including their positional wakes) remain
-to migrate. These app adapters remain synchronous; this change
+Root supervision and explicitly copied fixtures (including their positional wakes)
+remain to migrate; brokered stock/Split lifecycle controls use shared links. These app adapters remain synchronous; this change
 alone does not make an app process input while its drawing call is pending.
 
 ## Immutable attachments
@@ -349,14 +349,16 @@ service owner described above. The UI presenter borrows that owner across atomic
 image publication rather than creating another client over its pair. The installed
 producer and capture viewer likewise own shared broker and acquired-service
 Clients. Split adds two child-control connections to its ten service connections;
-when nested it also accepts a shared owner control connection. The ordinary outer
-stock control stream remains copied. Each auxiliary child funds two notifications and two writer/reader pages,
+when nested it also accepts a shared owner control connection. The ordinary stock owner now opens shared control to Split as well. Each
+auxiliary child funds two notifications and two writer/reader pages,
 plus its service-specific work. Capture uses correlated immutable replies and
-then forwards the same sealed result for presentation. Stock lifecycle/control and explicitly
-copied fixtures remain to migrate. The ordinary
-user matrix keeps eleven connections (thirty-three notification handles) with its
+then forwards the same sealed result for presentation. Stock brokered lifecycle/
+control now uses shared streams; root supervision and
+explicitly copied fixtures remain to migrate. The ordinary
+user matrix keeps eleven service connections (thirty-three notification handles) with its
 upstream, chrome, background and three app pairs. Brokered wake objects/rights
-are charged separately; the fully populated stock matrix uses 44 handles.
+are charged separately; these service connections use 44 handles including hints.
+Six owner/child control connections bring a fully populated matrix to 62 handles.
 The metadata ceiling is now
 sixty-four; object/page funding and the forty-eight-interest wait limit remain
 independent. Additional streams still require a capacity review.
@@ -373,7 +375,7 @@ Control closure disables that receiver without treating the app as dead. The
 opening guest exercises pending/double-reply rejection and an independent wake
 after the owner closes its connection or sends an invalid setup grant.
 
-The stock control migration needs seventeen writers and roughly 62 notification
+Stock shared lifecycle/control needs seventeen writers and roughly 62 notification
 rights at full occupancy. Metadata ceilings now allow 24 private objects and 64
 notification rights; every object still consumes its independently funded pages
 or channel/notification allowance. The capacity guest keeps twenty two-way
@@ -385,3 +387,19 @@ its pause mask is u32; additional wait interests do not create new dispatch bits
 The full-slot admission probe accepts sixteen notification reservations beside
 32 endpoint slots and refuses a seventeenth before taking custody.
 These larger finite scans are capacity headroom, not a latency improvement.
+
+[Stock lifecycle control](../../../../distribution/matrix/service/children/control/control.rs)
+now drives those links for brokered children. Its named entrance keeps pending
+owner requests, loss aggregation and teardown decisions above transport custody.
+Unpublished requests expire without being sent; published expired requests retain
+correlation and refuse another shared request until drained. Failure is not
+process death. Background and the separate UI presenter use OwnerControl too.
+The ordinary desktop harness requires shared-control readiness for the boot
+picker, user matrix, chrome and background; `control_lifecycle_test.py` exercises
+a delayed clean LOSS while live input makes the app dirty, then verifies fresh
+refusal, saving and eventual clean close across both boots.
+
+Four-level stock composition additionally needs the enlarged finite global
+channel/notification pool: 256 objects, with 252 as the per-account ceiling.
+F5 explicitly subdivides a 224-object root grant and a 208-object user allowance.
+A larger metadata arena does not grant these budgets to other compositions.

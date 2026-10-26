@@ -1,5 +1,7 @@
 //! Rust plumbing; start at session.rs.
 mod closing;
+#[cfg(feature = "control-delay-probe")]
+mod control_probe;
 mod cursors;
 #[cfg(feature = "input-receiver-probe")]
 mod input_probe;

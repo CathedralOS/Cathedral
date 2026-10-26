@@ -256,6 +256,9 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     assert 'Cathedral Omega host: notification input wake ready' in log, log[-2000:]
     scan(lambda _width, _pixels: 'Cathedral background: shared interaction ready; storage denied'
          in (output/'serial.log').read_text(errors='replace'), 'shared background with storage denied')
+    scan(lambda _width, _pixels: (output/'serial.log').read_text(errors='replace').count(
+        'Cathedral matrix: shared child control ready') >= 4,
+        'shared controls for picker, user matrix, chrome and background')
     def picker_gone(w,d):
         return all(rgb(w,d,x,y)==bytes.fromhex('101827')
                    for y in range((height-96)//2,(height+96)//2)
@@ -404,13 +407,16 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     print('PASS: user tiles, absolute/relative clicks, app tiles, save/discard/cancel and persistent replacement')
 
 
-def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False, nested_desktop=False, trace_input=False, latency=False, pointer_stress=False, interaction_delay=False, nested_depth=3, soak=0, collection_pressure=False, accel='tcg', input_producer=None, participants=False, participant_fault=None, render_demand=False, masked_capture=False, capture_case=None, cursor_preferences=False, cursor_producer=False, launcher_async=None, launch_async=None, binding_async=None, scene_async=None, selection_async=None):
+def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False, nested_desktop=False, trace_input=False, latency=False, pointer_stress=False, interaction_delay=False, nested_depth=3, soak=0, collection_pressure=False, accel='tcg', input_producer=None, participants=False, participant_fault=None, render_demand=False, masked_capture=False, capture_case=None, cursor_preferences=False, cursor_producer=False, launcher_async=None, launch_async=None, binding_async=None, scene_async=None, selection_async=None, control_late=False):
     output = harness.BUILD / 'desktop' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     output.mkdir(parents=True)
     # Exact default composition, with a separate build output so a regression
     # run does not replace the ESP of an already-running interactive guest.
     profile = output / f'desktop-check-{output.name}.json'
     composition = json.loads((ROOT / 'source-rs/distribution/profile.json').read_text())
+    if control_late:
+        import control_lifecycle_test
+        control_lifecycle_test.configure(composition)
     if launcher_async:
         import launcher_async_test
         launcher_async_test.configure(composition, launcher_async)
@@ -515,6 +521,9 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
     command += disk_image.arguments(path)
     flags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
     user_check = None
+    if control_late:
+        import control_lifecycle_test
+        user_check = control_lifecycle_test.exercise
     if render_demand or masked_capture:
         import render_demand_test
         from functools import partial
@@ -572,6 +581,9 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
         contents = path.read_bytes()
         database_image.prepare(path, programs, migration, app_close=True, realm_programs=harness.realm_programs(profile, True))
         assert contents == path.read_bytes(), 'relaunch must not reformat storage or reinstall unchanged programs'
+    if control_late:
+        print(f'PASS: shared lifecycle late replies, live input and cold reopen; artifacts: {output}')
+        return
     if selection_async:
         print(f'PASS: yielding existing-app selection {selection_async}, input and cold reopen; artifacts: {output}')
         return

@@ -14,10 +14,10 @@ def programs(startup):
 
 def channel_limits(startup):
     limits = [program.get("ipc_channels", 4) for program in programs(startup)]
-    if any(type(limit) is not int or not 0 <= limit <= 188 for limit in limits):
-        raise ValueError("ipc_channels must be an integer between 0 and 188")
-    if sum(limits) > 192:
-        raise ValueError("IPC channel reservations exceed the 192-channel backing pool")
+    if any(type(limit) is not int or not 0 <= limit <= 252 for limit in limits):
+        raise ValueError("ipc_channels must be an integer between 0 and 252")
+    if sum(limits) > 256:
+        raise ValueError("IPC channel reservations exceed the 256-channel backing pool")
     return limits
 
 def cpu_limits(startup):

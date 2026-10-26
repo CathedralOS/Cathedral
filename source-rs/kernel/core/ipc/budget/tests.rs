@@ -41,10 +41,11 @@ fn reservation_validation_rejects_overcommit_and_keeps_defaults_constant() {
 }
 #[test]
 fn every_task_can_fill_its_reservation_even_after_other_accounts_exhaust() {
-    let tasks = 8;
+    // Keep endpoint handles spare while filling the entire global object arena.
+    let tasks = 16;
     let per_task = abi::MAX_DYNAMIC_CHANNELS / tasks;
     let mut ipc =
-        Ipc::with_reservations(1, tasks, &[], &[abi::MAX_DYNAMIC_CHANNELS / 8; 8]).unwrap();
+        Ipc::with_reservations(1, tasks, &[], &[abi::MAX_DYNAMIC_CHANNELS / 16; 16]).unwrap();
     let mut all = alloc::vec::Vec::new();
     for task in 0..tasks {
         for _ in 0..per_task {

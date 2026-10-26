@@ -5,7 +5,7 @@ cathedral_user_runtime::service_bootstrap!(
         cathedral_platform_contracts::imports::INTERACTION,
         true,
     )],
-    1,
+    2,
     0
 );
 cathedral_user_runtime::entry_with_services!(main);

@@ -59,6 +59,11 @@ pub fn run(environment: Environment) -> Result<(), Error> {
     let world = unsafe { &mut *world_address };
     let mut server = Server::open_clients_from(if storage_root { 2 } else { 0 }, STREAMS - 1)?;
     server.enable_memory();
+    static mut CONTROL: cathedral_user_runtime::server::SharedSlot =
+        cathedral_user_runtime::server::SharedSlot::empty();
+    let control = &raw mut CONTROL;
+    // SAFETY: This process lends its owner-control storage once, until exit.
+    server.enable_shared_control(unsafe { &mut *control })?;
     static mut REPLIES: cathedral_user_runtime::server::Replies =
         cathedral_user_runtime::server::Replies::empty();
     let replies_address = &raw mut REPLIES;
@@ -193,21 +198,20 @@ pub fn run(environment: Environment) -> Result<(), Error> {
         if parent.can_poll() && !deferred.has_ready(parent) {
             parent.refresh_notified(world)?;
         }
-        let (handles, mut deadline) = children.wait(
+        let (interests, mut deadline) = children.wait(
             parent.upstream_busy() || parent.storing(),
             cathedral_user_runtime::time::now()?,
         );
         children.notify(world)?;
         let mut extra =
-            [Interest::Ipc(cathedral_user_runtime::ipc::Handle::from_raw(0)); CHILDREN + 6];
+            [Interest::Ipc(cathedral_user_runtime::ipc::Handle::from_raw(0)); CHILDREN * 2 + 6];
         let mut count = 0;
-        if parent.upstream_busy() || parent.storing() {
-            deadline = None;
-        }
         if !hold_storage && let Some((receive, until)) = parent.storage_wait() {
             extra[count] = Interest::Ipc(receive);
             count += 1;
-            deadline = Some(until);
+            deadline = Some(deadline.map_or(until, |d| {
+                if cathedral_user_runtime::time::reached(d, until) { until } else { d }
+            }));
         }
         #[cfg(any(feature = "recovery-delay", feature = "launch-delay"))]
         if let Some(until) = parent.recovery_delay_deadline() {
@@ -292,8 +296,8 @@ pub fn run(environment: Environment) -> Result<(), Error> {
                 }
             }));
         }
-        for handle in handles.into_iter().flatten() {
-            extra[count] = Interest::Ipc(handle);
+        for interest in interests.into_iter().flatten() {
+            extra[count] = interest;
             count += 1;
         }
         let input_ready = world.input_ready();

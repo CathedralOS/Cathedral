@@ -29,6 +29,10 @@ either a root grant or the upstream matrix endpoint into the same `Grant`.
 [source.rs](service/requests/source.rs) turns its explicitly supplied source
 endpoint into separate keyboard/pointer channels sharing one local focus group.
 [children entrance](service/children/children.rs) owns admission, pending control replies and teardown.
+[control.rs](service/children/control/control.rs) sequences pending owner requests,
+loss surveys, expiry and late replies; its [link](service/children/control/link.rs)
+owns yielding shared setup and exact transport custody. Brokered children use
+shared control; positional lab children retain the explicit copied adapter.
 [lifecycle.rs](service/children/lifecycle.rs) collects exact task outcomes;
 [recovery.rs](service/children/recovery/recovery.rs) reloads a failed configured launcher;
 [fallback.rs](service/children/recovery/fallback.rs) admits explicitly supplied recovery code.
@@ -411,3 +415,46 @@ and `funding-policy-refused` samples in the order private/readers/channels/slots
 frames. Surface and local app-slot refusals have separate tags. The desktop keeps
 its existing NO ROOM response. This is not a resource-management UI, live quota
 withdrawal, CPU renegotiation or dynamic surface relocation.
+
+## Lifecycle transport
+
+Control setup never parks the matrix while the child may need its upstream
+service. One owner request can wait unpublished during setup. Expiry removes an
+unpublished request; a published shared request retains its identity and makes
+further probes refuse until its late reply is drained. That old reply cannot
+answer a new loss survey. The copied fixture adapter retains its eight-entry FIFO
+late-reply bound. Setup or stream failure never supplies consent to discard work;
+only an actual kernel task outcome establishes death.
+
+Closing replies stay queued while upstream teardown is busy, and gain a bounded
+grace when resumed. Setup still progresses during that pause. Wait interests
+include shared reply notifications and transfer deadlines; control resources are
+released before returning the child's admission reservation. An authorized stop
+cancels and waits for the exact task before removing bindings or parking for
+upstream erasure, so the child cannot run against half-removed services. Retained
+visual readers remain charged until their subsequent release. The ordinary stock
+receiver accepts shared owner control too. The boot desktop's own root-control
+connection and provider supervision still use copied packets.
+
+Stock retains its forty-channel initial desktop declaration and twenty-four-channel
+workspace starting grant. The existing explicit growth protocol funds additional
+live connections instead of reserving every prospective descendant upfront.
+Chrome gets three notification allowances and four reader pages; Background gets
+two notification allowances and five private / two reader pages. Admission
+reserves another writer, reader and notification for each brokered child's owner
+control before lending its grant. These remain explicit allowances, not authority
+inferred from a manifest or a kernel exemption.
+
+The four-level desktop needs more total notification objects even with those small
+starting grants. The lab pool now backs 256 channel/notification objects (was
+192), with a 252 per-account ceiling (was 188). F5 explicitly funds its root with
+224 (was 180), lending the outer user 208 (was 168); the descendant growth policy
+has the same 208 ceiling. Kernel overcommit checks remain authoritative. Host
+exhaustion/withdrawal tests fill the entire enlarged arena across independently
+funded accounts; these larger finite scans are not a latency claim.
+
+Remaining receiver gap: the generic multi-client Server still returns owner-link
+failure to stock/Split's service entrance, so that receiver can exit and take its
+subtree with it. Outgoing control correlation and leaf OwnerControl isolation do
+not prove matrix survival under this case. Explicit inbound control retirement,
+with continuing independent services, is the next fault-isolation step.

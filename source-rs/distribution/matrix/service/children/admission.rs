@@ -140,11 +140,12 @@ impl Children {
         );
         // The control pair belongs to the reserved process slot. Interaction,
         // storage/producer queues and the wake object charge this creator. A selected
-        // shared storage/interaction slot needs its own writer, reader and
-        // notification. Retain both transport allowances here before lending
-        // capacity; copied leaf interaction does not allocate its reserved end.
-        let transport =
-            u64::from(storage && self.separate_storage) + u64::from(self.separate_storage);
+        // shared storage/interaction slot and brokered owner control need a writer,
+        // reader and notification each. Reserve their owner-side funding before
+        // lending capacity; copied fixtures do not allocate the selected backing.
+        let transport = u64::from(storage && self.separate_storage)
+            + u64::from(self.separate_storage)
+            + u64::from(brokered);
         let connection_channels = if storage && self.separate_storage {
             5
         } else {
@@ -379,8 +380,7 @@ impl Children {
             outcome: None,
             disconnected: false,
             reservation: dynamic.then_some(target),
-            control: Some(admitted.control),
-            stale: 0,
+            control: control::Control::open(admitted.control, services.is_some()),
             data: admitted.data,
             storage,
             producer: admitted.producer,

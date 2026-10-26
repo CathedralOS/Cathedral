@@ -1,19 +1,15 @@
-//! Forwarded requests stay pending while upstream child work can progress.
-//! Control is a FIFO request/reply stream the child answers in order, so an
-//! unanswered request is counted and its late reply skipped rather than letting
-//! it be read as the answer to a newer request. A slow child costs the asker a
-//! timeout. At the unanswered-request limit, stop issuing probes rather than
-//! closing the child's endpoint (which could destroy its unsaved work).
-//! A stream that fails outright is not death either: the request stays pending
-//! for a short grace so the kernel's outcome, not the broken link, decides
-//! between PEER_CLOSED and BUSY.
-//! One request may be pending per child: the owner's own, or a loss query
-//! sent before a sibling's close request, acted on when it answers.
+// Forwarded requests stay pending while upstream child work can progress.
+// Shared links retain exact request identity after timeout; the copied fixture
+// adapter drains FIFO late replies. Neither replays or abandons uncertain work.
+// Connection setup progresses while child upstream work remains serviceable.
+// A stream that fails outright is not death either: the request stays pending
+// for a short grace so the kernel's outcome, not the broken link, decides
+// between PEER_CLOSED and BUSY.
+// One request may be pending per child: the owner's own, or a loss query
+// sent before a sibling's close request, acted on when it answers.
 use super::*;
 use cathedral_stock_matrix::policy::lifecycle as decisions;
 
-/// Unanswered requests tolerated before the control link is retired.
-pub(super) const MAX_STALE: u8 = 8;
 /// Ticks a request waits for the kernel outcome of a child whose control
 /// stream failed before it is answered BUSY. Reclamation of an exited child
 /// takes a few ticks; a live child that merely broke its link stays unknown.
@@ -24,13 +20,9 @@ impl Children {
         let hop = routed & 7;
         if !(1..=CHILDREN as u64).contains(&hop) {
             Err(Error(abi::DENIED as i64))
-        } else if let Some(child) = &self.slots[(hop - 1) as usize] {
-            if child.stale >= MAX_STALE {
-                return Err(Error(abi::TIMED_OUT as i64));
-            }
-            let control = child.control.ok_or(Error(abi::PEER_CLOSED as i64))?;
+        } else if let Some(child) = &mut self.slots[(hop - 1) as usize] {
             words[0] = (words[0] & 0xffff) | ((routed >> 3) << wire::OP_BITS);
-            if let Err(error) = control.0.send(&wire::encode(words)) {
+            if let Err(error) = child.control.ask(words) {
                 if error.0 == abi::PEER_CLOSED as i64 && !self.completed((hop - 1) as usize)? {
                     return Err(Error(abi::BUSY as i64));
                 }
@@ -48,38 +40,24 @@ impl Children {
         &self,
         teardown_busy: bool,
         now: u64,
-    ) -> ([Option<Handle>; CHILDREN], Option<u64>) {
-        let mut handles = [None; CHILDREN];
+    ) -> ([Option<Interest>; CHILDREN * 2], Option<u64>) {
+        let mut handles = [None; CHILDREN * 2];
         let mut deadline: Option<u64> = None;
-        for (slot, handle) in handles.iter_mut().enumerate() {
-            let Some((_, until, purpose)) = &self.pending[slot] else {
-                // Late replies are drained even while nobody is asking. This
-                // restores probe capacity without mistaking an old answer for
-                // a fresh observation or abandoning the live child's channel.
-                *handle = self.slots[slot].as_ref().and_then(|child| {
-                    (child.stale > 0)
-                        .then_some(child.control)
-                        .flatten()
-                        .map(|p| p.1)
-                });
-                continue;
-            };
-            if decisions::wait(matches!(purpose, Purpose::Close), teardown_busy) {
-                continue;
-            }
-            let until = if self.retiring[slot].is_none() {
-                *handle = self.slots[slot]
-                    .as_ref()
-                    .and_then(|child| child.control)
-                    .map(|control| control.1);
-                *until
-            } else {
-                now.wrapping_add(1)
-            };
-            deadline = Some(match deadline {
-                Some(d) if !time::reached(d, until) => d,
-                _ => until,
+        for slot in 0..CHILDREN {
+            let Some(child) = &self.slots[slot] else { continue };
+            let pending = self.pending[slot].as_ref();
+            let paused = pending.is_some_and(|(_, _, purpose)|
+                decisions::wait(matches!(purpose, Purpose::Close), teardown_busy));
+            let (interests, opening) = child.control.wait(!paused && self.retiring[slot].is_none() && (pending.is_some() || child.control.has_late()));
+            handles[slot * 2..slot * 2 + 2].copy_from_slice(&interests);
+            let answer = pending.filter(|_| !paused).map(|(_, until, _)| {
+                if self.retiring[slot].is_some() { now.wrapping_add(1) } else { *until }
             });
+            for until in opening.into_iter().chain(answer) {
+                deadline = Some(deadline.map_or(until, |d| {
+                    if time::reached(d, until) { until } else { d }
+                }));
+            }
         }
         (handles, deadline)
     }
@@ -105,6 +83,9 @@ impl Children {
         world: &mut World,
         parent: &mut Parent,
     ) -> Result<bool, Error> {
+        if let Some(child) = &mut self.slots[slot] {
+            child.control.progress();
+        }
         let Some((request, mut deadline, purpose)) = self.pending[slot] else {
             self.close_paused[slot] = false;
             // A disconnect observed while a reply was pending must not be lost
@@ -118,17 +99,8 @@ impl Children {
                 self.stop(slot, server, world, parent)?;
                 return Ok(true);
             }
-            if let Some(child) = &mut self.slots[slot]
-                && child.stale > 0
-                && let Some(control) = child.control
-            {
-                match control.1.receive_until(&mut [0; 64], time::now()?) {
-                    Ok(_) => child.stale -= 1,
-                    Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
-                    // No late replies can arrive on a failed stream. Do not
-                    // leave its permanently-ready handle in the idle wait set.
-                    Err(_) => child.stale = 0,
-                }
+            if let Some(child) = &mut self.slots[slot] {
+                child.control.drain();
             }
             return Ok(false);
         };
@@ -154,42 +126,19 @@ impl Children {
         }
         let mut retired = false;
         let now = time::now()?;
-        let mut bytes = [0; 64];
         let result = if let Some(error) = self.retiring[slot] {
             Err(Error(error))
         } else {
-            match self.slots[slot].as_ref().and_then(|child| child.control) {
-                Some(control) => control.1.receive_until(&mut bytes, now),
+            match self.slots[slot].as_mut() {
+                Some(child) => child.control.receive(now, deadline),
                 None => Err(Error(abi::PEER_CLOSED as i64)),
             }
         };
         let answer = match result {
-            Ok(len) => {
-                let child = self.slots[slot].as_mut().unwrap();
-                if child.stale > 0 {
-                    // The answer to a request the asker already gave up on.
-                    #[cfg(feature = "trace-storage")]
-                    time::storage_sample(
-                        "matrix-control-stale",
-                        &[
-                            request.incarnation,
-                            slot as u64,
-                            now,
-                            deadline,
-                            child.stale as u64,
-                        ],
-                    );
-                    child.stale -= 1;
-                    return Ok(false);
-                }
-                Ok(wire::decode(&bytes[..len]).unwrap_or(wire::error(abi::IO_ERROR)))
-            }
-            Err(Error(code)) if code == abi::TIMED_OUT as i64 && !time::reached(now, deadline) => {
-                return Ok(false);
-            }
-            Err(Error(code)) if code == abi::TIMED_OUT as i64 => {
-                let child = self.slots[slot].as_mut().unwrap();
-                child.stale += 1;
+            Ok(Some(words)) => Ok(words),
+            Ok(None) if !time::reached(now, deadline) => return Ok(false),
+            Ok(None) => {
+                self.slots[slot].as_mut().unwrap().control.expire();
                 Err(abi::TIMED_OUT)
             }
             Err(error) => {

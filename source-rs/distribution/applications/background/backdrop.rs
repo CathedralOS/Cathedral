@@ -3,15 +3,17 @@
 use cathedral_platform_contracts::matrix as wire;
 use cathedral_user_runtime::{
     Error,
-    event::{self, Interest},
-    ipc::Handle,
+    server::{OwnerControl, SharedSlot},
     services::Services,
     time,
 };
 pub fn run(mut services: Services) -> Result<(), Error> {
     services.enable_shared()?;
     let interaction = services.interaction(1, 1)?;
-    let control = (Handle::bootstrap(0)?, Handle::bootstrap(1)?);
+    static mut CONTROL: SharedSlot = SharedSlot::empty();
+    let slot = &raw mut CONTROL;
+    // SAFETY: One entry lends this process-owned slot until exit.
+    let mut control = OwnerControl::open(unsafe { &mut *slot })?;
     let mut epoch = 0;
     let mut surface = 0;
     let mut checked_scope = false;
@@ -55,24 +57,17 @@ pub fn run(mut services: Services) -> Result<(), Error> {
                 return Err(Error(reply[0] as i64));
             }
         }
-        match event::wait(
-            &[Interest::Ipc(control.0), interaction.wake.interest()],
-            time::after(100)?,
-        ) {
-            Ok(1) => {
+        match control.next(interaction.wake.interest(), Some(time::after(100)?))? {
+            None => {
                 interaction.wake.take()?;
             }
-            Ok(_) => {
-                let mut bytes = [0; 64];
-                let len = control.0.receive(&mut bytes)?;
+            Some((bytes, len)) => {
                 let reply = match wire::decode(&bytes[..len]) {
                     Some([wire::HEALTH | wire::LOSS, 0, 0, 0, 0, 0, 0, 0]) => [0; 8],
                     _ => wire::error(cathedral_kernel_contracts::user::DENIED),
                 };
-                control.1.send(&wire::encode(reply))?;
+                control.reply(&wire::encode(reply))?;
             }
-            Err(Error(code)) if code == cathedral_kernel_contracts::user::TIMED_OUT as i64 => (),
-            Err(error) => return Err(error),
         }
     }
 }

@@ -51,17 +51,11 @@ impl Children {
             return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
         };
         let mut survey = Survey { request, policy };
-        for (slot, child) in self.slots.iter().enumerate() {
+        for (slot, child) in self.slots.iter_mut().enumerate() {
             let Some(child) = child else {
                 continue;
             };
-            let sent = child.stale < control::MAX_STALE
-                && child.control.is_some_and(|control| {
-                    control
-                        .0
-                        .send(&wire::encode([wire::LOSS, 0, 0, 0, 0, 0, 0, 0]))
-                        .is_ok()
-                });
+            let sent = child.control.ask([wire::LOSS, 0, 0, 0, 0, 0, 0, 0]).is_ok();
             if sent {
                 #[cfg(feature = "trace-storage")]
                 time::storage_trace("matrix-loss-send", request.incarnation, slot as u64);

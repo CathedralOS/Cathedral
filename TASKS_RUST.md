@@ -21,8 +21,8 @@ slice execute on x86-64 and ARM64. Ordinary F5 now uses them for physical input
 to the root matrix, root display commands/images, root storage and separate
 parent-storage and pipelined interaction streams between stock matrices, Omega app
 broker/interaction/storage, independent Split interaction/storage forwarding,
-Background, the separate Omega UI presenter, and Split's input producer and masked
-capture viewer. Brokered child input hints now use separate wait-only notifications.
+Background, the separate Omega UI presenter, Split's input producer and masked
+capture viewer, and brokered stock/Split lifecycle controls. Brokered child input hints now use separate wait-only notifications.
 The scoped storage fixture also
 exercises both private-root provider connections. See the evidence below. Remaining acceptance:
 
@@ -257,6 +257,118 @@ not perfect timing indistinguishability or mandatory agent badges. Existing
 default/hidden cursor evidence remains valid for its scope, not the full asset API.
 
 ## Current implementation evidence
+
+Implementation update 2026-10-25: **stock brokered lifecycle/control uses shared IPC**, over `a0adfa79`.
+
+The [stock control entrance](source-rs/distribution/matrix/service/children/control/control.rs)
+keeps owner requests, LOSS surveys, late replies and teardown sequencing above its
+[transport owner](source-rs/distribution/matrix/service/children/control/link.rs).
+Brokered admissions open a shared control stream while continuing to serve child
+startup/acquisition. One first request can wait unpublished during opening;
+expiry drops that queued request rather than publishing it later. Published
+expiry retains the exact connection request and refuses further shared probes
+until its late answer drains. A stale clean answer cannot close a now-dirty app.
+The explicit copied fixture adapter retains its eight-unanswered FIFO limit.
+Neither failed setup nor a broken stream establishes process death or permission
+to discard work; kernel outcomes still govern that decision.
+
+Stock accepts shared owner control at every hosted level. Background and the
+separate Omega UI presenter now use the common OwnerControl receiver too. The
+service wait combines child setup/transfer deadlines with upstream work instead
+of discarding them while storage is busy. Close replies remain held while
+teardown cannot use the parent stream, with bounded grace on resumption. Child
+control custody is dropped before its admission reservation is returned. Authorized
+stop now cancels/waits for the exact child before removing service bindings and
+waiting on upstream erasure; retained visual readers are released afterward.
+
+Every brokered admission reserves its owner-side writer, reader and notification
+before lending the child grant. Chrome/Notes/Colors declarations include control;
+Background receives two notification allowances and five private / two reader
+pages, and chooser reader funding is four pages (three streams plus one listing).
+F5's boot picker has the same explicit extra notification allowance.
+
+Four recursive desktops exposed the total object budget separately from the
+per-task metadata limits prepared previously. Stock keeps its original 40-object
+initial desktop declaration and 24-object workspace grant, growing explicitly
+as children arrive. The global channel/notification pool is 256 (was 192), the
+per-account ceiling 252 (was 188), F5's funded root 224 (was 180), and its user
+allowance/descendant growth ceiling 208 (was 168). Kernel and host composition
+checks agree. No process-count, deadline or kernel-heap increase. Exhaustion and
+withdrawal host tests fill the entire larger arena across independent accounts;
+these larger finite scans are not a latency improvement.
+
+Failures found during integration:
+
+- The first ordinary UI pass did not prove every control opened: the readiness
+  gate caught missing boot-picker notification funding
+  (`desktop/20261026T001434470832Z`). After fixing it, its three existing reader
+  pages were all occupied by streams, so a committed user copy could not refresh
+  its listing (`desktop/20261026T001806367360Z`). The fourth reader fixes this.
+- Raising each matrix's starting grant over-reserved recursive capacity
+  (`desktop/20261026T002022371837Z`). Keeping small starting grants still exposed
+  a real 21-object shortfall beyond the outer user's old 168 allowance
+  (`desktop/20261026T002314032473Z`). The explicit aggregate funding above covers
+  this; the host validator was updated alongside the kernel ceilings.
+- Closing the UI presenter exposed a preexisting teardown race: service bindings
+  disappeared before cancellation, and upstream cleanup could park the owner
+  long enough for the still-running UI to panic on its closed interaction stream
+  (`desktop/20261026T003254303126Z`). Stopping the child before withdrawing those
+  bindings removes the half-torn-down execution window.
+
+Verification:
+
+- Normal untraced F5 passes user creation, three independent Notes, protected
+  close, slot reuse, Colors and exact cold restoration, including the host
+  oracle's 1,619 records (`desktop/20261026T003520824784Z`). The harness now
+  requires all four initial shared controls: picker, user matrix, chrome and
+  Background.
+- The new `python tools/boot-harness-rs/control_lifecycle_test.py` passes both
+  boots (`desktop/20261026T003445126582Z`): an original clean LOSS is delayed
+  beyond expiry, input edits the still-live app, a second close cannot replace
+  the outstanding request, the old clean reply drains, a fresh dirty LOSS
+  refuses, saving permits clean close, and the separate UI presenter launches
+  and closes without a teardown panic.
+- Four recursive desktops pass repeated reclamation, protected close,
+  persistence and cold reopen (`desktop/20261026T003607333624Z`). Deep Split
+  passes both boots (`desktop/20261026T003750366663Z`), including shared stock
+  control into Split. Delayed upstream interaction/storage passes three nested
+  levels and close resumption (`desktop/20261026T003836715219Z`).
+- Matrix and matrix-storage guest suites pass the retained copied adapters.
+  Full IPC passes connection correlation, setup/partial-custody failures,
+  twenty-stream capacity and final logical/physical refunds.
+- ARM64 portability passes with the enlarged global arena; it does not exercise
+  the stock desktop control workflow. Host tests include full-arena exhaustion
+  and withdrawal, and composition-boundary refusal checks pass. Userspace/UEFI
+  checks, all-feature stock/Notes/Background/UI Clippy, format, layout and
+  whitespace checks pass.
+- Notes recovery passes both boots with exact text/history/quota (20 records),
+  physical input, draft/reload and focus isolation
+  (`matrix-database/20261026T004111561648Z`).
+- Logs: `build/omega-component/stock-control-*.log`. Final reruns after the
+  teardown-order fix pass; the failed integration artifacts above remain useful
+  evidence of the missing funding and old ordering.
+
+
+
+**Next, first:** isolate inbound owner-control failure in multi-client matrix
+receivers. The outgoing stock controller does not infer death or replay on
+expiry, and leaf OwnerControl preserves independent input after failure. However,
+stock/Split use the generic Server, whose owner-control read/setup/reply failure
+still propagates out of the service; actual matrix exit then tears down its tree.
+This retained receiver policy is not evidence of matrix survival after control
+failure. Add explicit control retirement and a guest proof that independent
+upstream/downstream service remains usable, without suppressing unrelated server
+errors or treating owner-link retirement as a task outcome.
+
+Root desktop control and provider supervision still use copied packets,
+as do explicitly positional fixtures. Start at
+[boot admission](source-rs/distribution/desktop/session/admission/admission.rs),
+[its root handoff](source-rs/distribution/desktop/session/admission/root.rs), and
+[storage supervision](source-rs/distribution/desktop/session/persistence/provider.rs).
+Migrate that owner path with exact request custody and failure tests, then inventory remaining copied payload
+consumers before retiring their syscalls. This completes brokered stock controls,
+not the entire shared-service migration. The ordinary desktop remains the proving
+path; there is no new owner-level blocker.
 
 Implementation update 2026-10-25: **funded connection capacity for stock control migration**, over `1434566e`.
 
@@ -8256,7 +8368,7 @@ for the same 293 provider requests; the depth-four app round trip fell from
 the matrix always mid-exchange, a leaf exiting during a forwarded control RPC
 was deferred until the kernel reported its outcome, and the asker saw
 PEER_CLOSED. Without the chatter the matrix answered BUSY before reclamation
-finished. [control.rs](source-rs/distribution/matrix/service/children/control.rs)
+finished. [control.rs](source-rs/distribution/matrix/service/children/control/control.rs)
 now keeps such a request pending, polling each tick, until the child's outcome
 arrives or `OUTCOME_GRACE_TICKS` (50) pass inside the asker's deadline, then
 answers BUSY as before. A live child that merely dropped its control link still
@@ -9047,7 +9159,7 @@ Next, in order:
    the realm's content. The entry's remaining time is admission, placement and
    drawing.
 3. The clean-close LOSS timeout: the mechanism is in
-   [control.rs](source-rs/distribution/matrix/service/children/control.rs). A
+   [control.rs](source-rs/distribution/matrix/service/children/control/control.rs). A
    close's answer is left queued while this matrix's storage is busy, and the
    deadline used to keep running meanwhile, so the first poll after a long
    busy window could refuse a sibling that had answered cleanly as timed out.
@@ -9174,7 +9286,7 @@ with the pointer's walk inside it, so on hardware the entry sits at the
 harness's floor.
 
 **The held close deadline, pinned.** The clean-close fix in
-[control.rs](source-rs/distribution/matrix/service/children/control.rs), which
+[control.rs](source-rs/distribution/matrix/service/children/control/control.rs), which
 keeps a close answer's deadline at least the outcome grace ahead while this
 matrix's storage is busy, had only non-reproduction behind it. The test-only
 [delay probe](source-rs/distribution/matrix/service/delay_probe.rs) lets F4

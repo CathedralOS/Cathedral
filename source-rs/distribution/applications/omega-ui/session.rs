@@ -1,11 +1,15 @@
 //! Scoped input and the app model stay here; shared UI handles construction and
 //! atomic publication. The presentation regions come from this app's view.
 use super::view::Demo;
-use cathedral_kernel_contracts::user as abi;
 use cathedral_matrix::reception::Pointers;
 use cathedral_omega_ui::{Presenter, Stats, Ui};
 use cathedral_platform_contracts::matrix as wire;
-use cathedral_user_runtime::{Error, ipc::Handle, memory::Private, services::Services, time};
+use cathedral_user_runtime::{
+    memory::Private,
+    server::{OwnerControl, SharedSlot},
+    services::Services,
+    time,
+};
 const WIDTH: i32 = 360;
 const HEIGHT: i32 = 336;
 fn origin(view: wire::Packet) -> (usize, usize) {
@@ -18,7 +22,10 @@ pub fn run(mut services: Services) -> u64 {
     services.enable_shared().unwrap();
     let connection = services.interaction(1, 1).unwrap();
     cathedral_user_runtime::write(b"Cathedral Omega UI: shared interaction ready\n").unwrap();
-    let control = (Handle::bootstrap(0).unwrap(), Handle::bootstrap(1).unwrap());
+    static mut CONTROL: SharedSlot = SharedSlot::empty();
+    let slot = &raw mut CONTROL;
+    // SAFETY: One app entry lends this owner-control slot until exit.
+    let mut control = OwnerControl::open(unsafe { &mut *slot }).unwrap();
     let api = cathedral_omega_ui::native_api();
     let (bytes, _) = api.layout().unwrap();
     let mut state = Private::allocate(bytes.div_ceil(4096)).unwrap();
@@ -118,23 +125,20 @@ pub fn run(mut services: Services) -> u64 {
         if more {
             continue;
         }
-        let mut bytes = [0; 64];
-        match cathedral_user_runtime::event::wait(
-            &[
+        match control
+            .next(
                 connection.wake.interest(),
-                cathedral_user_runtime::event::Interest::Ipc(control.0),
-            ],
-            time::after(if stats.animating { 1 } else { 100 }).unwrap(),
-        ) {
-            Ok(0) => {
+                Some(time::after(if stats.animating { 1 } else { 100 }).unwrap()),
+            )
+            .unwrap()
+        {
+            None => {
                 connection.wake.take().unwrap();
             }
-            Ok(_) => {
-                let length = control.0.receive(&mut bytes).unwrap();
+            Some((bytes, length)) => {
                 let operation = wire::decode(&bytes[..length]).map_or(0, |packet| packet[0]);
                 control
-                    .1
-                    .send(&wire::encode(if operation == wire::LOSS {
+                    .reply(&wire::encode(if operation == wire::LOSS {
                         [0; 8]
                     } else {
                         [
@@ -150,8 +154,6 @@ pub fn run(mut services: Services) -> u64 {
                     }))
                     .unwrap();
             }
-            Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
-            Err(error) => panic!("Omega UI wait: {error:?}"),
         }
     }
 }

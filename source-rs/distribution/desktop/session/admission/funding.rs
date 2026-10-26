@@ -47,7 +47,7 @@ pub(super) fn limits() -> cathedral_user_runtime::resources::Limits {
             16
         },
         channels: if cfg!(feature = "shell") {
-            180
+            224
         } else if cfg!(feature = "notes") {
             36
         } else {

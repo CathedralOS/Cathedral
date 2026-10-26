@@ -108,6 +108,8 @@ pub fn run(style: u64, mut services: Services) {
     let slot = &raw mut CONTROL;
     // SAFETY: The single probe entry owns its control connection until exit.
     let mut control = OwnerControl::open(unsafe { &mut *slot }).unwrap();
+    #[cfg(feature = "control-delay-probe")]
+    let mut control_probe = control_probe::Probe::default();
     let mut notes = storage::Notes::new(connections.storage, style);
     let mut draft = Document::default();
     let mut confirmed = draft;
@@ -340,10 +342,12 @@ pub fn run(style: u64, mut services: Services) {
         if snapshot[5] & wire::MORE != 0 {
             continue;
         }
+        #[cfg(feature = "control-delay-probe")]
+        if control_probe.progress(&mut control, connections.wake) { continue; }
         match control.next(connections.wake.interest(), Some(time::after(100).unwrap())) {
             Ok(Some((bytes, len))) => {
                 if wire::decode(&bytes[..len]).is_some_and(|words| words[0] == wire::LOSS) {
-                    let _ = control.reply(&wire::encode([
+                    let reply = wire::encode([
                         0,
                         u64::from(draft != confirmed),
                         0,
@@ -352,7 +356,10 @@ pub fn run(style: u64, mut services: Services) {
                         0,
                         0,
                         0,
-                    ]));
+                    ]);
+                    #[cfg(feature = "control-delay-probe")]
+                    if control_probe.hold(reply) { continue; }
+                    let _ = control.reply(&reply);
                 } else {
                     report(&mut control, &notes, &draft, draft != confirmed, error);
                 }

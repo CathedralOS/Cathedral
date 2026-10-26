@@ -651,7 +651,13 @@ creation, quota accounting, endpoint moves and the parent/worker QEMU proof:
 
 ```powershell
 python tools/boot-harness-rs/run.py --ipc-test --timeout 90
+python tools/boot-harness-rs/control_lifecycle_test.py
 ```
+
+The lifecycle check boots the ordinary desktop with a delayed Notes loss reply.
+It verifies continued input, rejection of a stale clean answer after editing,
+saving and final close, plus the separate UI presenter's shared owner control.
+
 
 `send_with` checks all inputs and reserves recipient capacity before moving one
 dynamic endpoint into a message. A failed send preserves ownership. A successful

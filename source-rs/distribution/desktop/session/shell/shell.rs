@@ -52,7 +52,7 @@ fn chooser(login: &mut Login, matrix: Pair, extent: [u64; 2], failed: bool) -> R
                 if failed { 2 } else { 1 },
                 chooser,
             ),
-            2,
+            3,
             0,
             0,
         ],
@@ -67,7 +67,7 @@ fn chooser(login: &mut Login, matrix: Pair, extent: [u64; 2], failed: bool) -> R
 pub(crate) fn workspace(width: u64, height: u64) -> [wire::Packet; 3] {
     [
         [wire::LAUNCH_IMAGES, 1, 1, 0, 0, 0, 0, 0],
-        [wire::LAUNCH_POLICY, 1, 960, 3584, 168, 24, 0, 11],
+        [wire::LAUNCH_POLICY, 1, 960, 3584, 208, 24, 0, 11],
         [wire::LAUNCH_PLACE, 1, 0, 0, width, height, KEYS, 0],
     ]
 }

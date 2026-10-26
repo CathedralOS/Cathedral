@@ -22,7 +22,7 @@ fn available() -> Result<[u64; 5], Error> {
 pub(super) fn policy(funded: [u64; 5]) -> Option<Funding> {
     (funded[3] != 0).then(|| Funding {
         funded,
-        ceiling: core::array::from_fn(|i| funded[i].max([960, 3584, 168, 24, 6400][i])),
+        ceiling: core::array::from_fn(|i| funded[i].max([960, 3584, 208, 24, 6400][i])),
     })
 }
 
