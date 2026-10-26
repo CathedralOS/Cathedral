@@ -15,7 +15,7 @@ impl Controls {
     pub fn open(&self) -> bool {
         self.confirming.is_some()
     }
-    pub fn refresh(&mut self, parent: Pair) -> bool {
+    pub fn refresh(&mut self, parent: &mut Services) -> bool {
         let reply = call(parent, [wire::MANAGED_TASK, 0, 0, 0, 0, 0, 0, 0]);
         let current = (reply[0] == 0 && reply[1] != 0).then_some(reply[1]);
         let changed = current != self.current;
@@ -35,7 +35,7 @@ impl Controls {
         event: wire::Packet,
         extent: wire::Packet,
         clicked: bool,
-        parent: Pair,
+        parent: &mut Services,
     ) -> bool {
         let activate = match event[2] {
             wire::POINTER => {

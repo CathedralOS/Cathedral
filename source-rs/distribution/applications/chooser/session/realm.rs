@@ -14,9 +14,9 @@ pub struct Realm {
     own: u64,
 }
 impl Realm {
-    pub fn new(pair: Pair, user_picker: bool, own: u64) -> Self {
+    pub fn new(scope: Scope<'static>, user_picker: bool, own: u64) -> Self {
         Self {
-            scope: Scope::new(pair),
+            scope,
             ids: [0; ENTRIES],
             labels: [[0; 13]; ENTRIES],
             count: 0,

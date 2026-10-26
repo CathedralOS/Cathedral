@@ -36,7 +36,7 @@ impl Editor {
         extent: wire::Packet,
         clicked: bool,
         scope: &mut Scope,
-        parent: Pair,
+        parent: &mut Services,
     ) -> (bool, bool) {
         let action = match event[2] {
             wire::POINTER => {

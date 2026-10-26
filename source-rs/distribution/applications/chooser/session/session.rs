@@ -1,37 +1,46 @@
 // List the realm, present users/apps, then launch a choice or copy the template.
 // Labels and hidden entries are distribution presentation; every request stays
 // within the scoped object identities returned by this child's realm.
+use cathedral_chooser::policy::{self, Action, Operation};
 use cathedral_desktop_matrix_contracts::matrix as wire;
 use cathedral_kernel_contracts::user as abi;
 use cathedral_platform_contracts::input;
 use cathedral_user_runtime::{
     Error,
-    ipc::Handle,
     server::{OwnerControl, SharedSlot},
-    task::Environment,
+    services::Services,
     time,
 };
-pub type Pair = (Handle, Handle);
-use cathedral_chooser::policy::{self, Action, Operation};
 pub use policy::{ENTRIES, NEW, USER_ENTRIES};
 
 /// `own` is this program's object in its realm, from its launch argument; the
 /// launcher hides that tile instead of reading which entry it is.
 pub fn run(
-    environment: Environment,
+    mut services: Services,
     user_picker: bool,
     initial_status: &'static str,
     own: u64,
 ) -> u64 {
     policy::verify();
-    let connections = cathedral_user_runtime::matrix::Connections::load(&environment).unwrap();
-    let parent = connections.interaction;
     static mut CONTROL: SharedSlot = SharedSlot::empty();
     let slot = &raw mut CONTROL;
     // SAFETY: The single probe entry owns this control slot until exit.
     let mut control = OwnerControl::open(unsafe { &mut *slot }).unwrap();
     control.establish(time::after(300).unwrap()).unwrap();
-    let mut realm = realm::Realm::new(connections.storage, user_picker, own);
+    services.enable_shared().unwrap();
+    let wake = services.interaction(1, 1).unwrap().wake;
+    assert!(matches!(
+        wake,
+        cathedral_user_runtime::services::Wake::Notification(_)
+    ));
+    let scope =
+        cathedral_user_runtime::storage::Scope::connect(services.storage(1, 1).unwrap()).unwrap();
+    let parent = &mut services;
+    cathedral_user_runtime::write(
+        b"Cathedral chooser probe: shared interaction and storage ready\n",
+    )
+    .unwrap();
+    let mut realm = realm::Realm::new(scope, user_picker, own);
     let mut status = match realm.reload() {
         Ok(()) => initial_status,
         Err(_) => "CANNOT OPEN",
@@ -220,9 +229,9 @@ pub fn run(
         if snapshot[5] & wire::MORE != 0 {
             continue;
         }
-        match control.next(connections.wake.interest(), Some(time::after(100).unwrap())) {
+        match control.next(wake.interest(), Some(time::after(100).unwrap())) {
             Ok(None) => {
-                connections.wake.take().unwrap();
+                wake.take().unwrap();
             }
             Ok(Some((bytes, len))) => {
                 // Settings drafts participate in ordinary close/loss reporting.
@@ -250,7 +259,7 @@ pub fn run(
 /// Execute an Omega intent only through this child's already supplied services.
 fn act(
     realm: &mut realm::Realm,
-    parent: Pair,
+    parent: &mut Services,
     action: Action,
     launched: &mut Option<u64>,
 ) -> &'static str {
@@ -270,16 +279,8 @@ fn act(
         _ => "",
     }
 }
-fn call(pair: Pair, words: wire::Packet) -> wire::Packet {
-    let budget = if words[0] == wire::LAUNCH {
-        wire::LAUNCH_DEADLINE_TICKS
-    } else {
-        600
-    };
-    let mut bytes = [0; 64];
-    pair.0.send(&wire::encode(words)).unwrap();
-    let len =
-        cathedral_user_runtime::matrix::upstream::receive(pair.1, &mut bytes, words[0], budget)
-            .unwrap_or_else(|error| panic!("chooser request {words:?}: {error:?}"));
-    wire::decode(&bytes[..len]).unwrap()
+fn call(services: &mut Services, words: wire::Packet) -> wire::Packet {
+    services
+        .request_interaction(words, None)
+        .unwrap_or_else(|error| panic!("chooser request {words:?}: {error:?}"))
 }

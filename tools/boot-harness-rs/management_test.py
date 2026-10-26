@@ -199,6 +199,7 @@ def run(source):
         for boot in ((1,) if mode == 'revoked' else (1, 2)):
             capture.run(command, folder, 240, subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0,
                         'Cathedral desktop: ready; choose a user', verify)
+            assert 'Cathedral chooser probe: shared interaction and storage ready' in (folder / 'serial.log').read_text(errors='replace')
             for name in ('serial.log', 'display.png'):
                 shutil.copyfile(folder / name, folder / f'boot-{boot}-{name}')
     assert source.read_bytes() == before, 'source fixture changed'

@@ -7,7 +7,7 @@ pub struct Scene {
     message: usize,
 }
 impl Scene {
-    pub fn new(parent: Pair, epoch: u64, picker: bool) -> Result<Self, u64> {
+    pub fn new(parent: &mut Services, epoch: u64, picker: bool) -> Result<Self, u64> {
         let mut names = [0; ENTRIES + 2];
         for (rank, name) in names
             .iter_mut()
@@ -33,7 +33,7 @@ impl Scene {
     }
     pub fn paint(
         &self,
-        parent: Pair,
+        parent: &mut Services,
         extent: wire::Packet,
         realm: &realm::Realm,
         selected: usize,
@@ -87,7 +87,7 @@ impl Scene {
     }
     pub fn tasks(
         &self,
-        parent: Pair,
+        parent: &mut Services,
         extent: wire::Packet,
         tasks: &tasks::Tasks,
         realm: &realm::Realm,
@@ -106,7 +106,7 @@ impl Scene {
     }
     pub fn management(
         &self,
-        parent: Pair,
+        parent: &mut Services,
         extent: wire::Packet,
         controls: &management::Controls,
     ) -> Result<(), u64> {
@@ -140,7 +140,7 @@ impl Scene {
     }
     pub fn settings(
         &self,
-        parent: Pair,
+        parent: &mut Services,
         extent: wire::Packet,
         editor: &settings::Editor,
     ) -> Result<(), u64> {
@@ -172,7 +172,7 @@ impl Scene {
         }
         self.footer(parent, extent, editor.status, "", false, false)
     }
-    fn background(&self, parent: Pair, extent: wire::Packet) -> Result<(), u64> {
+    fn background(&self, parent: &mut Services, extent: wire::Packet) -> Result<(), u64> {
         accepted(
             call(
                 parent,
@@ -208,7 +208,7 @@ impl Scene {
     }
     fn footer(
         &self,
-        parent: Pair,
+        parent: &mut Services,
         extent: wire::Packet,
         status: &str,
         button: &str,
@@ -247,17 +247,16 @@ impl Scene {
     }
     fn image(
         &self,
-        parent: Pair,
+        parent: &mut Services,
         surface: u64,
         pixels: Private,
         [x, y, width, height]: [u64; 4],
     ) -> Result<(), u64> {
         let mut image = pixels.freeze().unwrap();
         image.unmap().unwrap();
-        parent
-            .0
-            .send_memory(
-                &wire::encode([
+        let reply = parent
+            .request_interaction(
+                [
                     wire::SURFACE_IMAGE,
                     self.epoch,
                     surface,
@@ -266,19 +265,11 @@ impl Scene {
                     width,
                     height,
                     width,
-                ]),
-                &image,
+                ],
+                Some(&image),
             )
             .unwrap();
-        let mut bytes = [0; 64];
-        let n = cathedral_user_runtime::matrix::upstream::receive(
-            parent.1,
-            &mut bytes,
-            wire::SURFACE_IMAGE,
-            300,
-        )
-        .unwrap();
-        accepted(wire::decode(&bytes[..n]).unwrap()[0])
+        accepted(reply[0])
     }
 }
 

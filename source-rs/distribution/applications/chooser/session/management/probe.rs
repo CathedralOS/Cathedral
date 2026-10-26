@@ -3,7 +3,7 @@ use super::*;
 #[derive(Default)]
 pub struct Probe(Option<u64>);
 impl Probe {
-    pub fn event(&mut self, parent: Pair, event: wire::Packet) {
+    pub fn event(&mut self, parent: &mut Services, event: wire::Packet) {
         if event[2] != wire::KEY || event[4] != input::PRESS as u64 {
             return;
         }

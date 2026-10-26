@@ -12,7 +12,7 @@ pub struct Tasks {
     next_refresh: u64,
 }
 impl Tasks {
-    pub fn refresh(&mut self, parent: Pair, force: bool) -> bool {
+    pub fn refresh(&mut self, parent: &mut Services, force: bool) -> bool {
         let now = time::now().unwrap();
         if !force && !time::reached(now, self.next_refresh) {
             return false;
@@ -26,7 +26,7 @@ impl Tasks {
     }
     pub fn click(
         &self,
-        parent: Pair,
+        parent: &mut Services,
         view: wire::Packet,
         event: wire::Packet,
         clicked: bool,

@@ -9,6 +9,20 @@ The Rust `session/` and `policy/` adapter are compiled only for explicit
 `rust-probes` fault fixtures and tests. Ordinary F5 never selects that fallback.
 Host tests execute both the complete Omega app and its pure decision export.
 
+Both entries declare the same three shared connections. The Rust
+[session](session/session.rs) establishes independent owner control before
+acquiring its interaction broker, wait-only input notification and storage scope.
+Task selection, management, layout requests and immutable images retain that
+interaction client; realm listing/copying and settings persistence retain the
+separate storage client. Delayed replies keep their request ownership rather than
+being retried or read by a fresh raw-endpoint helper.
+
+`python tools/boot-harness-rs/desktop_test.py --rust-chooser` selects the Rust
+picker/taskbar in a disposable copy of the desktop composition. It exercises user
+creation, picker retirement, app launch/switch/close and cold persistence, and
+requires both chooser instances to establish shared services. Launcher recovery
+and management fixtures separately check replacement and revoked authority.
+
 F5 opens a full-screen user picker. Existing users appear as a horizontal row
 of avatar tiles; **NEW USER** copies the hidden template. Click a user to enter
 its workspace. Root stops and collects this picker before loading the user's

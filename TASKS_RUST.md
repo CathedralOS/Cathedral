@@ -324,6 +324,48 @@ default/hidden cursor evidence remains valid for its scope, not the full asset A
 
 ## Current implementation evidence
 
+Implementation update 2026-10-25: **Rust chooser probes use retained shared services**, over `496542c5`.
+
+The Rust picker/launcher fixture now declares the same three service connections
+as the ordinary Omega chooser and receives `Services` at its entry. Its named
+session establishes owner control first, then shared interaction, notification
+input wake and shared storage. Realm listing/copying, settings persistence,
+management, task selection, layout and immutable images retain those clients.
+No chooser-session data path creates raw copied requests or receives replies from
+an alias of an established connection. The normal installed chooser stays Omega.
+
+The desktop harness's explicit `--rust-chooser` variant exercises both picker and
+user launcher on a fresh disposable composition and checks the selected startup
+markers. Its runtime marker follows an assertion that the wake is a notification.
+Replacement-launcher and management tests also require the shared chooser marker.
+This is a transport migration, not a new locator, authority policy or UI design.
+
+Verification (`build/omega-component/chooser-shared-*.log`):
+
+- Fresh/cold Rust chooser desktop passes in `desktop/20261026T044019871853Z`,
+  including user creation, picker retirement, independent Notes instances, slot
+  reuse and exact verification of all 1,595 persisted host records.
+- All seven launcher recovery modes pass in
+  `launcher-recovery/20261026T044103617641Z`: recovery/cold persistence, clean
+  exit, startup fault, owner stop/revocation and fallback clean/fault. Replacement
+  retains settings/layout authority; pending app drafts survive repeated crashes
+  and explicit retries. The source disk remains unchanged.
+- Management recovery passes in `management/20261026T044310096528Z`, including
+  hung-app termination, stale/ungranted/revoked authority, replacement and cold
+  persistence; its source disk remains unchanged.
+- All five root startup cases pass in `startup/20261026T044421327714Z`, including
+  picker fault after shared setup, bounded retry and preserved disk contents.
+- Unmodified F5 and cold persistence pass in `desktop/20261026T044500943125Z`,
+  with exact verification of all 1,633 host records.
+- Host tests, Rust-probe/all-feature chooser Clippy, layout/format and whitespace
+  checks pass. No kernel/runtime change; ARM64 was not rerun.
+
+**Next:** migrate explicitly combined/copied fixtures and the pre-driver source
+injection before retiring copied application payloads. Source stall tests currently
+inject through an untouched pair before handing it to the driver; upgrading that
+pair and passing only bare endpoints would discard retained protocol ownership.
+
+
 Implementation update 2026-10-25: **Rust Notes probes retain shared data connections**, over `4e3b8190`.
 
 The disposable Rust Notes session establishes owner control first, then retains
@@ -379,7 +421,7 @@ Verification (`build/omega-component/notes-shared-*.log`):
 - Host tests, Notes (Rust probe/producer/all-feature), matrix and channel-lab Clippy,
   layout and format checks pass. No new owner decision or latency guarantee is claimed.
 
-**Next:** migrate Rust chooser probe data, then the combined-stream fixtures and
+**Previous next (chooser completed above):** migrate Rust chooser probe data, then the combined-stream fixtures and
 pre-driver source-probe handoff before retiring copied transport. The source pair
 cannot be upgraded and handed off as bare endpoints. Authorized broker lookup
 remains a separate outcome; these changes preserve the supplied relationship.
