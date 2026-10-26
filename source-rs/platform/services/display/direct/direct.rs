@@ -2,7 +2,11 @@
 use crate::surface;
 use cathedral_kernel_contracts::user as abi;
 use cathedral_platform_contracts::display as wire;
-use cathedral_user_runtime::{Error, server::Server};
+use cathedral_user_runtime::{
+    Error,
+    link::Link,
+    server::{Server, SharedSlot},
+};
 pub fn run(_fault_after: u64, _generation: u64) -> u64 {
     #[cfg(feature = "recovery-lab")]
     recovery::startup(_fault_after, _generation);
@@ -12,6 +16,18 @@ pub fn run(_fault_after: u64, _generation: u64) -> u64 {
     }
     let mut surface = surface::Surface::open();
     let mut server = Server::open().unwrap();
+    static mut SHARED: [SharedSlot; 2] = [const { SharedSlot::empty() }; 2];
+    let slots = (&raw mut SHARED).cast::<SharedSlot>();
+    // SAFETY: This process enters once; the server exclusively owns both slots.
+    server
+        .enable_shared_control(unsafe { &mut *slots })
+        .unwrap();
+    if Link::at(0).is_ok() {
+        // SAFETY: Distinct slot in the same process-lifetime storage.
+        server
+            .enable_shared(0, unsafe { &mut *slots.add(1) })
+            .unwrap();
+    }
     #[cfg(feature = "lab")]
     let mut requests = 0;
     loop {
@@ -22,11 +38,7 @@ pub fn run(_fault_after: u64, _generation: u64) -> u64 {
         };
         #[cfg(feature = "recovery-lab")]
         if request.control {
-            recovery::request(
-                &request.bytes[..request.len],
-                cathedral_user_runtime::ipc::Handle::bootstrap(0).unwrap(),
-                cathedral_user_runtime::ipc::Handle::bootstrap(1).unwrap(),
-            );
+            recovery::request(&mut server, &request);
         }
         #[cfg(feature = "lab")]
         {

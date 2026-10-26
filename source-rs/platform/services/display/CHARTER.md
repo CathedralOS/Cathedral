@@ -2,7 +2,7 @@
 
 Owns bounded software drawing into one boot-granted linear GOP framebuffer.
 In direct mode, the separately compiled userspace service exposes dimensions,
-clear, rectangle and printable ASCII text requests over copied IPC. Text uses
+clear, rectangle and printable ASCII text requests over shared-memory IPC. Text uses
 the platform's original bitmap font; every packet and its entire geometry are checked before
 any device write. It accepts no physical addresses.
 
@@ -20,14 +20,17 @@ A private control connection serves the designated supervisor; a boot-approved
 client link serves the application. The provider multiplexes both with bounded
 readiness waits and accepts a fresh data connection after app replacement.
 Client loss leaves the provider and its control connection alive. Linked service
-composition requires an explicit clock grant. The legacy single-peer smoke
-fixture requires none.
+composition and the single-peer smoke fixture require explicit clock grants and
+funded mailbox writer/reader pages plus notifications. The fixture's supervisor,
+drawing client and independent observer also retain shared coordination streams;
+see its [proof guide](../../../distribution/lab/display/README.md).
 
 Distribution clients choose colors, layout and restart policy. Whole-screen
 drawing in direct mode remains a lab capability, without a trusted prompt path,
 capture API or stable surface contract. `lab` adds boot-controlled smoke faults
-and mapping probes; `recovery-lab` adds faults only on the private control channel. Neither is
-included in ordinary builds, and client messages cannot trigger those handlers.
+and mapping probes; `recovery-lab` adds boot-selected startup failures and private
+control-channel failure injection. Neither is included in ordinary builds, and
+non-control client messages cannot trigger those handlers.
 
 ## Entrances and ownership
 
@@ -52,18 +55,20 @@ experimental protocol, not the complete compositor design.
 
 ## Root matrix connection
 
-When supplied an explicit control pair in its environment, the compositor permits
-that owner to upgrade to the [shared service connection](../../libraries/user-runtime/connection/README.md).
-Boot dimensions/labels are exchanged before the root receives those endpoints.
-The [root adapter](../../../distribution/matrix/service/parent/display.rs) then
-upgrades once; steady-state commands use shared frames and notifications, and
+Normal boot supplies separate presentation-owner and bootstrap connections.
+The bootstrap stream configures dimensions/labels and the restart screen without
+scene publication or input-injection authority. The
+[root adapter](../../../distribution/matrix/service/parent/display.rs) establishes
+its own [shared service connection](../../libraries/user-runtime/connection/README.md)
+once; steady-state commands use shared frames and notifications, and
 images use correlated typed immutable grants. The control bit comes from the
 installed connection, never a caller-supplied frame field. Pixel validation,
 clipping, retained-image lifetime and presentation commit remain with the display
 provider. Losing the owner retires this connection and ends the provider normally.
 
 Presentation and selection scene updates yield through the matrix's event loop.
-The provider has one additional private page, reader page and notification allowance;
-small root profiles reserve matching client capacity. Direct-mode smoke and older
-composition fixtures retain their existing protocol; nested matrix hops are a
-separate migration. This does not imply faster software rasterization or GPU support.
+Each shared stream consumes an explicit private page, reader page and notification
+allowance; root profiles reserve matching client capacity. Direct-mode smoke and
+ordinary nested matrix hops use shared transport too. Older positional compositor
+fixtures still need migration. This does not imply faster software rasterization
+or GPU support.

@@ -336,6 +336,57 @@ default/hidden cursor evidence remains valid for its scope, not the full asset A
 
 ## Current implementation evidence
 
+Implementation update 2026-10-26: **direct display and its coordination use shared IPC**, over `6cfa53a0`.
+
+The immediate display provider selects shared owner control and any supplied
+client link. The distribution display fixture retains one shared provider client
+per incarnation plus separate supervisor/client and supervisor/observer streams.
+Observer completion is an explicit request/reply; display mapping probes use a
+funded shared owner/peer completion stream too. Only intentional stale raw-handle
+send/receive probes remain in this lab. The drawing library now accepts the
+existing retained connection; unused copied drawing-session helpers are removed.
+Follow the [display proof guide](source-rs/distribution/lab/display/README.md) across
+the executable boundaries.
+
+The first provider still faults on its ninth application request, after malformed
+packet/geometry refusals and pattern requests. Setup traffic does not count as an
+application request. Its replacement answers INFO and remains connected until
+supervisor cancellation; the client then checks shared peer closure. Both rounds
+retain the original 200-tick completion deadline and independent observer progress.
+The old aggregate wait-timeout/copied-send assertions no longer describe this
+transport: shared clients have maintenance waits while retaining their exact call.
+Actual child outcomes, deadline checks, old-name denial and both progress replies
+remain directly asserted. No provider deadline was relaxed.
+
+The smoke graph explicitly funds two mailbox writer/reader/notification units at
+the supervisor and client, and one at the observer/provider. Mapping probes fund
+their completion stream independently of the tested device grant. Final owner
+retirement checks zero private/reader/channel charges and notification resources.
+The final-reply sender deliberately yields before dropping its reader, and the
+supervisor bounds its wait for actual reclamation rather than assuming immediate
+refund on reply receipt. This preserves accepted-reader lifetime.
+The host still checks exact heap/frame reclamation, spawn/reap/cancel counts,
+ungranted mapping faults, NX/guards and every device-admission frame boundary.
+The runner requires shared setup, both provider incarnations and retirement markers.
+
+Verification is in `build/omega-component/display-shared-*.log`: host tests,
+display lab Clippy, all-feature provider Clippy, smoke Clippy and release smoke
+pass. Release and dev smoke pass the final-reply/reader-release boundary and
+exercise 65 and 98 display admission boundaries respectively. Normal F5/cold persistence passes in
+`desktop/20261026T165021924598Z`, including exact verification of 1,631 host records.
+The direct `recovery-lab`
+hooks now reply through the selected server transport and are compile-checked;
+this smoke composition selects `lab`, not those optional hooks. No ARM64 runtime
+change is claimed; this fixture is x86-only.
+
+**Next:** migrate the supervision fixtures and positional compositor clients,
+including their actual pressure/backpressure and lifetime tests. The latter still
+use copied owner, input-WAIT and presentation traffic; do not confuse them with
+the already-shared normal F5/root/nested-matrix route. Then audit positional
+runtime wake/upstream adapters before retiring copied payload support. Keep typed
+grant setup and deliberate invalid-authority probes distinct from application work.
+
+
 Implementation update 2026-10-26: **direct object-store proofs use retained shared connections**, over `c3d2fce6`.
 
 Both `distribution/lab/objects` clients now retain shared-memory connections to
@@ -395,7 +446,7 @@ Verification (`build/omega-component/objects-shared-*.log`):
   `desktop/20261026T163518576499Z`, with exact verification of 1,631 host records.
   Ordinary release service behavior and storage representation are unchanged.
 
-**Next:** migrate the direct display/supervision application consumers, preserving
+**Previous next (direct display completed above):** migrate the direct display/supervision application consumers, preserving
 fault/restart, stale-handle and peer-closure evidence. Their bootstrap coordination
 still sends copied payloads; the restart fixture also deliberately probes stale
 raw handles, so distinguish those probes from normal service traffic. Audit the

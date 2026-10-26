@@ -51,15 +51,19 @@ fn run(
                 dynamic_tasks: 0,
                 links: &[],
                 frame_limit: usize::MAX,
-                endpoints: &[EndpointSpec {
-                    sender: 0,
-                    receiver: 1,
+                endpoints: &[(0, 1), (1, 0)].map(|(sender, receiver)| EndpointSpec {
+                    sender,
+                    receiver,
                     revoker: None,
-                }],
-                memory: &[],
-                channel_limits: &[],
+                }),
+                memory: &[0, 1].map(|task| cathedral_kernel_contracts::memory::Grant {
+                    task,
+                    private_pages: 1,
+                    shared_pages: 1,
+                }),
+                channel_limits: &[1, 1, 0],
                 cpu_limits: &[],
-                clock_readers: &[],
+                clock_readers: &[0, 1],
                 supervision: &[Supervision {
                     disk: false,
                     device: None,

@@ -4,7 +4,9 @@ use cathedral_kernel_contracts::user as abi;
 use cathedral_user_runtime::time;
 use cathedral_user_runtime::{
     Error,
+    connection::Client,
     ipc::Handle,
+    server::{Server, SharedSlot},
     task::{Launch, Outcome},
 };
 pub fn owner() -> u64 {
@@ -33,7 +35,7 @@ pub fn owner() -> u64 {
             _ => panic!("unexpected framebuffer probe outcome"),
         }
     }
-    Handle::bootstrap(0).unwrap().send(b"done").unwrap();
+    done();
     0
 }
 pub fn failed_admission() -> u64 {
@@ -41,33 +43,53 @@ pub fn failed_admission() -> u64 {
     for _ in 0..2 {
         assert_eq!(launch.spawn(0).unwrap_err(), Error(abi::NO_MEMORY as i64));
     }
-    Handle::bootstrap(0).unwrap().send(b"done").unwrap();
+    done();
     0
 }
 pub fn peer() -> u64 {
-    assert_eq!(
-        Handle::bootstrap(0).unwrap().receive(&mut [0; 64]).unwrap(),
-        4
-    );
+    static mut CONTROL: SharedSlot = SharedSlot::empty();
+    let slot = &raw mut CONTROL;
+    let mut server = Server::open_clients(0).unwrap();
+    // SAFETY: One entry in this process, exclusively borrowed by the server.
+    server.enable_shared_control(unsafe { &mut *slot }).unwrap();
+    let request = server.next_request().unwrap();
+    assert_eq!(&request.bytes[..request.len], b"done");
+    server.reply(&request, b"done").unwrap();
     0
 }
 
+fn done() {
+    let mut peer = Client::connect(
+        (Handle::bootstrap(0).unwrap(), Handle::bootstrap(1).unwrap()),
+        time::after(300).unwrap(),
+    )
+    .unwrap();
+    let (reply, len) = peer.call_retained(b"done").unwrap();
+    assert_eq!(&reply[..len], b"done");
+    peer.retire();
+}
+
 pub fn observer() -> u64 {
-    let command = Handle::bootstrap(0).unwrap();
-    let report = Handle::bootstrap(1).unwrap();
+    static mut CONTROL: SharedSlot = SharedSlot::empty();
+    let slot = &raw mut CONTROL;
+    let mut server = Server::open_clients(0).unwrap();
+    // SAFETY: One entry in this process, exclusively borrowed by the server.
+    server.enable_shared_control(unsafe { &mut *slot }).unwrap();
     for _ in 0..2 {
-        let mut bytes = [0; 64];
-        assert_eq!(command.receive(&mut bytes).unwrap(), 8);
-        let deadline = u64::from_le_bytes(bytes[..8].try_into().unwrap());
+        let request = server.next_request().unwrap();
+        assert_eq!(request.len, 8);
+        let deadline = u64::from_le_bytes(request.bytes[..8].try_into().unwrap());
         let start = time::now().unwrap();
         assert!(!time::reached(start, deadline));
-        report.send(&start.to_le_bytes()).unwrap();
+        server.reply(&request, &start.to_le_bytes()).unwrap();
         let mut samples = 0u64;
         while !time::reached(time::now().unwrap(), deadline) {
             samples += 1;
         }
         assert!(samples > 1);
-        report.send(&samples.to_le_bytes()).unwrap();
+        let request = server.next_request().unwrap();
+        assert_eq!(&request.bytes[..request.len], b"finish");
+        server.reply(&request, &samples.to_le_bytes()).unwrap();
     }
     0
 }

@@ -56,10 +56,18 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
                 links: &[],
                 frame_limit: usize::MAX,
                 endpoints: &endpoints,
-                memory: &[],
-                channel_limits: &[],
+                // Two coordination streams at the supervisor, one upstream
+                // plus one provider stream at its client, and one at each peer.
+                memory: &[(0, 2), (1, 2), (2, 1), (4, 1)].map(|(task, pages)| {
+                    cathedral_kernel_contracts::memory::Grant {
+                        task,
+                        private_pages: pages,
+                        shared_pages: pages,
+                    }
+                }),
+                channel_limits: &[2, 2, 1, 0, 1],
                 cpu_limits: &[],
-                clock_readers: &[0, 2],
+                clock_readers: &[0, 1, 2, 4],
                 supervision: &[Supervision {
                     disk: false,
                     device: None,
@@ -89,8 +97,10 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
         (reports[0].spawned, reports[0].reaped, reports[0].cancelled),
         (2, 2, 1)
     );
-    assert_eq!(reports[0].wait_timeouts, 0);
-    assert_eq!(reports[2].ipc_sent, 4);
+    // Shared transport uses maintenance waits while retaining the exact call,
+    // so its aggregate wait_timeouts/ipc_sent counters no longer measure the
+    // old payload exchange. Guest assertions still require provider completion
+    // before the same deadline, both observer replies and transport reclamation.
     assert_eq!(reports[4].exit, Some(Exit::Cancelled));
     drop(reports);
     assert_eq!(memory.frames.allocated(), frames);
