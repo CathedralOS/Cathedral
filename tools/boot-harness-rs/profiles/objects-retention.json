@@ -9,7 +9,11 @@
       "target": "x86_64-unknown-none",
       "features": [
         "retention"
-      ]
+      ],
+      "clock": true,
+      "private_pages": 1,
+      "shared_pages": 1,
+      "ipc_channels": 1
     },
     "launches": [
       {
@@ -18,30 +22,35 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "disk": true,
-        "private_pages": 64,
-        "shared_pages": 4
+        "private_pages": 83,
+        "shared_pages": 7,
+        "ipc_channels": 3
       },
       {
         "package": "cathedral-objects-lab",
         "entry": "distribution/lab/objects/main.rs",
         "target": "x86_64-unknown-none",
-        "private_pages": 4,
+        "private_pages": 5,
         "argument": 1,
         "features": [
           "retention"
         ],
-        "shared_pages": 4
+        "shared_pages": 5,
+        "clock": true,
+        "ipc_channels": 1
       },
       {
         "package": "cathedral-objects-lab",
         "entry": "distribution/lab/objects/main.rs",
         "target": "x86_64-unknown-none",
-        "private_pages": 4,
+        "private_pages": 5,
         "argument": 1,
         "features": [
           "retention"
         ],
-        "shared_pages": 4
+        "shared_pages": 5,
+        "clock": true,
+        "ipc_channels": 1
       }
     ],
     "links": [

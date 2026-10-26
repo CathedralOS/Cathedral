@@ -50,8 +50,11 @@ def run(args):
                           marker, abrupt=True)
         serial = (output / 'serial.log').read_text(encoding='utf-8', errors='replace').replace('Cathedral Rust lab: ', '')
         assert serial.count('Cathedral objects: ' + ('retention and bulk checks passed' if args.retention else 'client content and refusal checks passed')) == 2
+        assert serial.count('Cathedral objects: shared root connection ready') == 2, serial
+        assert serial.count('Cathedral objects: shared owner control ready') == 1, serial
         if boot == len(stages):
             assert 'Cathedral objects heap: closed live=0' in serial
+            assert serial.count('Cathedral objects: shared owner resources reclaimed') == 1, serial
         metrics = [line for line in serial.splitlines() if line.startswith('Cathedral objects heap:')]
         assert any(': recovered ' in line for line in metrics)
         if boot < 3: assert any(': prepared ' in line for line in metrics)

@@ -71,6 +71,10 @@ replacement; only the final reference releases it. No funding transfer is implie
 
 The lab preallocates a bounded object arena, ninety-six notification-grant slots per
 task, and one wait record per task. Wait registrations do not allocate in a trap.
+Wait records are fallibly heap-allocated at session startup, including dormant
+task slots. Keeping that array inline inflated the nested IPC/session constructor
+frames enough to exhaust the guarded debug boot stack. Allocation failure follows
+the existing startup rollback path; stack sizes and guards are unchanged.
 The notification budget syscall reports the shared object limit, notification
 charges and separate notification-handle usage, including escrow. The existing
 IPC budget's object usage now includes notifications; its handle fields still

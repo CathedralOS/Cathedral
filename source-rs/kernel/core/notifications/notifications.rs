@@ -37,7 +37,10 @@ pub struct Notifications {
     objects: Vec<Option<Object>>,
     grants: Vec<Option<Grant>>,
     names: crate::names::Names,
-    waits: [Option<Wait>; abi::MAX_TASKS],
+    // Reserve all task slots during startup. Keeping the array inline copied it
+    // through nested IPC/session constructors and exhausted the debug boot stack.
+    // Registration and completion never allocate or resize this arena.
+    waits: Vec<Option<Wait>>,
     charges: [usize; abi::MAX_TASKS],
     changed: u32,
 }
@@ -54,11 +57,14 @@ impl Notifications {
             .try_reserve_exact(tasks * abi::NOTIFY_HANDLES)
             .map_err(|_| abi::NO_MEMORY)?;
         grants.resize(tasks * abi::NOTIFY_HANDLES, None);
+        let mut waits = Vec::new();
+        waits.try_reserve_exact(tasks).map_err(|_| abi::NO_MEMORY)?;
+        waits.resize(tasks, None);
         Ok(Self {
             objects,
             grants,
             names: Default::default(),
-            waits: [None; abi::MAX_TASKS],
+            waits,
             charges: [0; abi::MAX_TASKS],
             changed: 0,
         })

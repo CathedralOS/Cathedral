@@ -13,7 +13,7 @@ def run(command, output, timeout, creationflags, marker, *, abrupt=False):
             deadline = time.monotonic() + timeout
             while time.monotonic() < deadline:
                 text = serial.read_text(encoding="utf-8", errors="replace")
-                if any(failure in text for failure in ("PANIC", "user panic:", "initial program stopped", "initial program admission failed")):
+                if any(failure in text for failure in ("PANIC", "CATHEDRAL_RS_FAULT", "user panic:", "initial program stopped", "initial program admission failed")):
                     raise RuntimeError(f"Protocol guest failed: {text}")
                 if marker in text:
                     print(f"PASS: {marker}; logs: {output}")

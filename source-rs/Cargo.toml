@@ -107,7 +107,7 @@ opt-level = "s"
 # Selected engine/fixture packages disable debug_assert! below; explicit assert!
 # checks remain enabled. Strip executable DWARF for the ELF file cap.
 [profile.dev.package.redb]
-opt-level = "s"
+opt-level = "z"
 codegen-units = 1
 debug-assertions = false
 
@@ -145,7 +145,7 @@ opt-level = "s"
 strip = "debuginfo"
 
 [profile.dev.package.cathedral-database-objects]
-opt-level = "s"
+opt-level = "z"
 codegen-units = 1
 debug-assertions = false
 
@@ -165,6 +165,21 @@ opt-level = "s"
 # Keep the database provider inside the existing user-image admission bound.
 # Runtime assertions remain enabled; optimize code size without raising limits.
 [profile.dev.package.cathedral-user-runtime]
+opt-level = "s"
+codegen-units = 1
+
+# These are linked into the same bounded provider; keep their checks while
+# avoiding unoptimized wire decoding and allocator machinery in the dev ELF.
+[profile.dev.package.cathedral-platform-contracts]
+opt-level = "s"
+
+[profile.dev.package.cathedral-kernel-contracts]
+opt-level = "s"
+
+[profile.dev.package.cathedral-user-heap]
+opt-level = "s"
+
+[profile.dev.package.linked_list_allocator]
 opt-level = "s"
 
 

@@ -336,6 +336,73 @@ default/hidden cursor evidence remains valid for its scope, not the full asset A
 
 ## Current implementation evidence
 
+Implementation update 2026-10-26: **direct object-store proofs use retained shared connections**, over `c3d2fce6`.
+
+Both `distribution/lab/objects` clients now retain shared-memory connections to
+their separately scoped provider roots. Inline reads, malformed scope fields and
+immutable publication/bulk attachments use the same connection owner. The
+supervisor retains shared HEALTH/CLOSE control for the provider's entire lifetime;
+there are no raw application-payload send/receive calls left in this lab. Typed
+setup and attachment transfers remain kernel-mediated capability operations.
+
+The two profiles explicitly fund mailbox writers/readers and notifications. Four
+retention data-reader pages remain available beside the mailbox: two retained
+bulk replies charge five readers, a third is refused with NO_MEMORY, and dropping
+the two replies leaves exactly one. Final provider collection/control retirement
+must leave the supervisor with zero writer/reader/channel charges and zero
+notification objects/rights. The host requires shared-root and shared-control
+markers on every boot, alongside the original persistence/refusal checks.
+
+Verification also exposed older dev/startup problems, now repaired:
+
+- The provider's image/tables already charge 300 frames. The initial 67-page
+  private grant derived 355 physical frames, leaving only 55 for a 56-page heap.
+  Both fixture grants are now 83 pages: the original heap/output capacity, three
+  mailbox writers and 16 pages of extra startup funding. No kernel limit changed.
+- The dev provider had grown to 262 load pages against the 240-page cap. Dev-only
+  size optimization of the engine/content packages, contracts and allocator,
+  plus one runtime codegen unit, restores 238 pages. Runtime assertions remain
+  enabled; existing engine/provider assertion settings and release settings are
+  unchanged.
+- An inline notification wait array inflated nested IPC/session constructors
+  until the dev boot stack faulted. The wait arena is now fallibly preallocated
+  on the heap for all configured slots, including dormant children. Notification
+  operations never grow it. Measured x86 dev frames for grant composition,
+  preparation and IPC construction fell from 33,752/14,568/17,192 bytes to
+  23,496/8,712/8,408. This is local evidence, not a global stack-use bound.
+  The existing stack capacities/guards and startup failure rollback remain.
+- The mapping rollback smoke fixture used `page as u8 + 1` after its coverage
+  grew to 256 pages. Dev overflow checks correctly rejected page 255; the fixture
+  now explicitly wraps its byte pattern on both write and verification. Mapping
+  checks still cover every page and every alias slot, including guards.
+
+The protocol harness now fails immediately on `CATHEDRAL_RS_FAULT`; a halted fake
+guest regression verifies it reports the fault instead of waiting for a timeout.
+Verification (`build/omega-component/objects-shared-*.log`):
+
+- Host tests, base/retention lab Clippy, x86/ARM64 smoke Clippy, layout, format,
+  whitespace and the harness fault regression pass.
+- Publication/refusal/recovery passes two cold boots in release and dev; durable
+  pins/collection/bulk reader pressure passes three in each. Exact host records
+  are 24/32 for publication and 34/24/24 for retention. All runs preserve neighbor
+  guards, report no heap allocation failures and reclaim final owner transport.
+  The [lab guide](source-rs/distribution/lab/objects/README.md) records artifact IDs.
+- Full x86 dev smoke passes, including 102 startup heap refusals with exact
+  reclamation, every page-allocation boundary and the repaired mapping fixture.
+  Full ARM64 dev portability passes, including 134 admission rollback boundaries.
+- Full release IPC passes, including shared transport races, recursive admission
+  and reclamation. Normal F5 and cold persistence pass in
+  `desktop/20261026T163518576499Z`, with exact verification of 1,631 host records.
+  Ordinary release service behavior and storage representation are unchanged.
+
+**Next:** migrate the direct display/supervision application consumers, preserving
+fault/restart, stale-handle and peer-closure evidence. Their bootstrap coordination
+still sends copied payloads; the restart fixture also deliberately probes stale
+raw handles, so distinguish those probes from normal service traffic. Audit the
+runtime's positional wake/upstream adapters before removing copied payload ABI
+support. Launch-established Matrix connectors remain a separate open outcome.
+
+
 Implementation update 2026-10-26: **stock matrices and headless leaves have shared data/control only**, over `339f086c`.
 
 Headless roots now offer the same brokered, separate interaction/storage shape as
@@ -387,7 +454,7 @@ Verification (`build/omega-component/fixture-shared-*.log`):
   ceiling changes; the runtime setup helper extraction uses the existing protocol.
 
 
-**Next:** audit direct mechanism consumers before retiring copied application
+**Previous next (object-store subset completed above):** audit direct mechanism consumers before retiring copied application
 payloads from the runtime/ABI. Start with `distribution/lab/display`, `objects`,
 `supervision`, and positional wake/upstream adapters in `user-runtime`; distinguish
 actual payload consumers from typed setup/grant transfers and intentional hostile

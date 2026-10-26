@@ -2,30 +2,46 @@
 //! Deliberately no database/driver dependency. Distinct fixture bytes expose any
 //! accidental root alias; revision checks prevent mixing concurrent range reads.
 use cathedral_platform_contracts::storage as wire;
-use cathedral_user_runtime::{ipc::Handle, memory::Object};
+use cathedral_user_runtime::{connection::Client as Transport, link::Link, memory::Object, time};
 #[cfg(not(feature = "retention"))]
-use cathedral_user_runtime::{link::Link, memory::Private, write};
-pub(super) struct Client {
-    pub(super) send: Handle,
-    pub(super) receive: Handle,
-}
+use cathedral_user_runtime::{memory::Private, write};
+pub(super) struct Client(Transport);
 pub(super) fn packet(op: u64, object: u64, expected: u64, offset: u64, len: u64) -> wire::Request {
     wire::Request::new(op, object, expected, offset, len)
 }
 impl Client {
-    pub(super) fn call(&self, request: wire::Request, object: Option<&Object>) -> [u8; 64] {
-        let bytes = request.encode();
-        if let Some(object) = object {
-            self.send.send_memory(&bytes, object).unwrap();
-        } else {
-            self.send.send(&bytes).unwrap();
-        }
-        let mut reply = [0; 64];
-        assert_eq!(self.receive.receive(&mut reply).unwrap(), 64);
+    pub(super) fn open() -> Self {
+        assert!(Link::at(1).is_err(), "client sees an ungranted connection");
+        let client = Self(
+            Transport::connect(
+                Link::at(0).unwrap().connect().unwrap(),
+                time::after(300).unwrap(),
+            )
+            .unwrap(),
+        );
+        cathedral_user_runtime::write(b"Cathedral objects: shared root connection ready\n")
+            .unwrap();
+        client
+    }
+    pub(super) fn exchange(
+        &mut self,
+        request: wire::Request,
+        object: Option<&Object>,
+    ) -> ([u8; 64], Option<Object>) {
+        let (reply, n, object) = self
+            .0
+            .call_retained_memory(&request.encode(), object)
+            .unwrap();
+        assert_eq!(n, 64);
+        (reply, object)
+    }
+    pub(super) fn call(&mut self, request: wire::Request, object: Option<&Object>) -> [u8; 64] {
+        let (reply, object) = self.exchange(request, object);
+        assert!(object.is_none(), "unexpected attachment on inline response");
         reply
     }
     #[cfg(not(feature = "retention"))]
-    fn verify(&self, revision: u64, root: u64) {
+    fn verify(&mut self, revision: u64, root: u64) {
         for offset in (0..8192).step_by(wire::READ_BYTES) {
             let len = wire::READ_BYTES.min(8192 - offset);
             let reply = self.call(
@@ -55,9 +71,7 @@ fn fixture(root: u64, revision: u64, index: usize) -> u8 {
 #[cfg(not(feature = "retention"))]
 pub fn run(root: u64) -> u64 {
     use cathedral_kernel_contracts::user as abi;
-    assert!(Link::at(1).is_err(), "client sees an ungranted connection");
-    let (send, receive) = Link::at(0).unwrap().connect().unwrap();
-    let client = Client { send, receive };
+    let mut client = Client::open();
     let listing = wire::unpack(&client.call(packet(wire::LIST, 0, 0, 0, 0), None)).unwrap();
     assert_eq!(listing[0], 0);
     assert_eq!(

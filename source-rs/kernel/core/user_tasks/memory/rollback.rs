@@ -184,12 +184,13 @@ unsafe fn mapping_boundaries(session: &mut Session, handle: u64) {
     let backing = session.memory.backing[index].clone();
     let mapping = session.memory.model.mapping(0, index);
     let space = session.tasks[0].space.as_mut().unwrap();
+    // Page 255 deliberately wraps the byte pattern to zero, in debug too.
     for page in 0..wire::MAX_PAGES {
         // SAFETY: Full byte range in the prepared owner's writable mapping.
         assert!(unsafe {
             space.copy_to_user(
                 wire::address(mapping) + (page * wire::PAGE_BYTES) as u64,
-                &[page as u8 + 1],
+                &[(page as u8).wrapping_add(1)],
             )
         });
     }
@@ -219,7 +220,7 @@ unsafe fn mapping_boundaries(session: &mut Session, handle: u64) {
             let mut byte = [0];
             // SAFETY: Inactive live reader mapping into the retained allocation.
             assert!(unsafe { space.copy_from_user(address, &mut byte) });
-            assert_eq!(byte, [page as u8 + 1]);
+            assert_eq!(byte, [(page as u8).wrapping_add(1)]);
             assert!(!space.writable_range(address, 1));
         }
         let guard = wire::address(alias) + (wire::MAX_PAGES * wire::PAGE_BYTES) as u64;
@@ -234,7 +235,7 @@ unsafe fn mapping_boundaries(session: &mut Session, handle: u64) {
             let mut byte = [0];
             // SAFETY: The original sealed owner alias must survive compaction intact.
             assert!(unsafe { space.copy_from_user(wire::address(mapping) + offset, &mut byte) });
-            assert_eq!(byte, [page as u8 + 1]);
+            assert_eq!(byte, [(page as u8).wrapping_add(1)]);
             assert!(!space.writable_range(wire::address(mapping) + offset, 1));
         }
         assert!(space.writable_range(super::super::address_space::USER_STACK, 1));
