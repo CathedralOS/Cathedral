@@ -28,7 +28,8 @@ semantic or trust choice blocking a concrete requirement belongs in
   separates retained scene submission, app-funded backing, read leases, resource
   budgets and software/GPU presentation. Commands alongside images, prepared glyph
   drawing and resource-miss feedback are accepted in the specification. Exact
-  protocols, shared-cache guarantees and direct-write admission remain proposed.
+  protocols and shared-cache guarantees remain proposed. Final-target writes stay
+  with the renderer; caller-funded command backing uses explicit read custody.
 - [0001: Input sources and scoped pointer leases](0001_input_and_pointer_leases.md)
   separates source bindings, logical pointers, cursor visuals and action rights.
   Pointer-to-seat association and keyboard-focus authority remain proposed.

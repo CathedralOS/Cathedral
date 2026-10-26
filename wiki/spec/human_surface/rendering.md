@@ -55,6 +55,22 @@ interpretation or a mandatory rendering-resource store. Resource availability,
 destination funding and submission feedback follow the
 [resource contract](rendering_resources.md#unavailable-resources-and-submission-results).
 
+## Final target writers
+
+The owner settled the row-leasing boundary on 2026-10-25: independent apps submit
+commands or their own images, not writable sub-page slices of the final framebuffer.
+The renderer owns final target writes. It may partition work into disjoint rows
+among its own workers; those internal borrows are not a cross-process isolation
+mechanism. Shipping a component with Cathedral does not exempt it from hardware
+isolation or make a Rust slice constrain its arbitrary native stores.
+
+Forwarding image references avoids mandatory copies through ancestors; final
+composition still consumes bandwidth. Command submission permits final-target
+drawing without handing that target to producers. Neither path promises universally
+zero-copy rendering. Any later direct-write optimization needs actual enforceable
+memory boundaries and safe completion/reclamation; it is not part of the ordinary
+app contract or a blocker for it. GPU import and synchronization remain separate work.
+
 ## Owner-managed placement
 
 Each presentation has a placement owner; other participants request changes
@@ -255,6 +271,6 @@ This is leaf-source software evidence: it does not implement app-published masks
 recursive source readiness, arbitrary views, remote capture or GPU synchronization.
 
 The accepted policy does not freeze that lab encoding. Exact drawing vocabulary,
-shared-cache residency/sponsorship, direct-writer admission, exact scene/mask
+shared-cache residency/sponsorship, exact scene/mask
 publication, view APIs and device-failure recovery remain outside this contract.
 Alternatives remain in the [rendering proposal](../../proposals/0000_rendering_and_composition.md).

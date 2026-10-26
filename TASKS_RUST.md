@@ -50,6 +50,37 @@ for that path and its invalid-authority controls. Shared-payload round trips now
 exercise publication and backpressure. Input, display and storage at the root
 provide ordinary service evidence, not a performance result or complete migration.
 
+## On-demand launch-authorized broker access
+
+**Open; owner decision ratified 2026-10-25.** Carry the
+[bootstrap contract](wiki/spec/execution/components_and_matrices.md#scoped-application-bootstrap)
+through launch authorization, a current-process syscall and the ordinary service
+library. Start at `source-rs/platform/contracts/services/README.md`, the import
+resolver, matrix admission and `source-rs/platform/libraries/user-runtime/services/`.
+The current startup endpoint pair and `entry_with_services!` wrapper are evidence
+of the old discovery mechanism, not completion or a compatibility requirement.
+
+- Preserve manifest/owner ceilings before launch; kernel lookup returns only access
+  to the process's authorized broker relationship, never a named service or a
+  connection selected by caller-supplied PID. Absent authority returns unavailable.
+- Repeated and concurrent lookup shares one logical connection with coordinated
+  request IDs/custody. Demonstrate bounded allocations, no new authority, no reply
+  theft and no revival after closure/revocation. Keep per-service acquisition rules
+  distinct from broker lookup; do not reset an established protocol on reacquisition.
+- Migrate ordinary Rust/Omega app bootstrap and subsystem library initialization
+  without mandatory broker arguments to authored main or reserved application
+  payload bytes. Remove the old discovery route as consumers migrate, rather than
+  maintaining parallel startup/syscall paths. Retain explicit privileged boot grants.
+- Exercise the normal desktop's rendering/storage acquisition, required/optional
+  refusals, owner mediation, no-broker launch, connection failure and safe cleanup.
+  Broker closure alone must not revoke independent service grants; actual provider
+  failure and matrix subtree teardown still apply. Lazy provider activation is not
+  implied by deferred acquisition and is not required for this outcome.
+
+Pin focused invalid-authority and race controls plus actual guest observations.
+No lookup syscall or arbitrary service catalog is claimed implemented by this
+documentation change. ABI spelling/handle representation are engineering work.
+
 ## Independent installation and component-owned activation
 
 **Open; owner boundary settled.** Implement the ordinary app update path from
@@ -190,9 +221,19 @@ evidence, not general glyph resources, remote hosting or GPU support.
   submission/resource identities without a global last-error slot. Reacquire and
   resubmit successfully. Reject stale-generation substitutions; slow providers
   cannot indefinitely stall unrelated output.
+- Use caller-funded shared command backing as well as images. Validate stable
+  published batches; reject malformed lengths, unauthorized grants and mutation
+  races. Demonstrate one-shot release/reuse and retained-scene replacement without
+  releasing backing still referenced by CPU/device work. Derived renderer storage
+  remains explicitly funded, not an automatic duplicate or kernel command store.
+- Keep final-target writes in the renderer; independent apps receive no writable
+  sub-page framebuffer slices. Internal row partitioning is not process isolation.
 - Preserve backing through active CPU/device use, producer exit and attempted
   eviction/reuse. Charge actual retained storage and bounded metadata/work until
-  release; do not replace caller-funded backing with a kernel image store.
+  release; do not replace caller-funded backing with a kernel image store. Index
+  submissions by connection incarnation and retire on closure/death notification,
+  not page faults. Cancel only safe queued work; drain or safely stop active work,
+  preserve independent grants/copies, and reject stale connection reuse.
 - Demonstrate a destination host uploading a remote resource into its own funded
   or explicitly sponsored local backing, forwarding commands through the ordinary
   interface and reusing unchanged resources. Remote names grant no local authority;

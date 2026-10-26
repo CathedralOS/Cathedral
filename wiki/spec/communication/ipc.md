@@ -5,7 +5,7 @@
 | Contract status | Current |
 | Specification coverage | Partial |
 | Implementation coverage | Partial |
-| Last reviewed | 2026-10-24 |
+| Last reviewed | 2026-10-25 |
 
 ## Scope and ownership
 
@@ -29,6 +29,28 @@ supply wakeups. Queues, mailboxes, message copying, request/reply and backpressu
 are library protocols, not additional kernel message-delivery transports. The
 kernel still owns authorized grant installation, mapping and scheduling; passing
 rights may require kernel mediation even when payload bytes do not.
+
+## Broker access and connection setup
+
+The [application bootstrap contract](../execution/components_and_matrices.md#scoped-application-bootstrap)
+selects on-demand syscall access to the process's launch-authorized broker.
+Service selection and import policy remain in the userspace broker. The kernel
+installs/enforces endpoint, backing and notification rights, not service names.
+
+An established service connection uses funded shared request/reply backing and
+notification rights. The IPC library owns publication, request correlation,
+backpressure and replies. Signal/wait indicates readiness, not payload validity or
+service completion. The concrete number of regions, setup exchanges and wire fields
+are protocol choices; this does not mandate one writable page shared by all peers.
+
+Passing a resource requires an authorized grant accepted by the receiver. A request
+identifies the receiver's granted resource together with bounded offsets/lengths
+and the agreed representation. Numeric handle bytes or a sender pointer cannot
+install authority. Correlate a payload with its accepted grant before use; partial
+handoffs retain or reclaim custody. Mappings may have different local addresses.
+Established backing can serve repeated publications without remapping each message
+when the checked custody rules below justify it. Hostile writers still require
+enforceable stable access, not a cooperative ready flag.
 
 ## Scoped participation and identity
 

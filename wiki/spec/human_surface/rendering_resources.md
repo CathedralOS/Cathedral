@@ -25,6 +25,28 @@ use and releases it afterward. The renderer need not keep a duplicate permanent
 image store. Sharing a raw pointer into an app heap is not sufficient: backing
 custody must survive every actual reader under the IPC contract.
 
+## Command backing and submission custody
+
+The owner accepted caller-funded shared command backing on 2026-10-25. Producers
+allocate/fill a batch, publish stable read access and submit it through their
+authorized rendering connection. Resource grants and bounded offsets identify the
+agreed representation; raw pointers and handle bytes do not grant access. The
+renderer validates commands and referenced resources before execution. Publication
+must prevent conflicting mutation through all aliases during validation and use,
+following the [IPC custody contract](../communication/ipc.md#checked-protocol-access).
+
+One-shot command backing can be released after consumption only when no outstanding
+CPU/device use still references it. Retained scenes retain funded stable backing
+for as long as they depend on it; replacement retires old backing after its users
+finish. Completion/release permits reuse, not request receipt or notification alone.
+The destination host funds received command backing for remote submissions just
+as it funds uploaded images. The kernel is not a command-buffer store or interpreter.
+
+The renderer may build validated execution records, device commands and caches
+under explicit budgets. Caller-backed submission does not prohibit necessary
+derived storage, nor require automatic duplication of every batch. Submission
+records and resource leases remain bounded even when the payload is caller-funded.
+
 ## Local import and remote transfer
 
 The common resource model admits different mechanisms:
@@ -83,6 +105,19 @@ alone does not promise residency. Results, outstanding requests and resource
 lists require bounded accounting along with backing and render work.
 
 ## Retirement and physical reclamation
+
+The service associates outstanding submissions and dependent resources with their
+connection incarnation, not a reusable PID alone. Observable endpoint closure or
+confirmed peer death triggers retirement: stop accepting work on that connection,
+discard safely cancellable queued work, and finish or safely stop active work
+before releasing its leases and bookkeeping. A page fault is not the client-death
+protocol; acquired backing must stay valid through reader completion. Notification
+and connection lifetime mechanisms wake the service for cleanup.
+
+Closure does not by itself prove process death or revoke independently accepted
+rights/copies. Losing a separate broker alone does not revoke acquired service
+connections. Actual provider/mediator loss or the matrix subtree teardown rule
+can independently end those paths. Cleanup must preserve those distinctions.
 
 Confirmed death of a leaf retires its live resource registrations for new work.
 Queued work that has not acquired backing can be discarded, and future output

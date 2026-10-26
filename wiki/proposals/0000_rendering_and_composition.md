@@ -112,7 +112,8 @@ component specifications listed in the index. This proposal introduces no
 production wire schema.
 
 Owner choices live in [OWNER_QUESTIONS.md](../../OWNER_QUESTIONS.md), particularly
-writable spans and stronger shared-cache/residency guarantees. The
+stronger shared-cache/residency guarantees. The accepted rendering contract now
+keeps row partitioning internal and command backing caller-funded. The
 [evidence page](0000_rendering_and_composition/evidence_and_acceptance.md) links
 each conflict and separates experiments from acceptance requirements.
 

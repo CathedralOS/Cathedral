@@ -29,6 +29,10 @@ producer's existing image without a CPU readback.
 
 ## Software execution
 
+The accepted [final-target writer boundary](../../spec/human_surface/rendering.md#final-target-writers)
+keeps independent producers on commands or their own images. Row partitioning
+below is internal renderer work, not a pending ordinary-app admission choice.
+
 The trusted software renderer can execute resolved commands into a common back
 buffer. It can delegate checked row borrows internally while retaining control
 of target custody. A failed frame can be withheld without modifying the visible
@@ -48,7 +52,9 @@ an offscreen computation test, not a safe lease of visible scanout.
 The accepted [IPC mapping boundary](../../spec/communication/ipc.md#shared-regions-and-capacity)
 permits disjoint whole-page mappings within a larger allocation. The compositor
 could see the full allocation while each writer sees only its authorized pages.
-This is a candidate rendering mechanism, not an accepted surface ABI.
+This remains an optional research mechanism, not an accepted surface ABI or a
+blocker for the ordinary command/image route. It cannot justify writable sub-page
+leases to independent apps.
 
 For example, with 4 KiB pages, a page-aligned linear image of 1,024 four-byte
 pixels per row and no row padding has one page per row. Exclusive whole-row
@@ -59,7 +65,7 @@ layout must also suit the renderer and display provider or require conversion.
 
 Separate page-isolated surfaces can instead be forwarded as authorized references
 with placement and clipping, without materializing an image at every ancestor.
-This remains a candidate: some effects require intermediate targets, and sharing
+This forwarding route is accepted: some effects require intermediate targets, and sharing
 backing avoids transport copies without eliminating final composition work.
 
 Spatial ownership and temporal custody are independent. Double buffering alone

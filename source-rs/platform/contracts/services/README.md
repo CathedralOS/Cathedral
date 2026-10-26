@@ -18,9 +18,13 @@ shared writable mailbox custody have not been implemented here.
 A program declares required and optional imports. Its owner resolves them against
 its own offered authority before launch. A declaration requests authority; it
 cannot confer it. Missing/incompatible required imports refuse launch. Optional
-imports may remain absent. The launch installs one scoped broker connection.
-Application entry receives a service-acquisition interface, not a growing
-positional list of service arguments.
+imports may remain absent. Launch authorizes one scoped broker relationship.
+The accepted [bootstrap contract](../../../../wiki/spec/execution/components_and_matrices.md#scoped-application-bootstrap)
+now requires on-demand syscall access to that connection, without broker arguments
+in main or a reserved prefix in application argument bytes. Repeated access denotes
+the same logical connection; the library coordinates its requests rather than
+allocating another connection. This is a migration requirement, not implemented
+by the startup-endpoint mechanism documented below.
 
 The owner selects the caller's offer from the receiving endpoint and its live
 incarnation. No PID, sibling number, realm, requested scope or claimed manifest
@@ -36,8 +40,9 @@ or provider death. Required compatibility is checked before launch, not an excus
 to omit operation errors.
 
 Bootstrap and individual service protocols have separate versions. Adding a
-service does not require changing the app entry shape. This is the adopted model;
-the Rust transport below is a bounded experimental version, not a frozen ABI or a
+service does not require changing the app entry shape. Service policy stays in
+the broker; the kernel's bootstrap lookup is not a service-name lookup.
+The Rust transport below is a bounded experimental version, not a frozen ABI or a
 claim that every driver and initial boot process already enters this way. Early
 processes that establish brokers still require explicit kernel-supplied grants.
 
@@ -52,11 +57,15 @@ positional records and undeclared fixture images keep their documented startup
 behavior; the retired `CTHIMP04` profile is rejected. Kernel
 admission never interprets either platform record.
 
-The initial environment contains exactly two endpoints: broker request sender,
+The current implementation's initial environment contains two endpoints: broker request sender,
 then reply receiver. Together these are one logical connection. Existing kernel
 owner-control endpoints and profile/launch arguments remain separate mechanisms.
 `entry_with_services!` loads the environment and calls the supplied Rust main with
-`Services`; the compatibility loader also accepts legacy matrix bundles.
+`Services`; the compatibility loader also accepts legacy matrix bundles. These
+describe current evidence, not a second supported discovery route to preserve
+after migration. Replace ordinary startup endpoint discovery and its mandatory
+main wrapper with the accepted lookup path in one coherent implementation change;
+explicit privileged boot grants remain separate.
 
 An acquisition is eight little-endian u64 words:
 

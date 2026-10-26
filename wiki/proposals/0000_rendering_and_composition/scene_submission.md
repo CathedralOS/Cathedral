@@ -40,6 +40,16 @@ Layout, styling, widgets, text editing and input behavior remain outside the
 drawing vocabulary. A copied control message or a shared command batch can carry
 the same description. IPC transport selection does not change drawing authority.
 
+## Command storage
+
+The accepted [command-backing contract](../../spec/human_surface/rendering_resources.md#command-backing-and-submission-custody)
+requires caller-funded shared publication with stable read custody. Local payloads
+are not an unbounded renderer-owned command queue. Retained scenes retain funded
+backing until their dependent uses end; one-shot batches release after consumption
+and any remaining asynchronous use. A remote host provides locally funded backing
+for received commands. Derived renderer execution data remains separately budgeted.
+The candidate revision scheme below must preserve those obligations.
+
 ## Retention and updates
 
 Retained descriptions and retained bitmaps have separate lifetimes. A scene may
@@ -97,7 +107,7 @@ continuous eager copying is not required just to keep the authority available.
 ## Trusted callers and shared targets
 
 Trusted sub-compositors can use the same submission interface as untrusted ones.
-The final renderer can remain the sole writer to its target. A trusted caller
+The accepted ordinary interface keeps final-target writes in the renderer. A caller
 does not need a writable target mapping merely to contribute layout or drawing.
 
 If a selected renderer implementation delegates direct writes internally, its

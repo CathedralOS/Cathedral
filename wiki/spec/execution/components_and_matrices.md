@@ -149,18 +149,45 @@ integration is outstanding. An independent copy remains an explicit storage oper
 
 ## Scoped application bootstrap
 
-The owner-approved model supplies one matrix-scoped service broker at application
-startup. A manifest declares required/optional imports; the launching owner
-resolves the authority ceiling before launch. The application requests its service
-connections through that broker and retains them for ordinary operations. A new
-service need not change main's argument structure. The broker authenticates the
-connection, never an application-supplied identity, and cannot widen its approved
-ceiling. Returned connections preserve the matrix's chosen mediation and revocation.
-Bootstrap and service protocol versions evolve independently.
+On 2026-10-25 the owner selected on-demand access to the launch-authorized broker.
+A manifest declares required/optional imports; the launching owner resolves the
+authority ceiling before launch and authorizes the child's scoped broker
+relationship. The application obtains access through a syscall, normally wrapped
+by a library. An absent relationship reports unavailable; requesting one cannot
+create authority or select another process's broker.
+
+The kernel enforces access to this process's authorized bootstrap connection. It
+does not interpret a rendering/storage service catalog or resolve platform import
+records. The broker is ordinary userspace functionality, possibly within the
+owning matrix. It authenticates the established connection, not a claimed PID or
+manifest supplied in request bytes. Actual service acquisition then uses ordinary
+IPC and returns connections preserving the owner's mediation and authority ceiling.
+
+Repeated broker access denotes the same logical connection, not a fresh connection
+or extra service authority. The library retains and coordinates its use, including
+request correlation. Handle representation and synchronization are engineering;
+concurrent/repeated access must not allocate unbounded connections, reset protocol
+state or revive a closed/revoked connection. Individual service connection creation,
+sharing and transfer remain governed by that service's acquisition contract.
+
+No broker parameter in authored main, reserved prefix in application argument bytes,
+or special startup adapter is required. Do not retain a second broker-discovery
+route through startup arguments as a speculative syscall optimization. Ordinary
+program-specific arguments and explicit authority injection remain possible; this
+decision does not define a universal application argument schema or change Omega's
+general entry adaptation. Bootstrap and service protocol versions evolve independently.
+
+A portable library may acquire its permitted service during subsystem initialization
+and own the resulting connection, without requiring every caller to thread a broker
+argument. Its platform binding performs acquisition; tests/embedding may explicitly
+supply a provider. Neither convenience nor a matching interface grants authority.
+Ordinary operations use the acquired connection without another broker lookup.
+This does not promise automatic provider startup or perpetual availability.
 
 The Rust [bootstrap contract](../../../source-rs/platform/contracts/services/README.md)
-records the first bounded implementation and its compatibility path. Direct
-startup grants remain necessary for the privileged programs establishing brokers;
+records the existing startup-endpoint implementation, which must migrate to this
+on-demand access rule. Its current main wrapper is not the accepted end shape.
+Direct startup grants remain necessary for privileged programs establishing brokers;
 this does not mandate a registry in the kernel or eliminate explicit handles.
 
 ## Privileged startup

@@ -65,44 +65,6 @@ first. This does not block current hardware-separated execution or coordination.
 concrete implementation and validation plan. Do not infer approval of a different
 kernel page-table layout or weaker isolation from the accepted program boundary.
 
-### Writable row spans and component admission
-
-**Requirement and evidence.** Direct rendering into delegated spans of a common
-back buffer could avoid intermediate pixel copies. The
-[rendering investigation](source-rs/distribution/lab/rendering/README.md) compares
-that with flattened references to separate leaf buffers. For its opaque workload,
-flattening already removes copies through ancestors. Checked Rust row borrows
-also remove the final composition copy, but the QEMU probe demonstrates that an
-arbitrary native store can cross an advertised row span within its writable page.
-Crossing the mapped page boundary faults. These are different authority guarantees.
-
-**Contracts checked.** The accepted [isolation contract](wiki/spec/execution/isolation.md)
-requires hardware separation and excludes PCC-based shared-domain admission. The lab's
-[page contract](source-rs/kernel/contracts/memory.rs) defines whole-page private writers
-and sealed readers; it supplies no writable byte-range delegation or production
-surface contract. The row wrapper relies on cooperating safe Rust and is not a
-proof checker or native-code sandbox. No Omega admission guarantee is implemented
-by this experiment.
-
-**Owner choice.** Which admitted writers may share a writable protection domain,
-and what enforces exact spans and eventual completion? Page-isolated native
-writers, verified/sandboxed writers and trusted in-process components need not
-use the same rendering path. A production contract must specify whether failure
-can leave a private partial frame, modify visible scanout, or delay other writers,
-and when a span can safely be reassigned after cancellation.
-
-**Recommendation (unaccepted).** Keep hierarchy metadata separate from pixel
-storage. Continue measuring flattened page-isolated leaves and checked direct
-rows as distinct paths. Require an explicit admission and failure model before
-promising exact sub-page containment or leasing visible scanout to independent
-writers. This does not select owned surfaces; direct leases must respect the accepted
-hardware boundary and cannot rely on the removed PCC-based SAS proposal.
-
-The [rendering proposal](wiki/proposals/0000_rendering_and_composition.md)
-keeps row borrows as a possible renderer implementation detail and evaluates
-bounded scene submission as a separate route. It does not grant direct target
-access to processes merely because Cathedral ships them.
-
 ### Shared render-cache sponsorship and stronger residency guarantees
 
 **Remaining choice; not a blocker for the baseline.** The owner accepted both

@@ -117,12 +117,15 @@ writers to share a writable final buffer. Direct rows remove the remaining
 composition copy for this workload, but arbitrary native code can bypass the Rust
 wrapper. Exact sub-page authority would need an admitted proof, a suitably enforced
 sandbox, or another enforcement mechanism. Mapping a writable page does not grant
-hardware-enforced byte ranges within it. See the
-[owner question](../../../../OWNER_QUESTIONS.md#writable-row-spans-and-component-admission).
+hardware-enforced byte ranges within it. The owner has now settled the ordinary
+[final-target writer boundary](../../../../wiki/spec/human_surface/rendering.md#final-target-writers):
+independent apps submit commands or owned images; row partitioning stays internal
+to the renderer. This experiment is not a pending admission exception.
 
 These are offscreen back buffers. Scanout/presentation, tearing, alpha blending,
 overlapping windows, scaling, GPU work, partial damage, parallel writers and
 deadline recovery are unmeasured. In particular, failing to publish a private
 back buffer says nothing about safely aborting a writer already modifying visible
-scanout. The next architecture decision needs both an admission/fault model and
-representative compositor workloads; the current result does not freeze either.
+scanout. Any later direct-write optimization needs enforceable boundaries,
+completion/reclamation rules and representative workloads. It does not block the
+accepted command/image interface; this lab does not establish its performance.

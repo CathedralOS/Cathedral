@@ -3,7 +3,10 @@
 Start at [imports.rs](imports.rs): resolve a program's requirements against the
 services its owner offers. [image.rs](image.rs) locates the declaration in sealed
 ELF bytes. This platform contract imports no implementation and adds no kernel
-service names, lookup syscall or PID-based authorization.
+service names, service-name lookup syscall or PID-based authorization. The accepted
+[bootstrap lookup](../../../../wiki/spec/execution/components_and_matrices.md#scoped-application-bootstrap)
+retrieves only the caller's launch-authorized broker connection; it does not parse
+these platform records. Current startup-endpoint plumbing below must migrate.
 
 The declaration is a request ceiling, not a grant. Each import names a contract,
 an inclusive compatible wire-version interval, and required/optional status.
