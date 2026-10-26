@@ -5,21 +5,22 @@
 use cathedral_desktop_matrix_contracts::matrix as wire;
 use cathedral_kernel_contracts::user as abi;
 use cathedral_platform_contracts::input;
+use cathedral_user_runtime::task::Environment;
 use cathedral_user_runtime::{
     Error,
-    ipc::Handle,
+    connection::Client,
     server::{OwnerControl, SharedSlot},
+    services::Services,
+    storage::Scope,
     task::Launch,
     time,
 };
-pub type Pair = (Handle, Handle);
-use cathedral_user_runtime::task::Environment;
 pub const LEFT: u64 = 0x315ca8;
 pub const RIGHT: u64 = 0x2c8762;
 /// What an owner command may act on: the scene, the state and the paint record.
 pub struct Probe<'a> {
     pub style: u64,
-    pub parent: Pair,
+    pub parent: &'a mut Services,
     pub control: &'a mut OwnerControl,
     pub view: wire::Packet,
     pub scene: &'a mut Option<surfaces::Scene>,
@@ -69,36 +70,38 @@ pub fn run_services<const PROBES: bool>(
         cathedral_user_runtime::keyboard::virtual_pointer(10, 0),
         Err(Error(abi::DENIED as i64))
     );
+    services.enable_shared().unwrap();
     let interaction = services.interaction(1, 1).unwrap();
-    let storage = services.storage(1, 1).unwrap();
-    let connections = cathedral_user_runtime::matrix::Connections {
-        interaction: interaction.pair,
-        wake: interaction.wake,
-        storage,
-    };
+    let mut storage =
+        Client::connect(services.storage(1, 1).unwrap(), time::after(300).unwrap()).unwrap();
+    let wake = interaction.wake;
+    cathedral_user_runtime::write(
+        b"Cathedral Colors probe: shared interaction and storage ready\n",
+    )
+    .unwrap();
     assert!(Launch::at(0).is_err());
     assert!(cathedral_user_runtime::link::Link::at(0).is_err());
     assert!(cathedral_user_runtime::display::mapping().is_err());
-    let parent = connections.interaction;
+    let parent = &mut services;
     assert_eq!(
         call(parent, [wire::APPLY_LAYOUT, 0, 24, 192, 16, 0, 0, 0])[0],
         abi::DENIED
     );
-    let storage = connections.storage;
     assert_eq!(
         call(parent, [wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0])[0],
         abi::DENIED
     );
-    assert_eq!(
-        call(storage, [wire::VIEW, 0, 0, 0, 0, 0, 0, 0])[0],
-        abi::DENIED
-    );
-    assert_eq!(
-        call(storage, [wire::POINTER_SOURCE, 0, 0, 0, 0, 0, 0, 0])[0],
-        abi::DENIED
-    );
+    for operation in [wire::VIEW, wire::POINTER_SOURCE] {
+        let (bytes, n) = storage
+            .call(
+                &wire::encode([operation, 0, 0, 0, 0, 0, 0, 0]),
+                time::after(300).unwrap(),
+            )
+            .unwrap();
+        assert_eq!(wire::decode(&bytes[..n]), Some(wire::error(abi::DENIED)));
+    }
+    let mut scope = Some(Scope::from_client(storage).unwrap());
     let mut state: Option<state::State> = None;
-    let wake = connections.wake;
     let mut painted = None;
     let mut scene: Option<surfaces::Scene> = None;
     let mut paints = 0;
@@ -114,7 +117,7 @@ pub fn run_services<const PROBES: bool>(
                 close.rebind();
             }
             if state.is_none() {
-                state = Some(state::State::open(storage, style));
+                state = Some(state::State::open(scope.take().unwrap(), style));
             }
             for _ in 0..8 {
                 let event = wire::poll_event(snapshot);
@@ -275,10 +278,8 @@ pub fn run_services<const PROBES: bool>(
     }
 }
 
-fn call(pair: Pair, words: wire::Packet) -> wire::Packet {
-    pair.0.send(&wire::encode(words)).unwrap();
-    let mut bytes = [0; 64];
-    let len = cathedral_user_runtime::matrix::upstream::receive(pair.1, &mut bytes, words[0], 300)
-        .unwrap_or_else(|error| panic!("Colors request {words:?}: {error:?}"));
-    wire::decode(&bytes[..len]).unwrap()
+fn call(parent: &mut Services, words: wire::Packet) -> wire::Packet {
+    parent
+        .request_interaction(words, None)
+        .unwrap_or_else(|error| panic!("Colors request {words:?}: {error:?}"))
 }

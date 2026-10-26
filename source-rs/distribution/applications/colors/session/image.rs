@@ -1,13 +1,10 @@
 //! One immutable bitmap: submit once, drop the producer handle, let matrices replay.
 use super::*;
 use cathedral_user_runtime::memory::{Object, Private};
-fn send(parent: Pair, words: wire::Packet, object: &Object) -> wire::Packet {
-    parent.0.send_memory(&wire::encode(words), object).unwrap();
-    let mut bytes = [0; 64];
-    let len = parent.1.receive(&mut bytes).unwrap();
-    wire::decode(&bytes[..len]).unwrap()
+fn send(parent: &mut Services, words: wire::Packet, object: &Object) -> wire::Packet {
+    parent.request_interaction(words, Some(object)).unwrap()
 }
-pub(super) fn probe(parent: Pair, epoch: u64, surface: u64) -> Result<(), u64> {
+pub(super) fn probe(parent: &mut Services, epoch: u64, surface: u64) -> Result<(), u64> {
     let mut pixels = Private::allocate(1).unwrap();
     for (index, pixel) in pixels.bytes_mut().chunks_exact_mut(4).enumerate() {
         let color: u32 = if ((index % 32 / 8) ^ (index / 32 / 8)) & 1 == 0 {
@@ -57,7 +54,7 @@ pub(super) fn probe(parent: Pair, epoch: u64, surface: u64) -> Result<(), u64> {
 
 /// Ordinary presentation has no adversarial probes. A resized binding returns
 /// to the app loop so it can acquire fresh surfaces without losing state.
-pub(super) fn submit(parent: Pair, epoch: u64, surface: u64) -> Result<(), u64> {
+pub(super) fn submit(parent: &mut Services, epoch: u64, surface: u64) -> Result<(), u64> {
     let mut pixels = Private::allocate(1).unwrap();
     for (index, pixel) in pixels.bytes_mut().chunks_exact_mut(4).enumerate() {
         let color: u32 = if ((index % 32 / 8) ^ (index / 32 / 8)) & 1 == 0 {

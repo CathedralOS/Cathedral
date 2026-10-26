@@ -4,16 +4,18 @@
 /// Notes funds its nine-page Omega host, old/new 12-page text objects, retained
 /// decorations and storage publication; bulk replies use reader pages. Colors keeps
 /// one bitmap and publishes through one page. Each app additionally funds its
-/// shared owner-control writer, reader and notification.
-pub(super) const APP_PAGES: u64 = if cfg!(feature = "notes") { 43 } else { 3 };
-pub(super) const APP_READERS: u64 = if cfg!(feature = "notes") { 7 } else { 1 };
-const APP_CHANNELS: u64 = if cfg!(feature = "notes") { 3 } else { 1 };
+/// shared owner-control writer, reader and notification. Colors also funds one
+/// interaction and one storage connection; its probes never use copied payloads.
+pub(super) const APP_PAGES: u64 = if cfg!(feature = "notes") { 43 } else { 5 };
+pub(super) const APP_READERS: u64 = if cfg!(feature = "notes") { 7 } else { 3 };
+const APP_CHANNELS: u64 = 3;
 /// A nested matrix holds old and new child bitmaps during replacement and lends
 /// its child's reader pages from this allowance. Parent storage and interaction
 /// each reserve a writer, reader and notification. The matrix also funds its own
 /// control server and two child control clients, beside the children's allowances.
-const MATRIX_PAGES: u64 = if cfg!(feature = "notes") { 59 } else { 11 };
-const MATRIX_READERS: u64 = if cfg!(feature = "notes") { 51 } else { 11 };
+/// Colors additionally needs both service-server ends for each child.
+const MATRIX_PAGES: u64 = if cfg!(feature = "notes") { 59 } else { 19 };
+const MATRIX_READERS: u64 = if cfg!(feature = "notes") { 51 } else { 19 };
 /// Notes draws a base, a text bitmap and three note-bar rectangles; the color
 /// app draws a base and an accent plus its quota probes.
 const APP_SURFACES: u64 = if cfg!(feature = "notes") { 6 } else { 4 };
@@ -31,7 +33,7 @@ fn launch_inner(pair: &mut RootControl, pressure: bool) {
             0,
             0,
             0,
-            15 + 2 * APP_CHANNELS,
+            if cfg!(feature = "notes") { 21 } else { 25 },
             2,
             if pressure { 7 } else { 3 },
             if pressure { 20000 } else { 0 },

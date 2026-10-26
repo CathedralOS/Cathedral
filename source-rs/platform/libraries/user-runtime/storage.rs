@@ -33,6 +33,15 @@ impl<'a> Scope<'a> {
     /// there is no copied-payload fallback or automatic mutation replay.
     pub fn connect(pair: (Handle, Handle)) -> Result<Self, Error> {
         let client = crate::connection::Client::connect(pair, time::after(300)?)?;
+        Self::from_client(client)
+    }
+    /// Adopt an established, idle connection without reopening or resetting IDs.
+    /// In-flight work cannot be relabelled as a storage request; refusal retires
+    /// the supplied client with its outstanding custody.
+    pub fn from_client(client: crate::connection::Client) -> Result<Self, Error> {
+        if client.pending() {
+            return Err(Error(abi::BUSY as i64));
+        }
         Ok(Self {
             transport: Transport::Owned(client),
             binding: 0,

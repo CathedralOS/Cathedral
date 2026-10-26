@@ -9,7 +9,7 @@ pub struct Scene {
     close: Option<u64>,
 }
 impl Scene {
-    fn probe(parent: Pair, view: wire::Packet) -> Result<Self, u64> {
+    fn probe(parent: &mut Services, view: wire::Packet) -> Result<Self, u64> {
         assert_eq!(
             call(parent, [wire::RUN_MEMORY, 0, 0, 0, 0, 0, 0, 0]),
             wire::error(abi::DENIED)
@@ -52,7 +52,7 @@ impl Scene {
         image::probe(parent, view[1], names[2]).unwrap();
         Ok(scene)
     }
-    pub fn new<const PROBES: bool>(parent: Pair, view: wire::Packet) -> Result<Self, u64> {
+    pub fn new<const PROBES: bool>(parent: &mut Services, view: wire::Packet) -> Result<Self, u64> {
         if PROBES {
             return Self::probe(parent, view);
         }
@@ -74,12 +74,17 @@ impl Scene {
             close: Some(names[3]),
         })
     }
-    pub fn close_button(&self, parent: Pair, view: wire::Packet, confirm: bool) -> Result<(), u64> {
+    pub fn close_button(
+        &self,
+        parent: &mut Services,
+        view: wire::Packet,
+        confirm: bool,
+    ) -> Result<(), u64> {
         closing::paint(parent, view, self.close.unwrap(), confirm)
     }
     pub fn paint(
         &mut self,
-        parent: Pair,
+        parent: &mut Services,
         view: wire::Packet,
         color: u64,
         error: u64,
@@ -115,14 +120,14 @@ impl Scene {
         accepted(call(parent, packet)[0])
     }
 
-    pub fn compact_probe(&mut self, parent: Pair) {
+    pub fn compact_probe(&mut self, parent: &mut Services) {
         self.revision += 1;
         let valid = [wire::PAINT, self.epoch, self.base, 0, 0, 200, 130, 0];
         let foreign = [wire::PAINT, self.epoch, u64::MAX, 0, 0, 1, 1, 0];
         let packet = wire::rectangles(self.epoch, self.revision, &[valid, foreign]).unwrap();
         assert_eq!(call(parent, packet), wire::error(abi::BAD_HANDLE));
     }
-    pub fn cursor_probe(&mut self, parent: Pair, view: wire::Packet, clipped: bool) {
+    pub fn cursor_probe(&mut self, parent: &mut Services, view: wire::Packet, clipped: bool) {
         self.begin(parent);
         let (x, y) = if clipped { (view[2] - 2, 0) } else { (30, 40) };
         assert_eq!(
@@ -142,7 +147,7 @@ impl Scene {
             [0; 8]
         );
     }
-    fn begin(&mut self, parent: Pair) {
+    fn begin(&mut self, parent: &mut Services) {
         self.revision += 1;
         assert_eq!(
             call(
@@ -161,7 +166,7 @@ impl Scene {
             [0; 8]
         );
     }
-    pub fn commit(&self, parent: Pair) {
+    pub fn commit(&self, parent: &mut Services) {
         {
             assert_eq!(
                 call(
@@ -181,7 +186,7 @@ impl Scene {
             );
         }
     }
-    pub fn staged_probe(&mut self, parent: Pair) {
+    pub fn staged_probe(&mut self, parent: &mut Services) {
         self.begin(parent);
         assert_eq!(
             call(
@@ -207,7 +212,7 @@ impl Scene {
             [0; 8]
         );
     }
-    pub fn rejected_probe(&mut self, parent: Pair) {
+    pub fn rejected_probe(&mut self, parent: &mut Services) {
         self.begin(parent);
         assert_eq!(
             call(
@@ -253,7 +258,7 @@ impl Scene {
             [0; 8]
         );
     }
-    fn paint_accent(&self, parent: Pair) {
+    fn paint_accent(&self, parent: &mut Services) {
         if let Some(name) = self.accent {
             assert_eq!(
                 call(
@@ -264,7 +269,7 @@ impl Scene {
             );
         }
     }
-    pub fn remove_accent(&mut self, parent: Pair) {
+    pub fn remove_accent(&mut self, parent: &mut Services) {
         if let Some(stale) = self.accent.take() {
             assert_eq!(
                 call(parent, [wire::ERASE, self.epoch, stale, 0, 0, 0, 0, 0]),
@@ -276,7 +281,7 @@ impl Scene {
             );
         }
     }
-    pub fn restore_accent(&mut self, parent: Pair) {
+    pub fn restore_accent(&mut self, parent: &mut Services) {
         assert!(self.accent.is_none());
         let reply = call(parent, [wire::SURFACE_CREATE, self.epoch, 1, 0, 0, 0, 0, 0]);
         assert_eq!(reply[0], 0);

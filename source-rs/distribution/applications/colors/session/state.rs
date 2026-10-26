@@ -15,9 +15,9 @@ pub struct State {
     volatile: bool,
 }
 impl State {
-    pub fn open(pair: Pair, style: u64) -> Self {
+    pub fn open(scope: Scope<'static>, style: u64) -> Self {
         let mut state = Self {
-            scope: Scope::new(pair),
+            scope,
             object: 0,
             revision: 0,
             style,

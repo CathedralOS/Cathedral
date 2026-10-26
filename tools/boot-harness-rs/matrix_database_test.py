@@ -115,6 +115,9 @@ def run(args):
         # boot where it is immediately stopped after its startup check.
         expected_children = 4 if args.recovery else 3
         assert serial.count('shared child control ready') == expected_children, serial
+        if not args.notes:
+            expected_colors = 3 if args.recovery else 2
+            assert serial.count('Colors probe: shared interaction and storage ready') == expected_colors, serial
         for marker in ('shared root control ready', 'shared bootstrap display ready'):
             assert serial.count(marker) == 1, (marker, serial)
         for name in ('serial.log', 'qemu.log', 'display.png'):

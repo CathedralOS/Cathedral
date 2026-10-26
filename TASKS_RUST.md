@@ -45,7 +45,7 @@ parent-storage and pipelined interaction streams between stock matrices, Omega a
 broker/interaction/storage, independent Split interaction/storage forwarding,
 Background, the separate Omega UI presenter, Split's input producer and masked
 capture viewer, brokered stock/Split lifecycle controls, and boot root/storage
-provider supervision. Boot display configuration and input readiness use separate shared streams;
+provider supervision and boot recovery lifecycle control. Boot display configuration and input readiness use separate shared streams;
 source-attenuation checks run on the driver-owned shared connection.
 Brokered child input hints now use separate wait-only notifications.
 The scoped storage fixture also
@@ -324,6 +324,57 @@ default/hidden cursor evidence remains valid for its scope, not the full asset A
 
 ## Current implementation evidence
 
+Implementation update 2026-10-25: **Rust Colors lab rendering and storage use retained shared clients**, over `50ac8625`.
+
+The retained Rust Colors probe now upgrades its supplied interaction connection
+through `Services` and owns a separate shared storage `Client`. Surface commands,
+compact transactions, immutable images and close-button backing use the same
+interaction owner. Helpers borrow it mutably; no raw endpoint alias sends or
+receives payloads behind the shared connection. Owner control remains independent.
+
+The storage client first exercises denied VIEW and POINTER_SOURCE requests.
+`Scope::from_client` then adopts that exact idle client, preserving request IDs
+and custody through binding discovery and subsequent object operations. It rejects
+an in-flight client rather than relabelling its pending work. `Scope::connect`
+uses the same constructor. The app still reconciles uncertain writes explicitly;
+no timeout causes a copied fallback or automatic mutation replay. Interaction
+uses the existing retained-reply service API; storage keeps its existing budget.
+
+The Colors leaf is funded at 5 private pages / 3 readers / 3 notification channels,
+its volatile peer at 4/3/3, its nested matrix at 19/19/25 and its root at 45/37/49.
+Both ends of each added interaction/storage stream are funded, beside retained
+image and publication backing. Notes and top-level F5 grants are unchanged; there
+are no kernel changes. The installed F5 Colors remains the Omega app; this is the
+adversarial Rust lab consumer, not a second installed implementation.
+
+Verification:
+
+- The destructive matrix desktop and cold reboot pass in `matrix-desktop-test/`,
+  including staged/rejected presentation, forwarded sealed images, subtree death,
+  blocked persistence and exact saved colors. Cold boot observes two Colors instances with
+  shared interaction and storage; the first boot includes the replacement probe instances.
+- Database recovery and cold persistence pass in
+  `matrix-database/20261026T035745668627Z`, with exact revisions [4, 2] and all
+  18 host records on both boots. Three shared Colors instances include the
+  independently interactive peer; both wrong-service refusals execute on shared IPC.
+- The pressure desktop and cold reboot pass in `pressure-matrix-desktop-test/`,
+  including late-reply reconciliation, resource/subtree reclamation and physical
+  input. The sampled nested key reached verified scanout in 813 ms under the
+  deliberate CPU cap; this does not establish ordinary-desktop performance.
+- F5 and cold persistence pass in `desktop/20261026T040007175059Z`, including
+  the exact 1,631-record host oracle. The installed Omega app uses the same
+  `Scope::connect` constructor as before; its retained client ownership is preserved.
+- Host tests, positional and all-feature desktop Clippy, layout/format and
+  whitespace checks pass. ARM64 was not rerun. Logs: `build/omega-component/colors-shared-*.log`.
+
+**Next:** migrate remaining Rust Notes/chooser/recovery data adapters and positional
+wake delivery, then retire their copied consumers. Pre-driver source probes still
+share an untouched endpoint pair with the later physical driver: upgrading that
+pair and passing only raw handles would lose the retained connection state. That
+handoff needs an explicit ownership-preserving migration. Direct mechanism fixtures
+and intentional malformed-setup tests remain distinct from ordinary application
+payload transport. On-demand authorized broker lookup remains separate accepted work.
+
 Implementation update 2026-10-25: **positional desktop children use shared lifecycle control**, over `40d0a130`.
 
 Stock admission now selects shared control for separate-storage compositions as
@@ -395,7 +446,7 @@ Verification:
   The optional Rust chooser was compiled, not newly exercised in QEMU. Kernel
   code is unchanged; ARM64 was not rerun. Logs: `build/omega-component/lab-child-control-*.log`.
 
-**Next:** migrate remaining positional app data/wake adapters and pre-driver
+**Previous next (Colors data completed above):** migrate remaining positional app data/wake adapters and pre-driver
 source probes. Direct storage/input/display mechanism labs also retain copied
 consumers. Preserve malformed-setup and kernel-mediated grant tests. On-demand
 authorized broker lookup remains a separate accepted outcome.

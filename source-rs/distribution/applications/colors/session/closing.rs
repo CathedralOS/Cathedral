@@ -33,7 +33,7 @@ impl Button {
     }
 }
 pub(super) fn paint(
-    parent: Pair,
+    parent: &mut Services,
     view: wire::Packet,
     surface: u64,
     confirm: bool,
@@ -64,10 +64,9 @@ pub(super) fn paint(
     }
     let mut image = pixels.freeze().unwrap();
     image.unmap().unwrap();
-    parent
-        .0
-        .send_memory(
-            &wire::encode([
+    let status = parent
+        .request_interaction(
+            [
                 wire::SURFACE_IMAGE,
                 view[1],
                 surface,
@@ -76,18 +75,9 @@ pub(super) fn paint(
                 width as u64,
                 16,
                 width as u64,
-            ]),
-            &image,
+            ],
+            Some(&image),
         )
-        .unwrap();
-    let mut bytes = [0; 64];
-    let len = cathedral_user_runtime::matrix::upstream::receive(
-        parent.1,
-        &mut bytes,
-        wire::SURFACE_IMAGE,
-        300,
-    )
-    .unwrap();
-    let status = wire::decode(&bytes[..len]).unwrap()[0];
+        .unwrap()[0];
     if status == 0 { Ok(()) } else { Err(status) }
 }
