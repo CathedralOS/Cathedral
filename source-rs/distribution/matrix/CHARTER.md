@@ -213,6 +213,12 @@ input, saving and cold persistence.
 through the same matrix chain, independently of display grants, with sealed
 attachments forwarded in both directions. Owner assignment
 is exclusive between siblings; every request checks a local binding revision.
+A storage grant does not require its recipient to access files. Follow the
+[demand-driven storage rule](../../../wiki/spec/execution/components_and_matrices.md#storage-access-is-demand-driven):
+do not issue parent-generated requests through a child's binding merely to warm
+scope proofs at launch/grant time. Necessary proof requests follow actual child
+operations; the parent's own storage operations use its own authority.
+
 The visible desktop admits children with separate interaction and catalog pairs,
 plus a wake right. [Shared admission](../../platform/libraries/user-runtime/matrix/admission/admission.rs)
 owns channel/notification construction, transfer and rollback. Brokered apps acquire

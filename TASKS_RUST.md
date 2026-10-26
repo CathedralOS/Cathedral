@@ -9478,9 +9478,13 @@ Next, in order:
 3. Timing taken under one accelerator compares only with timing under the
    same one. The TCG figures in the sections before this one stand; a figure
    for hardware is a WHPX run of the same command.
-4. The owner questions this work raised remain open: launching one program
-   over one realm twice, CPU sponsorship across service calls, the isolation
-   boundary, and a parent warming its child's proofs.
+4. These experiments raised questions about instances, CPU sponsorship, isolation
+   and parent-generated proof warming; the current specification and owner queue
+   supersede that historical list. On 2026-10-25 the owner rejected grant-time
+   requests through the child's binding: a storage grant need never be used.
+   Preserve [demand-driven checks](wiki/spec/execution/components_and_matrices.md#storage-access-is-demand-driven)
+   in future storage work. The warming experiment above is archived evidence,
+   not a pending optimization task or a reason to manufacture child traffic.
 
 
 ## CPU budget decision: archived lab evidence (2026-10-23)

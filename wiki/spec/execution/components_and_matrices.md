@@ -132,6 +132,21 @@ in software, or that an authorized operation cannot be abused within its limits.
 Unlocking a realm supplies authorized access to its contents; it does not imply
 delivery of its encryption key to the matrix program.
 
+### Storage access is demand-driven
+
+On 2026-10-25 the owner rejected automatic parent-generated storage requests
+through a child's binding to warm permission/containment checks. Granting a realm
+permits access; it does not require an app or matrix to use that realm. Launch or
+grant installation alone must not synthesize such a request as if the child sent it.
+
+Run the necessary checks when an actual child storage request requires them.
+Successful checks may be cached against the exact binding, scopes and validity
+conditions; revocation, replacement and relevant changes invalidate them. Cached
+containment is not permission to skip the operation's own authorization checks.
+This does not prohibit admission validation or a parent's independently authorized
+storage operations under its own binding. Future cache optimizations must preserve
+request attribution and demonstrate a need, not presume every grant will be used.
+
 ## Multiple instances over one realm
 
 The same program may be launched more than once with access to the same realm,

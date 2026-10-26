@@ -21,6 +21,12 @@ with the four-endpoint display/input environment. The visible desktop uses that
 composition; the dedicated storage fixture exercises the same delegation without
 a display adapter.
 
+The accepted [demand-driven storage rule](../../../../../../wiki/spec/execution/components_and_matrices.md#storage-access-is-demand-driven)
+keeps containment checks lazy. Grant installation does not generate a parent HEAD
+through the child's binding: a recipient may never use its storage grant. The
+proof requests described below are prerequisites of actual child requests, not
+speculative grant-time warming. Parent-owned operations retain their own binding.
+
 A child obtains its local binding revision and realm through `STORAGE_INFO`.
 The realm is the object its binding is rooted at: the scope it was granted, or
 the realm its matrix inherited when the grant named none. The child lists and
