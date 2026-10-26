@@ -6,6 +6,7 @@ pub struct Survey {
     pub request: Option<Request>,
     pub waiting: u8,
     pub deadline: u64,
+    unasked: u8,
     clean: bool,
 }
 impl Survey {
@@ -13,27 +14,52 @@ impl Survey {
         let mut s = Self {
             request,
             waiting: 0,
+            unasked: 0,
             deadline: time::after(100)?,
             clean: true,
         };
         for slot in 0..2 {
             if children.slots[slot].is_some() {
-                if children.uncertain[slot]
-                    || children.controls[slot]
-                        .as_mut()
-                        .is_none_or(|control| control.ask().is_err())
-                {
+                if children.uncertain[slot] {
                     s.clean = false;
-                } else {
-                    s.waiting |= 1 << slot;
+                    continue;
+                }
+                match children.controls[slot]
+                    .as_mut()
+                    .map(|control| control.ask())
+                {
+                    Some(Ok(true)) => s.waiting |= 1 << slot,
+                    Some(Ok(false)) => s.unasked |= 1 << slot,
+                    _ => s.clean = false,
                 }
             }
+        }
+        if s.unasked != 0 {
+            time::storage_sample("split-loss-awaiting-control", &[s.unasked as u64]);
         }
         Ok(s)
     }
     pub fn progress(&mut self, children: &mut Children) -> Result<Option<bool>, Error> {
         let now = time::now()?;
         for slot in 0..2 {
+            if self.unasked & (1 << slot) != 0 {
+                // Setup keeps yielding to the children's upstream work. An
+                // expired unsent query must neither be published nor mark an
+                // old reply outstanding; a later user action can retry safely.
+                let result = if time::reached(now, self.deadline) {
+                    None
+                } else {
+                    children.controls[slot]
+                        .as_mut()
+                        .map(|control| control.ask())
+                };
+                match result {
+                    Some(Ok(false)) => continue,
+                    Some(Ok(true)) => self.waiting |= 1 << slot,
+                    _ => self.clean = false,
+                }
+                self.unasked &= !(1 << slot);
+            }
             if self.waiting & (1 << slot) == 0 {
                 continue;
             }
@@ -54,6 +80,6 @@ impl Survey {
                 }
             }
         }
-        Ok((self.waiting == 0).then_some(self.clean))
+        Ok((self.waiting | self.unasked == 0).then_some(self.clean))
     }
 }

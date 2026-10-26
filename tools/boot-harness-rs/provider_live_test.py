@@ -3,6 +3,7 @@ import argparse
 from datetime import datetime, timezone
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -93,6 +94,7 @@ def exercise(stream, folder, mode, saved=None):
         click(width-8-256+130, 18)
         scan(lambda d, s: 'nested matrix admitted in separate realm' in s, 'deeper matrix admitted')
     scan(lambda d, _: header(d) == '27664a', 'Notes loaded')
+    assert log().count('shared storage control established') == 1
     focus()
     def sibling(data):
         x = 8 + (width - 8 - 8 - 12) // 2 + 12 + 10
@@ -180,6 +182,9 @@ def exercise(stream, folder, mode, saved=None):
         click(width - 22, 18)
         scan(lambda d, _: header(d) == '101827', 'saved app closes')
         expected = draft
+    retired = re.findall(r'storage-control-retired (\d+) (\d+) (\d+) (\d+) (\d+)', log())
+    assert retired and all(tuple(map(int, row)) == (0, 0, 4, 0, 0) for row in retired), retired
+    assert log().count('shared storage control established') == 1 + log().count('storage replaced; explicit grants restored')
     assert log().count('note-loaded') == loaded, 'Notes task was restarted'
     assert 'user matrix closed' not in log() and 'sign-in recovery visible' not in log()
     return expected

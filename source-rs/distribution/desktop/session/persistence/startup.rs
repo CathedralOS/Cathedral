@@ -19,7 +19,8 @@ fn probe_argument() -> u64 {
     #[cfg(any(
         feature = "storage-startup-fault",
         feature = "storage-startup-stall",
-        feature = "storage-startup-bad-ready"
+        feature = "storage-startup-bad-ready",
+        feature = "storage-startup-bad-setup"
     ))]
     {
         use core::sync::atomic::{AtomicBool, Ordering};
@@ -29,6 +30,8 @@ fn probe_argument() -> u64 {
                 1
             } else if cfg!(feature = "storage-startup-stall") {
                 2
+            } else if cfg!(feature = "storage-startup-bad-setup") {
+                4
             } else {
                 3
             };

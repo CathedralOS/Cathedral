@@ -18,6 +18,23 @@ per-operation engine transactions are building blocks, not the public batch API
 or its request-outcome reconciliation. Follow the
 [batch outcome](../../../../TASKS_RUST.md#explicit-atomic-storage-batches).
 
+The ordinary desktop's owner-control connection uses the same shared mailbox
+transport as the data roots. Its [provider owner](../../../distribution/desktop/session/persistence/provider/provider.rs)
+yields during setup, sends HEALTH after setup completes, and correlates later
+watchdog replies through one retained client. Failure collects the exact provider
+and releases control custody before replacement; it never replays an uncertain
+probe on a replacement stream. The separate data connections still require
+explicit regrant after recovery. Positional fault labs retain a named copied
+adapter for their unsolicited blocked/release signals.
+
+F5 funds one owner writer/reader page and a fifth owner channel/notification
+allowance: the four display/input-source channels remain charged to their original
+sponsor after handoff. The provider has three notification allowances for its two
+data roots plus owner control. Its reader allowance is 67 pages, preserving the
+previous 64-page attachment headroom beside three stream readers. Its heap
+calculation reserves all three possible mailbox writers. These are explicit
+composition grants, not larger kernel limits.
+
 A separate user task owns the exclusive boot-granted disk controller and the
 [object store](../../libraries/database-objects/README.md). [main.rs](main.rs)
 funds the heap, opens the guarded volume and recovers the engine, then
@@ -45,9 +62,9 @@ upgrades both data links to [shared service connections](../../libraries/user-ru
 The provider lends one persistent dispatch slot to each link. Commands/replies use
 shared frames and notifications; immutable attachments remain typed kernel-mediated
 grants correlated to those frames. A failed or replaced peer clears only its own
-transport state, while the other root remains serviceable. Initial control/health
-traffic and direct lab clients still use their existing copied endpoints; an upgraded
-data connection has no copied-payload fallback.
+transport state, while the other root remains serviceable. Ordinary owner control
+and health traffic are shared too; direct positional lab clients retain their
+explicit copied endpoints. An upgraded connection has no copied-payload fallback.
 
 Two boot-approved data links bind to private roots 0 and 1 by their
 service-local link position. The kernel isolates principals and grants

@@ -299,6 +299,85 @@ default/hidden cursor evidence remains valid for its scope, not the full asset A
 
 ## Current implementation evidence
 
+Implementation update 2026-10-25: **ordinary storage-provider supervision uses shared IPC**, over `43d167e1`.
+
+The F5 owner now retains one yielding shared control connection per provider
+incarnation. `desktop/session/persistence/provider/provider.rs` owns admission,
+readiness and collection; sibling `control.rs` owns opening and request transport.
+Opening progresses while the recovery UI and root services remain usable. Only a
+correlated HEALTH reply completes readiness; accepting the transport alone does
+not. Later watchdog probes use that same retained client. On failure, collect the
+exact task and drop its control custody before replacement and explicit data
+regrant. Existing startup deadlines, automatic restart limits and manual retry
+policy are unchanged.
+
+Storage's Server accepts shared control beside its two independent root clients.
+F5 explicitly funds one private writer page and one reader page in the desktop
+owner and raises its channel/notification allowance from four to five. Those four
+existing display/input-source channels remain charged to their original sponsor
+following endpoint handoff; the first integration attempt exposed that full
+reservation (`desktop/20261026T010509422794Z`, diagnostic
+`desktop/20261026T010825600060Z`). The provider has three notification allowances
+instead of two and 67 reader pages instead of 66, preserving the previous 64-page
+attachment headroom beside three stream readers. Heap sizing reserves the third
+possible mailbox writer. No kernel/global limit increase.
+
+Copied positional fault labs explicitly obtain `copied_control()` for their
+unsolicited blocked/release protocol; they are not a production transport fallback.
+F5's quiet fault arming uses the shared control client. Bad transport ACK and bad
+HEALTH after successful setup are separate startup fixtures. A rejected setup
+fixture exits on peer closure without opening the disk or introducing a secondary
+panic. `storage-spawn-failed`, `storage-control-failed` and
+`storage-control-retired` distinguish admission, allocation and final local
+custody. Recovery tests check writer/reader/notification refunds on every attempt,
+including repeated replacement and explicit retry after automatic exhaustion.
+
+The deep provider exercise exposed a separate Split startup race: its first Notes
+frame could appear before shared child control finished opening. A Deeper click
+then treated a not-yet-submitted LOSS as refusal. Split now keeps an unasked set,
+continues servicing setup and submits LOSS once ready, within the original survey
+deadline. An expired unsent query refuses that action without poisoning later
+queries as if an old reply were outstanding. Published requests retain the
+existing uncertainty rule. No longer deadline or automatic destructive close.
+
+Verification:
+
+- Host `cargo test --locked`, userspace Clippy, desktop/storage/Split all-feature
+  Clippy and the copied desktop lab feature set pass. Format and source-layout
+  checks pass. No kernel or runtime implementation changes in this update;
+  the preceding ARM64 evidence remains the baseline, not a fresh run here.
+- Ordinary F5 and cold persistence pass in `desktop/20261026T012336865261Z`,
+  including the exact 1,621-record host oracle and shared-control assertion.
+- Startup crash, stall, repeated crash and bad-volume cases pass in
+  `provider-startup/20261026T011251583496Z`; distinct bad-HEALTH-after-shared-setup
+  and malformed-setup cases pass in `provider-startup/20261026T012310184558Z`.
+  Failed attempts return owner writer/reader pages and notifications, leaving
+  exactly the four pre-existing source/display channel charges.
+- Live precommit, postcommit, restart exhaustion/manual retry, readiness stall and
+  nested recovery pass with cold boots in `provider-live/20261026T011432186347Z`.
+  That run's deep case found the Split race above; after the correction, deep
+  recovery and cold persistence pass in `provider-live/20261026T012230571175Z`.
+  These tests assert resource refunds and one new shared control per successful
+  replacement. The rerun did not force the pending-opening branch, so it is
+  recovery/regression evidence, not a deterministic race fixture.
+- `desktop_test.py --deep --trace-storage` passes recursive Split admission,
+  dirty-close protection, resource reclamation and cold reopen in
+  `desktop/20261026T012518826338Z`.
+
+- The copied positional `matrix_database_test.py --release --notes-recovery`
+  fixture passes both boots with exact 20-record text/history/quota verification
+  in `matrix-database/20261026T012622345818Z`. Its storage executable is now
+  239/240 admitted load pages; preserve this headroom in follow-up work.
+
+**Next:** migrate boot desktop-to-root control, starting at
+`desktop/session/admission/root.rs`, the root connection in `Session`, and
+`desktop/main.rs::call`. That path currently copies `Pair` freely; introduce
+one retained root client owner before adapting its callers, not a new client
+per call. Preserve interactive bootstrap rollback and bounded root/input/display
+failure policy. Remaining explicit copied fixtures and direct
+bootstrap display configuration are separate consumers. Provider supervision is
+now shared; this is not a complete copied-IPC removal or a latency claim.
+
 Implementation update 2026-10-25: **owner-control failure is isolated from live matrix services**, over `ee673f8a`.
 
 Stock and independent Split explicitly select `Server::isolate_control_failures`.
@@ -361,10 +440,10 @@ Verification:
   is chrome), and observe immediate failed-control close refusal separately from
   a completed LOSS refusal. These were test assumptions, not added OS allowances.
 
-**Next:** migrate ordinary boot desktop control and provider supervision from
+**Previous next (provider portion completed above):** migrate ordinary boot desktop control and provider supervision from
 copied packets, preserving startup/recovery and actual child-outcome handling.
 Start at `distribution/desktop/session/admission/admission.rs`, `root.rs`,
-`session/persistence/provider.rs` and `desktop/main.rs::call`. Explicitly positional
+`session/persistence/provider/provider.rs` and `desktop/main.rs::call`. Explicitly positional
 fixtures remain copied. This receiver fix does not claim complete shared service
 migration or a latency improvement. No owner decision is blocking this slice.
 
@@ -474,7 +553,7 @@ Root desktop control and provider supervision still use copied packets,
 as do explicitly positional fixtures. Start at
 [boot admission](source-rs/distribution/desktop/session/admission/admission.rs),
 [its root handoff](source-rs/distribution/desktop/session/admission/root.rs), and
-[storage supervision](source-rs/distribution/desktop/session/persistence/provider.rs).
+[storage supervision](source-rs/distribution/desktop/session/persistence/provider/provider.rs).
 Migrate that owner path with exact request custody and failure tests, then inventory remaining copied payload
 consumers before retiring their syscalls. This completes brokered stock controls,
 not the entire shared-service migration. The ordinary desktop remains the proving
@@ -5260,7 +5339,7 @@ readiness timeout collects that attempt and enables **TRY AGAIN**. Each click
 authorizes one attempt; initial failure does not start an automatic retry loop.
 There is still no formatting or repair fallback.
 
-[provider.rs](source-rs/distribution/desktop/session/persistence/provider.rs)
+[provider.rs](source-rs/distribution/desktop/session/persistence/provider/provider.rs)
 owns one task, its control endpoints and pending readiness deadline. Both startup
 and runtime replacement use it, so partial connection/readiness failure closes
 the old stream and collects the old task before reusing its launch grant. The

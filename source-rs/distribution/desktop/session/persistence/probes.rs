@@ -7,7 +7,7 @@ static DISABLED: core::sync::atomic::AtomicBool = core::sync::atomic::AtomicBool
 pub(super) fn disable() {
     DISABLED.store(true, Ordering::Relaxed);
 }
-pub(super) fn observe(session: &admission::Session) {
+pub(super) fn observe(session: &mut admission::Session) {
     if DISABLED.load(Ordering::Relaxed) {
         return;
     }
@@ -15,7 +15,7 @@ pub(super) fn observe(session: &admission::Session) {
     if session.user == 0 || session.storage_watch.pending.is_some() {
         return;
     }
-    let Some(provider) = session.storage.as_ref() else {
+    let Some(provider) = session.storage.as_mut() else {
         return;
     };
     if provider.starting.is_some() {
@@ -41,17 +41,7 @@ pub(super) fn observe(session: &admission::Session) {
     } else {
         1
     };
-    provider
-        .control
-        .0
-        .send(&[0xf5, phase, storage::PUBLISH as u8, 0])
-        .unwrap();
-    let mut bytes = [0; 64];
-    let len = provider
-        .control
-        .1
-        .receive_until(&mut bytes, time::after(300).unwrap())
-        .unwrap();
+    let (bytes, len) = provider.command(&[0xf5, phase, storage::PUBLISH as u8, 0]);
     assert_eq!(&bytes[..len], b"armed");
     ARMED.store(provider.child.raw(), Ordering::Relaxed);
     write(b"Cathedral desktop: live storage probe armed\n").unwrap();

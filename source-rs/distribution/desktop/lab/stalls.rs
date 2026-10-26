@@ -32,7 +32,7 @@ pub(super) fn exercise(session: &mut admission::Session) {
         // or after commit; the sibling's root stays unaffected.
         session
             .provider()
-            .control
+            .copied_control()
             .0
             .send(&[
                 0xf2,
@@ -41,10 +41,10 @@ pub(super) fn exercise(session: &mut admission::Session) {
                 0,
             ])
             .unwrap();
-        receive(session.provider().control, b"armed");
+        receive(session.provider().copied_control(), b"armed");
         let started = time::now().unwrap();
         assert_eq!(app(matrix, true, 12)[0], 0);
-        receive(session.provider().control, b"blocked");
+        receive(session.provider().copied_control(), b"blocked");
         // Root control, physical-source ingress and sibling rendering still run
         // while storage is demonstrably blocked, not merely after it recovers.
         assert_eq!(
@@ -65,7 +65,7 @@ pub(super) fn exercise(session: &mut admission::Session) {
             "sibling waited for storage timeout: {elapsed} ticks"
         );
         if mode == 0 {
-            session.provider().control.0.send(&[0xf3]).unwrap();
+            session.provider().copied_control().0.send(&[0xf3]).unwrap();
             assert_eq!(app(matrix, true, wire::HEALTH)[5], 0);
             pixel(matrix, 140, 190, 0xd18b35);
             assert_eq!(app(matrix, true, 8)[0], 0);
@@ -82,15 +82,15 @@ pub(super) fn exercise(session: &mut admission::Session) {
                 call(matrix, [wire::STORAGE_GRANT, 0, 0, 0, 0, 0, 0, 0])[0],
                 abi::BUSY
             );
-            session.provider().control.0.send(&[0xf3]).unwrap();
+            session.provider().copied_control().0.send(&[0xf3]).unwrap();
             // Force the now-late reply to be sent before provider retirement.
             session
                 .provider()
-                .control
+                .copied_control()
                 .0
                 .send(cathedral_platform_contracts::storage::HEALTH)
                 .unwrap();
-            receive(session.provider().control, b"ready");
+            receive(session.provider().copied_control(), b"ready");
         }
         session.provider().child.cancel().unwrap();
         session.provider().child.wait().unwrap();

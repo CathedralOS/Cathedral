@@ -3,6 +3,7 @@ import argparse
 from datetime import datetime, timezone
 import json
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -104,6 +105,9 @@ def exercise(stream, folder, mode):
              f'failed storage attempt {attempt}')
         time.sleep(0.8)
         assert log().count('storage startup attempt') == attempt, 'automatic startup retry'
+        retired = re.findall(r'storage-control-retired (\d+) (\d+) (\d+) (\d+) (\d+)', log())
+        assert len(retired) == attempt, 'every failed setup must release control custody'
+        assert all(tuple(map(int, row)) == (0, 0, 4, 0, 0) for row in retired), retired
 
     failure(1)
     if mode == 'stall-once':
@@ -130,6 +134,7 @@ def exercise(stream, folder, mode):
         scan(lambda d, l: pixel(d, 13, 18) == '101827', 'close saved app')
         click(96, height - 48)
         scan(lambda d, l: pixel(d, 13, 18) == color and pixel(d, 40, 50) == 'e5e7eb', 'reopen saved app')
+        assert log().count('shared storage control established') == (2 if mode == 'bad-ready-once' else 1)
         assert log().count('storage startup attempt') == 2 and log().count('storage startup accepted') == 1
     print(f'PASS: {mode}, visible readiness/recovery, explicit attempts and cleanup; {folder}', flush=True)
 
@@ -140,6 +145,7 @@ def run(source, cases=None):
     output.mkdir(parents=True)
     modes = {'crash-once': ['storage-startup-fault'],
              'bad-ready-once': ['storage-startup-bad-ready'],
+             'bad-setup-once': ['storage-startup-bad-setup'],
              'stall-once': ['storage-startup-stall'],
              'repeat-crash': ['storage-startup-fault', 'storage-startup-repeat'],
              'bad-volume': []}
@@ -187,6 +193,6 @@ def run(source, cases=None):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('image', type=Path, help='one-user fixture; only copies are modified')
-    parser.add_argument('--case', action='append', choices=('crash-once', 'bad-ready-once', 'stall-once', 'repeat-crash', 'bad-volume'))
+    parser.add_argument('--case', action='append', choices=('crash-once', 'bad-ready-once', 'bad-setup-once', 'stall-once', 'repeat-crash', 'bad-volume'))
     args = parser.parse_args()
     run(args.image, args.case)

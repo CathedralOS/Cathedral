@@ -20,6 +20,13 @@ pub fn serve(
 ) -> cathedral_storage_engine::redb::Database {
     let mut server = Server::open_clients(wire::ROOTS).unwrap();
     server.enable_memory();
+    static mut CONTROL: cathedral_user_runtime::server::SharedSlot =
+        cathedral_user_runtime::server::SharedSlot::empty();
+    let control = &raw mut CONTROL;
+    // SAFETY: One service entry lends this owner-control slot until shutdown.
+    server
+        .enable_shared_control(unsafe { &mut *control })
+        .unwrap();
     static mut SHARED: [cathedral_user_runtime::server::SharedSlot; wire::ROOTS] =
         [const { cathedral_user_runtime::server::SharedSlot::empty() }; wire::ROOTS];
     let slots = &raw mut SHARED;

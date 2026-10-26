@@ -353,8 +353,11 @@ when nested it also accepts a shared owner control connection. The ordinary stoc
 auxiliary child funds two notifications and two writer/reader pages,
 plus its service-specific work. Capture uses correlated immutable replies and
 then forwards the same sealed result for presentation. Stock brokered lifecycle/
-control now uses shared streams; root supervision and
-explicitly copied fixtures remain to migrate. The ordinary
+control now uses shared streams; boot root supervision and
+explicitly copied fixtures remain to migrate. The ordinary desktop storage
+provider now uses a yielding shared control opener for readiness and subsequent
+health probes. Replacement collects the exact provider and releases the old
+client before starting another; setup acceptance alone is not health readiness. The ordinary
 user matrix keeps eleven service connections (thirty-three notification handles) with its
 upstream, chrome, background and three app pairs. Brokered wake objects/rights
 are charged separately; these service connections use 44 handles including hints.

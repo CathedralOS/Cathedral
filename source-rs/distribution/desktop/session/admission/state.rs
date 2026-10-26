@@ -1,7 +1,7 @@
 //! Admitted tasks and their teardown order: input, root subtree, display, storage.
 use super::*;
 pub(crate) struct Session {
-    #[cfg(feature = "database-probes")]
+    #[cfg(all(feature = "database-probes", not(feature = "shell")))]
     pub(crate) database_fresh: bool,
     pub matrix: Pair,
     /// The realm of the user matrix in the workspace slot, or zero.

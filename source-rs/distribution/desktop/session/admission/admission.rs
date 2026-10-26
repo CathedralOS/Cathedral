@@ -96,11 +96,12 @@ fn admit(number: u64) -> Result<Session, Failure> {
 
 #[cfg(not(feature = "shell"))]
 pub(crate) fn start() -> Session {
-    let storage = persistence::Provider::start().unwrap();
+    #[allow(unused_mut)]
+    let mut storage = persistence::Provider::start().unwrap();
     #[cfg(feature = "notes-probes")]
     storage.arm_notes();
     #[cfg(feature = "database-probes")]
-    let database_fresh = crate::lab::database_recovery::arm_startup(storage.control);
+    let database_fresh = crate::lab::database_recovery::arm_startup(storage.copied_control());
     let mut session = admit(0)
         .unwrap_or_else(|failure| panic!("lab admission {:?}: {:?}", failure.stage, failure.error));
     session.storage = Some(storage);

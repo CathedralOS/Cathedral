@@ -54,7 +54,7 @@ impl Attempt {
         let root = self.tasks[2].unwrap();
         crate::ROOT_TASK.store(root.raw(), core::sync::atomic::Ordering::Relaxed);
         Session {
-            #[cfg(feature = "database-probes")]
+            #[cfg(all(feature = "database-probes", not(feature = "shell")))]
             database_fresh: false,
             matrix,
             source,

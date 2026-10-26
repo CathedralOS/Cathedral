@@ -59,7 +59,7 @@ pub(super) fn exercise(session: &mut admission::Session) {
         stalls_peer::stop(session);
         return;
     }
-    receive(session.provider().control, b"blocked");
+    receive(session.provider().copied_control(), b"blocked");
     // Initial CREATE committed, but the app never received success.
     stalls_peer::interact(session);
     // Let the actual matrix deadline expire while the provider remains alive.
@@ -94,10 +94,14 @@ pub(super) fn exercise(session: &mut admission::Session) {
     write(b"Cathedral database desktop: uncertain CREATE reconciled without duplication\n")
         .unwrap();
     for phase in 1..=2 {
-        arm(session.provider().control, phase, storage::PUBLISH as u8);
+        arm(
+            session.provider().copied_control(),
+            phase,
+            storage::PUBLISH as u8,
+        );
         let started = time::now().unwrap();
         assert_eq!(app(session.matrix, 12)[0], 0);
-        receive(session.provider().control, b"blocked");
+        receive(session.provider().copied_control(), b"blocked");
         stalls_peer::interact(session);
         assert!(time::now().unwrap().wrapping_sub(started) < 150);
         retire(session);

@@ -46,7 +46,7 @@ pub(crate) fn supervise(session: &mut admission::Session) {
     }
     #[cfg(feature = "storage-live-probes")]
     probes::observe(session);
-    let Some(provider) = session.storage.as_ref() else {
+    let Some(provider) = session.storage.as_mut() else {
         return;
     };
     if provider.starting.is_some() {
@@ -68,16 +68,15 @@ pub(crate) fn supervise(session: &mut admission::Session) {
     }
     if !failed {
         if let Some(deadline) = session.storage_watch.pending {
-            let mut bytes = [0; 64];
-            match provider.control.1.receive_until(&mut bytes, now) {
-                Ok(n) if &bytes[..n] == b"ready" => session.storage_watch.healthy(now),
-                Err(Error(code)) if code == abi::TIMED_OUT as i64 => {
+            match provider.poll_health(now) {
+                Ok(true) => session.storage_watch.healthy(now),
+                Ok(false) => {
                     failed = time::reached(now, deadline);
                 }
                 _ => failed = true,
             }
         } else if time::reached(now, session.storage_watch.next_probe) {
-            failed = provider.control.0.send(storage::HEALTH).is_err();
+            failed = provider.begin_health().is_err();
             session.storage_watch.pending = Some(now.wrapping_add(policy::PROBE_TIMEOUT));
         }
     }

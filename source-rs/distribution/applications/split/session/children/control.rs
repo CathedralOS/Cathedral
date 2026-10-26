@@ -47,12 +47,15 @@ impl Control {
             _ => ([None; 2], None),
         }
     }
-    pub fn ask(&mut self) -> Result<(), Error> {
+    /// False means setup is still progressing and nothing was published.
+    pub fn ask(&mut self) -> Result<bool, Error> {
         match self {
             Self::Ready(client) => {
-                client.begin(&wire::encode([wire::LOSS, 0, 0, 0, 0, 0, 0, 0]), None)
+                client.begin(&wire::encode([wire::LOSS, 0, 0, 0, 0, 0, 0, 0]), None)?;
+                Ok(true)
             }
-            _ => Err(Error(abi::BUSY as i64)),
+            Self::Opening(_) => Ok(false),
+            Self::Failed => Err(Error(abi::PEER_CLOSED as i64)),
         }
     }
     pub fn answer(&mut self) -> Result<Option<bool>, Error> {
