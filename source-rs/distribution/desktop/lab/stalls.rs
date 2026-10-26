@@ -12,14 +12,6 @@ fn app(matrix: &mut RootControl, nested: bool, op: u64) -> wire::Packet {
         },
     )
 }
-fn receive(pair: Pair, expected: &[u8]) {
-    let mut bytes = [0; 64];
-    let len = pair
-        .1
-        .receive_until(&mut bytes, time::after(300).unwrap())
-        .unwrap();
-    assert_eq!(&bytes[..len], expected);
-}
 pub(super) fn exercise(session: &mut admission::Session) {
     stalls_peer::start(&mut session.matrix, session.pressure);
     // Normal completion, timeout with a late reply, durable commit without reply.
@@ -29,21 +21,10 @@ pub(super) fn exercise(session: &mut admission::Session) {
         cathedral_user_runtime::write(&marker).unwrap();
         // Stall the nested app's next publication on its root, before execution
         // or after commit; the sibling's root stays unaffected.
-        session
-            .provider()
-            .copied_control()
-            .0
-            .send(&[
-                0xf2,
-                if mode == 2 { 2 } else { 1 },
-                cathedral_platform_contracts::storage::PUBLISH as u8,
-                0,
-            ])
-            .unwrap();
-        receive(session.provider().copied_control(), b"armed");
+        gate::arm(session.provider(), if mode == 2 { 2 } else { 1 });
         let started = time::now().unwrap();
         assert_eq!(app(&mut session.matrix, true, 12)[0], 0);
-        receive(session.provider().copied_control(), b"blocked");
+        gate::blocked(session.provider());
         // Root control, physical-source ingress and sibling rendering still run
         // while storage is demonstrably blocked, not merely after it recovers.
         assert_eq!(
@@ -64,7 +45,7 @@ pub(super) fn exercise(session: &mut admission::Session) {
             "sibling waited for storage timeout: {elapsed} ticks"
         );
         if mode == 0 {
-            session.provider().copied_control().0.send(&[0xf3]).unwrap();
+            gate::release(session.provider());
             assert_eq!(app(&mut session.matrix, true, wire::HEALTH)[5], 0);
             pixel(&mut session.matrix, 140, 190, 0xd18b35);
             assert_eq!(app(&mut session.matrix, true, 8)[0], 0);
@@ -86,15 +67,13 @@ pub(super) fn exercise(session: &mut admission::Session) {
                 )[0],
                 abi::BUSY
             );
-            session.provider().copied_control().0.send(&[0xf3]).unwrap();
+            gate::release(session.provider());
             // Force the now-late reply to be sent before provider retirement.
-            session
-                .provider()
-                .copied_control()
-                .0
-                .send(cathedral_platform_contracts::storage::HEALTH)
-                .unwrap();
-            receive(session.provider().copied_control(), b"ready");
+            gate::expect(
+                session.provider(),
+                cathedral_platform_contracts::storage::HEALTH,
+                b"ready",
+            );
         }
         session.provider().child.cancel().unwrap();
         session.provider().child.wait().unwrap();

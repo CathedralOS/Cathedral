@@ -196,15 +196,16 @@ host physical-input check. The ordinary profile reserves the same four descendan
 slots, uses three outside probes, and has no spinner.
 
 The positional profiles fund the same shared display-configuration and root
-control owners as F5. The small Colors composition reserves seven owner
-channel/notification allowances (four transferred channels plus root, input
-readiness and retiring display setup), two for display, two for input, two for
-storage and twenty-nine for the root. Notes uses thirty-seven for its root.
-The owner holds three writer pages and two readers; root funding adds one writer,
+control owners as F5. The small Colors composition reserves eight owner
+channel/notification allowances (four transferred channels plus root, storage,
+input readiness and retiring display setup), two for display, two for input,
+three for storage and twenty-nine for the root. Notes uses thirty-seven for its root.
+The owner holds four writer pages and three readers; root funding adds one writer,
 reader and notification for control without reducing the existing child/image
-allowances. Provider control/fault gates and pre-driver source injection remain
-explicit copied lab consumers. [source.rs](lab/source.rs) names the latter seam:
-it does not construct a shared client and later hand its raw endpoints away.
+allowances. Provider control and [fault gates](lab/gate.rs) use the same shared
+client for setup, health and correlated gate queries/releases. Pre-driver source
+injection remains an explicit copied lab consumer. [source.rs](lab/source.rs) names
+that seam: it does not construct a shared client and later hand its raw endpoints away.
 Add `--trace-input` for elapsed/CPU diagnostics; these are not latency guarantees.
 Compact rectangle packets avoid BEGIN/stage/COMMIT round trips at every level;
 publication waits now return to the service loop. Neither change introduces CPU

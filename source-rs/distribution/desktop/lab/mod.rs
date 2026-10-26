@@ -4,6 +4,7 @@ mod commands;
 #[cfg(feature = "database-probes")]
 pub(crate) mod database_recovery;
 mod funding;
+mod gate;
 mod probes;
 mod providers;
 mod recovery;

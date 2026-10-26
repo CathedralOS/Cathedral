@@ -74,7 +74,7 @@ pub(crate) fn supervise(session: &mut admission::Session) {
     }
     if !failed {
         if let Some(deadline) = session.storage_watch.pending {
-            match provider.poll_health(now) {
+            match provider.poll_health() {
                 Ok(true) => session.storage_watch.healthy(now),
                 Ok(false) => {
                     failed = time::reached(now, deadline);

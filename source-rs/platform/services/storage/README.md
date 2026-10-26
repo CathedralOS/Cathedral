@@ -24,19 +24,25 @@ yields during setup, sends HEALTH after setup completes, and correlates later
 watchdog replies through one retained client. Failure collects the exact provider
 and releases control custody before replacement; it never replays an uncertain
 probe on a replacement stream. The separate data connections still require
-explicit regrant after recovery. Positional fault labs retain a named copied
-adapter for their unsolicited blocked/release signals.
+explicit regrant after recovery. Positional desktop labs use the same shared
+owner, waiting on its current interests during synchronous startup. Their fault
+gate queries and releases are correlated requests, not unsolicited messages.
 
 F5 funds one owner writer/reader page and a channel/notification allowance for
-storage control, beside the same funding for root control. The owner has three
-writer pages, two reader pages and seven allowances: four display/input-source
-channels remain charged to their original sponsor after handoff, and a retiring
-bootstrap-display connection can retain one writer/notification charge remotely.
+storage control, beside the same funding for root control. The owner has four
+writer pages, two reader pages and eight allowances: four display/input-source
+channels remain charged to their original sponsor after handoff, and retiring
+bootstrap-display and input-readiness connections can retain writer/notification
+charges remotely.
 The two ordinary control connections remain after that transient debt is released. The provider has three notification allowances for its two
 data roots plus owner control. Its reader allowance is 67 pages, preserving the
 previous 64-page attachment headroom beside three stream readers. Its heap
 calculation reserves all three possible mailbox writers. These are explicit
-composition grants, not larger kernel limits.
+composition grants, not larger kernel limits. Positional desktops start storage
+before display/root admission, so their owner has three reader pages and four
+writers with eight allowances. Their storage provider has 131 private pages,
+67 readers and three notifications, preserving its previous heap/data funding
+while adding control.
 
 A separate user task owns the exclusive boot-granted disk controller and the
 [object store](../../libraries/database-objects/README.md). [main.rs](main.rs)
@@ -103,17 +109,25 @@ Commit errors remain uncertain, including capacity errors during commit. Other e
 corruption failures end the provider rather than serving uncertain state, and
 the distribution replaces it and regrants roots.
 
-The `recovery-lab` feature adds the owner-controlled [fault gate](gate.rs),
-which stalls one root's next matching request before execution or after
-commit, so proofs can exercise lost acknowledgements and provider replacement.
+The `recovery-lab` feature adds the owner-controlled [fault gate](gate.rs).
+Arm selects the next matching operation before execution or after commit.
+The [desktop fixture client](../../../distribution/desktop/lab/gate.rs) observes
+armed/blocked/idle state with a correlated query and receives an acknowledgement
+when releasing it. During a stall the server pauses both data streams, retains
+the original data request, and serves only owner control; HEALTH deliberately
+gets no reply so watchdog retirement remains a real failure test. Attachments
+are rejected and released. There is no direct bootstrap receive loop or
+unsolicited blocked publication bypassing shared correlation. Ordinary builds
+omit this protocol entirely.
+
 `trace-storage` emits per-request timing and ATA counters for the
 [timing summary](../../../../tools/boot-harness-rs/storage_timing.py).
 `collection-pressure` makes the store collect before every write inside a
 2 KiB workspace, so the desktop soak can watch windowed collection run and
-split on real records. Ordinary builds contain none of these.
+split on real records. Ordinary builds contain neither fixture.
 
 The provider's reader pages receive publication attachments; its private pages
-hold the heap, two mailbox writers and the pages behind bulk replies, which stay charged to it until
+hold the heap, up to three mailbox writers and the pages behind bulk replies, which stay charged to it until
 the last reader releases them. Profiles fund both explicitly. [main.rs](main.rs)
 splits funded private pages between the engine/cache and outstanding replies,
 after eight pages of headroom and two transport pages. The heap stays between its

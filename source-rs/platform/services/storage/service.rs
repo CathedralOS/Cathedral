@@ -82,7 +82,7 @@ pub fn serve(
         #[cfg(feature = "trace-storage")]
         let io_before = cathedral_ata_pio::metrics::snapshot();
         #[cfg(feature = "recovery-lab")]
-        gate.wait(1, r.op, root);
+        gate.wait(&mut server, 1, r.op, root);
         let authority = if r.deadline != 0
             && cathedral_user_runtime::time::now()
                 .is_ok_and(|now| cathedral_user_runtime::time::reached(now, r.deadline))
@@ -105,7 +105,7 @@ pub fn serve(
             // release/reuse their pages immediately after observing completion.
             drop(attachment);
             #[cfg(feature = "recovery-lab")]
-            gate.wait(2, r.op, root);
+            gate.wait(&mut server, 2, r.op, root);
             let bytes = match result {
                 Ok(()) => response,
                 Err(Error::ReopenCapacity) => {

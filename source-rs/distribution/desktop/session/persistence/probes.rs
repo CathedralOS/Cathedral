@@ -46,7 +46,7 @@ pub(super) fn observe(session: &mut admission::Session) {
     } else {
         1
     };
-    let (bytes, len) = provider.command(&[0xf5, phase, storage::PUBLISH as u8, 0]);
+    let (bytes, len) = provider.command(&[0xf2, phase, storage::PUBLISH as u8, 0]);
     assert_eq!(&bytes[..len], b"armed");
     ARMED.store(provider.child.raw(), Ordering::Relaxed);
     write(b"Cathedral desktop: live storage probe armed\n").unwrap();

@@ -102,7 +102,7 @@ pub(crate) fn start() -> Session {
     #[cfg(feature = "notes-probes")]
     storage.arm_notes();
     #[cfg(feature = "database-probes")]
-    let database_fresh = crate::lab::database_recovery::arm_startup(storage.copied_control());
+    let database_fresh = crate::lab::database_recovery::arm_startup(&mut storage);
     let mut session = admit(0)
         .unwrap_or_else(|failure| panic!("lab admission {:?}: {:?}", failure.stage, failure.error));
     session.storage = Some(storage);

@@ -52,9 +52,14 @@ impl Provider {
     pub fn start() -> Result<Self, Error> {
         let mut provider = Self::begin(0)?;
         let deadline = provider.starting.unwrap();
-        match provider.read_ready(deadline) {
-            Ok(true) => Ok(provider),
-            Ok(false) => unreachable!("readiness deadline reached"),
+        let result = (|| {
+            while !provider.read_ready()? {
+                provider.control.wait(deadline)?;
+            }
+            Ok(())
+        })();
+        match result {
+            Ok(()) => Ok(provider),
             Err(error) => {
                 provider.retire();
                 Err(error)
@@ -63,13 +68,13 @@ impl Provider {
     }
     #[cfg(feature = "shell")]
     pub fn poll_ready(&mut self) -> Result<bool, Error> {
-        self.read_ready(time::now()?)
+        self.read_ready()
     }
-    fn read_ready(&mut self, until: u64) -> Result<bool, Error> {
+    fn read_ready(&mut self) -> Result<bool, Error> {
         let Some(deadline) = self.starting else {
             return Ok(true);
         };
-        match self.control.poll(until)? {
+        match self.control.poll()? {
             Some((bytes, n)) if &bytes[..n] == b"ready" => {
                 self.starting = None;
                 Ok(true)
@@ -82,19 +87,18 @@ impl Provider {
     pub fn begin_health(&mut self) -> Result<(), Error> {
         self.control.health()
     }
-    pub fn poll_health(&mut self, now: u64) -> Result<bool, Error> {
-        match self.control.poll(now)? {
+    pub fn poll_health(&mut self) -> Result<bool, Error> {
+        match self.control.poll()? {
             Some((bytes, n)) if &bytes[..n] == b"ready" => Ok(true),
             Some(_) => Err(Error(abi::IO_ERROR as i64)),
             None => Ok(false),
         }
     }
-    #[cfg(not(feature = "shell"))]
-    pub fn copied_control(&self) -> Pair {
-        let Control::Copied(pair) = self.control;
-        pair
-    }
-    #[cfg(any(feature = "notes-probes", feature = "storage-live-probes"))]
+    #[cfg(any(
+        not(feature = "shell"),
+        feature = "notes-probes",
+        feature = "storage-live-probes"
+    ))]
     pub fn command(&mut self, bytes: &[u8]) -> ([u8; 64], usize) {
         self.control.command(bytes).unwrap()
     }
@@ -105,7 +109,7 @@ impl Provider {
     }
     #[cfg(feature = "notes-probes")]
     pub fn arm_notes(&mut self) {
-        let (bytes, n) = self.command(&[0xf5, 2, storage::PUBLISH as u8, 0]);
+        let (bytes, n) = self.command(&[0xf2, 2, storage::PUBLISH as u8, 0]);
         assert_eq!(&bytes[..n], b"armed");
     }
 }

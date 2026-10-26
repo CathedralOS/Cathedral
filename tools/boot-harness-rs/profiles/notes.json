@@ -12,9 +12,9 @@
       "features": [
         "notes"
       ],
-      "private_pages": 3,
-      "shared_pages": 2,
-      "ipc_channels": 7
+      "private_pages": 4,
+      "shared_pages": 3,
+      "ipc_channels": 8
     },
     "launches": [
       {
@@ -55,9 +55,9 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "disk": true,
-        "ipc_channels": 2,
-        "private_pages": 130,
-        "shared_pages": 66
+        "ipc_channels": 3,
+        "private_pages": 131,
+        "shared_pages": 67
       }
     ],
     "links": [

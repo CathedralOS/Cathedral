@@ -1,27 +1,13 @@
 //! Distribution-owned database failure exercise. Child apps keep their identities;
 //! the owner replaces the disk provider and explicitly re-grants local catalogs.
 use super::*;
-use cathedral_platform_contracts::storage;
 use cathedral_user_runtime::write;
-fn receive(pair: Pair, expected: &[u8]) {
-    let mut bytes = [0; 64];
-    let n = pair
-        .1
-        .receive_until(&mut bytes, time::after(500).unwrap())
-        .unwrap();
-    assert_eq!(&bytes[..n], expected);
-}
-fn arm(control: Pair, phase: u8, opcode: u8) {
-    control.0.send(&[0xf2, phase, opcode, 0]).unwrap();
-    receive(control, b"armed");
-}
-pub(crate) fn arm_startup(control: Pair) -> bool {
-    control.0.send(&[0xf4]).unwrap();
-    let mut bytes = [0; 16];
-    assert_eq!(control.1.receive(&mut bytes).unwrap(), 16);
-    let fresh = bytes == [0; 16];
+pub(crate) fn arm_startup(provider: &mut persistence::Provider) -> bool {
+    let (bytes, n) = provider.command(&[0xf4]);
+    assert_eq!(n, 16);
+    let fresh = bytes[..n] == [0; 16];
     if fresh {
-        arm(control, 2, storage::PUBLISH as u8);
+        gate::arm(provider, 2);
     }
     fresh
 }
@@ -59,7 +45,7 @@ pub(super) fn exercise(session: &mut admission::Session) {
         stalls_peer::stop(session);
         return;
     }
-    receive(session.provider().copied_control(), b"blocked");
+    gate::blocked(session.provider());
     // Initial CREATE committed, but the app never received success.
     stalls_peer::interact(session);
     // Let the actual matrix deadline expire while the provider remains alive.
@@ -93,14 +79,10 @@ pub(super) fn exercise(session: &mut admission::Session) {
     write(b"Cathedral database desktop: uncertain CREATE reconciled without duplication\n")
         .unwrap();
     for phase in 1..=2 {
-        arm(
-            session.provider().copied_control(),
-            phase,
-            storage::PUBLISH as u8,
-        );
+        gate::arm(session.provider(), phase);
         let started = time::now().unwrap();
         assert_eq!(app(&mut session.matrix, 12)[0], 0);
-        receive(session.provider().copied_control(), b"blocked");
+        gate::blocked(session.provider());
         stalls_peer::interact(session);
         assert!(time::now().unwrap().wrapping_sub(started) < 150);
         retire(session);

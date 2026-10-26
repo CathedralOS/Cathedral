@@ -24,8 +24,8 @@ pub(crate) struct Session {
 }
 impl Session {
     #[cfg(not(feature = "shell"))]
-    pub(crate) fn provider(&self) -> &persistence::Provider {
-        self.storage.as_ref().expect("lab requires ready storage")
+    pub(crate) fn provider(&mut self) -> &mut persistence::Provider {
+        self.storage.as_mut().expect("lab requires ready storage")
     }
     pub(crate) fn stop(mut self) {
         for child in [self.input, Some(self.root), Some(self.display_task)]

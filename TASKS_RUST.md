@@ -302,6 +302,68 @@ default/hidden cursor evidence remains valid for its scope, not the full asset A
 
 ## Current implementation evidence
 
+Implementation update 2026-10-25: **positional provider supervision and fault gates use shared control**, over `e4c40757`.
+
+`desktop/session/persistence/provider/` now has only shared Opening/Ready states.
+Ordinary F5 still yields during startup; positional admission polls the same owner
+and parks on its current setup or reply interests until the existing readiness
+deadline. HEALTH, fixture commands and later watchdog replies use one correlated
+client. The copied-control accessor and its raw-pair Drop path are removed.
+Retirement still collects the exact child before releasing control custody.
+
+`platform/services/storage/gate.rs` no longer sends unsolicited blocked payloads
+or reads the bootstrap endpoint behind Server. Arming, observing state and release
+are explicit owner requests; `desktop/lab/gate.rs` is their fixture client. At the
+selected before-execution or post-commit boundary, Gate retains the in-flight data
+request, pauses both data slots, and dispatches only owner control through Server.
+State queries report blocked; release replies before unpausing and resuming the
+original store request. HEALTH deliberately receives no reply, preserving the
+watchdog's nonresponsive-provider tests. No data operation executes during this
+pause and no application reply bypasses shared correlation. The redundant quiet
+arm opcode is removed; all arms use the same non-unsolicited protocol.
+
+Positional owners now have four writer pages, three readers and eight channel/
+notification allowances because storage starts before root/display admission.
+Each positional storage provider receives 131 private pages, 67 reader pages and
+three notifications, preserving prior data/heap funding beside the new control
+stream. Ordinary F5 funding, kernel limits and runtime implementation are unchanged.
+The fault/trace storage image reaches the existing 240-load-page admission cap
+(ordinary F5 is 238); further service growth needs code-size review, not an
+unexamined ceiling increase.
+
+Verification:
+
+- The destructive desktop and cold reboot pass in `matrix-desktop-test/`, with
+  five shared provider incarnations across recovery and one on cold boot.
+- F5 and cold persistence pass in `desktop/20261026T031225293141Z`, including the
+  exact 1,621-record host oracle.
+- Database recovery passes in `matrix-database/20261026T031318519714Z` with
+  revisions [4, 2] and 18 exact host records; four provider incarnations on the
+  first boot and one after cold restart.
+- Notes recovery passes in `matrix-database/20261026T031344763612Z`, with both
+  exact 20-record checks, two provider incarnations during failure/recovery and
+  one on cold boot.
+- All six live-provider cases pass in `provider-live/20261026T031423594096Z`:
+  precommit, postcommit, exhausted retries, stalled replacement readiness,
+  nested and deep. Draft protection, explicit recovery, retained-root resource
+  baselines and cold persistence remain checked.
+- All six startup cases pass in `provider-startup/20261026T031942737098Z`,
+  including malformed transport versus malformed HEALTH, stalls, repeated
+  crashes and invalid volume. Failed attempts release control resources before
+  the explicit retry; failed-volume/repeated-crash media stay unchanged.
+- The pressure desktop and cold reboot pass in `pressure-matrix-desktop-test/`,
+  including all five shared provider incarnations, sibling interaction while
+  storage is blocked, loss/rebuild and the established-focus precondition.
+- Host tests, all-feature desktop/storage Clippy, positional desktop Clippy,
+  format/layout and changed Markdown links pass. No kernel/runtime implementation
+  changes; ARM64 was not rerun. Logs: `build/omega-component/lab-provider-*.log`.
+
+**Next:** migrate positional app transport/wake adapters and pre-driver source
+probes. Other direct storage/input/display mechanism labs also retain copied
+consumers. Raw malformed-setup tests and kernel-mediated capability handoffs
+remain intentional; they are not ordinary application payload fallback. The
+on-demand authorized-broker lookup outcome remains separate accepted work.
+
 Implementation update 2026-10-25: **positional desktops share F5's root/display transport owners**, over `9b762621`.
 
 The copied root-control and display-configuration adapters are removed from
@@ -361,7 +423,7 @@ Verification:
   Markdown links pass. Kernel and runtime implementations are unchanged; ARM64
   was not rerun. Logs: `build/omega-component/lab-control-*.log`.
 
-**Next:** migrate copied provider-control/fault-gate consumers, then the remaining
+**Previous next (provider portion completed above):** migrate copied provider-control/fault-gate consumers, then the remaining
 positional app transport/wake adapters and pre-driver source probes. Preserve
 hostile/setup tests that deliberately use malformed raw bytes. Kernel-mediated
 capability installation remains necessary even when ordinary payload queues are

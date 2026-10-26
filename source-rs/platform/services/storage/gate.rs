@@ -1,32 +1,26 @@
 //! Opt-in owner-controlled fault fixture. Ordinary builds omit it entirely.
-//! Arm: `[0xf2 | 0xf5, phase 1..=2, operation, root]` stalls that root's next
+//! Arm: `[0xf2, phase 1..=2, operation, root]` stalls that root's next
 //! matching request before execution (1) or after commit before reply (2);
-//! 0xf5 stalls silently. `[0xf3]` releases. `[0xf4]` reports each root's
+//! `[0xf6]` queries armed/blocked/idle; `[0xf3]` releases with an acknowledgement.
+//! `[0xf4]` reports each root's
 //! lowest object number so a probe can tell a fresh database from a used one.
 use cathedral_database_objects::Store;
 use cathedral_platform_contracts::storage as wire;
-use cathedral_user_runtime::{
-    ipc::Handle,
-    server::{Request, Server},
-};
+use cathedral_user_runtime::server::{Event, Request, Server};
 #[derive(Default)]
 pub struct Gate {
     phase: u8,
     opcode: u8,
     root: u8,
-    quiet: bool,
 }
 impl Gate {
     pub fn control(&mut self, store: &Store<'_>, server: &mut Server, request: &Request) -> bool {
         match request.bytes[..request.len] {
-            [command @ (0xf2 | 0xf5), phase @ 1..=2, opcode, root @ 0..=1]
-                if u64::from(opcode) <= wire::LAST =>
-            {
+            [0xf2, phase @ 1..=2, opcode, root @ 0..=1] if u64::from(opcode) <= wire::LAST => {
                 *self = Self {
                     phase,
                     opcode,
                     root,
-                    quiet: command == 0xf5,
                 };
                 #[cfg(feature = "trace-storage")]
                 cathedral_user_runtime::time::storage_trace(
@@ -35,6 +29,12 @@ impl Gate {
                     opcode as u64,
                 );
                 server.reply(request, b"armed").unwrap();
+                true
+            }
+            [0xf6] => {
+                server
+                    .reply(request, if self.phase == 0 { b"idle" } else { b"armed" })
+                    .unwrap();
                 true
             }
             [0xf4] => {
@@ -52,24 +52,49 @@ impl Gate {
             _ => false,
         }
     }
-    pub fn wait(&mut self, phase: u8, opcode: u64, root: u8) {
+    pub fn wait(&mut self, server: &mut Server, phase: u8, opcode: u64, root: u8) {
         if self.phase != phase || self.opcode as u64 != opcode || self.root != root {
             return;
         }
         self.phase = 0;
         #[cfg(feature = "trace-storage")]
         cathedral_user_runtime::time::storage_trace("gate-stall", phase as u64, opcode);
-        if !self.quiet {
-            Handle::bootstrap(1).unwrap().send(b"blocked").unwrap();
-        }
-        let mut bytes = [0; 64];
+        // Retain the in-flight store request. Other data requests remain queued;
+        // only authenticated owner control can observe or release this fixture.
+        server.pause(((1 << wire::ROOTS) - 1) << 1);
         loop {
-            let n = Handle::bootstrap(0).unwrap().receive(&mut bytes).unwrap();
-            if bytes[..n] == [0xf3] {
-                break;
+            let request = match server.next_event().unwrap() {
+                Event::Request(request) => request,
+                Event::Memory(request, object) => {
+                    drop(object);
+                    server
+                        .reply(
+                            &request,
+                            &wire::error(cathedral_kernel_contracts::user::INVALID_ARGUMENT),
+                        )
+                        .unwrap();
+                    continue;
+                }
+                Event::Disconnected { .. } => continue,
+            };
+            assert!(request.control);
+            match &request.bytes[..request.len] {
+                [0xf6] => server.reply(&request, b"blocked").unwrap(),
+                [0xf3] => {
+                    server.reply(&request, b"released").unwrap();
+                    server.pause(0);
+                    break;
+                }
+                bytes if bytes == wire::HEALTH => {
+                    // Deliberately unresponsive: the watchdog must retire us.
+                }
+                _ => server
+                    .reply(
+                        &request,
+                        &wire::error(cathedral_kernel_contracts::user::INVALID_ARGUMENT),
+                    )
+                    .unwrap(),
             }
-            // Simulate a live nonresponsive provider, including owner health probes.
-            assert_eq!(&bytes[..n], wire::HEALTH);
         }
     }
 }

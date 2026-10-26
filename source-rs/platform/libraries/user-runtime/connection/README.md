@@ -162,8 +162,9 @@ including separate broker/data connections for its input producer and masked
 capture viewer. Brokered input hints use separate notification wait rights.
 Root supervision and brokered stock/Split lifecycle controls use shared links.
 Bootstrap source checks, input readiness, and positional desktop display/root
-control now use shared connections. Explicit copied provider/fault fixtures,
-pre-driver test injection and positional app wakes remain to migrate. These app adapters remain synchronous; this change
+control now use shared connections. Explicit copied pre-driver test injection and positional app/wake adapters remain
+to migrate. Positional provider supervision and fault gates now use retained
+shared control, with correlated state queries in place of unsolicited signals. These app adapters remain synchronous; this change
 alone does not make an app process input while its drawing call is pending.
 
 ## Immutable attachments
@@ -359,8 +360,7 @@ control and boot root supervision now use shared streams. The desktop's
 [root control owner](../../../../distribution/desktop/session/control.rs) moves
 from bootstrap into the Session, then lends one retained client to shell and
 recovery calls. Its idle wait watches the lifetime endpoint with no outstanding
-request, not notification hints as unsolicited replies. Explicitly copied
-provider/fault fixtures remain separate consumers. Positional desktop root control
+request, not notification hints as unsolicited replies. Positional desktop root control
 and display setup now use the same shared owners as F5; their lab helpers borrow
 those clients instead of copying raw pairs. Input source validation and bootstrap HEALTH
 now use shared connections: the driver validates its own source and retires the
@@ -372,7 +372,9 @@ text only, and uses its original client identity for replies. Its closure leaves
 the root stream live. Explicit budgets cover simultaneous display writers and
 retiring backing/notification charges until the remote peer releases them. The ordinary desktop storage
 provider now uses a yielding shared control opener for readiness and subsequent
-health probes. Replacement collects the exact provider and releases the old
+health probes; positional labs wait on this same owner during setup. Fault gates
+pause data dispatch and answer correlated state/release requests through Server,
+while deliberately withholding HEALTH for watchdog tests. Replacement collects the exact provider and releases the old
 client before starting another; setup acceptance alone is not health readiness. The ordinary
 user matrix keeps eleven service connections (thirty-three notification handles) with its
 upstream, chrome, background and three app pairs. Brokered wake objects/rights
