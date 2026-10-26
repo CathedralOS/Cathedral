@@ -1,7 +1,13 @@
 //! Exercise the syscall boundary, including copied arrays and later ready receivers.
 use super::*;
 use cathedral_user_runtime::ipc;
-pub(super) fn check(display: Pair, app: Pair) {
+pub(super) fn check() {
+    // Typed grant readiness still uses the endpoint wait ABI. Keep these hostile
+    // copy/authority checks separate from the now-shared application transport.
+    let display = ipc::channel().unwrap();
+    let app = ipc::channel().unwrap();
+    let [wait, signal, control] =
+        cathedral_user_runtime::notification::Notification::create().unwrap();
     let deadline = time::now().unwrap();
     assert_eq!(raw(u64::MAX, 1, deadline), abi::BAD_ADDRESS);
     assert_eq!(raw(0, 0, deadline), abi::INVALID_ARGUMENT);
@@ -20,11 +26,7 @@ pub(super) fn check(display: Pair, app: Pair) {
         ),
         abi::TIMED_OUT
     );
-    app.0
-        .send(&cathedral_platform_contracts::display::encode([
-            20, 0, 0, 0, 0, 0,
-        ]))
-        .unwrap();
+    wait.delegate(app.0, &[]).unwrap();
     let mut handles = [display.1; abi::MAX_WAIT_HANDLES];
     handles[abi::MAX_WAIT_HANDLES - 1] = app.1;
     assert_eq!(
@@ -39,7 +41,16 @@ pub(super) fn check(display: Pair, app: Pair) {
         ipc::wait_many(&handles, time::now().unwrap()),
         Ok(abi::MAX_WAIT_HANDLES - 1)
     );
-    assert_eq!(app.1.receive(&mut [0; 64]).unwrap(), 48);
+    let (len, received) =
+        cathedral_user_runtime::notification::Notification::accept(app.1, &mut [0; 64]).unwrap();
+    assert_eq!(len, 0);
+    received.unwrap().release().unwrap();
+    for right in [wait, signal, control] {
+        right.release().unwrap();
+    }
+    for handle in [display.0, display.1, app.0, app.1] {
+        handle.close().unwrap();
+    }
     marker(b"Cathedral session: wait-set copy bounds complete authority validation later readiness and non-consumption passed\n");
 }
 fn raw(address: u64, count: u64, deadline: u64) -> u64 {

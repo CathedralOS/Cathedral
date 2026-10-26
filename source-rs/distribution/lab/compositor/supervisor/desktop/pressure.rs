@@ -3,7 +3,7 @@ use super::*;
 use crate::pressure::{FAULT, SPIN, STATUS};
 pub(super) struct Pressure {
     child: Child,
-    pair: Pair,
+    pair: Client,
     polls: u64,
     rounds: u64,
     spinning: bool,
@@ -48,7 +48,7 @@ impl Pressure {
         } else {
             FAULT
         };
-        let stats = call(self.pair, command, 0);
+        let stats = call(&mut self.pair, command, 0);
         assert_eq!(stats[0], 0);
         assert!(stats[1] > 0 && stats[2] == stats[1] && stats[3] == 1);
         if command == STATUS {
@@ -68,6 +68,7 @@ impl Pressure {
         }
     }
     fn restart(&mut self) {
+        self.pair.retire();
         self.child = Launch::at(5).unwrap().spawn(0).unwrap();
         self.pair = connect(5);
         self.polls = 0;

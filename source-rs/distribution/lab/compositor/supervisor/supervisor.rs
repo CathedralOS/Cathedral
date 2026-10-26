@@ -4,24 +4,27 @@ use cathedral_kernel_contracts::user as abi;
 use cathedral_platform_contracts::display;
 use cathedral_platform_contracts::display::composition as w;
 use cathedral_user_runtime::{
-    ipc::Handle,
+    connection::Client,
     task::{Child, Launch, Outcome, Port},
     time,
 };
-type Pair = (Handle, Handle);
-fn connect(index: u64) -> Pair {
-    Port::at(index).unwrap().connect().unwrap()
+fn connect(index: u64) -> Client {
+    Client::connect(
+        Port::at(index).unwrap().connect().unwrap(),
+        time::after(300).unwrap(),
+    )
+    .unwrap()
 }
-fn call(pair: Pair, op: u64, arg: u64) -> [u64; 6] {
+fn call(pair: &mut Client, op: u64, arg: u64) -> [u64; 6] {
     exchange(pair, [op, arg, 0, 0, 0, 0])
 }
-fn place(display: Pair, client: u64, x: u64, y: u64) {
+fn place(display: &mut Client, client: u64, x: u64, y: u64) {
     assert_eq!(exchange(display, [w::PLACE, client, x, y, 256, 200])[0], 0);
 }
-fn pixel(display: Pair, x: u64, y: u64, color: u64) {
+fn pixel(display: &mut Client, x: u64, y: u64, color: u64) {
     assert_eq!(exchange(display, [w::PIXEL, x, y, 0, 0, 0])[1], color);
 }
-fn gone(display: Pair, client: u64) {
+fn gone(display: &mut Client, client: u64) {
     let deadline = time::after(300).unwrap();
     while call(display, w::STATUS, client)[3] != 0 {
         assert!(!time::reached(time::now().unwrap(), deadline));
@@ -34,9 +37,9 @@ struct Session {
     provider: Child,
     left: Child,
     right: Child,
-    display: Pair,
-    a: Pair,
-    b: Pair,
+    display: Client,
+    a: Client,
+    b: Client,
 }
 impl Session {
     fn start() -> Self {
@@ -46,10 +49,11 @@ impl Session {
         let provider = display_launch.spawn(0).unwrap();
         let left = left_launch.spawn(0).unwrap();
         let right = right_launch.spawn(0).unwrap();
-        let display = Port::at(0)
+        let display_pair = Port::at(0)
             .unwrap()
             .connect()
             .unwrap_or_else(|e| panic!("display connect {e:?}: {:?}", provider.wait()));
+        let display = Client::connect(display_pair, time::after(300).unwrap()).unwrap();
         let a = connect(1);
         let b = connect(2);
         Self {
@@ -67,8 +71,8 @@ pub fn run() -> u64 {
     if let Ok(child) = Launch::at(4)
         && !cfg!(feature = "session-probes")
     {
-        assert_eq!(call(session.a, 1, 1)[0], 0);
-        assert_eq!(call(session.b, 1, 1)[0], 0);
+        assert_eq!(call(&mut session.a, 1, 1)[0], 0);
+        assert_eq!(call(&mut session.b, 1, 1)[0], 0);
         marker(b"Cathedral session: interactive startup; destructive probes disabled\n");
         return session.desktop(child);
     }
@@ -84,9 +88,6 @@ pub fn run() -> u64 {
     }
     // Preserve the final scene and children for QMP or interactive viewing.
     loop {
-        let _ = session
-            .display
-            .1
-            .receive_until(&mut [0; 64], time::after(100).unwrap());
+        crate::transport::idle(100);
     }
 }

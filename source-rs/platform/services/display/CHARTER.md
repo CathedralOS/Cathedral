@@ -69,6 +69,8 @@ provider. Losing the owner retires this connection and ends the provider normall
 Presentation and selection scene updates yield through the matrix's event loop.
 Each shared stream consumes an explicit private page, reader page and notification
 allowance; root profiles reserve matching client capacity. Direct-mode smoke and
-ordinary nested matrix hops use shared transport too. Older positional compositor
-fixtures still need migration. This does not imply faster software rasterization
+ordinary nested matrix hops use shared transport too. Positional compositor,
+pointer and session fixtures also use shared control and pipelined client slots;
+their sealed scene offers remain separate authenticated attachments. This does
+not imply faster software rasterization
 or GPU support.

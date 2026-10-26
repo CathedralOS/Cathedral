@@ -43,3 +43,7 @@ configuration. Keyboard recovery hooks live under `keyboard/`.
 host-testable policies. Pointer-mode delivery feeds the
 [compositor input handler](../display/compositor/input.rs); application focus
 and pointer authority are enforced there, not in the physical input provider.
+Pointer mode uses separate shared owner-control and compositor connections.
+Readiness is an owner request; reconnecting retires the old data connection and
+seeds held-key state before resuming source updates. Its bounded device polling
+is independent of the command/reply transport.

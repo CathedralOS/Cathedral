@@ -9,8 +9,14 @@ use cathedral_platform_contracts::display;
 use cathedral_platform_contracts::display::interaction as session;
 use cathedral_platform_contracts::display::pointer as wire;
 use cathedral_platform_contracts::input;
-use cathedral_user_runtime::{Error, ipc::Handle, keyboard, link::Link, time};
-type Pair = (Handle, Handle);
+use cathedral_user_runtime::{
+    Error,
+    connection::Client,
+    keyboard,
+    link::Link,
+    server::{Event, Server, SharedSlot},
+    time,
+};
 pub fn run() -> u64 {
     match serve() {
         Ok(()) => 0,
@@ -19,27 +25,33 @@ pub fn run() -> u64 {
 }
 fn serve() -> Result<(), Error> {
     controller::initialize_mouse()?;
-    let control = (Handle::bootstrap(0)?, Handle::bootstrap(1)?);
+    static mut CONTROL: SharedSlot = SharedSlot::empty();
+    let slot = &raw mut CONTROL;
+    let mut control = Server::open_clients(0)?;
+    // SAFETY: This source enters once, lending its exclusive owner-control slot.
+    control.enable_shared_control(unsafe { &mut *slot })?;
     let mut mouse = Mouse::default();
     let mut keys = Decoder::source();
     let mut connection = Some(connect(keys.held_keys())?);
-    control.1.send(b"ready")?;
     loop {
-        let mut packet = [0; 64];
-        match control.0.receive_until(&mut packet, time::now()?) {
-            Ok(len) => {
-                if packet[..len] == [2] {
+        match control.next_event_for(&[], Some(time::now()?)) {
+            Ok(Some(Event::Request(request))) => {
+                if request.bytes[..request.len] == [2] {
+                    drop(connection.take());
                     connection = Some(connect(keys.held_keys())?);
                     mouse.reset();
                     keys.reset();
                 }
-                control.1.send(if connection.is_some() {
-                    b"ready"
-                } else {
-                    b"offline"
-                })?;
+                control.reply(
+                    &request,
+                    if connection.is_some() {
+                        b"ready"
+                    } else {
+                        b"offline"
+                    },
+                )?;
             }
-            Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
+            Ok(_) => (),
             Err(error) => return Err(error),
         }
         let byte = match keyboard::read_until(time::after(10)?) {
@@ -76,7 +88,7 @@ fn serve() -> Result<(), Error> {
             }),
             _ => None,
         };
-        if let (Some(pair), Some(words)) = (connection, words)
+        if let (Some(pair), Some(words)) = (&mut connection, words)
             && publish(pair, words).is_err()
         {
             cathedral_user_runtime::write(b"Cathedral pointer: delivery failed; source offline\n")?;
@@ -84,16 +96,16 @@ fn serve() -> Result<(), Error> {
         }
     }
 }
-fn connect(held: u64) -> Result<Pair, Error> {
-    let pair = Link::at(0)?.connect()?;
-    publish(pair, [wire::DEVICE, 0, 0, 0, 1, 0])?;
+fn connect(held: u64) -> Result<Client, Error> {
+    let mut pair = Client::connect(Link::at(0)?.connect()?, time::after(300)?)?;
+    publish(&mut pair, [wire::DEVICE, 0, 0, 0, 1, 0])?;
     // The physical reset above clears focus. Seed the replacement router's held
     // state before resetting keys, so typematic input cannot become a fresh press
     // if the user clicks a new target while still holding an old key.
     for key in input::UP..=input::ENTER {
         if held & (1 << (key - 1)) != 0 {
             publish(
-                pair,
+                &mut pair,
                 [
                     session::KEY_SOURCE,
                     u64::from(key),
@@ -106,16 +118,14 @@ fn connect(held: u64) -> Result<Pair, Error> {
         }
     }
     publish(
-        pair,
+        &mut pair,
         [session::KEY_SOURCE, u64::from(input::RESET), 0, 0, 0, 0],
     )?;
     cathedral_user_runtime::write(b"Cathedral pointer: mouse source ready\n")?;
     Ok(pair)
 }
-fn publish(pair: Pair, words: [u64; 6]) -> Result<(), Error> {
-    pair.0.send(&display::encode(words))?;
-    let mut bytes = [0; 64];
-    let len = pair.1.receive_until(&mut bytes, time::after(200)?)?;
+fn publish(pair: &mut Client, words: [u64; 6]) -> Result<(), Error> {
+    let (bytes, len) = pair.call(&display::encode(words), time::after(200)?)?;
     if display::decode(&bytes[..len]).is_none_or(|reply| reply[0] != 0) {
         return Err(Error(abi::IO_ERROR as i64));
     }

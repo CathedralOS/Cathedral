@@ -3,42 +3,39 @@ use super::*;
 use cathedral_platform_contracts::display::pointer as p;
 use cathedral_user_runtime::time;
 use core::fmt::Write;
-pub fn run(
-    role: u64,
-    lease: u64,
-    control: (Handle, Handle),
-    connection: (Handle, Handle),
-    link: Link,
-) -> u64 {
+pub fn run(role: u64, lease: u64, mut control: Server, mut connection: Data, link: Link) -> u64 {
     let mut held = [0; 2];
     let mut revision = 1;
     let mut pending = false;
     loop {
-        let mut bytes = [0; 64];
-        match control.0.receive_until(&mut bytes, time::now().unwrap()) {
-            Ok(_) => control.1.send(&display::encode([0; 6])).unwrap(),
-            Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
+        match control.next_event_for(&[], Some(time::now().unwrap())) {
+            Ok(Some(cathedral_user_runtime::server::Event::Request(request))) => {
+                control.reply(&request, &display::encode([0; 6])).unwrap()
+            }
+            Ok(_) => (),
             Err(_) => return 0,
         }
         if !pending {
             connection
-                .0
-                .send(&display::encode([p::WAIT, 0, 0, 0, 0, 0]))
+                .begin(&display::encode([p::WAIT, 0, 0, 0, 0, 0]), None)
                 .unwrap();
             pending = true;
         }
-        match cathedral_user_runtime::ipc::wait_two(
-            control.0,
-            connection.1,
-            time::after(500).unwrap(),
-        ) {
-            Ok(1) => (),
-            Ok(_) => continue,
-            Err(Error(code)) if code == abi::TIMED_OUT as i64 => continue,
-            Err(_) => return 0,
-        }
-        let mut packet = [0; 64];
-        let len = connection.1.receive(&mut packet).unwrap();
+        let response = connection.poll().unwrap();
+        let Some((packet, len, object)) = response else {
+            match control.next_event_for(
+                &connection.interests().unwrap(),
+                Some(time::after(500).unwrap()),
+            ) {
+                Ok(Some(cathedral_user_runtime::server::Event::Request(request))) => {
+                    control.reply(&request, &display::encode([0; 6])).unwrap()
+                }
+                Ok(_) => (),
+                Err(_) => return 0,
+            }
+            continue;
+        };
+        assert!(object.is_none());
         pending = false;
         let event = p::Event::decode(display::decode(&packet[..len]).unwrap()).unwrap();
         if event.kind == p::NONE {
@@ -51,7 +48,7 @@ pub fn run(
         } else {
             if held[id] == 0 && event.buttons != 0 {
                 // A release or cancellation can race this request. Denial is normal.
-                let _ = exchange(connection, [p::CAPTURE, event.pointer, 1, 0, 0, 0]);
+                let _ = exchange(&mut connection, [p::CAPTURE, event.pointer, 1, 0, 0, 0]);
             }
             held[id] = event.buttons;
         }
@@ -66,7 +63,10 @@ pub fn run(
             page.bytes_mut()[..snapshot.len()].copy_from_slice(&snapshot);
             let sealed = page.seal(link).unwrap();
             assert_eq!(
-                exchange(connection, [w::SUBMIT, revision, sealed.handle(), 0, 0, 0])[0],
+                exchange(
+                    &mut connection,
+                    [w::SUBMIT, revision, sealed.handle(), 0, 0, 0]
+                )[0],
                 0
             );
             sealed.release().unwrap();
@@ -82,9 +82,8 @@ pub fn run(
             if event.buttons & 4 != 0 {
                 cathedral_user_runtime::write(b"Cathedral pointer: app 1 flooding\n").unwrap();
                 loop {
-                    let _ = connection
-                        .0
-                        .send(&display::encode([w::BACKGROUND, 0, 0, 0, 0, 0]));
+                    let _ =
+                        connection.submit(&display::encode([w::BACKGROUND, 0, 0, 0, 0, 0]), None);
                 }
             }
         }
@@ -93,7 +92,7 @@ pub fn run(
         if role == 2 && event.pointer == 0 && event.kind != p::CANCEL && lease != 0 {
             assert_eq!(
                 exchange(
-                    connection,
+                    &mut connection,
                     [
                         p::DRIVE,
                         lease,

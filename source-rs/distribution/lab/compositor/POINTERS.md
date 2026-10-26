@@ -66,7 +66,11 @@ events. Adjacent motion for the same pointer coalesces; button edges do not.
 Overflow replaces that app's pending events with cancellation barriers, releases
 its captures and suppresses held presses until buttons are up. Other clients
 retain their state. The service rotates control, both apps and the mouse source;
-a full reply queue cannot block another connection.
+an unread shared reply cannot block another connection. Owner health/readiness
+and source updates have separate funded shared connections. The supervisor asks
+for readiness over its control connection; there is no unsolicited copied ready
+packet. Apps multiplex owner control with shared input replies, and the flood
+probe fills a four-call window without consuming replies.
 
 Hit-testing selects the topmost painted pixel in the same accepted scene used
 for rendering. Ancestor clips and app placement apply to both paths. Transparent

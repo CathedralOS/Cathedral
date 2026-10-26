@@ -30,7 +30,7 @@ impl Desktop {
         }
     }
     pub(super) fn update_focus(&mut self) {
-        let focus = call(self.base.display, s::FOCUS_STATE, 0)[1];
+        let focus = call(&mut self.base.display, s::FOCUS_STATE, 0)[1];
         if focus == self.last_focus {
             return;
         }
@@ -46,18 +46,15 @@ impl Desktop {
             },
         );
     }
-    pub(super) fn notice(&self, text: &[u8]) {
+    pub(super) fn notice(&mut self, text: &[u8]) {
         self.label(80, 420, text);
     }
-    fn label(&self, x: u64, y: u64, text: &[u8]) {
+    fn label(&mut self, x: u64, y: u64, text: &[u8]) {
         let packet = display::encode_text(x, y, 2, 0xc5d3e8, text).unwrap();
-        self.base.display.0.send(&packet).unwrap();
-        let mut reply = [0; 64];
-        let len = self
+        let (reply, len) = self
             .base
             .display
-            .1
-            .receive_until(&mut reply, time::after(300).unwrap())
+            .call(&packet, time::after(300).unwrap())
             .unwrap();
         assert_eq!(display::decode(&reply[..len]).unwrap()[0], 0);
     }

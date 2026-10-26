@@ -30,6 +30,12 @@ framebuffer-owning display provider and two copies of the client executable.
 appearance. The [profile](../../../../tools/boot-harness-rs/profiles/compositor.json)
 binds devices and connections.
 
+[Transport](transport.rs) exchanges commands over retained shared connections.
+Each owner-control connection has its own mailbox and notification rights;
+app-to-compositor connections have a four-call window. Snapshot pages still use
+authenticated sealed offers. Kernel channels establish connections and transfer
+rights; application commands and replies use shared memory and notifications.
+
 The receiving [display entrance](../../../platform/services/display/main.rs)
 selects [compositor execution](../../../platform/services/display/compositor/compositor.rs)
 from its boot-supplied mode. Follow [request dispatch](../../../platform/services/display/compositor/requests.rs)
@@ -68,7 +74,7 @@ Revisions belong to connection incarnations. The service observes disconnects,
 removes that instance's retained content, and redraws exposed peers. A replacement
 starts at revision one with a new connection. A queued request can finish before
 disconnect is observed; this does not define production revocation timing.
-The generic server rotates clients and control, and full reply queues do not
+The generic server rotates clients and control, and unread shared replies do not
 block the other client. Every accepted snapshot has bounded decoding and drawing
 work, though no real-time or fair CPU-share guarantee is established.
 
@@ -86,7 +92,8 @@ Kernel policy tests check producer authentication without consuming foreign offe
 
 QEMU checks actual device pixels after scope clipping, movement, overlap and
 exposure; rejects stale and foreign handles; and repeatedly releases/reallocates
-a client's single-page budget. It crashes, spins and floods one client, replaces
+a client's snapshot page beside its two mailbox writers. It crashes, spins and
+fills one client's four-call window without consuming replies, replaces
 it, then replaces the compositor while both clients survive and reconnect.
 The host independently reconstructs the final image and compares every pixel.
 This bounds the tested resource reuse; the profile remains live for inspection

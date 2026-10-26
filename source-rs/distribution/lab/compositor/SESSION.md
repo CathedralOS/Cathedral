@@ -114,18 +114,22 @@ scanout writes. No full-frame backing or ancestor image copies are introduced.
 
 ## Waiting and recovery
 
-Apps keep one outstanding WAIT and sleep on their control/reply handles. The
+Apps keep one outstanding WAIT and sleep on their shared control/data interests. The
 compositor retains at most one pending waiter per app and replies when an event
 exists. A supervisor WAKE supports configuration rendezvous. Apps serialize
-configuration RPCs after consuming their wait reply; arbitrary concurrent RPCs
-on one reply queue are not supported.
+configuration RPCs after consuming their wait reply, retaining the exact owner
+request until configuration completes. The four-call data window is used for
+hostile backpressure probes; ordinary app behavior keeps one call outstanding.
 
-The kernel's bounded IPC_WAIT_MANY copies and validates one to eight receive
-handles, checks every handle's authority before reporting readiness, and returns
-an index without consuming a message. The generic server waits on all connected
-clients plus control. It still wakes periodically to discover replacement links;
+The kernel's bounded mixed wait validates receive and notification rights before
+reporting readiness without consuming the event. The generic server waits on
+shared connection interests for clients plus control. It still wakes periodically
+to discover replacement links;
 the PS/2 source uses bounded device/control polling. The idle probe establishes
 no repeated app event polling or compositor redraws, not zero timer wakeups.
+The separate wait-array probe uses a typed notification grant, including complete
+authority validation and repeated readiness before grant acceptance; it does not
+put copied application payloads back on the shared data connection.
 
 On compositor failure the supervisor reconnects surviving apps, has them publish
 their desired state, rebuilds placements and grants, and reconnects the input
@@ -133,6 +137,8 @@ source. The surviving source supplies its held-key state so a repeat cannot
 become a new press after reconnection. Cursor positions restart; interrupted
 capture and focus are cleared.
 The old interaction is never resumed merely because its content survived.
+If the provider dies between polling and waiting, the app retires that data
+connection and keeps its owner-control server available for reconnection.
 If input delivery fails, source health reports `offline` instead of claiming
 readiness with a dead connection. Supervision can then replace it. Ordinary
 pointer motion no longer writes serial diagnostics for every report or moves the

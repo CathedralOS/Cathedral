@@ -295,9 +295,15 @@ def main():
                 "features": ["desktop"],
             })
         elif not args.kernel_only and profile == (Path(__file__).parent / "profiles/session.json").resolve():
+            for program in (startup["initial"], startup["launches"][0]):
+                for field in ("private_pages", "shared_pages", "ipc_channels"):
+                    program[field] += 1
             startup["launches"].append({
                 "package": "cathedral-compositor-lab", "entry": "distribution/lab/compositor/main.rs",
-                "target": "x86_64-unknown-none", "clock": True, "argument": 4, "private_pages": 16,
+                "target": "x86_64-unknown-none", "clock": True, "argument": 4,
+                # Full current 256-page object plus two mailbox writers. The
+                # object-count probe also needs room for 22 one-page objects.
+                "private_pages": 258, "shared_pages": 2, "ipc_channels": 2,
             })
             startup["links"].append([6, 1])
         else:

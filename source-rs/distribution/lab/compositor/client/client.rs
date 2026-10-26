@@ -5,15 +5,18 @@ use cathedral_platform_contracts::display;
 use cathedral_platform_contracts::display::composition as w;
 use cathedral_user_runtime::{
     Error,
-    ipc::Handle,
+    connection::Pipeline,
     link::Link,
     memory::{Private, Sealed},
+    server::{Server, SharedSlot},
+    time,
 };
+type Data = Pipeline<4>;
 struct Start {
     mode: u64,
     arg: u64,
-    control: (Handle, Handle),
-    connection: (Handle, Handle),
+    control: Server,
+    connection: Data,
     link: Link,
 }
 pub fn run(role: u64) -> u64 {
@@ -29,21 +32,26 @@ fn commands(role: u64) -> Start {
         cathedral_user_runtime::display::mapping(),
         Err(Error(abi::DENIED as i64))
     );
-    let control = (Handle::bootstrap(0).unwrap(), Handle::bootstrap(1).unwrap());
+    static mut CONTROL: SharedSlot = SharedSlot::empty();
+    let slot = &raw mut CONTROL;
+    let mut control = Server::open_clients(0).unwrap();
+    // SAFETY: Single-entry app exclusively lends its control slot to this server.
+    control
+        .enable_shared_control(unsafe { &mut *slot })
+        .unwrap();
     let link = Link::at(0).unwrap();
     let mut pair = None;
     let mut offer: Option<Sealed> = None;
     loop {
-        let mut bytes = [0; 64];
-        let len = control.0.receive(&mut bytes).unwrap();
-        let [op, arg, extra, _, _, _] = display::decode(&bytes[..len]).unwrap();
+        let request = control.next_request().unwrap();
+        let [op, arg, extra, _, _, _] = display::decode(&request.bytes[..request.len]).unwrap();
         if op == 9 {
             pair = None;
         }
         if pair.is_none() {
-            pair = Some(link.connect().unwrap());
+            pair = Some(Data::connect(link.connect().unwrap(), time::after(300).unwrap()).unwrap());
         }
-        let connection = pair.unwrap();
+        let connection = pair.as_mut().unwrap();
         let reply = match op {
             1..=3 => {
                 let snapshot = scene::snapshot(role, op == 2);
@@ -72,28 +80,36 @@ fn commands(role: u64) -> Start {
                 result
             }
             7 => {
-                control.1.send(&display::encode([0; 6])).unwrap();
+                control.reply(&request, &display::encode([0; 6])).unwrap();
                 loop {
                     core::hint::spin_loop();
                 }
             }
             8 => {
-                // Queue enough requests to overflow the undrained reply queue before
-                // announcing the hostile mode. The supervisor then tests peer progress.
+                // Fill the independent-call window without consuming any replies.
+                // The provider must retain replies behind its full output mailbox
+                // while continuing to serve control and other clients.
                 let packet = display::encode([w::BACKGROUND, 0, 0, 0, 0, 0]);
                 let mut sent = 0;
-                while sent < 16 {
-                    match connection.0.send(&packet) {
-                        Ok(()) => sent += 1,
+                while sent < 4 {
+                    match connection.submit(&packet, None) {
+                        Ok(_) => sent += 1,
                         Err(Error(code)) if code == abi::WOULD_BLOCK as i64 => {
                             cathedral_user_runtime::yield_now()
                         }
                         Err(error) => panic!("flood setup: {error:?}"),
                     }
                 }
-                control.1.send(&display::encode([0; 6])).unwrap();
+                assert_eq!(
+                    connection.submit(&packet, None),
+                    Err(Error(abi::BUSY as i64))
+                );
+                control.reply(&request, &display::encode([0; 6])).unwrap();
                 loop {
-                    let _ = connection.0.send(&packet);
+                    assert_eq!(
+                        connection.submit(&packet, None),
+                        Err(Error(abi::BUSY as i64))
+                    );
                 }
             }
             9 => [0; 6],
@@ -105,18 +121,21 @@ fn commands(role: u64) -> Start {
             }
             11 => exchange(connection, [w::PLACE, 1, 0, 0, 256, 256]),
             12 | 14 => {
-                control.1.send(&display::encode([0; 6])).unwrap();
+                control.reply(&request, &display::encode([0; 6])).unwrap();
                 return Start {
                     mode: op,
                     arg,
                     control,
-                    connection,
+                    connection: pair.take().unwrap(),
                     link,
                 };
             }
-            32..=57 => exchange(connection, display::decode(&bytes[..len]).unwrap()),
+            32..=57 => exchange(
+                connection,
+                display::decode(&request.bytes[..request.len]).unwrap(),
+            ),
             _ => panic!(),
         };
-        control.1.send(&display::encode(reply)).unwrap();
+        control.reply(&request, &display::encode(reply)).unwrap();
     }
 }

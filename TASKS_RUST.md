@@ -336,6 +336,59 @@ default/hidden cursor evidence remains valid for its scope, not the full asset A
 
 ## Current implementation evidence
 
+Implementation update 2026-10-26: **positional compositor, pointer and session traffic uses shared IPC**, over `723d5b70`.
+
+The lab supervisor, app control/data, pressure peer and physical pointer source
+now own funded shared connections. App data uses a four-call window; normal app
+loops retain one WAIT, while hostile clients deliberately fill the window without
+reading replies. The compositor retains replies without blocking unrelated
+clients. Scene snapshots still use producer-authenticated sealed page offers.
+The isolated wait-array probe now transfers an empty typed notification grant;
+it preserves copy bounds, complete authority validation and non-consuming
+readiness without copied application payloads. Timer-only sleeps use empty waits.
+
+Session configuration retains the exact owner request until the outstanding
+input WAIT completes. Provider death between poll and mixed wait retires only
+the data connection; owner control remains available to reconnect the surviving
+app. Replacement releases old mailbox/notification custody before admitting the
+new connection. The named lab [transport owner](source-rs/distribution/lab/compositor/transport.rs)
+keeps exchange/deadline handling out of `main.rs`.
+
+Pressure exposed stale fixture funding: its old 16-page grant no longer matched
+the current 256-page work object and 24-object ceiling. The grant now funds that
+1-MiB object plus two mailbox writers (258 private pages), two reader pages and
+two notifications. The object probe allocates 22 small objects beside the two
+writers. It still requires both object/page exhaustion and unused-reply
+backpressure, then cancellation/fault with live backing and successful replacement.
+No kernel ceiling or latency assertion was relaxed.
+
+**Outstanding performance failure:** development session with both
+`--startup-probes --pressure` loses raw input during the 120-report drag and fails
+the existing one-second/lost-motion assertion. This reproduced in four runs,
+including diagnostic attempts at less frequent control polling and a four-call
+source pipeline. Neither resolved it; those attempts were removed. Development
+without pressure passes all 120 reports (125 ms final catch-up in this run), and
+release pressure with startup probes passes (16 ms). These are workload
+observations, not input deadlines. Do not mark development pressure green or
+weaken its check. The newly funded full-size work object makes this a stronger
+workload than the old 64-KiB documentation described. Next isolate scheduling,
+shared request handling and allocation/reclamation costs under that load.
+
+Host tests and all-feature Clippy for compositor/input/display pass, as do layout
+and format checks. Release drawing, pointer, ordinary session and pressure
+session with/without startup probes pass; development pointer and session with
+startup probes pass. The ordinary F5 desktop test passes through multiple Notes
+instances, Colors, save/close controls and cold reboot; its host oracle verifies
+all 1,631 durable records. Logs are `build/omega-component/compositor-*.log`; failed
+development pressure serial logs are retained beside them. See the updated
+[lab guide](source-rs/distribution/lab/compositor/README.md),
+[session guide](source-rs/distribution/lab/compositor/SESSION.md) and
+[pressure guide](source-rs/distribution/lab/compositor/PRESSURE.md).
+
+**Next:** resolve the development pressure input failure above, then audit runtime
+wake/upstream adapters and remaining copied service consumers before retiring
+copied application payload support. This fixture migration adds no F5 UI behavior.
+
 Implementation update 2026-10-26: **watchdog recovery uses shared IPC; clock denial has dedicated process coverage**, over `0022d3a0`.
 
 The watchdog owner, client, observer and eight service incarnations use funded
@@ -366,7 +419,7 @@ The remaining raw sends/receives in this lab are intentional stale-authority and
 failed-admission endpoint-custody probes. No runtime/kernel mechanism or normal
 F5/ARM64 composition changed.
 
-**Next:** migrate positional compositor traffic and audit runtime wake/upstream
+**Previous next (positional migration completed above):** migrate positional compositor traffic and audit runtime wake/upstream
 adapters before retiring copied application payload support. Preserve actual
 pressure/backpressure, retained-reader and cancellation checks; the already-shared
 ordinary F5 route does not prove these separate consumers have been migrated.

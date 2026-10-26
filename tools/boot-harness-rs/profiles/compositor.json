@@ -7,7 +7,10 @@
       "package": "cathedral-compositor-lab",
       "entry": "distribution/lab/compositor/main.rs",
       "target": "x86_64-unknown-none",
-      "clock": true
+      "clock": true,
+      "private_pages": 3,
+      "shared_pages": 3,
+      "ipc_channels": 3
     },
     "launches": [
       {
@@ -16,8 +19,10 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "framebuffer": true,
-        "shared_pages": 2,
-        "argument": 1129270608
+        "shared_pages": 4,
+        "argument": 1129270608,
+        "private_pages": 3,
+        "ipc_channels": 3
       },
       {
         "package": "cathedral-compositor-lab",
@@ -25,7 +30,9 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 1,
-        "private_pages": 1
+        "private_pages": 3,
+        "shared_pages": 2,
+        "ipc_channels": 2
       },
       {
         "package": "cathedral-compositor-lab",
@@ -33,7 +40,9 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 2,
-        "private_pages": 1
+        "private_pages": 3,
+        "shared_pages": 2,
+        "ipc_channels": 2
       }
     ],
     "links": [

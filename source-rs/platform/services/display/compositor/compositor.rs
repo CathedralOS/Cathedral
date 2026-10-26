@@ -82,6 +82,20 @@ pub fn run(environment: cathedral_user_runtime::task::Environment) -> u64 {
         server.enable_shared_control(unsafe { &mut *slot }).unwrap();
     } else {
         assert!(environment.is_empty());
+        static mut CONTROL: cathedral_user_runtime::server::SharedSlot =
+            cathedral_user_runtime::server::SharedSlot::empty();
+        static mut CLIENT_TRANSPORTS: [cathedral_user_runtime::server::SharedSlot; 5] =
+            [const { cathedral_user_runtime::server::SharedSlot::empty() }; 5];
+        let control = &raw mut CONTROL;
+        let clients = &raw mut CLIENT_TRANSPORTS;
+        // SAFETY: Single service entry exclusively lends distinct process-local slots.
+        server
+            .enable_shared_control(unsafe { &mut *control })
+            .unwrap();
+        // SAFETY: Disjoint array from control and the ordinary bootstrap slots above.
+        for (index, slot) in unsafe { &mut *clients }.iter_mut().enumerate() {
+            server.enable_pipeline(index, slot).unwrap();
+        }
     }
     loop {
         match server.next_event() {
