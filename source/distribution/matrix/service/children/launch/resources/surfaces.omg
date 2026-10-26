@@ -1,0 +1,54 @@
+module children::launch::resources::surfaces;
+
+// A preference is not an allocation. The host tries disjoint ranges from this
+// count down to the requested minimum; an empty range must refuse admission.
+public data Demand {
+    requested: u64;
+    ceiling: u64;
+    has_descendants: bool;
+    explicit_profile: bool;
+    backed: u64;
+}
+
+public data Preference [copy] {
+    case ExceedsCeiling;
+    case Preferred(count: u64);
+}
+
+public const RESERVED_SURFACES: u64 = 9u64; // Launcher chrome plus background.
+const DEFAULT_HOST_CEILING: u64 = 16u64;
+
+public machine preferred(demand: &Demand) -> Preference {
+    transition demand.requested <= demand.ceiling {
+        true -> admitted(demand)
+        _ -> (Preference::ExceedsCeiling)
+    }
+    machine admitted(demand: &Demand) -> Preference {
+        transition demand.has_descendants {
+            true -> host(demand)
+            _ -> (Preference::Preferred { count: demand.requested })
+        }
+    }
+    machine host(demand: &Demand) -> Preference {
+        transition demand.explicit_profile {
+            true -> backed(demand.backed, demand.ceiling)
+            _ -> backed(demand.backed, minimum(demand.ceiling, DEFAULT_HOST_CEILING))
+        }
+    }
+    machine backed(count: u64, ceiling: u64) -> Preference {
+        transition count >= RESERVED_SURFACES {
+            true -> spare(count, ceiling)
+            _ -> (Preference::Preferred { count: 0u64 })
+        }
+    }
+    machine spare(count: u64, ceiling: u64) -> Preference requires count >= RESERVED_SURFACES {
+        Preference::Preferred { count: minimum(ceiling, count - RESERVED_SURFACES) }
+    }
+}
+
+machine minimum(a: u64, b: u64) -> u64 {
+    transition a <= b {
+        true -> (a)
+        _ -> (b)
+    }
+}

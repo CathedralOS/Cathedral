@@ -64,12 +64,14 @@ adding more packet-driven policy ports. The stock matrix now follows the Rust
 `bridge/`. Close/loss policy uses named survey, answer and outcome types; service
 turns use commands, observed facts and event kinds. Their native adapters own the
 numeric packet encoding. Local startup and launcher recovery now use named
-state and outcomes as well, with their encoding in `bridge/policy/`.
+state and outcomes as well, with their encoding in `bridge/policy/`. Resource
+admission now uses named capacities, optional declarations, role offers and
+surface preferences; its codec is also confined to that bridge.
 Package/module imports must retain this hierarchy.
 
 This is not a completed tree-wide cleanup. Launch, workspace, requests, realm
-setup, configuration and resource policies still need their packet-shaped domain
-interfaces replaced; retain the existing host regression cases while doing that. Avoid
+setup and configuration still need their packet-shaped domain interfaces replaced;
+retain the existing host regression cases while doing that. Avoid
 adding features to these representations. The Omega kernel also still mixes x86
 paging, PIC/PIT and interrupt profiles in `kernel/core/`; split shared ownership
 from ISA/board mechanisms before expanding that prototype. Start the audit at
@@ -111,6 +113,25 @@ admission or fallback. Layout checks and navigation links pass. Logs are
 Guest artifacts: `desktop/20261026T233346922557Z`,
 `nested-failures/20261026T233732612252Z`, `desktop/20261026T233946964061Z` and
 `desktop/20261026T234107883140Z` under `build/boot-harness-rs/`.
+
+Resource-policy follow-up over `3db18014`: `launch/resources/main.omg` now owns
+actual admission sequencing, replacing its former numeric dispatcher. It fits a
+named `Profile` and `Declaration` to an offered `Capacity`; accepted allocations
+carry an explicit surface request or retain the host offer. `recipes.omg` owns
+stock roles and their offers, while `surfaces.omg` owns preference bounded by
+standing authority and available backing. `bridge/policy/resources.omg` alone
+encodes native operations, packet slots and errors. Rust allocation mechanisms,
+resource ceilings and public service protocols are unchanged.
+
+Verification: all 97 compiled matrix tests pass, including strict profile
+refusals, absent declarations, owner ceilings and surface arithmetic boundaries.
+The default F5 composition passes three nested desktops, protected close, saved
+Notes/Colors, repeated subtree reclamation, isolation and cold reopen. Layout
+(71 Omega / 151 Rust edges) and resource navigation links pass. Logs:
+`build/omega-component/matrix-resource-{typed-tests,nested}.log`; guest artifacts:
+`build/boot-harness-rs/desktop/20261026T235443314258Z`. The matrix image uses
+122 of the existing 240 load pages. No limit was raised. The supported default
+Omega compiler was used; no compiler patch or environment override was needed.
 
 ## Memory budgets and allocator delegation
 

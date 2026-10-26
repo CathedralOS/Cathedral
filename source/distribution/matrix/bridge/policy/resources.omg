@@ -1,0 +1,131 @@
+module resources;
+
+// Private native-call codec. Domain policy sees roles, declarations and outcomes;
+// exact grants, transport funding and disjoint allocation remain with the host.
+use service::children::launch::resources::main;
+use service::children::launch::resources::main::Capacity;
+use service::children::launch::resources::main::Profile;
+use service::children::launch::resources::main::Declaration;
+use service::children::launch::resources::main::Allocation;
+use service::children::launch::resources::main::Admission;
+use service::children::launch::resources::main::SurfaceRequest;
+use service::children::launch::resources::recipes;
+use service::children::launch::resources::recipes::Role;
+use service::children::launch::resources::recipes::Offer;
+use service::children::launch::resources::recipes::OfferDecision;
+use service::children::launch::resources::surfaces;
+use service::children::launch::resources::surfaces::Demand;
+use service::children::launch::resources::surfaces::Preference;
+
+const RECIPE: u64 = 1u64;
+const ALLOCATE: u64 = 2u64;
+const SURFACES: u64 = 3u64;
+const INVALID_ARGUMENT: u64 = 18446744073709551594u64;
+const NO_MEMORY: u64 = 18446744073709551604u64;
+
+public machine resources_decision(packet: &mut [u64; 128]) -> u64 {
+    transition packet[1] {
+        RECIPE -> recipe(packet)
+        ALLOCATE -> allocate(packet)
+        SURFACES -> surfaces(packet)
+        _ -> (INVALID_ARGUMENT)
+    }
+}
+
+machine recipe(packet: &mut [u64; 128]) -> u64 {
+    let private_pages: u64 = packet[3];
+    let reader_pages: u64 = packet[4];
+    let surfaces: u64 = packet[5];
+    let backed_surfaces: u64 = packet[6];
+    transition packet[2] {
+        1u64 -> encode_offer(packet, service::children::launch::resources::recipes::offer(Role::Launcher { private_pages: private_pages }))
+        2u64 -> encode_offer(packet, service::children::launch::resources::recipes::offer(Role::Picker { backed_surfaces: backed_surfaces }))
+        3u64 -> encode_offer(packet, service::children::launch::resources::recipes::offer(Role::Background))
+        4u64 -> encode_offer(packet, service::children::launch::resources::recipes::offer(Role::Workspace { private_pages: private_pages, reader_pages: reader_pages, surfaces: surfaces }))
+        5u64 -> encode_offer(packet, service::children::launch::resources::recipes::offer(Role::User { backed_surfaces: backed_surfaces }))
+        _ -> (INVALID_ARGUMENT)
+    }
+}
+
+machine encode_offer(packet: &mut [u64; 128], decision: OfferDecision) -> u64 {
+    transition decision {
+        OfferDecision::Offered { offer } -> publish(packet, offer)
+        OfferDecision::InsufficientBacking -> (NO_MEMORY)
+    }
+    machine publish(packet: &mut [u64; 128], offer: Offer) -> u64 {
+        packet[32] = offer.private_pages;
+        packet[33] = offer.reader_pages;
+        packet[34] = offer.channels;
+        packet[35] = offer.descendants;
+        packet[36] = offer.cpu;
+        packet[37] = offer.imports;
+        packet[38] = offer.surfaces;
+        0u64
+    }
+}
+
+machine allocate(packet: &mut [u64; 128]) -> u64 {
+    let offered: Capacity = Capacity {
+        private_pages: packet[4], reader_pages: packet[5],
+        channels: packet[13], descendants: packet[14]
+    };
+    let profile: Profile = decode_profile(packet);
+    let declaration: Declaration = decode_declaration(packet);
+    let decision: Admission = service::children::launch::resources::main::allocate(&offered, profile, declaration, packet[2] != 0u64 && packet[3] != 0u64);
+    transition decision {
+        Admission::Accepted { allocation } -> encode_allocation(packet, allocation)
+        Admission::Refused -> (NO_MEMORY)
+    }
+}
+
+machine decode_profile(packet: &[u64; 128]) -> Profile {
+    transition packet[6] != 0u64 {
+        true -> (Profile::Required { private_pages: packet[7], reader_pages: packet[8], surfaces: packet[9] })
+        _ -> (Profile::Unspecified)
+    }
+}
+
+machine decode_declaration(packet: &[u64; 128]) -> Declaration {
+    transition packet[10] != 0u64 {
+        true -> (Declaration::Required { channels: packet[11], descendants: packet[12] })
+        _ -> (Declaration::Unspecified)
+    }
+}
+
+machine encode_allocation(packet: &mut [u64; 128], allocation: Allocation) -> u64 {
+    packet[32] = allocation.capacity.private_pages;
+    packet[33] = allocation.capacity.reader_pages;
+    packet[34] = allocation.capacity.channels;
+    packet[35] = allocation.capacity.descendants;
+    transition allocation.surfaces {
+        SurfaceRequest::Request { count } -> requested(packet, count)
+        SurfaceRequest::Inherit -> inherited(packet)
+    }
+    machine requested(packet: &mut [u64; 128], count: u64) -> u64 {
+        packet[36] = 1u64;
+        packet[37] = count;
+        0u64
+    }
+    machine inherited(packet: &mut [u64; 128]) -> u64 {
+        packet[36] = 0u64;
+        packet[37] = 0u64;
+        0u64
+    }
+}
+
+machine surfaces(packet: &mut [u64; 128]) -> u64 {
+    let demand: Demand = Demand {
+        requested: packet[2], ceiling: packet[3],
+        has_descendants: packet[4] != 0u64, explicit_profile: packet[5] != 0u64,
+        backed: packet[6]
+    };
+    let preference: Preference = service::children::launch::resources::surfaces::preferred(&demand);
+    transition preference {
+        Preference::Preferred { count } -> publish(packet, count)
+        Preference::ExceedsCeiling -> (NO_MEMORY)
+    }
+    machine publish(packet: &mut [u64; 128], count: u64) -> u64 {
+        packet[32] = count;
+        0u64
+    }
+}

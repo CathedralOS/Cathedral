@@ -1,14 +1,101 @@
 module children::launch::resources::main;
 
-// Stock resource offers and admission policy. The host retains grants and allocation.
-use children::launch::resources::recipes;
-use children::launch::resources::allocation;
+// Fit a program to its owner's offer before the host allocates any resources.
+// Explicit requirements refuse on excess; only undeclared defaults are capped.
+public data Capacity [copy] {
+    private_pages: u64;
+    reader_pages: u64;
+    channels: u64;
+    descendants: u64;
+}
 
-public machine resources_decision(p: &mut [u64; 128]) -> u64 {
-    transition p[1] {
-        1u64 -> children::launch::resources::recipes::recipe(p)
-        2u64 -> children::launch::resources::allocation::allocation(p)
-        3u64 -> children::launch::resources::allocation::surfaces(p)
-        _ -> (18446744073709551594u64)
+public data Profile [copy] {
+    case Unspecified;
+    case Required(private_pages: u64, reader_pages: u64, surfaces: u64);
+}
+
+public data Declaration [copy] {
+    case Unspecified;
+    case Required(channels: u64, descendants: u64);
+}
+
+public data SurfaceRequest [copy] {
+    case Inherit;
+    case Request(count: u64);
+}
+
+public data Allocation [copy] {
+    capacity: Capacity;
+    surfaces: SurfaceRequest;
+}
+
+public data Admission [copy] {
+    case Refused;
+    case Accepted(allocation: Allocation);
+}
+
+public machine allocate(offered: &Capacity, profile: Profile, declaration: Declaration, desktop_app: bool) -> Admission {
+    transition profile {
+        Profile::Required { private_pages, reader_pages, surfaces } -> explicit(offered, declaration, private_pages, reader_pages, surfaces)
+        Profile::Unspecified -> defaulted(offered, declaration, desktop_app)
+    }
+    machine explicit(offered: &Capacity, declaration: Declaration, private_pages: u64, reader_pages: u64, surfaces: u64) -> Admission {
+        transition private_pages <= offered.private_pages && reader_pages <= offered.reader_pages && services_fit(offered, declaration) {
+            true -> accept(offered, declaration, private_pages, reader_pages, SurfaceRequest::Request { count: surfaces })
+            _ -> (Admission::Refused)
+        }
+    }
+    machine defaulted(offered: &Capacity, declaration: Declaration, desktop_app: bool) -> Admission {
+        transition desktop_app {
+            true -> desktop(offered, declaration)
+            _ -> accept(offered, declaration, offered.private_pages, offered.reader_pages, SurfaceRequest::Inherit)
+        }
+    }
+    machine desktop(offered: &Capacity, declaration: Declaration) -> Admission {
+        // Select the host default before capping descendants to the owner's offer.
+        transition declares_descendants(declaration) {
+            true -> accept(offered, declaration, minimum(offered.private_pages, 168u64), minimum(offered.reader_pages, 144u64), SurfaceRequest::Request { count: 10u64 })
+            _ -> accept(offered, declaration, minimum(offered.private_pages, 128u64), minimum(offered.reader_pages, 128u64), SurfaceRequest::Request { count: 10u64 })
+        }
+    }
+}
+
+machine services_fit(offered: &Capacity, declaration: Declaration) -> bool {
+    transition declaration {
+        Declaration::Required { channels, descendants } -> (channels <= offered.channels && descendants <= offered.descendants)
+        Declaration::Unspecified -> (true)
+    }
+}
+
+machine declares_descendants(declaration: Declaration) -> bool {
+    transition declaration {
+        Declaration::Required { channels, descendants } -> (descendants != 0u64)
+        Declaration::Unspecified -> (false)
+    }
+}
+
+machine accept(offered: &Capacity, declaration: Declaration, private_pages: u64, reader_pages: u64, surfaces: SurfaceRequest) -> Admission {
+    let mut allocation: Allocation;
+    allocation.capacity.private_pages = private_pages;
+    allocation.capacity.reader_pages = reader_pages;
+    allocation.capacity.channels = offered.channels;
+    allocation.capacity.descendants = offered.descendants;
+    allocation.surfaces = surfaces;
+    transition declaration {
+        Declaration::Required { channels, descendants } -> bounded(allocation, channels, descendants)
+        Declaration::Unspecified -> (Admission::Accepted { allocation: allocation })
+    }
+    machine bounded(allocation: Allocation, channels: u64, descendants: u64) -> Admission {
+        let mut result: Allocation = allocation;
+        result.capacity.channels = minimum(channels, allocation.capacity.channels);
+        result.capacity.descendants = minimum(descendants, allocation.capacity.descendants);
+        Admission::Accepted { allocation: result }
+    }
+}
+
+machine minimum(a: u64, b: u64) -> u64 {
+    transition a <= b {
+        true -> (a)
+        _ -> (b)
     }
 }
