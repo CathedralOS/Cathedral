@@ -1,5 +1,6 @@
 // Background setup/retry uses the same Omega sequence and local-only resource custody.
 use super::*;
+use cathedral_stock_matrix::policy::resources;
 impl Children {
     pub(in crate::service::children) fn background(
         &mut self,
@@ -9,6 +10,7 @@ impl Children {
         server: &mut Server,
     ) -> Result<(), Error> {
         let mut state = State::new(Job::Background, false, false, false);
+        let offer = resources::background();
         let mut code: Option<Object> = None;
         let mut object = 0;
         loop {
@@ -33,12 +35,12 @@ impl Children {
                         object,
                         scope: 0,
                         argument: wire::launch_argument(0, object),
-                        channels: 2,
-                        descendants: 0,
-                        cpu: 0,
-                        pages: Some([5, 2]),
+                        channels: offer.channels,
+                        descendants: offer.descendants,
+                        cpu: offer.cpu,
+                        pages: Some(offer.pages),
                         stamp: 0,
-                        imports: cathedral_platform_contracts::imports::INTERACTION,
+                        imports: offer.imports,
                     };
                     // The returned boolean reports storage acquisition, not admission.
                     self.run_object(
@@ -51,7 +53,7 @@ impl Children {
                 }
                 Command::PlaceBackground => {
                     status = world
-                        .surface_range(BACKGROUND, 0, 1)
+                        .surface_range(BACKGROUND, 0, offer.surfaces as usize)
                         .and_then(|()| {
                             world.place(
                                 BACKGROUND,

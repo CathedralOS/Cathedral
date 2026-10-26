@@ -55,7 +55,16 @@ impl Children {
             let Some(child) = child else {
                 continue;
             };
-            let sent = child.control.ask([wire::LOSS, 0, 0, 0, 0, 0, 0, 0]).is_ok();
+            let sent = child
+                .control
+                .ask([wire::LOSS, 0, 0, 0, 0, 0, 0, 0])
+                .inspect_err(|error| {
+                    time::storage_sample(
+                        "matrix-loss-submit-refused",
+                        &[slot as u64, error.0 as u64],
+                    );
+                })
+                .is_ok();
             if sent {
                 #[cfg(feature = "trace-storage")]
                 time::storage_trace("matrix-loss-send", request.incarnation, slot as u64);

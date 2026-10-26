@@ -1,5 +1,6 @@
 //! Select local launch grants, create the child's parent connection, admit, install.
 use super::*;
+use cathedral_stock_matrix::policy::resources as resource_policy;
 use cathedral_user_runtime::{
     resources::Limits,
     task::{Executable, Launch},
@@ -96,39 +97,29 @@ impl Children {
             refused("matrix-import-refused", plan.slot, error, [0; 3]);
         })?;
         let storage = binding & cathedral_platform_contracts::imports::STORAGE != 0;
-        let (mut pages, frames) = match plan.pages {
+        let (pages, frames) = match plan.pages {
             Some(pages) => (pages, None),
             None => (
                 self.next_pages[plan.slot].take().unwrap_or([0, 0]),
                 self.next_frames[plan.slot].take(),
             ),
         };
-        if let Some([private, readers, surfaces]) = profile {
-            if private > pages[0]
-                || readers > pages[1]
-                || resources.is_some_and(|(c, d)| c > plan.channels || d > plan.descendants)
-            {
-                return Err(Error(abi::NO_MEMORY as i64));
-            }
-            pages = [private, readers];
-            self.requested_surfaces[plan.slot] = Some(surfaces);
-        } else if self.desktop && (1..BACKGROUND).contains(&plan.slot) {
-            // A bounded child-matrix share covers a 122-page nested workspace
-            // beside its owner's old/new 14-page headers. Owner offers still cap it.
-            let (private, readers) = if resources.is_some_and(|(_, descendants)| descendants > 0) {
-                // Retain headers, masked capture output and all shared mailboxes
-                // beside optional producer/capture loans or the nested workspace.
-                (168, 144)
-            } else {
-                (128, 128)
-            };
-            pages = [pages[0].min(private), pages[1].min(readers)];
-            self.requested_surfaces[plan.slot] = Some(10);
-        }
-        let (channels, descendants) = resources
-            .map_or((plan.channels, plan.descendants), |(c, d)| {
-                (c.min(plan.channels), d.min(plan.descendants))
-            });
+        let resource_policy::Allocation {
+            pages,
+            channels,
+            descendants,
+            surfaces,
+        } = resource_policy::allocate(resource_policy::Facts {
+            desktop: self.desktop,
+            app_slot: (1..BACKGROUND).contains(&plan.slot),
+            pages,
+            profile,
+            resources,
+            channels: plan.channels,
+            descendants: plan.descendants,
+        })
+        .map_err(|c| Error(c as i64))?;
+        self.requested_surfaces[plan.slot] = surfaces;
         let slots = descendants
             .checked_add(1)
             .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
@@ -154,34 +145,21 @@ impl Children {
         let connected_channels = channels
             .checked_add(connection_channels + transport)
             .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
-        // Reserve the minimum before spawning. Undeclared descendant hosts get
-        // bounded spare room for auxiliary children (e.g. a capture viewer),
-        // rather than consuming every surface and preventing sibling admission.
-        // An explicit profile may use the owner's full configured ceiling.
-        // All allocations remain disjoint ranges within our own grant.
+        // Omega selects the minimum/preferred offer. Only this host tries actual
+        // disjoint ranges within its grant, descending when capacity is fragmented.
         if self.desktop
             && let Some(count) = self.requested_surfaces[plan.slot]
         {
             let ceiling = self.standing[plan.slot].map_or(0, |s| s.surfaces);
-            if count > ceiling {
-                time::storage_sample("funding-surface-refused", &[count, ceiling]);
-                return Err(Error(abi::NO_MEMORY as i64));
-            }
-            let preferred = if descendants != 0 {
-                let ceiling = if profile.is_some() {
-                    ceiling
-                } else {
-                    ceiling.min(16)
-                };
-                ceiling.min(
-                    world
-                        .backed_surfaces()
-                        .saturating_sub(wire::config::LAUNCHER_SURFACES + 1)
-                        as u64,
-                )
-            } else {
-                count
-            };
+            let preferred = resource_policy::preferred_surfaces(
+                count,
+                ceiling,
+                descendants,
+                profile.is_some(),
+                world.backed_surfaces(),
+            )
+            .inspect_err(|_| time::storage_sample("funding-surface-refused", &[count, ceiling]))
+            .map_err(|c| Error(c as i64))?;
             let allocated = (count..=preferred).rev().find(|&amount| {
                 self.place_surface_range(world, plan.slot, amount as usize)
                     .is_ok()

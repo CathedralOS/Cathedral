@@ -8,6 +8,7 @@ mod lifecycle;
 mod realm;
 mod recovery;
 mod requests;
+mod resources;
 mod session;
 mod startup;
 mod workspace;

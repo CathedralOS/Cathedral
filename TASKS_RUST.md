@@ -25,12 +25,13 @@ capabilities, standing grants and pending replies. Realm discovery and saved
 configuration/picker/background setup now execute sequences under
 `source/distribution/matrix/realm/`. The host entry points are
 `service/children/startup/startup.rs` and `service/children/configuration/configuration.rs`.
-Next, move the stock resource recipes and profile-based admission choices into
-Omega: `configuration/workspace.rs`, `configuration/background.rs`, `startup/picker.rs`
-and `children/admission.rs` still choose detailed plans/default ceilings. Keep
-actual grants, mappings and resource custody in the host; do not turn the native
-bridge into a permanent second distribution API. Live layout application also
-retains Rust orchestration under `configuration/layout.rs`.
+Stock role resource offers, profile ceilings and preferred surface counts now
+execute under `source/distribution/matrix/resources/`. The host composes exact
+image/scope launch plans, accounts for transport overhead and allocates resources.
+Next, move the remaining live-layout decisions in `configuration/layout.rs` and
+the stock service offer/binding choices in `children/imports.rs` into Omega.
+Keep actual grants, mappings and resource custody in the host; do not turn the
+native bridge into a permanent second distribution API.
 The independent Omega matrix is a useful precedent, but its synchronous parent
 refresh must not replace the desktop's yielding path.
 
@@ -380,6 +381,55 @@ not perfect timing indistinguishability or mandatory agent badges. Existing
 default/hidden cursor evidence remains valid for its scope, not the full asset API.
 
 ## Current implementation evidence
+
+Implementation update 2026-10-26: **Omega chooses stock resource offers and
+profile ceilings**, over `80507146`.
+
+`resources/main.omg` dispatches role offers, program resource selection and
+surface preference. `recipes.omg` supplies launcher, picker, background,
+workspace app and selected-user offers. `allocation.omg` preserves strict
+explicit-profile refusal, bounded unprofiled defaults, owner ceilings and the
+spare-surface preference for descendant hosts. A background still receives only
+interaction; the picker still reserves its surfaces before lending to a user.
+
+The existing host admission path retains import decoding, one-shot funding
+consumption, checked transport accounting, disjoint surface allocation, executable
+reservations and rollback. No kernel, budget allowance or manifest contract
+changes. Legacy catalogue launch, import binding and live layout retain Rust
+behavior; this is not a fully Omega matrix executable.
+
+Nested verification exposed an Omega-host startup gap: unlike the Rust app
+paths, `omega-app/host/host.rs` postponed owner-control setup until the first
+event wait, after storage and rendering. One four-level run refused subtree
+close because a launcher's LOSS could not be submitted
+(`desktop/20261026T201541540882Z`). The diagnostic run recorded a shared-control
+opening timeout while deep Notes loaded and then failed to accept typing
+(`desktop/20261026T202053243457Z`). The host now completes the existing independent
+owner-control handshake before service acquisition or the first app step, using
+the same 300-tick deadline as the Rust app paths. Control setup/submission
+refusals now retain their error codes in storage traces. No longer deadline,
+automatic replay or treatment of missing LOSS as consent was introduced.
+
+Six compiled-Omega tests bring the matrix total to 81, covering all role offers,
+picker backing, every profile ceiling, absent declarations, default bounds and
+surface extremes. The full host suite, default/all-feature x86-64 matrix and
+Omega-app Clippy, layout (81 Omega and 151 Rust package edges), format and diff
+checks pass. Guest verification after the handshake fix passes:
+
+- Ordinary F5, multiple app instances, capacity refusal, saved Notes/Colors and
+  cold reboot, including the 1,669-record durable oracle:
+  `desktop/20261026T202750408062Z`.
+- Four nested desktops, protected close, repeated subtree reclamation, isolation
+  and cold reopen: `desktop/20261026T202417516448Z`.
+- Optional input-producer acquisition/custody and the desktop workflow across
+  cold reboot: `desktop/20261026T202645298923Z`.
+- Independent nested Split layout, focus, resize, funded refusal, dirty-close,
+  repeated reclamation and cold persistence: `desktop/20261026T202851312374Z`.
+- Headless matrix suite: identical worlds, local-only views, attenuated input
+  and recovery, `matrix-test/`.
+
+Artifact paths above are relative to `build/boot-harness-rs/`; logs are
+`build/omega-component/resources-*.log`.
 
 Implementation update 2026-10-26: **Omega sequences realm discovery and setup**,
 over `dd0b0d2e`.

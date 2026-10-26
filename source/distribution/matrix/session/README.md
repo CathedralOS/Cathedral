@@ -50,8 +50,8 @@ The stack allowance and kernel are unchanged.
 The `Request` operation continues into [Omega request routing](../requests/README.md).
 Owner child-control dispatch and launch target/role choices also execute in Omega.
 [Realm discovery and setup](../realm/README.md) now have Omega sequences too.
-Resource recipes, live layout, local world mutations and transport implementations
-retain Rust behavior. This
+[Resource offers and profile ceilings](../resources/README.md) execute in Omega.
+Live layout, local world mutations and transport implementations retain Rust behavior. This
 milestone moves orchestration and event-category dispatch; it does not claim a
 fully Omega matrix executable, a new platform runtime or a native Omega kernel.
 

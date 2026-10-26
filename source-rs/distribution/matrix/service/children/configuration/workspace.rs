@@ -1,5 +1,6 @@
 // Execute one configuration operation. No connection, image or task enters Omega.
 use super::*;
+use cathedral_stock_matrix::policy::resources;
 pub(super) struct Workspace {
     config: Option<u64>,
     saved: Option<config::Config>,
@@ -57,16 +58,17 @@ impl Workspace {
             BindLauncher => return Ok(parent.storage_grant(server, 0, 0, 0)?.err().unwrap_or(0)),
             InstallWorkspace => self.install(children),
             PlaceLauncher => {
-                let keys = self.saved.expect("configuration").keys;
+                let saved = self.saved.expect("configuration");
+                let offer = resources::launcher(saved.launcher_pages);
                 return Ok(world
                     .surface_range(
                         0,
                         world
                             .backed_surfaces()
-                            .saturating_sub(config::LAUNCHER_SURFACES),
-                        config::LAUNCHER_SURFACES,
+                            .saturating_sub(offer.surfaces as usize),
+                        offer.surfaces as usize,
                     )
-                    .and_then(|()| world.place(0, rect(self.rects[0]), keys))
+                    .and_then(|()| world.place(0, rect(self.rects[0]), saved.keys))
                     .err()
                     .unwrap_or(0));
             }
@@ -151,22 +153,24 @@ impl Workspace {
             return Ok(abi::INVALID_ARGUMENT);
         };
         self.rects = rects;
+        let offer = resources::launcher(saved.launcher_pages);
         self.plan = Some(parent::LaunchRequest {
             slot: 0,
             object: self.launcher,
             scope: 0,
             argument: wire::launch_argument(0, self.launcher),
-            channels: 3,
-            descendants: 0,
-            cpu: 0,
-            pages: Some([saved.launcher_pages, wire::CHOOSER_READERS]),
+            channels: offer.channels,
+            descendants: offer.descendants,
+            cpu: offer.cpu,
+            pages: Some(offer.pages),
             stamp: 0,
-            imports: cathedral_platform_contracts::imports::ALL,
+            imports: offer.imports,
         });
         Ok(0)
     }
     fn install(&self, children: &mut Children) {
         let saved = self.saved.expect("configuration");
+        let offer = resources::workspace([saved.app_pages, saved.app_readers], saved.app_surfaces);
         children.saved_storage[0] = Some((0, 0));
         children.desktop = true;
         for slot in 1..BACKGROUND {
@@ -178,11 +182,11 @@ impl Workspace {
                 );
             }
             children.standing[slot] = Some(Standing {
-                pages: [saved.app_pages, saved.app_readers],
-                channels: 40,
-                descendants: 5,
-                cpu: 0,
-                surfaces: saved.app_surfaces,
+                pages: offer.pages,
+                channels: offer.channels,
+                descendants: offer.descendants,
+                cpu: offer.cpu,
+                surfaces: offer.surfaces,
                 place: Some((rect(self.rects[1]), saved.keys)),
             });
         }

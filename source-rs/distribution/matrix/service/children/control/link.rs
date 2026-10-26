@@ -27,7 +27,13 @@ impl Control {
     }
     pub fn open(pair: Pair) -> Self {
         let link = match time::after(300) {
-            Ok(until) => Client::begin_connect(pair, until).map_or(Link::Failed, Link::Opening),
+            Ok(until) => Client::begin_connect(pair, until).map_or_else(
+                |error| {
+                    time::storage_sample("matrix-control-begin-refused", &[error.0 as u64]);
+                    Link::Failed
+                },
+                Link::Opening,
+            ),
             Err(_) => {
                 pair.0.close().ok();
                 pair.1.close().ok();
@@ -51,7 +57,10 @@ impl Control {
                     .unwrap();
                 }
                 Ok(None) => (),
-                Err(_) => self.link = Link::Failed,
+                Err(error) => {
+                    time::storage_sample("matrix-control-open-refused", &[error.0 as u64]);
+                    self.link = Link::Failed;
+                }
             }
         }
     }

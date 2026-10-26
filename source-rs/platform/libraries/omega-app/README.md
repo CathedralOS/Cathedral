@@ -30,8 +30,10 @@ independently of reply notifications and preserve control-first dispatch. Lifecy
 control reception uses [OwnerControl](../user-runtime/server/owner.rs), which
 opens only the process's owner port and retains the exact received request until
 operation 7 answers it. It discovers no service links and trusts no supplied PID.
-Split selects shared control; stock owners still send copied lifecycle requests
-until their migration. A disconnected owner control link leaves input usable.
+Stock and Split owners initiate shared control at admission. The host establishes
+that independent connection before service acquisition or the first Omega app
+step, so slow startup storage/rendering cannot consume its handshake deadline.
+Later loss of owner control leaves independent input usable.
 See the
 [transport boundary](../user-runtime/connection/README.md).
 

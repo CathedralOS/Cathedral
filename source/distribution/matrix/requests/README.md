@@ -59,5 +59,6 @@ compiled coverage for canonical control shapes, shared-opcode precedence,
 forwarded hop/deadline/pending rules and boundary limits. Launch target and role
 choices continue into [Omega launch admission](../launch/README.md).
 [Realm discovery and configuration setup](../realm/README.md) also execute Omega
-sequences. Resource recipes and local world/resource mutations still contain Rust
-behavior; this migration does not claim a fully Omega matrix.
+sequences. [Resource offers and profile ceilings](../resources/README.md) also run
+in Omega; local world/resource mutations remain host-owned. This migration does
+not claim a fully Omega matrix.

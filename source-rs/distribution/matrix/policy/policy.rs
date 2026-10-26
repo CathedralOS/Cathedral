@@ -6,6 +6,7 @@
 // requests.rs adapts request-family routing and owner success consequences.
 // control.rs and admission.rs adapt owner child-control and launch target/role choices.
 // realm.rs drives scoped discovery and configuration/picker/background setup.
+// resources.rs adapts stock role offers, profile ceilings and surface preferences.
 // Cross-language entrance: source/distribution/matrix/policy/main.omg.
 // These synchronous values carry no capability, endpoint or task identity.
 use cathedral_desktop_matrix_contracts::matrix::config::Config;

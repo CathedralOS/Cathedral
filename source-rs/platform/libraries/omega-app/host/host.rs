@@ -50,12 +50,16 @@ pub unsafe fn run_with_argument(
     let mut app =
         unsafe { Instance::new(step, state, packet) }.ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
     app.packet[12] = argument;
-    services.enable_shared()?;
-    cathedral_user_runtime::write(b"Cathedral Omega host: shared interaction broker ready\n")?;
     static mut CONTROL: SharedSlot = SharedSlot::empty();
     let control = &raw mut CONTROL;
     // SAFETY: The single app entry owns this slot throughout its lifetime.
-    let control = OwnerControl::open(unsafe { &mut *control })?;
+    let mut control = OwnerControl::open(unsafe { &mut *control })?;
+    // Admission initiates this independent connection. Finish it before app
+    // storage/rendering can consume its setup deadline in a deeply nested realm.
+    control.establish(time::after(300)?)?;
+    cathedral_user_runtime::write(b"Cathedral Omega host: shared owner control ready\n")?;
+    services.enable_shared()?;
+    cathedral_user_runtime::write(b"Cathedral Omega host: shared interaction broker ready\n")?;
     let mut host = Host {
         services,
         interaction: None,

@@ -1,5 +1,6 @@
 // Execute Omega's picker setup while retaining the image and scoped user binding locally.
 use super::*;
+use cathedral_stock_matrix::policy::resources;
 impl Children {
     pub(in crate::service::children) fn start_picker(
         &mut self,
@@ -13,6 +14,7 @@ impl Children {
         let mut code = None;
         let mut picker_mode = 0;
         let mut capacity = 0;
+        let mut offer = None;
         loop {
             let command = state.command().expect("completed picker setup step");
             let mut status = 0;
@@ -29,23 +31,25 @@ impl Children {
                 }
                 Command::ValidatePicker => {
                     capacity = world.backed_surfaces();
-                    if capacity < wire::config::HOST_SURFACES {
-                        status = abi::NO_MEMORY;
+                    match resources::picker(capacity) {
+                        Ok(value) => offer = Some(value),
+                        Err(code) => status = code,
                     }
                 }
                 Command::AdmitPicker => {
+                    let offer = offer.expect("validated picker offer");
                     self.run_object(
                         parent::LaunchRequest {
                             slot: 0,
                             object: picker,
                             scope: users,
                             argument: wire::launch_argument(picker_mode, picker),
-                            channels: 3,
-                            descendants: 0,
-                            cpu: 0,
-                            pages: Some([48, wire::CHOOSER_READERS]),
+                            channels: offer.channels,
+                            descendants: offer.descendants,
+                            cpu: offer.cpu,
+                            pages: Some(offer.pages),
                             stamp: 0,
-                            imports: cathedral_platform_contracts::imports::ALL,
+                            imports: offer.imports,
                         },
                         code.as_mut().expect("picker image"),
                         parent,
@@ -63,8 +67,9 @@ impl Children {
                     }
                 }
                 Command::PlacePicker => {
+                    let surfaces = offer.expect("validated picker offer").surfaces as usize;
                     world
-                        .surface_range(0, capacity - 6, 6)
+                        .surface_range(0, capacity - surfaces, surfaces)
                         .map_err(|c| Error(c as i64))?;
                     world
                         .place(
@@ -80,12 +85,13 @@ impl Children {
                         .map_err(|c| Error(c as i64))?;
                 }
                 Command::InstallPicker => {
+                    let offer = resources::user(capacity).map_err(|c| Error(c as i64))?;
                     self.standing[1] = Some(Standing {
-                        pages: [256, 384],
-                        channels: 24,
-                        descendants: 3,
-                        cpu: 0,
-                        surfaces: (capacity - 6) as u64,
+                        pages: offer.pages,
+                        channels: offer.channels,
+                        descendants: offer.descendants,
+                        cpu: offer.cpu,
+                        surfaces: offer.surfaces,
                         place: Some((
                             Rect {
                                 x: 0,

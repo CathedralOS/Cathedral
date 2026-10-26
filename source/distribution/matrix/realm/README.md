@@ -57,7 +57,8 @@ exercise setup ordering, canonical completion, all realm-entry subsets, deferred
 startup, rollback, nonfatal background refusal and terminal failures. Guest
 verification and exact scope are in `TASKS_RUST.md`.
 
-Stock resource recipes (default pages/channels/imports and the detailed launch
-plans), live layout application and profile-based admission still contain Rust
-policy. Those remain Omega work; this is setup sequencing, not a fully Omega
-matrix executable or a new platform runtime.
+[Stock resource offers and profile ceilings](../resources/README.md) now execute
+in Omega too. The host composes exact images/scopes into launch plans and owns
+grants, allocation and transport funding. Import binding and live layout still
+contain Rust policy. This is not a fully Omega matrix executable or a new platform
+runtime.

@@ -1,0 +1,6 @@
+// Stock resource offers and admission policy. The host retains grants and allocation.
+use recipes;
+use allocation;
+public machine resources_decision(p: &mut [u64; 128]) -> u64 {
+    transition p[1] { 1u64 -> recipe(p) 2u64 -> allocation(p) 3u64 -> surfaces(p) _ -> (18446744073709551594u64) }
+}
