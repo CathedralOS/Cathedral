@@ -57,13 +57,13 @@ pub fn completed() -> u64 {
     let past = time::now().unwrap().wrapping_sub(1);
     assert_eq!(child.wait_until(past).unwrap(), Outcome::Returned(42));
     assert_eq!(child.cancel(), Err(Error(abi::BAD_HANDLE as i64)));
-    Handle::bootstrap(0).unwrap().send(b"done").unwrap();
+    crate::gates::post(Handle::bootstrap(0).unwrap());
     0
 }
 
 pub fn idle() -> u64 {
     let child = Launch::bootstrap().unwrap().spawn(0).unwrap();
-    // Both peers block in receive. The boot CPU must idle and wake on the timer.
+    // Both peers block awaiting gate grants. The CPU must idle and wake on the timer.
     let deadline = time::after(12).unwrap();
     assert_eq!(
         child.wait_until(deadline),
@@ -72,6 +72,6 @@ pub fn idle() -> u64 {
     assert!(time::reached(time::now().unwrap(), deadline));
     child.cancel().unwrap();
     assert_eq!(child.wait().unwrap(), Outcome::Cancelled);
-    Handle::bootstrap(0).unwrap().send(b"done").unwrap();
+    crate::gates::post(Handle::bootstrap(0).unwrap());
     0
 }

@@ -36,7 +36,7 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
                 Config {
                     executables: &[],
                     dynamic_tasks: 0,
-                    channel_limits: &[],
+                    channel_limits: &[2, 1, 3, 0, 0],
                     cpu_limits: &limits,
                     memory: &[],
                     frame_limit: usize::MAX,

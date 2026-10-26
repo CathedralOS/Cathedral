@@ -3,6 +3,7 @@
 //! Select restart, failed-admission, watchdog, sibling, link and CPU-budget fixture roles.
 mod cpu;
 mod failures;
+mod gates;
 mod links;
 mod multiple;
 mod restarts;

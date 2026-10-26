@@ -34,7 +34,8 @@ fn lifecycle(memory: &mut PreparedMemory, console: &mut SerialPort) {
     assert_eq!(reports[0].spawned, 32);
     assert_eq!(reports[0].reaped, 32);
     assert!(reports[0].waits_blocked > 0);
-    assert_eq!(reports[1].ipc_received, 32 * 5); // Commands plus four echoes per child.
+    // The guest checks all 32 commands and 128 exact shared echoes. Copied-IPC
+    // counters now describe capability setup, not application delivery.
     assert!(matches!(reports[2].exit, Some(Exit::Fault(fault)) if fault.vector == 6));
     drop(reports);
     reclaimed(memory, baseline, heap);
@@ -155,6 +156,13 @@ fn run(
     // Failure probes also propose a launch loan. It must survive ELF and partial
     // frame-admission failure just like their initial endpoint bundle.
     let launch_count = if programs[0].arguments[0] == 3 { 2 } else { 1 };
+    let shared_restarts = programs[0].arguments[0] == 0;
+    let transport_memory =
+        [(0, 1), (1, 2), (2, 1)].map(|(task, pages)| cathedral_kernel_contracts::memory::Grant {
+            task,
+            private_pages: pages,
+            shared_pages: pages,
+        });
     // SAFETY: Sole CPU, IRQs off, boot-owned executable bytes and initialized entry paths.
     unsafe {
         user_tasks::run_configured(
@@ -169,10 +177,22 @@ fn run(
                 links: &[],
                 frame_limit: usize::MAX,
                 endpoints,
-                memory: &[],
-                channel_limits: &[],
+                memory: if shared_restarts {
+                    &transport_memory
+                } else {
+                    &[]
+                },
+                // Failure probes retain two proposed channels; other lifecycle
+                // owners fund one completion gate. Receivers allocate neither.
+                channel_limits: if shared_restarts {
+                    &[1, 2, 1]
+                } else if launch_count == 2 {
+                    &[2, 0, 0, 0]
+                } else {
+                    &[1, 0, 0]
+                },
                 cpu_limits: &[],
-                clock_readers: &[],
+                clock_readers: if shared_restarts { &[0, 1, 2] } else { &[] },
                 supervision: &launches[..launch_count],
             },
         )

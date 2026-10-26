@@ -3,6 +3,7 @@ use cathedral_kernel_contracts::user as abi;
 use cathedral_user_runtime::{
     Error,
     ipc::Handle,
+    notification::Notification,
     task::{Child, Launch},
     yield_now,
 };
@@ -38,7 +39,8 @@ pub fn failed_spawn(expected: u64) -> u64 {
         };
         assert_eq!(result.unwrap_err(), Error(expected as i64));
         assert_eq!(Launch::at(1).unwrap().raw(), loan.raw());
-        // Failed ELF/frame admission must retain the entire proposed environment.
+        // Intentional endpoint-custody probe, not application traffic: failed
+        // ELF/frame admission must retain the entire proposed environment.
         send.send(b"still ours").unwrap();
         assert_eq!(recv.receive(&mut [0; 64]).unwrap(), 10);
         reply.send(b"still ours").unwrap();
@@ -48,14 +50,14 @@ pub fn failed_spawn(expected: u64) -> u64 {
     recv.close().unwrap();
     reply.close().unwrap();
     answer.close().unwrap();
-    Handle::bootstrap(0).unwrap().send(b"done").unwrap();
+    super::gates::post(Handle::bootstrap(0).unwrap());
     0
 }
 pub fn passive_peer() -> u64 {
     let input = Handle::bootstrap(0).unwrap();
-    assert_eq!(input.receive(&mut [0; 64]).unwrap(), 4);
+    super::gates::wait(input);
     assert_eq!(
-        input.receive(&mut [0; 64]),
+        Notification::accept(input, &mut [0; 64]),
         Err(Error(abi::PEER_CLOSED as i64))
     );
     0
@@ -65,11 +67,11 @@ pub fn abandon_child() -> u64 {
     for _ in 0..32 {
         yield_now();
     }
-    Handle::bootstrap(0).unwrap().send(b"done").unwrap();
+    super::gates::post(Handle::bootstrap(0).unwrap());
     0
 }
 pub fn blocked_child() -> u64 {
-    Handle::bootstrap(0).unwrap().receive(&mut [0; 64]).unwrap();
+    super::gates::wait(Handle::bootstrap(0).unwrap());
     253 // Must be cancelled when its supervisor exits.
 }
 pub fn returned_child() -> u64 {
@@ -83,6 +85,6 @@ pub fn returned_child() -> u64 {
         cathedral_user_runtime::task::Outcome::Returned(u64::MAX)
     );
     assert_eq!(child.wait(), Err(Error(abi::BAD_HANDLE as i64)));
-    Handle::bootstrap(0).unwrap().send(b"done").unwrap();
+    super::gates::post(Handle::bootstrap(0).unwrap());
     0
 }

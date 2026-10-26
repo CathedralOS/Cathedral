@@ -77,8 +77,8 @@ pub fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
     assert_eq!(reports[0].wait_timeouts, 1);
     assert_eq!(reports[0].waits_blocked, 1);
     assert_eq!(reports[0].cancelled_blocked, 1);
-    // The first receive waits through the idle interval. After "done", the
-    // sender may already have exited, so observing closure need not block again.
+    // The gate's grant receive waits through the idle interval. After its signal,
+    // the sender may have exited, so observing closure need not block again.
     assert!(reports[1].receives_blocked >= 1);
     assert_eq!(reports[1].ipc_received, 1);
     assert_eq!(reports[2].receives_blocked, 1);
@@ -121,7 +121,7 @@ fn run(
                 frame_limit: usize::MAX,
                 endpoints,
                 memory: &[],
-                channel_limits: &[],
+                channel_limits: if role == 12 { &[] } else { &[1, 0, 0] },
                 cpu_limits: &[],
                 clock_readers: clocks,
                 supervision: &[Supervision {

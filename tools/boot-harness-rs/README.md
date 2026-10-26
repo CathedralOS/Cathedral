@@ -200,6 +200,10 @@ return to its heap and physical-frame baselines. The userspace supervision fixtu
 keeps one client alive across 32 service crashes/restarts and checks explicit
 reconnection, retired task/endpoint tickets, wait copyout, parent-exit cleanup,
 and failed admission with live peers.
+Its restart commands and echoes use shared IPC with per-incarnation transport
+reclamation checks; lifecycle/CPU gates use notifications. See the
+[supervision proof guide](../../source-rs/distribution/lab/supervision/README.md)
+for the remaining copied fixtures and intentional authority probes.
 The watchdog fixture then recovers four blocked and four non-yielding services
 using clock grants, deadline waits and owner-authorized cancellation. An independent
 observer must progress before cancellation; an all-blocked session must also wake

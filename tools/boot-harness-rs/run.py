@@ -71,6 +71,7 @@ MARKERS = (
     "Cathedral Rust lab: IPC revocation woke blocked receiver and reclaimed all memory",
     "Cathedral Rust lab: IPC backpressure and checked copyout preserved queued message; all memory reclaimed",
     "Cathedral Rust lab: IPC deadlines woke idle sessions; checked copies, late replies, terminal precedence and denied clock access passed",
+    "Cathedral supervision: 32 shared service incarnations completed",
     "Cathedral Rust lab: userspace supervisor restarted 32 faulted services; live client reconnected with fresh grants",
     "Cathedral Rust lab: supervision parent-exit cancellation and collected return status reclaimed all memory",
     "Cathedral Rust lab: supervision failed-spawn retries preserved live peers and memory baselines",

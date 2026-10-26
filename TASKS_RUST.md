@@ -336,6 +336,41 @@ default/hidden cursor evidence remains valid for its scope, not the full asset A
 
 ## Current implementation evidence
 
+Implementation update 2026-10-26: **restart payloads use shared IPC; lifecycle and CPU gates use notifications**, over `53e476f2`.
+
+The supervision restart owner and live client retain a shared coordination
+stream; the client establishes a fresh shared connection for each of 32 faulting
+service incarnations. All 128 echoes are checked byte-for-byte. The owner still
+publishes its command before blocking on child outcome, then collects the exact
+pending reply. Invalid wait destinations, stolen launch/child authority, hidden
+grants before acceptance, duplicate acceptance, stale names and terminal peer
+closure remain asserted. Each faulted connection must return the client's page,
+reader, channel and notification usage to its pre-connection baseline before the
+next round. The smoke runner requires the shared-incarnation completion marker.
+
+Payload-free ready/start/done coordination in CPU, parent-exit, failed-admission
+completion and watchdog completion/idle fixtures now uses one-shot notifications.
+The sender publishes the signal before exporting the wait-only grant; queued
+custody survives immediate sender exit. No shared page or new clock grant is
+needed. Explicit transport budgets cover these gates; workers only receive wait
+rights. Existing CPU ceiling, restart-debt, subtree fairness, all-idle deadline,
+parent-death cancellation and exact heap/frame reclamation assertions remain.
+The failed-admission endpoint self-loop remains an intentional custody probe,
+not an ordinary application transport consumer.
+
+Follow the [supervision proof guide](source-rs/distribution/lab/supervision/README.md)
+for the userspace roles and boot composition. Host tests, supervision and smoke
+Clippy, layout/format checks and release/development smoke pass, including 65/98
+display admission failure boundaries respectively. Logs are under
+`build/omega-component/supervision-shared-*.log`.
+This is x86 fixture work; no F5 or ARM64 behavior change is claimed.
+
+**Next:** migrate the remaining watchdog recovery exchange, sibling-service and
+link-graph fixtures. Preserve denied-clock/device checks and replies held across
+other children's cancellation. Then migrate positional compositor clients and
+audit runtime wake/upstream adapters before removing copied payload support.
+Typed grant setup and deliberate invalid-authority probes remain distinct.
+
 Implementation update 2026-10-26: **direct display and its coordination use shared IPC**, over `6cfa53a0`.
 
 The immediate display provider selects shared owner control and any supplied
@@ -379,7 +414,7 @@ hooks now reply through the selected server transport and are compile-checked;
 this smoke composition selects `lab`, not those optional hooks. No ARM64 runtime
 change is claimed; this fixture is x86-only.
 
-**Next:** migrate the supervision fixtures and positional compositor clients,
+**Previous next (restart and gate portion completed above):** migrate the supervision fixtures and positional compositor clients,
 including their actual pressure/backpressure and lifetime tests. The latter still
 use copied owner, input-WAIT and presentation traffic; do not confuse them with
 the already-shared normal F5/root/nested-matrix route. Then audit positional

@@ -13,10 +13,10 @@ pub fn owner(argument: u64) -> u64 {
         .spawn_tree(argument, &[], &loans[..descendants as usize])
         .unwrap();
     let (start, ready) = Port::at(0).unwrap().connect().unwrap();
-    ready.receive(&mut [0; 64]).unwrap();
-    Handle::bootstrap(0).unwrap().send(b"measure").unwrap();
-    start.send(b"go").unwrap();
-    Handle::bootstrap(1).unwrap().receive(&mut [0; 64]).unwrap();
+    super::gates::wait(ready);
+    super::gates::post(Handle::bootstrap(0).unwrap());
+    super::gates::post(start);
+    super::gates::wait(Handle::bootstrap(1).unwrap());
     child.cancel().unwrap();
     assert_eq!(child.wait().unwrap(), Outcome::Cancelled);
     // Loans return only after the entire spinning subtree is reclaimed.
@@ -27,7 +27,7 @@ pub fn owner(argument: u64) -> u64 {
     0
 }
 pub fn peer(yielding: u64) -> u64 {
-    Handle::bootstrap(0).unwrap().receive(&mut [0; 64]).unwrap();
+    super::gates::wait(Handle::bootstrap(0).unwrap());
     let deadline = time::after(128).unwrap();
     while !time::reached(time::now().unwrap(), deadline) {
         core::hint::spin_loop(); // Clock calls must retain the current quantum.
@@ -35,7 +35,7 @@ pub fn peer(yielding: u64) -> u64 {
             cathedral_user_runtime::yield_now();
         }
     }
-    Handle::bootstrap(1).unwrap().send(b"done").unwrap();
+    super::gates::post(Handle::bootstrap(1).unwrap());
     0
 }
 pub fn branch(argument: u64) -> u64 {
@@ -50,16 +50,16 @@ pub fn branch(argument: u64) -> u64 {
             .unwrap();
         starts[index as usize] = Some(Port::at(index).unwrap().connect().unwrap().0);
     }
-    Handle::bootstrap(1).unwrap().send(b"ready").unwrap();
-    Handle::bootstrap(0).unwrap().receive(&mut [0; 64]).unwrap();
+    super::gates::post(Handle::bootstrap(1).unwrap());
+    super::gates::wait(Handle::bootstrap(0).unwrap());
     for start in starts.into_iter().flatten() {
-        start.send(b"go").unwrap();
+        super::gates::post(start);
     }
     worker(argument)
 }
 pub fn worker(argument: u64) -> ! {
     if argument & 512 != 0 {
-        Handle::bootstrap(0).unwrap().receive(&mut [0; 64]).unwrap();
+        super::gates::wait(Handle::bootstrap(0).unwrap());
     }
     if argument & 256 != 0 {
         loop {
@@ -70,7 +70,7 @@ pub fn worker(argument: u64) -> ! {
 }
 pub fn restarts() -> u64 {
     let deadline = time::after(128).unwrap();
-    Handle::bootstrap(0).unwrap().send(b"measure").unwrap();
+    super::gates::post(Handle::bootstrap(0).unwrap());
     let launch = Launch::at(0).unwrap();
     let mut count = 0;
     while count < 2 || !time::reached(time::now().unwrap(), deadline) {
@@ -80,7 +80,7 @@ pub fn restarts() -> u64 {
         count += 1;
     }
     assert!(count >= 2);
-    Handle::bootstrap(1).unwrap().receive(&mut [0; 64]).unwrap();
+    super::gates::wait(Handle::bootstrap(1).unwrap());
     0
 }
 pub fn idle_refill() -> u64 {

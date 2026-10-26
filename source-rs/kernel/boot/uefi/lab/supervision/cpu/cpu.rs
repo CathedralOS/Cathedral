@@ -27,7 +27,9 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
                 Config {
                     executables: &[],
                     dynamic_tasks: 0,
-                    channel_limits: &[],
+                    // Owner start/sample gates, peer completion, branch readiness
+                    // and two descendant starts. Workers only accept wait rights.
+                    channel_limits: &[2, 1, 3, 0, 0],
                     cpu_limits: &[],
                     memory: &[],
                     frame_limit: usize::MAX,
