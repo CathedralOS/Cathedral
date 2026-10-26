@@ -1,6 +1,6 @@
 use state;
 use transport;
-use configuration::encoding;
+use matrix_service::children::configuration::encoding;
 use rendering::rendering;
 use rendering::text;
 public machine settings_pixel(s: &State, x: u64, y: u64) -> u64 {
@@ -12,7 +12,7 @@ public machine settings_pixel(s: &State, x: u64, y: u64) -> u64 {
     }
     state save(s: &State, x: u64, y: u64) -> u64 { transition label_pixel(13u64, x, y, 10u64, 44u64) || label_pixel(14u64, x, y, 84u64, 44u64) { true -> (0xffffffu64) _ -> setting_background(s, x, y) } }
 }
-machine setting_value(s: &State, row: u64) -> u64 { transition row == 0u64 { true -> word(&s.draft, 72u64) _ -> word(&s.draft, 64u64) } }
+machine setting_value(s: &State, row: u64) -> u64 { transition row == 0u64 { true -> matrix_service::children::configuration::encoding::word(&s.draft, 72u64) _ -> matrix_service::children::configuration::encoding::word(&s.draft, 64u64) } }
 machine setting_background(s: &State, x: u64, y: u64) -> u64 {
     let action: u64 = add(((s.image_index as u64 in Saturating) * 2) as u64, (x >= 80u64) as u64);
     transition y >= 40u64 && s.setting_selected == action { true -> (0x53718au64) _ -> (0x202d43u64) }

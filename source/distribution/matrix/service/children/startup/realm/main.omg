@@ -1,0 +1,122 @@
+module children::startup::realm::main;
+
+// Realm discovery and setup. Each issued host operation completes exactly once.
+// State 16..20: next/issued command, job, final status, last status, reset-surfaces obligation.
+use children::startup::realm::operations;
+use children::startup::realm::configuration;
+use children::startup::realm::picker;
+use children::startup::realm::background;
+use children::startup::realm::discovery;
+
+public machine realm_decision(p: &mut [u64; 128]) -> u64 {
+    transition p[1] {
+        0u64 -> initialize(p)
+        1u64 -> issue(p)
+        2u64 -> completed(p)
+        _ -> (0u64)
+    }
+}
+
+machine initialize(p: &mut [u64; 128]) -> u64 {
+    transition p[16] == 0u64 && p[2] >= children::startup::realm::operations::CONFIGURATION && p[2] <= children::startup::realm::operations::DISCOVERY {
+        true -> start(p)
+        _ -> (0u64)
+    }
+    state start(p: &mut [u64; 128]) -> u64 {
+        p[17] = p[2];
+        p[18] = 0u64;
+        p[19] = 0u64;
+        p[20] = 0u64;
+        transition p[2] {
+            children::startup::realm::operations::CONFIGURATION -> configure(p)
+            children::startup::realm::operations::PICKER -> picker(p)
+            children::startup::realm::operations::BACKGROUND -> background(p)
+            _ -> discovery(p)
+        }
+    }
+    state configure(p: &mut [u64; 128]) -> u64 {
+        p[16] = children::startup::realm::configuration::configuration_start(p);
+        1u64
+    }
+    state picker(p: &mut [u64; 128]) -> u64 {
+        p[16] = children::startup::realm::operations::PREPARE_PICKER;
+        1u64
+    }
+    state background(p: &mut [u64; 128]) -> u64 {
+        p[16] = children::startup::realm::operations::READ_BACKGROUND;
+        1u64
+    }
+    state discovery(p: &mut [u64; 128]) -> u64 {
+        transition p[5] != 0u64 {
+            true -> refresh(p)
+            _ -> recover(p)
+        }
+    }
+    state refresh(p: &mut [u64; 128]) -> u64 {
+        p[16] = children::startup::realm::operations::REFRESH;
+        1u64
+    }
+    state recover(p: &mut [u64; 128]) -> u64 {
+        p[16] = children::startup::realm::operations::RECOVER_STARTUP;
+        1u64
+    }
+}
+
+machine issue(p: &mut [u64; 128]) -> u64 {
+    transition p[16] >= children::startup::realm::operations::REFRESH && p[16] <= children::startup::realm::operations::FINISH {
+        true -> issued(p)
+        _ -> (0u64)
+    }
+    state issued(p: &mut [u64; 128]) -> u64 requires p[16] <= children::startup::realm::operations::FINISH {
+        let command: u64 = p[16];
+        p[16] = command + 64u64;
+        command
+    }
+}
+
+machine completed(p: &mut [u64; 128]) -> u64 {
+    transition p[2] >= children::startup::realm::operations::REFRESH && p[2] <= children::startup::realm::operations::FINISH && p[16] == p[2] + 64u64 {
+        true -> advance(p)
+        _ -> (0u64)
+    }
+    state advance(p: &mut [u64; 128]) -> u64 {
+        // Keep the optional background refusal until its reporting command runs.
+        transition p[2] == children::startup::realm::operations::FINISH {
+            true -> finish(p)
+            _ -> job(p)
+        }
+    }
+    state finish(p: &mut [u64; 128]) -> u64 {
+        p[16] = 0u64;
+        1u64
+    }
+    state job(p: &mut [u64; 128]) -> u64 {
+        transition p[17] {
+            children::startup::realm::operations::CONFIGURATION -> configure(p)
+            children::startup::realm::operations::PICKER -> picker(p)
+            children::startup::realm::operations::BACKGROUND -> background(p)
+            children::startup::realm::operations::DISCOVERY -> discovery(p)
+            _ -> (0u64)
+        }
+    }
+    state configure(p: &mut [u64; 128]) -> u64 {
+        let next: u64 = children::startup::realm::configuration::configuration_next(p);
+        p[16] = next;
+        1u64
+    }
+    state picker(p: &mut [u64; 128]) -> u64 {
+        let next: u64 = children::startup::realm::picker::picker_next(p);
+        p[16] = next;
+        1u64
+    }
+    state background(p: &mut [u64; 128]) -> u64 {
+        let next: u64 = children::startup::realm::background::background_next(p);
+        p[16] = next;
+        1u64
+    }
+    state discovery(p: &mut [u64; 128]) -> u64 {
+        let next: u64 = children::startup::realm::discovery::discovery_next(p);
+        p[16] = next;
+        1u64
+    }
+}

@@ -1,0 +1,63 @@
+module requests::owner;
+
+// Owner-only routing and post-success consequences. Child packets cannot reach this path.
+use requests::operations;
+use requests::desktop;
+use protocol::main;
+use protocol::matrix;
+
+public machine owner_request(p: &mut [u64; 128]) -> u64 {
+    transition p[16] == RESOLVE_PATH && p[21] == 0u64 && p[22] == 0u64 && p[23] == 0u64 {
+        true -> (requests::operations::DO_RESOLVE)
+        _ -> pixel(p)
+    }
+    state pixel(p: &mut [u64; 128]) -> u64 {
+        transition p[16] == READ_PIXEL && p[19] == 0u64 && p[20] == 0u64 && p[21] == 0u64 && p[22] == 0u64 && p[23] == 0u64 {
+            true -> (requests::operations::DO_PIXEL)
+            _ -> (requests::operations::DO_OWNER)
+        }
+    }
+}
+
+public machine owner_fallback(p: &mut [u64; 128]) -> u64 {
+    transition p[2] == requests::operations::OWNER && p[3] != 0u64 {
+        true -> operation(p)
+        _ -> (requests::operations::DO_DENY)
+    }
+    state operation(p: &mut [u64; 128]) -> u64 {
+        transition p[16] {
+            requests::desktop::SAVE_RECOVERY_GRANT -> (requests::operations::DO_RECOVERY_OWNER)
+            requests::desktop::SAVE_RECOVERY_POLL -> (requests::operations::DO_RECOVERY_OWNER)
+            STORAGE_GRANT -> (requests::operations::DO_STORAGE_OWNER)
+            STORAGE_REVOKE -> (requests::operations::DO_STORAGE_OWNER)
+            STORAGE_STATUS -> (requests::operations::DO_STORAGE_OWNER)
+            STORAGE_BINDING -> (requests::operations::DO_STORAGE_OWNER)
+            _ -> (requests::operations::DO_LAYOUT_OWNER)
+        }
+    }
+}
+
+public machine owner_effects(p: &mut [u64; 128]) -> u64 {
+    transition p[2] == requests::operations::OWNER && p[3] != 0u64 && p[7] != 0u64 {
+        true -> operation(p)
+        _ -> (0u64)
+    }
+    state operation(p: &mut [u64; 128]) -> u64 {
+        transition p[16] {
+            STORAGE_GRANT -> (requests::operations::CHANGED | requests::operations::REMEMBER_STORAGE)
+            STORAGE_REVOKE -> (requests::operations::CHANGED | requests::operations::REMEMBER_STORAGE)
+            STORAGE_STATUS -> (requests::operations::CHANGED | requests::operations::REMEMBER_STORAGE)
+            STORAGE_BINDING -> (requests::operations::CHANGED | requests::operations::REMEMBER_STORAGE)
+            BIND -> (requests::operations::CHANGED | requests::operations::CLEAR_PAIR | requests::operations::REPLAY_ALL)
+            PLACE -> (requests::operations::CHANGED | requests::operations::REPLAY_SLOT)
+            REVOKE -> revoke(p)
+            _ -> (requests::operations::CHANGED)
+        }
+    }
+    state revoke(p: &mut [u64; 128]) -> u64 {
+        transition p[17] < p[6] && p[18] == 0u64 && p[19] == 0u64 && p[20] == 0u64 && p[21] == 0u64 && p[22] == 0u64 && p[23] == 0u64 {
+            true -> (requests::operations::CHANGED | requests::operations::CLEAR_SLOT | requests::operations::REPLAY_SLOT)
+            _ -> (requests::operations::CHANGED | requests::operations::REPLAY_SLOT)
+        }
+    }
+}

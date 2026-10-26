@@ -1,4 +1,4 @@
-//! Private native adapter to distribution/matrix/workspace/main.omg.
+//! Private native adapter to distribution/matrix/service/children/workspace/main.omg.
 use super::operation::Ticket;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

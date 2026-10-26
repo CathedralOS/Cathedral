@@ -1,0 +1,86 @@
+module children::launch::imports;
+
+// Private native adapter: declaration present/brokered/count/owner offer in 2..5;
+// four contract/min/max/required records in 16..31; result mask/contract in 32..33.
+use services::main;
+use services::types;
+
+public machine import_binding(p: &mut [u64; 128]) -> u64 {
+    let mut entries: [Import; 4];
+    transition p[2] == 0u64 {
+        true -> legacy(p, &mut entries)
+        _ -> copy(p, &mut entries, 0u64)
+    }
+    state legacy(p: &mut [u64; 128], entries: &mut [Import; 4]) -> u64 {
+        entries[0] = Import {
+            contract: INTERACTION, minimum: 1u64, maximum: 1u64, required: true
+        }
+        ;
+        entries[1] = Import {
+            contract: STORAGE, minimum: 1u64, maximum: 1u64, required: true
+        }
+        ;
+        transition {
+            _ -> select(p, entries, 2u64, false)
+        }
+    }
+    state copy(p: &mut [u64; 128], entries: &mut [Import; 4], i: u64) -> u64 {
+        transition i < 4u64 {
+            true -> inspect(p, entries, i)
+            _ -> supplied(p, entries)
+        }
+    }
+    state inspect(p: &mut [u64; 128], entries: &mut [Import; 4], i: u64) -> u64 requires i < 4u64 {
+        let at: u64 = 16u64 + i * 4u64;
+        entries[i] = Import {
+            contract: p[at], minimum: p[at + 1u64], maximum: p[at + 2u64], required: p[at + 3u64] != 0u64
+        }
+        ;
+        transition {
+            _ -> copy(p, entries, i + 1u64)
+        }
+    }
+    state supplied(p: &mut [u64; 128], entries: &[Import; 4]) -> u64 {
+        let count: u64 = p[4];
+        let brokered: bool = p[3] != 0u64;
+        transition {
+            _ -> select(p, entries, count, brokered)
+        }
+    }
+    state select(p: &mut [u64; 128], entries: &[Import; 4], count: u64, brokered: bool) -> u64 {
+        // Op 10 exposes the common matcher to compiled conformance tests.
+        transition p[1] == 10u64 {
+            true -> generic(p, entries, count)
+            _ -> stock(p, entries, count, brokered)
+        }
+    }
+    state generic(p: &mut [u64; 128], entries: &[Import; 4], count: u64) -> u64 {
+        let result: Binding = bind(entries, count, p[5]);
+        publish(p, result)
+    }
+    state stock(p: &mut [u64; 128], entries: &[Import; 4], count: u64, brokered: bool) -> u64 {
+        transition brokered {
+            true -> available(p, entries, count, INTERACTION | STORAGE | INPUT_PRODUCER)
+            _ -> available(p, entries, count, INTERACTION | STORAGE)
+        }
+    }
+    state available(p: &mut [u64; 128], entries: &[Import; 4], count: u64, supported: u64) -> u64 {
+        let result: Binding = bind(entries, count, p[5] & supported);
+        transition result.status == 0u64 && (result.mask & INTERACTION) == 0u64 {
+            true -> missing(p)
+            _ -> publish(p, result)
+        }
+    }
+    state missing(p: &mut [u64; 128]) -> u64 {
+        publish(p, Binding {
+            status: MISSING, mask: 0u64, contract: INTERACTION
+        }
+        )
+    }
+}
+
+machine publish(p: &mut [u64; 128], result: Binding) -> u64 {
+    p[32] = result.mask;
+    p[33] = result.contract;
+    result.status
+}

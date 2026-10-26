@@ -1,0 +1,61 @@
+module children::configuration::main;
+
+// Stock distribution configuration: validate bytes or place launcher and workspace.
+// Direct Omega callers use encoding/placement. This packet is the temporary
+// Rust reference bridge, never a service protocol or capability grant.
+use children::configuration::encoding;
+use children::configuration::placement;
+use children::configuration::live;
+
+public machine decision(p: &mut [u64; 128]) -> u64 {
+    transition p[0] {
+        1u64 -> decode(p)
+        2u64 -> children::configuration::placement::place(p)
+        18u64 -> children::configuration::live::live_layout(p)
+        _ -> (0u64)
+    }
+}
+
+machine decode(p: &mut [u64; 128]) -> u64 {
+    let mut bytes: [u8; 104];
+    transition p[1] == 104u64 {
+        true -> copy(p, &mut bytes, 0u64)
+        _ -> (0u64)
+    }
+    state copy(p: &mut [u64; 128], bytes: &mut [u8; 104], i: u64) -> u64 {
+        transition i < 104u64 {
+            true -> byte(p, bytes, i)
+            _ -> validate(p, bytes)
+        }
+    }
+    state byte(p: &mut [u64; 128], bytes: &mut [u8; 104], i: u64) -> u64 requires i < 104u64 {
+        transition p[16u64 + i] <= 255u64 {
+            true -> accepted(p, bytes, i)
+            _ -> (0u64)
+        }
+    }
+    state accepted(p: &mut [u64; 128], bytes: &mut [u8; 104], i: u64) -> u64 requires i < 104u64 {
+        bytes[i] = p[16u64 + i] as u8;
+        transition {
+            _ -> copy(p, bytes, i + 1u64)
+        }
+    }
+    state validate(p: &mut [u64; 128], bytes: &mut [u8; 104]) -> u64 {
+        transition children::configuration::encoding::normalize(bytes) {
+            true -> publish(p, bytes, 0u64)
+            _ -> (0u64)
+        }
+    }
+    state publish(p: &mut [u64; 128], bytes: &[u8; 104], i: u64) -> u64 {
+        transition i < 104u64 {
+            true -> output(p, bytes, i)
+            _ -> (1u64)
+        }
+    }
+    state output(p: &mut [u64; 128], bytes: &[u8; 104], i: u64) -> u64 requires i < 104u64 {
+        p[16u64 + i] = bytes[i] as u64;
+        transition {
+            _ -> publish(p, bytes, i + 1u64)
+        }
+    }
+}

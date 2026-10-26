@@ -1,0 +1,60 @@
+module children::launch::resources::recipes;
+
+// Role 2; configured private/readers/surfaces 3..5; available surfaces 6.
+// Output 32..38: private, readers, channels, descendants, CPU, imports, surfaces.
+// These are offers inside the matrix's authority, never kernel grants.
+use protocol::main;
+
+public machine recipe(p: &mut [u64; 128]) -> u64 {
+    transition p[2] {
+        1u64 -> launcher(p)
+        2u64 -> picker(p)
+        3u64 -> background(p)
+        4u64 -> workspace(p)
+        5u64 -> user(p)
+        _ -> (18446744073709551594u64)
+    }
+    state launcher(p: &mut [u64; 128]) -> u64 {
+        let private: u64 = p[3];
+        offer(p, private, 4u64, 3u64, 0u64, 3u64, 8u64)
+    }
+    state picker(p: &mut [u64; 128]) -> u64 {
+        transition p[6] >= 24u64 {
+            true -> picker_offer(p)
+            _ -> (NO_MEMORY)
+        }
+    }
+    state picker_offer(p: &mut [u64; 128]) -> u64 {
+        offer(p, 48u64, 4u64, 3u64, 0u64, 3u64, 6u64)
+    }
+    state background(p: &mut [u64; 128]) -> u64 {
+        offer(p, 5u64, 2u64, 2u64, 0u64, 1u64, 1u64)
+    }
+    state workspace(p: &mut [u64; 128]) -> u64 {
+        let private: u64 = p[3];
+        let readers: u64 = p[4];
+        let surfaces: u64 = p[5];
+        offer(p, private, readers, 40u64, 5u64, 3u64, surfaces)
+    }
+    state user(p: &mut [u64; 128]) -> u64 {
+        transition p[6] >= 24u64 {
+            true -> user_offer(p)
+            _ -> (NO_MEMORY)
+        }
+    }
+    state user_offer(p: &mut [u64; 128]) -> u64 requires p[6] >= 24u64 {
+        let surfaces: u64 = p[6] - 6u64;
+        offer(p, 256u64, 384u64, 24u64, 3u64, 3u64, surfaces)
+    }
+}
+
+machine offer(p: &mut [u64; 128], private: u64, readers: u64, channels: u64, descendants: u64, imports: u64, surfaces: u64) -> u64 {
+    p[32] = private;
+    p[33] = readers;
+    p[34] = channels;
+    p[35] = descendants;
+    p[36] = 0u64;
+    p[37] = imports;
+    p[38] = surfaces;
+    0u64
+}

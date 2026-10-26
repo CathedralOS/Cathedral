@@ -1,4 +1,0 @@
-machine build(builder: &mut Build) {
-    Build::package(builder, "cathedral_matrix_requests");
-    Build::depend_as(builder, "protocol", Source::Path { location: "../../../platform/contracts/reference" });
-}

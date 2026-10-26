@@ -1,0 +1,69 @@
+// Native reference adapter. Only this layer sees packet slots, operation numbers
+// and the issued-command marker. The service policy consumes named facts/commands.
+use service::main;
+use service::progress;
+use service::operations;
+use session_wire;
+
+const ISSUED: u64 = 64u64;
+public machine session_decision(packet: &mut [u64; 128]) -> u64 {
+    transition packet[1] {
+        0u64 -> command(packet)
+        1u64 -> completed(packet)
+        _ -> (0u64)
+    }
+}
+
+machine command(packet: &mut [u64; 128]) -> u64 {
+    transition packet[16] {
+        0u64 -> issue(packet, INTERACTION)
+        _ -> pending(packet)
+    }
+    machine pending(packet: &mut [u64; 128]) -> u64 {
+        transition packet[16] >= INTERACTION && packet[16] <= DISCONNECT {
+            true -> select(packet)
+            _ -> (0u64)
+        }
+    }
+    machine select(packet: &mut [u64; 128]) -> u64 {
+        let mut facts: service::operations::TurnFacts;
+        facts.interaction_busy = (packet[2] & BUSY) != 0u64;
+        facts.launch_ready = (packet[2] & READY_LAUNCH) != 0u64;
+        facts.refresh_ready = (packet[2] & REFRESH_READY) != 0u64;
+        facts.publishing = (packet[2] & PUBLISHING) != 0u64;
+        facts.deferred_ready = (packet[2] & DEFERRED_READY) != 0u64;
+        facts.deferred_empty = (packet[2] & DEFERRED_EMPTY) != 0u64;
+        facts.storing = (packet[2] & STORING) != 0u64;
+        facts.can_poll = (packet[2] & CAN_POLL) != 0u64;
+        facts.has_input_wake = (packet[2] & HAS_WAKE) != 0u64;
+        facts.event_blocked = (packet[2] & EVENT_BLOCKED) != 0u64;
+        let command: service::operations::Command = service::main::choose_work(decode_command(packet[16]), &facts, decode_event(packet[3]));
+        issue(packet, encode_command(command))
+    }
+}
+
+machine issue(packet: &mut [u64; 128], command: u64) -> u64 {
+    transition command <= INVALID {
+        true -> record(packet, command)
+        _ -> (0u64)
+    }
+    machine record(packet: &mut [u64; 128], command: u64) -> u64 requires command <= INVALID {
+        packet[16] = command + ISSUED;
+        command
+    }
+}
+
+machine completed(packet: &mut [u64; 128]) -> u64 {
+    transition packet[2] >= INTERACTION && packet[2] <= REQUEST
+    && packet[16] == packet[2] + ISSUED {
+        true -> advance(packet)
+        _ -> (0u64)
+    }
+    machine advance(packet: &mut [u64; 128]) -> u64 {
+        let command: service::operations::Command = service::progress::following_work(decode_command(packet[2]), packet[3] != 0u64);
+        let following: u64 = encode_command(command);
+        packet[16] = following;
+        packet[17] = observations(following);
+        1u64
+    }
+}

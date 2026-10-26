@@ -92,17 +92,17 @@ F5 calls that policy directly from Omega. See the
 The Rust stock matrix is also a distribution program: `distribution/matrix/`
 owns its launcher/app roles, saved desktop configuration, child control
 router and recovery choices. Its saved configuration validation and placement
-now execute the shared [Omega configuration](../../source/distribution/matrix/configuration/README.md);
+now execute the shared [Omega configuration](../../source/distribution/matrix/service/children/configuration/README.md);
 the chooser calls the same codec directly. Stock close/loss aggregation and
-wait/refuse/stop decisions also execute [Omega lifecycle policy](../../source/distribution/matrix/lifecycle/README.md).
+wait/refuse/stop decisions also execute [Omega lifecycle policy](../../source/distribution/matrix/service/children/control/README.md).
 Bounded launcher retries and the ticketed read/wait/admit workflow execute
-[Omega recovery policy](../../source/distribution/matrix/recovery/README.md).
+[Omega recovery policy](../../source/distribution/matrix/service/children/recovery/README.md).
 Local picker/background retry budgets execute
-[Omega startup policy](../../source/distribution/matrix/startup/README.md).
+[Omega startup policy](../../source/distribution/matrix/service/children/startup/README.md).
 Ordinary stored-program launch sequencing and rollback execute
-[Omega launch workflow](../../source/distribution/matrix/launch/README.md).
+[Omega launch workflow](../../source/distribution/matrix/service/children/launch/README.md).
 The instance catalogue, selection/fallback choices, switching, cancellation and restoration execute the
-[Omega workspace workflow](../../source/distribution/matrix/workspace/README.md).
+[Omega workspace workflow](../../source/distribution/matrix/service/children/workspace/README.md).
 Ordinary read/binding exchanges yield; the newly admitted child waits for
 publication while existing siblings continue using their scoped services.
 Authenticated IPC custody, stale reply draining and task reclamation stay in Rust.
@@ -112,20 +112,20 @@ for installer/tools and independent conformance checks. Its extension contract l
 `platform/libraries/matrix/` supplies reusable local authority, input, geometry,
 surface, storage-scope and task-management state with caller-selected child
 capacity. It imposes no launcher, desktop strip or persisted configuration.
-The stock program's [Omega session](../../source/distribution/matrix/session/README.md)
+The stock program's [Omega session](../../source/distribution/matrix/service/README.md)
 sequences progress, work priority and event dispatch through a Rust resource host.
-Its [Omega request router](../../source/distribution/matrix/requests/README.md)
+Its [Omega request router](../../source/distribution/matrix/service/requests/README.md)
 selects operations from authenticated connection facts and defines successful
 owner-update consequences. Omega also selects child-control operations, launch
 targets and launch roles. The Rust host retains exact capabilities, pending replies
-and local world/resource mutations. [Realm setup](../../source/distribution/matrix/realm/README.md)
+and local world/resource mutations. [Realm setup](../../source/distribution/matrix/service/children/startup/realm/README.md)
 also executes Omega discovery/configuration/picker/background sequences over
-host-owned resources. [Stock resource offers and profile ceilings](../../source/distribution/matrix/resources/README.md)
+host-owned resources. [Stock resource offers and profile ceilings](../../source/distribution/matrix/service/children/launch/resources/README.md)
 now execute in Omega too, while the host allocates disjoint ranges and reserves
 kernel grants. Live-layout plans and stock service offers execute in Omega;
-the common [record decoder and service matcher](../../source/platform/contracts/imports/README.md)
+the common [image scanner, record decoder and service matcher](../../source/platform/contracts/imports/README.md)
 live in platform contracts without a distribution dependency. The host retains
-ELF record location, mapped-byte access and live-grant validation/application; a
+mapped-byte access and live-grant validation/application; a
 general-purpose matrix server runtime is not yet a separate platform package.
 The independent Rust `distribution/lab/matrix-composition/matrix` program uses
 the shared runtime server and matrix commands for three local peers without any

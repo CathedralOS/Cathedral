@@ -6,7 +6,7 @@ use interaction::interaction;
 use layout;
 use outcomes;
 
-public boundary trait Chooser { machine decide(p: &mut [u64; 128]) -> u64; }
+public boundary trait Chooser { machine decide(p: &mut [u64; 128]) -> u64 reaches; }
 public ChooserProvider satisfies Chooser {
     machine decide(p: &mut [u64; 128]) -> u64 {
         decision(p)

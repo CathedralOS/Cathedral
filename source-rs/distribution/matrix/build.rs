@@ -11,7 +11,7 @@ fn prepare() {
     println!("cargo:rerun-if-changed={}", script.display());
     let output = Command::new(env::var_os("PYTHON").unwrap_or_else(|| "python".into()))
         .arg(script)
-        .arg(root.join("source/distribution/matrix/native"))
+        .arg(root.join("source/distribution/matrix/bridge/native"))
         .arg("--cargo")
         .env("PYTHONIOENCODING", "utf-8")
         .output()

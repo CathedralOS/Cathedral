@@ -1,0 +1,236 @@
+module requests::control;
+
+// Owner child-control: recognize -> preserve loss exclusion -> route or validate local work.
+// Facts 2..15: owner, loss, launch, storing, occupied/unavailable/pending/standing masks,
+// child/image counts, private/reader ceilings, supported imports, surface ceiling.
+// Request 16..23; configure deadline 24. Output: slot 25, forwarded deadline 26.
+use requests::desktop;
+use protocol::main;
+use protocol::matrix;
+
+const UNHANDLED: u64 = 0u64;
+const DENY: u64 = 1u64;
+const BLOCKED: u64 = 2u64;
+const INVALID: u64 = 3u64;
+const SURVEY: u64 = 4u64;
+const STORED: u64 = 5u64;
+const FORWARD: u64 = 6u64;
+const IMAGES: u64 = 7u64;
+const FALLBACK: u64 = 8u64;
+const MANAGEMENT: u64 = 9u64;
+const CONFIGURATION: u64 = 10u64;
+const RESTORE: u64 = 11u64;
+const IMPORTS: u64 = 12u64;
+const PAGES: u64 = 13u64;
+const MEMORY: u64 = 14u64;
+const POLICY: u64 = 15u64;
+const PLACEMENT: u64 = 16u64;
+const SPAWNING: u64 = 17u64;
+const RUNNING: u64 = 18u64;
+const STOPPING: u64 = 19u64;
+public machine control_decision(p: &mut [u64; 128]) -> u64 {
+    transition p[2] != 0u64 && p[10] > 0u64 && p[10] <= 7u64 {
+        true -> recognize(p)
+        _ -> (DENY)
+    }
+    state recognize(p: &mut [u64; 128]) -> u64 {
+        transition p[16] == LOSS && control_padding(p, 17u64) {
+            true -> (SURVEY)
+            _ -> routed(p)
+        }
+    }
+    state routed(p: &mut [u64; 128]) -> u64 {
+        transition p[16] >> 16u64 != 0u64 {
+            true -> available(p)
+            _ -> local(p)
+        }
+    }
+    state local(p: &mut [u64; 128]) -> u64 {
+        transition p[16] {
+            SPAWN -> available(p)
+            RUN -> available(p)
+            RUN_OBJECT -> available(p)
+            RUN_MEMORY -> available(p)
+            RUN_PAGES -> available(p)
+            LAUNCH_POLICY -> available(p)
+            LAUNCH_PLACE -> available(p)
+            LAUNCH_IMPORTS -> available(p)
+            requests::desktop::CONFIGURE -> available(p)
+            RESTORE_STORAGE -> available(p)
+            STOP -> available(p)
+            MANAGEMENT_GRANT -> available(p)
+            LAUNCH_IMAGES -> available(p)
+            requests::desktop::LAUNCHER_FALLBACK -> available(p)
+            _ -> (UNHANDLED)
+        }
+    }
+    state available(p: &mut [u64; 128]) -> u64 {
+        transition p[3] != 0u64 {
+            true -> (BLOCKED)
+            _ -> dispatch(p)
+        }
+    }
+    state dispatch(p: &mut [u64; 128]) -> u64 {
+        transition p[16] >> 16u64 != 0u64 {
+            true -> forward(p)
+            _ -> local_control(p)
+        }
+    }
+}
+
+machine forward(p: &mut [u64; 128]) -> u64 {
+    let hop: u64 = (p[16] >> 16u64) & 7u64;
+    transition hop > 0u64 && hop <= p[10] {
+        true -> slot(p, hop)
+        _ -> (DENY)
+    }
+    state slot(p: &mut [u64; 128], hop: u64) -> u64 requires hop > 0u64 && hop <= 7u64 {
+        let slot: u64 = hop - 1u64;
+        transition (p[8] & (1u64 << slot)) != 0u64 {
+            true -> (BLOCKED)
+            _ -> issue(p, slot)
+        }
+    }
+    state issue(p: &mut [u64; 128], slot: u64) -> u64 {
+        p[25] = slot;
+        transition (p[16] & 65535u64) == requests::desktop::CONFIGURE {
+            true -> configuring(p)
+            _ -> ordinary(p)
+        }
+    }
+    state configuring(p: &mut [u64; 128]) -> u64 {
+        p[26] = p[24];
+        FORWARD
+    }
+    state ordinary(p: &mut [u64; 128]) -> u64 {
+        p[26] = 100u64;
+        FORWARD
+    }
+}
+
+machine local_control(p: &mut [u64; 128]) -> u64 {
+    transition p[16] {
+        requests::desktop::CONFIGURE -> zero(p, 17u64, CONFIGURATION)
+        RESTORE_STORAGE -> zero(p, 17u64, RESTORE)
+        requests::desktop::LAUNCHER_FALLBACK -> zero(p, 19u64, FALLBACK)
+        _ -> target(p)
+    }
+    state target(p: &mut [u64; 128]) -> u64 {
+        transition p[17] < p[10] && p[17] < 7u64 {
+            true -> slot(p)
+            _ -> (DENY)
+        }
+    }
+    state slot(p: &mut [u64; 128]) -> u64 requires p[17] < 7u64 {
+        p[25] = p[17];
+        transition p[16] {
+            RUN_OBJECT -> stored(p)
+            LAUNCH_IMAGES -> images(p)
+            MANAGEMENT_GRANT -> management(p)
+            LAUNCH_IMPORTS -> imports(p)
+            RUN_PAGES -> pages(p)
+            RUN_MEMORY -> memory(p)
+            LAUNCH_POLICY -> policy(p)
+            LAUNCH_PLACE -> placement(p)
+            SPAWN -> zero(p, 21u64, SPAWNING)
+            RUN -> (RUNNING)
+            STOP -> zero(p, 18u64, STOPPING)
+            _ -> (DENY)
+        }
+    }
+}
+
+machine stored(p: &mut [u64; 128]) -> u64 requires p[17] < 7u64 {
+    transition p[4] != 0u64 || p[5] != 0u64 || ((p[6] | p[7]) & (1u64 << p[17])) != 0u64 {
+        true -> (BLOCKED)
+        _ -> object(p)
+    }
+    state object(p: &mut [u64; 128]) -> u64 {
+        transition p[18] != 0u64 {
+            true -> (STORED)
+            _ -> (INVALID)
+        }
+    }
+}
+
+machine images(p: &mut [u64; 128]) -> u64 {
+    transition p[11] < 64u64 {
+        true -> count(p)
+        _ -> (DENY)
+    }
+    state count(p: &mut [u64; 128]) -> u64 requires p[11] < 64u64 {
+        transition (p[18] >> p[11]) == 0u64 {
+            true -> zero(p, 19u64, IMAGES)
+            _ -> (DENY)
+        }
+    }
+}
+
+machine management(p: &mut [u64; 128]) -> u64 {
+    transition p[18] <= p[10] {
+        true -> zero(p, 19u64, MANAGEMENT)
+        _ -> (DENY)
+    }
+}
+
+machine imports(p: &mut [u64; 128]) -> u64 {
+    transition (p[18] & ~p[14]) == 0u64 {
+        true -> zero(p, 19u64, IMPORTS)
+        _ -> (DENY)
+    }
+}
+
+machine pages(p: &mut [u64; 128]) -> u64 requires p[17] < 7u64 {
+    transition p[18] <= p[12] && p[19] <= p[13] && control_padding(p, 20u64) {
+        true -> vacant(p, PAGES)
+        _ -> (DENY)
+    }
+}
+
+machine memory(p: &mut [u64; 128]) -> u64 requires p[17] < 7u64 {
+    transition control_padding(p, 19u64) {
+        true -> vacant(p, MEMORY)
+        _ -> (DENY)
+    }
+}
+
+machine vacant(p: &mut [u64; 128], operation: u64) -> u64 requires p[17] < 7u64 {
+    transition (p[6] & (1u64 << p[17])) == 0u64 {
+        true -> (operation)
+        _ -> (BLOCKED)
+    }
+}
+
+machine policy(p: &mut [u64; 128]) -> u64 {
+    transition p[18] <= p[12] && p[19] <= p[13] && p[23] <= p[15] {
+        true -> (POLICY)
+        _ -> (DENY)
+    }
+}
+
+machine placement(p: &mut [u64; 128]) -> u64 requires p[17] < 7u64 {
+    transition p[23] == 0u64 && (p[9] & (1u64 << p[17])) != 0u64 {
+        true -> (PLACEMENT)
+        _ -> (DENY)
+    }
+}
+
+machine zero(p: &mut [u64; 128], from: u64, operation: u64) -> u64 {
+    transition control_padding(p, from) {
+        true -> (operation)
+        _ -> (DENY)
+    }
+}
+
+machine control_padding(p: &[u64; 128], from: u64) -> bool {
+    transition from < 24u64 {
+        true -> word(p, from)
+        _ -> (true)
+    }
+    state word(p: &[u64; 128], i: u64) -> bool requires i < 24u64 {
+        transition p[i] == 0u64 {
+            true -> control_padding(p, i + 1u64)
+            _ -> (false)
+        }
+    }
+}

@@ -118,10 +118,10 @@ F5 matrix shares its local grant and input command implementation. Add `--omega`
 to run the independent Omega implementation, or `--upstream` to run it under a
 real parent with nested input/view attenuation and live-subtree reclamation.
 These are headless boundary proofs, not additional F5 desktops. The normal stock
-matrix now executes its [close/loss decisions](../source/distribution/matrix/lifecycle/README.md),
-[ticketed asynchronous launcher recovery](../source/distribution/matrix/recovery/README.md),
-[ordinary launch orchestration](../source/distribution/matrix/launch/README.md) and
-[local startup recovery](../source/distribution/matrix/startup/README.md)
+matrix now executes its [close/loss decisions](../source/distribution/matrix/service/children/control/README.md),
+[ticketed asynchronous launcher recovery](../source/distribution/matrix/service/children/recovery/README.md),
+[ordinary launch orchestration](../source/distribution/matrix/service/children/launch/README.md) and
+[local startup recovery](../source/distribution/matrix/service/children/startup/README.md)
 in Omega, with authenticated asynchronous IPC and task cleanup retained in Rust.
 
 The installed Split matrix also has a bounded masked capture demonstration:

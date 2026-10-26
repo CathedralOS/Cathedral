@@ -1,0 +1,56 @@
+module children::startup::realm::discovery;
+
+// One scoped listing: Matrix wins; otherwise Login+Users is a picker; otherwise owner-driven.
+use children::startup::realm::operations;
+
+public machine discovery_next(p: &mut [u64; 128]) -> u64 {
+    transition p[2] == children::startup::realm::operations::INSPECT_REALM {
+        true -> inspected(p)
+        _ -> result(p)
+    }
+    state inspected(p: &mut [u64; 128]) -> u64 {
+        transition p[3] {
+            0u64 -> shape(p)
+            children::startup::realm::operations::DENIED -> (children::startup::realm::operations::MARK_HOSTED)
+            children::startup::realm::operations::PEER_CLOSED -> (children::startup::realm::operations::MARK_HOSTED)
+            _ -> failed(p)
+        }
+    }
+    state shape(p: &mut [u64; 128]) -> u64 {
+        transition (p[4] & 1u64) != 0u64 {
+            true -> (children::startup::realm::operations::CONFIGURE_REALM)
+            _ -> picker(p)
+        }
+    }
+    state picker(p: &mut [u64; 128]) -> u64 {
+        transition (p[4] & 6u64) == 6u64 {
+            true -> (children::startup::realm::operations::START_PICKER)
+            _ -> (children::startup::realm::operations::MARK_HOSTED)
+        }
+    }
+    state result(p: &mut [u64; 128]) -> u64 {
+        transition p[3] == 0u64 {
+            true -> success(p)
+            _ -> failed(p)
+        }
+    }
+    state failed(p: &mut [u64; 128]) -> u64 {
+        p[18] = p[3];
+        children::startup::realm::operations::FINISH
+    }
+    state success(p: &mut [u64; 128]) -> u64 {
+        transition p[2] {
+            children::startup::realm::operations::REFRESH -> placed(p)
+            children::startup::realm::operations::CONFIGURE_REALM -> (children::startup::realm::operations::MARK_HOSTED)
+            children::startup::realm::operations::START_PICKER -> (children::startup::realm::operations::MARK_HOSTED)
+            children::startup::realm::operations::MARK_HOSTED -> (children::startup::realm::operations::RECOVER_STARTUP)
+            _ -> (children::startup::realm::operations::FINISH)
+        }
+    }
+    state placed(p: &mut [u64; 128]) -> u64 {
+        transition p[4] != 0u64 {
+            true -> (children::startup::realm::operations::INSPECT_REALM)
+            _ -> (children::startup::realm::operations::FINISH)
+        }
+    }
+}

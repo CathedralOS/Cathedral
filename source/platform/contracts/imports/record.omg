@@ -4,9 +4,13 @@ const POSITIONAL: u64 = 3544421199612761155u64;
 const BROKER: u64 = 3616478793650689091u64;
 const FUNDED: u64 = 3688536387688617027u64;
 const PROFILE: u64 = 3832651575764472899u64;
+// The ELF scanner and record decoder agree on recognized versions and extent.
+public machine record_bytes(magic: u64) -> u64 {
+    transition magic { PROFILE -> (168u64) POSITIONAL -> (144u64) BROKER -> (144u64) FUNDED -> (144u64) _ -> (0u64) }
+}
 public machine header(bytes: &[u8; 168], length: u64, output: &mut Declaration) -> bool {
     let magic: u64 = word(bytes, 0u64);
-    transition (magic == PROFILE && length == 168u64) || ((magic == POSITIONAL || magic == BROKER || magic == FUNDED) && length == 144u64) {
+    transition length != 0u64 && length == record_bytes(magic) {
         true -> fields(bytes, output, magic) _ -> (false)
     }
     state fields(bytes: &[u8; 168], output: &mut Declaration, magic: u64) -> bool {

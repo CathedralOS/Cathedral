@@ -1,5 +1,5 @@
 //! Pure close/loss policy bridge. Rust retains all endpoints and task identities.
-//! Decisions: source/distribution/matrix/lifecycle/main.omg; transport never enters Omega.
+//! Decisions: source/distribution/matrix/service/children/control/main.omg; transport never enters Omega.
 use cathedral_platform_contracts::matrix::Packet;
 #[derive(Debug, PartialEq, Eq)]
 pub enum Close {

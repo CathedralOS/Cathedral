@@ -99,7 +99,7 @@ fn duplicate_and_malformed_later_entries_refuse_before_matching() {
         .and_then(|d| policy::resolve(d.as_ref(), imports::SUPPORTED));
     assert_eq!(result, Err(Refusal::Missing(u64::MAX)));
 }
-fn image(record: &[u8]) -> Vec<u8> {
+pub(super) fn image(record: &[u8]) -> Vec<u8> {
     let mut bytes = vec![0; 256 + record.len()];
     bytes[..6].copy_from_slice(b"\x7fELF\x02\x01");
     bytes[32..40].copy_from_slice(&64u64.to_le_bytes());
@@ -111,7 +111,7 @@ fn image(record: &[u8]) -> Vec<u8> {
     bytes[256..].copy_from_slice(record);
     bytes
 }
-fn executable(bytes: &[u8]) {
+pub(super) fn executable(bytes: &[u8]) {
     match (policy::from_elf(bytes), imports::from_elf(bytes)) {
         (Ok(Some(actual)), Ok(Some(expected))) => compare(Ok(actual), Ok(expected)),
         (Ok(None), Ok(None)) => (),

@@ -19,8 +19,8 @@ use commands;
 use editor;
 use font;
 use paint;
-public boundary trait UiNativeLayout { machine query(kind: u64) -> u64; }
-public boundary trait UiNativeFrame { machine apply(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64; }
+public boundary trait UiNativeLayout { machine query(kind: u64) -> u64 reaches; }
+public boundary trait UiNativeFrame { machine apply(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 reaches; }
 public UiNativeLayoutProvider satisfies UiNativeLayout {
     machine query(kind: u64) -> u64 {
         transition kind { 0u64 -> (size_of<NativeUiState>()) 1u64 -> (align_of<NativeUiState>()) 2u64 -> (2u64) _ -> (0u64) }

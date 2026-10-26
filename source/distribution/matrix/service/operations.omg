@@ -1,0 +1,56 @@
+module operations;
+
+// Work performed by the current Rust host. Commands carry no task or IPC authority.
+public data Command [copy] {
+    case Interaction;
+    case Refresh;
+    case Storage;
+    case AdmitReady;
+    case Binding;
+    case Presentation;
+    case Selection;
+    case LaunchScene;
+    case RefreshRetained;
+    case FinishChildren;
+    case Flush;
+    case RestoreInput;
+    case Cursors;
+    case Prune;
+    case Launch;
+    case Recover;
+    case Startup;
+    case Poll;
+    case Wait;
+    case QueryLoss;
+    case Cancel;
+    case Defer;
+    case LegacyRefresh;
+    case Disconnect;
+    case ProducerMemory;
+    case StorageMemory;
+    case ImageMemory;
+    case Request;
+    case Invalid;
+}
+
+public data EventKind [copy] {
+    case Disconnect;
+    case ProducerMemory;
+    case StorageMemory;
+    case ImageMemory;
+    case Request;
+    case Invalid;
+}
+// The host observes these facts from authenticated connections and retained work.
+public data TurnFacts {
+    interaction_busy: bool;
+    launch_ready: bool;
+    refresh_ready: bool;
+    publishing: bool;
+    deferred_ready: bool;
+    deferred_empty: bool;
+    storing: bool;
+    can_poll: bool;
+    has_input_wake: bool;
+    event_blocked: bool;
+}

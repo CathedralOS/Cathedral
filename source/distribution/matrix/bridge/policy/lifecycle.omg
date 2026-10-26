@@ -1,0 +1,77 @@
+// Temporary Rust native-call encoding. The close policy never sees this packet.
+use service::children::control::main;
+
+const BEGIN_SURVEY: u64 = 3u64;
+const RECORD_QUERY: u64 = 4u64;
+const RECORD_ANSWER: u64 = 5u64;
+const FINISH_SURVEY: u64 = 6u64;
+const DECIDE_CLOSE: u64 = 7u64;
+const WAIT_FOR_CLOSE: u64 = 8u64;
+public machine lifecycle_decision(packet: &mut [u64; 128]) -> u64 {
+    let mut survey: service::children::control::main::LossSurvey;
+    survey.pending_children = packet[16];
+    survey.loss_possible = packet[17] != 0u64;
+    transition packet[0] {
+        BEGIN_SURVEY -> begin(packet, &mut survey)
+        RECORD_QUERY -> queried(packet, &mut survey)
+        RECORD_ANSWER -> answered(packet, &mut survey)
+        FINISH_SURVEY -> conclusion(service::children::control::main::finish_survey(&survey, packet[1] != 0u64))
+        DECIDE_CLOSE -> close_result(service::children::control::main::decide_close(packet[1] != 0u64, child_answer(packet)))
+        WAIT_FOR_CLOSE -> boolean_result(service::children::control::main::should_wait_for_close(packet[1] != 0u64, packet[2] != 0u64))
+        _ -> (0u64)
+    }
+    machine begin(packet: &mut [u64; 128], survey: &mut service::children::control::main::LossSurvey) -> u64 {
+        let accepted: bool = service::children::control::main::begin_survey(packet[1] != 0u64, survey);
+        publish_survey(packet, survey, accepted)
+    }
+    machine queried(packet: &mut [u64; 128], survey: &mut service::children::control::main::LossSurvey) -> u64 {
+        let accepted: bool = service::children::control::main::record_query(survey, packet[1], packet[2] == 1u64);
+        publish_survey(packet, survey, accepted)
+    }
+    machine answered(packet: &mut [u64; 128], survey: &mut service::children::control::main::LossSurvey) -> u64 {
+        let answer: service::children::control::main::LossAnswer = child_answer(packet);
+        let accepted: bool = service::children::control::main::record_answer(survey, packet[1], answer);
+        publish_survey(packet, survey, accepted)
+    }
+}
+
+machine child_answer(packet: &[u64; 128]) -> service::children::control::main::LossAnswer {
+    // Require transport success and the complete canonical empty-loss reply.
+    transition packet[2] == 1u64
+    && packet[24] == 0u64 && packet[25] == 0u64
+    && packet[26] == 0u64 && packet[27] == 0u64
+    && packet[28] == 0u64 && packet[29] == 0u64
+    && packet[30] == 0u64 && packet[31] == 0u64 {
+        true -> (service::children::control::main::LossAnswer::NothingToLose)
+        _ -> (service::children::control::main::LossAnswer::Uncertain)
+    }
+}
+
+machine publish_survey(packet: &mut [u64; 128], survey: &service::children::control::main::LossSurvey, accepted: bool) -> u64 {
+    packet[16] = survey.pending_children;
+    packet[17] = boolean_result(survey.loss_possible);
+    boolean_result(accepted)
+}
+
+machine boolean_result(value: bool) -> u64 {
+    transition value {
+        true -> (1u64)
+        _ -> (0u64)
+    }
+}
+
+machine conclusion(value: service::children::control::main::SurveyConclusion) -> u64 {
+    transition value {
+        service::children::control::main::SurveyConclusion::Waiting -> (0u64)
+        service::children::control::main::SurveyConclusion::NothingToLose -> (1u64)
+        _ -> (2u64)
+    }
+}
+
+machine close_result(value: service::children::control::main::CloseDecision) -> u64 {
+    transition value {
+        service::children::control::main::CloseDecision::Stop -> (2u64)
+        service::children::control::main::CloseDecision::AlreadyStopped -> (3u64)
+        _ -> (1u64)
+    }
+}

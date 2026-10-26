@@ -1,0 +1,126 @@
+module children::launch::resources::allocation;
+
+// Admission facts: desktop/app-slot 2..3, offered pages 4..5, profile present 6,
+// profile pages/surfaces 7..9, resource declaration present 10, channels/descendants
+// 11..12, offered channels/descendants 13..14. Output 32..37: pages, channels,
+// descendants, surface request present/count. No capabilities enter this policy.
+use protocol::main;
+
+public machine allocation(p: &mut [u64; 128]) -> u64 {
+    p[32] = p[4];
+    p[33] = p[5];
+    p[34] = p[13];
+    p[35] = p[14];
+    p[36] = 0u64;
+    p[37] = 0u64;
+    transition p[6] != 0u64 {
+        true -> explicit(p)
+        _ -> defaulted(p)
+    }
+    state explicit(p: &mut [u64; 128]) -> u64 {
+        transition p[7] > p[4] || p[8] > p[5] || (p[10] != 0u64 && (p[11] > p[13] || p[12] > p[14])) {
+            true -> (NO_MEMORY)
+            _ -> profile(p)
+        }
+    }
+    state profile(p: &mut [u64; 128]) -> u64 {
+        p[32] = p[7];
+        p[33] = p[8];
+        p[36] = 1u64;
+        p[37] = p[9];
+        transition {
+            _ -> resources(p)
+        }
+    }
+    state defaulted(p: &mut [u64; 128]) -> u64 {
+        transition p[2] != 0u64 && p[3] != 0u64 {
+            true -> desktop(p)
+            _ -> resources(p)
+        }
+    }
+    state desktop(p: &mut [u64; 128]) -> u64 {
+        p[36] = 1u64;
+        p[37] = 10u64;
+        transition p[10] != 0u64 && p[12] > 0u64 {
+            true -> nested(p)
+            _ -> leaf(p)
+        }
+    }
+    // Undeclared hosts retain room for headers, capture and auxiliary mailboxes.
+    state nested(p: &mut [u64; 128]) -> u64 {
+        p[32] = minimum(p[4], 168u64);
+        p[33] = minimum(p[5], 144u64);
+        transition {
+            _ -> resources(p)
+        }
+    }
+    state leaf(p: &mut [u64; 128]) -> u64 {
+        p[32] = minimum(p[4], 128u64);
+        p[33] = minimum(p[5], 128u64);
+        transition {
+            _ -> resources(p)
+        }
+    }
+    state resources(p: &mut [u64; 128]) -> u64 {
+        transition p[10] != 0u64 {
+            true -> bounded(p)
+            _ -> (0u64)
+        }
+    }
+    state bounded(p: &mut [u64; 128]) -> u64 {
+        p[34] = minimum(p[11], p[13]);
+        p[35] = minimum(p[12], p[14]);
+        0u64
+    }
+}
+// Request, owner ceiling, descendants, explicit profile, backed surfaces: 2..6.
+// Output 32 is the preferred count. The host tries descending disjoint ranges.
+public machine surfaces(p: &mut [u64; 128]) -> u64 {
+    transition p[2] <= p[3] {
+        true -> admitted(p)
+        _ -> (NO_MEMORY)
+    }
+    state admitted(p: &mut [u64; 128]) -> u64 {
+        transition p[4] != 0u64 {
+            true -> host(p)
+            _ -> leaf(p)
+        }
+    }
+    state leaf(p: &mut [u64; 128]) -> u64 {
+        p[32] = p[2];
+        0u64
+    }
+    state host(p: &mut [u64; 128]) -> u64 {
+        transition p[5] != 0u64 {
+            true -> backed(p, p[3])
+            _ -> bounded(p)
+        }
+    }
+    state bounded(p: &mut [u64; 128]) -> u64 {
+        let ceiling: u64 = minimum(p[3], 16u64);
+        transition {
+            _ -> backed(p, ceiling)
+        }
+    }
+    state backed(p: &mut [u64; 128], ceiling: u64) -> u64 {
+        transition p[6] >= 9u64 {
+            true -> spare(p, ceiling)
+            _ -> empty(p)
+        }
+    }
+    state spare(p: &mut [u64; 128], ceiling: u64) -> u64 requires p[6] >= 9u64 {
+        p[32] = minimum(ceiling, p[6] - 9u64);
+        0u64
+    }
+    state empty(p: &mut [u64; 128]) -> u64 {
+        p[32] = 0u64;
+        0u64
+    }
+}
+
+machine minimum(a: u64, b: u64) -> u64 {
+    transition a <= b {
+        true -> (a)
+        _ -> (b)
+    }
+}

@@ -1,0 +1,64 @@
+module children::launch::image;
+
+// Private native adapter for the common platform's sealed-image scan.
+// Begin op 12: image length in 2. Advance op 13: returned length in 2, bytes 16..23.
+// Opaque scan state 32..40 survives each call; read/result extent returns in 4..5.
+use services::image;
+
+public machine import_image(p: &mut [u64; 128]) -> u64 {
+    let mut scan: ImageScan;
+    transition p[1] == 12u64 {
+        true -> begin(p, &mut scan)
+        _ -> resume(p, &mut scan)
+    }
+    state begin(p: &mut [u64; 128], scan: &mut ImageScan) -> u64 {
+        let read: ImageRead = begin_image(p[2], scan);
+        publish_image(p, scan, read)
+    }
+    state resume(p: &mut [u64; 128], scan: &mut ImageScan) -> u64 {
+        scan.phase = p[32];
+        scan.length = p[33];
+        scan.table = p[34];
+        scan.count = p[35];
+        scan.index = p[36];
+        scan.segment = p[37];
+        scan.segment_bytes = p[38];
+        scan.found = p[39];
+        scan.found_bytes = p[40];
+        let mut bytes: [u8; 64];
+        transition {
+            _ -> copy(p, scan, &mut bytes, 0u64)
+        }
+    }
+    state copy(p: &mut [u64; 128], scan: &mut ImageScan, bytes: &mut [u8; 64], i: u64) -> u64 {
+        transition i < 64u64 {
+            true -> byte(p, scan, bytes, i)
+            _ -> advance(p, scan, bytes)
+        }
+    }
+    state byte(p: &mut [u64; 128], scan: &mut ImageScan, bytes: &mut [u8; 64], i: u64) -> u64 requires i < 64u64 {
+        bytes[i] = ((p[16u64 + i / 8u64] >> ((i % 8u64) * 8u64)) & 255u64) as u8;
+        transition {
+            _ -> copy(p, scan, bytes, i + 1u64)
+        }
+    }
+    state advance(p: &mut [u64; 128], scan: &mut ImageScan, bytes: &[u8; 64]) -> u64 {
+        let read: ImageRead = advance_image(scan, bytes, p[2]);
+        publish_image(p, scan, read)
+    }
+}
+
+machine publish_image(p: &mut [u64; 128], scan: &ImageScan, read: ImageRead) -> u64 {
+    p[32] = scan.phase;
+    p[33] = scan.length;
+    p[34] = scan.table;
+    p[35] = scan.count;
+    p[36] = scan.index;
+    p[37] = scan.segment;
+    p[38] = scan.segment_bytes;
+    p[39] = scan.found;
+    p[40] = scan.found_bytes;
+    p[4] = read.offset;
+    p[5] = read.bytes;
+    read.kind
+}

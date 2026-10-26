@@ -1,0 +1,114 @@
+// Discover one import record through bounded reads of a sealed ELF64 image.
+// This is declaration discovery, not kernel executable/load validation.
+use record;
+public const IMAGE_READ: u64 = 1u64;
+public const IMAGE_ABSENT: u64 = 2u64;
+public const IMAGE_FOUND: u64 = 3u64;
+public const IMAGE_MALFORMED: u64 = 4u64;
+public data ImageRead [copy] { kind: u64; offset: u64; bytes: u64; }
+public data ImageScan {
+    phase: u64; length: u64; table: u64; count: u64; index: u64;
+    segment: u64; segment_bytes: u64; found: u64; found_bytes: u64;
+}
+public machine begin_image(length: u64, scan: &mut ImageScan) -> ImageRead {
+    scan.phase = 1u64; scan.length = length; scan.table = 0u64; scan.count = 0u64; scan.index = 0u64;
+    scan.segment = 0u64; scan.segment_bytes = 0u64; scan.found = 0u64; scan.found_bytes = 0u64;
+    transition length >= 64u64 { true -> (ImageRead { kind: IMAGE_READ, offset: 0u64, bytes: 64u64 }) _ -> malformed(scan) }
+}
+// Supply exactly the requested bytes from the same immutable image. Unused input
+// bytes are initialized padding. Terminal calls never accept further replies.
+public machine advance_image(scan: &mut ImageScan, bytes: &[u8; 64], length: u64) -> ImageRead {
+    transition scan.phase { 1u64 -> elf_header(scan, bytes, length) 2u64 -> segment(scan, bytes, length) 3u64 -> prefix(scan, bytes, length) _ -> malformed(scan) }
+}
+machine elf_header(scan: &mut ImageScan, bytes: &[u8; 64], length: u64) -> ImageRead {
+    transition length == 64u64 && bytes[0] == 127u8 && bytes[1] == 69u8 && bytes[2] == 76u8 && bytes[3] == 70u8 && bytes[4] == 2u8 && bytes[5] == 1u8 {
+        true -> table(scan, bytes) _ -> malformed(scan)
+    }
+    state table(scan: &mut ImageScan, bytes: &[u8; 64]) -> ImageRead {
+        let size: u64 = (bytes[54] as u64) | ((bytes[55] as u64) << 8u64);
+        scan.table = image_word(bytes, 32u64); scan.count = (bytes[56] as u64) | ((bytes[57] as u64) << 8u64);
+        transition size == 56u64 { true -> next_header(scan) _ -> malformed(scan) }
+    }
+}
+machine next_header(scan: &mut ImageScan) -> ImageRead {
+    transition scan.count <= 16u64 && scan.index <= scan.count && scan.table <= scan.length { true -> range(scan) _ -> malformed(scan) }
+    state range(scan: &mut ImageScan) -> ImageRead requires scan.table <= scan.length {
+        transition scan.count * 56u64 <= scan.length - scan.table { true -> pending(scan) _ -> malformed(scan) }
+    }
+    state pending(scan: &mut ImageScan) -> ImageRead {
+        transition scan.index < scan.count { true -> request(scan) _ -> finish(scan) }
+    }
+    state request(scan: &mut ImageScan) -> ImageRead {
+        let table: u64 = scan.table; let index: u64 = scan.index;
+        transition index < 16u64 { true -> offset(scan, table, index) _ -> malformed(scan) }
+    }
+    state offset(scan: &mut ImageScan, table: u64, index: u64) -> ImageRead requires index < 16u64 {
+        let delta: u64 = index * 56u64;
+        transition delta <= 18446744073709551615u64 - table { true -> read(scan, table, delta) _ -> malformed(scan) }
+    }
+    state read(scan: &mut ImageScan, table: u64, delta: u64) -> ImageRead requires delta <= 18446744073709551615u64 - table {
+        scan.phase = 2u64; ImageRead { kind: IMAGE_READ, offset: table + delta, bytes: 56u64 }
+    }
+}
+machine segment(scan: &mut ImageScan, bytes: &[u8; 64], length: u64) -> ImageRead {
+    transition length == 56u64 { true -> kind(scan, bytes) _ -> malformed(scan) }
+    state kind(scan: &mut ImageScan, bytes: &[u8; 64]) -> ImageRead {
+        // PT_LOAD with exactly PF_R. Other segment kinds/flags are irrelevant here.
+        transition image_word(bytes, 0u64) == 17179869185u64 { true -> load(scan, bytes) _ -> consumed(scan) }
+    }
+    state load(scan: &mut ImageScan, bytes: &[u8; 64]) -> ImageRead {
+        scan.segment = image_word(bytes, 8u64); scan.segment_bytes = image_word(bytes, 32u64);
+        transition scan.segment <= scan.length { true -> range(scan) _ -> malformed(scan) }
+    }
+    state range(scan: &mut ImageScan) -> ImageRead requires scan.segment <= scan.length {
+        transition scan.segment_bytes <= scan.length - scan.segment { true -> readable(scan) _ -> malformed(scan) }
+    }
+    state readable(scan: &mut ImageScan) -> ImageRead {
+        transition scan.segment_bytes >= 6u64 { true -> request(scan) _ -> consumed(scan) }
+    }
+    state request(scan: &mut ImageScan) -> ImageRead {
+        scan.phase = 3u64;
+        transition scan.segment_bytes < 8u64 {
+            true -> (ImageRead { kind: IMAGE_READ, offset: scan.segment, bytes: scan.segment_bytes })
+            _ -> (ImageRead { kind: IMAGE_READ, offset: scan.segment, bytes: 8u64 })
+        }
+    }
+}
+machine prefix(scan: &mut ImageScan, bytes: &[u8; 64], length: u64) -> ImageRead {
+    transition (scan.segment_bytes >= 8u64 && length == 8u64) || (scan.segment_bytes >= 6u64 && scan.segment_bytes < 8u64 && length == scan.segment_bytes) {
+        true -> marker(scan, bytes, length) _ -> malformed(scan)
+    }
+    state marker(scan: &mut ImageScan, bytes: &[u8; 64], length: u64) -> ImageRead {
+        transition bytes[0] == 67u8 && bytes[1] == 84u8 && bytes[2] == 72u8 && bytes[3] == 73u8 && bytes[4] == 77u8 && bytes[5] == 80u8 {
+            true -> version(scan, bytes, length) _ -> consumed(scan)
+        }
+    }
+    state version(scan: &mut ImageScan, bytes: &[u8; 64], length: u64) -> ImageRead {
+        let size: u64 = record_bytes(image_word(bytes, 0u64));
+        transition length == 8u64 && size != 0u64 && size <= scan.segment_bytes && scan.found_bytes == 0u64 {
+            true -> found(scan, size) _ -> malformed(scan)
+        }
+    }
+    state found(scan: &mut ImageScan, size: u64) -> ImageRead {
+        scan.found = scan.segment; scan.found_bytes = size; consumed(scan)
+    }
+}
+machine consumed(scan: &mut ImageScan) -> ImageRead {
+    transition scan.index < scan.count && scan.count <= 16u64 { true -> advance(scan) _ -> malformed(scan) }
+    state advance(scan: &mut ImageScan) -> ImageRead { scan.index = scan.index + 1u64; next_header(scan) }
+}
+machine finish(scan: &mut ImageScan) -> ImageRead {
+    scan.phase = 0u64;
+    transition scan.found_bytes == 0u64 {
+        true -> (ImageRead { kind: IMAGE_ABSENT, offset: 0u64, bytes: 0u64 })
+        _ -> (ImageRead { kind: IMAGE_FOUND, offset: scan.found, bytes: scan.found_bytes })
+    }
+}
+machine malformed(scan: &mut ImageScan) -> ImageRead { scan.phase = 0u64; ImageRead { kind: IMAGE_MALFORMED, offset: 0u64, bytes: 0u64 } }
+machine image_word(bytes: &[u8; 64], at: u64) -> u64 {
+    transition { _ -> read(bytes, at, 0u64, 0u64) }
+    state read(bytes: &[u8; 64], at: u64, i: u64, value: u64) -> u64 { transition at <= 56u64 && i < 8u64 { true -> byte(bytes, at, i, value) _ -> (value) } }
+    state byte(bytes: &[u8; 64], at: u64, i: u64, value: u64) -> u64 requires at <= 56u64 && i < 8u64 {
+        transition { _ -> read(bytes, at, i + 1u64, value | ((bytes[at + i] as u64) << (i * 8u64))) }
+    }
+}

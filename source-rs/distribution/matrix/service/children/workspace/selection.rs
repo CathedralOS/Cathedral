@@ -1,4 +1,4 @@
-//! Dispatch source/distribution/matrix/workspace/main.omg commands while retaining
+//! Dispatch source/distribution/matrix/service/children/workspace/main.omg commands while retaining
 //! the chrome request and exact tasks until the scene commits or is restored.
 use super::*;
 use cathedral_stock_matrix::policy::{

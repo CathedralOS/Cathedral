@@ -1,5 +1,5 @@
 // Authenticate chrome before querying Omega's catalogue of local app instances.
-// source/distribution/matrix/workspace/main.omg owns tickets and selection.
+// source/distribution/matrix/service/children/workspace/main.omg owns tickets and selection.
 // SELECT_APP enters selection.rs; custody.rs checks its exact tasks and caller.
 // activate below remains the synchronous cleanup helper; commit_activation is
 // the shared local handoff after either visual path succeeds.

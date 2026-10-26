@@ -1,0 +1,204 @@
+module children::recovery::main;
+
+// Stock launcher recovery. The host supplies verified facts, never raw task IDs.
+// State 16..17 holds the phase and outstanding host ticket. Commands are issued once.
+const AUTOMATIC: u64 = 1u64;
+const SPENT: u64 = 2u64;
+const READ_PENDING: u64 = 3u64;
+const READING: u64 = 4u64;
+const NEED_FALLBACK: u64 = 5u64;
+const FALLBACK: u64 = 6u64;
+const REQUESTED: u64 = 7u64;
+const STARTING: u64 = 8u64;
+const READ_READY: u64 = 9u64;
+const ADMITTING: u64 = 10u64;
+public machine recovery_decision(p: &mut [u64; 128]) -> u64 {
+    transition p[1] {
+        0u64 -> initialize(p)
+        1u64 -> retired(p)
+        2u64 -> ready(p)
+        3u64 -> next(p)
+        4u64 -> read_started(p)
+        5u64 -> read_completed(p)
+        6u64 -> fallback_finished(p)
+        7u64 -> request(p)
+        8u64 -> fallback_changed(p)
+        9u64 -> explicit_retired(p)
+        10u64 -> read_unavailable(p)
+        11u64 -> admission_finished(p)
+        _ -> (0u64)
+    }
+}
+
+machine set(p: &mut [u64; 128], state: u64) -> u64 {
+    p[16] = state;
+    1u64
+}
+
+machine discard(p: &mut [u64; 128]) -> u64 {
+    p[16] = 0u64;
+    p[17] = 0u64;
+    0u64
+}
+
+machine initialize(p: &mut [u64; 128]) -> u64 {
+    transition p[16] == 0u64 {
+        true -> set(p, AUTOMATIC)
+        _ -> (0u64)
+    }
+}
+
+machine retired(p: &mut [u64; 128]) -> u64 {
+    transition p[2] == 1u64 {
+        true -> failure(p)
+        _ -> discard(p)
+    }
+    state failure(p: &mut [u64; 128]) -> u64 {
+        transition p[16] {
+            AUTOMATIC -> set(p, READ_PENDING)
+            SPENT -> set(p, NEED_FALLBACK)
+            _ -> discard(p)
+        }
+    }
+}
+
+machine pending(state: u64) -> bool {
+    state == READ_PENDING || state == READING || state == NEED_FALLBACK || state == REQUESTED || state == STARTING || state == READ_READY || state == ADMITTING
+}
+
+machine ready(p: &[u64; 128]) -> u64 {
+    transition pending(p[16]) && p[2] == 0u64 {
+        true -> (1u64)
+        _ -> (0u64)
+    }
+}
+// Commands: wait, cancel, retire fallback, start read, admit ticket, show fallback.
+machine next(p: &mut [u64; 128]) -> u64 {
+    transition pending(p[16]) {
+        true -> authority(p)
+        _ -> (0u64)
+    }
+    state authority(p: &mut [u64; 128]) -> u64 {
+        transition p[2] == 1u64 {
+            true -> selected(p)
+            _ -> cancel(p)
+        }
+    }
+    state selected(p: &mut [u64; 128]) -> u64 {
+        transition p[16] == REQUESTED {
+            true -> (2u64)
+            _ -> vacant(p)
+        }
+    }
+    state vacant(p: &mut [u64; 128]) -> u64 {
+        transition p[3] == 1u64 {
+            true -> advance(p)
+            _ -> cancel(p)
+        }
+    }
+    state advance(p: &mut [u64; 128]) -> u64 {
+        transition p[16] {
+            NEED_FALLBACK -> (5u64)
+            READ_PENDING -> start(p)
+            READ_READY -> admit(p)
+            _ -> (0u64)
+        }
+    }
+    state cancel(p: &mut [u64; 128]) -> u64 {
+        p[16] = 0u64;
+        p[17] = 0u64;
+        1u64
+    }
+    state start(p: &mut [u64; 128]) -> u64 {
+        p[16] = STARTING;
+        3u64
+    }
+    state admit(p: &mut [u64; 128]) -> u64 {
+        p[16] = ADMITTING;
+        p[24] = p[17];
+        4u64
+    }
+}
+
+machine read_started(p: &mut [u64; 128]) -> u64 {
+    transition p[16] == STARTING && p[4] != 0u64 {
+        true -> remember(p)
+        _ -> (0u64)
+    }
+    state remember(p: &mut [u64; 128]) -> u64 {
+        p[17] = p[4];
+        set(p, READING)
+    }
+}
+
+machine read_unavailable(p: &mut [u64; 128]) -> u64 {
+    transition p[16] == STARTING {
+        true -> set(p, NEED_FALLBACK)
+        _ -> (0u64)
+    }
+}
+
+machine read_completed(p: &mut [u64; 128]) -> u64 {
+    transition p[16] == READING && p[17] == p[4] && p[4] != 0u64 {
+        true -> result(p)
+        _ -> (0u64)
+    }
+    state result(p: &mut [u64; 128]) -> u64 {
+        transition p[2] == 1u64 {
+            true -> set(p, READ_READY)
+            _ -> failed(p)
+        }
+    }
+    state failed(p: &mut [u64; 128]) -> u64 {
+        p[17] = 0u64;
+        set(p, NEED_FALLBACK)
+    }
+}
+
+machine admission_finished(p: &mut [u64; 128]) -> u64 {
+    transition p[16] == ADMITTING && p[17] == p[4] && p[4] != 0u64 {
+        true -> result(p)
+        _ -> (0u64)
+    }
+    state result(p: &mut [u64; 128]) -> u64 {
+        p[17] = 0u64;
+        transition p[2] == 1u64 {
+            true -> set(p, SPENT)
+            _ -> set(p, NEED_FALLBACK)
+        }
+    }
+}
+
+machine fallback_finished(p: &mut [u64; 128]) -> u64 {
+    transition p[16] == NEED_FALLBACK {
+        true -> result(p)
+        _ -> (0u64)
+    }
+    state result(p: &mut [u64; 128]) -> u64 {
+        transition p[2] == 1u64 {
+            true -> set(p, FALLBACK)
+            _ -> discard(p)
+        }
+    }
+}
+
+machine request(p: &mut [u64; 128]) -> u64 {
+    transition p[16] == FALLBACK && p[2] == 1u64 {
+        true -> set(p, REQUESTED)
+        _ -> (0u64)
+    }
+}
+
+machine fallback_changed(p: &mut [u64; 128]) -> u64 {
+    transition p[2] == 1u64 && (p[16] == AUTOMATIC || p[16] == SPENT) {
+        true -> (1u64)
+        _ -> discard(p)
+    }
+}
+
+machine explicit_retired(p: &mut [u64; 128]) -> u64 {
+    transition p[16] == REQUESTED {
+        true -> set(p, READ_PENDING)
+        _ -> (0u64)
+    }
+}

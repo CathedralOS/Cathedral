@@ -29,22 +29,32 @@ endpoint lookup. A matched bit says only that the supplied offer satisfies that
 declaration. Actual authority and provider behavior remain separate. The API uses
 typed records; the stock matrix's temporary native packet is not this contract.
 
-The [stock adapter](../../../distribution/matrix/launch/imports.omg) filters its
+The [stock adapter](../../../distribution/matrix/service/children/launch/imports.omg) filters its
 offer before calling this matcher: interaction/storage, plus input production
 for brokered startup. Capture is supported by other hosts; it is not supplied by
 the stock matrix just because its contract ID is recognized. Missing legacy
 records use an explicit two-required-interface declaration at the distribution
 boundary.
 
-Record encoding and ELF extraction still run in Rust. The ordinary matrix uses
-this Omega decoder and matcher after locating a record in a sealed image. Its
-[declaration adapter](../../../distribution/matrix/launch/declaration.omg)
-unpacks bytes and publishes metadata only after full validation. The ELF locator
-still validates load ranges, duplicate records and supported record lengths;
-it does not substitute for content validation. Compiled
+ELF record discovery starts at [image.omg](image.omg). `begin_image` and
+`advance_image` request bounded byte spans from one immutable image, then return
+absent, found or malformed. The caller supplies each requested span exactly;
+terminal scans refuse further replies. The scanner checks the ELF64 header and
+the complete table of at most 16 program headers, inspecting read-only load
+segments for a supported record. Unknown versions, duplicate records, truncated
+ranges and overflow refuse, including bad segments after an earlier match. This
+is declaration discovery, not the kernel's executable validation.
+
+Record encoding remains in Rust. The ordinary matrix uses this Omega scanner,
+decoder and matcher; its host supplies checked reads from the sealed mapping. Its
+[declaration adapter](../../../distribution/matrix/service/children/launch/declaration.omg)
+unpacks bytes and publishes metadata only after full validation. Discovery does
+not substitute for content validation. Compiled
 [conformance tests](../../../../source-rs/distribution/matrix/tests/imports.rs)
 compare versions, optionality, duplicates, unknown identities and refusal
 precedence against the Rust contract. The [decoder tests](../../../../source-rs/distribution/matrix/tests/declaration.rs)
 compare record forms, bit mutations, truncation, metadata and ELF boundary
-failures against the original Rust parser. This is implementation evidence for
+failures against the original Rust parser. The [image tests](../../../../source-rs/distribution/matrix/tests/image.rs)
+compare header/prefix mutations, segment kinds and ranges, duplicate records,
+table limits and reply sequencing. This is implementation evidence for
 the existing bounded protocol, not a new manifest format.

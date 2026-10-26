@@ -11,31 +11,39 @@ supplies a missing mechanism needed by that migration.
 
 The app catalogue, instance tickets, current selection, switch admission,
 fallback choice, cancellation and scene restoration now execute in
-`source/distribution/matrix/workspace/`; see the verification below. Rust retains
+`source/distribution/matrix/service/children/workspace/`; see the verification below. Rust retains
 opaque catalogue/workflow state, exact request/task identity, asynchronous scene
 transport and resource custody. The service-turn sequence now executes in
-`source/distribution/matrix/session/`, through `service/host/` operations; the
+`source/distribution/matrix/service/`, through `service/host/` operations; the
 Rust service entrance only drives that session. Request-family routing and owner
-success consequences now execute in `source/distribution/matrix/requests/`;
+success consequences now execute in `source/distribution/matrix/service/requests/`;
 `service/requests/requests.rs` supplies authenticated facts and executes the choice.
 Owner child-control now descends into `requests/control.omg`; launch target/refusal
 and role choices execute in `launch/admission.omg` and `launch/roles.omg`. The host
 under `service/children/control/owner.rs` and `launch/request.rs` retains exact
 capabilities, standing grants and pending replies. Realm discovery and saved
 configuration/picker/background setup now execute sequences under
-`source/distribution/matrix/realm/`. The host entry points are
+`source/distribution/matrix/service/children/startup/realm/`. The host entry points are
 `service/children/startup/startup.rs` and `service/children/configuration/configuration.rs`.
 Stock role resource offers, profile ceilings and preferred surface counts now
-execute under `source/distribution/matrix/resources/`. The host composes exact
+execute under `source/distribution/matrix/service/children/launch/resources/`. The host composes exact
 image/scope launch plans, accounts for transport overhead and allocates resources.
 Live-layout plans and stock service offers now execute in Omega as well, with
 common typed interface matching under `source/platform/contracts/imports/`.
 The bounded service-import record decoder now also runs in that Omega platform
-package, before matching. Rust locates the record in sealed ELF bytes through
-`source-rs/platform/contracts/imports/image.rs`; its original record decoder remains
-an oracle and serves consumers not yet migrated. Next, migrate the bounded ELF
-record-location decisions while keeping mapped-byte access explicit. Preserve
-duplicate/unknown record refusal, load-range overflow and truncation checks;
+package, before matching. The Omega scanner
+in `source/platform/contracts/imports/image.omg` requests bounded spans from the
+host's sealed mapping and owns ELF record discovery. Its Rust adapter descends
+through `policy/imports/imports.rs`; the original Rust parser remains an oracle
+and serves consumers not yet migrated. Local evidence includes 97 matrix tests,
+full host tests, both matrix Clippy configurations, and ordinary F5/cold reboot.
+The compiler publication repair is qualified on the recorded producer
+`e8bebc16d5883`, merged through Omega PR #292 as `e30c4a48ed7f`, together with
+the pure-component support previously
+confined to the UI branch. The supported checkout recipe is in
+[the compiler build guide](tools/omega-ui/README.md#build); no local source patch
+is needed. The default local compiler path resolves to that tested checkout.
+Preserve duplicate/unknown record refusal, load-range overflow and truncation checks;
 do not turn a malformed declaration into an absent legacy record.
 Keep actual grants, mappings and resource custody in the host; do not turn the
 native bridge into a permanent second distribution API.
@@ -47,6 +55,41 @@ Omega. Matrix configuration, lifecycle, launcher/local recovery and ordinary
 launch sequencing also do. This work does not claim a fully Omega matrix process
 or a native Omega kernel. Recheck the recorded native-kernel proof-propagation
 blocker against a newer compiler separately; it need not stall userspace work.
+
+## Active correction: Omega source quality and discoverability
+
+The owner's current priority is correcting `source/` code and organization, not
+adding more packet-driven policy ports. The stock matrix now follows the Rust
+`service/children/` tree in one service package, with an explicit temporary native
+`bridge/`. Close/loss policy uses named survey, answer and outcome types; service
+turns use commands, observed facts and event kinds. Their native adapters own the
+numeric packet encoding. Package/module imports must retain this hierarchy.
+
+This is not a completed tree-wide cleanup. Launch, recovery, startup, workspace,
+requests and configuration still need their packet-shaped domain interfaces
+replaced; retain the existing host regression cases while doing that. Avoid
+adding features to these representations. The Omega kernel also still mixes x86
+paging, PIC/PIT and interrupt profiles in `kernel/core/`; split shared ownership
+from ISA/board mechanisms before expanding that prototype. Start the audit at
+[source/README.md](source/README.md), with the ownership map and actual entrances.
+
+The directory move requires reviewing the compiler's local source-location
+replacement; it grants no new service authority. Migration/compiler qualification
+above remains separate from the architecture correction. The local compiler
+checkout is retained at `C:/Projects/Omega/.agents/worktree/cathedral-component-publication`;
+`build/omega-ui/compiler` is a junction to it. The old UI checkout, including its
+local publication patch, is preserved at `cathedral-legacy-ui` beside it.
+
+Verification of the reorganized tree, 2026-10-26: all 97 compiled matrix tests and
+`cargo test --locked` across the host workspace pass. Rust formatting, source layout
+(71 Omega / 151 Rust edges) and its eight dependency-law tests pass. Ordinary F5
+flow passes with three Notes instances, protected close, Colors, saves and cold
+reboot; the durable oracle verifies 1,689 records. Artifacts are under
+`build/boot-harness-rs/desktop/20261026T231306307127Z`; logs are
+`build/omega-component/matrix-structure-{tests,host-tests,desktop}.log`.
+This run used the exact producer above, not an arbitrary current-main compiler.
+The normal session profile also builds through the default compiler path without
+`OMEGA_BIN` (`matrix-default-build.log`).
 
 ## Memory budgets and allocator delegation
 
@@ -597,7 +640,7 @@ a latency guarantee. Logs are `build/omega-component/control-*.log`.
 Implementation update 2026-10-26: **Omega routes stock matrix requests**, over
 `da1ecec9`.
 
-`source/distribution/matrix/requests/main.omg` owns request-family selection from
+`source/distribution/matrix/service/requests/main.omg` owns request-family selection from
 authenticated owner/source/child/storage/producer facts, canonical app packet
 shapes, separated-producer enforcement and the storage attachment allowlist.
 `owner.omg` selects diagnostics, owner fallback handlers and successful update
@@ -623,7 +666,7 @@ regression evidence, not a latency guarantee. Logs are
 Implementation update 2026-10-26: **Omega sequences the stock matrix service turn**,
 over `cbb8e464`.
 
-`source/distribution/matrix/session/main.omg` owns upstream progress order,
+`source/distribution/matrix/service/main.omg` owns upstream progress order,
 admission gates, child workflow/reclamation ordering, launch/recovery priority,
 waiting, loss/cancellation handling, deferral and retained-event category dispatch.
 Its named completion transitions show the actual sequence. Omega asks for only
@@ -690,7 +733,7 @@ Rust fallback was introduced.
 Implementation update 2026-10-26: **Omega owns existing-app workspace switching**,
 over `484f17a7`.
 
-`source/distribution/matrix/workspace/main.omg` sequences Begin/Wait/Activate or
+`source/distribution/matrix/service/children/workspace/main.omg` sequences Begin/Wait/Activate or
 Restore/WaitRestore before Finish. Commands complete only with their exact
 operation ticket and command; duplicate/wrong completions cannot advance work.
 Cancellation keeps the first refusal and drains the submitted scene. If commit
@@ -3395,7 +3438,7 @@ intermittent partial-key observation. No new owner decision was needed.
 Implementation update 2026-10-25: **ordinary launch activation yields and
 publication is local**, over `4a191eff`. Artifact directory stamps below are UTC.
 
-Start at [the launch boundary guide](source/distribution/matrix/launch/README.md),
+Start at [the launch boundary guide](source/distribution/matrix/service/children/launch/README.md),
 then [launch/scene.rs](source-rs/distribution/matrix/service/children/launch/scene.rs)
 for task/ticket custody and
 [parent/scene/scene.rs](source-rs/distribution/matrix/service/parent/scene/scene.rs)
@@ -3525,7 +3568,7 @@ this milestone is not a latency-bound or complete input-loss fix.
 Implementation update 2026-10-24: **ordinary launch storage binding yields to
 the service loop**, over `4c884a94`. Artifact directory stamps below are UTC.
 
-Start at [the launch boundary guide](source/distribution/matrix/launch/README.md),
+Start at [the launch boundary guide](source/distribution/matrix/service/children/launch/README.md),
 then [launch/binding.rs](source-rs/distribution/matrix/service/children/launch/binding.rs)
 and [storage/binding.rs](source-rs/distribution/matrix/service/parent/storage/binding.rs).
 Omega's existing Bind command now starts a nonblocking upstream refresh. Rust
@@ -3595,8 +3638,8 @@ intermittent partial-key observation remains open.
 Implementation update 2026-10-24: **ordinary stored-program launch orchestration
 executes in Omega**, over `35537b05`. Artifact directory stamps below are UTC.
 
-Start at [the Omega launch entrance](source/distribution/matrix/launch/main.omg)
-and its [boundary guide](source/distribution/matrix/launch/README.md). The F5 path
+Start at [the Omega launch entrance](source/distribution/matrix/service/children/launch/main.omg)
+and its [boundary guide](source/distribution/matrix/service/children/launch/README.md). The F5 path
 for app/user-matrix launches issues read, retire-picker, admit, bind, place,
 activate, publish and finish commands through Omega. Partial failure issues task
 rollback and, when needed, picker recovery. Rust dispatches those commands from
@@ -3667,8 +3710,8 @@ open; this work does not claim to resolve it.
 Implementation update 2026-10-24: **launcher recovery is a ticketed asynchronous
 Omega workflow**, over `8394d522`. Artifact directory stamps below are UTC.
 
-Start at [the recovery entrance](source/distribution/matrix/recovery/main.omg)
-and its [host boundary guide](source/distribution/matrix/recovery/README.md).
+Start at [the recovery entrance](source/distribution/matrix/service/children/recovery/main.omg)
+and its [host boundary guide](source/distribution/matrix/service/children/recovery/README.md).
 Omega emits read/admission commands once, waits for matching completions and
 chooses fallback or cancellation. Rust retains authenticated request custody,
 actual IPC, sealed images, task admission and teardown. The storage exchange now
@@ -3728,7 +3771,7 @@ Implementation update 2026-10-24: **local picker/background startup recovery
 executes in Omega**, over `7e8c585f`. Artifact directory stamps below are UTC.
 
 Start at [the stock Omega matrix guide](source/distribution/matrix/README.md), then
-[startup/main.omg](source/distribution/matrix/startup/main.omg). Omega owns picker
+[startup/main.omg](source/distribution/matrix/service/children/startup/main.omg). Omega owns picker
 attempts/pending work, selection-error display and background pending/spent state.
 The Rust lifetime handler now dispatches its decisions. Local picker failures get
 two total attempts; selected-user failure returns to a fresh error-reporting picker;
@@ -3791,7 +3834,7 @@ Implementation update 2026-10-24: **stock launcher recovery decisions execute
 in Omega**, over `029f3a43`. Artifact directory stamps below are UTC.
 
 Start at [the stock Omega matrix guide](source/distribution/matrix/README.md), then
-[recovery/main.omg](source/distribution/matrix/recovery/main.omg). The existing
+[recovery/main.omg](source/distribution/matrix/service/children/recovery/main.omg). The existing
 single native export now dispatches configuration, close/loss and recovery.
 Omega owns the opaque retry phase and the wait/cancel/read/admit/fallback actions.
 The Rust phase enum is gone. One automatic attempt is still allowed; authenticated
@@ -3844,7 +3887,7 @@ Omega**, over `ce2e94f9`. Artifact directory stamps below are UTC.
 
 Start at [the stock Omega matrix guide](source/distribution/matrix/README.md).
 The shared native export now dispatches configuration/placement and
-[lifecycle policy](source/distribution/matrix/lifecycle/main.omg). The former
+[lifecycle policy](source/distribution/matrix/service/children/control/main.omg). The former
 `configuration-native` consumer is now `native`; configuration is a plain package
 that the chooser still imports directly. Lifecycle owns survey admission,
 pending-answer aggregation, conservative loss, close wait/refuse/stop and the
@@ -3972,7 +4015,7 @@ This is opt-in diagnostic output, not a new input protocol or global identity.
 The prior `deep` -> `de` occurrence remains unexplained: it did not recur in either
 full replay. The new records expose transport receipt, not app-side acceptance.
 
-The [shared distribution configuration](source/distribution/matrix/configuration/README.md)
+The [shared distribution configuration](source/distribution/matrix/service/children/configuration/README.md)
 now owns the Omega CTHMAT codec and checked bottom-bar placement. The chooser
 imports it instead of owning a private copy. Stock matrix startup and authorized
 live layout execute its compiled export through
@@ -5341,7 +5384,7 @@ Updated 2026-10-22 (local date). Current milestone: **the hop on hardware, and
 global shared leaves**, on baseline `f8bab679` (where a forwarded request
 spends its time). The harness runs the guest under the Windows hypervisor with
 `--accel whpx` as well as under TCG: 32 bare round trips between two tasks cost
-118 to 144 µs there against 3,140 to 4,824 under TCG, and the hop between
+118 to 144 Ãƒâ€šÃ‚Âµs there against 3,140 to 4,824 under TCG, and the hop between
 matrices sits inside the trace line's own noise. The seven supervisor ranges
 every root shares are global now, so the kernel's translations survive the two
 root switches of a trap: 15 percent off the round trip on hardware, nothing
@@ -6365,7 +6408,7 @@ ATA timeout and quiet fault-gate occurrence remain recorded above, unresolved.
 ## Saved layout editor and reliable profile switching (2026-10-18)
 
 The normal user launcher now has SETTINGS, also reachable with F2 when it has
-focus. It edits strip width (192ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“320 pixels) and outer spacing (8ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“40 pixels).
+focus. It edits strip width (192ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¾ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ320 pixels) and outer spacing (8ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¾ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ40 pixels).
 Save writes that user's `Matrix` configuration; Cancel discards local edits and
 returns to app tiles. The current app keeps running in the same position.
 Restart QEMU and select the user to apply the saved layout. This is a bounded
@@ -8293,14 +8336,14 @@ an existing template, without replacing its programs or data.
 
 Measured third-level observations (seconds, traced QEMU/TCG):
 
-| Phase | Before | After | Provider calls before → after |
+| Phase | Before | After | Provider calls before ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ after |
 | --- | ---: | ---: | ---: |
-| Fresh picker launch | 41.62 | 21.41 | 449 → 60 |
-| Fresh user entry | 27.40 | 7.91 | 312 → 27 |
-| Cold picker launch | 26.23 | 6.34 | 283 → 28 |
-| Cold user entry | 40.22 | 7.83 | 312 → 27 |
-| Cold Notes launch | 13.43 | 3.36 | 89 → 9 |
-| Cold Notes save | 5.20 | 3.00 | 21 → 1 |
+| Fresh picker launch | 41.62 | 21.41 | 449 ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ 60 |
+| Fresh user entry | 27.40 | 7.91 | 312 ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ 27 |
+| Cold picker launch | 26.23 | 6.34 | 283 ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ 28 |
+| Cold user entry | 40.22 | 7.83 | 312 ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ 27 |
+| Cold Notes launch | 13.43 | 3.36 | 89 ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ 9 |
+| Cold Notes save | 5.20 | 3.00 | 21 ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ 1 |
 
 Baseline artifacts: `desktop/20261020T054908071290Z`; revised artifacts:
 `desktop/20261020T055706461711Z`, both beneath `build/boot-harness-rs/`.
@@ -8313,9 +8356,9 @@ adds work. These are observations, not timing promises; operation counts show
 the eliminated work independently of host scheduling.
 
 This does **not** establish an input latency improvement. Revised third-level
-typing observations span 187–335 ms across both boots; root pointer observations
-span 40–136 ms there. The compositor CPU for the three cold typed characters was
-about 2–6 ms each, measured on its own clock. Do not subtract it from host time
+typing observations span 187ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“335 ms across both boots; root pointer observations
+span 40ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“136 ms there. The compositor CPU for the three cold typed characters was
+about 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“6 ms each, measured on its own clock. Do not subtract it from host time
 and label the remainder scheduler or IPC cost.
 
 Next measured targets: first-time seed creation still takes 21 seconds at depth
@@ -8406,9 +8449,9 @@ Host load and trace overhead vary; counts and eliminated work are stronger
 evidence than a timing ratio. Cold user entry still took 8.3 seconds and fresh
 entry 11.5 seconds in the revised run; these phases were not fixed.
 
-Deep typing observed 209–240 ms fresh and 114–118 ms cold, so responsiveness is
+Deep typing observed 209ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“240 ms fresh and 114ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“118 ms cold, so responsiveness is
 still uneven. Source-to-Notes delivery crossed seven matrix processes and took
-5–8 nominal 100-Hz guest ticks in the revised samples. For one cold character,
+5ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“8 nominal 100-Hz guest ticks in the revised samples. For one cold character,
 delivery took six ticks, Notes paint took five ticks including IPC, Notes charged
 about 1.8 ms CPU during that paint, and compositor redraw about 0.9 ms. These
 separate clocks are not a decomposition of host elapsed time. The useful next
@@ -9956,9 +9999,9 @@ Evidence before the storage fix:
   dirty-close protection, deepest persistence and repeated whole-subtree teardown:
   `build/nested-four-focused.log`.
 - Four-level latency/cold reopen passed: `build/nested-four-latency.log`. Fresh
-  deepest typing observations were 120–133 ms and save 412 ms; user entry was
+  deepest typing observations were 120ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“133 ms and save 412 ms; user entry was
   5.2 s. Host injection/capture and tracing perturb these upper bounds. Earlier
-  isolated key tracing saw 1–4 guest ticks from source to Notes. This does not
+  isolated key tracing saw 1ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“4 guest ticks from source to Notes. This does not
   isolate scheduler delay or claim a host-independent performance threshold.
 - Five-second delayed interaction fixtures at four levels passed with pointer
   stress and cold reopen: `build/nested-four-delayed.log`.
@@ -10725,7 +10768,7 @@ a backwards clock and the calibration.
 
 Measurements, microseconds from the fresh boot of
 `desktop_test.py --latency --nested-depth 4 --trace-storage`
-(`build/latency-stamp.log`), medians with the trace line's own 231 µs
+(`build/latency-stamp.log`), medians with the trace line's own 231 Ãƒâ€šÃ‚Âµs
 subtracted, then raw p90:
 
 | Transition | Count | Net median | Raw p90 |
@@ -10739,8 +10782,8 @@ subtracted, then raw p90:
 | root dispatch and forward | 233 | 10 and 2 | 324 and 280 |
 | provider work | 88 | 406 | 27,719 |
 
-The cold boot reads the same within 30 µs on every row. So a hop costs 300 to
-400 µs under TCG, where the matrix's own work on a request is about 30 µs: the
+The cold boot reads the same within 30 Ãƒâ€šÃ‚Âµs on every row. So a hop costs 300 to
+400 Ãƒâ€šÃ‚Âµs under TCG, where the matrix's own work on a request is about 30 Ãƒâ€šÃ‚Âµs: the
 time is kernel delivery plus the receiving matrix's wake and switch, not matrix
 code. A depth-4 request crosses eight or nine hops each way, sixteen to
 eighteen in all, for about 6 ms, and the thirteen requests of a user entry
@@ -10753,9 +10796,9 @@ when the running one blocks, yields or the timer fires, so a matrix's loop tail
 sat between every hop. [pending.rs](source-rs/distribution/matrix/service/parent/storage/pending.rs)
 now yields right after forwarding a request upstream and right after answering
 a child (`build/latency-yield.log`): the hop down from the root to a matrix fell
-from 222 to 54 µs net and matrix to matrix from 406 to 368, the depth-4 user
+from 222 to 54 Ãƒâ€šÃ‚Âµs net and matrix to matrix from 406 to 368, the depth-4 user
 entry from 581 to 519 ms and the depth-1 picker launch from 354 to 280. The hop
-up stayed at about 290 µs net, so what remains is the kernel's switch itself
+up stayed at about 290 Ãƒâ€šÃ‚Âµs net, so what remains is the kernel's switch itself
 under emulation: two syscall transitions and a page-table switch, with the
 yield's return through the boot context when deferred work is pending. That is
 a property of the lab's single CPU under TCG far more than of the design, and
@@ -10765,18 +10808,18 @@ any matrix.
 **Kernel phases.** The smoke session's report (`run.py --smoke --release`; the
 suite takes 42 s here, so the default boot timeout is now 120 s instead of 30)
 puts
-the kernel's own work far below the hop: a trap averages 5 µs and a syscall
-2 µs across 190,000 of each, and a task whose registered wait completes is
-selected 8 to 13 µs later with a yielding peer. The IPC lab's echo client now
+the kernel's own work far below the hop: a trap averages 5 Ãƒâ€šÃ‚Âµs and a syscall
+2 Ãƒâ€šÃ‚Âµs across 190,000 of each, and a task whose registered wait completes is
+selected 8 to 13 Ãƒâ€šÃ‚Âµs later with a yielding peer. The IPC lab's echo client now
 times its thirty-two round trips with a clock grant (`ipc-roundtrip`): 3,004
-and 2,957 µs in the two rounds, so a round trip between two small tasks costs
-94 µs and a switch about 45, four syscalls included. The matrix hop's 290 µs is
+and 2,957 Ãƒâ€šÃ‚Âµs in the two rounds, so a round trip between two small tasks costs
+94 Ãƒâ€šÃ‚Âµs and a switch about 45, four syscalls included. The matrix hop's 290 Ãƒâ€šÃ‚Âµs is
 therefore neither trap handling, scheduler latency nor the switch itself: it
 is the woken matrix re-touching its working set, static arenas and mapped
 objects alike, through the emulator's translation cache after the page-table
 reload, before it reaches its stamp. Real hardware pays a few microseconds
 for all of it. A direct switch to the woken task would save the yield's own
-trap, about 5 µs; the hop count, not the hop, is the lab's lever, and that
+trap, about 5 Ãƒâ€šÃ‚Âµs; the hop count, not the hop, is the lab's lever, and that
 count is now what the realm layout requires.
 
 **Two older items close.** Bulk program reads are no longer amplified: a user
@@ -10817,9 +10860,9 @@ Verification:
 
 Next, in order:
 
-1. The per-hop cost is about 290 µs under TCG: a bare switch between two
-   small tasks measures 45 µs, the kernel's trap work 5 µs and selection
-   within 13 µs of completion, so the rest is the woken matrix re-touching its
+1. The per-hop cost is about 290 Ãƒâ€šÃ‚Âµs under TCG: a bare switch between two
+   small tasks measures 45 Ãƒâ€šÃ‚Âµs, the kernel's trap work 5 Ãƒâ€šÃ‚Âµs and selection
+   within 13 Ãƒâ€šÃ‚Âµs of completion, so the rest is the woken matrix re-touching its
    working set through the emulator's translation cache. The receive path was
    tried as a lever: a stamp at the moment the wait returned
    (`build/latency-wake.log`, `build/latency-wake2.log`) put the whole up hop
@@ -10828,15 +10871,15 @@ Next, in order:
    channel the kernel reported ready and a scan reads the clock once
    ([polling.rs](source-rs/platform/libraries/user-runtime/server/polling.rs)),
    which removes a receive per quiet client per wake but leaves the hop at
-   294 µs net (`build/latency-poll3.log`) against 287 to 293 before. The
-   per-turn stamp itself cost 250 µs a turn and was retired. The refill's
+   294 Ãƒâ€šÃ‚Âµs net (`build/latency-poll3.log`) against 287 to 293 before. The
+   per-turn stamp itself cost 250 Ãƒâ€šÃ‚Âµs a turn and was retired. The refill's
    origin is in [entry.S](source-rs/kernel/arch/isa/x86_64/interrupts/entry.S):
    every trap switches to the kernel's own root on entry and back to the
    task's root on return, and no mapping is global
    ([inherited.rs](source-rs/kernel/arch/isa/x86_64/memory/inherited.rs)
    strips the flag, [creation.rs](source-rs/kernel/arch/isa/x86_64/user/memory/creation.rs)
    masks it), so every syscall drops both the kernel's and the task's
-   translations and the emulator re-walks them: 45 µs for a tiny task, far
+   translations and the emulator re-walks them: 45 Ãƒâ€šÃ‚Âµs for a tiny task, far
    more for a matrix. Global supervisor leaves (the seven identical ranges and
    the slot-unique task stacks) would spare the kernel's half; keeping the
    task's half needs PCID or the kernel running in the task's root, which is
@@ -10896,7 +10939,7 @@ able to time either way.
 software TLB on every CR3 write while paging is on, `cpu_x86_update_cr4`
 flushes again only when PGE itself changes, and the x86 page walker never reads
 the global bit (v9.2.0 and current master alike). Under TCG a global leaf
-therefore costs nothing and saves nothing, and the 45 µs a bare switch costs
+therefore costs nothing and saves nothing, and the 45 Ãƒâ€šÃ‚Âµs a bare switch costs
 there is the emulator rebuilding its own TLB, not the guest's. The lab's QEMU
 (11.0.50) also carries WHPX, the Windows hypervisor accelerator, under which
 the guest's page tables and TLB run on the host CPU. [run.py](tools/boot-harness-rs/run.py)
@@ -10909,23 +10952,23 @@ depth-4 latency workload pass under WHPX
 (`build/whpx-smoke.log`, `build/boot-harness-rs/desktop/20261023T060538222615Z`).
 
 **What hardware pays.** Every serial byte is a hypervisor exit under WHPX, so a
-trace line costs about 1,150 µs there against 231 under TCG, and the hop figures
-net of it sit inside its own noise: 0 to 140 µs for the hop up between matrices
+trace line costs about 1,150 Ãƒâ€šÃ‚Âµs there against 231 under TCG, and the hop figures
+net of it sit inside its own noise: 0 to 140 Ãƒâ€šÃ‚Âµs for the hop up between matrices
 and 39 to 224 down over two boots, against 290 and 370 under TCG. A traced
 workload is therefore bound by its own tracing under WHPX, and the untraced
 entry is the end-to-end figure. All TCG figures here are today's: by the
 afternoon the host ran TCG about 1.6 times slower than in the morning's runs,
-the trace line itself at 434 to 649 µs against 231, on the unchanged kernel as
+the trace line itself at 434 to 649 Ãƒâ€šÃ‚Âµs against 231, on the unchanged kernel as
 well (820 to 959 ms for the traced depth-4 entry before the global
 leaves, `build/boot-harness-rs/desktop/20261023T063432217407Z`), so a figure compares only with one taken
 beside it.
 
 | Figure, 32 round trips or one depth-4 step | TCG | WHPX |
 | --- | --- | --- |
-| bare round trip between two tasks, fastest burst | 3,140 to 4,824 µs | 118 to 144 µs |
-| the whole exchange, eight bursts | 36,977 to 44,346 µs | 1,094 to 1,217 µs |
-| trace line itself | 434 to 649 µs (231 in the morning) | about 1,150 µs |
-| hop up between matrices, net median | 332 to 512 µs (290 in the morning) | within trace noise |
+| bare round trip between two tasks, fastest burst | 3,140 to 4,824 Ãƒâ€šÃ‚Âµs | 118 to 144 Ãƒâ€šÃ‚Âµs |
+| the whole exchange, eight bursts | 36,977 to 44,346 Ãƒâ€šÃ‚Âµs | 1,094 to 1,217 Ãƒâ€šÃ‚Âµs |
+| trace line itself | 434 to 649 Ãƒâ€šÃ‚Âµs (231 in the morning) | about 1,150 Ãƒâ€šÃ‚Âµs |
+| hop up between matrices, net median | 332 to 512 Ãƒâ€šÃ‚Âµs (290 in the morning) | within trace noise |
 | depth-4 user entry, traced | 828 to 851 ms | 787 to 989 ms |
 | depth-4 user entry, untraced | 620 to 629 ms | 329 to 431 ms |
 | depth-4 picker launch, untraced | 460 to 533 ms | 777 to 785 ms |
@@ -10956,9 +10999,9 @@ does not map, and no flush site changes, since the shared ranges never change
 after boot. A host test walks a copied tree and checks the identity leaves are
 global, the alias of the same frames is not and the neighbours are untouched.
 Measured as an interleaved A/B, three smoke runs each way under each
-accelerator with a 256-round exchange: under WHPX 1,310 to 1,359 µs without
+accelerator with a 256-round exchange: under WHPX 1,310 to 1,359 Ãƒâ€šÃ‚Âµs without
 the global leaves and 1,128 to 1,175 with (one run 3,508 with a host
-preemption inside), about 15 percent less per round trip, 5.2 to 4.5 µs; under
+preemption inside), about 15 percent less per round trip, 5.2 to 4.5 Ãƒâ€šÃ‚Âµs; under
 TCG 38.4 to 38.5 ms without and 36.9 to 42.0 with, unchanged within noise, as
 QEMU's source says it must be; on the desktop workload under TCG, run beside
 each other, the traced depth-4 entry took 820 to 959 ms without and
@@ -11016,7 +11059,7 @@ refuses at admission beside a live three-deep subtree. Counting the storage as
 busy from the close itself, with nothing in flight, is what makes the timing
 reachable.
 
-**The exchange in bursts.** 256 round trips under TCG cost 150 µs each against
+**The exchange in bursts.** 256 round trips under TCG cost 150 Ãƒâ€šÃ‚Âµs each against
 93 for 32, because ten-millisecond ticks land inside a 38 ms exchange. The echo
 client now runs eight bursts of 32, times each, and reports the fastest burst
 beside the whole exchange (`ipc-roundtrip 32 <fastest> <total>`); the fastest
@@ -11102,17 +11145,17 @@ above; merely registering a provider confers no extra scheduling authority.
 
 **Forwarding-hop lab evidence (2026-10-22, not a scheduling decision).** With
 a microsecond clock in the storage traces, one hop of a nested storage request
-from a matrix to its parent costs about 290 µs under TCG net of tracing, while
-the matrix's own work on the request is about 30 µs; a depth-4 request crosses
+from a matrix to its parent costs about 290 Ãƒâ€šÃ‚Âµs under TCG net of tracing, while
+the matrix's own work on the request is about 30 Ãƒâ€šÃ‚Âµs; a depth-4 request crosses
 sixteen to eighteen hops. The scheduler gives a woken receiver its turn only
 when the running task blocks, yields or the timer fires, so matrices now yield
 right after forwarding or answering, which shortens the downward hops but
-leaves the upward hop near 290 µs. The kernel's trap work is 5 µs, a woken task
-is selected within 13 µs of its completion, and a bare round trip between two
-small tasks measures 94 µs in the IPC lab, so the rest is the woken matrix
+leaves the upward hop near 290 Ãƒâ€šÃ‚Âµs. The kernel's trap work is 5 Ãƒâ€šÃ‚Âµs, a woken task
+is selected within 13 Ãƒâ€šÃ‚Âµs of its completion, and a bare round trip between two
+small tasks measures 94 Ãƒâ€šÃ‚Âµs in the IPC lab, so the rest is the woken matrix
 re-touching its working set through the emulator's translation cache after the
 page-table reload; on hardware (the Windows hypervisor on the lab host) the
-same 32 round trips take about 118 to 144 µs and the hop sits inside the
+same 32 round trips take about 118 to 144 Ãƒâ€šÃ‚Âµs and the hop sits inside the
 trace line's own noise. A direct switch to the task an IPC wakes would therefore
 save only the yield's trap, and what it decides is whose turn funds the
 receiver's work, which is this question; the lab keeps the yield and leaves the
@@ -11189,11 +11232,11 @@ keeps the kernel in its own page-table root: every trap switches roots on entry
 and back on return. The seven supervisor ranges every root shares (image,
 stacks, context heap) are global, so the kernel's translations survive the
 switches; the task's are dropped by each one. 32 bare round trips between two
-tiny tasks cost about 3,140 to 4,824 µs under TCG, where the emulator rebuilds its
+tiny tasks cost about 3,140 to 4,824 Ãƒâ€šÃ‚Âµs under TCG, where the emulator rebuilds its
 whole TLB on every root switch whatever the guest marks global, and about
-118 to 144 µs under the Windows hypervisor on the lab host, 15 percent less
+118 to 144 Ãƒâ€šÃ‚Âµs under the Windows hypervisor on the lab host, 15 percent less
 than before the global leaves. A storage hop between matrices
-is about 290 µs net of tracing under TCG and within the trace line's own noise
+is about 290 Ãƒâ€šÃ‚Âµs net of tracing under TCG and within the trace line's own noise
 on hardware; a depth-4 user entry spends about 85 ms of its 520 in hops under
 TCG and almost nothing on hardware. Sparing the task's half needs PCID, which
 the lab refuses, or the kernel executing in the task's root, which is this

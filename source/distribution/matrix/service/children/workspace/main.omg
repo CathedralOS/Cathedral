@@ -1,0 +1,13 @@
+module children::workspace::main;
+
+// Stock workspace: instance catalogue and the yielding switch workflow.
+use children::workspace::catalogue;
+use children::workspace::selection;
+
+public machine workspace_decision(p: &mut [u64; 128]) -> u64 {
+    transition p[0] {
+        12u64 -> children::workspace::selection::selection_decision(p)
+        13u64 -> children::workspace::catalogue::catalogue_decision(p)
+        _ -> (0u64)
+    }
+}

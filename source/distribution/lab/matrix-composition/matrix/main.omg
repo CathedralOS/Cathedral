@@ -1,7 +1,7 @@
 // Independent matrix: admit peers -> place them -> dispatch authenticated events.
 use session;
 use state;
-public boundary trait Matrix { machine step(s: &mut State, p: &mut [u64; 4096]) -> u64; }
+public boundary trait Matrix { machine step(s: &mut State, p: &mut [u64; 4096]) -> u64 reaches; }
 public MatrixProvider satisfies Matrix {
     machine step(s: &mut State, p: &mut [u64; 4096]) -> u64 {
         transition p[15] { 1u64 -> (size_of<State>()) 2u64 -> (align_of<State>()) 3u64 -> (1u64) _ -> session(s, p) }

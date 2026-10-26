@@ -1,43 +1,37 @@
 # Stock matrix behavior in Omega
 
-Start at [session/main.omg](session/main.omg) for the stock service-turn sequence,
-including progress, work priority, waiting and event dispatch. The
-[session boundary](session/README.md) leads into its Rust mechanisms.
-[requests/main.omg](requests/main.omg) selects request operations from authenticated
-caller facts; [the request boundary](requests/README.md) explains reply custody.
-[realm/main.omg](realm/main.omg) sequences realm discovery and workspace,
-picker and background setup; [the realm boundary](realm/README.md) leads to host resources.
-[resources/main.omg](resources/main.omg) chooses stock role offers, profile
-ceilings and surface preferences; [the resource boundary](resources/README.md)
-leads to the host's actual grants and allocations.
-[policy/main.omg](policy/main.omg) dispatches the temporary native reference
-bridge to [configuration](configuration/README.md), [lifecycle](lifecycle/README.md),
-[launcher recovery](recovery/README.md), [local startup recovery](startup/README.md)
-or [ordinary stored-program launch](launch/README.md) and
-[existing-app workspace selection](workspace/README.md).
-The chooser imports the configuration codec directly. The stock F5 matrix runs
-these policies through [native/main.omg](native/main.omg), a single compiled export.
+Start at [service/main.omg](service/main.omg): it chooses work from named commands,
+current facts and the authenticated event kind. [progress.omg](service/progress.omg)
+shows what follows each completion. The [service boundary](service/README.md)
+connects these operations to the Rust host that still owns connections and tasks.
 
-Configuration owns saved desktop settings and placement calculations. Lifecycle
-owns loss aggregation and the wait/refuse/stop decisions for ordinary close.
-Recovery owns bounded retries and the asynchronous read/wait/admit workflow,
-with ticketed completions and fallback decisions.
-Startup owns local picker/background retry budgets and selection-failure recovery.
-Launch owns target admission, role classification, read/admit/bind/place/publish
-sequencing and partial-failure rollback.
-Workspace owns switch/wait/activate sequencing and restoration after a late
-accepted commit. Cancellation drains the scene before finishing or restoring.
-It also owns the app catalogue, instance-ticket allocation, current selection and
-fallback choice after retirement; Rust retains opaque state and exact task custody.
-Ordinary reads and storage binding yield; admission/publication still use
-synchronous host mechanisms.
-Rust still authenticates callers, serializes IPC, retains exact task/endpoint
-identity, drains late replies, progresses asynchronous parent work and reclaims
-tasks/resources. Service-turn orchestration, request-family routing and owner
-success consequences now execute in Omega, as do owner child-control dispatch and
-launch target/role choices. Realm discovery and configuration/picker/background
-setup sequencing, stock resource offers and profile ceilings also execute in Omega.
-Stock service offers and live-layout plans also execute in Omega; common record
-decoding and interface matching live in platform contracts. ELF record location,
-mapped-byte access and local world/resource operations retain Rust behavior. These are bounded migrations
-of distribution behavior, not a new platform API or the completed Omega OS.
+The service is one package. Descend by responsibility, following the Rust tree:
+
+- [requests](service/requests/main.omg): route from authenticated caller facts,
+  select the request family and decide the consequences of owner operations.
+- [children/control](service/children/control/main.omg): aggregate loss answers
+  and decide whether an ordinary close can stop a child.
+- [children/launch](service/children/launch/main.omg): read, admit, bind, place,
+  activate and publish a child; recover resources after partial failure.
+- [children/workspace](service/children/workspace/main.omg): catalogue instances,
+  switch selection and restore the scene after cancellation.
+- [children/startup](service/children/startup/main.omg): local picker/background
+  retries; [realm](service/children/startup/realm/main.omg) discovers and configures
+  the realm, picker and background.
+- [children/recovery](service/children/recovery/main.omg): launcher crash/retry and
+  fallback policy, including asynchronous read and admission completion.
+- [children/configuration](service/children/configuration/main.omg): saved settings
+  and live layout; [launch resources](service/children/launch/resources/main.omg)
+  selects stock role offers and profile ceilings.
+
+[bridge/policy/main.omg](bridge/policy/main.omg) is the temporary native dispatcher;
+[bridge/native/main.omg](bridge/native/main.omg) selects its compiled export for
+Rust. Service-turn and close/loss adapters serialize named domain values there.
+Other migrated policies still expose packet-shaped interfaces and need the same
+cleanup; moving them into semantic folders does not finish that work.
+
+Rust retains exact task/endpoint identity, authenticated connections, mappings,
+late replies, yielding transport and resource reclamation. Common import-record
+validation lives in [platform contracts](../../platform/contracts/imports/README.md).
+The chooser imports the distribution configuration codec directly. Neither this
+bridge nor the stock matrix policy is a new platform API.

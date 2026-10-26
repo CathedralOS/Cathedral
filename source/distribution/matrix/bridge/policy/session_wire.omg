@@ -1,0 +1,137 @@
+use service::operations;
+
+// Private host-operation vocabulary; not a service or kernel protocol.
+public const INTERACTION: u64 = 1u64;
+public const REFRESH: u64 = 2u64;
+public const STORAGE: u64 = 3u64;
+public const ADMIT_READY: u64 = 4u64;
+public const BINDING: u64 = 5u64;
+public const PRESENTATION: u64 = 6u64;
+public const SELECTION: u64 = 7u64;
+public const LAUNCH_SCENE: u64 = 8u64;
+public const REFRESH_RETAINED: u64 = 9u64;
+public const FINISH_CHILDREN: u64 = 10u64;
+public const FLUSH: u64 = 11u64;
+public const RESTORE_INPUT: u64 = 12u64;
+public const CURSORS: u64 = 13u64;
+public const PRUNE: u64 = 14u64;
+public const LAUNCH: u64 = 15u64;
+public const RECOVER: u64 = 16u64;
+public const STARTUP: u64 = 17u64;
+public const POLL: u64 = 18u64;
+public const WAIT: u64 = 19u64;
+public const QUERY_LOSS: u64 = 20u64;
+public const CANCEL: u64 = 21u64;
+public const DEFER: u64 = 22u64;
+public const LEGACY_REFRESH: u64 = 23u64;
+public const DISCONNECT: u64 = 24u64;
+public const PRODUCER_MEMORY: u64 = 25u64;
+public const STORAGE_MEMORY: u64 = 26u64;
+public const IMAGE_MEMORY: u64 = 27u64;
+public const REQUEST: u64 = 28u64;
+public const INVALID: u64 = 29u64;
+public const BUSY: u64 = 1u64;
+public const READY_LAUNCH: u64 = 2u64;
+public const REFRESH_READY: u64 = 4u64;
+public const PUBLISHING: u64 = 8u64;
+public const DEFERRED_READY: u64 = 16u64;
+public const DEFERRED_EMPTY: u64 = 32u64;
+public const STORING: u64 = 64u64;
+public const CAN_POLL: u64 = 128u64;
+public const HAS_WAKE: u64 = 256u64;
+public const EVENT_BLOCKED: u64 = 512u64;
+public machine decode_command(value: u64) -> service::operations::Command {
+    transition value {
+        1u64 -> (service::operations::Command::Interaction)
+        2u64 -> (service::operations::Command::Refresh)
+        3u64 -> (service::operations::Command::Storage)
+        4u64 -> (service::operations::Command::AdmitReady)
+        5u64 -> (service::operations::Command::Binding)
+        6u64 -> (service::operations::Command::Presentation)
+        7u64 -> (service::operations::Command::Selection)
+        8u64 -> (service::operations::Command::LaunchScene)
+        9u64 -> (service::operations::Command::RefreshRetained)
+        10u64 -> (service::operations::Command::FinishChildren)
+        11u64 -> (service::operations::Command::Flush)
+        12u64 -> (service::operations::Command::RestoreInput)
+        13u64 -> (service::operations::Command::Cursors)
+        14u64 -> (service::operations::Command::Prune)
+        15u64 -> (service::operations::Command::Launch)
+        16u64 -> (service::operations::Command::Recover)
+        17u64 -> (service::operations::Command::Startup)
+        18u64 -> (service::operations::Command::Poll)
+        19u64 -> (service::operations::Command::Wait)
+        20u64 -> (service::operations::Command::QueryLoss)
+        21u64 -> (service::operations::Command::Cancel)
+        22u64 -> (service::operations::Command::Defer)
+        23u64 -> (service::operations::Command::LegacyRefresh)
+        24u64 -> (service::operations::Command::Disconnect)
+        25u64 -> (service::operations::Command::ProducerMemory)
+        26u64 -> (service::operations::Command::StorageMemory)
+        27u64 -> (service::operations::Command::ImageMemory)
+        28u64 -> (service::operations::Command::Request)
+        _ -> (service::operations::Command::Invalid)
+    }
+}
+
+public machine encode_command(command: service::operations::Command) -> u64 {
+    transition command {
+        service::operations::Command::Interaction -> (1u64)
+        service::operations::Command::Refresh -> (2u64)
+        service::operations::Command::Storage -> (3u64)
+        service::operations::Command::AdmitReady -> (4u64)
+        service::operations::Command::Binding -> (5u64)
+        service::operations::Command::Presentation -> (6u64)
+        service::operations::Command::Selection -> (7u64)
+        service::operations::Command::LaunchScene -> (8u64)
+        service::operations::Command::RefreshRetained -> (9u64)
+        service::operations::Command::FinishChildren -> (10u64)
+        service::operations::Command::Flush -> (11u64)
+        service::operations::Command::RestoreInput -> (12u64)
+        service::operations::Command::Cursors -> (13u64)
+        service::operations::Command::Prune -> (14u64)
+        service::operations::Command::Launch -> (15u64)
+        service::operations::Command::Recover -> (16u64)
+        service::operations::Command::Startup -> (17u64)
+        service::operations::Command::Poll -> (18u64)
+        service::operations::Command::Wait -> (19u64)
+        service::operations::Command::QueryLoss -> (20u64)
+        service::operations::Command::Cancel -> (21u64)
+        service::operations::Command::Defer -> (22u64)
+        service::operations::Command::LegacyRefresh -> (23u64)
+        service::operations::Command::Disconnect -> (24u64)
+        service::operations::Command::ProducerMemory -> (25u64)
+        service::operations::Command::StorageMemory -> (26u64)
+        service::operations::Command::ImageMemory -> (27u64)
+        service::operations::Command::Request -> (28u64)
+        _ -> (29u64)
+    }
+}
+
+public machine decode_event(value: u64) -> service::operations::EventKind {
+    transition value {
+        1u64 -> (service::operations::EventKind::Disconnect)
+        2u64 -> (service::operations::EventKind::ProducerMemory)
+        3u64 -> (service::operations::EventKind::StorageMemory)
+        4u64 -> (service::operations::EventKind::ImageMemory)
+        5u64 -> (service::operations::EventKind::Request)
+        _ -> (service::operations::EventKind::Invalid)
+    }
+}
+// Ask only for facts needed by this gate and the gates it may immediately skip to.
+// In particular, ordinary upstream progress never scans the deferred-event queue.
+public machine observations(command: u64) -> u64 {
+    transition command {
+        ADMIT_READY -> (BUSY | READY_LAUNCH)
+        REFRESH_RETAINED -> (REFRESH_READY | PUBLISHING)
+        FLUSH -> (BUSY)
+        LAUNCH -> (DEFERRED_READY | DEFERRED_EMPTY | BUSY | STORING | CAN_POLL)
+        RECOVER -> (DEFERRED_EMPTY | BUSY | STORING | CAN_POLL | DEFERRED_READY)
+        STARTUP -> (BUSY | STORING | CAN_POLL | DEFERRED_READY)
+        POLL -> (CAN_POLL | DEFERRED_READY)
+        QUERY_LOSS -> (READY_LAUNCH)
+        DEFER -> (EVENT_BLOCKED | BUSY | HAS_WAKE)
+        LEGACY_REFRESH -> (BUSY | HAS_WAKE)
+        _ -> (0u64)
+    }
+}

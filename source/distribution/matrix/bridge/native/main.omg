@@ -1,0 +1,6 @@
+use policy::main;
+
+machine main() reaches Policy {
+    let mut p: [u64; 128];
+    let result: u64 = Policy::decide(&mut p);
+}

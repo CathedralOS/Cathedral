@@ -3,7 +3,7 @@ machine build(builder: &mut Build) {
     Build::depend_as(builder, "host", Source::Path { location: "../../../../platform/libraries/app-host" });
     Build::depend_as(builder, "protocol", Source::Path { location: "../../../../platform/contracts/reference" });
     Build::depend_as(builder, "decisions", Source::Path { location: "../policy" });
-    Build::depend_as(builder, "configuration", Source::Path { location: "../../../matrix/configuration" });
+    Build::depend_as(builder, "matrix_service", Source::Path { location: "../../../matrix/service" });
     Build::select_provider<ChooserApp, ChooserAppProvider>(builder);
     Build::bind(builder, linux_x86_64::ProgramEntry, component_entry);
 }

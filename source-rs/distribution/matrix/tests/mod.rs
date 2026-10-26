@@ -4,6 +4,7 @@ mod catalogue;
 mod code;
 mod control;
 mod declaration;
+mod image;
 mod imports;
 mod launch;
 mod layout;

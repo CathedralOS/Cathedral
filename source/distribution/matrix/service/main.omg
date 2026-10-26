@@ -1,0 +1,93 @@
+module main;
+
+// A turn progresses existing work, finishes children, chooses new work, then
+// waits and dispatches an event. progress.omg selects the next step after completion.
+use operations;
+
+public machine choose_work(step: operations::Command, facts: &operations::TurnFacts, event: operations::EventKind) -> operations::Command {
+    transition step {
+        operations::Command::AdmitReady -> admission(facts)
+        operations::Command::RefreshRetained -> refreshed(facts)
+        operations::Command::Flush -> flush(facts)
+        operations::Command::Launch -> launch(facts)
+        operations::Command::Recover -> recover(facts)
+        operations::Command::Startup -> startup(facts)
+        operations::Command::Poll -> poll(facts)
+        operations::Command::QueryLoss -> loss(facts)
+        operations::Command::Defer -> defer(facts, event)
+        operations::Command::LegacyRefresh -> legacy(facts, event)
+        operations::Command::Disconnect -> dispatch(event)
+        _ -> (step)
+    }
+    machine admission(facts: &operations::TurnFacts) -> operations::Command {
+        transition !facts.interaction_busy && facts.launch_ready {
+            true -> (operations::Command::AdmitReady)
+            _ -> (operations::Command::Binding)
+        }
+    }
+    machine refreshed(facts: &operations::TurnFacts) -> operations::Command {
+        transition facts.refresh_ready && !facts.publishing {
+            true -> (operations::Command::RefreshRetained)
+            _ -> (operations::Command::FinishChildren)
+        }
+    }
+    machine flush(facts: &operations::TurnFacts) -> operations::Command {
+        transition facts.interaction_busy {
+            true -> (operations::Command::Prune)
+            _ -> (operations::Command::Flush)
+        }
+    }
+    machine launch(facts: &operations::TurnFacts) -> operations::Command {
+        transition facts.deferred_ready {
+            true -> recover(facts)
+            _ -> (operations::Command::Launch)
+        }
+    }
+    machine recover(facts: &operations::TurnFacts) -> operations::Command {
+        transition facts.deferred_empty {
+            true -> (operations::Command::Recover)
+            _ -> startup(facts)
+        }
+    }
+    machine startup(facts: &operations::TurnFacts) -> operations::Command {
+        transition facts.interaction_busy || facts.storing {
+            true -> poll(facts)
+            _ -> (operations::Command::Startup)
+        }
+    }
+    machine poll(facts: &operations::TurnFacts) -> operations::Command {
+        transition facts.can_poll && !facts.deferred_ready {
+            true -> (operations::Command::Poll)
+            _ -> (operations::Command::Wait)
+        }
+    }
+    machine loss(facts: &operations::TurnFacts) -> operations::Command {
+        transition facts.launch_ready {
+            true -> (operations::Command::Cancel)
+            _ -> (operations::Command::QueryLoss)
+        }
+    }
+    machine defer(facts: &operations::TurnFacts, event: operations::EventKind) -> operations::Command {
+        transition facts.event_blocked {
+            true -> (operations::Command::Defer)
+            _ -> legacy(facts, event)
+        }
+    }
+    machine legacy(facts: &operations::TurnFacts, event: operations::EventKind) -> operations::Command {
+        transition facts.interaction_busy || facts.has_input_wake {
+            true -> dispatch(event)
+            _ -> (operations::Command::LegacyRefresh)
+        }
+    }
+}
+
+machine dispatch(event: operations::EventKind) -> operations::Command {
+    transition event {
+        operations::EventKind::Disconnect -> (operations::Command::Disconnect)
+        operations::EventKind::ProducerMemory -> (operations::Command::ProducerMemory)
+        operations::EventKind::StorageMemory -> (operations::Command::StorageMemory)
+        operations::EventKind::ImageMemory -> (operations::Command::ImageMemory)
+        operations::EventKind::Request -> (operations::Command::Request)
+        _ -> (operations::Command::Invalid)
+    }
+}

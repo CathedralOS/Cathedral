@@ -1,0 +1,51 @@
+module progress;
+
+// Completion advances one service turn. Successful launch/recovery restarts
+// upstream progress; a received event goes through loss/cancellation before dispatch.
+use operations;
+
+public machine following_work(completed: operations::Command, progressed: bool) -> operations::Command {
+    transition completed {
+        operations::Command::Interaction -> (operations::Command::Refresh)
+        operations::Command::Refresh -> (operations::Command::Storage)
+        operations::Command::Storage -> (operations::Command::AdmitReady)
+        operations::Command::AdmitReady -> (operations::Command::Binding)
+        operations::Command::Binding -> (operations::Command::Presentation)
+        operations::Command::Presentation -> (operations::Command::Selection)
+        operations::Command::Selection -> (operations::Command::LaunchScene)
+        operations::Command::LaunchScene -> (operations::Command::RefreshRetained)
+        operations::Command::RefreshRetained -> (operations::Command::FinishChildren)
+        operations::Command::FinishChildren -> (operations::Command::Flush)
+        operations::Command::Flush -> (operations::Command::RestoreInput)
+        operations::Command::RestoreInput -> (operations::Command::Cursors)
+        operations::Command::Cursors -> (operations::Command::Prune)
+        operations::Command::Prune -> (operations::Command::Launch)
+        operations::Command::Launch -> after_progress(progressed, operations::Command::Recover)
+        operations::Command::Recover -> after_progress(progressed, operations::Command::Startup)
+        operations::Command::Startup -> (operations::Command::Poll)
+        operations::Command::Poll -> (operations::Command::Wait)
+        operations::Command::Wait -> after_wait(progressed)
+        operations::Command::QueryLoss -> after_progress(progressed, operations::Command::Cancel)
+        operations::Command::Cancel -> (operations::Command::Defer)
+        operations::Command::Defer -> (operations::Command::Interaction)
+        operations::Command::LegacyRefresh -> (operations::Command::Disconnect)
+        operations::Command::Disconnect -> (operations::Command::Interaction)
+        operations::Command::ProducerMemory -> (operations::Command::Interaction)
+        operations::Command::StorageMemory -> (operations::Command::Interaction)
+        operations::Command::ImageMemory -> (operations::Command::Interaction)
+        operations::Command::Request -> (operations::Command::Interaction)
+        _ -> (operations::Command::Invalid)
+    }
+    machine after_progress(progressed: bool, otherwise: operations::Command) -> operations::Command {
+        transition progressed {
+            true -> (operations::Command::Interaction)
+            _ -> (otherwise)
+        }
+    }
+    machine after_wait(received: bool) -> operations::Command {
+        transition received {
+            true -> (operations::Command::QueryLoss)
+            _ -> (operations::Command::Interaction)
+        }
+    }
+}

@@ -1,5 +1,5 @@
 //! Omega commands/completions; Rust owns tickets and all IPC/image/task custody.
-//! Workflow entrance: source/distribution/matrix/recovery/main.omg.
+//! Workflow entrance: source/distribution/matrix/service/children/recovery/main.omg.
 pub use super::operation::{Ticket, Tickets};
 pub struct State {
     words: [u64; 2],

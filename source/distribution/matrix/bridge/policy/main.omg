@@ -1,0 +1,43 @@
+// One temporary native export dispatches to independently owned stock policies.
+use service::children::configuration::main;
+use lifecycle;
+use service::children::recovery::main;
+use service::children::startup::main;
+use service::children::launch::main;
+use service::children::workspace::main;
+use session;
+use service::requests::main;
+use service::children::startup::realm::main;
+use service::children::launch::resources::main;
+
+public boundary trait Policy {
+    machine decide(p: &mut [u64; 128]) -> u64 reaches;
+}
+public PolicyProvider satisfies Policy {
+    machine decide(p: &mut [u64; 128]) -> u64 {
+        choose(p)
+    }
+}
+
+public machine choose(p: &mut [u64; 128]) -> u64 {
+    transition p[0] {
+        1u64 -> service::children::configuration::main::decision(p)
+        2u64 -> service::children::configuration::main::decision(p)
+        18u64 -> service::children::configuration::main::decision(p)
+        9u64 -> service::children::recovery::main::recovery_decision(p)
+        10u64 -> service::children::startup::main::startup_decision(p)
+        11u64 -> service::children::launch::main::launch_decision(p)
+        12u64 -> service::children::workspace::main::workspace_decision(p)
+        13u64 -> service::children::workspace::main::workspace_decision(p)
+        14u64 -> session_decision(p)
+        15u64 -> service::requests::main::request_decision(p)
+        16u64 -> service::children::startup::realm::main::realm_decision(p)
+        17u64 -> service::children::launch::resources::main::resources_decision(p)
+        _ -> lifecycle_decision(p)
+    }
+}
+
+public machine policy_entry() reaches Policy invokes Policy; {
+    let mut p: [u64; 128];
+    let result: u64 = Policy::decide(&mut p);
+}

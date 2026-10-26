@@ -1,4 +1,4 @@
-//! Local startup recovery decisions in source/distribution/matrix/startup/main.omg.
+//! Local startup recovery decisions in source/distribution/matrix/service/children/startup/main.omg.
 #[derive(Default)]
 pub struct State {
     words: [u64; 5],

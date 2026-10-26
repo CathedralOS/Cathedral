@@ -1,0 +1,113 @@
+module children::startup::main;
+
+// Local picker/background recovery. State 16..20 remains opaque to Rust:
+// picker attempts, picker pending, failed selection, background pending, retry spent.
+public machine startup_decision(p: &mut [u64; 128]) -> u64 {
+    transition p[1] {
+        0u64 -> retired(p)
+        1u64 -> picker_started(p)
+        2u64 -> selection_failed(p)
+        3u64 -> background_failed(p)
+        4u64 -> take_picker(p)
+        5u64 -> take_background(p)
+        _ -> (0u64)
+    }
+}
+
+machine retired(p: &mut [u64; 128]) -> u64 {
+    // Facts: role (picker/user/background/other), failed, login, entered,
+    // workspace, owner-managed picker. Only a verified failure can schedule work.
+    transition p[3] == 1u64 && !(p[4] == 1u64 && p[7] == 1u64) {
+        true -> local(p)
+        _ -> (0u64)
+    }
+    state local(p: &mut [u64; 128]) -> u64 {
+        transition p[4] == 1u64 && p[2] == 1u64 && p[5] == 1u64 {
+            true -> reset_picker(p)
+            _ -> picker(p)
+        }
+    }
+    state picker(p: &mut [u64; 128]) -> u64 {
+        transition p[4] == 1u64 && p[2] == 0u64 && p[5] == 0u64 {
+            true -> queue_picker(p)
+            _ -> background(p)
+        }
+    }
+    state background(p: &mut [u64; 128]) -> u64 {
+        transition p[6] == 1u64 && p[2] == 2u64 && p[20] == 0u64 {
+            true -> background_failed(p)
+            _ -> (0u64)
+        }
+    }
+}
+
+machine selection_failed(p: &mut [u64; 128]) -> u64 {
+    // Owner-managed admission failures belong to the same owner as task failures.
+    transition p[2] == 0u64 {
+        true -> reset_picker(p)
+        _ -> (0u64)
+    }
+}
+
+machine reset_picker(p: &mut [u64; 128]) -> u64 {
+    p[16] = 0u64;
+    p[17] = 1u64;
+    p[18] = 1u64;
+    1u64
+}
+
+machine queue_picker(p: &mut [u64; 128]) -> u64 {
+    p[17] = 1u64;
+    0u64
+}
+
+machine picker_started(p: &mut [u64; 128]) -> u64 {
+    // Saturation preserves exhaustion even if a host accidentally repeats admission.
+    transition p[16] < 2u64 {
+        true -> increment(p)
+        _ -> mode(p)
+    }
+    state increment(p: &mut [u64; 128]) -> u64 {
+        p[16] = p[16] + 1u64;
+        transition true {
+            true -> mode(p)
+        }
+    }
+    state mode(p: &[u64; 128]) -> u64 {
+        transition p[18] == 1u64 {
+            true -> (2u64)
+            _ -> (1u64)
+        }
+    }
+}
+
+machine background_failed(p: &mut [u64; 128]) -> u64 {
+    p[19] = 1u64;
+    0u64
+}
+
+machine take_picker(p: &mut [u64; 128]) -> u64 {
+    transition p[2] == 0u64 && p[17] == 1u64 {
+        true -> consume(p)
+        _ -> (0u64)
+    }
+    state consume(p: &mut [u64; 128]) -> u64 {
+        p[17] = 0u64;
+        transition p[16] >= 2u64 {
+            true -> (2u64)
+            _ -> (1u64)
+        }
+    }
+}
+
+machine take_background(p: &mut [u64; 128]) -> u64 {
+    transition p[2] == 0u64 && p[19] == 1u64 {
+        true -> consume(p)
+        _ -> (0u64)
+    }
+    state consume(p: &mut [u64; 128]) -> u64 {
+        p[19] = 0u64;
+        p[20] = 1u64;
+        1u64
+    }
+}

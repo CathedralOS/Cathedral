@@ -6,7 +6,7 @@ use protocol::main;
 use state;
 use session::session;
 
-public boundary trait Colors { machine step(s: &mut State, p: &mut [u64; 4096]) -> u64; }
+public boundary trait Colors { machine step(s: &mut State, p: &mut [u64; 4096]) -> u64 reaches; }
 public ColorsProvider satisfies Colors {
     machine step(s: &mut State, p: &mut [u64; 4096]) -> u64 {
         transition p[15] {

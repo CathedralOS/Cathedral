@@ -1,0 +1,114 @@
+module children::control::main;
+
+// A close requires a clean answer. A survey waits for every queried child and
+// preserves uncertainty once any child might lose work.
+public const CHILD_CAPACITY: u64 = 5u64;
+public data LossAnswer [copy] {
+    case NothingToLose;
+    case Uncertain;
+}
+
+public data CloseDecision [copy] {
+    case Refuse;
+    case Stop;
+    case AlreadyStopped;
+}
+
+public data LossSurvey {
+    pending_children: u64;
+    loss_possible: bool;
+}
+
+public data SurveyConclusion [copy] {
+    case Waiting;
+    case NothingToLose;
+    case LossPossible;
+}
+
+public machine decide_close(retired: bool, answer: LossAnswer) -> CloseDecision {
+    transition retired {
+        true -> (CloseDecision::AlreadyStopped)
+        _ -> inspect_answer(answer)
+    }
+    machine inspect_answer(answer: LossAnswer) -> CloseDecision {
+        transition answer {
+            LossAnswer::NothingToLose -> (CloseDecision::Stop)
+            LossAnswer::Uncertain -> (CloseDecision::Refuse)
+        }
+    }
+}
+
+public machine should_wait_for_close(is_close_request: bool, teardown_busy: bool) -> bool {
+    is_close_request && teardown_busy
+}
+
+public machine begin_survey(busy: bool, survey: &mut LossSurvey) -> bool {
+    transition busy {
+        true -> (false)
+        _ -> initialize(survey)
+    }
+    machine initialize(survey: &mut LossSurvey) -> bool {
+        survey.pending_children = 0u64;
+        survey.loss_possible = false;
+        true
+    }
+}
+
+public machine record_query(survey: &mut LossSurvey, child: u64, sent: bool) -> bool {
+    transition child < CHILD_CAPACITY {
+        true -> remember(survey, child, sent)
+        _ -> (false)
+    }
+    machine remember(survey: &mut LossSurvey, child: u64, sent: bool) -> bool
+    requires child < CHILD_CAPACITY {
+        transition sent {
+            true -> wait_for_answer(survey, child)
+            _ -> retain_uncertainty(survey)
+        }
+    }
+    machine wait_for_answer(survey: &mut LossSurvey, child: u64) -> bool
+    requires child < CHILD_CAPACITY {
+        survey.pending_children = survey.pending_children | (1u64 << child);
+        true
+    }
+}
+
+public machine record_answer(survey: &mut LossSurvey, child: u64, answer: LossAnswer) -> bool {
+    transition child < CHILD_CAPACITY {
+        true -> expected(survey, child, answer)
+        _ -> (false)
+    }
+    machine expected(survey: &mut LossSurvey, child: u64, answer: LossAnswer) -> bool
+    requires child < CHILD_CAPACITY {
+        transition (survey.pending_children & (1u64 << child)) != 0u64 {
+            true -> consume(survey, child, answer)
+            _ -> (false)
+        }
+    }
+    machine consume(survey: &mut LossSurvey, child: u64, answer: LossAnswer) -> bool
+    requires child < CHILD_CAPACITY {
+        survey.pending_children = survey.pending_children ^ (1u64 << child);
+        transition answer {
+            LossAnswer::NothingToLose -> (true)
+            LossAnswer::Uncertain -> retain_uncertainty(survey)
+        }
+    }
+}
+
+public machine finish_survey(survey: &LossSurvey, recovery_pending: bool) -> SurveyConclusion {
+    transition survey.pending_children != 0u64 {
+        true -> (SurveyConclusion::Waiting)
+        _ -> conclude(survey, recovery_pending)
+    }
+    machine conclude(survey: &LossSurvey, recovery_pending: bool) -> SurveyConclusion {
+        transition survey.loss_possible || recovery_pending {
+            true -> (SurveyConclusion::LossPossible)
+            _ -> (SurveyConclusion::NothingToLose)
+        }
+    }
+}
+
+machine retain_uncertainty(survey: &mut LossSurvey) -> bool {
+    survey.loss_possible = true;
+    true
+}

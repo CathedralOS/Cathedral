@@ -1,6 +1,0 @@
-// Stock workspace: instance catalogue and the yielding switch workflow.
-use catalogue;
-use selection;
-public machine workspace_decision(p: &mut [u64; 128]) -> u64 {
-    transition p[0] { 12u64 -> selection_decision(p) 13u64 -> catalogue_decision(p) _ -> (0u64) }
-}

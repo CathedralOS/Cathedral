@@ -1,0 +1,28 @@
+module children::startup::realm::picker;
+
+// Picker admission errors propagate to its enclosing matrix; budget arming precedes the read.
+use children::startup::realm::operations;
+
+public machine picker_next(p: &mut [u64; 128]) -> u64 {
+    transition p[3] == 0u64 {
+        true -> success(p)
+        _ -> failed(p)
+    }
+    state failed(p: &mut [u64; 128]) -> u64 {
+        p[18] = p[3];
+        children::startup::realm::operations::FINISH
+    }
+    state success(p: &mut [u64; 128]) -> u64 {
+        transition p[2] {
+            children::startup::realm::operations::PREPARE_PICKER -> (children::startup::realm::operations::READ_PICKER)
+            children::startup::realm::operations::READ_PICKER -> (children::startup::realm::operations::VALIDATE_PICKER)
+            children::startup::realm::operations::VALIDATE_PICKER -> (children::startup::realm::operations::ADMIT_PICKER)
+            children::startup::realm::operations::ADMIT_PICKER -> (children::startup::realm::operations::BIND_PICKER)
+            children::startup::realm::operations::BIND_PICKER -> (children::startup::realm::operations::PLACE_PICKER)
+            children::startup::realm::operations::PLACE_PICKER -> (children::startup::realm::operations::INSTALL_PICKER)
+            children::startup::realm::operations::INSTALL_PICKER -> (children::startup::realm::operations::NOTIFY)
+            children::startup::realm::operations::NOTIFY -> (children::startup::realm::operations::RECORD_PICKER)
+            _ -> (children::startup::realm::operations::FINISH)
+        }
+    }
+}

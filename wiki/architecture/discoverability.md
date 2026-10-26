@@ -74,6 +74,26 @@ under admission, supervision under lifecycle, page regions under memory, and
 raw input queues under the keyboard adapter. Shared frame allocation, IPC and
 scheduling remain core peers. Small coherent leaves need no extra wrapper.
 
+## Omega correspondence
+
+The Omega implementation follows the Rust implementation's responsibility tree.
+A migration preserves recognizable subsystem paths and named entrances while
+dropping Rust module plumbing. For example, stock matrix child launch, recovery,
+configuration and workspace work belong under `distribution/matrix/service/children/`.
+Compiler package manifests should support that organization; they are not a
+reason to flatten each extracted policy into a new top-level package.
+
+Write the Omega domain model in named state, requests and outcomes. Temporary
+native-call packets belong in explicit bridge code. A service entrance should
+not require a reader to decode numeric operation tags or anonymous array slots
+to understand its workflow. Protocol codecs still own their real wire formats.
+Expand control flow enough to show each decision and result; compressing several
+states, mutations and branches onto a line harms the reading path.
+
+An incomplete port should identify the mechanisms its host still supplies.
+Do not invent unused entrances or forwarding layers to suggest that those
+mechanisms have already moved into Omega.
+
 ## Executable and protocol boundaries
 
 An OS has several entrances, including boot, task entry and interrupts. Describe

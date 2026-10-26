@@ -1,0 +1,81 @@
+module children::startup::realm::configuration;
+
+// Applying saved configuration: explicit rollback, optional background, then publish chrome authority.
+use children::startup::realm::operations;
+
+public machine configuration_start(p: &mut [u64; 128]) -> u64 {
+    transition p[3] != 0u64 {
+        true -> (children::startup::realm::operations::FINISH)
+        _ -> available(p)
+    }
+    state available(p: &mut [u64; 128]) -> u64 {
+        transition p[4] != 0u64 {
+            true -> busy(p)
+            _ -> (children::startup::realm::operations::REFRESH)
+        }
+    }
+    state busy(p: &mut [u64; 128]) -> u64 {
+        p[18] = children::startup::realm::operations::BUSY;
+        children::startup::realm::operations::FINISH
+    }
+}
+
+public machine configuration_next(p: &mut [u64; 128]) -> u64 {
+    transition p[2] == children::startup::realm::operations::START_BACKGROUND {
+        true -> background(p)
+        _ -> result(p)
+    }
+    state background(p: &mut [u64; 128]) -> u64 {
+        p[19] = p[3];
+        transition p[3] == 0u64 {
+            true -> (children::startup::realm::operations::FLUSH)
+            _ -> (children::startup::realm::operations::BACKGROUND_FAILED)
+        }
+    }
+    state result(p: &mut [u64; 128]) -> u64 {
+        transition p[3] == 0u64 {
+            true -> success(p)
+            _ -> failed(p)
+        }
+    }
+    state failed(p: &mut [u64; 128]) -> u64 {
+        p[18] = p[3];
+        transition p[2] {
+            children::startup::realm::operations::ADMIT_LAUNCHER -> (children::startup::realm::operations::STOP_LAUNCHER)
+            children::startup::realm::operations::BIND_LAUNCHER -> (children::startup::realm::operations::STOP_LAUNCHER)
+            children::startup::realm::operations::PLACE_LAUNCHER -> clear(p)
+            _ -> (children::startup::realm::operations::FINISH)
+        }
+    }
+    state clear(p: &mut [u64; 128]) -> u64 {
+        p[20] = 1u64;
+        children::startup::realm::operations::CLEAR_WORKSPACE
+    }
+    state success(p: &mut [u64; 128]) -> u64 {
+        transition p[2] {
+            children::startup::realm::operations::REFRESH -> (children::startup::realm::operations::READ_CONFIGURATION)
+            children::startup::realm::operations::READ_CONFIGURATION -> (children::startup::realm::operations::VALIDATE_CONFIGURATION)
+            children::startup::realm::operations::VALIDATE_CONFIGURATION -> (children::startup::realm::operations::ADMIT_LAUNCHER)
+            children::startup::realm::operations::ADMIT_LAUNCHER -> (children::startup::realm::operations::RELEASE_IMAGE)
+            children::startup::realm::operations::RELEASE_IMAGE -> (children::startup::realm::operations::BIND_LAUNCHER)
+            children::startup::realm::operations::BIND_LAUNCHER -> (children::startup::realm::operations::INSTALL_WORKSPACE)
+            children::startup::realm::operations::INSTALL_WORKSPACE -> (children::startup::realm::operations::PLACE_LAUNCHER)
+            children::startup::realm::operations::PLACE_LAUNCHER -> (children::startup::realm::operations::START_BACKGROUND)
+            children::startup::realm::operations::BACKGROUND_FAILED -> (children::startup::realm::operations::FLUSH)
+            children::startup::realm::operations::FLUSH -> (children::startup::realm::operations::NOTIFY)
+            children::startup::realm::operations::NOTIFY -> (children::startup::realm::operations::GRANT_CHROME)
+            children::startup::realm::operations::GRANT_CHROME -> (children::startup::realm::operations::RECORD_LAUNCHER)
+            children::startup::realm::operations::RECORD_LAUNCHER -> (children::startup::realm::operations::FINISH)
+            children::startup::realm::operations::CLEAR_WORKSPACE -> (children::startup::realm::operations::STOP_LAUNCHER)
+            children::startup::realm::operations::STOP_LAUNCHER -> stopped(p)
+            children::startup::realm::operations::RESET_SURFACES -> (children::startup::realm::operations::FINISH)
+            _ -> (children::startup::realm::operations::FINISH)
+        }
+    }
+    state stopped(p: &mut [u64; 128]) -> u64 {
+        transition p[20] != 0u64 {
+            true -> (children::startup::realm::operations::RESET_SURFACES)
+            _ -> (children::startup::realm::operations::FINISH)
+        }
+    }
+}
