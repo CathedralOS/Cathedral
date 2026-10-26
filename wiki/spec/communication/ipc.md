@@ -5,7 +5,7 @@
 | Contract status | Current |
 | Specification coverage | Partial |
 | Implementation coverage | Partial |
-| Last reviewed | 2026-10-25 |
+| Last reviewed | 2026-10-26 |
 
 ## Scope and ownership
 
@@ -39,29 +39,62 @@ an unavailable allocator to contact it. Service selection and import policy rema
 in the userspace broker behind that interface. The kernel
 installs/enforces endpoint, backing and notification rights, not service names.
 
-The owner ratified a common versioned platform connector contract on 2026-10-25.
-Established service connections use funded shared request/reply backing and
-notification rights under that transport contract. Capacity and access roles are
-negotiated; application operation/argument schemas remain service-specific payloads.
-The IPC library owns publication, request correlation, backpressure and replies.
-Signal/wait indicates readiness, not payload validity or service completion.
-This standardizes the transport contract, not one page size, one region, a fixed
-ring layout, syscall count or kernel knowledge of allocator/decoder structures.
-Larger or independently retained payload backing may be granted separately.
+On 2026-10-26 the owner narrowed the preceding connector settlement: the standard
+Matrix bootstrap interface has its own versioned protocol, not a universal IPC
+transport imposed on every service. Other services own their agreed layout, access
+and lifecycle protocols. Reusable mailbox/ring libraries are optional implementations,
+not mandatory wrappers. There is no universal header, atomic control field, ring
+slot, acknowledgement counter, request/reply pair or notification object in every
+shared-buffer exchange. A one-shot immutable buffer, unidirectional stream and
+reusable mailbox are distinct valid uses of the same resource-grant mechanism.
 
-Acquiring a service returns a usable connection only after its required resources
-are installed and its protocol is established. An endpoint introduction alone is
-not completed acquisition. The broker may arrange direct client/provider access
-or an explicitly mediated provider; it need not carry subsequent traffic. Connector
-backing can be client-funded and client-provisioned once the client has allocation
-authority. Bootstrap and first-allocator connectors are provisioned on its behalf
-by an already-capable parent/provider. Backing and setup metadata require explicit
+The kernel enforces backing, rights, lifetime and any supplied notification rights;
+it does not interpret service structures or ring fields. Signal/wait, where used,
+indicates readiness, not payload validity or service completion. Capacity, directions
+and the resources needed to establish the protocol are part of the service contract.
+
+Acquiring a service reports readiness for its agreed operation only after its
+required resources and protocol obligations are established. An endpoint introduction
+alone is not a completed usable-buffer handoff. The broker may arrange direct
+client/provider access or an explicitly mediated provider; it need not carry
+subsequent traffic. Backing can be client-funded and client-provisioned once the
+client has allocation authority. Bootstrap and first-allocator connections are
+provisioned on its behalf by an already-capable parent/provider. Backing and setup metadata require explicit
 funding under the [memory contract](../resources/memory_budgets.md).
+
+## Service-owned layout and typed establishment
+
+Allocation supplies storage with explicit extent, alignment, rights, lifetime and
+funding; those claims are not mandatory fields inside the shared bytes. A service
+package may export ordinary Omega data declarations, layout/access policies and
+checked establishment/access machines. Its actual structure may start at offset
+zero. No generic connector carrier must wrap it, and crossing processes does not
+by itself require a `boundary data` declaration. That declaration marks a supplied
+representation dependency, not automatic trust in received contents.
+
+Exclusive mutable authority permits initialization; it does not prove that prior
+contents satisfy the target type. Construction may use Omega's checked
+[deferred-establishment recasts](https://github.com/CathedralOS/Omega/blob/main/wiki/spec/layouts/recasts.md#deferred-establishment-on-exclusive-storage-casts).
+The backing/access provider supplies its explicit guarantees. A receiver separately
+establishes typed validity and stable or protocol-governed access through checked
+validation, enforced custody, or an explicitly admitted provider contract. A cast,
+matching schema or common source repository cannot silently provide these facts.
+If a provider returns an established typed view without checking some guarantee,
+that guarantee belongs in its admitted contract and trust dependencies.
+
+Atomic fields are optional parts of the selected structure, not a separate required
+allocation. Their alignment, operation authority and concurrent-observation rules
+must hold. Ordinary byte access cannot bypass them or acquire extra write authority;
+reinterpreting live shared storage must preserve all outstanding views and custody.
+A read-only recipient mapping alone does not establish immutability when another
+party retains unrestricted write access. The checked-access rules below govern
+that case, independently of the chosen data layout.
 
 ## Resource offers and acceptance
 
-A connection-resource offer identifies the exact receiving process incarnation, backing
-extent, access permissions and notification rights required for the connection.
+A resource offer identifies the exact receiving process incarnation and the exact
+resources offered: backing extent/access permissions and any notification rights
+the selected protocol needs. Notifications are not compulsory for a backing grant.
 Its kernel-enforced grant record, not a sender's pointer or handle number in bytes,
 determines what may be accepted. A notice carrying a reference to that record may
 travel over the existing Matrix connection. Accepting installs recipient-local
@@ -143,8 +176,8 @@ Pending introductions must be bounded and may report starting or unavailable.
 The service authenticates later participants against the fixed group requirements
 and delivers connection offers. The first participant may reject an offer with
 an application-level reason or accept a connection. Accepted peers receive explicit
-endpoint rights with defined request/reply roles; numeric handle bytes alone do
-not transfer authority. An incomplete handoff must retain or reclaim every right
+endpoint rights with roles defined by their agreed protocol; numeric handle bytes
+alone do not transfer authority. An incomplete handoff must retain or reclaim every right
 without publishing a partially usable connection as complete.
 
 The incoming mailbox handles introductions; accepted connections isolate each

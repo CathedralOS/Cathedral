@@ -5,7 +5,7 @@
 | Contract status | Current |
 | Specification coverage | Partial |
 | Implementation coverage | Partial |
-| Last reviewed | 2026-10-25 |
+| Last reviewed | 2026-10-26 |
 
 ## Scope
 
@@ -177,8 +177,8 @@ an authorized provider. This is not the child's only permitted IPC connection.
 
 A manifest declares required/optional imports; the launching owner resolves the
 authority ceiling before launch. For a child supplied this interface, launch
-provisions and initializes funded standard connector backing and installs the
-child's required mapping and notification rights before the child runs. The lookup
+provisions and initializes funded backing for the standard Matrix protocol and
+installs the child's required mapping and notification rights before the child runs. The lookup
 syscall exposes those existing resources, not
 merely an endpoint requiring the child to allocate before it can communicate.
 It is access-on-demand, not first-use allocation. An absent relationship reports
@@ -191,6 +191,12 @@ it can reach it. Funding may come from the child's admitted connection budget, n
 an arbitrary charge to unrelated accounts. This bottoms out at privileged startup's
 initial resource authority. Zeroed connector bytes cannot create notification
 objects or install authority. See [connection setup](../communication/ipc.md#matrix-access-and-connection-setup).
+
+The Matrix protocol is scoped to this environment interface. It is not a mandatory
+envelope for every acquired service: each service declares its own shared-storage
+layout, direction, synchronization and lifetime requirements. Reusable transport
+libraries may be selected without imposing rings, atomic headers or replies on
+one-shot or one-way resource handoffs.
 
 The kernel enforces access to this process's authorized bootstrap connection. It
 does not interpret a rendering/storage service catalog or resolve platform import

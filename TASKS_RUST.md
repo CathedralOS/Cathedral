@@ -107,12 +107,17 @@ of the old discovery mechanism, not completion or a compatibility requirement.
   Broker closure alone must not revoke independent service grants; actual provider
   failure and matrix subtree teardown still apply. Lazy provider activation is not
   implied by deferred acquisition and is not required for this outcome.
-- Complete versioned standard-connector acquisition through exact recipient-bound
-  backing/notification offers. Check protocol, geometry and rights; cover partial
+- Complete the versioned Matrix acquisition protocol and service-owned handoffs
+  through exact recipient-bound backing and required notification offers. Check
+  protocol, geometry and rights; cover partial
   acceptance, queue exhaustion, offer-before-wait, cancellation/acceptance races,
   stale/foreign offers and death. Never publish a half-installed connection or
-  reclaim accepted backing on sender timeout. Keep payload schemas service-owned;
-  wire fields, queue representation and syscall fusion remain engineering choices.
+  reclaim accepted backing on sender timeout. Include a one-shot immutable typed
+  buffer handoff with no mandatory ring/header/reply resources, using the same grant
+  mechanism. Validate contents or retain explicit provider/custody evidence; a cast
+  or mutable authority cannot invent validity. Service layout and synchronization
+  stay service-owned; wire fields, queue representation and syscall fusion remain
+  engineering choices, not a universal transport ABI.
 
 Pin focused invalid-authority and race controls plus actual guest observations.
 No lookup syscall or arbitrary service catalog is claimed implemented by this

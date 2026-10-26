@@ -31,10 +31,12 @@ The Matrix connection is the app-facing environment interface; broker is its
 import-resolution role. The parent/provider must provision first-allocator
 communication without asking the child to allocate before it has an allocator.
 The [accepted connection contract](../../../../wiki/spec/communication/ipc.md#matrix-access-and-connection-setup)
-requires funded, recipient-bound offers for exact backing/notification rights,
-complete acquisition before usable publication, and bounded pending custody with
-acceptance/cancellation races resolved. Common versioned transport is distinct
-from service payload schemas. Existing wire versions below are implementation
+requires funded, recipient-bound offers for exact backing and any required
+notification rights, complete acquisition before usable publication, and bounded pending custody with
+acceptance/cancellation races resolved. The standard Matrix acquisition protocol
+does not impose a common transport on every service. Services select their own
+layout/access protocol; one-shot immutable backing and one-way streams need no
+ring header or reply buffer. Existing wire versions below are implementation
 evidence, not the final syscall/API or proof of this complete bootstrap path.
 
 The owner selects the caller's offer from the receiving endpoint and its live

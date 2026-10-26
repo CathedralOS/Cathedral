@@ -24,7 +24,7 @@ can copy from a shared buffer into private storage, and must do so when that is
 the chosen way to obtain stable data from a hostile writer. Kernel authority
 transfer remains mediated; arbitrary application payload delivery does not.
 
-## Establish once, exchange repeatedly
+## Bootstrap, then service-owned protocols
 
 The child starts with an established **Matrix connection** to its supplied
 environment, retrieved through the current-process syscall. The matrix's broker
@@ -46,12 +46,25 @@ Child: use allocator; later connections can use backing the child now provisions
 
 The offer reference is not the backing or a pointer into the sender's address
 space. The kernel checks its recorded recipient/rights and installs local handles
-and mappings. Common versioned connector structure carries service-specific
-requests; granting additional payload backing uses the same acceptance mechanism.
-Publication and notification rights still need a valid protocol, not just zero bytes.
+and mappings. The Matrix's versioned acquisition protocol is not a universal
+shared-buffer format. Each service defines the layout and access protocol of the
+backing it exchanges. Ordinary data with an agreed layout may describe it; a
+`boundary data` declaration is not required simply because bytes cross processes.
+Validity and synchronization must be checked or supplied by an explicitly admitted
+provider contract, never assumed by a cast or by knowing the peer's source language.
 
-A connection establishes authorized shared backing and the necessary notification
-rights. Mapping the same physical backing at different virtual addresses is fine.
+For example, a one-shot handoff can be: allocate, initialize the actual structure,
+establish immutable access, offer backing rights, accept/map, read and release.
+It needs no ring slots, reply payload or reusable transport header. A raw read-only
+mapping still needs a stability guarantee if a writer remains. Reusable mailbox
+libraries instead supply publication, acknowledgement and backpressure; these are
+protocol choices over the same generic grant mechanism.
+
+## Reusable notification-driven exchange
+
+When the selected protocol needs it, connection setup establishes authorized
+shared backing and notification rights. Mapping the same physical backing at
+different virtual addresses is fine.
 The layout uses offsets or indices where another process's pointer would not work.
 
 A notification is a kernel-created object, with separately granted wait and
