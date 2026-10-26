@@ -1,11 +1,17 @@
-// App knows only its granted local extent, events and parent surface connection.
+// The Rust probe app knows only its local extent, events and parent connection.
 // Enter toggles its color through its own private object. The owner may probe
 // it over the control link; lab compositions add proof commands to that link,
-// the shipped app answers every command with its liveness report.
+// non-probe sessions answer every command with their liveness report.
 use cathedral_desktop_matrix_contracts::matrix as wire;
 use cathedral_kernel_contracts::user as abi;
 use cathedral_platform_contracts::input;
-use cathedral_user_runtime::{Error, ipc::Handle, task::Launch, time};
+use cathedral_user_runtime::{
+    Error,
+    ipc::Handle,
+    server::{OwnerControl, SharedSlot},
+    task::Launch,
+    time,
+};
 pub type Pair = (Handle, Handle);
 use cathedral_user_runtime::task::Environment;
 pub const LEFT: u64 = 0x315ca8;
@@ -14,7 +20,7 @@ pub const RIGHT: u64 = 0x2c8762;
 pub struct Probe<'a> {
     pub style: u64,
     pub parent: Pair,
-    pub control: Pair,
+    pub control: &'a mut OwnerControl,
     pub view: wire::Packet,
     pub scene: &'a mut Option<surfaces::Scene>,
     pub state: &'a mut Option<state::State>,
@@ -51,6 +57,13 @@ pub fn run_services<const PROBES: bool>(
     mut services: cathedral_user_runtime::services::Services,
     command: fn(u64, &mut Probe<'_>) -> Option<u64>,
 ) -> u64 {
+    static mut CONTROL: SharedSlot = SharedSlot::empty();
+    let slot = &raw mut CONTROL;
+    // SAFETY: The single app entry owns this control slot until exit.
+    let mut control = OwnerControl::open(unsafe { &mut *slot }).unwrap();
+    // Admission starts this independent connection immediately. Establish it
+    // before storage/rendering work can consume a tightly capped CPU share.
+    control.establish(time::after(300).unwrap()).unwrap();
     // Apps have logical input only, never access to the physical pointer channel.
     assert_eq!(
         cathedral_user_runtime::keyboard::virtual_pointer(10, 0),
@@ -84,7 +97,6 @@ pub fn run_services<const PROBES: bool>(
         call(storage, [wire::POINTER_SOURCE, 0, 0, 0, 0, 0, 0, 0])[0],
         abi::DENIED
     );
-    let control = (Handle::bootstrap(0).unwrap(), Handle::bootstrap(1).unwrap());
     let mut state: Option<state::State> = None;
     let wake = connections.wake;
     let mut painted = None;
@@ -192,28 +204,20 @@ pub fn run_services<const PROBES: bool>(
             painted = None;
             scene = None;
         }
-        let mut bytes = [0; 64];
         loop {
-            match cathedral_user_runtime::event::wait(
-                &[
-                    wake.interest(),
-                    cathedral_user_runtime::event::Interest::Ipc(control.0),
-                ],
-                time::after(100).unwrap(),
-            ) {
-                Ok(0) => {
-                    wake.take().unwrap();
-                    wakes += 1;
-                    break;
+            match control.next(wake.interest(), Some(time::after(100).unwrap())) {
+                Ok(None) => {
+                    if wake.take().unwrap() {
+                        wakes += 1;
+                        break;
+                    }
                 }
-                Ok(_) => {
-                    let len = control.0.receive(&mut bytes).unwrap();
+                Ok(Some((bytes, len))) => {
                     let operation = wire::decode(&bytes[..len]).map_or(0, |words| words[0]);
                     // Closing asks what would be lost: a toggle whose save failed.
                     if operation == wire::LOSS {
                         control
-                            .1
-                            .send(&wire::encode([
+                            .reply(&wire::encode([
                                 0,
                                 u64::from(
                                     save_status != 0
@@ -229,7 +233,7 @@ pub fn run_services<const PROBES: bool>(
                             .unwrap();
                         continue;
                     }
-                    // The shipped app answers any owner command with its liveness
+                    // A non-probe session answers owner commands with its liveness
                     // report; lab compositions act on proof commands first.
                     let status = if PROBES {
                         let Some(status) = command(
@@ -237,7 +241,7 @@ pub fn run_services<const PROBES: bool>(
                             &mut Probe {
                                 style,
                                 parent,
-                                control,
+                                control: &mut control,
                                 view,
                                 scene: &mut scene,
                                 state: &mut state,
@@ -252,8 +256,7 @@ pub fn run_services<const PROBES: bool>(
                         0
                     };
                     control
-                        .1
-                        .send(&wire::encode([
+                        .reply(&wire::encode([
                             status,
                             paints,
                             wakes,

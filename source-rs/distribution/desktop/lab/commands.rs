@@ -32,7 +32,7 @@ pub(crate) fn command(op: u64, p: &mut app::Probe<'_>) -> Option<u64> {
         12 => {
             // The owner gets admission acknowledgement before the save blocks;
             // completion is observed through a later liveness probe.
-            p.control.1.send(&wire::encode([0; 8])).unwrap();
+            p.control.reply(&wire::encode([0; 8])).unwrap();
             *p.save_status = p.state.as_mut().unwrap().toggle().err().unwrap_or(0);
             p.repaint(true);
             return None;

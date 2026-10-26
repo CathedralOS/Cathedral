@@ -5,7 +5,13 @@
 use cathedral_desktop_matrix_contracts::matrix as wire;
 use cathedral_kernel_contracts::user as abi;
 use cathedral_platform_contracts::input;
-use cathedral_user_runtime::{Error, ipc::Handle, task::Environment, time};
+use cathedral_user_runtime::{
+    ipc::Handle,
+    server::{OwnerControl, SharedSlot},
+    services::Wake,
+    task::Environment,
+    time,
+};
 pub(crate) type Pair = (Handle, Handle);
 
 pub(crate) fn call(pair: Pair, packet: wire::Packet) -> wire::Packet {
@@ -19,6 +25,11 @@ pub(crate) fn call(pair: Pair, packet: wire::Packet) -> wire::Packet {
 }
 
 pub(crate) fn run(environment: Environment, argument: u64) -> u64 {
+    static mut CONTROL: SharedSlot = SharedSlot::empty();
+    let slot = &raw mut CONTROL;
+    // SAFETY: This single-entry recovery process owns the slot until collection.
+    let mut control = OwnerControl::open(unsafe { &mut *slot }).unwrap();
+    control.establish(time::after(300).unwrap()).unwrap();
     let launcher = argument == crate::protocol::LAUNCHER;
     let mut failed = argument != crate::protocol::STARTING;
     let connections =
@@ -38,7 +49,7 @@ pub(crate) fn run(environment: Environment, argument: u64) -> u64 {
             assert_eq!(call(parent, packet), wire::error(abi::DENIED));
         }
     }
-    let control = (Handle::bootstrap(0).unwrap(), Handle::bootstrap(1).unwrap());
+
     let mut epoch = 0;
     let mut pointers = cathedral_matrix::reception::Pointers::default();
     let mut retry = false;
@@ -95,25 +106,17 @@ pub(crate) fn run(environment: Environment, argument: u64) -> u64 {
             // owner preserves its phase ordering without sending another RPC
             // through an endpoint it is about to close.
             if call(parent, [wire::RETRY_LAUNCHER, 0, 0, 0, 0, 0, 0, 0])[0] == 0 {
-                await_retirement(control);
+                await_retirement(&mut control, connections.wake);
             }
         }
         if snapshot[5] & wire::MORE != 0 {
             continue;
         }
-        match cathedral_user_runtime::event::wait(
-            &[
-                connections.wake.interest(),
-                cathedral_user_runtime::event::Interest::Ipc(control.0),
-            ],
-            time::after(100).unwrap(),
-        ) {
-            Ok(0) => {
+        match control.next(connections.wake.interest(), Some(time::after(100).unwrap())) {
+            Ok(None) => {
                 connections.wake.take().unwrap();
             }
-            Ok(_) => {
-                let mut bytes = [0; 64];
-                let n = control.0.receive(&mut bytes).unwrap();
+            Ok(Some((bytes, n))) => {
                 let request = wire::decode(&bytes[..n]).unwrap();
                 let reply = match request[0] {
                     crate::protocol::STATUS if request[1] <= crate::protocol::FAILED => {
@@ -131,21 +134,22 @@ pub(crate) fn run(environment: Environment, argument: u64) -> u64 {
                     wire::LOSS => [0; 8],
                     _ => wire::error(abi::DENIED),
                 };
-                control.1.send(&wire::encode(reply)).unwrap();
+                control.reply(&wire::encode(reply)).unwrap();
             }
-            Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
             Err(error) => panic!("recovery wait: {error:?}"),
         }
     }
 }
-fn await_retirement(control: Pair) -> ! {
+fn await_retirement(control: &mut OwnerControl, wake: Wake) -> ! {
     loop {
-        let mut bytes = [0; 64];
-        let n = control.0.receive(&mut bytes).unwrap();
+        let Some((bytes, n)) = control.next(wake.interest(), None).unwrap() else {
+            wake.take().unwrap();
+            continue;
+        };
         let reply = match wire::decode(&bytes[..n]) {
             Some([wire::HEALTH | wire::LOSS, 0, 0, 0, 0, 0, 0, 0]) => [0; 8],
             _ => wire::error(abi::DENIED),
         };
-        control.1.send(&wire::encode(reply)).unwrap();
+        control.reply(&wire::encode(reply)).unwrap();
     }
 }

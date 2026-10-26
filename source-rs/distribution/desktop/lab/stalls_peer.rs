@@ -14,8 +14,8 @@ pub(super) fn start(matrix: &mut RootControl, pressure: bool) {
     if pressure {
         assert_eq!(inner(matrix, [wire::STOP, 1, 0, 0, 0, 0, 0, 0])[0], 0);
     }
-    assert_eq!(inner(matrix, [wire::RUN_PAGES, 1, 1, 0, 0, 0, 0, 0])[0], 0);
-    assert_eq!(inner(matrix, [wire::RUN, 1, 1, 2, 0, 0, 0, 0])[0], 0);
+    assert_eq!(inner(matrix, [wire::RUN_PAGES, 1, 2, 1, 0, 0, 0, 0])[0], 0);
+    assert_eq!(inner(matrix, [wire::RUN, 1, 1, 2, 1, 0, 0, 0])[0], 0);
     assert_eq!(
         inner(matrix, [wire::SURFACE_LIMIT, 1, 4, 0, 0, 0, 0, 0])[0],
         0

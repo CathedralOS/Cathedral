@@ -59,7 +59,7 @@ impl Children {
                 fallback.image,
                 launcher.plan.pages.unwrap(),
                 None,
-                [fallback.argument, 0, 0, 0, 0],
+                [fallback.argument, 1, 0, 0, 0],
                 false,
                 None,
                 server,

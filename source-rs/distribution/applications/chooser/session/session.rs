@@ -4,7 +4,13 @@
 use cathedral_desktop_matrix_contracts::matrix as wire;
 use cathedral_kernel_contracts::user as abi;
 use cathedral_platform_contracts::input;
-use cathedral_user_runtime::{Error, ipc::Handle, task::Environment, time};
+use cathedral_user_runtime::{
+    Error,
+    ipc::Handle,
+    server::{OwnerControl, SharedSlot},
+    task::Environment,
+    time,
+};
 pub type Pair = (Handle, Handle);
 use cathedral_chooser::policy::{self, Action, Operation};
 pub use policy::{ENTRIES, NEW, USER_ENTRIES};
@@ -20,7 +26,11 @@ pub fn run(
     policy::verify();
     let connections = cathedral_user_runtime::matrix::Connections::load(&environment).unwrap();
     let parent = connections.interaction;
-    let control = (Handle::bootstrap(0).unwrap(), Handle::bootstrap(1).unwrap());
+    static mut CONTROL: SharedSlot = SharedSlot::empty();
+    let slot = &raw mut CONTROL;
+    // SAFETY: The single probe entry owns this control slot until exit.
+    let mut control = OwnerControl::open(unsafe { &mut *slot }).unwrap();
+    control.establish(time::after(300).unwrap()).unwrap();
     let mut realm = realm::Realm::new(connections.storage, user_picker, own);
     let mut status = match realm.reload() {
         Ok(()) => initial_status,
@@ -210,20 +220,12 @@ pub fn run(
         if snapshot[5] & wire::MORE != 0 {
             continue;
         }
-        let mut bytes = [0; 64];
-        match cathedral_user_runtime::event::wait(
-            &[
-                connections.wake.interest(),
-                cathedral_user_runtime::event::Interest::Ipc(control.0),
-            ],
-            time::after(100).unwrap(),
-        ) {
-            Ok(0) => {
+        match control.next(connections.wake.interest(), Some(time::after(100).unwrap())) {
+            Ok(None) => {
                 connections.wake.take().unwrap();
             }
-            Ok(_) => {
+            Ok(Some((bytes, len))) => {
                 // Settings drafts participate in ordinary close/loss reporting.
-                let len = control.0.receive(&mut bytes).unwrap();
                 let reply = match wire::decode(&bytes[..len]) {
                     Some([wire::HEALTH, 0, 0, 0, 0, 0, 0, 0]) => [0; 8],
                     Some([wire::LOSS, 0, 0, 0, 0, 0, 0, 0]) => [
@@ -238,7 +240,7 @@ pub fn run(
                     ],
                     _ => wire::error(abi::DENIED),
                 };
-                control.1.send(&wire::encode(reply)).unwrap();
+                control.reply(&wire::encode(reply)).unwrap();
             }
             Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
             Err(error) => panic!("chooser wait {error:?}"),

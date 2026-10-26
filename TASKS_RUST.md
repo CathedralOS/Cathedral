@@ -324,6 +324,82 @@ default/hidden cursor evidence remains valid for its scope, not the full asset A
 
 ## Current implementation evidence
 
+Implementation update 2026-10-25: **positional desktop children use shared lifecycle control**, over `40d0a130`.
+
+Stock admission now selects shared control for separate-storage compositions as
+well as brokered children. The integrated Colors/Notes labs and their nested
+matrices therefore use the existing yielding control client, including exact
+late-reply custody, instead of the copied FIFO adapter. Older single-connection
+mechanism fixtures still select that adapter. This includes children without their
+own storage grant: control selection follows the modern host, not that child's
+storage entitlement. Ordinary brokered apps already used shared control.
+
+The Rust Colors probe, optional Rust chooser probe and boot-bundled recovery
+screen use `OwnerControl`, as Notes already does. The Colors save probe acknowledges its current shared request before
+blocking in storage; subsequent liveness observes completion. Neither probe reads
+or writes raw control payloads behind the retained server.
+
+The first pressure run exposed startup ordering: Colors could finish its initial
+paint after the owner's shared setup had expired, leaving a live app with unusable
+control. `OwnerControl::establish` now permits an explicitly selected shared leaf
+to complete setup before costly startup. Colors calls it before service requests;
+the Rust chooser before loading its realm, and recovery before its service work. It advances only setup, checks readiness
+before reading the established stream, rejects unexpected copied payloads and
+retains no application request. Both peers keep their existing 300-tick deadline.
+Use it only where the owner initiates setup independently of app readiness.
+The failed pressure serial is preserved in
+`build/omega-component/lab-child-control-pressure-startup-failure-serial.log`.
+
+Funding includes both ends, not just the app's writer: each leaf gets one extra
+private page, reader and notification; each nested lab matrix also funds its own
+control server and two child control clients. Colors uses root 33/25/37, inner
+11/11/17 and leaf 3/1/1; Notes uses root 153/153/45, inner 59/51/21 and leaf 43/7/3
+(private/readers/channels). The volatile sibling receives 2/1/1. The F5 boot-recovery child receives
+65/1/1, preserving its old two-card backing; a launcher fallback receives one
+notification channel from the retained launcher budget. Top-level F5 grants and
+kernel limits are unchanged. Early setup can complete for short-lived probe children
+before they are collected, so first-boot child setup counts are a lower bound;
+functional control/recovery checks still run, and the cold desktop has exactly
+three established child links.
+
+The first F5 check exposed the boot recovery screen's remaining raw receive loop:
+it tried to decode OPEN as an application packet. Recovery now retains shared
+request custody, including while awaiting collection after an acknowledged retry.
+Startup/launcher failure paths are included in the final checks below.
+
+Verification:
+
+- F5 and cold persistence pass in `desktop/20261026T034219955389Z`, including
+  the exact 1,629-record host oracle and no recovery-screen panic.
+- Launcher recovery, fallback clean exit and fallback fault pass in
+  `launcher-recovery/20261026T034346951434Z`; the source fixture stays unchanged.
+- The final pressure desktop and cold boot pass in
+  `pressure-matrix-desktop-test/`, including all destructive guest controls,
+  sibling activity during blocked persistence and exact saved colors. The sampled
+  nested key reached verified scanout in 922 ms under the deliberate CPU cap;
+  this is not an ordinary-desktop performance claim.
+- Notes recovery passes in `matrix-database/20261026T033105028048Z`, including
+  physical input, preserved drafts and both exact 20-record host checks.
+- Database recovery and cold persistence pass in
+  `matrix-database/20261026T034810334748Z`, with exact revisions [4, 2] and
+  18 host records on both boots. Its startup-only peer now establishes shared
+  control before painting, so all four child setups are observed even on cold boot.
+- All six provider-startup cases pass in `provider-startup/20261026T034503741769Z`:
+  crash-once, bad-ready-once, bad-setup-once, stall-once, repeat-crash and bad-volume.
+  Visible recovery, explicit attempts, cleanup and unchanged rejected media remain checked.
+- The final unpressured destructive desktop and cold reboot pass in
+  `matrix-desktop-test/`, including setup counts, actual app controls and exact
+  saved colors. The pressure failure above was corrected before these final runs.
+- Host tests; all-feature desktop and recovery Clippy; positional desktop,
+  matrix and Rust-chooser Clippy; format/layout and whitespace checks pass.
+  The optional Rust chooser was compiled, not newly exercised in QEMU. Kernel
+  code is unchanged; ARM64 was not rerun. Logs: `build/omega-component/lab-child-control-*.log`.
+
+**Next:** migrate remaining positional app data/wake adapters and pre-driver
+source probes. Direct storage/input/display mechanism labs also retain copied
+consumers. Preserve malformed-setup and kernel-mediated grant tests. On-demand
+authorized broker lookup remains a separate accepted outcome.
+
 Implementation update 2026-10-25: **positional provider supervision and fault gates use shared control**, over `e4c40757`.
 
 `desktop/session/persistence/provider/` now has only shared Opening/Ready states.
@@ -380,7 +456,7 @@ Verification:
   format/layout and changed Markdown links pass. No kernel/runtime implementation
   changes; ARM64 was not rerun. Logs: `build/omega-component/lab-provider-*.log`.
 
-**Next:** migrate positional app transport/wake adapters and pre-driver source
+**Previous next (child control completed above):** migrate positional app transport/wake adapters and pre-driver source
 probes. Other direct storage/input/display mechanism labs also retain copied
 consumers. Raw malformed-setup tests and kernel-mediated capability handoffs
 remain intentional; they are not ordinary application payload fallback. The

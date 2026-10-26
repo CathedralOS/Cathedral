@@ -7,6 +7,10 @@ import pointer_test
 
 def verify(stream, output, serial, pressure=False):
     assert serial.count("shared storage control established") == 5, serial
+    # Some short-lived probe children finish setup before collection without
+    # ever receiving an owner command. All exercised control links must be shared;
+    # the extra setup completions are scheduling-dependent, not leaked children.
+    assert serial.count("shared child control ready") >= 20, serial
     assert serial.count("focus click consumed before source loss") == 1, serial
     for marker in ("shared root control ready", "shared bootstrap display ready"):
         assert serial.count(marker) == 3, (marker, serial)
@@ -110,6 +114,7 @@ def verify(stream, output, serial, pressure=False):
 
 def verify_reboot(stream, output, serial):
     assert serial.count("shared storage control established") == 1, serial
+    assert serial.count("shared child control ready") == 3, serial
     for marker in ("shared root control ready", "shared bootstrap display ready"):
         assert serial.count(marker) == 1, (marker, serial)
     if "persisted colors restored after reboot" not in serial or "user panic:" in serial:

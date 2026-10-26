@@ -54,13 +54,22 @@ expiry and peer closure at every partial phase, a wrong notification right,
 completion consumed once, accepted/queued backing surviving abandonment, and exact
 logical, physical and notification refunds. The ordinary F5 callers use the same
 setup through `connect`. Split now drives yielding setup for both Notes children
-and its nested copy. Stock lifecycle-control migration still needs event-loop
-integration and explicit funding.
+and its nested copy. Stock lifecycle control uses yielding setup for brokered
+children and the separate-storage desktop labs, with explicitly funded endpoints.
+Older single-connection mechanism fixtures still select copied control.
+
+Leaf apps use [OwnerControl](../server/owner.rs) to retain one exact request through
+its reply. An app whose owner initiates shared setup independently may call
+`establish(deadline)` before expensive storage or rendering startup. This pumps only
+the setup exchange and returns before consuming any application request. It rejects
+copied payloads at that boundary. It is not a readiness acknowledgement and does
+not lengthen the owner's setup deadline. Colors uses this ordering so the capped
+CPU pressure fixture cannot leave control setup behind its initial paint.
 
 Original endpoints remain the setup, typed-grant and lifetime/abort connection. After COMMIT,
 ordinary payloads travel only through the shared mailbox, never by copied-message
 fallback. The server can accept pre-upgrade messages while Armed; this lets the
-F5 owner run existing source-authority rejection probes before handing that pair
+desktop lab run its pre-driver source probes before handing that pair
 to the physical input process. Only that explicitly enabled stream recognizes OPEN.
 
 ## Calls and failure

@@ -20,6 +20,32 @@ impl OwnerControl {
             request: None,
         })
     }
+    /// Complete an explicitly selected shared control connection before expensive
+    /// app startup. No application request is consumed: poll advances one setup
+    /// step, and readiness is checked before polling the established stream.
+    /// Use only when the owner initiates setup independently of app readiness.
+    pub fn establish(&mut self, deadline: u64) -> Result<(), Error> {
+        if self.request.is_some() {
+            return Err(Error(abi::BUSY as i64));
+        }
+        let server = self.server.as_mut().ok_or(Error(abi::PEER_CLOSED as i64))?;
+        while !server.shared_ready(0) {
+            server.expire_shared()?;
+            if server.poll()?.is_some() {
+                // Copied application payloads are not the selected setup protocol.
+                // Dropping the event also releases any unexpected attachment.
+                return Err(Error(abi::IO_ERROR as i64));
+            }
+            if server.shared_ready(0) {
+                break;
+            }
+            if time::reached(time::now()?, deadline) {
+                return Err(Error(abi::TIMED_OUT as i64));
+            }
+            server.wait(&[], Some(deadline))?;
+        }
+        Ok(())
+    }
     pub fn reply(&mut self, bytes: &[u8]) -> Result<(), Error> {
         let request = self.request.take().ok_or(Error(abi::DENIED as i64))?;
         self.server

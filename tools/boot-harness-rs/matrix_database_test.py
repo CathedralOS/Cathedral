@@ -111,6 +111,10 @@ def run(args):
         serial = (output / 'serial.log').read_text(encoding='utf-8', errors='replace')
         expected_providers = 4 if args.recovery and boot == 1 else 2 if args.notes_recovery and boot == 1 else 1
         assert serial.count('shared storage control established') == expected_providers, serial
+        # The recovery peer establishes control before painting, even on cold
+        # boot where it is immediately stopped after its startup check.
+        expected_children = 4 if args.recovery else 3
+        assert serial.count('shared child control ready') == expected_children, serial
         for marker in ('shared root control ready', 'shared bootstrap display ready'):
             assert serial.count(marker) == 1, (marker, serial)
         for name in ('serial.log', 'qemu.log', 'display.png'):

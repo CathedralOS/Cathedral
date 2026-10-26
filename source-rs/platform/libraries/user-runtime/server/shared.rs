@@ -113,6 +113,11 @@ impl Server {
             Ok(())
         }
     }
+    pub(super) fn shared_ready(&self, channel: usize) -> bool {
+        self.shared[channel]
+            .as_ref()
+            .is_some_and(|s| matches!(s.state, State::Ready(_)))
+    }
     pub(super) fn shared_active(&self, channel: usize) -> bool {
         self.shared[channel]
             .as_ref()
