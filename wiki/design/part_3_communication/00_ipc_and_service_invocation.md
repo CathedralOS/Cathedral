@@ -190,11 +190,14 @@ itself become a network transport.
 ## Self-coordination, not general endpoint discovery
 
 The accepted [identity rules](../../spec/communication/ipc.md#scoped-participation-and-identity)
-serve related instances finding one another: select executable-content identity,
-executable-path identity within the authorized namespace, or both. A secret may
-add a restriction but cannot be the sole admission check. The environment verifies
-launch facts; caller-supplied names, hashes and endpoint numbers do not establish
-them. All selected checks apply, within the supplied coordination authority.
+serve related instances finding one another through
+`{ executable restriction, location restriction, endpoint }`. Select executable
+contents, executable path within the authorized namespace, or both. The endpoint
+is the rendezvous name, not a secret or additional admission proof; cooperating
+instances may embed the same public name. The environment verifies launch facts,
+not caller-supplied assertions. All selected checks apply within supplied authority;
+knowing the endpoint or dropping its restrictions cannot bypass them. An endpoint
+with neither identity restriction rejects.
 
 Live registration atomically chooses the first participant and ties the claim to
 its process incarnation. Confirmed death retires it; a timeout does not elect a

@@ -145,26 +145,38 @@ enforceable stable access, not a cooperative ready flag.
 
 ## Scoped participation and identity
 
-Coordination is available only through supplied authority. Knowing a group name,
-path, executable digest or purpose string does not grant participation. One
+Coordination is available only through supplied authority. Knowing an endpoint
+name, path or executable digest does not grant participation. One
 application must not impersonate another, reserve its protected group or receive
 its introductions by choosing matching request bytes.
 
-A self-coordination group must select at least one authenticated identity restriction:
+The self-coordination tuple is:
+
+```text
+{ executable restriction, location restriction, endpoint }
+```
+
+The endpoint names the rendezvous within the supplied coordination scope. It may
+be a public constant embedded in every cooperating instance; it is not a secret,
+a third identity proof or a separately invented participation credential. It
+distinguishes coordination purposes without creating an ambient service namespace.
+This logical endpoint name is not a process-local kernel handle; actual connection
+rights still require the authorized introduction and installation described here.
+
+A group must select at least one of the two authenticated identity restrictions:
 
 - The exact executable content admitted for a participant.
 - The same executable path within the relevant authorized namespace.
 
-It may select both and may additionally require possession of a supplied
-participation secret. These are selectable levers, not a mandatory three-check
-bundle. Secret-only and unrestricted named registrations reject: knowing an
-endpoint reference, purpose string or secret cannot replace the required identity
-restriction. The secret narrows an already identity-restricted group; it does not
-turn self-coordination into arbitrary endpoint discovery.
+It may select both; these are selectable levers, not a mandatory pair of checks.
+An endpoint with neither restriction rejects. Knowing or copying the endpoint
+name cannot satisfy an identity restriction, reserve another group's registration
+or receive its introductions.
 
 Selected constraints are conjunctive. The group's requirements cannot be weakened
-by a joining caller omitting a check. An application-supplied purpose distinguishes
-groups within the authorized scope; it is not a global registration authority.
+by a joining caller omitting a check or requesting weaker restrictions for the
+same endpoint. The endpoint selects the rendezvous; authenticated identity gates
+admission to it.
 The supplied authority ceiling always applies in addition to those restrictions.
 Matching executable bytes does not establish protocol correctness. Application
 protocol compatibility and admission remain the accepting instance's responsibility;
@@ -180,8 +192,8 @@ establish an upstream identity or widen authority.
 Identity lookup may be retained beside a direct child's slot and connection
 incarnation at admission. Retiring or replacing that child invalidates its live
 registration. This does not require exposing global process or storage identities.
-Digest selection, path canonicalization and rename semantics, and the secret's
-representation and proof-of-possession protocol remain unspecified.
+Digest selection, path canonicalization and rename semantics, and endpoint-name
+encoding remain unspecified. No shared-secret protocol is required by this tuple.
 
 ## First participant and introductions
 
@@ -225,7 +237,7 @@ rights. Registration does not require a kernel-owned application-message queue.
 General discovery/admission between unrelated applications is not settled by this
 contract. Capability-controlled endpoints can enforce an authorized connection;
 they do not alone decide who may introduce callers or select a trustworthy provider.
-There is no ambient first-registrant-wins service namespace or secret-only route
+There is no ambient first-registrant-wins service namespace or endpoint-only route
 through the self-coordination interface.
 
 An authenticated launch-realm association was discussed as a possible additional

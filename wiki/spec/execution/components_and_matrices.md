@@ -169,8 +169,10 @@ The program determines whether it supports concurrent use or rejects another
 instance. Sharing a realm does not serialize the programs' operations or their
 private state. The accepted [self-coordination service](../communication/ipc.md#scoped-participation-and-identity)
 supplies identity-restricted live registration, introductions and app-controlled
-acceptance or refusal. A secret may further restrict the group, not replace all
-identity checks. Integration remains outstanding; application registration does
+acceptance or refusal. Its tuple contains executable/location restrictions and an
+endpoint name, not a shared secret. At least one identity restriction is required;
+the endpoint identifies the rendezvous but grants no admission. Integration
+remains outstanding; application registration does
 not by itself prevent a second process from starting. An independent copy remains
 an explicit storage operation. Ordinary realm access does not establish an
 additional launch-identity restriction by implication.
