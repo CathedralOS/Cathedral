@@ -13,6 +13,7 @@ fn app(matrix: &mut RootControl, nested: bool, op: u64) -> wire::Packet {
     )
 }
 pub(super) fn exercise(session: &mut admission::Session) {
+    let mut source = source::Source::open(session.source.take().expect("untouched lab source"));
     stalls_peer::start(&mut session.matrix, session.pressure);
     // Normal completion, timeout with a late reply, durable commit without reply.
     for mode in 0..3 {
@@ -28,17 +29,14 @@ pub(super) fn exercise(session: &mut admission::Session) {
         // Root control, physical-source ingress and sibling rendering still run
         // while storage is demonstrably blocked, not merely after it recovers.
         assert_eq!(
-            source::request(
-                session.source,
-                [wire::POINTER_SOURCE, 550, 220, 0, 0, 0, 0, 0]
-            )[0],
+            source.request([wire::POINTER_SOURCE, 550, 220, 0, 0, 0, 0, 0])[0],
             0
         );
         assert_eq!(app(&mut session.matrix, false, 1)[0], 0);
         pixel(&mut session.matrix, 540, 225, app::RIGHT);
         assert_eq!(app(&mut session.matrix, false, 2)[0], 0);
         pixel(&mut session.matrix, 540, 225, 0xe5e7eb);
-        stalls_peer::interact(session);
+        stalls_peer::interact(session, &mut source);
         let elapsed = time::now().unwrap().wrapping_sub(started);
         assert!(
             elapsed < 150,
@@ -88,7 +86,7 @@ pub(super) fn exercise(session: &mut admission::Session) {
                 [wire::STORAGE_REVOKE, slot, 0, 0, 0, 0, 0, 0],
             );
         }
-        stalls_peer::interact(session);
+        stalls_peer::interact(session, &mut source);
         session.storage.take().unwrap().retire();
         session.storage = Some(persistence::Provider::start().unwrap());
         for slot in 0..2 {
@@ -120,9 +118,9 @@ pub(super) fn exercise(session: &mut admission::Session) {
             assert_eq!(app(&mut session.matrix, true, 8)[0], 0);
         }
         pixel(&mut session.matrix, 140, 190, app::LEFT);
-        stalls_peer::interact(session);
+        stalls_peer::interact(session, &mut source);
     }
-    stalls_peer::replace_writer(session);
+    stalls_peer::replace_writer(session, &mut source);
     stalls_peer::stop(session);
     cathedral_user_runtime::write(b"Cathedral matrix desktop: nested sibling consumed pointer and keyboard and repainted during blocked persistence\n").unwrap();
     cathedral_user_runtime::write(b"Cathedral matrix desktop: stalled storage preserved sibling rendering; timeout, late reply and lost commit acknowledgement reconciled\n").unwrap();

@@ -63,7 +63,7 @@ impl Attempt {
             #[cfg(all(feature = "database-probes", not(feature = "shell")))]
             database_fresh: false,
             matrix,
-            source,
+            source: Some(source),
             extent,
             #[cfg(feature = "shell")]
             user: 0,

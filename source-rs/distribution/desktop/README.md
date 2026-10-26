@@ -199,13 +199,17 @@ The positional profiles fund the same shared display-configuration and root
 control owners as F5. The small Colors composition reserves eight owner
 channel/notification allowances (four transferred channels plus root, storage,
 input readiness and retiring display setup), two for display, two for input,
-three for storage and twenty-nine for the root. Notes uses thirty-seven for its root.
+three for storage and forty-nine for the root. Notes uses forty-five for its root.
 The owner holds four writer pages and three readers; root funding adds one writer,
 reader and notification for control without reducing the existing child/image
 allowances. Provider control and [fault gates](lab/gate.rs) use the same shared
-client for setup, health and correlated gate queries/releases. Pre-driver source
-injection remains an explicit copied lab consumer. [source.rs](lab/source.rs) names
-that seam: it does not construct a shared client and later hand its raw endpoints away.
+client for setup, health and correlated gate queries/releases. The
+[source fixture](lab/source.rs) takes the untouched ingress pair and retains a
+shared client for all pointer/key injections while storage is blocked. Its source
+connection rejects owner/display operations. Once consumed, that pair cannot be
+handed to a driver: the lab verifies refusal, collects its disposable tree, then
+rebuilds from persisted app state with a fresh source. This adds one test-only
+root/display/storage admission; normal F5 and cold restoration do not take it.
 Add `--trace-input` for elapsed/CPU diagnostics; these are not latency guarantees.
 Compact rectangle packets avoid BEGIN/stage/COMMIT round trips at every level;
 publication waits now return to the service loop. Neither change introduces CPU

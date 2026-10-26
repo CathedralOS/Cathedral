@@ -12,7 +12,12 @@ impl Session {
         let deadline = time::after(READY_TICKS)?;
         #[cfg(feature = "bootstrap-probes")]
         probes::refusal(value)?;
-        self.input = Some(Launch::at(1)?.spawn_with(value, &[self.source.0, self.source.1])?);
+        // Only an untouched pair can cross this process boundary. A lab that
+        // established shared transport must retire its tree instead of dropping
+        // the client state and handing the driver's new client stale endpoints.
+        let (send, receive) = self.source.ok_or(Error(abi::DENIED as i64))?;
+        self.input = Some(Launch::at(1)?.spawn_with(value, &[send, receive])?);
+        self.source = None;
         let mut control =
             cathedral_user_runtime::connection::Client::connect(Port::at(1)?.connect()?, deadline)?;
         let (bytes, n) = control.call(&cathedral_platform_contracts::input::HEALTH, deadline)?;
@@ -25,7 +30,7 @@ impl Session {
         Ok(())
     }
     #[cfg(not(feature = "shell"))]
-    pub fn start_input(&mut self) {
-        self.input(0).expect("lab input admission");
+    pub fn start_input(&mut self) -> Result<(), Error> {
+        self.input(0)
     }
 }

@@ -14,6 +14,10 @@ fn app(matrix: &mut RootControl, nested: bool, op: u64) -> wire::Packet {
     )
 }
 pub(super) fn exercise(mut session: admission::Session) -> admission::Session {
+    // A rebuilt capped subtree may still be loading its apps. Geometry admission
+    // is not app readiness: observe both initial scenes before starting saves.
+    pixel(&mut session.matrix, 140, 190, app::LEFT);
+    pixel(&mut session.matrix, 510, 190, app::RIGHT);
     for nested in [true, false] {
         assert_eq!(app(&mut session.matrix, nested, 8)[0], 0);
     }
@@ -58,7 +62,7 @@ pub(super) fn exercise(mut session: admission::Session) -> admission::Session {
                 b"Cathedral matrix desktop: focus click consumed before source loss\n",
             )
             .unwrap();
-            session.start_input();
+            session.start_input().expect("lab input admission");
             let input = session.input.unwrap();
             input.cancel().unwrap();
             input.wait().unwrap();

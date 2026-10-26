@@ -1,12 +1,25 @@
-//! Pre-driver fault probes inject through the untouched source pair. The driver
-//! later takes this pair and opens shared transport; no shared client is aliased.
-use crate::{Pair, time, wire};
-pub(super) fn request(pair: Pair, words: wire::Packet) -> wire::Packet {
-    pair.0.send(&wire::encode(words)).unwrap();
-    let mut bytes = [0; 64];
-    let n = pair
-        .1
-        .receive_until(&mut bytes, time::after(300).unwrap())
+//! Lab-owned input ingress. Retain shared correlation throughout fault injection;
+//! this connection is retired with the disposable tree, never handed to a driver.
+use crate::{Pair, abi, time, wire};
+use cathedral_user_runtime::connection::Client;
+pub(super) struct Source(Client);
+impl Source {
+    pub fn open(pair: Pair) -> Self {
+        let mut source = Self(Client::connect(pair, time::after(300).unwrap()).unwrap());
+        for op in [wire::SPAWN, wire::READ_PIXEL, wire::BIND] {
+            assert_eq!(
+                source.request([op, 0, 0, 0, 0, 0, 0, 0]),
+                wire::error(abi::DENIED)
+            );
+        }
+        cathedral_user_runtime::write(
+            b"Cathedral source probe: shared ingress; owner operations denied\n",
+        )
         .unwrap();
-    wire::decode(&bytes[..n]).expect("source probe reply")
+        source
+    }
+    pub fn request(&mut self, words: wire::Packet) -> wire::Packet {
+        let (bytes, n) = self.0.call_retained(&wire::encode(words)).unwrap();
+        wire::decode(&bytes[..n]).expect("source probe reply")
+    }
 }

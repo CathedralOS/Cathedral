@@ -68,9 +68,11 @@ CPU pressure fixture cannot leave control setup behind its initial paint.
 
 Original endpoints remain the setup, typed-grant and lifetime/abort connection. After COMMIT,
 ordinary payloads travel only through the shared mailbox, never by copied-message
-fallback. The server can accept pre-upgrade messages while Armed; this lets the
-desktop lab run its pre-driver source probes before handing that pair
-to the physical input process. Only that explicitly enabled stream recognizes OPEN.
+fallback. The server can still accept pre-upgrade messages while Armed for
+explicitly unmigrated fixtures; only an enabled stream recognizes OPEN. The desktop
+source fixture now retains its own shared client and retires the test tree before
+physical-driver admission on a fresh connection. It never transfers just the raw
+endpoints of an established protocol.
 
 ## Calls and failure
 
@@ -171,8 +173,9 @@ including separate broker/data connections for its input producer and masked
 capture viewer. Brokered input hints use separate notification wait rights.
 Root supervision and brokered stock/Split lifecycle controls use shared links.
 Bootstrap source checks, input readiness, and positional desktop display/root
-control now use shared connections. Explicit copied pre-driver test injection and positional app/wake adapters remain
-to migrate. Positional provider supervision and fault gates now use retained
+control now use shared connections. Rust app probes, catalogue wakes and
+pre-driver source injection have also migrated; legacy combined-stream mechanism
+fixtures remain. Positional provider supervision and fault gates use retained
 shared control, with correlated state queries in place of unsolicited signals. These app adapters remain synchronous; this change
 alone does not make an app process input while its drawing call is pending.
 

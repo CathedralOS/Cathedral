@@ -324,6 +324,54 @@ default/hidden cursor evidence remains valid for its scope, not the full asset A
 
 ## Current implementation evidence
 
+Implementation update 2026-10-25: **storage-stall input injection retains shared source custody**, over `bcf8aa41`.
+
+The desktop lab now takes its untouched source pair into one retained `Client`.
+That connection rejects SPAWN, READ_PIXEL and BIND, then forwards pointer/key
+injections throughout blocked-storage, provider replacement and sibling-death
+checks. The original deadline and proof that a sibling consumes input/repaints
+before storage recovery remain in place. There is no copied source-request helper.
+
+Admission records the untouched pair as optional custody: failed driver spawn
+retains it, successful spawn transfers it, and the lab can instead consume it.
+After the source fixture, an attempted driver admission must return DENIED without
+creating a task. The lab then collects its disposable tree and rebuilds from disk
+with a fresh source for physical input. Established mailbox/request state never
+moves across a process boundary as bare endpoint aliases. This costs one extra
+root/display/storage admission in the destructive lab only; ordinary F5 and cold
+restoration take no additional rebuild. Existing page/channel grants suffice.
+
+Verification (`build/omega-component/source-shared-*.log`): the
+unpressured and CPU-capped matrix desktop and cold boots pass, including
+consumed-handoff denial, all storage-stall/lifetime proofs, driver-source loss and
+persistent colors. Under pressure, the scene became ready after 114.31 s and a
+nested key reached verified scanout in 1,359 ms; these are observations, not a
+latency guarantee. All ten input bootstrap cases pass in
+`bootstrap/20261026T050051019782Z`: death, stall, malformed reply, refusal and bad
+readiness, each with one-shot recovery and repeated terminal failure. Their
+process/frame/page/channel/notification rollback checks pass, and the source disk
+remains unchanged. The final unpressured matrix run became ready after 26.78 s,
+with nested key-to-scanout observed at 203 ms; its cold boot also passes. Unmodified
+F5 and cold persistence pass in `desktop/20261026T050321897166Z`, including exact
+verification of all 1,633 host records. Host tests, lab/all-feature desktop Clippy
+and layout/format checks pass. No kernel/runtime implementation change; ARM64 was
+not rerun.
+
+The first pressure run timed out on the recovery fixture's initial save after
+rebuilding the tree. That fixture assumed a warm app from the preceding probes;
+geometry admission alone did not establish readiness. It now waits for both
+expected initial app frames before issuing the save. The capped rerun passes
+without increasing the storage deadline or changing resource grants. The original
+failure is retained in `source-shared-pressure-startup-failure.log` and its serial
+log alongside the passing rerun.
+
+**Next:** remove the remaining combined matrix stream by migrating the headless
+`distribution/desktop/fixture.rs`, scenario/storage suites and leaf relay to
+separate shared connections. Then simplify `matrix/service/parent`'s copied
+interaction/storage branches. Retain locality, revocation and malformed-input
+checks; a passing ordinary desktop does not cover those fixture contracts.
+
+
 Implementation update 2026-10-25: **Rust chooser probes use retained shared services**, over `496542c5`.
 
 The Rust picker/launcher fixture now declares the same three service connections
@@ -360,7 +408,7 @@ Verification (`build/omega-component/chooser-shared-*.log`):
 - Host tests, Rust-probe/all-feature chooser Clippy, layout/format and whitespace
   checks pass. No kernel/runtime change; ARM64 was not rerun.
 
-**Next:** migrate explicitly combined/copied fixtures and the pre-driver source
+**Previous next (source injection completed above):** migrate explicitly combined/copied fixtures and the pre-driver source
 injection before retiring copied application payloads. Source stall tests currently
 inject through an untouched pair before handing it to the driver; upgrading that
 pair and passing only bare endpoints would discard retained protocol ownership.

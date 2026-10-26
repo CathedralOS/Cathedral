@@ -13,7 +13,8 @@ pub(crate) struct Session {
     #[cfg(not(feature = "shell"))]
     pub pressure: bool,
     pub extent: [u64; 2],
-    pub(crate) source: Pair,
+    /// Untouched source custody; taken exactly once by a driver or lab client.
+    pub(crate) source: Option<Pair>,
     pub(crate) storage: Option<persistence::Provider>,
     pub(crate) storage_watch: persistence::Watchdog,
     /// Held so the owner keeps its children's handles; lab compositions also
@@ -37,9 +38,9 @@ impl Session {
         if let Some(provider) = self.storage.take() {
             provider.retire();
         }
-        if self.input.is_none() {
-            self.source.0.close().unwrap();
-            self.source.1.close().unwrap();
+        if let Some((send, receive)) = self.source.take() {
+            send.close().unwrap();
+            receive.close().unwrap();
         }
         drop(self.matrix);
         // Descendant creator death returns dynamic reservations to this owner.

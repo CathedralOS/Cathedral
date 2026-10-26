@@ -29,32 +29,26 @@ pub(super) fn start(matrix: &mut RootControl, pressure: bool) {
     );
     pixel(matrix, 140, 320, app::RIGHT);
 }
-pub(super) fn interact(session: &mut admission::Session) {
+pub(super) fn interact(session: &mut admission::Session, source: &mut source::Source) {
     let before = peer(&mut session.matrix);
     for buttons in [1, 0] {
         assert_eq!(
-            source::request(
-                session.source,
-                [wire::POINTER_SOURCE, 170, 330, buttons, 0, 0, 0, 0]
-            )[0],
+            source.request([wire::POINTER_SOURCE, 170, 330, buttons, 0, 0, 0, 0])[0],
             0
         );
     }
     for state in [input::PRESS, input::RELEASE] {
         assert_eq!(
-            source::request(
-                session.source,
-                [
-                    wire::KEY_SOURCE,
-                    input::ENTER as u64,
-                    state as u64,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0
-                ]
-            )[0],
+            source.request([
+                wire::KEY_SOURCE,
+                input::ENTER as u64,
+                state as u64,
+                0,
+                0,
+                0,
+                0,
+                0
+            ])[0],
             0
         );
     }
@@ -84,7 +78,7 @@ pub(super) fn stop(session: &mut admission::Session) {
         );
     }
 }
-pub(super) fn replace_writer(session: &mut admission::Session) {
+pub(super) fn replace_writer(session: &mut admission::Session, source: &mut source::Source) {
     assert_eq!(
         inner(
             &mut session.matrix,
@@ -93,7 +87,7 @@ pub(super) fn replace_writer(session: &mut admission::Session) {
         abi::PEER_CLOSED
     );
     pixel(&mut session.matrix, 140, 190, BACKGROUND);
-    interact(session);
+    interact(session, source);
     assert_eq!(
         inner(
             &mut session.matrix,
@@ -130,6 +124,6 @@ pub(super) fn replace_writer(session: &mut admission::Session) {
         0
     );
     pixel(&mut session.matrix, 140, 190, app::LEFT);
-    interact(session);
+    interact(session, source);
     cathedral_user_runtime::write(b"Cathedral matrix desktop: nested peer survived catalog revocation, provider replacement and sibling death\n").unwrap();
 }

@@ -24,6 +24,12 @@ Later shell/persistence requests borrow that retained client. Its failures retir
 the stream without replaying mutations. Positional lab operations borrow this
 same owner, including failure probes and provider replacement. Idle probes wait
 on its lifetime endpoint, never consume replies outside the shared dispatcher.
+[state.rs](state.rs) retains an optional untouched source pair. Successful driver
+spawn removes it; failed spawn retains it for rollback. A lab can instead take it
+into a retained shared client, after which driver admission refuses without a task.
+The stall fixture retires that client and collects/rebuilds its disposable tree
+before starting physical input on a fresh connection. No negotiated transport is
+handed across a process boundary as raw endpoint aliases.
 [input.rs](input.rs) transfers untouched source endpoints, opens an independent
 shared readiness connection and checks an exact input HEALTH reply. The
 [driver](../../../../platform/services/input/matrix.rs) checks denied SPAWN,

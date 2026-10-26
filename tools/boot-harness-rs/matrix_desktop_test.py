@@ -6,7 +6,7 @@ import pointer_test
 
 
 def verify(stream, output, serial, pressure=False):
-    assert serial.count("shared storage control established") == 5, serial
+    assert serial.count("shared storage control established") == 6, serial
     # Some short-lived probe children finish setup before collection without
     # ever receiving an owner command. All exercised control links must be shared;
     # the extra setup completions are scheduling-dependent, not leaked children.
@@ -15,8 +15,12 @@ def verify(stream, output, serial, pressure=False):
     assert serial.count("Colors probe: notification input wake ready") >= 2, serial
     assert "brokered startup and notification input wake ready" in serial
     assert serial.count("focus click consumed before source loss") == 1, serial
+    assert serial.count("source probe: shared ingress; owner operations denied") == 1, serial
+    assert serial.count("source probe: consumed handoff denied") == 1, serial
+    assert serial.count("source probe: tree retired; fresh driver source ready") == 1, serial
+    assert serial.index("source probe: shared ingress") < serial.index("stalled storage preserved sibling rendering") < serial.index("source probe: tree retired"), serial
     for marker in ("shared root control ready", "shared bootstrap display ready"):
-        assert serial.count(marker) == 3, (marker, serial)
+        assert serial.count(marker) == 4, (marker, serial)
     if "nested peer survived catalog revocation, provider replacement and sibling death" not in serial:
         raise RuntimeError("Missing nested peer lifetime isolation proof")
     if "nested sibling consumed pointer and keyboard and repainted during blocked persistence" not in serial:
@@ -116,6 +120,7 @@ def verify(stream, output, serial, pressure=False):
 
 
 def verify_reboot(stream, output, serial):
+    assert "source probe:" not in serial, serial
     assert serial.count("shared storage control established") == 1, serial
     assert serial.count("shared child control ready") == 3, serial
     assert serial.count("Colors probe: shared interaction and storage ready") == 2, serial

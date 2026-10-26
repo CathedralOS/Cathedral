@@ -166,12 +166,27 @@ fn setup(probes: bool) -> admission::Session {
 }
 pub(crate) fn run() -> u64 {
     let mut session = setup(cfg!(feature = "desktop-probes"));
+    if session.source.is_none() {
+        assert_eq!(session.start_input(), Err(Error(abi::DENIED as i64)));
+        assert!(session.input.is_none(), "consumed source admitted a driver");
+        cathedral_user_runtime::write(b"Cathedral source probe: consumed handoff denied\n")
+            .unwrap();
+        // The stall fixture owned the shared source client. Its protocol state
+        // cannot move as a bare pair: collect this tree before admitting a fresh
+        // source for the physical driver. Durable app state remains on disk.
+        session.stop();
+        session = setup(false);
+        cathedral_user_runtime::write(
+            b"Cathedral source probe: tree retired; fresh driver source ready\n",
+        )
+        .unwrap();
+    }
     if cfg!(feature = "desktop-probes") && !recovery::sibling_saved(&mut session.matrix) {
         session = providers::exercise(session);
     }
     #[cfg(feature = "database-probes")]
     database_recovery::exercise(&mut session);
-    session.start_input();
+    session.start_input().expect("lab input admission");
     cathedral_user_runtime::write(b"Cathedral matrix desktop: ready\n").unwrap();
     loop {
         match session.matrix.idle(time::after(100).unwrap()) {
