@@ -72,6 +72,13 @@ for readiness over its control connection; there is no unsolicited copied ready
 packet. Apps multiplex owner control with shared input replies, and the flood
 probe fills a four-call window without consuming replies.
 
+The physical source can put up to four ordered pointer reports in one request.
+It drains bytes already queued by the device, never delays waiting to fill a
+batch, and flushes pointer reports before a keyboard/session-control command.
+The compositor rejects malformed batches before applying any report, routes
+each accepted motion/button/reset in order, and redraws the final cursor once.
+This preserves short clicks between app reads; it is not latest-state polling.
+
 Hit-testing selects the topmost painted pixel in the same accepted scene used
 for rendering. Ancestor clips and app placement apply to both paths. Transparent
 text gaps can target content underneath: this is a lab hit policy, not a decision

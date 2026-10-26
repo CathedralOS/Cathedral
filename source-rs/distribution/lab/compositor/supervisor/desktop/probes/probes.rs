@@ -53,6 +53,12 @@ impl Desktop {
             exchange(&mut self.c, [s::KEY_SOURCE, 5, 1, 0, 0, 0])[0],
             abi::DENIED
         );
+        let before = call(display, p::STATE, 0);
+        assert_eq!(
+            exchange(&mut self.c, [p::DEVICE_BATCH, 1, 20, 0, 0, 0])[0],
+            abi::DENIED
+        );
+        assert_eq!(call(display, p::STATE, 0), before);
         assert_eq!(
             exchange(&mut self.base.b, [s::FOCUS_REVOKE, focus, 0, 0, 0, 0])[0],
             0

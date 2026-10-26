@@ -32,33 +32,25 @@ impl Compositor {
         } else if r.client == Some(2) {
             match w {
                 [p::DEVICE, dx, dy, buttons @ 0..=7, reset @ 0..=1, 0] => {
-                    if self.source != r.incarnation {
-                        self.composition
-                            .pointers
-                            .source_lost(self.composition.clients);
-                        self.source = r.incarnation;
-                    }
-                    let previous = self.composition.pointers.state(0)[3];
-                    self.composition.pointers.device(
+                    self.device_report(
+                        r.incarnation,
                         dx as i64,
                         dy as i64,
                         buttons as u8,
                         reset == 1,
-                        self.composition.clients,
                     );
-                    if reset == 1 {
-                        self.composition.focus.source_lost();
-                    } else if previous == 0 && self.composition.pointers.state(0)[3] != 0 {
-                        let state = self.composition.pointers.state(0);
-                        let target = self
-                            .composition
-                            .clients
-                            .iter()
-                            .rposition(|c| c.hit(state[1], state[2]));
-                        self.composition.focus.click(
-                            target,
-                            &self.composition.tree,
-                            self.composition.clients,
+                    Ok([0; 6])
+                }
+                [p::DEVICE_BATCH, ..] => {
+                    // Validate every report before any state or pixel mutation.
+                    let batch = p::SourceBatch::decode(w).ok_or(abi::INVALID_ARGUMENT)?;
+                    for report in batch.reports() {
+                        self.device_report(
+                            r.incarnation,
+                            i64::from(report.dx),
+                            i64::from(report.dy),
+                            report.buttons,
+                            report.reset,
                         );
                     }
                     Ok([0; 6])
@@ -91,10 +83,35 @@ impl Compositor {
             }
         };
         // Polling/capture/state do not change cursor pixels.
-        if matches!(w[0], p::DEVICE | p::DRIVE | p::LEASE) {
+        if matches!(w[0], p::DEVICE | p::DEVICE_BATCH | p::DRIVE | p::LEASE) {
             self.redraw_cursors(before);
         }
         result
+    }
+    fn device_report(&mut self, incarnation: u64, dx: i64, dy: i64, buttons: u8, reset: bool) {
+        if self.source != incarnation {
+            self.composition
+                .pointers
+                .source_lost(self.composition.clients);
+            self.source = incarnation;
+        }
+        let previous = self.composition.pointers.state(0)[3];
+        self.composition
+            .pointers
+            .device(dx, dy, buttons, reset, self.composition.clients);
+        if reset {
+            self.composition.focus.source_lost();
+        } else if previous == 0 && self.composition.pointers.state(0)[3] != 0 {
+            let state = self.composition.pointers.state(0);
+            let target = self
+                .composition
+                .clients
+                .iter()
+                .rposition(|c| c.hit(state[1], state[2]));
+            self.composition
+                .focus
+                .click(target, &self.composition.tree, self.composition.clients);
+        }
     }
     pub(super) fn redraw_cursors(&mut self, before: [Rect; 2]) {
         for rect in before

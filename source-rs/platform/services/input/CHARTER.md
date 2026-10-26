@@ -47,3 +47,12 @@ Pointer mode uses separate shared owner-control and compositor connections.
 Readiness is an owner request; reconnecting retires the old data connection and
 seeds held-key state before resuming source updates. Its bounded device polling
 is independent of the command/reply transport.
+
+Pointer mode drains up to 32 already-available raw bytes per owner-control turn.
+It sends at most four ordered pointer reports per shared call and flushes before
+keyboard or session-control commands. It never waits to fill a batch. A full
+batch, an empty device queue or the end of the bounded turn also flushes it.
+This avoids a service round trip for every queued report while preserving button
+and reset transitions. The compositor validates the entire batch before effects,
+routes each report, then repaints old/final cursor bounds once. This is the
+positional lab protocol; the ordinary F5 matrix source remains separate.

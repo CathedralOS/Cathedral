@@ -54,48 +54,97 @@ fn serve() -> Result<(), Error> {
             Ok(_) => (),
             Err(error) => return Err(error),
         }
-        let byte = match keyboard::read_until(time::after(10)?) {
+        let mut byte = match keyboard::read_until(time::after(10)?) {
             Ok(byte) => byte,
             Err(Error(code)) if code == abi::TIMED_OUT as i64 => continue,
             Err(error) => return Err(error),
         };
-        let words = match byte {
-            0x3f => return Ok(()), // F5: lab source replacement.
-            0x3e => Some([session::SESSION_CONTROL, 1, 0, 0, 0, 0]), // F4: compositor replacement.
-            0x41 => Some([session::SESSION_CONTROL, 3, 0, 0, 0, 0]), // F7: app-owned synthetic click.
-            0x40 => Some([session::SESSION_CONTROL, 2, 0, 0, 0, 0]), // F6: host replacement.
-            keyboard::LOST => {
-                cathedral_user_runtime::write(b"Cathedral pointer: raw input lost; cancelling\n")?;
-                keys.reset();
-                Some(motion(mouse.reset()))
+        let mut batch = wire::SourceBatch::default();
+        // Drain already queued bytes, with a bounded turn for owner control.
+        // No delay to fill a batch; keyboard/control edges flush preceding motion.
+        for index in 0..32 {
+            let words = match byte {
+                0x3f => {
+                    // F5: preserve preceding reports before source replacement.
+                    flush(&mut connection, &mut batch)?;
+                    return Ok(());
+                }
+                0x3e => Some([session::SESSION_CONTROL, 1, 0, 0, 0, 0]), // F4: compositor replacement.
+                0x41 => Some([session::SESSION_CONTROL, 3, 0, 0, 0, 0]), // F7: app-owned synthetic click.
+                0x40 => Some([session::SESSION_CONTROL, 2, 0, 0, 0, 0]), // F6: host replacement.
+                keyboard::LOST => {
+                    cathedral_user_runtime::write(
+                        b"Cathedral pointer: raw input lost; cancelling\n",
+                    )?;
+                    keys.reset();
+                    Some(motion(mouse.reset()))
+                }
+                1 => Some(motion(Motion {
+                    dx: 0,
+                    dy: 0,
+                    buttons: 0,
+                    reset: true,
+                })),
+                byte if byte & keyboard::AUX != 0 => mouse.feed(byte as u8).map(motion),
+                byte if byte < 256 => keys.feed(byte as u8).map(|event| {
+                    [
+                        session::KEY_SOURCE,
+                        u64::from(event.key),
+                        u64::from(event.state),
+                        0,
+                        0,
+                        0,
+                    ]
+                }),
+                _ => None,
+            };
+            if let Some(words) = words {
+                if words[0] == wire::DEVICE {
+                    batch
+                        .push(wire::SourceReport {
+                            dx: words[1] as i16,
+                            dy: words[2] as i16,
+                            buttons: words[3] as u8,
+                            reset: words[4] != 0,
+                        })
+                        .unwrap();
+                    if batch.is_full() {
+                        flush(&mut connection, &mut batch)?;
+                    }
+                } else {
+                    flush(&mut connection, &mut batch)?;
+                    deliver(&mut connection, words)?;
+                }
             }
-            1 => Some(motion(Motion {
-                dx: 0,
-                dy: 0,
-                buttons: 0,
-                reset: true,
-            })),
-            byte if byte & keyboard::AUX != 0 => mouse.feed(byte as u8).map(motion),
-            byte if byte < 256 => keys.feed(byte as u8).map(|event| {
-                [
-                    session::KEY_SOURCE,
-                    u64::from(event.key),
-                    u64::from(event.state),
-                    0,
-                    0,
-                    0,
-                ]
-            }),
-            _ => None,
-        };
-        if let (Some(pair), Some(words)) = (&mut connection, words)
-            && publish(pair, words).is_err()
-        {
-            cathedral_user_runtime::write(b"Cathedral pointer: delivery failed; source offline\n")?;
-            connection = None; // Keep serving control through compositor replacement.
+            if index == 31 {
+                break;
+            }
+            byte = match keyboard::read(false) {
+                Ok(byte) => byte,
+                Err(Error(code)) if code == abi::WOULD_BLOCK as i64 => break,
+                Err(error) => return Err(error),
+            };
         }
+        flush(&mut connection, &mut batch)?;
     }
 }
+fn flush(connection: &mut Option<Client>, batch: &mut wire::SourceBatch) -> Result<(), Error> {
+    if !batch.is_empty() {
+        deliver(connection, batch.words())?;
+        *batch = wire::SourceBatch::default();
+    }
+    Ok(())
+}
+fn deliver(connection: &mut Option<Client>, words: [u64; 6]) -> Result<(), Error> {
+    if let Some(peer) = connection
+        && publish(peer, words).is_err()
+    {
+        cathedral_user_runtime::write(b"Cathedral pointer: delivery failed; source offline\n")?;
+        *connection = None; // Retain owner control for explicit reconnection.
+    }
+    Ok(())
+}
+
 fn connect(held: u64) -> Result<Client, Error> {
     let mut pair = Client::connect(Link::at(0)?.connect()?, time::after(300)?)?;
     publish(&mut pair, [wire::DEVICE, 0, 0, 0, 1, 0])?;

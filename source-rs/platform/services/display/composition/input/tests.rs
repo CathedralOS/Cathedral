@@ -48,6 +48,44 @@ fn router(clients: &[Client; 3]) -> Router {
     router
 }
 #[test]
+fn batched_reports_preserve_short_clicks_between_app_reads() {
+    let clients = clients();
+    let mut r = router(&clients);
+    r.device(110, 110, 0, false, &clients);
+    while r.next(0).kind != wire::NONE {}
+    let mut batch = wire::SourceBatch::default();
+    for (dx, buttons) in [(0, 1), (5, 1), (0, 0), (0, 1)] {
+        batch
+            .push(wire::SourceReport {
+                dx,
+                dy: 0,
+                buttons,
+                reset: false,
+            })
+            .unwrap();
+    }
+    for report in wire::SourceBatch::decode(batch.words()).unwrap().reports() {
+        r.device(
+            i64::from(report.dx),
+            i64::from(report.dy),
+            report.buttons,
+            report.reset,
+            &clients,
+        );
+    }
+    for (kind, x, buttons) in [
+        (wire::BUTTONS, 50, 1),
+        (wire::MOTION, 55, 1),
+        (wire::BUTTONS, 55, 0),
+        (wire::BUTTONS, 55, 1),
+    ] {
+        let event = r.next(0);
+        assert_eq!((event.kind, event.x, event.buttons), (kind, x, buttons));
+    }
+    assert_eq!(r.next(0).kind, wire::NONE);
+    assert_eq!(r.next(1).kind, wire::NONE);
+}
+#[test]
 fn hiding_physical_cursor_changes_pixels_without_revoking_input_or_other_cursor() {
     let clients = clients();
     let mut r = router(&clients);

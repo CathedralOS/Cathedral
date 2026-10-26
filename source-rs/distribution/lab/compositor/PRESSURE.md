@@ -82,12 +82,15 @@ allowance could no longer fund the current full-size object even before adding
 mailboxes. The profile now funds the work object and both writers explicitly;
 the kernel ceilings and exhaustion assertions were preserved.
 
-Current shared-transport evidence: release with startup probes passes all 120
-drag reports and service replacement. Development without pressure also passes,
-but development with the now-funded 1-MiB pressure workload loses raw input and
-fails the unchanged sustained-drag check. That failure is reproducible and remains
-open in [the handoff](../../../../TASKS_RUST.md#current-implementation-evidence).
-The historical debug result above does not establish a pass for this workload.
+The initial shared migration failed development pressure: the 64-byte raw input
+queue filled while the source waited for individual report replies. Temporary
+instrumentation measured 23 source calls taking 471 ms elapsed but only 31 ms of
+source CPU. The source now batches up to four already-available reports per call;
+the compositor routes every report and redraws once. No queue, memory limit or
+test threshold was enlarged. Two development runs with startup probes now pass
+all 120 drag reports and recovery, with final-cursor catch-up of 16 and 218 ms.
+See [the handoff](../../../../TASKS_RUST.md#current-implementation-evidence) for
+the complete verification scope. These are observations, not a latency guarantee.
 
 This is one bounded QEMU workload, not a production denial-of-service guarantee.
 It does not exhaust all physical RAM, provide CPU reservations, implement an

@@ -336,6 +336,53 @@ default/hidden cursor evidence remains valid for its scope, not the full asset A
 
 ## Current implementation evidence
 
+Implementation update 2026-10-26: **ordered pointer batches resolve development pressure input loss**, over `d000196d`.
+
+The pressure failure was the kernel's 64-byte raw input queue overflowing, not
+controller parity/timeout loss. Temporary kernel phase/wait measurements showed
+no single long stall explaining the backlog. Source timing measured 23 report
+calls taking 471 ms elapsed versus 31 ms of source CPU: waiting per report could
+not keep up under the hostile workload. Diagnostic panic/timing changes were
+removed; the kernel and raw queue are unchanged.
+
+The positional physical source now drains at most 32 available raw bytes per
+owner-control turn and sends up to four ordered pointer reports per shared call.
+It flushes on a full batch, empty device queue, end of turn or before keyboard/
+session-control delivery. It never waits to accumulate reports. The compositor
+authenticates the source connection and validates the entire batch before any
+effects, then routes each report and redraws old/final cursor bounds once.
+Press/release/reset transitions are retained; this does not substitute latest
+state for queued events. No enlarged queue, increased grant, scheduler priority
+or relaxed timing assertion is involved. Ordinary F5 uses its existing separate
+matrix input path; no general input ABI is frozen by this lab encoding.
+
+Host tests cover malformed batches (including an invalid later report), signed
+motion, capacity and ordered short clicks between app reads. The startup guest
+probe denies a non-source batch and checks pointer state is unchanged. Two
+development `--session-test --startup-probes --pressure` runs pass all 120 drag
+reports, full scanout, memory/object/backpressure assertions and compositor,
+host, source and hostile-peer recovery. Final cursor catch-up was 16/218 ms;
+these observations establish neither real-time deadlines nor general performance.
+Release pressure with startup probes also passes all 120 reports (31 ms final
+catch-up). Development pointer tests pass capture, Escape, synthetic scope,
+app/source replacement and unread-reply flood recovery.
+The normal F5 desktop and cold reboot pass, including the 1,631-record durable
+storage oracle. This checks regression only; batching does not change its input path.
+Host workspace tests, compositor/input/display all-feature Clippy, layout and
+format checks pass. Logs are `build/omega-component/input-batch-*.log`; diagnostic
+logs are `input-pressure-*.log` in the same directory.
+
+**Next:** audit runtime wake/upstream adapters and remaining copied service
+consumers before retiring copied application payload support. Preserve typed
+grant/lifetime and hostile-authority probes while removing data-path fallbacks.
+Concrete remaining entrances: `user-runtime/services/wake.rs`,
+`user-runtime/matrix/{matrix.rs,admission/connections.rs,upstream/upstream.rs}`
+and `user-runtime/storage.rs`. The positional matrix-composition host still calls
+the copied upstream helper; stock parent loading still accepts the old five-endpoint
+environment. The separate physical-key service under `platform/services/input/keyboard/`
+also retains copied startup/control/data traffic. These are audited consumers,
+not evidence that the already-shared F5 path regressed.
+
 Implementation update 2026-10-26: **positional compositor, pointer and session traffic uses shared IPC**, over `723d5b70`.
 
 The lab supervisor, app control/data, pressure peer and physical pointer source
@@ -362,17 +409,17 @@ writers. It still requires both object/page exhaustion and unused-reply
 backpressure, then cancellation/fault with live backing and successful replacement.
 No kernel ceiling or latency assertion was relaxed.
 
-**Outstanding performance failure:** development session with both
-`--startup-probes --pressure` loses raw input during the 120-report drag and fails
+**Performance failure resolved by ordered batches above:** the initial development session with both
+`--startup-probes --pressure` lost raw input during the 120-report drag and failed
 the existing one-second/lost-motion assertion. This reproduced in four runs,
 including diagnostic attempts at less frequent control polling and a four-call
 source pipeline. Neither resolved it; those attempts were removed. Development
 without pressure passes all 120 reports (125 ms final catch-up in this run), and
 release pressure with startup probes passes (16 ms). These are workload
-observations, not input deadlines. Do not mark development pressure green or
-weaken its check. The newly funded full-size work object makes this a stronger
-workload than the old 64-KiB documentation described. Next isolate scheduling,
-shared request handling and allocation/reclamation costs under that load.
+observations, not input deadlines. That checkpoint recorded the failure and kept
+its check intact. The newly funded full-size work object makes this a stronger
+workload than the old 64-KiB documentation described; the diagnosis and fix are
+recorded above.
 
 Host tests and all-feature Clippy for compositor/input/display pass, as do layout
 and format checks. Release drawing, pointer, ordinary session and pressure
@@ -385,7 +432,7 @@ development pressure serial logs are retained beside them. See the updated
 [session guide](source-rs/distribution/lab/compositor/SESSION.md) and
 [pressure guide](source-rs/distribution/lab/compositor/PRESSURE.md).
 
-**Next:** resolve the development pressure input failure above, then audit runtime
+**Previous next (pressure failure resolved above):** resolve the development pressure input failure above, then audit runtime
 wake/upstream adapters and remaining copied service consumers before retiring
 copied application payload support. This fixture migration adds no F5 UI behavior.
 
