@@ -1,4 +1,4 @@
-# Scoped application bootstrap
+# Scoped Matrix connection and service acquisition
 
 Start at [services.rs](services.rs) for the bounded acquisition protocol and
 [tests.rs](tests.rs) for request ceilings and version/shape validation.
@@ -18,13 +18,24 @@ shared writable mailbox custody have not been implemented here.
 A program declares required and optional imports. Its owner resolves them against
 its own offered authority before launch. A declaration requests authority; it
 cannot confer it. Missing/incompatible required imports refuse launch. Optional
-imports may remain absent. Launch authorizes one scoped broker relationship.
+imports may remain absent. Launch authorizes one scoped Matrix connection.
 The accepted [bootstrap contract](../../../../wiki/spec/execution/components_and_matrices.md#scoped-application-bootstrap)
-now requires on-demand syscall access to that connection, without broker arguments
+now requires launch-provisioned connector backing and notification rights, retrieved
+through a current-process syscall, without broker arguments
 in main or a reserved prefix in application argument bytes. Repeated access denotes
 the same logical connection; the library coordinates its requests rather than
 allocating another connection. This is a migration requirement, not implemented
 by the startup-endpoint mechanism documented below.
+
+The Matrix connection is the app-facing environment interface; broker is its
+import-resolution role. The parent/provider must provision first-allocator
+communication without asking the child to allocate before it has an allocator.
+The [accepted connection contract](../../../../wiki/spec/communication/ipc.md#matrix-access-and-connection-setup)
+requires funded, recipient-bound offers for exact backing/notification rights,
+complete acquisition before usable publication, and bounded pending custody with
+acceptance/cancellation races resolved. Common versioned transport is distinct
+from service payload schemas. Existing wire versions below are implementation
+evidence, not the final syscall/API or proof of this complete bootstrap path.
 
 The owner selects the caller's offer from the receiving endpoint and its live
 incarnation. No PID, sibling number, realm, requested scope or claimed manifest

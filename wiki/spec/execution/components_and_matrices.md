@@ -169,12 +169,28 @@ integration is outstanding. An independent copy remains an explicit storage oper
 
 ## Scoped application bootstrap
 
-On 2026-10-25 the owner selected on-demand access to the launch-authorized broker.
+On 2026-10-25 the owner selected on-demand syscall access to a launch-established
+**Matrix connection**: the child's canonical connection to its supplied environment.
+Broker names the service-resolution responsibility behind that interface, not a
+required separate process. The owning matrix may implement it directly or arrange
+an authorized provider. This is not the child's only permitted IPC connection.
+
 A manifest declares required/optional imports; the launching owner resolves the
-authority ceiling before launch and authorizes the child's scoped broker
-relationship. The application obtains access through a syscall, normally wrapped
-by a library. An absent relationship reports unavailable; requesting one cannot
-create authority or select another process's broker.
+authority ceiling before launch. For a child supplied this interface, launch
+provisions and initializes funded standard connector backing and installs the
+child's required mapping and notification rights before the child runs. The lookup
+syscall exposes those existing resources, not
+merely an endpoint requiring the child to allocate before it can communicate.
+It is access-on-demand, not first-use allocation. An absent relationship reports
+unavailable; requesting one cannot create authority or select another environment.
+
+The launcher uses memory authority or an allocator connection it already possesses.
+The first child allocator connection is likewise provisioned by the parent/provider
+using existing authority; the child is not required to call that allocator before
+it can reach it. Funding may come from the child's admitted connection budget, not
+an arbitrary charge to unrelated accounts. This bottoms out at privileged startup's
+initial resource authority. Zeroed connector bytes cannot create notification
+objects or install authority. See [connection setup](../communication/ipc.md#matrix-access-and-connection-setup).
 
 The kernel enforces access to this process's authorized bootstrap connection. It
 does not interpret a rendering/storage service catalog or resolve platform import
@@ -183,8 +199,15 @@ owning matrix. It authenticates the established connection, not a claimed PID or
 manifest supplied in request bytes. Actual service acquisition then uses ordinary
 IPC and returns connections preserving the owner's mediation and authority ceiling.
 
-Repeated broker access denotes the same logical connection, not a fresh connection
-or extra service authority. The library retains and coordinates its use, including
+Acquisition identifies a declared import under that child's admitted contract,
+not an ambient string lookup for arbitrary services. Friendly configuration names
+do not grant authority or let another provider replace an existing selection by
+registering the same name. Third-party providers require explicit authorized
+selection and interface/version compatibility; those concrete registration formats
+remain engineering work.
+
+Repeated Matrix-connection access denotes the same logical connection, not a fresh
+connection or extra service authority. The library retains and coordinates its use, including
 request correlation. Handle representation and synchronization are engineering;
 concurrent/repeated access must not allocate unbounded connections, reset protocol
 state or revive a closed/revoked connection. Individual service connection creation,

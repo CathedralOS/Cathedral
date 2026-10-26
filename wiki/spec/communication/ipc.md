@@ -30,18 +30,66 @@ are library protocols, not additional kernel message-delivery transports. The
 kernel still owns authorized grant installation, mapping and scheduling; passing
 rights may require kernel mediation even when payload bytes do not.
 
-## Broker access and connection setup
+## Matrix access and connection setup
 
 The [application bootstrap contract](../execution/components_and_matrices.md#scoped-application-bootstrap)
-selects on-demand syscall access to the process's launch-authorized broker.
-Service selection and import policy remain in the userspace broker. The kernel
+selects syscall retrieval of the process's launch-established Matrix connection:
+usable connector backing and notification rights, not an endpoint that requires
+an unavailable allocator to contact it. Service selection and import policy remain
+in the userspace broker behind that interface. The kernel
 installs/enforces endpoint, backing and notification rights, not service names.
 
-An established service connection uses funded shared request/reply backing and
-notification rights. The IPC library owns publication, request correlation,
-backpressure and replies. Signal/wait indicates readiness, not payload validity or
-service completion. The concrete number of regions, setup exchanges and wire fields
-are protocol choices; this does not mandate one writable page shared by all peers.
+The owner ratified a common versioned platform connector contract on 2026-10-25.
+Established service connections use funded shared request/reply backing and
+notification rights under that transport contract. Capacity and access roles are
+negotiated; application operation/argument schemas remain service-specific payloads.
+The IPC library owns publication, request correlation, backpressure and replies.
+Signal/wait indicates readiness, not payload validity or service completion.
+This standardizes the transport contract, not one page size, one region, a fixed
+ring layout, syscall count or kernel knowledge of allocator/decoder structures.
+Larger or independently retained payload backing may be granted separately.
+
+Acquiring a service returns a usable connection only after its required resources
+are installed and its protocol is established. An endpoint introduction alone is
+not completed acquisition. The broker may arrange direct client/provider access
+or an explicitly mediated provider; it need not carry subsequent traffic. Connector
+backing can be client-funded and client-provisioned once the client has allocation
+authority. Bootstrap and first-allocator connectors are provisioned on its behalf
+by an already-capable parent/provider. Backing and setup metadata require explicit
+funding under the [memory contract](../resources/memory_budgets.md).
+
+## Resource offers and acceptance
+
+A connection-resource offer identifies the exact receiving process incarnation, backing
+extent, access permissions and notification rights required for the connection.
+Its kernel-enforced grant record, not a sender's pointer or handle number in bytes,
+determines what may be accepted. A notice carrying a reference to that record may
+travel over the existing Matrix connection. Accepting installs recipient-local
+handles and mappings to the existing backing; it does not copy the payload or
+return a physical address as authority. Service code still establishes layout,
+protocol compatibility and content validity under the checked custody rules below.
+
+The receiver checks the offer against its outstanding request or explicitly
+authorized listener admission. Identity, rights and protocol mismatches reject;
+guessing/replaying a reference or substituting another process's offer cannot
+install authority. Connection setup may use several operations, but no usable
+connection is published with only some required resources installed. Partial
+acceptance retains explicit custody until completion or safe cleanup; it is not
+reported as success or assumed to roll back already accepted grants automatically.
+
+Pending offers and their retained backing/metadata are bounded and funded. Capacity
+exhaustion reports refusal/backpressure, not silent loss or unbounded kernel
+allocation. Offers may remain pending while the recipient is not parked; registering
+a wait and observing readiness must not lose an already pending offer. This is
+grant admission, not a second kernel application-message transport. Queue storage,
+representation and syscall fusion are implementation choices, not a mandated
+kernel-owned payload queue.
+
+Unaccepted offers may be cancelled. Acceptance and cancellation must resolve which
+rights were installed without double transfer, premature release or lost custody.
+A sender timeout does not prove refusal, cancel an accepted grant, or permit reuse
+of backing still owed to the receiver. Sender/receiver death and closure follow
+the same retained-backing and safe-teardown obligations.
 
 Passing a resource requires an authorized grant accepted by the receiver. A request
 identifies the receiver's granted resource together with bounded offsets/lengths

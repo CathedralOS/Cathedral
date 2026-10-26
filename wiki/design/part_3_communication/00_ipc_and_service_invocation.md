@@ -26,6 +26,30 @@ transfer remains mediated; arbitrary application payload delivery does not.
 
 ## Establish once, exchange repeatedly
 
+The child starts with an established **Matrix connection** to its supplied
+environment, retrieved through the current-process syscall. The matrix's broker
+role resolves declared imports; it is not necessarily a separate process or an
+arbitrary service-name registry. Parent-provisioned bootstrap backing removes the
+cycle of needing an allocator connection before being able to allocate a connector.
+
+The accepted [setup and resource-offer rules](../../spec/communication/ipc.md#matrix-access-and-connection-setup)
+give this sequence (mechanisms, not frozen API spelling):
+
+```text
+Parent: provision/fund/init Matrix connector; install child rights; start child.
+Child: retrieve established Matrix connection; request its allocator import.
+Matrix/provider: provision allocator connector using existing allocation authority.
+Matrix/provider: register recipient-bound grants; reply with allocator-connection offer.
+Child: accept offered mappings/notification rights; establish allocator connection.
+Child: use allocator; later connections can use backing the child now provisions.
+```
+
+The offer reference is not the backing or a pointer into the sender's address
+space. The kernel checks its recorded recipient/rights and installs local handles
+and mappings. Common versioned connector structure carries service-specific
+requests; granting additional payload backing uses the same acceptance mechanism.
+Publication and notification rights still need a valid protocol, not just zero bytes.
+
 A connection establishes authorized shared backing and the necessary notification
 rights. Mapping the same physical backing at different virtual addresses is fine.
 The layout uses offsets or indices where another process's pointer would not work.

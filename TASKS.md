@@ -7,7 +7,7 @@ specification or a claim that every design ambition is implemented.
 | --- | --- | --- |
 | Runnable Rust reference OS | [Rust tasks and handoff](TASKS_RUST.md) | `source-rs/` |
 | Shared-memory service transport and capability-controlled parking | [IPC and notification outcome](TASKS_RUST.md#shared-memory-ipc-and-notification-outcome) | Kernel mechanisms, platform protocols and ordinary desktop consumers |
-| On-demand launch-authorized broker access | [Broker outcome](TASKS_RUST.md#on-demand-launch-authorized-broker-access) | Launch authority, kernel bootstrap lookup and userspace service library |
+| Launch-established Matrix connection and service acquisition | [Matrix connection outcome](TASKS_RUST.md#launch-established-matrix-connection-and-service-acquisition) | Funded bootstrap backing, syscall retrieval and accepted service-resource grants |
 | Hierarchical memory budgets and optional allocator interception | [Memory outcome](TASKS_RUST.md#memory-budgets-and-allocator-delegation) | Kernel grant/accounting enforcement and replaceable userspace allocation policy |
 | Drawing commands, images and resource availability | [Rendering outcome](TASKS_RUST.md#drawing-images-and-resource-availability) | Platform renderer, caller-funded backing and remote-host imports |
 | Shared-buffer audio playback | [Audio outcome](TASKS_RUST.md#shared-buffer-audio-playback) | Platform mixer, funded sample backing and audio driver |

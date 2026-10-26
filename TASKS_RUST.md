@@ -75,19 +75,25 @@ for that path and its invalid-authority controls. Shared-payload round trips now
 exercise publication and backpressure. Input, display and storage at the root
 provide ordinary service evidence, not a performance result or complete migration.
 
-## On-demand launch-authorized broker access
+## Launch-established Matrix connection and service acquisition
 
 **Open; owner decision ratified 2026-10-25.** Carry the
 [bootstrap contract](wiki/spec/execution/components_and_matrices.md#scoped-application-bootstrap)
-through launch authorization, a current-process syscall and the ordinary service
-library. Start at `source-rs/platform/contracts/services/README.md`, the import
+through funded launch-established backing/notification rights, a current-process
+retrieval syscall and the ordinary service library. Include the accepted
+[connection/resource-offer rules](wiki/spec/communication/ipc.md#matrix-access-and-connection-setup).
+Start at `source-rs/platform/contracts/services/README.md`, the import
 resolver, matrix admission and `source-rs/platform/libraries/user-runtime/services/`.
 The current startup endpoint pair and `entry_with_services!` wrapper are evidence
 of the old discovery mechanism, not completion or a compatibility requirement.
 
-- Preserve manifest/owner ceilings before launch; kernel lookup returns only access
-  to the process's authorized broker relationship, never a named service or a
-  connection selected by caller-supplied PID. Absent authority returns unavailable.
+- Provision/init the Matrix connector at launch using existing parent authority and
+  explicit funding. Lookup retrieves usable installed resources, not a bare endpoint
+  or newly allocated connection. Exercise first-allocator acquisition without a
+  child direct-allocation grant: parent/provider provisions that connector too.
+- Preserve manifest/owner ceilings; lookup cannot select another process's connection.
+  Absent authority returns unavailable. Resolve declared imports, not ambient string
+  discovery; a matching friendly name cannot substitute a different provider.
 - Repeated and concurrent lookup shares one logical connection with coordinated
   request IDs/custody. Demonstrate bounded allocations, no new authority, no reply
   theft and no revival after closure/revocation. Keep per-service acquisition rules
@@ -101,6 +107,12 @@ of the old discovery mechanism, not completion or a compatibility requirement.
   Broker closure alone must not revoke independent service grants; actual provider
   failure and matrix subtree teardown still apply. Lazy provider activation is not
   implied by deferred acquisition and is not required for this outcome.
+- Complete versioned standard-connector acquisition through exact recipient-bound
+  backing/notification offers. Check protocol, geometry and rights; cover partial
+  acceptance, queue exhaustion, offer-before-wait, cancellation/acceptance races,
+  stale/foreign offers and death. Never publish a half-installed connection or
+  reclaim accepted backing on sender timeout. Keep payload schemas service-owned;
+  wire fields, queue representation and syscall fusion remain engineering choices.
 
 Pin focused invalid-authority and race controls plus actual guest observations.
 No lookup syscall or arbitrary service catalog is claimed implemented by this

@@ -66,6 +66,12 @@ requests; deciding to forward each request does not. Broker discovery belongs to
 connection setup, not every allocation. Separate-process allocation and recursive
 matrix forwarding are not mandatory paths.
 
+The [Matrix connection](../execution/components_and_matrices.md#scoped-application-bootstrap)
+breaks allocator bootstrap recursion: its initialized backing and notification
+rights are provisioned at launch from existing parent authority. The parent/provider
+also provisions the first allocator connector when needed, using explicitly admitted
+funding. Receiving an allocator connection is not an ambient direct-allocation grant.
+
 Ordinary allocators may acquire backing in chunks and allocate objects locally
 within it. An external provider can observe backing requests, not every local
 object allocation. More detailed instrumentation is additional work, not a property
