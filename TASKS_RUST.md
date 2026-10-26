@@ -336,6 +336,40 @@ default/hidden cursor evidence remains valid for its scope, not the full asset A
 
 ## Current implementation evidence
 
+Implementation update 2026-10-26: **sibling-service and link-graph proofs use shared IPC**, over `2f7e3bec`.
+
+The sibling owner retains independent shared clients, leaves one exact reply
+outstanding across the other child's cancellation/replacement, then collects it
+without replay. Sixteen alternating restarts preserve both streams' later echoes.
+Failed admission still leaves the healthy sibling usable. Raw keyboard readiness
+uses a notification gate; the keyboard child retains both clock-denied and
+clock-granted variants, forbidden controller-command checks and exact blocking/
+timeout assertions. Only the shared echo roles gain clock grants.
+
+The four-child link graph now uses shared owner control, shared provider client
+slots and three application-to-provider clients. All sixteen app/provider
+replacements retain unrelated clock/link identities and reject retired names.
+The existing first-command barrier still separates app admission from connecting
+to providers that the owner has not finished launching. Each connection retires
+after collection and before replacement; the composition explicitly funds its
+writer, reader and notification counts. At final owner return the clients remain
+live for kernel parent-death teardown, rather than being closed early by Rust
+drop. All expected child cancellation outcomes and exact heap/frame reclamation
+remain checked. The runner requires both shared migration completion markers.
+
+Host tests, supervision/smoke Clippy, layout/format checks and release/development
+smoke pass, including 66/99 display admission failure boundaries respectively.
+Logs are in `build/omega-component/supervision-graph-*.log`.
+See the updated [supervision proof guide](source-rs/distribution/lab/supervision/README.md).
+No runtime/kernel mechanism or normal F5/ARM64 composition changed.
+
+**Next:** migrate the watchdog recovery exchange while preserving absent-clock
+authority coverage. Shared `Client`/`Server` currently use clocks for setup and
+maintenance; do not silently add clocks and discard denial checks. Then migrate
+positional compositor traffic and audit runtime wake/upstream adapters. Typed
+grant handoffs and intentional raw invalid-authority/custody probes remain
+separate from the copied application payload consumers being retired.
+
 Implementation update 2026-10-26: **restart payloads use shared IPC; lifecycle and CPU gates use notifications**, over `53e476f2`.
 
 The supervision restart owner and live client retain a shared coordination
@@ -365,7 +399,7 @@ display admission failure boundaries respectively. Logs are under
 `build/omega-component/supervision-shared-*.log`.
 This is x86 fixture work; no F5 or ARM64 behavior change is claimed.
 
-**Next:** migrate the remaining watchdog recovery exchange, sibling-service and
+**Previous next (sibling/graph portion completed above):** migrate the remaining watchdog recovery exchange, sibling-service and
 link-graph fixtures. Preserve denied-clock/device checks and replies held across
 other children's cancellation. Then migrate positional compositor clients and
 audit runtime wake/upstream adapters before removing copied payload support.

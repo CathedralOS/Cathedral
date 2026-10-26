@@ -22,12 +22,33 @@ queued/accepted right retains funding even if the sender immediately exits; the
 receiver consumes and releases it. This is a fixture gate, not a general message
 protocol or a claim that notification receipt proves application completion.
 
+[Sibling tests](multiple.rs) retain one shared connection per child. A sibling's
+outstanding reply remains unconsumed while its neighbour is cancelled, reaped and
+replaced, then completes without replay. Failed admission must leave the healthy
+connection usable. Keyboard readiness uses a gate so the raw input waiter keeps
+its clock-denied and clock-granted variants and exact timeout checks.
+
+The [link graph](links/links.rs) retains four owner connections; its application
+uses three shared provider connections, while each provider serves independent
+owner and application streams. Sixteen replacements alternate the application
+and its providers. [Name probes](links/names.rs) check stable unrelated clock/link
+names and rejection of previous incarnations. The first non-probe command remains
+the explicit all-providers-live barrier; starting the app does not imply that its
+providers have already been admitted.
+
+These owners deliberately leave their final clients to process teardown instead
+of Rust drop. Closing them early would let providers observe disconnection before
+the parent-death cancellation this fixture is meant to test. Replacement clients
+are explicitly retired after child collection and before reconnecting. Boot funds
+the exact stream counts and checks all surviving children were cancelled and all
+heap/frame resources reclaimed.
+
 The failed-admission self-loop deliberately tests that proposed endpoint grants
 remain usable after rejection. It still uses raw copied sends/receives for that
-custody probe. Other copied traffic remains in the watchdog recovery exchange,
-sibling-service tests and link-graph tests. Those are subsequent migration work;
-in particular, preserve denied-clock roles and pending sibling replies instead
-of deleting their assertions to accommodate a new transport.
+custody probe. Application traffic remains copied in the watchdog recovery
+exchange. That is subsequent migration work; preserve denied-clock roles instead
+of deleting their assertions to accommodate a new transport. Raw stale-name
+send probes in the migrated sibling/graph tests are intentional authority checks.
 
 Run both release and development `run.py --smoke` from the repository's
 `tools/boot-harness-rs/` harness. Development runs also exercise larger images and

@@ -47,10 +47,22 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
                     links: &[],
                     frame_limit: usize::MAX,
                     endpoints: &[],
-                    memory: &[],
-                    channel_limits: &[],
+                    memory: &[(0, 2), (1, 1), (2, usize::from(!keyboard))].map(|(task, pages)| {
+                        cathedral_kernel_contracts::memory::Grant {
+                            task,
+                            private_pages: pages,
+                            shared_pages: pages,
+                        }
+                    }),
+                    channel_limits: &[2, 1, 1],
                     cpu_limits: &[],
-                    clock_readers: if clock { &[2] } else { &[] },
+                    // Shared echo streams need clocks. The raw keyboard probe
+                    // retains both its denied-clock and granted-clock variants.
+                    clock_readers: if clock || !keyboard {
+                        &[0, 1, 2]
+                    } else {
+                        &[0, 1]
+                    },
                     supervision: &grants,
                 },
             )

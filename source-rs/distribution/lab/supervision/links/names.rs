@@ -1,6 +1,6 @@
 //! Exercise real clock/link lookup across process replacement and unrelated restarts.
 use super::*;
-pub(super) fn inspect(pair: (Handle, Handle), retired: [u64; 2]) -> [u64; 2] {
+pub(super) fn inspect(client: &mut Client, retired: [u64; 2]) -> [u64; 2] {
     let mut packet = [0; 24];
     for (value, bytes) in [255, retired[0], retired[1]]
         .into_iter()
@@ -8,9 +8,8 @@ pub(super) fn inspect(pair: (Handle, Handle), retired: [u64; 2]) -> [u64; 2] {
     {
         bytes.copy_from_slice(&value.to_le_bytes());
     }
-    pair.0.send(&packet).unwrap();
-    let mut reply = [0; 64];
-    assert_eq!(pair.1.receive(&mut reply).unwrap(), 16);
+    let (reply, len) = client.call_retained(&packet).unwrap();
+    assert_eq!(len, 16);
     core::array::from_fn(|i| u64::from_le_bytes(reply[i * 8..i * 8 + 8].try_into().unwrap()))
 }
 pub(super) fn probe(packet: &[u8]) -> Option<[u8; 16]> {

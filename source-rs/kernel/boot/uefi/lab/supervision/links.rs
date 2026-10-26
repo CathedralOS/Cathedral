@@ -28,10 +28,18 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
                 links: &links,
                 frame_limit: usize::MAX,
                 endpoints: &[],
-                memory: &[],
-                channel_limits: &[],
+                // Four owner streams; each provider serves owner + application;
+                // the application serves its owner and calls all three providers.
+                memory: &[(0, 4), (1, 2), (2, 2), (3, 4), (4, 2)].map(|(task, pages)| {
+                    cathedral_kernel_contracts::memory::Grant {
+                        task,
+                        private_pages: pages,
+                        shared_pages: pages,
+                    }
+                }),
+                channel_limits: &[4, 2, 2, 4, 2],
                 cpu_limits: &[],
-                clock_readers: &[1, 2, 3, 4],
+                clock_readers: &[0, 1, 2, 3, 4],
                 supervision: &grants,
             },
         )
