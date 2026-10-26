@@ -65,8 +65,12 @@ funding under the [memory contract](../resources/memory_budgets.md).
 ## Service-owned layout and typed establishment
 
 Allocation supplies storage with explicit extent, alignment, rights, lifetime and
-funding; those claims are not mandatory fields inside the shared bytes. A service
-package may export ordinary Omega data declarations, layout/access policies and
+funding; those claims are not mandatory fields inside the shared bytes. The
+Omega-facing allocation result uses the existing qualified `Extent` under the
+[ordinary allocation contract](../resources/memory_budgets.md#ordinary-backing-allocation):
+actual usable length, guaranteed alignment and zeroed fresh backing. Accepting an
+existing shared buffer does not zero it or recreate the sender's allocation.
+A service package may export ordinary Omega data declarations, layout/access policies and
 checked establishment/access machines. Its actual structure may start at offset
 zero. No generic connector carrier must wrap it, and crossing processes does not
 by itself require a `boundary data` declaration. That declaration marks a supplied

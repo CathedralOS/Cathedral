@@ -68,7 +68,16 @@ without premature refund or account-reuse escape. Bound mapping/page-table,
 handle/object and pending-grant costs separately; state whether evidence establishes
 a backing ceiling or total-memory bound. Carry the path through the Omega-facing
 boundary and actual guest execution. Do not freeze syscall spellings, offer-queue
-layout or the broader byte-allocation API from illustrative discussion samples.
+layout or source signatures from illustrative discussion samples. The
+[ordinary backing contract](wiki/spec/resources/memory_budgets.md#ordinary-backing-allocation)
+is now ratified: demonstrate positive minimum-size requests returning qualified
+Omega `Extent` values with actual usable lengths and satisfied alignment, zeroed
+bytes throughout exposed rounding (including reused backing), and non-executable
+ordinary access. Reject zero, overflowing/unsupported requests and insufficient
+budget without partial grants or leaked reservations. Reuse the existing carrier
+and provider evidence, not duplicate backing/size/alignment records. Carry this
+through the Omega boundary and real guest behavior; existing page tests alone
+do not establish the full byte-request contract.
 
 ## Shared-memory IPC and notification outcome
 

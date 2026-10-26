@@ -55,6 +55,15 @@ Allocation strategy can live in a library or userspace service; privileged mappi
 and authority enforcement remain in the kernel. Direct delegation avoids mandatory
 ancestor forwarding, while local object allocation stays inside granted backing.
 
+Its [ordinary backing allocation](../../spec/resources/memory_budgets.md#ordinary-backing-allocation)
+contract now requires a positive minimum byte count, an existing qualified `Extent`
+with honest usable length and satisfied provider alignment, and zeroed fresh
+writable/non-executable backing. Zero-byte requests reject. There is no second
+`MemoryBacking` carrier or mandatory runtime alignment field; alignment is a
+contract fact about the returned base. Arbitrary alignment requests and a universal
+page size are not promised. The local strategy/recycled-byte discussion below is
+not an exception to zeroing freshly issued ordinary backing.
+
 Low-level memory has three separate layers: address data, extent authority, and allocation. `addr` is inert address-width data and grants no access. An `Extent` is authority over a concrete `[base, length)` with rights, provenance, and lifetime. Allocation strategies are ordinary checked packages that partition qualified extents and return package-defined owned storage claims. Typed establishment and access use the selected layout and access plans. MMIO views, imported firmware tables, shared pages, and page-table builders therefore begin from extents rather than fabricated integers.
 
 Strategy state and issued storage claims remain linear. Reset or bulk reclamation is illegal while any issued claim remains live. Issuing storage does not by itself establish a live `T`, and recycled bytes are not assumed zero. Before storage becomes visible to another principal, its provider must establish non-disclosure for every visible byte, including padding and page slack. Recipient-side initialization never discharges that prior-owner duty.
