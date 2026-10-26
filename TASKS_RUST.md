@@ -336,6 +336,42 @@ default/hidden cursor evidence remains valid for its scope, not the full asset A
 
 ## Current implementation evidence
 
+Implementation update 2026-10-26: **headless fixture owners retain shared control**, over `e493d887`.
+
+The common `distribution/desktop/fixture.rs` now owns a shared `Client`; all
+scenario/storage commands borrow it mutably, preserving request correlation and
+the existing 300-tick proof deadline. Idle observation does not consume raw replies.
+The storage fixture's initial and recovered providers also retain shared control,
+validate exact `ready` replies and answer health after the recovered data checks.
+Recovery collects the old tasks and retires both old clients before replacement,
+asserting zero owner writer/reader/channel charges and notification objects/rights.
+Recovered clients remain alive for the observation loop: the first migrated run
+exposed premature provider-control drop on helper return, which signalled owner
+departure even though its recovery assertions had passed.
+
+Profiles explicitly fund each new control stream's writer, reader and notification.
+The input owner has one of each, the storage owner two; root/provider allowances
+add one each. No kernel limits, runtime or ordinary desktop behavior changed.
+
+Verification (`build/omega-component/fixture-control-*.log`): host tests,
+headless/storage/all-feature desktop Clippy, layout, format and whitespace checks
+pass. Both `--matrix-test --release` and `--matrix-storage-test --release` pass
+with the exact shared-control and teardown-accounting markers. Artifacts are in
+`build/boot-harness-rs/matrix-test/` and `matrix-storage-test/`. Existing locality,
+revocation, malformed/late LOSS, producer capacity, sibling launch/close and durable
+recovery checks remain enabled. F5 and ARM64 were not rerun: these implementation
+changes are confined to non-desktop fixtures and their two test profiles.
+
+**Next:** migrate the combined nested matrix data and `desktop/leaf.rs` relay to
+separate shared interaction/storage and shared child control, then remove the
+copied parent branches. Preserve the stale/late LOSS, malformed reply, missing
+control and sibling-close tests. The old eight-unanswered-reply fixture encodes
+copied FIFO behavior; replace it with explicit retained-request/backpressure
+coverage, rather than silently dropping that scenario or pretending the shared
+single-outstanding control client queues eight requests. The newly ratified
+launch-established Matrix connector remains a separate open outcome above.
+
+
 Implementation update 2026-10-25: **storage-stall input injection retains shared source custody**, over `bcf8aa41`.
 
 The desktop lab now takes its untouched source pair into one retained `Client`.
@@ -377,7 +413,7 @@ without increasing the storage deadline or changing resource grants. The origina
 failure is retained in `source-shared-pressure-startup-failure.log` and its serial
 log alongside the passing rerun.
 
-**Next:** remove the remaining combined matrix stream by migrating the headless
+**Previous next (owner controls completed above):** remove the remaining combined matrix stream by migrating the headless
 `distribution/desktop/fixture.rs`, scenario/storage suites and leaf relay to
 separate shared connections. Then simplify `matrix/service/parent`'s copied
 interaction/storage branches. Retain locality, revocation and malformed-input

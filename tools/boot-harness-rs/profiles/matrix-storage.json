@@ -11,7 +11,10 @@
       "argument": 0,
       "features": [
         "storage-lab"
-      ]
+      ],
+      "private_pages": 2,
+      "shared_pages": 2,
+      "ipc_channels": 2
     },
     "launches": [
       {
@@ -20,9 +23,9 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 0,
-        "ipc_channels": 11,
-        "shared_pages": 74,
-        "private_pages": 10
+        "ipc_channels": 12,
+        "shared_pages": 75,
+        "private_pages": 11
       },
       {
         "package": "cathedral-stock-matrix",
@@ -61,9 +64,9 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "disk": true,
-        "private_pages": 130,
-        "shared_pages": 66,
-        "ipc_channels": 2
+        "private_pages": 131,
+        "shared_pages": 67,
+        "ipc_channels": 3
       }
     ],
     "links": [

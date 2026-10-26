@@ -1,7 +1,7 @@
 //! Compare observable replies while changing only authority outside the leaf.
 use super::*;
 impl Fixture {
-    pub(super) fn confinement(&self) {
+    pub(super) fn confinement(&mut self) {
         let view = self.view(2);
         assert_eq!(view[0], 0);
         assert_eq!(&view[2..], &[60, 40, 1 << (input::ENTER - 1), 0, 0, 0]);
@@ -49,7 +49,7 @@ impl Fixture {
             wire::error(abi::DENIED)
         );
     }
-    pub(super) fn input(&self) {
+    pub(super) fn input(&mut self) {
         let epoch = self.view(2)[1];
         self.pointer(115, 127, 1);
         assert_eq!(&self.next(2, epoch)[2..], &[wire::POINTER, 5, 7, 1, 1, 1]);

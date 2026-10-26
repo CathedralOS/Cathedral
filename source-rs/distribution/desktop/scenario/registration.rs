@@ -2,24 +2,24 @@
 //! Local and inherited compact names overlap; they must remain different streams.
 use super::*;
 impl Fixture {
-    pub(super) fn registration(&self) {
+    pub(super) fn registration(&mut self) {
         let epoch = self.view(2)[1];
         while self.next(2, epoch)[2] != wire::NONE {}
-        let create = |index, op, arg| {
-            let reply = self.query(index, [op, arg, 0, 0, 0, 0, 0, 0]);
+        let create = |fixture: &mut Self, index, op, arg| {
+            let reply = fixture.query(index, [op, arg, 0, 0, 0, 0, 0, 0]);
             assert_eq!(reply[0], 0);
             assert_ne!(reply[1], 0);
             reply[1]
         };
-        let outer = create(0, wire::INPUT_GROUP_CREATE, 0);
-        let inner = create(1, wire::INPUT_GROUP_CREATE, 0);
-        let local = create(1, wire::INPUT_CHANNEL_CREATE, inner);
+        let outer = create(self, 0, wire::INPUT_GROUP_CREATE, 0);
+        let inner = create(self, 1, wire::INPUT_GROUP_CREATE, 0);
+        let local = create(self, 1, wire::INPUT_CHANNEL_CREATE, inner);
         self.owner(1, [wire::INPUT_POINTER, local, 15, 27, 1, 0, 0, 0]);
         let local_event = self.next(2, epoch);
         assert_eq!(local_event[2], wire::POINTER);
         let mut previous = local_event[6];
         for _ in 0..8 {
-            let channel = create(0, wire::INPUT_CHANNEL_CREATE, outer);
+            let channel = create(self, 0, wire::INPUT_CHANNEL_CREATE, outer);
             self.owner(0, [wire::INPUT_POINTER, channel, 115, 127, 1, 0, 0, 0]);
             let event = self.next(2, epoch);
             assert_eq!(&event[2..6], &[wire::POINTER, 5, 7, 1]);
@@ -51,8 +51,8 @@ impl Fixture {
         // More distinct groups than the live table can hold must reuse storage,
         // while allocating new receiver-visible identities each time.
         for _ in 0..8 {
-            let group = create(0, wire::INPUT_GROUP_CREATE, 0);
-            let channel = create(0, wire::INPUT_CHANNEL_CREATE, group);
+            let group = create(self, 0, wire::INPUT_GROUP_CREATE, 0);
+            let channel = create(self, 0, wire::INPUT_CHANNEL_CREATE, group);
             self.owner(0, [wire::INPUT_POINTER, channel, 115, 127, 1, 0, 0, 0]);
             let event = self.next(2, epoch);
             assert_eq!(event[2], wire::POINTER);

@@ -2,7 +2,7 @@
 //! smaller incoming ceiling. Retirement restores the available upstream space.
 use super::*;
 impl Fixture {
-    pub(super) fn nested_producer(&self) {
+    pub(super) fn nested_producer(&mut self) {
         let epoch = self.view(2)[1];
         self.pointer(115, 127, 0);
         assert_eq!(self.next(2, epoch)[2], wire::POINTER);

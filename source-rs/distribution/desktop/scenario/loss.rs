@@ -2,7 +2,7 @@
 //! answer must never authorize a later close after the descendant becomes dirty.
 use super::*;
 impl Fixture {
-    pub(super) fn loss(&self) {
+    pub(super) fn loss(&mut self) {
         let probe = [wire::LOSS, 0, 0, 0, 0, 0, 0, 0];
         self.owner(0, probe);
         // A nominally clean reply with reserved data is malformed, not consent.
@@ -55,7 +55,7 @@ impl Fixture {
         cathedral_user_runtime::write(b"Cathedral matrix: recursive loss kept dirty and delayed descendants; clean subtree closed and reopened\n").unwrap();
     }
 
-    fn sibling_close(&self, expected: u64) {
+    fn sibling_close(&mut self, expected: u64) {
         self.owner(
             3,
             [crate::leaf::DETACHED_PROBE, wire::CLOSE, 0, 0, 0, 0, 0, 0],

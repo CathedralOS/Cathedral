@@ -3,7 +3,7 @@ use super::*;
 use crate::fixture::Fixture;
 use cathedral_platform_contracts::input;
 impl Fixture {
-    fn layout(&self) {
+    fn layout(&mut self) {
         self.owner(0, [wire::BIND, 800, 600, wire::KEY_MASK, 0, 0, 0, 0]);
         self.owner(0, [wire::PLACE, 0, 100, 100, 200, 160, wire::KEY_MASK, 0]);
         self.owner(0, [wire::PLACE, 1, 500, 100, 100, 80, wire::KEY_MASK, 0]);
@@ -12,10 +12,10 @@ impl Fixture {
             [wire::PLACE, 0, 10, 20, 60, 40, 1 << (input::ENTER - 1), 0],
         );
     }
-    fn view(&self, leaf: usize) -> wire::Packet {
+    fn view(&mut self, leaf: usize) -> wire::Packet {
         self.query(leaf, [wire::VIEW, 0, 0, 0, 0, 0, 0, 0])
     }
-    fn next(&self, leaf: usize, epoch: u64) -> wire::Packet {
+    fn next(&mut self, leaf: usize, epoch: u64) -> wire::Packet {
         // Channel metadata is a separate boundary, not a pointer/key action.
         // Verify it against the scoped directory before continuing input checks.
         // A nested router may have consumed only the new metadata boundary this
@@ -50,10 +50,10 @@ impl Fixture {
             assert_eq!(&description[4..7], &event[3..6]);
         }
     }
-    fn pointer(&self, x: u64, y: u64, buttons: u64) {
+    fn pointer(&mut self, x: u64, y: u64, buttons: u64) {
         self.owner(0, [wire::POINTER_SOURCE, x, y, buttons, 0, 0, 0, 0]);
     }
-    fn key(&self, key: u8, state: u8) {
+    fn key(&mut self, key: u8, state: u8) {
         self.owner(
             0,
             [wire::KEY_SOURCE, key as u64, state as u64, 0, 0, 0, 0, 0],
@@ -75,9 +75,6 @@ pub fn run() -> u64 {
             fixture.root.wait_until(time::now().unwrap()),
             Err(Error(abi::TIMED_OUT as i64))
         );
-        let _ = fixture
-            .control
-            .1
-            .receive_until(&mut [0; 64], time::after(100).unwrap());
+        fixture.idle();
     }
 }

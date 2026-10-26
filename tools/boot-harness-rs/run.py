@@ -462,6 +462,13 @@ def main():
         marker = ("Cathedral matrix storage: scoped roots, recursive delegation, revocation, cheap copies, attenuated realms, programs from the realm, launched siblings and replacement passed" if args.matrix_storage_test else "Cathedral IPC: channels, startup bundles, recursive admission and reclamation passed" if args.ipc_test
                   else "Cathedral matrix: two identical worlds, local-only views, attenuated input and recovery passed")
         protocol_test.run(command, output, args.timeout, creationflags, marker)
+        if args.matrix_test or args.matrix_storage_test:
+            serial = (output / "serial.log").read_text(encoding="utf-8", errors="replace")
+            count = 2 if args.matrix_storage_test else 1
+            assert serial.count("matrix fixture: shared owner control ready") == count, serial
+            if args.matrix_storage_test:
+                assert serial.count("matrix fixture: shared provider control ready") == 2, serial
+                assert serial.count("matrix fixture: retired control resources reclaimed") == 1, serial
         return 0
     if args.session_test:
         capture.run(command, output, args.timeout, creationflags, ready_marker="Cathedral session: ready",

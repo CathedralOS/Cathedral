@@ -78,7 +78,22 @@ Without the `shell` feature the same package builds the probe desktop in
 nested matrix beside an outside sibling, with destructive proofs selected by
 feature. The proof commands the color app answers over its control link live in
 [lab/commands.rs](lab/commands.rs) and never ship in the shell. Without the
-`desktop` feature the package is a headless matrix fixture.
+`desktop` feature the package is a headless matrix fixture. Its owner entrance,
+[fixture.rs](fixture.rs), retains one shared control client; scenario/storage
+helpers borrow that client instead of sending and receiving through endpoint
+aliases. Idle observation watches lifetime without consuming a reply. The
+[storage fixture](storage/storage.rs) also retains shared provider control and
+requires an exact `ready` reply. Its [recovery](storage/recovery.rs) collects the
+old tree/provider, drops their control clients, and checks zero writer/reader,
+channel and notification charges/rights before replacement. The new clients stay
+alive throughout the observation loop.
+
+The headless profiles fund one writer, reader and notification per control stream:
+one at the fixture owner for the input suite, two for the storage suite, and one
+at each root/provider peer. They do not change kernel ceilings or ordinary F5.
+Nested matrix data, leaf relay and deliberate eight-late-reply control probes
+remain copied consumers. Those checks must migrate with the replacement protocol;
+shared owner control alone does not establish shared transport through every hop.
 
 
 Run from the repository root:

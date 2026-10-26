@@ -8,7 +8,10 @@
       "entry": "distribution/desktop/main.rs",
       "target": "x86_64-unknown-none",
       "clock": true,
-      "argument": 0
+      "argument": 0,
+      "private_pages": 1,
+      "shared_pages": 1,
+      "ipc_channels": 1
     },
     "launches": [
       {
@@ -17,7 +20,9 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 0,
-        "ipc_channels": 6
+        "ipc_channels": 7,
+        "private_pages": 1,
+        "shared_pages": 1
       },
       {
         "package": "cathedral-stock-matrix",

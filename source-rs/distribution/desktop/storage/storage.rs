@@ -3,9 +3,12 @@
 use crate::fixture::Fixture;
 use crate::*;
 use cathedral_platform_contracts::storage as store;
-use cathedral_user_runtime::task::{Launch, Port};
+use cathedral_user_runtime::{
+    connection::Client,
+    task::{Child, Launch, Port},
+};
 /// Relay one object request; the reply keeps the provider's 64-byte layout.
-fn request(f: &Fixture, leaf: usize, request: store::Request, payload: &[u8]) -> [u8; 64] {
+fn request(f: &mut Fixture, leaf: usize, request: store::Request, payload: &[u8]) -> [u8; 64] {
     f.query(leaf, [wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0]);
     let mut words = request.words();
     words[0] += wire::STORAGE_BASE;
@@ -18,7 +21,7 @@ fn request(f: &Fixture, leaf: usize, request: store::Request, payload: &[u8]) ->
     wire::encode(f.query(leaf, words))
 }
 /// The object a leaf's binding is rooted at, once it has a binding.
-fn realm(f: &Fixture, leaf: usize) -> Result<u64, u64> {
+fn realm(f: &mut Fixture, leaf: usize) -> Result<u64, u64> {
     let info = f.query(leaf, [wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0]);
     if info[0] != 0 {
         return Err(info[0]);
@@ -26,7 +29,7 @@ fn realm(f: &Fixture, leaf: usize) -> Result<u64, u64> {
     Ok(info[2])
 }
 fn publish(
-    f: &Fixture,
+    f: &mut Fixture,
     leaf: usize,
     object: u64,
     expected: u64,
@@ -47,7 +50,7 @@ fn publish(
     ))
 }
 fn copy(
-    f: &Fixture,
+    f: &mut Fixture,
     leaf: usize,
     object: u64,
     expected: u64,
@@ -61,7 +64,7 @@ fn copy(
     ))
 }
 fn copy_tree(
-    f: &Fixture,
+    f: &mut Fixture,
     leaf: usize,
     object: u64,
     expected: u64,
@@ -74,7 +77,7 @@ fn copy_tree(
         &[],
     ))
 }
-fn read(f: &Fixture, leaf: usize, object: u64) -> Result<([u8; 32], usize), u64> {
+fn read(f: &mut Fixture, leaf: usize, object: u64) -> Result<([u8; 32], usize), u64> {
     let head = store::Reply::decode(&request(
         f,
         leaf,
@@ -90,11 +93,11 @@ fn read(f: &Fixture, leaf: usize, object: u64) -> Result<([u8; 32], usize), u64>
     store::Reply::decode(&reply)?;
     Ok((reply[32..].try_into().unwrap(), head.length as usize))
 }
-fn text(f: &Fixture, leaf: usize, object: u64) -> Result<[u8; 32], u64> {
+fn text(f: &mut Fixture, leaf: usize, object: u64) -> Result<[u8; 32], u64> {
     read(f, leaf, object).map(|(bytes, _)| bytes)
 }
 /// The first bytes of an object too large to read whole through the inline path.
-fn prefix(f: &Fixture, leaf: usize, object: u64, len: u64) -> Result<[u8; 32], u64> {
+fn prefix(f: &mut Fixture, leaf: usize, object: u64, len: u64) -> Result<[u8; 32], u64> {
     let reply = request(
         f,
         leaf,
@@ -108,7 +111,7 @@ fn expect(bytes: [u8; 32], payload: &[u8]) {
     assert_eq!(&bytes[..payload.len()], payload);
 }
 /// The children of the leaf's realm: count, then the numbers.
-fn listing(f: &Fixture, leaf: usize) -> Result<[u64; 8], u64> {
+fn listing(f: &mut Fixture, leaf: usize) -> Result<[u64; 8], u64> {
     let parent = realm(f, leaf)?;
     let reply = request(
         f,
@@ -122,7 +125,7 @@ fn listing(f: &Fixture, leaf: usize) -> Result<[u64; 8], u64> {
     }
     Ok(words)
 }
-fn grant(f: &Fixture) {
+fn grant(f: &mut Fixture) {
     f.owner(0, [wire::STORAGE_GRANT, 0, 0, 0, 0, 0, 0, 0]);
     f.owner(1, [wire::STORAGE_GRANT, 0, 0, 0, 0, 0, 0, 0]);
     // The leaf has not refreshed its old local binding yet. Even a valid object
@@ -133,19 +136,26 @@ fn grant(f: &Fixture) {
     );
 }
 /// Give the nested matrix one subtree of root 0 and its leaf the whole of that.
-fn regrant_scoped(f: &Fixture, scope: u64) {
+fn regrant_scoped(f: &mut Fixture, scope: u64) {
     f.owner(0, [wire::STORAGE_REVOKE, 0, 0, 0, 0, 0, 0, 0]);
     f.owner(0, [wire::STORAGE_GRANT, 0, 0, scope, 0, 0, 0, 0]);
     f.owner(1, [wire::STORAGE_GRANT, 0, 0, 0, 0, 0, 0, 0]);
     assert_eq!(realm(f, 2), Ok(scope));
 }
-pub fn run() -> u64 {
+fn start_provider() -> (Child, Client) {
     let provider = Launch::at(4).unwrap().spawn(0).unwrap();
-    let control = Port::at(4).unwrap().connect().unwrap();
-    control.0.send(store::HEALTH).unwrap();
-    assert_eq!(control.1.receive(&mut [0; 64]).unwrap(), 5);
-    let fixture = Fixture::open();
-    let f = &fixture;
+    let deadline = time::after(300).unwrap();
+    let mut control = Client::connect(Port::at(4).unwrap().connect().unwrap(), deadline).unwrap();
+    let (bytes, length) = control.call(store::HEALTH, deadline).unwrap();
+    assert_eq!(&bytes[..length], b"ready");
+    cathedral_user_runtime::write(b"Cathedral matrix fixture: shared provider control ready\n")
+        .unwrap();
+    (provider, control)
+}
+pub fn run() -> u64 {
+    let (provider, control) = start_provider();
+    let mut fixture = Fixture::open();
+    let f = &mut fixture;
     probes::delegation(f);
     probes::revocation(f);
     probes::replacement(f);
@@ -153,7 +163,9 @@ pub fn run() -> u64 {
     probes::attenuation(f);
     probes::launching(f);
     probes::sibling(f);
-    recovery::exercise(f, provider);
+    // Keep the recovered control owners alive for the observation loop. Closing
+    // provider control is owner departure, not a harmless health-query cleanup.
+    let (_fixture, _provider, _control) = recovery::exercise(fixture, provider, control);
     cathedral_user_runtime::write(b"Cathedral matrix storage: scoped roots, recursive delegation, revocation, cheap copies, attenuated realms, programs from the realm, launched siblings and replacement passed\n").unwrap();
     loop {
         let _ = event_sleep();

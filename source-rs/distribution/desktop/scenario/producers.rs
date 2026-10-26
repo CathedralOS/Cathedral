@@ -2,7 +2,7 @@
 //! interaction connection. Owner control is never lent to that process.
 use super::*;
 impl Fixture {
-    pub(super) fn producers(&self) {
+    pub(super) fn producers(&mut self) {
         let epoch = self.view(2)[1];
         self.nested_producer();
         self.view(3); // Establish the outside sibling's current connection.

@@ -2,7 +2,7 @@
 //! attenuation and programs run from the realm, over real IPC. Object one of
 //! root 0 is the program the harness installed; everything made here follows.
 use super::*;
-pub(super) fn delegation(f: &Fixture) {
+pub(super) fn delegation(f: &mut Fixture) {
     assert_eq!(listing(f, 2), Err(abi::DENIED));
     grant(f);
     assert_eq!(
@@ -32,7 +32,7 @@ pub(super) fn delegation(f: &Fixture) {
         wire::error(abi::DENIED)
     );
 }
-pub(super) fn revocation(f: &Fixture) {
+pub(super) fn revocation(f: &mut Fixture) {
     // Revoke and regrant the direct leaf without allowing it an INFO refresh:
     // its old binding number must not authorize anything in the new grant.
     f.owner(1, [wire::STORAGE_REVOKE, 0, 0, 0, 0, 0, 0, 0]);
@@ -59,7 +59,7 @@ pub(super) fn revocation(f: &Fixture) {
     assert_eq!(publish(f, 2, 2, 7, b"stale"), Err(abi::WOULD_BLOCK));
     expect(text(f, 2, 2).unwrap(), b"nested root");
 }
-pub(super) fn replacement(f: &Fixture) {
+pub(super) fn replacement(f: &mut Fixture) {
     // Child death and replacement: the new leaf gets no implicit storage grant.
     f.owner(1, [wire::STOP, 0, 0, 0, 0, 0, 0, 0]);
     f.owner(1, [wire::SPAWN, 0, 0, 0, 0, 0, 0, 0]);
@@ -69,7 +69,7 @@ pub(super) fn replacement(f: &Fixture) {
     expect(text(f, 2, 2).unwrap(), b"nested root");
     expect(text(f, 3, 1).unwrap(), b"outside root");
 }
-pub(super) fn sharing(f: &Fixture) {
+pub(super) fn sharing(f: &mut Fixture) {
     // Copies through two hops: a new number, revision one, identical bytes,
     // and the original's revision untouched.
     let copy = copy(f, 2, 2, 1, 0).unwrap();
@@ -84,7 +84,7 @@ pub(super) fn sharing(f: &Fixture) {
     assert_eq!(listing(f, 3).unwrap()[1], 1);
     assert_eq!(super::copy(f, 2, 9, 1, 0), Err(store::MISSING));
 }
-pub(super) fn attenuation(f: &Fixture) {
+pub(super) fn attenuation(f: &mut Fixture) {
     // A program holding the whole root makes a subtree: an empty object at
     // the top. The owner can then grant the nested matrix that subtree alone.
     let realm = publish(f, 2, 0, 0, b"").unwrap();
@@ -156,7 +156,7 @@ pub(super) fn attenuation(f: &Fixture) {
     regrant_scoped(f, 0);
     assert_eq!(listing(f, 2).unwrap()[1..7], [5, 1, 2, 3, 4, 6]);
 }
-pub(super) fn launching(f: &Fixture) {
+pub(super) fn launching(f: &mut Fixture) {
     // The root runs the installed program in the sibling's place. It is
     // admitted from the object itself and gets that object's subtree as its
     // realm: it can read its own code, list and create beneath it, and see
@@ -188,7 +188,7 @@ pub(super) fn launching(f: &Fixture) {
     // The whole-root holder still sees the program and its state beneath it.
     assert_eq!(listing(f, 2).unwrap()[1..7], [5, 1, 2, 3, 4, 6]);
 }
-pub(super) fn sibling(f: &Fixture) {
+pub(super) fn sibling(f: &mut Fixture) {
     // The program copies itself into its realm, cheaply, and asks its host to
     // run the copy as a sibling. The host reads it with the requester's scope,
     // admits it into the slot the owner opened, and grants it the copy's
