@@ -1,6 +1,6 @@
 // Forwarded requests stay pending while upstream child work can progress.
-// Shared links retain exact request identity after timeout; the copied fixture
-// adapter drains FIFO late replies. Neither replays or abandons uncertain work.
+// Shared links retain exact request identity after timeout. Drain that late reply
+// before issuing new work; repeated asks cannot replay or abandon the old request.
 // Connection setup progresses while child upstream work remains serviceable.
 // A stream that fails outright is not death either: the request stays pending
 // for a short grace so the kernel's outcome, not the broken link, decides

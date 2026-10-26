@@ -31,7 +31,6 @@ pub(super) struct Parent {
     cursor_mode: Option<u64>,
     interaction: Option<interaction::Connection>,
     storage_upstream: Option<storage::Upstream>,
-    pub separate_storage: bool,
     pub grant: Grant,
     display: Option<display::Display>,
     pub wake: Option<cathedral_user_runtime::services::Wake>,
@@ -108,7 +107,6 @@ impl Parent {
             upstream: false,
             interaction: None,
             storage_upstream: None,
-            separate_storage: false,
             grant: Grant {
                 epoch: 0,
                 width: 0,
@@ -138,7 +136,7 @@ impl Parent {
         storage_root: bool,
     ) -> Result<(), Error> {
         if (storage_root && !matches!(environment.len(), 0 | 4))
-            || !matches!(environment.len(), 0 | 2 | 3 | 4 | 5)
+            || !matches!(environment.len(), 0 | 2 | 4 | 5)
         {
             return Err(Error(abi::DENIED as i64));
         }
@@ -146,25 +144,18 @@ impl Parent {
             self.storage_links[0] = Some(storage::Provider::at(0)?);
             self.storage_links[1] = Some(storage::Provider::at(1)?);
         }
-        self.separate_storage =
-            matches!(environment.len(), 2 | 5) || (storage_root && environment.len() == 4);
-        self.upstream = matches!(environment.len(), 2 | 3 | 5);
+        self.upstream = matches!(environment.len(), 2 | 5);
         let pair = || {
             (
                 environment.endpoint(0).unwrap(),
                 environment.endpoint(1).unwrap(),
             )
         };
-        self.interaction =
-            (environment.len() == 3).then(|| interaction::Connection::Copied(pair()));
         self.display = if environment.len() == 4 {
             Some(display::Display::connect(pair())?)
         } else {
             None
         };
-        self.wake = (environment.len() == 3).then(|| {
-            cathedral_user_runtime::services::Wake::Copied(environment.endpoint(2).unwrap())
-        });
         if environment.len() == 2 {
             let mut services =
                 cathedral_user_runtime::services::ServiceBindings::<2>::load(environment)?;
@@ -184,9 +175,6 @@ impl Parent {
             self.interaction = Some(interaction::Connection::shared(connections.interaction)?);
             self.storage_upstream = Some(storage::Upstream::connect(connections.storage)?);
             self.wake = Some(connections.wake);
-        } else {
-            // Manually assembled headless fixtures retain their combined copied stream.
-            self.storage_upstream = self.upstream.then(|| storage::Upstream::Combined(pair()));
         }
         Ok(())
     }

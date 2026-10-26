@@ -1,6 +1,6 @@
 //! Two identical matrix executables, a nested leaf and an outside sibling.
 //! All owner requests borrow one retained shared client. The adversarial leaf
-//! relay still uses its older combined parent stream; see leaf.rs.
+//! relay uses independent shared interaction and storage; see leaf.rs.
 use crate::*;
 use cathedral_user_runtime::{
     connection::Client,

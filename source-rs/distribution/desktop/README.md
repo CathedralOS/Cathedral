@@ -91,9 +91,19 @@ alive throughout the observation loop.
 The headless profiles fund one writer, reader and notification per control stream:
 one at the fixture owner for the input suite, two for the storage suite, and one
 at each root/provider peer. They do not change kernel ceilings or ordinary F5.
-Nested matrix data, leaf relay and deliberate eight-late-reply control probes
-remain copied consumers. Those checks must migrate with the replacement protocol;
-shared owner control alone does not establish shared transport through every hop.
+Nested matrices and [leaf.rs](leaf.rs) now use separate shared interaction,
+storage and child control. Leaves establish control before acquiring services,
+receive a wait-only input notification and preserve raw malformed storage requests
+for the boundary tests. The old eight-reply FIFO scenario is replaced by one
+held LOSS: repeated surveys must not enqueue/replay work, its late clean reply
+must not authorize later dirty observations, and both leaf and sibling survive.
+The stock matrix has no copied parent-data or child-control branch.
+
+Each leaf is funded for three transport writers/readers/notifications plus its
+publication page and retained read. The nested matrix funds its three upstream
+connections and three downstream connections. The storage root also funds dynamic
+leaf loans and the ordinary loader's 256-reader forwarding reserve; this is an
+allowance, not an eager allocation. The two profiles record the exact grants.
 
 
 Run from the repository root:

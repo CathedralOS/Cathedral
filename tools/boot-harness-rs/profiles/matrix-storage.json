@@ -23,9 +23,9 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 0,
-        "ipc_channels": 12,
-        "shared_pages": 75,
-        "private_pages": 11
+        "ipc_channels": 28,
+        "shared_pages": 345,
+        "private_pages": 25
       },
       {
         "package": "cathedral-stock-matrix",
@@ -33,8 +33,9 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 1,
-        "ipc_channels": 6,
-        "shared_pages": 8
+        "ipc_channels": 11,
+        "shared_pages": 14,
+        "private_pages": 6
       },
       {
         "package": "cathedral-desktop",
@@ -45,7 +46,9 @@
         "features": [
           "storage-lab"
         ],
-        "private_pages": 2
+        "private_pages": 4,
+        "shared_pages": 4,
+        "ipc_channels": 3
       },
       {
         "package": "cathedral-desktop",
@@ -56,7 +59,9 @@
         "features": [
           "storage-lab"
         ],
-        "private_pages": 2
+        "private_pages": 4,
+        "shared_pages": 4,
+        "ipc_channels": 3
       },
       {
         "package": "cathedral-storage-service",

@@ -1,10 +1,9 @@
 //! Transport custody below the lifecycle decisions. One shared request survives
-//! expiry until its exact reply is drained; fixture queues retain FIFO accounting.
+//! expiry until its exact reply is drained; repeated asks cannot queue work.
 use super::*;
 use cathedral_user_runtime::connection::{Client, Connecting};
 
 enum Link {
-    Copied(Pair),
     Opening(Connecting<1>),
     Shared(Client),
     Failed,
@@ -12,7 +11,7 @@ enum Link {
 pub struct Control {
     link: Link,
     queued: Option<wire::Packet>,
-    late: u8,
+    late: bool,
 }
 impl Control {
     /// Fault fixture: abandon only the established control transport. The child
@@ -26,23 +25,19 @@ impl Control {
             false
         }
     }
-    pub fn open(pair: Pair, shared: bool) -> Self {
-        let link = if shared {
-            match time::after(300) {
-                Ok(until) => Client::begin_connect(pair, until).map_or(Link::Failed, Link::Opening),
-                Err(_) => {
-                    pair.0.close().ok();
-                    pair.1.close().ok();
-                    Link::Failed
-                }
+    pub fn open(pair: Pair) -> Self {
+        let link = match time::after(300) {
+            Ok(until) => Client::begin_connect(pair, until).map_or(Link::Failed, Link::Opening),
+            Err(_) => {
+                pair.0.close().ok();
+                pair.1.close().ok();
+                Link::Failed
             }
-        } else {
-            Link::Copied(pair)
         };
         Self {
             link,
             queued: None,
-            late: 0,
+            late: false,
         }
     }
     pub fn progress(&mut self) {
@@ -65,19 +60,17 @@ impl Control {
             return Err(Error(abi::BUSY as i64));
         }
         match &mut self.link {
-            Link::Copied(pair) if self.late < 8 => pair.0.send(&wire::encode(words)),
-            Link::Copied(_) => Err(Error(abi::TIMED_OUT as i64)),
             Link::Opening(_) => {
                 self.queued = Some(words);
                 Ok(())
             }
-            Link::Shared(client) if self.late == 0 => client.begin(&wire::encode(words), None),
+            Link::Shared(client) if !self.late => client.begin(&wire::encode(words), None),
             Link::Shared(_) => Err(Error(abi::TIMED_OUT as i64)),
             Link::Failed => Err(Error(abi::PEER_CLOSED as i64)),
         }
     }
     pub fn has_late(&self) -> bool {
-        self.late != 0
+        self.late
     }
     pub fn wait(&self, answers: bool) -> ([Option<Interest>; 2], Option<u64>) {
         match &self.link {
@@ -86,7 +79,6 @@ impl Control {
                 client.interests().map_or([None; 2], |i| i.map(Some)),
                 client.transfer_deadline(),
             ),
-            Link::Copied(pair) if answers => ([Some(Interest::Ipc(pair.1)), None], None),
             _ => ([None; 2], None),
         }
     }
@@ -113,23 +105,15 @@ impl Control {
                 }
                 None => None,
             },
-            Link::Copied(pair) => {
-                let mut bytes = [0; 64];
-                match pair.1.receive_until(&mut bytes, time::now()?) {
-                    Ok(n) => Some((bytes, n)),
-                    Err(Error(c)) if c == abi::TIMED_OUT as i64 => None,
-                    Err(error) => return Err(error),
-                }
-            }
             Link::Failed => return Err(Error(abi::PEER_CLOSED as i64)),
         };
         Ok(received.and_then(|(bytes, n)| {
-            if self.late != 0 {
+            if self.late {
                 #[cfg(feature = "trace-storage")]
                 if let Some(words) = wire::decode(&bytes[..n]) {
                     time::storage_sample("matrix-control-late-drained", &words[..2]);
                 }
-                self.late -= 1;
+                self.late = false;
                 None
             } else {
                 Some(wire::decode(&bytes[..n]).unwrap_or(wire::error(abi::IO_ERROR)))
@@ -138,12 +122,12 @@ impl Control {
     }
     pub fn expire(&mut self) {
         if self.queued.take().is_none() {
-            self.late += 1;
+            self.late = true;
         }
     }
     pub fn drain(&mut self) {
-        if self.late != 0 && self.poll().is_err() {
-            self.late = 0;
+        if self.late && self.poll().is_err() {
+            self.late = false;
             self.link = Link::Failed;
         }
     }

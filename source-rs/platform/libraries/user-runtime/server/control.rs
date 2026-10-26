@@ -2,6 +2,27 @@
 //! lifetime; independent clients, caller interests and accepted work stay local.
 use super::*;
 impl Server {
+    /// Finish an explicitly selected owner-control handshake without consuming
+    /// application work. The owner must initiate setup independently. Copied
+    /// requests during setup are not a substitute for the selected protocol.
+    pub fn establish_control(&mut self, deadline: u64) -> Result<(), Error> {
+        while !self.shared_ready(0) {
+            self.expire_shared()?;
+            if self.poll()?.is_some() {
+                // Copied application payloads are not the selected setup protocol.
+                // Dropping the event also releases any unexpected attachment.
+                return Err(Error(abi::IO_ERROR as i64));
+            }
+            if self.shared_ready(0) {
+                break;
+            }
+            if crate::time::reached(crate::time::now()?, deadline) {
+                return Err(Error(abi::TIMED_OUT as i64));
+            }
+            self.wait(&[], Some(deadline))?;
+        }
+        Ok(())
+    }
     /// Retire failed owner control while continuing independent service work.
     /// Requires a clock grant for the multiplexed wait path. Typed-reply errors
     /// still preserve and report attachment custody; only plain abandoned replies

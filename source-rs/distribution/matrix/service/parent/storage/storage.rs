@@ -40,9 +40,6 @@ impl Parent {
                     .client(time::after(300)?)?,
             ));
         }
-        if !self.separate_storage {
-            return Err(Error(abi::DENIED as i64));
-        }
         Ok(self
             .storage_upstream
             .as_mut()
@@ -51,25 +48,13 @@ impl Parent {
     }
 
     pub(in crate::service) fn storage_client(&self, slot: usize) -> usize {
-        if self.separate_storage {
-            slot + STORAGE_BASE
-        } else {
-            slot
-        }
+        slot + STORAGE_BASE
     }
     pub(in crate::service) fn storage_slot(&self, client: usize) -> usize {
-        if self.separate_storage {
-            client - STORAGE_BASE
-        } else {
-            client
-        }
+        client - STORAGE_BASE
     }
     pub(in crate::service) fn storage_stream(&self, client: usize) -> bool {
-        if self.separate_storage {
-            (STORAGE_BASE..STORAGE_BASE + CHILDREN).contains(&client)
-        } else {
-            client < CHILDREN
-        }
+        (STORAGE_BASE..STORAGE_BASE + CHILDREN).contains(&client)
     }
     fn storage_exchange(&mut self, words: wire::Packet) -> Result<wire::Packet, Error> {
         let result = self
@@ -77,7 +62,7 @@ impl Parent {
             .as_mut()
             .ok_or(Error(abi::PEER_CLOSED as i64))?
             .call(words);
-        if result.is_err() && self.separate_storage {
+        if result.is_err() {
             self.retire_storage(0)?;
         }
         result
@@ -109,8 +94,7 @@ impl Parent {
         }
         let reply = match self.storage_exchange([wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0]) {
             Ok(reply) => reply,
-            Err(_) if self.separate_storage => return Ok(0),
-            Err(error) => return Err(error),
+            Err(_) => return Ok(0),
         };
         self.adopt_upstream(reply);
         Ok(usize::from(self.storage_epoch != 0))
@@ -290,9 +274,7 @@ impl Parent {
     }
     fn retire_storage(&mut self, source: usize) -> Result<(), Error> {
         if self.upstream {
-            if let Some(connection) = self.storage_upstream.take() {
-                connection.close()?;
-            }
+            drop(self.storage_upstream.take());
             self.storage_epoch = 0;
             self.storage_realm = 0;
             self.scopes.clear();

@@ -336,6 +336,66 @@ default/hidden cursor evidence remains valid for its scope, not the full asset A
 
 ## Current implementation evidence
 
+Implementation update 2026-10-26: **stock matrices and headless leaves have shared data/control only**, over `339f086c`.
+
+Headless roots now offer the same brokered, separate interaction/storage shape as
+the desktop. The leaf establishes shared owner control before acquiring services,
+asserts a notification input wake, and retains its interaction and storage clients.
+Stored-code launches declare and receive that bootstrap too. Publication still
+constructs sealed backing locally; malformed scope/deadline fields still reach the
+real storage boundary unchanged. No leaf receives a world lookup or hardware grant.
+
+The stock matrix's copied parent interaction, combined parent storage and copied
+child-control variants are removed, along with the composition flag and combined
+stream blocking/retirement branches. Interaction always retains its two correlated
+lanes; storage failures retire only storage. Child control keeps at most one late
+request, represented by a boolean rather than an eight-reply FIFO count.
+
+The former eight-unanswered-LOSS fixture now holds one shared request for 1,000
+ticks. Nine owner surveys cannot enqueue another request; the leaf observes no new
+control work while holding it. Its late clean reply is drained before later dirty
+observations. Existing malformed LOSS, delayed replies, missing control, child
+exit, sibling close, scope revocation and stored-code recovery checks remain.
+`Server::establish_control` owns the existing setup-only sequence used by both
+`OwnerControl` and this adversarial server; it rejects copied application requests
+during setup without consuming valid application work.
+
+Funding is explicit in the two headless profiles: leaves reserve three transport
+writers/notifications plus a publication page, and four readers; a nested matrix
+funds three upstream and three downstream connections. Storage forwarding also
+needs its attachment readers. Dynamic leaves now receive four writer/reader pages
+and three notification allowances. The storage root reserves 345 readers, including
+the existing loader policy's 256-reader forwarding headroom. This is a capability
+ceiling, not eager allocation. Kernel limits are unchanged. Initial failed runs
+identified insufficient attachment-reader funding, then the loader reserve; no
+refusal was bypassed or timeout relaxed.
+
+Verification (`build/omega-component/fixture-shared-*.log`):
+
+- Host tests, headless/storage/all-feature Clippy, layout, format and whitespace
+  checks pass.
+- Headless input/storage suites pass, including exact shared leaf/parent and
+  held-LOSS markers, teardown accounting, raw malformed requests, independent
+  roots, stored-code launch, sibling-close races and durable recovery.
+- Unpressured matrix desktop and cold boot pass (27.56 s to scene readiness;
+  nested key-to-scanout observed at 219 ms). CPU-capped desktop and cold boot also
+  pass (115.50 s to readiness; observed key-to-scanout 1,093 ms). These are measured
+  test observations, not latency guarantees.
+- Normal F5 and cold persistence pass in `desktop/20261026T160310790021Z`, including
+  independent Notes instances and exact verification of all 1,631 host records.
+- Full x86-64 IPC and ARM64 portability suites pass. No kernel implementation or
+  ceiling changes; the runtime setup helper extraction uses the existing protocol.
+
+
+**Next:** audit direct mechanism consumers before retiring copied application
+payloads from the runtime/ABI. Start with `distribution/lab/display`, `objects`,
+`supervision`, and positional wake/upstream adapters in `user-runtime`; distinguish
+actual payload consumers from typed setup/grant transfers and intentional hostile
+transport probes. Preserve their refusal, lifetime and accounting evidence. The
+launch-established Matrix connector is still an open outcome, not implied by the
+current broker-pair migration.
+
+
 Implementation update 2026-10-26: **headless fixture owners retain shared control**, over `e493d887`.
 
 The common `distribution/desktop/fixture.rs` now owns a shared `Client`; all
@@ -362,7 +422,7 @@ revocation, malformed/late LOSS, producer capacity, sibling launch/close and dur
 recovery checks remain enabled. F5 and ARM64 were not rerun: these implementation
 changes are confined to non-desktop fixtures and their two test profiles.
 
-**Next:** migrate the combined nested matrix data and `desktop/leaf.rs` relay to
+**Previous next (completed above):** migrate the combined nested matrix data and `desktop/leaf.rs` relay to
 separate shared interaction/storage and shared child control, then remove the
 copied parent branches. Preserve the stale/late LOSS, malformed reply, missing
 control and sibling-close tests. The old eight-unanswered-reply fixture encodes

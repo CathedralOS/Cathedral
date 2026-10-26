@@ -135,9 +135,6 @@ impl Parent {
     }
     fn retire_binding(&mut self, error: Error) -> Result<(), Error> {
         time::storage_sample("launch-bind-retired", &[error.0 as u64]);
-        if self.upstream && !self.separate_storage {
-            return Err(error);
-        }
         self.retire_storage(0)
     }
     pub(super) fn binding_wait(&self) -> Option<(Handle, u64)> {

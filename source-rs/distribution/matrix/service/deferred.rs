@@ -47,8 +47,7 @@ impl Deferred {
                 return true;
             }
         }
-        if parent.separate_storage
-            && let Event::Request(r) | Event::Memory(r, _) = event
+        if let Event::Request(r) | Event::Memory(r, _) = event
             && r.client.is_some_and(|client| parent.storage_stream(client))
         {
             return parent.storing();
@@ -75,11 +74,7 @@ impl Deferred {
                                 | wire::STORAGE_STATUS
                                 | wire::SAVE_RECOVERY_POLL
                                 | wire::STORAGE_BINDING
-                        ) || (1..=CHILDREN as u64).contains(&hop)
-                            && (parent.separate_storage
-                                || parent
-                                    .storing_client()
-                                    .is_none_or(|client| hop as usize != client + 1)))
+                        ) || (1..=CHILDREN as u64).contains(&hop))
                     }
                     Some(w) => {
                         matches!(w[0], wire::STORAGE_INFO | wire::LAUNCH)
@@ -113,7 +108,7 @@ impl Deferred {
         // One catalog request at a time; unread requests remain in their bounded
         // queues. Exclude all child storage receivers while their shared upstream
         // exchange is active; interaction and owner replies remain serviceable.
-        let storage = if parent.separate_storage && parent.storing() {
+        let storage = if parent.storing() {
             ((1u32 << CHILDREN) - 1) << (STORAGE_BASE + 1)
         } else {
             0

@@ -20,9 +20,9 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 0,
-        "ipc_channels": 7,
-        "private_pages": 1,
-        "shared_pages": 1
+        "ipc_channels": 17,
+        "private_pages": 7,
+        "shared_pages": 7
       },
       {
         "package": "cathedral-stock-matrix",
@@ -30,21 +30,29 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 1,
-        "ipc_channels": 6
+        "ipc_channels": 11,
+        "private_pages": 6,
+        "shared_pages": 6
       },
       {
         "package": "cathedral-desktop",
         "entry": "distribution/desktop/main.rs",
         "target": "x86_64-unknown-none",
         "clock": true,
-        "argument": 1
+        "argument": 1,
+        "private_pages": 4,
+        "shared_pages": 4,
+        "ipc_channels": 3
       },
       {
         "package": "cathedral-desktop",
         "entry": "distribution/desktop/main.rs",
         "target": "x86_64-unknown-none",
         "clock": true,
-        "argument": 1
+        "argument": 1,
+        "private_pages": 4,
+        "shared_pages": 4,
+        "ipc_channels": 3
       }
     ],
     "links": []

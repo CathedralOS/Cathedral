@@ -241,9 +241,7 @@ impl Parent {
             .and_then(|p| p.request.and_then(|r| r.client))
     }
     pub(in crate::service) fn upstream_busy(&self) -> bool {
-        self.refreshing()
-            || self.publishing()
-            || (self.upstream && !self.separate_storage && self.storing())
+        self.refreshing() || self.publishing()
     }
     /// Advance the pending exchange. A finished program read is handed back
     /// for admission; a finished child request is answered here.
@@ -407,17 +405,13 @@ impl Parent {
         cathedral_user_runtime::task::yield_now();
         Ok(None)
     }
-    /// A separate catalog stream can retire without losing input. Legacy shared
-    /// streams must retire the whole service.
+    /// Retire the catalog stream without losing independent input.
     fn retire_after(
         &mut self,
         p: &Pending,
         error: Error,
         reply: &mut Option<(wire::Packet, Option<Object>)>,
     ) -> Result<(), Error> {
-        if self.upstream && !self.separate_storage {
-            return Err(error);
-        }
         #[cfg(feature = "trace-storage")]
         time::storage_sample(
             "storage-retire",

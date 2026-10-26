@@ -466,6 +466,10 @@ def main():
             serial = (output / "serial.log").read_text(encoding="utf-8", errors="replace")
             count = 2 if args.matrix_storage_test else 1
             assert serial.count("matrix fixture: shared owner control ready") == count, serial
+            assert serial.count("matrix leaf: shared control, interaction and storage ready") >= 2, serial
+            assert "shared parent interaction ready" in serial and "shared parent storage ready" in serial, serial
+            if args.matrix_test:
+                assert serial.count("matrix leaf: held one LOSS without queued replay") == 1, serial
             if args.matrix_storage_test:
                 assert serial.count("matrix fixture: shared provider control ready") == 2, serial
                 assert serial.count("matrix fixture: retired control resources reclaimed") == 1, serial

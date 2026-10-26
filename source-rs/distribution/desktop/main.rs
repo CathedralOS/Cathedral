@@ -22,13 +22,19 @@ mod session;
 mod storage;
 use cathedral_desktop_matrix_contracts::matrix as wire;
 use cathedral_kernel_contracts::user as abi;
-use cathedral_user_runtime::{Error, ipc::Handle, time};
+#[cfg(feature = "desktop")]
+use cathedral_user_runtime::ipc::Handle;
+use cathedral_user_runtime::{Error, time};
 #[cfg(feature = "desktop")]
 use session::control::request as call;
+#[cfg(feature = "desktop")]
 type Pair = (Handle, Handle);
 #[cfg(feature = "desktop")]
 static ROOT_TASK: core::sync::atomic::AtomicU64 = core::sync::atomic::AtomicU64::new(0);
+#[cfg(feature = "desktop")]
 cathedral_user_runtime::service_imports!(&cathedral_platform_contracts::imports::REQUIRED);
+#[cfg(not(feature = "desktop"))]
+cathedral_user_runtime::service_bootstrap!(&cathedral_platform_contracts::imports::REQUIRED, 3, 0);
 cathedral_user_runtime::entry_with_environment!(main);
 fn main(role: u64, argument: u64, environment: cathedral_user_runtime::task::Environment) -> u64 {
     let _ = argument;

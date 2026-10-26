@@ -38,13 +38,14 @@ impl Fixture {
         self.admit_inner();
         self.layout();
         self.owner(0, probe);
-        // Exhaust the outside leaf's unanswered-request budget. It stays alive,
-        // then releases eight old clean replies and reports dirty on new probes.
-        self.owner(3, [crate::leaf::LOSS_BATCH_PROBE, 0, 0, 0, 0, 0, 0, 0]);
+        // Repeated surveys cannot enqueue more shared requests while one LOSS
+        // remains outstanding. Its eventual clean answer cannot authorize a new
+        // close: every later observation is dirty.
+        self.owner(3, [crate::leaf::LOSS_HOLD_PROBE, 0, 0, 0, 0, 0, 0, 0]);
         for _ in 0..9 {
             assert_ne!(self.query(0, probe), [0; 8]);
         }
-        let until = time::after(200).unwrap();
+        let until = time::after(1100).unwrap();
         while !time::reached(time::now().unwrap(), until) {
             cathedral_user_runtime::yield_now();
         }

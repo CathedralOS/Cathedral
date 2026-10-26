@@ -5,9 +5,7 @@ use cathedral_stock_matrix::transport::{self, Reply};
 
 impl Parent {
     pub(in crate::service) fn can_poll(&self) -> bool {
-        !(self.refreshing()
-            || self.poll_retry.is_some()
-            || self.upstream && !self.separate_storage && self.storing())
+        !(self.refreshing() || self.poll_retry.is_some())
     }
 
     pub(in crate::service) fn progress_interaction(&mut self) -> Result<(), Error> {
@@ -39,12 +37,10 @@ impl Parent {
             return Ok(());
         };
         let classified = transport::classify(words, poll, presenting);
-        if let Some(lane) = lane
-            && !matches!(
-                (lane, &classified),
-                (Lane::Poll, Reply::Poll(_)) | (Lane::Visual, Reply::Presentation(_))
-            )
-        {
+        if !matches!(
+            (lane, &classified),
+            (Lane::Poll, Reply::Poll(_)) | (Lane::Visual, Reply::Presentation(_))
+        ) {
             return Err(Error(abi::IO_ERROR as i64));
         }
         match classified {

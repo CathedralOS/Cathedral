@@ -21,7 +21,7 @@ impl Display {
     pub fn begin(&self, bytes: &[u8], object: Option<&Object>) -> Result<(), Error> {
         self.0.borrow_mut().begin(bytes, object).map_err(|error| {
             // The shared client retires after a failed submission. The enclosing
-            // copied-stream adapter's WOULD_BLOCK retry must not replay it.
+            // presentation adapter's WOULD_BLOCK retry must not replay it.
             if error.0 == abi::WOULD_BLOCK as i64 {
                 Error(abi::PEER_CLOSED as i64)
             } else {

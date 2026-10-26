@@ -84,7 +84,7 @@ pub fn run(environment: Environment) -> Result<(), Error> {
         // SAFETY: Single-entry service owns this connection storage until exit.
         server.enable_shared(SOURCE, unsafe { &mut *slot })?;
     }
-    if parent.separate_storage {
+    {
         static mut INTERACTION: [cathedral_user_runtime::server::SharedSlot; CHILDREN] =
             [const { cathedral_user_runtime::server::SharedSlot::empty() }; CHILDREN];
         let slots = &raw mut INTERACTION;
@@ -127,7 +127,6 @@ pub fn run(environment: Environment) -> Result<(), Error> {
         cathedral_user_runtime::time::storage_trace("trace-calibrate", 0, 0);
     }
     let mut children = children::Children::default();
-    children.separate_storage = parent.separate_storage;
     static mut DEFERRED: deferred::Deferred = deferred::Deferred::empty();
     let deferred_address = &raw mut DEFERRED;
     // SAFETY: Same single-entry process lifetime as the parent/world arenas above.

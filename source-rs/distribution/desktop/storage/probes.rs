@@ -162,12 +162,12 @@ pub(super) fn launching(f: &mut Fixture) {
     // realm: it can read its own code, list and create beneath it, and see
     // nothing beside it, but never replace or delete the code it runs from.
     f.owner(0, [wire::STOP, 1, 0, 0, 0, 0, 0, 0]);
-    f.owner(0, [wire::RUN_PAGES, 1, 2, 0, 0, 0, 0, 0]);
+    f.owner(0, [wire::RUN_PAGES, 1, 4, 4, 0, 0, 0, 0]);
     assert_eq!(
-        f.query(0, [wire::RUN_OBJECT, 1, 99, 99, 0, 0, 0, 0]),
+        f.query(0, [wire::RUN_OBJECT, 1, 99, 99, 0, 3, 0, 0]),
         wire::error(store::MISSING)
     );
-    f.owner(0, [wire::RUN_OBJECT, 1, 1, 1, 0, 0, 0, 0]);
+    f.owner(0, [wire::RUN_OBJECT, 1, 1, 1, 0, 3, 0, 0]);
     assert_eq!(realm(f, 3), Ok(1));
     assert_eq!(listing(f, 3).unwrap()[1], 0);
     expect(prefix(f, 3, 1, 4).unwrap(), b"\x7fELF");
@@ -205,7 +205,7 @@ pub(super) fn sibling(f: &mut Fixture) {
         f.query(3, [wire::LAUNCH, 9, 0, 0, 0, 0, 0, 0]),
         wire::error(abi::DENIED)
     );
-    f.owner(0, [wire::LAUNCH_POLICY, 0, 2, 0, 0, 0, 0, 0]);
+    f.owner(0, [wire::LAUNCH_POLICY, 0, 4, 4, 3, 0, 0, 0]);
     // Declared required storage cannot be manufactured by a child request.
     // Refusals happen before admission and leave funding available for retry.
     let imports = cathedral_platform_contracts::imports::INTERACTION;
@@ -274,7 +274,7 @@ pub(super) fn sibling(f: &mut Fixture) {
     );
     // This headless host has no surface capacity. Placement failure must reclaim
     // the admitted child and its funding, not report an invisible running app.
-    f.owner(0, [wire::LAUNCH_POLICY, 0, 2, 0, 0, 0, 0, 1]);
+    f.owner(0, [wire::LAUNCH_POLICY, 0, 4, 4, 3, 0, 0, 1]);
     for _ in 0..3 {
         assert_eq!(
             f.query(3, [wire::LAUNCH, 9, 0, 0, 0, 0, 0, 0]),
@@ -285,7 +285,7 @@ pub(super) fn sibling(f: &mut Fixture) {
             wire::error(abi::DENIED)
         );
     }
-    f.owner(0, [wire::LAUNCH_POLICY, 0, 2, 0, 0, 0, 0, 0]);
+    f.owner(0, [wire::LAUNCH_POLICY, 0, 4, 4, 3, 0, 0, 0]);
     let launched = f.query(3, [wire::LAUNCH, 9, 0, 0, 0, 0, 0, 0]);
     assert_eq!(launched, [0, 0, 1, 0, 0, 0, 0, 0]);
     assert_eq!(
@@ -377,8 +377,8 @@ pub(super) fn sibling(f: &mut Fixture) {
         f.query(3, [wire::LAUNCH_STATUS, 5, 0, 0, 0, 0, 0, 0])[1],
         wire::LAUNCH_EXITED
     );
-    f.owner(0, [wire::RUN_PAGES, 0, 2, 0, 0, 0, 0, 0]);
-    f.owner(0, [wire::RUN_OBJECT, 0, 9, 9, 0, 0, 0, 0]);
+    f.owner(0, [wire::RUN_PAGES, 0, 4, 4, 0, 0, 0, 0]);
+    f.owner(0, [wire::RUN_OBJECT, 0, 9, 9, 0, 3, 0, 0]);
     assert_eq!(
         f.query(3, [wire::LAUNCH_STATUS, 5, 0, 0, 0, 0, 0, 0])[1],
         wire::LAUNCH_EXITED

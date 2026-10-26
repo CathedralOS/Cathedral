@@ -44,7 +44,6 @@ pub(super) enum Purpose {
 }
 #[derive(Default)]
 pub(super) struct Children {
-    pub separate_storage: bool,
     desktop: bool,
     requested_surfaces: [Option<u64>; CHILDREN],
     login: bool,

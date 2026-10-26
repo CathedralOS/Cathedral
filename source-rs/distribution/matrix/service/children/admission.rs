@@ -36,16 +36,14 @@ impl Children {
             &loans[..count],
             argument,
             false,
-            self.separate_storage,
-            self.separate_storage
-                .then_some(cathedral_platform_contracts::imports::ALL),
+            true,
+            Some(cathedral_platform_contracts::imports::ALL),
             server,
             world,
         )
     }
     /// Code from the owner's catalogue, with the catalogue grants `images` lends.
-    /// Modern hosts offer the same interaction/storage rights through a broker;
-    /// combined-stream mechanism fixtures retain their explicitly old shape.
+    /// Offer the same interaction/storage rights through the scoped broker.
     pub(super) fn run(
         &mut self,
         slot: usize,
@@ -68,9 +66,8 @@ impl Children {
             pages,
             frames,
             [argument, channels, descendants, images, cpu],
-            self.separate_storage,
-            self.separate_storage
-                .then_some(cathedral_platform_contracts::imports::ALL),
+            true,
+            Some(cathedral_platform_contracts::imports::ALL),
             server,
             world,
         )
@@ -98,9 +95,6 @@ impl Children {
         } = imports::resolve(object, plan.imports).inspect_err(|error| {
             refused("matrix-import-refused", plan.slot, error, [0; 3]);
         })?;
-        if brokered && !self.separate_storage {
-            return Err(Error(abi::DENIED as i64));
-        }
         let storage = binding & cathedral_platform_contracts::imports::STORAGE != 0;
         let (mut pages, frames) = match plan.pages {
             Some(pages) => (pages, None),
@@ -146,19 +140,11 @@ impl Children {
         // storage/producer queues and the wake object charge this creator. A selected
         // shared data slot and selected owner control need a writer,
         // reader and notification each. Reserve their owner-side funding before
-        // lending capacity; copied fixtures do not allocate the selected backing.
-        let transport = u64::from(storage && self.separate_storage)
-            + u64::from(self.separate_storage)
-            + u64::from(brokered || self.separate_storage)
-            + u64::from(
-                self.separate_storage
-                    && binding & cathedral_platform_contracts::imports::INPUT_PRODUCER != 0,
-            );
-        let connection_channels = if storage && self.separate_storage {
-            5
-        } else {
-            3
-        };
+        // lending capacity.
+        let transport = u64::from(storage)
+            + 2
+            + u64::from(binding & cathedral_platform_contracts::imports::INPUT_PRODUCER != 0);
+        let connection_channels = if storage { 5 } else { 3 };
         let connection_channels = connection_channels
             + if binding & cathedral_platform_contracts::imports::INPUT_PRODUCER != 0 {
                 2
@@ -243,7 +229,7 @@ impl Children {
                     self.allowed_images[plan.slot],
                     plan.cpu,
                 ],
-                storage && self.separate_storage,
+                storage,
                 brokered.then_some(binding),
                 server,
                 world,
@@ -275,7 +261,7 @@ impl Children {
         [private_pages, reader_pages]: [u64; 2],
         requested_frames: Option<u64>,
         [argument, channels, descendants, images, cpu]: [u64; 5],
-        separate_storage: bool,
+        storage: bool,
         services: Option<u64>,
         server: &mut Server,
         world: &mut World,
@@ -315,7 +301,7 @@ impl Children {
                 &[],
                 argument,
                 true,
-                separate_storage,
+                storage,
                 services,
                 server,
                 world,
@@ -348,12 +334,12 @@ impl Children {
         loans: &[Launch],
         argument: u64,
         dynamic: bool,
-        separate_storage: bool,
+        storage: bool,
         services: Option<u64>,
         server: &mut Server,
         world: &mut World,
     ) -> Result<(), Error> {
-        if separate_storage && !server.available(slot + STORAGE_BASE) {
+        if storage && !server.available(slot + STORAGE_BASE) {
             return Err(Error(abi::BUSY as i64));
         }
         if services.is_some_and(|g| g & cathedral_platform_contracts::imports::INPUT_PRODUCER != 0)
@@ -364,7 +350,7 @@ impl Children {
         use cathedral_user_runtime::matrix::admission;
         let admitted = match services {
             Some(granted) => admission::spawn_brokered(target, argument, loans, granted)?,
-            None => admission::spawn(target, argument, loans, separate_storage)?,
+            None => admission::spawn(target, argument, loans, storage)?,
         };
         world.disconnected(slot);
         server
@@ -388,12 +374,8 @@ impl Children {
             outcome: None,
             disconnected: false,
             reservation: dynamic.then_some(target),
-            // Separate-storage compositions select shared control even when
-            // service discovery still uses positional startup connections.
-            control: control::Control::open(
-                admitted.control,
-                services.is_some() || self.separate_storage,
-            ),
+            // Shared control stays independent of service discovery and data.
+            control: control::Control::open(admitted.control),
             data: admitted.data,
             storage,
             producer: admitted.producer,

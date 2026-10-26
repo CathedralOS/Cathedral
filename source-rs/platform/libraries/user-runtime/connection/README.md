@@ -56,13 +56,16 @@ logical, physical and notification refunds. The ordinary F5 callers use the same
 setup through `connect`. Split now drives yielding setup for both Notes children
 and its nested copy. Stock lifecycle control uses yielding setup for brokered
 children and the separate-storage desktop labs, with explicitly funded endpoints.
-Older single-connection mechanism fixtures still select copied control.
+Headless stock-matrix fixtures also select shared control and independent shared
+interaction/storage; the stock service no longer accepts a combined copied parent.
 
 Leaf apps use [OwnerControl](../server/owner.rs) to retain one exact request through
 its reply. An app whose owner initiates shared setup independently may call
 `establish(deadline)` before expensive storage or rendering startup. This pumps only
 the setup exchange and returns before consuming any application request. It rejects
-copied payloads at that boundary. It is not a readiness acknowledgement and does
+copied payloads at that boundary. `Server::establish_control` owns the same setup
+sequence for services such as the adversarial leaf fixture; neither consumes an
+application request during setup. It is not a readiness acknowledgement and does
 not lengthen the owner's setup deadline. Colors uses this ordering so the capped
 CPU pressure fixture cannot leave control setup behind its initial paint.
 
@@ -174,8 +177,7 @@ capture viewer. Brokered input hints use separate notification wait rights.
 Root supervision and brokered stock/Split lifecycle controls use shared links.
 Bootstrap source checks, input readiness, and positional desktop display/root
 control now use shared connections. Rust app probes, catalogue wakes and
-pre-driver source injection have also migrated; legacy combined-stream mechanism
-fixtures remain. Positional provider supervision and fault gates use retained
+pre-driver source injection and headless matrix/leaf fixtures have also migrated. Positional provider supervision and fault gates use retained
 shared control, with correlated state queries in place of unsolicited signals. These app adapters remain synchronous; this change
 alone does not make an app process input while its drawing call is pending.
 
@@ -318,9 +320,10 @@ without changing the app step ABI. [Split](../../../../distribution/applications
 accepts shared child storage and keeps one persistent upstream client for both
 local reads and asynchronous forwarding. App manifests and owner grants fund each
 end's writer, reader and notification. Their interaction and acquisition use the
-shared Services owner described above. Older fixtures combining interaction and
-storage stay copied;
-this is an explicit composition choice, never fallback after an upgrade.
+shared Services owner described above. Headless matrix/storage fixtures now use
+those same independent transports, including stored-code launches and destructive
+recovery. Direct mechanism labs and positional wake adapters still need migration;
+there is no copied fallback after shared setup.
 
 [The guest connection proof](../../../../distribution/lab/channels/connection/connection.rs)
 checks repeated requests, wrong reply IDs, mixed-wait validation, deadline retirement,
