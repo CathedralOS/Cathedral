@@ -9,9 +9,9 @@
 
 ## Scope and ownership
 
-The shipped OS supports scoped application coordination and protocol-controlled
-shared-memory IPC. The default matrix supplies the coordination service through
-its scoped service broker, subject to granted authority and funded limits.
+The shipped OS supports self-coordination between related application instances
+and protocol-controlled shared-memory IPC. The default matrix supplies coordination
+through its scoped service broker, subject to granted authority and funded limits.
 These are general application facilities; matrices are not a special class of
 participant. Custom matrices may restrict, mediate or substitute the service
 within their own authority, as with other supplied services.
@@ -22,6 +22,12 @@ process isolation, endpoint and memory authority, mapping lifetime and resource
 accounting; it need not interpret application names, filesystem paths or singleton
 policy. The owner accepted this supported operation on 2026-10-23. This page
 does not claim that the complete service is already implemented.
+
+The 2026-10-26 clarification limits automatic coordination to self-IPC, such as
+finding an existing instance or requesting that it open another document. It is
+not a general registry for arbitrary independently launched applications. Supplied
+service connections and custom environment composition remain distinct from this
+instance-discovery facility.
 
 The owner ratified the transport split on 2026-10-24: shared memory is the local
 IPC data path; capability-controlled [notifications and parking](../execution/notifications.md)
@@ -144,17 +150,25 @@ path, executable digest or purpose string does not grant participation. One
 application must not impersonate another, reserve its protected group or receive
 its introductions by choosing matching request bytes.
 
-A group may independently require any combination of:
+A self-coordination group must select at least one authenticated identity restriction:
 
 - The exact executable content admitted for a participant.
 - The same executable path within the relevant authorized namespace.
-- Possession of a supplied secret admitting participation.
+
+It may select both and may additionally require possession of a supplied
+participation secret. These are selectable levers, not a mandatory three-check
+bundle. Secret-only and unrestricted named registrations reject: knowing an
+endpoint reference, purpose string or secret cannot replace the required identity
+restriction. The secret narrows an already identity-restricted group; it does not
+turn self-coordination into arbitrary endpoint discovery.
 
 Selected constraints are conjunctive. The group's requirements cannot be weakened
 by a joining caller omitting a check. An application-supplied purpose distinguishes
 groups within the authorized scope; it is not a global registration authority.
-Even without additional identity constraints, the supplied authority ceiling
-still applies. Matching executable bytes does not establish protocol correctness.
+The supplied authority ceiling always applies in addition to those restrictions.
+Matching executable bytes does not establish protocol correctness. Application
+protocol compatibility and admission remain the accepting instance's responsibility;
+an executable update does not require another universal coordination rule.
 
 The admitting matrix derives executable and path identity from authenticated
 launch records and the immutable image it admits, not from a claimed PID, path
@@ -170,6 +184,13 @@ Digest selection, path canonicalization and rename semantics, and the secret's
 representation and proof-of-possession protocol remain unspecified.
 
 ## First participant and introductions
+
+This is live registration, not a persistent lockfile requiring an application to
+clean up after a crash. The service binds registration to an authenticated process
+incarnation. Application registration may occur after launch: finding an existing
+instance can then cause the newcomer to exit or request activation. This contract
+does not promise to prevent that process from starting; launch-time exclusion
+would require a separately specified admission integration.
 
 Registration atomically selects a first participant and establishes its incoming
 connection mailbox before reporting success. Initialization may hold the
@@ -198,6 +219,29 @@ independent parent-local registries do not imply global exclusivity.
 
 Here a mailbox is a bounded library queue over shared storage plus notification
 rights. Registration does not require a kernel-owned application-message queue.
+
+## Boundaries not selected by self-coordination
+
+General discovery/admission between unrelated applications is not settled by this
+contract. Capability-controlled endpoints can enforce an authorized connection;
+they do not alone decide who may introduce callers or select a trustworthy provider.
+There is no ambient first-registrant-wins service namespace or secret-only route
+through the self-coordination interface.
+
+An authenticated launch-realm association was discussed as a possible additional
+identity lever. It would differ from ordinary storage access obtained later, for
+example through a folder picker, and would not mean exclusive ownership of a realm.
+It is not selected here as a replacement for executable/path identity. Realm
+matching and cross-launch-authority attestation need their own explicit contract
+before such a lever is exposed.
+
+Pass-through service routing to make nested environments cheaper remains a proposal,
+not a consequence of these IPC primitives. Returning a parent's locator, sharing
+an external provider transparently, filtering its process-list visibility, or
+emulating its termination/lifecycle are not ratified here. Existing scoped grants
+and explicit service composition are not an approval of that combined design.
+Any later proposal must preserve environment authority and non-disclosure without
+claiming that connection closure terminated an independently owned process.
 
 ## Established connections and service authority
 

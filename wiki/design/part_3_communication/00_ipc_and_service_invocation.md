@@ -187,6 +187,39 @@ This design does not revive PCC-based single-address-space invocation. Remote
 networking adapts service contracts separately; a local shared region does not
 itself become a network transport.
 
+## Self-coordination, not general endpoint discovery
+
+The accepted [identity rules](../../spec/communication/ipc.md#scoped-participation-and-identity)
+serve related instances finding one another: select executable-content identity,
+executable-path identity within the authorized namespace, or both. A secret may
+add a restriction but cannot be the sole admission check. The environment verifies
+launch facts; caller-supplied names, hashes and endpoint numbers do not establish
+them. All selected checks apply, within the supplied coordination authority.
+
+Live registration atomically chooses the first participant and ties the claim to
+its process incarnation. Confirmed death retires it; a timeout does not elect a
+competitor. A second launch can exit or ask the existing instance to handle work.
+This does not yet promise that launch admission prevents the second process from
+starting. Registration and activation policy are not a persistent lockfile or a
+general service-location API.
+
+## Proposals outside that settlement
+
+An authenticated launch-realm association could distinguish boot-assigned realm
+access from later folder-picker access. That is not ordinary realm ownership and
+has not replaced the accepted executable/path checks. Generic introductions
+between unrelated applications also remain unsettled outside explicitly supplied
+services and custom environment composition.
+
+Reusing upstream provider processes for cheaper nested environments was discussed,
+but transparent pass-through routing is not ratified. Returning a parent locator,
+scoping process enumeration and translating termination into connection removal
+raise distinct authority, lifecycle and information-disclosure questions. Neither
+generic backing grants nor self-IPC resolves those questions. Do not implement the
+discussion as an accepted process-visibility policy or claim a cheap nesting cost
+without measurement. The existing explicit delegation contracts remain in force;
+they do not select a universal nested-service routing architecture.
+
 ## Implementation boundary
 
 The [implementation outcome](../../../TASKS_RUST.md#shared-memory-ipc-and-notification-outcome)

@@ -167,11 +167,13 @@ This rule applies to matrices as ordinary programs as well as to leaf apps.
 
 The program determines whether it supports concurrent use or rejects another
 instance. Sharing a realm does not serialize the programs' operations or their
-private state. This acceptance does not specify an exclusive-instance claim,
-lock lifetime, discovery or activation protocol; those mechanisms remain to be
-designed in detail. The accepted [coordination service](../communication/ipc.md)
-supplies scoped introductions and app-controlled acceptance or refusal; its Rust
-integration is outstanding. An independent copy remains an explicit storage operation.
+private state. The accepted [self-coordination service](../communication/ipc.md#scoped-participation-and-identity)
+supplies identity-restricted live registration, introductions and app-controlled
+acceptance or refusal. A secret may further restrict the group, not replace all
+identity checks. Integration remains outstanding; application registration does
+not by itself prevent a second process from starting. An independent copy remains
+an explicit storage operation. Ordinary realm access does not establish an
+additional launch-identity restriction by implication.
 
 ## Scoped application bootstrap
 

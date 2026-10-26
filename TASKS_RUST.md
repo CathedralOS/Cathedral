@@ -125,6 +125,15 @@ exercises both private-root provider connections. See the evidence below. Remain
   nested input/rendering, launch cancellation and storage behavior, and retire
   copied payload syscall consumers once migrated. Keep grant-installation checks
   and existing custody evidence; do not reinterpret old queue tests as new proof.
+- Complete [self-coordination](wiki/spec/communication/ipc.md#scoped-participation-and-identity)
+  through an Omega caller and real process registration/introduction. Exercise
+  executable and scoped-path restrictions independently and together, optional
+  secret narrowing, rejection of secret-only/unrestricted groups and forged
+  launch facts, competing first registrations, confirmed death and stale process
+  incarnations. Timeout must not create another first participant. This does not
+  require generic endpoint discovery, launch-time exclusion, a new launch-realm
+  identity lever or transparent parent-provider routing; those are not ratified
+  by this outcome. Existing transport tests do not close registration acceptance.
 
 Done means the normal service path uses shared-memory data plus notifications,
 not only a standalone lab. Pin focused host/race controls and real guest evidence
