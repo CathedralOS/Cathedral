@@ -15,6 +15,17 @@ pub struct Control {
     late: u8,
 }
 impl Control {
+    /// Fault fixture: abandon only the established control transport. The child
+    /// task and its separately granted service connections remain owned and live.
+    #[cfg(feature = "control-failure-probe")]
+    pub fn cut_ready(&mut self) -> bool {
+        if matches!(self.link, Link::Shared(_)) {
+            self.link = Link::Failed;
+            true
+        } else {
+            false
+        }
+    }
     pub fn open(pair: Pair, shared: bool) -> Self {
         let link = if shared {
             match time::after(300) {

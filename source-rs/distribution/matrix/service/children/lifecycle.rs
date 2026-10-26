@@ -248,6 +248,8 @@ impl Children {
                 self.stop(target, server, world, parent)?;
                 return server.reply(&request, &wire::encode([0; 8]));
             }
+            #[cfg(feature = "trace-storage")]
+            time::storage_sample("matrix-close-unavailable", &[target as u64]);
             return server.reply(&request, &wire::encode(wire::error(abi::BUSY)));
         }
         self.pending[target] = Some((request, time::after(100)?, Purpose::Close));

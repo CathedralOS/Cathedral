@@ -355,3 +355,12 @@ objects in the initial account. Peer endpoint pairs move during construction so
 this test does not accidentally exhaust the independent endpoint-handle limit.
 The copied-channel quota probe retains only a wait right per extra notification;
 releasing it last returns that object's charge.
+
+[Owner failure isolation](connection/owner_failure/owner_failure.rs) keeps a shared
+service client alive across copied closure, malformed/unsupported shared setup,
+expiry after an accepted writer grant, established closure and pending replies.
+Paused owner reads force both copied/shared reply publication to discover closure.
+Replacement rejects an old reply, a refused endpoint move retains sender custody,
+deadline-only waits work after retirement, and bad caller interests still fail.
+Every scenario checks exact logical, physical and notification refunds. The old
+unselected owner-control cases still require errors to propagate.

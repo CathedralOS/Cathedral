@@ -6,6 +6,9 @@ use cathedral_user_runtime::{
     server::{Event, Server},
 };
 pub(crate) fn run(mode: u64, env: Environment) -> u64 {
+    if mode == 103 {
+        return super::owner_failure::worker(env);
+    }
     if mode == 102 {
         return super::opening::worker_fault(env);
     }

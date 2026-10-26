@@ -7,6 +7,7 @@ impl Server {
         // Never attribute the old shared peer's frames to a replacement owner.
         self.reset_shared(0);
         self.control = pair;
+        self.control_live = true;
     }
     pub fn open() -> Result<Self, Error> {
         Self::open_clients(1)
@@ -40,6 +41,8 @@ impl Server {
         }
         Ok(Self {
             control: (Handle::bootstrap(0)?, Handle::bootstrap(1)?),
+            control_live: true,
+            control_isolated: false,
             links,
             clients: [None; MAX_CLIENTS],
             count,

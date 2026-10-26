@@ -258,6 +258,75 @@ default/hidden cursor evidence remains valid for its scope, not the full asset A
 
 ## Current implementation evidence
 
+Implementation update 2026-10-25: **owner-control failure is isolated from live matrix services**, over `ee673f8a`.
+
+Stock and independent Split explicitly select `Server::isolate_control_failures`.
+The runtime's named `server/control.rs` owns local control retirement: rejected or
+expired setup, closed peers and failed plain replies release that connection and
+remove its wait interests. Independent admitted clients, upstream waits and already
+accepted work continue. A closed owner link is neither task death nor permission
+to close a child. Actual owner task death still tears down the kernel-owned subtree.
+No kernel, quota, timeout or public wire-protocol change.
+
+The opt-in requires a clock grant. Unselected services retain their old error
+policy, including clockless copied-control reception. Deadline-only waits work
+when the retired owner was the final interest. Invalid caller-owned interests and
+oversized replies still report errors. Typed replies retain their existing custody
+rules; a failed unexposed endpoint move remains the sender's. An explicit control
+replacement starts a new incarnation, and abandoned plain replies cannot reach it.
+`control_connected` means locally admitted and not retired, including setup; it is
+not a shared-readiness or process-liveness test.
+
+The guest proof starts at
+`distribution/lab/channels/connection/owner_failure/owner_failure.rs`. It checks
+nine failure paths with an independent shared client: copied closure, unsupported
+pipeline setup, malformed first/second grants, expiry after an accepted writer,
+established shared closure, a retained request across closure/replacement, and
+shared/copied reply publication detecting failure while owner reads are paused.
+It also checks source endpoint custody, stale replies, deadline-only waits,
+invalid caller interests and exact logical/physical/notification refunds.
+
+Ordinary desktop tests use a disposable `control-failure-probe` stock build to cut
+the first launched app's established control only. Production F5 does not enable
+it. `python tools/boot-harness-rs/control_failure_test.py --mode split` or
+`--mode matrix` proves descendant editing and durable saves after the cut, and
+refusal of an owner close whose loss state is unknown. Split additionally closes
+itself through its independent interaction connection. The new trace
+`matrix-close-unavailable` identifies the live-child/failed-link refusal before a
+LOSS can be sent.
+
+Verification:
+
+- Split fault mode passes fresh and cold (`desktop/20261026T005526899510Z`):
+  owner close refuses, Notes edits and saves after the cut, and Split's own
+  clean close collects the subtree through its independent connection.
+- Nested stock fault mode passes fresh and cold
+  (`desktop/20261026T005603344150Z`): its user matrix and Notes/Colors stay
+  usable, saved text reopens, and input still works after the outer owner
+  refuses an uncertain close.
+- Normal untraced F5 passes three Notes, protected close, slot reuse, Colors
+  and exact cold restoration (`desktop/20261026T005635380963Z`); its independent
+  host oracle verifies 1,621 records.
+- Four recursive stock desktops pass protected close, repeated subtree
+  reclamation, persistence and cold reopen (`desktop/20261026T005838134723Z`).
+- Full IPC passes all nine owner-failure scenarios plus the existing default
+  control-error, capacity, attachment, notification, admission and subtree
+  reclamation controls. Exact budget refunds pass at every scenario boundary.
+- ARM64 portability passes; it does not run the stock desktop fault workflow.
+  Host tests, userspace/UEFI checks, all-feature stock/Split Clippy, source layout,
+  format, changed-document local links and whitespace checks pass.
+- Logs: `build/omega-component/owner-isolation-*.log`. Early fault-harness runs
+  were corrected to consume the setup writer ACK, target app slot one (slot zero
+  is chrome), and observe immediate failed-control close refusal separately from
+  a completed LOSS refusal. These were test assumptions, not added OS allowances.
+
+**Next:** migrate ordinary boot desktop control and provider supervision from
+copied packets, preserving startup/recovery and actual child-outcome handling.
+Start at `distribution/desktop/session/admission/admission.rs`, `root.rs`,
+`session/persistence/provider.rs` and `desktop/main.rs::call`. Explicitly positional
+fixtures remain copied. This receiver fix does not claim complete shared service
+migration or a latency improvement. No owner decision is blocking this slice.
+
 Implementation update 2026-10-25: **stock brokered lifecycle/control uses shared IPC**, over `a0adfa79`.
 
 The [stock control entrance](source-rs/distribution/matrix/service/children/control/control.rs)
@@ -350,7 +419,7 @@ Verification:
 
 
 
-**Next, first:** isolate inbound owner-control failure in multi-client matrix
+**Previous next (resolved by the update above):** isolate inbound owner-control failure in multi-client matrix
 receivers. The outgoing stock controller does not infer death or replay on
 expiry, and leaf OwnerControl preserves independent input after failure. However,
 stock/Split use the generic Server, whose owner-control read/setup/reply failure

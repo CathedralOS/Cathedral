@@ -59,6 +59,7 @@ pub fn run(environment: Environment) -> Result<(), Error> {
     let world = unsafe { &mut *world_address };
     let mut server = Server::open_clients_from(if storage_root { 2 } else { 0 }, STREAMS - 1)?;
     server.enable_memory();
+    server.isolate_control_failures();
     static mut CONTROL: cathedral_user_runtime::server::SharedSlot =
         cathedral_user_runtime::server::SharedSlot::empty();
     let control = &raw mut CONTROL;
@@ -210,7 +211,11 @@ pub fn run(environment: Environment) -> Result<(), Error> {
             extra[count] = Interest::Ipc(receive);
             count += 1;
             deadline = Some(deadline.map_or(until, |d| {
-                if cathedral_user_runtime::time::reached(d, until) { until } else { d }
+                if cathedral_user_runtime::time::reached(d, until) {
+                    until
+                } else {
+                    d
+                }
             }));
         }
         #[cfg(any(feature = "recovery-delay", feature = "launch-delay"))]

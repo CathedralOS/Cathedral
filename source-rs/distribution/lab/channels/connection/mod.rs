@@ -8,6 +8,7 @@ mod multiplex;
 mod notification_faults;
 mod notification_grants;
 mod opening;
+mod owner_failure;
 mod pipeline;
 mod replacement;
 mod worker;

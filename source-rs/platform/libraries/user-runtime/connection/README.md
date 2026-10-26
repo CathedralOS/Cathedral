@@ -375,6 +375,27 @@ Control closure disables that receiver without treating the app as dead. The
 opening guest exercises pending/double-reply rejection and an independent wake
 after the owner closes its connection or sends an invalid setup grant.
 
+Multi-client receivers can explicitly select
+[`Server::isolate_control_failures`](../server/control.rs). Stock and Split select
+it: malformed/expired setup, closure and failed plain replies retire only the
+owner connection. Independent clients and caller-owned waits remain usable. This
+requires a clock grant; unselected, clockless control-only consumers retain their
+existing error policy. `control_connected` reports locally admitted, not yet
+retired control, including setup in progress; it is not proof of readiness or
+process liveness. Explicit `set_control` admits a replacement, and old plain
+replies cannot reach its incarnation. Typed replies keep their existing custody
+rules; a failed endpoint move still belongs to the sender. Already accepted work
+is not rolled back because its reply recipient disappeared. Actual owner death
+still invokes kernel subtree teardown.
+
+The [owner-failure guest](../../../../distribution/lab/channels/connection/owner_failure/owner_failure.rs)
+keeps an independent shared client exchanging messages through setup, expiry,
+closure and pending-reply failures, then checks replacement, deadline-only waits,
+invalid caller interests and exact refunds. The ordinary desktop fault test is
+`python tools/boot-harness-rs/control_failure_test.py --mode split` (or `matrix`).
+It cuts a launched app's control transport while retaining its task and services;
+descendants must still edit/save, and an uncertain owner close must be refused.
+
 Stock shared lifecycle/control needs seventeen writers and roughly 62 notification
 rights at full occupancy. Metadata ceilings now allow 24 private objects and 64
 notification rights; every object still consumes its independently funded pages

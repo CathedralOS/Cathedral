@@ -44,19 +44,30 @@ impl Children {
         let mut handles = [None; CHILDREN * 2];
         let mut deadline: Option<u64> = None;
         for slot in 0..CHILDREN {
-            let Some(child) = &self.slots[slot] else { continue };
+            let Some(child) = &self.slots[slot] else {
+                continue;
+            };
             let pending = self.pending[slot].as_ref();
-            let paused = pending.is_some_and(|(_, _, purpose)|
-                decisions::wait(matches!(purpose, Purpose::Close), teardown_busy));
-            let (interests, opening) = child.control.wait(!paused && self.retiring[slot].is_none() && (pending.is_some() || child.control.has_late()));
+            let paused = pending.is_some_and(|(_, _, purpose)| {
+                decisions::wait(matches!(purpose, Purpose::Close), teardown_busy)
+            });
+            let (interests, opening) = child.control.wait(
+                !paused
+                    && self.retiring[slot].is_none()
+                    && (pending.is_some() || child.control.has_late()),
+            );
             handles[slot * 2..slot * 2 + 2].copy_from_slice(&interests);
             let answer = pending.filter(|_| !paused).map(|(_, until, _)| {
-                if self.retiring[slot].is_some() { now.wrapping_add(1) } else { *until }
+                if self.retiring[slot].is_some() {
+                    now.wrapping_add(1)
+                } else {
+                    *until
+                }
             });
             for until in opening.into_iter().chain(answer) {
-                deadline = Some(deadline.map_or(until, |d| {
-                    if time::reached(d, until) { until } else { d }
-                }));
+                deadline = Some(
+                    deadline.map_or(until, |d| if time::reached(d, until) { until } else { d }),
+                );
             }
         }
         (handles, deadline)
@@ -85,6 +96,13 @@ impl Children {
     ) -> Result<bool, Error> {
         if let Some(child) = &mut self.slots[slot] {
             child.control.progress();
+            // Only a launched first app, never boot/setup providers or chrome.
+            #[cfg(feature = "control-failure-probe")]
+            if slot == 1 && self.running[slot].is_some() && child.control.cut_ready() {
+                cathedral_user_runtime::write(
+                    b"Cathedral control probe: owner link cut; child retained\n",
+                )?;
+            }
         }
         let Some((request, mut deadline, purpose)) = self.pending[slot] else {
             self.close_paused[slot] = false;

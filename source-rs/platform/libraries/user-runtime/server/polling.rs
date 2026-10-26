@@ -17,6 +17,9 @@ impl Server {
             if (self.paused | self.reply_paused()) & (1 << channel) != 0 {
                 continue;
             }
+            if channel == 0 && !self.control_live {
+                continue;
+            }
             let Some(pair) = (if channel == 0 {
                 Some(self.control)
             } else {
@@ -33,8 +36,8 @@ impl Server {
                     Ok(None) => continue,
                     Err(error) => {
                         if channel == 0 {
-                            self.reset_shared(0);
-                            return Err(error);
+                            self.control_failed(error)?;
+                            continue;
                         }
                         self.disconnect(channel - 1);
                         return Ok(self.take_disconnection());
@@ -76,7 +79,7 @@ impl Server {
                     self.disconnect(channel - 1);
                     return Ok(self.take_disconnection());
                 }
-                Err(error) => return Err(error),
+                Err(error) => self.control_failed(error)?,
             }
         }
         Ok(None)
@@ -96,7 +99,7 @@ impl Server {
         let mut handles = [Interest::Ipc(self.control.0); abi::MAX_WAIT_HANDLES];
         let mut channels = [0; abi::MAX_WAIT_HANDLES];
         let mut count = 0;
-        if self.paused & 1 == 0 {
+        if self.control_live && self.paused & 1 == 0 {
             count = 1;
         }
         for index in 0..self.count {
@@ -138,7 +141,9 @@ impl Server {
                 until = retry;
             }
         }
-        if count + extra.len() == 0 {
+        // A retired owner may leave only a maintenance deadline. The kernel
+        // supports this empty wait; do not retain a closed handle to fill it.
+        if count + extra.len() == 0 && self.control_live {
             return Err(Error(abi::INVALID_ARGUMENT as i64));
         }
         match event::wait(&handles[..count + extra.len()], until) {

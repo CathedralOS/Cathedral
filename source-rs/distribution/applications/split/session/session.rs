@@ -21,6 +21,7 @@ pub fn run(mut services: Services) -> Result<(), Error> {
     let interaction = services.interaction(1, 1)?;
     let storage = services.storage(1, 1)?;
     let mut server = Server::open_clients(8)?;
+    server.isolate_control_failures();
     server.enable_memory();
     static mut CONTROL: cathedral_user_runtime::server::SharedSlot =
         cathedral_user_runtime::server::SharedSlot::empty();

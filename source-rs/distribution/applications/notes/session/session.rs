@@ -343,22 +343,17 @@ pub fn run(style: u64, mut services: Services) {
             continue;
         }
         #[cfg(feature = "control-delay-probe")]
-        if control_probe.progress(&mut control, connections.wake) { continue; }
+        if control_probe.progress(&mut control, connections.wake) {
+            continue;
+        }
         match control.next(connections.wake.interest(), Some(time::after(100).unwrap())) {
             Ok(Some((bytes, len))) => {
                 if wire::decode(&bytes[..len]).is_some_and(|words| words[0] == wire::LOSS) {
-                    let reply = wire::encode([
-                        0,
-                        u64::from(draft != confirmed),
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                        0,
-                    ]);
+                    let reply = wire::encode([0, u64::from(draft != confirmed), 0, 0, 0, 0, 0, 0]);
                     #[cfg(feature = "control-delay-probe")]
-                    if control_probe.hold(reply) { continue; }
+                    if control_probe.hold(reply) {
+                        continue;
+                    }
                     let _ = control.reply(&reply);
                 } else {
                     report(&mut control, &notes, &draft, draft != confirmed, error);

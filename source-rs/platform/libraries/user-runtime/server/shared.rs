@@ -107,8 +107,7 @@ impl Server {
     }
     fn retire_shared(&mut self, channel: usize) -> Result<(), Error> {
         if channel == 0 {
-            self.reset_shared(0);
-            Err(Error(abi::PEER_CLOSED as i64))
+            self.control_failed(Error(abi::PEER_CLOSED as i64))
         } else {
             self.disconnect(channel - 1);
             Ok(())

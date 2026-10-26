@@ -652,11 +652,16 @@ creation, quota accounting, endpoint moves and the parent/worker QEMU proof:
 ```powershell
 python tools/boot-harness-rs/run.py --ipc-test --timeout 90
 python tools/boot-harness-rs/control_lifecycle_test.py
+python tools/boot-harness-rs/control_failure_test.py --mode split
+python tools/boot-harness-rs/control_failure_test.py --mode matrix
 ```
 
 The lifecycle check boots the ordinary desktop with a delayed Notes loss reply.
 It verifies continued input, rejection of a stale clean answer after editing,
 saving and final close, plus the separate UI presenter's shared owner control.
+The failure checks cut an established owner-control connection to Split or a
+nested desktop. Their descendants must keep editing and saving; an uncertain
+owner close is refused. Both exercise cold reopen without enabling the fault in F5.
 
 
 `send_with` checks all inputs and reserves recipient capacity before moving one

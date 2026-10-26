@@ -1,6 +1,7 @@
 // Fair, bounded service control and explicitly admitted client connections.
 // Client identity comes from the installed connection, never from message contents.
 // owner.rs retains one lifecycle request for apps with no service-client slots.
+// control.rs optionally retires owner transport without ending independent work.
 use crate::{Error, abi, ipc::Handle, link::Link};
 #[derive(Clone, Copy)]
 pub struct Request {
@@ -21,6 +22,8 @@ pub enum Event {
 const MAX_CLIENTS: usize = 31;
 pub struct Server {
     control: (Handle, Handle),
+    control_live: bool,
+    control_isolated: bool,
     links: [Option<Link>; MAX_CLIENTS],
     clients: [Option<(Handle, Handle)>; MAX_CLIENTS],
     count: usize,
@@ -33,6 +36,9 @@ pub struct Server {
 }
 impl Server {
     fn control_only(&self) -> bool {
+        if self.control_isolated || !self.control_live {
+            return false;
+        }
         if self.shared.iter().any(|s| s.is_some()) || self.reply_paused() != 0 {
             return false;
         }
@@ -131,6 +137,12 @@ impl Server {
         }
     }
     pub fn reply(&mut self, request: &Request, bytes: &[u8]) -> Result<(), Error> {
+        if request.control && self.control_isolated && bytes.len() > 64 {
+            return Err(Error(abi::INVALID_ARGUMENT as i64));
+        }
+        if self.abandoned_control(request) {
+            return Ok(());
+        }
         if request.shared_id != 0 {
             return self.shared_reply(request, bytes, None);
         }
@@ -138,6 +150,7 @@ impl Server {
             return self.retained_reply(request, bytes);
         }
         match request.reply.send(bytes) {
+            Err(error) if request.control && self.control_isolated => self.control_failed(error),
             // A full client response queue loses only that reply. The service and other
             // client stay live; synchronous clients reconcile ambiguous commits.
             Err(Error(code)) if !request.control && code == abi::WOULD_BLOCK as i64 => Ok(()),
