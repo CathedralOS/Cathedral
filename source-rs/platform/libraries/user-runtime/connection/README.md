@@ -359,7 +359,9 @@ control and boot root supervision now use shared streams. The desktop's
 from bootstrap into the Session, then lends one retained client to shell and
 recovery calls. Its idle wait watches the lifetime endpoint with no outstanding
 request, not notification hints as unsolicited replies. Explicitly copied
-fixtures and the remaining input bootstrap exchanges are separate consumers.
+fixtures remain separate consumers. Input source validation and bootstrap HEALTH
+now use shared connections: the driver validates its own source and retires the
+independent startup server after the boot owner closes it.
 Display configuration now uses a separate short-lived shared bootstrap port;
 the root's presentation endpoint is not upgraded by an earlier owner and handed
 off without its transport state. The boot port permits INFO/background/cursor-enable/

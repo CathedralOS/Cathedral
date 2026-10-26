@@ -4,9 +4,7 @@ use cathedral_input_service::decoder::{Decoder, mouse::Mouse};
 use cathedral_kernel_contracts::user as abi;
 use cathedral_platform_contracts::input;
 use cathedral_platform_contracts::matrix as wire;
-use cathedral_user_runtime::{
-    Error, connection::Client, ipc::Handle, keyboard, task::Environment, time,
-};
+use cathedral_user_runtime::{Error, connection::Client, keyboard, task::Environment, time};
 pub fn run(extent: u64, environment: Environment) -> u64 {
     serve(extent, environment).unwrap();
     0
@@ -20,6 +18,16 @@ fn serve(extent: u64, environment: Environment) -> Result<(), Error> {
         environment.endpoint(1).unwrap(),
     );
     let mut connection = Client::connect(pair, time::after(300)?)?;
+    // Validate attenuation on the connection the driver actually owns. The boot
+    // owner passes untouched endpoints, never an already-upgraded raw alias.
+    for op in [wire::SPAWN, wire::READ_PIXEL, wire::BIND] {
+        let (bytes, n) =
+            connection.call(&wire::encode([op, 0, 0, 0, 0, 0, 0, 0]), time::after(300)?)?;
+        if wire::decode(&bytes[..n]) != Some(wire::error(abi::DENIED)) {
+            return Err(Error(abi::IO_ERROR as i64));
+        }
+    }
+    cathedral_user_runtime::write(b"Cathedral input: shared source authority checked\n")?;
     super::controller::initialize_mouse()?;
     #[cfg(feature = "absolute-pointer")]
     let mut absolute = super::absolute::Pointer::open();
@@ -28,7 +36,7 @@ fn serve(extent: u64, environment: Environment) -> Result<(), Error> {
     let (mut x, mut y) = (40, 40);
     publish(&mut connection, [wire::POINTER_SOURCE, x, y, 0, 0, 0, 0, 0])?;
     cathedral_user_runtime::write(b"Cathedral input: shared source connection ready\n")?;
-    Handle::bootstrap(1)?.send(b"ready")?;
+    super::readiness::serve()?;
     loop {
         #[cfg(feature = "absolute-pointer")]
         for _ in 0..64 {

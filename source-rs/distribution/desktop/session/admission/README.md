@@ -23,8 +23,16 @@ park here because the boot owner serves nothing the root needs; the root's displ
 peer runs independently. Setup and first HEALTH share the original 300-tick bound.
 Later shell/persistence requests borrow that retained client. Its failures retire
 the stream without replaying mutations; positional labs keep a copied adapter.
-[input.rs](input.rs) checks source attenuation, transfers the source endpoints,
-and waits for exactly `ready`. All readiness/request waits here are bounded by
+[input.rs](input.rs) transfers untouched source endpoints, opens an independent
+shared readiness connection and checks an exact input HEALTH reply. The
+[driver](../../../../platform/services/input/matrix.rs) checks denied SPAWN,
+READ_PIXEL and BIND on its own shared source connection, initializes hardware and
+publishes the initial pointer before serving HEALTH. Its
+[startup control](../../../../platform/services/input/readiness.rs) flushes replies
+until owner closure (bounded to 300 ticks), releases custody, then leaves physical
+delivery on the independent source stream. No startup polling enters the input loop.
+Both F5 and positional matrix labs use this readiness protocol.
+All readiness/request waits here are bounded by
 300 guest ticks. Stored program lookup and volume recovery have their own longer
 deadlines in the shell and persistence subsystems.
 
@@ -50,7 +58,7 @@ is a different recovery operation; this path never destroys a live session.
 
 The `bootstrap-*` features and service `startup_probe.rs` files are fault fixtures
 only. `bootstrap_test.py` drives pre-initialization exits, stalls, malformed
-replies and a refusal after staging but before a successful endpoint move. Display/root fixtures distinguish malformed setup from bad INFO/HEALTH after
+replies and a refusal after staging but before a successful endpoint move. Display/root/input fixtures distinguish malformed setup from bad INFO/HEALTH after
 valid shared setup; successful probe boots also check refused scene publication
 and input injection on bootstrap display control. None
 is part of the ordinary distribution profile. Hardware initialization itself is

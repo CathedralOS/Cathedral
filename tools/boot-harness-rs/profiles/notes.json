@@ -11,7 +11,10 @@
       "argument": 0,
       "features": [
         "notes"
-      ]
+      ],
+      "private_pages": 1,
+      "shared_pages": 1,
+      "ipc_channels": 5
     },
     "launches": [
       {
@@ -32,9 +35,9 @@
         "clock": true,
         "argument": 1296127058,
         "keyboard": true,
-        "private_pages": 1,
-        "shared_pages": 1,
-        "ipc_channels": 1
+        "private_pages": 2,
+        "shared_pages": 2,
+        "ipc_channels": 2
       },
       {
         "package": "cathedral-stock-matrix",

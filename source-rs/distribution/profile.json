@@ -69,9 +69,9 @@
       "features": [
         "shell"
       ],
-      "private_pages": 3,
+      "private_pages": 4,
       "shared_pages": 2,
-      "ipc_channels": 7
+      "ipc_channels": 8
     },
     "executables": [
       {
@@ -102,9 +102,9 @@
         "features": [
           "absolute-pointer"
         ],
-        "ipc_channels": 1,
-        "private_pages": 1,
-        "shared_pages": 1
+        "ipc_channels": 2,
+        "private_pages": 2,
+        "shared_pages": 2
       },
       {
         "package": "cathedral-stock-matrix",

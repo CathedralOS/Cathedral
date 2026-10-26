@@ -23,7 +23,8 @@ parent-storage and pipelined interaction streams between stock matrices, Omega a
 broker/interaction/storage, independent Split interaction/storage forwarding,
 Background, the separate Omega UI presenter, Split's input producer and masked
 capture viewer, brokered stock/Split lifecycle controls, and boot root/storage
-provider supervision. Boot display configuration uses a separate shared stream.
+provider supervision. Boot display configuration and input readiness use separate shared streams;
+source-attenuation checks run on the driver-owned shared connection.
 Brokered child input hints now use separate wait-only notifications.
 The scoped storage fixture also
 exercises both private-root provider connections. See the evidence below. Remaining acceptance:
@@ -301,6 +302,63 @@ default/hidden cursor evidence remains valid for its scope, not the full asset A
 
 ## Current implementation evidence
 
+Implementation update 2026-10-25: **input readiness and source validation use shared IPC**, over `41967919`.
+
+`desktop/session/admission/input.rs` passes untouched source endpoints to the
+driver and requests input HEALTH on an independent shared bootstrap connection.
+Setup and the exact idle reply share the original 300-tick readiness deadline.
+The driver checks denied SPAWN, READ_PIXEL and BIND on its own shared source,
+initializes hardware and publishes its initial pointer before serving HEALTH.
+No upgraded connection is handed off as bare endpoints.
+
+`platform/services/input/readiness.rs` owns the short-lived startup server. It
+flushes replies until owner closure, bounded to 300 ticks, then releases its
+shared custody before physical delivery resumes on the independent source.
+The steady input loop has no added readiness polling. Server Drop already owns
+shared endpoint cleanup; the initial F5 run caught a duplicate-close error that
+terminated the driver after HEALTH. Cleanup now tolerates endpoints already
+retired by that owner, and closes only any leftover raw startup handles without
+intervening allocations.
+
+The input grant funds two writer pages, two reader pages and two notifications.
+F5's owner funds four writers, two readers and eight channel/notification
+allowances: four transferred channels, root/storage, and bounded outstanding
+remote custody from display and input startup. No kernel ceiling changed.
+All four positional matrix-input profiles use the same readiness protocol and
+explicitly fund their owner and driver's startup stream. Keyboard-only and
+direct compositor-input labs retain their existing interfaces.
+
+The bootstrap suite now distinguishes malformed input setup from bad HEALTH
+after successful setup, bringing it to 30 cases. Ordinary desktop assertions
+require source authority validation, shared readiness and startup retirement.
+
+Verification:
+
+- Normal F5 and cold persistence pass in `desktop/20261026T024007080593Z`,
+  including physical input and the exact 1,621-record host oracle.
+- All 30 bootstrap cases pass in `bootstrap/20261026T024103314716Z`: malformed
+  setup versus bad HEALTH after setup, bounded retry, terminal restart screens,
+  unchanged failed-boot storage and complete resource reclamation. The final
+  source/readiness/retirement marker assertions also pass across all 30 logs.
+- Four recursive desktops pass physical input, protected close, repeated subtree
+  reclamation, confined Notes/Colors persistence and cold reopen in
+  `desktop/20261026T024705062741Z`.
+- The positional Notes recovery lab passes physical input, draft preservation,
+  persistence and both exact 20-record host checks in
+  `matrix-database/20261026T024844399136Z`.
+- Provider bad-setup and bad-HEALTH recovery pass in
+  `provider-startup/20261026T024923346492Z`, preserving the retained-root charge
+  baseline after display and input startup custody has retired.
+- Host tests, input/desktop all-feature Clippy, positional desktop Clippy and
+  format/layout checks pass. Kernel and runtime implementations are unchanged;
+  ARM64 was not rerun. Logs: `build/omega-component/bootstrap-input-*.log`.
+
+**Next:** inventory explicitly copied lab/service adapters and migrate their
+application payloads before retiring copied-payload syscall consumers. The
+ordinary desktop's bootstrap is now shared, but that is not proof that all
+fixture consumers have migrated. The on-demand authorized-broker lookup outcome
+remains separate accepted work. No latency improvement is claimed.
+
 Implementation update 2026-10-25: **bootstrap display configuration uses an independent shared stream**, over `dcbf3f11`.
 
 Ordinary display INFO, background, cursor enable and terminal restart text now use
@@ -361,7 +419,7 @@ Verification:
   checks pass. Kernel and runtime implementations are unchanged; ARM64 was not
   rerun here. Logs: `build/omega-component/bootstrap-display-*.log`.
 
-**Next:** migrate input-driver readiness and the source-attenuation checks in
+**Previous next (completed above):** migrate input-driver readiness and the source-attenuation checks in
 `desktop/session/admission/input.rs` and `platform/services/input/matrix.rs`.
 The source pair currently receives copied denial probes before being moved to the
 driver, which opens shared transport. Keep one real transport owner per lifetime;

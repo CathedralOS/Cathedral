@@ -7,6 +7,7 @@ mod controller;
 mod keyboard;
 mod matrix;
 mod pointer;
+mod readiness;
 #[cfg(feature = "bootstrap-probes")]
 mod startup_probe;
 cathedral_user_runtime::entry_with_environment!(main);

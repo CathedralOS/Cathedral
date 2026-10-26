@@ -10,10 +10,13 @@ shell commands and storage regrant. Session helpers borrow it; they never rebuil
 a client over copied raw handles. [Display admission](session/admission/display.rs)
 uses a separate, temporary shared configuration port, leaving presentation endpoints
 untouched for the root's own stream. It drops configuration after root readiness.
-The owner funds three writer pages, two reader pages and seven channel/notification
+Input startup uses its own shared
+HEALTH connection, dropped after acceptance; the driver retains only its source
+connection for ordinary delivery.
+The owner funds four writer pages, two reader pages and eight channel/notification
 allowances: four transferred display/source channels, root/storage control and
-bounded overlap with the retiring display connection. Remote readers and signal
-rights can keep its backing charged after local drop. Kernel ceilings are unchanged.
+bounded overlap with retiring display and input-startup connections. Remote
+readers and signal rights can keep their backing charged after local drop. Kernel ceilings are unchanged.
 [Colors](../applications/colors/main.rs) is a separate installed program. See the
 [distribution map](../README.md) for F5, controls, composition and the
 same-image interactive test.

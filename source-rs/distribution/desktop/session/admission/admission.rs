@@ -113,11 +113,13 @@ pub(crate) fn start() -> Session {
     session
 }
 
+#[cfg(not(feature = "shell"))]
 fn receive(pair: Pair, deadline: u64) -> Result<([u8; 64], usize), Error> {
     let mut bytes = [0; 64];
     let n = pair.1.receive_until(&mut bytes, deadline)?;
     Ok((bytes, n))
 }
+#[cfg(not(feature = "shell"))]
 fn matrix_request(pair: Pair, words: wire::Packet) -> Result<wire::Packet, Error> {
     let deadline = time::after(READY_TICKS)?;
     pair.0.send(&wire::encode(words))?;

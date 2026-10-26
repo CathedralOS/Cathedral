@@ -69,6 +69,10 @@ def exercise(stream, folder, stage, mode, repeat, dynamic_tasks):
         assert text.count('bootstrap accepted') == 1 and text.count('storage startup attempt') == 1
         assert text.count('shared root control ready') == (2 if stage == 'input' else 1), text
         colors_test.exercise(stream, folder, text, 1, 1, None)
+    # Retirement is asynchronous; check after actual input delivery on success.
+    text = log()
+    for marker in ('shared input control ready', 'shared source authority checked', 'startup control retired'):
+        assert text.count(marker) == (0 if repeat else 1), (marker, text)
     print(f'PASS: {stage} {mode} {"persistent" if repeat else "transient"}; {folder}', flush=True)
 
 
@@ -79,8 +83,6 @@ def run(source, selected):
     completed = []
     for stage, index in STAGES.items():
         for mode, value in MODES.items():
-            if mode == 'bad-ready' and stage == 'input':
-                continue
             for repeat in (False, True):
                 case = f'{stage}-{mode}-{"repeat" if repeat else "once"}'
                 if selected and case not in selected:
@@ -126,6 +128,6 @@ def run(source, selected):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('image', type=Path, help='one-user fixture; only copies are modified')
-    parser.add_argument('--case', action='append', help='e.g. input-stall-once; default: all 28 cases')
+    parser.add_argument('--case', action='append', help='e.g. input-stall-once; default: all 30 cases')
     args = parser.parse_args()
     run(args.image, args.case)

@@ -9,7 +9,17 @@ transport.
 The matrix-source path uses the [shared connection client](../../libraries/user-runtime/connection/README.md):
 one shared page and notification per direction, initialized from the owner's
 explicit endpoint handoff. Input requests retain their identity through slow replies;
-they do not time out and retry mutations. Nested forwarding is a separate migration.
+they do not time out and retry mutations. Nested forwarding uses independently owned matrix streams.
+
+The source endpoints arrive untouched. The driver verifies that SPAWN, READ_PIXEL
+and BIND are denied over its own shared connection before initializing hardware.
+After its initial pointer is accepted, [readiness.rs](readiness.rs) serves the
+owner's input HEALTH request over a separate shared bootstrap connection. The
+owner closes after validating the idle reply. Readiness flushes until closure,
+with a 300-tick bound, and drops that stream before entering the input loop.
+Source delivery does not depend on retaining this owner connection. The driver
+receives two writer/reader pages and two notification allowances for their overlap.
+Keyboard-only and compositor-source lab modes retain their existing protocols.
 
 The default distribution enables `absolute-pointer`. [absolute.rs](absolute.rs)
 negotiates QEMU's VMMouse protocol, drains bounded packets and maps its 16-bit
