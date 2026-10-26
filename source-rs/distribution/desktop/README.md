@@ -52,7 +52,7 @@ reports that uncertainty, so the chooser cannot silently close it.
 its sibling user matrix is admitted, before loading the user launcher from
 storage. This retires the picker's display, input and storage binding; it does
 not leave an invisible login process behind. The
-[user matrix's configuration loader](../../distribution/matrix/service/children/configuration.rs)
+[user matrix's configuration loader](../../distribution/matrix/service/children/configuration/configuration.rs)
 places the separate launcher and app using its own saved arrangement. The user matrix owns
 the full display, with its launcher at the left and its app in the remaining
 space. The root keeps supervising and forwarding without visible boot chrome.

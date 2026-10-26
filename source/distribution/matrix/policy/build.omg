@@ -8,6 +8,7 @@ machine build(builder: &mut Build) {
     Build::depend_as(builder, "workspace", Source::Path { location: "../workspace" });
     Build::depend_as(builder, "session", Source::Path { location: "../session" });
     Build::depend_as(builder, "requests", Source::Path { location: "../requests" });
+    Build::depend_as(builder, "realm", Source::Path { location: "../realm" });
     Build::select_provider<Policy, PolicyProvider>(builder);
     Build::bind(builder, linux_x86_64::ProgramEntry, policy_entry);
 }

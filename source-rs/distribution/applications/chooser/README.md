@@ -50,7 +50,7 @@ the ordinary control link. The launcher uses its explicitly granted whole user
 realm; Notes and Colors still hold only their own subtrees.
 
 Saving then sends `APPLY_LAYOUT` on the launcher's interaction connection.
-[Stock configuration](../../../distribution/matrix/service/children/configuration.rs)
+[Stock configuration](../../../distribution/matrix/service/children/configuration/configuration.rs)
 grants this operation only to the selected launcher's endpoint incarnation;
 the [world layout policy](../../../platform/libraries/matrix/world/layout.rs)
 checks current epoch, authority and complete geometry before moving either view.

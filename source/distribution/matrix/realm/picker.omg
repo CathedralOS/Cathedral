@@ -1,0 +1,14 @@
+// Picker admission errors propagate to its enclosing matrix; budget arming precedes the read.
+use operations;
+public machine picker_next(p: &mut [u64; 128]) -> u64 {
+    transition p[3] == 0u64 { true -> success(p) _ -> failed(p) }
+    state failed(p: &mut [u64; 128]) -> u64 { p[18] = p[3]; FINISH }
+    state success(p: &mut [u64; 128]) -> u64 {
+        transition p[2] {
+            PREPARE_PICKER -> (READ_PICKER) READ_PICKER -> (VALIDATE_PICKER)
+            VALIDATE_PICKER -> (ADMIT_PICKER) ADMIT_PICKER -> (BIND_PICKER)
+            BIND_PICKER -> (PLACE_PICKER) PLACE_PICKER -> (INSTALL_PICKER)
+            INSTALL_PICKER -> (NOTIFY) NOTIFY -> (RECORD_PICKER) _ -> (FINISH)
+        }
+    }
+}

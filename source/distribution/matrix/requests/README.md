@@ -58,5 +58,6 @@ scope are recorded in `TASKS_RUST.md`.
 compiled coverage for canonical control shapes, shared-opcode precedence,
 forwarded hop/deadline/pending rules and boundary limits. Launch target and role
 choices continue into [Omega launch admission](../launch/README.md).
-Realm startup, applying saved configuration, and local world/resource mutations
-still contain Rust behavior; this migration does not claim a fully Omega matrix.
+[Realm discovery and configuration setup](../realm/README.md) also execute Omega
+sequences. Resource recipes and local world/resource mutations still contain Rust
+behavior; this migration does not claim a fully Omega matrix.

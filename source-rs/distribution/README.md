@@ -117,7 +117,7 @@ shown only the folder of users, and opens the second slot with a standing
 launch policy: whatever the chooser launches lands there with that budget and
 placement. It resolves `Login` and `Users` by path. When a user matrix appears,
 the desktop retires the picker and requests `CONFIGURE`. The
-[user matrix](../distribution/matrix/service/children/configuration.rs)
+[user matrix](../distribution/matrix/service/children/configuration/configuration.rs)
 loads its own `Matrix` object and resolves the saved launcher path, then sets
 its child budgets and placement. The outer owner supervises storage and restores
 the user's binding after provider replacement; that matrix restores its own

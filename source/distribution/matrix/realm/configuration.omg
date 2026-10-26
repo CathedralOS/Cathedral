@@ -1,0 +1,32 @@
+// Applying saved configuration: explicit rollback, optional background, then publish chrome authority.
+use operations;
+public machine configuration_start(p: &mut [u64; 128]) -> u64 {
+    transition p[3] != 0u64 { true -> (FINISH) _ -> available(p) }
+    state available(p: &mut [u64; 128]) -> u64 { transition p[4] != 0u64 { true -> busy(p) _ -> (REFRESH) } }
+    state busy(p: &mut [u64; 128]) -> u64 { p[18] = BUSY; FINISH }
+}
+public machine configuration_next(p: &mut [u64; 128]) -> u64 {
+    transition p[2] == START_BACKGROUND { true -> background(p) _ -> result(p) }
+    state background(p: &mut [u64; 128]) -> u64 {
+        p[19] = p[3]; transition p[3] == 0u64 { true -> (FLUSH) _ -> (BACKGROUND_FAILED) }
+    }
+    state result(p: &mut [u64; 128]) -> u64 { transition p[3] == 0u64 { true -> success(p) _ -> failed(p) } }
+    state failed(p: &mut [u64; 128]) -> u64 {
+        p[18] = p[3];
+        transition p[2] { ADMIT_LAUNCHER -> (STOP_LAUNCHER) BIND_LAUNCHER -> (STOP_LAUNCHER) PLACE_LAUNCHER -> clear(p) _ -> (FINISH) }
+    }
+    state clear(p: &mut [u64; 128]) -> u64 { p[20] = 1u64; CLEAR_WORKSPACE }
+    state success(p: &mut [u64; 128]) -> u64 {
+        transition p[2] {
+            REFRESH -> (READ_CONFIGURATION) READ_CONFIGURATION -> (VALIDATE_CONFIGURATION)
+            VALIDATE_CONFIGURATION -> (ADMIT_LAUNCHER) ADMIT_LAUNCHER -> (RELEASE_IMAGE)
+            RELEASE_IMAGE -> (BIND_LAUNCHER) BIND_LAUNCHER -> (INSTALL_WORKSPACE)
+            INSTALL_WORKSPACE -> (PLACE_LAUNCHER) PLACE_LAUNCHER -> (START_BACKGROUND)
+            BACKGROUND_FAILED -> (FLUSH) FLUSH -> (NOTIFY) NOTIFY -> (GRANT_CHROME)
+            GRANT_CHROME -> (RECORD_LAUNCHER) RECORD_LAUNCHER -> (FINISH)
+            CLEAR_WORKSPACE -> (STOP_LAUNCHER) STOP_LAUNCHER -> stopped(p) RESET_SURFACES -> (FINISH)
+            _ -> (FINISH)
+        }
+    }
+    state stopped(p: &mut [u64; 128]) -> u64 { transition p[20] != 0u64 { true -> (RESET_SURFACES) _ -> (FINISH) } }
+}

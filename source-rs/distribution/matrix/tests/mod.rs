@@ -5,6 +5,7 @@ mod code;
 mod control;
 mod launch;
 mod lifecycle;
+mod realm;
 mod recovery;
 mod requests;
 mod session;

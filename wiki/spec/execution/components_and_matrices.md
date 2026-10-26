@@ -276,7 +276,7 @@ retain their existing design/specification owners.
   exercise owner ceilings, restricted launches and recursive hosting.
 - The [distribution owner](../../../source-rs/distribution/desktop/session/shell/shell.rs)
   grants the user ceiling and requests startup. The
-  [stock matrix](../../../source-rs/distribution/matrix/service/children/configuration.rs)
+  [stock matrix](../../../source-rs/distribution/matrix/service/children/configuration/configuration.rs)
   reads its own `Matrix` configuration, resolves the launcher path in its realm,
   and installs child budgets and placement within the supplied ceiling. Startup
   requires empty slots. The distribution launcher now has a bounded editor for

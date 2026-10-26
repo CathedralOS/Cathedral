@@ -21,11 +21,16 @@ success consequences now execute in `source/distribution/matrix/requests/`;
 Owner child-control now descends into `requests/control.omg`; launch target/refusal
 and role choices execute in `launch/admission.omg` and `launch/roles.omg`. The host
 under `service/children/control/owner.rs` and `launch/request.rs` retains exact
-capabilities, standing grants and pending replies. Next, move realm startup and
-saved-configuration application into Omega: `service/children/startup/startup.rs`
-and `service/children/configuration.rs` still choose the realm shape and sequence
-launcher/background setup. Preserve their cleanup and existing role semantics;
-do not turn the native bridge into a permanent second distribution API.
+capabilities, standing grants and pending replies. Realm discovery and saved
+configuration/picker/background setup now execute sequences under
+`source/distribution/matrix/realm/`. The host entry points are
+`service/children/startup/startup.rs` and `service/children/configuration/configuration.rs`.
+Next, move the stock resource recipes and profile-based admission choices into
+Omega: `configuration/workspace.rs`, `configuration/background.rs`, `startup/picker.rs`
+and `children/admission.rs` still choose detailed plans/default ceilings. Keep
+actual grants, mappings and resource custody in the host; do not turn the native
+bridge into a permanent second distribution API. Live layout application also
+retains Rust orchestration under `configuration/layout.rs`.
 The independent Omega matrix is a useful precedent, but its synchronous parent
 refresh must not replace the desktop's yielding path.
 
@@ -375,6 +380,45 @@ not perfect timing indistinguishability or mandatory agent badges. Existing
 default/hidden cursor evidence remains valid for its scope, not the full asset API.
 
 ## Current implementation evidence
+
+Implementation update 2026-10-26: **Omega sequences realm discovery and setup**,
+over `dd0b0d2e`.
+
+`realm/main.omg` selects discovery, configuration, picker or background setup.
+The owning sequence decides the next operation and accepts only its outstanding
+completion. Discovery waits for placement, gives Matrix precedence over the
+Login/Users pair, and distinguishes missing realm authority from inspection
+failure. Configuration preserves launcher/storage refusal cleanup, policy clearing
+before placement rollback, image release ordering and nonfatal background retry.
+Picker retry arming precedes the read; background placement failure stops its
+admitted task. Host mechanism errors keep their existing propagation behavior.
+
+The former configuration leaf is now `service/children/configuration/`, with a
+small entrance driving Omega and named resource owners for workspace/background,
+live layout, immutable reads and saved bindings. `startup/startup.rs` similarly
+drives discovery; `startup/picker.rs` executes picker resource operations. Resource
+recipes and profile admission remain Rust policy. This does not make startup
+asynchronous or complete the Omega matrix port.
+
+Eight compiled-Omega tests bring the matrix total to 75: setup order, duplicate
+completion, all realm-entry combinations, unplaced startup, failure propagation,
+rollback and optional background refusal. The full host suite and matrix
+default/all-feature x86-64 Clippy, source layout (79 Omega and 151 Rust package
+edges), formatting and diff checks pass. Guest verification passes:
+
+- Ordinary F5 desktop and cold reboot, with the 1,657-record durable oracle:
+  `build/boot-harness-rs/desktop/20261026T200141117548Z`.
+- Four nested desktops, recursive close/reclamation and cold reopen:
+  `build/boot-harness-rs/desktop/20261026T200241878414Z`.
+- Asynchronous launcher recovery with live sibling input and cold reopen:
+  `build/boot-harness-rs/desktop/20261026T200509958328Z`.
+- Nested picker, selected-user and background startup faults: bounded retries,
+  repeated reclamation and preservation of the outer draft on disposable copies:
+  `build/boot-harness-rs/nested-failures/20261026T200622233417Z`.
+- Configured launcher recovery and startup failure, source fixture unchanged:
+  `build/boot-harness-rs/launcher-recovery/20261026T200723249663Z`.
+
+Logs are `build/omega-component/realm-*.log`. No kernel or stack allowance changed.
 
 Implementation update 2026-10-26: **Omega chooses owner child-control operations
 and launch admission/roles**, over `24ea8113`.
@@ -6105,7 +6149,7 @@ metadata-editing UI yet. Name collisions refuse rather than overwrite.
 [Configuration](source-rs/distribution/matrix/contracts/config.rs) is the stock
 matrix's bounded 104-byte `CTHMAT01` record: launcher path, page/reader budgets,
 margin, launcher width, gap, app surfaces and key mask. The
-[loader](source-rs/distribution/matrix/service/children/configuration.rs)
+[loader](source-rs/distribution/matrix/service/children/configuration/configuration.rs)
 requires empty child slots, checks geometry/key limits and uses ordinary
 admission. Failed startup returns to the picker. No settings editor or live
 apply is implemented. Parent grants remain authoritative; saving policy never
@@ -6296,7 +6340,7 @@ use it. Authority is checked before reporting busy owner operations. The new
 rectangles before changing either, preserves current key masks and allowances,
 and does not revive a revoked sibling view. Controller revocation/death or
 parent-binding replacement clears the grant. Equal geometry is idempotent.
-Start at [configuration.rs](source-rs/distribution/matrix/service/children/configuration.rs)
+Start at [configuration.rs](source-rs/distribution/matrix/service/children/configuration/configuration.rs)
 for the grant and standing-placement update, then
 [layout.rs](source-rs/platform/libraries/matrix/world/layout.rs) for authority and
 geometry. The protocol is owned by platform/contracts/matrix.rs; no kernel
@@ -10070,7 +10114,7 @@ otherwise; the `desktop-host` feature of
 [main.rs](source-rs/distribution/matrix/main.rs) only encodes the funding a
 desktop needs when it is launched into an app slot. An owner's explicit
 CONFIGURE is satisfied by a matrix that already configured itself
-([configuration.rs](source-rs/distribution/matrix/service/children/configuration.rs)),
+([configuration.rs](source-rs/distribution/matrix/service/children/configuration/configuration.rs)),
 so the boot owner's order no longer races the user matrix's own startup. The
 realm selects policy, never authority: every stamp still arrives through the
 storage forwarding chain.
@@ -10322,7 +10366,7 @@ now accepts an expected revision of zero, the current one, and a length of
 zero, the whole object from the offset; [bulk.rs](source-rs/platform/services/storage/bulk.rs)
 takes the length from the head inside the one request and the reply states the
 revision and length it read. The matrix's [program read](source-rs/distribution/matrix/service/parent/storage/pending.rs)
-and its [configuration and launcher reads](source-rs/distribution/matrix/service/children/configuration.rs)
+and its [configuration and launcher reads](source-rs/distribution/matrix/service/children/configuration/configuration.rs)
 issue that single request; the HEAD step is gone. Partial reads and BULK_PIN
 keep their explicit arguments.
 
@@ -10411,7 +10455,7 @@ name and the launcher by the name the configuration record carries, all from
 one listing plus one READ: two requests where a six-tile launcher spent
 fourteen. The matrix's [realm shape](source-rs/distribution/matrix/service/children/startup/startup.rs)
 is one listing instead of three LOOKUPs, and it carries the configuration it
-found into [configure](source-rs/distribution/matrix/service/children/configuration.rs)
+found into [configure](source-rs/distribution/matrix/service/children/configuration/configuration.rs)
 instead of looking it up again.
 
 **A program must fit one object.** The first guest run of the listing panicked

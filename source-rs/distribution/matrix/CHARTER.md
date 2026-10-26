@@ -294,7 +294,7 @@ and nested adapters; distribution supervision interprets it.
 
 ## Desktop roles and instances
 
-[Configuration](service/children/configuration.rs) resolves the chrome from the
+[Configuration](service/children/configuration/configuration.rs) resolves the chrome from the
 saved `Matrix.launcher` path and the background from the realm-local `Background`
 path. Both are installed executables, replaceable independently of the platform.
 The background gets one bottom surface, no keys, storage, channel-creation budget

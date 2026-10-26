@@ -1,0 +1,19 @@
+// One scoped listing: Matrix wins; otherwise Login+Users is a picker; otherwise owner-driven.
+use operations;
+public machine discovery_next(p: &mut [u64; 128]) -> u64 {
+    transition p[2] == INSPECT_REALM { true -> inspected(p) _ -> result(p) }
+    state inspected(p: &mut [u64; 128]) -> u64 {
+        transition p[3] { 0u64 -> shape(p) DENIED -> (MARK_HOSTED) PEER_CLOSED -> (MARK_HOSTED) _ -> failed(p) }
+    }
+    state shape(p: &mut [u64; 128]) -> u64 { transition (p[4] & 1u64) != 0u64 { true -> (CONFIGURE_REALM) _ -> picker(p) } }
+    state picker(p: &mut [u64; 128]) -> u64 { transition (p[4] & 6u64) == 6u64 { true -> (START_PICKER) _ -> (MARK_HOSTED) } }
+    state result(p: &mut [u64; 128]) -> u64 { transition p[3] == 0u64 { true -> success(p) _ -> failed(p) } }
+    state failed(p: &mut [u64; 128]) -> u64 { p[18] = p[3]; FINISH }
+    state success(p: &mut [u64; 128]) -> u64 {
+        transition p[2] {
+            REFRESH -> placed(p) CONFIGURE_REALM -> (MARK_HOSTED) START_PICKER -> (MARK_HOSTED)
+            MARK_HOSTED -> (RECOVER_STARTUP) _ -> (FINISH)
+        }
+    }
+    state placed(p: &mut [u64; 128]) -> u64 { transition p[4] != 0u64 { true -> (INSPECT_REALM) _ -> (FINISH) } }
+}

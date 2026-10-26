@@ -5,6 +5,7 @@ pub mod launch;
 pub mod lifecycle;
 mod native;
 pub mod operation;
+pub mod realm;
 pub mod recovery;
 pub mod requests;
 pub mod session;

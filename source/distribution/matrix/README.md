@@ -5,6 +5,8 @@ including progress, work priority, waiting and event dispatch. The
 [session boundary](session/README.md) leads into its Rust mechanisms.
 [requests/main.omg](requests/main.omg) selects request operations from authenticated
 caller facts; [the request boundary](requests/README.md) explains reply custody.
+[realm/main.omg](realm/main.omg) sequences realm discovery and workspace,
+picker and background setup; [the realm boundary](realm/README.md) leads to host resources.
 [policy/main.omg](policy/main.omg) dispatches the temporary native reference
 bridge to [configuration](configuration/README.md), [lifecycle](lifecycle/README.md),
 [launcher recovery](recovery/README.md), [local startup recovery](startup/README.md)
@@ -30,6 +32,7 @@ Rust still authenticates callers, serializes IPC, retains exact task/endpoint
 identity, drains late replies, progresses asynchronous parent work and reclaims
 tasks/resources. Service-turn orchestration, request-family routing and owner
 success consequences now execute in Omega, as do owner child-control dispatch and
-launch target/role choices. Realm startup, applying saved configuration, local
-world operations and the native host retain Rust behavior. These are bounded migrations
+launch target/role choices. Realm discovery and configuration/picker/background
+setup sequencing also execute in Omega. Stock resource recipes, profile-based
+admission, live layout and local world operations retain Rust behavior. These are bounded migrations
 of distribution behavior, not a new platform API or the completed Omega OS.
