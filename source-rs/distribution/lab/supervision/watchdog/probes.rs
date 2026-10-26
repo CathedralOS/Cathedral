@@ -36,6 +36,45 @@ pub fn clock() {
         Err(Error(abi::BAD_HANDLE as i64))
     );
 }
+
+// Shared transport currently requires a clock for setup/maintenance. Keep
+// absent-clock enforcement in its own initial and supervised process roles,
+// rather than silently granting authority and losing the old negative checks.
+pub fn clockless_owner() -> u64 {
+    clockless_peer();
+    let child = Launch::bootstrap().unwrap().spawn(0).unwrap();
+    assert_eq!(child.wait_until(0), Err(Error(abi::DENIED as i64)));
+    assert_eq!(child.wait().unwrap(), Outcome::Returned(0));
+    crate::gates::post(Handle::bootstrap(0).unwrap());
+    0
+}
+
+pub fn clockless_peer() -> u64 {
+    use cathedral_user_runtime::{
+        event,
+        notification::{Notification, Outcome as Wake},
+    };
+    assert_eq!(time::now(), Err(Error(abi::DENIED as i64)));
+    assert_eq!(time::cpu_us(), Err(Error(abi::DENIED as i64)));
+    assert_eq!(event::wait(&[], 0), Err(Error(abi::DENIED as i64)));
+    let [wait, signal, control] = Notification::create().unwrap();
+    signal.signal(false).unwrap();
+    assert_eq!(wait.wait(Some(0)), Err(Error(abi::DENIED as i64)));
+    assert_eq!(
+        event::wait(&[event::Interest::Notification(wait)], 0),
+        Err(Error(abi::DENIED as i64))
+    );
+    assert_eq!(wait.wait(None).unwrap(), Wake::Signaled);
+    for right in [wait, signal, control] {
+        right.release().unwrap();
+    }
+    assert_eq!(
+        cathedral_user_runtime::notification::budget().unwrap()[1],
+        0
+    );
+    0
+}
+
 pub fn completed() -> u64 {
     clock();
     let launch = Launch::bootstrap().unwrap();

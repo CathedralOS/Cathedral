@@ -43,12 +43,31 @@ are explicitly retired after child collection and before reconnecting. Boot fund
 the exact stream counts and checks all surviving children were cancelled and all
 heap/frame resources reclaimed.
 
+The [watchdog supervisor](watchdog/supervisor.rs) retains a closure request to
+its client while waiting on the hung child. The [client and service](watchdog/watchdog.rs)
+establish shared control, echo the incarnation and prepare; the service then
+consumes a hang request without replying. Four incarnations park and four spin
+without syscalls. An independent observer reports its start and completed progress
+before the supervisor cancels the child. The waiting client must observe terminal
+peer closure, then complete that same owner request. Original 12-tick deadlines,
+cancel idempotence, stale tickets and exact blocked/runnable cancellation counts
+remain checked. Transport maintenance can add aggregate timeouts; each of the
+sixteen expected child-wait timeouts is still explicitly asserted.
+
+Shared runtime setup currently requires clocks. The prior absent-clock checks
+therefore live in separate initial/child [clockless probes](watchdog/probes.rs),
+whose composition grants no clocks. They check clock/CPU reads, timed task waits,
+timer-only and notification readiness waits, and timed notification consumption
+are denied; an untimed wait must still consume the original signal afterward.
+This preserves and expands absence-of-authority coverage without pretending the
+shared runtime already supports clockless connections.
+
 The failed-admission self-loop deliberately tests that proposed endpoint grants
 remain usable after rejection. It still uses raw copied sends/receives for that
-custody probe. Application traffic remains copied in the watchdog recovery
-exchange. That is subsequent migration work; preserve denied-clock roles instead
-of deleting their assertions to accommodate a new transport. Raw stale-name
-send probes in the migrated sibling/graph tests are intentional authority checks.
+custody probe. Raw stale-name send/receive probes in the migrated tests are also
+intentional authority checks. All application traffic in this supervision fixture
+now uses shared connections or payload-free notification gates; typed grant
+installation remains kernel-mediated.
 
 Run both release and development `run.py --smoke` from the repository's
 `tools/boot-harness-rs/` harness. Development runs also exercise larger images and

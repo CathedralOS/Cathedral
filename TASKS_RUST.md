@@ -336,6 +336,41 @@ default/hidden cursor evidence remains valid for its scope, not the full asset A
 
 ## Current implementation evidence
 
+Implementation update 2026-10-26: **watchdog recovery uses shared IPC; clock denial has dedicated process coverage**, over `0022d3a0`.
+
+The watchdog owner, client, observer and eight service incarnations use funded
+shared connections. Each service echoes its round, prepares and consumes a hang
+request without replying. Four then block and four spin without syscalls. The
+owner retains its client's closure request while checking both the past-deadline
+and original 12-tick child wait; it requires independent observer progress before
+cancellation. Only then may terminal service closure complete the retained owner
+request. Stolen/stale authority, duplicate cancellation, eight collected outcomes,
+four blocked/four runnable cancellations, final spin preemption and exact
+heap/frame reclamation remain checked. Guest checks all sixteen task timeouts
+directly; aggregate timeout counts may additionally contain shared maintenance.
+
+Shared runtime setup and maintenance currently require clock access. The old
+clock-denial assertions move to explicit initial and supervised process roles
+with no clock grants, rather than disappearing. Those roles also check CPU reads,
+timed task waits, timer-only/mixed readiness and timed notification waits are
+denied. Denied waits must not consume an already signalled notification: an
+untimed wait still succeeds and releases the charge. Existing keyboard clockless
+coverage remains unchanged. No clockless shared connection support is claimed.
+
+The runner requires shared-watchdog and clockless-probe completion markers.
+Host tests, supervision/smoke Clippy, layout/format checks and release/development
+smoke pass, including 66/99 display admission failure boundaries respectively.
+Logs are `build/omega-component/supervision-watchdog-*.log`.
+See the [supervision proof guide](source-rs/distribution/lab/supervision/README.md).
+The remaining raw sends/receives in this lab are intentional stale-authority and
+failed-admission endpoint-custody probes. No runtime/kernel mechanism or normal
+F5/ARM64 composition changed.
+
+**Next:** migrate positional compositor traffic and audit runtime wake/upstream
+adapters before retiring copied application payload support. Preserve actual
+pressure/backpressure, retained-reader and cancellation checks; the already-shared
+ordinary F5 route does not prove these separate consumers have been migrated.
+
 Implementation update 2026-10-26: **sibling-service and link-graph proofs use shared IPC**, over `2f7e3bec`.
 
 The sibling owner retains independent shared clients, leaves one exact reply
@@ -363,7 +398,7 @@ Logs are in `build/omega-component/supervision-graph-*.log`.
 See the updated [supervision proof guide](source-rs/distribution/lab/supervision/README.md).
 No runtime/kernel mechanism or normal F5/ARM64 composition changed.
 
-**Next:** migrate the watchdog recovery exchange while preserving absent-clock
+**Previous next (watchdog portion completed above):** migrate the watchdog recovery exchange while preserving absent-clock
 authority coverage. Shared `Client`/`Server` currently use clocks for setup and
 maintenance; do not silently add clocks and discard denial checks. Then migrate
 positional compositor traffic and audit runtime wake/upstream adapters. Typed

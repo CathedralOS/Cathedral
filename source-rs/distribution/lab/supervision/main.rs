@@ -50,6 +50,8 @@ fn main(role: u64, argument: u64) -> u64 {
         29 => cpu::idle_refill(),
         30 => timing::periodic(),
         31 => timing::noise(argument),
+        32 => watchdog::probes::clockless_owner(),
+        33 => watchdog::probes::clockless_peer(),
         _ => 254,
     }
 }
