@@ -14,7 +14,7 @@ pub fn wait(interests: &[Interest], deadline: u64) -> Result<usize, Error> {
     }
     // The kernel copies a wait record set within one page. Align the entire
     // maximum-size set so a larger live wait cannot straddle a page boundary.
-    #[repr(align(512))]
+    #[repr(align(1024))]
     struct Records([u64; abi::MAX_WAIT_HANDLES * 2]);
     const _: () = assert!(
         core::mem::size_of::<[u64; abi::MAX_WAIT_HANDLES * 2]>()

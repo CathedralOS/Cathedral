@@ -48,10 +48,10 @@ pub const MAX_READER_PAGES: usize = 4096;
 /// Separate metadata limits: larger page grants must not buy every global slot.
 /// A matrix or the compositor retains one sealed image per surface it shows
 /// and holds its replacement beside it, including images below nested matrices.
-// A matrix keeps two upstream and two mailbox writers per served app. The
-// ordinary desktop needs ten with its chrome and three leaves, plus transient
-// publications. This bounds metadata, not page funding: every writer is charged.
-pub const MAX_PRIVATE_REGIONS: usize = 16;
+// Stock service plus independent owner/child control needs seventeen mailbox
+// writers before transient publications. This bounds metadata, not page funding:
+// every writer and descendant account still consumes explicitly granted pages.
+pub const MAX_PRIVATE_REGIONS: usize = 24;
 pub const MAX_SHARED_REGIONS: usize = 48;
 pub const MAX_MAPPING_SLOTS: usize = MAX_PRIVATE_REGIONS + MAX_SHARED_REGIONS;
 // Every live object has an owner or an accepted reader. This capacity covers

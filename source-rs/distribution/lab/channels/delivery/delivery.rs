@@ -62,9 +62,14 @@ pub(super) fn quota() {
     // The service fixture funds more objects than fit as endpoint pairs. Charge
     // the excess as notifications so this still proves object-quota refusal
     // with endpoint metadata spare, rather than hitting the handle ceiling first.
-    let mut bells = [None; abi::NOTIFY_HANDLES / 3];
+    let mut bells = [None; abi::NOTIFY_HANDLES];
     for bell in &mut bells[..available - limit] {
-        *bell = Some(Notification::create().unwrap());
+        let [wait, signal, control] = Notification::create().unwrap();
+        // This quota probe needs lifetime custody only, not signal/close rights.
+        // Releasing the final wait below refunds the retained object charge.
+        signal.release().unwrap();
+        control.release().unwrap();
+        *bell = Some(wait);
     }
     let mut channels = [None; abi::MAX_DYNAMIC_HANDLES / 2];
     for slot in &mut channels[..limit] {
@@ -83,11 +88,8 @@ pub(super) fn quota() {
         send.close().unwrap();
         recv.close().unwrap();
     }
-    for handles in bells.into_iter().flatten() {
-        handles[2].close_object().unwrap();
-        for handle in handles {
-            handle.release().unwrap();
-        }
+    for wait in bells.into_iter().flatten() {
+        wait.release().unwrap();
     }
     let after = ipc::budget().unwrap();
     assert_eq!(after.charged_channels, before.charged_channels);

@@ -69,7 +69,7 @@ assignment and reclamation cannot lend an outstanding notification's funding awa
 The charge stays with its original account through delegation, escrow, death and
 replacement; only the final reference releases it. No funding transfer is implied.
 
-The lab preallocates a bounded object arena, forty-eight notification-grant slots per
+The lab preallocates a bounded object arena, sixty-four notification-grant slots per
 task, and one wait record per task. Wait registrations do not allocate in a trap.
 The notification budget syscall reports the shared object limit, notification
 charges and separate notification-handle usage, including escrow. The existing

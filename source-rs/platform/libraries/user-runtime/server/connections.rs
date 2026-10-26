@@ -48,7 +48,7 @@ impl Server {
             closed: [None; MAX_CLIENTS],
             paused: 0,
             replies: None,
-            shared: [const { None }; abi::MAX_WAIT_HANDLES],
+            shared: [const { None }; MAX_CLIENTS + 1],
         })
     }
     /// Whether a local slot can accept an explicitly supplied connection.

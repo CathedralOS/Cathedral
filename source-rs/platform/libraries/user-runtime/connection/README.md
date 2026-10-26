@@ -322,7 +322,7 @@ yielding calls, immutable replies, owner replacement and abandoned control setup
 [Multiplexing cases](../../../../distribution/lab/channels/connection/multiplex.rs)
 exercise simultaneous owner/two-client streams with equal IDs and reversed replies,
 setup expiry beside a live peer, full wait-set refusal, four writable mailbox
-objects beside immutable scratch, and the sixteen-object metadata ceiling. The enclosing
+objects beside immutable scratch, and the twenty-four-object metadata ceiling. The enclosing
 fixture checks exact logical/physical refunds after peer exit and Server drop.
 [Replacement](../../../../distribution/lab/channels/connection/replacement.rs)
 preselects an empty slot, removes and reinstalls its child, then rejects an old
@@ -337,7 +337,7 @@ registration alone does not bypass these or the object-count limits. After
 delegating its notification signal right, each side releases its setup-only copy.
 A live connection retains three local notification handles: wait, close/control
 and the peer's signal right. The [capacity proof](../../../../distribution/lab/channels/connection/capacity.rs)
-keeps six streams live under the forty-eight-handle cap, exhausts the remaining
+keeps twenty streams live under the sixty-four-handle cap, exhausts the remaining
 handle metadata with separately funded notifications, refuses a further allocation,
 and checks final handle and enclosing budget refunds. Fair scanning
 and earliest partial/setup deadlines cover all selected streams. There is still
@@ -358,7 +358,7 @@ user matrix keeps eleven connections (thirty-three notification handles) with it
 upstream, chrome, background and three app pairs. Brokered wake objects/rights
 are charged separately; the fully populated stock matrix uses 44 handles.
 The metadata ceiling is now
-forty-eight; object/page funding and the thirty-two-interest wait limit remain
+sixty-four; object/page funding and the forty-eight-interest wait limit remain
 independent. Additional streams still require a capacity review.
 Shared mailbox pooling may reduce per-connection backing/metadata costs later; current
 bounds refuse excess setup safely. No performance improvement or final production
@@ -372,3 +372,16 @@ second reply is DENIED. Unsupported attachment custody is released and refused.
 Control closure disables that receiver without treating the app as dead. The
 opening guest exercises pending/double-reply rejection and an independent wake
 after the owner closes its connection or sends an invalid setup grant.
+
+The stock control migration needs seventeen writers and roughly 62 notification
+rights at full occupancy. Metadata ceilings now allow 24 private objects and 64
+notification rights; every object still consumes its independently funded pages
+or channel/notification allowance. The capacity guest keeps twenty two-way
+connections live and exercises the final slot of the 48-entry mixed wait set.
+It checks both wait entrypoints' full-set validation, notification metadata
+refusal without partial installation, subsequent message exchange and final
+reclamation. Runtime service dispatch remains 31 clients plus control because
+its pause mask is u32; additional wait interests do not create new dispatch bits.
+The full-slot admission probe accepts sixteen notification reservations beside
+32 endpoint slots and refuses a seventeenth before taking custody.
+These larger finite scans are capacity headroom, not a latency improvement.

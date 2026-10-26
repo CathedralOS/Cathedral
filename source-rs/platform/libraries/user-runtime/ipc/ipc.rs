@@ -100,7 +100,7 @@ pub fn wait_many(handles: &[Handle], deadline: u64) -> Result<usize, Error> {
         return Err(Error(abi::INVALID_ARGUMENT as i64));
     }
     // Whole wait sets must fit within one user page, including at full capacity.
-    #[repr(align(256))]
+    #[repr(align(512))]
     struct Handles([u64; abi::MAX_WAIT_HANDLES]);
     const _: () = assert!(
         core::mem::size_of::<[u64; abi::MAX_WAIT_HANDLES]>() <= core::mem::align_of::<Handles>()

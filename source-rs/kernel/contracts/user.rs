@@ -86,7 +86,7 @@ pub const MEMORY_PAGES: u64 = 32;
 
 /// Wait on 1..=MAX_WAIT_HANDLES receive handles copied from a user array; return ready index.
 pub const IPC_WAIT_MANY: u64 = 33;
-pub const MAX_WAIT_HANDLES: usize = 32;
+pub const MAX_WAIT_HANDLES: usize = 48;
 
 /// Ordinary processes may create bounded, one-way copied-message channels.
 /// CREATE writes [send, receive] to 16 writable bytes at arg0; arg1/arg2 must be zero.
@@ -206,7 +206,7 @@ pub const NOTIFY_RECEIVE: u64 = 80; // receive endpoint, writable packet, zero
 pub const NOTIFY_BUDGET: u64 = 81; // writable [shared object limit, notifications charged, handle limit, handles used]
 // Shared service streams retain wait/control/peer-signal rights independently.
 // Page/channel funding remains separate from this per-task metadata ceiling.
-pub const NOTIFY_HANDLES: usize = 48;
+pub const NOTIFY_HANDLES: usize = 64;
 pub const NOTIFY_SIGNALED: u64 = 0;
 pub const NOTIFY_TIMED_OUT: u64 = 1;
 pub const NOTIFY_CLOSED: u64 = 2;

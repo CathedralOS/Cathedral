@@ -92,17 +92,21 @@ fn finish(client: &mut Client) -> [u8; 64] {
     }
 }
 pub(super) fn worker(mode: u64, env: Environment) -> u64 {
-    // A full endpoint set cannot also reserve a notification. Refusal happens
-    // before transport setup and leaves the same endpoints usable below.
-    let mut full = Server::open_clients(abi::MAX_WAIT_HANDLES - 1).unwrap();
+    // Client dispatch is still a u32 mask. The larger wait budget funds extra
+    // notifications, not client indexes which the mask cannot represent.
+    assert!(matches!(Server::open_clients(32), Err(Error(c)) if c == abi::INVALID_ARGUMENT as i64));
+    let mut full = Server::open_clients(31).unwrap();
     full.install(0, (env.endpoint(0).unwrap(), env.endpoint(1).unwrap()))
         .unwrap();
-    static mut REFUSED: SharedSlot = SharedSlot::empty();
-    let refused = &raw mut REFUSED;
-    // SAFETY: A distinct process-owned slot, offered only to this bounded probe.
-    let refused = unsafe { &mut *refused };
+    static mut BOUND: [SharedSlot; 17] = [const { SharedSlot::empty() }; 17];
+    let slots = &raw mut BOUND;
+    // SAFETY: One fixture process lends disjoint persistent connection slots.
+    let (accepted, refused) = unsafe { &mut *slots }.split_at_mut(16);
+    for (index, slot) in accepted.iter_mut().enumerate() {
+        full.enable_shared(index, slot).unwrap();
+    }
     assert_eq!(
-        full.enable_shared(0, refused),
+        full.enable_shared(16, &mut refused[0]),
         Err(Error(abi::INVALID_ARGUMENT as i64))
     );
     drop(full);

@@ -258,6 +258,64 @@ default/hidden cursor evidence remains valid for its scope, not the full asset A
 
 ## Current implementation evidence
 
+Implementation update 2026-10-25: **funded connection capacity for stock control migration**, over `1434566e`.
+
+The stock control audit found three independent metadata ceilings. Its eleven
+service streams plus incoming owner control and five child controls need seventeen
+writers and about 62 notification rights including wake hints. The kernel now
+bounds each task at 24 private objects (was 16), 64 notification handles (was 48)
+and 48 wait interests (was 32). Page and channel/notification object funding is
+still explicit and independently enforced. These larger finite tables and scans
+are capacity headroom, not a latency improvement. The task-count and dynamic IPC
+endpoint limits are unchanged.
+
+Runtime wait arrays retain single-page alignment for the enlarged ABI. Server
+client dispatch remains 31 clients plus control because its pause mask is u32;
+extra wait interests do not silently introduce unsupported client bits. The
+reservation probe accepts sixteen shared notification slots beside 32 endpoint
+slots, then refuses the next before taking custody.
+
+The [capacity guest](source-rs/distribution/lab/channels/connection/capacity.rs)
+keeps twenty shared streams live with sixty notification rights on each peer.
+It fills spare metadata, proves failed creation leaves the budget unchanged,
+continues exchanging messages, exercises readiness in slot 47 and rejects an
+invalid final handle despite a ready first entry. Both wait entrypoints are
+covered; failed validation does not consume readiness. Final stream retirement
+returns exact enclosing logical and physical resources. Close authority remains
+retained by each production stream.
+
+The channels fixture explicitly funds 64 private pages, 64 reader pages and 80
+channel/notification objects. The first expanded run exposed insufficient fixture
+page funding in the private-object exhaustion probe; increasing that explicit
+fixture grant fixed it. Construction moves peer endpoint pairs immediately to
+avoid exhausting unrelated endpoint metadata. The copied-channel quota test
+retains only wait custody for extra notification objects so it reaches object
+quota with handle metadata still available.
+
+Verification:
+
+- Full x86 IPC suite passes, including twenty streams, invalid trailing authority,
+  metadata refusal, continued exchange and final refunds.
+- Normal untraced F5 passes creation, independent apps, protected close, slot reuse
+  and cold restoration (`desktop/20261026T000405405635Z`).
+- Four nested desktops pass protected close, repeated subtree reclamation,
+  persistence and cold reopening (`desktop/20261026T000509966287Z`).
+- ARM64 portability passes with a new SVC proof of slot 47 readiness and invalid
+  final authority; the harness requires its marker. It does not run the x86
+  twenty-stream fixture.
+- Host tests, userspace checks, all-feature channels/stock/portability Clippy,
+  source layout, formatting and whitespace checks pass.
+- Logs: `build/omega-component/control-capacity-*.log`. The initial underfunded
+  guest failed as described above; the subsequent complete suite passes.
+
+**Next:** stock lifecycle/control is still copied. Integrate yielding control
+setup and queue the first owner request while setup is incomplete; preserve
+LOSS/HEALTH correlation, late replies, storage pauses and uncertainty without
+inferring process death. Explicitly fund each receiver and migrate Background
+and the separate UI receiver. The ceilings above make room for that work; they
+do not themselves migrate the desktop or prove its eventual full composition.
+Root provider supervision and copied fixtures also remain.
+
 Implementation update 2026-10-25: **Split lifecycle links use shared control**, over
 `d4a780a0`.
 

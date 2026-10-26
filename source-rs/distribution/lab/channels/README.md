@@ -346,3 +346,12 @@ signal failure after delegation/frame publication. Provider source rights surviv
 only receiver custody transfers. All cases require exact resource refunds. The
 nonblocking syscall probe also checks wrong receive authority, bad copyout and
 reserved fields without consuming escrow, and incompatible typed preservation.
+
+The [connection capacity case](connection/capacity.rs) funds twenty simultaneous
+shared streams, drives readiness at index 47, checks invalid final entries despite
+an earlier ready source, exhausts notification metadata and proves exact refunds.
+The profile explicitly funds 64 private/reader pages and 80 channel/notification
+objects in the initial account. Peer endpoint pairs move during construction so
+this test does not accidentally exhaust the independent endpoint-handle limit.
+The copied-channel quota probe retains only a wait right per extra notification;
+releasing it last returns that object's charge.

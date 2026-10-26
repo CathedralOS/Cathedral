@@ -17,7 +17,8 @@ pub enum Event {
     Memory(Request, crate::memory::Object),
     Disconnected { client: usize, incarnation: u64 },
 }
-const MAX_CLIENTS: usize = abi::MAX_WAIT_HANDLES - 1; // Control also occupies a wait slot.
+// Dispatch uses a u32 pause mask; extra wait interests do not expand client slots.
+const MAX_CLIENTS: usize = 31;
 pub struct Server {
     control: (Handle, Handle),
     links: [Option<Link>; MAX_CLIENTS],
@@ -28,7 +29,7 @@ pub struct Server {
     closed: [Option<u64>; MAX_CLIENTS],
     paused: u32,
     replies: Option<&'static mut Replies>,
-    shared: [Option<&'static mut SharedSlot>; abi::MAX_WAIT_HANDLES],
+    shared: [Option<&'static mut SharedSlot>; MAX_CLIENTS + 1],
 }
 impl Server {
     fn control_only(&self) -> bool {

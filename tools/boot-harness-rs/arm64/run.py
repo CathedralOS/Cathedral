@@ -88,6 +88,7 @@ def main():
     if not args.kernel_only:
         milestones += ['session startup heap refusals=', 'exact reclamation passed',
                        'shared objects forwarded without mappings; lifetime and reclamation passed',
+                       'Cathedral ARM64: final wait slot and invalid tail passed',
                        'Cathedral ARM64: 32 notification round trips passed',
                        'Cathedral ARM64: 32 shared mailbox payload round trips passed',
                        'Cathedral ARM64: nonblocking endpoint custody passed',
