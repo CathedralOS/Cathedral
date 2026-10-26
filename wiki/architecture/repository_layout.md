@@ -116,8 +116,9 @@ The stock program's [Omega session](../../source/distribution/matrix/session/REA
 sequences progress, work priority and event dispatch through a Rust resource host.
 Its [Omega request router](../../source/distribution/matrix/requests/README.md)
 selects operations from authenticated connection facts and defines successful
-owner-update consequences. Detailed child control and local world operations
-still compose these mechanisms in Rust; a
+owner-update consequences. Omega also selects child-control operations, launch
+targets and launch roles. The Rust host retains exact capabilities, pending replies
+and local world/resource mutations; a
 general-purpose matrix server runtime is not yet a separate platform package.
 The independent Rust `distribution/lab/matrix-composition/matrix` program uses
 the shared runtime server and matrix commands for three local peers without any

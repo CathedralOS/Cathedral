@@ -9,3 +9,5 @@ public const APP_ENTRY: u64 = 23u64;
 public const SELECT_APP: u64 = 24u64;
 public const SAVE_RECOVERY_GRANT: u64 = 128u64;
 public const SAVE_RECOVERY_POLL: u64 = 129u64;
+public const CONFIGURE: u64 = 122u64;
+public const LAUNCHER_FALLBACK: u64 = 127u64;

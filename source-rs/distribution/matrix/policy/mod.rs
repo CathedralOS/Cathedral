@@ -1,4 +1,6 @@
+pub mod admission;
 pub mod catalogue;
+pub mod control;
 pub mod launch;
 pub mod lifecycle;
 mod native;

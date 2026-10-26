@@ -2,6 +2,7 @@
 // Shared links retain exact request identity after timeout. Drain that late reply
 // before issuing new work; repeated asks cannot replay or abandon the old request.
 // Connection setup progresses while child upstream work remains serviceable.
+// Incoming owner operations start in owner.rs and are selected by Omega requests/control.omg.
 // A stream that fails outright is not death either: the request stays pending
 // for a short grace so the kernel's outcome, not the broken link, decides
 // between PEER_CLOSED and BUSY.

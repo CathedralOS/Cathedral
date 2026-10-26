@@ -4,10 +4,11 @@
 use operations;
 use desktop;
 use owner;
+use control;
 use protocol::main;
 use protocol::matrix;
 public machine request_decision(p: &mut [u64; 128]) -> u64 {
-    transition p[1] { 0u64 -> route(p) 1u64 -> owner_fallback(p) 2u64 -> owner_effects(p) 3u64 -> attachment(p) _ -> (DO_DENY) }
+    transition p[1] { 0u64 -> route(p) 1u64 -> owner_fallback(p) 2u64 -> owner_effects(p) 3u64 -> attachment(p) 4u64 -> control_decision(p) _ -> (DO_DENY) }
 }
 machine route(p: &mut [u64; 128]) -> u64 {
     transition p[2] == PRODUCER { true -> (DO_PRODUCER) _ -> decoded(p) }

@@ -1,6 +1,8 @@
+mod admission;
 mod behavior;
 mod catalogue;
 mod code;
+mod control;
 mod launch;
 mod lifecycle;
 mod recovery;

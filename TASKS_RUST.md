@@ -18,10 +18,14 @@ transport and resource custody. The service-turn sequence now executes in
 Rust service entrance only drives that session. Request-family routing and owner
 success consequences now execute in `source/distribution/matrix/requests/`;
 `service/requests/requests.rs` supplies authenticated facts and executes the choice.
-Next, move detailed owner child-control dispatch and launch/startup role choices
-into Omega. Start at `service/children/children.rs` and
-`service/children/launch/request.rs`; preserve exact capabilities and pending replies
-in the host while moving the decisions that use their authenticated observations.
+Owner child-control now descends into `requests/control.omg`; launch target/refusal
+and role choices execute in `launch/admission.omg` and `launch/roles.omg`. The host
+under `service/children/control/owner.rs` and `launch/request.rs` retains exact
+capabilities, standing grants and pending replies. Next, move realm startup and
+saved-configuration application into Omega: `service/children/startup/startup.rs`
+and `service/children/configuration.rs` still choose the realm shape and sequence
+launcher/background setup. Preserve their cleanup and existing role semantics;
+do not turn the native bridge into a permanent second distribution API.
 The independent Omega matrix is a useful precedent, but its synchronous parent
 refresh must not replace the desktop's yielding path.
 
@@ -371,6 +375,37 @@ not perfect timing indistinguishability or mandatory agent badges. Existing
 default/hidden cursor evidence remains valid for its scope, not the full asset API.
 
 ## Current implementation evidence
+
+Implementation update 2026-10-26: **Omega chooses owner child-control operations
+and launch admission/roles**, over `24ea8113`.
+
+`requests/control.omg` owns canonical control shapes, loss exclusion, bounded
+forwarded hops, pending-request exclusion and forwarding deadlines. It checks
+image/import/page/surface ceilings from host facts before selecting local work.
+The former owner dispatcher leaves the child record entrance; its host operations
+live with control custody under `service/children/control/owner.rs`. Actual image
+grants, exact connection incarnations, pending replies and local mutations remain
+host-owned. LOSS and LAUNCH_IMPORTS retain their existing shared opcode and exact
+shape distinction; this is no wire-format change.
+
+`launch/admission.omg` chooses stock app positions or the owner-driven pair,
+preserving refusal precedence and the standing-policy/storage-binding requirements.
+`launch/roles.omg` classifies picker selection, child placement and desktop
+activation, including recognition of the root owner's Login/Users pair. Rust
+supplies exact chrome authentication and resolves names in its own realm, retains
+the selected grants, then starts the existing ticketed workflow.
+
+Twelve new compiled-Omega tests bring the matrix total to 67. They cover owner
+authentication, canonical/malformed controls, pending hop isolation, shared-opcode
+precedence, limits, every occupied app subset, refusal order, withheld imports and
+launch roles/picker recognition. The full host workspace, default/all-feature
+matrix x86-64 Clippy, layout and format checks pass. The owner-driven matrix and
+matrix-desktop fixtures pass, including recursive input, clipping, recovery and
+cold persistence. Ordinary F5/cold reboot passes with the 1,657-record oracle.
+Four nested desktops, launch-read `revoke`, storage-binding `stop` and scene
+`late-stop-target` pass on both boots, preserving sibling input, protected drafts
+and subtree reclamation. This establishes the exercised functional behavior, not
+a latency guarantee. Logs are `build/omega-component/control-*.log`.
 
 Implementation update 2026-10-26: **Omega routes stock matrix requests**, over
 `da1ecec9`.

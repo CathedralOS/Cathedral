@@ -37,10 +37,16 @@ impl Children {
         let Some(ticket) = self.operation_tickets.issue() else {
             return server.reply(&request, &wire::encode(wire::error(abi::NO_MEMORY)));
         };
-        let selection = self.login && !self.entered && plan.slot == 1;
-        let desktop = self.desktop && request.client == Some(0);
+        let roles = cathedral_stock_matrix::policy::admission::roles(
+            self.login,
+            self.entered,
+            plan.slot,
+            self.desktop,
+            request.client,
+        );
+        let selection = roles.selection;
         #[cfg(any(feature = "launch-bind-failure", feature = "launch-place-failure"))]
-        let probe = desktop && plan.slot == 2 && !self.launch_probe_used;
+        let probe = roles.desktop && plan.slot == 2 && !self.launch_probe_used;
         #[cfg(any(feature = "launch-bind-failure", feature = "launch-place-failure"))]
         {
             self.launch_probe_used |= probe;
@@ -54,7 +60,7 @@ impl Children {
             request,
             plan,
             ticket,
-            policy: State::new(ticket, selection, request.client.is_some(), desktop),
+            policy: State::new(ticket, selection, roles.child, roles.desktop),
             image: None,
             task: None,
             selection,

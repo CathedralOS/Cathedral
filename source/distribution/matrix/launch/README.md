@@ -8,13 +8,28 @@ placement, an app without storage skips binding, and desktop activation belongs
 to the stock desktop role. Failed work reclaims an admitted task and schedules
 picker recovery if the old picker was deliberately retired.
 
+Before that workflow, [admission.omg](admission.omg) chooses the target and refusal
+order from host-authenticated facts. A configured desktop accepts only its exact
+chrome and selects the first empty app position (1..3), never chrome/background.
+An owner-driven pair selects the requester's other slot. Busy work/connection,
+receipt/ticket capacity, arguments and standing/storage authority are checked in
+that order after role/target selection. A free record whose connection is still
+occupied remains BUSY rather than silently skipping to another slot.
+[roles.omg](roles.omg) distinguishes picker selection, child placement and desktop
+activation. It also decides when the root owner's initial Login needs a realm
+lookup and whether the returned Login/Users pair matches the requested program
+and scope. All names are resolved through this matrix's supplied realm.
+
 [The Rust entrance](../../../../source-rs/distribution/matrix/service/children/launch/launch.rs)
-dispatches these commands. Its siblings own caller validation (`request.rs`),
+dispatches these commands. Its siblings supply authenticated observations and
+retain the selected standing grants/storage binding (`request.rs`),
 resource mechanisms (`steps.rs`) and identity/cancellation/reply custody
 (`custody.rs`). Asynchronous storage completion and grant commit live in
 `binding.rs` beside that entrance; `scene.rs` owns visual completion and restoration.
 `mod.rs` is plumbing only. The private native adapter is
-[policy/launch.rs](../../../../source-rs/distribution/matrix/policy/launch.rs).
+[policy/launch.rs](../../../../source-rs/distribution/matrix/policy/launch.rs), with
+[policy/admission.rs](../../../../source-rs/distribution/matrix/policy/admission.rs)
+for admission and roles.
 
 A matrix issues a non-reused operation ticket shared with launcher recovery.
 Each command is emitted once and must complete with both its ticket and command.
@@ -42,7 +57,9 @@ The private bridge uses operation 11. Events 0..3 initialize, issue a command,
 complete a command and cancel. State words 16..21 retain phase, ticket, role flags,
 error and task/picker obligations. Facts 2..5 carry the ticket/command/status and
 whether admission supplied storage. No endpoint, task ID or object enters this
-packet. This is distribution implementation detail, not a public app ABI.
+workflow packet. Admission/role events 5..8 also carry local object names and
+observations, never endpoint/task handles or transferable grants. This is
+distribution implementation detail, not a public app ABI.
 
 Ordinary program reads and storage binding now yield to the service loop. The
 [storage binding exchange](../../../../source-rs/distribution/matrix/service/parent/storage/binding.rs)
@@ -110,6 +127,8 @@ concurrent pixel commits or a fully nonblocking matrix.
 The Rust host tests execute compiled Omega for all role/storage combinations,
 wrong/duplicate completions, replacement tickets, cancellation and failure at
 every ordinary stage. They verify rollback and picker-recovery obligations.
+Admission tests exercise every occupied app subset, owner-driven pairs, refusal
+precedence, import withholding, role combinations and root-picker recognition.
 
 `python tools/boot-harness-rs/desktop_test.py --launch-async MODE --timeout 240`
 runs the full F5 composition with a nested user desktop. Modes are `complete`,

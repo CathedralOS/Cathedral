@@ -18,7 +18,8 @@ owns loss aggregation and the wait/refuse/stop decisions for ordinary close.
 Recovery owns bounded retries and the asynchronous read/wait/admit workflow,
 with ticketed completions and fallback decisions.
 Startup owns local picker/background retry budgets and selection-failure recovery.
-Launch owns read/admit/bind/place/publish sequencing and partial-failure rollback.
+Launch owns target admission, role classification, read/admit/bind/place/publish
+sequencing and partial-failure rollback.
 Workspace owns switch/wait/activate sequencing and restoration after a late
 accepted commit. Cancellation drains the scene before finishing or restoring.
 It also owns the app catalogue, instance-ticket allocation, current selection and
@@ -28,6 +29,7 @@ synchronous host mechanisms.
 Rust still authenticates callers, serializes IPC, retains exact task/endpoint
 identity, drains late replies, progresses asynchronous parent work and reclaims
 tasks/resources. Service-turn orchestration, request-family routing and owner
-success consequences now execute in Omega. Detailed child-control dispatch,
-launch target choices, local world operations and the native host remain Rust. These are bounded migrations
+success consequences now execute in Omega, as do owner child-control dispatch and
+launch target/role choices. Realm startup, applying saved configuration, local
+world operations and the native host retain Rust behavior. These are bounded migrations
 of distribution behavior, not a new platform API or the completed Omega OS.

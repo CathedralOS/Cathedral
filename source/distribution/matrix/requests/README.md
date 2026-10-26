@@ -29,6 +29,18 @@ recovery, flush/replay, then ordinary invalidation notification before the reply
 Asynchronous child control, launch, close, selection and storage retain their
 original pending request; choosing an operation does not manufacture a reply.
 
+Owner child control descends into [control.omg](control.omg): recognition, loss
+exclusion, routed-hop selection or canonical local operation validation. It
+chooses forwarding deadlines, validates slot/mask/allowance limits supplied by the
+host, and refuses to replace a pending request on the selected hop. The current
+lab gives LOSS and LAUNCH_IMPORTS the same opcode: only the canonical all-zero
+argument packet is a loss survey; malformed imports are never reinterpreted as
+loss. Unrelated owner operations still reach their fallback during a survey.
+The [control host](../../../../source-rs/distribution/matrix/service/children/control/owner.rs)
+executes the choice, checks actual executable grants, retains the forwarded request
+and mutates only its local records. Host mechanisms still validate live resources;
+the word values and masks in a policy packet grant no authority.
+
 [operations.omg](operations.omg) is the private host vocabulary.
 [desktop.omg](desktop.omg) binds stock distribution extensions; platform wire
 families come from [the matrix reference bindings](../../../platform/contracts/reference/matrix.omg).
@@ -42,7 +54,9 @@ reserved fields, owner success effects, producer separation and every storage
 attachment opcode with and without scope bits. Guest verification and current
 scope are recorded in `TASKS_RUST.md`.
 
-The next descent remains in Rust: `service/children/children.rs` selects owner
-child-control operations, `service/children/launch/request.rs` chooses authorized
-launch targets, and request handlers validate and mutate local world state.
-Those are further Omega work; this migration does not claim a fully Omega matrix.
+[tests/control.rs](../../../../source-rs/distribution/matrix/tests/control.rs) adds
+compiled coverage for canonical control shapes, shared-opcode precedence,
+forwarded hop/deadline/pending rules and boundary limits. Launch target and role
+choices continue into [Omega launch admission](../launch/README.md).
+Realm startup, applying saved configuration, and local world/resource mutations
+still contain Rust behavior; this migration does not claim a fully Omega matrix.

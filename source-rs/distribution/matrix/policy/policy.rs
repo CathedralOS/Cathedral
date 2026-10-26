@@ -4,6 +4,7 @@
 // the instance catalogue in catalogue.rs.
 // session.rs adapts the service-turn orchestration; resources stay in service/host.
 // requests.rs adapts request-family routing and owner success consequences.
+// control.rs and admission.rs adapt owner child-control and launch target/role choices.
 // Cross-language entrance: source/distribution/matrix/policy/main.omg.
 // These synchronous values carry no capability, endpoint or task identity.
 use cathedral_desktop_matrix_contracts::matrix::config::Config;
