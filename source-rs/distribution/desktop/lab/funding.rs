@@ -1,6 +1,6 @@
 //! An underfunded inner matrix cannot borrow an outside app's frame reservation.
 use super::*;
-pub(super) fn exercise(matrix: Pair, pressure: bool) {
+pub(super) fn exercise(matrix: &mut RootControl, pressure: bool) {
     pixel(matrix, 510, 190, app::RIGHT);
     owner(matrix, [wire::RUN_MEMORY, 0, 256, 0, 0, 0, 0, 0]);
     launch_inner(matrix, pressure);

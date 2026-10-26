@@ -55,8 +55,7 @@ impl Attempt {
     pub fn commit(self, matrix: RootControl, source: Pair, extent: [u64; 2]) -> Session {
         // Root presentation has its own ready connection now. Release early
         // configuration before starting storage. Its remote reader/signal can
-        // outlive this local drop, so F5 funds that bounded overlap explicitly.
-        #[cfg(feature = "shell")]
+        // outlive this local drop, so each composition funds that overlap explicitly.
         drop(self.display_control);
         let root = self.tasks[2].unwrap();
         crate::ROOT_TASK.store(root.raw(), core::sync::atomic::Ordering::Relaxed);

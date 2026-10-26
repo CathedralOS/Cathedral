@@ -6,6 +6,9 @@ import pointer_test
 
 
 def verify(stream, output, serial, pressure=False):
+    assert serial.count("focus click consumed before source loss") == 1, serial
+    for marker in ("shared root control ready", "shared bootstrap display ready"):
+        assert serial.count(marker) == 3, (marker, serial)
     if "nested peer survived catalog revocation, provider replacement and sibling death" not in serial:
         raise RuntimeError("Missing nested peer lifetime isolation proof")
     if "nested sibling consumed pointer and keyboard and repainted during blocked persistence" not in serial:
@@ -105,6 +108,8 @@ def verify(stream, output, serial, pressure=False):
 
 
 def verify_reboot(stream, output, serial):
+    for marker in ("shared root control ready", "shared bootstrap display ready"):
+        assert serial.count(marker) == 1, (marker, serial)
     if "persisted colors restored after reboot" not in serial or "user panic:" in serial:
         raise RuntimeError(f"Missing persisted reboot evidence; logs: {output}")
     width, height, data = pointer_test.read_scanout(stream, output)

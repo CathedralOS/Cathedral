@@ -23,9 +23,7 @@ mod storage;
 use cathedral_desktop_matrix_contracts::matrix as wire;
 use cathedral_kernel_contracts::user as abi;
 use cathedral_user_runtime::{Error, ipc::Handle, time};
-#[cfg(all(feature = "desktop", not(feature = "shell")))]
-use session::control::copied_call as call;
-#[cfg(feature = "shell")]
+#[cfg(feature = "desktop")]
 use session::control::request as call;
 type Pair = (Handle, Handle);
 #[cfg(feature = "desktop")]

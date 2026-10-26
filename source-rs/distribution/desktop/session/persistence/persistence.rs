@@ -22,12 +22,12 @@ fn regrant(session: &mut admission::Session) -> Result<(), Error> {
     {
         for slot in 0..2 {
             owner(
-                session.matrix,
+                &mut session.matrix,
                 [wire::STORAGE_GRANT, slot, slot, 0, 0, 0, 0, 0],
             );
         }
         owner(
-            session.matrix,
+            &mut session.matrix,
             wire::route([wire::STORAGE_GRANT, 0, 0, 0, 0, 0, 0, 0], 0).unwrap(),
         );
     }

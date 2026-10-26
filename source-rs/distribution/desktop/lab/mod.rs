@@ -11,7 +11,8 @@ mod stalls;
 mod stalls_peer;
 pub(crate) use commands::command;
 
-use crate::session::{BACKGROUND, KEYS, admission, owner, persistence};
+use crate::session::{BACKGROUND, KEYS, admission, control::RootControl, owner, persistence};
+mod source;
 use crate::*;
 use cathedral_colors as app;
 use cathedral_platform_contracts::input;

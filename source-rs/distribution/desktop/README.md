@@ -195,13 +195,16 @@ the spinner, retaining the matrix's 20% cap. The spinner is restored before the
 host physical-input check. The ordinary profile reserves the same four descendant
 slots, uses three outside probes, and has no spinner.
 
-Channel funding remains within the fixed 32-channel arena: four for distribution
-adapter connections, four reserved for display, four for input, zero for storage,
-and twenty delegated to the root. The root retains ten and lends ten to its inner
-matrix; each child bundle costs five channels. The largest construction needs
-20 local dynamic handles (five incoming, five retained for an existing child,
-ten for the new child before transfer). Boot control/provider links use their
-separate static backing.
+The positional profiles fund the same shared display-configuration and root
+control owners as F5. The small Colors composition reserves seven owner
+channel/notification allowances (four transferred channels plus root, input
+readiness and retiring display setup), two for display, two for input, two for
+storage and twenty-nine for the root. Notes uses thirty-seven for its root.
+The owner holds three writer pages and two readers; root funding adds one writer,
+reader and notification for control without reducing the existing child/image
+allowances. Provider control/fault gates and pre-driver source injection remain
+explicit copied lab consumers. [source.rs](lab/source.rs) names the latter seam:
+it does not construct a shared client and later hand its raw endpoints away.
 Add `--trace-input` for elapsed/CPU diagnostics; these are not latency guarantees.
 Compact rectangle packets avoid BEGIN/stage/COMMIT round trips at every level;
 publication waits now return to the service loop. Neither change introduces CPU

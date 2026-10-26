@@ -12,9 +12,9 @@
       "features": [
         "notes-probes"
       ],
-      "private_pages": 1,
-      "shared_pages": 1,
-      "ipc_channels": 5
+      "private_pages": 3,
+      "shared_pages": 2,
+      "ipc_channels": 7
     },
     "launches": [
       {
@@ -24,9 +24,9 @@
         "clock": true,
         "argument": 1129270608,
         "framebuffer": true,
-        "shared_pages": 65,
-        "private_pages": 1,
-        "ipc_channels": 1
+        "shared_pages": 66,
+        "private_pages": 2,
+        "ipc_channels": 2
       },
       {
         "package": "cathedral-input-service",
@@ -45,9 +45,9 @@
         "target": "x86_64-unknown-none",
         "clock": true,
         "argument": 0,
-        "ipc_channels": 36,
-        "private_pages": 144,
-        "shared_pages": 144
+        "ipc_channels": 37,
+        "private_pages": 145,
+        "shared_pages": 145
       },
       {
         "package": "cathedral-storage-service",

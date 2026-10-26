@@ -29,29 +29,29 @@ pub(super) fn assign(root: Launch) -> Result<(), Error> {
 
 pub(super) fn limits() -> cathedral_user_runtime::resources::Limits {
     // Small labs reserve writer/reader/notification capacity for SOURCE, display
-    // and two storage links, both ends of nested/app storage and child/image
+    // and two storage links, shared root control, both ends of nested/app storage and child/image
     // allowances. F5 has hub capacity.
     cathedral_user_runtime::resources::Limits {
         private_pages: if cfg!(feature = "shell") {
             1024
         } else if cfg!(feature = "notes") {
-            144
+            145
         } else {
-            24
+            25
         },
         reader_pages: if cfg!(feature = "shell") {
             4096
         } else if cfg!(feature = "notes") {
-            144
+            145
         } else {
-            16
+            17
         },
         channels: if cfg!(feature = "shell") {
             224
         } else if cfg!(feature = "notes") {
-            36
+            37
         } else {
-            28
+            29
         },
     }
 }

@@ -1,23 +1,14 @@
 //! Configure through a short-lived boot stream; the root receives a separate
-//! presentation pair. Copied positional labs retain the old staged exchange.
+//! presentation pair. Both desktop compositions use the same transport.
 use super::*;
 use cathedral_platform_contracts::display::{self, composition as c, pointer};
-#[cfg(feature = "shell")]
 pub(super) type Control = cathedral_user_runtime::connection::Client;
-#[cfg(not(feature = "shell"))]
-pub(super) type Control = Pair;
 
 pub(super) fn exchange(control: &mut Control, bytes: &[u8]) -> Result<[u64; 6], Error> {
     exchange_until(control, bytes, time::after(READY_TICKS)?)
 }
 fn exchange_until(control: &mut Control, bytes: &[u8], deadline: u64) -> Result<[u64; 6], Error> {
-    #[cfg(feature = "shell")]
     let (bytes, n) = control.call(bytes, deadline)?;
-    #[cfg(not(feature = "shell"))]
-    let (bytes, n) = {
-        control.0.send(bytes)?;
-        receive(*control, deadline)?
-    };
     display::decode(&bytes[..n]).ok_or(BAD_REPLY)
 }
 fn request(control: &mut Control, words: [u64; 6]) -> Result<[u64; 6], Error> {
@@ -37,10 +28,7 @@ pub(super) fn start(attempt: &mut Attempt, argument: u64) -> Result<(Pair, [u64;
     attempt.spawn(Stage::Display, argument, &[input, output])?;
     let pair = (send, recv);
     let deadline = time::after(READY_TICKS)?;
-    #[cfg(feature = "shell")]
     let mut control = Control::connect(Port::at(0)?.connect()?, deadline)?;
-    #[cfg(not(feature = "shell"))]
-    let mut control = pair;
     let info = exchange_until(
         &mut control,
         &display::encode([display::INFO, 0, 0, 0, 0, 0]),
@@ -63,7 +51,6 @@ pub(super) fn start(attempt: &mut Attempt, argument: u64) -> Result<(Pair, [u64;
             return Err(BAD_REPLY);
         }
     }
-    #[cfg(feature = "shell")]
     cathedral_user_runtime::write(b"Cathedral desktop: shared bootstrap display ready\n")?;
     attempt.display_control = Some(control);
     Ok((pair, [info[1], info[2]]))

@@ -6,23 +6,24 @@ the same admission and input mechanisms, with its own storage-first proof setup.
 
 Follow [display.rs](display.rs) for the initial INFO exchange, dimensions and
 background, then [root.rs](root.rs) for funding and the endpoint handoff.
-F5 uses the display's bootstrap port for a short-lived shared configuration
+Both desktop compositions use the display's bootstrap port for a short-lived shared configuration
 connection. The presentation pair passed to the root is separate and untouched;
 the root opens its own shared stream. [Attempt](attempt.rs) retains configuration
 through root readiness and drops it on commit, or after collecting failed tasks.
 The [display configuration dispatcher](../../../../platform/services/display/compositor/configuration.rs)
 permits INFO, background, cursor enable and text on that boot port, not scene
 publication, input injection or client grants. No request identity is rewritten
-for reply dispatch. Copied positional labs keep their staged presentation pair.
-Root
-budgets and code authority are explicit in [funding.rs](funding.rs).
-F5 opens one [shared root control](../control.rs), validates HEALTH and moves that
+for reply dispatch. Positional labs paint static labels through this same port
+before root admission. Root budgets and code authority are explicit in [funding.rs](funding.rs).
+Each composition opens one [shared root control](../control.rs), validates HEALTH and moves that
 owner into the admitted Session. The connector owns its raw endpoints on success
 and failure; the partial-attempt raw inventory never also owns them. Setup can
 park here because the boot owner serves nothing the root needs; the root's display
 peer runs independently. Setup and first HEALTH share the original 300-tick bound.
 Later shell/persistence requests borrow that retained client. Its failures retire
-the stream without replaying mutations; positional labs keep a copied adapter.
+the stream without replaying mutations. Positional lab operations borrow this
+same owner, including failure probes and provider replacement. Idle probes wait
+on its lifetime endpoint, never consume replies outside the shared dispatcher.
 [input.rs](input.rs) transfers untouched source endpoints, opens an independent
 shared readiness connection and checks an exact input HEALTH reply. The
 [driver](../../../../platform/services/input/matrix.rs) checks denied SPAWN,

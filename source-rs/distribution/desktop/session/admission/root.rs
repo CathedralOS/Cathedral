@@ -13,17 +13,9 @@ pub(super) fn start(
         argument,
         &[display.0, display.1, source_input, source_output],
     )?;
-    #[cfg(feature = "shell")]
     let deadline = time::after(READY_TICKS)?;
     let pair = Port::at(2)?.connect()?;
-    #[cfg(feature = "shell")]
     let matrix = RootControl::open(pair, deadline)?;
-    #[cfg(not(feature = "shell"))]
-    let matrix = {
-        let pair = attempt.track(pair);
-        matrix_ok(pair, [wire::HEALTH, 0, 0, 0, 0, 0, 0, 0])?;
-        pair
-    };
     assert_eq!(task::available_slots()?, 0);
     Ok((matrix, (source_send, source_recv)))
 }

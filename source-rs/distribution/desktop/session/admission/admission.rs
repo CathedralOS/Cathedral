@@ -113,32 +113,6 @@ pub(crate) fn start() -> Session {
     session
 }
 
-#[cfg(not(feature = "shell"))]
-fn receive(pair: Pair, deadline: u64) -> Result<([u8; 64], usize), Error> {
-    let mut bytes = [0; 64];
-    let n = pair.1.receive_until(&mut bytes, deadline)?;
-    Ok((bytes, n))
-}
-#[cfg(not(feature = "shell"))]
-fn matrix_request(pair: Pair, words: wire::Packet) -> Result<wire::Packet, Error> {
-    let deadline = time::after(READY_TICKS)?;
-    pair.0.send(&wire::encode(words))?;
-    let (bytes, n) = receive(pair, deadline)?;
-    wire::decode(&bytes[..n]).ok_or(BAD_REPLY)
-}
-#[cfg(not(feature = "shell"))]
-fn matrix_ok(pair: Pair, words: wire::Packet) -> Result<(), Error> {
-    let reply = matrix_request(pair, words)?;
-    if reply == [0; 8] {
-        Ok(())
-    } else {
-        Err(if reply[0] == 0 {
-            BAD_REPLY
-        } else {
-            Error(reply[0] as i64)
-        })
-    }
-}
 fn argument(stage: Stage, attempt: u64, normal: u64) -> u64 {
     #[cfg(feature = "bootstrap-probes")]
     return probes::argument(stage, attempt, normal);

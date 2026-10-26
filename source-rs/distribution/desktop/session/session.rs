@@ -12,11 +12,6 @@ pub(crate) const KEYS: u64 = if cfg!(feature = "notes") {
     wire::KEY_MASK
 };
 pub(crate) const BACKGROUND: u64 = 0x101827;
-#[cfg(not(feature = "shell"))]
-pub(crate) fn owner(pair: Pair, words: wire::Packet) {
-    assert_eq!(call(pair, words), [0; 8], "owner request {words:?}");
-}
-#[cfg(feature = "shell")]
 pub(crate) fn owner(matrix: &mut RootControl, words: wire::Packet) {
     assert_eq!(call(matrix, words), [0; 8], "owner request {words:?}");
 }

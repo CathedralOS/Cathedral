@@ -1,6 +1,6 @@
 //! Check quiet clients and retained placement while a capped sibling spins.
 use super::*;
-fn stats(matrix: Pair, nested: bool) -> wire::Packet {
+fn stats(matrix: &mut RootControl, nested: bool) -> wire::Packet {
     let mut words = wire::route(
         [wire::HEALTH, 0, 0, 0, 0, 0, 0, 0],
         if nested { 0 } else { 1 },
@@ -11,15 +11,12 @@ fn stats(matrix: Pair, nested: bool) -> wire::Packet {
     }
     call(matrix, words)
 }
-pub(super) fn exercise(matrix: Pair) {
-    // Drain startup wake hints before measuring the quiet interval.
-    let _ = matrix
-        .1
-        .receive_until(&mut [0; 64], time::after(30).unwrap());
+pub(super) fn exercise(matrix: &mut RootControl) {
+    // Let startup settle before measuring quiet work; only the root lifetime
+    // endpoint participates, never a notification hint as an unsolicited reply.
+    let _ = matrix.idle(time::after(30).unwrap());
     let before = [stats(matrix, true), stats(matrix, false)];
-    let _ = matrix
-        .1
-        .receive_until(&mut [0; 64], time::after(100).unwrap());
+    let _ = matrix.idle(time::after(100).unwrap());
     let after = [stats(matrix, true), stats(matrix, false)];
     for (before, after) in before.into_iter().zip(after) {
         assert_eq!(before[..3], after[..3]);
@@ -51,7 +48,7 @@ pub(super) fn exercise(matrix: Pair) {
     cathedral_user_runtime::write(b"Cathedral matrix desktop: quiet apps below 20ms CPU per second; retained move without app repaint\n").unwrap();
 }
 
-fn cursor(matrix: Pair) {
+fn cursor(matrix: &mut RootControl) {
     let app = |op| wire::route(wire::route([op, 0, 0, 0, 0, 0, 0, 0], 0).unwrap(), 0).unwrap();
     assert_eq!(call(matrix, app(14))[0], 0);
     pixel(matrix, 170, 225, 0xe5e7eb); // Staging has not changed the scene.
@@ -80,7 +77,7 @@ fn cursor(matrix: Pair) {
     cathedral_user_runtime::write(b"Cathedral matrix desktop: scoped cursor clipping, transparency, retained move and atomic publication passed\n").unwrap();
 }
 
-fn presentation(matrix: Pair) {
+fn presentation(matrix: &mut RootControl) {
     let app = |op| wire::route(wire::route([op, 0, 0, 0, 0, 0, 0, 0], 0).unwrap(), 0).unwrap();
     assert_eq!(call(matrix, app(3))[0], 0);
     pixel(matrix, 140, 190, app::LEFT);
@@ -105,7 +102,7 @@ fn presentation(matrix: Pair) {
     .unwrap();
 }
 
-fn surfaces(matrix: Pair) {
+fn surfaces(matrix: &mut RootControl) {
     let app = |operation| {
         wire::route(wire::route([operation, 0, 0, 0, 0, 0, 0, 0], 0).unwrap(), 0).unwrap()
     };
@@ -128,7 +125,7 @@ fn surfaces(matrix: Pair) {
     cathedral_user_runtime::write(b"Cathedral matrix desktop: owned surface quotas, stale names, removal and subtree stacking passed\n").unwrap();
 }
 
-pub(super) fn startup(matrix: Pair, pressure: bool) {
+pub(super) fn startup(matrix: &mut RootControl, pressure: bool) {
     if !recovery::restored(matrix) {
         pixel(matrix, 140, 190, app::LEFT);
         pixel(matrix, 510, 190, app::RIGHT);

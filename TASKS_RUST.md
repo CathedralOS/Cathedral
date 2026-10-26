@@ -302,6 +302,71 @@ default/hidden cursor evidence remains valid for its scope, not the full asset A
 
 ## Current implementation evidence
 
+Implementation update 2026-10-25: **positional desktops share F5's root/display transport owners**, over `9b762621`.
+
+The copied root-control and display-configuration adapters are removed from
+`desktop/session/`. Both ordinary F5 and positional desktop labs open separate
+shared display configuration, hand untouched presentation endpoints to the root,
+check root HEALTH, and retain one `RootControl` for the session. Static lab labels
+use the narrow boot-display configuration port. Every lab operation borrows the
+retained root client; no raw-pair alias receives or publishes its payloads.
+
+Idle/timeout probes now wait on that client's lifetime endpoint, leaving shared
+reply correlation and notification draining with its owner. Display death uses
+a real shared request, expects peer closure and collects the failed root before
+rebuilding the tree. The old copied source-probe helper is explicitly located in
+`desktop/lab/source.rs`: it only touches the pre-driver source pair. Migrating
+that producer must preserve the later physical driver's ownership; upgrading it
+and passing bare endpoints would lose transport state. Storage control/fault gates
+are also still copied, as are positional app adapters/wakes.
+
+Each positional owner has three writers, two readers and seven channel/notification
+allowances, funding root control, input readiness and possibly still-retiring
+display configuration beside four transferred channels. Display receives one
+additional writer, reader and notification for configuration. Each root receives
+one additional writer/reader/notification, preserving its old child/image capacity:
+Colors root 25/17/29; Notes root 145/145/37. F5 budgets and kernel limits are unchanged.
+The database-recovery profile was below its admission constants and relied on
+borrowing the difference from the initial owner; explicit owner budgets exposed
+that mismatch as BUSY before root admission. Its profile now matches the actual
+25/17/29 admission limits.
+
+The pressure fixture exposed a precondition race: it injected a focus click and
+killed the source before the nested app necessarily consumed that click.
+Cancellation may discard undelivered input. The test now observes both click
+events through the app's existing pointer counter before source death, so its
+later key checks preservation of an established selection rather than scheduling
+luck. No production input semantics or timeout increase is used for that check.
+
+Verification:
+
+- F5 and cold persistence pass in `desktop/20261026T025520349313Z`, including the
+  exact 1,621-record host oracle.
+- The database-recovery workload and cold reboot pass in
+  `matrix-database/20261026T025723711955Z`, preserving the two objects' exact
+  revisions [4, 2] and all 18 host records. The prior profile-mismatch failure is
+  `matrix-database/20261026T025611587096Z`.
+- Notes recovery passes physical input, draft preservation, lost-reply recovery
+  and both exact 20-record checks in `matrix-database/20261026T025750601187Z`.
+- The pressure matrix desktop passes nested clipping, storage isolation, subtree
+  recovery, source/display death and cold persistence in
+  `pressure-matrix-desktop-test/`. Final assertions observe three shared root/display
+  incarnations across recovery, one on cold boot, and delivered focus before
+  source loss. The original failed focus run is preserved in
+  `build/omega-component/lab-control-pressure-focus-failure.log`.
+- The final unpressured destructive desktop and cold rerun pass in
+  `matrix-desktop-test/`, with the same exact transport incarnation checks and
+  delivered-focus precondition.
+- Host tests, all-feature and positional desktop Clippy, format/layout and changed
+  Markdown links pass. Kernel and runtime implementations are unchanged; ARM64
+  was not rerun. Logs: `build/omega-component/lab-control-*.log`.
+
+**Next:** migrate copied provider-control/fault-gate consumers, then the remaining
+positional app transport/wake adapters and pre-driver source probes. Preserve
+hostile/setup tests that deliberately use malformed raw bytes. Kernel-mediated
+capability installation remains necessary even when ordinary payload queues are
+retired. The on-demand authorized-broker lookup outcome remains separate work.
+
 Implementation update 2026-10-25: **input readiness and source validation use shared IPC**, over `41967919`.
 
 `desktop/session/admission/input.rs` passes untouched source endpoints to the
@@ -353,7 +418,7 @@ Verification:
   format/layout checks pass. Kernel and runtime implementations are unchanged;
   ARM64 was not rerun. Logs: `build/omega-component/bootstrap-input-*.log`.
 
-**Next:** inventory explicitly copied lab/service adapters and migrate their
+**Previous next (root/display portion completed above):** inventory explicitly copied lab/service adapters and migrate their
 application payloads before retiring copied-payload syscall consumers. The
 ordinary desktop's bootstrap is now shared, but that is not proof that all
 fixture consumers have migrated. The on-demand authorized-broker lookup outcome

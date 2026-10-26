@@ -17,7 +17,7 @@ const MATRIX_READERS: u64 = if cfg!(feature = "notes") { 46 } else { 6 };
 const APP_SURFACES: u64 = if cfg!(feature = "notes") { 6 } else { 4 };
 const INNER_SURFACES: u64 = if cfg!(feature = "notes") { 10 } else { 8 };
 const SIBLING_SURFACES: u64 = if cfg!(feature = "notes") { 6 } else { 8 };
-fn launch_inner(pair: Pair, pressure: bool) {
+fn launch_inner(pair: &mut RootControl, pressure: bool) {
     owner(
         pair,
         [wire::RUN_PAGES, 0, MATRIX_PAGES, MATRIX_READERS, 0, 0, 0, 0],
@@ -36,7 +36,7 @@ fn launch_inner(pair: Pair, pressure: bool) {
         ],
     );
 }
-fn inner(pair: Pair, pressure: bool) {
+fn inner(pair: &mut RootControl, pressure: bool) {
     launch_inner(pair, pressure);
     owner(
         pair,
@@ -90,7 +90,7 @@ fn inner(pair: Pair, pressure: bool) {
         .unwrap(),
     );
 }
-fn pixel(pair: Pair, x: u64, y: u64, expected: u64) {
+fn pixel(pair: &mut RootControl, x: u64, y: u64, expected: u64) {
     // Cold surface creation crosses multiple IPC hops under the 20% pressure cap.
     // This is a bounded correctness wait; the host measures input latency separately.
     let deadline = time::after(1000).unwrap();
@@ -105,7 +105,7 @@ fn pixel(pair: Pair, x: u64, y: u64, expected: u64) {
         );
     }
 }
-fn bitmap(matrix: Pair) {
+fn bitmap(matrix: &mut RootControl) {
     pixel(matrix, 316, 292, 0xffcc44);
     pixel(matrix, 316, 299, 0x7755dd);
     pixel(matrix, 334, 292, BACKGROUND);
@@ -113,7 +113,7 @@ fn bitmap(matrix: Pair) {
 }
 fn setup(probes: bool) -> admission::Session {
     let mut session = admission::start();
-    let matrix = session.matrix;
+    let matrix = &mut session.matrix;
     let pressure = session.pressure;
     owner(
         matrix,
@@ -162,7 +162,7 @@ fn setup(probes: bool) -> admission::Session {
 }
 pub(crate) fn run() -> u64 {
     let mut session = setup(cfg!(feature = "desktop-probes"));
-    if cfg!(feature = "desktop-probes") && !recovery::sibling_saved(session.matrix) {
+    if cfg!(feature = "desktop-probes") && !recovery::sibling_saved(&mut session.matrix) {
         session = providers::exercise(session);
     }
     #[cfg(feature = "database-probes")]
@@ -170,11 +170,7 @@ pub(crate) fn run() -> u64 {
     session.start_input();
     cathedral_user_runtime::write(b"Cathedral matrix desktop: ready\n").unwrap();
     loop {
-        match session
-            .matrix
-            .1
-            .receive_until(&mut [0; 64], time::after(100).unwrap())
-        {
+        match session.matrix.idle(time::after(100).unwrap()) {
             Ok(_) => (),
             Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
             Err(error) => panic!("desktop owner: {error:?}"),

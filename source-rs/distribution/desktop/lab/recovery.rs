@@ -1,7 +1,7 @@
 //! One visible session proves persistence, revoked writes and interrupted work.
 //! All control is owner-routed; the apps hold only their own catalog bindings.
 use super::*;
-fn app(matrix: Pair, nested: bool, op: u64) -> wire::Packet {
+fn app(matrix: &mut RootControl, nested: bool, op: u64) -> wire::Packet {
     let words = wire::route([op, 0, 0, 0, 0, 0, 0, 0], if nested { 0 } else { 1 }).unwrap();
     call(
         matrix,
@@ -12,7 +12,7 @@ fn app(matrix: Pair, nested: bool, op: u64) -> wire::Packet {
         },
     )
 }
-fn visible(matrix: Pair, nested: bool) -> u64 {
+fn visible(matrix: &mut RootControl, nested: bool) -> u64 {
     let deadline = time::after(1000).unwrap();
     loop {
         let reply = call(
@@ -38,10 +38,10 @@ fn visible(matrix: Pair, nested: bool) -> u64 {
         );
     }
 }
-pub(super) fn sibling_saved(matrix: Pair) -> bool {
+pub(super) fn sibling_saved(matrix: &mut RootControl) -> bool {
     visible(matrix, false) == 0xd18b35
 }
-pub(super) fn restored(matrix: Pair) -> bool {
+pub(super) fn restored(matrix: &mut RootControl) -> bool {
     visible(matrix, true);
     visible(matrix, false);
     let states = [
@@ -61,7 +61,7 @@ pub(super) fn restored(matrix: Pair) -> bool {
         false
     }
 }
-pub(super) fn exercise(matrix: Pair, pressure: bool) {
+pub(super) fn exercise(matrix: &mut RootControl, pressure: bool) {
     assert_eq!(app(matrix, true, 8)[0], 0);
     pixel(matrix, 140, 190, 0xd18b35);
     pixel(matrix, 510, 190, app::RIGHT);

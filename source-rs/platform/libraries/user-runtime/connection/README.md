@@ -161,8 +161,9 @@ connection. Split selects all eight child service slots before admission,
 including separate broker/data connections for its input producer and masked
 capture viewer. Brokered input hints use separate notification wait rights.
 Root supervision and brokered stock/Split lifecycle controls use shared links.
-Bootstrap source checks, input readiness and explicitly copied
-fixtures (including their positional wakes) remain to migrate. These app adapters remain synchronous; this change
+Bootstrap source checks, input readiness, and positional desktop display/root
+control now use shared connections. Explicit copied provider/fault fixtures,
+pre-driver test injection and positional app wakes remain to migrate. These app adapters remain synchronous; this change
 alone does not make an app process input while its drawing call is pending.
 
 ## Immutable attachments
@@ -359,7 +360,9 @@ control and boot root supervision now use shared streams. The desktop's
 from bootstrap into the Session, then lends one retained client to shell and
 recovery calls. Its idle wait watches the lifetime endpoint with no outstanding
 request, not notification hints as unsolicited replies. Explicitly copied
-fixtures remain separate consumers. Input source validation and bootstrap HEALTH
+provider/fault fixtures remain separate consumers. Positional desktop root control
+and display setup now use the same shared owners as F5; their lab helpers borrow
+those clients instead of copying raw pairs. Input source validation and bootstrap HEALTH
 now use shared connections: the driver validates its own source and retires the
 independent startup server after the boot owner closes it.
 Display configuration now uses a separate short-lived shared bootstrap port;

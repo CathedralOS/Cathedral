@@ -1,17 +1,11 @@
-//! One root connection per admitted session. Ordinary F5 borrows the retained
-//! shared client; positional labs explicitly keep their copied protocol.
+//! One retained shared root connection per admitted desktop or lab session.
 use crate::{Error, Pair, abi, time, wire};
-#[cfg(feature = "shell")]
 use cathedral_user_runtime::{connection::Client, event};
 
-#[cfg(feature = "shell")]
 pub(crate) struct RootControl {
     client: Client,
 }
-#[cfg(not(feature = "shell"))]
-pub(crate) type RootControl = Pair;
 
-#[cfg(feature = "shell")]
 impl RootControl {
     /// The boot owner serves no requests needed by the new root. Its display
     /// peer is already running, so this bounded setup can park here.
@@ -41,10 +35,7 @@ impl RootControl {
 }
 
 pub(crate) fn request(matrix: &mut RootControl, words: wire::Packet) -> wire::Packet {
-    #[cfg(feature = "shell")]
     let result = matrix.exchange(words, deadline(words));
-    #[cfg(not(feature = "shell"))]
-    let result = copied_exchange(*matrix, words);
     result.unwrap_or_else(|error| {
         let root = crate::ROOT_TASK.load(core::sync::atomic::Ordering::Relaxed);
         panic!(
@@ -52,17 +43,6 @@ pub(crate) fn request(matrix: &mut RootControl, words: wire::Packet) -> wire::Pa
             cathedral_user_runtime::task::Child::from_raw(root).wait_until(time::now().unwrap())
         )
     })
-}
-#[cfg(not(feature = "shell"))]
-pub(crate) fn copied_call(mut pair: Pair, words: wire::Packet) -> wire::Packet {
-    request(&mut pair, words)
-}
-#[cfg(not(feature = "shell"))]
-fn copied_exchange(pair: Pair, words: wire::Packet) -> Result<wire::Packet, Error> {
-    let mut bytes = [0; 64];
-    pair.0.send(&wire::encode(words))?;
-    let n = pair.1.receive_until(&mut bytes, deadline(words))?;
-    wire::decode(&bytes[..n]).ok_or(Error(abi::IO_ERROR as i64))
 }
 fn deadline(words: wire::Packet) -> u64 {
     time::after(match words[0] & 0xffff {
