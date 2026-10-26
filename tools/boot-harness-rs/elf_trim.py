@@ -14,8 +14,7 @@ def title_record(title):
     return b'CTHTIT01' + title.encode('ascii').ljust(24, b'\0')
 
 
-def trim(source, destination, title=None):
-    footer = title_record(title)
+def loadable_bytes(source):
     data = bytearray(Path(source).read_bytes())
     if data[:4] != b'\x7fELF' or data[4] != 2:
         raise ValueError(f'{source} is not an ELF64 file')
@@ -33,6 +32,11 @@ def trim(source, destination, title=None):
     # No section headers: offset, count, size and string index all zero.
     struct.pack_into('<Q', data, 0x28, 0)
     struct.pack_into('<HHH', data, 0x3a, 0, 0, 0)
+    return bytes(data[:end])
+
+
+def trim(source, destination, title=None):
+    data = loadable_bytes(source) + title_record(title)
     Path(destination).parent.mkdir(parents=True, exist_ok=True)
-    Path(destination).write_bytes(bytes(data[:end]) + footer)
-    return end + len(footer)
+    Path(destination).write_bytes(data)
+    return len(data)

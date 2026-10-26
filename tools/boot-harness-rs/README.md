@@ -135,7 +135,10 @@ loaded only once, and typing still works. These delays never enter the normal
 F5 build. This mode and `--recovery` are mutually exclusive.
 
 The build harness captures each compiled role in [artifacts.py](artifacts.py)
-before Cargo reuses its package output path. Paths include the content digest,
+before Cargo reuses its package output path. It uses [elf_trim.py](elf_trim.py)
+to retain loadable bytes and program headers, leaving Cargo's debug binary intact.
+Debug information therefore cannot exhaust the boot bundle's file-size limit.
+Paths include the content digest,
 so changing cached feature sets changes the kernel build's watched ELF inputs
 even when Cargo restores an older timestamp. This prevents a normal build from
 reusing a previously bundled recovery image. Check with `python
