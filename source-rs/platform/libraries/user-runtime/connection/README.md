@@ -161,7 +161,7 @@ connection. Split selects all eight child service slots before admission,
 including separate broker/data connections for its input producer and masked
 capture viewer. Brokered input hints use separate notification wait rights.
 Root supervision and brokered stock/Split lifecycle controls use shared links.
-Direct bootstrap display/source checks, input readiness and explicitly copied
+Bootstrap source checks, input readiness and explicitly copied
 fixtures (including their positional wakes) remain to migrate. These app adapters remain synchronous; this change
 alone does not make an app process input while its drawing call is pending.
 
@@ -359,7 +359,13 @@ control and boot root supervision now use shared streams. The desktop's
 from bootstrap into the Session, then lends one retained client to shell and
 recovery calls. Its idle wait watches the lifetime endpoint with no outstanding
 request, not notification hints as unsolicited replies. Explicitly copied
-fixtures and the remaining bootstrap exchanges are separate consumers. The ordinary desktop storage
+fixtures and the remaining input bootstrap exchanges are separate consumers.
+Display configuration now uses a separate short-lived shared bootstrap port;
+the root's presentation endpoint is not upgraded by an earlier owner and handed
+off without its transport state. The boot port permits INFO/background/cursor-enable/
+text only, and uses its original client identity for replies. Its closure leaves
+the root stream live. Explicit budgets cover simultaneous display writers and
+retiring backing/notification charges until the remote peer releases them. The ordinary desktop storage
 provider now uses a yielding shared control opener for readiness and subsequent
 health probes. Replacement collects the exact provider and releases the old
 client before starting another; setup acceptance alone is not health readiness. The ordinary

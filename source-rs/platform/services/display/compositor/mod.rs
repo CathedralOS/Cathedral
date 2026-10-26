@@ -1,5 +1,6 @@
 //! Rust module plumbing. Start reading in `compositor.rs`.
 
+mod configuration;
 mod delivery;
 mod input;
 mod matrix;

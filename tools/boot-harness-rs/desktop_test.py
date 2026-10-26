@@ -253,6 +253,7 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     assert 'Cathedral matrix: brokered startup and notification input wake ready' in log, log[-2000:]
     assert 'Cathedral desktop: shared storage control established' in log, log[-2000:]
     assert log.count('Cathedral desktop: shared root control ready') == 1, log[-2000:]
+    assert log.count('Cathedral desktop: shared bootstrap display ready') == 1, log[-2000:]
     assert 'Cathedral Omega host: shared storage ready' in log, log[-2000:]
     assert 'Cathedral Omega host: shared interaction broker ready' in log, log[-2000:]
     assert 'Cathedral Omega host: notification input wake ready' in log, log[-2000:]

@@ -1,7 +1,7 @@
 //! Static labels used only by the catalogue lab compositions.
 use super::*;
 use cathedral_platform_contracts::display;
-pub(super) fn paint(pair: Pair) -> Result<(), Error> {
+pub(super) fn paint(control: &mut super::display::Control) -> Result<(), Error> {
     let labels: &[(u64, u64, &[u8])] = if cfg!(feature = "shell") {
         &[] // The shell puts its headings inside the phase-specific chooser.
     } else if cfg!(feature = "notes") {
@@ -27,10 +27,11 @@ pub(super) fn paint(pair: Pair) -> Result<(), Error> {
         ]
     };
     for &(x, y, text) in labels {
-        pair.0
-            .send(&display::encode_text(x, y, 2, 0xffffff, text).unwrap())?;
-        let (bytes, n) = receive(pair, time::after(READY_TICKS)?)?;
-        if display::decode(&bytes[..n]) != Some([0; 6]) {
+        if super::display::exchange(
+            control,
+            &display::encode_text(x, y, 2, 0xffffff, text).unwrap(),
+        )? != [0; 6]
+        {
             return Err(BAD_REPLY);
         }
     }

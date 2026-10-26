@@ -7,9 +7,13 @@ matrix's own startup and supervise storage. [shell/](session/shell/shell.rs)
 resolves `Login` and `Users` by path in the supplied root.
 [Root control](session/control.rs) retains one shared connection for admission,
 shell commands and storage regrant. Session helpers borrow it; they never rebuild
-a client over copied raw handles. The ordinary owner funds two writer/reader pages
-and six channel/notification allowances: four transferred display/source channels
-plus root and storage control. Kernel ceilings are unchanged.
+a client over copied raw handles. [Display admission](session/admission/display.rs)
+uses a separate, temporary shared configuration port, leaving presentation endpoints
+untouched for the root's own stream. It drops configuration after root readiness.
+The owner funds three writer pages, two reader pages and seven channel/notification
+allowances: four transferred display/source channels, root/storage control and
+bounded overlap with the retiring display connection. Remote readers and signal
+rights can keep its backing charged after local drop. Kernel ceilings are unchanged.
 [Colors](../applications/colors/main.rs) is a separate installed program. See the
 [distribution map](../README.md) for F5, controls, composition and the
 same-image interactive test.

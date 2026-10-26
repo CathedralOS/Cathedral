@@ -12,17 +12,16 @@ impl Compositor {
         result.unwrap_or_else(|status| [status, 0, 0, 0, 0, 0])
     }
     fn dispatch(&mut self, request: &Request) -> Result<[u64; 6], u64> {
-        if request.len == display::TEXT_BYTES {
+        if request.control || request.client == Some(BOOTSTRAP) {
+            if let Some(reply) = self.configuration(request) {
+                return reply;
+            }
             if !request.control {
                 return Err(abi::DENIED);
             }
-            let damage = self.composition.labels.set(
-                &request.bytes,
-                self.output.width,
-                self.output.height,
-            )?;
-            self.redraw(damage);
-            return Ok([0; 6]);
+        }
+        if request.len == display::TEXT_BYTES {
+            return Err(abi::DENIED);
         }
         let words = display::decode(&request.bytes[..request.len]).ok_or(abi::INVALID_ARGUMENT)?;
         if matches!(
@@ -97,19 +96,7 @@ impl Compositor {
             self.redraw(damage);
             return Ok([0, words[1], 0, 0, 0, 0]);
         }
-        if words == [display::INFO, 0, 0, 0, 0, 0] {
-            return Ok([0, self.output.width, self.output.height, 0, 0, 0]);
-        }
         match words {
-            [wire::BACKGROUND, color, 0, 0, 0, 0] if color <= 0xffffff => {
-                self.composition.background = color as u32;
-                self.redraw(Rect {
-                    x: 0,
-                    y: 0,
-                    w: self.output.width,
-                    h: self.output.height,
-                });
-            }
             [wire::PLACE, client, x, y, w, h] if client < 3 => {
                 let rect = Rect { x, y, w, h };
                 if !rect.valid()

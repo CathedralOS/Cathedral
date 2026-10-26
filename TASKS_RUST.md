@@ -23,7 +23,8 @@ parent-storage and pipelined interaction streams between stock matrices, Omega a
 broker/interaction/storage, independent Split interaction/storage forwarding,
 Background, the separate Omega UI presenter, Split's input producer and masked
 capture viewer, brokered stock/Split lifecycle controls, and boot root/storage
-provider supervision. Brokered child input hints now use separate wait-only notifications.
+provider supervision. Boot display configuration uses a separate shared stream.
+Brokered child input hints now use separate wait-only notifications.
 The scoped storage fixture also
 exercises both private-root provider connections. See the evidence below. Remaining acceptance:
 
@@ -300,6 +301,74 @@ default/hidden cursor evidence remains valid for its scope, not the full asset A
 
 ## Current implementation evidence
 
+Implementation update 2026-10-25: **bootstrap display configuration uses an independent shared stream**, over `dcbf3f11`.
+
+Ordinary display INFO, background, cursor enable and terminal restart text now use
+shared IPC. `desktop/session/admission/display.rs` opens the provider's bootstrap
+port and retains that Client in the admission Attempt. The separate presentation
+pair is handed to the root unchanged; that root opens its own shared stream and
+answers HEALTH before the Attempt releases configuration. Setup plus first INFO
+share the original 300-tick readiness bound. Positional labs keep the old copied
+adapter and static labels; shell labels are supplied by its programs.
+
+The display compositor installs bootstrap as an explicit client slot, separately
+from its root control stream. No payload supplies the role and no request identity
+is rewritten for replies. `compositor/configuration.rs` owns the narrow INFO,
+background, cursor-enable and text dispatch shared with root control. Bootstrap
+cannot publish matrix scenes, inject input or grant clients authority. Closing it
+retires that stream without stopping the live root presentation connection.
+No new public wire command, kernel mechanism or global limit.
+
+Display receives two writer pages, two notification allowances and 514 reader
+pages (the old 512-page image headroom plus both possible stream readers). The
+boot owner receives three writer pages, two reader pages and seven allowances.
+Dropping configuration releases its local reader/rights, but remote readers and
+signal rights may retain its writer/notification charge until display processes
+closure. Fund that overlap with root/storage explicitly; do not assume local
+Drop synchronously returns remote debt. After retirement, storage recovery still
+expects the same retained-root baseline as before.
+
+Malformed display setup and malformed INFO after valid setup are separate fault
+cases; rejected fixtures exit on peer closure. The bootstrap suite now has 28
+cases, and probe builds exercise denied scene/input operations on the new port.
+Restart rendering still requires neither a root matrix nor input/storage tasks.
+
+Verification:
+
+- Normal F5 and cold persistence pass with the final funding in
+  `desktop/20261026T022420036886Z`: user selection, three independent Notes,
+  protected close/slot reuse, Colors and the exact 1,621-record host oracle.
+  The test requires one shared bootstrap-display connection per normal boot.
+  The earlier implementation pass is `desktop/20261026T021119241722Z`.
+- All 28 bootstrap cases pass in `bootstrap/20261026T021824384477Z`, including
+  malformed shared setup versus bad INFO/HEALTH after setup, successful explicit
+  retries, exhausted restart screens and unchanged storage on failure. Every
+  rollback compares the complete guest budget baseline and reports zero reader,
+  endpoint, notification-object and notification-right residue. Probe builds
+  refuse matrix-scene and physical-input operations on bootstrap display control.
+- Four recursive desktops pass dirty-close protection, repeated subtree
+  reclamation, confined saved Notes/Colors and cold reopen in
+  `desktop/20261026T022505680047Z`.
+- Provider bad-setup and bad-HEALTH recovery pass in
+  `provider-startup/20261026T022647045072Z`, including the unchanged retained-root
+  charge baseline after the earlier display stream has retired.
+- `--compositor-test --release` passes isolation/recovery and all 786,432 scanout
+  pixels with the standalone copied composition. The positional Notes recovery
+  lab passes physical input, drafts, persistence and both exact 20-record host
+  checks in `matrix-database/20261026T022729925365Z`.
+- Host `cargo test --locked`, desktop/display all-feature Clippy, copied desktop
+  lab Clippy, final format/layout checks, local Markdown links and whitespace
+  checks pass. Kernel and runtime implementations are unchanged; ARM64 was not
+  rerun here. Logs: `build/omega-component/bootstrap-display-*.log`.
+
+**Next:** migrate input-driver readiness and the source-attenuation checks in
+`desktop/session/admission/input.rs` and `platform/services/input/matrix.rs`.
+The source pair currently receives copied denial probes before being moved to the
+driver, which opens shared transport. Keep one real transport owner per lifetime;
+do not repeat the old endpoint-only handoff after upgrading it. Then inventory
+explicit copied labs and retire those consumers deliberately. The on-demand
+broker outcome remains separate accepted work. No latency improvement claimed.
+
 Implementation update 2026-10-25: **boot desktop-to-root control uses one shared owner**, over `e6318026`.
 
 The ordinary F5 bootstrap opens shared root control and validates HEALTH before
@@ -367,7 +436,7 @@ Verification:
   including physical input, drafts, recovery and exact 20-record text/history/quota
   verification. Logs for this update are `build/omega-component/root-control-*.log`.
 
-**Next:** finish the remaining ordinary bootstrap exchanges: initial display INFO,
+**Previous next (display completed above):** finish the remaining ordinary bootstrap exchanges: initial display INFO,
 background/labels and terminal restart rendering, input-driver readiness, and
 source-attenuation checks before endpoint handoff. Start at
 `desktop/session/admission/display.rs`, `labels.rs` and `input.rs`. Display/source

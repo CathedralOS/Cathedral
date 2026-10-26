@@ -3,12 +3,14 @@
 use super::*;
 pub(super) struct Attempt {
     tasks: [Option<task::Child>; 3],
+    pub display_control: Option<display::Control>,
     handles: [Option<Handle>; 10],
 }
 impl Attempt {
     pub fn new() -> Self {
         Self {
             tasks: [None; 3],
+            display_control: None,
             handles: [None; 10],
         }
     }
@@ -51,6 +53,11 @@ impl Attempt {
         }
     }
     pub fn commit(self, matrix: RootControl, source: Pair, extent: [u64; 2]) -> Session {
+        // Root presentation has its own ready connection now. Release early
+        // configuration before starting storage. Its remote reader/signal can
+        // outlive this local drop, so F5 funds that bounded overlap explicitly.
+        #[cfg(feature = "shell")]
+        drop(self.display_control);
         let root = self.tasks[2].unwrap();
         crate::ROOT_TASK.store(root.raw(), core::sync::atomic::Ordering::Relaxed);
         Session {

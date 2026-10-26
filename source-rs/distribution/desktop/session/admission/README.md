@@ -5,7 +5,16 @@ root admission/policy and physical input. The catalogue lab calls
 the same admission and input mechanisms, with its own storage-first proof setup.
 
 Follow [display.rs](display.rs) for the initial INFO exchange, dimensions and
-background, then [root.rs](root.rs) for funding and the endpoint handoff. Root
+background, then [root.rs](root.rs) for funding and the endpoint handoff.
+F5 uses the display's bootstrap port for a short-lived shared configuration
+connection. The presentation pair passed to the root is separate and untouched;
+the root opens its own shared stream. [Attempt](attempt.rs) retains configuration
+through root readiness and drops it on commit, or after collecting failed tasks.
+The [display configuration dispatcher](../../../../platform/services/display/compositor/configuration.rs)
+permits INFO, background, cursor enable and text on that boot port, not scene
+publication, input injection or client grants. No request identity is rewritten
+for reply dispatch. Copied positional labs keep their staged presentation pair.
+Root
 budgets and code authority are explicit in [funding.rs](funding.rs).
 F5 opens one [shared root control](../control.rs), validates HEALTH and moves that
 owner into the admitted Session. The connector owns its raw endpoints on success
@@ -33,14 +42,16 @@ objects/rights against its baseline.
 Failed cleanup is an invariant failure, not permission to start another attempt.
 
 On exhaustion, input/root failures can still use the original display launch
-grant to show a static restart message, without a matrix, input or storage. That
+grant and shared bootstrap configuration to show a static restart message,
+without a matrix, input or storage. That
 owner blocks while the display serves. If display cannot start, the diagnostic is
 serial-only and the initial program exits. A driver replacement for a live user
 is a different recovery operation; this path never destroys a live session.
 
 The `bootstrap-*` features and service `startup_probe.rs` files are fault fixtures
 only. `bootstrap_test.py` drives pre-initialization exits, stalls, malformed
-replies and a refusal after staging but before a successful endpoint move. Root
-fixtures distinguish malformed setup from bad HEALTH after valid shared setup. None
+replies and a refusal after staging but before a successful endpoint move. Display/root fixtures distinguish malformed setup from bad INFO/HEALTH after
+valid shared setup; successful probe boots also check refused scene publication
+and input injection on bootstrap display control. None
 is part of the ordinary distribution profile. Hardware initialization itself is
 not exhaustively fault-injected by these tests.

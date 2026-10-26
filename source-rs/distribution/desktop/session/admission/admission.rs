@@ -81,7 +81,7 @@ fn admit(number: u64) -> Result<Session, Failure> {
     let mut stage = Stage::Display;
     let result = (|| {
         let (display, extent) = display::start(&mut attempt, argument(stage, number, 0))?;
-        labels::paint(display)?;
+        labels::paint(attempt.display_control.as_mut().unwrap())?;
         stage = Stage::Root;
         let (matrix, source) = root::start(&mut attempt, display, argument(stage, number, 0))?;
         Ok((matrix, source, extent))

@@ -7,12 +7,6 @@ impl Compositor {
         let before = self.composition.pointers.cursor_bounds();
         let result = if r.control {
             match w {
-                [p::ENABLE, enabled @ 0..=1, 0, 0, 0, 0] => {
-                    self.composition
-                        .pointers
-                        .enable(enabled == 1, self.composition.clients);
-                    Ok([0; 6])
-                }
                 [p::LEASE, client @ 0..=2, grant @ 0..=1, 0, 0, 0] => self
                     .composition
                     .pointers
@@ -97,7 +91,7 @@ impl Compositor {
             }
         };
         // Polling/capture/state do not change cursor pixels.
-        if matches!(w[0], p::DEVICE | p::DRIVE | p::LEASE | p::ENABLE) {
+        if matches!(w[0], p::DEVICE | p::DRIVE | p::LEASE) {
             self.redraw_cursors(before);
         }
         result

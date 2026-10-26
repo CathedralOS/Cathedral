@@ -79,7 +79,7 @@ def run(source, selected):
     completed = []
     for stage, index in STAGES.items():
         for mode, value in MODES.items():
-            if mode == 'bad-ready' and stage != 'root':
+            if mode == 'bad-ready' and stage == 'input':
                 continue
             for repeat in (False, True):
                 case = f'{stage}-{mode}-{"repeat" if repeat else "once"}'
@@ -126,6 +126,6 @@ def run(source, selected):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('image', type=Path, help='one-user fixture; only copies are modified')
-    parser.add_argument('--case', action='append', help='e.g. input-stall-once; default: all 26 cases')
+    parser.add_argument('--case', action='append', help='e.g. input-stall-once; default: all 28 cases')
     args = parser.parse_args()
     run(args.image, args.case)

@@ -11,6 +11,9 @@ use cathedral_user_runtime::{
     Error,
     server::{Event, Server},
 };
+// Only explicitly installed bootstrap endpoints occupy this slot; ordinary
+// scene/source links keep their existing indices and cannot claim it.
+const BOOTSTRAP: usize = 5;
 struct Compositor {
     presentation: &'static mut presentation::Presentation,
     composition: Composition<'static>,
@@ -46,9 +49,28 @@ pub fn run(environment: cathedral_user_runtime::task::Environment) -> u64 {
     let mut compositor = Compositor::open(clients, scratch, labels, tiles, presentation);
     // The optional fifth connection has no scene/input authority; it exercises
     // denied requests and reply backpressure without adding an application slot.
-    let mut server = Server::open_clients(5).unwrap();
+    let mut server = Server::open_clients(if environment.len() == 2 { 6 } else { 5 }).unwrap();
     server.enable_memory();
     if environment.len() == 2 {
+        // Keep bootstrap configuration separate from the root's presentation
+        // stream. set_control replaces an unopened port; the installed slot
+        // takes that port's custody, never aliases an active shared client.
+        server
+            .install(
+                BOOTSTRAP,
+                (
+                    cathedral_user_runtime::ipc::Handle::bootstrap(0).unwrap(),
+                    cathedral_user_runtime::ipc::Handle::bootstrap(1).unwrap(),
+                ),
+            )
+            .unwrap();
+        static mut BOOT: cathedral_user_runtime::server::SharedSlot =
+            cathedral_user_runtime::server::SharedSlot::empty();
+        let boot = &raw mut BOOT;
+        // SAFETY: Single entry lends this separate slot until service exit.
+        server
+            .enable_shared(BOOTSTRAP, unsafe { &mut *boot })
+            .unwrap();
         server.set_control((
             environment.endpoint(0).unwrap(),
             environment.endpoint(1).unwrap(),

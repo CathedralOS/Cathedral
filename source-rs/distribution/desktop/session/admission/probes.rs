@@ -19,7 +19,8 @@ pub(super) fn argument(stage: Stage, attempt: u64, normal: u64) -> u64 {
     }
     let mode = if cfg!(feature = "bootstrap-refusal") {
         4
-    } else if matches!(stage, Stage::Root) && cfg!(feature = "bootstrap-bad-ready") {
+    } else if matches!(stage, Stage::Root | Stage::Display) && cfg!(feature = "bootstrap-bad-ready")
+    {
         5
     } else if cfg!(feature = "bootstrap-malformed") {
         3

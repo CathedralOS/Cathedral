@@ -69,9 +69,9 @@
       "features": [
         "shell"
       ],
-      "private_pages": 2,
+      "private_pages": 3,
       "shared_pages": 2,
-      "ipc_channels": 6
+      "ipc_channels": 7
     },
     "executables": [
       {
@@ -88,9 +88,9 @@
         "clock": true,
         "argument": 1129270608,
         "framebuffer": true,
-        "shared_pages": 513,
-        "ipc_channels": 1,
-        "private_pages": 1
+        "shared_pages": 514,
+        "ipc_channels": 2,
+        "private_pages": 2
       },
       {
         "package": "cathedral-input-service",
