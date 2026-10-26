@@ -18,7 +18,12 @@ Credentials are **secrets**, kept in the keychain (the operating system's protec
 
 ## Authentication unseals the realm
 
-A correct credential does two things at once. It proves identity, binding the new session to the user's principal ([identity & principals](../design/part_1_authority/02_identity_and_principals.md)). And it releases the user realm's decryption key, which is sealed to the credential plus a measured-good boot ([trust & measurement](07_trust_and_measurement.md)). Logging in is therefore the act that makes the user's data readable: a wrong credential, or a tampered boot, leaves the realm sealed.
+For an initially sealed realm, authentication may authorize the storage/crypto
+provider to unlock access and establish a session. The provider retains key
+custody; the program receives authorized storage operations, not the realm key.
+The measured-boot/key mechanism remains part of the
+[trust design](07_trust_and_measurement.md). Re-authenticating an existing locked
+session is not necessarily a new storage unlock.
 
 ## What login produces: a session
 
@@ -30,7 +35,21 @@ The session then starts the user's first components inside the user realm: the p
 
 ## Lock, logout, switch
 
-Locking or logging out revokes the session and re-seals the user realm, dropping its key from memory. Switching users selects a different realm and runs its own login, so two users' worlds never share ambient authority. The unattended pre-session state is the safe default the machine returns to.
+The accepted [session-lock contract](../spec/human_surface/compositor_and_seat.md#session-locking)
+gates interactive access and routes unlock interaction to the authorized interface.
+It does not automatically revoke storage grants, destroy keys or re-seal a realm.
+Session policy separately chooses whether programs continue, throttle or suspend.
+
+Suspending any program gates its owned descendants under the general
+[execution rule](../spec/resources/execution_budgets.md#owner-controlled-subtree-suspension).
+Resume preserves budgets, grants and independent suspension gates. A Matrix is
+not a special kernel category, and independent providers need not stop with it.
+
+Logout ends a session through its explicit lifecycle policy; deliberate storage
+sealing is a separate provider operation, not a consequence inferred from a UI
+transition. Switching sessions changes authorized seat routing without granting
+one session access to another's realm. The initial sealed pre-login condition is
+not a claim that every later lock or switch recreates that cryptographic state.
 
 ## Next
 

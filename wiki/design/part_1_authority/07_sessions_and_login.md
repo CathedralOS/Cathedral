@@ -8,9 +8,19 @@ On a legacy system, login produces an ambient session: authenticate once and you
 
 ## The Cathedral Model
 
-Login is an authority-minting event over **sealed** data. Authentication authorizes access to the user's realm and binds a bounded, revocable session to the user's principal. Before login the realm is sealed: encrypted, with no principal holding its root, so the data is unreadable, not merely access-denied. A correct credential releases the realm's key, which is sealed to the credential plus a measured-good boot, and mints the session. Logout or lock revokes the session and re-seals the realm.
+Initial login can authorize access to **sealed** data and bind a bounded,
+revocable session to the user's principal. The storage/crypto provider retains
+key custody and supplies authorized realm access, not key bytes to the Matrix.
+Returning to an existing locked session is different: its realm need not have
+been sealed, and re-authentication need not mint replacement storage grants.
+Session locking, execution suspension and explicit realm locking are separate
+operations under the accepted [session-lock contract](../../spec/human_surface/compositor_and_seat.md#session-locking).
 
-"User" is not an OS concept. The OS knows only three things: **Matrices** (programs hosting and attenuating children), **seats** (a display region plus the input routing bound to it), and the **root** that hosts them. "User," "account," "login," and "corporate single-sign-on" are all policy inside a swappable login program. The OS exposes two primitives, unseal a realm given a credential-operation and bind a seat to a Matrix, and everything else is the login program's business. That is why a login program can be wired to a local password, a corporate VPN, a cloud identity provider, or a biometric with no change to the mechanism: it boots a Matrix and the OS hands it the seat.
+"User," "account," "login," and "corporate single-sign-on" are policy inside
+a swappable login program. A Matrix is an ordinary program hosting and
+attenuating children, not a kernel program category. Authorized storage unlocking
+and seat binding support initial login; a local password, corporate identity
+provider or other authentication policy need not change those mechanisms.
 
 ## The decided mechanism
 
@@ -20,14 +30,16 @@ Login is an authority-minting event over **sealed** data. Authentication authori
 
 - the **boot login program**, which unseals the top-level realm and then rebinds the seat to the Matrix;
 - any **app or shell hitting a sealed sub-realm**, such as the password-protected vault inside your files, which unseals on demand and re-seals when done with no seat rebind, so you stay where you are;
-- a **nested login**, which unseals a child Matrix.
+- a **nested login**, which may unlock a realm supplied to a child program.
 
 The matrix receives access to plaintext through authorized storage operations,
 not the encryption key. The trusted storage/crypto implementation owns key
 custody; the [accepted matrix authority boundary](../../spec/execution/components_and_matrices.md)
 does not choose that implementation or a complete sealing protocol.
 
-Login is unseal plus seat-rebind. An in-place vault unlock is unseal only. Login is not special; it is the top-level instance of a general mechanism, which is why it nests: a custom login program can log into a nested Matrix, recursively.
+Initial login may combine realm unlock and seat binding. An in-place vault unlock
+needs no seat rebind; unlocking an existing session need not unlock storage.
+These independently authorized operations also serve nested login programs.
 
 ### The login program is a confined sibling-broker, never the Matrix's host
 
@@ -61,14 +73,35 @@ When sealing hardware is absent, the realm degrades visibly. The key is derived 
 
 There is no "compositing" handed over as a subsystem. The compositor is trusted root infrastructure. A Matrix gets a surface plus input routing, which is the seat bound to it. "Full-screen" means the whole region the parent grants (whole-parent-view). A parent owns a compositor region and grants sub-regions to its children, and the window-resize and region-grant protocol is a compositor implementation detail ([[windowing_and_compositor]]), identical for a windowed app or a full-screen Matrix.
 
-Lock and timeout confirm the broker is never load-bearing. The intended lifecycle is for root to reclaim the seat, suspend the Matrix, arrange realm sealing, and spawn a fresh login broker without depending on the old broker staying alive. This is not a completed
-locking contract: withdrawing storage/key access alone cannot seal plaintext
-already held in process memory. Suspension, retained plaintext and subsequent
-resume remain part of that protocol's design work.
+### Locking does not imply suspension or realm sealing
+
+The enclosing owner gates interactive access and arranges an authorized unlock
+interface without depending on the original login broker staying alive. Session
+policy independently chooses continued execution, throttling or suspension. It
+does not automatically revoke realm access or discard encryption keys.
+
+Owner-controlled suspension gates the entire owned subtree of any program, not
+just a Matrix. Children subdivide their parent's execution allowance; spawning
+does not buy extra budget. Resume removes that gate without clearing independent
+child/ancestor suspensions, resetting accounting or replacing existing grants.
+Ordinary task parking is not subtree suspension. Independently owned services
+may continue already-submitted work under their own budgets. See the
+[execution rule](../../spec/resources/execution_budgets.md#owner-controlled-subtree-suspension).
+
+An explicit storage lock is a separate operation with its provider's own access
+and key-custody contract. Neither a screen lock nor program suspension makes a
+cryptographic sealing claim. Logout/teardown is also distinct from locking an
+existing session; this chapter does not establish automatic key destruction on
+either transition.
 
 ### The login chooser sees only a minimal, opt-in unsealed label
 
-A login chooser wants to show "John Smith [avatar]" before unlock, but everything inside the realm is sealed until then. The sealed realm is the home of all user config (name, avatar, settings), configured from within and shown by the Matrix itself after unlock, so "Hello John" needs nothing from the broker. There is one exception: a minimal, unsealed label (name plus avatar, nothing more) that the Matrix exports from its settings to an unsealed sidecar, readable by the chooser while the realm is sealed. It is opt-in. Export the label for a friendly chooser, or export nothing for a bare prompt, the private lock screen. The bound "anything beyond a name and picture is too much" is enforced structurally: that label is the only thing outside the seal, so there is nowhere to leak more.
+An initial login chooser may want to show a name and avatar while the realm is
+still sealed. The intended mechanism is an opt-in minimal label exported to an
+unsealed sidecar, not permission to read the realm. An existing session's lock
+screen must likewise use only information authorized for that interface; a realm
+remaining unlocked does not grant the chooser access. Sidecar policy does not
+imply that every return to the chooser seals storage.
 
 ### The granting structure: Matrices forward, root mints
 

@@ -65,6 +65,12 @@ is one application of this boundary.
 
 ## Matrix failure and subtree lifetime
 
+Execution suspension is distinct from failure or termination. The
+[execution-budget contract](../resources/execution_budgets.md#owner-controlled-subtree-suspension)
+gates any suspended program's owned subtree and preserves its grants and custody.
+There is no Matrix-specific suspension class. Session locking may choose that
+policy but does not imply suspension or realm sealing.
+
 The owner accepted on 2026-10-23 that a matrix is a lifetime boundary: when it
 crashes or terminates, its owned children and all their descendants are torn down.
 No descendant survives as an orphan for a replacement matrix to adopt. The

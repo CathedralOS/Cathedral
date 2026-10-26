@@ -5557,6 +5557,16 @@ to hierarchy metadata; extensions are conventions, not authoritative types.
   remain. A live storage retry needs delegated authority and a discoverable
   control without replacing the user's app or expanding an app's service grants.
   Existing app-owned close protects dirty work, and layout invalidation keeps drafts.
+  Carry the accepted [session-lock boundary](wiki/spec/human_surface/compositor_and_seat.md#session-locking)
+  and [general subtree suspension](wiki/spec/resources/execution_budgets.md#owner-controlled-subtree-suspension)
+  through an ordinary desktop lock/unlock and a non-Matrix parent/child witness.
+  Prove interactive gating independently of execution policy, no descendant
+  execution after suspension completes, independent child gates surviving parent
+  resume, preserved budget accounting/grants, and an external provider remaining
+  eligible. Reject unauthorized control and stale handles; ordinary parent parking
+  must leave children eligible. Do not require realm encryption, key destruction
+  or storage-grant redistribution for lock/unlock. Existing budget-gate evidence
+  does not close this acceptance.
 - [x] **Remove desktop requirements from shared matrix machinery.** The stock
   executable/configuration/recovery/control router belong to distribution. Platform
   supplies local authority state with caller-selected child capacity and geometry.

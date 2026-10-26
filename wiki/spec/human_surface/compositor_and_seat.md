@@ -5,7 +5,7 @@
 | Contract status | Current |
 | Specification coverage | Partial |
 | Implementation coverage | Partial |
-| Last reviewed | 2026-10-23 |
+| Last reviewed | 2026-10-26 |
 
 ## Replaceable desktop programs
 
@@ -41,6 +41,30 @@ from failure of the kernel or every underlying input/display provider. Exact
 press duration, recovery controls, restart policy and protected presentation
 mechanisms remain implementation work. The contract requires availability, not
 a particular process residency strategy.
+
+## Session locking
+
+On 2026-10-26 the owner separated session locking, execution suspension and realm
+locking. Session locking gates interactive access to the session through its
+enclosing seat/input authority. The authorized unlock interface receives the
+interaction needed for re-authentication; the locked session must not receive
+that credential input or regain interaction merely by requesting focus.
+
+Locking does not itself end the session, revoke storage grants, discard keys or
+re-seal a realm. The session owner separately chooses whether its programs keep
+running, are throttled, or are suspended within its scheduling authority. No one
+execution policy is mandatory. If it selects suspension, the general
+[owned-subtree rule](../resources/execution_budgets.md#owner-controlled-subtree-suspension)
+applies to any program; a matrix has no special kernel status.
+
+Unlocking restores authorized interaction and removes any corresponding
+owner-imposed suspension when policy calls for it, without clearing independent
+suspensions or recreating revoked/expired grants. Explicit realm locking remains
+a separate storage-provider operation. This settlement introduces neither a
+temporary storage-grant disable/restore protocol nor an automatic key lifecycle.
+Logout/teardown and deliberate storage sealing must not be inferred from a lock
+screen transition. Concrete authentication and trusted-prompt protocols remain
+separate work.
 
 ## Nested matrices
 

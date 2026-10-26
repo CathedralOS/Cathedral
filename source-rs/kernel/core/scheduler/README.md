@@ -6,6 +6,13 @@ another program does not transfer its budget or confer scheduling privilege.
 Provider request admission remains userspace policy; caller-funded CPU execution
 is deferred. The concrete accounting and scheduling choices below remain lab policy.
 
+The contract also requires owner-controlled suspend/resume of any program's
+owned subtree, preserving independent suspension gates and budget accounting.
+This is separate from an individual task waiting or sleeping. The budget gates
+described here are reusable machinery, not evidence that the suspend/resume and
+session-lock outcome is implemented; see the
+[remaining lifecycle work](../../../../TASKS_RUST.md#next-work-in-recommended-order).
+
 [Scheduler entrance](scheduler.rs) owns task state: wake sleepers, park the current
 process, select a turn, mark it running. [shares entrance](shares/shares.rs) selects within the
 ownership tree without knowing about contexts, IPC protocols or matrices.

@@ -6,6 +6,14 @@ ceilings. Services and matrices are ordinary programs; request admission is thei
 policy. Caller-funded CPU execution is deferred. The broader resource and timing
 mechanisms below are not all accepted by that partial contract.
 
+The same contract now fixes owner-controlled subtree suspension: every program
+and its descendants share the ancestor execution gate, with no Matrix special
+case. Resume preserves independent gates, ceilings and accounting. Ordinary task
+parking, including an Omega `suspend` call, does not close that subtree gate.
+Session locking may select suspension but does not require it or revoke storage
+grants. These are scheduler eligibility rules, not permission to migrate or
+rewrite paused state outside the semantic safe points described below.
+
 The accepted [memory-budget contract](../../spec/resources/memory_budgets.md)
 separately fixes conserved backing envelopes, direct delegation, optional
 interception and retention accounting. Its backing ceiling is not automatically
