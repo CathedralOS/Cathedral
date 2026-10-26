@@ -1,6 +1,10 @@
-//! Retain a chrome request until the prepared switch commits or is restored.
+//! Dispatch source/distribution/matrix/workspace/main.omg commands while retaining
+//! the chrome request and exact tasks until the scene commits or is restored.
 use super::*;
-use cathedral_stock_matrix::policy::operation::Ticket;
+use cathedral_stock_matrix::policy::{
+    operation::Ticket,
+    workspace::{Command, State},
+};
 
 pub(in crate::service::children) struct Pending {
     pub(super) request: Request,
@@ -9,8 +13,8 @@ pub(in crate::service::children) struct Pending {
     pub(super) task: u64,
     pub(super) caller_task: u64,
     pub(super) previous: Option<(usize, u64)>,
-    pub(super) status: u64,
-    pub(super) restoring: bool,
+    pub(super) policy: State,
+    command: Option<Command>,
 }
 
 impl Children {
@@ -19,7 +23,7 @@ impl Children {
         request: Request,
         app: u64,
         parent: &mut Parent,
-        world: &World,
+        world: &mut World,
         server: &mut Server,
     ) -> Result<(), Error> {
         let slot =
@@ -47,7 +51,7 @@ impl Children {
         let Some(ticket) = self.operation_tickets.issue() else {
             return server.reply(&request, &wire::encode(wire::error(abi::NO_MEMORY)));
         };
-        let mut pending = Pending {
+        self.selecting = Some(Pending {
             request,
             ticket,
             slot,
@@ -56,26 +60,10 @@ impl Children {
             previous: self
                 .active
                 .map(|s| (s, self.slots[s].as_ref().unwrap().task.raw())),
-            status: 0,
-            restoring: false,
-        };
-        if let Some(status) = self.selection_refusal(&pending, world, server)? {
-            pending.status = status;
-            return self.reply_selection(pending, server);
-        }
-        if let Err(error) = parent.begin_scene(
-            ticket,
-            world,
-            self.active,
-            Some(slot),
-            cfg!(feature = "selection-delay"),
-        ) {
-            pending.status = error.0 as u64;
-            return self.reply_selection(pending, server);
-        }
-        time::storage_sample("selection-started", &[ticket.raw(), slot as u64]);
-        self.selecting = Some(pending);
-        Ok(())
+            policy: State::new(ticket),
+            command: None,
+        });
+        self.progress_selection(parent, world, server)
     }
 
     pub(in crate::service) fn progress_selection(
@@ -87,60 +75,61 @@ impl Children {
         let Some(mut p) = self.selecting.take() else {
             return Ok(());
         };
-        if !p.restoring
-            && p.status == 0
-            && parent.scene_commit_ready()
-            && let Some(status) = self.selection_refusal(&p, world, server)?
-        {
-            p.status = status;
+        loop {
+            let command = p
+                .command
+                .take()
+                .or_else(|| p.policy.command())
+                .expect("live selection has a command");
+            let (status, committed) = match command {
+                Command::Begin => (
+                    self.begin_selection_scene(&mut p, parent, world, server)?,
+                    false,
+                ),
+                Command::Wait | Command::WaitRestore => {
+                    let Some(outcome) =
+                        self.poll_selection_scene(&mut p, command, parent, world, server)?
+                    else {
+                        p.command = Some(command);
+                        self.selecting = Some(p);
+                        return Ok(());
+                    };
+                    outcome
+                }
+                Command::Activate => {
+                    let status = self
+                        .commit_activation(p.slot, world, server)
+                        .err()
+                        .map_or(0, |e| e.0 as u64);
+                    (status, false)
+                }
+                Command::Restore => {
+                    // Retain both exact tasks until Omega observes restoration.
+                    let previous = p.previous.map(|(slot, _)| slot);
+                    let status = parent
+                        .begin_scene(p.ticket, world, Some(p.slot), previous, false)
+                        .err()
+                        .map_or(0, |e| e.0 as u64);
+                    time::storage_sample("selection-restoring", &[p.ticket.raw()]);
+                    (status, false)
+                }
+                Command::Finish => {
+                    assert!(p.policy.complete(p.ticket, command, 0, false));
+                    return self.reply_selection(p, server);
+                }
+                Command::Failed => return Err(Error(abi::IO_ERROR as i64)),
+            };
+            assert!(p.policy.complete(p.ticket, command, status, committed));
         }
-        if !p.restoring && p.status != 0 {
-            parent.cancel_scene(p.status);
-        }
-        let Some(done) = parent.progress_scene()? else {
-            self.selecting = Some(p);
-            return Ok(());
-        };
-        assert_eq!(done.ticket, p.ticket);
-        if p.restoring {
-            if !done.committed || done.status != 0 {
-                return Err(Error(abi::IO_ERROR as i64));
-            }
-            time::storage_sample("selection-restored", &[p.ticket.raw()]);
-            return self.reply_selection(p, server);
-        }
-        if p.status == 0 {
-            p.status = done.status;
-            if p.status == 0
-                && let Some(status) = self.selection_refusal(&p, world, server)?
-            {
-                p.status = status;
-            }
-        }
-        if done.committed && p.status == 0 {
-            self.commit_activation(p.slot, world, server)?;
-            return self.reply_selection(p, server);
-        }
-        if done.committed {
-            // Local visibility/input never changed. Deferred mutations cannot
-            // replace either task until restoration releases visual custody.
-            let previous = p.previous.map(|(slot, _)| slot);
-            parent.begin_scene(p.ticket, world, Some(p.slot), previous, false)?;
-            p.restoring = true;
-            time::storage_sample("selection-restoring", &[p.ticket.raw()]);
-            self.selecting = Some(p);
-            return Ok(());
-        }
-        self.reply_selection(p, server)
     }
 
     fn reply_selection(&self, p: Pending, server: &mut Server) -> Result<(), Error> {
-        time::storage_sample("selection-complete", &[p.ticket.raw(), p.status]);
+        time::storage_sample("selection-complete", &[p.ticket.raw(), p.policy.status()]);
         // Never deliver an old selection result to a replacement chrome.
         if server.incarnation(0) == Some(p.request.incarnation)
             && self.slots[0].as_ref().map(|c| c.task.raw()) == Some(p.caller_task)
         {
-            server.reply(&p.request, &wire::encode(wire::error(p.status)))?;
+            server.reply(&p.request, &wire::encode(wire::error(p.policy.status())))?;
         }
         Ok(())
     }

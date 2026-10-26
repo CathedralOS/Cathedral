@@ -3,7 +3,8 @@
 Start at [policy/main.omg](policy/main.omg), which dispatches the Rust reference
 bridge to [configuration](configuration/README.md), [lifecycle](lifecycle/README.md),
 [launcher recovery](recovery/README.md), [local startup recovery](startup/README.md)
-or [ordinary stored-program launch](launch/README.md).
+or [ordinary stored-program launch](launch/README.md) and
+[existing-app workspace selection](workspace/README.md).
 The chooser imports the configuration codec directly. The stock F5 matrix runs
 these policies through [native/main.omg](native/main.omg), a single compiled export.
 
@@ -13,6 +14,8 @@ Recovery owns bounded retries and the asynchronous read/wait/admit workflow,
 with ticketed completions and fallback decisions.
 Startup owns local picker/background retry budgets and selection-failure recovery.
 Launch owns read/admit/bind/place/publish sequencing and partial-failure rollback.
+Workspace owns switch/wait/activate sequencing and restoration after a late
+accepted commit. Cancellation drains the scene before finishing or restoring.
 Ordinary reads and storage binding yield; admission/publication still use
 synchronous host mechanisms.
 Rust still authenticates callers, serializes IPC, retains exact task/endpoint

@@ -3,6 +3,13 @@
 Start here when taking over work. These are implementation queues, not the
 specification or a claim that every design ambition is implemented.
 
+**Owner direction, 2026-10-26: prioritize Omega-centered implementation.** The
+Rust reference has established enough of the OS design to support moving runnable
+behavior into `source/`. Use Rust for the host mechanisms, regression fixes and
+tests needed by that transition; completing every Rust experiment is not a
+prerequisite. Prefer replacing existing desktop behavior with Omega over adding
+another Rust-only feature or isolated proof. Keep F5 usable throughout.
+
 | Work | Start here | Source |
 | --- | --- | --- |
 | Runnable Rust reference OS | [Rust tasks and handoff](TASKS_RUST.md) | `source-rs/` |

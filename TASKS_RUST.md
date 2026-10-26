@@ -1,5 +1,30 @@
 # Rust reference OS: tasks and handoff
 
+## Active direction: Omega-owned desktop behavior
+
+**Owner instruction, 2026-10-26:** focus on driving the Omega implementation
+forward. The Rust reference is now supporting infrastructure and executable
+evidence, not the default destination for further feature development. The open
+outcomes below remain requirements; their order does not override this direction.
+Continue Rust work where it enables an Omega migration, fixes a regression, or
+supplies a missing mechanism needed by that migration.
+
+Existing-app selection, cancellation and scene restoration now execute in
+`source/distribution/matrix/workspace/`; see the verification below. The Rust
+service retains exact request/task identity, asynchronous scene transport and
+resource custody. Next, continue toward an Omega-owned stock matrix service loop:
+workspace admission/listing and lifecycle-driven fallback selection remain Rust
+decisions around the migrated workflow. Keep those facts separate from authority
+enforcement when migrating them. The independent Omega matrix is a useful
+precedent, but its synchronous parent refresh must not replace the desktop's
+yielding path.
+
+Notes, Colors and the chooser already execute their ordinary app behavior in
+Omega. Matrix configuration, lifecycle, launcher/local recovery and ordinary
+launch sequencing also do. This work does not claim a fully Omega matrix process
+or a native Omega kernel. Recheck the recorded native-kernel proof-propagation
+blocker against a newer compiler separately; it need not stall userspace work.
+
 ## Memory budgets and allocator delegation
 
 **Open; ratified 2026-10-25.** Complete the
@@ -341,6 +366,34 @@ default/hidden cursor evidence remains valid for its scope, not the full asset A
 
 ## Current implementation evidence
 
+Implementation update 2026-10-26: **Omega owns existing-app workspace switching**,
+over `484f17a7`.
+
+`source/distribution/matrix/workspace/main.omg` sequences Begin/Wait/Activate or
+Restore/WaitRestore before Finish. Commands complete only with their exact
+operation ticket and command; duplicate/wrong completions cannot advance work.
+Cancellation keeps the first refusal and drains the submitted scene. If commit
+already succeeded, Omega requires restoration before the reply. Restoration is
+not cancellable and failure is fatal rather than false successful cleanup.
+
+The normal F5 `SELECT_APP` path dispatches these commands through
+`distribution/matrix/service/children/workspace/selection.rs`. Rust still checks
+authenticated chrome and exact task/connection identities before commit and after
+the reply, owns scene IPC and image custody, applies local visibility/input changes,
+and refuses to deliver an old result to replacement chrome. Request admission and
+synchronous lifecycle fallback activation remain Rust; this is not yet an
+Omega-owned service loop or native Omega kernel.
+
+All 33 matrix host tests pass, including six new compiled-Omega switch tests for
+wrong/duplicate completion, refusal, cancellation, late commit and failed restore.
+All four `desktop_test.py --selection-async` modes (`complete`, `failure`, `stop`,
+`late-stop`) pass initial boot and cold reopen, routed input during held scenes,
+repeated switches, protected Notes drafts and exact reclamation. The ordinary F5
+desktop and cold reboot also pass with multiple Notes instances, switching,
+capacity refusal, protected close, saved Notes/Colors and the 1,621-record durable
+oracle. Full host workspace tests, matrix all-feature x86-64 Clippy, layout and format checks pass.
+Logs are `build/omega-component/workspace-*.log`.
+
 Implementation update 2026-10-26: **ordered pointer batches resolve development pressure input loss**, over `d000196d`.
 
 The pressure failure was the kernel's 64-byte raw input queue overflowing, not
@@ -377,7 +430,7 @@ Host workspace tests, compositor/input/display all-feature Clippy, layout and
 format checks pass. Logs are `build/omega-component/input-batch-*.log`; diagnostic
 logs are `input-pressure-*.log` in the same directory.
 
-**Next:** audit runtime wake/upstream adapters and remaining copied service
+**Remaining Rust transport work (deferred behind Omega migration):** audit runtime wake/upstream adapters and remaining copied service
 consumers before retiring copied application payload support. Preserve typed
 grant/lifetime and hostile-authority probes while removing data-path fallbacks.
 Concrete remaining entrances: `user-runtime/services/wake.rs`,

@@ -37,9 +37,6 @@ impl Children {
         let Some(p) = &mut self.selecting else {
             return;
         };
-        if p.restoring || p.status != 0 {
-            return;
-        }
         let relevant =
             |slot: usize| slot == 0 || slot == p.slot || p.previous.is_some_and(|(s, _)| s == slot);
         let cancelled = match event {
@@ -62,9 +59,8 @@ impl Children {
             }
             _ => false,
         };
-        if cancelled {
-            p.status = abi::DENIED;
-            parent.cancel_scene(p.status);
+        if cancelled && p.policy.cancel(abi::DENIED) {
+            parent.cancel_scene(p.policy.status());
             time::storage_sample("selection-cancelled", &[p.ticket.raw()]);
         }
     }
