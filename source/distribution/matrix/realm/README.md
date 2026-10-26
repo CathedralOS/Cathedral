@@ -59,6 +59,6 @@ verification and exact scope are in `TASKS_RUST.md`.
 
 [Stock resource offers and profile ceilings](../resources/README.md) now execute
 in Omega too. The host composes exact images/scopes into launch plans and owns
-grants, allocation and transport funding. Import binding and live layout still
-contain Rust policy. This is not a fully Omega matrix executable or a new platform
-runtime.
+grants, allocation and transport funding. Service matching and live-layout plans
+also execute in Omega; image decoding and applying/publishing layout remain host
+work. This is not a fully Omega matrix executable or a new platform runtime.

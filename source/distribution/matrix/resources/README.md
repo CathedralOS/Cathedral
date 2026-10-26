@@ -37,10 +37,13 @@ surface ranges from preferred to minimum, reserves kernel resources and rolls
 back failed admission. Failed Omega choices return before those later operations.
 Exact images, slots, process reservations and capabilities remain host-owned.
 
-Import parsing/binding, legacy catalogue launch, live layout orchestration and
+Import parsing, legacy catalogue launch, live layout application and
 the mechanism-specific image/transport funding remain Rust work. The native
 packet is temporary implementation plumbing, not an app manifest or public IPC
 contract. This does not finish the matrix's Omega port.
+
+[Service matching](../launch/imports.omg) and [live-layout planning](../configuration/live.omg)
+now run in Omega. Image decoding and actual application/publication remain host work.
 
 [Compiled tests](../../../../source-rs/distribution/matrix/tests/resources.rs)
 cover distinct role authority, picker capacity, strict profile refusals,

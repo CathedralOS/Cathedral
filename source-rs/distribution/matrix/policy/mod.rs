@@ -1,7 +1,9 @@
 pub mod admission;
 pub mod catalogue;
 pub mod control;
+pub mod imports;
 pub mod launch;
+pub mod layout;
 pub mod lifecycle;
 mod native;
 pub mod operation;

@@ -28,8 +28,13 @@ configuration/picker/background setup now execute sequences under
 Stock role resource offers, profile ceilings and preferred surface counts now
 execute under `source/distribution/matrix/resources/`. The host composes exact
 image/scope launch plans, accounts for transport overhead and allocates resources.
-Next, move the remaining live-layout decisions in `configuration/layout.rs` and
-the stock service offer/binding choices in `children/imports.rs` into Omega.
+Live-layout plans and stock service offers now execute in Omega as well, with
+common typed interface matching under `source/platform/contracts/imports/`.
+Next, port the bounded service-import record decoder into that platform package;
+`source-rs/platform/contracts/imports/imports.rs` and `image.rs` still decode and
+extract declarations from sealed executables. Keep the byte-access/ELF boundary
+explicit, preserve malformed-record refusal before matching or admission, and
+use the existing Rust parser as a conformance oracle.
 Keep actual grants, mappings and resource custody in the host; do not turn the
 native bridge into a permanent second distribution API.
 The independent Omega matrix is a useful precedent, but its synchronous parent
@@ -381,6 +386,42 @@ not perfect timing indistinguishability or mandatory agent badges. Existing
 default/hidden cursor evidence remains valid for its scope, not the full asset API.
 
 ## Current implementation evidence
+
+Implementation update 2026-10-26: **Omega plans live layout and matches service
+declarations**, over `0681b83e`.
+
+`configuration/live.omg` preserves authority-before-busy-before-syntax refusal,
+checked geometry, stock role rectangles and the existing-app standing mask.
+The host still revalidates exact layout authority, applies through `World`, then
+remembers placement, flushes and replays. Revoked views and key masks are not
+restored by planning a new arrangement.
+
+`launch/imports.omg` owns stock offer filtering and the explicit absent-record
+legacy declaration. The typed common matcher is platform-owned in
+`source/platform/contracts/imports/main.omg`: required/optional interfaces,
+versions, duplicates and unknown identities. It has no distribution dependency
+or native packet API. The Rust host retains sealed-image mapping/unmapping,
+record decoding, resource metadata and actual grant installation. No manifest
+format, supported service or kernel changes.
+
+Seven compiled-Omega tests bring the matrix total to 88: common matching against
+the Rust oracle over version/identity/offer combinations, duplicate and excess
+records, stock versus positional offers, absent declarations, authority refusal
+order, standing placement selection and geometry extremes. Full workspace host
+tests, default/all-feature x86-64 matrix Clippy, formatting and source layout
+(83 Omega packages, 151 Rust dependency edges) pass. Logs are
+`build/omega-component/binding-*.log`.
+
+Guest evidence: ordinary F5 and cold reboot pass with the independent 1,673-record
+storage oracle (`desktop/20261026T204101554870Z`). Settings passes cancel,
+live/saved layout, running apps, subsequent launches and independent user defaults
+across three boots (`settings/20261026T204222440728Z`). Two forced render
+invalidations preserve Notes content and input
+(`settings/20261026T204331811744Z`). Undeclared Notes storage stays absent across
+cold reboot while dirty-close and Colors' independent binding work
+(`desktop/20261026T204444126684Z`); incompatible optional storage also stays absent
+through cold reboot (`desktop/20261026T204509795069Z`). Artifact paths are beneath
+`build/boot-harness-rs/`.
 
 Implementation update 2026-10-26: **Omega chooses stock resource offers and
 profile ceilings**, over `80507146`.

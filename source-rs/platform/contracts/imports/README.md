@@ -23,6 +23,12 @@ matrix configuration schema.
 
 ## Current bounded representation
 
+The stock matrix executes common declaration matching in
+[Omega](../../../../source/platform/contracts/imports/README.md), through its
+distribution-owned offer adapter. This Rust package remains the representation,
+ELF extraction/record decoder and independent conformance oracle, and still
+serves other Rust hosts. Matching itself creates no capabilities.
+
 The runtime's `service_imports!` emits `CTHIMP01`; `service_bootstrap!` emits
 `CTHIMP03` for [scoped acquisition](../services/README.md) and requested resources.
 The earlier `CTHIMP02` scoped-acquisition format remains accepted. All contain a header followed by

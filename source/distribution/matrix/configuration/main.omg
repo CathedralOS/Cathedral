@@ -3,8 +3,9 @@
 // Rust reference bridge, never a service protocol or capability grant.
 use encoding;
 use placement;
+use live;
 public machine decision(p: &mut [u64; 128]) -> u64 {
-    transition p[0] { 1u64 -> decode(p) 2u64 -> place(p) _ -> (0u64) }
+    transition p[0] { 1u64 -> decode(p) 2u64 -> place(p) 18u64 -> live_layout(p) _ -> (0u64) }
 }
 machine decode(p: &mut [u64; 128]) -> u64 {
     let mut bytes: [u8; 104];

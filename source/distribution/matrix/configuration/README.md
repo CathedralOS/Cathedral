@@ -7,6 +7,17 @@ This is the desktop's CTHMAT02 format and bottom-bar policy, not a universal
 platform configuration or a source of authority. The owner still checks the
 supplied grants before applying any result.
 
+[live.omg](live.omg) plans an authorized live layout. It checks authority before
+busy state, then canonical request shape and checked geometry. The launcher takes
+the bottom bar, app positions take the workspace, and background takes the full
+extent. Only existing app standing placements are selected for remembering.
+The [host](../../../../source-rs/distribution/matrix/service/children/configuration/layout.rs)
+rechecks the exact controller/incarnation/epoch in `World::layout`, validates all
+rectangles before mutation, preserves revoked views and key masks, then remembers
+placements, flushes and replays retained scenes. These synchronous resource
+operations and failure propagation stay in the host; the Omega plan grants no
+authority and does not make publication atomic across IPC hops.
+
 The chooser calls the codec directly. The Rust stock matrix calls the compiled
 export through [its policy entrance](../../../../source-rs/distribution/matrix/policy/policy.rs).
 [native](../native/main.omg) packages that temporary

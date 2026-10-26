@@ -20,6 +20,13 @@ activation. It also decides when the root owner's initial Login needs a realm
 lookup and whether the returned Login/Users pair matches the requested program
 and scope. All names are resolved through this matrix's supplied realm.
 
+[imports.omg](imports.omg) selects the stock offer and legacy declaration, then
+calls the common [Omega service matcher](../../../platform/contracts/imports/README.md).
+Brokered programs may receive explicitly offered input production; positional
+programs receive only interaction/storage. Stock admission requires interaction
+and never supplies capture. The host still reads/unmaps the sealed ELF, validates
+its declaration bytes and retains profile/resource metadata before reservation.
+
 [The Rust entrance](../../../../source-rs/distribution/matrix/service/children/launch/launch.rs)
 dispatches these commands. Its siblings supply authenticated observations and
 retain the selected standing grants/storage binding (`request.rs`),

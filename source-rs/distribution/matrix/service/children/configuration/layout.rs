@@ -1,4 +1,4 @@
-// Apply geometry under the exact current layout grant.
+// Omega plans the layout; apply it under the exact current grant, then publish.
 use super::*;
 impl Children {
     pub(in crate::service) fn apply_layout(
@@ -8,40 +8,36 @@ impl Children {
         parent: &mut Parent,
         world: &mut World,
     ) -> Result<wire::Packet, Error> {
-        if !world.layout_allowed(request.client.unwrap(), request.incarnation, words[1]) {
-            return Ok(wire::error(abi::DENIED));
-        }
-        if self.loss.is_some() || self.pending.iter().any(Option::is_some) {
-            return Ok(wire::error(abi::BUSY));
-        }
-        let [wire::APPLY_LAYOUT, epoch, margin, bar, gap, 0, 0, 0] = words else {
-            return Ok(wire::error(abi::INVALID_ARGUMENT));
-        };
         let grant = parent.grant;
-        let Some(rects) = policy::rectangles(margin, bar, gap, grant.width, grant.height) else {
-            return Ok(wire::error(abi::INVALID_ARGUMENT));
+        let standing = self
+            .standing
+            .iter()
+            .enumerate()
+            .fold(0, |mask, (slot, entry)| {
+                mask | (u64::from(entry.is_some_and(|s| s.place.is_some())) << slot)
+            });
+        let plan = match policy::layout::prepare(
+            words,
+            world.layout_allowed(request.client.unwrap(), request.incarnation, words[1]),
+            self.loss.is_some() || self.pending.iter().any(Option::is_some),
+            [grant.width, grant.height],
+            standing,
+        ) {
+            Ok(plan) => plan,
+            Err(code) => return Ok(wire::error(code)),
         };
-        let pair = rects.map(rect);
-        let rects = core::array::from_fn(|i| {
-            if i == 0 {
-                pair[0]
-            } else if i == BACKGROUND {
-                Rect {
-                    x: 0,
-                    y: 0,
-                    width: grant.width,
-                    height: grant.height,
-                }
-            } else {
-                pair[1]
-            }
-        });
-        let rects = match world.layout(request.client.unwrap(), request.incarnation, epoch, rects) {
+        let rects = match world.layout(
+            request.client.unwrap(),
+            request.incarnation,
+            words[1],
+            plan.rectangles.map(rect),
+        ) {
             Ok(rects) => rects,
             Err(code) => return Ok(wire::error(code)),
         };
-        for (slot, next) in rects.iter().enumerate().take(BACKGROUND).skip(1) {
-            if let Some(standing) = &mut self.standing[slot]
+        for (slot, next) in rects.iter().enumerate() {
+            if plan.remember & (1 << slot) != 0
+                && let Some(standing) = &mut self.standing[slot]
                 && let Some((rect, _)) = &mut standing.place
             {
                 *rect = *next;
