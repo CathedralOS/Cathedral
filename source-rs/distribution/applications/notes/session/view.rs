@@ -24,7 +24,7 @@ pub struct Scene {
     tabs: Option<(usize, usize, bool)>,
 }
 impl Scene {
-    pub fn new(parent: Pair, epoch: u64) -> Result<Self, u64> {
+    pub fn new(parent: &mut Services, epoch: u64) -> Result<Self, u64> {
         let mut names = [0; 4];
         for (rank, name) in names.iter_mut().enumerate() {
             let reply = call(
@@ -52,7 +52,7 @@ impl Scene {
     /// Paint one retained rectangle at a local rectangle: x, y, width, height.
     fn rectangle(
         &self,
-        parent: Pair,
+        parent: &mut Services,
         surface: u64,
         [x, y, width, height]: [u64; 4],
         color: u64,
@@ -66,7 +66,7 @@ impl Scene {
     #[allow(clippy::too_many_arguments)]
     pub fn paint(
         &mut self,
-        parent: Pair,
+        parent: &mut Services,
         extent: wire::Packet,
         doc: &Document,
         cursor: usize,
@@ -199,7 +199,7 @@ impl Scene {
     /// Publish one sealed image at a local rectangle: x, y, width, height.
     fn image(
         &self,
-        parent: Pair,
+        parent: &mut Services,
         surface: u64,
         [x, y, width, height]: [usize; 4],
         draw: impl FnOnce(&mut [u8]),
@@ -211,10 +211,9 @@ impl Scene {
         draw(&mut pixels.bytes_mut()[..width * height * 4]);
         let mut object = pixels.freeze().unwrap();
         object.unmap().unwrap();
-        parent
-            .0
-            .send_memory(
-                &wire::encode([
+        let reply = parent
+            .request_interaction(
+                [
                     wire::SURFACE_IMAGE,
                     self.epoch,
                     surface,
@@ -223,19 +222,11 @@ impl Scene {
                     width as u64,
                     height as u64,
                     width as u64,
-                ]),
-                &object,
+                ],
+                Some(&object),
             )
             .unwrap();
-        let mut reply = [0; 64];
-        let n = cathedral_user_runtime::matrix::upstream::receive(
-            parent.1,
-            &mut reply,
-            wire::SURFACE_IMAGE,
-            300,
-        )
-        .unwrap();
-        let result = accepted(wire::decode(&reply[..n]).unwrap()[0]);
+        let result = accepted(reply[0]);
         #[cfg(feature = "render-probes")]
         if result.is_ok() {
             super::render_probe::gate(2);

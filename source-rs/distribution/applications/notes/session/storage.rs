@@ -18,9 +18,9 @@ pub struct Notes {
     _style: u64,
 }
 impl Notes {
-    pub fn new(pair: Option<Pair>, style: u64) -> Self {
+    pub fn new(scope: Option<Scope<'static>>, style: u64) -> Self {
         Self {
-            scope: pair.map(Scope::new),
+            scope,
             ids: [0; MAX_NOTES],
             count: 0,
             current: 0,

@@ -86,7 +86,11 @@ impl<const WIDTH: usize> ServiceBindings<WIDTH> {
             Acquired::Endpoint(_) => unreachable!("typed acquisition"),
         }
     }
-    pub(super) fn acquire(
+    /// Acquire one endpoint part from this supplied broker with normal reply custody.
+    /// This low-level operation transfers that part exactly once; it does not fill
+    /// the complete-service cache. Do not mix partial and complete acquisition for
+    /// the same offer. The provider still validates scope, contract and version.
+    pub fn acquire_endpoint_part(
         &mut self,
         contract: u64,
         minimum: u64,

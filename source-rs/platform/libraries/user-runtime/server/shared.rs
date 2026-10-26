@@ -147,6 +147,25 @@ impl Server {
             Ok(accept) => self.shared[channel].as_mut().unwrap().state = State::Opening(accept),
             Err(error) => {
                 time::storage_sample("shared-open-refused", &[channel as u64, error.0 as u64]);
+                if let Ok(b) = crate::resources::budget() {
+                    time::storage_sample(
+                        "shared-open-budget",
+                        &[
+                            b.limits.private_pages,
+                            b.used.private_pages,
+                            b.limits.reader_pages,
+                            b.used.reader_pages,
+                            b.limits.channels,
+                            b.used.channels,
+                        ],
+                    );
+                }
+                if let Ok(b) = crate::notification::budget() {
+                    time::storage_sample("shared-open-notifications", &b);
+                }
+                if let Ok(b) = crate::resources::physical_budget() {
+                    time::storage_sample("shared-open-frames", &[b.reserved, b.charged]);
+                }
                 self.retire_shared(channel)?;
             }
         }

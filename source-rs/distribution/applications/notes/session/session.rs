@@ -6,18 +6,14 @@ use cathedral_notes::document::Document;
 use cathedral_platform_contracts::input;
 use cathedral_user_runtime::{
     Error,
-    ipc::Handle,
+    connection::Client,
     server::{OwnerControl, SharedSlot},
     services::Services,
+    storage::Scope,
     time,
 };
-type Pair = (Handle, Handle);
-fn call(pair: Pair, words: wire::Packet) -> wire::Packet {
-    pair.0.send(&wire::encode(words)).unwrap();
-    let mut bytes = [0; 64];
-    let n = cathedral_user_runtime::matrix::upstream::receive(pair.1, &mut bytes, words[0], 300)
-        .unwrap();
-    wire::decode(&bytes[..n]).unwrap()
+fn call(services: &mut Services, words: wire::Packet) -> wire::Packet {
+    services.request_interaction(words, None).unwrap()
 }
 /// Owner control reply: revision, length, last error, dirty, note count, note index.
 fn report(
@@ -43,24 +39,32 @@ fn report(
     ]));
 }
 pub fn run(style: u64, mut services: Services) {
-    let interaction = services.interaction(1, 1).unwrap();
-    let storage = match services.storage(1, 1) {
-        Ok(pair) => Some(pair),
+    // Establish the independent owner link before storage or rendering work.
+    static mut CONTROL: SharedSlot = SharedSlot::empty();
+    let slot = &raw mut CONTROL;
+    // SAFETY: The single probe entry owns its control connection until exit.
+    let mut control = OwnerControl::open(unsafe { &mut *slot }).unwrap();
+    control.establish(time::after(300).unwrap()).unwrap();
+    services.enable_shared().unwrap();
+    let wake = services.interaction(1, 1).unwrap().wake;
+    let mut storage = match services.storage(1, 1) {
+        Ok(pair) => Some(Client::connect(pair, time::after(300).unwrap()).unwrap()),
         Err(Error(code)) if code == cathedral_platform_contracts::services::UNAVAILABLE as i64 => {
             None
         }
         Err(error) => panic!("storage acquisition: {:?}", error),
     };
-    let connections = cathedral_user_runtime::matrix::OptionalConnections {
-        interaction: interaction.pair,
-        wake: interaction.wake,
-        storage,
-    };
-    let parent = connections.interaction;
     #[cfg(feature = "input-producer-probe")]
-    producer_probe::run(&mut services, parent);
+    producer_probe::run(&mut services);
     #[cfg(feature = "management-probes")]
-    management_probe::denied(&connections);
+    management_probe::denied(&mut services, storage.as_mut());
+    // Move the established storage connection without resetting request IDs.
+    let scope = storage
+        .take()
+        .map(|client| Scope::from_client(client).unwrap());
+    let parent = &mut services;
+    cathedral_user_runtime::write(b"Cathedral Notes probe: shared data connections ready\n")
+        .unwrap();
     assert_eq!(
         call(parent, [wire::APPLY_LAYOUT, 0, 24, 192, 16, 0, 0, 0])[0],
         abi::DENIED
@@ -81,7 +85,7 @@ pub fn run(style: u64, mut services: Services) {
     {
         panic!("deliberate Notes admitted failure");
     }
-    if connections.storage.is_none() {
+    if scope.is_none() {
         // The interactive endpoint cannot substitute for the omitted service.
         assert_eq!(
             call(parent, [wire::STORAGE_INFO, 0, 0, 0, 0, 0, 0, 0]),
@@ -103,14 +107,9 @@ pub fn run(style: u64, mut services: Services) {
             wire::error(abi::DENIED)
         );
     }
-    // The owner may retire this control link; the app keeps serving its world.
-    static mut CONTROL: SharedSlot = SharedSlot::empty();
-    let slot = &raw mut CONTROL;
-    // SAFETY: The single probe entry owns its control connection until exit.
-    let mut control = OwnerControl::open(unsafe { &mut *slot }).unwrap();
     #[cfg(feature = "control-delay-probe")]
     let mut control_probe = control_probe::Probe::default();
-    let mut notes = storage::Notes::new(connections.storage, style);
+    let mut notes = storage::Notes::new(scope, style);
     let mut draft = Document::default();
     let mut confirmed = draft;
     let mut error = 0;
@@ -343,10 +342,10 @@ pub fn run(style: u64, mut services: Services) {
             continue;
         }
         #[cfg(feature = "control-delay-probe")]
-        if control_probe.progress(&mut control, connections.wake) {
+        if control_probe.progress(&mut control, wake) {
             continue;
         }
-        match control.next(connections.wake.interest(), Some(time::after(100).unwrap())) {
+        match control.next(wake.interest(), Some(time::after(100).unwrap())) {
             Ok(Some((bytes, len))) => {
                 if wire::decode(&bytes[..len]).is_some_and(|words| words[0] == wire::LOSS) {
                     let reply = wire::encode([0, u64::from(draft != confirmed), 0, 0, 0, 0, 0, 0]);
@@ -360,7 +359,7 @@ pub fn run(style: u64, mut services: Services) {
                 }
             }
             Ok(None) => {
-                connections.wake.take().unwrap();
+                wake.take().unwrap();
             }
             Err(e) => panic!("notes wait {e:?}"),
         }

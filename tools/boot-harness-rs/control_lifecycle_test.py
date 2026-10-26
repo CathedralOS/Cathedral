@@ -22,6 +22,7 @@ def exercise(output, click, key, scan, width, height, reboot):
     n.launch(0, 0)
     value = 'x' if reboot else ''
     n.note(0, value)
+    observed('Cathedral Notes probe: shared data connections ready')
     scan(lambda _w, _d: log().count('Cathedral matrix: shared child control ready') >= 5,
          'shared Notes owner control')
     start = len(log())

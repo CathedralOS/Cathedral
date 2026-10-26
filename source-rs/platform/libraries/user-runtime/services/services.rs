@@ -92,7 +92,7 @@ impl<const WIDTH: usize> ServiceBindings<WIDTH> {
         if let Some(connection) = self.storage {
             return Ok(connection);
         }
-        let send = match self.acquire(imports::STORAGE, minimum, maximum, 0) {
+        let send = match self.acquire_endpoint_part(imports::STORAGE, minimum, maximum, 0) {
             Ok(send) => send,
             Err(Error(code)) if code == wire::UNAVAILABLE as i64 => {
                 self.storage_absent = true;
@@ -100,7 +100,7 @@ impl<const WIDTH: usize> ServiceBindings<WIDTH> {
             }
             Err(error) => return Err(error),
         };
-        let receive = match self.acquire(imports::STORAGE, minimum, maximum, 1) {
+        let receive = match self.acquire_endpoint_part(imports::STORAGE, minimum, maximum, 1) {
             Ok(receive) => receive,
             Err(error) => {
                 send.close()?;
@@ -120,7 +120,7 @@ impl<const WIDTH: usize> ServiceBindings<WIDTH> {
         if let Some(pair) = self.producer {
             return Ok(pair);
         }
-        let send = match self.acquire(imports::INPUT_PRODUCER, minimum, maximum, 0) {
+        let send = match self.acquire_endpoint_part(imports::INPUT_PRODUCER, minimum, maximum, 0) {
             Ok(send) => send,
             Err(Error(code)) if code == wire::UNAVAILABLE as i64 => {
                 self.producer_absent = true;
@@ -128,7 +128,8 @@ impl<const WIDTH: usize> ServiceBindings<WIDTH> {
             }
             Err(error) => return Err(error),
         };
-        let receive = match self.acquire(imports::INPUT_PRODUCER, minimum, maximum, 1) {
+        let receive = match self.acquire_endpoint_part(imports::INPUT_PRODUCER, minimum, maximum, 1)
+        {
             Ok(receive) => receive,
             Err(error) => {
                 send.close()?;
@@ -147,7 +148,7 @@ impl<const WIDTH: usize> ServiceBindings<WIDTH> {
         if let Some(pair) = self.capture {
             return Ok(pair);
         }
-        let send = match self.acquire(imports::CAPTURE, minimum, maximum, 0) {
+        let send = match self.acquire_endpoint_part(imports::CAPTURE, minimum, maximum, 0) {
             Ok(send) => send,
             Err(Error(code)) if code == wire::UNAVAILABLE as i64 => {
                 self.capture_absent = true;
@@ -155,7 +156,7 @@ impl<const WIDTH: usize> ServiceBindings<WIDTH> {
             }
             Err(error) => return Err(error),
         };
-        let receive = match self.acquire(imports::CAPTURE, minimum, maximum, 1) {
+        let receive = match self.acquire_endpoint_part(imports::CAPTURE, minimum, maximum, 1) {
             Ok(receive) => receive,
             Err(error) => {
                 send.close()?;

@@ -324,6 +324,66 @@ default/hidden cursor evidence remains valid for its scope, not the full asset A
 
 ## Current implementation evidence
 
+Implementation update 2026-10-25: **Rust Notes probes retain shared data connections**, over `4e3b8190`.
+
+The disposable Rust Notes session establishes owner control first, then retains
+shared broker/interaction and optional storage clients. Immutable image publication,
+cursor preferences and scoped input-directory reads use the same interaction
+owner. Management-denial checks exercise both real connections before moving the
+storage client into `Scope` without resetting correlation. Installed Notes remains
+Omega-authored. The normal probe funds three shared streams; its optional producer
+variant funds four and acquires no authority beyond its explicit manifest/offer.
+
+Producer parts now pass through the broker's existing typed grant/correlation
+owner (`acquire_endpoint_part`). This low-level operation transfers one part,
+does not populate a complete-service cache, and must not be mixed with complete
+acquisition of that offer. The partial fixture intentionally retains just the send
+half and attempts an early copied message before the reply half has transferred.
+Complete acquisition selects a shared producer connection, checks wrong-service,
+forged-group and stale-grant rejection, then closes it while ordinary app services
+remain usable. Stock admission reserves the additional owner-side transport cost.
+
+Guest testing exposed and fixed two issues:
+
+- Shared producer teardown had already closed its endpoints; the old copied-path
+  cleanup treated `BAD_HANDLE` on the second close as a fatal matrix error.
+  Disconnect and child collection now handle retired incarnations like storage.
+- At three live Notes instances the stock matrix held 62 of 64 notification rights.
+  Setup needed three free rights despite ample pages, channel funding and frames.
+  The separate metadata ceiling is 96, with explicit setup headroom; page/object
+  funding is unchanged. The capacity lab's initial channel grant is 96 so its
+  metadata-exhaustion test can still reach that independent ceiling after lending
+  peer funding. Refused shared setup now reports these resource dimensions.
+
+Verification (`build/omega-component/notes-shared-*.log`):
+
+- Complete, partial and denied producer acquisition pass fresh/cold desktop flows:
+  `desktop/20261026T042643664711Z`, `20261026T042758959915Z` and
+  `20261026T042843073348Z`. Each checks three live Notes instances, independent
+  drafts, protected close, slot reuse and exact persisted state.
+- Receiver hold/replacement and directory identity checks pass fresh/cold in
+  `desktop/20261026T042949389393Z`; hidden input, deferred painting and restore
+  pass in `desktop/20261026T043028038068Z`.
+- Delayed lifecycle replies, live editing, stale clean-answer draining, fresh
+  dirty-close refusal and clean close pass fresh/cold in
+  `desktop/20261026T043231425731Z`.
+- Full IPC and ARM64 release guests pass. IPC keeps twenty shared streams live,
+  reaches the 96-right metadata ceiling independently of object funding, refuses
+  excess creation without partial grants, continues exchanging and refunds custody.
+  The two-free-slot case also refuses three-right creation without partial grants.
+- Management recovery passes in `management/20261026T043346262144Z`, including
+  both service-denial connections, hung-app termination, revoked/stale authority,
+  launcher replacement and cold persistence; the source disk stays unchanged.
+- Unmodified F5 and cold reboot pass in `desktop/20261026T043521892304Z`, with
+  exact verification of all 1,633 host records.
+- Host tests, Notes (Rust probe/producer/all-feature), matrix and channel-lab Clippy,
+  layout and format checks pass. No new owner decision or latency guarantee is claimed.
+
+**Next:** migrate Rust chooser probe data, then the combined-stream fixtures and
+pre-driver source-probe handoff before retiring copied transport. The source pair
+cannot be upgraded and handed off as bare endpoints. Authorized broker lookup
+remains a separate outcome; these changes preserve the supplied relationship.
+
 Implementation update 2026-10-25: **modern catalogue launches acquire services and notification wakes through the broker**, over `8586acb4`.
 
 Stock hosts with separate storage now use brokered admission for supplied launch
@@ -380,7 +440,7 @@ Verification:
   layout/format and whitespace checks pass. No kernel/runtime implementation changes;
   ARM64 was not rerun. Logs: `build/omega-component/catalogue-broker-*.log`.
 
-**Next:** migrate the remaining Rust Notes/chooser probe data adapters, then the
+**Previous next (Notes completed above):** migrate the remaining Rust Notes/chooser probe data adapters, then the
 combined-stream fixtures and source-probe handoff before retiring copied transport.
 The pre-driver source still cannot be upgraded and handed off as bare endpoints.
 On-demand authorized broker lookup remains a separate outcome; this change still

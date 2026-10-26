@@ -144,12 +144,16 @@ impl Children {
         );
         // The control pair belongs to the reserved process slot. Interaction,
         // storage/producer queues and the wake object charge this creator. A selected
-        // shared storage/interaction slot and selected owner control need a writer,
+        // shared data slot and selected owner control need a writer,
         // reader and notification each. Reserve their owner-side funding before
         // lending capacity; copied fixtures do not allocate the selected backing.
         let transport = u64::from(storage && self.separate_storage)
             + u64::from(self.separate_storage)
-            + u64::from(brokered || self.separate_storage);
+            + u64::from(brokered || self.separate_storage)
+            + u64::from(
+                self.separate_storage
+                    && binding & cathedral_platform_contracts::imports::INPUT_PRODUCER != 0,
+            );
         let connection_channels = if storage && self.separate_storage {
             5
         } else {

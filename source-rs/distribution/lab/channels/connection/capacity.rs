@@ -60,6 +60,20 @@ pub(super) fn run(launch: Launch) {
         cathedral_user_runtime::notification::budget().unwrap(),
         budget
     );
+    // Leave two free metadata slots: create needs three and must publish none.
+    // This remains a partial-capacity check when the ceiling is divisible by three.
+    let handles = extra[count - 1].take().unwrap();
+    handles[0].release().unwrap();
+    handles[1].release().unwrap();
+    let partial = cathedral_user_runtime::notification::budget().unwrap();
+    assert_eq!(partial[2] - partial[3], 2);
+    assert_eq!(N::create(), Err(Error(abi::NO_MEMORY as i64)));
+    assert_eq!(
+        cathedral_user_runtime::notification::budget().unwrap(),
+        partial
+    );
+    handles[2].close_object().unwrap();
+    handles[2].release().unwrap();
     for handles in extra.into_iter().flatten() {
         handles[2].close_object().unwrap();
         for handle in handles {

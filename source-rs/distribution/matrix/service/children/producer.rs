@@ -58,8 +58,14 @@ impl Children {
         world.revoke_input_producer(slot);
         server.remove(PRODUCER_BASE + slot);
         let (input, output) = child.producer.take().unwrap();
-        input.close()?;
-        output.close()?;
+        // Shared teardown may already have closed this exact incarnation.
+        for endpoint in [input, output] {
+            match endpoint.close() {
+                Ok(()) => (),
+                Err(Error(c)) if c == abi::BAD_HANDLE as i64 => (),
+                Err(error) => return Err(error),
+            }
+        }
         if let Some(offer) = &mut child.services {
             offer.close_producer()?;
         }

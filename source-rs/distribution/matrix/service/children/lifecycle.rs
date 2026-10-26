@@ -143,8 +143,14 @@ impl Children {
             }
         }
         if let Some((input, output)) = child.producer {
-            input.close()?;
-            output.close()?;
+            // Shared teardown may already have closed this exact incarnation.
+            for endpoint in [input, output] {
+                match endpoint.close() {
+                    Ok(()) => (),
+                    Err(Error(c)) if c == abi::BAD_HANDLE as i64 => (),
+                    Err(error) => return Err(error),
+                }
+            }
         }
         drop(child.control);
         if let Some(reservation) = child.reservation {

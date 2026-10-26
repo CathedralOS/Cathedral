@@ -8,7 +8,7 @@ mod session;
 #[cfg(not(feature = "input-producer-probe"))]
 cathedral_user_runtime::service_bootstrap!(
     &cathedral_platform_contracts::imports::OPTIONAL_STORAGE,
-    if cfg!(feature = "rust-probes") { 2 } else { 3 },
+    3,
     0
 );
 #[cfg(feature = "input-producer-probe")]
@@ -27,7 +27,7 @@ cathedral_user_runtime::service_bootstrap!(
             false
         ),
     ],
-    if cfg!(feature = "rust-probes") { 2 } else { 3 },
+    4,
     0
 );
 cathedral_user_runtime::entry_with_services!(main);

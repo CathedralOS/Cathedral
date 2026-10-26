@@ -7,6 +7,22 @@ editor behavior; Rust supplies runtime transport and buffer custody.
 The Rust session below remains only for explicitly selected `rust-probes`
 fault/admission/producer/render fixtures.
 
+The [probe session](session/session.rs) establishes its independent owner control
+before acquiring shared interaction and optional shared storage. Rendering,
+immutable images, cursor requests and input-directory reads all retain that same
+interaction client; management-denial probes use the actual separate connections.
+An acquired storage client moves into `Scope` without reopening or resetting IDs.
+The probe manifest funds three shared connections, or four when the disposable
+producer feature requests its separately authorized connection. No ordinary Notes
+manifest acquires producer authority.
+
+The [producer fixture](session/producer_probe.rs) acquires endpoint parts through
+the retained broker. Its partial variant deliberately keeps only the send half
+and attempts an early copied message; this tests interrupted handoff, not a second
+ordinary transport. The complete variant negotiates a shared producer connection,
+checks wrong-service, forged-group and stale-grant refusals, then retires it while
+interaction and storage remain usable.
+
  Press **F5**,
 choose a user, click **Notes** in its chrome, then click the note to focus it.
 The equivalent default boot is:

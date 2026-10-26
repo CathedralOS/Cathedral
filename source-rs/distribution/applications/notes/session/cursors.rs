@@ -7,7 +7,7 @@ pub struct Cursors {
     pointers: [(u64, u64, bool); wire::INPUT_STREAMS],
 }
 impl Cursors {
-    pub fn observe(&mut self, parent: (Handle, Handle), event: wire::Packet) {
+    pub fn observe(&mut self, parent: &mut Services, event: wire::Packet) {
         if self.epoch != event[1] {
             self.epoch = event[1];
             self.pointers.fill((0, 0, false));

@@ -100,6 +100,13 @@ pub fn run(environment: Environment) -> Result<(), Error> {
         for (index, slot) in unsafe { &mut *slots }.iter_mut().enumerate() {
             server.enable_shared(STORAGE_BASE + index, slot)?;
         }
+        static mut PRODUCER: [cathedral_user_runtime::server::SharedSlot; CHILDREN] =
+            [const { cathedral_user_runtime::server::SharedSlot::empty() }; CHILDREN];
+        let slots = &raw mut PRODUCER;
+        // SAFETY: Disjoint producer connections have one process-owned arena each.
+        for (index, slot) in unsafe { &mut *slots }.iter_mut().enumerate() {
+            server.enable_shared(PRODUCER_BASE + index, slot)?;
+        }
     }
     // Page allowances and use at startup, so a refused attachment is diagnosable.
     if let Ok(budget) = cathedral_user_runtime::resources::budget() {

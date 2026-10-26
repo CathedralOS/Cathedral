@@ -579,6 +579,8 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
     for boot in (1, 2):
         capture.run(command, output, timeout, flags, ready_marker='Cathedral desktop: ready; choose a user',
                     verify=lambda stream, output, serial: desktop(stream, output, serial, boot == 2, not relative_pointer, service_imports=service_imports, nested=nested, nested_saved=boot == 2, deep=deep, nested_desktop=nested_desktop, latency=latency, pointer_stress=pointer_stress, interaction_delay=interaction_delay, nested_depth=nested_depth, soak=soak, collection_pressure=collection_pressure, user_check=user_check, allowed_panics=("deliberate launcher failure",) if launcher_async else ()))
+        if participant_fault or render_demand or masked_capture:
+            assert 'Cathedral Notes probe: shared data connections ready' in (output / 'serial.log').read_text(errors='replace')
         if input_producer:
             expected = {'complete': 'acquired isolated connection and closed',
                         'partial': 'partial acquisition retained',
@@ -587,6 +589,7 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
             # Both boots close and relaunch Notes. A lone successful startup
             # cannot prove that interrupted handoffs return their allocation.
             assert producer_log.count(f'Cathedral producer: {expected}') >= 2
+            assert producer_log.count('Cathedral Notes probe: shared data connections ready') >= 2
             if input_producer == 'partial' and boot == 1:
                 assert 'Cathedral producer: capacity refused; broker retained' in producer_log
         for name in ('serial.log', 'qemu.log', 'display.png', 'boot-timing.json'):

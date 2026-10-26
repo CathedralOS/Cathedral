@@ -1,8 +1,8 @@
 //! Read a bounded revision-consistent directory from the supplied interaction
-//! pair. BUSY means discard this attempt; the caller chooses when to retry.
+//! connection. BUSY means discard this attempt; the caller chooses when to retry.
 //! At most INPUT_STREAMS rows and their descriptions plus one terminal read;
 //! ordinary input events never require these lookup exchanges.
-use super::upstream::{self, Pair};
+use crate::services::Services;
 use crate::{Error, abi};
 use cathedral_platform_contracts::input::description::Description;
 use cathedral_platform_contracts::matrix as wire;
@@ -25,7 +25,7 @@ impl Directory {
     pub fn entries(&self) -> &[Channel] {
         &self.entries[..self.len]
     }
-    pub fn read(pair: Pair, epoch: u64) -> Result<Self, Error> {
+    pub fn read(services: &mut Services, epoch: u64) -> Result<Self, Error> {
         let mut snapshot = Self {
             epoch,
             revision: 0,
@@ -34,8 +34,7 @@ impl Directory {
         };
         let mut after = 0;
         for _ in 0..=wire::INPUT_STREAMS {
-            let reply = upstream::call(
-                pair,
+            let reply = services.request_interaction(
                 [
                     wire::INPUT_DIRECTORY,
                     epoch,
@@ -46,6 +45,7 @@ impl Directory {
                     0,
                     0,
                 ],
+                None,
             )?;
             if reply[0] != 0 {
                 return Err(Error(reply[0] as i64));
@@ -75,17 +75,22 @@ impl Directory {
                 group: reply[4] as u16,
                 retiring: reply[5] == wire::CHANNEL_RETIRING,
                 keys: reply[6],
-                description: Self::describe(pair, epoch, snapshot.revision, reply[3])?,
+                description: Self::describe(services, epoch, snapshot.revision, reply[3])?,
             };
             snapshot.len += 1;
             after = reply[3];
         }
         Err(Error(abi::IO_ERROR as i64))
     }
-    fn describe(pair: Pair, epoch: u64, revision: u64, name: u64) -> Result<Description, Error> {
-        let reply = upstream::call(
-            pair,
+    fn describe(
+        services: &mut Services,
+        epoch: u64,
+        revision: u64,
+        name: u64,
+    ) -> Result<Description, Error> {
+        let reply = services.request_interaction(
             [wire::INPUT_DESCRIPTION, epoch, revision, name, 0, 0, 0, 0],
+            None,
         )?;
         if reply[0] != 0 {
             return Err(Error(reply[0] as i64));

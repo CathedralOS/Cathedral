@@ -205,8 +205,10 @@ pub const NOTIFY_SEND: u64 = 79; // send endpoint, packet address, zero
 pub const NOTIFY_RECEIVE: u64 = 80; // receive endpoint, writable packet, zero
 pub const NOTIFY_BUDGET: u64 = 81; // writable [shared object limit, notifications charged, handle limit, handles used]
 // Shared service streams retain wait/control/peer-signal rights independently.
+// A populated stock matrix holds seventeen streams and wake rights (62 handles).
+// Producer streams and temporary setup signal/escrow need additional headroom.
 // Page/channel funding remains separate from this per-task metadata ceiling.
-pub const NOTIFY_HANDLES: usize = 64;
+pub const NOTIFY_HANDLES: usize = 96;
 pub const NOTIFY_SIGNALED: u64 = 0;
 pub const NOTIFY_TIMED_OUT: u64 = 1;
 pub const NOTIFY_CLOSED: u64 = 2;

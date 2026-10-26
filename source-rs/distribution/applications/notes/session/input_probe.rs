@@ -16,7 +16,7 @@ pub struct Receiver {
     channels: [Channel; wire::INPUT_STREAMS],
 }
 impl Receiver {
-    pub fn observe(&mut self, parent: Pair, packet: wire::Packet) {
+    pub fn observe(&mut self, parent: &mut Services, packet: wire::Packet) {
         let [status, epoch, kind, key, state, buttons, name, group] = packet;
         if status != 0 || epoch == 0 {
             return;
@@ -126,7 +126,7 @@ impl Receiver {
         }
     }
 
-    fn directory(parent: Pair, packet: wire::Packet) {
+    fn directory(parent: &mut Services, packet: wire::Packet) {
         use cathedral_user_runtime::matrix::input::Directory;
         let [_, epoch, kind, a, b, controls, name, group] = packet;
         let snapshot = match Directory::read(parent, epoch) {

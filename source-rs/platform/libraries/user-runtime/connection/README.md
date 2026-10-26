@@ -349,7 +349,7 @@ registration alone does not bypass these or the object-count limits. After
 delegating its notification signal right, each side releases its setup-only copy.
 A live connection retains three local notification handles: wait, close/control
 and the peer's signal right. The [capacity proof](../../../../distribution/lab/channels/connection/capacity.rs)
-keeps twenty streams live under the sixty-four-handle cap, exhausts the remaining
+keeps twenty streams live under the ninety-six-handle cap, exhausts the remaining
 handle metadata with separately funded notifications, refuses a further allocation,
 and checks final handle and enclosing budget refunds. Fair scanning
 and earliest partial/setup deadlines cover all selected streams. There is still
@@ -390,8 +390,12 @@ upstream, chrome, background and three app pairs. Brokered wake objects/rights
 are charged separately; these service connections use 44 handles including hints.
 Six owner/child control connections bring a fully populated matrix to 62 handles.
 The metadata ceiling is now
-sixty-four; object/page funding and the forty-eight-interest wait limit remain
-independent. Additional streams still require a capacity review.
+ninety-six. A separately acquired producer stream needs three more live rights;
+its setup failed at 62/64 occupied slots in the three-Notes desktop proof. The
+larger ceiling covers these streams and setup headroom; object/page funding and
+the forty-eight-interest wait limit remain independent. Refused setup reports
+page, channel, notification-handle and physical-frame use separately. Additional
+streams still require a capacity review.
 Shared mailbox pooling may reduce per-connection backing/metadata costs later; current
 bounds refuse excess setup safely. No performance improvement or final production
 wire ABI is claimed here.
@@ -427,7 +431,7 @@ It cuts a launched app's control transport while retaining its task and services
 descendants must still edit/save, and an uncertain owner close must be refused.
 
 Stock shared lifecycle/control needs seventeen writers and roughly 62 notification
-rights at full occupancy. Metadata ceilings now allow 24 private objects and 64
+rights before optional producer streams. Metadata ceilings allow 24 private objects and 96
 notification rights; every object still consumes its independently funded pages
 or channel/notification allowance. The capacity guest keeps twenty two-way
 connections live and exercises the final slot of the 48-entry mixed wait set.
