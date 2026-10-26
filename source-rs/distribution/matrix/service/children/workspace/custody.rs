@@ -13,7 +13,7 @@ impl Children {
             || server.incarnation(0) != Some(p.request.incarnation)
             || self.slots[0].as_ref().map(|c| c.task.raw()) != Some(p.caller_task)
             || self.slots[p.slot].as_ref().map(|c| c.task.raw()) != Some(p.task)
-            || self.active != p.previous.map(|(slot, _)| slot)
+            || self.catalogue.active() != p.previous.map(|(slot, _)| slot)
         {
             return Ok(Some(abi::DENIED));
         }

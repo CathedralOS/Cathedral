@@ -16,6 +16,8 @@ Startup owns local picker/background retry budgets and selection-failure recover
 Launch owns read/admit/bind/place/publish sequencing and partial-failure rollback.
 Workspace owns switch/wait/activate sequencing and restoration after a late
 accepted commit. Cancellation drains the scene before finishing or restoring.
+It also owns the app catalogue, instance-ticket allocation, current selection and
+fallback choice after retirement; Rust retains opaque state and exact task custody.
 Ordinary reads and storage binding yield; admission/publication still use
 synchronous host mechanisms.
 Rust still authenticates callers, serializes IPC, retains exact task/endpoint

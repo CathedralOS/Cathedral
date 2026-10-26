@@ -49,10 +49,8 @@ pub(super) struct Children {
     login: bool,
     entered: bool,
     startup_recovery: startup::Recovery,
-    active: Option<usize>,
+    catalogue: cathedral_stock_matrix::policy::catalogue::Catalogue,
     selecting: Option<workspace::selection::Pending>,
-    running: [Option<(u64, u64)>; CHILDREN], // local ticket, program object
-    next_ticket: u64,
     slots: [Option<Owned>; CHILDREN],
     saved_storage: [Option<(usize, u64)>; CHILDREN],
     next_frames: [Option<u64>; CHILDREN],

@@ -1,5 +1,5 @@
-// Chrome sees only this matrix's admitted app instances. Local tickets survive
-// focus changes, never task replacement. Background has no workspace authority.
+// Authenticate chrome before querying Omega's catalogue of local app instances.
+// source/distribution/matrix/workspace/main.omg owns tickets and selection.
 // SELECT_APP enters selection.rs; custody.rs checks its exact tasks and caller.
 // activate below remains the synchronous cleanup helper; commit_activation is
 // the shared local handoff after either visual path succeeds.
@@ -19,23 +19,12 @@ impl Children {
         index: u64,
         world: &World,
     ) -> wire::Packet {
-        if !self.chrome(request, world) || index >= 3 {
+        if !self.chrome(request, world) {
             return wire::error(abi::DENIED);
         }
-        let slot = index as usize + 1;
-        match self.running[slot] {
-            Some((ticket, object)) => [
-                0,
-                ticket,
-                object,
-                u64::from(self.active == Some(slot)),
-                0,
-                0,
-                0,
-                0,
-            ],
-            None => [0; 8],
-        }
+        self.catalogue
+            .entry(index)
+            .unwrap_or_else(|| wire::error(abi::DENIED))
     }
     pub(super) fn activate(
         &mut self,
@@ -44,7 +33,7 @@ impl Children {
         world: &mut World,
         server: &Server,
     ) -> Result<u64, Error> {
-        if self.active == Some(slot) {
+        if self.catalogue.active() == Some(slot) {
             return Ok(0);
         }
         for sibling in 1..BACKGROUND {
@@ -52,11 +41,11 @@ impl Children {
                 .visible(sibling, sibling == slot)
                 .map_err(|c| Error(c as i64))?;
         }
-        let status = parent.switch_scene(world, self.active, slot)?;
+        let status = parent.switch_scene(world, self.catalogue.active(), slot)?;
         if status != 0 {
             for sibling in 1..BACKGROUND {
                 world
-                    .visible(sibling, self.active == Some(sibling))
+                    .visible(sibling, self.catalogue.active() == Some(sibling))
                     .map_err(|c| Error(c as i64))?;
             }
             return Ok(status);
@@ -77,12 +66,15 @@ impl Children {
         }
         // This desktop's app-switch policy deactivates the former app's routes.
         // Visibility itself is neutral: other matrices may keep hidden control.
-        if let Some(previous) = self.active {
+        if let Some(previous) = self.catalogue.active() {
             world
                 .deactivate_input(previous)
                 .map_err(|c| Error(c as i64))?;
         }
-        self.active = Some(slot);
+        assert!(
+            self.catalogue.activate(slot),
+            "activation requires a published instance"
+        );
         if let Some(incarnation) = server.incarnation(0) {
             self.management
                 .grant(0, incarnation, slot)

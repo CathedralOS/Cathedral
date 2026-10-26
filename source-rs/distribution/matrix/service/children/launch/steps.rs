@@ -67,15 +67,16 @@ impl Children {
                 }
             }
             Command::Activate => {
-                l.previous = self.active;
+                l.previous = self.catalogue.active();
                 l.previous_task = self
-                    .active
+                    .catalogue
+                    .active()
                     .and_then(|s| self.slots[s].as_ref())
                     .map(|c| c.task.raw());
                 parent.begin_scene(
                     l.ticket,
                     world,
-                    self.active,
+                    self.catalogue.active(),
                     Some(slot),
                     slot == 2 && !cfg!(feature = "selection-delay"),
                 )?;

@@ -1,3 +1,4 @@
+pub mod catalogue;
 pub mod launch;
 pub mod lifecycle;
 mod native;

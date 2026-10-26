@@ -20,7 +20,7 @@ impl Children {
         if let Err(e) = parent.begin_scene(
             p.ticket,
             world,
-            self.active,
+            self.catalogue.active(),
             Some(p.slot),
             cfg!(feature = "selection-delay"),
         ) {

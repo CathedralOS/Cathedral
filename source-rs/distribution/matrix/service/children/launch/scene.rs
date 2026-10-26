@@ -27,11 +27,9 @@ impl Children {
             assert_eq!(done.ticket, l.ticket);
             l.scene_committed = done.committed;
             if done.committed && done.status == 0 && l.policy.status() == 0 {
-                self.next_ticket = self
-                    .next_ticket
-                    .checked_add(1)
-                    .ok_or(Error(abi::NO_MEMORY as i64))?;
-                self.running[l.plan.slot] = Some((self.next_ticket, l.plan.object));
+                if !self.catalogue.publish(l.plan.slot, l.plan.object) {
+                    return Err(Error(abi::NO_MEMORY as i64));
+                }
                 self.commit_activation(l.plan.slot, world, server)?;
             }
             if l.policy.accepts(done.ticket, Command::Activate) {
@@ -82,7 +80,7 @@ impl Children {
     ) -> Result<(), Error> {
         let slot = l.plan.slot;
         if l.scene_committed
-            && (self.active == Some(slot) || self.active == l.previous)
+            && (self.catalogue.active() == Some(slot) || self.catalogue.active() == l.previous)
             && (self.slots[slot].as_ref().map(|c| c.task.raw()) == l.task
                 || self.slots[slot].is_none())
         {
@@ -92,7 +90,7 @@ impl Children {
                 && self.slots[previous].as_ref().map(|c| c.task.raw()) == l.previous_task
                 && l.previous_task.is_some()
             {
-                let status = if self.active == l.previous {
+                let status = if self.catalogue.active() == l.previous {
                     // A cancellation already known at the commit reply
                     // never changed local visibility or input routes.
                     parent.switch_scene(world, Some(slot), previous)?

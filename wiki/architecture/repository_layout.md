@@ -101,7 +101,7 @@ Local picker/background retry budgets execute
 [Omega startup policy](../../source/distribution/matrix/startup/README.md).
 Ordinary stored-program launch sequencing and rollback execute
 [Omega launch workflow](../../source/distribution/matrix/launch/README.md).
-Existing-app switching, cancellation and restoration execute the
+The instance catalogue, selection/fallback choices, switching, cancellation and restoration execute the
 [Omega workspace workflow](../../source/distribution/matrix/workspace/README.md).
 Ordinary read/binding exchanges yield; the newly admitted child waits for
 publication while existing siblings continue using their scoped services.

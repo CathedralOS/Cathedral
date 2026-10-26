@@ -1,4 +1,5 @@
 mod behavior;
+mod catalogue;
 mod code;
 mod launch;
 mod lifecycle;

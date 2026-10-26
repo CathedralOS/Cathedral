@@ -98,7 +98,10 @@ impl Children {
             child.control.progress();
             // Only a launched first app, never boot/setup providers or chrome.
             #[cfg(feature = "control-failure-probe")]
-            if slot == 1 && self.running[slot].is_some() && child.control.cut_ready() {
+            if slot == 1
+                && self.catalogue.entry(0).is_some_and(|row| row[1] != 0)
+                && child.control.cut_ready()
+            {
                 cathedral_user_runtime::write(
                     b"Cathedral control probe: owner link cut; child retained\n",
                 )?;

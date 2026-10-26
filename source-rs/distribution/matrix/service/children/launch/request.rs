@@ -33,7 +33,7 @@ impl Children {
         };
         let refusal = if parent.storing() || self.slots[slot].is_some() || !server.available(slot) {
             Some(abi::BUSY)
-        } else if !self.observations.available(requester) || self.next_ticket == u64::MAX {
+        } else if !self.observations.available(requester) || !self.catalogue.has_ticket_capacity() {
             Some(abi::NO_MEMORY)
         } else if object == 0 || withhold & !cathedral_platform_contracts::imports::SUPPORTED != 0 {
             Some(abi::INVALID_ARGUMENT)

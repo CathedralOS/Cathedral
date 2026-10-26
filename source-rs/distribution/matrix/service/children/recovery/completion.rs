@@ -57,7 +57,11 @@ impl Children {
             launcher.incarnation = server.incarnation(0).unwrap();
             launcher.snapshot = None;
             self.management
-                .grant(0, launcher.incarnation, self.active.unwrap_or(1))
+                .grant(
+                    0,
+                    launcher.incarnation,
+                    self.catalogue.active().unwrap_or(1),
+                )
                 .map_err(|c| Error(c as i64))?;
             parent.grant_recovery(0, Some(launcher.incarnation));
             self.notify(world)?;

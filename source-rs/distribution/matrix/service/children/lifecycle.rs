@@ -66,12 +66,9 @@ impl Children {
             }
         };
         self.saved_storage[slot] = None;
-        self.running[slot] = None;
+        self.catalogue.retire(slot);
         if self.desktop && slot != 0 {
             world.notify(0);
-        }
-        if self.active == Some(slot) {
-            self.active = None;
         }
         parent.grant_recovery(slot, None);
         self.observations.disconnected(slot);
@@ -169,8 +166,7 @@ impl Children {
             }
         }
         if self.desktop
-            && self.active.is_none()
-            && let Some(next) = (1..BACKGROUND).find(|s| self.running[*s].is_some())
+            && let Some(next) = self.catalogue.fallback()
         {
             self.activate(next, parent, world, server)?;
         }
@@ -213,7 +209,7 @@ impl Children {
             if !self.chrome(&request, world) {
                 return server.reply(&request, &wire::encode(wire::error(abi::DENIED)));
             }
-            let Some(target) = self.active else {
+            let Some(target) = self.catalogue.active() else {
                 return server.reply(&request, &wire::encode(wire::error(abi::PEER_CLOSED)));
             };
             target

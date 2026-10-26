@@ -2,6 +2,7 @@
 //! the chrome request and exact tasks until the scene commits or is restored.
 use super::*;
 use cathedral_stock_matrix::policy::{
+    catalogue::Selection,
     operation::Ticket,
     workspace::{Command, State},
 };
@@ -26,28 +27,28 @@ impl Children {
         world: &mut World,
         server: &mut Server,
     ) -> Result<(), Error> {
-        let slot =
-            (1..BACKGROUND).find(|s| self.running[*s].is_some_and(|(ticket, _)| ticket == app));
-        let status = if !self.chrome(&request, world) || slot.is_none() {
-            Some(abi::DENIED)
-        } else if parent.storing()
+        if !self.chrome(&request, world) {
+            return server.reply(&request, &wire::encode(wire::error(abi::DENIED)));
+        }
+        let busy = parent.storing()
             || parent.upstream_busy()
             || self.loss.is_some()
             || self.launching.is_some()
             || self.selecting.is_some()
             || self.pending.iter().any(Option::is_some)
-            || self.recovery_pending()
-        {
-            Some(abi::BUSY)
-        } else if self.active == slot {
-            Some(0)
-        } else {
-            None
+            || self.recovery_pending();
+        let slot = match self.catalogue.select(app, busy) {
+            Selection::Switch(slot) => slot,
+            selection => {
+                let status = match selection {
+                    Selection::Missing => abi::DENIED,
+                    Selection::Busy => abi::BUSY,
+                    Selection::Current => 0,
+                    Selection::Switch(_) => unreachable!(),
+                };
+                return server.reply(&request, &wire::encode(wire::error(status)));
+            }
         };
-        if let Some(status) = status {
-            return server.reply(&request, &wire::encode(wire::error(status)));
-        }
-        let slot = slot.unwrap();
         let Some(ticket) = self.operation_tickets.issue() else {
             return server.reply(&request, &wire::encode(wire::error(abi::NO_MEMORY)));
         };
@@ -58,7 +59,8 @@ impl Children {
             task: self.slots[slot].as_ref().unwrap().task.raw(),
             caller_task: self.slots[0].as_ref().unwrap().task.raw(),
             previous: self
-                .active
+                .catalogue
+                .active()
                 .map(|s| (s, self.slots[s].as_ref().unwrap().task.raw())),
             policy: State::new(ticket),
             command: None,

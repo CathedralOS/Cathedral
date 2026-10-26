@@ -9,15 +9,17 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Existing-app selection, cancellation and scene restoration now execute in
-`source/distribution/matrix/workspace/`; see the verification below. The Rust
-service retains exact request/task identity, asynchronous scene transport and
-resource custody. Next, continue toward an Omega-owned stock matrix service loop:
-workspace admission/listing and lifecycle-driven fallback selection remain Rust
-decisions around the migrated workflow. Keep those facts separate from authority
-enforcement when migrating them. The independent Omega matrix is a useful
-precedent, but its synchronous parent refresh must not replace the desktop's
-yielding path.
+The app catalogue, instance tickets, current selection, switch admission,
+fallback choice, cancellation and scene restoration now execute in
+`source/distribution/matrix/workspace/`; see the verification below. Rust retains
+opaque catalogue/workflow state, exact request/task identity, asynchronous scene
+transport and resource custody. Next, continue toward an Omega-owned stock matrix
+service loop: the authenticated request dispatcher and launch/startup role choices
+still compose these pieces in Rust. Start at `service/requests/requests.rs` and
+`service/children/launch/request.rs`; distinguish owner/child/source request facts
+from the exact capabilities retained by the host. The independent Omega matrix
+is a useful precedent, but its synchronous parent refresh must not replace the
+desktop's yielding path.
 
 Notes, Colors and the chooser already execute their ordinary app behavior in
 Omega. Matrix configuration, lifecycle, launcher/local recovery and ordinary
@@ -365,6 +367,36 @@ not perfect timing indistinguishability or mandatory agent badges. Existing
 default/hidden cursor evidence remains valid for its scope, not the full asset API.
 
 ## Current implementation evidence
+
+Implementation update 2026-10-26: **Omega owns the stock app catalogue and selection
+state**, over `b40c71d3`.
+
+Workspace `main.omg` now dispatches to `catalogue.omg` and `selection.omg`.
+The catalogue owns its three app positions, non-reused instance tickets, local
+program-object identifiers, active instance, switch admission and first-survivor
+fallback after retirement. Rust's parallel `running`, `active` and `next_ticket`
+fields are removed. It retains one opaque eight-word catalogue and translates
+queries/commands through the existing private native export. Publication follows
+successful scene commit; retirement follows the kernel's exact task outcome.
+Task/endpoint identities, chrome authentication, scene/input mutation and resource
+reclamation stay host-owned. No new shared service protocol or authority is added.
+
+Six new compiled-Omega tests cover independent instances of the same program,
+stale tickets after slot reuse, busy/current/missing precedence, every surviving
+app subset, invalid positions/duplicate publication and ticket exhaustion without
+wrap or reset. All 39 matrix tests and the full host workspace suite pass; matrix
+all-feature x86-64 Clippy, layout and format checks pass. The ordinary F5 desktop
+and cold reboot pass with the 1,639-record durable oracle. All four selection
+cases (`complete`, `failure`, `stop`, `late-stop`) pass, as does launch-scene
+`late-stop-target`: sibling input remains usable, exact-instance rollback restores
+the draft, and final subtree reclamation succeeds. Each guest case includes cold
+reopen. See `build/omega-component/catalogue-*.log`.
+
+An initial host hang was an authored transition named `entry` selecting the
+machine's implicit entry state rather than the intended catalogue reader. Naming
+the operation `read_entry` resolves it. Temporary tracing was removed; the
+compiled catalogue tests exercise the actual operation. No compiler blocker or
+Rust fallback was introduced.
 
 Implementation update 2026-10-26: **Omega owns existing-app workspace switching**,
 over `484f17a7`.
