@@ -1,6 +1,6 @@
 //! Compare compiled Omega matching with the existing platform contract oracle.
 use crate::policy::imports as policy;
-use cathedral_platform_contracts::imports::{self, Declaration, Import, Refusal};
+use cathedral_platform_contracts::imports::{self, Import, Refusal};
 #[test]
 fn common_matching_preserves_versions_optionality_and_precise_refusals() {
     for contract in [0, 1, 2, 3, 4, 8, 16, u64::MAX] {
@@ -52,8 +52,8 @@ fn matcher_rejects_duplicates_and_excess_without_accidentally_publishing_a_bindi
     assert_eq!(policy::bind(&rows, 1), Err(Refusal::Missing(8)));
     assert_eq!(policy::bind(&rows, 16), Err(Refusal::Malformed));
 }
-fn declaration(entries: &[Import], brokered: bool) -> Declaration {
-    Declaration::decode(&if brokered {
+fn declaration(entries: &[Import], brokered: bool) -> policy::Declaration {
+    policy::decode(&if brokered {
         imports::encode_brokered(entries)
     } else {
         imports::encode(entries)

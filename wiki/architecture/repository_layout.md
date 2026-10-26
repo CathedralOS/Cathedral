@@ -123,9 +123,9 @@ also executes Omega discovery/configuration/picker/background sequences over
 host-owned resources. [Stock resource offers and profile ceilings](../../source/distribution/matrix/resources/README.md)
 now execute in Omega too, while the host allocates disjoint ranges and reserves
 kernel grants. Live-layout plans and stock service offers execute in Omega;
-the common [service matcher](../../source/platform/contracts/imports/README.md)
-lives in platform contracts without a distribution dependency. The host retains
-image decoding and live-grant validation/application; a
+the common [record decoder and service matcher](../../source/platform/contracts/imports/README.md)
+live in platform contracts without a distribution dependency. The host retains
+ELF record location, mapped-byte access and live-grant validation/application; a
 general-purpose matrix server runtime is not yet a separate platform package.
 The independent Rust `distribution/lab/matrix-composition/matrix` program uses
 the shared runtime server and matrix commands for three local peers without any

@@ -10,12 +10,13 @@ pub(super) struct Bound {
     pub resources: Option<(u64, u64)>,
 }
 pub(super) fn resolve(object: &mut Object, offered: u64) -> Result<Bound, Error> {
-    let declaration = imports::from_elf(object.map()?).map_err(status);
+    let declaration =
+        cathedral_stock_matrix::policy::imports::from_elf(object.map()?).map_err(status);
     object.unmap()?;
     let declaration = declaration?;
     let brokered = declaration.as_ref().is_some_and(|d| d.brokered);
-    // Omega selects the stock offer and matches the declaration. Mapping and
-    // validating the sealed image remain here, before any grant is reserved.
+    // Omega validates the declaration, selects the stock offer and matches it.
+    // Sealed image mapping remains here, before any grant is reserved.
     let bound = cathedral_stock_matrix::policy::imports::resolve(declaration.as_ref(), offered)
         .map_err(status)?;
     Ok(Bound {

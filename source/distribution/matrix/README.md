@@ -37,7 +37,7 @@ tasks/resources. Service-turn orchestration, request-family routing and owner
 success consequences now execute in Omega, as do owner child-control dispatch and
 launch target/role choices. Realm discovery and configuration/picker/background
 setup sequencing, stock resource offers and profile ceilings also execute in Omega.
-Stock service offers and live-layout plans also execute in Omega; common interface
-matching lives in platform contracts. Image declaration decoding and local
-world/resource operations retain Rust behavior. These are bounded migrations
+Stock service offers and live-layout plans also execute in Omega; common record
+decoding and interface matching live in platform contracts. ELF record location,
+mapped-byte access and local world/resource operations retain Rust behavior. These are bounded migrations
 of distribution behavior, not a new platform API or the completed Omega OS.

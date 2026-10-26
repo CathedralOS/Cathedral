@@ -1,6 +1,11 @@
 //! Locate imports through ELF load headers; the kernel separately validates code.
 use super::*;
 pub fn from_elf(bytes: &[u8]) -> Result<Option<Declaration>, Refusal> {
+    record_from_elf(bytes)?.map(Declaration::decode).transpose()
+}
+/// Locate the complete bounded record without decoding its contents.
+/// The caller must validate it before matching or using resource metadata.
+pub fn record_from_elf(bytes: &[u8]) -> Result<Option<&[u8]>, Refusal> {
     if bytes.get(..6) != Some(b"\x7fELF\x02\x01") || bytes.len() < 64 {
         return Err(Refusal::Malformed);
     }
@@ -36,7 +41,7 @@ pub fn from_elf(bytes: &[u8]) -> Result<Option<Declaration>, Refusal> {
         if found.is_some() {
             return Err(Refusal::Malformed);
         }
-        found = Some(Declaration::decode(
+        found = Some(
             data.get(
                 ..if data.get(..8) == Some(&PROFILE_MAGIC.to_le_bytes()) {
                     PROFILE_BYTES
@@ -45,7 +50,7 @@ pub fn from_elf(bytes: &[u8]) -> Result<Option<Declaration>, Refusal> {
                 },
             )
             .ok_or(Refusal::Malformed)?,
-        )?);
+        );
     }
     Ok(found)
 }

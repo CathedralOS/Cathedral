@@ -2,5 +2,5 @@
 mod image;
 #[cfg(test)]
 mod tests;
-pub use image::from_elf;
+pub use image::{from_elf, record_from_elf};
 include!("imports.rs");

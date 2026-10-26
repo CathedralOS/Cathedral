@@ -4,6 +4,7 @@
 use admission;
 use roles;
 use imports;
+use declaration;
 const READ: u64 = 1u64;
 const RETIRE: u64 = 2u64;
 const ADMIT: u64 = 3u64;
@@ -15,7 +16,7 @@ const ROLLBACK: u64 = 8u64;
 const RESTORE: u64 = 9u64;
 const FINISH: u64 = 10u64;
 public machine launch_decision(p: &mut [u64; 128]) -> u64 {
-    transition p[1] { 0u64 -> initialize(p) 1u64 -> next(p) 2u64 -> completed(p) 3u64 -> cancel(p) 4u64 -> accepts(p) 5u64 -> launch_admission(p) 6u64 -> launch_roles(p) 7u64 -> inspect_picker(p) 8u64 -> matches_picker(p) 9u64 -> import_binding(p) 10u64 -> import_binding(p) _ -> (0u64) }
+    transition p[1] { 0u64 -> initialize(p) 1u64 -> next(p) 2u64 -> completed(p) 3u64 -> cancel(p) 4u64 -> accepts(p) 5u64 -> launch_admission(p) 6u64 -> launch_roles(p) 7u64 -> inspect_picker(p) 8u64 -> matches_picker(p) 9u64 -> import_binding(p) 10u64 -> import_binding(p) 11u64 -> import_declaration(p) _ -> (0u64) }
 }
 machine initialize(p: &mut [u64; 128]) -> u64 {
     transition p[16] == 0u64 && p[2] != 0u64 {

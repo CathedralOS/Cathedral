@@ -1,14 +1,14 @@
 // Match declarations to a supplied interface offer. This creates no capabilities.
-public const INTERACTION: u64 = 1u64;
-public const STORAGE: u64 = 2u64;
-public const INPUT_PRODUCER: u64 = 4u64;
-public const CAPTURE: u64 = 8u64;
-public const SUPPORTED: u64 = 15u64;
-public const MALFORMED: u64 = 1u64;
-public const MISSING: u64 = 2u64;
-public const VERSION: u64 = 3u64;
-public data Import [copy] { contract: u64; minimum: u64; maximum: u64; required: bool; }
-public data Binding [copy] { status: u64; mask: u64; contract: u64; }
+use types;
+use record;
+// Decode the complete bounded little-endian record before any service matching.
+// On false the output is unspecified and must not be used for admission.
+public machine decode(bytes: &[u8; 168], length: u64, output: &mut Declaration) -> bool {
+    transition header(bytes, length, output) { true -> records(bytes, output) _ -> (false) }
+    state records(bytes: &[u8; 168], output: &mut Declaration) -> bool {
+        transition entries(bytes, output) { true -> padding(bytes, output.count) _ -> (false) }
+    }
+}
 public machine bind(entries: &[Import; 4], count: u64, offered: u64) -> Binding {
     transition count <= 4u64 && (offered & ~SUPPORTED) == 0u64 { true -> next(entries, count, offered, 0u64, 0u64) _ -> failed(MALFORMED, 0u64) }
     state next(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64) -> Binding requires count <= 4u64 {

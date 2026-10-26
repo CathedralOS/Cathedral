@@ -1,6 +1,7 @@
 // Private native adapter: declaration present/brokered/count/owner offer in 2..5;
 // four contract/min/max/required records in 16..31; result mask/contract in 32..33.
 use services::main;
+use services::types;
 public machine import_binding(p: &mut [u64; 128]) -> u64 {
     let mut entries: [Import; 4];
     transition p[2] == 0u64 { true -> legacy(p, &mut entries) _ -> copy(p, &mut entries, 0u64) }

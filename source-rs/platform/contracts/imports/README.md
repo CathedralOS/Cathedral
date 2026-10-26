@@ -23,11 +23,14 @@ matrix configuration schema.
 
 ## Current bounded representation
 
-The stock matrix executes common declaration matching in
+The stock matrix executes record decoding and common declaration matching in
 [Omega](../../../../source/platform/contracts/imports/README.md), through its
-distribution-owned offer adapter. This Rust package remains the representation,
-ELF extraction/record decoder and independent conformance oracle, and still
-serves other Rust hosts. Matching itself creates no capabilities.
+distribution-owned adapters. This Rust package remains the encoded representation,
+ELF record locator and independent parser/matcher oracle, and still serves other
+Rust hosts. `record_from_elf` locates bounded raw bytes without validating their
+contents; a consumer must decode them before matching or using resource metadata.
+`from_elf` retains the complete Rust decoding path for those other consumers.
+Matching itself creates no capabilities.
 
 The runtime's `service_imports!` emits `CTHIMP01`; `service_bootstrap!` emits
 `CTHIMP03` for [scoped acquisition](../services/README.md) and requested resources.

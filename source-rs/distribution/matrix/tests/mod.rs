@@ -3,6 +3,7 @@ mod behavior;
 mod catalogue;
 mod code;
 mod control;
+mod declaration;
 mod imports;
 mod launch;
 mod layout;

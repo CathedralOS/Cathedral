@@ -30,11 +30,13 @@ execute under `source/distribution/matrix/resources/`. The host composes exact
 image/scope launch plans, accounts for transport overhead and allocates resources.
 Live-layout plans and stock service offers now execute in Omega as well, with
 common typed interface matching under `source/platform/contracts/imports/`.
-Next, port the bounded service-import record decoder into that platform package;
-`source-rs/platform/contracts/imports/imports.rs` and `image.rs` still decode and
-extract declarations from sealed executables. Keep the byte-access/ELF boundary
-explicit, preserve malformed-record refusal before matching or admission, and
-use the existing Rust parser as a conformance oracle.
+The bounded service-import record decoder now also runs in that Omega platform
+package, before matching. Rust locates the record in sealed ELF bytes through
+`source-rs/platform/contracts/imports/image.rs`; its original record decoder remains
+an oracle and serves consumers not yet migrated. Next, migrate the bounded ELF
+record-location decisions while keeping mapped-byte access explicit. Preserve
+duplicate/unknown record refusal, load-range overflow and truncation checks;
+do not turn a malformed declaration into an absent legacy record.
 Keep actual grants, mappings and resource custody in the host; do not turn the
 native bridge into a permanent second distribution API.
 The independent Omega matrix is a useful precedent, but its synchronous parent
@@ -386,6 +388,36 @@ not perfect timing indistinguishability or mandatory agent badges. Existing
 default/hidden cursor evidence remains valid for its scope, not the full asset API.
 
 ## Current implementation evidence
+
+Implementation update 2026-10-26: **Omega decodes service declarations before
+stock admission**, over `5b3030b4`.
+
+`source/platform/contracts/imports/main.omg` sequences header, entry and padding
+validation through `record.omg`, returning typed declaration metadata. Exact
+record lengths, known versions, reserved header bits, counts, required booleans,
+identity/version syntax, duplicate identities and unused zero padding are checked
+before matching. Explicit resource/profile demands remain metadata, not grants.
+The stock adapter publishes decoded fields only after successful validation.
+
+The Rust ELF locator exposes the bounded raw record; ordinary stock admission
+uses the Omega decoder instead of `Declaration::decode`. The old decoder remains
+for other hosts and conformance testing. ELF header/range access, record placement,
+unknown-version and duplicate-record checks remain Rust-owned in this slice.
+
+Four compiled-Omega tests bring the matrix total to 92. They compare all four
+record forms, every entry count, single-bit mutations throughout the record,
+truncation/extension, resource extremes, and ELF boundary failures against the
+Rust oracle. A malformed later entry refuses before an earlier unavailable
+required service can reach matching. Full workspace host tests, default and
+all-feature x86-64 matrix Clippy, formatting and source layout (83 Omega packages,
+151 Rust edges) pass. Logs are `build/omega-component/declaration-*.log`.
+
+Ordinary F5 and cold reboot pass with the 1,681-record storage oracle
+(`desktop/20261026T205128536334Z`). Four-level nesting passes protected close,
+saved Notes/Omega Colors, repeated subtree reclamation, isolation and cold reopen
+(`desktop/20261026T205254614950Z`). Incompatible optional Notes storage stays absent
+on fresh/cold boots while dirty-close and Colors' independent service binding work
+(`desktop/20261026T205538691307Z`). Paths are beneath `build/boot-harness-rs/`.
 
 Implementation update 2026-10-26: **Omega plans live layout and matches service
 declarations**, over `0681b83e`.

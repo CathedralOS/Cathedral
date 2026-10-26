@@ -1,0 +1,16 @@
+public const INTERACTION: u64 = 1u64;
+public const STORAGE: u64 = 2u64;
+public const INPUT_PRODUCER: u64 = 4u64;
+public const CAPTURE: u64 = 8u64;
+public const SUPPORTED: u64 = 15u64;
+public const MALFORMED: u64 = 1u64;
+public const MISSING: u64 = 2u64;
+public const VERSION: u64 = 3u64;
+public data Import [copy] { contract: u64; minimum: u64; maximum: u64; required: bool; }
+public data Binding [copy] { status: u64; mask: u64; contract: u64; }
+// Decoded demand is metadata, never authority. Only consume it when decode succeeds.
+public data Declaration {
+    count: u64; entries: [Import; 4]; brokered: bool;
+    funded: bool; channels: u64; descendants: u64;
+    profiled: bool; private_pages: u64; reader_pages: u64; surfaces: u64;
+}

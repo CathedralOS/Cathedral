@@ -24,8 +24,11 @@ and scope. All names are resolved through this matrix's supplied realm.
 calls the common [Omega service matcher](../../../platform/contracts/imports/README.md).
 Brokered programs may receive explicitly offered input production; positional
 programs receive only interaction/storage. Stock admission requires interaction
-and never supplies capture. The host still reads/unmaps the sealed ELF, validates
-its declaration bytes and retains profile/resource metadata before reservation.
+and never supplies capture. [declaration.omg](declaration.omg) adapts raw record
+bytes to the common Omega decoder, publishing metadata only after its complete
+syntax validation. The host still maps/unmaps the sealed ELF and locates the
+bounded record. Profile/resource metadata reaches stock funding policy before
+reservation; decoding it grants nothing.
 
 [The Rust entrance](../../../../source-rs/distribution/matrix/service/children/launch/launch.rs)
 dispatches these commands. Its siblings supply authenticated observations and
