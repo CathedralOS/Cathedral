@@ -1,7 +1,6 @@
 //! One retained card; the matrix supplies the background and clips local input.
-use crate::recovery::Pair;
 use cathedral_desktop_matrix_contracts::matrix as wire;
-use cathedral_user_runtime::{memory::Private, time};
+use cathedral_user_runtime::{memory::Private, services::Services};
 fn height(launcher: bool) -> usize {
     if launcher { 64 } else { 112 }
 }
@@ -19,7 +18,13 @@ pub(crate) fn button(view: wire::Packet, x: u64, y: u64, launcher: bool) -> bool
     (left + start..left + end).contains(&x)
         && (top + button_top..top + button_top + 32).contains(&y)
 }
-pub(crate) fn paint(parent: Pair, view: wire::Packet, surface: u64, failed: bool, launcher: bool) {
+pub(crate) fn paint(
+    parent: &mut Services,
+    view: wire::Packet,
+    surface: u64,
+    failed: bool,
+    launcher: bool,
+) {
     let width = WIDTH;
     let (start, end) = (64, 224);
     let button_top = if launcher { 32 } else { 64 };
@@ -80,10 +85,9 @@ pub(crate) fn paint(parent: Pair, view: wire::Packet, surface: u64, failed: bool
     let mut image = pixels.freeze().unwrap();
     image.unmap().unwrap();
     let (x, y) = origin(view, launcher);
-    parent
-        .0
-        .send_memory(
-            &wire::encode([
+    let reply = parent
+        .request_interaction(
+            [
                 wire::SURFACE_IMAGE,
                 view[1],
                 surface,
@@ -92,14 +96,9 @@ pub(crate) fn paint(parent: Pair, view: wire::Packet, surface: u64, failed: bool
                 width as u64,
                 height(launcher) as u64,
                 width as u64,
-            ]),
-            &image,
+            ],
+            Some(&image),
         )
         .unwrap();
-    let mut bytes = [0; 64];
-    let n = parent
-        .1
-        .receive_until(&mut bytes, time::after(300).unwrap())
-        .unwrap();
-    assert_eq!(wire::decode(&bytes[..n]).unwrap(), [0; 8]);
+    assert_eq!(reply, [0; 8]);
 }

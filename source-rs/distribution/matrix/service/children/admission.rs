@@ -37,12 +37,15 @@ impl Children {
             argument,
             false,
             self.separate_storage,
-            None,
+            self.separate_storage
+                .then_some(cathedral_platform_contracts::imports::ALL),
             server,
             world,
         )
     }
     /// Code from the owner's catalogue, with the catalogue grants `images` lends.
+    /// Modern hosts offer the same interaction/storage rights through a broker;
+    /// combined-stream mechanism fixtures retain their explicitly old shape.
     pub(super) fn run(
         &mut self,
         slot: usize,
@@ -66,7 +69,8 @@ impl Children {
             frames,
             [argument, channels, descendants, images, cpu],
             self.separate_storage,
-            None,
+            self.separate_storage
+                .then_some(cathedral_platform_contracts::imports::ALL),
             server,
             world,
         )

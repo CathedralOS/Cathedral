@@ -59,9 +59,9 @@ impl Children {
                 fallback.image,
                 launcher.plan.pages.unwrap(),
                 None,
-                [fallback.argument, 1, 0, 0, 0],
+                [fallback.argument, 2, 0, 0, 0],
                 false,
-                None,
+                Some(cathedral_platform_contracts::imports::INTERACTION),
                 server,
                 world,
             )

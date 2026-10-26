@@ -75,6 +75,13 @@ pub fn run_services<const PROBES: bool>(
     let mut storage =
         Client::connect(services.storage(1, 1).unwrap(), time::after(300).unwrap()).unwrap();
     let wake = interaction.wake;
+    let cathedral_user_runtime::services::Wake::Notification(wait) = wake else {
+        panic!("Colors requires a brokered notification wake");
+    };
+    assert_eq!(wait.signal(false), Err(Error(abi::DENIED as i64)));
+    assert_eq!(wait.close_object(), Err(Error(abi::DENIED as i64)));
+    cathedral_user_runtime::write(b"Cathedral Colors probe: notification input wake ready\n")
+        .unwrap();
     cathedral_user_runtime::write(
         b"Cathedral Colors probe: shared interaction and storage ready\n",
     )

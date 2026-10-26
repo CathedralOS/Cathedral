@@ -2,8 +2,8 @@
 //! Only a real retry request retries admission. A dead picker shows recovery;
 //! a dead recovery screen does not create an automatic restart loop.
 use super::*;
-// A 32-page card beside its predecessor, plus the shared control writer.
-const RECOVERY_PAGES: u64 = 65;
+// A 32-page card beside its predecessor, plus shared control and interaction writers.
+const RECOVERY_PAGES: u64 = 66;
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Login {
     Stopped,
@@ -67,8 +67,8 @@ impl Login {
             return;
         }
         stop(matrix, 0).expect("login cleanup");
-        request(matrix, [wire::RUN_PAGES, 0, RECOVERY_PAGES, 1, 0, 0, 0, 0]).unwrap();
-        request(matrix, [wire::RUN, 0, 0, mode, 1, 0, 0, 0]).expect("bundled recovery admission");
+        request(matrix, [wire::RUN_PAGES, 0, RECOVERY_PAGES, 2, 0, 0, 0, 0]).unwrap();
+        request(matrix, [wire::RUN, 0, 0, mode, 2, 0, 0, 0]).expect("bundled recovery admission");
         select_user(matrix, extent).expect("recovery placement");
         *self = state;
     }

@@ -7,10 +7,13 @@ retained card and button geometry.
 The distribution profile bundles this executable in the boot catalogue. The
 [startup owner](../session/shell/login.rs) runs it in root slot 0 when the stored
 picker cannot start or dies, and while the storage provider starts. It receives
-local matrix interaction and a wake endpoint, no device grants, executable
-catalogue or descendant budget. The
-current catalogue-admission mechanism also supplies a separate storage endpoint,
-but the owner never binds a realm to it and this screen never uses it.
+a scoped service broker, local matrix interaction and a wait-only notification,
+with no device grants, executable catalogue or descendant budget. Control setup
+completes before service acquisition. Drawing commands and immutable card images
+use one retained shared interaction connection; there are no copied payload calls.
+The current boot-catalogue grant still offers storage, but the owner never binds
+a realm to it and this screen never acquires it. Launcher fallback admission offers
+only interaction and explicitly verifies that storage acquisition is unavailable.
 
 While storage opens, **STARTING...** has no active button. Clicking **TRY AGAIN**
 after failure, or Enter with focus, sets one pending retry. On the

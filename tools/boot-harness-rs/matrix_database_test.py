@@ -113,11 +113,13 @@ def run(args):
         assert serial.count('shared storage control established') == expected_providers, serial
         # The recovery peer establishes control before painting, even on cold
         # boot where it is immediately stopped after its startup check.
+        assert serial.count('brokered startup and notification input wake ready') == 1, serial
         expected_children = 4 if args.recovery else 3
         assert serial.count('shared child control ready') == expected_children, serial
         if not args.notes:
             expected_colors = 3 if args.recovery else 2
             assert serial.count('Colors probe: shared interaction and storage ready') == expected_colors, serial
+            assert serial.count('Colors probe: notification input wake ready') == expected_colors, serial
         for marker in ('shared root control ready', 'shared bootstrap display ready'):
             assert serial.count(marker) == 1, (marker, serial)
         for name in ('serial.log', 'qemu.log', 'display.png'):

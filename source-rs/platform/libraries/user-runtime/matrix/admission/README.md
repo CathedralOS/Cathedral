@@ -40,7 +40,11 @@ input hints until `Offer::interaction_ready`, then signal the independent hint.
 `close_connections` closes the notification and releases retained rights, including
 unacquired wait rights. The notification replaces one queue, with the same object
 charge; local notification-handle metadata also has a finite limit. Positional
-startup still uses a copied wake queue. See [the bootstrap contract](../../../../contracts/services/README.md).
+startup still uses a copied wake queue. Stock hosts with separate storage now use
+brokered admission for their static catalogue and supplied launch grants, preserving
+the previous interaction/storage offer. Their root recovery and nested labs acquire
+notification hints through that broker. Stored legacy probe images and combined-
+stream mechanism fixtures still select the positional API. See [the bootstrap contract](../../../../contracts/services/README.md).
 An explicitly offered input producer adds two channels, retained separately from
 interaction and storage. Its provider must install that pair, grant bounded
 production and keep its reply queue empty until both parts have transferred.

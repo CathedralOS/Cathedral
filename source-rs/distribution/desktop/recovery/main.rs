@@ -6,8 +6,8 @@ mod protocol;
 mod recovery;
 mod screen;
 use cathedral_platform_contracts::imports::{INTERACTION, Import};
-cathedral_user_runtime::service_imports!(&[Import::v1(INTERACTION, true)]);
-cathedral_user_runtime::entry_with_environment!(main);
-fn main(_: u64, argument: u64, environment: cathedral_user_runtime::task::Environment) -> u64 {
-    recovery::run(environment, argument)
+cathedral_user_runtime::service_bootstrap!(&[Import::v1(INTERACTION, true)], 2, 0);
+cathedral_user_runtime::entry_with_services!(main);
+fn main(_: u64, argument: u64, services: cathedral_user_runtime::services::Services) -> u64 {
+    recovery::run(services, argument)
 }

@@ -6,25 +6,15 @@ use cathedral_desktop_matrix_contracts::matrix as wire;
 use cathedral_kernel_contracts::user as abi;
 use cathedral_platform_contracts::input;
 use cathedral_user_runtime::{
-    ipc::Handle,
     server::{OwnerControl, SharedSlot},
-    services::Wake,
-    task::Environment,
+    services::{Services, Wake},
     time,
 };
-pub(crate) type Pair = (Handle, Handle);
-
-pub(crate) fn call(pair: Pair, packet: wire::Packet) -> wire::Packet {
-    pair.0.send(&wire::encode(packet)).unwrap();
-    let mut bytes = [0; 64];
-    let n = pair
-        .1
-        .receive_until(&mut bytes, time::after(300).unwrap())
-        .unwrap();
-    wire::decode(&bytes[..n]).unwrap()
+pub(crate) fn call(parent: &mut Services, packet: wire::Packet) -> wire::Packet {
+    parent.request_interaction(packet, None).unwrap()
 }
 
-pub(crate) fn run(environment: Environment, argument: u64) -> u64 {
+pub(crate) fn run(mut services: Services, argument: u64) -> u64 {
     static mut CONTROL: SharedSlot = SharedSlot::empty();
     let slot = &raw mut CONTROL;
     // SAFETY: This single-entry recovery process owns the slot until collection.
@@ -32,11 +22,24 @@ pub(crate) fn run(environment: Environment, argument: u64) -> u64 {
     control.establish(time::after(300).unwrap()).unwrap();
     let launcher = argument == crate::protocol::LAUNCHER;
     let mut failed = argument != crate::protocol::STARTING;
-    let connections =
-        cathedral_user_runtime::matrix::OptionalConnections::load(&environment).unwrap();
-    let parent = connections.interaction;
+    assert!(services.is_brokered());
+    services.enable_shared().unwrap();
+    let wake = services.interaction(1, 1).unwrap().wake;
+    assert!(matches!(wake, Wake::Notification(_)));
     if launcher {
-        assert!(connections.storage.is_none());
+        assert_eq!(
+            services.storage(1, 1).err(),
+            Some(cathedral_user_runtime::Error(
+                cathedral_platform_contracts::services::UNAVAILABLE as i64
+            )),
+        );
+    }
+    cathedral_user_runtime::write(
+        b"Cathedral recovery: shared interaction and notification wake ready\n",
+    )
+    .unwrap();
+    let parent = &mut services;
+    if launcher {
         // Template admission includes its own code; no other images or child
         // capacity are lent, so even that grant cannot reserve a process.
         assert!(cathedral_user_runtime::task::Executable::at(1).is_err());
@@ -106,15 +109,15 @@ pub(crate) fn run(environment: Environment, argument: u64) -> u64 {
             // owner preserves its phase ordering without sending another RPC
             // through an endpoint it is about to close.
             if call(parent, [wire::RETRY_LAUNCHER, 0, 0, 0, 0, 0, 0, 0])[0] == 0 {
-                await_retirement(&mut control, connections.wake);
+                await_retirement(&mut control, wake);
             }
         }
         if snapshot[5] & wire::MORE != 0 {
             continue;
         }
-        match control.next(connections.wake.interest(), Some(time::after(100).unwrap())) {
+        match control.next(wake.interest(), Some(time::after(100).unwrap())) {
             Ok(None) => {
-                connections.wake.take().unwrap();
+                wake.take().unwrap();
             }
             Ok(Some((bytes, n))) => {
                 let request = wire::decode(&bytes[..n]).unwrap();

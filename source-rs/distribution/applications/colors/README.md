@@ -14,8 +14,10 @@ app's implementation. Its interaction stream is owned by `Services`; all drawing
 commands and image attachments use that same shared connection. A separate shared
 storage client first proves wrong-service refusal, then transfers unchanged into
 `Scope`; binding discovery and writes continue its request sequence. Both ends
-are explicitly funded by the lab. Positional input hints still use the older wake
-queue until that startup shape is migrated to broker acquisition.
+are explicitly funded by the lab. The modern catalogue supplies a broker; input
+hints are acquired as wait-only notifications. The probe verifies that attempts
+to signal or close that notification are denied, then exercises physical input
+and nested rendering using the same granted wait right.
 
 The ordinary desktop and native component tests exercise
 the Omega implementation; kernel labs retain their existing proof commands.

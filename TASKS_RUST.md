@@ -324,6 +324,68 @@ default/hidden cursor evidence remains valid for its scope, not the full asset A
 
 ## Current implementation evidence
 
+Implementation update 2026-10-25: **modern catalogue launches acquire services and notification wakes through the broker**, over `8586acb4`.
+
+Stock hosts with separate storage now use brokered admission for supplied launch
+and static-catalogue RUN requests. They offer the same interaction/storage rights
+as the old five-endpoint bundle; local view/storage grants are still installed
+separately. Nested lab matrices and Colors/Omega Notes acquire those connections
+and a wait-only notification through the existing authenticated service offer.
+This reuses ordinary desktop acquisition and cleanup, not a new locator or payload
+transport. Combined-stream mechanism fixtures and stored legacy probe images
+still select their positional paths. Stored-image manifest admission is unchanged.
+
+The boot-bundled recovery program now receives `Services`, establishes independent
+owner control first, then acquires shared interaction and a notification wake.
+POLL, retry requests, screen commands and immutable card images all use that same
+retained interaction owner. The startup owner gives it 66 private pages, two
+readers and two notification channels, retaining the old two-card capacity.
+Launcher fallback admission offers only INTERACTION and two channels within the
+retained launcher budget. It verifies storage acquisition is unavailable and that
+its interaction connection cannot query management, layout or storage authority.
+Boot-catalogue admission retains its previous unbound storage offer; recovery does
+not acquire it. No realm access is added by discovery.
+
+Colors requires a notification wake and checks actual kernel refusals when it
+tries to signal or close that wait-only right. Physical input and nested painting
+then use the same right. Admission/rollback, child death and subtree replacement
+now exercise retained broker offers instead of copied wake queues in the integrated
+labs. The notification replaces the previous wake queue at the same object charge;
+Colors/Notes lab budgets and top-level F5 grants are unchanged.
+
+Verification:
+
+- F5 and cold persistence pass in `desktop/20261026T040640555071Z`, including
+  the shared recovery marker and the exact 1,631-record host oracle.
+- The destructive desktop and cold reboot pass in `matrix-desktop-test/`, with
+  notification wakes in both Colors instances and brokered startup in the nested
+  matrix. Existing image, input, blocked-save and subtree recovery proofs remain.
+- Notes recovery and cold persistence pass in
+  `matrix-database/20261026T040809922279Z`, including exact text/history/quota
+  (20 host records each boot) and the nested broker path.
+- The pressure desktop and cold boot pass in `pressure-matrix-desktop-test/`,
+  including wait-only authority refusals and actual input afterward. The sampled
+  nested key reached scanout in 1,312 ms under the deliberate CPU cap; ordinary
+  unpressured input sampled 218 ms. These are observations, not latency guarantees.
+- Launcher retry, clean fallback exit and fallback fault pass in
+  `launcher-recovery/20261026T041309880041Z`; the source fixture stays unchanged.
+- All six provider-startup cases pass in `provider-startup/20261026T041423449561Z`,
+  including malformed setup/readiness, stalls, repeated crashes and invalid media.
+  Recovery remains visible and explicit retries/cleanup preserve the original disk.
+- Database recovery and cold persistence pass in
+  `matrix-database/20261026T041618018960Z`, with exact revisions [4, 2] and
+  all 18 host records on both boots. Three Colors instances acquire notification
+  hints, including the independently interactive peer.
+- Host tests; recovery/matrix, positional and all-feature desktop Clippy;
+  layout/format and whitespace checks pass. No kernel/runtime implementation changes;
+  ARM64 was not rerun. Logs: `build/omega-component/catalogue-broker-*.log`.
+
+**Next:** migrate the remaining Rust Notes/chooser probe data adapters, then the
+combined-stream fixtures and source-probe handoff before retiring copied transport.
+The pre-driver source still cannot be upgraded and handed off as bare endpoints.
+On-demand authorized broker lookup remains a separate outcome; this change still
+uses the existing explicit startup relationship.
+
 Implementation update 2026-10-25: **Rust Colors lab rendering and storage use retained shared clients**, over `50ac8625`.
 
 The retained Rust Colors probe now upgrades its supplied interaction connection
@@ -367,7 +429,7 @@ Verification:
 - Host tests, positional and all-feature desktop Clippy, layout/format and
   whitespace checks pass. ARM64 was not rerun. Logs: `build/omega-component/colors-shared-*.log`.
 
-**Next:** migrate remaining Rust Notes/chooser/recovery data adapters and positional
+**Previous next (recovery data and modern catalogue wakes completed above):** migrate remaining Rust Notes/chooser/recovery data adapters and positional
 wake delivery, then retire their copied consumers. Pre-driver source probes still
 share an untouched endpoint pair with the later physical driver: upgrading that
 pair and passing only raw handles would lose the retained connection state. That
