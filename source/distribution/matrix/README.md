@@ -3,6 +3,8 @@
 Start at [session/main.omg](session/main.omg) for the stock service-turn sequence,
 including progress, work priority, waiting and event dispatch. The
 [session boundary](session/README.md) leads into its Rust mechanisms.
+[requests/main.omg](requests/main.omg) selects request operations from authenticated
+caller facts; [the request boundary](requests/README.md) explains reply custody.
 [policy/main.omg](policy/main.omg) dispatches the temporary native reference
 bridge to [configuration](configuration/README.md), [lifecycle](lifecycle/README.md),
 [launcher recovery](recovery/README.md), [local startup recovery](startup/README.md)
@@ -25,6 +27,7 @@ Ordinary reads and storage binding yield; admission/publication still use
 synchronous host mechanisms.
 Rust still authenticates callers, serializes IPC, retains exact task/endpoint
 identity, drains late replies, progresses asynchronous parent work and reclaims
-tasks/resources. The service-turn orchestration now executes in Omega; detailed
-request operations and the native host remain Rust. These are bounded migrations
+tasks/resources. Service-turn orchestration, request-family routing and owner
+success consequences now execute in Omega. Detailed child-control dispatch,
+launch target choices, local world operations and the native host remain Rust. These are bounded migrations
 of distribution behavior, not a new platform API or the completed Omega OS.

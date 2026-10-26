@@ -15,10 +15,13 @@ fallback choice, cancellation and scene restoration now execute in
 opaque catalogue/workflow state, exact request/task identity, asynchronous scene
 transport and resource custody. The service-turn sequence now executes in
 `source/distribution/matrix/session/`, through `service/host/` operations; the
-Rust service entrance only drives that session. Next, move detailed authenticated
-request routing and launch/startup role choices into the Omega program. Start at
-`service/requests/requests.rs` and `service/children/launch/request.rs`; distinguish
-owner/child/source request facts from the exact capabilities retained by the host.
+Rust service entrance only drives that session. Request-family routing and owner
+success consequences now execute in `source/distribution/matrix/requests/`;
+`service/requests/requests.rs` supplies authenticated facts and executes the choice.
+Next, move detailed owner child-control dispatch and launch/startup role choices
+into Omega. Start at `service/children/children.rs` and
+`service/children/launch/request.rs`; preserve exact capabilities and pending replies
+in the host while moving the decisions that use their authenticated observations.
 The independent Omega matrix is a useful precedent, but its synchronous parent
 refresh must not replace the desktop's yielding path.
 
@@ -368,6 +371,32 @@ not perfect timing indistinguishability or mandatory agent badges. Existing
 default/hidden cursor evidence remains valid for its scope, not the full asset API.
 
 ## Current implementation evidence
+
+Implementation update 2026-10-26: **Omega routes stock matrix requests**, over
+`da1ecec9`.
+
+`source/distribution/matrix/requests/main.omg` owns request-family selection from
+authenticated owner/source/child/storage/producer facts, canonical app packet
+shapes, separated-producer enforcement and the storage attachment allowlist.
+`owner.omg` selects diagnostics, owner fallback handlers and successful update
+consequences. Rust retains exact requests/incarnations, validation of actual
+resources, pending replies, attachment custody and publication order. Unknown
+callers refuse; packet words cannot select a caller class. This is the ordinary
+F5 path, not a second isolated matrix or a new service protocol.
+
+Eight compiled-Omega tests bring the matrix total to 55. They check connection
+separation, malformed packets, reserved fields, app operation bindings, owner
+success/failure consequences, separate producer enforcement and every storage
+attachment opcode with scope bits. The first full rebuild caught a name collision
+from adding matrix constants to the app reference module; a separate `matrix.omg`
+import keeps operation names out of app host namespaces. The full host workspace,
+default/all-feature x86-64 matrix Clippy, layout and format checks pass. Ordinary
+F5 and cold reboot pass with the 1,649-record durable oracle. Four nested desktops,
+repeated isolated producer acquisition/closure, existing-app selection `late-stop`
+and launch-scene `late-stop-target` all pass on both boots. The late cases preserve
+sibling input, protected drafts and subtree reclamation. This is functional
+regression evidence, not a latency guarantee. Logs are
+`build/omega-component/requests-*.log`.
 
 Implementation update 2026-10-26: **Omega sequences the stock matrix service turn**,
 over `cbb8e464`.

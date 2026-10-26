@@ -47,8 +47,9 @@ records occupy process-owned arenas, alongside the existing world/parent arenas;
 returning them together by value would duplicate them across the guarded stack.
 The stack allowance and kernel are unchanged.
 
-The detailed operation dispatcher under `service/requests/`, launch/startup role
-choices, local world mutations and transport implementations remain Rust. This
+The `Request` operation continues into [Omega request routing](../requests/README.md).
+Detailed child-control dispatch, launch/startup role choices, local world mutations
+and transport implementations remain Rust. This
 milestone moves orchestration and event-category dispatch; it does not claim a
 fully Omega matrix executable, a new platform runtime or a native Omega kernel.
 

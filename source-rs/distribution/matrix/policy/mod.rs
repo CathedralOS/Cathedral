@@ -4,6 +4,7 @@ pub mod lifecycle;
 mod native;
 pub mod operation;
 pub mod recovery;
+pub mod requests;
 pub mod session;
 pub mod startup;
 pub mod workspace;

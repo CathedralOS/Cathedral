@@ -1,0 +1,11 @@
+// Stock distribution wire bindings. Owner: source-rs/distribution/matrix/contracts/matrix.rs.
+public const LAUNCH: u64 = 14u64;
+public const CLOSE: u64 = 15u64;
+public const APPLY_LAYOUT: u64 = 16u64;
+public const RETRY_LAUNCHER: u64 = 20u64;
+public const SAVE_AVAILABILITY: u64 = 21u64;
+public const RETRY_SAVES: u64 = 22u64;
+public const APP_ENTRY: u64 = 23u64;
+public const SELECT_APP: u64 = 24u64;
+public const SAVE_RECOVERY_GRANT: u64 = 128u64;
+public const SAVE_RECOVERY_POLL: u64 = 129u64;

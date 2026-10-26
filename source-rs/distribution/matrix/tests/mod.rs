@@ -4,6 +4,7 @@ mod code;
 mod launch;
 mod lifecycle;
 mod recovery;
+mod requests;
 mod session;
 mod startup;
 mod workspace;

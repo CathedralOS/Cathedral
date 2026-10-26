@@ -1,0 +1,66 @@
+// Authenticated connection -> request family -> host operation. Words never name a caller.
+// p[2..6]: connection class, decoded packet, separate producer, storage stream, child count.
+// p[16..24]: decoded untrusted request. p[7]: successful owner operation.
+use operations;
+use desktop;
+use owner;
+use protocol::main;
+use protocol::matrix;
+public machine request_decision(p: &mut [u64; 128]) -> u64 {
+    transition p[1] { 0u64 -> route(p) 1u64 -> owner_fallback(p) 2u64 -> owner_effects(p) 3u64 -> attachment(p) _ -> (DO_DENY) }
+}
+machine route(p: &mut [u64; 128]) -> u64 {
+    transition p[2] == PRODUCER { true -> (DO_PRODUCER) _ -> decoded(p) }
+    state decoded(p: &mut [u64; 128]) -> u64 {
+        transition p[3] != 0u64 { true -> acquire(p) _ -> malformed(p) }
+    }
+    state malformed(p: &mut [u64; 128]) -> u64 { transition p[2] == STORAGE { true -> (DO_DENY_NOW) _ -> (DO_DENY) } }
+    state acquire(p: &mut [u64; 128]) -> u64 {
+        transition p[2] != OWNER && p[2] != UNKNOWN && p[16] == SERVICE_ACQUIRE { true -> (DO_ACQUIRE) _ -> caller(p) }
+    }
+    state caller(p: &mut [u64; 128]) -> u64 {
+        transition p[2] { OWNER -> owner_request(p) SOURCE -> (DO_SOURCE) CHILD -> storage(p) STORAGE -> storage(p) _ -> (DO_DENY) }
+    }
+    state storage(p: &mut [u64; 128]) -> u64 {
+        let op: u64 = p[16] & 65535u64;
+        transition p[16] == STORAGE_INFO || (op >= STORAGE_BASE && op < STORAGE_BASE + 256u64) { true -> storage_right(p) _ -> interaction(p) }
+    }
+    state storage_right(p: &mut [u64; 128]) -> u64 { transition p[5] != 0u64 { true -> (DO_STORAGE) _ -> (DO_DENY_NOW) } }
+    state interaction(p: &mut [u64; 128]) -> u64 {
+        transition p[2] == STORAGE { true -> (DO_DENY_NOW) _ -> producer(p) }
+    }
+    state producer(p: &mut [u64; 128]) -> u64 {
+        transition p[4] != 0u64 && ((p[16] >= PRODUCER_INFO && p[16] <= PRODUCER_RELEASE) || p[16] == PRODUCER_DESCRIBE) { true -> (DO_DENY) _ -> child_request(p) }
+    }
+}
+machine child_request(p: &mut [u64; 128]) -> u64 {
+    transition p[16] {
+        LAUNCH -> two(p, DO_LAUNCH) CLOSE -> empty(p, DO_CLOSE)
+        FUND -> funding(p) APP_ENTRY -> one(p, DO_APP_ENTRY)
+        SELECT_APP -> one(p, DO_SELECT) APPLY_LAYOUT -> (DO_LAYOUT)
+        LAUNCH_STATUS -> one(p, DO_STATUS)
+        SAVE_AVAILABILITY -> empty(p, DO_SAVE_AVAILABILITY) RETRY_SAVES -> empty(p, DO_RETRY_SAVES)
+        MANAGED_TASK -> empty(p, DO_MANAGED_TASK) RETRY_LAUNCHER -> empty(p, DO_RETRY_LAUNCHER)
+        TERMINATE_TASK -> one(p, DO_TERMINATE)
+        PRESENT_BEGIN -> (DO_PRESENT) PRESENT_COMMIT -> (DO_PRESENT) PRESENT_ABORT -> (DO_PRESENT) PRESENT_RECTS -> (DO_PRESENT)
+        SURFACE_CREATE -> (DO_SURFACE) MATRIX_PAINT -> (DO_SURFACE) MATRIX_ERASE -> (DO_SURFACE) SURFACE_IMAGE -> (DO_SURFACE) SURFACE_CURSOR -> (DO_SURFACE)
+        _ -> (DO_WORLD)
+    }
+    state funding(p: &mut [u64; 128]) -> u64 { transition p[22] == 0u64 && p[23] == 0u64 { true -> (DO_FUND) _ -> (DO_WORLD) } }
+}
+machine empty(p: &mut [u64; 128], operation: u64) -> u64 { transition p[17] == 0u64 { true -> one(p, operation) _ -> (DO_WORLD) } }
+machine one(p: &mut [u64; 128], operation: u64) -> u64 { transition p[18] == 0u64 { true -> two(p, operation) _ -> (DO_WORLD) } }
+machine two(p: &mut [u64; 128], operation: u64) -> u64 {
+    transition p[19] == 0u64 && p[20] == 0u64 && p[21] == 0u64 && p[22] == 0u64 && p[23] == 0u64 { true -> (operation) _ -> (DO_WORLD) }
+}
+machine attachment(p: &mut [u64; 128]) -> u64 {
+    transition p[2] == STORAGE && p[3] != 0u64 && p[5] != 0u64 { true -> operation(p) _ -> (DO_DENY_NOW) }
+    state operation(p: &mut [u64; 128]) -> u64 {
+        transition p[16] & 65535u64 {
+            STORAGE_BASE + STORE_PUBLISH -> (DO_STORAGE) STORAGE_BASE + STORE_CREATE_NAMED -> (DO_STORAGE)
+            STORAGE_BASE + STORE_SET_METADATA -> (DO_STORAGE) STORAGE_BASE + STORE_LOOKUP -> (DO_STORAGE)
+            STORAGE_BASE + STORE_FILTER -> (DO_STORAGE) STORAGE_BASE + STORE_COPY_TREE -> (DO_STORAGE)
+            STORAGE_BASE + STORE_COPY -> (DO_STORAGE) _ -> (DO_DENY_NOW)
+        }
+    }
+}
