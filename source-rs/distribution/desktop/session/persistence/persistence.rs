@@ -4,11 +4,14 @@ use super::*;
 use cathedral_platform_contracts::storage;
 use cathedral_user_runtime::write;
 pub(crate) use policy::Watchdog;
-fn revoke(session: &admission::Session) {
+fn revoke(session: &mut admission::Session) {
     for slot in 0..2 {
-        owner(
-            session.matrix,
-            [wire::STORAGE_REVOKE, slot, 0, 0, 0, 0, 0, 0],
+        assert_eq!(
+            control::request(
+                &mut session.matrix,
+                [wire::STORAGE_REVOKE, slot, 0, 0, 0, 0, 0, 0]
+            ),
+            [0; 8]
         );
     }
 }
@@ -60,7 +63,10 @@ pub(crate) fn supervise(session: &mut admission::Session) {
     };
     let mut failed = dead;
     if !dead {
-        let status = call(session.matrix, [wire::STORAGE_STATUS, 0, 0, 0, 0, 0, 0, 0]);
+        let status = control::request(
+            &mut session.matrix,
+            [wire::STORAGE_STATUS, 0, 0, 0, 0, 0, 0, 0],
+        );
         assert_eq!(status[0], 0);
         // A provider may resume after the matrix has already retired its stream.
         // A healthy control reply cannot make that old stream safe to reuse.

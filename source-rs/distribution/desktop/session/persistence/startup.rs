@@ -7,7 +7,7 @@ pub(crate) fn begin(session: &mut admission::Session) {
         session.user, 0,
         "startup recovery never replaces a live user"
     );
-    session.login.waiting(session.matrix, session.extent);
+    session.login.waiting(&mut session.matrix, session.extent);
     session.storage_watch.manual_start();
     write(b"Cathedral desktop: storage startup attempt\n").unwrap();
     match Provider::begin(probe_argument()) {
@@ -56,7 +56,9 @@ pub(crate) fn progress(session: &mut admission::Session) {
             provider.arm_notes();
             session.storage_watch.healthy(time::now().unwrap());
             write(b"Cathedral desktop: storage startup accepted\n").unwrap();
-            session.login.start(session.matrix, session.extent, false);
+            session
+                .login
+                .start(&mut session.matrix, session.extent, false);
             write(b"Cathedral desktop: ready; choose a user\n").unwrap();
         }
         Err(error) => failed(session, error),
@@ -70,5 +72,5 @@ fn failed(session: &mut admission::Session, error: Error) {
     time::storage_sample("storage-startup-failed", &[error.0 as u64]);
     session
         .login
-        .recover(session.matrix, session.extent, error.0 as u64);
+        .recover(&mut session.matrix, session.extent, error.0 as u64);
 }

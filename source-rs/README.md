@@ -290,7 +290,9 @@ Use `--case precommit`, `postcommit`, `exhausted` or `readiness-stall` for a sub
 initial display/root/input death, stall, malformed readiness and admission
 refusal. Each is exercised once and persistently: successful retry reaches a
 usable app, exhausted retry leaves storage byte-identical, and guest resource
-snapshots check rollback. Root/input exhaustion also checks the restart screen.
+snapshots check rollback, including notification objects and rights. Root
+fixtures distinguish malformed transport setup from malformed HEALTH after
+shared setup. Root/input exhaustion also checks the restart screen.
 The fixture uses disposable copies and separate boot files.
 
 `python tools/boot-harness-rs/desktop_test.py` drives that same composition

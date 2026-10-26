@@ -1,5 +1,6 @@
 //! Test-only pre-initialization failures; absent from ordinary service builds.
-use cathedral_user_runtime::{ipc::Handle, task};
+use cathedral_kernel_contracts::user as abi;
+use cathedral_user_runtime::{Error, ipc::Handle, task};
 pub fn run(mode: u64) {
     if mode == 0 {
         return;
@@ -13,6 +14,11 @@ pub fn run(mode: u64) {
         send.send(b"wrong").unwrap();
     }
     loop {
-        receive.receive(&mut [0; 64]).unwrap();
+        match receive.receive(&mut [0; 64]) {
+            Ok(_) => (),
+            // Rejected readiness closes control before task collection.
+            Err(Error(c)) if c == abi::PEER_CLOSED as i64 => task::exit(0),
+            Err(error) => panic!("input bootstrap probe: {error:?}"),
+        }
     }
 }

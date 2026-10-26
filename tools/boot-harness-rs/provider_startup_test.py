@@ -107,7 +107,7 @@ def exercise(stream, folder, mode):
         assert log().count('storage startup attempt') == attempt, 'automatic startup retry'
         retired = re.findall(r'storage-control-retired (\d+) (\d+) (\d+) (\d+) (\d+)', log())
         assert len(retired) == attempt, 'every failed setup must release control custody'
-        assert all(tuple(map(int, row)) == (0, 0, 4, 0, 0) for row in retired), retired
+        assert all(tuple(map(int, row)) == (1, 1, 5, 1, 3) for row in retired), retired
 
     failure(1)
     if mode == 'stall-once':

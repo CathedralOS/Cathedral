@@ -3,7 +3,10 @@
 use super::*;
 
 /// Also restores selection if the running user is lost; there is no logout UI.
-pub(in crate::session) fn select_user(matrix: Pair, [width, height]: [u64; 2]) -> Result<(), u64> {
+pub(in crate::session) fn select_user(
+    matrix: &mut RootControl,
+    [width, height]: [u64; 2],
+) -> Result<(), u64> {
     request(matrix, [wire::SURFACE_LIMIT, 0, 6, 0, 0, 0, 0, 0])?;
     request(
         matrix,

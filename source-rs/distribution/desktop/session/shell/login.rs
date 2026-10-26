@@ -12,7 +12,7 @@ pub(crate) enum Login {
     Recovery,
 }
 impl Login {
-    pub(crate) fn start(&mut self, matrix: Pair, extent: [u64; 2], failed: bool) {
+    pub(crate) fn start(&mut self, matrix: &mut RootControl, extent: [u64; 2], failed: bool) {
         #[cfg(feature = "login-recovery-probe")]
         {
             // A transient admission refusal on the first attempt only. Manual
@@ -29,14 +29,14 @@ impl Login {
             Err(code) => self.recover(matrix, extent, code),
         }
     }
-    pub(crate) fn recover(&mut self, matrix: Pair, extent: [u64; 2], code: u64) {
+    pub(crate) fn recover(&mut self, matrix: &mut RootControl, extent: [u64; 2], code: u64) {
         time::storage_sample("login-start-refused", &[code]);
         self.screen(matrix, extent, true);
     }
-    pub(crate) fn waiting(&mut self, matrix: Pair, extent: [u64; 2]) {
+    pub(crate) fn waiting(&mut self, matrix: &mut RootControl, extent: [u64; 2]) {
         self.screen(matrix, extent, false);
     }
-    fn screen(&mut self, matrix: Pair, extent: [u64; 2], failed: bool) {
+    fn screen(&mut self, matrix: &mut RootControl, extent: [u64; 2], failed: bool) {
         use crate::recovery_protocol as protocol;
         let state = if failed {
             Self::Recovery
@@ -72,7 +72,7 @@ impl Login {
         select_user(matrix, extent).expect("recovery placement");
         *self = state;
     }
-    pub(crate) fn poll(&mut self, matrix: Pair, extent: [u64; 2]) -> bool {
+    pub(crate) fn poll(&mut self, matrix: &mut RootControl, extent: [u64; 2]) -> bool {
         if matches!(*self, Self::Stopped | Self::Starting) {
             return false;
         }
@@ -98,7 +98,7 @@ impl Login {
         false
     }
 }
-fn health(matrix: Pair) -> wire::Packet {
+fn health(matrix: &mut RootControl) -> wire::Packet {
     call(
         matrix,
         wire::route([wire::HEALTH, 0, 0, 0, 0, 0, 0, 0], 0).unwrap(),

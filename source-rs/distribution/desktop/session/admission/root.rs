@@ -4,7 +4,7 @@ pub(super) fn start(
     attempt: &mut Attempt,
     display: Pair,
     argument: u64,
-) -> Result<(Pair, Pair), Error> {
+) -> Result<(RootControl, Pair), Error> {
     let (source_send, source_input) = attempt.channel()?;
     let (source_output, source_recv) = attempt.channel()?;
     funding::assign(Launch::at(2)?)?;
@@ -13,21 +13,44 @@ pub(super) fn start(
         argument,
         &[display.0, display.1, source_input, source_output],
     )?;
-    let matrix = attempt.track(Port::at(2)?.connect()?);
-    matrix_ok(matrix, [wire::HEALTH, 0, 0, 0, 0, 0, 0, 0])?;
+    #[cfg(feature = "shell")]
+    let deadline = time::after(READY_TICKS)?;
+    let pair = Port::at(2)?.connect()?;
+    #[cfg(feature = "shell")]
+    let matrix = RootControl::open(pair, deadline)?;
+    #[cfg(not(feature = "shell"))]
+    let matrix = {
+        let pair = attempt.track(pair);
+        matrix_ok(pair, [wire::HEALTH, 0, 0, 0, 0, 0, 0, 0])?;
+        pair
+    };
     assert_eq!(task::available_slots()?, 0);
     Ok((matrix, (source_send, source_recv)))
 }
 
 #[cfg(feature = "shell")]
-pub(super) fn configure(session: &Session) -> Result<(), Error> {
+pub(super) fn configure(session: &mut Session) -> Result<(), Error> {
     let [width, height] = session.extent;
-    matrix_ok(
-        session.matrix,
+    root_ok(
+        &mut session.matrix,
         [wire::BIND, width, height, KEYS, 0, 0, 0, 0],
     )?;
     for words in shell::workspace(width, height) {
-        matrix_ok(session.matrix, words)?;
+        root_ok(&mut session.matrix, words)?;
     }
     Ok(())
+}
+
+#[cfg(feature = "shell")]
+fn root_ok(matrix: &mut RootControl, words: wire::Packet) -> Result<(), Error> {
+    let reply = matrix.exchange(words, time::after(READY_TICKS)?)?;
+    if reply == [0; 8] {
+        Ok(())
+    } else {
+        Err(if reply[0] == 0 {
+            BAD_REPLY
+        } else {
+            Error(reply[0] as i64)
+        })
+    }
 }

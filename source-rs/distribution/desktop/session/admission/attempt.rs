@@ -50,7 +50,7 @@ impl Attempt {
             handle.close().expect("admission endpoint cleanup");
         }
     }
-    pub fn commit(self, matrix: Pair, source: Pair, extent: [u64; 2]) -> Session {
+    pub fn commit(self, matrix: RootControl, source: Pair, extent: [u64; 2]) -> Session {
         let root = self.tasks[2].unwrap();
         crate::ROOT_TASK.store(root.raw(), core::sync::atomic::Ordering::Relaxed);
         Session {

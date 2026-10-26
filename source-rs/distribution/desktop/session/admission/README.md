@@ -7,6 +7,13 @@ the same admission and input mechanisms, with its own storage-first proof setup.
 Follow [display.rs](display.rs) for the initial INFO exchange, dimensions and
 background, then [root.rs](root.rs) for funding and the endpoint handoff. Root
 budgets and code authority are explicit in [funding.rs](funding.rs).
+F5 opens one [shared root control](../control.rs), validates HEALTH and moves that
+owner into the admitted Session. The connector owns its raw endpoints on success
+and failure; the partial-attempt raw inventory never also owns them. Setup can
+park here because the boot owner serves nothing the root needs; the root's display
+peer runs independently. Setup and first HEALTH share the original 300-tick bound.
+Later shell/persistence requests borrow that retained client. Its failures retire
+the stream without replaying mutations; positional labs keep a copied adapter.
 [input.rs](input.rs) checks source attenuation, transfers the source endpoints,
 and waits for exactly `ready`. All readiness/request waits here are bounded by
 300 guest ticks. Stored program lookup and volume recovery have their own longer
@@ -21,7 +28,8 @@ F5 gets two attempts before storage or users start. Rollback restores root proce
 and physical reservations and its fixed page/channel allowance. The page/channel
 allowance cannot all be merged into the owner: the combined total exceeds its
 per-account ceiling. The owner compares process slots, physical funding/charges,
-page/channel limits, page/reader charges and dynamic handles against its baseline.
+page/channel limits, page/reader charges, dynamic handles and notification
+objects/rights against its baseline.
 Failed cleanup is an invariant failure, not permission to start another attempt.
 
 On exhaustion, input/root failures can still use the original display launch
@@ -32,6 +40,7 @@ is a different recovery operation; this path never destroys a live session.
 
 The `bootstrap-*` features and service `startup_probe.rs` files are fault fixtures
 only. `bootstrap_test.py` drives pre-initialization exits, stalls, malformed
-replies and a refusal after staging but before a successful endpoint move. None
+replies and a refusal after staging but before a successful endpoint move. Root
+fixtures distinguish malformed setup from bad HEALTH after valid shared setup. None
 is part of the ordinary distribution profile. Hardware initialization itself is
 not exhaustively fault-injected by these tests.

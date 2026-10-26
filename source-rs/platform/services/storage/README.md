@@ -27,9 +27,10 @@ probe on a replacement stream. The separate data connections still require
 explicit regrant after recovery. Positional fault labs retain a named copied
 adapter for their unsolicited blocked/release signals.
 
-F5 funds one owner writer/reader page and a fifth owner channel/notification
-allowance: the four display/input-source channels remain charged to their original
-sponsor after handoff. The provider has three notification allowances for its two
+F5 funds one owner writer/reader page and a channel/notification allowance for
+storage control, beside the same funding for root control. The owner therefore has
+two writer/reader pages and six allowances: four display/input-source channels
+remain charged to their original sponsor after handoff. The provider has three notification allowances for its two
 data roots plus owner control. Its reader allowance is 67 pages, preserving the
 previous 64-page attachment headroom beside three stream readers. Its heap
 calculation reserves all three possible mailbox writers. These are explicit

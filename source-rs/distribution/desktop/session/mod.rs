@@ -1,6 +1,8 @@
 //! Rust module plumbing. Start reading in `session.rs`.
 
 pub(crate) mod admission;
+pub(crate) mod control;
+use control::RootControl;
 
 pub(crate) mod persistence;
 #[cfg(any(

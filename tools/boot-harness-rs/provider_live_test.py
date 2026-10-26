@@ -182,8 +182,9 @@ def exercise(stream, folder, mode, saved=None):
         click(width - 22, 18)
         scan(lambda d, _: header(d) == '101827', 'saved app closes')
         expected = draft
+    # The retained root control remains funded while only storage is retired.
     retired = re.findall(r'storage-control-retired (\d+) (\d+) (\d+) (\d+) (\d+)', log())
-    assert retired and all(tuple(map(int, row)) == (0, 0, 4, 0, 0) for row in retired), retired
+    assert retired and all(tuple(map(int, row)) == (1, 1, 5, 1, 3) for row in retired), retired
     assert log().count('shared storage control established') == 1 + log().count('storage replaced; explicit grants restored')
     assert log().count('note-loaded') == loaded, 'Notes task was restarted'
     assert 'user matrix closed' not in log() and 'sign-in recovery visible' not in log()

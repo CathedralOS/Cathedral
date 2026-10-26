@@ -23,6 +23,10 @@ mod storage;
 use cathedral_desktop_matrix_contracts::matrix as wire;
 use cathedral_kernel_contracts::user as abi;
 use cathedral_user_runtime::{Error, ipc::Handle, time};
+#[cfg(all(feature = "desktop", not(feature = "shell")))]
+use session::control::copied_call as call;
+#[cfg(feature = "shell")]
+use session::control::request as call;
 type Pair = (Handle, Handle);
 #[cfg(feature = "desktop")]
 static ROOT_TASK: core::sync::atomic::AtomicU64 = core::sync::atomic::AtomicU64::new(0);
@@ -48,31 +52,4 @@ fn main(role: u64, argument: u64, environment: cathedral_user_runtime::task::Env
         },
         _ => leaf::run(environment),
     }
-}
-#[cfg(feature = "desktop")]
-fn call(pair: Pair, words: wire::Packet) -> wire::Packet {
-    let mut bytes = [0; 64];
-    let result = pair.0.send(&wire::encode(words)).and_then(|()| {
-        pair.1.receive_until(
-            &mut bytes,
-            time::after(match words[0] & 0xffff {
-                wire::CONFIGURE => wire::CONFIGURE_DEADLINE_TICKS + 100,
-                wire::RUN_OBJECT => 3 * wire::STORAGE_DEADLINE_TICKS + 200,
-                wire::RESOLVE_PATH => wire::CONFIGURE_DEADLINE_TICKS + 100,
-                // The root can defer completion while a storage exchange owns
-                // its stream; a slow picker is not a failed root connection.
-                wire::HEALTH => wire::STORAGE_DEADLINE_TICKS + 200,
-                _ => 300,
-            })
-            .unwrap(),
-        )
-    });
-    let len = result.unwrap_or_else(|error| {
-        let root = ROOT_TASK.load(core::sync::atomic::Ordering::Relaxed);
-        panic!(
-            "matrix request {words:?}: {error:?}; root {:?}",
-            cathedral_user_runtime::task::Child::from_raw(root).wait_until(time::now().unwrap())
-        )
-    });
-    wire::decode(&bytes[..len]).unwrap()
 }

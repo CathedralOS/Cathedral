@@ -29,7 +29,7 @@ pub(crate) fn interactive() -> Option<Session> {
     for number in 0..2 {
         write(b"Cathedral desktop: bootstrap attempt\n").unwrap();
         let result = admit(number).and_then(|mut session| {
-            let result = root::configure(&session)
+            let result = root::configure(&mut session)
                 .map_err(|error| Failure {
                     stage: Stage::Root,
                     error,
@@ -62,6 +62,7 @@ pub(crate) fn interactive() -> Option<Session> {
                 let reclaimed = funding::snapshot();
                 assert_eq!(reclaimed, baseline, "bootstrap resource leak");
                 time::storage_sample("bootstrap-reclaimed", &reclaimed);
+                time::storage_sample("bootstrap-transport-reclaimed", &reclaimed[8..]);
                 if number == 1 {
                     write(b"Cathedral desktop: bootstrap exhausted; restart Cathedral\n").unwrap();
                     // A failed display cannot render its own diagnostic. For
@@ -123,6 +124,7 @@ fn matrix_request(pair: Pair, words: wire::Packet) -> Result<wire::Packet, Error
     let (bytes, n) = receive(pair, deadline)?;
     wire::decode(&bytes[..n]).ok_or(BAD_REPLY)
 }
+#[cfg(not(feature = "shell"))]
 fn matrix_ok(pair: Pair, words: wire::Packet) -> Result<(), Error> {
     let reply = matrix_request(pair, words)?;
     if reply == [0; 8] {

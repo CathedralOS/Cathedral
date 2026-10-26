@@ -3,7 +3,7 @@ use super::*;
 pub(crate) struct Session {
     #[cfg(all(feature = "database-probes", not(feature = "shell")))]
     pub(crate) database_fresh: bool,
-    pub matrix: Pair,
+    pub matrix: RootControl,
     /// The realm of the user matrix in the workspace slot, or zero.
     #[cfg(feature = "shell")]
     pub(crate) user: u64,
@@ -41,8 +41,13 @@ impl Session {
             self.source.0.close().unwrap();
             self.source.1.close().unwrap();
         }
-        self.matrix.0.close().unwrap();
-        self.matrix.1.close().unwrap();
+        #[cfg(feature = "shell")]
+        drop(self.matrix);
+        #[cfg(not(feature = "shell"))]
+        {
+            self.matrix.0.close().unwrap();
+            self.matrix.1.close().unwrap();
+        }
         // Descendant creator death returns dynamic reservations to this owner.
         let mut index = 0;
         while let Ok(launch) = Launch::at(index) {

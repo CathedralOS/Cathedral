@@ -33,7 +33,12 @@ pub(super) fn observe(session: &mut admission::Session) {
     } else {
         34
     };
-    if call(session.matrix, [wire::READ_PIXEL, 237, y, 0, 0, 0, 0, 0])[..2] != [0, 0x9b7028] {
+    if call(
+        &mut session.matrix,
+        [wire::READ_PIXEL, 237, y, 0, 0, 0, 0, 0],
+    )[..2]
+        != [0, 0x9b7028]
+    {
         return;
     }
     let phase = if cfg!(feature = "storage-live-postcommit") {

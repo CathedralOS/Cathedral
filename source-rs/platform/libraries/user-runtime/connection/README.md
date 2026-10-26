@@ -160,8 +160,9 @@ only for acquisition, and routes immutable drawing objects through the same shar
 connection. Split selects all eight child service slots before admission,
 including separate broker/data connections for its input producer and masked
 capture viewer. Brokered input hints use separate notification wait rights.
-Root supervision and explicitly copied fixtures (including their positional wakes)
-remain to migrate; brokered stock/Split lifecycle controls use shared links. These app adapters remain synchronous; this change
+Root supervision and brokered stock/Split lifecycle controls use shared links.
+Direct bootstrap display/source checks, input readiness and explicitly copied
+fixtures (including their positional wakes) remain to migrate. These app adapters remain synchronous; this change
 alone does not make an app process input while its drawing call is pending.
 
 ## Immutable attachments
@@ -353,8 +354,12 @@ when nested it also accepts a shared owner control connection. The ordinary stoc
 auxiliary child funds two notifications and two writer/reader pages,
 plus its service-specific work. Capture uses correlated immutable replies and
 then forwards the same sealed result for presentation. Stock brokered lifecycle/
-control now uses shared streams; boot root supervision and
-explicitly copied fixtures remain to migrate. The ordinary desktop storage
+control and boot root supervision now use shared streams. The desktop's
+[root control owner](../../../../distribution/desktop/session/control.rs) moves
+from bootstrap into the Session, then lends one retained client to shell and
+recovery calls. Its idle wait watches the lifetime endpoint with no outstanding
+request, not notification hints as unsolicited replies. Explicitly copied
+fixtures and the remaining bootstrap exchanges are separate consumers. The ordinary desktop storage
 provider now uses a yielding shared control opener for readiness and subsequent
 health probes. Replacement collects the exact provider and releases the old
 client before starting another; setup acceptance alone is not health readiness. The ordinary

@@ -17,7 +17,7 @@ import pointer_test
 import run as harness
 
 STAGES = {'display': 0, 'input': 1, 'root': 2}
-MODES = {'death': 1, 'stall': 2, 'malformed': 3, 'refusal': 4}
+MODES = {'death': 1, 'stall': 2, 'malformed': 3, 'refusal': 4, 'bad-ready': 5}
 
 
 def exercise(stream, folder, stage, mode, repeat, dynamic_tasks):
@@ -38,14 +38,19 @@ def exercise(stream, folder, stage, mode, repeat, dynamic_tasks):
     for number, found_stage, error in failures:
         assert int(found_stage) == STAGES[stage]
         assert int(number) < count
-        expected = {'death': -32, 'stall': -110, 'malformed': -5, 'refusal': -12}[mode]
+        expected = {'death': -32, 'stall': -110, 'malformed': -5, 'refusal': -12, 'bad-ready': -5}[mode]
         assert int(error) == expected % (1 << 64), (mode, error, text)
     reclaimed = re.findall(r'bootstrap-reclaimed ([\d ]+)', text)
     assert len(reclaimed) == count and len(set(reclaimed)) == 1, text
     assert all(int(line.split()[0]) == dynamic_tasks for line in reclaimed), 'process capacity not restored'
+    transport = re.findall(r'bootstrap-transport-reclaimed (\d+) (\d+) (\d+) (\d+)', text)
+    assert len(transport) == count and all(tuple(map(int, row)) == (0, 0, 0, 0) for row in transport), transport
     # The guest compares every rollback to the measured pre-attempt limits,
     # frame charge, page charge and channel charge; panics fail this fixture.
+    if mode == 'bad-ready':
+        assert text.count('bootstrap readiness request received') == count, text
     if repeat:
+        assert text.count('shared root control ready') == (2 if stage == 'input' else 0), text
         assert 'storage startup attempt' not in text and 'bootstrap accepted' not in text
         if stage != 'display':
             font = bytes.fromhex((harness.WORKSPACE / 'platform/libraries/bitmap-font/font.hex').read_text())
@@ -62,6 +67,7 @@ def exercise(stream, folder, stage, mode, repeat, dynamic_tasks):
         assert log().count('bootstrap attempt') == 2, 'unbounded bootstrap restart'
     else:
         assert text.count('bootstrap accepted') == 1 and text.count('storage startup attempt') == 1
+        assert text.count('shared root control ready') == (2 if stage == 'input' else 1), text
         colors_test.exercise(stream, folder, text, 1, 1, None)
     print(f'PASS: {stage} {mode} {"persistent" if repeat else "transient"}; {folder}', flush=True)
 
@@ -73,6 +79,8 @@ def run(source, selected):
     completed = []
     for stage, index in STAGES.items():
         for mode, value in MODES.items():
+            if mode == 'bad-ready' and stage != 'root':
+                continue
             for repeat in (False, True):
                 case = f'{stage}-{mode}-{"repeat" if repeat else "once"}'
                 if selected and case not in selected:
@@ -118,6 +126,6 @@ def run(source, selected):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('image', type=Path, help='one-user fixture; only copies are modified')
-    parser.add_argument('--case', action='append', help='e.g. input-stall-once; default: all 24 cases')
+    parser.add_argument('--case', action='append', help='e.g. input-stall-once; default: all 26 cases')
     args = parser.parse_args()
     run(args.image, args.case)

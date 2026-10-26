@@ -5,6 +5,11 @@ admit display and the root matrix, configure workspace policy, start input, open
 storage, run the chooser over the folder of users, request each user
 matrix's own startup and supervise storage. [shell/](session/shell/shell.rs)
 resolves `Login` and `Users` by path in the supplied root.
+[Root control](session/control.rs) retains one shared connection for admission,
+shell commands and storage regrant. Session helpers borrow it; they never rebuild
+a client over copied raw handles. The ordinary owner funds two writer/reader pages
+and six channel/notification allowances: four transferred display/source channels
+plus root and storage control. Kernel ceilings are unchanged.
 [Colors](../applications/colors/main.rs) is a separate installed program. See the
 [distribution map](../README.md) for F5, controls, composition and the
 same-image interactive test.
@@ -58,7 +63,7 @@ A failed replacement logs its actual error code before leaving storage offline.
 Apps retain their tasks and drafts; Notes reports failed saves and keeps its
 close dialog open when saving fails. Automatic recovery permits three provider
 replacements for the session and never replenishes that budget on a healthy
-reply. No live-session manual storage retry is exposed yet. There is no logout UI; recursive whole-user
+reply. After exhaustion, the launcher can request one explicit save retry. There is no logout UI; recursive whole-user
 LOSS remains a headless proof.
 
 Without the `shell` feature the same package builds the probe desktop in

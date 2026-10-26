@@ -6,7 +6,7 @@ pub(super) struct Probe {
     done: bool,
 }
 impl Probe {
-    pub fn apply(&mut self, matrix: Pair, height: u64) {
+    pub fn apply(&mut self, matrix: &mut RootControl, height: u64) {
         if self.done {
             return;
         }

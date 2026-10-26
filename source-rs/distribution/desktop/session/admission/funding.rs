@@ -67,9 +67,10 @@ pub(super) fn reset() {
     resources::assign(root, funding::limits()).unwrap();
 }
 #[cfg(feature = "shell")]
-pub(super) fn snapshot() -> [u64; 10] {
+pub(super) fn snapshot() -> [u64; 12] {
     let resources::Budget { limits, used } = resources::budget().unwrap();
     let physical = resources::physical_budget().unwrap();
+    let notifications = cathedral_user_runtime::notification::budget().unwrap();
     [
         task::available_slots().unwrap(),
         physical.reserved,
@@ -81,5 +82,7 @@ pub(super) fn snapshot() -> [u64; 10] {
         used.private_pages,
         used.reader_pages,
         ipc::budget().unwrap().charged_handles,
+        notifications[1],
+        notifications[3],
     ]
 }

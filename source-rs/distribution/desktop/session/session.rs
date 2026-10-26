@@ -12,15 +12,19 @@ pub(crate) const KEYS: u64 = if cfg!(feature = "notes") {
     wire::KEY_MASK
 };
 pub(crate) const BACKGROUND: u64 = 0x101827;
+#[cfg(not(feature = "shell"))]
 pub(crate) fn owner(pair: Pair, words: wire::Packet) {
     assert_eq!(call(pair, words), [0; 8], "owner request {words:?}");
+}
+#[cfg(feature = "shell")]
+pub(crate) fn owner(matrix: &mut RootControl, words: wire::Packet) {
+    assert_eq!(call(matrix, words), [0; 8], "owner request {words:?}");
 }
 #[cfg(feature = "shell")]
 pub(crate) fn run() -> u64 {
     let Some(mut session) = admission::interactive() else {
         return 1;
     };
-    let matrix = session.matrix;
     #[cfg(any(
         feature = "launcher-read-revoke-probe",
         feature = "launcher-read-stop-probe",
@@ -46,30 +50,36 @@ pub(crate) fn run() -> u64 {
         // The chooser launches a user matrix into the workspace slot; the
         // desktop observes only that direct child's realm. The user matrix
         // owns its launcher, app policy and recovery bindings.
-        let user = shell::realm_of(matrix, session.user);
+        let user = shell::realm_of(&mut session.matrix, session.user);
         if user != session.user {
             session.user = user;
             if user != 0 {
                 session.login = shell::Login::Stopped;
-                if let Err(code) = shell::enter(matrix) {
+                if let Err(code) = shell::enter(&mut session.matrix) {
                     cathedral_user_runtime::time::storage_sample("user-start-refused", &[code]);
-                    shell::stop(matrix, 1).expect("failed user cleanup");
+                    shell::stop(&mut session.matrix, 1).expect("failed user cleanup");
                     session.user = 0;
-                    session.login.start(matrix, session.extent, true);
+                    session
+                        .login
+                        .start(&mut session.matrix, session.extent, true);
                     continue;
                 }
                 cathedral_user_runtime::write(b"Cathedral desktop: user matrix furnished\n")
                     .unwrap();
             } else {
-                session.login.start(matrix, session.extent, false);
+                session
+                    .login
+                    .start(&mut session.matrix, session.extent, false);
                 cathedral_user_runtime::write(b"Cathedral desktop: user matrix closed\n").unwrap();
             }
         }
-        if session.user == 0 && session.login.poll(matrix, session.extent) {
+        if session.user == 0 && session.login.poll(&mut session.matrix, session.extent) {
             if session.storage.is_none() {
                 persistence::startup::begin(&mut session);
             } else {
-                session.login.start(matrix, session.extent, false);
+                session
+                    .login
+                    .start(&mut session.matrix, session.extent, false);
             }
         }
         persistence::supervise(&mut session);
@@ -79,7 +89,7 @@ pub(crate) fn run() -> u64 {
         {
             session
                 .login
-                .recover(matrix, session.extent, abi::PEER_CLOSED);
+                .recover(&mut session.matrix, session.extent, abi::PEER_CLOSED);
         }
         #[cfg(any(
             feature = "launcher-stop-probe",
@@ -87,7 +97,7 @@ pub(crate) fn run() -> u64 {
             feature = "management-revoke-probe"
         ))]
         if session.user != 0 && !recovery_probed {
-            recovery_probed = recovery_probes::apply(matrix);
+            recovery_probed = recovery_probes::apply(&mut session.matrix);
         }
         #[cfg(any(
             feature = "launcher-read-revoke-probe",
@@ -96,14 +106,11 @@ pub(crate) fn run() -> u64 {
             feature = "launch-read-revoke-probe"
         ))]
         if session.user != 0 {
-            read_probe.apply(matrix, session.extent[1]);
+            read_probe.apply(&mut session.matrix, session.extent[1]);
         }
         // Polling is only how the owner notices; rendering and input wake the
         // programs independently through their matrix connections.
-        match matrix
-            .1
-            .receive_until(&mut [0; 64], time::after(10).unwrap())
-        {
+        match session.matrix.idle(time::after(10).unwrap()) {
             Err(Error(code)) if code == abi::TIMED_OUT as i64 => {
                 #[cfg(feature = "trace-storage")]
                 {

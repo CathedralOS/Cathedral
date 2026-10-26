@@ -22,7 +22,8 @@ to the root matrix, root display commands/images, root storage and separate
 parent-storage and pipelined interaction streams between stock matrices, Omega app
 broker/interaction/storage, independent Split interaction/storage forwarding,
 Background, the separate Omega UI presenter, Split's input producer and masked
-capture viewer, and brokered stock/Split lifecycle controls. Brokered child input hints now use separate wait-only notifications.
+capture viewer, brokered stock/Split lifecycle controls, and boot root/storage
+provider supervision. Brokered child input hints now use separate wait-only notifications.
 The scoped storage fixture also
 exercises both private-root provider connections. See the evidence below. Remaining acceptance:
 
@@ -299,6 +300,84 @@ default/hidden cursor evidence remains valid for its scope, not the full asset A
 
 ## Current implementation evidence
 
+Implementation update 2026-10-25: **boot desktop-to-root control uses one shared owner**, over `e6318026`.
+
+The ordinary F5 bootstrap opens shared root control and validates HEALTH before
+committing the Session. `desktop/session/control.rs` owns the retained client,
+request deadlines, plain-reply decoding and the idle lifetime wait. Shell/login,
+recovery probes and storage regrant borrow that owner mutably; no request
+reconstructs a client from aliased raw endpoints. The old request helper has left
+`main.rs`. Positional desktop labs explicitly retain the copied adapter.
+
+Root setup may park during pre-user admission: its display task is already
+running and it needs no service from this boot owner. Setup plus initial HEALTH
+share the original 300-tick bound. Later request deadlines and two-attempt
+bootstrap policy are unchanged. A failed transport is never reused or replayed;
+ordinary live-root failure keeps the existing terminal owner policy. The idle
+loop has no outstanding request, so it waits on the connection's lifetime/grant
+endpoint and deadline, not notification hints interpreted as unsolicited replies.
+It still periodically checks user state and storage; this is not event-driven
+replacement of that policy polling.
+
+Setup takes endpoint custody on success and failure; the raw partial-admission
+inventory never also owns those endpoints. An admitted Session collects its child
+tasks before dropping the root client and returning reservations. Bootstrap
+rollback now compares notification objects and local rights as well as the old
+page/frame/channel/handle snapshot. Fault fixtures distinguish malformed setup
+from bad HEALTH after successful setup. The rejected setup fixture exits on
+closure without a secondary panic.
+
+F5's initial owner now receives two writer pages, two reader pages and six
+channel/notification allowances: four transferred display/input channels plus
+root control and storage control. No kernel or root-subtree ceiling increase.
+Storage retirement tests now require the retained root's exact baseline
+(one writer, one reader, five channel/object charges, one notification object and
+three notification rights); replacing storage must not discard or leak root
+control.
+
+Verification:
+
+- Normal F5 passes independent Notes drafts, protected close, slot reuse, Colors
+  and cold persistence in `desktop/20261026T014518039473Z`. The host verifies
+  exactly 1,621 records; the guest trace must show exactly one ready shared root
+  connection per normal boot.
+- All 26 bootstrap cases pass across `bootstrap/20261026T014625829566Z` and
+  `bootstrap/20261026T015033216355Z`: transient/persistent death, stall, malformed
+  reply and admission refusal for display/input/root, plus two bad-HEALTH-after-
+  shared-setup cases. Retried boots reach a working app; exhausted boots leave
+  disk contents unchanged. The final run requires explicit zero reader/endpoint/
+  notification-object/right residue as well as the guest's complete baseline
+  comparison, and proves the bad-HEALTH fixture received an application request.
+  The initial run exposed an input fault fixture panicking on expected owner
+  closure after its malformed readiness response; that fixture now exits cleanly.
+- Four recursive stock desktops pass repeated subtree reclamation, protected
+  close, saved Notes/Omega Colors and cold reopen in
+  `desktop/20261026T015336864313Z`.
+- Provider bad-setup and bad-HEALTH recovery pass in
+  `provider-startup/20261026T015517225430Z`. Live restart exhaustion/manual retry
+  and deep recovery pass both boots in `provider-live/20261026T015544327670Z`,
+  including exact retained-root resource baselines after each storage retirement.
+- The headless `--matrix-test --release` passes; copied desktop lab features
+  pass Clippy. Host `cargo test --locked`, all-feature desktop/stock/input Clippy,
+  formatting, source-layout, local Markdown links and whitespace checks pass.
+  Kernel and runtime implementations are unchanged; ARM64 was not rerun here.
+
+- The copied positional `matrix_database_test.py --release --notes-recovery`
+  regression passes both boots in `matrix-database/20261026T015810711801Z`,
+  including physical input, drafts, recovery and exact 20-record text/history/quota
+  verification. Logs for this update are `build/omega-component/root-control-*.log`.
+
+**Next:** finish the remaining ordinary bootstrap exchanges: initial display INFO,
+background/labels and terminal restart rendering, input-driver readiness, and
+source-attenuation checks before endpoint handoff. Start at
+`desktop/session/admission/display.rs`, `labels.rs` and `input.rs`. Display/source
+pairs are handed to new owners that open shared streams: changing their early
+traffic requires an explicit connection-lifetime handoff, not a second client
+on an already-upgraded pair. Keep copied fault-lab migration separate and retain
+the ordinary F5 acceptance checks. This update does not remove copied payload
+syscalls or claim a latency improvement. The on-demand broker outcome above
+remains separate accepted work.
+
 Implementation update 2026-10-25: **ordinary storage-provider supervision uses shared IPC**, over `43d167e1`.
 
 The F5 owner now retains one yielding shared control connection per provider
@@ -369,7 +448,7 @@ Verification:
   in `matrix-database/20261026T012622345818Z`. Its storage executable is now
   239/240 admitted load pages; preserve this headroom in follow-up work.
 
-**Next:** migrate boot desktop-to-root control, starting at
+**Previous next (completed above):** migrate boot desktop-to-root control, starting at
 `desktop/session/admission/root.rs`, the root connection in `Session`, and
 `desktop/main.rs::call`. That path currently copies `Pair` freely; introduce
 one retained root client owner before adapting its callers, not a new client

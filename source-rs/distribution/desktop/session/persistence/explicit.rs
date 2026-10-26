@@ -13,7 +13,7 @@ pub(super) fn poll(session: &mut admission::Session) {
         wire::SAVES_READY
     };
     let reply = call(
-        session.matrix,
+        &mut session.matrix,
         [wire::SAVE_RECOVERY_POLL, state, 0, 0, 0, 0, 0, 0],
     );
     if reply[..2] != [0, 1] || state != wire::SAVES_OFFLINE {

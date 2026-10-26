@@ -1,13 +1,13 @@
 // Resolve the login programs, grant the user ceiling, then ask that matrix
 // to configure itself. The shell never interprets user-internal object order.
 use super::*;
-fn request(matrix: Pair, words: wire::Packet) -> Result<(), u64> {
+fn request(matrix: &mut RootControl, words: wire::Packet) -> Result<(), u64> {
     match call(matrix, words)[0] {
         0 => Ok(()),
         code => Err(code),
     }
 }
-fn resolve(matrix: Pair, path: &[u8]) -> Result<u64, u64> {
+fn resolve(matrix: &mut RootControl, path: &[u8]) -> Result<u64, u64> {
     let mut bytes = [0; 64];
     bytes[..8].copy_from_slice(&wire::RESOLVE_PATH.to_le_bytes());
     bytes[8..8 + path.len()].copy_from_slice(path);
@@ -22,7 +22,12 @@ fn resolve(matrix: Pair, path: &[u8]) -> Result<u64, u64> {
 const CHOOSER_PAGES: u64 = 64;
 
 /// Root slot 0: the chooser, shown the folder of users and nothing else.
-fn chooser(login: &mut Login, matrix: Pair, extent: [u64; 2], failed: bool) -> Result<(), u64> {
+fn chooser(
+    login: &mut Login,
+    matrix: &mut RootControl,
+    extent: [u64; 2],
+    failed: bool,
+) -> Result<(), u64> {
     let chooser = resolve(matrix, b"Login")?;
     let users = resolve(matrix, b"Users")?;
     // Keep an existing recovery screen visible through the path reads.
@@ -73,7 +78,7 @@ pub(crate) fn workspace(width: u64, height: u64) -> [wire::Packet; 3] {
 }
 
 /// Retire the picker and request the user matrix's own saved startup policy.
-pub(super) fn enter(matrix: Pair) -> Result<(), u64> {
+pub(super) fn enter(matrix: &mut RootControl) -> Result<(), u64> {
     // Selection admitted a sibling, not a descendant of the picker. Reclaim
     // the picker process, surfaces, input and realm binding before any slow
     // storage reads needed to start the user's launcher.
@@ -121,7 +126,7 @@ pub(super) fn enter(matrix: Pair) -> Result<(), u64> {
 }
 
 /// Collection may win the race with startup failure handling.
-pub(super) fn stop(matrix: Pair, slot: u64) -> Result<(), u64> {
+pub(super) fn stop(matrix: &mut RootControl, slot: u64) -> Result<(), u64> {
     match call(matrix, [wire::STOP, slot, 0, 0, 0, 0, 0, 0])[0] {
         0 | abi::PEER_CLOSED => Ok(()),
         code => Err(code),
@@ -132,7 +137,7 @@ pub(super) fn stop(matrix: Pair, slot: u64) -> Result<(), u64> {
 /// Losing a storage binding is not process death. Keep the last known realm
 /// for recovery until the child's control link confirms it has gone away;
 /// busy or timed-out probes never turn a live session into a new picker.
-pub(super) fn realm_of(matrix: Pair, previous: u64) -> u64 {
+pub(super) fn realm_of(matrix: &mut RootControl, previous: u64) -> u64 {
     let binding = [wire::STORAGE_BINDING, 1, 0, 0, 0, 0, 0, 0];
     let health = wire::route([wire::HEALTH, 0, 0, 0, 0, 0, 0, 0], 1).unwrap();
     let reply = call(matrix, binding);
@@ -148,7 +153,7 @@ pub(super) fn realm_of(matrix: Pair, previous: u64) -> u64 {
 /// Restore the direct child's realm after provider replacement, then ask the
 /// user matrix to restore its own remembered child bindings.
 pub(crate) fn regrant(session: &mut admission::Session) {
-    let matrix = session.matrix;
+    let matrix = &mut session.matrix;
     if session.user == 0 {
         if session.login != Login::Picker {
             return;
