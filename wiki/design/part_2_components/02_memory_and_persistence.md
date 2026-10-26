@@ -49,6 +49,12 @@ The tension this chapter exists to face is safe references versus hot swapping. 
 
 ### Address data, extent authority, and allocation
 
+The accepted [memory-budget contract](../../spec/resources/memory_budgets.md)
+allows conserved hierarchical backing grants and optional allocator interception.
+Allocation strategy can live in a library or userspace service; privileged mapping
+and authority enforcement remain in the kernel. Direct delegation avoids mandatory
+ancestor forwarding, while local object allocation stays inside granted backing.
+
 Low-level memory has three separate layers: address data, extent authority, and allocation. `addr` is inert address-width data and grants no access. An `Extent` is authority over a concrete `[base, length)` with rights, provenance, and lifetime. Allocation strategies are ordinary checked packages that partition qualified extents and return package-defined owned storage claims. Typed establishment and access use the selected layout and access plans. MMIO views, imported firmware tables, shared pages, and page-table builders therefore begin from extents rather than fabricated integers.
 
 Strategy state and issued storage claims remain linear. Reset or bulk reclamation is illegal while any issued claim remains live. Issuing storage does not by itself establish a live `T`, and recycled bytes are not assumed zero. Before storage becomes visible to another principal, its provider must establish non-disclosure for every visible byte, including padding and page slack. Recipient-side initialization never discharges that prior-owner duty.

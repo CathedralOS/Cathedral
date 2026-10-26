@@ -162,6 +162,11 @@ receives rights to the same physical backing with its own local mapping; sharing
 a pointer value does not establish access. Region access, retained backing and
 pending introductions consume explicitly funded resources.
 
+The [memory-budget contract](../resources/memory_budgets.md) preserves charges
+while backing is retained by mappings or pending/accepted grants. Sharing does
+not duplicate physical backing, but mapping and grant metadata still need bounded
+funding. This does not choose an endpoint-offer queue layout or allocation API.
+
 Capacity is a negotiated descriptor, not another group identity key. The creator
 proposes a bounded capacity, layout/protocol version and access roles. Joiners
 receive the established descriptor and accept it or report incompatibility.

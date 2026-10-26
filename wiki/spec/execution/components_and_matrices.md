@@ -40,6 +40,11 @@ provider may enforce a delegated grant directly; an interposing matrix is an
 implementation choice when its behavior requires mediation. Enforcement must
 remain effective regardless of which path carries the request.
 
+The [memory-budget contract](../resources/memory_budgets.md) makes this concrete:
+backing allowances partition the supplied envelope, direct grants remain
+kernel-enforced, and a matrix may withhold them in favor of an interposed
+allocator. No compulsory per-allocation forwarding chain is introduced.
+
 ## Supplied interfaces do not reveal upstream construction
 
 A child receives the observations and operations its supplied interfaces authorize,

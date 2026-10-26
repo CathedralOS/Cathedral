@@ -42,14 +42,15 @@ allowance for their own execution, including the costs of their chosen policies.
 ## Scope and deferred mechanisms
 
 Caller-funded execution and CPU donation are deferred, not prerequisites for the
-shipped coordination service. Any future budget delegation needs a demonstrated
+shipped coordination service. Any future CPU budget delegation needs a demonstrated
 workload and a separately accepted general capability contract available to
 ordinary programs. It must not depend on a blessed service classification.
 
 This partial contract does not specify fairness, priority inheritance, hard
 real-time guarantees, precise kernel/interrupt cost attribution, or CPU ceiling
-enforcement granularity. It does not settle retained-memory sponsorship, budget
-refund routing, or metering of storage, network and device quantities.
+enforcement granularity, or metering of storage, network and device quantities.
+[Memory budgets](memory_budgets.md) separately settle backing conservation,
+retained charging and allocator delegation; they do not imply CPU donation.
 
 ## Implementation evidence
 

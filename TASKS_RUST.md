@@ -1,5 +1,27 @@
 # Rust reference OS: tasks and handoff
 
+## Memory budgets and allocator delegation
+
+**Open; ratified 2026-10-25.** Complete the
+[memory-budget contract](wiki/spec/resources/memory_budgets.md) using the existing
+`source-rs/kernel/core/user_tasks/resources/physical/` funding owner, memory owner
+and platform grant/connection path. Existing conserved-frame and retained-reader
+evidence is a starting point, not missing work to rewrite.
+
+Acceptance: a matrix partitions one envelope between children; nested delegation
+and concurrent allocation cannot duplicate funding, exhaustion leaves its sibling
+usable, and failure/cancellation returns only discharged reservations. Demonstrate
+both direct bounded allocation without per-request ancestor IPC and a substituted
+provider whose client cannot bypass it with a raw syscall. Keep fine-grained
+allocation local; no mandatory allocator process or instrumentation framework.
+
+Exercise retained readers, queued grants, producer/subtree death and final release
+without premature refund or account-reuse escape. Bound mapping/page-table,
+handle/object and pending-grant costs separately; state whether evidence establishes
+a backing ceiling or total-memory bound. Carry the path through the Omega-facing
+boundary and actual guest execution. Do not freeze syscall spellings, offer-queue
+layout or the broader byte-allocation API from illustrative discussion samples.
+
 ## Shared-memory IPC and notification outcome
 
 **Open; accepted architecture, not an owner blocker.** Carry the
@@ -9976,7 +9998,11 @@ Idle-child
 CPU ceiling assignment preserves ancestor enforcement and debt; it confers no
 priority or permission to charge an unrelated service's work to a caller.
 
-**Physical-memory funding experiment (not a production sponsorship decision).**
+**Physical-memory funding experiment (historical implementation evidence).**
+The [memory-budget contract](wiki/spec/resources/memory_budgets.md) now settles
+hierarchical conservation, retained charging and optional allocator interception.
+The following measurements and sizes remain historical lab evidence, not new runs
+or a production allocator ABI.
 The [Rust frame bank](source-rs/kernel/core/user_tasks/resources/physical/README.md) now backs
 conserved allowances with real reserved RAM. Executable pages, stacks, private
 page tables and runtime buffers charge the same account. Retained readers keep
@@ -9987,9 +10013,10 @@ costs. Nested exhaustion cannot spend a sibling's reservation.
 Bootstrap sizing is provisionally 256 frames per bound account plus private-page
 quota, and another 256 per unbound process slot initially held by the root. This
 eager, fixed session bank is lab policy, not the eventual manifest contract.
-Production still needs the already-open choice between persistent sponsors,
-explicit funded adoption, and revocation, plus a policy for growing/reclaiming
-active memory envelopes. No new answer is needed to continue this bounded lab.
+Automatic sponsorship transfer, forced revocation, exact refund routing and
+production envelope-management APIs remain outside that partial contract. They
+cannot erase retained charges or reclaim live backing. These exclusions do not
+block the direct-grant and interposed-provider outcome above.
 
 
 ## Isolation decision: archived trap-path evidence (2026-10-23)

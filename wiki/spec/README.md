@@ -31,6 +31,7 @@ subject. A current specification may precede implementation.
 | UEFI boot-services ownership transition | [UEFI boot-services ownership transition](boot/uefi_boot_services.md) | Partial | Partial |
 | Initial root extent | [Initial root extent](resources/root_extent.md) | Partial | Partial |
 | Execution budgets and service work | [Execution budgets](resources/execution_budgets.md) | Partial | Partial |
+| Hierarchical backing budgets, direct delegation and allocator interception | [Memory budgets](resources/memory_budgets.md) | Partial | Partial |
 | Realms and objects: copies, paths and hierarchy metadata | [Realms and objects](storage/realms_and_objects.md) | Partial | Partial |
 | Object-rooted live watches and transaction-coupled durable capture | [Change watches](storage/change_watches.md) | Partial | None |
 | Explicit revision prerequisites and atomic multi-object mutations | [Atomic storage batches](storage/atomic_batches.md) | Partial | None |
