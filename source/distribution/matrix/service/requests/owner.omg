@@ -1,63 +1,75 @@
 module requests::owner;
 
-// Owner-only routing and post-success consequences. Child packets cannot reach this path.
-use requests::operations;
-use requests::desktop;
-use protocol::main;
-use protocol::matrix;
+// Owner-only routing and post-success consequences. No request supplies authority.
+use requests::operations::Caller;
+use requests::operations::Facts;
+use requests::operations::Message;
+use requests::operations::Operation;
 
-public machine owner_request(p: &mut [u64; 128]) -> u64 {
-    transition p[16] == RESOLVE_PATH && p[21] == 0u64 && p[22] == 0u64 && p[23] == 0u64 {
-        true -> (requests::operations::DO_RESOLVE)
-        _ -> pixel(p)
+public data Clearing [copy] {
+    case None;
+    case Slot;
+    case Pair;
+}
+
+public data Replay [copy] {
+    case None;
+    case Slot;
+    case All;
+}
+
+public data Effects {
+    changed: bool;
+    clearing: Clearing;
+    replay: Replay;
+    remember_storage: bool;
+}
+
+public machine route(message: Message) -> Operation {
+    transition message {
+        Message::Resolve -> (Operation::Resolve)
+        Message::Pixel -> (Operation::Pixel)
+        _ -> (Operation::Owner)
     }
-    state pixel(p: &mut [u64; 128]) -> u64 {
-        transition p[16] == READ_PIXEL && p[19] == 0u64 && p[20] == 0u64 && p[21] == 0u64 && p[22] == 0u64 && p[23] == 0u64 {
-            true -> (requests::operations::DO_PIXEL)
-            _ -> (requests::operations::DO_OWNER)
+}
+
+public machine fallback(facts: &Facts, message: Message) -> Operation {
+    transition facts.caller == Caller::Owner && !(message in Message::Missing) {
+        true -> operation(message)
+        _ -> (Operation::Deny)
+    }
+    machine operation(message: Message) -> Operation {
+        transition message {
+            Message::RecoveryOwner -> (Operation::RecoveryOwner)
+            Message::StorageOwner -> (Operation::StorageOwner)
+            _ -> (Operation::LayoutOwner)
         }
     }
 }
 
-public machine owner_fallback(p: &mut [u64; 128]) -> u64 {
-    transition p[2] == requests::operations::OWNER && p[3] != 0u64 {
-        true -> operation(p)
-        _ -> (requests::operations::DO_DENY)
+public machine effects(facts: &Facts, message: Message, children: u64, success: bool) -> Effects {
+    transition facts.caller == Caller::Owner && !(message in Message::Missing) && success {
+        true -> operation(message, children)
+        _ -> (Effects { changed: false, clearing: Clearing::None,
+            replay: Replay::None, remember_storage: false })
     }
-    state operation(p: &mut [u64; 128]) -> u64 {
-        transition p[16] {
-            requests::desktop::SAVE_RECOVERY_GRANT -> (requests::operations::DO_RECOVERY_OWNER)
-            requests::desktop::SAVE_RECOVERY_POLL -> (requests::operations::DO_RECOVERY_OWNER)
-            STORAGE_GRANT -> (requests::operations::DO_STORAGE_OWNER)
-            STORAGE_REVOKE -> (requests::operations::DO_STORAGE_OWNER)
-            STORAGE_STATUS -> (requests::operations::DO_STORAGE_OWNER)
-            STORAGE_BINDING -> (requests::operations::DO_STORAGE_OWNER)
-            _ -> (requests::operations::DO_LAYOUT_OWNER)
+    machine operation(message: Message, children: u64) -> Effects {
+        transition message {
+            Message::StorageOwner -> changed(Clearing::None, Replay::None, true)
+            Message::Bind -> changed(Clearing::Pair, Replay::All, false)
+            Message::Place -> changed(Clearing::None, Replay::Slot, false)
+            Message::Revoke { slot, canonical } -> revoke(slot, canonical, children)
+            _ -> changed(Clearing::None, Replay::None, false)
+        }
+    }
+    machine revoke(slot: u64, canonical: bool, children: u64) -> Effects {
+        transition canonical && slot < children {
+            true -> changed(Clearing::Slot, Replay::Slot, false)
+            _ -> changed(Clearing::None, Replay::Slot, false)
         }
     }
 }
 
-public machine owner_effects(p: &mut [u64; 128]) -> u64 {
-    transition p[2] == requests::operations::OWNER && p[3] != 0u64 && p[7] != 0u64 {
-        true -> operation(p)
-        _ -> (0u64)
-    }
-    state operation(p: &mut [u64; 128]) -> u64 {
-        transition p[16] {
-            STORAGE_GRANT -> (requests::operations::CHANGED | requests::operations::REMEMBER_STORAGE)
-            STORAGE_REVOKE -> (requests::operations::CHANGED | requests::operations::REMEMBER_STORAGE)
-            STORAGE_STATUS -> (requests::operations::CHANGED | requests::operations::REMEMBER_STORAGE)
-            STORAGE_BINDING -> (requests::operations::CHANGED | requests::operations::REMEMBER_STORAGE)
-            BIND -> (requests::operations::CHANGED | requests::operations::CLEAR_PAIR | requests::operations::REPLAY_ALL)
-            PLACE -> (requests::operations::CHANGED | requests::operations::REPLAY_SLOT)
-            REVOKE -> revoke(p)
-            _ -> (requests::operations::CHANGED)
-        }
-    }
-    state revoke(p: &mut [u64; 128]) -> u64 {
-        transition p[17] < p[6] && p[18] == 0u64 && p[19] == 0u64 && p[20] == 0u64 && p[21] == 0u64 && p[22] == 0u64 && p[23] == 0u64 {
-            true -> (requests::operations::CHANGED | requests::operations::CLEAR_SLOT | requests::operations::REPLAY_SLOT)
-            _ -> (requests::operations::CHANGED | requests::operations::REPLAY_SLOT)
-        }
-    }
+machine changed(clearing: Clearing, replay: Replay, storage: bool) -> Effects {
+    Effects { changed: true, clearing: clearing, replay: replay, remember_storage: storage }
 }

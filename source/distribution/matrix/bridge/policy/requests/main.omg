@@ -1,0 +1,133 @@
+module requests::main;
+
+// Temporary native envelope -> authenticated facts and real IPC words -> policy.
+use service::requests::main;
+use service::requests::owner;
+use requests::control::control_decision;
+use service::requests::wire;
+use service::requests::operations::Caller;
+use service::requests::operations::Facts;
+use service::requests::operations::Message;
+use service::requests::operations::Operation;
+use service::requests::owner::Effects;
+use service::requests::owner::Clearing;
+use service::requests::owner::Replay;
+
+public machine request_decision(packet: &mut [u64; 128]) -> u64 {
+    transition packet[1] {
+        4u64 -> control_decision(packet)
+        _ -> ordinary(packet)
+    }
+}
+
+machine ordinary(packet: &[u64; 128]) -> u64 {
+    let facts: Facts = Facts { caller: caller(packet[2]),
+        separate_producer: packet[4] != 0u64, storage_stream: packet[5] != 0u64 };
+    let message: Message = decode_message(packet);
+    transition packet[1] {
+        0u64 -> route(&facts, message)
+        1u64 -> fallback(&facts, message)
+        2u64 -> effects(&facts, message, packet[6], packet[7] != 0u64)
+        3u64 -> attachment(&facts, message)
+        _ -> (0u64)
+    }
+    machine route(facts: &Facts, message: Message) -> u64 {
+        let operation: Operation = service::requests::main::route(facts, message);
+        encode_operation(operation)
+    }
+    machine fallback(facts: &Facts, message: Message) -> u64 {
+        let operation: Operation = service::requests::owner::fallback(facts, message);
+        encode_operation(operation)
+    }
+    machine attachment(facts: &Facts, message: Message) -> u64 {
+        let operation: Operation = service::requests::main::attachment(facts, message);
+        encode_operation(operation)
+    }
+    machine effects(facts: &Facts, message: Message, children: u64, success: bool) -> u64 {
+        let effects: Effects = service::requests::owner::effects(facts, message, children, success);
+        encode_effects(&effects)
+    }
+}
+
+machine decode_message(packet: &[u64; 128]) -> Message {
+    transition packet[3] != 0u64 {
+        true -> present(packet)
+        _ -> (Message::Missing)
+    }
+    machine present(packet: &[u64; 128]) -> Message {
+        let mut words: [u64; 8];
+        words[0] = packet[16];
+        words[1] = packet[17];
+        words[2] = packet[18];
+        words[3] = packet[19];
+        words[4] = packet[20];
+        words[5] = packet[21];
+        words[6] = packet[22];
+        words[7] = packet[23];
+        service::requests::wire::decode(&words)
+    }
+}
+
+machine caller(value: u64) -> Caller {
+    transition value {
+        1u64 -> (Caller::Owner)
+        2u64 -> (Caller::Source)
+        3u64 -> (Caller::Child)
+        4u64 -> (Caller::Storage)
+        5u64 -> (Caller::Producer)
+        _ -> (Caller::Unknown)
+    }
+}
+
+machine encode_operation(operation: Operation) -> u64 {
+    transition operation {
+        Operation::Deny -> (0u64)
+        Operation::Producer -> (1u64)
+        Operation::Acquire -> (2u64)
+        Operation::Resolve -> (3u64)
+        Operation::Pixel -> (4u64)
+        Operation::Owner -> (5u64)
+        Operation::RecoveryOwner -> (6u64)
+        Operation::StorageOwner -> (7u64)
+        Operation::LayoutOwner -> (8u64)
+        Operation::Source -> (9u64)
+        Operation::Storage -> (10u64)
+        Operation::DenyNow -> (11u64)
+        Operation::Launch -> (12u64)
+        Operation::Close -> (13u64)
+        Operation::Fund -> (14u64)
+        Operation::AppEntry -> (15u64)
+        Operation::Select -> (16u64)
+        Operation::Layout -> (17u64)
+        Operation::Status -> (18u64)
+        Operation::SaveAvailability -> (19u64)
+        Operation::RetrySaves -> (20u64)
+        Operation::ManagedTask -> (21u64)
+        Operation::RetryLauncher -> (22u64)
+        Operation::Terminate -> (23u64)
+        Operation::Present -> (24u64)
+        Operation::Surface -> (25u64)
+        Operation::World -> (26u64)
+    }
+}
+
+machine encode_effects(effects: &Effects) -> u64 {
+    (effects.changed as u64) | clearing(effects.clearing) | replay(effects.replay)
+        | ((effects.remember_storage as u64) << 5u64)
+}
+
+machine clearing(value: Clearing) -> u64 {
+    transition value {
+        Clearing::None -> (0u64)
+        Clearing::Slot -> (2u64)
+        Clearing::Pair -> (4u64)
+    }
+}
+
+machine replay(value: Replay) -> u64 {
+    transition value {
+        Replay::None -> (0u64)
+        Replay::Slot -> (8u64)
+        Replay::All -> (16u64)
+    }
+}

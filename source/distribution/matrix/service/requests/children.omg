@@ -1,0 +1,26 @@
+module requests::children;
+
+// Only a child interaction connection reaches this dispatch. Canonical syntax
+// selects a workflow; live resource/authority validation stays with that owner.
+use requests::operations::Message;
+use requests::operations::Operation;
+
+public machine route(message: Message) -> Operation {
+    transition message {
+        Message::Launch -> (Operation::Launch)
+        Message::Close -> (Operation::Close)
+        Message::Fund -> (Operation::Fund)
+        Message::AppEntry -> (Operation::AppEntry)
+        Message::Select -> (Operation::Select)
+        Message::Layout -> (Operation::Layout)
+        Message::Status -> (Operation::Status)
+        Message::SaveAvailability -> (Operation::SaveAvailability)
+        Message::RetrySaves -> (Operation::RetrySaves)
+        Message::ManagedTask -> (Operation::ManagedTask)
+        Message::RetryLauncher -> (Operation::RetryLauncher)
+        Message::Terminate -> (Operation::Terminate)
+        Message::Present -> (Operation::Present)
+        Message::Surface -> (Operation::Surface)
+        _ -> (Operation::World)
+    }
+}

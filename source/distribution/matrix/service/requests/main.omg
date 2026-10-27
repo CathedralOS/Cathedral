@@ -1,158 +1,88 @@
 module requests::main;
 
-// Authenticated connection -> request family -> host operation. Words never name a caller.
-// p[2..6]: connection class, decoded packet, separate producer, storage stream, child count.
-// p[16..24]: decoded untrusted request. p[7]: successful owner operation.
-use requests::operations;
-use requests::desktop;
+// Authenticated connection -> decoded request family -> operation owner.
+// The native bridge supplies facts; wire.omg classifies the actual IPC message.
+use requests::operations::Caller;
+use requests::operations::Facts;
+use requests::operations::Message;
+use requests::operations::Operation;
 use requests::owner;
-use requests::control;
-use protocol::main;
-use protocol::matrix;
+use requests::children;
 
-public machine request_decision(p: &mut [u64; 128]) -> u64 {
-    transition p[1] {
-        0u64 -> route(p)
-        1u64 -> requests::owner::owner_fallback(p)
-        2u64 -> requests::owner::owner_effects(p)
-        3u64 -> attachment(p)
-        4u64 -> requests::control::control_decision(p)
-        _ -> (requests::operations::DO_DENY)
+public machine route(facts: &Facts, message: Message) -> Operation {
+    transition facts.caller == Caller::Producer {
+        true -> (Operation::Producer)
+        _ -> decoded(facts, message)
     }
-}
-
-machine route(p: &mut [u64; 128]) -> u64 {
-    transition p[2] == requests::operations::PRODUCER {
-        true -> (requests::operations::DO_PRODUCER)
-        _ -> decoded(p)
-    }
-    state decoded(p: &mut [u64; 128]) -> u64 {
-        transition p[3] != 0u64 {
-            true -> acquire(p)
-            _ -> malformed(p)
+    machine decoded(facts: &Facts, message: Message) -> Operation {
+        transition message {
+            Message::Missing -> malformed(facts)
+            Message::Acquire -> acquisition(facts, message)
+            _ -> caller(facts, message)
         }
     }
-    state malformed(p: &mut [u64; 128]) -> u64 {
-        transition p[2] == requests::operations::STORAGE {
-            true -> (requests::operations::DO_DENY_NOW)
-            _ -> (requests::operations::DO_DENY)
+    machine malformed(facts: &Facts) -> Operation {
+        transition facts.caller == Caller::Storage {
+            true -> (Operation::DenyNow)
+            _ -> (Operation::Deny)
         }
     }
-    state acquire(p: &mut [u64; 128]) -> u64 {
-        transition p[2] != requests::operations::OWNER && p[2] != requests::operations::UNKNOWN && p[16] == SERVICE_ACQUIRE {
-            true -> (requests::operations::DO_ACQUIRE)
-            _ -> caller(p)
+    machine acquisition(facts: &Facts, message: Message) -> Operation {
+        transition facts.caller != Caller::Owner && facts.caller != Caller::Unknown {
+            true -> (Operation::Acquire)
+            _ -> caller(facts, message)
         }
     }
-    state caller(p: &mut [u64; 128]) -> u64 {
-        transition p[2] {
-            requests::operations::OWNER -> requests::owner::owner_request(p)
-            requests::operations::SOURCE -> (requests::operations::DO_SOURCE)
-            requests::operations::CHILD -> storage(p)
-            requests::operations::STORAGE -> storage(p)
-            _ -> (requests::operations::DO_DENY)
+    machine caller(facts: &Facts, message: Message) -> Operation {
+        transition facts.caller {
+            Caller::Owner -> requests::owner::route(message)
+            Caller::Source -> (Operation::Source)
+            Caller::Child -> interaction(facts, message)
+            Caller::Storage -> interaction(facts, message)
+            _ -> (Operation::Deny)
         }
     }
-    state storage(p: &mut [u64; 128]) -> u64 {
-        let op: u64 = p[16] & 65535u64;
-        transition p[16] == STORAGE_INFO || (op >= STORAGE_BASE && op < STORAGE_BASE + 256u64) {
-            true -> storage_right(p)
-            _ -> interaction(p)
+    machine interaction(facts: &Facts, message: Message) -> Operation {
+        transition message {
+            Message::Storage -> storage(facts)
+            _ -> child_connection(facts, message)
         }
     }
-    state storage_right(p: &mut [u64; 128]) -> u64 {
-        transition p[5] != 0u64 {
-            true -> (requests::operations::DO_STORAGE)
-            _ -> (requests::operations::DO_DENY_NOW)
+    machine storage(facts: &Facts) -> Operation {
+        transition facts.storage_stream {
+            true -> (Operation::Storage)
+            _ -> (Operation::DenyNow)
         }
     }
-    state interaction(p: &mut [u64; 128]) -> u64 {
-        transition p[2] == requests::operations::STORAGE {
-            true -> (requests::operations::DO_DENY_NOW)
-            _ -> producer(p)
+    machine child_connection(facts: &Facts, message: Message) -> Operation {
+        transition facts.caller == Caller::Storage {
+            true -> (Operation::DenyNow)
+            _ -> producer(facts, message)
         }
     }
-    state producer(p: &mut [u64; 128]) -> u64 {
-        transition p[4] != 0u64 && ((p[16] >= PRODUCER_INFO && p[16] <= PRODUCER_RELEASE) || p[16] == PRODUCER_DESCRIBE) {
-            true -> (requests::operations::DO_DENY)
-            _ -> child_request(p)
+    machine producer(facts: &Facts, message: Message) -> Operation {
+        transition facts.separate_producer && (message in Message::Producer) {
+            true -> (Operation::Deny)
+            _ -> requests::children::route(message)
         }
     }
 }
 
-machine child_request(p: &mut [u64; 128]) -> u64 {
-    transition p[16] {
-        requests::desktop::LAUNCH -> two(p, requests::operations::DO_LAUNCH)
-        requests::desktop::CLOSE -> empty(p, requests::operations::DO_CLOSE)
-        FUND -> funding(p)
-        requests::desktop::APP_ENTRY -> one(p, requests::operations::DO_APP_ENTRY)
-        requests::desktop::SELECT_APP -> one(p, requests::operations::DO_SELECT)
-        requests::desktop::APPLY_LAYOUT -> (requests::operations::DO_LAYOUT)
-        LAUNCH_STATUS -> one(p, requests::operations::DO_STATUS)
-        requests::desktop::SAVE_AVAILABILITY -> empty(p, requests::operations::DO_SAVE_AVAILABILITY)
-        requests::desktop::RETRY_SAVES -> empty(p, requests::operations::DO_RETRY_SAVES)
-        MANAGED_TASK -> empty(p, requests::operations::DO_MANAGED_TASK)
-        requests::desktop::RETRY_LAUNCHER -> empty(p, requests::operations::DO_RETRY_LAUNCHER)
-        TERMINATE_TASK -> one(p, requests::operations::DO_TERMINATE)
-        PRESENT_BEGIN -> (requests::operations::DO_PRESENT)
-        PRESENT_COMMIT -> (requests::operations::DO_PRESENT)
-        PRESENT_ABORT -> (requests::operations::DO_PRESENT)
-        PRESENT_RECTS -> (requests::operations::DO_PRESENT)
-        SURFACE_CREATE -> (requests::operations::DO_SURFACE)
-        MATRIX_PAINT -> (requests::operations::DO_SURFACE)
-        MATRIX_ERASE -> (requests::operations::DO_SURFACE)
-        SURFACE_IMAGE -> (requests::operations::DO_SURFACE)
-        SURFACE_CURSOR -> (requests::operations::DO_SURFACE)
-        _ -> (requests::operations::DO_WORLD)
+public machine attachment(facts: &Facts, message: Message) -> Operation {
+    transition facts.caller == Caller::Storage && facts.storage_stream {
+        true -> allowed(message)
+        _ -> (Operation::DenyNow)
     }
-    state funding(p: &mut [u64; 128]) -> u64 {
-        transition p[22] == 0u64 && p[23] == 0u64 {
-            true -> (requests::operations::DO_FUND)
-            _ -> (requests::operations::DO_WORLD)
+    machine allowed(message: Message) -> Operation {
+        transition message {
+            Message::Storage { attachment } -> eligible(attachment)
+            _ -> (Operation::DenyNow)
         }
     }
-}
-
-machine empty(p: &mut [u64; 128], operation: u64) -> u64 {
-    transition p[17] == 0u64 {
-        true -> one(p, operation)
-        _ -> (requests::operations::DO_WORLD)
-    }
-}
-
-machine one(p: &mut [u64; 128], operation: u64) -> u64 {
-    transition p[18] == 0u64 {
-        true -> two(p, operation)
-        _ -> (requests::operations::DO_WORLD)
-    }
-}
-
-machine two(p: &mut [u64; 128], operation: u64) -> u64 {
-    transition p[19] == 0u64 && p[20] == 0u64 && p[21] == 0u64 && p[22] == 0u64 && p[23] == 0u64 {
-        true -> (operation)
-        _ -> (requests::operations::DO_WORLD)
-    }
-}
-
-machine attachment(p: &mut [u64; 128]) -> u64 {
-    transition p[2] == requests::operations::STORAGE && p[3] != 0u64 && p[5] != 0u64 {
-        true -> operation(p)
-        _ -> (requests::operations::DO_DENY_NOW)
-    }
-    state operation(p: &mut [u64; 128]) -> u64 {
-        transition p[16] & 65535u64 {
-            STORAGE_BASE +
-            STORE_PUBLISH -> (requests::operations::DO_STORAGE) STORAGE_BASE +
-            STORE_CREATE_NAMED -> (requests::operations::DO_STORAGE)
-            STORAGE_BASE +
-            STORE_SET_METADATA -> (requests::operations::DO_STORAGE) STORAGE_BASE +
-            STORE_LOOKUP -> (requests::operations::DO_STORAGE)
-            STORAGE_BASE +
-            STORE_FILTER -> (requests::operations::DO_STORAGE) STORAGE_BASE +
-            STORE_COPY_TREE -> (requests::operations::DO_STORAGE)
-            STORAGE_BASE +
-            STORE_COPY -> (requests::operations::DO_STORAGE)
-            _ -> (requests::operations::DO_DENY_NOW)
+    machine eligible(allowed: bool) -> Operation {
+        transition allowed {
+            true -> (Operation::Storage)
+            _ -> (Operation::DenyNow)
         }
     }
 }

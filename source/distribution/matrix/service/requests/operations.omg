@@ -1,42 +1,77 @@
 module requests::operations;
 
-// Private host operations and authenticated connection classes, not wire authority.
-public const UNKNOWN: u64 = 0u64;
-public const OWNER: u64 = 1u64;
-public const SOURCE: u64 = 2u64;
-public const CHILD: u64 = 3u64;
-public const STORAGE: u64 = 4u64;
-public const PRODUCER: u64 = 5u64;
-public const DO_DENY: u64 = 0u64;
-public const DO_PRODUCER: u64 = 1u64;
-public const DO_ACQUIRE: u64 = 2u64;
-public const DO_RESOLVE: u64 = 3u64;
-public const DO_PIXEL: u64 = 4u64;
-public const DO_OWNER: u64 = 5u64;
-public const DO_RECOVERY_OWNER: u64 = 6u64;
-public const DO_STORAGE_OWNER: u64 = 7u64;
-public const DO_LAYOUT_OWNER: u64 = 8u64;
-public const DO_SOURCE: u64 = 9u64;
-public const DO_STORAGE: u64 = 10u64;
-public const DO_DENY_NOW: u64 = 11u64;
-public const DO_LAUNCH: u64 = 12u64;
-public const DO_CLOSE: u64 = 13u64;
-public const DO_FUND: u64 = 14u64;
-public const DO_APP_ENTRY: u64 = 15u64;
-public const DO_SELECT: u64 = 16u64;
-public const DO_LAYOUT: u64 = 17u64;
-public const DO_STATUS: u64 = 18u64;
-public const DO_SAVE_AVAILABILITY: u64 = 19u64;
-public const DO_RETRY_SAVES: u64 = 20u64;
-public const DO_MANAGED_TASK: u64 = 21u64;
-public const DO_RETRY_LAUNCHER: u64 = 22u64;
-public const DO_TERMINATE: u64 = 23u64;
-public const DO_PRESENT: u64 = 24u64;
-public const DO_SURFACE: u64 = 25u64;
-public const DO_WORLD: u64 = 26u64;
-public const CHANGED: u64 = 1u64;
-public const CLEAR_SLOT: u64 = 2u64;
-public const CLEAR_PAIR: u64 = 4u64;
-public const REPLAY_SLOT: u64 = 8u64;
-public const REPLAY_ALL: u64 = 16u64;
-public const REMEMBER_STORAGE: u64 = 32u64;
+// Caller facts come from accepted host connections, never from request words.
+// Message names describe decoded syntax; Operation names select host work.
+public data Caller [copy] {
+    case Unknown;
+    case Owner;
+    case Source;
+    case Child;
+    case Storage;
+    case Producer;
+}
+
+public data Facts {
+    caller: Caller;
+    separate_producer: bool;
+    storage_stream: bool;
+}
+
+public data Message [copy] {
+    case Missing;
+    case Other;
+    case Acquire;
+    case Storage(attachment: bool);
+    case Producer;
+    case Launch;
+    case Close;
+    case Fund;
+    case AppEntry;
+    case Select;
+    case Layout;
+    case Status;
+    case SaveAvailability;
+    case RetrySaves;
+    case ManagedTask;
+    case RetryLauncher;
+    case Terminate;
+    case Present;
+    case Surface;
+    case Resolve;
+    case Pixel;
+    case RecoveryOwner;
+    case StorageOwner;
+    case Bind;
+    case Place;
+    case Revoke(slot: u64, canonical: bool);
+}
+
+public data Operation [copy] {
+    case Deny;
+    case Producer;
+    case Acquire;
+    case Resolve;
+    case Pixel;
+    case Owner;
+    case RecoveryOwner;
+    case StorageOwner;
+    case LayoutOwner;
+    case Source;
+    case Storage;
+    case DenyNow;
+    case Launch;
+    case Close;
+    case Fund;
+    case AppEntry;
+    case Select;
+    case Layout;
+    case Status;
+    case SaveAvailability;
+    case RetrySaves;
+    case ManagedTask;
+    case RetryLauncher;
+    case Terminate;
+    case Present;
+    case Surface;
+    case World;
+}

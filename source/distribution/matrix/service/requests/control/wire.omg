@@ -1,0 +1,48 @@
+module requests::control::wire;
+
+// Recognize canonical loss before the shared LAUNCH_IMPORTS opcode. Routed
+// requests retain their first hop; the host owns the original packet and reply.
+use requests::control::operation::Request;
+use requests::control::operation::Local;
+use requests::desktop;
+use requests::wire;
+use protocol::main;
+use protocol::matrix;
+
+public machine decode(words: &[u64; 8]) -> Request {
+    transition words[0] == LOSS && requests::wire::zero_tail(words, 1u64) {
+        true -> (Request::Loss)
+        _ -> routed(words)
+    }
+    machine routed(words: &[u64; 8]) -> Request {
+        transition words[0] >> 16u64 != 0u64 {
+            true -> (Request::Forward { hop: (words[0] >> 16u64) & 7u64,
+                configuration: (words[0] & 65535u64) == requests::desktop::CONFIGURE })
+            _ -> local(words)
+        }
+    }
+}
+
+machine local(words: &[u64; 8]) -> Request {
+    transition words[0] {
+        requests::desktop::CONFIGURE -> (Request::Configure { canonical: requests::wire::zero_tail(words, 1u64) })
+        RESTORE_STORAGE -> (Request::Restore { canonical: requests::wire::zero_tail(words, 1u64) })
+        requests::desktop::LAUNCHER_FALLBACK -> (Request::Fallback { canonical: requests::wire::zero_tail(words, 3u64) })
+        RUN_OBJECT -> child(words[1], Local::Stored { object: words[2] })
+        LAUNCH_IMAGES -> child(words[1], Local::Images { mask: words[2], canonical: requests::wire::zero_tail(words, 3u64) })
+        MANAGEMENT_GRANT -> child(words[1], Local::Management { count: words[2], canonical: requests::wire::zero_tail(words, 3u64) })
+        LAUNCH_IMPORTS -> child(words[1], Local::Imports { mask: words[2], canonical: requests::wire::zero_tail(words, 3u64) })
+        RUN_PAGES -> child(words[1], Local::Pages { private_pages: words[2], reader_pages: words[3], canonical: requests::wire::zero_tail(words, 4u64) })
+        RUN_MEMORY -> child(words[1], Local::Memory { canonical: requests::wire::zero_tail(words, 3u64) })
+        LAUNCH_POLICY -> child(words[1], Local::Policy { private_pages: words[2], reader_pages: words[3], surfaces: words[7] })
+        LAUNCH_PLACE -> child(words[1], Local::Placement { canonical: words[7] == 0u64 })
+        SPAWN -> child(words[1], Local::Spawn { canonical: requests::wire::zero_tail(words, 5u64) })
+        RUN -> child(words[1], Local::Run)
+        STOP -> child(words[1], Local::Stop { canonical: requests::wire::zero_tail(words, 2u64) })
+        _ -> (Request::Unknown)
+    }
+}
+
+machine child(slot: u64, work: Local) -> Request {
+    Request::Child { slot: slot, work: work }
+}

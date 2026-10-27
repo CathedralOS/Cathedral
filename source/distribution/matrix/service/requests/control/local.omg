@@ -1,0 +1,74 @@
+module requests::control::local;
+
+// Per-operation checks after owner, loss and target-position admission.
+use requests::control::operation::Facts;
+use requests::control::operation::Local;
+use requests::control::operation::Operation;
+
+public machine decide(facts: &Facts, slot: u64, work: Local) -> Operation requires slot < 7u64 {
+    transition work {
+        Local::Stored { object } -> stored(facts, slot, object)
+        Local::Images { mask, canonical } -> images(facts, mask, canonical)
+        Local::Management { count, canonical } -> accept(count <= facts.children && canonical, Operation::Management)
+        Local::Imports { mask, canonical } -> accept((mask & ~facts.supported_imports) == 0u64 && canonical, Operation::Imports)
+        Local::Pages { private_pages, reader_pages, canonical } -> pages(facts, slot, private_pages, reader_pages, canonical)
+        Local::Memory { canonical } -> memory(facts, slot, canonical)
+        Local::Policy { private_pages, reader_pages, surfaces } -> accept(private_pages <= facts.private_pages
+            && reader_pages <= facts.reader_pages && surfaces <= facts.surfaces, Operation::Policy)
+        Local::Placement { canonical } -> accept(canonical && (facts.standing & (1u64 << slot)) != 0u64, Operation::Placement)
+        Local::Spawn { canonical } -> accept(canonical, Operation::Spawn)
+        Local::Run -> (Operation::Run)
+        Local::Stop { canonical } -> accept(canonical, Operation::Stop)
+    }
+}
+
+machine stored(facts: &Facts, slot: u64, object: u64) -> Operation requires slot < 7u64 {
+    transition facts.launching || facts.storing || ((facts.occupied | facts.unavailable) & (1u64 << slot)) != 0u64 {
+        true -> (Operation::Busy)
+        _ -> valid(object)
+    }
+    machine valid(object: u64) -> Operation {
+        transition object != 0u64 {
+            true -> (Operation::Stored)
+            _ -> (Operation::Invalid)
+        }
+    }
+}
+
+machine images(facts: &Facts, mask: u64, canonical: bool) -> Operation {
+    transition facts.images < 64u64 {
+        true -> fits(facts, mask, canonical)
+        _ -> (Operation::Deny)
+    }
+    machine fits(facts: &Facts, mask: u64, canonical: bool) -> Operation requires facts.images < 64u64 {
+        accept((mask >> facts.images) == 0u64 && canonical, Operation::Images)
+    }
+}
+
+machine pages(facts: &Facts, slot: u64, private_pages: u64, reader_pages: u64, canonical: bool) -> Operation requires slot < 7u64 {
+    transition private_pages <= facts.private_pages && reader_pages <= facts.reader_pages && canonical {
+        true -> vacant(facts, slot, Operation::Pages)
+        _ -> (Operation::Deny)
+    }
+}
+
+machine memory(facts: &Facts, slot: u64, canonical: bool) -> Operation requires slot < 7u64 {
+    transition canonical {
+        true -> vacant(facts, slot, Operation::Memory)
+        _ -> (Operation::Deny)
+    }
+}
+
+machine vacant(facts: &Facts, slot: u64, operation: Operation) -> Operation requires slot < 7u64 {
+    transition (facts.occupied & (1u64 << slot)) == 0u64 {
+        true -> (operation)
+        _ -> (Operation::Busy)
+    }
+}
+
+machine accept(allowed: bool, operation: Operation) -> Operation {
+    transition allowed {
+        true -> (operation)
+        _ -> (Operation::Deny)
+    }
+}

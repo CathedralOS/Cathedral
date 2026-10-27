@@ -1,0 +1,97 @@
+module requests::wire;
+
+// Classify the real eight-word Matrix IPC packet, not the native-call envelope.
+// Reserved argument checks are syntax only; they never authorize a caller.
+use requests::operations::Message;
+use requests::desktop;
+use protocol::main;
+use protocol::matrix;
+
+public machine decode(words: &[u64; 8]) -> Message {
+    let opcode: u64 = words[0];
+    let scoped: u64 = opcode & 65535u64;
+    transition opcode == STORAGE_INFO || (scoped >= STORAGE_BASE && scoped < STORAGE_BASE + 256u64) {
+        true -> storage(scoped)
+        _ -> ordinary(words)
+    }
+    machine storage(scoped: u64) -> Message {
+        Message::Storage { attachment: attachment_operation(scoped) }
+    }
+}
+
+machine ordinary(words: &[u64; 8]) -> Message {
+    transition words[0] {
+        SERVICE_ACQUIRE -> (Message::Acquire)
+        PRODUCER_INFO -> (Message::Producer)
+        PRODUCER_INFO + 1u64 -> (Message::Producer)
+        PRODUCER_INFO + 2u64 -> (Message::Producer)
+        PRODUCER_RELEASE -> (Message::Producer)
+        PRODUCER_DESCRIBE -> (Message::Producer)
+        requests::desktop::LAUNCH -> canonical(words, 3u64, Message::Launch)
+        requests::desktop::CLOSE -> canonical(words, 1u64, Message::Close)
+        FUND -> canonical(words, 6u64, Message::Fund)
+        requests::desktop::APP_ENTRY -> canonical(words, 2u64, Message::AppEntry)
+        requests::desktop::SELECT_APP -> canonical(words, 2u64, Message::Select)
+        requests::desktop::APPLY_LAYOUT -> (Message::Layout)
+        LAUNCH_STATUS -> canonical(words, 2u64, Message::Status)
+        requests::desktop::SAVE_AVAILABILITY -> canonical(words, 1u64, Message::SaveAvailability)
+        requests::desktop::RETRY_SAVES -> canonical(words, 1u64, Message::RetrySaves)
+        MANAGED_TASK -> canonical(words, 1u64, Message::ManagedTask)
+        requests::desktop::RETRY_LAUNCHER -> canonical(words, 1u64, Message::RetryLauncher)
+        TERMINATE_TASK -> canonical(words, 2u64, Message::Terminate)
+        PRESENT_BEGIN -> (Message::Present)
+        PRESENT_COMMIT -> (Message::Present)
+        PRESENT_ABORT -> (Message::Present)
+        PRESENT_RECTS -> (Message::Present)
+        SURFACE_CREATE -> (Message::Surface)
+        MATRIX_PAINT -> (Message::Surface)
+        MATRIX_ERASE -> (Message::Surface)
+        SURFACE_IMAGE -> (Message::Surface)
+        SURFACE_CURSOR -> (Message::Surface)
+        RESOLVE_PATH -> canonical(words, 5u64, Message::Resolve)
+        READ_PIXEL -> canonical(words, 3u64, Message::Pixel)
+        requests::desktop::SAVE_RECOVERY_GRANT -> (Message::RecoveryOwner)
+        requests::desktop::SAVE_RECOVERY_POLL -> (Message::RecoveryOwner)
+        STORAGE_GRANT -> (Message::StorageOwner)
+        STORAGE_REVOKE -> (Message::StorageOwner)
+        STORAGE_STATUS -> (Message::StorageOwner)
+        STORAGE_BINDING -> (Message::StorageOwner)
+        BIND -> (Message::Bind)
+        PLACE -> (Message::Place)
+        REVOKE -> (Message::Revoke { slot: words[1], canonical: zero_tail(words, 2u64) })
+        _ -> (Message::Other)
+    }
+}
+
+machine canonical(words: &[u64; 8], from: u64, message: Message) -> Message {
+    transition zero_tail(words, from) {
+        true -> (message)
+        _ -> (Message::Other)
+    }
+}
+
+public machine zero_tail(words: &[u64; 8], from: u64) -> bool {
+    transition from < 8u64 {
+        true -> word(words, from)
+        _ -> (true)
+    }
+    machine word(words: &[u64; 8], index: u64) -> bool requires index < 8u64 {
+        transition words[index] == 0u64 {
+            true -> zero_tail(words, index + 1u64)
+            _ -> (false)
+        }
+    }
+}
+
+machine attachment_operation(opcode: u64) -> bool {
+    transition opcode {
+        STORAGE_BASE + STORE_PUBLISH -> (true)
+        STORAGE_BASE + STORE_CREATE_NAMED -> (true)
+        STORAGE_BASE + STORE_SET_METADATA -> (true)
+        STORAGE_BASE + STORE_LOOKUP -> (true)
+        STORAGE_BASE + STORE_FILTER -> (true)
+        STORAGE_BASE + STORE_COPY_TREE -> (true)
+        STORAGE_BASE + STORE_COPY -> (true)
+        _ -> (false)
+    }
+}

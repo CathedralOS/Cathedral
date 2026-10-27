@@ -18,7 +18,7 @@ transport and resource custody. The service-turn sequence now executes in
 Rust service entrance only drives that session. Request-family routing and owner
 success consequences now execute in `source/distribution/matrix/service/requests/`;
 `service/requests/requests.rs` supplies authenticated facts and executes the choice.
-Owner child-control now descends into `requests/control.omg`; launch target/refusal
+Owner child-control now descends into `requests/control/main.omg`; launch target/refusal
 and role choices execute in `launch/admission.omg` and `launch/roles.omg`. The host
 under `service/children/control/owner.rs` and `launch/request.rs` retains exact
 capabilities, standing grants and pending replies. Realm discovery and saved
@@ -73,10 +73,15 @@ facts, targets and refusals. Import policy operates on common contract records;
 its native codec, image scanner adapter and declaration adapter live together
 under `bridge/policy/launch/`. Workspace now uses named catalogue entries,
 selection outcomes and switch commands/completions. Its native state layout and
-query tags live in `bridge/policy/workspace/`. Package/module imports retain
-this hierarchy.
+query tags live in `bridge/policy/workspace/`. Request routing now separates
+authenticated caller facts, decoded message families and named operations;
+owner effects use clearing/replay choices. Owner child-control descends through
+`requests/control/` into syntax and per-operation checks. Its native envelope,
+operation numbers and effect bits live in `bridge/policy/requests/`. Actual
+eight-word IPC formats remain in the service's wire decoders. Package/module
+imports retain this hierarchy.
 
-This is not a completed tree-wide cleanup. Requests, realm setup and
+This is not a completed tree-wide cleanup. Realm setup and
 configuration still need their packet-shaped interfaces replaced or moved into
 the native bridge; retain the existing host regression cases while doing that. Avoid
 adding features to these representations. The Omega kernel also still mixes x86
@@ -225,6 +230,35 @@ call; all 97 compiled matrix tests then pass. This is not a compiler repair.
 The exact failing source, component, standalone probe and debugger/disassembly
 evidence are preserved under `build/omega-component/workspace-entry-repro/`.
 Keep this as a compiler-resolution follow-up, not an owner-design question.
+
+Request-policy follow-up over `98546e76`: `requests/main.omg` now routes named
+caller facts and message families to named operations. `children.omg` selects
+child workflows, and `owner.omg` defines diagnostics, fallback and successful
+clearing/replay consequences. `requests/control/main.omg` admits owner work,
+preserves loss exclusion and selects forwarding or local validation; `local.omg`
+owns the per-operation checks. Both real-wire decoders retain canonical padding,
+scoped storage classification, attachment allowlists and the shared LOSS/imports
+opcode precedence. Native 128-word envelopes, numeric operation results and
+effect bits exist only in `bridge/policy/requests/`. Rust still owns original
+requests, authenticated connections, tasks, grants and pending replies.
+
+Verification: all 97 compiled matrix tests pass, including caller separation,
+malformed packets, reserved arguments, owner failure atomicity, storage attachment
+allowlists, control limits and forwarding/loss precedence. Layout (72 Omega /
+151 Rust edges), eight dependency-law tests and navigation links pass. Three
+nested desktops pass repeated subtree reclamation and confined persistence.
+Producer acquisition and denial both pass ordinary desktop instances, protected
+close and saved state; their durable host oracles verify 1,833 and 1,727 records.
+Owner revocation after accepted launch-scene commit passes restoration, sibling
+input, protected drafts and reclamation. All four guest runs pass cold reopen.
+Logs: `build/omega-component/matrix-requests-{typed-tests,nested,producer,producer-denied,late-revoke}.log`.
+Artifacts under `build/boot-harness-rs/desktop/`: `20261027T013924813796Z`,
+`20261027T014156628351Z`, `20261027T014332561434Z`, `20261027T014443716396Z`.
+The ordinary matrix uses 141 of its existing 240 image pages. No grants, resource
+limits or guest deadlines changed. The supported producer is unchanged. The
+native dispatchers explicitly import their callable entries: the producer's
+qualified-only module references failed lowering despite each branch lowering
+in isolation. Direct callable imports retain the intended composition.
 
 ## Memory budgets and allocator delegation
 
@@ -744,7 +778,7 @@ Logs are `build/omega-component/realm-*.log`. No kernel or stack allowance chang
 Implementation update 2026-10-26: **Omega chooses owner child-control operations
 and launch admission/roles**, over `24ea8113`.
 
-`requests/control.omg` owns canonical control shapes, loss exclusion, bounded
+`requests/control/main.omg` owns canonical control shapes, loss exclusion, bounded
 forwarded hops, pending-request exclusion and forwarding deadlines. It checks
 image/import/page/surface ceilings from host facts before selecting local work.
 The former owner dispatcher leaves the child record entrance; its host operations

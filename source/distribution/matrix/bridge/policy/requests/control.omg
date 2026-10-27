@@ -1,0 +1,58 @@
+module requests::control;
+
+// Native host envelope codec. No task, connection or grant handle is transferred.
+use service::requests::control::main;
+use service::requests::control::wire;
+use service::requests::control::operation::Facts;
+use service::requests::control::operation::Request;
+use service::requests::control::operation::Operation;
+use service::requests::control::operation::Decision;
+
+public machine control_decision(packet: &mut [u64; 128]) -> u64 {
+    let facts: Facts = Facts {
+        owner: packet[2] != 0u64, loss: packet[3] != 0u64,
+        launching: packet[4] != 0u64, storing: packet[5] != 0u64,
+        occupied: packet[6], unavailable: packet[7], pending: packet[8], standing: packet[9],
+        children: packet[10], images: packet[11], private_pages: packet[12], reader_pages: packet[13],
+        supported_imports: packet[14], surfaces: packet[15], configure_deadline: packet[24]
+    };
+    let mut words: [u64; 8];
+    words[0] = packet[16];
+    words[1] = packet[17];
+    words[2] = packet[18];
+    words[3] = packet[19];
+    words[4] = packet[20];
+    words[5] = packet[21];
+    words[6] = packet[22];
+    words[7] = packet[23];
+    let request: Request = service::requests::control::wire::decode(&words);
+    let decision: Decision = service::requests::control::main::decide(&facts, request);
+    packet[25] = decision.slot;
+    packet[26] = decision.deadline;
+    encode(decision.operation)
+}
+
+machine encode(operation: Operation) -> u64 {
+    transition operation {
+        Operation::Unhandled -> (0u64)
+        Operation::Deny -> (1u64)
+        Operation::Busy -> (2u64)
+        Operation::Invalid -> (3u64)
+        Operation::Survey -> (4u64)
+        Operation::Stored -> (5u64)
+        Operation::Forward -> (6u64)
+        Operation::Images -> (7u64)
+        Operation::Fallback -> (8u64)
+        Operation::Management -> (9u64)
+        Operation::Configure -> (10u64)
+        Operation::Restore -> (11u64)
+        Operation::Imports -> (12u64)
+        Operation::Pages -> (13u64)
+        Operation::Memory -> (14u64)
+        Operation::Policy -> (15u64)
+        Operation::Placement -> (16u64)
+        Operation::Spawn -> (17u64)
+        Operation::Run -> (18u64)
+        Operation::Stop -> (19u64)
+    }
+}

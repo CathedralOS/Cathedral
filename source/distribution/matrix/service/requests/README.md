@@ -1,7 +1,10 @@
 # Stock matrix request routing
 
-Start at [main.omg](main.omg): authenticated connection class, decoded request,
-then the operation to execute. This runs for ordinary F5 stock matrices at every
+Start at [main.omg](main.omg): authenticated connection class, decoded request
+family, then the named operation to execute. [wire.omg](wire.omg) classifies the
+real eight-word Matrix IPC message; [operations.omg](operations.omg) names
+caller facts, decoded messages and operations. [children.omg](children.omg)
+selects child workflows after connection checks. This runs for ordinary F5 stock matrices at every
 level, from the session's `Request` operation. The
 [Rust dispatcher](../../../../../source-rs/distribution/matrix/service/requests/requests.rs)
 derives caller facts from the server's accepted connection, decodes the packet,
@@ -29,7 +32,7 @@ recovery, flush/replay, then ordinary invalidation notification before the reply
 Asynchronous child control, launch, close, selection and storage retain their
 original pending request; choosing an operation does not manufacture a reply.
 
-Owner child control descends into [control.omg](control.omg): recognition, loss
+Owner child control descends into [control/main.omg](control/main.omg): recognition, loss
 exclusion, routed-hop selection or canonical local operation validation. It
 chooses forwarding deadlines, validates slot/mask/allowance limits supplied by the
 host, and refuses to replace a pending request on the selected hop. The current
@@ -39,9 +42,16 @@ loss. Unrelated owner operations still reach their fallback during a survey.
 The [control host](../../../../../source-rs/distribution/matrix/service/children/control/owner.rs)
 executes the choice, checks actual executable grants, retains the forwarded request
 and mutates only its local records. Host mechanisms still validate live resources;
-the word values and masks in a policy packet grant no authority.
+decoded request values and host-supplied masks grant no authority.
 
-[operations.omg](operations.omg) is the private host vocabulary.
+The [control entrance](control/README.md) descends into protocol decoding and
+operation-specific checks. Its `Facts`, `Request`, `Local`, `Operation` and
+`Decision` values name the policy inputs and results. Owner consequences also
+use named clearing/replay choices, not host bitfields.
+
+The [native request bridge](../../bridge/policy/requests/main.omg) alone decodes
+the 128-word host envelope and encodes native operation numbers and effect bits.
+Policy and real wire decoding never use its offsets.
 [desktop.omg](desktop.omg) binds stock distribution extensions; platform wire
 families come from [the matrix reference bindings](../../../../platform/contracts/reference/matrix.omg).
 Neither is a new service ABI. Omega and Rust execute in one process; this is a

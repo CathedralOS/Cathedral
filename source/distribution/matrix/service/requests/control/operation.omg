@@ -1,0 +1,74 @@
+module requests::control::operation;
+
+// Authenticated host state and decoded child-control syntax. Masks name local
+// positions only; live tasks, executable grants and replies remain with the host.
+public data Facts {
+    owner: bool;
+    loss: bool;
+    launching: bool;
+    storing: bool;
+    occupied: u64;
+    unavailable: u64;
+    pending: u64;
+    standing: u64;
+    children: u64;
+    images: u64;
+    private_pages: u64;
+    reader_pages: u64;
+    supported_imports: u64;
+    surfaces: u64;
+    configure_deadline: u64;
+}
+
+public data Request [copy] {
+    case Unknown;
+    case Loss;
+    case Forward(hop: u64, configuration: bool);
+    case Configure(canonical: bool);
+    case Restore(canonical: bool);
+    case Fallback(canonical: bool);
+    case Child(slot: u64, work: Local);
+}
+
+public data Local [copy] {
+    case Stored(object: u64);
+    case Images(mask: u64, canonical: bool);
+    case Management(count: u64, canonical: bool);
+    case Imports(mask: u64, canonical: bool);
+    case Pages(private_pages: u64, reader_pages: u64, canonical: bool);
+    case Memory(canonical: bool);
+    case Policy(private_pages: u64, reader_pages: u64, surfaces: u64);
+    case Placement(canonical: bool);
+    case Spawn(canonical: bool);
+    case Run;
+    case Stop(canonical: bool);
+}
+
+public data Operation [copy] {
+    case Unhandled;
+    case Deny;
+    case Busy;
+    case Invalid;
+    case Survey;
+    case Stored;
+    case Forward;
+    case Images;
+    case Fallback;
+    case Management;
+    case Configure;
+    case Restore;
+    case Imports;
+    case Pages;
+    case Memory;
+    case Policy;
+    case Placement;
+    case Spawn;
+    case Run;
+    case Stop;
+}
+
+public data Decision {
+    operation: Operation;
+    slot: u64;
+    deadline: u64;
+}

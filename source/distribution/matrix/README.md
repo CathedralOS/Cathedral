@@ -31,10 +31,11 @@ and resource adapters serialize named domain values there. The
 [launch bridge](bridge/policy/launch/main.omg) also owns admission/import encoding
 and image/declaration codecs; launch policy uses named facts and shared contract
 values. The [workspace bridge](bridge/policy/workspace/main.omg) translates the
-instance catalogue and switch workflow to named domain values as well. Requests
-and realm configuration still expose packet-shaped interfaces and need the same
-cleanup;
-moving them into semantic folders does not finish that work.
+instance catalogue and switch workflow to named domain values as well. The [request bridge](bridge/policy/requests/main.omg) likewise translates host
+connection facts, control decisions and owner effects. Request policy uses named
+values; its wire decoders handle the actual IPC formats. Realm configuration
+still exposes packet-shaped interfaces and needs the same cleanup. Moving it
+into semantic folders does not finish that work.
 
 Rust retains exact task/endpoint identity, authenticated connections, mappings,
 late replies, yielding transport and resource reclamation. Common import-record
