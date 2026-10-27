@@ -88,7 +88,7 @@ yet specify those operations.
 ## Conformance evidence
 
 - The Cathedral provider adapter is
-  [`source/kernel/core/extent.omg`](../../../source/kernel/core/extent.omg).
+  [`source/kernel/core/memory/extent.omg`](../../../source/kernel/core/memory/extent.omg).
 - The admitted invocation and lifetime are in
   [`source/kernel/boot/uefi/own_machine.omg`](../../../source/kernel/boot/uefi/own_machine.omg).
 - Omega owns the generic rules for

@@ -218,7 +218,7 @@ the UEFI boot separately acquires and retains each reached physical frame.
 
 ## Path-copy policy and retirement control
 
-`table-clone/main.omg` exercises the actual `core::page_table_clone` operation:
+`table-clone/main.omg` exercises the actual `arch::isa::x86_64::memory::clone` operation:
 absent paths, 4-KiB/2-MiB/1-GiB paths, large-leaf PAT conversion, read-only
 parent ceilings, NX and supervisor/user preservation, unchanged off-path words,
 and malformed geometry or supplied-child links. The shared range operation also

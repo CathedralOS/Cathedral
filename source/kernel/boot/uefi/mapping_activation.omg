@@ -1,15 +1,16 @@
-use omega::language::core::assembly;
-use omega::language::core::extent;
-use omega::language::core::layout;
-use core::paging_profile;
-use mapping_region;
-use mapping_handoff;
-
 // A virtual reservation is independent of physical source authority. This
 // exact admitted boot occurrence reserves the configured page range at 1GiB
 // in the continuing kernel's virtual namespace. Firmware's old identity translation there is
 // not ownership of that namespace. Admission asserts no live image, stack,
 // firmware callback or other claimant uses it. Geometry cannot prove freshness.
+
+use arch::isa::x86_64::memory::profile::BootstrapPaging;
+use arch::isa::x86_64::memory::profile::BootstrapPagingProfile;
+use omega::language::core::assembly;
+use omega::language::core::extent;
+use omega::language::core::layout;
+use mapping_region;
+use mapping_handoff;
 domain Extent::BootVirtualDestination established by BootVirtualReservation::reserve;
 
 boundary trait BootVirtualReservation {

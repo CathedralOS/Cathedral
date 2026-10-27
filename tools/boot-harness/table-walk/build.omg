@@ -1,6 +1,6 @@
 machine build(builder: &mut Build) {
     Build::application(builder, "cathedral_table_walk");
-    Build::depend_as(builder, "core", Source::Path { location: "../../../source/kernel/core" });
+    Build::depend_as(builder, "arch", Source::Path { location: "../../../source/kernel/arch" });
     Build::bind(builder, macos_arm64::ProgramEntry, main);
     Build::bind(builder, linux_arm64::ProgramEntry, main);
     Build::bind(builder, linux_x86_64::ProgramEntry, main);

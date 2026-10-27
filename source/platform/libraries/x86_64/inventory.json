@@ -660,11 +660,11 @@
       ],
       "comparison_targets": [
         {
-          "path": "source/kernel/core/x86_page_table.omg",
+          "path": "source/kernel/arch/isa/x86_64/memory/validation/geometry.omg",
           "anchor": "public machine x86_decompose_bootstrap_virtual_address"
         },
         {
-          "path": "source/kernel/core/x86_page_table.omg",
+          "path": "source/kernel/arch/isa/x86_64/memory/validation/geometry.omg",
           "anchor": "public machine x86_validate_bootstrap_physical_frame_geometry"
         }
       ]
@@ -724,11 +724,11 @@
       ],
       "comparison_targets": [
         {
-          "path": "source/kernel/core/legacy_timer_root.omg",
+          "path": "source/kernel/arch/board/pc/timer/root.omg",
           "anchor": "InterruptAcknowledgement"
         },
         {
-          "path": "source/kernel/core/x86_interrupt_profile.omg",
+          "path": "source/kernel/arch/isa/x86_64/interrupts/interrupts.omg",
           "anchor": "pub machine"
         }
       ]
@@ -811,7 +811,7 @@
       ],
       "comparison_targets": [
         {
-          "path": "source/kernel/core/x2apic_timer.omg",
+          "path": "source/kernel/arch/isa/x86_64/timer.omg",
           "anchor": "reaches MachineControl"
         }
       ]
@@ -1018,7 +1018,7 @@
       ],
       "comparison_targets": [
         {
-          "path": "source/kernel/core/pic_8259.omg",
+          "path": "source/kernel/arch/board/pc/timer/pic.omg",
           "anchor": "reaches PortIo"
         }
       ]
@@ -1456,7 +1456,7 @@
       ],
       "comparison_targets": [
         {
-          "path": "source/kernel/core/x86_page_table.omg",
+          "path": "source/kernel/arch/isa/x86_64/memory/validation/walk.omg",
           "anchor": "public machine x86_validate_bootstrap_four_level_walk_descriptor"
         }
       ]
@@ -2034,11 +2034,11 @@
       ],
       "comparison_targets": [
         {
-          "path": "source/kernel/core/x86_page_table.omg",
+          "path": "source/kernel/arch/isa/x86_64/memory/validation/geometry.omg",
           "anchor": "public machine x86_decompose_bootstrap_virtual_address"
         },
         {
-          "path": "source/kernel/core/x2apic_timer.omg",
+          "path": "source/kernel/arch/isa/x86_64/timer.omg",
           "anchor": "reaches MachineControl"
         }
       ]
@@ -3094,7 +3094,7 @@
           "anchor": "pub const IA32_APIC_BASE_MSR"
         },
         {
-          "path": "source/kernel/core/x2apic_timer.omg",
+          "path": "source/kernel/arch/isa/x86_64/timer.omg",
           "anchor": "reaches MachineControl"
         }
       ]
@@ -3462,7 +3462,7 @@
       ],
       "comparison_targets": [
         {
-          "path": "source/kernel/core/legacy_timer_root.omg",
+          "path": "source/kernel/arch/board/pc/timer/root.omg",
           "anchor": "InterruptAcknowledgement"
         }
       ]
@@ -5102,11 +5102,11 @@
           "anchor": "pub data X86IstStackClass"
         },
         {
-          "path": "source/kernel/core/x86_interrupt_profile.omg",
+          "path": "source/kernel/arch/isa/x86_64/interrupts/interrupts.omg",
           "anchor": "pub machine"
         },
         {
-          "path": "source/kernel/core/legacy_timer_root.omg",
+          "path": "source/kernel/arch/board/pc/timer/root.omg",
           "anchor": "InterruptAcknowledgement"
         }
       ]
@@ -5171,7 +5171,7 @@
           "anchor": "public data X86PageTableEntry"
         },
         {
-          "path": "source/kernel/core/x86_page_table.omg",
+          "path": "source/kernel/arch/isa/x86_64/memory/validation/walk.omg",
           "anchor": "public machine x86_validate_bootstrap_four_level_walk_descriptor"
         }
       ]
@@ -5665,7 +5665,7 @@
       ],
       "comparison_targets": [
         {
-          "path": "source/kernel/core/x86_page_table.omg",
+          "path": "source/kernel/arch/isa/x86_64/memory/validation/geometry.omg",
           "anchor": "public machine x86_validate_bootstrap_physical_frame_geometry"
         }
       ]
@@ -5706,7 +5706,7 @@
       ],
       "comparison_targets": [
         {
-          "path": "source/kernel/core/extent.omg",
+          "path": "source/kernel/core/memory/extent.omg",
           "anchor": "ExtentRootProvider"
         }
       ]
@@ -6006,11 +6006,11 @@
       ],
       "comparison_targets": [
         {
-          "path": "source/kernel/core/x86_page_table.omg",
+          "path": "source/kernel/arch/isa/x86_64/memory/validation/walk.omg",
           "anchor": "public machine x86_validate_bootstrap_four_level_walk_descriptor"
         },
         {
-          "path": "source/kernel/core/extent.omg",
+          "path": "source/kernel/core/memory/extent.omg",
           "anchor": "ExtentRootProvider"
         }
       ]
@@ -6276,11 +6276,11 @@
       ],
       "comparison_targets": [
         {
-          "path": "source/kernel/core/x86_page_table.omg",
+          "path": "source/kernel/arch/isa/x86_64/memory/validation/walk.omg",
           "anchor": "public machine x86_validate_bootstrap_four_level_walk_descriptor"
         },
         {
-          "path": "source/kernel/core/extent.omg",
+          "path": "source/kernel/core/memory/extent.omg",
           "anchor": "ExtentRootProvider"
         }
       ]
@@ -6484,11 +6484,11 @@
       ],
       "comparison_targets": [
         {
-          "path": "source/kernel/core/x86_page_table.omg",
+          "path": "source/kernel/arch/isa/x86_64/memory/validation/walk.omg",
           "anchor": "public machine x86_validate_bootstrap_four_level_walk_descriptor"
         },
         {
-          "path": "source/kernel/core/extent.omg",
+          "path": "source/kernel/core/memory/extent.omg",
           "anchor": "ExtentRootProvider"
         }
       ]
@@ -6747,11 +6747,11 @@
       ],
       "comparison_targets": [
         {
-          "path": "source/kernel/core/x86_page_table.omg",
+          "path": "source/kernel/arch/isa/x86_64/memory/validation/walk.omg",
           "anchor": "public machine x86_validate_bootstrap_four_level_walk_descriptor"
         },
         {
-          "path": "source/kernel/core/extent.omg",
+          "path": "source/kernel/core/memory/extent.omg",
           "anchor": "ExtentRootProvider"
         }
       ]
@@ -6849,7 +6849,7 @@
           "anchor": "public data X86PageTableEntry"
         },
         {
-          "path": "source/kernel/core/x86_page_table.omg",
+          "path": "source/kernel/arch/isa/x86_64/memory/validation/walk.omg",
           "anchor": "public machine x86_validate_bootstrap_four_level_walk_descriptor"
         }
       ]
@@ -7576,7 +7576,7 @@
       ],
       "comparison_targets": [
         {
-          "path": "source/kernel/core/x86_page_table.omg",
+          "path": "source/kernel/arch/isa/x86_64/memory/validation/geometry.omg",
           "anchor": "public machine x86_decompose_bootstrap_virtual_address"
         }
       ]
@@ -8110,7 +8110,7 @@
           "anchor": "public data X86PageTableEntry"
         },
         {
-          "path": "source/kernel/core/x86_page_table.omg",
+          "path": "source/kernel/arch/isa/x86_64/memory/validation/walk.omg",
           "anchor": "public machine x86_validate_bootstrap_four_level_walk_descriptor"
         }
       ]
@@ -8151,7 +8151,7 @@
       ],
       "comparison_targets": [
         {
-          "path": "source/kernel/core/pic_8259.omg",
+          "path": "source/kernel/arch/board/pc/timer/pic.omg",
           "anchor": "reaches PortIo"
         }
       ]
@@ -8240,7 +8240,7 @@
           "anchor": "pub data X86IstStackClass"
         },
         {
-          "path": "source/kernel/core/x86_interrupt_profile.omg",
+          "path": "source/kernel/arch/isa/x86_64/interrupts/interrupts.omg",
           "anchor": "pub machine"
         }
       ]
@@ -8454,7 +8454,7 @@
       ],
       "comparison_targets": [
         {
-          "path": "source/kernel/core/pic_8259.omg",
+          "path": "source/kernel/arch/board/pc/timer/pic.omg",
           "anchor": "reaches PortIo"
         }
       ]
@@ -8508,7 +8508,7 @@
       ],
       "comparison_targets": [
         {
-          "path": "source/kernel/core/legacy_timer_root.omg",
+          "path": "source/kernel/arch/board/pc/timer/root.omg",
           "anchor": "InterruptAcknowledgement"
         }
       ]
@@ -8574,7 +8574,7 @@
       ],
       "comparison_targets": [
         {
-          "path": "source/kernel/core/legacy_timer_root.omg",
+          "path": "source/kernel/arch/board/pc/timer/root.omg",
           "anchor": "InterruptAcknowledgement"
         }
       ]
@@ -8628,7 +8628,7 @@
       ],
       "comparison_targets": [
         {
-          "path": "source/kernel/core/pic_8259.omg",
+          "path": "source/kernel/arch/board/pc/timer/pic.omg",
           "anchor": "reaches PortIo"
         }
       ]

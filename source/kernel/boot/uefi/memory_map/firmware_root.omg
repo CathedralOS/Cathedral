@@ -1,12 +1,14 @@
-use memory::memory_map;
-use core::boot_geometry;
-
 // Locate the live four-level root in the final successful UEFI memory map.
 // This is numeric eligibility, not Extent issuance or permission to dereference
 // CR3. The caller must retain the complete image (including its private stack)
 // and original allocator root as exclusions, not just their remaining tails.
 // Scan the complete map: the first covering descriptor cannot hide a later
 // overlapping descriptor. Unknown/reserved ownership never becomes table RAM.
+
+use core::memory::geometry::BootGeometry;
+use core::memory::geometry::BootGeometryCheck;
+use memory::memory_map;
+
 public data FirmwareRootMap {}
 
 public machine FirmwareRootMap::frame(control3: u64) -> u64 {

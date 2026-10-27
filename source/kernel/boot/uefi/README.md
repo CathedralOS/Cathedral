@@ -150,7 +150,7 @@ The retained map is prerequisite data for firmware-table admission, not that
 admission itself. A numeric descriptor or CR3 value still cannot establish a
 qualified table root, stable memory, or a retained reachable table closure.
 
-The firmware-neutral [joint root geometry checker](../../core/boot_geometry.omg)
+The firmware-neutral [joint root geometry checker](../../core/memory/geometry.omg)
 validates nonempty, nonoverflowing, disjoint image and initial-storage ranges.
 Its [host witness](../../../../tools/boot-harness/README.md#root-geometry-without-firmware)
 checks numeric acceptance and rejection without firmware. The boot transaction

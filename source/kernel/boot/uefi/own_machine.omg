@@ -11,11 +11,12 @@
 // M2 chain: the machine only arrives there after a successful map walk, a
 // successful ExitBootServices, and the admitted grant.
 
+use core::memory::extent::PAGE_SIZE;
+use core::memory::geometry::BootGeometry;
+use core::memory::geometry::BootGeometryCheck;
 use uefi::uefi;            // EfiHandle, EfiSystemTable, EfiStatus
 use uefi::boot_services;   // MapKey, BootServicesTable and callable services
 use memory::memory_map;    // EfiMemoryDescriptor and memory type/attribute data
-use core::extent;          // PAGE_SIZE + checked ExtentRootProvider adapter
-use core::boot_geometry;   // numeric joint geometry; never backing authority
 use omega::language::core::assembly; // PortIo, MachineControl
 use omega::language::core::extent;   // Extent, Granted, ExtentRootProvider
 use omega::language::core::layout;

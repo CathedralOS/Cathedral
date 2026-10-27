@@ -1,10 +1,4 @@
-// Firmware-neutral kernel mechanisms and their pure hardware facts.
-
+// Firmware- and ISA-neutral ownership and deferred-work primitives.
 machine build(builder: &mut Build) {
     Build::package(builder, "cathedral_core");
-    // Pure hardware facts grant no authority. Checked PIC/PIT and x2APIC
-    // helpers retain PortIo or MachineControl reach from their instruction
-    // contracts; the eventual boot/root provider must still be granted those
-    // services explicitly.
-    Build::depend_as(builder, "facts", Source::Path { location: "../../platform/drivers/facts" });
 }

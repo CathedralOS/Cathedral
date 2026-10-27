@@ -1,15 +1,17 @@
-// source/core/legacy_timer_provider.omg
-//
+module board::pc::timer::timer;
+
+use board::pc::timer::pic::Pic8259;
+use board::pc::timer::pit::Pit8254;
+use isa::x86_64::interrupts::interrupts::X86EntryStackAssignment;
 // Bounded preparation for Cathedral's first QEMU/PC timer provider. This
 // composes the checked PIC and PIT leaves while every interrupt input remains
 // masked. It neither installs an entry nor admits a live timer occurrence;
 // `Pic8259::unmask_timer` stays a separate, later operation ordered after the
 // complete exception floor and timer root have been installed.
 
-use core::pic_8259;
-use core::pit_8254;
-use core::x86_interrupt_profile;
 use facts::pit_8254;
+use facts::pic_8259;
+use facts::x86_interrupt_stacks;
 use facts::x86_idt_gate;
 
 // First-provider policy only. The PC-compatible 1,193,182 Hz PIT input divided
@@ -155,4 +157,14 @@ reaches PortIo
         LEGACY_BOOTSTRAP_PIT_DIVISOR_LOW,
         LEGACY_BOOTSTRAP_PIT_DIVISOR_HIGH
     );
+}
+
+// The remapped legacy timer is the first member of the shared maskable-IRQ
+// class. Later PIC/APIC roots cite the same class while owning distinct vector
+// assignments.
+pub machine x86_legacy_timer_entry_stack() -> X86EntryStackAssignment {
+    X86EntryStackAssignment {
+        vector: PROTECTED_MASTER_VECTOR_BASE,
+        stack: X86_MASKABLE_IRQ_STACK,
+    }
 }

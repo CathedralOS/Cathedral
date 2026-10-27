@@ -1,5 +1,5 @@
-// source/core/x86_interrupt_profile.omg
-//
+module isa::x86_64::interrupts::interrupts;
+
 // Cathedral's first x86-64 vector-to-stack policy. This composes pure
 // architecture facts into kernel policy; it still grants no entry identity,
 // stack storage, root admission, table publication, or machine control.
@@ -8,7 +8,6 @@
 // side from selecting one analysis class while IDT/TSS materialization writes
 // a different IST index.
 
-use facts::pic_8259;
 use facts::x86_exception_vectors;
 use facts::x86_idt_gate;
 use facts::x86_interrupt_stacks;
@@ -347,15 +346,5 @@ pub machine x86_machine_check_entry_stack() -> X86EntryStackAssignment {
     X86EntryStackAssignment {
         vector: X86_EXCEPTION_MACHINE_CHECK,
         stack: X86_MACHINE_CHECK_STACK,
-    }
-}
-
-// The remapped legacy timer is the first member of the shared maskable-IRQ
-// class. Later PIC/APIC roots cite the same class while owning distinct vector
-// assignments.
-pub machine x86_legacy_timer_entry_stack() -> X86EntryStackAssignment {
-    X86EntryStackAssignment {
-        vector: PROTECTED_MASTER_VECTOR_BASE,
-        stack: X86_MASKABLE_IRQ_STACK,
     }
 }

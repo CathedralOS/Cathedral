@@ -1,7 +1,10 @@
+use arch::isa::x86_64::memory::clone::X86ClonedPageTables;
+use arch::isa::x86_64::memory::memory::InactivePageTablePlacement;
+use arch::isa::x86_64::memory::memory::InactivePageTables;
+use arch::isa::x86_64::memory::memory::PageTableReservation;
+use arch::isa::x86_64::memory::memory::PreparedPageTables;
 use omega::language::core::extent;
 use omega::language::core::layout;
-use core::page_tables;
-use core::page_table_clone;
 use firmware_tables;
 use page_frame;
 use boot_memory;

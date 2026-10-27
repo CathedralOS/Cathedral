@@ -1,6 +1,7 @@
 // Expected exit: 0. Four-level table topology is numeric policy, not authority.
-use core::x86_table_walk;
 
+use arch::isa::x86_64::memory::walk::X86TableEntryRoute;
+use arch::isa::x86_64::memory::walk::X86TableWalk;
 machine require(value: bool) crashes Trap {
     transition value { true -> done() false -> wrong() }
     state done() {}

@@ -1,12 +1,14 @@
+use arch::isa::x86_64::memory::memory::PageTableBuilder;
+use arch::isa::x86_64::memory::memory::PageTableReservation;
+use arch::isa::x86_64::memory::profile::BootstrapPaging;
+use arch::isa::x86_64::memory::profile::BootstrapPagingProfile;
+use core::memory::geometry::BootGeometry;
 use omega::language::core::extent;
 use omega::language::core::assembly;
 use omega::language::core::layout;
 use memory_lifecycle;
 use page_frame;
-use core::page_tables;
-use core::paging_profile;
 use boot_handoff;
-use core::boot_geometry;
 use memory_map::firmware_root;
 use boot_memory;
 use paging_handoff;

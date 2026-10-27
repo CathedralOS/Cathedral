@@ -1,5 +1,5 @@
-// source/core/timer_root_work.omg
-//
+module timing::wake;
+
 // Preallocated per-CPU state for the fixed-work portion of Cathedral's timer
 // root. The installed root will receive this state through its admitted
 // internal claims; it must not add the state as a hardware-supplied semantic

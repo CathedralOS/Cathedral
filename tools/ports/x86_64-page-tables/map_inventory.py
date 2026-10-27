@@ -12,7 +12,7 @@ for path,file in doc['files'].items():
   if path.endswith('/page_table.rs'):
    original=base['files'][path]['symbols'][key]
    if original['disposition']!='pending':row.update(original);continue
-   if name=='PageTable':target='source/kernel/core/x86_page_table.omg';anchor='pub data X86PageTablePageCandidate {';reason='Canonical core candidate retained; pure helpers borrow its initialized array shape without creating a competing table carrier.'
+   if name=='PageTable':target='source/kernel/arch/isa/x86_64/memory/validation/images.omg';anchor='public data X86PageTablePageCandidate {';reason='Canonical core candidate retained; pure helpers borrow its initialized array shape without creating a competing table carrier.'
    elif name=='ENTRY_COUNT':target=table;anchor='pub const ENTRY_COUNT:';reason='Fixed512entry geometry retained.'
    elif name in {'Output','fmt','default'}:row.update(disposition='omitted',reason='Rust presentation/index-trait/default scaffolding replaced by explicit array operations and new_table.');row.pop('targets',None);continue
    else:

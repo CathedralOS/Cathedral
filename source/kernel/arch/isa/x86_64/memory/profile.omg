@@ -1,3 +1,5 @@
+module isa::x86_64::memory::profile;
+
 // This is a sampled CPU configuration, not authority over its translations.
 // The activation provider must check the configuration again at its transition
 // and separately retain image, stack, table and source/destination custody.

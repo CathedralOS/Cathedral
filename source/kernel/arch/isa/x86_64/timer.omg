@@ -1,5 +1,5 @@
-// source/core/x2apic_timer.omg
-//
+module isa::x86_64::timer;
+
 // Checked x2APIC one-shot timer operations for Cathedral's production timer
 // provider. These helpers expose no raw MSR primitive, choose no root, publish
 // no IDT entry, and cannot enable CPU interrupts. Their parsed `wrmsr`

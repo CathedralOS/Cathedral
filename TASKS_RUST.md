@@ -87,9 +87,11 @@ codecs remain beside their service owner. Package/module imports retain this hie
 
 This is not a completed tree-wide cleanup. The stock matrix policy no longer
 uses native packets as its domain model; retain its host regressions as further
-mechanisms move into Omega. The Omega kernel still mixes x86
-paging, PIC/PIT and interrupt profiles in `kernel/core/`; split shared ownership
-from ISA/board mechanisms before expanding that prototype. Start the audit at
+mechanisms move into Omega. The Omega kernel now separates shared ownership
+in `kernel/core/` from x86 mechanisms in `kernel/arch/isa/x86_64/` and PIC/PIT
+policy in `kernel/arch/board/pc/`. Its UEFI experiment still needs focused
+firmware/handoff/memory ownership; its older boundary/interrupt prototypes also
+need compiler qualification before new kernel features. Start the audit at
 [source/README.md](source/README.md), with the ownership map and actual entrances.
 
 The directory move requires reviewing the compiler's local source-location
@@ -307,6 +309,39 @@ Layout (72 Omega / 151 Rust edges), eight dependency-law tests and matrix
 navigation links pass. The ordinary matrix uses 153 of the existing 240 image
 pages; no resource limit, service deadline or grant changed. Verification used
 the supported compiler through the default path without source patches.
+
+
+Kernel structure follow-up over `556a95fe`: shared extent/geometry now live in
+`core/memory/`, coalescing wake state in `core/timing/`, CPU mechanisms in
+`arch/isa/x86_64/`, and PIC/PIT preparation/acknowledgement in
+`arch/board/pc/timer/`. Core has no hardware package dependency. Boot selects
+concrete architecture operations; no unused multi-ISA facade was added.
+`memory/memory.omg` owns backed table preparation. The former 1,052-line numeric
+validation file is now a complete-image entrance descending into image,
+walk, entry and geometry owners. The x86 arrival ABI is separate from the PC
+root provider and timer-vector selection. Active source inventories, probes and
+navigation follow the moved definitions; older verification receipts remain
+historical. The old architecture detail is preserved in `arch/FRONTIER.md`.
+
+Verification with producer `e8bebc16d5883`: table-walk, table-clone and
+paging-profile probes pass in both native and interpreted execution before and
+after relocation. The complete four-page validation closure also passes checked
+compilation through an isolated consumer. Layout (73 Omega / 151 Rust edges),
+eight dependency-law tests, 19 boot-harness tests and changed navigation links
+pass. A token comparison of all moved mechanism bodies confirms no algorithm
+changes beyond module imports and the two validation helper exports needed by
+the split. This pass does not change the Rust desktop kernel or its F5 profile.
+
+Current Omega kernel compatibility limits, reproduced before and after the move:
+the boot build cannot resolve the `ExtentRootProvider` operand in its build
+selection; the root-geometry native probe fails lowering
+`BootGeometry::exclude_image_suffix` with ?resident membership home has no exact
+source projection?. These are not successful boot checks. Several older interrupt
+sources still use retired `pub` syntax/contracts and are not qualified by the
+numeric probes. Do not claim current live interrupt or full native-kernel support.
+Logs are `build/omega-component/kernel-{structure,table-walk,table-clone,paging-profile,root-geometry}-{baseline,relocated}.log`
+and `kernel-validation-check.log`. Continue architectural cleanup and separately
+resolve source/compiler compatibility without weakening the resource contracts.
 
 ## Memory budgets and allocator delegation
 

@@ -1,0 +1,214 @@
+module isa::x86_64::memory::validation::validation;
+
+use isa::x86_64::memory::validation::images::X86BootstrapSingleEntryPageImageCandidate;
+use isa::x86_64::memory::validation::images::X86BootstrapSingleEntryPageImageCheck;
+use isa::x86_64::memory::validation::images::x86_bootstrap_page_table_walk_steps_are_equal;
+use isa::x86_64::memory::validation::images::x86_validate_bootstrap_single_entry_page_image;
+use isa::x86_64::memory::validation::walk::X86BootstrapFourKilobyteWalkEndpointCheck;
+use isa::x86_64::memory::validation::walk::X86BootstrapFourKilobyteWalkEndpoints;
+use isa::x86_64::memory::validation::walk::x86_validate_bootstrap_four_kilobyte_walk_endpoints;
+use facts::x86_page_table_entry;
+
+// Four independently checked single-entry page images paired with one checked
+// 4-KiB walk endpoint candidate. The endpoint carrier already retains the exact
+// role-consistent descriptor. These values remain ordinary pre-authority data:
+// they prove no backing, placement, hierarchy ownership, mapping, TLB state,
+// installation, CR3 value, or machine-control authority and choose no layout,
+// permission, or cache policy.
+public data X86BootstrapFourPageWalkImageCandidate {
+    endpoints: X86BootstrapFourKilobyteWalkEndpoints;
+    pml4: X86BootstrapSingleEntryPageImageCandidate;
+    pdpt: X86BootstrapSingleEntryPageImageCandidate;
+    pd: X86BootstrapSingleEntryPageImageCandidate;
+    pt: X86BootstrapSingleEntryPageImageCandidate;
+}
+
+public data X86BootstrapFourPageWalkImageCheck {
+    case Rejected;
+    case ImagesConsistent(
+        candidate: X86BootstrapFourPageWalkImageCandidate
+    );
+}
+
+// Replay the endpoint/role/descriptor policy and each complete single-entry
+// image independently. Only the exact successful payload from every validator
+// reaches the final level-binding check.
+public machine x86_validate_bootstrap_four_page_walk_images(
+    candidate: X86BootstrapFourPageWalkImageCandidate
+) -> X86BootstrapFourPageWalkImageCheck {
+    let pml4: X86BootstrapSingleEntryPageImageCandidate = candidate.pml4;
+    let pdpt: X86BootstrapSingleEntryPageImageCandidate = candidate.pdpt;
+    let pd: X86BootstrapSingleEntryPageImageCandidate = candidate.pd;
+    let pt: X86BootstrapSingleEntryPageImageCandidate = candidate.pt;
+    let endpoints_check: X86BootstrapFourKilobyteWalkEndpointCheck =
+        x86_validate_bootstrap_four_kilobyte_walk_endpoints(
+            candidate.endpoints
+        );
+    transition endpoints_check {
+        X86BootstrapFourKilobyteWalkEndpointCheck::EndpointConsistent {
+            candidate
+        } -> validate_bootstrap_pml4_page_image(
+            candidate,
+            pml4,
+            pdpt,
+            pd,
+            pt
+        )
+        _ -> reject_bootstrap_four_page_walk_images()
+    }
+
+    state validate_bootstrap_pml4_page_image(
+        endpoints: X86BootstrapFourKilobyteWalkEndpoints,
+        pml4: X86BootstrapSingleEntryPageImageCandidate,
+        pdpt: X86BootstrapSingleEntryPageImageCandidate,
+        pd: X86BootstrapSingleEntryPageImageCandidate,
+        pt: X86BootstrapSingleEntryPageImageCandidate
+    ) -> X86BootstrapFourPageWalkImageCheck {
+        let image_check: X86BootstrapSingleEntryPageImageCheck =
+            x86_validate_bootstrap_single_entry_page_image(pml4);
+        transition image_check {
+            X86BootstrapSingleEntryPageImageCheck::ImageConsistent {
+                candidate
+            } -> validate_bootstrap_pdpt_page_image(
+                endpoints,
+                candidate,
+                pdpt,
+                pd,
+                pt
+            )
+            _ -> reject_bootstrap_four_page_walk_images()
+        }
+    }
+
+    state validate_bootstrap_pdpt_page_image(
+        endpoints: X86BootstrapFourKilobyteWalkEndpoints,
+        pml4: X86BootstrapSingleEntryPageImageCandidate,
+        pdpt: X86BootstrapSingleEntryPageImageCandidate,
+        pd: X86BootstrapSingleEntryPageImageCandidate,
+        pt: X86BootstrapSingleEntryPageImageCandidate
+    ) -> X86BootstrapFourPageWalkImageCheck {
+        let image_check: X86BootstrapSingleEntryPageImageCheck =
+            x86_validate_bootstrap_single_entry_page_image(pdpt);
+        transition image_check {
+            X86BootstrapSingleEntryPageImageCheck::ImageConsistent {
+                candidate
+            } -> validate_bootstrap_pd_page_image(
+                endpoints,
+                pml4,
+                candidate,
+                pd,
+                pt
+            )
+            _ -> reject_bootstrap_four_page_walk_images()
+        }
+    }
+
+    state validate_bootstrap_pd_page_image(
+        endpoints: X86BootstrapFourKilobyteWalkEndpoints,
+        pml4: X86BootstrapSingleEntryPageImageCandidate,
+        pdpt: X86BootstrapSingleEntryPageImageCandidate,
+        pd: X86BootstrapSingleEntryPageImageCandidate,
+        pt: X86BootstrapSingleEntryPageImageCandidate
+    ) -> X86BootstrapFourPageWalkImageCheck {
+        let image_check: X86BootstrapSingleEntryPageImageCheck =
+            x86_validate_bootstrap_single_entry_page_image(pd);
+        transition image_check {
+            X86BootstrapSingleEntryPageImageCheck::ImageConsistent {
+                candidate
+            } -> validate_bootstrap_pt_page_image(
+                endpoints,
+                pml4,
+                pdpt,
+                candidate,
+                pt
+            )
+            _ -> reject_bootstrap_four_page_walk_images()
+        }
+    }
+
+    state validate_bootstrap_pt_page_image(
+        endpoints: X86BootstrapFourKilobyteWalkEndpoints,
+        pml4: X86BootstrapSingleEntryPageImageCandidate,
+        pdpt: X86BootstrapSingleEntryPageImageCandidate,
+        pd: X86BootstrapSingleEntryPageImageCandidate,
+        pt: X86BootstrapSingleEntryPageImageCandidate
+    ) -> X86BootstrapFourPageWalkImageCheck {
+        let image_check: X86BootstrapSingleEntryPageImageCheck =
+            x86_validate_bootstrap_single_entry_page_image(pt);
+        transition image_check {
+            X86BootstrapSingleEntryPageImageCheck::ImageConsistent {
+                candidate
+            } -> validate_bootstrap_four_page_walk_correspondence(
+                endpoints,
+                pml4,
+                pdpt,
+                pd,
+                candidate
+            )
+            _ -> reject_bootstrap_four_page_walk_images()
+        }
+    }
+
+    state validate_bootstrap_four_page_walk_correspondence(
+        endpoints: X86BootstrapFourKilobyteWalkEndpoints,
+        pml4: X86BootstrapSingleEntryPageImageCandidate,
+        pdpt: X86BootstrapSingleEntryPageImageCandidate,
+        pd: X86BootstrapSingleEntryPageImageCandidate,
+        pt: X86BootstrapSingleEntryPageImageCandidate
+    ) -> X86BootstrapFourPageWalkImageCheck {
+        let pml4_matches: bool =
+            x86_bootstrap_page_table_walk_steps_are_equal(
+                &pml4.step,
+                &endpoints.descriptor.pml4
+            );
+        let pdpt_matches: bool =
+            x86_bootstrap_page_table_walk_steps_are_equal(
+                &pdpt.step,
+                &endpoints.descriptor.pdpt
+            );
+        let pd_matches: bool =
+            x86_bootstrap_page_table_walk_steps_are_equal(
+                &pd.step,
+                &endpoints.descriptor.pd
+            );
+        let pt_matches: bool =
+            x86_bootstrap_page_table_walk_steps_are_equal(
+                &pt.step,
+                &endpoints.descriptor.pt
+            );
+        transition pml4_matches && pdpt_matches && pd_matches && pt_matches {
+            true -> accept_bootstrap_four_page_walk_images(
+                endpoints,
+                pml4,
+                pdpt,
+                pd,
+                pt
+            )
+            _ -> reject_bootstrap_four_page_walk_images()
+        }
+    }
+
+    state accept_bootstrap_four_page_walk_images(
+        endpoints: X86BootstrapFourKilobyteWalkEndpoints,
+        pml4: X86BootstrapSingleEntryPageImageCandidate,
+        pdpt: X86BootstrapSingleEntryPageImageCandidate,
+        pd: X86BootstrapSingleEntryPageImageCandidate,
+        pt: X86BootstrapSingleEntryPageImageCandidate
+    ) -> X86BootstrapFourPageWalkImageCheck {
+        X86BootstrapFourPageWalkImageCheck::ImagesConsistent {
+            candidate: X86BootstrapFourPageWalkImageCandidate {
+                endpoints: endpoints,
+                pml4: pml4,
+                pdpt: pdpt,
+                pd: pd,
+                pt: pt,
+            },
+        }
+    }
+
+    state reject_bootstrap_four_page_walk_images()
+        -> X86BootstrapFourPageWalkImageCheck
+    {
+        X86BootstrapFourPageWalkImageCheck::Rejected
+    }
+}

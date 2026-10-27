@@ -1,5 +1,5 @@
-// source/core/pit_8254.omg
-//
+module board::pc::timer::pit;
+
 // Checked legacy-PIT programming for Cathedral's first QEMU timer provider.
 // This helper configures channel 0 but does not unmask IRQ0, publish an entry,
 // or enable CPU interrupts. The caller supplies the already-validated divisor

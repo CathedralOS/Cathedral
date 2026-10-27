@@ -1,5 +1,5 @@
-// source/core/extent.omg
-//
+module memory::extent;
+
 // Extent -- THE FIRST CAPABILITY: exclusive authority over a concrete address
 // span. Every later memory authority descends from a qualified Extent rooted
 // here at boot, so this is the origin of the authority graph

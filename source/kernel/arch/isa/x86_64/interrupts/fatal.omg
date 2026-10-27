@@ -1,5 +1,5 @@
-// source/core/fatal_exception_work.omg
-//
+module isa::x86_64::interrupts::fatal;
+
 // Fixed-work diagnostic sink for Cathedral's bootstrap exception floor. A
 // generated per-vector entry stub will eventually call this leaf with its own
 // normalized vector identity through admitted internal state. This is not an

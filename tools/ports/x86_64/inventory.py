@@ -6,6 +6,7 @@ from collections import Counter
 import hashlib
 import importlib.util
 import json
+import os
 import re
 import sys
 from module_catalog import MODULES,F,A,E,I,P,R,T
@@ -136,7 +137,7 @@ def render(modules):
           'This is a reviewed source inventory; pending symbol dispositions mean future implementation, not missing classification.','',
           '| Upstream module | Categories | Reconciliation / next work | Existing Cathedral comparison |','| --- | --- | --- | --- |']
     for path,row in modules['modules'].items():
-        refs=', '.join('['+Path(t['path']).name+'](../../../'+t['path']+')' for t in row['comparison_targets']) or 'none'
+        refs=', '.join('['+Path(t['path']).name+']('+Path(os.path.relpath(ROOT/t['path'], DEST)).as_posix()+')' for t in row['comparison_targets']) or 'none'
         rows.append('| `'+path+'` | '+', '.join(row['categories'])+' | '+row['review'].replace('|','\\|')+' | '+refs+' |')
     rows+=['','No module is promoted to translated/typechecked/tested by this table. Macro bodies, private fields and feature-dependent branches remain bound by whole-file hashes.','']
     return '\n'.join(rows)

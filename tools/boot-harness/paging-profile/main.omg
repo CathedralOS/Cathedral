@@ -1,8 +1,9 @@
 // Expected exit: 0.
 // Exercise the actual boot policy. These numeric profiles are not hardware
 // observations, machine-owner authority or persistent translation evidence.
-use core::paging_profile;
 
+use arch::isa::x86_64::memory::profile::BootstrapPaging;
+use arch::isa::x86_64::memory::profile::BootstrapPagingProfile;
 machine supported(control0: u64, control4: u64, extended: u64) -> bool {
     let profile: BootstrapPagingProfile = BootstrapPagingProfile {
         control0: control0, control4: control4, extended_features: extended,

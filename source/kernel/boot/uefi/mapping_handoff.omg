@@ -1,8 +1,15 @@
+use arch::isa::x86_64::memory::clone::X86ClonedPageTables;
+use arch::isa::x86_64::memory::clone::X86ObservedTablePage;
+use arch::isa::x86_64::memory::clone::X86PageTableClone;
+use arch::isa::x86_64::memory::clone::X86PageTableCloneResult;
+use arch::isa::x86_64::memory::clone::X86PagingPathSnapshot;
+use arch::isa::x86_64::memory::validation::geometry::X86BootstrapVirtualAddressCheck;
+use arch::isa::x86_64::memory::validation::geometry::X86BootstrapVirtualAddressIndices;
+use arch::isa::x86_64::memory::validation::geometry::x86_decompose_bootstrap_virtual_address;
+use arch::isa::x86_64::memory::walk::X86TableEntryRoute;
+use arch::isa::x86_64::memory::walk::X86TableWalk;
 use omega::language::core::extent;
 use omega::language::core::layout;
-use core::page_table_clone;
-use core::x86_page_table;
-use core::x86_table_walk;
 use firmware_tables;
 use paging_handoff;
 

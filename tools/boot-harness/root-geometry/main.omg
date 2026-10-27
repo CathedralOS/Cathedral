@@ -1,7 +1,8 @@
 // Expected exit: 0. Exercise the actual boot geometry helper, not a test copy.
 // This validates numeric geometry only, not backing authority or UEFI handoff.
-use core::boot_geometry;
 
+use core::memory::geometry::BootGeometry;
+use core::memory::geometry::BootGeometryCheck;
 machine accepted(geometry: BootGeometry) -> bool {
     let checked: BootGeometryCheck = BootGeometry::check(geometry);
     transition checked {

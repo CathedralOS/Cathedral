@@ -122,7 +122,7 @@ such an interrupt is real.
 
 [Library charter](../CHARTER.md) owns pure helpers; existing
 [hardware facts](../../drivers/facts/pic_8259.omg) remain zero-authority data.
-[Core adapter](../../../kernel/core/pic_8259.omg) retains its exact PortIo reach and Pending
+[Core adapter](../../../kernel/arch/board/pc/timer/pic.omg) retains its exact PortIo reach and Pending
 acknowledgement lifecycle. New package has no production dependency. `source/platform/drivers/facts/build.omg` now
 names `builder: &mut Build` and publishes `cathedral-hardware-facts`, the minimal
 package-front-door modernization needed to import the existing facts. It grants

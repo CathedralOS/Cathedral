@@ -3,6 +3,7 @@
 // the Build-selected kernel entry. See README.md for the fresh-image oracle
 // and the separate provider assumptions behind those grants.
 
+use core::memory::extent::CathedralExtentRootProvider; // selected by build.omg
 use uefi::uefi;            // EfiHandle, EfiStatus, EFI_SUCCESS, EfiSystemTable, TextOutputProtocol, SimpleTextOutput
 use uefi::boot_services;   // BootServices
 use uefi::loaded_image;
@@ -11,7 +12,6 @@ use physical_entry;
 use kernel_entry;
 use paging_handoff;
 use boot_handoff;
-use core::extent;
 use omega::language::core::assembly; // PortIo, MachineControl
 use omega::language::core::extent;   // ExtentRootProvider
 use omega::language::core::program_image;

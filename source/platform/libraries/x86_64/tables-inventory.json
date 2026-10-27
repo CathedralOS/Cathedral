@@ -859,7 +859,7 @@
           "reason": "Canonical core candidate retained; pure helpers borrow its initialized array shape without creating a competing table carrier.",
           "targets": [
             {
-              "path": "source/kernel/core/x86_page_table.omg",
+              "path": "source/kernel/arch/isa/x86_64/memory/validation/images.omg",
               "anchor": "public data X86PageTablePageCandidate {"
             }
           ]

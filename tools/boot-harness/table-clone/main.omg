@@ -1,7 +1,10 @@
 // Expected exit: 0. Path-copying preserves off-path translations and permissions.
 // This is numeric policy only; no address or snapshot grants memory authority.
-use core::page_table_clone;
 
+use arch::isa::x86_64::memory::clone::X86ClonedPageTables;
+use arch::isa::x86_64::memory::clone::X86PageTableClone;
+use arch::isa::x86_64::memory::clone::X86PageTableCloneResult;
+use arch::isa::x86_64::memory::clone::X86PagingPathSnapshot;
 machine require(value: bool) crashes Trap {
     transition value { true -> done() false -> wrong() }
     state done() {}

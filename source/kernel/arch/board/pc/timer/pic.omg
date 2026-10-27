@@ -1,5 +1,5 @@
-// source/core/pic_8259.omg
-//
+module board::pc::timer::pic;
+
 // Checked legacy-PIC port sequences for Cathedral's first QEMU timer provider.
 // These helpers are intentionally narrower than an interrupt provider: they
 // expose no raw port primitive, install no entry, mint no acknowledgement, and

@@ -1,3 +1,5 @@
+module isa::x86_64::memory::walk;
+
 use facts::x86_page_table_entry;
 
 // A route through one observed four-level paging word. This is numeric

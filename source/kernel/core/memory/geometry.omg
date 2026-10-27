@@ -1,3 +1,5 @@
+module memory::geometry;
+
 // Joint numeric validation before either semantic boot root is introduced.
 // This creates no backing authority: firmware provenance, successful exit and
 // exclusion of live stack/bootstrap storage remain the boot adapter's duties.

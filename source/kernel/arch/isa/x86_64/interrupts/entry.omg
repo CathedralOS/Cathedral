@@ -1,5 +1,5 @@
-// source/core/legacy_timer_root.omg
-//
+module isa::x86_64::interrupts::entry;
+
 // Source-level acceptance shape for Cathedral's first maskable x86 interrupt
 // root. This stops at the normalized entry/provider contract: it publishes no
 // IDT, owns no stack storage, unmasks no IRQ, and enables no CPU interrupts.
@@ -7,7 +7,6 @@
 // provisioned stack before the existing PIC/PIT operations can make it live.
 
 use facts::x86_interrupt_stacks;
-use core::pic_8259;
 use omega::language::core::interrupt;
 use omega::language::std::calling;
 
@@ -89,23 +88,4 @@ pub machine CathedralX86InterruptPolicy::plan(
 pub boundary trait CathedralTimerRoot:
     InterruptEntry + Calling<CathedralX86InterruptPolicy>
 {
-}
-
-// Cathedral's first selected root provider. Its deliberately tiny body proves
-// the hard-root contract shape: settle the one linear acknowledgement and
-// return through the deriver-owned interrupt exit. Clock capture and the
-// preallocated coalescing wake are later fixed-work leaves.
-pub data LegacyPicTimerRoot {
-}
-
-LegacyPicTimerRootCathedralTimerRoot:
-    LegacyPicTimerRoot satisfies CathedralTimerRoot;
-
-pub machine LegacyPicTimerRoot::enter(
-    acknowledgement: InterruptAcknowledgement in Pending
-)
-    satisfies InterruptEntry::enter
-    reaches PortIo
-{
-    Pic8259::complete_timer_acknowledgement(acknowledgement);
 }

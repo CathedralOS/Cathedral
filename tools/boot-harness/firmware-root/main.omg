@@ -1,8 +1,8 @@
 // Expected exit: 0.
 // Run the same complete-map policy used after firmware exit. Synthetic map
 // bytes prove numeric rejection behavior, never backing or grant authority.
+use core::memory::geometry::BootGeometry;
 use memory_map::firmware_root;
-use core::boot_geometry;
 
 machine require(value: bool) crashes Trap {
     transition value { true -> done() false -> wrong() }

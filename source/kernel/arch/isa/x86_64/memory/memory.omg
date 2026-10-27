@@ -1,7 +1,17 @@
+module isa::x86_64::memory::memory;
+
+use isa::x86_64::memory::validation::entries::X86BootstrapAddressBoundPageTableEntryCandidate;
+use isa::x86_64::memory::validation::geometry::X86BootstrapVirtualAddressCheck;
+use isa::x86_64::memory::validation::geometry::X86BootstrapVirtualAddressIndices;
+use isa::x86_64::memory::validation::geometry::x86_decompose_bootstrap_virtual_address;
+use isa::x86_64::memory::validation::walk::X86BootstrapFourKilobyteWalkEndpointCheck;
+use isa::x86_64::memory::validation::walk::X86BootstrapFourKilobyteWalkEndpoints;
+use isa::x86_64::memory::validation::walk::X86BootstrapFourLevelWalkDescriptor;
+use isa::x86_64::memory::validation::walk::X86BootstrapPageTableWalkStep;
+use isa::x86_64::memory::validation::walk::x86_validate_bootstrap_four_kilobyte_walk_endpoints;
 use omega::language::core::extent;
 use omega::language::core::layout;
 use facts::x86_page_table_entry;
-use x86_page_table;
 
 // Inactive table construction owns actual RAM, not detached candidate images.
 // One conserved allocation holds four consecutive pages; each field has one

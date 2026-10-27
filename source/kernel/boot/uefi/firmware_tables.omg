@@ -1,14 +1,16 @@
-use omega::language::core::extent;
-use paging_handoff;
-use boot_handoff;
-use memory_map::firmware_root;
-use core::boot_geometry;
-use core::x86_table_walk;
-
 // A bounded boot inventory, not an allocator. Each distinct physical page has
 // exactly one retained grant; a page used at several translation levels is
 // visited once at each level without issuing duplicate authority. The fixed
 // budget is explicit and exhaustion cannot announce a complete closure.
+
+use arch::isa::x86_64::memory::walk::X86TableEntryRoute;
+use arch::isa::x86_64::memory::walk::X86TableWalk;
+use core::memory::geometry::BootGeometry;
+use omega::language::core::extent;
+use paging_handoff;
+use boot_handoff;
+use memory_map::firmware_root;
+
 data FirmwareTableSlot {
     case Empty;
     case Held(storage: Extent in Granted);

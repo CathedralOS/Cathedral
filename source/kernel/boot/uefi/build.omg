@@ -8,6 +8,7 @@ machine build(builder: &mut Build) {
     Build::depend_as(builder, "uefi", Source::Path { location: "../../../contracts/uefi" });
     Build::depend_as(builder, "memory", Source::Path { location: "../../../contracts/uefi/memory" });
     Build::depend_as(builder, "core", Source::Path { location: "../../core" });
+    Build::depend_as(builder, "arch", Source::Path { location: "../../arch" });
     Build::depend_as(builder, "memory_map", Source::Path { location: "memory_map" });
     Build::depend_as(builder, "alloc", Source::Git {
         repository: "https://github.com/CathedralOS/Omega.git",
@@ -15,7 +16,7 @@ machine build(builder: &mut Build) {
         selection: PackageSelection::Named { package: "alloc" }
     });
     Build::accept_boundary<ExtentRootProvider>(builder);
-    Build::select_provider<ExtentRootProvider, core::CathedralExtentRootProvider>(builder);
+    Build::select_provider<ExtentRootProvider, core::memory::extent::CathedralExtentRootProvider>(builder);
     Build::accept_boundary<VacantContentTransfer>(builder);
     Build::select_provider<VacantContentTransfer, BootVacantStorageProvider>(builder);
     Build::accept_boundary<BootMemorySupply>(builder);
