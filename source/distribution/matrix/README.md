@@ -27,9 +27,11 @@ The service is one package. Descend by responsibility, following the Rust tree:
 [bridge/policy/main.omg](bridge/policy/main.omg) is the temporary native dispatcher;
 [bridge/native/main.omg](bridge/native/main.omg) selects its compiled export for
 Rust. Service-turn, close/loss, startup, launcher recovery, launch workflow/roles
-and resource adapters serialize named domain values there. Launch admission and
-import adapters, workspace, requests and realm configuration still expose
-packet-shaped interfaces and need the same cleanup;
+and resource adapters serialize named domain values there. The
+[launch bridge](bridge/policy/launch/main.omg) also owns admission/import encoding
+and image/declaration codecs; launch policy uses named facts and shared contract
+values. Workspace, requests and realm configuration still expose packet-shaped
+interfaces and need the same cleanup;
 moving them into semantic folders does not finish that work.
 
 Rust retains exact task/endpoint identity, authenticated connections, mappings,

@@ -1,4 +1,4 @@
-module children::launch::declaration;
+module launch::declaration;
 
 // Private native adapter: raw length in 2, packed little-endian bytes in 16..36.
 // Publish decoded metadata in 64..72 and entries in 80..95 only after validation.

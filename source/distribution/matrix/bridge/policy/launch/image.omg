@@ -1,4 +1,4 @@
-module children::launch::image;
+module launch::image;
 
 // Private native adapter for the common platform's sealed-image scan.
 // Begin op 12: image length in 2. Advance op 13: returned length in 2, bytes 16..23.

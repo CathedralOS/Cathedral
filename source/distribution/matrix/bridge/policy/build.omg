@@ -4,6 +4,9 @@ machine build(builder: &mut Build) {
         location: "../../service"
     }
     );
+    Build::depend_as(builder, "services", Source::Path {
+        location: "../../../../platform/contracts/imports"
+    });
     Build::select_provider<Policy, PolicyProvider>(builder);
     Build::bind(builder, linux_x86_64::ProgramEntry, policy_entry);
 }

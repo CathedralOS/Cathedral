@@ -68,13 +68,14 @@ state and outcomes as well, with their encoding in `bridge/policy/`. Resource
 admission now uses named capacities, optional declarations, role offers and
 surface preferences; its codec is also confined to that bridge. Ordinary launch
 now separates its typed operation state, guarded entrance and progress/cleanup
-sequence; role selection returns a named launch plan.
-Package/module imports must retain this hierarchy.
+sequence; role selection returns a named launch plan. Admission also uses named
+facts, targets and refusals. Import policy operates on common contract records;
+its native codec, image scanner adapter and declaration adapter live together
+under `bridge/policy/launch/`. Package/module imports retain this hierarchy.
 
-This is not a completed tree-wide cleanup. Launch admission/import adapters,
-workspace, requests, realm setup and configuration still need their packet-shaped
-interfaces replaced or moved into the native bridge; retain the existing host
-regression cases while doing that. Avoid
+This is not a completed tree-wide cleanup. Workspace, requests, realm setup and
+configuration still need their packet-shaped interfaces replaced or moved into
+the native bridge; retain the existing host regression cases while doing that. Avoid
 adding features to these representations. The Omega kernel also still mixes x86
 paging, PIC/PIT and interrupt profiles in `kernel/core/`; split shared ownership
 from ISA/board mechanisms before expanding that prototype. Start the audit at
@@ -140,10 +141,10 @@ Launch-workflow follow-up over `30f96eb7`: `launch/main.omg` begins, issues,
 validates completions and cancels work. `operation.omg` names the `Launch`,
 `Plan`, `Command`, ready/waiting `Phase`, `Completion` and `Dispatch` values;
 `progress.omg` exposes the successful sequence and reclaim-before-restore cleanup
-order. Role selection also produces a named plan. `bridge/policy/launch.omg`
+order. Role selection also produces a named plan. `bridge/policy/launch/main.omg`
 alone encodes workflow commands, the waiting offset, role flags and opaque state.
 The Rust caller still owns the actual task, image, binding and authenticated
-connection. Admission and import adapters remain separate cleanup work.
+connection. The subsequent admission/import cleanup is recorded below.
 
 Verification: all 97 compiled matrix tests pass with the supported default
 compiler, including all launch-role/storage combinations, failures at every
@@ -164,6 +165,31 @@ now allows 30 seconds for graceful emulator teardown and disk flushing, keeping
 the failure/termination path and refusing cold reopen if exit still times out.
 The successful runs above use that allowance. This changes test-host teardown,
 not guest scheduling or service timeouts.
+
+Admission/import follow-up over `f036da70`: launch admission now consumes named
+`Request`/`Facts` and returns `Decision`/`Refusal`, retaining the selected target
+when a later check refuses it. Busy/role/target/capacity/argument/authority order
+is unchanged. Stock import policy owns only default declarations and offer
+filtering over common platform contract records. The native image/declaration
+adapters moved out of the service tree into `bridge/policy/launch/`, alongside
+admission/import encoding and the actual `main.omg` dispatcher. There is no
+same-named `launch.omg` beside that folder. The bridge explicitly imports the
+platform contracts it uses; the protocol package has no reverse dependency.
+
+Verification: all 97 compiled matrix tests pass, including occupied-slot subsets,
+refusal precedence, import matching against the Rust oracle, record mutations
+and ELF discovery boundaries. Ordinary F5 passes three nested desktops,
+protected close, saved Notes/Colors, repeated subtree reclamation and cold reopen.
+Undeclared and incompatible optional storage both remain absent for Notes while
+Colors retains its independent binding, including cold reopen. Logs:
+`build/omega-component/matrix-admission-{typed-tests,nested,undeclared,incompatible}.log`.
+Artifacts under `build/boot-harness-rs/desktop/`: `20261027T003551074803Z`,
+`20261027T003847008877Z`,
+`20261027T003912241661Z`.
+Layout (72 Omega / 151 Rust edges), all eight dependency-law tests and navigation
+links pass. The ordinary matrix uses 126 of the existing 240 image pages. No
+resource limit, guest deadline or runtime grant changed. The supported default
+compiler was used without source patches or an environment override.
 
 ## Memory budgets and allocator delegation
 

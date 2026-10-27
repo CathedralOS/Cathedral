@@ -1,0 +1,64 @@
+module launch::admission;
+
+// Native facts become named policy inputs; refusal codes stay at this seam.
+use service::children::launch::admission;
+use service::children::launch::admission::Request;
+use service::children::launch::admission::Facts;
+use service::children::launch::admission::Decision;
+use service::children::launch::admission::Refusal;
+use service::children::launch::roles::Requester;
+
+const BUSY: u64 = 18446744073709551600u64;
+const DENIED: u64 = 18446744073709551603u64;
+const NO_MEMORY: u64 = 18446744073709551604u64;
+const INVALID_ARGUMENT: u64 = 18446744073709551594u64;
+
+public machine launch_admission(packet: &mut [u64; 128]) -> u64 {
+    let request: Request = Request {
+        program_present: packet[11] != 0u64,
+        withheld_imports: packet[12], supported_imports: packet[13]
+    };
+    let facts: Facts = Facts {
+        busy: packet[2] != 0u64, desktop: packet[3] != 0u64,
+        exact_chrome: packet[4] != 0u64, requester: requester(packet[5]),
+        occupied_slots: packet[6], unavailable_connections: packet[7],
+        storing: packet[8] != 0u64, has_receipt: packet[9] != 0u64,
+        has_ticket: packet[10] != 0u64, standing_slots: packet[14],
+        has_storage_binding: packet[15] != 0u64
+    };
+    let decision: Decision = service::children::launch::admission::admit(&request, &facts);
+    transition decision {
+        Decision::Admitted { slot } -> admitted(packet, slot)
+        Decision::TargetRefused { slot, reason } -> target_refused(packet, slot, reason)
+        Decision::Refused { reason } -> refused(packet, reason)
+    }
+    machine admitted(packet: &mut [u64; 128], slot: u64) -> u64 {
+        packet[24] = slot;
+        0u64
+    }
+    machine target_refused(packet: &mut [u64; 128], slot: u64, reason: Refusal) -> u64 {
+        packet[24] = slot;
+        refused(packet, reason)
+    }
+}
+
+machine requester(value: u64) -> Requester {
+    transition value == 18446744073709551615u64 {
+        true -> (Requester::Owner)
+        _ -> (Requester::Child { slot: value })
+    }
+}
+
+machine refused(packet: &mut [u64; 128], reason: Refusal) -> u64 {
+    transition reason {
+        Refusal::Busy -> (BUSY)
+        Refusal::Denied -> (DENIED)
+        Refusal::Capacity -> (NO_MEMORY)
+        Refusal::InvalidArguments -> (INVALID_ARGUMENT)
+        Refusal::AppPositionsFull -> full(packet)
+    }
+    machine full(packet: &mut [u64; 128]) -> u64 {
+        packet[25] = 1u64;
+        NO_MEMORY
+    }
+}

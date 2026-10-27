@@ -1,4 +1,4 @@
-module launch;
+module launch::main;
 
 // Temporary Rust-call routing and encoding. Workflow state is private host
 // storage; command tags, the waiting offset and role bits do not enter policy.
@@ -12,10 +12,10 @@ use service::children::launch::operation::Completion;
 use service::children::launch::roles;
 use service::children::launch::roles::Context;
 use service::children::launch::roles::Requester;
-use service::children::launch::admission;
-use service::children::launch::imports;
-use service::children::launch::declaration;
-use service::children::launch::image;
+use launch::admission;
+use launch::imports;
+use launch::declaration;
+use launch::image;
 
 const BEGIN: u64 = 0u64;
 const NEXT: u64 = 1u64;
@@ -30,15 +30,15 @@ public machine launch_decision(packet: &mut [u64; 128]) -> u64 {
         COMPLETE -> workflow(packet)
         CANCEL -> workflow(packet)
         ACCEPTS -> workflow(packet)
-        5u64 -> service::children::launch::admission::launch_admission(packet)
+        5u64 -> launch::admission::launch_admission(packet)
         6u64 -> role_plan(packet)
         7u64 -> boolean(service::children::launch::roles::needs_picker_lookup(packet[2] != 0u64, packet[3], packet[4] != 0u64))
         8u64 -> boolean(service::children::launch::roles::matches_picker(packet[2], packet[3], packet[4], packet[5]))
-        9u64 -> service::children::launch::imports::import_binding(packet)
-        10u64 -> service::children::launch::imports::import_binding(packet)
-        11u64 -> service::children::launch::declaration::import_declaration(packet)
-        12u64 -> service::children::launch::image::import_image(packet)
-        13u64 -> service::children::launch::image::import_image(packet)
+        9u64 -> launch::imports::import_binding(packet)
+        10u64 -> launch::imports::import_binding(packet)
+        11u64 -> launch::declaration::import_declaration(packet)
+        12u64 -> launch::image::import_image(packet)
+        13u64 -> launch::image::import_image(packet)
         _ -> (0u64)
     }
 }

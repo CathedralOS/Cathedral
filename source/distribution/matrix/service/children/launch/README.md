@@ -12,7 +12,9 @@ to the stock desktop role. Failed work reclaims an admitted task and schedules
 picker recovery if the old picker was deliberately retired.
 
 Before that workflow, [admission.omg](admission.omg) chooses the target and refusal
-order from host-authenticated facts. A configured desktop accepts only its exact
+order from host-authenticated facts. Its named decision distinguishes an early
+refusal, an admitted target and a refusal after target selection; the native
+codec alone translates these to status numbers. A configured desktop accepts only its exact
 chrome and selects the first empty app position (1..3), never chrome/background.
 An owner-driven pair selects the requester's other slot. Busy work/connection,
 receipt/ticket capacity, arguments and standing/storage authority are checked in
@@ -27,9 +29,9 @@ and scope. All names are resolved through this matrix's supplied realm.
 calls the common [Omega service matcher](../../../../../platform/contracts/imports/README.md).
 Brokered programs may receive explicitly offered input production; positional
 programs receive only interaction/storage. Stock admission requires interaction
-and never supplies capture. [declaration.omg](declaration.omg) adapts raw record
+and never supplies capture. [declaration codec](../../../bridge/policy/launch/declaration.omg) adapts raw record
 bytes to the common Omega decoder, publishing metadata only after its complete
-syntax validation. [image.omg](image.omg) adapts the common Omega ELF scanner's
+syntax validation. [image codec](../../../bridge/policy/launch/image.omg) adapts the common Omega ELF scanner's
 bounded read requests. The [Rust host](../../../../../../source-rs/distribution/matrix/policy/imports/imports.rs)
 supplies spans from the same sealed image, then decodes the discovered record;
 it interprets no ELF fields. The host still owns mapping/unmapping.
@@ -42,8 +44,9 @@ retain the selected standing grants/storage binding (`request.rs`),
 resource mechanisms (`steps.rs`) and identity/cancellation/reply custody
 (`custody.rs`). Asynchronous storage completion and grant commit live in
 `binding.rs` beside that entrance; `scene.rs` owns visual completion and restoration.
-`mod.rs` is plumbing only. The [Omega native codec](../../../bridge/policy/launch.omg) alone owns numeric
-commands, the waiting offset and role flags. The Rust adapter is
+`mod.rs` is plumbing only. The [Omega native codec](../../../bridge/policy/launch/main.omg) owns native routing, commands, the waiting offset and role flags. Its siblings
+encode admission facts, import records, raw bytes and image-scan state; these
+codecs do not live in the service policy tree. The Rust adapter is
 [policy/launch.rs](../../../../../../source-rs/distribution/matrix/policy/launch.rs), with
 [policy/admission.rs](../../../../../../source-rs/distribution/matrix/policy/admission.rs)
 for admission and roles.

@@ -29,7 +29,7 @@ endpoint lookup. A matched bit says only that the supplied offer satisfies that
 declaration. Actual authority and provider behavior remain separate. The API uses
 typed records; the stock matrix's temporary native packet is not this contract.
 
-The [stock adapter](../../../distribution/matrix/service/children/launch/imports.omg) filters its
+The [stock policy](../../../distribution/matrix/service/children/launch/imports.omg) filters its
 offer before calling this matcher: interaction/storage, plus input production
 for brokered startup. Capture is supported by other hosts; it is not supplied by
 the stock matrix just because its contract ID is recognized. Missing legacy
@@ -47,7 +47,7 @@ is declaration discovery, not the kernel's executable validation.
 
 Record encoding remains in Rust. The ordinary matrix uses this Omega scanner,
 decoder and matcher; its host supplies checked reads from the sealed mapping. Its
-[declaration adapter](../../../distribution/matrix/service/children/launch/declaration.omg)
+[declaration adapter](../../../distribution/matrix/bridge/policy/launch/declaration.omg)
 unpacks bytes and publishes metadata only after full validation. Discovery does
 not substitute for content validation. Compiled
 [conformance tests](../../../../source-rs/distribution/matrix/tests/imports.rs)

@@ -1,79 +1,110 @@
 module children::launch::admission;
 
-// Child asks for a sibling: select a stock app position, then apply the owner's ceilings.
-// Facts 2..15: busy, desktop, exact chrome, requester, occupied/unavailable masks,
-// storing, receipt/ticket capacity, object, withheld/supported imports, standing mask, binding.
-// Output 24: slot; 25: app positions exhausted (diagnostic only).
-use protocol::main;
+// Select a target before checking its pressure, arguments and standing authority.
+// A free app position with a busy connection is not permission to skip that slot.
+use children::launch::roles::Requester;
 
-const INVALID_ARGUMENT: u64 = 18446744073709551594u64;
-public machine launch_admission(p: &mut [u64; 128]) -> u64 {
-    transition p[2] != 0u64 {
-        true -> (BUSY)
-        _ -> role(p)
+public data Request {
+    program_present: bool;
+    withheld_imports: u64;
+    supported_imports: u64;
+}
+
+public data Facts {
+    busy: bool;
+    desktop: bool;
+    exact_chrome: bool;
+    requester: Requester;
+    occupied_slots: u64;
+    unavailable_connections: u64;
+    storing: bool;
+    has_receipt: bool;
+    has_ticket: bool;
+    standing_slots: u64;
+    has_storage_binding: bool;
+}
+
+public data Refusal [copy] {
+    case Busy;
+    case Denied;
+    case Capacity;
+    case InvalidArguments;
+    case AppPositionsFull;
+}
+
+public data Decision [copy] {
+    case Refused(reason: Refusal);
+    case Admitted(slot: u64);
+    case TargetRefused(slot: u64, reason: Refusal);
+}
+
+public machine admit(request: &Request, facts: &Facts) -> Decision {
+    transition facts.busy {
+        true -> (Decision::Refused { reason: Refusal::Busy })
+        _ -> role(request, facts)
     }
-    state role(p: &mut [u64; 128]) -> u64 {
-        transition p[3] != 0u64 {
-            true -> chrome(p)
-            _ -> sibling(p)
+    machine role(request: &Request, facts: &Facts) -> Decision {
+        transition facts.desktop {
+            true -> chrome(request, facts)
+            _ -> sibling(request, facts)
         }
     }
-    state chrome(p: &mut [u64; 128]) -> u64 {
-        transition p[4] != 0u64 {
-            true -> free(p, 1u64)
-            _ -> (DENIED)
+    machine chrome(request: &Request, facts: &Facts) -> Decision {
+        transition facts.exact_chrome {
+            true -> free(request, facts, 1u64)
+            _ -> (Decision::Refused { reason: Refusal::Denied })
         }
     }
-    state free(p: &mut [u64; 128], slot: u64) -> u64 {
+    machine free(request: &Request, facts: &Facts, slot: u64) -> Decision {
         transition slot < 4u64 {
-            true -> present(p, slot)
-            _ -> full(p)
+            true -> present(request, facts, slot)
+            _ -> (Decision::Refused { reason: Refusal::AppPositionsFull })
         }
     }
-    state present(p: &mut [u64; 128], slot: u64) -> u64 requires slot < 4u64 {
-        transition (p[6] & (1u64 << slot)) == 0u64 {
-            true -> selected(p, slot)
-            _ -> free(p, slot + 1u64)
+    machine present(request: &Request, facts: &Facts, slot: u64) -> Decision requires slot < 4u64 {
+        transition (facts.occupied_slots & (1u64 << slot)) == 0u64 {
+            true -> selected(request, facts, slot)
+            _ -> free(request, facts, slot + 1u64)
         }
     }
-    state full(p: &mut [u64; 128]) -> u64 {
-        p[25] = 1u64;
-        NO_MEMORY
-    }
-    state sibling(p: &mut [u64; 128]) -> u64 {
-        transition p[5] < 2u64 {
-            true -> other(p)
-            _ -> (DENIED)
+    machine sibling(request: &Request, facts: &Facts) -> Decision {
+        transition facts.requester {
+            Requester::Child { slot } -> pair(request, facts, slot)
+            Requester::Owner -> (Decision::Refused { reason: Refusal::Denied })
         }
     }
-    state other(p: &mut [u64; 128]) -> u64 requires p[5] < 2u64 {
-        let slot: u64 = 1u64 - p[5];
-        selected(p, slot)
+    machine pair(request: &Request, facts: &Facts, requester: u64) -> Decision {
+        transition requester < 2u64 {
+            true -> other(request, facts, requester)
+            _ -> (Decision::Refused { reason: Refusal::Denied })
+        }
+    }
+    machine other(request: &Request, facts: &Facts, requester: u64) -> Decision requires requester < 2u64 {
+        selected(request, facts, 1u64 - requester)
     }
 }
 
-machine selected(p: &mut [u64; 128], slot: u64) -> u64 requires slot < 4u64 {
-    p[24] = slot;
-    transition p[8] != 0u64 || ((p[6] | p[7]) & (1u64 << slot)) != 0u64 {
-        true -> (BUSY)
-        _ -> capacity(p, slot)
+machine selected(request: &Request, facts: &Facts, slot: u64) -> Decision requires slot < 4u64 {
+    transition facts.storing || ((facts.occupied_slots | facts.unavailable_connections) & (1u64 << slot)) != 0u64 {
+        true -> (Decision::TargetRefused { slot: slot, reason: Refusal::Busy })
+        _ -> capacity(request, facts, slot)
     }
-    state capacity(p: &mut [u64; 128], slot: u64) -> u64 requires slot < 4u64 {
-        transition p[9] != 0u64 && p[10] != 0u64 {
-            true -> arguments(p, slot)
-            _ -> (NO_MEMORY)
+    machine capacity(request: &Request, facts: &Facts, slot: u64) -> Decision requires slot < 4u64 {
+        transition facts.has_receipt && facts.has_ticket {
+            true -> arguments(request, facts, slot)
+            _ -> (Decision::TargetRefused { slot: slot, reason: Refusal::Capacity })
         }
     }
-    state arguments(p: &mut [u64; 128], slot: u64) -> u64 requires slot < 4u64 {
-        transition p[11] != 0u64 && (p[12] & ~p[13]) == 0u64 {
-            true -> authority(p, slot)
-            _ -> (INVALID_ARGUMENT)
+    machine arguments(request: &Request, facts: &Facts, slot: u64) -> Decision requires slot < 4u64 {
+        transition request.program_present && (request.withheld_imports & ~request.supported_imports) == 0u64 {
+            true -> authority(facts, slot)
+            _ -> (Decision::TargetRefused { slot: slot, reason: Refusal::InvalidArguments })
         }
     }
-    state authority(p: &mut [u64; 128], slot: u64) -> u64 requires slot < 4u64 {
-        transition (p[14] & (1u64 << slot)) != 0u64 && p[15] != 0u64 {
-            true -> (0u64)
-            _ -> (DENIED)
+    machine authority(facts: &Facts, slot: u64) -> Decision requires slot < 4u64 {
+        transition (facts.standing_slots & (1u64 << slot)) != 0u64 && facts.has_storage_binding {
+            true -> (Decision::Admitted { slot: slot })
+            _ -> (Decision::TargetRefused { slot: slot, reason: Refusal::Denied })
         }
     }
 }
