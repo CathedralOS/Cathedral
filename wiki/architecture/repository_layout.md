@@ -35,8 +35,10 @@ Cathedral/
 
 Directories appear with real residents. Distribution exists today because its
 profile is consumed by the boot harness. No placeholder desktop packages are
-created. Omega currently keeps CPU policies in `kernel/core` and hardware facts
-in `platform/drivers/facts`; Rust already has a separate `kernel/arch` crate.
+created. Both implementations separate shared kernel policy in `kernel/core`
+from CPU mechanisms in `kernel/arch/isa` and privileged board adapters in
+`kernel/arch/board`. Omega's translated pure hardware facts remain in
+`platform/drivers/facts`; the architecture package consumes those facts.
 
 There is one `distribution/`, singular, with no multi-distro registry or plugin
 framework. A fork replaces it and keeps the kernel/platform contracts. Defaults,

@@ -380,6 +380,36 @@ those experiments were discarded. No native-boot success is claimed. Diagnose
 that source/compiler boundary next before further rewriting retained control
 flow; the ordinary Rust-kernel F5 desktop is a separate baseline.
 
+## Native Omega boot qualification after the structure pass
+
+The desktop remains on its tested producer `e8bebc16d5883`. Do not switch F5's
+compiler merely to test the native-kernel experiment. The reorganized kernel
+is not yet qualified as a complete native boot.
+
+A fresh isolated compiler at `b8c81bbb8c1f` reproduced the `accept_boundary`
+operand failure with no Cathedral dependencies. Build ran before Product
+imports existed, but boundary acceptance tried to resolve its subject early;
+completed Build settings also dropped root grants. [Omega PR #322](https://github.com/CathedralOS/Omega/pull/322)
+repairs this through the existing source-issued request protocol and post-join
+Product resolution. Candidate `6acfc27ebbbcd` is qualified locally and merged upstream as
+`a72862f5fdbf`; PR and merge-queue integration checks passed. Four Build-effect integration tests and eight focused
+corpus fixtures pass, including helper identity, untaken acceptance, fabricated
+activation, forged protocol, missing subject and wrong declaration kind.
+Scoped Clippy passes; pinned qualification has no invalidations.
+
+With that candidate, Cathedral passes the earlier lookup and now stops while
+acquiring its pinned `alloc` Git dependency: `source root exceeds identity entry
+limit of 4096`. This does not establish native kernel type checking or boot.
+Next: fix the allocator acquisition/selection boundary, then qualify the retained
+boot contracts before further splitting the large firmware and memory-lab
+coordinators. The separately recorded root-geometry lowering and retired
+interrupt syntax limitations remain open. No grants or acquisition limits were
+weakened, and no desktop compiler path changed.
+
+Evidence: `build/omega-component/kernel-provider-{baseline-builtin,baseline-uefi,repair-uefi}.log`
+and `kernel-provider-qualification.json`. The isolated compiler and full evidence
+are retained at `C:/Projects/Omega/.agents/worktree/cathedral-boot-providers`.
+
 ## Memory budgets and allocator delegation
 
 **Open; ratified 2026-10-25.** Complete the

@@ -10,7 +10,7 @@ The semantic continuation is currently the [memory lab](lab/memory/main.omg),
 not a normal task-starting kernel. Its [mapping entrance](lab/memory/mapping/mapping.omg)
 descends into clone/program/activate/retire checks. The build selects that
 continuation explicitly. Current compiler compatibility failures are recorded
-in [TASKS_RUST.md](../../../../TASKS_RUST.md); the historical proof notes below
+in [the native-boot handoff](../../../../TASKS_RUST.md#native-omega-boot-qualification-after-the-structure-pass); the historical proof notes below
 are not a claim that the current compiler boots this tree.
 
 This directory contains Cathedral's boot source and a bounded physical-entry
