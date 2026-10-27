@@ -1,0 +1,142 @@
+module main;
+// Acquire presentation -> verify scope -> paint changed grants -> sleep/respond.
+// The bridge supplies completed operations, never ambient services or authority.
+use model::Session;
+use model::Phase;
+use model::View;
+use model::Event;
+use model::Command;
+use model::Failure;
+
+public machine advance(s: &mut Session, event: Event) -> Command {
+    transition event {
+        Event::Failed { failure } -> fail(s, failure)
+        _ -> resume(s, event)
+    }
+}
+
+machine resume(s: &mut Session, event: Event) -> Command {
+    transition s.phase {
+        Phase::Start -> acquire(s)
+        Phase::Interaction -> first_poll(s)
+        Phase::FirstView -> check_scope(s, event)
+        Phase::StorageProbe -> report_scope(s, event)
+        Phase::Diagnostic -> present(s)
+        Phase::View -> refresh(s, event)
+        Phase::Surface -> created(s, event)
+        Phase::Paint -> wait(s)
+        Phase::Waiting -> awakened(s, event)
+        Phase::Control -> poll(s)
+        Phase::Stopped -> (Command::Exit)
+    }
+}
+
+machine acquire(s: &mut Session) -> Command {
+    s.phase = Phase::Interaction;
+    Command::AcquireInteraction
+}
+
+machine first_poll(s: &mut Session) -> Command {
+    s.phase = Phase::FirstView;
+    Command::Poll
+}
+
+machine check_scope(s: &mut Session, event: Event) -> Command {
+    transition event {
+        Event::View { view } -> remember(s, view)
+        Event::NoView -> probe(s)
+        _ -> fail(s, Failure::UnexpectedReply)
+    }
+    machine remember(s: &mut Session, view: View) -> Command {
+        s.view = view;
+        probe(s)
+    }
+    machine probe(s: &mut Session) -> Command {
+        s.phase = Phase::StorageProbe;
+        Command::ProbeStorage
+    }
+}
+
+machine report_scope(s: &mut Session, event: Event) -> Command {
+    transition event {
+        Event::StorageDenied -> report(s)
+        _ -> fail(s, Failure::UnexpectedStorageGrant)
+    }
+    machine report(s: &mut Session) -> Command {
+        s.phase = Phase::Diagnostic;
+        Command::ReportScope
+    }
+}
+
+machine refresh(s: &mut Session, event: Event) -> Command {
+    transition event {
+        Event::View { view } -> update(s, view)
+        Event::NoView -> wait(s)
+        _ -> fail(s, Failure::UnexpectedReply)
+    }
+    machine update(s: &mut Session, view: View) -> Command {
+        s.view = view;
+        present(s)
+    }
+}
+
+machine present(s: &mut Session) -> Command {
+    transition s.view.epoch == s.painted_epoch {
+        true -> wait(s)
+        _ -> changed(s)
+    }
+    machine changed(s: &mut Session) -> Command {
+        s.painted_epoch = s.view.epoch;
+        transition s.surface == 0u64 {
+            true -> create(s)
+            _ -> paint(s)
+        }
+    }
+    machine create(s: &mut Session) -> Command {
+        s.phase = Phase::Surface;
+        Command::CreateSurface { epoch: s.view.epoch }
+    }
+}
+
+machine created(s: &mut Session, event: Event) -> Command {
+    transition event {
+        Event::Surface { handle } -> retain(s, handle)
+        _ -> fail(s, Failure::UnexpectedReply)
+    }
+    machine retain(s: &mut Session, handle: u64) -> Command {
+        s.surface = handle;
+        paint(s)
+    }
+}
+
+machine paint(s: &mut Session) -> Command {
+    s.phase = Phase::Paint;
+    Command::Paint { view: s.view, surface: s.surface, color: 0x101827u64 }
+}
+
+machine wait(s: &mut Session) -> Command {
+    s.phase = Phase::Waiting;
+    Command::Wait { ticks: 100u64 }
+}
+
+machine awakened(s: &mut Session, event: Event) -> Command {
+    transition event {
+        Event::Wake -> poll(s)
+        Event::Control { accepted } -> reply(s, accepted)
+        _ -> fail(s, Failure::UnexpectedReply)
+    }
+    machine reply(s: &mut Session, accepted: bool) -> Command {
+        s.phase = Phase::Control;
+        Command::ReplyControl { accepted: accepted }
+    }
+}
+
+machine poll(s: &mut Session) -> Command {
+    s.phase = Phase::View;
+    Command::Poll
+}
+
+machine fail(s: &mut Session, failure: Failure) -> Command {
+    s.phase = Phase::Stopped;
+    Command::Fail { failure: failure }
+}

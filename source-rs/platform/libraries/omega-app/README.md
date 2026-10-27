@@ -13,7 +13,8 @@ The producer-side helpers live at
 [app-host/main.omg](../../../../source/platform/libraries/app-host/main.omg).
 Consumers are [Omega Colors](../../../../source/distribution/applications/colors/README.md)
 and [Omega Notes](../../../../source/distribution/applications/notes/README.md),
-plus the [Omega chooser](../../../../source/distribution/applications/chooser/README.md).
+plus the [Omega chooser](../../../../source/distribution/applications/chooser/README.md)
+and [Background](../../../../source/distribution/applications/background/README.md).
 This is deliberately a temporary, synchronous x86-64 native bridge. A future
 Omega runtime can replace it while retaining the app's protocol behavior.
 
@@ -70,6 +71,7 @@ grant authority by themselves.
 | 9 | Append a payload chunk to a staged object; words 0/1 are total bytes and sequential byte offset |
 | 10 | Discard the staged object, whether partial or ready |
 | 11 | Read this task's existing monotonic clock; return ticks in word 0 |
+| 12 | End the app with the error in word 0; the host returns it to the task entry without replaying the failed operation |
 
 Storage BULK receives require an explicit nonzero limit no larger than the packet
 payload. Before mapping, the host checks the returned byte count against that

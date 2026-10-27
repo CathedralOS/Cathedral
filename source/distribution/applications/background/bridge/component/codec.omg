@@ -1,0 +1,147 @@
+module codec;
+// ABI and protocol interpretation stay here; the app sees named events/commands.
+use app::model::Phase;
+use app::model::View;
+use app::model::Event;
+use app::model::Command;
+use app::model::Failure;
+use host::main;
+use protocol::main;
+use diagnostic;
+
+public machine decode(phase: Phase, p: &[u64; 4096]) -> Event {
+    transition phase {
+        Phase::Start -> (Event::Complete)
+        Phase::Stopped -> (Event::Complete)
+        Phase::StorageProbe -> scope(p)
+        Phase::Waiting -> wake(p)
+        _ -> completed(phase, p)
+    }
+}
+
+machine completed(phase: Phase, p: &[u64; 4096]) -> Event {
+    transition p[9] == 0u64 {
+        true -> reply(phase, p)
+        _ -> (Event::Failed { failure: Failure::Transport { code: p[9] } })
+    }
+    machine reply(phase: Phase, p: &[u64; 4096]) -> Event {
+        transition phase {
+            Phase::FirstView -> view(p)
+            Phase::View -> view(p)
+            Phase::Surface -> surface(p)
+            Phase::Paint -> painted(p)
+            _ -> (Event::Complete)
+        }
+    }
+}
+
+machine scope(p: &[u64; 4096]) -> Event {
+    transition p[9] {
+        UNAVAILABLE -> (Event::StorageDenied)
+        0u64 -> (Event::Failed { failure: Failure::UnexpectedStorageGrant })
+        _ -> (Event::Failed { failure: Failure::Transport { code: p[9] } })
+    }
+}
+
+machine view(p: &[u64; 4096]) -> Event {
+    transition p[0] == 0u64 {
+        true -> (Event::View { view: View { epoch: p[1], width: p[2], height: p[3] } })
+        _ -> (Event::NoView)
+    }
+}
+
+machine surface(p: &[u64; 4096]) -> Event {
+    transition p[0] == 0u64 {
+        true -> (Event::Surface { handle: p[1] })
+        _ -> (Event::Failed { failure: Failure::Provider { code: p[0] } })
+    }
+}
+
+machine painted(p: &[u64; 4096]) -> Event {
+    transition p[0] == 0u64 {
+        true -> (Event::Complete)
+        _ -> (Event::Failed { failure: Failure::Provider { code: p[0] } })
+    }
+}
+
+machine wake(p: &[u64; 4096]) -> Event {
+    transition p[9] {
+        0u64 -> (Event::Wake)
+        1u64 -> control(p)
+        _ -> (Event::Failed { failure: Failure::Transport { code: p[9] } })
+    }
+    machine control(p: &[u64; 4096]) -> Event {
+        Event::Control { accepted: (p[0] == HEALTH || p[0] == LOSS)
+            && p[1] == 0u64 && p[2] == 0u64 && p[3] == 0u64 && p[4] == 0u64
+            && p[5] == 0u64 && p[6] == 0u64 && p[7] == 0u64 }
+    }
+}
+
+public machine encode(command: Command, p: &mut [u64; 4096]) -> u64 {
+    message(p, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64);
+    transition command {
+        Command::AcquireInteraction -> acquire(p, INTERACTION)
+        Command::ProbeStorage -> acquire(p, STORAGE)
+        Command::Poll -> poll(p)
+        Command::ReportScope -> diagnostic::scope(p)
+        Command::CreateSurface { epoch } -> create(p, epoch)
+        Command::Paint { view, surface, color } -> paint(p, view, surface, color)
+        Command::Wait { ticks } -> wait(p, ticks)
+        Command::ReplyControl { accepted } -> reply(p, accepted)
+        Command::Fail { failure } -> fail(p, failure)
+        Command::Exit -> (EXIT)
+    }
+}
+
+machine acquire(p: &mut [u64; 4096], operation: u64) -> u64 {
+    p[0] = 1u64;
+    p[1] = 1u64;
+    operation
+}
+
+machine poll(p: &mut [u64; 4096]) -> u64 {
+    p[0] = MATRIX_POLL;
+    EXCHANGE
+}
+
+machine create(p: &mut [u64; 4096], epoch: u64) -> u64 {
+    p[0] = SURFACE_CREATE;
+    p[1] = epoch;
+    EXCHANGE
+}
+
+machine paint(p: &mut [u64; 4096], view: View, surface: u64, color: u64) -> u64 {
+    message(p, MATRIX_PAINT, view.epoch, surface, 0u64, 0u64, view.width, view.height, color);
+    EXCHANGE
+}
+
+machine wait(p: &mut [u64; 4096], ticks: u64) -> u64 {
+    p[13] = ticks;
+    WAIT
+}
+
+machine reply(p: &mut [u64; 4096], accepted: bool) -> u64 {
+    transition accepted {
+        true -> (CONTROL)
+        _ -> denied(p)
+    }
+    machine denied(p: &mut [u64; 4096]) -> u64 {
+        p[0] = DENIED;
+        CONTROL
+    }
+}
+
+machine fail(p: &mut [u64; 4096], failure: Failure) -> u64 {
+    let code: u64 = failure_code(failure);
+    p[0] = code;
+    FAIL
+}
+
+machine failure_code(failure: Failure) -> u64 {
+    transition failure {
+        Failure::Transport { code } -> (code)
+        Failure::Provider { code } -> (code)
+        Failure::UnexpectedStorageGrant -> (DENIED)
+        Failure::UnexpectedReply -> (INVALID_ARGUMENT)
+    }
+}

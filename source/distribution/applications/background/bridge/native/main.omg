@@ -1,0 +1,7 @@
+use component::main::Background;
+use app::model::Session;
+machine main() reaches Background {
+    let mut s: Session;
+    let mut p: [u64; 4096];
+    let result: u64 = Background::step(&mut s, &mut p);
+}

@@ -19,7 +19,8 @@ python tools/boot-harness-rs/desktop_test.py --trace-storage
 python tools/boot-harness-rs/desktop_test.py --nested-desktop --nested-depth 4 --trace-storage
 ```
 
-Cargo invokes this through Colors' build script; F5 needs no extra preparation
+Cargo invokes this through the apps' build scripts, including Background's
+`bridge/native` consumer; F5 needs no extra preparation
 after the compiler has been built. Output is under `build/omega-component/`,
 with compiler/source fingerprints, ELF hash, entry offset and packaged byte
 hashes in `receipt.json`. Cache hits verify every packaged artifact. Concurrent

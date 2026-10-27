@@ -25,7 +25,7 @@ fn stock_roles_keep_distinct_offers_and_background_has_no_storage_authority() {
     assert_eq!(launcher.imports, imports::ALL);
     assert_eq!(launcher.surfaces, wire::config::LAUNCHER_SURFACES as u64);
     let background = p::background();
-    assert_eq!(background.pages, [5, 2]);
+    assert_eq!(background.pages, [14, 2]);
     assert_eq!(
         (background.channels, background.descendants, background.cpu),
         (2, 0, 0)

@@ -1,0 +1,3 @@
+machine build(builder: &mut Build) {
+    Build::package(builder, "cathedral_background");
+}

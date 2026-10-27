@@ -50,11 +50,46 @@ native bridge into a permanent second distribution API.
 The independent Omega matrix is a useful precedent, but its synchronous parent
 refresh must not replace the desktop's yielding path.
 
-Notes, Colors and the chooser already execute their ordinary app behavior in
+Notes, Colors, Background and the chooser already execute their ordinary app behavior in
 Omega. Matrix configuration, lifecycle, launcher/local recovery and ordinary
 launch sequencing also do. This work does not claim a fully Omega matrix process
 or a native Omega kernel. Recheck the recorded native-kernel proof-propagation
 blocker against a newer compiler separately; it need not stall userspace work.
+
+### Background now executes in Omega
+
+The installed background's acquisition, storage-refusal probe, geometry-change
+painting and lifecycle replies now execute in
+[app/main.omg](source/distribution/applications/background/app/main.omg).
+Its session and commands have named types; the temporary native packet/protocol
+codec lives under `background/bridge/component/`. Rust retains only executable
+startup, the existing startup-fault injection and the common Omega host. The old
+Rust `backdrop.rs` implementation was removed.
+
+The app still receives interaction only, reuses one surface, paints only after
+a grant-epoch change and waits between work. A refused storage acquisition must
+leave the interaction broker usable; unexpected storage authority fails closed.
+Only canonical HEALTH/LOSS messages are accepted. Transport and drawing failures
+end the task without replay; host operation 12 returns the app's error to its
+entry. Background's stock private allowance is now 14 pages: the existing five
+transport pages plus the common host's nine buffer pages. Reader, notification,
+surface, storage and descendant authority remain unchanged.
+
+Seven Windows host tests invoke the actual packaged Omega export. They are part
+of the default `cargo test --locked` suite. The default suite, Background/host
+Clippy (including the guest target and startup-fault feature), format and source
+layout pass. The ordinary F5 desktop and cold reboot pass at
+`build/boot-harness-rs/desktop/20261027T052235517408Z`; independent storage reopen
+verifies the copied user, notes, color and ungranted root. The compiler remains
+the qualified `e8bebc16d5883` producer. Background's component receipt is under
+`build/omega-component/distribution/applications/background/bridge/native/`.
+Four nested desktops also pass at
+`build/boot-harness-rs/desktop/20261027T052513030543Z`, including protected close,
+saved Notes/Colors, repeated subtree reclamation, isolation and cold reopen.
+The picker, selected-user and background startup-failure fixtures pass at
+`build/boot-harness-rs/nested-failures/20261027T052816308102Z`: bounded local
+retries and repeated reclamation preserve the outer draft. Logs for this pass
+are `build/omega-component/background-{host-suite,desktop,nested,startup-failures}.log`.
 
 ## Language alignment: defer the blocked nested-machine migration
 
@@ -500,7 +535,8 @@ calls whole-root `acquire_git` before dispatching `PackageSelection::Named`.
 This charges the repository against the selected library's 4,096-entry limit.
 
 Omega [PR #339](https://github.com/CathedralOS/Omega/pull/339), source
-`20dcd0409b66d`, supplies the staged resolver prerequisite. It authenticates the
+`20dcd0409b66d`, merged as `79a661193e9625f3192d1f7524057868eb29d563`,
+supplies the staged resolver prerequisite. It authenticates the
 repository once, reads bounded root/member declarations across separate calls,
 and materializes selected payloads under the existing package limits. Tests
 cover an oversized unrelated tree, selected-content refusal, declaration-roster
@@ -523,6 +559,8 @@ The existing `executed_git_source` workspace witness requires five activations,
 selected-return reuse, private-access refusal and no unselected Product work.
 Then rerun the actual isolated Cathedral kernel. This needs no new owner choice;
 do not raise limits, reintroduce static manifest parsing or claim a boot result.
+The resolver claim was released after landing; this remaining compiler integration
+is recorded work, not a live background build or a blocker for Omega app migration.
 
 ## Memory budgets and allocator delegation
 
@@ -2955,7 +2993,7 @@ traffic; the installed Split participant and capture viewer no longer do.
 Implementation update 2026-10-25: **shared Background and Omega UI presentation**,
 over `67b45f7e`.
 
-[Background](source-rs/distribution/applications/background/backdrop.rs) and the
+[Background](source-rs/distribution/applications/background/README.md) and the
 [separate UI demo](source-rs/distribution/applications/omega-ui/session.rs) now
 select the existing shared Services owner before acquisition. Background performs
 its denied optional-storage request after the first interaction poll, then keeps

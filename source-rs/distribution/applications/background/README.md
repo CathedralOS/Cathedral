@@ -1,18 +1,10 @@
-# Stock background
+# Background executable adapter
 
-[main.rs](main.rs) acquires the scoped service bootstrap and enters
-[backdrop.rs](backdrop.rs), which fills one owner-granted surface on geometry
-changes and otherwise waits for notifications/control. It is a separate process,
-not compositor code. The matrix resolves the `Background` executable in its own
-realm, so replacing that object changes the backdrop without changing the kernel,
-platform compositor or chrome. No storage or keyboard service is granted.
+[main.rs](main.rs) declares the interaction import and starts the common Omega
+host. [build.rs](build.rs) packages the independently compiled export;
+[native.rs](native.rs) binds it into the task. The app's sequence and rendering
+live in [Omega](../../../../source/distribution/applications/background/README.md).
 
-The process selects the shared Services transport before acquisition. It requests
-storage once after its first interaction poll and requires refusal, then continues
-drawing through the same broker. Its manifest and owner grant fund one notification,
-one private mailbox page and one accepted reader page. Lifecycle controls and wake
-hints still use copied channels.
-
-The current implementation is a solid fill. Role selection UI, animation and
-wallpaper storage grants remain distribution policy. Startup retry and fallback
-belong to the owning matrix, not to this background process.
+`cargo test --locked -p cathedral-background --lib` exercises the real compiled
+export on Windows. The `startup-fault` feature retains the existing deliberate
+panic used to test the owner's bounded background restart policy.

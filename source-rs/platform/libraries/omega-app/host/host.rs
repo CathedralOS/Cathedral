@@ -72,6 +72,9 @@ pub unsafe fn run_with_argument(
         if operation == 0 {
             return Ok(0);
         }
+        if operation == 12 {
+            return Err(Error(app.packet[0] as i64));
+        }
         app.packet[9] = 0;
         if let Err(error) = host.dispatch(operation, app.packet) {
             #[cfg(feature = "trace-storage")]

@@ -1,0 +1,59 @@
+module model;
+// The app owns its continuation and presentation. Native packets live in bridge/.
+public data Phase [copy] {
+    case Start;
+    case Interaction;
+    case FirstView;
+    case StorageProbe;
+    case Diagnostic;
+    case View;
+    case Surface;
+    case Paint;
+    case Waiting;
+    case Control;
+    case Stopped;
+}
+
+public data View [copy] {
+    epoch: u64;
+    width: u64;
+    height: u64;
+}
+
+public data Session {
+    phase: Phase;
+    view: View;
+    painted_epoch: u64;
+    surface: u64;
+}
+
+public data Failure [copy] {
+    case Transport(code: u64);
+    case Provider(code: u64);
+    case UnexpectedReply;
+    case UnexpectedStorageGrant;
+}
+
+public data Event [copy] {
+    case Complete;
+    case View(view: View);
+    case NoView;
+    case StorageDenied;
+    case Surface(handle: u64);
+    case Wake;
+    case Control(accepted: bool);
+    case Failed(failure: Failure);
+}
+
+public data Command [copy] {
+    case AcquireInteraction;
+    case Poll;
+    case ProbeStorage;
+    case ReportScope;
+    case CreateSurface(epoch: u64);
+    case Paint(view: View, surface: u64, color: u64);
+    case Wait(ticks: u64);
+    case ReplyControl(accepted: bool);
+    case Fail(failure: Failure);
+    case Exit;
+}

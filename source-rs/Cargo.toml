@@ -56,7 +56,7 @@ members = [
     "distribution/lab/supervision",
     "distribution/libraries/boot-scene",
 ]
-default-members = ["distribution/matrix", "distribution/matrix/contracts", "distribution/applications/chooser", "distribution/applications/notes", "platform/libraries/user-heap", "platform/libraries/storage-volume", "platform/drivers/uart_16550", "distribution/lab/rendering", "kernel/contracts", "platform/contracts", "platform/libraries/block-device", "kernel/core", "kernel/arch", "platform/services/input", "platform/services/display", "platform/libraries/matrix", "platform/libraries/bitmap-font"]
+default-members = ["distribution/applications/background", "distribution/matrix", "distribution/matrix/contracts", "distribution/applications/chooser", "distribution/applications/notes", "platform/libraries/user-heap", "platform/libraries/storage-volume", "platform/drivers/uart_16550", "distribution/lab/rendering", "kernel/contracts", "platform/contracts", "platform/libraries/block-device", "kernel/core", "kernel/arch", "platform/services/input", "platform/services/display", "platform/libraries/matrix", "platform/libraries/bitmap-font"]
 
 [workspace.package]
 version = "0.0.0"

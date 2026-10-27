@@ -1,0 +1,26 @@
+module diagnostic;
+// Existing desktop witness: refusal did not retire the interaction broker.
+use host::main;
+
+public machine scope(p: &mut [u64; 4096]) -> u64 {
+    let text: [u8; 63] = "Cathedral background: shared interaction ready; storage denied\n";
+    p[16] = 0u64; p[17] = 0u64; p[18] = 0u64; p[19] = 0u64;
+    p[20] = 0u64; p[21] = 0u64; p[22] = 0u64; p[23] = 0u64;
+    transition { _ -> copy(p, &text, 0u64) }
+
+    machine copy(p: &mut [u64; 4096], text: &[u8; 63], index: u64) -> u64 requires index <= 63u64 {
+        transition index < 63u64 {
+            true -> byte(p, text, index)
+            _ -> ready(p)
+        }
+    }
+    machine byte(p: &mut [u64; 4096], text: &[u8; 63], index: u64) -> u64 requires index < 63u64 {
+        let word: u64 = 16u64 + index / 8u64;
+        p[word] = p[word] | ((text[index] as u64) << ((index % 8u64) * 8u64));
+        transition { _ -> copy(p, text, index + 1u64) }
+    }
+    machine ready(p: &mut [u64; 4096]) -> u64 {
+        p[8] = 63u64;
+        WRITE
+    }
+}
