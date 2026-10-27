@@ -1,6 +1,9 @@
 # Stored-program launch workflow
 
-Start at [main.omg](main.omg). The ordinary F5 path for launching Notes, Colors,
+Start at [main.omg](main.omg): begin a launch, issue each command once, validate
+its completion or cancel it. [operation.omg](operation.omg) names the plan,
+ready/waiting state and cleanup obligations; [progress.omg](progress.omg) shows
+the successful sequence and rollback order. The ordinary F5 path for launching Notes, Colors,
 a user workspace or a nested matrix executes this workflow. Omega issues read,
 retire-picker, admit, bind-storage, place, activate, publish and finish commands.
 Only applicable steps run: an owner-directed/headless launch needs no child
@@ -39,7 +42,8 @@ retain the selected standing grants/storage binding (`request.rs`),
 resource mechanisms (`steps.rs`) and identity/cancellation/reply custody
 (`custody.rs`). Asynchronous storage completion and grant commit live in
 `binding.rs` beside that entrance; `scene.rs` owns visual completion and restoration.
-`mod.rs` is plumbing only. The private native adapter is
+`mod.rs` is plumbing only. The [Omega native codec](../../../bridge/policy/launch.omg) alone owns numeric
+commands, the waiting offset and role flags. The Rust adapter is
 [policy/launch.rs](../../../../../../source-rs/distribution/matrix/policy/launch.rs), with
 [policy/admission.rs](../../../../../../source-rs/distribution/matrix/policy/admission.rs)
 for admission and roles.

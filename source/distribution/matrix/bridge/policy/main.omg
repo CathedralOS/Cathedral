@@ -3,7 +3,7 @@ use service::children::configuration::main;
 use lifecycle;
 use recovery;
 use startup;
-use service::children::launch::main;
+use launch;
 use service::children::workspace::main;
 use session;
 use service::requests::main;
@@ -26,7 +26,7 @@ public machine choose(p: &mut [u64; 128]) -> u64 {
         18u64 -> service::children::configuration::main::decision(p)
         9u64 -> recovery::recovery_decision(p)
         10u64 -> startup::startup_decision(p)
-        11u64 -> service::children::launch::main::launch_decision(p)
+        11u64 -> launch::launch_decision(p)
         12u64 -> service::children::workspace::main::workspace_decision(p)
         13u64 -> service::children::workspace::main::workspace_decision(p)
         14u64 -> session_decision(p)

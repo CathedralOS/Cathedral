@@ -1,0 +1,223 @@
+module launch;
+
+// Temporary Rust-call routing and encoding. Workflow state is private host
+// storage; command tags, the waiting offset and role bits do not enter policy.
+use service::children::launch::main;
+use service::children::launch::operation::Launch;
+use service::children::launch::operation::Plan;
+use service::children::launch::operation::Command;
+use service::children::launch::operation::Phase;
+use service::children::launch::operation::Dispatch;
+use service::children::launch::operation::Completion;
+use service::children::launch::roles;
+use service::children::launch::roles::Context;
+use service::children::launch::roles::Requester;
+use service::children::launch::admission;
+use service::children::launch::imports;
+use service::children::launch::declaration;
+use service::children::launch::image;
+
+const BEGIN: u64 = 0u64;
+const NEXT: u64 = 1u64;
+const COMPLETE: u64 = 2u64;
+const CANCEL: u64 = 3u64;
+const ACCEPTS: u64 = 4u64;
+
+public machine launch_decision(packet: &mut [u64; 128]) -> u64 {
+    transition packet[1] {
+        BEGIN -> workflow(packet)
+        NEXT -> workflow(packet)
+        COMPLETE -> workflow(packet)
+        CANCEL -> workflow(packet)
+        ACCEPTS -> workflow(packet)
+        5u64 -> service::children::launch::admission::launch_admission(packet)
+        6u64 -> role_plan(packet)
+        7u64 -> boolean(service::children::launch::roles::needs_picker_lookup(packet[2] != 0u64, packet[3], packet[4] != 0u64))
+        8u64 -> boolean(service::children::launch::roles::matches_picker(packet[2], packet[3], packet[4], packet[5]))
+        9u64 -> service::children::launch::imports::import_binding(packet)
+        10u64 -> service::children::launch::imports::import_binding(packet)
+        11u64 -> service::children::launch::declaration::import_declaration(packet)
+        12u64 -> service::children::launch::image::import_image(packet)
+        13u64 -> service::children::launch::image::import_image(packet)
+        _ -> (0u64)
+    }
+}
+
+machine workflow(packet: &mut [u64; 128]) -> u64 {
+    // Refuse corrupt opaque state instead of decoding it as a fresh operation.
+    transition packet[16] == 0u64 || (packet[16] >= 1u64 && packet[16] <= 10u64)
+        || (packet[16] >= 33u64 && packet[16] <= 42u64) {
+        true -> decoded(packet)
+        _ -> (0u64)
+    }
+    machine decoded(packet: &mut [u64; 128]) -> u64 {
+        let mut launch: Launch;
+        launch.phase = decode_phase(packet[16]);
+        launch.ticket = packet[17];
+        launch.plan = decode_plan(packet[18]);
+        launch.status = packet[19];
+        launch.child_admitted = packet[20] != 0u64;
+        launch.picker_retired = packet[21] != 0u64;
+        let result: u64 = apply(packet, &mut launch);
+        packet[16] = encode_phase(launch.phase);
+        packet[17] = launch.ticket;
+        packet[18] = encode_plan(launch.plan);
+        packet[19] = launch.status;
+        packet[20] = boolean(launch.child_admitted);
+        packet[21] = boolean(launch.picker_retired);
+        result
+    }
+}
+
+machine apply(packet: &[u64; 128], launch: &mut Launch) -> u64 {
+    transition packet[1] {
+        BEGIN -> begin(packet, launch)
+        NEXT -> next(launch)
+        COMPLETE -> completion(packet, launch)
+        CANCEL -> boolean(service::children::launch::main::cancel(launch, packet[2]))
+        ACCEPTS -> completion(packet, launch)
+        _ -> (0u64)
+    }
+    machine begin(packet: &[u64; 128], launch: &mut Launch) -> u64 {
+        let plan: Plan = decode_plan(packet[3]);
+        let accepted: bool = service::children::launch::main::begin(launch, packet[2], plan);
+        boolean(accepted)
+    }
+    machine next(launch: &mut Launch) -> u64 {
+        let dispatch: Dispatch = service::children::launch::main::next(launch);
+        encode_dispatch(dispatch)
+    }
+}
+
+machine completion(packet: &[u64; 128], launch: &mut Launch) -> u64 {
+    transition packet[3] >= 1u64 && packet[3] <= 10u64 {
+        true -> decoded(packet, launch)
+        _ -> (0u64)
+    }
+    machine decoded(packet: &[u64; 128], launch: &mut Launch) -> u64
+        requires packet[3] >= 1u64 && packet[3] <= 10u64 {
+        let completion: Completion = Completion {
+            ticket: packet[2], command: decode_command(packet[3]),
+            status: packet[4], requires_storage: packet[5] != 0u64
+        };
+        transition packet[1] == COMPLETE {
+            true -> boolean(service::children::launch::main::complete(launch, completion))
+            _ -> boolean(service::children::launch::main::accepts(launch, completion.ticket, completion.command))
+        }
+    }
+}
+
+machine role_plan(packet: &[u64; 128]) -> u64 {
+    let context: Context = Context {
+        login: packet[2] != 0u64, entered: packet[3] != 0u64,
+        target: packet[4], desktop: packet[5] != 0u64,
+        requester: decode_requester(packet[6])
+    };
+    encode_plan(service::children::launch::roles::plan(&context))
+}
+
+machine decode_requester(value: u64) -> Requester {
+    transition value != 0u64 {
+        true -> child(value)
+        _ -> (Requester::Owner)
+    }
+    machine child(value: u64) -> Requester requires value != 0u64 {
+        Requester::Child { slot: value - 1u64 }
+    }
+}
+
+machine decode_plan(flags: u64) -> Plan {
+    Plan {
+        retire_picker: (flags & 1u64) != 0u64,
+        place_child: (flags & 2u64) != 0u64,
+        activate_desktop: (flags & 4u64) != 0u64
+    }
+}
+
+machine encode_plan(plan: Plan) -> u64 {
+    (plan.retire_picker as u64) | ((plan.place_child as u64) << 1u64)
+        | ((plan.activate_desktop as u64) << 2u64)
+}
+
+machine decode_phase(value: u64) -> Phase {
+    transition value >= 1u64 && value <= 10u64 {
+        true -> ready(value)
+        _ -> waiting_or_dormant(value)
+    }
+    machine ready(value: u64) -> Phase requires value >= 1u64 && value <= 10u64 {
+        Phase::Ready { command: decode_command(value) }
+    }
+    machine waiting_or_dormant(value: u64) -> Phase {
+        transition value >= 33u64 && value <= 42u64 {
+            true -> waiting(value)
+            _ -> (Phase::Dormant)
+        }
+    }
+    machine waiting(value: u64) -> Phase requires value >= 33u64 && value <= 42u64 {
+        Phase::Waiting { command: decode_command(value - 32u64) }
+    }
+}
+
+machine decode_command(value: u64) -> Command requires value >= 1u64 && value <= 10u64 {
+    transition value {
+        1u64 -> (Command::Read)
+        2u64 -> (Command::RetirePicker)
+        3u64 -> (Command::Admit)
+        4u64 -> (Command::Bind)
+        5u64 -> (Command::Place)
+        6u64 -> (Command::Activate)
+        7u64 -> (Command::Publish)
+        8u64 -> (Command::Rollback)
+        9u64 -> (Command::RestorePicker)
+        _ -> (Command::Finish)
+    }
+}
+
+machine encode_dispatch(dispatch: Dispatch) -> u64 {
+    transition dispatch {
+        Dispatch::Issue { command } -> encode_command(command)
+        Dispatch::Wait -> (0u64)
+    }
+}
+
+machine encode_phase(phase: Phase) -> u64 {
+    transition phase {
+        Phase::Ready { command } -> encode_command(command)
+        Phase::Waiting { command } -> encode_waiting(command)
+        Phase::Dormant -> (0u64)
+    }
+}
+
+machine encode_command(command: Command) -> u64 {
+    transition command {
+        Command::Read -> (1u64)
+        Command::RetirePicker -> (2u64)
+        Command::Admit -> (3u64)
+        Command::Bind -> (4u64)
+        Command::Place -> (5u64)
+        Command::Activate -> (6u64)
+        Command::Publish -> (7u64)
+        Command::Rollback -> (8u64)
+        Command::RestorePicker -> (9u64)
+        Command::Finish -> (10u64)
+    }
+}
+
+machine encode_waiting(command: Command) -> u64 {
+    transition command {
+        Command::Read -> (33u64)
+        Command::RetirePicker -> (34u64)
+        Command::Admit -> (35u64)
+        Command::Bind -> (36u64)
+        Command::Place -> (37u64)
+        Command::Activate -> (38u64)
+        Command::Publish -> (39u64)
+        Command::Rollback -> (40u64)
+        Command::RestorePicker -> (41u64)
+        Command::Finish -> (42u64)
+    }
+}
+
+machine boolean(value: bool) -> u64 {
+    value as u64
+}

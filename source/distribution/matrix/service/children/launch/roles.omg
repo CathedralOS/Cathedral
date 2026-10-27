@@ -1,24 +1,39 @@
 module children::launch::roles;
 
-// Role facts are host-authenticated local observations, never caller-supplied claims.
-// p2 login, p3 entered, p4 target slot, p5 desktop, p6 requester+1 (zero for owner).
-public machine launch_roles(p: &mut [u64; 128]) -> u64 {
-    let selection: bool = p[2] != 0u64 && p[3] == 0u64 && p[4] == 1u64;
-    let child: bool = p[6] != 0u64;
-    let desktop: bool = p[5] != 0u64 && p[6] == 1u64;
-    (selection as u64) | ((child as u64) << 1u64) | ((desktop as u64) << 2u64)
+// Role facts are host-authenticated local observations, never caller claims.
+use children::launch::operation::Plan;
+
+public data Requester [copy] {
+    case Owner;
+    case Child(slot: u64);
 }
-// p2 upstream, p3 slot, p4 scope: root owner's first picker needs realm lookup.
-public machine inspect_picker(p: &mut [u64; 128]) -> u64 {
-    transition p[2] == 0u64 && p[3] == 0u64 && p[4] != 0u64 {
-        true -> (1u64)
-        _ -> (0u64)
+
+public data Context {
+    login: bool;
+    entered: bool;
+    target: u64;
+    desktop: bool;
+    requester: Requester;
+}
+
+public machine plan(context: &Context) -> Plan {
+    let selecting_user: bool = context.login && !context.entered && context.target == 1u64;
+    transition context.requester {
+        Requester::Owner -> (Plan {
+            retire_picker: selecting_user, place_child: false, activate_desktop: false
+        })
+        Requester::Child { slot } -> (Plan {
+            retire_picker: selecting_user, place_child: true,
+            activate_desktop: context.desktop && slot == 0u64
+        })
     }
 }
-// p2/p3 are Login/Users found through the matrix's own realm; zero means absent.
-public machine matches_picker(p: &mut [u64; 128]) -> u64 {
-    transition p[2] != 0u64 && p[3] != 0u64 && p[2] == p[4] && p[3] == p[5] {
-        true -> (1u64)
-        _ -> (0u64)
-    }
+
+// The root owner's first picker is recognized through its supplied realm.
+public machine needs_picker_lookup(upstream: bool, slot: u64, has_scope: bool) -> bool {
+    !upstream && slot == 0u64 && has_scope
+}
+
+public machine matches_picker(found_login: u64, found_users: u64, program: u64, scope: u64) -> bool {
+    found_login != 0u64 && found_users != 0u64 && found_login == program && found_users == scope
 }

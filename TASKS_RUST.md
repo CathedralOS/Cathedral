@@ -66,12 +66,15 @@ turns use commands, observed facts and event kinds. Their native adapters own th
 numeric packet encoding. Local startup and launcher recovery now use named
 state and outcomes as well, with their encoding in `bridge/policy/`. Resource
 admission now uses named capacities, optional declarations, role offers and
-surface preferences; its codec is also confined to that bridge.
+surface preferences; its codec is also confined to that bridge. Ordinary launch
+now separates its typed operation state, guarded entrance and progress/cleanup
+sequence; role selection returns a named launch plan.
 Package/module imports must retain this hierarchy.
 
-This is not a completed tree-wide cleanup. Launch, workspace, requests, realm
-setup and configuration still need their packet-shaped domain interfaces replaced;
-retain the existing host regression cases while doing that. Avoid
+This is not a completed tree-wide cleanup. Launch admission/import adapters,
+workspace, requests, realm setup and configuration still need their packet-shaped
+interfaces replaced or moved into the native bridge; retain the existing host
+regression cases while doing that. Avoid
 adding features to these representations. The Omega kernel also still mixes x86
 paging, PIC/PIT and interrupt profiles in `kernel/core/`; split shared ownership
 from ISA/board mechanisms before expanding that prototype. Start the audit at
@@ -132,6 +135,35 @@ Notes/Colors, repeated subtree reclamation, isolation and cold reopen. Layout
 `build/boot-harness-rs/desktop/20261026T235443314258Z`. The matrix image uses
 122 of the existing 240 load pages. No limit was raised. The supported default
 Omega compiler was used; no compiler patch or environment override was needed.
+
+Launch-workflow follow-up over `30f96eb7`: `launch/main.omg` begins, issues,
+validates completions and cancels work. `operation.omg` names the `Launch`,
+`Plan`, `Command`, ready/waiting `Phase`, `Completion` and `Dispatch` values;
+`progress.omg` exposes the successful sequence and reclaim-before-restore cleanup
+order. Role selection also produces a named plan. `bridge/policy/launch.omg`
+alone encodes workflow commands, the waiting offset, role flags and opaque state.
+The Rust caller still owns the actual task, image, binding and authenticated
+connection. Admission and import adapters remain separate cleanup work.
+
+Verification: all 97 compiled matrix tests pass with the supported default
+compiler, including all launch-role/storage combinations, failures at every
+ordinary stage, wrong/duplicate completions and cancellation. Ordinary F5 passes
+three nested desktops, saved Notes/Colors, protected close, repeated reclamation
+and cold reopen. Placement failure, pending-binding revocation and revocation
+after an accepted scene-commit reply also pass with sibling input and cold reopen.
+Logs: `build/omega-component/matrix-launch-{typed-tests,nested,place,binding-revoke,scene-late-revoke}.log`.
+Guest artifacts under `build/boot-harness-rs/desktop/`: `20261027T001832876354Z`,
+`20261027T002124768135Z`, `20261027T002230106497Z` and `20261027T002329268063Z`.
+Layout (71 Omega / 151 Rust edges) and navigation links pass. The ordinary matrix
+uses 125 of the existing 240 image pages; no limit or service deadline changed.
+
+The first fresh-boot run (`20261027T000820312761Z`) passed its guest checks but
+exceeded the harness's five-second host exit wait after QMP acknowledged quit;
+the harness terminated it, so that attempt did not prove cold reopen. Capture
+now allows 30 seconds for graceful emulator teardown and disk flushing, keeping
+the failure/termination path and refusing cold reopen if exit still times out.
+The successful runs above use that allowance. This changes test-host teardown,
+not guest scheduling or service timeouts.
 
 ## Memory budgets and allocator delegation
 

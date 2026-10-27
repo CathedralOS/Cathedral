@@ -1,0 +1,49 @@
+module children::launch::operation;
+
+// Correlation and cleanup obligations for one launch. These values name work;
+// the host retains the authenticated caller, image, bindings and actual task.
+public data Command [copy] {
+    case Read;
+    case RetirePicker;
+    case Admit;
+    case Bind;
+    case Place;
+    case Activate;
+    case Publish;
+    case Rollback;
+    case RestorePicker;
+    case Finish;
+}
+
+public data Phase [copy] {
+    case Dormant;
+    case Ready(command: Command);
+    case Waiting(command: Command);
+}
+
+public data Plan [copy] {
+    retire_picker: bool;
+    place_child: bool;
+    activate_desktop: bool;
+}
+
+public data Launch {
+    phase: Phase;
+    ticket: u64;
+    plan: Plan;
+    status: u64;
+    child_admitted: bool;
+    picker_retired: bool;
+}
+
+public data Dispatch [copy] {
+    case Wait;
+    case Issue(command: Command);
+}
+
+public data Completion [copy] {
+    ticket: u64;
+    command: Command;
+    status: u64;
+    requires_storage: bool;
+}

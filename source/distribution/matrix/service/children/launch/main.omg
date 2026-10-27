@@ -1,211 +1,71 @@
 module children::launch::main;
 
-// Ordinary stored-program launch: commands, completions and rollback.
-// State 16..21: next/waiting command, ticket, role flags, error, task, retired picker.
-// A waiting command is command + 32. Only its ticket and command can complete it.
-use children::launch::admission;
-use children::launch::roles;
-use children::launch::imports;
-use children::launch::declaration;
-use children::launch::image;
+// Begin, issue once, accept only the outstanding ticket/command, then advance.
+// progress.omg owns the successful sequence and cleanup after partial failure.
+use children::launch::operation::Launch;
+use children::launch::operation::Plan;
+use children::launch::operation::Command;
+use children::launch::operation::Phase;
+use children::launch::operation::Dispatch;
+use children::launch::operation::Completion;
+use children::launch::progress;
 
-const READ: u64 = 1u64;
-const RETIRE: u64 = 2u64;
-const ADMIT: u64 = 3u64;
-const BIND: u64 = 4u64;
-const PLACE: u64 = 5u64;
-const ACTIVATE: u64 = 6u64;
-const PUBLISH: u64 = 7u64;
-const ROLLBACK: u64 = 8u64;
-const RESTORE: u64 = 9u64;
-const FINISH: u64 = 10u64;
-public machine launch_decision(p: &mut [u64; 128]) -> u64 {
-    transition p[1] {
-        0u64 -> initialize(p)
-        1u64 -> next(p)
-        2u64 -> completed(p)
-        3u64 -> cancel(p)
-        4u64 -> accepts(p)
-        5u64 -> children::launch::admission::launch_admission(p)
-        6u64 -> children::launch::roles::launch_roles(p)
-        7u64 -> children::launch::roles::inspect_picker(p)
-        8u64 -> children::launch::roles::matches_picker(p)
-        9u64 -> children::launch::imports::import_binding(p)
-        10u64 -> children::launch::imports::import_binding(p)
-        11u64 -> children::launch::declaration::import_declaration(p)
-        12u64 -> children::launch::image::import_image(p)
-        13u64 -> children::launch::image::import_image(p)
-        _ -> (0u64)
+public machine begin(launch: &mut Launch, ticket: u64, plan: Plan) -> bool {
+    transition (launch.phase in Phase::Dormant) && ticket != 0u64 {
+        true -> start(launch, ticket, plan)
+        _ -> (false)
+    }
+    machine start(launch: &mut Launch, ticket: u64, plan: Plan) -> bool {
+        launch.phase = Phase::Ready { command: Command::Read };
+        launch.ticket = ticket;
+        launch.plan = plan;
+        true
     }
 }
 
-machine initialize(p: &mut [u64; 128]) -> u64 {
-    transition p[16] == 0u64 && p[2] != 0u64 {
-        true -> start(p)
-        _ -> (0u64)
+public machine next(launch: &mut Launch) -> Dispatch {
+    transition launch.phase {
+        Phase::Ready { command } -> issue(launch, command)
+        _ -> (Dispatch::Wait)
     }
-    state start(p: &mut [u64; 128]) -> u64 {
-        p[16] = READ;
-        p[17] = p[2];
-        p[18] = p[3];
-        1u64
+    machine issue(launch: &mut Launch, command: Command) -> Dispatch {
+        launch.phase = Phase::Waiting { command: command };
+        Dispatch::Issue { command: command }
     }
 }
 
-machine next(p: &mut [u64; 128]) -> u64 {
-    transition p[16] >= READ && p[16] <= FINISH {
-        true -> issue(p)
-        _ -> (0u64)
-    }
-    state issue(p: &mut [u64; 128]) -> u64 {
-        let command: u64 = p[16];
-        p[16] = command + 32u64;
-        command
+// A held reply remains usable only while this exact work is outstanding.
+public machine accepts(launch: &Launch, ticket: u64, requested: Command) -> bool {
+    transition launch.phase {
+        Phase::Waiting { command } -> (launch.ticket == ticket && command == requested)
+        _ -> (false)
     }
 }
 
-machine fail(p: &mut [u64; 128]) -> u64 {
-    transition p[20] != 0u64 {
-        true -> rollback(p)
-        _ -> restore(p)
+public machine complete(launch: &mut Launch, completion: Completion) -> bool {
+    transition accepts(launch, completion.ticket, completion.command) {
+        true -> outcome(launch, completion)
+        _ -> (false)
     }
-    state rollback(p: &mut [u64; 128]) -> u64 {
-        p[16] = ROLLBACK;
-        1u64
-    }
-    state restore(p: &mut [u64; 128]) -> u64 {
-        transition p[21] != 0u64 {
-            true -> picker(p)
-            _ -> done(p)
+    machine outcome(launch: &mut Launch, completion: Completion) -> bool {
+        transition completion.status == 0u64 {
+            true -> children::launch::progress::completed(launch, completion.command, completion.requires_storage)
+            _ -> failed(launch, completion.status)
         }
     }
-    state picker(p: &mut [u64; 128]) -> u64 {
-        p[16] = RESTORE;
-        1u64
-    }
-    state done(p: &mut [u64; 128]) -> u64 {
-        p[16] = FINISH;
-        1u64
+    machine failed(launch: &mut Launch, status: u64) -> bool {
+        launch.status = status;
+        children::launch::progress::cleanup(launch)
     }
 }
 
-machine cancel(p: &mut [u64; 128]) -> u64 {
-    transition p[16] != 0u64 && p[19] == 0u64 && p[2] != 0u64 {
-        true -> cancelled(p)
-        _ -> (0u64)
+public machine cancel(launch: &mut Launch, status: u64) -> bool {
+    transition !(launch.phase in Phase::Dormant) && launch.status == 0u64 && status != 0u64 {
+        true -> cancelled(launch, status)
+        _ -> (false)
     }
-    state cancelled(p: &mut [u64; 128]) -> u64 {
-        p[19] = p[2];
-        fail(p)
-    }
-}
-
-machine completed(p: &mut [u64; 128]) -> u64 {
-    transition p[2] == p[17] && p[3] >= READ && p[3] <= FINISH && p[16] == p[3] + 32u64 {
-        true -> outcome(p)
-        _ -> (0u64)
-    }
-    state outcome(p: &mut [u64; 128]) -> u64 {
-        transition p[4] != 0u64 {
-            true -> error(p)
-            _ -> advance(p)
-        }
-    }
-    state error(p: &mut [u64; 128]) -> u64 {
-        p[19] = p[4];
-        fail(p)
-    }
-    state advance(p: &mut [u64; 128]) -> u64 {
-        transition p[3] {
-            READ -> read(p)
-            RETIRE -> retired(p)
-            ADMIT -> admitted(p)
-            BIND -> bound(p)
-            PLACE -> placed(p)
-            ACTIVATE -> activated(p)
-            PUBLISH -> published(p)
-            ROLLBACK -> rolled_back(p)
-            RESTORE -> restored(p)
-            FINISH -> finished(p)
-            _ -> (0u64)
-        }
-    }
-    state read(p: &mut [u64; 128]) -> u64 {
-        transition (p[18] & 1u64) != 0u64 {
-            true -> retiring(p)
-            _ -> admitting(p)
-        }
-    }
-    state retiring(p: &mut [u64; 128]) -> u64 {
-        p[16] = RETIRE;
-        1u64
-    }
-    state admitting(p: &mut [u64; 128]) -> u64 {
-        p[16] = ADMIT;
-        1u64
-    }
-    state retired(p: &mut [u64; 128]) -> u64 {
-        p[21] = 1u64;
-        p[16] = ADMIT;
-        1u64
-    }
-    state admitted(p: &mut [u64; 128]) -> u64 {
-        p[20] = 1u64;
-        transition p[5] != 0u64 {
-            true -> binding(p)
-            _ -> bound(p)
-        }
-    }
-    state binding(p: &mut [u64; 128]) -> u64 {
-        p[16] = BIND;
-        1u64
-    }
-    state bound(p: &mut [u64; 128]) -> u64 {
-        transition (p[18] & 2u64) != 0u64 {
-            true -> placing(p)
-            _ -> placed(p)
-        }
-    }
-    state placing(p: &mut [u64; 128]) -> u64 {
-        p[16] = PLACE;
-        1u64
-    }
-    state placed(p: &mut [u64; 128]) -> u64 {
-        transition (p[18] & 4u64) != 0u64 {
-            true -> activating(p)
-            _ -> activated(p)
-        }
-    }
-    state activating(p: &mut [u64; 128]) -> u64 {
-        p[16] = ACTIVATE;
-        1u64
-    }
-    state activated(p: &mut [u64; 128]) -> u64 {
-        p[16] = PUBLISH;
-        1u64
-    }
-    state published(p: &mut [u64; 128]) -> u64 {
-        p[16] = FINISH;
-        1u64
-    }
-    state rolled_back(p: &mut [u64; 128]) -> u64 {
-        p[20] = 0u64;
-        fail(p)
-    }
-    state restored(p: &mut [u64; 128]) -> u64 {
-        p[21] = 0u64;
-        p[16] = FINISH;
-        1u64
-    }
-    state finished(p: &mut [u64; 128]) -> u64 {
-        p[16] = 0u64;
-        1u64
-    }
-}
-// Host may retain a completion only while this exact command is outstanding.
-machine accepts(p: &[u64; 128]) -> u64 {
-    transition p[2] == p[17] && p[3] >= READ && p[3] <= FINISH && p[16] == p[3] + 32u64 {
-        true -> (1u64)
-        _ -> (0u64)
+    machine cancelled(launch: &mut Launch, status: u64) -> bool {
+        launch.status = status;
+        children::launch::progress::cleanup(launch)
     }
 }

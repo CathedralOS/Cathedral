@@ -1,0 +1,81 @@
+module children::launch::progress;
+
+// Successful steps acquire cleanup obligations as they complete. On failure,
+// reclaim the admitted task before restoring a picker that this launch retired.
+use children::launch::operation::Launch;
+use children::launch::operation::Command;
+use children::launch::operation::Phase;
+
+public machine completed(launch: &mut Launch, command: Command, requires_storage: bool) -> bool {
+    transition command {
+        Command::Read -> read(launch)
+        Command::RetirePicker -> retired(launch)
+        Command::Admit -> admitted(launch, requires_storage)
+        Command::Bind -> bound(launch)
+        Command::Place -> placed(launch)
+        Command::Activate -> queue(launch, Command::Publish)
+        Command::Publish -> queue(launch, Command::Finish)
+        Command::Rollback -> rolled_back(launch)
+        Command::RestorePicker -> restored(launch)
+        Command::Finish -> finished(launch)
+    }
+    machine read(launch: &mut Launch) -> bool {
+        transition launch.plan.retire_picker {
+            true -> queue(launch, Command::RetirePicker)
+            _ -> queue(launch, Command::Admit)
+        }
+    }
+    machine retired(launch: &mut Launch) -> bool {
+        launch.picker_retired = true;
+        queue(launch, Command::Admit)
+    }
+    machine admitted(launch: &mut Launch, requires_storage: bool) -> bool {
+        launch.child_admitted = true;
+        transition requires_storage {
+            true -> queue(launch, Command::Bind)
+            _ -> bound(launch)
+        }
+    }
+    machine bound(launch: &mut Launch) -> bool {
+        transition launch.plan.place_child {
+            true -> queue(launch, Command::Place)
+            _ -> placed(launch)
+        }
+    }
+    machine placed(launch: &mut Launch) -> bool {
+        transition launch.plan.activate_desktop {
+            true -> queue(launch, Command::Activate)
+            _ -> queue(launch, Command::Publish)
+        }
+    }
+    machine rolled_back(launch: &mut Launch) -> bool {
+        launch.child_admitted = false;
+        cleanup(launch)
+    }
+    machine restored(launch: &mut Launch) -> bool {
+        launch.picker_retired = false;
+        queue(launch, Command::Finish)
+    }
+    machine finished(launch: &mut Launch) -> bool {
+        launch.phase = Phase::Dormant;
+        true
+    }
+}
+
+public machine cleanup(launch: &mut Launch) -> bool {
+    transition launch.child_admitted {
+        true -> queue(launch, Command::Rollback)
+        _ -> restore(launch)
+    }
+    machine restore(launch: &mut Launch) -> bool {
+        transition launch.picker_retired {
+            true -> queue(launch, Command::RestorePicker)
+            _ -> queue(launch, Command::Finish)
+        }
+    }
+}
+
+machine queue(launch: &mut Launch, command: Command) -> bool {
+    launch.phase = Phase::Ready { command: command };
+    true
+}
