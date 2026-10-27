@@ -7,8 +7,8 @@ use arch::isa::x86_64::memory::walk::X86TableEntryRoute;
 use arch::isa::x86_64::memory::walk::X86TableWalk;
 use core::memory::geometry::BootGeometry;
 use omega::language::core::extent;
-use paging_handoff;
-use boot_handoff;
+use lab::memory::mapping::firmware::root;
+use handoff::handoff;
 use memory_map::firmware_root;
 
 data FirmwareTableSlot {

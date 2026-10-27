@@ -9,8 +9,8 @@ use arch::isa::x86_64::memory::profile::BootstrapPagingProfile;
 use omega::language::core::assembly;
 use omega::language::core::extent;
 use omega::language::core::layout;
-use mapping_region;
-use mapping_handoff;
+use lab::memory::mapping::region;
+use lab::memory::mapping::custody;
 domain Extent::BootVirtualDestination established by BootVirtualReservation::reserve;
 
 boundary trait BootVirtualReservation {

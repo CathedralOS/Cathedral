@@ -1,0 +1,236 @@
+// Fixed serial marker bursts. The lab waits for COM1 before each call;
+// these leaves neither poll nor decide whether the memory step succeeded.
+use omega::language::core::assembly;
+
+public data BootMarkers {}
+
+public machine BootMarkers::handoff_received() reaches PortIo {
+    asm { out 1016, 66 } // Boot map ready
+    asm { out 1016, 111 }
+    asm { out 1016, 111 }
+    asm { out 1016, 116 }
+    asm { out 1016, 32 }
+    asm { out 1016, 109 }
+    asm { out 1016, 97 }
+    asm { out 1016, 112 }
+    asm { out 1016, 32 }
+    asm { out 1016, 114 }
+    asm { out 1016, 101 }
+    asm { out 1016, 97 }
+    asm { out 1016, 100 }
+    asm { out 1016, 121 }
+    asm { out 1016, 13 }
+    asm { out 1016, 10 }
+}
+
+public machine BootMarkers::entered() reaches PortIo {
+    asm { out 1016, 75 }   // K
+    asm { out 1016, 101 }  // e
+    asm { out 1016, 114 }  // r
+    asm { out 1016, 110 }  // n
+    asm { out 1016, 101 }  // e
+    asm { out 1016, 108 }  // l
+    asm { out 1016, 32 }
+    asm { out 1016, 101 }  // e
+    asm { out 1016, 110 }  // n
+    asm { out 1016, 116 }  // t
+    asm { out 1016, 101 }  // e
+    asm { out 1016, 114 }  // r
+    asm { out 1016, 101 }  // e
+    asm { out 1016, 100 }  // d
+    asm { out 1016, 13 }
+    asm { out 1016, 10 }
+}
+
+public machine BootMarkers::partitioned() reaches PortIo {
+    asm { out 1016, 77 }  // M
+    asm { out 1016, 101 } // e
+    asm { out 1016, 109 } // m
+    asm { out 1016, 111 } // o
+    asm { out 1016, 114 } // r
+    asm { out 1016, 121 } // y
+    asm { out 1016, 32 }
+    asm { out 1016, 115 } // s
+    asm { out 1016, 112 } // p
+    asm { out 1016, 108 } // l
+    asm { out 1016, 105 } // i
+    asm { out 1016, 116 } // t
+    asm { out 1016, 13 }
+    asm { out 1016, 10 }
+}
+
+public machine BootMarkers::memory_checked() reaches PortIo {
+    asm { out 1016, 77 }  // M
+    asm { out 1016, 101 } // e
+    asm { out 1016, 109 } // m
+    asm { out 1016, 111 } // o
+    asm { out 1016, 114 } // r
+    asm { out 1016, 121 } // y
+    asm { out 1016, 32 }
+    asm { out 1016, 99 }  // c
+    asm { out 1016, 104 } // h
+    asm { out 1016, 101 } // e
+    asm { out 1016, 99 }  // c
+    asm { out 1016, 107 } // k
+    asm { out 1016, 101 } // e
+    asm { out 1016, 100 } // d
+    asm { out 1016, 13 }
+    asm { out 1016, 10 }
+}
+
+public machine BootMarkers::pair_checked() reaches PortIo {
+    asm { out 1016, 77 }  // M
+    asm { out 1016, 101 } // e
+    asm { out 1016, 109 } // m
+    asm { out 1016, 111 } // o
+    asm { out 1016, 114 } // r
+    asm { out 1016, 121 } // y
+    asm { out 1016, 32 }
+    asm { out 1016, 112 } // p
+    asm { out 1016, 97 }  // a
+    asm { out 1016, 105 } // i
+    asm { out 1016, 114 } // r
+    asm { out 1016, 101 } // e
+    asm { out 1016, 100 } // d
+    asm { out 1016, 13 }
+    asm { out 1016, 10 }
+}
+
+public machine BootMarkers::page_ready() reaches PortIo {
+    asm { out 1016, 80 }  // P
+    asm { out 1016, 97 }  // a
+    asm { out 1016, 103 } // g
+    asm { out 1016, 101 } // e
+    asm { out 1016, 32 }
+    asm { out 1016, 114 } // r
+    asm { out 1016, 101 } // e
+    asm { out 1016, 97 }  // a
+    asm { out 1016, 100 } // d
+    asm { out 1016, 121 } // y
+    asm { out 1016, 13 }
+    asm { out 1016, 10 }
+}
+
+public machine BootMarkers::tables_ready() reaches PortIo {
+    asm { out 1016, 84 } // T
+    asm { out 1016, 97 } // a
+    asm { out 1016, 98 } // b
+    asm { out 1016, 108 } // l
+    asm { out 1016, 101 } // e
+    asm { out 1016, 115 } // s
+    asm { out 1016, 32 }
+    asm { out 1016, 114 } // r
+    asm { out 1016, 101 } // e
+    asm { out 1016, 97 } // a
+    asm { out 1016, 100 } // d
+    asm { out 1016, 121 } // y
+    asm { out 1016, 13 }
+    asm { out 1016, 10 }
+}
+
+public machine BootMarkers::cpu_checked() reaches PortIo {
+    asm { out 1016, 67 } // CPU checked
+    asm { out 1016, 80 }
+    asm { out 1016, 85 }
+    asm { out 1016, 32 }
+    asm { out 1016, 99 }
+    asm { out 1016, 104 }
+    asm { out 1016, 101 }
+    asm { out 1016, 99 }
+    asm { out 1016, 107 }
+    asm { out 1016, 101 }
+    asm { out 1016, 100 }
+    asm { out 1016, 13 }
+    asm { out 1016, 10 }
+}
+
+public machine BootMarkers::root_located() reaches PortIo {
+    asm { out 1016, 82 } // Root located
+    asm { out 1016, 111 }
+    asm { out 1016, 111 }
+    asm { out 1016, 116 }
+    asm { out 1016, 32 }
+    asm { out 1016, 108 }
+    asm { out 1016, 111 }
+    asm { out 1016, 99 }
+    asm { out 1016, 97 }
+    asm { out 1016, 116 }
+    asm { out 1016, 101 }
+    asm { out 1016, 100 }
+    asm { out 1016, 13 }
+    asm { out 1016, 10 }
+}
+
+public machine BootMarkers::root_read() reaches PortIo {
+    asm { out 1016, 82 } // Root read
+    asm { out 1016, 111 }
+    asm { out 1016, 111 }
+    asm { out 1016, 116 }
+    asm { out 1016, 32 }
+    asm { out 1016, 114 }
+    asm { out 1016, 101 }
+    asm { out 1016, 97 }
+    asm { out 1016, 100 }
+    asm { out 1016, 13 }
+    asm { out 1016, 10 }
+}
+
+public machine BootMarkers::tables_retained() reaches PortIo {
+    asm { out 1016, 84 } // Tables retained
+    asm { out 1016, 97 }
+    asm { out 1016, 98 }
+    asm { out 1016, 108 }
+    asm { out 1016, 101 }
+    asm { out 1016, 115 }
+    asm { out 1016, 32 }
+    asm { out 1016, 114 }
+    asm { out 1016, 101 }
+    asm { out 1016, 116 }
+    asm { out 1016, 97 }
+    asm { out 1016, 105 }
+    asm { out 1016, 110 }
+    asm { out 1016, 101 }
+    asm { out 1016, 100 }
+    asm { out 1016, 13 }
+    asm { out 1016, 10 }
+}
+
+public machine BootMarkers::mapping_retired() reaches PortIo {
+    asm { out 1016, 77 } // Mapping retired
+    asm { out 1016, 97 }
+    asm { out 1016, 112 }
+    asm { out 1016, 112 }
+    asm { out 1016, 105 }
+    asm { out 1016, 110 }
+    asm { out 1016, 103 }
+    asm { out 1016, 32 }
+    asm { out 1016, 114 }
+    asm { out 1016, 101 }
+    asm { out 1016, 116 }
+    asm { out 1016, 105 }
+    asm { out 1016, 114 }
+    asm { out 1016, 101 }
+    asm { out 1016, 100 }
+    asm { out 1016, 13 }
+    asm { out 1016, 10 }
+}
+
+public machine BootMarkers::mapping_checked() reaches PortIo {
+    asm { out 1016, 77 } // Mapping checked
+    asm { out 1016, 97 }
+    asm { out 1016, 112 }
+    asm { out 1016, 112 }
+    asm { out 1016, 105 }
+    asm { out 1016, 110 }
+    asm { out 1016, 103 }
+    asm { out 1016, 32 }
+    asm { out 1016, 99 }
+    asm { out 1016, 104 }
+    asm { out 1016, 101 }
+    asm { out 1016, 99 }
+    asm { out 1016, 107 }
+    asm { out 1016, 101 }
+    asm { out 1016, 100 }
+    asm { out 1016, 13 }
+    asm { out 1016, 10 }
+}

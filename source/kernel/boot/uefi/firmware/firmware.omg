@@ -1,0 +1,81 @@
+// Cathedral's intended Omega boot sequence: greet, validate the memory map,
+// exit Boot Services, report over COM1, then transfer both admitted roots to
+// the Build-selected kernel entry. See README.md for the fresh-image oracle
+// and the separate provider assumptions behind those grants.
+
+use core::memory::extent::CathedralExtentRootProvider; // selected by build.omg
+use uefi::uefi;            // EfiHandle, EfiStatus, EFI_SUCCESS, EfiSystemTable, TextOutputProtocol, SimpleTextOutput
+use uefi::boot_services;   // BootServices
+use uefi::loaded_image;
+use firmware::ownership::ownership;
+use omega::language::core::assembly; // PortIo, MachineControl
+use omega::language::core::extent;   // ExtentRootProvider
+use omega::language::core::program_image;
+use omega::language::core::layout;
+
+// Invocation-owned storage. Provider implementations are selected in build.omg;
+// firmware handles and table borrows stay explicit arguments. Neither this
+// record nor provider selection grants authority to a firmware occurrence.
+data Main {
+    msg:      [u16; 19];         // "Hello from Omega\r\n\0" as UTF-16 CHAR16 code units
+    map_buf:  UefiMemoryMapStorage; // aligned bounded map backing, no authority
+    final_map_size: u64;
+    final_descriptor_size: u64;
+    image_base: addr;
+    image_size: u64;
+    image_retained_start: u64;
+}
+
+// Ordinary checked boot logic, not a physical firmware entry declaration.
+// Selecting PE's subsystem alone cannot install this function or establish
+// the validity of table. The target adapter must supply those premises.
+machine Main::run(context: &mut Main, handle: EfiHandle in LoadedApplication, table: &EfiSystemTable) -> EfiStatus
+reaches SimpleTextOutput + LoadedImageAccess + BootServices + ExtentRootProvider + ProgramStorageEntry + ProgramImage + ResourceProfileSupply + PortIo + MachineControl
+invokes SimpleTextOutput;
+invokes LoadedImageAccess;
+invokes BootServices;
+invokes ExtentRootProvider;
+invokes ProgramStorageEntry;
+invokes ProgramImage;
+invokes ResourceProfileSupply;
+requires addr::Bound == 18446744073709551616
+{
+    context.msg = utf16"Hello from Omega\r\n\0";
+    // Project con_out through a frame local (the reference-param deref), then
+    // dispatch OutputString(con_out, &msg) through the firmware's own vtable.
+    // This borrow must originate from the adapter's validated firmware input.
+    let con_out: &TextOutputProtocol = table.con_out;
+    let status: EfiStatus = SimpleTextOutput::output_string(con_out, &context.msg);
+    // A failed greeting must not silently proceed into irreversible handoff.
+    // Preserve the firmware status while Boot Services are still available.
+    transition status.code == 0 {
+        true -> discover_image(context, handle, table)
+        _ -> (status)
+    }
+    state discover_image(context: &mut Main, handle: EfiHandle in LoadedApplication,
+                         table: &EfiSystemTable) -> EfiStatus
+    requires addr::Bound == 18446744073709551616
+    {
+        let empty: EfiLoadedImage;
+        let mut output: LoadedImageOutput = LoadedImageOutput { image: &empty };
+        let status: EfiStatus = LoadedImageAccess::discover(
+            table.boot_services, handle, &LOADED_IMAGE_PROTOCOL_GUID, &mut output
+        );
+        context.image_base = output.image.image_base;
+        context.image_size = output.image.image_size;
+        context.image_retained_start = ProgramImage::retained_suffix_start() as u64;
+        transition status.code == 0 {
+            true -> take_ownership(context, handle as EfiHandle, table)
+            _ -> (status)
+        }
+    }
+
+    state take_ownership(context: &mut Main, handle: EfiHandle, table: &EfiSystemTable) -> EfiStatus
+    requires addr::Bound == 18446744073709551616
+    {
+        // Walk the memory map, exit Boot Services, obtain the first qualified
+        // Extent, then idle retaining it. The success route does not return.
+        Main::own_machine(context, handle, table);
+        transition { _ -> (EFI_SUCCESS) }
+    }
+}

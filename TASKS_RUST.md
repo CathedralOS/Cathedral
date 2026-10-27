@@ -89,9 +89,11 @@ This is not a completed tree-wide cleanup. The stock matrix policy no longer
 uses native packets as its domain model; retain its host regressions as further
 mechanisms move into Omega. The Omega kernel now separates shared ownership
 in `kernel/core/` from x86 mechanisms in `kernel/arch/isa/x86_64/` and PIC/PIT
-policy in `kernel/arch/board/pc/`. Its UEFI experiment still needs focused
-firmware/handoff/memory ownership; its older boundary/interrupt prototypes also
-need compiler qualification before new kernel features. Start the audit at
+policy in `kernel/arch/board/pc/`. UEFI now has separate physical-entry, firmware,
+handoff and post-handoff memory-lab owners. The lab coordinator and firmware
+ownership transaction still need smaller stage entrances, but first restore
+full compiler qualification of their retained contracts. Older interrupt
+prototypes also need qualification before new kernel features. Start the audit at
 [source/README.md](source/README.md), with the ownership map and actual entrances.
 
 The directory move requires reviewing the compiler's local source-location
@@ -342,6 +344,41 @@ numeric probes. Do not claim current live interrupt or full native-kernel suppor
 Logs are `build/omega-component/kernel-{structure,table-walk,table-clone,paging-profile,root-geometry}-{baseline,relocated}.log`
 and `kernel-validation-check.log`. Continue architectural cleanup and separately
 resolve source/compiler compatibility without weakening the resource contracts.
+
+
+UEFI structure follow-up over `f725f202`: `boot/uefi/main.omg` is now the real
+firmware-arrival validator. It enters `firmware/firmware.omg`, then the bounded
+map/exit/grant transaction under `firmware/ownership/`. The copied boot record
+lives in `handoff/`; backing assumptions in `memory/profile.omg`. The selected
+semantic continuation is visibly a lab under `lab/memory/`, with lifecycle,
+aligned-page and mapping owners. Mapping descends into firmware-table retention,
+hardware custody, activation/retirement and destination checks. The actual root
+entry path and build-selected `Kernel::enter` identity remain unchanged. The
+contract dependency is now named `uefi_memory` so it cannot shadow local
+`memory/profile.omg`.
+
+Thirteen fixed COM1 marker bursts moved to `lab/memory/diagnostics/markers.omg`;
+the lab retains its polling, timeouts and success/failure transitions. Expanding
+those calls reproduces the original code tokens. This is not yet a small lab
+coordinator: repeated UART waits and retained-state continuations still need
+cleanup once full compiler checking can qualify that refactor. The older
+firmware ownership transaction also retains descriptor-walk/report details.
+
+The firmware-root test exposed a missing domain qualification from the preceding
+core namespace move. Both firmware consumers now name
+`core::memory::geometry::BootGeometry::Separated` explicitly; no arithmetic or
+separation condition was relaxed. The complete map/root probe now passes native
+and interpreted execution. The diagnostic leaves pass checked compilation in
+an isolated freestanding consumer and were not executed on the host. Layout
+(73 Omega / 151 Rust edges), eight dependency-law tests, 19 harness tests, local
+import paths and navigation checks pass. Source-token comparison verifies the
+relocated bodies after accounting for those domain names and marker calls.
+Logs: `build/omega-component/uefi-{firmware-root-relocated,markers-check,structure-build}.log`.
+Full boot still stops at the existing `ExtentRootProvider` build-selection
+lookup; explicit qualification or an extra build import did not resolve it and
+those experiments were discarded. No native-boot success is claimed. Diagnose
+that source/compiler boundary next before further rewriting retained control
+flow; the ordinary Rust-kernel F5 desktop is a separate baseline.
 
 ## Memory budgets and allocator delegation
 

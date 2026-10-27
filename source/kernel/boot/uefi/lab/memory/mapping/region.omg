@@ -1,6 +1,6 @@
 use omega::language::core::extent;
 use omega::language::core::layout;
-use boot_memory;
+use memory::profile;
 
 // The boot composition chooses one bounded region. Allocation, leaf
 // installation and access iterate this same geometry; no per-count compiler

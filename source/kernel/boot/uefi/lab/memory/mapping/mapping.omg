@@ -5,12 +5,12 @@ use arch::isa::x86_64::memory::memory::PageTableReservation;
 use arch::isa::x86_64::memory::memory::PreparedPageTables;
 use omega::language::core::extent;
 use omega::language::core::layout;
-use firmware_tables;
-use page_frame;
-use boot_memory;
-use mapping_handoff;
-use mapping_activation;
-use mapping_region;
+use lab::memory::mapping::firmware::firmware;
+use lab::memory::page;
+use memory::profile;
+use lab::memory::mapping::custody;
+use lab::memory::mapping::activation;
+use lab::memory::mapping::region;
 
 data BootPageTables {
     leading: Extent in Granted & Vacant;

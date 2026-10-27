@@ -1,3 +1,4 @@
+use firmware::firmware;
 // source/boot/uefi/own_machine.omg
 //
 // MILESTONE 2 — own the machine. Get the firmware memory map, walk it for free
@@ -16,11 +17,11 @@ use core::memory::geometry::BootGeometry;
 use core::memory::geometry::BootGeometryCheck;
 use uefi::uefi;            // EfiHandle, EfiSystemTable, EfiStatus
 use uefi::boot_services;   // MapKey, BootServicesTable and callable services
-use memory::memory_map;    // EfiMemoryDescriptor and memory type/attribute data
+use uefi_memory::memory_map;    // EfiMemoryDescriptor and memory type/attribute data
 use omega::language::core::assembly; // PortIo, MachineControl
 use omega::language::core::extent;   // Extent, Granted, ExtentRootProvider
 use omega::language::core::layout;
-use boot_handoff;
+use handoff::handoff;
 
 // Conservative runtime geometry ceiling for one page-count multiplication.
 // This is ordinary Cathedral policy over firmware data, not evidence that the
@@ -510,7 +511,7 @@ requires addr::Bound == 18446744073709551616
     // unowned.
     state exit(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                stale_retry_used: u64, key: MapKey,
-               best_pages: u64, geometry: BootGeometry in Separated)
+               best_pages: u64, geometry: BootGeometry in core::memory::geometry::BootGeometry::Separated)
     requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         let exit_status: EfiStatus = BootServices::exit_boot_services(bs, handle, key);
@@ -538,7 +539,7 @@ requires addr::Bound == 18446744073709551616
     // validated largest-span values, then cross the admitted owner-authored
     // provider requirement for each root. Reconstructing these fields alone
     // does not grant authority; the selected calls establish their claims.
-    state own(context: &mut Main, geometry: BootGeometry in Separated, best_pages: u64)
+    state own(context: &mut Main, geometry: BootGeometry in core::memory::geometry::BootGeometry::Separated, best_pages: u64)
     requires addr::Bound == 18446744073709551616
     {
         let image_geometry: Extent = Extent {

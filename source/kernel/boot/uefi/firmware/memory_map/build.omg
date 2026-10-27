@@ -1,0 +1,5 @@
+machine build(builder: &mut Build) {
+    Build::package(builder, "cathedral_boot_memory_map");
+    Build::depend_as(builder, "memory", Source::Path { location: "../../../../../contracts/uefi/memory" });
+    Build::depend_as(builder, "core", Source::Path { location: "../../../../core" });
+}

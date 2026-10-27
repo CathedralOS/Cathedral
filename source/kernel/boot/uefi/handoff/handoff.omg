@@ -1,6 +1,6 @@
 use omega::language::core::extent;
 use omega::language::core::layout;
-use boot_memory;
+use memory::profile;
 
 // The semantic entry carries two extents, not hidden firmware parameters.
 // Boot writes this copy-only packet into its granted initial storage after

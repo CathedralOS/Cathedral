@@ -90,7 +90,7 @@ yet specify those operations.
 - The Cathedral provider adapter is
   [`source/kernel/core/memory/extent.omg`](../../../source/kernel/core/memory/extent.omg).
 - The admitted invocation and lifetime are in
-  [`source/kernel/boot/uefi/own_machine.omg`](../../../source/kernel/boot/uefi/own_machine.omg).
+  [`source/kernel/boot/uefi/firmware/ownership/ownership.omg`](../../../source/kernel/boot/uefi/firmware/ownership/ownership.omg).
 - Omega owns the generic rules for
   [authority establishment](https://github.com/CathedralOS/Omega/blob/main/wiki/spec/resources/authority.md)
   and [extents](https://github.com/CathedralOS/Omega/blob/main/wiki/spec/resources/extents.md).

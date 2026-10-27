@@ -1,11 +1,24 @@
 # Omega boot frontier
 
+Start at [main.omg](main.omg), the selected physical firmware arrival. It
+validates the table and enters [firmware discovery](firmware/firmware.omg), then
+[ownership](firmware/ownership/ownership.omg) for the final map/exit/grant
+transaction. [handoff](handoff/handoff.omg) owns the copied boot record; the
+[boot memory profile](memory/profile.omg) owns its admitted backing assumptions.
+
+The semantic continuation is currently the [memory lab](lab/memory/main.omg),
+not a normal task-starting kernel. Its [mapping entrance](lab/memory/mapping/mapping.omg)
+descends into clone/program/activate/retire checks. The build selects that
+continuation explicitly. Current compiler compatibility failures are recorded
+in [TASKS_RUST.md](../../../../TASKS_RUST.md); the historical proof notes below
+are not a claim that the current compiler boots this tree.
+
 This directory contains Cathedral's boot source and a bounded physical-entry
 ladder. `build.omg` selects `CathedralBootstrap` for firmware arrival and binds
 the target's semantic slot to `Kernel::enter(context, image, initial_storage)`.
-`physical_entry.omg` validates the incoming table header and invokes the checked
-boot sequence. That sequence greets, discovers LoadedImage geometry, and enters
-the map/exit/report implementation in `own_machine.omg`. After successful
+`main.omg` validates the incoming table header and invokes the checked
+sequence in `firmware/firmware.omg`. That sequence greets, discovers LoadedImage geometry, and enters
+the map/exit/report implementation in `firmware/ownership/ownership.omg`. After successful
 ExitBootServices it grants both retained roots, writes the final-map handoff
 packet into initial storage, and calls `ProgramStorageEntry`.
 The explicitly selected native provider transfers them to the exact
@@ -128,7 +141,7 @@ acceptance as if it were portable.
 
 ## Boundaries and next work
 
-`boot_handoff.omg` preserves the exact successful final map and its runtime
+`handoff/handoff.omg` preserves the exact successful final map and its runtime
 descriptor stride, full image geometry and retained-suffix boundary. The
 physical adapter writes this copy-only packet through an exclusive External
 view of its existing initial-storage grant. The kernel opens a shared view
@@ -174,7 +187,7 @@ supplies the explicitly admitted Stable read/write premise for this retained
 ConventionalMemory range. Its complete profile is bound to the unchanged extent;
 an independently constructed profile is not authority.
 
-`memory_lifecycle.omg` first reconstructs the prefix from each partition's
+`lab/memory/lifecycle.omg` first reconstructs the prefix from each partition's
 complete live descendants. Its ordinary checked contract conserves Granted and
 Vacant separately; numeric equality supplies neither backing nor a fresh grant.
 The zero/full cases retain empty children as distinct claims. This requires
@@ -215,7 +228,7 @@ lineage contract; it does not prevent allocation or simultaneous live residents.
 
 ## Aligned page preparation
 
-`page_frame.omg` reserves one aligned 4096-byte page after an ordinary eight-byte
+`lab/memory/page.omg` reserves one aligned 4096-byte page after an ordinary eight-byte
 leading reservation. The resulting misalignment exercises retained padding,
 rather than relying only on firmware-aligned input. Address-to-count conversion
 uses the explicit 64-bit address-model premise already supplied by this UEFI
@@ -265,7 +278,7 @@ must retain its storage even when earlier partial transfers retire live facts.
 
 ## Borrowed page snapshot
 
-`paging_handoff.omg` copies a qualified 4096-byte page through a read-only
+`lab/memory/mapping/firmware/root.omg` copies a qualified 4096-byte page through a read-only
 External placed view. It retains the view through the copying states and
 returns an ordinary 512-word snapshot; the caller keeps the original extent.
 `PageFrame::prepare` exercises it on the known resident page before extraction,
@@ -285,7 +298,7 @@ The known-page test also requests a Stable view through the External-only
 `BootMemory` supplies stronger permissions for that same backing. Both roles
 are explicit applied boundary requirements; choosing a role does not grant
 storage or borrow permissions. The ordinary RAM provider lives in
-`boot_memory.omg`; the firmware provider lives beside the snapshot operation.
+`memory/profile.omg`; the firmware provider lives beside the snapshot operation.
 Snapshot success does not install translations.
 
 ## CPU paging profile
@@ -343,7 +356,7 @@ entry. The original grant is retained on every subsequent success and failure
 path. The root is not reclassified as Vacant or an Omega Resident. Hardware
 may update entries during the copy: it is not an atomic hierarchy snapshot.
 
-`firmware_tables.omg` continues from that root into a bounded four-level
+`lab/memory/mapping/firmware/firmware.omg` continues from that root into a bounded four-level
 traversal. Every new child must pass the same complete-map and full image/
 original allocator-root exclusions before its separately admitted grant.
 Physical frames are deduplicated; the same frame may be visited once at each
@@ -375,7 +388,7 @@ addresses.
 
 ## Closed mapping activation and retirement
 
-After table retention, `mapping_handoff.omg` snapshots the firmware path to the
+After table retention, `lab/memory/mapping/custody.omg` snapshots the firmware path to the
 reserved virtual range and `core::page_table_clone` copies only that path into
 the four owned table pages. Off-path translations remain intact, including
 image and private-stack mappings. Splitting large leaves preserves their PAT
@@ -386,7 +399,7 @@ new pointer. Hosted native/Terminal controls exercise these numeric rules.
 The root grant beside `Kernel::mapping` explicitly admits a fresh 12-KiB
 virtual-space claim at 1 GiB; it is not a physical-memory grant inferred from an
 address. `BootVirtualReservation` qualifies that already granted claim.
-`mapping_region.omg` initializes a distinct three-page physical allocation
+`lab/memory/mapping/region.omg` initializes a distinct three-page physical allocation
 from the retained vacant tail before any alias exists. The original one-page
 construction witness, new physical region, replacement tables and inventory stay
 independently owned. Neither numeric layout nor a copied table word grants
@@ -400,7 +413,7 @@ provider additionally admits effective write-back cache compatibility, including
 the physical identity aliases and MTRR/platform effects. A PAT[0] check alone
 does not establish that premise.
 
-`mapping_activation.omg` exclusively borrows the whole `BootMapping` carrier,
+`lab/memory/mapping/activation.omg` exclusively borrows the whole `BootMapping` carrier,
 disables interrupts and rechecks the live CR0/CR3/CR4/EFER/PAT profile immediately
 before installation. The supported uniprocessor regime excludes PGE, PCID,
 five-level paging, CET and PKS. MOV CR3 publishes the new root and flushes its

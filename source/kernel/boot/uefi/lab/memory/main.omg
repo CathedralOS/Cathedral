@@ -1,3 +1,8 @@
+// Post-handoff memory lab. The selected entry validates its copied boot record,
+// exercises conserved storage, then retains all roots while idling. This is not
+// the Rust kernel's normal task startup. Serial byte sequences live in diagnostics.
+use lab::memory::diagnostics::markers;
+
 use arch::isa::x86_64::memory::memory::PageTableBuilder;
 use arch::isa::x86_64::memory::memory::PageTableReservation;
 use arch::isa::x86_64::memory::profile::BootstrapPaging;
@@ -6,16 +11,16 @@ use core::memory::geometry::BootGeometry;
 use omega::language::core::extent;
 use omega::language::core::assembly;
 use omega::language::core::layout;
-use memory_lifecycle;
-use page_frame;
-use boot_handoff;
+use lab::memory::lifecycle;
+use lab::memory::page;
+use handoff::handoff;
 use memory_map::firmware_root;
-use boot_memory;
-use paging_handoff;
-use firmware_tables;
-use mapping_exercise;
-use mapping_activation;
-use mapping_region;
+use memory::profile;
+use lab::memory::mapping::firmware::root;
+use lab::memory::mapping::firmware::firmware;
+use lab::memory::mapping::mapping;
+use lab::memory::mapping::activation;
+use lab::memory::mapping::region;
 
 data KernelState {
     entered: bool;
@@ -152,22 +157,7 @@ crashes Abort
                          initial_storage: Extent in Granted)
     requires addr::Bound == 18446744073709551616
     {
-        asm { out 1016, 66 } // Boot map ready
-        asm { out 1016, 111 }
-        asm { out 1016, 111 }
-        asm { out 1016, 116 }
-        asm { out 1016, 32 }
-        asm { out 1016, 109 }
-        asm { out 1016, 97 }
-        asm { out 1016, 112 }
-        asm { out 1016, 32 }
-        asm { out 1016, 114 }
-        asm { out 1016, 101 }
-        asm { out 1016, 97 }
-        asm { out 1016, 100 }
-        asm { out 1016, 121 }
-        asm { out 1016, 13 }
-        asm { out 1016, 10 }
+        BootMarkers::handoff_received();
         transition { _ -> announce(context, image, initial_storage, 1000000) }
     }
 
@@ -198,22 +188,7 @@ crashes Abort
     state report(context: &mut KernelState, image: Extent in Granted, initial_storage: Extent in Granted)
     requires addr::Bound == 18446744073709551616
     {
-        asm { out 1016, 75 }   // K
-        asm { out 1016, 101 }  // e
-        asm { out 1016, 114 }  // r
-        asm { out 1016, 110 }  // n
-        asm { out 1016, 101 }  // e
-        asm { out 1016, 108 }  // l
-        asm { out 1016, 32 }
-        asm { out 1016, 101 }  // e
-        asm { out 1016, 110 }  // n
-        asm { out 1016, 116 }  // t
-        asm { out 1016, 101 }  // e
-        asm { out 1016, 114 }  // r
-        asm { out 1016, 101 }  // e
-        asm { out 1016, 100 }  // d
-        asm { out 1016, 13 }
-        asm { out 1016, 10 }
+        BootMarkers::entered();
         let vacant: Extent in Granted & Vacant = VacantContentTransfer::transfer(initial_storage);
         transition vacant.length >= 4096 {
             true -> reserve(context, image, vacant)
@@ -268,20 +243,7 @@ crashes Abort
                         parts: VacantExtentParts)
     requires addr::Bound == 18446744073709551616
     {
-        asm { out 1016, 77 }  // M
-        asm { out 1016, 101 } // e
-        asm { out 1016, 109 } // m
-        asm { out 1016, 111 } // o
-        asm { out 1016, 114 } // r
-        asm { out 1016, 121 } // y
-        asm { out 1016, 32 }
-        asm { out 1016, 115 } // s
-        asm { out 1016, 112 } // p
-        asm { out 1016, 108 } // l
-        asm { out 1016, 105 } // i
-        asm { out 1016, 116 } // t
-        asm { out 1016, 13 }
-        asm { out 1016, 10 }
+        BootMarkers::partitioned();
         transition { _ -> exercise_memory(context, image, parts) }
     }
 
@@ -335,22 +297,7 @@ crashes Abort
                           parts: VacantExtentParts)
     requires addr::Bound == 18446744073709551616
     {
-        asm { out 1016, 77 }  // M
-        asm { out 1016, 101 } // e
-        asm { out 1016, 109 } // m
-        asm { out 1016, 111 } // o
-        asm { out 1016, 114 } // r
-        asm { out 1016, 121 } // y
-        asm { out 1016, 32 }
-        asm { out 1016, 99 }  // c
-        asm { out 1016, 104 } // h
-        asm { out 1016, 101 } // e
-        asm { out 1016, 99 }  // c
-        asm { out 1016, 107 } // k
-        asm { out 1016, 101 } // e
-        asm { out 1016, 100 } // d
-        asm { out 1016, 13 }
-        asm { out 1016, 10 }
+        BootMarkers::memory_checked();
         transition parts.taken.length >= 16 {
             true -> exercise_pair(context, image, parts)
             _ -> retain_parts(context, image, parts)
@@ -400,21 +347,7 @@ crashes Abort
                         pair: KernelMemoryPair, rest: Extent in Granted & Vacant)
     requires addr::Bound == 18446744073709551616
     {
-        asm { out 1016, 77 }  // M
-        asm { out 1016, 101 } // e
-        asm { out 1016, 109 } // m
-        asm { out 1016, 111 } // o
-        asm { out 1016, 114 } // r
-        asm { out 1016, 121 } // y
-        asm { out 1016, 32 }
-        asm { out 1016, 112 } // p
-        asm { out 1016, 97 }  // a
-        asm { out 1016, 105 } // i
-        asm { out 1016, 114 } // r
-        asm { out 1016, 101 } // e
-        asm { out 1016, 100 } // d
-        asm { out 1016, 13 }
-        asm { out 1016, 10 }
+        BootMarkers::pair_checked();
         transition rest.length >= 8199 {
             true -> prepare_page(context, image, pair, rest)
             _ -> retain_pair(context, image, pair, rest)
@@ -463,18 +396,7 @@ crashes Abort
                       pair: KernelMemoryPair, page: BootPage)
     requires addr::Bound == 18446744073709551616
     {
-        asm { out 1016, 80 }  // P
-        asm { out 1016, 97 }  // a
-        asm { out 1016, 103 } // g
-        asm { out 1016, 101 } // e
-        asm { out 1016, 32 }
-        asm { out 1016, 114 } // r
-        asm { out 1016, 101 } // e
-        asm { out 1016, 97 }  // a
-        asm { out 1016, 100 } // d
-        asm { out 1016, 121 } // y
-        asm { out 1016, 13 }
-        asm { out 1016, 10 }
+        BootMarkers::page_ready();
         transition page.reservation.tail.length >= 20479 {
             true -> prepare_tables(context, image, pair, page)
             _ -> retain_page(context, image, pair, page)
@@ -545,20 +467,7 @@ crashes Abort
                         pair: KernelMemoryPair, tables: BootPageTables)
     requires addr::Bound == 18446744073709551616
     {
-        asm { out 1016, 84 } // T
-        asm { out 1016, 97 } // a
-        asm { out 1016, 98 } // b
-        asm { out 1016, 108 } // l
-        asm { out 1016, 101 } // e
-        asm { out 1016, 115 } // s
-        asm { out 1016, 32 }
-        asm { out 1016, 114 } // r
-        asm { out 1016, 101 } // e
-        asm { out 1016, 97 } // a
-        asm { out 1016, 100 } // d
-        asm { out 1016, 121 } // y
-        asm { out 1016, 13 }
-        asm { out 1016, 10 }
+        BootMarkers::tables_ready();
         transition { _ -> inspect_paging(context, image, pair, tables) }
     }
 
@@ -599,19 +508,7 @@ crashes Abort
                         pair: KernelMemoryPair, tables: BootPageTables)
     requires addr::Bound == 18446744073709551616
     {
-        asm { out 1016, 67 } // CPU checked
-        asm { out 1016, 80 }
-        asm { out 1016, 85 }
-        asm { out 1016, 32 }
-        asm { out 1016, 99 }
-        asm { out 1016, 104 }
-        asm { out 1016, 101 }
-        asm { out 1016, 99 }
-        asm { out 1016, 107 }
-        asm { out 1016, 101 }
-        asm { out 1016, 100 }
-        asm { out 1016, 13 }
-        asm { out 1016, 10 }
+        BootMarkers::cpu_checked();
         transition { _ -> locate_firmware_root(context, image, pair, tables) }
     }
 
@@ -665,20 +562,7 @@ crashes Abort
                       pair: KernelMemoryPair, tables: BootPageTables)
     requires addr::Bound == 18446744073709551616
     {
-        asm { out 1016, 82 } // Root located
-        asm { out 1016, 111 }
-        asm { out 1016, 111 }
-        asm { out 1016, 116 }
-        asm { out 1016, 32 }
-        asm { out 1016, 108 }
-        asm { out 1016, 111 }
-        asm { out 1016, 99 }
-        asm { out 1016, 97 }
-        asm { out 1016, 116 }
-        asm { out 1016, 101 }
-        asm { out 1016, 100 }
-        asm { out 1016, 13 }
-        asm { out 1016, 10 }
+        BootMarkers::root_located();
         transition { _ -> admit_firmware_root(context, image, pair, tables) }
     }
 
@@ -757,17 +641,7 @@ crashes Abort
                            retained_root: Extent in Granted)
     requires addr::Bound == 18446744073709551616
     {
-        asm { out 1016, 82 } // Root read
-        asm { out 1016, 111 }
-        asm { out 1016, 111 }
-        asm { out 1016, 116 }
-        asm { out 1016, 32 }
-        asm { out 1016, 114 }
-        asm { out 1016, 101 }
-        asm { out 1016, 97 }
-        asm { out 1016, 100 }
-        asm { out 1016, 13 }
-        asm { out 1016, 10 }
+        BootMarkers::root_read();
         transition { _ -> collect_firmware_tables(context, image, pair, tables, retained_root) }
     }
 
@@ -819,23 +693,7 @@ crashes Abort
                          inventory: FirmwareTableInventory)
     requires addr::Bound == 18446744073709551616
     {
-        asm { out 1016, 84 } // Tables retained
-        asm { out 1016, 97 }
-        asm { out 1016, 98 }
-        asm { out 1016, 108 }
-        asm { out 1016, 101 }
-        asm { out 1016, 115 }
-        asm { out 1016, 32 }
-        asm { out 1016, 114 }
-        asm { out 1016, 101 }
-        asm { out 1016, 116 }
-        asm { out 1016, 97 }
-        asm { out 1016, 105 }
-        asm { out 1016, 110 }
-        asm { out 1016, 101 }
-        asm { out 1016, 100 }
-        asm { out 1016, 13 }
-        asm { out 1016, 10 }
+        BootMarkers::tables_retained();
         transition { _ -> mapping(context, image, pair, tables, inventory) }
     }
 
@@ -896,23 +754,7 @@ crashes Abort
                                  attempt: MappingAttempt, verified: bool)
     requires addr::Bound == 18446744073709551616
     {
-        asm { out 1016, 77 } // Mapping retired
-        asm { out 1016, 97 }
-        asm { out 1016, 112 }
-        asm { out 1016, 112 }
-        asm { out 1016, 105 }
-        asm { out 1016, 110 }
-        asm { out 1016, 103 }
-        asm { out 1016, 32 }
-        asm { out 1016, 114 }
-        asm { out 1016, 101 }
-        asm { out 1016, 116 }
-        asm { out 1016, 105 }
-        asm { out 1016, 114 }
-        asm { out 1016, 101 }
-        asm { out 1016, 100 }
-        asm { out 1016, 13 }
-        asm { out 1016, 10 }
+        BootMarkers::mapping_retired();
         transition { _ -> mapping_checked(context, image, pair, inventory, attempt, verified) }
     }
 
@@ -955,23 +797,7 @@ crashes Abort
                          pair: KernelMemoryPair, inventory: FirmwareTableInventory, attempt: MappingAttempt)
     requires addr::Bound == 18446744073709551616
     {
-        asm { out 1016, 77 } // Mapping checked
-        asm { out 1016, 97 }
-        asm { out 1016, 112 }
-        asm { out 1016, 112 }
-        asm { out 1016, 105 }
-        asm { out 1016, 110 }
-        asm { out 1016, 103 }
-        asm { out 1016, 32 }
-        asm { out 1016, 99 }
-        asm { out 1016, 104 }
-        asm { out 1016, 101 }
-        asm { out 1016, 99 }
-        asm { out 1016, 107 }
-        asm { out 1016, 101 }
-        asm { out 1016, 100 }
-        asm { out 1016, 13 }
-        asm { out 1016, 10 }
+        BootMarkers::mapping_checked();
         transition { _ -> retain_mapping(context, image, pair, inventory, attempt) }
     }
 

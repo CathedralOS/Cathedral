@@ -8,7 +8,7 @@ port-I/O executor, MMIO pointer wrapper, or capability constructor.
 `backend/pio.rs::_read_register` and `_write_register` require a granted x86
 port range, byte-width input/output operations, and exclusive protocol ownership
 across DLAB bank changes. A valid number is not a grant. Cathedral's existing
-`source/kernel/boot/uefi/own_machine.omg` explicitly reaches `PortIo`; the audited
+`source/kernel/boot/uefi/firmware/ownership/ownership.omg` explicitly reaches `PortIo`; the audited
 request data does not replace or expand that authority. Eight consecutive ports
 fit only when base<=65528. Addition to a validated base must retain that bound.
 

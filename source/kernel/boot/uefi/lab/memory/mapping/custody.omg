@@ -10,8 +10,8 @@ use arch::isa::x86_64::memory::walk::X86TableEntryRoute;
 use arch::isa::x86_64::memory::walk::X86TableWalk;
 use omega::language::core::extent;
 use omega::language::core::layout;
-use firmware_tables;
-use paging_handoff;
+use lab::memory::mapping::firmware::firmware;
+use lab::memory::mapping::firmware::root;
 
 data MappingHandoff {}
 

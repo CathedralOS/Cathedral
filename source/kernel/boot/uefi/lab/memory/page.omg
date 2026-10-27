@@ -1,7 +1,7 @@
 use omega::language::core::extent;
 use omega::language::core::layout;
-use paging_handoff;
-use boot_memory;
+use lab::memory::mapping::firmware::root;
+use memory::profile;
 
 // Boot owns this first page and all skipped bytes until a later kernel owner
 // takes them. Alignment is geometry, not authority: both splits conserve the

@@ -7,7 +7,8 @@ record the prototype's intended sequence and historical boot evidence.
 The owners now follow the Rust kernel:
 
 - [boot/uefi](boot/uefi/main.omg) owns firmware discovery, exit and the retained
-  handoff. Its experiment still needs a focused firmware/handoff/memory split.
+  handoff. Firmware, copied handoff and the post-handoff memory lab now have
+  separate entrances; the lab still needs a smaller coordinator.
 - [core](core/CHARTER.md) owns shared extent geometry, the root adapter and
   coalescing wake state. It has no hardware package dependency.
 - [arch](arch/README.md) owns concrete CPU and board mechanisms. Descend into

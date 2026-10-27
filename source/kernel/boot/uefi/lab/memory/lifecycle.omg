@@ -1,7 +1,7 @@
 use omega::language::core::extent;
 use omega::language::core::layout;
 use alloc::bump;
-use boot_memory;
+use memory::profile;
 
 public data KernelWord { value: u64; }
 public data KernelWordPlacement {}
