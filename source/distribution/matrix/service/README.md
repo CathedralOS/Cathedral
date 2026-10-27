@@ -55,7 +55,8 @@ The `Request` operation continues into [Omega request routing](requests/README.m
 Owner child-control dispatch and launch target/role choices also execute in Omega.
 [Realm discovery and setup](children/startup/realm/README.md) now have Omega sequences too.
 [Resource offers and profile ceilings](children/launch/resources/README.md) execute in Omega.
-Live layout, local world mutations and transport implementations retain Rust behavior. This
+[Live-layout planning](children/configuration/main.omg) also executes in Omega.
+Applying the plan, local world mutations and transport remain in Rust. This
 milestone moves orchestration and event-category dispatch; it does not claim a
 fully Omega matrix executable, a new platform runtime or a native Omega kernel.
 

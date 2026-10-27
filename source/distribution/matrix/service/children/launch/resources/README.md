@@ -44,7 +44,7 @@ Rust work. The native packet is temporary implementation plumbing, not an app
 manifest or public IPC
 contract. This does not finish the matrix's Omega port.
 
-[Service matching](../imports.omg) and [live-layout planning](../../configuration/live.omg)
+[Service matching](../imports.omg) and [live-layout planning](../../configuration/main.omg)
 now run in Omega. The bounded image scanner and declaration decoder also run in
 Omega; mapped-byte access and actual application/publication remain host work.
 

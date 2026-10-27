@@ -1,0 +1,16 @@
+module children::configuration::wire;
+
+// Actual live-layout IPC syntax. The host retains the epoch and original request.
+use requests::desktop;
+use children::configuration::main::Request;
+use children::configuration::placement::Geometry;
+
+public machine decode(words: &[u64; 8]) -> Request {
+    transition words[0] == requests::desktop::APPLY_LAYOUT
+        && words[5] == 0u64 && words[6] == 0u64 && words[7] == 0u64 {
+        true -> (Request::Layout { geometry: Geometry {
+            margin: words[2], bar_height: words[3], gap: words[4]
+        } })
+        _ -> (Request::Malformed)
+    }
+}

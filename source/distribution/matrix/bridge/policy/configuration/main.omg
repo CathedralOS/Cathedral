@@ -1,0 +1,15 @@
+module configuration::main;
+
+// Temporary native dispatch. Real file/IPC decoders and layout policy live in
+// the service; bytes.omg and layout.omg only translate the host envelope.
+use configuration::bytes;
+use configuration::layout;
+
+public machine configuration_decision(packet: &mut [u64; 128]) -> u64 {
+    transition packet[0] {
+        1u64 -> configuration::bytes::decode(packet)
+        2u64 -> configuration::layout::placement(packet)
+        18u64 -> configuration::layout::live(packet)
+        _ -> (0u64)
+    }
+}

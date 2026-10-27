@@ -1,0 +1,72 @@
+module configuration::layout;
+
+// Native geometry and live-layout envelopes; role choices belong to the service.
+use service::children::configuration::main;
+use service::children::configuration::wire;
+use service::children::configuration::placement;
+use service::children::configuration::main::Facts;
+use service::children::configuration::main::Request;
+use service::children::configuration::main::Decision;
+use service::children::configuration::main::Plan;
+use service::children::configuration::placement::Geometry;
+use service::children::configuration::placement::Extent;
+use service::children::configuration::placement::Rectangle;
+use service::children::configuration::placement::Placement;
+
+const DENIED: u64 = 18446744073709551603u64;
+const BUSY: u64 = 18446744073709551600u64;
+const INVALID_ARGUMENT: u64 = 18446744073709551594u64;
+
+public machine placement(packet: &mut [u64; 128]) -> u64 {
+    let geometry: Geometry = Geometry { margin: packet[1], bar_height: packet[2], gap: packet[3] };
+    let extent: Extent = Extent { width: packet[4], height: packet[5] };
+    let placement: Placement = service::children::configuration::placement::place(&geometry, &extent);
+    transition placement {
+        Placement::Placed { chrome, workspace } -> placed(packet, chrome, workspace)
+        Placement::Invalid -> (0u64)
+    }
+    machine placed(packet: &mut [u64; 128], chrome: Rectangle, workspace: Rectangle) -> u64 {
+        rectangle(packet, 16u64, chrome);
+        rectangle(packet, 20u64, workspace);
+        1u64
+    }
+}
+
+public machine live(packet: &mut [u64; 128]) -> u64 {
+    let facts: Facts = Facts { authorized: packet[2] != 0u64, busy: packet[3] != 0u64,
+        extent: Extent { width: packet[4], height: packet[5] }, standing: packet[6] };
+    let mut words: [u64; 8];
+    words[0] = packet[16];
+    words[1] = packet[17];
+    words[2] = packet[18];
+    words[3] = packet[19];
+    words[4] = packet[20];
+    words[5] = packet[21];
+    words[6] = packet[22];
+    words[7] = packet[23];
+    let request: Request = service::children::configuration::wire::decode(&words);
+    let decision: Decision = service::children::configuration::main::prepare(&facts, request);
+    transition decision {
+        Decision::Denied -> (DENIED)
+        Decision::Busy -> (BUSY)
+        Decision::Invalid -> (INVALID_ARGUMENT)
+        Decision::Ready { plan } -> encode_plan(packet, &plan)
+    }
+}
+
+machine encode_plan(packet: &mut [u64; 128], plan: &Plan) -> u64 {
+    rectangle(packet, 32u64, plan.chrome);
+    rectangle(packet, 36u64, plan.apps[0]);
+    rectangle(packet, 40u64, plan.apps[1]);
+    rectangle(packet, 44u64, plan.apps[2]);
+    rectangle(packet, 48u64, plan.background);
+    packet[52] = plan.remember;
+    0u64
+}
+
+machine rectangle(packet: &mut [u64; 128], offset: u64, rectangle: Rectangle) requires offset <= 124u64 {
+    packet[offset] = rectangle.x;
+    packet[offset + 1u64] = rectangle.y;
+    packet[offset + 2u64] = rectangle.width;
+    packet[offset + 3u64] = rectangle.height;
+}

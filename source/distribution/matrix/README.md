@@ -20,8 +20,9 @@ The service is one package. Descend by responsibility, following the Rust tree:
   the realm, picker and background.
 - [children/recovery](service/children/recovery/main.omg): launcher crash/retry and
   fallback policy, including asynchronous read and admission completion.
-- [children/configuration](service/children/configuration/main.omg): saved settings
-  and live layout; [launch resources](service/children/launch/resources/main.omg)
+- [children/configuration](service/children/configuration/main.omg): authorized
+  live layout; its sibling codec owns saved settings.
+  [Launch resources](service/children/launch/resources/main.omg)
   selects stock role offers and profile ceilings.
 
 [bridge/policy/main.omg](bridge/policy/main.omg) is the temporary native dispatcher;
@@ -34,9 +35,9 @@ values. The [workspace bridge](bridge/policy/workspace/main.omg) translates the
 instance catalogue and switch workflow to named domain values as well. The [request bridge](bridge/policy/requests/main.omg) likewise translates host
 connection facts, control decisions and owner effects. Request policy uses named
 values; its wire decoders handle the actual IPC formats. The [realm adapter](bridge/policy/realm/main.omg) also translates setup jobs,
-completions and outcomes; startup sequences use named state. Configuration
-geometry and live-layout policy still expose packet-shaped interfaces and need
-the same cleanup. Moving them into semantic folders does not finish that work.
+completions and outcomes; startup sequences use named state. The
+[configuration adapter](bridge/policy/configuration/main.omg) translates file and
+layout envelopes; geometry and live policy use named rectangles, requests and plans.
 
 Rust retains exact task/endpoint identity, authenticated connections, mappings,
 late replies, yielding transport and resource reclamation. Common import-record

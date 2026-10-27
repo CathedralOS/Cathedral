@@ -81,12 +81,13 @@ operation numbers and effect bits live in `bridge/policy/requests/`. Actual
 eight-word IPC formats remain in the service's wire decoders. Realm setup now
 uses named jobs, ready/waiting commands, completion observations and outcomes;
 its native state and status encoding lives under `bridge/policy/realm/`.
-Package/module imports retain this hierarchy.
+Configuration now also uses named requests, geometry, rectangles and plans; its
+native adapter lives under `bridge/policy/configuration/`. Saved-file and real IPC
+codecs remain beside their service owner. Package/module imports retain this hierarchy.
 
-This is not a completed tree-wide cleanup. Configuration geometry and live-layout
-policy still need their packet-shaped interfaces replaced or moved into
-the native bridge; retain the existing host regression cases while doing that. Avoid
-adding features to these representations. The Omega kernel also still mixes x86
+This is not a completed tree-wide cleanup. The stock matrix policy no longer
+uses native packets as its domain model; retain its host regressions as further
+mechanisms move into Omega. The Omega kernel still mixes x86
 paging, PIC/PIT and interrupt profiles in `kernel/core/`; split shared ownership
 from ISA/board mechanisms before expanding that prototype. Start the audit at
 [source/README.md](source/README.md), with the ownership map and actual entrances.
@@ -284,6 +285,28 @@ Artifacts: `build/boot-harness-rs/desktop/20261027T015543543265Z` and
 `build/boot-harness-rs/nested-failures/20261027T015819897726Z`.
 The ordinary matrix uses 150 of its existing 240 image pages. No resource limit,
 deadline or grant changed; the supported compiler is unchanged.
+
+
+Configuration follow-up over `40a9338a`: `configuration/main.omg` now checks
+named caller facts and requests before planning stock role placements.
+`placement.omg` validates bounded geometry and returns named rectangles;
+`wire.omg` decodes the actual layout IPC. The saved-file codec remains directly
+available to the chooser. Native byte slots, geometry packets, status codes and
+plan serialization live in `bridge/policy/configuration/`. The forwarding/packet
+`live.omg` entrance is gone. Host authority revalidation and local world mutation
+remain unchanged.
+
+Verification: all 97 compiled matrix tests pass, including 100,000 geometry
+comparisons, overflow boundaries, saved-format mutations and live-layout refusal
+precedence. The settings guest test passes cancellation, saved/live edits with
+running apps, preserved drafts, later launches using the new arrangement, cold
+persistence and independent defaults for a second user. Artifacts:
+`build/boot-harness-rs/settings/20261027T020748185520Z`; logs:
+`build/omega-component/matrix-configuration-{typed-tests,settings}.log`.
+Layout (72 Omega / 151 Rust edges), eight dependency-law tests and matrix
+navigation links pass. The ordinary matrix uses 153 of the existing 240 image
+pages; no resource limit, service deadline or grant changed. Verification used
+the supported compiler through the default path without source patches.
 
 ## Memory budgets and allocator delegation
 
