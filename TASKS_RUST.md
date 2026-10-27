@@ -489,9 +489,40 @@ has an older pending package review, which was preserved; the isolated archive
 avoids conflating that review with the source acquisition failure. Evidence:
 `build/omega-component/kernel-current-language-isolated.log` and
 `language-current-producer.json`; snapshot: `kernel-language-current/` beside them.
-The retained `cathedral-boot-providers` worktree now sits at `9b9bf65d51cbb` with
-that optimized compiler. Prior PR #322 evidence remains historical and unchanged.
+The optimized binary in the retained `cathedral-boot-providers` worktree was
+built from `9b9bf65d51cbb`; later source work does not relabel that producer.
+Prior PR #322 evidence remains historical and unchanged.
 The allocator acquisition failure is separate from nested-machine unification.
+
+The acquisition cause is now traced: `BuildSourceAcquisitions::acquire_source`
+calls whole-root `acquire_git` before dispatching `PackageSelection::Named`.
+`workspace_acquisition.rs` then derives every member from that complete capture.
+This charges the repository against the selected library's 4,096-entry limit.
+
+Omega [PR #339](https://github.com/CathedralOS/Omega/pull/339), source
+`20dcd0409b66d`, supplies the staged resolver prerequisite. It authenticates the
+repository once, reads bounded root/member declarations across separate calls,
+and materializes selected payloads under the existing package limits. Tests
+cover an oversized unrelated tree, selected-content refusal, declaration-roster
+refusals, a moving branch/shared cache, pin reuse and offline recorded recovery.
+The Git resolver suite passes 52 tests with three existing Windows-specific
+skips; strengthened session tests and scoped Clippy pass. Logs are in that
+worktree's `build/allocator-{resolver-git-tests,session-tests,clippy}.log`.
+
+**The kernel acquisition is still blocked; the application is not connected to
+that resolver yet.** A prototype connection exposed the next invariant: Build
+must execute once, preserving its complete input inventory and negative
+observations. Turning declaration-only bytes into `CapturedLocalSource` and
+rerunning the selected Build after materializing its Product violates that
+contract. That prototype was discarded, without weakening source-join checks.
+Continue at `compilation-inputs/src/source_imports/frontier.rs` and
+`package_compilation.rs` (`validate_unbound_source_join`), together with the
+application's `source_resolution/readiness.rs`. Establish compiler-owned custody
+for staged discovery/Product source before wiring the session into acquisition.
+The existing `executed_git_source` workspace witness requires five activations,
+selected-return reuse, private-access refusal and no unselected Product work.
+Then rerun the actual isolated Cathedral kernel. This needs no new owner choice;
+do not raise limits, reintroduce static manifest parsing or claim a boot result.
 
 ## Memory budgets and allocator delegation
 
