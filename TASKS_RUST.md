@@ -56,6 +56,58 @@ launch sequencing also do. This work does not claim a fully Omega matrix process
 or a native Omega kernel. Recheck the recorded native-kernel proof-propagation
 blocker against a newer compiler separately; it need not stall userspace work.
 
+## Language alignment: defer the blocked nested-machine migration
+
+Owner clarification, 2026-10-26: replacing `state` with nested `machine` is a
+language migration, not a reason to restate thousands of private contracts.
+Each machine has its own checked contract, with justified private inference.
+Preserve incoming control-flow facts, result typing, recursive reasoning and
+constant-stack execution through the unified compiler path. Every incoming call
+must establish inferred requirements; lexical nesting alone supplies no facts.
+See [Omega's invocation contract](https://github.com/CathedralOS/Omega/blob/main/wiki/spec/language/state_contracts.md).
+
+An audit at Cathedral `088082d4` found 4,829 tracked `state` declarations across
+`source/`, including 244 in the chooser. Older `pub` and data-owned machine forms
+also remain, especially in the translated libraries outside the desktop closure.
+This is migration debt, not proof that every occurrence is independently broken.
+Do not use a green desktop build as evidence of whole-tree language alignment.
+
+A fresh optimized compiler from Omega `9b9bf65d51cbb` rejects a chooser change
+that changes only those 244 declaration keywords. The policy component builds,
+but app checking reports four mutable/shared argument conflicts, four missing
+private arrival bounds (`i < 51` and `i < 6`), and one private result-bound failure
+(`digit_count`'s `result <= 4`). These are the migration acceptance witnesses;
+adding manual bounds or restructuring calls to evade them is not the agreed fix.
+An intermediate experiment with explicit contracts reached a further disagreement
+between retained and freshly derived mutation summaries; that experiment was
+also discarded. No compiler checking or package-review gate was weakened.
+
+The chooser source has been restored exactly. F5's compiler remains the tested
+`e8bebc16d5883` producer. The owner reports parallel work on unification; Omega's
+claim registry also records `NESTED-MACHINE-UNIFICATION`. Our duplicate compiler
+claim was released without compiler edits. This pauses only this migration,
+not other Omega OS work; no new owner semantic decision is needed.
+
+Local evidence lives under `build/omega-component/language-migration/`:
+`chooser-spelling-only.patch` and `chooser-current-rejection.log`. The producer's
+revision, optimized profile and binary hash are in
+`build/omega-component/language-current-producer.json`. To retry on a compiler
+that contains the unification repair, apply the patch to the recorded source,
+select that compiler with `OMEGA_BIN`, and run
+`cargo test --locked -p cathedral-chooser --lib` in `source-rs/`, then the ordinary
+`python tools/boot-harness-rs/desktop_test.py --trace-storage` flow. Require the
+unchanged behavior and existing rejection tests to pass; a successful parse or
+policy-only export is insufficient. Finish qualification before changing F5's
+compiler. [Source guidance](source/README.md#language-compatibility) records the
+ongoing distinction between the current specification and staged implementation.
+
+
+Restoration verification: all 20 compiled chooser tests pass again through the
+unchanged default compiler; log `build/omega-component/chooser-language-restored.log`.
+Source layout passes (75 Omega / 151 Rust package edges), and the tracked chooser
+source matches `088082d4` exactly. No fresh QEMU claim is made for this audit;
+the desktop runtime sources and compiler selection were restored, not migrated.
+
 ## Active correction: Omega source quality and discoverability
 
 The owner's current priority is correcting `source/` code and organization, not
@@ -428,6 +480,18 @@ weakened, and no desktop compiler path changed.
 Evidence: `build/omega-component/kernel-provider-{baseline-builtin,baseline-uefi,repair-uefi}.log`
 and `kernel-provider-qualification.json`. The isolated compiler and full evidence
 are retained at `C:/Projects/Omega/.agents/worktree/cathedral-boot-providers`.
+
+Rechecked during the language audit with a fresh optimized Omega `9b9bf65d51cbb`
+producer: an isolated archive of Cathedral `088082d4` still refuses the pinned
+`alloc` acquisition with `source root exceeds identity entry limit of 4096`.
+This happens before native-kernel checking or image emission. The main checkout
+has an older pending package review, which was preserved; the isolated archive
+avoids conflating that review with the source acquisition failure. Evidence:
+`build/omega-component/kernel-current-language-isolated.log` and
+`language-current-producer.json`; snapshot: `kernel-language-current/` beside them.
+The retained `cathedral-boot-providers` worktree now sits at `9b9bf65d51cbb` with
+that optimized compiler. Prior PR #322 evidence remains historical and unchanged.
+The allocator acquisition failure is separate from nested-machine unification.
 
 ## Memory budgets and allocator delegation
 
