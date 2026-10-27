@@ -1,0 +1,26 @@
+module layout;
+
+use decisions::layout::Geometry;
+
+use decisions::layout;
+
+public machine geometry(p: &mut [u64; 128]) -> u64 {
+    let result: Geometry = decisions::layout::geometry(p[1] != 0u64, p[2], p[3], p[4], p[5]);
+    p[80] = result.count;
+    p[81] = result.width;
+    p[82] = result.height;
+    p[83] = result.x;
+    p[84] = result.y;
+    p[85] = result.tasks_left;
+    transition { _ -> items(p, 0u64) }
+    machine items(p: &mut [u64; 128], i: u64) -> u64 {
+        transition i < p[80] && i < 6u64 {
+            true -> item(p, i)
+            _ -> (1u64)
+        }
+    }
+    machine item(p: &mut [u64; 128], i: u64) -> u64 requires i < 6u64 {
+        p[86u64 + i] = decisions::layout::tile_id(p[2], p[1] != 0u64, i);
+        transition { _ -> items(p, i + 1u64) }
+    }
+}

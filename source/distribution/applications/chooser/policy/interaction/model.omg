@@ -1,0 +1,66 @@
+module interaction::model;
+
+// Selection is local UI state. Object identity and permission remain separate.
+public const NEW_USER: u64 = 6u64;
+public const SETTINGS: u64 = 7u64;
+public const MANAGEMENT: u64 = 8u64;
+public const RETRY_SAVES: u64 = 9u64;
+
+public data Context {
+    picker: bool;
+    count: u64;
+    width: u64;
+    height: u64;
+    selected: u64;
+    managed: bool;
+    retry: bool;
+}
+
+public data Input [copy] {
+    case None;
+    case Pointer(x: u64, y: u64, clicked: bool);
+    case Key(code: u64, pressed: bool);
+}
+
+public data Selection [copy] {
+    selected: u64;
+    changed: bool;
+    activate: bool;
+}
+
+public data Action [copy] {
+    case None;
+    case Launch(object: u64);
+    case Copy(object: u64);
+    case Settings;
+    case Manage;
+    case Retry;
+}
+
+public data ActionRequest {
+    picker: bool;
+    count: u64;
+    selected: u64;
+    object: u64;
+    template: u64;
+    retry: bool;
+}
+
+public data Task {
+    available: bool;
+    ticket: u64;
+}
+
+public data TaskHit [copy] {
+    hit: bool;
+    ticket: u64;
+    close: bool;
+}
+
+public machine unchanged(context: &Context) -> Selection {
+    Selection { selected: context.selected, changed: false, activate: false }
+}
+
+public machine activate(index: u64) -> Selection {
+    Selection { selected: index, changed: true, activate: true }
+}

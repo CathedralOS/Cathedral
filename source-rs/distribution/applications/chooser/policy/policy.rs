@@ -1,5 +1,5 @@
 // Native seam for the distribution-owned Omega chooser decisions.
-// Start across the seam at source/distribution/applications/chooser/policy/main.omg.
+// Start across the seam at source/distribution/applications/chooser/bridge/policy/main.omg.
 // This is an app-local synchronous packet, not the platform app-host ABI or IPC.
 use cathedral_desktop_matrix_contracts::matrix as wire;
 use cathedral_platform_contracts::storage::{ENTRIES_PER_PAGE, metadata};

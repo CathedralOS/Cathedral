@@ -1,8 +1,9 @@
+module main;
+
 // Chooser decisions over scoped facts. No services, pointers or process IDs cross
 // this temporary in-process boundary. The Rust shell executes returned intents.
-use catalogue::catalogue;
-use catalogue::metadata;
-use interaction::interaction;
+use catalogue;
+use interaction;
 use layout;
 use outcomes;
 
@@ -15,16 +16,16 @@ public ChooserProvider satisfies Chooser {
 public machine decision(p: &mut [u64; 128]) -> u64 {
         transition p[0] {
             0u64 -> describe(p)
-            1u64 -> classify(p)
-            2u64 -> catalogue(p)
-            3u64 -> geometry(p)
-            4u64 -> selection(p)
-            5u64 -> action(p)
-            6u64 -> outcome(p)
-            7u64 -> task_click(p)
-            8u64 -> after_select(p)
-            9u64 -> observation(p)
-            10u64 -> user_name(p)
+            1u64 -> catalogue::classify(p)
+            2u64 -> catalogue::catalogue(p)
+            3u64 -> layout::geometry(p)
+            4u64 -> interaction::selection(p)
+            5u64 -> interaction::action(p)
+            6u64 -> outcomes::outcome(p)
+            7u64 -> interaction::task_click(p)
+            8u64 -> outcomes::after_select(p)
+            9u64 -> outcomes::observation(p)
+            10u64 -> catalogue::user_name(p)
             _ -> (0u64)
         }
 }

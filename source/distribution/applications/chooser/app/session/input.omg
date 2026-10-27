@@ -1,7 +1,15 @@
+use decisions::outcomes;
 // Keep pointer edges per scoped channel; the pure policy handles tile selection.
 use host::main;
 use protocol::main;
-use decisions::main;
+use decisions::interaction::model::Input;
+use decisions::interaction::model::Context;
+use decisions::interaction::model::Selection;
+use decisions::interaction::model::Task;
+use decisions::interaction::model::TaskHit;
+use decisions::interaction::interaction;
+use decisions::interaction::tasks;
+use decisions::layout;
 use state;
 use transport;
 use session::session;
@@ -35,33 +43,65 @@ public machine input(s: &mut State, p: &mut [u64; 4096]) -> u64 {
         transition s.confirming != 0u64 { true -> management_input(s, p) _ -> editor(s, p) }
     }
     state editor(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition s.editing { true -> settings_input(s, p) _ -> tasks(s, p) } }
-    state tasks(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition s.picker { true -> selection(s, p) _ -> task_packet(s, p) } }
-    state task_packet(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        s.q[0] = 3u64; s.q[1] = 0u64; s.q[2] = s.count; s.q[3] = s.width; s.q[4] = s.height; s.q[5] = 0u64;
-        let ok: u64 = decision(&mut s.q); let left: u64 = s.q[85];
-        s.q[0] = 7u64; s.q[1] = left; s.q[2] = s.width; s.q[3] = s.height; s.q[4] = s.snapshot[5] & 255u64;
-        s.q[5] = s.snapshot[6]; s.q[6] = s.snapshot[7]; s.q[7] = s.clicked as u64;
-        transition { _ -> task_words(s, p, 0u64) }
+    state tasks(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition s.picker {
+            true -> selection(s, p)
+            _ -> hit_task(s, p)
+        }
     }
-    state task_words(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 { transition i < 24u64 { true -> task_word(s, p, i) _ -> hit_task(s, p) } }
-    state task_word(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 requires i < 24u64 { s.q[16u64 + i] = s.tasks[i / 8u64][i % 8u64]; transition { _ -> task_words(s, p, i + 1u64) } }
-    state hit_task(s: &mut State, p: &mut [u64; 4096]) -> u64 { let ok: u64 = decision(&mut s.q); transition s.q[82] != 0u64 { true -> task(s, p) _ -> selection(s, p) } }
-    state task(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        s.dirty = true; s.force_refresh = true; s.status = 0u64;
-        transition s.q[80] != 0u64 { true -> select_task(s, p) _ -> after_input(s, p) }
+    state hit_task(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        let result: TaskHit = task_hit(s);
+        transition result.hit {
+            true -> task(s, p, result)
+            _ -> selection(s, p)
+        }
     }
-    state select_task(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        let ticket: u64 = s.q[80]; s.close_selected = s.q[81] != 0u64;
-        interaction(s, p, SELECTED, 24u64, ticket, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64)
+    state task(s: &mut State, p: &mut [u64; 4096], result: TaskHit) -> u64 {
+        s.dirty = true;
+        s.force_refresh = true;
+        s.notice = decisions::outcomes::Notice::None;
+        transition result.ticket != 0u64 {
+            true -> select_task(s, p, result)
+            _ -> after_input(s, p)
+        }
+    }
+    state select_task(s: &mut State, p: &mut [u64; 4096], result: TaskHit) -> u64 {
+        s.close_selected = result.close;
+        interaction(s, p, SELECTED, 24u64, result.ticket, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64)
     }
     state selection(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        s.q[0] = 4u64; s.q[1] = s.picker as u64; s.q[2] = s.count; s.q[3] = s.width; s.q[4] = s.height;
-        s.q[5] = s.selected; s.q[6] = s.snapshot[5] & 255u64; s.q[7] = s.snapshot[6]; s.q[8] = s.snapshot[7];
-        s.q[9] = s.clicked as u64; s.q[10] = (s.managed != 0u64) as u64; s.q[11] = (s.saves == 1u64) as u64;
-        let ok: u64 = decision(&mut s.q); s.selected = s.q[80]; s.dirty = s.dirty || s.q[81] != 0u64;
-        transition s.q[82] != 0u64 { true -> act(s, p) _ -> after_input(s, p) }
+        let context: Context = Context {
+            picker: s.picker, count: s.entries.count, width: s.width, height: s.height,
+            selected: s.selected, managed: s.managed != 0u64, retry: s.saves == 1u64
+        };
+        let result: Selection = decisions::interaction::interaction::selection(&context, input_event(s));
+        s.selected = result.selected;
+        s.dirty = s.dirty || result.changed;
+        transition result.activate {
+            true -> act(s, p)
+            _ -> after_input(s, p)
+        }
     }
 }
+
+machine task_hit(s: &State) -> TaskHit {
+    let mut tasks: [Task; 3];
+    tasks[0] = Task { available: s.tasks[0][0] == 0u64, ticket: s.tasks[0][1] };
+    tasks[1] = Task { available: s.tasks[1][0] == 0u64, ticket: s.tasks[1][1] };
+    tasks[2] = Task { available: s.tasks[2][0] == 0u64, ticket: s.tasks[2][1] };
+    let result: TaskHit = decisions::interaction::tasks::task_click(decisions::layout::tasks_left(s.entries.count), s.height, input_event(s), &tasks);
+    result
+}
+
+// Decode actual incoming Matrix wire fields once, at the app's input boundary.
+machine input_event(s: &State) -> Input {
+    transition s.snapshot[5] & 255u64 {
+        POINTER -> (Input::Pointer { x: s.snapshot[6], y: s.snapshot[7], clicked: s.clicked })
+        KEY -> (Input::Key { code: s.snapshot[6], pressed: s.snapshot[7] == PRESS })
+        _ -> (Input::None)
+    }
+}
+
 machine channel(s: &State, name: u64) -> u64 {
     transition { _ -> scan(s, name, 0u64) }
     state scan(s: &State, name: u64, i: u64) -> u64 { transition i < 4u64 { true -> inspect(s, name, i) _ -> (4u64) } }

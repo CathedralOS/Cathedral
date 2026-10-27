@@ -1,0 +1,47 @@
+module outcomes;
+
+use decisions::outcomes::SelectionReply;
+use decisions::outcomes::Observation;
+use decisions::outcomes::Operation;
+use decisions::outcomes::Outcome;
+use decisions::outcomes::Notice;
+
+use decisions::outcomes;
+
+public machine outcome(p: &mut [u64; 128]) -> u64 {
+    let result: Outcome = decisions::outcomes::outcome(operation(p[1]), p[2], p[3]);
+    p[80] = notice(result.notice);
+    p[81] = result.receipt;
+    1u64
+}
+public machine after_select(p: &mut [u64; 128]) -> u64 {
+    let result: SelectionReply = decisions::outcomes::after_select(p[1], p[2] != 0u64);
+    p[80] = result.close as u64;
+    p[81] = notice(result.notice);
+    1u64
+}
+public machine observation(p: &mut [u64; 128]) -> u64 {
+    let result: Observation = decisions::outcomes::observation(p[1], p[2]);
+    p[80] = result.running as u64;
+    p[81] = notice(result.notice);
+    1u64
+}
+machine operation(word: u64) -> Operation {
+    transition word {
+        0u64 -> (Operation::Launch)
+        2u64 -> (Operation::Close)
+        3u64 -> (Operation::Copy)
+        _ -> (Operation::Retry)
+    }
+}
+machine notice(value: Notice) -> u64 {
+    transition value {
+        Notice::None -> (0u64)
+        Notice::Unavailable -> (1u64)
+        Notice::Retry -> (2u64)
+        Notice::Capacity -> (3u64)
+        Notice::Unsaved -> (4u64)
+        Notice::Stopped -> (5u64)
+        _ -> (0u64)
+    }
+}

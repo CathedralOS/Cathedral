@@ -1,3 +1,4 @@
+use decisions::outcomes;
 // Resolve -> pinned inline reads -> compare -> publish -> apply. A lost reply
 // stays uncertain until readback; an intervening edit is never overwritten.
 use host::main;
@@ -45,7 +46,7 @@ machine loaded(s: &mut State, p: &mut [u64; 4096]) -> u64 {
     transition s.reconciling { true -> reconcile(s, p) _ -> opened(s, p) }
     state opened(s: &mut State, p: &mut [u64; 4096]) -> u64 {
         s.config_object = s.reading_object; s.config_revision = s.reading_revision; s.saved = s.reading; s.draft = s.reading;
-        s.editing = true; s.uncertain = false; s.setting_selected = 0u64; s.setting_status = 0u64; s.status = 0u64; s.dirty = true; cycle(s, p)
+        s.editing = true; s.uncertain = false; s.setting_selected = 0u64; s.setting_status = 0u64; s.notice = decisions::outcomes::Notice::None; s.dirty = true; cycle(s, p)
     }
     state reconcile(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition s.config_object != s.reading_object { true -> conflict(s, p) _ -> desired(s, p) } }
     state desired(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition matrix_service::children::configuration::encoding::equal(&s.reading, &s.draft) { true -> confirmed(s, p) _ -> baseline(s, p) } }
@@ -79,5 +80,5 @@ public machine applied(s: &mut State, p: &mut [u64; 4096]) -> u64 {
 machine load_error(s: &mut State, p: &mut [u64; 4096]) -> u64 {
     s.dirty = true; transition s.reconciling { true -> save_failed(s, p) _ -> open_failed(s, p) }
     state save_failed(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.setting_status = 19u64; cycle(s, p) }
-    state open_failed(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.status = 1u64; cycle(s, p) }
+    state open_failed(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.notice = decisions::outcomes::Notice::Unavailable; cycle(s, p) }
 }

@@ -30,15 +30,15 @@ surface notification. Descend through these decisions:
   [pixels](app/rendering/pixels.omg) dispatches tile/panel rasterization. Epoch
   changes rebuild the scene without discarding application state.
 
-The existing [policy entrance](policy/main.omg) remains the single source for
-metadata classification, catalogue limits, shared paint/hit geometry, selection,
-intent and refusal decisions. The Omega session calls it directly. The policy's
-small packet is an internal distribution convention, not an IPC service or app
-startup ABI.
+The [policy map](policy/README.md) leads to the same responsibility split as
+Rust's `chooser/policy/` and `chooser/session/`: catalogue, shared geometry,
+input selection, action intent and reply outcomes. Omega app callers pass named
+state and results directly. No 128-word local policy packet lives in the app.
+Actual host/Matrix/storage wire data is still decoded at the session boundary.
 
 ## Native boundary and ownership
 
-[session-native/main.omg](session-native/main.omg) selects the complete app as
+[bridge/app/main.omg](bridge/app/main.omg) selects the complete app as
 one independent component. The [packager](../../../../tools/omega-component/README.md)
 checks its relocation-free export; [omega-app](../../../../source-rs/platform/libraries/omega-app/README.md)
 supplies scoped IPC, attachment custody and the existing task's monotonic clock.
@@ -58,8 +58,10 @@ supervision, storage authority and matrix resource grants are unchanged.
 
 `rust-probes` explicitly selects the old Rust session for the recovery and
 startup-fault fixtures. These features still use the shared Omega policy via
-[native/main.omg](native/main.omg); ordinary F5 has no fallback to that session.
-The former app-local Rust policy marshalling is compiled only for probes/tests.
+[bridge/native/main.omg](bridge/native/main.omg); ordinary F5 has no fallback to that session.
+The [bridge policy entrance](bridge/policy/main.omg) alone decodes the temporary
+128-word Rust probe packet. Its typed calls enter the same policy the app uses.
+That packet is neither an IPC protocol nor an app-facing distribution API.
 
 ## Verification
 

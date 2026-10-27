@@ -1,0 +1,116 @@
+module catalogue;
+
+use decisions::catalogue::metadata::Classification;
+use decisions::catalogue::catalogue::Catalogue;
+use decisions::catalogue::catalogue::Request;
+
+use decisions::catalogue::catalogue;
+use decisions::catalogue::metadata;
+use decisions::catalogue::name;
+
+public machine catalogue(p: &mut [u64; 128]) -> u64 {
+    let mut request: Request;
+    request.picker = p[1] != 0u64;
+    request.own = p[2];
+    request.template = p[3];
+    request.background = p[4];
+    request.count = p[5];
+    let result: u64 = inputs(p, &mut request, 0u64);
+    result
+}
+
+machine inputs(p: &mut [u64; 128], request: &mut Request, i: u64) -> u64 {
+    transition i < 51u64 {
+        true -> input(p, request, i)
+        _ -> choose(p, request)
+    }
+}
+machine input(p: &mut [u64; 128], request: &mut Request, i: u64) -> u64 requires i < 51u64 {
+    request.ids[i] = p[16u64 + i];
+    transition { _ -> inputs(p, request, i + 1u64) }
+}
+machine choose(p: &mut [u64; 128], request: &Request) -> u64 {
+    let mut result: Catalogue;
+    let accepted: bool = decisions::catalogue::catalogue::catalogue(request, &mut result);
+    p[80] = result.count;
+    let written: u64 = publish_catalogue(p, &result, accepted);
+    written
+}
+machine outputs(p: &mut [u64; 128], result: &Catalogue, i: u64) -> u64 {
+    transition i < result.count && i < 6u64 {
+        true -> output(p, result, i)
+        _ -> (1u64)
+    }
+}
+machine output(p: &mut [u64; 128], result: &Catalogue, i: u64) -> u64 requires i < 6u64 {
+    p[81u64 + i] = result.ids[i];
+    transition { _ -> outputs(p, result, i + 1u64) }
+}
+
+
+public machine classify(p: &mut [u64; 128]) -> u64 {
+    let mut bytes: [u64; 64];
+    let result: u64 = read(p, &mut bytes, 0u64);
+    result
+}
+
+machine read(p: &mut [u64; 128], bytes: &mut [u64; 64], i: u64) -> u64 {
+    transition i < 64u64 {
+        true -> byte(p, bytes, i)
+        _ -> classify_metadata(p, bytes)
+    }
+}
+machine byte(p: &mut [u64; 128], bytes: &mut [u64; 64], i: u64) -> u64 requires i < 64u64 {
+    bytes[i] = p[16u64 + i];
+    transition { _ -> read(p, bytes, i + 1u64) }
+}
+machine classify_metadata(p: &mut [u64; 128], bytes: &[u64; 64]) -> u64 {
+    let mut result: Classification;
+    decisions::catalogue::metadata::classify(bytes, &mut result);
+    p[1] = result.executable as u64 | ((result.template as u64) << 1u64) | ((result.background as u64) << 2u64);
+    let written: u64 = label(p, &result, 0u64);
+    written
+}
+machine label(p: &mut [u64; 128], result: &Classification, i: u64) -> u64 {
+    transition i < 13u64 {
+        true -> letter(p, result, i)
+        _ -> (1u64)
+    }
+}
+machine letter(p: &mut [u64; 128], result: &Classification, i: u64) -> u64 requires i < 13u64 {
+    p[80u64 + i] = result.label[i];
+    transition { _ -> label(p, result, i + 1u64) }
+}
+
+
+public machine user_name(p: &mut [u64; 128]) -> u64 {
+    let mut name: [u64; 6];
+    let accepted: bool = decisions::catalogue::name::user_name(p[1], &mut name);
+    let result: u64 = name_reply(p, &name, accepted);
+    result
+}
+
+machine publish(p: &mut [u64; 128], name: &[u64; 6]) -> u64 {
+    p[80] = name[0];
+    p[81] = name[1];
+    p[82] = name[2];
+    p[83] = name[3];
+    p[84] = name[4];
+    p[85] = name[5];
+    1u64
+}
+
+
+machine publish_catalogue(p: &mut [u64; 128], result: &Catalogue, accepted: bool) -> u64 {
+    transition accepted {
+        true -> outputs(p, result, 0u64)
+        _ -> (0u64)
+    }
+}
+
+machine name_reply(p: &mut [u64; 128], name: &[u64; 6], accepted: bool) -> u64 {
+    transition accepted {
+        true -> publish(p, name)
+        _ -> (0u64)
+    }
+}

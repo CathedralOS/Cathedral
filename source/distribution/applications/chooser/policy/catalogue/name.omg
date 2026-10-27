@@ -1,0 +1,18 @@
+module catalogue::name;
+
+// The current picker has at most three user slots beside its hidden template.
+public machine user_name(slot: u64, name: &mut [u64; 6]) -> bool {
+    transition slot > 0u64 && slot < 4u64 {
+        true -> write(slot, name)
+        _ -> (false)
+    }
+    machine write(slot: u64, name: &mut [u64; 6]) -> bool requires slot < 4u64 {
+        name[0] = 85u64;
+        name[1] = 115u64;
+        name[2] = 101u64;
+        name[3] = 114u64;
+        name[4] = 32u64;
+        name[5] = 48u64 + slot;
+        true
+    }
+}

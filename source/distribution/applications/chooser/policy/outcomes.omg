@@ -1,37 +1,91 @@
-// Status tags are presentation data for the retained Rust painter. The matrix's
-// reply, not optimistic local state, decides whether work was accepted.
+module outcomes;
+
+// Replies, not optimistic UI state, decide whether an operation was accepted.
 use protocol::main;
-public machine outcome(p: &mut [u64; 128]) -> u64 {
-    p[80] = 0u64; p[81] = 0u64;
-    transition p[2] == 0u64 { true -> accepted(p) _ -> refused(p) }
-    state accepted(p: &mut [u64; 128]) -> u64 {
-        transition p[1] == 0u64 { true -> launched(p) _ -> (1u64) }
+
+public data Operation [copy] {
+    case Launch;
+    case Close;
+    case Copy;
+    case Retry;
+}
+
+public data Notice [copy] {
+    case None;
+    case Unavailable;
+    case Retry;
+    case Capacity;
+    case Unsaved;
+    case Stopped;
+}
+
+public data Outcome [copy] {
+    notice: Notice;
+    receipt: u64;
+}
+
+public data SelectionReply [copy] {
+    close: bool;
+    notice: Notice;
+}
+
+public data Observation [copy] {
+    running: bool;
+    notice: Notice;
+}
+
+public machine outcome(operation: Operation, status: u64, receipt: u64) -> Outcome {
+    transition status == 0u64 {
+        true -> accepted(operation, receipt)
+        _ -> (Outcome { notice: refusal(operation, status), receipt: 0u64 })
     }
-    state launched(p: &mut [u64; 128]) -> u64 { p[81] = p[3]; 1u64 }
-    state refused(p: &mut [u64; 128]) -> u64 {
-        transition p[1] {
-            0u64 -> launch_error(p)
-            2u64 -> unsaved(p)
-            3u64 -> copy_error(p)
-            _ -> retry(p)
+    machine accepted(operation: Operation, receipt: u64) -> Outcome {
+        transition operation {
+            Operation::Launch -> (Outcome { notice: Notice::None, receipt: receipt })
+            _ -> (Outcome { notice: Notice::None, receipt: 0u64 })
         }
     }
-    state launch_error(p: &mut [u64; 128]) -> u64 {
-        transition p[2] { BUSY -> retry(p) NO_MEMORY -> capacity(p) _ -> unavailable(p) }
-    }
-    state copy_error(p: &mut [u64; 128]) -> u64 {
-        transition p[2] { NO_MEMORY -> capacity(p) _ -> retry(p) }
-    }
-    state unavailable(p: &mut [u64; 128]) -> u64 { p[80] = 1u64; 1u64 }
-    state retry(p: &mut [u64; 128]) -> u64 { p[80] = 2u64; 1u64 }
-    state capacity(p: &mut [u64; 128]) -> u64 { p[80] = 3u64; 1u64 }
-    state unsaved(p: &mut [u64; 128]) -> u64 { p[80] = 4u64; 1u64 }
 }
-public machine after_select(p: &mut [u64; 128]) -> u64 {
-    p[80] = (p[1] == 0u64 && p[2] != 0u64) as u64;
-    p[81] = (p[1] != 0u64) as u64 * 2u64; 1u64
+
+machine refusal(operation: Operation, status: u64) -> Notice {
+    transition operation {
+        Operation::Launch -> launch_error(status)
+        Operation::Close -> (Notice::Unsaved)
+        Operation::Copy -> copy_error(status)
+        _ -> (Notice::Retry)
+    }
+    machine launch_error(status: u64) -> Notice {
+        transition status {
+            BUSY -> (Notice::Retry)
+            NO_MEMORY -> (Notice::Capacity)
+            _ -> (Notice::Unavailable)
+        }
+    }
+    machine copy_error(status: u64) -> Notice {
+        transition status {
+            NO_MEMORY -> (Notice::Capacity)
+            _ -> (Notice::Retry)
+        }
+    }
 }
-public machine observation(p: &mut [u64; 128]) -> u64 {
-    p[80] = (p[1] == 0u64 && p[2] == LAUNCH_RUNNING) as u64;
-    p[81] = (p[1] == 0u64 && p[2] == LAUNCH_FAILED) as u64 * 5u64; 1u64
+
+public machine after_select(status: u64, close: bool) -> SelectionReply {
+    transition status == 0u64 {
+        true -> (SelectionReply { close: close, notice: Notice::None })
+        _ -> (SelectionReply { close: false, notice: Notice::Retry })
+    }
+}
+
+public machine observation(status: u64, state: u64) -> Observation {
+    transition status == 0u64 {
+        true -> observed(state)
+        _ -> (Observation { running: false, notice: Notice::None })
+    }
+    machine observed(state: u64) -> Observation {
+        transition state {
+            LAUNCH_RUNNING -> (Observation { running: true, notice: Notice::None })
+            LAUNCH_FAILED -> (Observation { running: false, notice: Notice::Stopped })
+            _ -> (Observation { running: false, notice: Notice::None })
+        }
+    }
 }

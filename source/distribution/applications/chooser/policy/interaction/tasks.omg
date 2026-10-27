@@ -1,0 +1,40 @@
+module interaction::tasks;
+
+use interaction::model::Input;
+
+use interaction::model;
+use layout;
+
+// A hit on empty taskbar space is consumed without selecting a task.
+public machine task_click(left: u64, height: u64, input: Input, tasks: &[model::Task; 3]) -> model::TaskHit {
+    transition input {
+        Input::Pointer { x, y, clicked } -> pointer(left, height, x, y, clicked, tasks)
+        _ -> (model::TaskHit { hit: false, ticket: 0u64, close: false })
+    }
+    machine pointer(left: u64, height: u64, x: u64, y: u64, clicked: bool, tasks: &[model::Task; 3]) -> model::TaskHit {
+        let top: u64 = ((height as u64 in Saturating) - 32) as u64 / 2u64;
+        transition clicked && layout::inside(x, left, 432u64) && layout::inside(y, top, 32u64) {
+            true -> hit(left, x, tasks)
+            _ -> (model::TaskHit { hit: false, ticket: 0u64, close: false })
+        }
+    }
+    machine hit(left: u64, x: u64, tasks: &[model::Task; 3]) -> model::TaskHit {
+        transition x >= left {
+            true -> offset(x - left, tasks)
+            _ -> (model::TaskHit { hit: true, ticket: 0u64, close: false })
+        }
+    }
+    machine offset(x: u64, tasks: &[model::Task; 3]) -> model::TaskHit {
+        transition x < 432u64 {
+            true -> ticket(x, tasks)
+            _ -> (model::TaskHit { hit: true, ticket: 0u64, close: false })
+        }
+    }
+    machine ticket(x: u64, tasks: &[model::Task; 3]) -> model::TaskHit requires x < 432u64 {
+        let index: u64 = x / 144u64;
+        transition tasks[index].available && tasks[index].ticket != 0u64 {
+            true -> (model::TaskHit { hit: true, ticket: tasks[index].ticket, close: x % 144u64 >= 124u64 })
+            _ -> (model::TaskHit { hit: true, ticket: 0u64, close: false })
+        }
+    }
+}

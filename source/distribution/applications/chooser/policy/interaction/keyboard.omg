@@ -1,0 +1,82 @@
+module interaction::keyboard;
+
+use interaction::model;
+use layout;
+use protocol::main;
+
+public machine select_key(context: &model::Context, code: u64, pressed: bool) -> model::Selection {
+    transition pressed {
+        true -> key(context, code)
+        _ -> model::unchanged(context)
+    }
+    machine key(context: &model::Context, code: u64) -> model::Selection {
+        transition code {
+            UP -> move_selection(context, false)
+            LEFT -> move_selection(context, false)
+            DOWN -> move_selection(context, true)
+            RIGHT -> move_selection(context, true)
+            ENTER -> model::activate(context.selected)
+            F2 -> settings(context)
+            F3 -> management(context)
+            F4 -> retry(context)
+            _ -> model::unchanged(context)
+        }
+    }
+    machine settings(context: &model::Context) -> model::Selection {
+        transition context.picker {
+            true -> model::unchanged(context)
+            _ -> model::activate(model::SETTINGS)
+        }
+    }
+    machine management(context: &model::Context) -> model::Selection {
+        transition context.managed {
+            true -> model::activate(model::MANAGEMENT)
+            _ -> model::unchanged(context)
+        }
+    }
+    machine retry(context: &model::Context) -> model::Selection {
+        transition context.retry {
+            true -> model::activate(model::RETRY_SAVES)
+            _ -> model::unchanged(context)
+        }
+    }
+}
+
+machine move_selection(context: &model::Context, forward: bool) -> model::Selection {
+    let count: u64 = layout::tile_count(context.count, context.picker);
+    transition count > 0u64 && count <= 6u64 {
+        true -> find(context, forward, count, 0u64)
+        _ -> (model::Selection { selected: 0u64, changed: true, activate: false })
+    }
+    machine find(context: &model::Context, forward: bool, count: u64, index: u64) -> model::Selection {
+        transition index < count && index < 6u64 {
+            true -> compare(context, forward, count, index)
+            _ -> move_from(context, forward, count, 0u64)
+        }
+    }
+    machine compare(context: &model::Context, forward: bool, count: u64, index: u64) -> model::Selection requires index < 6u64 {
+        transition layout::tile_id(context.count, context.picker, index) == context.selected {
+            true -> move_from(context, forward, count, index)
+            _ -> find(context, forward, count, index + 1u64)
+        }
+    }
+    machine move_from(context: &model::Context, forward: bool, count: u64, index: u64) -> model::Selection {
+        transition count > 0u64 && count <= 6u64 && index < 6u64 {
+            true -> bounded(context, forward, count, index)
+            _ -> model::unchanged(context)
+        }
+    }
+    machine bounded(context: &model::Context, forward: bool, count: u64, index: u64) -> model::Selection
+    requires count > 0u64 && count <= 6u64 && index < 6u64 {
+        let delta: u64 = step(forward, count);
+        let selected: u64 = layout::tile_id(context.count, context.picker, (index + delta) % count);
+        model::Selection { selected: selected, changed: true, activate: false }
+    }
+}
+
+machine step(forward: bool, count: u64) -> u64 requires count > 0u64 {
+    transition forward {
+        true -> (1u64)
+        _ -> (count - 1u64)
+    }
+}

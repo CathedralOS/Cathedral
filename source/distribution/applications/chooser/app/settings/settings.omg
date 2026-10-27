@@ -1,3 +1,4 @@
+use decisions::outcomes;
 // Draft layout edits belong to the launcher; applying them is a separate grant.
 use host::main;
 use protocol::main;
@@ -28,7 +29,7 @@ public machine settings_input(s: &mut State, p: &mut [u64; 4096]) -> u64 {
     }
     state height(s: &mut State, p: &mut [u64; 4096], increase: bool) -> u64 { let value: u64 = adjusted(matrix_service::children::configuration::encoding::word(&s.draft, 72u64), increase, 80u64, 128u64); matrix_service::children::configuration::encoding::set_word(&mut s.draft, 72u64, value); s.setting_status = 15u64; cycle(s, p) }
     state margin(s: &mut State, p: &mut [u64; 4096], increase: bool) -> u64 { let value: u64 = adjusted(matrix_service::children::configuration::encoding::word(&s.draft, 64u64), increase, 8u64, 40u64); matrix_service::children::configuration::encoding::set_word(&mut s.draft, 64u64, value); s.setting_status = 15u64; cycle(s, p) }
-    state cancel(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.editing = false; s.status = 0u64; cycle(s, p) }
+    state cancel(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.editing = false; s.notice = decisions::outcomes::Notice::None; cycle(s, p) }
 }
 machine adjusted(value: u64, increase: bool, low: u64, high: u64) -> u64 {
     transition increase { true -> clamp(add(value, 16u64), low, high) _ -> clamp(subtract(value, 16u64), low, high) }

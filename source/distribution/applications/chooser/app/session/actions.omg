@@ -1,60 +1,154 @@
-// Execute the policy's intent through the supplied endpoints, then reconcile replies.
+// Choose an intent, execute it through supplied endpoints, reconcile the reply.
 use host::main;
 use protocol::main;
-use decisions::main;
+use decisions::interaction::model::Action;
+use decisions::interaction::model::ActionRequest;
+use decisions::interaction::actions;
+use decisions::catalogue::name;
+use decisions::outcomes;
+use decisions::outcomes::Operation;
+use decisions::outcomes::Notice;
 use state;
 use transport;
 use session::session;
 use catalogue::catalogue;
 use settings::persistence;
+
 public machine act(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-    s.q[0] = 5u64; s.q[1] = s.picker as u64; s.q[2] = s.count; s.q[3] = s.selected; s.q[4] = selected_object(s);
-    s.q[5] = s.ids[0]; s.q[6] = (s.saves == 1u64) as u64;
-    let ok: u64 = decision(&mut s.q); s.dirty = true; s.force_refresh = true;
-    transition s.q[80] {
-        1u64 -> launch(s, p)
-        2u64 -> copy(s, p)
-        3u64 -> settings(s, p)
-        4u64 -> manage(s, p)
-        5u64 -> retry(s, p)
+    let request: ActionRequest = ActionRequest {
+        picker: s.picker, count: s.entries.count, selected: s.selected,
+        object: selected_object(s), template: s.entries.ids[0], retry: s.saves == 1u64
+    };
+    let action: Action = decisions::interaction::actions::action(&request);
+    s.dirty = true;
+    s.force_refresh = true;
+    transition action {
+        Action::Launch { object } -> launch(s, p, object)
+        Action::Copy { object } -> copy(s, p, object)
+        Action::Settings -> settings(s, p)
+        Action::Manage -> manage(s, p)
+        Action::Retry -> retry(s, p)
         _ -> after_input(s, p)
     }
-    state launch(s: &mut State, p: &mut [u64; 4096]) -> u64 { let object: u64 = s.q[81]; interaction(s, p, LAUNCHED, 14u64, object, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64) }
-    state copy(s: &mut State, p: &mut [u64; 4096]) -> u64 { let object: u64 = s.q[81]; storage(s, p, COPY_HEAD, STORE_HEAD, object, 0u64, 0u64, 0u64) }
-    state settings(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.reconciling = false; load_settings(s, p) }
-    state manage(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.confirming = s.managed; s.cancel = true; s.management_status = 0u64; after_input(s, p) }
-    state retry(s: &mut State, p: &mut [u64; 4096]) -> u64 { interaction(s, p, RETRIED, 22u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64) }
-}
-machine selected_object(s: &State) -> u64 { transition s.selected < 6u64 { true -> item(s) _ -> (0u64) } state item(s: &State) -> u64 requires s.selected < 6u64 { s.ids[s.selected] } }
-public machine copy_head(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-    transition failed(p) { true -> copy_failed(s, p) _ -> copy(s, p) }
-    state copy(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        let revision: u64 = p[2]; let object: u64 = s.ids[0]; let realm: u64 = s.realm;
-        s.q[0] = 10u64; s.q[1] = s.count; let ok: u64 = decision(&mut s.q);
-        let op: u64 = storage(s, p, COPIED, 13u64, object, revision, realm, 6u64);
-        transition { _ -> name(s, p, 0u64) }
+    state launch(s: &mut State, p: &mut [u64; 4096], object: u64) -> u64 {
+        interaction(s, p, LAUNCHED, 14u64, object, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64)
     }
-    state name(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 { transition i < 6u64 { true -> letter(s, p, i) _ -> send(s, p) } }
-    state letter(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 requires i < 6u64 { put(p, i, s.q[80u64 + i]); transition { _ -> name(s, p, i + 1u64) } }
-    state send(s: &mut State, p: &mut [u64; 4096]) -> u64 { p[8] = 6u64; STORE }
+    state copy(s: &mut State, p: &mut [u64; 4096], object: u64) -> u64 {
+        storage(s, p, COPY_HEAD, STORE_HEAD, object, 0u64, 0u64, 0u64)
+    }
+    state settings(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        s.reconciling = false;
+        load_settings(s, p)
+    }
+    state manage(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        s.confirming = s.managed;
+        s.cancel = true;
+        s.management_status = 0u64;
+        after_input(s, p)
+    }
+    state retry(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        interaction(s, p, RETRIED, 22u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64)
+    }
 }
+
+machine selected_object(s: &State) -> u64 {
+    transition s.selected < 6u64 {
+        true -> item(s)
+        _ -> (0u64)
+    }
+    state item(s: &State) -> u64 requires s.selected < 6u64 {
+        s.entries.ids[s.selected]
+    }
+}
+
+public machine copy_head(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    transition failed(p) {
+        true -> copy_failed(s, p)
+        _ -> copy(s, p)
+    }
+    state copy(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        let mut name: [u64; 6];
+        let valid: bool = decisions::catalogue::name::user_name(s.entries.count, &mut name);
+        let result: u64 = copy_request(s, p, &name, valid);
+        result
+    }
+}
+
 public machine copied(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-    transition failed(p) { true -> copy_failed(s, p) _ -> reload_new(s, p) }
-    state reload_new(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.status = 0u64; reload(s, p) }
+    transition failed(p) {
+        true -> copy_failed(s, p)
+        _ -> reload_new(s, p)
+    }
+    state reload_new(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        s.notice = Notice::None;
+        reload(s, p)
+    }
 }
-machine copy_failed(s: &mut State, p: &mut [u64; 4096]) -> u64 { record_outcome(s, p, 3u64); cycle(s, p) }
+
+machine copy_failed(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    let result: decisions::outcomes::Outcome = record_outcome(s, p, Operation::Copy);
+    cycle(s, p)
+}
+
 public machine launched(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-    record_outcome(s, p, 0u64);
-    transition s.q[81] != 0u64 { true -> receipt(s, p) _ -> cycle(s, p) }
-    state receipt(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.launched = s.q[81]; cycle(s, p) }
+    let result: decisions::outcomes::Outcome = record_outcome(s, p, Operation::Launch);
+    transition result.receipt != 0u64 {
+        true -> receipt(s, p, result.receipt)
+        _ -> cycle(s, p)
+    }
+    state receipt(s: &mut State, p: &mut [u64; 4096], receipt: u64) -> u64 {
+        s.launched = receipt;
+        cycle(s, p)
+    }
 }
-public machine retried(s: &mut State, p: &mut [u64; 4096]) -> u64 { record_outcome(s, p, 4u64); cycle(s, p) }
-public machine closed(s: &mut State, p: &mut [u64; 4096]) -> u64 { record_outcome(s, p, 2u64); cycle(s, p) }
+
+public machine retried(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    let result: decisions::outcomes::Outcome = record_outcome(s, p, Operation::Retry);
+    cycle(s, p)
+}
+
+public machine closed(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    let result: decisions::outcomes::Outcome = record_outcome(s, p, Operation::Close);
+    cycle(s, p)
+}
+
 public machine selected_reply(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-    s.q[0] = 8u64; s.q[1] = status(p); s.q[2] = s.close_selected as u64; let ok: u64 = decision(&mut s.q); s.status = s.q[81];
-    transition s.q[80] != 0u64 { true -> close(s, p) _ -> cycle(s, p) }
-    state close(s: &mut State, p: &mut [u64; 4096]) -> u64 { interaction(s, p, CLOSED, 15u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64) }
+    let result: decisions::outcomes::SelectionReply = decisions::outcomes::after_select(status(p), s.close_selected);
+    s.notice = result.notice;
+    transition result.close {
+        true -> close(s, p)
+        _ -> cycle(s, p)
+    }
+    state close(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        interaction(s, p, CLOSED, 15u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64)
+    }
 }
-machine record_outcome(s: &mut State, p: &[u64; 4096], kind: u64) {
-    s.q[0] = 6u64; s.q[1] = kind; s.q[2] = status(p); s.q[3] = p[2]; let ok: u64 = decision(&mut s.q); s.status = s.q[80]; s.dirty = true; s.force_refresh = true;
+
+machine record_outcome(s: &mut State, p: &[u64; 4096], operation: Operation) -> decisions::outcomes::Outcome {
+    let result: decisions::outcomes::Outcome = decisions::outcomes::outcome(operation, status(p), p[2]);
+    s.notice = result.notice;
+    s.dirty = true;
+    s.force_refresh = true;
+    result
+}
+
+machine copy_request(s: &mut State, p: &mut [u64; 4096], name: &[u64; 6], valid: bool) -> u64 {
+    transition valid {
+        true -> request(s, p, name)
+        _ -> unavailable(s, p)
+    }
+    state request(s: &mut State, p: &mut [u64; 4096], name: &[u64; 6]) -> u64 {
+        let revision: u64 = p[2];
+        let object: u64 = s.entries.ids[0];
+        let realm: u64 = s.realm;
+        let op: u64 = storage(s, p, COPIED, 13u64, object, revision, realm, 6u64);
+        put(p, 0u64, name[0]);
+        put(p, 1u64, name[1]);
+        put(p, 2u64, name[2]);
+        put(p, 3u64, name[3]);
+        put(p, 4u64, name[4]);
+        put(p, 5u64, name[5]);
+        p[8] = 6u64;
+        STORE
+    }
 }

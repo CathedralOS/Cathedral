@@ -1,7 +1,7 @@
 // Startup -> refresh scoped observations -> poll -> dispatch -> present -> wait.
 use host::main;
 use protocol::main;
-use decisions::main;
+use decisions::outcomes;
 use state;
 use transport;
 use catalogue::catalogue;
@@ -51,7 +51,7 @@ public machine session(s: &mut State, p: &mut [u64; 4096]) -> u64 {
 machine start(s: &mut State, p: &mut [u64; 4096]) -> u64 {
     let role: u64 = p[12] & 255u64;
     s.picker = role == 1u64 || role == 2u64; s.own = p[12] >> 8u64;
-    s.status = (role == 2u64) as u64; s.selected = 1u64; s.dirty = true; s.force_refresh = true;
+    s.notice = initial_notice(role); s.selected = 1u64; s.dirty = true; s.force_refresh = true;
     s.phase = INTERACTION_READY; p[0] = 1u64; p[1] = 1u64; INTERACTION
 }
 machine acquire_storage(s: &mut State, p: &mut [u64; 4096]) -> u64 {
@@ -108,10 +108,26 @@ machine observe(s: &mut State, p: &mut [u64; 4096]) -> u64 {
     state request(s: &mut State, p: &mut [u64; 4096]) -> u64 { let receipt: u64 = s.launched; interaction(s, p, OBSERVED, 17u64, receipt, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64) }
 }
 machine observed(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-    s.q[0] = 9u64; s.q[1] = status(p); s.q[2] = p[1]; let ok: u64 = decision(&mut s.q);
-    transition s.q[80] == 0u64 { true -> stopped(s, p) _ -> poll(s, p) }
-    state stopped(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.launched = 0u64; s.status = s.q[81]; s.dirty = true; poll(s, p) }
+    let result: decisions::outcomes::Observation = decisions::outcomes::observation(status(p), p[1]);
+    transition result.running {
+        true -> poll(s, p)
+        _ -> stopped(s, p, result.notice)
+    }
+    state stopped(s: &mut State, p: &mut [u64; 4096], notice: decisions::outcomes::Notice) -> u64 {
+        s.launched = 0u64;
+        s.notice = notice;
+        s.dirty = true;
+        poll(s, p)
+    }
 }
+
+machine initial_notice(role: u64) -> decisions::outcomes::Notice {
+    transition role == 2u64 {
+        true -> (decisions::outcomes::Notice::Unavailable)
+        _ -> (decisions::outcomes::Notice::None)
+    }
+}
+
 public machine poll(s: &mut State, p: &mut [u64; 4096]) -> u64 { interaction(s, p, POLLED, MATRIX_POLL, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64) }
 machine polled(s: &mut State, p: &mut [u64; 4096]) -> u64 {
     transition p[9] != 0u64 { true -> (EXIT) _ -> view(s, p) }

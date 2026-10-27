@@ -1,0 +1,50 @@
+module interaction::actions;
+
+use interaction::model;
+use interaction::model::NEW_USER;
+use interaction::model::SETTINGS;
+use interaction::model::MANAGEMENT;
+use interaction::model::RETRY_SAVES;
+
+// Select an intent. Only the supplied service can authorize its execution.
+public machine action(request: &model::ActionRequest) -> model::Action {
+    transition request.selected {
+        RETRY_SAVES -> retry(request)
+        MANAGEMENT -> manage(request)
+        SETTINGS -> settings(request)
+        NEW_USER -> copy(request)
+        _ -> launch(request)
+    }
+    machine retry(request: &model::ActionRequest) -> model::Action {
+        transition request.retry {
+            true -> (model::Action::Retry)
+            _ -> (model::Action::None)
+        }
+    }
+    machine manage(request: &model::ActionRequest) -> model::Action {
+        transition request.picker {
+            true -> (model::Action::None)
+            _ -> (model::Action::Manage)
+        }
+    }
+    machine settings(request: &model::ActionRequest) -> model::Action {
+        transition request.picker {
+            true -> (model::Action::None)
+            _ -> (model::Action::Settings)
+        }
+    }
+    machine copy(request: &model::ActionRequest) -> model::Action {
+        transition request.picker && request.count > 0u64
+        && request.count < 4u64 && request.template != 0u64 {
+            true -> (model::Action::Copy { object: request.template })
+            _ -> (model::Action::None)
+        }
+    }
+    machine launch(request: &model::ActionRequest) -> model::Action {
+        transition request.selected > 0u64 && request.selected < request.count
+        && request.selected < 6u64 && request.object != 0u64 {
+            true -> (model::Action::Launch { object: request.object })
+            _ -> (model::Action::None)
+        }
+    }
+}

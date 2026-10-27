@@ -1,0 +1,69 @@
+module interaction;
+
+use decisions::interaction::model::TaskHit;
+use decisions::interaction::model::Task;
+use decisions::interaction::model::Action;
+use decisions::interaction::model::ActionRequest;
+use decisions::interaction::model::Selection;
+use decisions::interaction::model::Input;
+use decisions::interaction::model::Context;
+// Temporary native encoding for Rust probes; ordinary Omega calls typed policy.
+use decisions::interaction::model;
+use decisions::interaction::interaction;
+use decisions::interaction::actions;
+use decisions::interaction::tasks;
+use protocol::main;
+
+public machine selection(p: &mut [u64; 128]) -> u64 {
+    let context: Context = Context {
+        picker: p[1] != 0u64, count: p[2], width: p[3], height: p[4],
+        selected: p[5], managed: p[10] != 0u64, retry: p[11] != 0u64
+    };
+    let input: Input = event(p[6], p[7], p[8], p[9] != 0u64);
+    let result: Selection = decisions::interaction::interaction::selection(&context, input);
+    p[80] = result.selected;
+    p[81] = result.changed as u64;
+    p[82] = result.activate as u64;
+    1u64
+}
+
+public machine action(p: &mut [u64; 128]) -> u64 {
+    let request: ActionRequest = ActionRequest {
+        picker: p[1] != 0u64, count: p[2], selected: p[3], object: p[4], template: p[5], retry: p[6] != 0u64
+    };
+    p[80] = 0u64;
+    p[81] = 0u64;
+    transition decisions::interaction::actions::action(&request) {
+        Action::Launch { object } -> publish(p, 1u64, object)
+        Action::Copy { object } -> publish(p, 2u64, object)
+        Action::Settings -> publish(p, 3u64, 0u64)
+        Action::Manage -> publish(p, 4u64, 0u64)
+        Action::Retry -> publish(p, 5u64, 0u64)
+        _ -> (1u64)
+    }
+    machine publish(p: &mut [u64; 128], kind: u64, object: u64) -> u64 {
+        p[80] = kind;
+        p[81] = object;
+        1u64
+    }
+}
+
+public machine task_click(p: &mut [u64; 128]) -> u64 {
+    let mut entries: [Task; 3];
+    entries[0] = Task { available: p[16] == 0u64, ticket: p[17] };
+    entries[1] = Task { available: p[24] == 0u64, ticket: p[25] };
+    entries[2] = Task { available: p[32] == 0u64, ticket: p[33] };
+    let result: TaskHit = decisions::interaction::tasks::task_click(p[1], p[3], event(p[4], p[5], p[6], p[7] != 0u64), &entries);
+    p[80] = result.ticket;
+    p[81] = result.close as u64;
+    p[82] = result.hit as u64;
+    1u64
+}
+
+machine event(kind: u64, a: u64, b: u64, clicked: bool) -> Input {
+    transition kind {
+        POINTER -> (Input::Pointer { x: a, y: b, clicked: clicked })
+        KEY -> (Input::Key { code: a, pressed: b == PRESS })
+        _ -> (Input::None)
+    }
+}

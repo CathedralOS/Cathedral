@@ -1,7 +1,8 @@
 // Retain surfaces; publish complete bounded images. Re-poll after an epoch race.
 use host::main;
 use protocol::main;
-use decisions::main;
+use decisions::layout;
+use decisions::outcomes::Notice;
 use state;
 use transport;
 use session::session;
@@ -56,7 +57,7 @@ public machine paint_next(s: &mut State, p: &mut [u64; 4096]) -> u64 {
     state editor(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition s.editing { true -> settings(s, p) _ -> tiles(s, p) } }
     state settings(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition s.rank < 3u64 { true -> settings_image(s, p) _ -> footer_start(s, p) } }
     state tiles(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        geometry(s); transition s.rank < s.q[80] && s.rank < 6u64 { true -> tile_image(s, p) _ -> clear_start(s, p) }
+        geometry(s); transition s.rank < s.geometry.count && s.rank < 6u64 { true -> tile_image(s, p) _ -> clear_start(s, p) }
     }
     state clear_start(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.paint_step = 4u64; transition { _ -> clear_unused(s, p) } }
     state clear_unused(s: &mut State, p: &mut [u64; 4096]) -> u64 {
@@ -86,12 +87,27 @@ public machine rechecked(s: &mut State, p: &mut [u64; 4096]) -> u64 {
     transition p[9] != 0u64 || (p[0] == 0u64 && p[1] == s.epoch) { true -> (EXIT) _ -> retry(s, p) }
     state retry(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.scene = false; s.dirty = true; s.channels[0] = 0u64; s.channels[1] = 0u64; s.channels[2] = 0u64; s.channels[3] = 0u64; s.buttons[0] = 0u64; s.buttons[1] = 0u64; s.buttons[2] = 0u64; s.buttons[3] = 0u64; cycle(s, p) }
 }
-public machine geometry(s: &mut State) { s.q[0] = 3u64; s.q[1] = s.picker as u64; s.q[2] = s.count; s.q[3] = s.width; s.q[4] = s.height; s.q[5] = s.rank; let ok: u64 = decision(&mut s.q); }
+public machine geometry(s: &mut State) {
+    s.geometry = decisions::layout::geometry(s.picker, s.entries.count, s.width, s.height, s.rank);
+}
 public machine footer_slot(s: &State) -> u64 { transition s.picker { true -> (5u64) _ -> (6u64) } }
 public machine normal_chrome(s: &State) -> bool { !s.picker && !s.editing && s.confirming == 0u64 }
 public machine footer_managed(s: &State) -> bool { normal_chrome(s) && s.managed != 0u64 }
 public machine footer_status(s: &State) -> u64 {
     transition s.confirming != 0u64 { true -> (s.management_status) _ -> editor(s) }
     state editor(s: &State) -> u64 { transition s.editing { true -> (s.setting_status) _ -> availability(s) } }
-    state availability(s: &State) -> u64 { transition s.saves { 1u64 -> (6u64) 2u64 -> (7u64) _ -> (s.status) } }
+    state availability(s: &State) -> u64 { transition s.saves { 1u64 -> (6u64) 2u64 -> (7u64) _ -> (notice_code(s.notice)) } }
+}
+
+// The existing footer painter shares numeric presentation tags with its panels.
+// Convert named operation notices only at that presentation boundary.
+machine notice_code(notice: Notice) -> u64 {
+    transition notice {
+        Notice::None -> (0u64)
+        Notice::Unavailable -> (1u64)
+        Notice::Retry -> (2u64)
+        Notice::Capacity -> (3u64)
+        Notice::Unsaved -> (4u64)
+        Notice::Stopped -> (5u64)
+    }
 }

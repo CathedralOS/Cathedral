@@ -1,122 +1,16 @@
-// Selection -> intent. Services still decide whether the requested action is
-// authorized; a tile or keyboard shortcut never supplies extra authority.
-use layout;
-use protocol::main;
-public machine selection(p: &mut [u64; 128]) -> u64 {
-    p[80] = p[5]; p[81] = 0u64; p[82] = 0u64;
-    transition p[6] {
-        POINTER -> pointer(p)
-        KEY -> keyboard(p)
-        _ -> (1u64)
-    }
-    state pointer(p: &mut [u64; 128]) -> u64 {
-        transition p[9] != 0u64 { true -> controls(p) _ -> (1u64) }
-    }
-    state controls(p: &mut [u64; 128]) -> u64 {
-        let left: u64 = ((p[3] as u64 in Saturating) - 184) as u64;
-        transition p[1] == 0u64 && p[7] >= left { true -> settings(p) _ -> tiles(p, 0u64) }
-    }
-    state settings(p: &mut [u64; 128]) -> u64 {
-        let top: u64 = ((p[4] as u64 in Saturating) - 32) as u64;
-        transition p[8] >= top { true -> activate(p, 7u64) _ -> retry(p) }
-    }
-    state retry(p: &mut [u64; 128]) -> u64 {
-        let top: u64 = ((p[4] as u64 in Saturating) - 48) as u64;
-        transition p[11] != 0u64 && p[8] >= top { true -> activate(p, 9u64) _ -> manage(p) }
-    }
-    state manage(p: &mut [u64; 128]) -> u64 {
-        let top: u64 = ((p[4] as u64 in Saturating) - 72) as u64;
-        let bottom: u64 = ((p[4] as u64 in Saturating) - 48) as u64;
-        transition p[10] != 0u64 && p[8] >= top && p[8] < bottom { true -> activate(p, 8u64) _ -> tiles(p, 0u64) }
-    }
-    state tiles(p: &mut [u64; 128], i: u64) -> u64 {
-        let n: u64 = tile_count(p[2], p[1] != 0u64);
-        transition i < n && i < 6u64 { true -> tile(p, i, n) _ -> (1u64) }
-    }
-    state tile(p: &mut [u64; 128], i: u64, n: u64) -> u64 requires i < 6u64 {
-        let picker: bool = p[1] != 0u64;
-        let hit: bool = inside(p[7], tile_left(p[3], n, picker, i), tile_width(picker)) && inside(p[8], tile_top(p[4], picker), tile_height(picker));
-        transition hit { true -> activate(p, tile_id(p[2], picker, i)) _ -> tiles(p, i + 1u64) }
-    }
-    state keyboard(p: &mut [u64; 128]) -> u64 {
-        transition p[8] == PRESS { true -> key(p) _ -> (1u64) }
-    }
-    state key(p: &mut [u64; 128]) -> u64 {
-        transition p[7] {
-            UP -> move_selection(p, false)
-            LEFT -> move_selection(p, false)
-            DOWN -> move_selection(p, true)
-            RIGHT -> move_selection(p, true)
-            ENTER -> activate(p, p[5])
-            F2 -> open_settings(p)
-            F3 -> open_management(p)
-            F4 -> retry_saves(p)
-            _ -> (1u64)
-        }
-    }
-    state open_settings(p: &mut [u64; 128]) -> u64 { transition p[1] == 0u64 { true -> activate(p, 7u64) _ -> (1u64) } }
-    state open_management(p: &mut [u64; 128]) -> u64 { transition p[10] != 0u64 { true -> activate(p, 8u64) _ -> (1u64) } }
-    state retry_saves(p: &mut [u64; 128]) -> u64 { transition p[11] != 0u64 { true -> activate(p, 9u64) _ -> (1u64) } }
-    state move_selection(p: &mut [u64; 128], forward: bool) -> u64 {
-        let n: u64 = tile_count(p[2], p[1] != 0u64);
-        p[81] = 1u64;
-        transition n > 0u64 && n <= 6u64 { true -> find(p, forward, n, 0u64) _ -> empty(p) }
-    }
-    state empty(p: &mut [u64; 128]) -> u64 { p[80] = 0u64; 1u64 }
-    state find(p: &mut [u64; 128], forward: bool, n: u64, i: u64) -> u64 {
-        transition i < n && i < 6u64 { true -> compare(p, forward, n, i) _ -> move_from(p, forward, n, 0u64) }
-    }
-    state compare(p: &mut [u64; 128], forward: bool, n: u64, i: u64) -> u64 requires i < 6u64 {
-        transition tile_id(p[2], p[1] != 0u64, i) == p[5] { true -> move_from(p, forward, n, i) _ -> find(p, forward, n, i + 1u64) }
-    }
-    state move_from(p: &mut [u64; 128], forward: bool, n: u64, i: u64) -> u64 {
-        transition n > 0u64 && n <= 6u64 && i < 6u64 { true -> move_bounded(p, forward, n, i) _ -> (0u64) }
-    }
-    state move_bounded(p: &mut [u64; 128], forward: bool, n: u64, i: u64) -> u64 requires n > 0u64 && n <= 6u64 && i < 6u64 {
-        let delta: u64 = move_delta(forward, n);
-        p[80] = tile_id(p[2], p[1] != 0u64, (i + delta) % n); 1u64
-    }
-    state activate(p: &mut [u64; 128], index: u64) -> u64 { p[80] = index; p[81] = 1u64; p[82] = 1u64; 1u64 }
-}
+module interaction::interaction;
 
-public machine action(p: &mut [u64; 128]) -> u64 {
-    p[80] = 0u64; p[81] = 0u64;
-    transition p[3] {
-        9u64 -> retry(p)
-        8u64 -> manage(p)
-        7u64 -> settings(p)
-        6u64 -> copy(p)
-        _ -> launch(p)
-    }
-    state retry(p: &mut [u64; 128]) -> u64 { transition p[6] != 0u64 { true -> intent(p, 5u64, 0u64) _ -> (1u64) } }
-    state manage(p: &mut [u64; 128]) -> u64 { transition p[1] == 0u64 { true -> intent(p, 4u64, 0u64) _ -> (1u64) } }
-    state settings(p: &mut [u64; 128]) -> u64 { transition p[1] == 0u64 { true -> intent(p, 3u64, 0u64) _ -> (1u64) } }
-    state copy(p: &mut [u64; 128]) -> u64 { transition p[1] != 0u64 && p[2] > 0u64 && p[2] < 4u64 && p[5] != 0u64 { true -> intent(p, 2u64, p[5]) _ -> (1u64) } }
-    state launch(p: &mut [u64; 128]) -> u64 { transition p[3] > 0u64 && p[3] < p[2] && p[3] < 6u64 && p[4] != 0u64 { true -> intent(p, 1u64, p[4]) _ -> (1u64) } }
-    state intent(p: &mut [u64; 128], kind: u64, object: u64) -> u64 { p[80] = kind; p[81] = object; 1u64 }
-}
+use interaction::model::Input;
 
-public machine task_click(p: &mut [u64; 128]) -> u64 {
-    p[80] = 0u64; p[81] = 0u64; p[82] = 0u64;
-    let top: u64 = ((p[3] as u64 in Saturating) - 32) as u64 / 2u64;
-    transition p[4] == POINTER && p[7] != 0u64 && inside(p[5], p[1], 432u64) && inside(p[6], top, 32u64) {
-        true -> hit(p) _ -> (1u64)
-    }
-    state hit(p: &mut [u64; 128]) -> u64 {
-        p[82] = 1u64;
-        transition p[5] >= p[1] { true -> offset(p) _ -> (0u64) }
-    }
-    state offset(p: &mut [u64; 128]) -> u64 requires p[5] >= p[1] {
-        let x: u64 = p[5] - p[1];
-        transition x < 432u64 { true -> ticket(p, x) _ -> (0u64) }
-    }
-    state ticket(p: &mut [u64; 128], x: u64) -> u64 requires x < 432u64 {
-        let at: u64 = 16u64 + (x / 144u64) * 8u64;
-        transition p[at] == 0u64 && p[at + 1u64] != 0u64 { true -> selected(p, at, x) _ -> (1u64) }
-    }
-    state selected(p: &mut [u64; 128], at: u64, x: u64) -> u64 requires at < 127u64 {
-        p[80] = p[at + 1u64]; p[81] = (x % 144u64 >= 124u64) as u64; 1u64
+// Input -> selection. Pointer geometry and keyboard navigation share tile IDs.
+use interaction::model;
+use interaction::pointer;
+use interaction::keyboard;
+
+public machine selection(context: &model::Context, input: Input) -> model::Selection {
+    transition input {
+        Input::Pointer { x, y, clicked } -> pointer::select_pointer(context, x, y, clicked)
+        Input::Key { code, pressed } -> keyboard::select_key(context, code, pressed)
+        _ -> model::unchanged(context)
     }
 }
-
-machine move_delta(forward: bool, n: u64) -> u64 requires n > 0u64 { transition forward { true -> (1u64) _ -> (n - 1u64) } }

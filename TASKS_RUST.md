@@ -85,6 +85,25 @@ Configuration now also uses named requests, geometry, rectangles and plans; its
 native adapter lives under `bridge/policy/configuration/`. Saved-file and real IPC
 codecs remain beside their service owner. Package/module imports retain this hierarchy.
 
+The chooser now also uses ordinary typed calls for catalogue resolution,
+geometry, input selection, launch/copy intents, replies and observations. Its
+session no longer stages internal decisions through a 128-word scratch array.
+`chooser/policy/` retains the Rust policy responsibility split; `chooser/app/`
+owns the session, settings and rendering. Both temporary native entrances now
+live under `chooser/bridge/`, with the Rust probe packet codec in `bridge/policy/`.
+Start at [the chooser map](source/distribution/applications/chooser/README.md).
+
+Chooser cleanup verification: full `cargo test --locked`, including 20 compiled
+chooser tests and 97 matrix tests, passes on the pinned desktop producer above.
+Layout checks pass with 75 Omega / 151 Rust package edges; all eight layout laws,
+five component-packaging tests and Rust formatting pass. Chooser Clippy passes
+with and without `rust-probes`, with warnings denied. Normal F5 acceptance
+covers login, three independent Notes instances, protected close, slot reuse,
+Colors, saves and cold reboot; the durable oracle verifies 1,767 records.
+Artifacts: `build/boot-harness-rs/desktop/20261027T034355939124Z`.
+Logs: `build/omega-component/chooser-typed-{host-tests,desktop,clippy}.log`.
+No service grants, image-page ceilings or deadlines were enlarged.
+
 This is not a completed tree-wide cleanup. The stock matrix policy no longer
 uses native packets as its domain model; retain its host regressions as further
 mechanisms move into Omega. The Omega kernel now separates shared ownership

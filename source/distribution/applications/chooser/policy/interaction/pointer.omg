@@ -1,0 +1,61 @@
+module interaction::pointer;
+
+use interaction::model;
+use layout;
+
+public machine select_pointer(context: &model::Context, x: u64, y: u64, clicked: bool) -> model::Selection {
+    transition clicked {
+        true -> controls(context, x, y)
+        _ -> model::unchanged(context)
+    }
+    machine controls(context: &model::Context, x: u64, y: u64) -> model::Selection {
+        let left: u64 = ((context.width as u64 in Saturating) - 184) as u64;
+        transition !context.picker && x >= left {
+            true -> settings(context, x, y)
+            _ -> tiles(context, x, y, 0u64)
+        }
+    }
+    machine settings(context: &model::Context, x: u64, y: u64) -> model::Selection {
+        let top: u64 = ((context.height as u64 in Saturating) - 32) as u64;
+        transition y >= top {
+            true -> model::activate(model::SETTINGS)
+            _ -> retry(context, x, y)
+        }
+    }
+    machine retry(context: &model::Context, x: u64, y: u64) -> model::Selection {
+        let top: u64 = ((context.height as u64 in Saturating) - 48) as u64;
+        transition context.retry && y >= top {
+            true -> model::activate(model::RETRY_SAVES)
+            _ -> manage(context, x, y)
+        }
+    }
+    machine manage(context: &model::Context, x: u64, y: u64) -> model::Selection {
+        let top: u64 = ((context.height as u64 in Saturating) - 72) as u64;
+        let bottom: u64 = ((context.height as u64 in Saturating) - 48) as u64;
+        transition context.managed && y >= top && y < bottom {
+            true -> model::activate(model::MANAGEMENT)
+            _ -> tiles(context, x, y, 0u64)
+        }
+    }
+    machine tiles(context: &model::Context, x: u64, y: u64, index: u64) -> model::Selection {
+        let count: u64 = layout::tile_count(context.count, context.picker);
+        transition index < count && index < 6u64 {
+            true -> tile(context, x, y, index, count)
+            _ -> model::unchanged(context)
+        }
+    }
+    machine tile(context: &model::Context, x: u64, y: u64, index: u64, count: u64) -> model::Selection {
+        let hit: bool = layout::inside(x, layout::tile_left(context.width, count, context.picker, index), layout::tile_width(context.picker))
+            && layout::inside(y, layout::tile_top(context.height, context.picker), layout::tile_height(context.picker));
+        transition hit {
+            true -> model::activate(layout::tile_id(context.count, context.picker, index))
+            _ -> advance(context, x, y, index)
+        }
+    }
+    machine advance(context: &model::Context, x: u64, y: u64, index: u64) -> model::Selection {
+        transition index < 6u64 {
+            true -> tiles(context, x, y, index + 1u64)
+            _ -> model::unchanged(context)
+        }
+    }
+}

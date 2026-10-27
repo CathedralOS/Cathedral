@@ -44,6 +44,6 @@ machine number(index: u64, x: u64, y: u64) -> bool {
 }
 machine task_title(s: &State, object: u64, x: u64, y: u64) -> bool {
     transition { _ -> scan(s, object, x, y, 0u64) }
-    state scan(s: &State, object: u64, x: u64, y: u64, i: u64) -> bool { transition i < s.count && i < 6u64 { true -> match_id(s, object, x, y, i) _ -> label_pixel(22u64, x, y, 4u64, 8u64) } }
-    state match_id(s: &State, object: u64, x: u64, y: u64, i: u64) -> bool requires i < 6u64 { transition s.ids[i] == object { true -> name_pixel(s, i, 8u64, x, y, 4u64, 8u64) _ -> scan(s, object, x, y, i + 1u64) } }
+    state scan(s: &State, object: u64, x: u64, y: u64, i: u64) -> bool { transition i < s.entries.count && i < 6u64 { true -> match_id(s, object, x, y, i) _ -> label_pixel(22u64, x, y, 4u64, 8u64) } }
+    state match_id(s: &State, object: u64, x: u64, y: u64, i: u64) -> bool requires i < 6u64 { transition s.entries.ids[i] == object { true -> name_pixel(s, i, 8u64, x, y, 4u64, 8u64) _ -> scan(s, object, x, y, i + 1u64) } }
 }
