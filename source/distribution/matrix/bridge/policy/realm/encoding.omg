@@ -1,0 +1,202 @@
+module realm::encoding;
+
+// Private native tags and existing host status codes, never service authority.
+use service::children::startup::realm::operations::Job;
+use service::children::startup::realm::operations::Command;
+use service::children::startup::realm::operations::Phase;
+use service::children::startup::realm::operations::Outcome;
+
+const BUSY_STATUS: u64 = 18446744073709551600u64;
+const DENIED_STATUS: u64 = 18446744073709551603u64;
+const PEER_CLOSED_STATUS: u64 = 18446744073709551584u64;
+
+public machine job(value: u64) -> Job {
+    transition value {
+        1u64 -> (Job::Configuration)
+        2u64 -> (Job::Picker)
+        3u64 -> (Job::Background)
+        4u64 -> (Job::Discovery)
+        _ -> (Job::None)
+    }
+}
+
+public machine job_tag(job: Job) -> u64 {
+    transition job {
+        Job::None -> (0u64)
+        Job::Configuration -> (1u64)
+        Job::Picker -> (2u64)
+        Job::Background -> (3u64)
+        Job::Discovery -> (4u64)
+    }
+}
+
+public machine command(value: u64) -> Command requires value >= 1u64 && value <= 36u64 {
+    transition value {
+        1u64 -> (Command::Refresh)
+        2u64 -> (Command::ReadConfiguration)
+        3u64 -> (Command::ValidateConfiguration)
+        4u64 -> (Command::AdmitLauncher)
+        5u64 -> (Command::ReleaseImage)
+        6u64 -> (Command::BindLauncher)
+        7u64 -> (Command::InstallWorkspace)
+        8u64 -> (Command::PlaceLauncher)
+        9u64 -> (Command::StartBackground)
+        10u64 -> (Command::BackgroundFailed)
+        11u64 -> (Command::Flush)
+        12u64 -> (Command::Notify)
+        13u64 -> (Command::GrantChrome)
+        14u64 -> (Command::RecordLauncher)
+        15u64 -> (Command::StopLauncher)
+        16u64 -> (Command::ClearWorkspace)
+        17u64 -> (Command::ResetSurfaces)
+        18u64 -> (Command::PreparePicker)
+        19u64 -> (Command::ReadPicker)
+        20u64 -> (Command::ValidatePicker)
+        21u64 -> (Command::AdmitPicker)
+        22u64 -> (Command::BindPicker)
+        23u64 -> (Command::PlacePicker)
+        24u64 -> (Command::InstallPicker)
+        25u64 -> (Command::RecordPicker)
+        26u64 -> (Command::ReadBackground)
+        27u64 -> (Command::AdmitBackground)
+        28u64 -> (Command::PlaceBackground)
+        29u64 -> (Command::RecordBackground)
+        30u64 -> (Command::StopBackground)
+        31u64 -> (Command::InspectRealm)
+        32u64 -> (Command::ConfigureRealm)
+        33u64 -> (Command::StartPicker)
+        34u64 -> (Command::MarkHosted)
+        35u64 -> (Command::RecoverStartup)
+        _ -> (Command::Finish)
+    }
+}
+
+public machine command_tag(command: Command) -> u64 {
+    transition command {
+        Command::Refresh -> (1u64)
+        Command::ReadConfiguration -> (2u64)
+        Command::ValidateConfiguration -> (3u64)
+        Command::AdmitLauncher -> (4u64)
+        Command::ReleaseImage -> (5u64)
+        Command::BindLauncher -> (6u64)
+        Command::InstallWorkspace -> (7u64)
+        Command::PlaceLauncher -> (8u64)
+        Command::StartBackground -> (9u64)
+        Command::BackgroundFailed -> (10u64)
+        Command::Flush -> (11u64)
+        Command::Notify -> (12u64)
+        Command::GrantChrome -> (13u64)
+        Command::RecordLauncher -> (14u64)
+        Command::StopLauncher -> (15u64)
+        Command::ClearWorkspace -> (16u64)
+        Command::ResetSurfaces -> (17u64)
+        Command::PreparePicker -> (18u64)
+        Command::ReadPicker -> (19u64)
+        Command::ValidatePicker -> (20u64)
+        Command::AdmitPicker -> (21u64)
+        Command::BindPicker -> (22u64)
+        Command::PlacePicker -> (23u64)
+        Command::InstallPicker -> (24u64)
+        Command::RecordPicker -> (25u64)
+        Command::ReadBackground -> (26u64)
+        Command::AdmitBackground -> (27u64)
+        Command::PlaceBackground -> (28u64)
+        Command::RecordBackground -> (29u64)
+        Command::StopBackground -> (30u64)
+        Command::InspectRealm -> (31u64)
+        Command::ConfigureRealm -> (32u64)
+        Command::StartPicker -> (33u64)
+        Command::MarkHosted -> (34u64)
+        Command::RecoverStartup -> (35u64)
+        Command::Finish -> (36u64)
+    }
+}
+
+public machine phase(value: u64) -> Phase {
+    transition value >= 1u64 && value <= 36u64 {
+        true -> ready(value)
+        _ -> waiting_or_dormant(value)
+    }
+    machine ready(value: u64) -> Phase requires value >= 1u64 && value <= 36u64 {
+        Phase::Ready { command: command(value) }
+    }
+    machine waiting_or_dormant(value: u64) -> Phase {
+        transition value >= 65u64 && value <= 100u64 {
+            true -> waiting(value)
+            _ -> (Phase::Dormant)
+        }
+    }
+    machine waiting(value: u64) -> Phase requires value >= 65u64 && value <= 100u64 {
+        Phase::Waiting { command: command(value - 64u64) }
+    }
+}
+
+public machine phase_tag(phase: Phase) -> u64 {
+    transition phase {
+        Phase::Dormant -> (0u64)
+        Phase::Ready { command } -> command_tag(command)
+        Phase::Waiting { command } -> waiting_tag(command)
+    }
+}
+
+machine waiting_tag(command: Command) -> u64 {
+    // Exhaustive constants keep the native offset out of service state.
+    transition command {
+        Command::Refresh -> (65u64)
+        Command::ReadConfiguration -> (66u64)
+        Command::ValidateConfiguration -> (67u64)
+        Command::AdmitLauncher -> (68u64)
+        Command::ReleaseImage -> (69u64)
+        Command::BindLauncher -> (70u64)
+        Command::InstallWorkspace -> (71u64)
+        Command::PlaceLauncher -> (72u64)
+        Command::StartBackground -> (73u64)
+        Command::BackgroundFailed -> (74u64)
+        Command::Flush -> (75u64)
+        Command::Notify -> (76u64)
+        Command::GrantChrome -> (77u64)
+        Command::RecordLauncher -> (78u64)
+        Command::StopLauncher -> (79u64)
+        Command::ClearWorkspace -> (80u64)
+        Command::ResetSurfaces -> (81u64)
+        Command::PreparePicker -> (82u64)
+        Command::ReadPicker -> (83u64)
+        Command::ValidatePicker -> (84u64)
+        Command::AdmitPicker -> (85u64)
+        Command::BindPicker -> (86u64)
+        Command::PlacePicker -> (87u64)
+        Command::InstallPicker -> (88u64)
+        Command::RecordPicker -> (89u64)
+        Command::ReadBackground -> (90u64)
+        Command::AdmitBackground -> (91u64)
+        Command::PlaceBackground -> (92u64)
+        Command::RecordBackground -> (93u64)
+        Command::StopBackground -> (94u64)
+        Command::InspectRealm -> (95u64)
+        Command::ConfigureRealm -> (96u64)
+        Command::StartPicker -> (97u64)
+        Command::MarkHosted -> (98u64)
+        Command::RecoverStartup -> (99u64)
+        Command::Finish -> (100u64)
+    }
+}
+
+public machine outcome(value: u64) -> Outcome {
+    transition value {
+        0u64 -> (Outcome::Success)
+        BUSY_STATUS -> (Outcome::Busy)
+        DENIED_STATUS -> (Outcome::Denied)
+        PEER_CLOSED_STATUS -> (Outcome::PeerClosed)
+        _ -> (Outcome::Failed { status: value })
+    }
+}
+
+public machine outcome_tag(outcome: Outcome) -> u64 {
+    transition outcome {
+        Outcome::Success -> (0u64)
+        Outcome::Busy -> (BUSY_STATUS)
+        Outcome::Denied -> (DENIED_STATUS)
+        Outcome::PeerClosed -> (PEER_CLOSED_STATUS)
+        Outcome::Failed { status } -> (status)
+    }
+}

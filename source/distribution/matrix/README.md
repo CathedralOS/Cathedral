@@ -33,9 +33,10 @@ and image/declaration codecs; launch policy uses named facts and shared contract
 values. The [workspace bridge](bridge/policy/workspace/main.omg) translates the
 instance catalogue and switch workflow to named domain values as well. The [request bridge](bridge/policy/requests/main.omg) likewise translates host
 connection facts, control decisions and owner effects. Request policy uses named
-values; its wire decoders handle the actual IPC formats. Realm configuration
-still exposes packet-shaped interfaces and needs the same cleanup. Moving it
-into semantic folders does not finish that work.
+values; its wire decoders handle the actual IPC formats. The [realm adapter](bridge/policy/realm/main.omg) also translates setup jobs,
+completions and outcomes; startup sequences use named state. Configuration
+geometry and live-layout policy still expose packet-shaped interfaces and need
+the same cleanup. Moving them into semantic folders does not finish that work.
 
 Rust retains exact task/endpoint identity, authenticated connections, mappings,
 late replies, yielding transport and resource reclamation. Common import-record

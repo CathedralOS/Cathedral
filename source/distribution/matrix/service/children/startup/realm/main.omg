@@ -1,122 +1,97 @@
 module children::startup::realm::main;
 
-// Realm discovery and setup. Each issued host operation completes exactly once.
-// State 16..20: next/issued command, job, final status, last status, reset-surfaces obligation.
-use children::startup::realm::operations;
+// Begin one job, issue work once, and accept only its outstanding command.
+// Each job's sequence lives beside this entrance; the native codec lives outside.
+use children::startup::realm::operations::Setup;
+use children::startup::realm::operations::Job;
+use children::startup::realm::operations::Command;
+use children::startup::realm::operations::Phase;
+use children::startup::realm::operations::Outcome;
+use children::startup::realm::operations::Context;
+use children::startup::realm::operations::Completion;
+use children::startup::realm::operations::Dispatch;
 use children::startup::realm::configuration;
 use children::startup::realm::picker;
 use children::startup::realm::background;
 use children::startup::realm::discovery;
 
-public machine realm_decision(p: &mut [u64; 128]) -> u64 {
-    transition p[1] {
-        0u64 -> initialize(p)
-        1u64 -> issue(p)
-        2u64 -> completed(p)
-        _ -> (0u64)
+public machine begin(setup: &mut Setup, job: Job, context: &Context) -> bool {
+    transition (setup.phase in Phase::Dormant) && job != Job::None {
+        true -> start(setup, job, context)
+        _ -> (false)
+    }
+    machine start(setup: &mut Setup, job: Job, context: &Context) -> bool {
+        setup.job = job;
+        setup.outcome = Outcome::Success;
+        setup.background_outcome = Outcome::Success;
+        setup.reset_surfaces = false;
+        let command: Command = first(setup, job, context);
+        setup.phase = Phase::Ready { command: command };
+        true
     }
 }
 
-machine initialize(p: &mut [u64; 128]) -> u64 {
-    transition p[16] == 0u64 && p[2] >= children::startup::realm::operations::CONFIGURATION && p[2] <= children::startup::realm::operations::DISCOVERY {
-        true -> start(p)
-        _ -> (0u64)
-    }
-    state start(p: &mut [u64; 128]) -> u64 {
-        p[17] = p[2];
-        p[18] = 0u64;
-        p[19] = 0u64;
-        p[20] = 0u64;
-        transition p[2] {
-            children::startup::realm::operations::CONFIGURATION -> configure(p)
-            children::startup::realm::operations::PICKER -> picker(p)
-            children::startup::realm::operations::BACKGROUND -> background(p)
-            _ -> discovery(p)
-        }
-    }
-    state configure(p: &mut [u64; 128]) -> u64 {
-        p[16] = children::startup::realm::configuration::configuration_start(p);
-        1u64
-    }
-    state picker(p: &mut [u64; 128]) -> u64 {
-        p[16] = children::startup::realm::operations::PREPARE_PICKER;
-        1u64
-    }
-    state background(p: &mut [u64; 128]) -> u64 {
-        p[16] = children::startup::realm::operations::READ_BACKGROUND;
-        1u64
-    }
-    state discovery(p: &mut [u64; 128]) -> u64 {
-        transition p[5] != 0u64 {
-            true -> refresh(p)
-            _ -> recover(p)
-        }
-    }
-    state refresh(p: &mut [u64; 128]) -> u64 {
-        p[16] = children::startup::realm::operations::REFRESH;
-        1u64
-    }
-    state recover(p: &mut [u64; 128]) -> u64 {
-        p[16] = children::startup::realm::operations::RECOVER_STARTUP;
-        1u64
+machine first(setup: &mut Setup, job: Job, context: &Context) -> Command {
+    transition job {
+        Job::Configuration -> children::startup::realm::configuration::begin(setup, context)
+        Job::Picker -> (Command::PreparePicker)
+        Job::Background -> (Command::ReadBackground)
+        Job::Discovery -> children::startup::realm::discovery::begin(context)
+        Job::None -> (Command::Finish)
     }
 }
 
-machine issue(p: &mut [u64; 128]) -> u64 {
-    transition p[16] >= children::startup::realm::operations::REFRESH && p[16] <= children::startup::realm::operations::FINISH {
-        true -> issued(p)
-        _ -> (0u64)
+public machine next(setup: &mut Setup) -> Dispatch {
+    transition setup.phase {
+        Phase::Ready { command } -> issue(setup, command)
+        _ -> (Dispatch::Wait)
     }
-    state issued(p: &mut [u64; 128]) -> u64 requires p[16] <= children::startup::realm::operations::FINISH {
-        let command: u64 = p[16];
-        p[16] = command + 64u64;
-        command
+    machine issue(setup: &mut Setup, command: Command) -> Dispatch {
+        setup.phase = Phase::Waiting { command: command };
+        Dispatch::Issue { command: command }
     }
 }
 
-machine completed(p: &mut [u64; 128]) -> u64 {
-    transition p[2] >= children::startup::realm::operations::REFRESH && p[2] <= children::startup::realm::operations::FINISH && p[16] == p[2] + 64u64 {
-        true -> advance(p)
-        _ -> (0u64)
+public machine complete(setup: &mut Setup, completion: Completion) -> bool {
+    transition setup.phase {
+        Phase::Waiting { command } -> matching(setup, completion, command)
+        _ -> (false)
     }
-    state advance(p: &mut [u64; 128]) -> u64 {
-        // Keep the optional background refusal until its reporting command runs.
-        transition p[2] == children::startup::realm::operations::FINISH {
-            true -> finish(p)
-            _ -> job(p)
+    machine matching(setup: &mut Setup, completion: Completion, command: Command) -> bool {
+        transition command == completion.command {
+            true -> completed(setup, completion)
+            _ -> (false)
         }
     }
-    state finish(p: &mut [u64; 128]) -> u64 {
-        p[16] = 0u64;
-        1u64
-    }
-    state job(p: &mut [u64; 128]) -> u64 {
-        transition p[17] {
-            children::startup::realm::operations::CONFIGURATION -> configure(p)
-            children::startup::realm::operations::PICKER -> picker(p)
-            children::startup::realm::operations::BACKGROUND -> background(p)
-            children::startup::realm::operations::DISCOVERY -> discovery(p)
-            _ -> (0u64)
+    machine completed(setup: &mut Setup, completion: Completion) -> bool {
+        transition completion.command == Command::Finish {
+            true -> finish(setup)
+            _ -> advance(setup, completion)
         }
     }
-    state configure(p: &mut [u64; 128]) -> u64 {
-        let next: u64 = children::startup::realm::configuration::configuration_next(p);
-        p[16] = next;
-        1u64
+    machine finish(setup: &mut Setup) -> bool {
+        setup.phase = Phase::Dormant;
+        true
     }
-    state picker(p: &mut [u64; 128]) -> u64 {
-        let next: u64 = children::startup::realm::picker::picker_next(p);
-        p[16] = next;
-        1u64
+    machine advance(setup: &mut Setup, completion: Completion) -> bool {
+        transition setup.job != Job::None {
+            true -> queue(setup, completion)
+            _ -> (false)
+        }
     }
-    state background(p: &mut [u64; 128]) -> u64 {
-        let next: u64 = children::startup::realm::background::background_next(p);
-        p[16] = next;
-        1u64
+    machine queue(setup: &mut Setup, completion: Completion) -> bool {
+        let command: Command = following(setup, completion);
+        setup.phase = Phase::Ready { command: command };
+        true
     }
-    state discovery(p: &mut [u64; 128]) -> u64 {
-        let next: u64 = children::startup::realm::discovery::discovery_next(p);
-        p[16] = next;
-        1u64
+}
+
+machine following(setup: &mut Setup, completion: Completion) -> Command {
+    transition setup.job {
+        Job::Configuration -> children::startup::realm::configuration::completed(setup, completion)
+        Job::Picker -> children::startup::realm::picker::completed(setup, completion)
+        Job::Background -> children::startup::realm::background::completed(setup, completion)
+        Job::Discovery -> children::startup::realm::discovery::completed(setup, completion)
+        Job::None -> (Command::Finish)
     }
 }

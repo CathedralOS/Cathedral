@@ -78,11 +78,13 @@ authenticated caller facts, decoded message families and named operations;
 owner effects use clearing/replay choices. Owner child-control descends through
 `requests/control/` into syntax and per-operation checks. Its native envelope,
 operation numbers and effect bits live in `bridge/policy/requests/`. Actual
-eight-word IPC formats remain in the service's wire decoders. Package/module
-imports retain this hierarchy.
+eight-word IPC formats remain in the service's wire decoders. Realm setup now
+uses named jobs, ready/waiting commands, completion observations and outcomes;
+its native state and status encoding lives under `bridge/policy/realm/`.
+Package/module imports retain this hierarchy.
 
-This is not a completed tree-wide cleanup. Realm setup and
-configuration still need their packet-shaped interfaces replaced or moved into
+This is not a completed tree-wide cleanup. Configuration geometry and live-layout
+policy still need their packet-shaped interfaces replaced or moved into
 the native bridge; retain the existing host regression cases while doing that. Avoid
 adding features to these representations. The Omega kernel also still mixes x86
 paging, PIC/PIT and interrupt profiles in `kernel/core/`; split shared ownership
@@ -259,6 +261,29 @@ limits or guest deadlines changed. The supported producer is unchanged. The
 native dispatchers explicitly import their callable entries: the producer's
 qualified-only module references failed lowering despite each branch lowering
 in isolation. Direct callable imports retain the intended composition.
+
+Realm-setup follow-up over `ae61f9c8`: `startup/realm/main.omg` begins one named
+job, issues a ready command once, and accepts only its outstanding completion.
+The existing discovery/configuration/picker/background files own the subsequent
+choices over `Setup`, `Context`, `Completion`, `Entries` and `Outcome` values.
+`bridge/policy/realm/` alone owns native state words, command/job numbers, the
+waiting offset, status encoding and discovery bitfields. Optional-background
+failure remains separate from the final configuration outcome. Cleanup failure
+replaces the preceding error; no failed cleanup reports success. This preserves
+the host's existing resource custody and synchronous error paths.
+
+Verification: all 97 compiled matrix tests pass, including setup ordering,
+duplicate/wrong completions, every realm-entry subset, deferred unplaced startup,
+missing authority, rollback and cleanup failure. Layout (72 Omega / 151 Rust
+edges), eight dependency-law tests and navigation links pass. Three nested
+desktops pass protected close, confined persistence, repeated reclamation and
+cold reopen. Separate picker, selected-user and background fault fixtures all
+pass bounded local recovery and repeated reclamation while preserving the outer
+draft. Logs: `build/omega-component/matrix-realm-{typed-tests,nested,startup-faults}.log`.
+Artifacts: `build/boot-harness-rs/desktop/20261027T015543543265Z` and
+`build/boot-harness-rs/nested-failures/20261027T015819897726Z`.
+The ordinary matrix uses 150 of its existing 240 image pages. No resource limit,
+deadline or grant changed; the supported compiler is unchanged.
 
 ## Memory budgets and allocator delegation
 

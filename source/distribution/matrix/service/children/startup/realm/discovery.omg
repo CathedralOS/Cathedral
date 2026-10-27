@@ -1,56 +1,72 @@
 module children::startup::realm::discovery;
 
-// One scoped listing: Matrix wins; otherwise Login+Users is a picker; otherwise owner-driven.
-use children::startup::realm::operations;
+// A scoped Matrix configuration wins; Login plus Users selects a picker.
+// Missing realm authority leaves setup to the owner. An unplaced view retries later.
+use children::startup::realm::operations::Setup;
+use children::startup::realm::operations::Command;
+use children::startup::realm::operations::Outcome;
+use children::startup::realm::operations::Completion;
+use children::startup::realm::operations::Context;
+use children::startup::realm::operations::Entries;
 
-public machine discovery_next(p: &mut [u64; 128]) -> u64 {
-    transition p[2] == children::startup::realm::operations::INSPECT_REALM {
-        true -> inspected(p)
-        _ -> result(p)
+public machine begin(context: &Context) -> Command {
+    transition context.discover {
+        true -> (Command::Refresh)
+        _ -> (Command::RecoverStartup)
     }
-    state inspected(p: &mut [u64; 128]) -> u64 {
-        transition p[3] {
-            0u64 -> shape(p)
-            children::startup::realm::operations::DENIED -> (children::startup::realm::operations::MARK_HOSTED)
-            children::startup::realm::operations::PEER_CLOSED -> (children::startup::realm::operations::MARK_HOSTED)
-            _ -> failed(p)
+}
+
+public machine completed(setup: &mut Setup, completion: Completion) -> Command {
+    transition completion.command == Command::InspectRealm {
+        true -> inspected(setup, completion)
+        _ -> required(setup, completion)
+    }
+    machine inspected(setup: &mut Setup, completion: Completion) -> Command {
+        transition completion.outcome {
+            Outcome::Success -> shape(completion.entries)
+            Outcome::Denied -> (Command::MarkHosted)
+            Outcome::PeerClosed -> (Command::MarkHosted)
+            _ -> failed(setup, completion.outcome)
         }
     }
-    state shape(p: &mut [u64; 128]) -> u64 {
-        transition (p[4] & 1u64) != 0u64 {
-            true -> (children::startup::realm::operations::CONFIGURE_REALM)
-            _ -> picker(p)
+    machine required(setup: &mut Setup, completion: Completion) -> Command {
+        transition completion.outcome {
+            Outcome::Success -> succeeded(completion)
+            _ -> failed(setup, completion.outcome)
         }
     }
-    state picker(p: &mut [u64; 128]) -> u64 {
-        transition (p[4] & 6u64) == 6u64 {
-            true -> (children::startup::realm::operations::START_PICKER)
-            _ -> (children::startup::realm::operations::MARK_HOSTED)
+}
+
+machine shape(entries: Entries) -> Command {
+    transition entries.matrix {
+        true -> (Command::ConfigureRealm)
+        _ -> picker(entries)
+    }
+    machine picker(entries: Entries) -> Command {
+        transition entries.login && entries.users {
+            true -> (Command::StartPicker)
+            _ -> (Command::MarkHosted)
         }
     }
-    state result(p: &mut [u64; 128]) -> u64 {
-        transition p[3] == 0u64 {
-            true -> success(p)
-            _ -> failed(p)
-        }
+}
+
+machine failed(setup: &mut Setup, outcome: Outcome) -> Command {
+    setup.outcome = outcome;
+    Command::Finish
+}
+
+machine succeeded(completion: Completion) -> Command {
+    transition completion.command {
+        Command::Refresh -> placed(completion.placed)
+        Command::ConfigureRealm -> (Command::MarkHosted)
+        Command::StartPicker -> (Command::MarkHosted)
+        Command::MarkHosted -> (Command::RecoverStartup)
+        _ -> (Command::Finish)
     }
-    state failed(p: &mut [u64; 128]) -> u64 {
-        p[18] = p[3];
-        children::startup::realm::operations::FINISH
-    }
-    state success(p: &mut [u64; 128]) -> u64 {
-        transition p[2] {
-            children::startup::realm::operations::REFRESH -> placed(p)
-            children::startup::realm::operations::CONFIGURE_REALM -> (children::startup::realm::operations::MARK_HOSTED)
-            children::startup::realm::operations::START_PICKER -> (children::startup::realm::operations::MARK_HOSTED)
-            children::startup::realm::operations::MARK_HOSTED -> (children::startup::realm::operations::RECOVER_STARTUP)
-            _ -> (children::startup::realm::operations::FINISH)
-        }
-    }
-    state placed(p: &mut [u64; 128]) -> u64 {
-        transition p[4] != 0u64 {
-            true -> (children::startup::realm::operations::INSPECT_REALM)
-            _ -> (children::startup::realm::operations::FINISH)
+    machine placed(available: bool) -> Command {
+        transition available {
+            true -> (Command::InspectRealm)
+            _ -> (Command::Finish)
         }
     }
 }

@@ -1,81 +1,88 @@
 module children::startup::realm::configuration;
 
-// Applying saved configuration: explicit rollback, optional background, then publish chrome authority.
-use children::startup::realm::operations;
+// Bind/place before publication and chrome authority. Background failure is
+// optional; rollback failures replace the original error rather than hide it.
+use children::startup::realm::operations::Setup;
+use children::startup::realm::operations::Command;
+use children::startup::realm::operations::Outcome;
+use children::startup::realm::operations::Completion;
+use children::startup::realm::operations::Context;
 
-public machine configuration_start(p: &mut [u64; 128]) -> u64 {
-    transition p[3] != 0u64 {
-        true -> (children::startup::realm::operations::FINISH)
-        _ -> available(p)
+public machine begin(setup: &mut Setup, context: &Context) -> Command {
+    transition context.configured {
+        true -> (Command::Finish)
+        _ -> available(setup, context)
     }
-    state available(p: &mut [u64; 128]) -> u64 {
-        transition p[4] != 0u64 {
-            true -> busy(p)
-            _ -> (children::startup::realm::operations::REFRESH)
+    machine available(setup: &mut Setup, context: &Context) -> Command {
+        transition context.busy {
+            true -> busy(setup)
+            _ -> (Command::Refresh)
         }
     }
-    state busy(p: &mut [u64; 128]) -> u64 {
-        p[18] = children::startup::realm::operations::BUSY;
-        children::startup::realm::operations::FINISH
+    machine busy(setup: &mut Setup) -> Command {
+        setup.outcome = Outcome::Busy;
+        Command::Finish
     }
 }
 
-public machine configuration_next(p: &mut [u64; 128]) -> u64 {
-    transition p[2] == children::startup::realm::operations::START_BACKGROUND {
-        true -> background(p)
-        _ -> result(p)
+public machine completed(setup: &mut Setup, completion: Completion) -> Command {
+    transition completion.command == Command::StartBackground {
+        true -> background(setup, completion.outcome)
+        _ -> required(setup, completion)
     }
-    state background(p: &mut [u64; 128]) -> u64 {
-        p[19] = p[3];
-        transition p[3] == 0u64 {
-            true -> (children::startup::realm::operations::FLUSH)
-            _ -> (children::startup::realm::operations::BACKGROUND_FAILED)
+    machine background(setup: &mut Setup, outcome: Outcome) -> Command {
+        setup.background_outcome = outcome;
+        transition outcome {
+            Outcome::Success -> (Command::Flush)
+            _ -> (Command::BackgroundFailed)
         }
     }
-    state result(p: &mut [u64; 128]) -> u64 {
-        transition p[3] == 0u64 {
-            true -> success(p)
-            _ -> failed(p)
+    machine required(setup: &mut Setup, completion: Completion) -> Command {
+        transition completion.outcome {
+            Outcome::Success -> succeeded(setup, completion.command)
+            _ -> failed(setup, completion)
         }
     }
-    state failed(p: &mut [u64; 128]) -> u64 {
-        p[18] = p[3];
-        transition p[2] {
-            children::startup::realm::operations::ADMIT_LAUNCHER -> (children::startup::realm::operations::STOP_LAUNCHER)
-            children::startup::realm::operations::BIND_LAUNCHER -> (children::startup::realm::operations::STOP_LAUNCHER)
-            children::startup::realm::operations::PLACE_LAUNCHER -> clear(p)
-            _ -> (children::startup::realm::operations::FINISH)
-        }
+}
+
+machine failed(setup: &mut Setup, completion: Completion) -> Command {
+    setup.outcome = completion.outcome;
+    transition completion.command {
+        Command::AdmitLauncher -> (Command::StopLauncher)
+        Command::BindLauncher -> (Command::StopLauncher)
+        Command::PlaceLauncher -> clear(setup)
+        _ -> (Command::Finish)
     }
-    state clear(p: &mut [u64; 128]) -> u64 {
-        p[20] = 1u64;
-        children::startup::realm::operations::CLEAR_WORKSPACE
+    machine clear(setup: &mut Setup) -> Command {
+        setup.reset_surfaces = true;
+        Command::ClearWorkspace
     }
-    state success(p: &mut [u64; 128]) -> u64 {
-        transition p[2] {
-            children::startup::realm::operations::REFRESH -> (children::startup::realm::operations::READ_CONFIGURATION)
-            children::startup::realm::operations::READ_CONFIGURATION -> (children::startup::realm::operations::VALIDATE_CONFIGURATION)
-            children::startup::realm::operations::VALIDATE_CONFIGURATION -> (children::startup::realm::operations::ADMIT_LAUNCHER)
-            children::startup::realm::operations::ADMIT_LAUNCHER -> (children::startup::realm::operations::RELEASE_IMAGE)
-            children::startup::realm::operations::RELEASE_IMAGE -> (children::startup::realm::operations::BIND_LAUNCHER)
-            children::startup::realm::operations::BIND_LAUNCHER -> (children::startup::realm::operations::INSTALL_WORKSPACE)
-            children::startup::realm::operations::INSTALL_WORKSPACE -> (children::startup::realm::operations::PLACE_LAUNCHER)
-            children::startup::realm::operations::PLACE_LAUNCHER -> (children::startup::realm::operations::START_BACKGROUND)
-            children::startup::realm::operations::BACKGROUND_FAILED -> (children::startup::realm::operations::FLUSH)
-            children::startup::realm::operations::FLUSH -> (children::startup::realm::operations::NOTIFY)
-            children::startup::realm::operations::NOTIFY -> (children::startup::realm::operations::GRANT_CHROME)
-            children::startup::realm::operations::GRANT_CHROME -> (children::startup::realm::operations::RECORD_LAUNCHER)
-            children::startup::realm::operations::RECORD_LAUNCHER -> (children::startup::realm::operations::FINISH)
-            children::startup::realm::operations::CLEAR_WORKSPACE -> (children::startup::realm::operations::STOP_LAUNCHER)
-            children::startup::realm::operations::STOP_LAUNCHER -> stopped(p)
-            children::startup::realm::operations::RESET_SURFACES -> (children::startup::realm::operations::FINISH)
-            _ -> (children::startup::realm::operations::FINISH)
-        }
+}
+
+machine succeeded(setup: &Setup, command: Command) -> Command {
+    transition command {
+        Command::Refresh -> (Command::ReadConfiguration)
+        Command::ReadConfiguration -> (Command::ValidateConfiguration)
+        Command::ValidateConfiguration -> (Command::AdmitLauncher)
+        Command::AdmitLauncher -> (Command::ReleaseImage)
+        Command::ReleaseImage -> (Command::BindLauncher)
+        Command::BindLauncher -> (Command::InstallWorkspace)
+        Command::InstallWorkspace -> (Command::PlaceLauncher)
+        Command::PlaceLauncher -> (Command::StartBackground)
+        Command::BackgroundFailed -> (Command::Flush)
+        Command::Flush -> (Command::Notify)
+        Command::Notify -> (Command::GrantChrome)
+        Command::GrantChrome -> (Command::RecordLauncher)
+        Command::RecordLauncher -> (Command::Finish)
+        Command::ClearWorkspace -> (Command::StopLauncher)
+        Command::ResetSurfaces -> (Command::Finish)
+        Command::StopLauncher -> stopped(setup)
+        _ -> (Command::Finish)
     }
-    state stopped(p: &mut [u64; 128]) -> u64 {
-        transition p[20] != 0u64 {
-            true -> (children::startup::realm::operations::RESET_SURFACES)
-            _ -> (children::startup::realm::operations::FINISH)
+    machine stopped(setup: &Setup) -> Command {
+        transition setup.reset_surfaces {
+            true -> (Command::ResetSurfaces)
+            _ -> (Command::Finish)
         }
     }
 }

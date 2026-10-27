@@ -1,26 +1,31 @@
 module children::startup::realm::background;
 
-// Background has presentation only; failed placement must reclaim its admitted task.
-use children::startup::realm::operations;
+// Background has presentation only. Failed placement reclaims the admitted task;
+// failed reclamation remains a failure, replacing the preceding placement error.
+use children::startup::realm::operations::Setup;
+use children::startup::realm::operations::Command;
+use children::startup::realm::operations::Outcome;
+use children::startup::realm::operations::Completion;
 
-public machine background_next(p: &mut [u64; 128]) -> u64 {
-    transition p[3] == 0u64 {
-        true -> success(p)
-        _ -> failed(p)
+public machine completed(setup: &mut Setup, completion: Completion) -> Command {
+    transition completion.outcome {
+        Outcome::Success -> succeeded(completion.command)
+        _ -> failed(setup, completion)
     }
-    state failed(p: &mut [u64; 128]) -> u64 {
-        p[18] = p[3];
-        transition p[2] == children::startup::realm::operations::PLACE_BACKGROUND {
-            true -> (children::startup::realm::operations::STOP_BACKGROUND)
-            _ -> (children::startup::realm::operations::FINISH)
+    machine failed(setup: &mut Setup, completion: Completion) -> Command {
+        setup.outcome = completion.outcome;
+        transition completion.command {
+            Command::PlaceBackground -> (Command::StopBackground)
+            _ -> (Command::Finish)
         }
     }
-    state success(p: &mut [u64; 128]) -> u64 {
-        transition p[2] {
-            children::startup::realm::operations::READ_BACKGROUND -> (children::startup::realm::operations::ADMIT_BACKGROUND)
-            children::startup::realm::operations::ADMIT_BACKGROUND -> (children::startup::realm::operations::PLACE_BACKGROUND)
-            children::startup::realm::operations::PLACE_BACKGROUND -> (children::startup::realm::operations::RECORD_BACKGROUND)
-            _ -> (children::startup::realm::operations::FINISH)
-        }
+}
+
+machine succeeded(command: Command) -> Command {
+    transition command {
+        Command::ReadBackground -> (Command::AdmitBackground)
+        Command::AdmitBackground -> (Command::PlaceBackground)
+        Command::PlaceBackground -> (Command::RecordBackground)
+        _ -> (Command::Finish)
     }
 }

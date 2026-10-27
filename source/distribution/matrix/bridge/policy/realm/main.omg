@@ -1,0 +1,81 @@
+module realm::main;
+
+// Native setup invocation -> named job/state/completion -> updated opaque state.
+// The service retains sequencing only; the host keeps all resource custody.
+use realm::encoding;
+use service::children::startup::realm::main;
+use service::children::startup::realm::operations::Setup;
+use service::children::startup::realm::operations::Context;
+use service::children::startup::realm::operations::Completion;
+use service::children::startup::realm::operations::Entries;
+use service::children::startup::realm::operations::Dispatch;
+use service::children::startup::realm::operations::Job;
+use service::children::startup::realm::operations::Command;
+
+public machine realm_decision(packet: &mut [u64; 128]) -> u64 {
+    transition packet[16] == 0u64 || (packet[16] >= 1u64 && packet[16] <= 36u64)
+        || (packet[16] >= 65u64 && packet[16] <= 100u64) {
+        true -> decoded(packet)
+        _ -> (0u64)
+    }
+    machine decoded(packet: &mut [u64; 128]) -> u64 {
+        let mut setup: Setup;
+        setup.phase = realm::encoding::phase(packet[16]);
+        setup.job = realm::encoding::job(packet[17]);
+        setup.outcome = realm::encoding::outcome(packet[18]);
+        setup.background_outcome = realm::encoding::outcome(packet[19]);
+        setup.reset_surfaces = packet[20] != 0u64;
+        let result: u64 = apply(packet, &mut setup);
+        packet[16] = realm::encoding::phase_tag(setup.phase);
+        packet[17] = realm::encoding::job_tag(setup.job);
+        packet[18] = realm::encoding::outcome_tag(setup.outcome);
+        packet[19] = realm::encoding::outcome_tag(setup.background_outcome);
+        packet[20] = setup.reset_surfaces as u64;
+        result
+    }
+}
+
+machine apply(packet: &[u64; 128], setup: &mut Setup) -> u64 {
+    transition packet[1] {
+        0u64 -> begin(packet, setup)
+        1u64 -> next(setup)
+        2u64 -> complete(packet, setup)
+        _ -> (0u64)
+    }
+    machine begin(packet: &[u64; 128], setup: &mut Setup) -> u64 {
+        let job: Job = realm::encoding::job(packet[2]);
+        let context: Context = Context { configured: packet[3] != 0u64,
+            busy: packet[4] != 0u64, discover: packet[5] != 0u64 };
+        let accepted: bool = service::children::startup::realm::main::begin(setup, job, &context);
+        accepted as u64
+    }
+    machine next(setup: &mut Setup) -> u64 {
+        let dispatch: Dispatch = service::children::startup::realm::main::next(setup);
+        transition dispatch {
+            Dispatch::Wait -> (0u64)
+            Dispatch::Issue { command } -> realm::encoding::command_tag(command)
+        }
+    }
+}
+
+machine complete(packet: &[u64; 128], setup: &mut Setup) -> u64 {
+    transition packet[2] >= 1u64 && packet[2] <= 36u64 {
+        true -> decoded(packet, setup)
+        _ -> (0u64)
+    }
+    machine decoded(packet: &[u64; 128], setup: &mut Setup) -> u64
+        requires packet[2] >= 1u64 && packet[2] <= 36u64 {
+        let command: Command = realm::encoding::command(packet[2]);
+        let completion: Completion = Completion {
+            command: command, outcome: realm::encoding::outcome(packet[3]),
+            placed: command == Command::Refresh && packet[4] != 0u64,
+            entries: Entries {
+                matrix: command == Command::InspectRealm && (packet[4] & 1u64) != 0u64,
+                login: command == Command::InspectRealm && (packet[4] & 2u64) != 0u64,
+                users: command == Command::InspectRealm && (packet[4] & 4u64) != 0u64
+            }
+        };
+        let accepted: bool = service::children::startup::realm::main::complete(setup, completion);
+        accepted as u64
+    }
+}

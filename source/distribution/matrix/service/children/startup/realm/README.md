@@ -29,12 +29,17 @@ The refusal remains available to the host diagnostic without becoming the final
 configuration error.
 
 The ordinary F5 stock matrix executes these sequences, including nested instances
-and local picker/background retries. [operations.omg](operations.omg) is private
-host vocabulary, not a new service API. State retains only the issued command,
-job, result and cleanup obligation. Images, IDs, grants and exact child records
+and local picker/background retries. [operations.omg](operations.omg) names
+`Setup`, its job and ready/waiting phase, commands, outcomes, context and
+completion observations. Discovery uses named Matrix/Login/Users facts rather
+than bit positions. This is private host vocabulary, not a new service API.
+State retains only sequencing, outcomes and the surface-reset obligation. Images, IDs, grants and exact child records
 remain in the host. Issuing a command twice or completing a different command
-cannot advance setup. The native bridge shares the process with Rust and is not
-an isolation boundary.
+cannot advance setup. The [native realm adapter](../../../../bridge/policy/realm/main.omg)
+alone owns packet offsets, command/job tags, the waiting offset, status encodings
+and discovery bitfields. It shares the process with Rust and is not an isolation
+boundary. Optional-background refusal remains distinct from the final outcome;
+a failed cleanup replaces that outcome with its own failure.
 
 The Rust reading path is
 [startup/startup.rs](../../../../../../../source-rs/distribution/matrix/service/children/startup/startup.rs)

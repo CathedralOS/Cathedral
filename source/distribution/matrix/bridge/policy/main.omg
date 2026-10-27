@@ -7,7 +7,7 @@ use launch::main;
 use workspace::main;
 use session;
 use requests::main::request_decision;
-use service::children::startup::realm::main;
+use realm::main::realm_decision;
 use resources;
 
 public boundary trait Policy {
@@ -31,7 +31,7 @@ public machine choose(p: &mut [u64; 128]) -> u64 {
         13u64 -> workspace::main::workspace_decision(p)
         14u64 -> session_decision(p)
         15u64 -> request_decision(p)
-        16u64 -> service::children::startup::realm::main::realm_decision(p)
+        16u64 -> realm_decision(p)
         17u64 -> resources::resources_decision(p)
         _ -> lifecycle_decision(p)
     }
