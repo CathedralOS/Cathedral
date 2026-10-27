@@ -75,7 +75,9 @@ def run(qemu_command, output, timeout, creationflags, ready_marker, verify, *, a
                     verify(stream, output, text)
                     if process.poll() is None:
                         command(stream, "quit")
-            process.wait(timeout=5)
+            # QMP acknowledges quit before host teardown and disk flushing end.
+            # This is a host-exit allowance, separate from guest service deadlines.
+            process.wait(timeout=30)
         finally:
             if process.poll() is None:
                 process.terminate()
