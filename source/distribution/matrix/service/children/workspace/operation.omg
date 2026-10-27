@@ -1,0 +1,37 @@
+module children::workspace::operation;
+
+// One existing-app switch. Task/connection identity and scene custody remain
+// with the host; this operation retains only correlation and the first refusal.
+public data Command [copy] {
+    case BeginScene;
+    case AwaitScene;
+    case Activate;
+    case BeginRestore;
+    case AwaitRestore;
+    case Finish;
+    case Failed;
+}
+
+public data Phase [copy] {
+    case Dormant;
+    case Ready(command: Command);
+    case Waiting(command: Command);
+}
+
+public data Switch {
+    phase: Phase;
+    ticket: u64;
+    refusal: u64;
+}
+
+public data Dispatch [copy] {
+    case Wait;
+    case Issue(command: Command);
+}
+
+public data Completion [copy] {
+    ticket: u64;
+    command: Command;
+    status: u64;
+    committed: bool;
+}

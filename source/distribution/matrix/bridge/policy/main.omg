@@ -4,7 +4,7 @@ use lifecycle;
 use recovery;
 use startup;
 use launch::main;
-use service::children::workspace::main;
+use workspace::main;
 use session;
 use service::requests::main;
 use service::children::startup::realm::main;
@@ -27,8 +27,8 @@ public machine choose(p: &mut [u64; 128]) -> u64 {
         9u64 -> recovery::recovery_decision(p)
         10u64 -> startup::startup_decision(p)
         11u64 -> launch::main::launch_decision(p)
-        12u64 -> service::children::workspace::main::workspace_decision(p)
-        13u64 -> service::children::workspace::main::workspace_decision(p)
+        12u64 -> workspace::main::workspace_decision(p)
+        13u64 -> workspace::main::workspace_decision(p)
         14u64 -> session_decision(p)
         15u64 -> service::requests::main::request_decision(p)
         16u64 -> service::children::startup::realm::main::realm_decision(p)

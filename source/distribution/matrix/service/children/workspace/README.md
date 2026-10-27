@@ -1,8 +1,12 @@
 # Existing-app workspace selection
 
-Start at [main.omg](main.omg). [catalogue.omg](catalogue.omg) owns the desktop's
-app instances, monotonic tickets, selected instance, switch admission and fallback
-choice. [selection.omg](selection.omg) sequences scene preparation, waiting,
+Start at [main.omg](main.omg): begin a switch, issue work once, validate its
+completion and retain cancellation without dropping an outstanding scene.
+[operation.omg](operation.omg) names the switch, commands, phases and completions.
+[catalogue.omg](catalogue.omg) owns the desktop's
+app instances, monotonic tickets, selected position, switch admission and fallback
+choice through named `Catalogue`, `Instance`, `Position`, `Entry` and `Selection`
+values. Empty positions and missing/out-of-range queries are distinct outcomes. [selection.omg](selection.omg) sequences scene preparation, waiting,
 local activation, restoration and the final reply for a stock desktop switch.
 This is distribution policy, not a platform-wide coupling of focus and visibility.
 
@@ -29,7 +33,10 @@ That adapter retains the authenticated chrome request, operation ticket, exact
 target/previous tasks and one issued command. It dispatches commands rather than
 choosing the successful-switch or rollback sequence. The private value adapter is
 [policy/workspace.rs](../../../../../../source-rs/distribution/matrix/policy/workspace.rs).
-No task or capability handle crosses the Omega policy packet.
+The [Omega native bridge](../../../bridge/policy/workspace/main.omg) separately
+encodes the catalogue and switch state; packet offsets, numeric commands and
+query tags do not enter service policy. No task or capability handle crosses
+that temporary packet.
 
 Commands issue once and complete only for their matching ticket and command.
 While waiting, the host continues ordinary input/service work. Cancellation

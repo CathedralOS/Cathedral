@@ -30,8 +30,10 @@ Rust. Service-turn, close/loss, startup, launcher recovery, launch workflow/role
 and resource adapters serialize named domain values there. The
 [launch bridge](bridge/policy/launch/main.omg) also owns admission/import encoding
 and image/declaration codecs; launch policy uses named facts and shared contract
-values. Workspace, requests and realm configuration still expose packet-shaped
-interfaces and need the same cleanup;
+values. The [workspace bridge](bridge/policy/workspace/main.omg) translates the
+instance catalogue and switch workflow to named domain values as well. Requests
+and realm configuration still expose packet-shaped interfaces and need the same
+cleanup;
 moving them into semantic folders does not finish that work.
 
 Rust retains exact task/endpoint identity, authenticated connections, mappings,

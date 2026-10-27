@@ -71,9 +71,12 @@ now separates its typed operation state, guarded entrance and progress/cleanup
 sequence; role selection returns a named launch plan. Admission also uses named
 facts, targets and refusals. Import policy operates on common contract records;
 its native codec, image scanner adapter and declaration adapter live together
-under `bridge/policy/launch/`. Package/module imports retain this hierarchy.
+under `bridge/policy/launch/`. Workspace now uses named catalogue entries,
+selection outcomes and switch commands/completions. Its native state layout and
+query tags live in `bridge/policy/workspace/`. Package/module imports retain
+this hierarchy.
 
-This is not a completed tree-wide cleanup. Workspace, requests, realm setup and
+This is not a completed tree-wide cleanup. Requests, realm setup and
 configuration still need their packet-shaped interfaces replaced or moved into
 the native bridge; retain the existing host regression cases while doing that. Avoid
 adding features to these representations. The Omega kernel also still mixes x86
@@ -190,6 +193,38 @@ Layout (72 Omega / 151 Rust edges), all eight dependency-law tests and navigatio
 links pass. The ordinary matrix uses 126 of the existing 240 image pages. No
 resource limit, guest deadline or runtime grant changed. The supported default
 compiler was used without source patches or an environment override.
+
+Workspace follow-up over `c6aa45b6`: `workspace/main.omg` guards begin, issue,
+completion and cancellation; `operation.omg` names the state and messages, and
+`selection.omg` owns activation/restoration sequencing. `catalogue.omg` exposes
+named instance, position, entry and selection values. The native bridge owns
+all numeric query/command tags, opaque state words and waiting offsets. The
+existing Rust host still retains exact tasks, connections and scene custody.
+Cancellation preserves the first refusal and drains outstanding scene work;
+an accepted late commit requires restoration before the final reply. Failed
+restoration remains fatal. Instance tickets never wrap or restart on slot reuse.
+
+Verification: all 97 compiled matrix tests, layout (72 Omega / 151 Rust edges),
+all eight dependency-law tests and navigation links pass. Three nested desktops
+pass saved state, protected close and repeated subtree reclamation. All four
+asynchronous switch fixtures (`complete`, `failure`, `stop`, `late-stop`) pass
+routed input, repeated switches, protected drafts and reclamation. Every guest
+run also passes cold reopen. Logs:
+`build/omega-component/matrix-workspace-{typed-tests,nested,complete,failure,stop,late-stop}.log`.
+Guest artifacts under `build/boot-harness-rs/desktop/`:
+`20261027T005850605790Z`, `20261027T010150556142Z`,
+`20261027T010254127627Z`, `20261027T010407883268Z`,
+`20261027T010501410640Z`. The ordinary matrix uses 131 of its existing 240 image
+pages. No resource limit, service deadline or grant changed.
+
+Compiler finding during this cleanup: a nested bridge helper named `entry`
+collided with the enclosing machine's implicit entry in the supported producer.
+Catalogue publication/activation returned, but an entry query repeatedly jumped
+to the same dispatcher. Renaming that helper to `read_entry` restores the intended
+call; all 97 compiled matrix tests then pass. This is not a compiler repair.
+The exact failing source, component, standalone probe and debugger/disassembly
+evidence are preserved under `build/omega-component/workspace-entry-repro/`.
+Keep this as a compiler-resolution follow-up, not an owner-design question.
 
 ## Memory budgets and allocator delegation
 

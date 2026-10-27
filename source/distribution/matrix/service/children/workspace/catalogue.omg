@@ -1,165 +1,176 @@
 module children::workspace::catalogue;
 
-// The desktop owns three app positions; chrome/background are never catalogue entries.
-// Opaque state 16..23: last issued ticket, active slot, three ticket/object pairs.
-// Tickets name instances locally. They confer no authority over the host's tasks.
-public machine catalogue_decision(p: &mut [u64; 128]) -> u64 {
-    transition p[1] {
-        0u64 -> publish(p)
-        1u64 -> retire(p)
-        2u64 -> activate(p)
-        3u64 -> read_entry(p)
-        4u64 -> select(p)
-        5u64 -> fallback(p)
-        6u64 -> active(p)
-        7u64 -> capacity(p)
-        _ -> (0u64)
+// Three stock app positions; chrome/background never enter this catalogue.
+// Instance tickets are monotonic local names, not authority over host tasks.
+public const LAST_TICKET: u64 = 18446744073709551615u64;
+
+public data Instance [copy] {
+    case Empty;
+    case Published(ticket: u64, program: u64);
+}
+
+public data Position [copy] {
+    case None;
+    case App(slot: u64);
+}
+
+public data Catalogue {
+    last_ticket: u64;
+    selected: Position;
+    instances: [Instance; 3];
+}
+
+public data Entry [copy] {
+    case Outside;
+    case Empty;
+    case Present(ticket: u64, program: u64, selected: bool);
+}
+
+public data Selection [copy] {
+    case Missing;
+    case Busy(slot: u64);
+    case Current(slot: u64);
+    case Switch(slot: u64);
+}
+
+public machine publish(catalogue: &mut Catalogue, slot: u64, program: u64) -> bool {
+    transition slot >= 1u64 && slot <= 3u64 && catalogue.last_ticket < LAST_TICKET {
+        true -> vacant(catalogue, slot, program)
+        _ -> (false)
+    }
+    machine vacant(catalogue: &mut Catalogue, slot: u64, program: u64) -> bool
+        requires slot >= 1u64 && slot <= 3u64 && catalogue.last_ticket < LAST_TICKET {
+        transition catalogue.instances[slot - 1u64] {
+            Instance::Empty -> install(catalogue, slot, program)
+            _ -> (false)
+        }
+    }
+    machine install(catalogue: &mut Catalogue, slot: u64, program: u64) -> bool
+        requires slot >= 1u64 && slot <= 3u64 && catalogue.last_ticket < LAST_TICKET {
+        catalogue.last_ticket = catalogue.last_ticket + 1u64;
+        catalogue.instances[slot - 1u64] = Instance::Published {
+            ticket: catalogue.last_ticket, program: program
+        };
+        true
     }
 }
 
-machine publish(p: &mut [u64; 128]) -> u64 {
-    transition p[2] >= 1u64 && p[2] <= 3u64 && p[16] < 18446744073709551615u64 {
-        true -> vacant(p, p[2])
-        _ -> (0u64)
+public machine retire(catalogue: &mut Catalogue, slot: u64) -> bool {
+    transition slot >= 1u64 && slot <= 3u64 {
+        true -> remove(catalogue, slot)
+        _ -> (false)
     }
-    state vacant(p: &mut [u64; 128], slot: u64) -> u64 requires slot >= 1u64 && slot <= 3u64 {
-        transition p[16u64 + slot * 2u64] == 0u64 {
-            true -> install(p, slot)
-            _ -> (0u64)
+    machine remove(catalogue: &mut Catalogue, slot: u64) -> bool requires slot >= 1u64 && slot <= 3u64 {
+        catalogue.instances[slot - 1u64] = Instance::Empty;
+        transition is_selected(catalogue, slot) {
+            true -> clear(catalogue)
+            _ -> (true)
         }
     }
-    state install(p: &mut [u64; 128], slot: u64) -> u64 requires slot >= 1u64 && slot <= 3u64 {
-        p[16] = p[16] + 1u64;
-        p[16u64 + slot * 2u64] = p[16];
-        p[17u64 + slot * 2u64] = p[3];
-        1u64
+    machine clear(catalogue: &mut Catalogue) -> bool {
+        catalogue.selected = Position::None;
+        true
     }
 }
 
-machine retire(p: &mut [u64; 128]) -> u64 {
-    transition p[2] >= 1u64 && p[2] <= 3u64 {
-        true -> remove(p, p[2])
-        _ -> (0u64)
+public machine activate(catalogue: &mut Catalogue, slot: u64) -> bool {
+    transition slot >= 1u64 && slot <= 3u64 {
+        true -> occupied(catalogue, slot)
+        _ -> (false)
     }
-    state remove(p: &mut [u64; 128], slot: u64) -> u64 requires slot >= 1u64 && slot <= 3u64 {
-        p[16u64 + slot * 2u64] = 0u64;
-        p[17u64 + slot * 2u64] = 0u64;
-        transition p[17] == slot {
-            true -> clear(p)
-            _ -> (1u64)
+    machine occupied(catalogue: &mut Catalogue, slot: u64) -> bool requires slot >= 1u64 && slot <= 3u64 {
+        transition catalogue.instances[slot - 1u64] {
+            Instance::Published -> commit(catalogue, slot)
+            _ -> (false)
         }
     }
-    state clear(p: &mut [u64; 128]) -> u64 {
-        p[17] = 0u64;
-        1u64
+    machine commit(catalogue: &mut Catalogue, slot: u64) -> bool {
+        catalogue.selected = Position::App { slot: slot };
+        true
     }
 }
 
-machine activate(p: &mut [u64; 128]) -> u64 {
-    transition p[2] >= 1u64 && p[2] <= 3u64 {
-        true -> occupied(p, p[2])
-        _ -> (0u64)
+public machine entry(catalogue: &Catalogue, index: u64) -> Entry {
+    transition index < 3u64 {
+        true -> row(catalogue, index)
+        _ -> (Entry::Outside)
     }
-    state occupied(p: &mut [u64; 128], slot: u64) -> u64 requires slot >= 1u64 && slot <= 3u64 {
-        transition p[16u64 + slot * 2u64] != 0u64 {
-            true -> commit(p, slot)
-            _ -> (0u64)
-        }
-    }
-    state commit(p: &mut [u64; 128], slot: u64) -> u64 {
-        p[17] = slot;
-        1u64
-    }
-}
-
-machine read_entry(p: &mut [u64; 128]) -> u64 {
-    transition p[2] < 3u64 {
-        true -> row(p, p[2] + 1u64)
-        _ -> (0u64)
-    }
-    state row(p: &mut [u64; 128], slot: u64) -> u64 requires slot >= 1u64 && slot <= 3u64 {
-        transition p[16u64 + slot * 2u64] != 0u64 {
-            true -> found(p, slot)
-            _ -> (1u64)
-        }
-    }
-    state found(p: &mut [u64; 128], slot: u64) -> u64 requires slot >= 1u64 && slot <= 3u64 {
-        p[8] = p[16u64 + slot * 2u64];
-        p[9] = p[17u64 + slot * 2u64];
-        transition p[17] == slot {
-            true -> selected(p)
-            _ -> (2u64)
-        }
-    }
-    state selected(p: &mut [u64; 128]) -> u64 {
-        p[10] = 1u64;
-        2u64
-    }
-}
-
-machine select(p: &mut [u64; 128]) -> u64 {
-    transition p[2] != 0u64 {
-        true -> scan(p, 1u64)
-        _ -> (0u64)
-    }
-    state scan(p: &mut [u64; 128], slot: u64) -> u64 {
-        transition slot <= 3u64 && slot >= 1u64 {
-            true -> row(p, slot)
-            _ -> (0u64)
-        }
-    }
-    state row(p: &mut [u64; 128], slot: u64) -> u64 requires slot >= 1u64 && slot <= 3u64 {
-        transition p[16u64 + slot * 2u64] == p[2] {
-            true -> found(p, slot)
-            _ -> scan(p, slot + 1u64)
-        }
-    }
-    state found(p: &mut [u64; 128], slot: u64) -> u64 {
-        p[8] = slot;
-        transition p[3] != 0u64 {
-            true -> (1u64)
-            _ -> ready(p, slot)
-        }
-    }
-    state ready(p: &mut [u64; 128], slot: u64) -> u64 {
-        transition p[17] == slot {
-            true -> (2u64)
-            _ -> (3u64)
+    machine row(catalogue: &Catalogue, index: u64) -> Entry requires index < 3u64 {
+        let instance: Instance = catalogue.instances[index];
+        transition instance {
+            Instance::Published { ticket, program } -> (Entry::Present {
+                ticket: ticket, program: program, selected: is_selected(catalogue, index + 1u64)
+            })
+            Instance::Empty -> (Entry::Empty)
         }
     }
 }
 
-machine fallback(p: &mut [u64; 128]) -> u64 {
-    transition p[17] == 0u64 {
-        true -> scan(p, 1u64)
-        _ -> (0u64)
+public machine select(catalogue: &Catalogue, ticket: u64, busy: bool) -> Selection {
+    transition ticket != 0u64 {
+        true -> scan(catalogue, ticket, busy, 1u64)
+        _ -> (Selection::Missing)
     }
-    state scan(p: &mut [u64; 128], slot: u64) -> u64 {
+    machine scan(catalogue: &Catalogue, ticket: u64, busy: bool, slot: u64) -> Selection {
         transition slot >= 1u64 && slot <= 3u64 {
-            true -> row(p, slot)
-            _ -> (0u64)
+            true -> row(catalogue, ticket, busy, slot)
+            _ -> (Selection::Missing)
         }
     }
-    state row(p: &mut [u64; 128], slot: u64) -> u64 requires slot >= 1u64 && slot <= 3u64 {
-        transition p[16u64 + slot * 2u64] != 0u64 {
-            true -> found(p, slot)
-            _ -> scan(p, slot + 1u64)
+    machine row(catalogue: &Catalogue, ticket: u64, busy: bool, slot: u64) -> Selection
+        requires slot >= 1u64 && slot <= 3u64 {
+        transition matches(catalogue.instances[slot - 1u64], ticket) {
+            true -> found(catalogue, busy, slot)
+            _ -> scan(catalogue, ticket, busy, slot + 1u64)
         }
     }
-    state found(p: &mut [u64; 128], slot: u64) -> u64 {
-        p[8] = slot;
-        1u64
+    machine found(catalogue: &Catalogue, busy: bool, slot: u64) -> Selection {
+        transition busy {
+            true -> (Selection::Busy { slot: slot })
+            _ -> ready(catalogue, slot)
+        }
+    }
+    machine ready(catalogue: &Catalogue, slot: u64) -> Selection {
+        transition is_selected(catalogue, slot) {
+            true -> (Selection::Current { slot: slot })
+            _ -> (Selection::Switch { slot: slot })
+        }
     }
 }
 
-machine active(p: &mut [u64; 128]) -> u64 {
-    p[8] = p[17];
-    1u64
+public machine fallback(catalogue: &Catalogue) -> Position {
+    transition catalogue.selected {
+        Position::None -> scan(catalogue, 1u64)
+        _ -> (Position::None)
+    }
+    machine scan(catalogue: &Catalogue, slot: u64) -> Position {
+        transition slot >= 1u64 && slot <= 3u64 {
+            true -> row(catalogue, slot)
+            _ -> (Position::None)
+        }
+    }
+    machine row(catalogue: &Catalogue, slot: u64) -> Position requires slot >= 1u64 && slot <= 3u64 {
+        transition catalogue.instances[slot - 1u64] {
+            Instance::Published -> (Position::App { slot: slot })
+            _ -> scan(catalogue, slot + 1u64)
+        }
+    }
 }
 
-machine capacity(p: &[u64; 128]) -> u64 {
-    transition p[16] < 18446744073709551615u64 {
-        true -> (1u64)
-        _ -> (0u64)
+public machine has_ticket_capacity(catalogue: &Catalogue) -> bool {
+    catalogue.last_ticket < LAST_TICKET
+}
+
+machine is_selected(catalogue: &Catalogue, wanted: u64) -> bool {
+    transition catalogue.selected {
+        Position::App { slot } -> (slot == wanted)
+        Position::None -> (false)
+    }
+}
+
+machine matches(instance: Instance, wanted: u64) -> bool {
+    transition instance {
+        Instance::Published { ticket, program } -> (ticket == wanted)
+        Instance::Empty -> (false)
     }
 }

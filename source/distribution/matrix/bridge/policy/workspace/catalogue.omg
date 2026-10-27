@@ -1,0 +1,137 @@
+module workspace::catalogue;
+
+// Eight opaque words: ticket high-water mark, selection and three instance rows.
+// Packet layout and native query tags never enter the service's catalogue.
+use service::children::workspace::catalogue;
+use service::children::workspace::catalogue::Catalogue;
+use service::children::workspace::catalogue::Instance;
+use service::children::workspace::catalogue::Position;
+use service::children::workspace::catalogue::Entry;
+use service::children::workspace::catalogue::Selection;
+
+const PUBLISH: u64 = 0u64;
+const RETIRE: u64 = 1u64;
+const ACTIVATE: u64 = 2u64;
+const ENTRY: u64 = 3u64;
+const SELECT: u64 = 4u64;
+const FALLBACK: u64 = 5u64;
+const ACTIVE: u64 = 6u64;
+const CAPACITY: u64 = 7u64;
+
+public machine catalogue_decision(packet: &mut [u64; 128]) -> u64 {
+    let mut catalogue: Catalogue;
+    catalogue.last_ticket = packet[16];
+    catalogue.selected = decode_position(packet[17]);
+    catalogue.instances[0] = decode_instance(packet[18], packet[19]);
+    catalogue.instances[1] = decode_instance(packet[20], packet[21]);
+    catalogue.instances[2] = decode_instance(packet[22], packet[23]);
+    let result: u64 = apply(packet, &mut catalogue);
+    packet[16] = catalogue.last_ticket;
+    packet[17] = encode_position(catalogue.selected);
+    encode_instance(packet, 18u64, catalogue.instances[0]);
+    encode_instance(packet, 20u64, catalogue.instances[1]);
+    encode_instance(packet, 22u64, catalogue.instances[2]);
+    result
+}
+
+machine apply(packet: &mut [u64; 128], catalogue: &mut Catalogue) -> u64 {
+    transition packet[1] {
+        PUBLISH -> boolean(service::children::workspace::catalogue::publish(catalogue, packet[2], packet[3]))
+        RETIRE -> boolean(service::children::workspace::catalogue::retire(catalogue, packet[2]))
+        ACTIVATE -> boolean(service::children::workspace::catalogue::activate(catalogue, packet[2]))
+        ENTRY -> read_entry(packet, catalogue)
+        SELECT -> selection(packet, catalogue)
+        FALLBACK -> fallback(packet, catalogue)
+        ACTIVE -> active(packet, catalogue)
+        CAPACITY -> boolean(service::children::workspace::catalogue::has_ticket_capacity(catalogue))
+        _ -> (0u64)
+    }
+    machine read_entry(packet: &mut [u64; 128], catalogue: &Catalogue) -> u64 {
+        let entry: Entry = service::children::workspace::catalogue::entry(catalogue, packet[2]);
+        encode_entry(packet, entry)
+    }
+    machine selection(packet: &mut [u64; 128], catalogue: &Catalogue) -> u64 {
+        let selection: Selection = service::children::workspace::catalogue::select(catalogue, packet[2], packet[3] != 0u64);
+        encode_selection(packet, selection)
+    }
+    machine fallback(packet: &mut [u64; 128], catalogue: &Catalogue) -> u64 {
+        let position: Position = service::children::workspace::catalogue::fallback(catalogue);
+        transition position {
+            Position::App { slot } -> found(packet, slot)
+            Position::None -> (0u64)
+        }
+    }
+    machine found(packet: &mut [u64; 128], slot: u64) -> u64 {
+        packet[8] = slot;
+        1u64
+    }
+    machine active(packet: &mut [u64; 128], catalogue: &Catalogue) -> u64 {
+        packet[8] = encode_position(catalogue.selected);
+        1u64
+    }
+}
+
+machine decode_position(value: u64) -> Position {
+    transition value == 0u64 {
+        true -> (Position::None)
+        _ -> (Position::App { slot: value })
+    }
+}
+
+machine encode_position(position: Position) -> u64 {
+    transition position {
+        Position::App { slot } -> (slot)
+        Position::None -> (0u64)
+    }
+}
+
+machine decode_instance(ticket: u64, program: u64) -> Instance {
+    transition ticket == 0u64 {
+        true -> (Instance::Empty)
+        _ -> (Instance::Published { ticket: ticket, program: program })
+    }
+}
+
+machine encode_instance(packet: &mut [u64; 128], offset: u64, instance: Instance)
+    requires offset < 127u64 {
+    transition instance {
+        Instance::Published { ticket, program } -> populated(packet, offset, ticket, program)
+        Instance::Empty -> populated(packet, offset, 0u64, 0u64)
+    }
+    machine populated(packet: &mut [u64; 128], offset: u64, ticket: u64, program: u64)
+        requires offset < 127u64 {
+        packet[offset] = ticket;
+        packet[offset + 1u64] = program;
+    }
+}
+
+machine encode_entry(packet: &mut [u64; 128], entry: Entry) -> u64 {
+    transition entry {
+        Entry::Outside -> (0u64)
+        Entry::Empty -> (1u64)
+        Entry::Present { ticket, program, selected } -> present(packet, ticket, program, selected)
+    }
+    machine present(packet: &mut [u64; 128], ticket: u64, program: u64, selected: bool) -> u64 {
+        packet[8] = ticket;
+        packet[9] = program;
+        packet[10] = boolean(selected);
+        2u64
+    }
+}
+
+machine encode_selection(packet: &mut [u64; 128], selection: Selection) -> u64 {
+    transition selection {
+        Selection::Missing -> (0u64)
+        Selection::Busy { slot } -> found(packet, slot, 1u64)
+        Selection::Current { slot } -> found(packet, slot, 2u64)
+        Selection::Switch { slot } -> found(packet, slot, 3u64)
+    }
+    machine found(packet: &mut [u64; 128], slot: u64, kind: u64) -> u64 {
+        packet[8] = slot;
+        kind
+    }
+}
+
+machine boolean(value: bool) -> u64 {
+    value as u64
+}

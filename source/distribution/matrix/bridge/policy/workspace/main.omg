@@ -1,0 +1,14 @@
+module workspace::main;
+
+// Private Rust-call dispatch. The service owns typed catalogue and switch state;
+// these siblings alone serialize that state into the host's opaque words.
+use workspace::catalogue;
+use workspace::selection;
+
+public machine workspace_decision(packet: &mut [u64; 128]) -> u64 {
+    transition packet[0] {
+        12u64 -> workspace::selection::selection_decision(packet)
+        13u64 -> workspace::catalogue::catalogue_decision(packet)
+        _ -> (0u64)
+    }
+}

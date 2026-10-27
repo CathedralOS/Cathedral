@@ -1,13 +1,82 @@
 module children::workspace::main;
 
-// Stock workspace: instance catalogue and the yielding switch workflow.
-use children::workspace::catalogue;
+// Issue once and retain the first refusal while draining the outstanding scene.
+// selection.omg owns activation/restoration; catalogue.omg owns instance identity.
+use children::workspace::operation::Switch;
+use children::workspace::operation::Command;
+use children::workspace::operation::Phase;
+use children::workspace::operation::Dispatch;
+use children::workspace::operation::Completion;
 use children::workspace::selection;
 
-public machine workspace_decision(p: &mut [u64; 128]) -> u64 {
-    transition p[0] {
-        12u64 -> children::workspace::selection::selection_decision(p)
-        13u64 -> children::workspace::catalogue::catalogue_decision(p)
-        _ -> (0u64)
+public machine begin(work: &mut Switch, ticket: u64) -> bool {
+    transition (work.phase in Phase::Dormant) && ticket != 0u64 {
+        true -> start(work, ticket)
+        _ -> (false)
+    }
+    machine start(work: &mut Switch, ticket: u64) -> bool {
+        work.phase = Phase::Ready { command: Command::BeginScene };
+        work.ticket = ticket;
+        work.refusal = 0u64;
+        true
+    }
+}
+
+public machine next(work: &mut Switch) -> Dispatch {
+    transition work.phase {
+        Phase::Ready { command } -> issue(work, command)
+        _ -> (Dispatch::Wait)
+    }
+    machine issue(work: &mut Switch, command: Command) -> Dispatch {
+        work.phase = Phase::Waiting { command: command };
+        Dispatch::Issue { command: command }
+    }
+}
+
+public machine complete(work: &mut Switch, completion: Completion) -> bool {
+    transition accepts(work, completion) {
+        true -> remember(work, completion)
+        _ -> (false)
+    }
+    machine remember(work: &mut Switch, completion: Completion) -> bool {
+        transition work.refusal == 0u64 {
+            true -> status(work, completion)
+            _ -> children::workspace::selection::completed(work, completion)
+        }
+    }
+    machine status(work: &mut Switch, completion: Completion) -> bool {
+        work.refusal = completion.status;
+        children::workspace::selection::completed(work, completion)
+    }
+}
+
+public machine cancel(work: &mut Switch, status: u64) -> bool {
+    transition status != 0u64 && work.refusal == 0u64 && cancellable(work.phase) {
+        true -> refused(work, status)
+        _ -> (false)
+    }
+    machine refused(work: &mut Switch, status: u64) -> bool {
+        // Do not manufacture completion or release an outstanding scene.
+        work.refusal = status;
+        true
+    }
+}
+
+machine accepts(work: &Switch, completion: Completion) -> bool {
+    transition work.phase {
+        Phase::Waiting { command } -> (work.ticket == completion.ticket
+            && command == completion.command && command != Command::Failed)
+        _ -> (false)
+    }
+}
+
+machine cancellable(phase: Phase) -> bool {
+    transition phase {
+        Phase::Ready { command } -> before_activation(command)
+        Phase::Waiting { command } -> before_activation(command)
+        Phase::Dormant -> (false)
+    }
+    machine before_activation(command: Command) -> bool {
+        command == Command::BeginScene || command == Command::AwaitScene
     }
 }
