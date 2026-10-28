@@ -8,6 +8,7 @@ import shutil
 import subprocess
 from elf import Elf, component
 from locking import exclusive
+import process
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -44,7 +45,7 @@ def prepare_locked(source, compiler, output):
         roots.add(root)
         manifest = (root / 'build.omg').read_text(encoding='utf-8')
         pending.extend(root / path for path in re.findall(r'location:\s*"([^"]+)"', manifest))
-    paths = {compiler, Path(__file__), Path(__file__).with_name('elf.py'), Path(__file__).with_name('locking.py')}
+    paths = {compiler, Path(__file__), Path(__file__).with_name('elf.py'), Path(__file__).with_name('locking.py'), Path(__file__).with_name('process.py')}
     for root in roots:
         paths.update(p for p in root.rglob('*.omg') if 'build' not in p.relative_to(root).parts[:-1])
     inputs = lambda: {str(path): digest(path) for path in sorted(paths)}
@@ -61,7 +62,7 @@ def prepare_locked(source, compiler, output):
     ):
         log = output / (step + '.log')
         with log.open('w', encoding='utf-8') as stream:
-            result = subprocess.run([str(compiler), *args], cwd=source, stdout=stream, stderr=subprocess.STDOUT)
+            result = process.run([str(compiler), *args], cwd=source, stdout=stream, stderr=subprocess.STDOUT)
         if result.returncode:
             raise RuntimeError(f'{step} failed: {log}')
     needed = Elf((output / 'native/omega-program').read_bytes(), 2).needed()

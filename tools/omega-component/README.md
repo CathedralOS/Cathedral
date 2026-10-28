@@ -28,6 +28,14 @@ Cargo/editor/direct builds serialize on the output lock. Source changes during
 compilation refuse publication. Generated binaries and Omega package-manager
 workspaces are not checked in.
 
+Compiler review and compilation run through [process.py](process.py), with a
+4 GiB memory allowance and a five-minute deadline. On Windows a kernel job
+limits the whole compiler process tree and closes it if the wrapper exits.
+The wrapper joins the job before starting the compiler; other sessions remain
+outside it. On Unix the inherited address-space limit applies per process.
+These limits make runaway compilation fail locally instead of exhausting the
+host. They do not turn an incomplete compile into a successful package.
+
 This packaging route permits exactly one local component, with no dynamic
 imports, remaining relocations, TLS or mutable globals. It is not a generic ELF
 loader or a proof that native code is trustworthy. The compiled code runs in an
