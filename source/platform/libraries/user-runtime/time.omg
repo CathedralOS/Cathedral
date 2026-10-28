@@ -1,0 +1,31 @@
+module time;
+use kernel::Gate;
+use kernel::Kernel;
+
+public data Tick [copy] {
+    case Read(value: u64);
+    case Failed(code: u64);
+}
+
+public machine read(gate: &Gate, clock: u64) -> Tick reaches Kernel invokes Kernel; {
+    let mut record: [u64; 8];
+    let status: u64 = Kernel::clock_read(gate, clock, &mut record);
+    transition status == 0u64 {
+        true -> (Tick::Read { value: record[0] })
+        _ -> (Tick::Failed { code: status })
+    }
+}
+
+// The reference kernel uses half-range comparisons on a wrapping tick clock.
+public machine after(now: u64, ticks: u64 [0..=9223372036854775807]) -> u64 {
+    ((now as u64 in Wrapping) + (ticks as u64 in Wrapping)) as u64
+}
+public machine reached(now: u64, deadline: u64) -> bool {
+    let elapsed: u64 = ((now as u64 in Wrapping) - (deadline as u64 in Wrapping)) as u64;
+    elapsed < 0x8000000000000000u64
+}
+
+public machine park_until(gate: &Gate, deadline: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let empty: [u64; 8];
+    block Kernel::wait(gate, &empty, 0u64, deadline)
+}

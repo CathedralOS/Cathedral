@@ -1,0 +1,61 @@
+module main;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::main::Startup;
+use runtime::main::start;
+use runtime::main::yield_now;
+use runtime::entry::Program;
+use channel;
+use timing;
+
+public ProgramProvider satisfies Program {
+    machine run(gate: &Gate, first: u64, second: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+        let startup: Startup = start(gate);
+        transition startup {
+            Startup::Ready { environment } -> block environment_ready(gate, environment.count)
+            _ -> (101u64)
+        }
+    }
+}
+machine environment_ready(gate: &Gate, endpoints: u64) -> u64 reaches Kernel {
+    transition endpoints == 0u64 {
+        true -> block yielded(gate)
+        _ -> (108u64)
+    }
+}
+machine yielded(gate: &Gate) -> u64 reaches Kernel {
+    let status: u64 = block yield_now(gate);
+    transition status == 0u64 {
+        true -> block checked(gate)
+        _ -> (106u64)
+    }
+}
+machine checked(gate: &Gate) -> u64 reaches Kernel {
+    let status: u64 = block channel::check(gate);
+    transition status == 0u64 {
+        true -> block timed(gate)
+        _ -> (status)
+    }
+}
+machine timed(gate: &Gate) -> u64 reaches Kernel {
+    let status: u64 = block timing::check(gate);
+    transition status == 0u64 {
+        true -> report(gate)
+        _ -> (status)
+    }
+}
+machine report(gate: &Gate) -> u64 reaches Kernel {
+    let mut message: [u64; 8];
+    // "Omega IPC ready\n" in the reference kernel's little-endian wire.
+    message[0] = 0x5049206167656d4fu64;
+    message[1] = 0x000a79646165722043u64;
+    let bytes: u64 = Kernel::write(gate, &message, 16u64);
+    transition bytes == 16u64 {
+        true -> (0u64)
+        _ -> (107u64)
+    }
+}
+public machine component_entry() reaches Program + Kernel blocks; invokes Program; invokes Kernel; {
+    let gate: Gate;
+    let result: u64 = block Program::run(&gate, 0u64, 0u64);
+}

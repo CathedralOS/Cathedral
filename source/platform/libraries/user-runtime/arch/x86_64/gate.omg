@@ -1,0 +1,41 @@
+module arch::x86_64::gate;
+// Temporary native realization of the Rust reference kernel ABI. The process
+// entry supplies this immutable table from its own executable, not from a peer.
+// TableFunction removes the table argument from the native call. No address
+// becomes a reference: all buffer arguments are ordinary borrowed arrays.
+use kernel::Gate;
+use kernel::Kernel;
+
+linux_x86_64 machine Gate::yield_leaf(gate: &Gate) -> u64
+    satisfies Kernel::yield_now via ForeignBinding::TableFunction(yield_now) blocks;
+linux_x86_64 machine Gate::environment_leaf(gate: &Gate, buffer: &mut [u64; 8]) -> u64
+    satisfies Kernel::environment via ForeignBinding::TableFunction(environment);
+linux_x86_64 machine Gate::channel_leaf(gate: &Gate, buffer: &mut [u64; 8]) -> u64
+    satisfies Kernel::channel via ForeignBinding::TableFunction(channel);
+linux_x86_64 machine Gate::send_leaf(gate: &Gate, handle: u64, buffer: &[u64; 8], bytes: u64 [0..=64]) -> u64
+    satisfies Kernel::send via ForeignBinding::TableFunction(send);
+linux_x86_64 machine Gate::receive_leaf(gate: &Gate, handle: u64, buffer: &mut [u64; 8]) -> u64
+    satisfies Kernel::receive via ForeignBinding::TableFunction(receive) blocks;
+linux_x86_64 machine Gate::close_leaf(gate: &Gate, handle: u64) -> u64
+    satisfies Kernel::close via ForeignBinding::TableFunction(close);
+linux_x86_64 machine Gate::write_leaf(gate: &Gate, buffer: &[u64; 8], bytes: u64 [0..=64]) -> u64
+    satisfies Kernel::write via ForeignBinding::TableFunction(write);
+linux_x86_64 machine Gate::clock_leaf(gate: &Gate) -> u64
+    satisfies Kernel::clock via ForeignBinding::TableFunction(clock);
+linux_x86_64 machine Gate::clock_read_leaf(gate: &Gate, handle: u64, buffer: &mut [u64; 8]) -> u64
+    satisfies Kernel::clock_read via ForeignBinding::TableFunction(clock_read);
+linux_x86_64 machine Gate::wait_leaf(gate: &Gate, records: &[u64; 8], count: u64 [0..=4], deadline: u64) -> u64
+    satisfies Kernel::wait via ForeignBinding::TableFunction(wait) blocks;
+
+public NativeKernel satisfies Kernel {
+    Kernel::yield_now = Gate::yield_leaf;
+    Kernel::environment = Gate::environment_leaf;
+    Kernel::channel = Gate::channel_leaf;
+    Kernel::send = Gate::send_leaf;
+    Kernel::receive = Gate::receive_leaf;
+    Kernel::close = Gate::close_leaf;
+    Kernel::write = Gate::write_leaf;
+    Kernel::clock = Gate::clock_leaf;
+    Kernel::clock_read = Gate::clock_read_leaf;
+    Kernel::wait = Gate::wait_leaf;
+}

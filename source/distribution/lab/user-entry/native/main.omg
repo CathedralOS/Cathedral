@@ -1,0 +1,8 @@
+use runtime::entry::Program;
+use component::main::ProgramProvider;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+machine main() reaches Program + Kernel {
+    let gate: Gate;
+    let result: u64 = block Program::run(&gate, 0u64, 0u64);
+}

@@ -1,0 +1,28 @@
+module kernel;
+// Temporary native boundary, not a matrix service bundle. The table comes from
+// this executable's read-only image; the kernel still authenticates every handle.
+public data Gate {
+    yield_now: addr;
+    environment: addr;
+    channel: addr;
+    send: addr;
+    receive: addr;
+    close: addr;
+    write: addr;
+    clock: addr;
+    clock_read: addr;
+    wait: addr;
+}
+
+public boundary trait Kernel {
+    machine yield_now(gate: &Gate) -> u64 reaches blocks;
+    machine environment(gate: &Gate, buffer: &mut [u64; 8]) -> u64 reaches;
+    machine channel(gate: &Gate, buffer: &mut [u64; 8]) -> u64 reaches;
+    machine send(gate: &Gate, handle: u64, buffer: &[u64; 8], bytes: u64 [0..=64]) -> u64 reaches;
+    machine receive(gate: &Gate, handle: u64, buffer: &mut [u64; 8]) -> u64 reaches blocks;
+    machine close(gate: &Gate, handle: u64) -> u64 reaches;
+    machine write(gate: &Gate, buffer: &[u64; 8], bytes: u64 [0..=64]) -> u64 reaches;
+    machine clock(gate: &Gate) -> u64 reaches;
+    machine clock_read(gate: &Gate, handle: u64, buffer: &mut [u64; 8]) -> u64 reaches;
+    machine wait(gate: &Gate, records: &[u64; 8], count: u64 [0..=4], deadline: u64) -> u64 reaches blocks;
+}

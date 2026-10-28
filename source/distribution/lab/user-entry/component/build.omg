@@ -1,0 +1,7 @@
+machine build(builder: &mut Build) {
+    Build::package(builder, "cathedral_user_entry");
+    Build::depend_as(builder, "runtime", Source::Path { location: "../../../../platform/libraries/user-runtime" });
+    Build::select_provider<runtime::entry::Program, main::ProgramProvider>(builder);
+    Build::select_provider<runtime::kernel::Kernel, runtime::arch::x86_64::gate::NativeKernel>(builder);
+    Build::bind(builder, linux_x86_64::ProgramEntry, main::component_entry);
+}

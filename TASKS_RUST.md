@@ -9,6 +9,52 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
+### Standalone Omega userspace: entry and kernel calls
+
+The next target is Background running without the Rust application host. Its
+first prerequisite now works: an independently compiled Omega process linked
+with a small native assembly adapter, running under the unchanged Rust kernel.
+Start at [the platform runtime](source/platform/libraries/user-runtime/README.md)
+and [the executable witness](source/distribution/lab/user-entry/README.md).
+Omega owns environment decoding, channel use/cleanup and wrapping deadline
+handling. The assembly owns only process arrival/return, the `INT 0x80` leaves
+and page-contained native buffer staging. No Rust code is linked into this guest.
+The temporary entry forwards both ordinary kernel arguments and borrows an
+immutable function table from its own executable; this is not a service locator
+or a new capability grant.
+
+With the existing `20dcd0409b66` release producer, both clock-granted and
+clock-denied QEMU boots pass at
+`build/omega-user/tests/20261028T024733966254Z/`. The same image checks a full
+message, exhausted channel quota, close/refund/reuse, retired-handle refusal,
+clock denial and real deadline parking, then exits normally with status zero.
+The witness uses 5 of the existing 240 image pages, with no new resource limit.
+Three boundary/ELF checks, five existing component-packaging tests and source
+layout (89 Omega / 154 Rust edges) pass. No Omega compiler source was changed.
+Ordinary F5 desktop and cold reopen also pass at
+`build/boot-harness-rs/desktop/20261028T024325348119Z/`, with the 1,925-record
+storage oracle, three independent Notes instances and saved Notes/Colors.
+The log is `build/omega-component/omega-user-desktop.log`; PowerShell recorded
+Cargo's stderr progress as `NativeCommandError`, but the desktop runner reached
+its final PASS and wrote both boot captures and the successful host oracle.
+
+The compiler rejected inline `int` as a hidden control exit; the working path
+uses explicitly reviewed native `TableFunction` declarations, not a weakened
+assembly check. The independently linked component still comes from the compiler's
+SysV/Linux container path; its host executable is not shipped or run. See
+[build/review instructions](tools/omega-user/README.md).
+
+**Still required for standalone Background:** implement retained shared-memory
+and notification custody, the existing v4 client/server setup and mailbox
+publication rules, then matrix service acquisition and owner-control handling.
+Use the current Background app sequence with that runtime. Preserve one-writer
+pages, read-only peer views, grant/frame correlation, drain/recheck/park ordering,
+deadline/refusal behavior and cleanup after partial setup. Copied IPC is needed
+for setup; it must not replace ordinary shared service transport as a shortcut.
+Only then switch the installed Background and run desktop, nested and startup
+failure fixtures. F5 currently still uses the Rust-hosted Background. The native
+Omega kernel boot and bulk `state` migration remain separate work.
+
 The app catalogue, instance tickets, current selection, switch admission,
 fallback choice, cancellation and scene restoration now execute in
 `source/distribution/matrix/service/children/workspace/`; see the verification below. Rust retains

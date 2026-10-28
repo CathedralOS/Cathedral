@@ -1,0 +1,47 @@
+module main;
+// Process entry -> snapshot the installed endpoint names -> validate the record.
+// Roles belong to service protocols. A second read never recreates closed grants.
+use kernel::Gate;
+use kernel::Kernel;
+use arch::x86_64::gate::NativeKernel;
+
+public data Environment {
+    count: u64 [0..=5];
+    endpoints: [u64; 5];
+}
+
+public data Startup {
+    case Ready(environment: Environment);
+    case Failed(code: u64);
+    case InvalidEnvironment;
+}
+
+public machine start(gate: &Gate) -> Startup reaches Kernel invokes Kernel; {
+    let mut record: [u64; 8];
+    let status: u64 = Kernel::environment(gate, &mut record);
+    transition status == 0u64 {
+        true -> decode(record)
+        _ -> (Startup::Failed { code: status })
+    }
+}
+
+machine decode(record: [u64; 8]) -> Startup {
+    transition record[0] <= 5u64 {
+        true -> installed(record, record[0])
+        _ -> (Startup::InvalidEnvironment)
+    }
+    machine installed(record: [u64; 8], count: u64 [0..=5]) -> Startup {
+        let mut environment: Environment;
+        environment.count = count;
+        environment.endpoints[0] = record[1];
+        environment.endpoints[1] = record[2];
+        environment.endpoints[2] = record[3];
+        environment.endpoints[3] = record[4];
+        environment.endpoints[4] = record[5];
+        Startup::Ready { environment: environment }
+    }
+}
+
+public machine yield_now(gate: &Gate) -> u64 reaches Kernel blocks; invokes Kernel; {
+    block Kernel::yield_now(gate)
+}

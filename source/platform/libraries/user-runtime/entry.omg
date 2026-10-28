@@ -1,0 +1,11 @@
+module entry;
+use kernel::Gate;
+use kernel::Kernel;
+
+// The native entry borrows its immutable gate and forwards both ordinary kernel
+// arguments unchanged. Return is an exit status; it never returns into the kernel.
+// This is the prototype's process ABI, not the eventual Omega component ABI.
+public boundary trait Program {
+    machine run(gate: &Gate, first: u64, second: u64) -> u64
+        reaches Kernel blocks; invokes Kernel;
+}
