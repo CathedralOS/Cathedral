@@ -192,3 +192,66 @@ fn cursor_preferences_are_group_scoped_and_cancelled_streams_are_forgotten() {
         );
     });
 }
+
+#[test]
+fn bulk_revision_and_length_must_match_before_replacing_a_draft() {
+    for revision_mismatch in [false, true] {
+        with_app(|p| {
+            p.records.push((37, b"NTS1hello".to_vec()));
+            p.pump();
+            p.text("x");
+            if revision_mismatch {
+                p.bulk_revision = Some(38);
+            } else {
+                p.bulk_reported_length = Some(8);
+            }
+            p.key(7);
+            assert_eq!(p.status()[1..5], [37, 6, ERROR, 1]);
+            assert_eq!(p.records[0].1, b"NTS1hello");
+            p.bulk_revision = None;
+            p.bulk_reported_length = None;
+            p.key(6); // Reconciliation retains the draft.
+            assert_eq!(p.status()[1..5], [37, 6, 0, 1]);
+            p.key(6); // A separate request publishes it.
+            assert_eq!(p.records[0].1, b"NTS1hellox");
+        });
+    }
+}
+
+#[test]
+fn enumeration_crosses_the_six_entry_page_and_stops_at_eight_documents() {
+    with_app(|p| {
+        for ch in b'a'..=b'h' {
+            p.records.push((1, std::vec![b'N', b'T', b'S', b'1', ch]));
+        }
+        p.pump();
+        assert_eq!(p.status()[5..7], [8, 1]);
+        for expected in [2, 3, 4, 5, 6, 7, 8, 1] {
+            p.key(10);
+            assert_eq!(p.status()[6], expected);
+        }
+        p.key(9);
+        assert_eq!(p.records.len(), 8);
+        assert_eq!(p.status()[3], ERROR);
+    });
+}
+
+#[test]
+fn queued_press_release_pairs_survive_the_bounded_drain() {
+    with_app(|p| {
+        p.pump();
+        for code in 15..20 {
+            for action in [1, 0] {
+                p.events
+                    .push_back([0, p.epoch, wire::KEY, code, action, 0, 17, 1]);
+            }
+        }
+        p.wake();
+        assert_eq!(p.events.len(), 2, "one turn drains at most eight events");
+        assert_eq!(p.loss(), 1, "control remains available between batches");
+        p.wake();
+        assert!(p.events.is_empty());
+        p.key(6);
+        assert_eq!(p.records[0].1, b"NTS1abcde");
+    });
+}

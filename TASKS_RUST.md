@@ -155,6 +155,55 @@ laws (8) and changed navigation links also pass. Colors uses 39 of the existing
 240 image pages; the matrix uses 153. No native Omega kernel or ARM64
 qualification is claimed for this app cleanup and desktop compiler upgrade.
 
+### Notes separates document work from its native bridge
+
+The installed Notes app now starts at a typed
+[app/main.omg](source/distribution/applications/notes/app/main.omg), with session,
+storage and rendering continuations named in `state.omg`. Input is retained as
+a typed event across initial placement/storage loading. `LoadMode` distinguishes
+replacing the editor from reconciling confirmed storage while retaining a draft.
+`operations.omg` names requests and replies; the app contains no 4,096-word native
+packet, packet offsets or numeric continuation dispatch.
+
+The temporary `notes/bridge/component/` owns native reply decoding, command
+encoding, bounded byte transfer, image packing and startup diagnostic text.
+The app's document codec owns `NTS1` validation and its renderer supplies pixels.
+The bridge calls those pixel functions without interpreting editor state. Module
+and type imports are explicit. Existing local `state` bodies and their justified
+requirements remain; this does not resume the bulk language migration. Rust still
+owns executable startup, service transport, waits and immutable attachment custody.
+
+Verification on the unchanged `20dcd0409b66` release producer: the
+full host suite passes, including 13 compiled Omega Notes behavior tests and the
+retained Rust document test. New cases cover bulk revision/length mismatches
+without draft replacement, enumeration across the six-entry page boundary and
+the eight-document cap, and ordered press/release pairs across a bounded drain.
+Host/guest Clippy, including all features and the ordinary guest path, Rust format,
+source layout (86 Omega / 154 Rust edges), eight layout laws and five component
+packaging tests pass. Logs: `build/omega-component/notes-typed-{tests,host-suite,clippy}.log`.
+
+Ordinary F5 and cold reboot pass at
+`build/boot-harness-rs/desktop/20261028T013318570124Z`: three independent Notes
+instances, editing, protected close, slot reuse, saves and durable reopening.
+The host oracle verifies 1,925 records. Log:
+`build/omega-component/notes-typed-desktop.log`. Token comparison confirms the
+retained document algorithms and font are unchanged apart from module/import
+declarations and formatting; changed navigation links resolve.
+
+Four nested desktops also pass, fresh and cold, at
+`build/boot-harness-rs/desktop/20261028T013542672264Z`. The unchanged fixture checks
+protected close, durable Notes/Colors, repeated subtree reclamation and isolation
+from the outer realm. Log: `build/omega-component/notes-typed-nested.log`.
+Neither previously recorded intermittent failure appeared in these two guest
+fixtures; that does not resolve the ATA or deep-input observations above.
+
+The app image grows from 31 to 83 of the existing 240 load pages in this cleanup.
+Keep that code-size cost visible when improving the compiler or aggregate passing;
+no image or resource ceiling was increased. This validates the installed x86-64
+app through the Rust host, not native Omega kernel boot or ARM64. Further source
+cleanup should preserve these executable boundaries and investigate large value
+passing before treating the image growth as an acceptable permanent cost.
+
 ## Language alignment: defer the blocked nested-machine migration
 
 Owner clarification, 2026-10-26: replacing `state` with nested `machine` is a

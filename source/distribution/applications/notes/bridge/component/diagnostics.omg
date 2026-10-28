@@ -1,0 +1,27 @@
+module diagnostics;
+use host::main;
+// Preserve the guest harness's startup messages at the transport boundary.
+public machine loaded(p: &mut [u64; 4096], transient: bool) -> u64 {
+    transition transient {
+        true -> temporary(p)
+        _ -> durable(p)
+    }
+    state temporary(p: &mut [u64; 4096]) -> u64 {
+        p[16] = 7021785155730956611u64;
+        p[17] = 4211821627279548524u64;
+        p[18] = 7021797297686410272u64;
+        p[19] = 8295753032394307954u64;
+        p[20] = 7286935691776388980u64;
+        p[21] = 753348436797973614u64;
+        p[8] = 48u64;
+        WRITE
+    }
+    state durable(p: &mut [u64; 4096]) -> u64 {
+        p[16] = 7021785155730956611u64;
+        p[17] = 4211821627279548524u64;
+        p[18] = 8028842149463158304u64;
+        p[19] = 44634039393u64;
+        p[8] = 29u64;
+        WRITE
+    }
+}

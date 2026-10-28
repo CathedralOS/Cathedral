@@ -1,0 +1,101 @@
+module commands;
+
+use app::state::State;
+use app::operations::View;
+use app::operations::Record;
+use app::operations::Report;
+use app::operations::Command;
+use host::main;
+use protocol::main;
+use images;
+use records;
+use diagnostics;
+public machine encode(command: Command, s: &State, p: &mut [u64; 4096]) -> u64 {
+    message(p, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64);
+    transition command {
+        Command::Exit -> (EXIT)
+        Command::AcquireInteraction -> acquire(p, INTERACTION)
+        Command::AcquireStorage -> acquire(p, STORAGE)
+        Command::BindStorage -> (BIND)
+        Command::List { realm, after } -> listing(p, realm, after)
+        Command::Head { object } -> head(p, object)
+        Command::Read { object, revision, length } -> read(p, object, revision, length)
+        Command::Publish { object, revision, realm, record } -> publish(p, object, revision, realm, record)
+        Command::Copy { object, revision, realm } -> duplicate(p, object, revision, realm)
+        Command::Poll -> exchange(p, MATRIX_POLL)
+        Command::View -> exchange(p, MATRIX_VIEW)
+        Command::Cursor { epoch, channel, hidden } -> cursor(p, epoch, channel, hidden)
+        Command::CreateSurface { epoch, rank } -> surface(p, epoch, rank)
+        Command::Paint { epoch, surface, width, height, color } -> paint(p, epoch, surface, width, height, color)
+        Command::StageText { offset, words } -> images::text(s, p, offset, words)
+        Command::PublishText { image } -> images::publish(p, image)
+        Command::Decorate { image, decoration } -> images::decorate(s, p, image, decoration)
+        Command::FrameDemand { epoch } -> frame(p, FRAME_DEMAND, epoch, 0u64)
+        Command::FrameReady { epoch, ticket } -> frame(p, FRAME_READY, epoch, ticket)
+        Command::Wait -> (WAIT)
+        Command::Control { report } -> control(p, report)
+        Command::Loaded { temporary } -> diagnostics::loaded(p, temporary)
+    }
+}
+machine acquire(p: &mut [u64; 4096], operation: u64) -> u64 {
+    p[0] = 1u64;
+    p[1] = 1u64;
+    operation
+}
+machine listing(p: &mut [u64; 4096], realm: u64, after: u64) -> u64 {
+    message(p, STORE_LIST, realm, 0u64, after, 0u64, 0u64, 0u64, 0u64);
+    STORE
+}
+machine head(p: &mut [u64; 4096], object: u64) -> u64 {
+    message(p, STORE_HEAD, object, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64);
+    STORE
+}
+machine read(p: &mut [u64; 4096], object: u64, revision: u64, length: u64) -> u64 {
+    message(p, STORE_BULK, object, revision, 0u64, length, 0u64, 0u64, 0u64);
+    p[11] = 244u64;
+    STORE
+}
+machine publish(p: &mut [u64; 4096], object: u64, revision: u64, realm: u64, record: Record) -> u64 {
+    message(p, STORE_PUBLISH, object, revision, realm, record.length, 0u64, 0u64, 0u64);
+    records::encode(&record, p);
+    p[8] = record.length;
+    STORE
+}
+machine duplicate(p: &mut [u64; 4096], object: u64, revision: u64, realm: u64) -> u64 {
+    message(p, STORE_COPY, object, revision, realm, 0u64, 0u64, 0u64, 0u64);
+    STORE
+}
+machine exchange(p: &mut [u64; 4096], operation: u64) -> u64 {
+    p[0] = operation;
+    EXCHANGE
+}
+machine cursor(p: &mut [u64; 4096], epoch: u64, channel: u64, hidden: bool) -> u64 {
+    message(p, CURSOR_PREFERENCE, epoch, channel, hidden as u64, 0u64, 0u64, 0u64, 0u64);
+    EXCHANGE
+}
+machine surface(p: &mut [u64; 4096], epoch: u64, rank: u64) -> u64 {
+    message(p, SURFACE_CREATE, epoch, rank, 0u64, 0u64, 0u64, 0u64, 0u64);
+    EXCHANGE
+}
+machine paint(p: &mut [u64; 4096], epoch: u64, surface: u64, width: u64, height: u64, color: u64) -> u64 {
+    message(p, MATRIX_PAINT, epoch, surface, 0u64, 0u64, width, height, color);
+    EXCHANGE
+}
+machine frame(p: &mut [u64; 4096], operation: u64, epoch: u64, ticket: u64) -> u64 {
+    message(p, operation, epoch, ticket, 0u64, 0u64, 0u64, 0u64, 0u64);
+    EXCHANGE
+}
+machine control(p: &mut [u64; 4096], report: Report) -> u64 {
+    transition report {
+        Report::Loss { changed } -> loss(p, changed)
+        Report::Health { revision, length, error, changed, count, selected } -> health(p, revision, length, error, changed, count, selected)
+    }
+    machine loss(p: &mut [u64; 4096], changed: bool) -> u64 {
+        p[1] = changed as u64;
+        CONTROL
+    }
+    machine health(p: &mut [u64; 4096], revision: u64, length: u64, error: u64, changed: bool, count: u64, selected: u64) -> u64 {
+        message(p, 0u64, revision, length, error, changed as u64, count, selected, 0u64);
+        CONTROL
+    }
+}

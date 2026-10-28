@@ -1,22 +1,27 @@
-// Installed Notes: acquire scoped services -> load -> receive -> act -> present.
-// Each yield requests one operation from the temporary native host. Subsystems
-// own their continuations; the host never interprets app state or storage bytes.
-use host::main;
-use protocol::main;
-use state;
-use session::session;
+module main;
 
-public boundary trait Notes { machine step(s: &mut State, p: &mut [u64; 4096]) -> u64 reaches; }
-public NotesProvider satisfies Notes {
-    machine step(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        transition p[15] {
-            1u64 -> (size_of<State>())
-            2u64 -> (align_of<State>())
-            3u64 -> (1u64)
-            _ -> session(s, p)
+// Advance one completed operation. Storage retains uncertain outcomes; startup
+// interprets optional service refusal. Reporting remains best effort; other
+// transport loss stops the app.
+use state::State;
+use state::Phase;
+use operations::Completion;
+use operations::Command;
+use session::session;
+use session::input;
+use storage::storage;
+public machine advance(s: &mut State, completion: &Completion) -> Command {
+    transition completion.transport_status == 0u64 {
+        true -> session::session::resume(s, completion.reply)
+        _ -> failed(s, completion.transport_status)
+    }
+    machine failed(s: &mut State, status: u64) -> Command {
+        transition s.phase {
+            Phase::StorageReady -> session::session::storage_ready(s, status)
+            Phase::ControlReplied -> session::session::wait(s)
+            Phase::LoadReported -> session::input::input(s)
+            Phase::Storage { step } -> storage::storage::failed(s, status)
+            _ -> (Command::Exit)
         }
     }
-}
-public machine component_entry() reaches Notes invokes Notes; {
-    let mut s: State; let mut p: [u64; 4096]; let result: u64 = Notes::step(&mut s, &mut p);
 }

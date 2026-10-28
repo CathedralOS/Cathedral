@@ -1,83 +1,150 @@
-// One acceptance interface, independent pointer edges per scoped channel.
-// Metadata/key cancellation never manufactures a pointer press.
-use host::main;
-use protocol::main;
-use state;
+module session::input;
+
+// Independent pointer edges. Cancellation and metadata cannot create a click.
+use operations::Input;
+use operations::Command;
+use state::State;
+use state::LoadMode;
 use session::session;
 use storage::storage;
 use document::document;
 use session::keys;
 public machine reset_channels(s: &mut State) {
-    s.channels[0] = 0u64; s.channels[1] = 0u64; s.channels[2] = 0u64; s.channels[3] = 0u64;
-    s.hidden[0] = false; s.hidden[1] = false; s.hidden[2] = false; s.hidden[3] = false;
-    s.buttons[0] = 0u64; s.buttons[1] = 0u64; s.buttons[2] = 0u64; s.buttons[3] = 0u64;
+    s.channels[0] = 0u64;
+    s.channels[1] = 0u64;
+    s.channels[2] = 0u64;
+    s.channels[3] = 0u64;
+    s.hidden[0] = false;
+    s.hidden[1] = false;
+    s.hidden[2] = false;
+    s.hidden[3] = false;
+    s.buttons[0] = 0u64;
+    s.buttons[1] = 0u64;
+    s.buttons[2] = 0u64;
+    s.buttons[3] = 0u64;
 }
-public machine input(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-    transition s.snapshot[5] & 255u64 {
-        POINTER -> pointer(s, p)
-        KEY -> key(s, p)
-        CANCEL -> cancel(s, p, false)
-        RETIRED -> cancel(s, p, true)
-        _ -> after_input(s, p)
+public machine input(s: &mut State) -> Command {
+    transition s.input {
+        Input::Pointer { channel, group, buttons, x, y } -> pointer(s, channel, group, buttons, x, y)
+        Input::Key { group, code, action } -> key(s, group, code, action)
+        Input::Cancel { channel, retire } -> cancel(s, channel)
+        _ -> session::session::after_input(s)
     }
-    state key(s: &mut State, p: &mut [u64; 4096]) -> u64 { keys(s, p) }
-    state cancel(s: &mut State, p: &mut [u64; 4096], retire: bool) -> u64 {
-        let slot: u64 = find(s, s.snapshot[5] >> 32u64, 0u64);
-        transition slot < 4u64 { true -> clear(s, p, slot, retire) _ -> after_input(s, p) }
+    machine key(s: &mut State, group: u64, code: u64, action: u64) -> Command {
+        s.cursor_group = group;
+        session::keys::keys(s, code, action)
     }
-    state clear(s: &mut State, p: &mut [u64; 4096], slot: u64, retire: bool) -> u64 requires slot < 4u64 {
-        s.buttons[slot] = 0u64; s.hidden[slot] = false; s.channels[slot] = 0u64;
-        transition retire { true -> forget(s, p, slot) _ -> after_input(s, p) }
+}
+machine cancel(s: &mut State, channel: u64) -> Command {
+    let slot: u64 = find(s, channel, 0u64);
+    transition slot < 4u64 {
+        true -> clear(s, slot)
+        _ -> session::session::after_input(s)
     }
-    state forget(s: &mut State, p: &mut [u64; 4096], slot: u64) -> u64 requires slot < 4u64 {
-        s.channels[slot] = 0u64; after_input(s, p)
+    machine clear(s: &mut State, slot: u64) -> Command requires slot < 4u64 {
+        s.buttons[slot] = 0u64;
+        s.hidden[slot] = false;
+        s.channels[slot] = 0u64;
+        session::session::after_input(s)
     }
-    state pointer(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-
-        let name: u64 = s.snapshot[5] >> 32u64;
-        transition name != 0u64 {
-            true -> existing(s, p, name, find(s, name, 0u64)) _ -> after_input(s, p)
+}
+machine pointer(s: &mut State, channel: u64, group: u64, buttons: u64, x: u64, y: u64) -> Command {
+    transition channel != 0u64 {
+        true -> locate(s, channel, group, buttons, x, y)
+        _ -> session::session::after_input(s)
+    }
+    machine locate(s: &mut State, channel: u64, group: u64, buttons: u64, x: u64, y: u64) -> Command {
+        let slot: u64 = find(s, channel, 0u64);
+        transition slot < 4u64 {
+            true -> edge(s, channel, group, buttons, x, y, slot)
+            _ -> available(s, channel, group, buttons, x, y)
         }
     }
-    state existing(s: &mut State, p: &mut [u64; 4096], name: u64, slot: u64) -> u64 {
-        transition slot < 4u64 { true -> edge(s, p, name, slot) _ -> available(s, p, name, find(s, 0u64, 0u64)) }
+    machine available(s: &mut State, channel: u64, group: u64, buttons: u64, x: u64, y: u64) -> Command {
+        let slot: u64 = find(s, 0u64, 0u64);
+        transition slot < 4u64 {
+            true -> edge(s, channel, group, buttons, x, y, slot)
+            _ -> session::session::after_input(s)
+        }
     }
-    state available(s: &mut State, p: &mut [u64; 4096], name: u64, slot: u64) -> u64 {
-        transition slot < 4u64 { true -> edge(s, p, name, slot) _ -> after_input(s, p) }
+    machine edge(s: &mut State, channel: u64, group: u64, buttons: u64, x: u64, y: u64, slot: u64) -> Command
+        requires slot < 4u64
+    {
+        let pressed: bool = (buttons & 1u64) != 0u64 && (s.buttons[slot] & 1u64) == 0u64;
+        s.channels[slot] = channel;
+        s.buttons[slot] = buttons;
+        s.groups[slot] = group;
+        transition pressed {
+            true -> clicked(s, x, y)
+            _ -> session::session::after_input(s)
+        }
     }
-    state edge(s: &mut State, p: &mut [u64; 4096], name: u64, slot: u64) -> u64 requires slot < 4u64 {
-        let held: u64 = (s.snapshot[5] >> 8u64) & 7u64;
-        let pressed: bool = (held & 1u64) != 0u64 && (s.buttons[slot] & 1u64) == 0u64;
-        s.channels[slot] = name; s.buttons[slot] = held; s.groups[slot] = (s.snapshot[5] >> 17u64) & 32767u64;
-        transition pressed { true -> clicked(s, p) _ -> after_input(s, p) }
+}
+machine clicked(s: &mut State, x: u64, y: u64) -> Command {
+    let left: u64 in Saturating = (s.width as u64 in Saturating) - 24;
+    let right: u64 in Saturating = (s.width as u64 in Saturating) - 4;
+    transition x >= left && x < right && y >= 2u64 && y < 18u64 {
+        true -> close(s)
+        _ -> dialog(s, x, y)
     }
-    state clicked(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        let left: u64 in Saturating = (s.width as u64 in Saturating) - 24;
-        let right: u64 in Saturating = (s.width as u64 in Saturating) - 4;
-        transition s.snapshot[6] >= left && s.snapshot[6] < right && s.snapshot[7] >= 2u64 && s.snapshot[7] < 18u64 { true -> close(s, p) _ -> dialog(s, p) }
+    machine close(s: &mut State) -> Command {
+        transition s.error == 0u64 && !document::document::changed(s) {
+            true -> (Command::Exit)
+            _ -> ask(s)
+        }
     }
-    state close(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        transition s.error == 0u64 && !changed(s) { true -> (EXIT) _ -> ask(s, p) }
+    machine ask(s: &mut State) -> Command {
+        s.closing = true;
+        s.dirty = true;
+        session::session::after_input(s)
     }
-    state ask(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.closing = true; s.dirty = true; after_input(s, p) }
-    state dialog(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        transition s.closing && s.snapshot[6] >= 10u64 && s.snapshot[6] < 190u64 { true -> choice(s, p) _ -> after_input(s, p) }
+}
+machine dialog(s: &mut State, x: u64, y: u64) -> Command {
+    transition s.closing && x >= 10u64 && x < 190u64 {
+        true -> choice(s, y)
+        _ -> session::session::after_input(s)
     }
-    state choice(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        transition s.snapshot[7] >= 36u64 && s.snapshot[7] < 52u64 && !s.temporary { true -> commit(s, p) _ -> discard(s, p) }
+    machine choice(s: &mut State, y: u64) -> Command {
+        transition y >= 36u64 && y < 52u64 && !s.temporary {
+            true -> commit(s)
+            _ -> discard(s, y)
+        }
     }
-    state commit(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        s.close_after = true; s.loading = 2u64;
-        transition s.error == 0u64 { true -> save(s, p) _ -> load(s, p) }
+    machine commit(s: &mut State) -> Command {
+        s.close_after = true;
+        s.loading = LoadMode::Reconcile;
+        transition s.error == 0u64 {
+            true -> storage::storage::save(s)
+            _ -> storage::storage::load(s)
+        }
     }
-    state discard(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition s.snapshot[7] >= 52u64 && s.snapshot[7] < 68u64 { true -> (EXIT) _ -> cancel_dialog(s, p) } }
-    state cancel_dialog(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition s.snapshot[7] >= 68u64 && s.snapshot[7] < 84u64 { true -> dismiss(s, p) _ -> after_input(s, p) } }
-    state dismiss(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.closing = false; s.dirty = true; after_input(s, p) }
-
+    machine discard(s: &mut State, y: u64) -> Command {
+        transition y >= 52u64 && y < 68u64 {
+            true -> (Command::Exit)
+            _ -> cancel_dialog(s, y)
+        }
+    }
+    machine cancel_dialog(s: &mut State, y: u64) -> Command {
+        transition y >= 68u64 && y < 84u64 {
+            true -> dismiss(s)
+            _ -> session::session::after_input(s)
+        }
+    }
+    machine dismiss(s: &mut State) -> Command {
+        s.closing = false;
+        s.dirty = true;
+        session::session::after_input(s)
+    }
 }
 machine find(s: &State, name: u64, index: u64) -> u64 {
-    transition index < 4u64 { true -> inspect(s, name, index) _ -> (4u64) }
+    transition index < 4u64 {
+        true -> inspect(s, name, index)
+        _ -> (4u64)
+    }
     state inspect(s: &State, name: u64, index: u64) -> u64 requires index < 4u64 {
-        transition s.channels[index] == name { true -> (index) _ -> find(s, name, index + 1u64) }
+        transition s.channels[index] == name {
+            true -> (index)
+            _ -> find(s, name, index + 1u64)
+        }
     }
 }

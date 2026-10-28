@@ -1,37 +1,89 @@
-// App-owned editor, storage continuation and retained presentation state.
-public data State {
-    phase: u64; temporary: bool; loaded: bool; error: u64;
-    draft: [u8; 240]; confirmed: [u8; 240]; length: u64; saved_length: u64; cursor: u64;
-    realm: u64; ids: [u64; 8]; count: u64; current: u64; revision: u64; after: u64;
-    loading: u64; read_length: u64; read_revision: u64; close_after: bool;
-    epoch: u64; width: u64; height: u64; snapshot: [u64; 8];
-    channels: [u64; 4]; buttons: [u64; 4]; groups: [u64; 4]; hidden: [bool; 4]; cursor_index: u64;
-    frames: bool; more: bool; drained: u64; ticket: u64;
-    scene: bool; dirty: bool; closing: bool; surfaces: [u64; 4]; rank: u64;
-    background: u64; cached_width: u64; cached_height: u64; close_width: u64;
-    cached_count: u64; cached_current: u64; tabs_valid: bool;
-    cells: [u64; 60]; caret: u64; image_offset: u64;
+module state;
+use operations::Input;
+public data LoadMode [copy] {
+    case ReplaceDraft;
+    case Reconcile;
 }
-public const START: u64 = 0u64;
-public const INTERACTION_READY: u64 = 1u64;
-public const STORAGE_READY: u64 = 2u64;
-public const POLLED: u64 = 10u64;
-public const AWAKENED: u64 = 11u64;
-public const CONTROL_REPLIED: u64 = 12u64;
-public const CURSOR_CHANGED: u64 = 13u64;
-public const STORAGE_BOUND: u64 = 20u64;
-public const LISTED: u64 = 21u64;
-public const HEADED: u64 = 22u64;
-public const READ: u64 = 23u64;
-public const SAVED: u64 = 24u64;
-public const COPIED: u64 = 25u64;
-public const SURFACE_CREATED: u64 = 30u64;
-public const BASE_READY: u64 = 31u64;
-public const TEXT_STAGED: u64 = 32u64;
-public const TEXT_READY: u64 = 33u64;
-public const CLOSE_READY: u64 = 34u64;
-public const TABS_READY: u64 = 35u64;
-public const VIEW_RECHECKED: u64 = 36u64;
-public const DEMAND_READY: u64 = 37u64;
-public const FRAME_SENT: u64 = 38u64;
-public const LOAD_REPORTED: u64 = 14u64;
+public data StorageStep [copy] {
+    case Bound;
+    case Listed;
+    case Headed;
+    case Read;
+    case Saved;
+    case Copied;
+}
+public data RenderStep [copy] {
+    case SurfaceCreated;
+    case BaseReady;
+    case TextStaged;
+    case TextReady;
+    case CloseReady;
+    case TabsReady;
+    case ViewRechecked;
+    case DemandReady;
+    case FrameSent;
+}
+public data Phase [copy] {
+    case Start;
+    case InteractionReady;
+    case StorageReady;
+    case Polled;
+    case Awakened;
+    case ControlReplied;
+    case CursorChanged;
+    case LoadReported;
+    case Storage(step: StorageStep);
+    case Rendering(step: RenderStep);
+}
+// The app owns this state. The host only allocates its opaque backing.
+public data State {
+    phase: Phase;
+    temporary: bool;
+    loaded: bool;
+    error: u64;
+    draft: [u8; 240];
+    confirmed: [u8; 240];
+    length: u64;
+    saved_length: u64;
+    cursor: u64;
+    realm: u64;
+    ids: [u64; 8];
+    count: u64;
+    current: u64;
+    revision: u64;
+    after: u64;
+    loading: LoadMode;
+    read_length: u64;
+    read_revision: u64;
+    close_after: bool;
+    epoch: u64;
+    width: u64;
+    height: u64;
+    input: Input;
+    requested: bool;
+    channels: [u64; 4];
+    buttons: [u64; 4];
+    groups: [u64; 4];
+    hidden: [bool; 4];
+    cursor_index: u64;
+    cursor_group: u64;
+    frames: bool;
+    more: bool;
+    drained: u64;
+    ticket: u64;
+    scene: bool;
+    dirty: bool;
+    closing: bool;
+    surfaces: [u64; 4];
+    rank: u64;
+    background: u64;
+    cached_width: u64;
+    cached_height: u64;
+    close_width: u64;
+    cached_count: u64;
+    cached_current: u64;
+    tabs_valid: bool;
+    cells: [u64; 60];
+    caret: u64;
+    image_offset: u64;
+}

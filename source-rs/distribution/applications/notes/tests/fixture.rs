@@ -32,6 +32,8 @@ pub(super) fn with_app(run: impl FnOnce(&mut Peer<'_>)) {
         next_surface: 500,
         storage_requests: 0,
         truncated_bulk: false,
+        bulk_revision: None,
+        bulk_reported_length: None,
     });
 }
 pub(super) struct Peer<'a> {
@@ -52,6 +54,8 @@ pub(super) struct Peer<'a> {
     next_surface: u64,
     pub storage_requests: usize,
     pub truncated_bulk: bool,
+    pub bulk_revision: Option<u64>,
+    pub bulk_reported_length: Option<u64>,
 }
 impl Peer<'_> {
     pub fn pump(&mut self) {
@@ -114,7 +118,8 @@ impl Peer<'_> {
                                 assert_eq!(q[4], p[3]);
                                 let n = record.1.len() - usize::from(self.truncated_bulk);
                                 p[8] = n as u64;
-                                p[4] = n as u64;
+                                p[2] = self.bulk_revision.unwrap_or(record.0);
+                                p[4] = self.bulk_reported_length.unwrap_or(n as u64);
                                 for (i, chunk) in record.1[..n].chunks(8).enumerate() {
                                     let mut word = [0u8; 8];
                                     word[..chunk.len()].copy_from_slice(chunk);

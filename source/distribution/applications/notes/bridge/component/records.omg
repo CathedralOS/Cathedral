@@ -1,0 +1,53 @@
+module records;
+// Transfer bounded bytes; schema interpretation belongs to the app document.
+use app::operations::Record;
+public machine decode(p: &[u64; 4096]) -> Record {
+    let mut record: Record;
+    record.length = p[8];
+    copy(p, &mut record, 0u64);
+    record
+}
+machine copy(p: &[u64; 4096], record: &mut Record, i: u64) {
+    transition i < 244u64 {
+        true -> byte(p, record, i)
+        _ -> done()
+    }
+    state byte(p: &[u64; 4096], record: &mut Record, i: u64) requires i < 244u64 {
+        record.bytes[i] = ((p[16u64 + i / 8u64] >> ((i % 8u64) * 8u64)) & 255u64) as u8;
+        transition {
+            _ -> copy(p, record, i + 1u64)
+        }
+    }
+    state done() {}
+}
+public machine encode(record: &Record, p: &mut [u64; 4096]) {
+    transition {
+        _ -> clear(record, p, 0u64)
+    }
+    state clear(record: &Record, p: &mut [u64; 4096], i: u64) {
+        transition i < 31u64 {
+            true -> zero(record, p, i)
+            _ -> copy(record, p, 0u64)
+        }
+    }
+    state zero(record: &Record, p: &mut [u64; 4096], i: u64) requires i < 31u64 {
+        p[16u64 + i] = 0u64;
+        transition {
+            _ -> clear(record, p, i + 1u64)
+        }
+    }
+    state copy(record: &Record, p: &mut [u64; 4096], i: u64) {
+        transition i < record.length && i < 244u64 {
+            true -> byte(record, p, i)
+            _ -> done()
+        }
+    }
+    state byte(record: &Record, p: &mut [u64; 4096], i: u64) requires i < 244u64 {
+        let at: u64 = 16u64 + i / 8u64;
+        p[at] = p[at] | ((record.bytes[i] as u64) << ((i % 8u64) * 8u64));
+        transition {
+            _ -> copy(record, p, i + 1u64)
+        }
+    }
+    state done() {}
+}

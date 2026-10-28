@@ -1,0 +1,73 @@
+module replies;
+
+use app::state::Phase;
+use app::state::StorageStep;
+use app::state::RenderStep;
+use app::operations::Input;
+use app::operations::View;
+use app::operations::StorageReply;
+use app::operations::StorageResult;
+use app::operations::Reply;
+use app::operations::Completion;
+use protocol::main;
+use records;
+public machine decode(phase: Phase, p: &[u64; 4096]) -> Completion {
+    transition phase {
+        Phase::Start -> (Completion { transport_status: 0u64, reply: Reply::Complete })
+        Phase::Awakened -> awakened(p)
+        _ -> (Completion { transport_status: p[9], reply: response(phase, p) })
+    }
+}
+machine response(phase: Phase, p: &[u64; 4096]) -> Reply {
+    transition phase {
+        Phase::Polled -> (Reply::View { view: view(p) })
+        Phase::CursorChanged -> (Reply::Cursor { status: p[0] })
+        Phase::Storage { step } -> storage_reply(step, p)
+        Phase::Rendering { step } -> rendering(step, p)
+        _ -> (Reply::Complete)
+    }
+}
+machine storage_reply(step: StorageStep, p: &[u64; 4096]) -> Reply {
+    let result: StorageResult = storage(step, p);
+    Reply::Storage { reply: StorageReply { status: p[0], result: result } }
+}
+machine storage(step: StorageStep, p: &[u64; 4096]) -> StorageResult {
+    transition step {
+        StorageStep::Bound -> (StorageResult::Bound { realm: p[1] })
+        StorageStep::Listed -> (StorageResult::Listed { count: p[1], entries: [p[2], p[3], p[4], p[5], p[6], p[7]] })
+        StorageStep::Headed -> (StorageResult::Head { revision: p[2], length: p[3] })
+        StorageStep::Read -> (StorageResult::Read { revision: p[2], reported: p[4], record: records::decode(p) })
+        StorageStep::Saved -> (StorageResult::Saved { object: p[1], revision: p[2] })
+        StorageStep::Copied -> (StorageResult::Copied { object: p[1] })
+    }
+}
+machine rendering(step: RenderStep, p: &[u64; 4096]) -> Reply {
+    transition step {
+        RenderStep::ViewRechecked -> (Reply::View { view: view(p) })
+        RenderStep::SurfaceCreated -> (Reply::Surface { status: p[0], handle: p[1] })
+        RenderStep::DemandReady -> (Reply::Demand { status: p[0], ticket: p[2] })
+        _ -> (Reply::Presented { status: p[0] })
+    }
+}
+machine view(p: &[u64; 4096]) -> View {
+    View { status: p[0], epoch: p[1], width: p[2], height: p[3],
+        frames: (p[4] & NO_FRAMES) == 0u64, requested: (p[4] & FRAME_REQUESTED) != 0u64,
+        more: (p[5] & MORE) != 0u64, input: input(p) }
+}
+machine input(p: &[u64; 4096]) -> Input {
+    transition p[5] & 255u64 {
+        POINTER -> (Input::Pointer { channel: p[5] >> 32u64, group: (p[5] >> 17u64) & 32767u64,
+            buttons: (p[5] >> 8u64) & 7u64, x: p[6], y: p[7] })
+        KEY -> (Input::Key { group: (p[5] >> 17u64) & 32767u64, code: p[6], action: p[7] })
+        CANCEL -> (Input::Cancel { channel: p[5] >> 32u64, retire: false })
+        RETIRED -> (Input::Cancel { channel: p[5] >> 32u64, retire: true })
+        _ -> (Input::Other)
+    }
+}
+machine awakened(p: &[u64; 4096]) -> Completion {
+    transition p[9] {
+        0u64 -> (Completion { transport_status: 0u64, reply: Reply::Wake })
+        1u64 -> (Completion { transport_status: 0u64, reply: Reply::Control { loss: p[0] == LOSS } })
+        _ -> (Completion { transport_status: p[9], reply: Reply::Complete })
+    }
+}

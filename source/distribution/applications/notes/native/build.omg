@@ -1,6 +1,0 @@
-machine build(builder: &mut Build) {
-    Build::application(builder, "cathedral_notes_native");
-    Build::depend_as(builder, "app", Source::Path { location: "../app" });
-    Build::select_provider<app::Notes, app::NotesProvider>(builder, CompositionMode::Independent);
-    Build::bind(builder, linux_x86_64::ProgramEntry, main);
-}

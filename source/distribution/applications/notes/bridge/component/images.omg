@@ -1,0 +1,72 @@
+module images;
+use app::state::State;
+use app::operations::Decoration;
+use app::operations::Image;
+use app::rendering::pixels;
+use host::main;
+use protocol::main;
+public machine text(s: &State, p: &mut [u64; 4096], offset: u64, words: u64) -> u64 {
+    message(p, 46080u64, offset, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64);
+    text_pixels(s, p, offset, words);
+    p[8] = ((words as u64 in Saturating) * 8) as u64;
+    STAGE
+}
+public machine publish(p: &mut [u64; 4096], image: Image) -> u64 {
+    message(p, SURFACE_IMAGE, image.epoch, image.surface, image.x, image.y, image.width, image.height, image.width);
+    EXCHANGE
+}
+public machine decorate(s: &State, p: &mut [u64; 4096], image: Image, kind: Decoration) -> u64 {
+    let operation: u64 = publish(p, image);
+    transition kind {
+        Decoration::Close -> pack(s, p, 0u64, 160u64)
+        Decoration::Temporary -> pack(s, p, 1u64, 1440u64)
+        Decoration::Tabs -> pack(s, p, 2u64, 496u64)
+    }
+    machine pack(s: &State, p: &mut [u64; 4096], kind: u64, words: u64) -> u64 {
+        decoration(s, p, kind, words);
+        p[8] = ((words as u64 in Saturating) * 8) as u64;
+        EXCHANGE
+    }
+}
+public machine text_pixels(s: &State, p: &mut [u64; 4096], offset: u64, words: u64) {
+    transition {
+        _ -> fill(s, p, offset, words, 0u64)
+    }
+    state fill(s: &State, p: &mut [u64; 4096], offset: u64, words: u64, i: u64) {
+        transition i < words && i < 4080u64 && offset < 46080u64 {
+            true -> pair(s, p, offset, words, i)
+            _ -> done()
+        }
+    }
+    state pair(s: &State, p: &mut [u64; 4096], offset: u64, words: u64, i: u64) requires i < 4080u64 && offset < 46080u64 {
+        let at: u64 = offset / 4u64 + i * 2u64;
+        let lo: u64 = pixels::text_pixel(s, at);
+        let hi: u64 = pixels::text_pixel(s, at + 1u64);
+        p[16u64 + i] = lo | ((hi & 4294967295u64) << 32u64);
+        transition {
+            _ -> fill(s, p, offset, words, i + 1u64)
+        }
+    }
+    state done() {}
+}
+
+public machine decoration(s: &State, p: &mut [u64; 4096], kind: u64, words: u64) {
+    transition {
+        _ -> fill(s, p, kind, words, 0u64)
+    }
+    state fill(s: &State, p: &mut [u64; 4096], kind: u64, words: u64, i: u64) {
+        transition i < words && i < 1440u64 {
+            true -> pair(s, p, kind, words, i)
+            _ -> done()
+        }
+    }
+    state pair(s: &State, p: &mut [u64; 4096], kind: u64, words: u64, i: u64) requires i < 1440u64 {
+        let lo: u64 = pixels::decoration_pixel(s, kind, i * 2u64);
+        let hi: u64 = pixels::decoration_pixel(s, kind, i * 2u64 + 1u64);
+        p[16u64 + i] = lo | ((hi & 4294967295u64) << 32u64);
+        transition {
+            _ -> fill(s, p, kind, words, i + 1u64)
+        }
+    }
+    state done() {}
+}

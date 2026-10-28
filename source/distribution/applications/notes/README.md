@@ -6,7 +6,8 @@ realm, F1 save/reconcile, F2 reload, F3 duplicate, F4 next, F6 cursor preference
 and an app-owned X with Save/Discard/Cancel. Optional storage can be withheld;
 temporary notes retain drafts and close protection.
 
-Start at [app/main.omg](app/main.omg), then follow:
+Start at [app/main.omg](app/main.omg): advance completed work, retaining storage
+uncertainty and optional service refusal. Then follow:
 
 - [session/session.omg](app/session/session.omg): acquire scoped services,
   receive input, dispatch editor work, render and answer owner control.
@@ -26,9 +27,18 @@ Start at [app/main.omg](app/main.omg), then follow:
   frame demand and publication. [pixels.omg](app/rendering/pixels.omg) draws
   four rows around the caret, the close dialog and decorations. Text images are
   staged in two bounded chunks; unchanged decorations remain at the compositor.
-- [state.omg](app/state.omg): app-owned state and named continuation points.
+- [state.omg](app/state.omg): app-owned state and typed continuation points.
+  [operations.omg](app/operations.omg) describes requested work, completed replies,
+  input, images and document bytes without native packet offsets.
 
-The [native consumer](native/main.omg) builds an independent Omega export.
+The [component bridge](bridge/component/main.omg) decodes a completed operation,
+advances the app and encodes its next request. `replies.omg` and `commands.omg`
+own transport interpretation; `records.omg` transfers bounded bytes while the
+document codec owns `NTS1` validation. `images.omg` packs pixels supplied by the
+app's renderer, and `diagnostics.omg` encodes the existing startup messages.
+Neither the bridge nor the Rust host decides how to edit, save or close Notes.
+
+The [native consumer](bridge/native/main.omg) builds an independent Omega export.
 The [Rust executable](../../../../source-rs/distribution/applications/notes/main.rs)
 declares the existing imports and enters the shared
 [platform host](../../../../source-rs/platform/libraries/omega-app/README.md).
@@ -47,6 +57,6 @@ oracle. Native startup diagnostics retain the `note-loaded` marker; detailed Rus
 editor timing/probe markers have not been ported.
 
 Build with `python tools/omega-component/build.py
-source/distribution/applications/notes/native` or let Cargo prepare the component.
+source/distribution/applications/notes/bridge/native` or let Cargo prepare the component.
 Run `cargo test --locked -p cathedral-notes` from `source-rs/` on Windows to replay
 the compiled export; the integrated desktop runs it in QEMU.

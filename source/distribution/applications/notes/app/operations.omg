@@ -1,0 +1,91 @@
+module operations;
+
+// App requests and completed work. Transport layout belongs to bridge/.
+public data Input [copy] {
+    case Other;
+    case Pointer(channel: u64, group: u64, buttons: u64, x: u64, y: u64);
+    case Key(group: u64, code: u64, action: u64);
+    case Cancel(channel: u64, retire: bool);
+}
+public data View [copy] {
+    status: u64;
+    epoch: u64;
+    width: u64;
+    height: u64;
+    frames: bool;
+    requested: bool;
+    more: bool;
+    input: Input;
+}
+public data Record [copy] {
+    length: u64;
+    bytes: [u8; 244];
+}
+public data StorageReply [copy] {
+    status: u64;
+    result: StorageResult;
+}
+public data StorageResult [copy] {
+    case Bound(realm: u64);
+    case Listed(count: u64, entries: [u64; 6]);
+    case Head(revision: u64, length: u64);
+    case Read(revision: u64, reported: u64, record: Record);
+    case Saved(object: u64, revision: u64);
+    case Copied(object: u64);
+}
+public data Reply [copy] {
+    case Complete;
+    case View(view: View);
+    case Storage(reply: StorageReply);
+    case Surface(status: u64, handle: u64);
+    case Presented(status: u64);
+    case Demand(status: u64, ticket: u64);
+    case Cursor(status: u64);
+    case Wake;
+    case Control(loss: bool);
+}
+public data Completion {
+    transport_status: u64;
+    reply: Reply;
+}
+public data Report [copy] {
+    case Loss(changed: bool);
+    case Health(revision: u64, length: u64, error: u64, changed: bool, count: u64, selected: u64);
+}
+public data Decoration [copy] {
+    case Close;
+    case Temporary;
+    case Tabs;
+}
+public data Image [copy] {
+    epoch: u64;
+    surface: u64;
+    x: u64;
+    y: u64;
+    width: u64;
+    height: u64;
+}
+public data Command [copy] {
+    case Exit;
+    case AcquireInteraction;
+    case AcquireStorage;
+    case BindStorage;
+    case List(realm: u64, after: u64);
+    case Head(object: u64);
+    case Read(object: u64, revision: u64, length: u64);
+    case Publish(object: u64, revision: u64, realm: u64, record: Record);
+    case Copy(object: u64, revision: u64, realm: u64);
+    case Poll;
+    case View;
+    case Cursor(epoch: u64, channel: u64, hidden: bool);
+    case CreateSurface(epoch: u64, rank: u64);
+    case Paint(epoch: u64, surface: u64, width: u64, height: u64, color: u64);
+    case StageText(offset: u64, words: u64);
+    case PublishText(image: Image);
+    case Decorate(image: Image, decoration: Decoration);
+    case FrameDemand(epoch: u64);
+    case FrameReady(epoch: u64, ticket: u64);
+    case Wait;
+    case Control(report: Report);
+    case Loaded(temporary: bool);
+}

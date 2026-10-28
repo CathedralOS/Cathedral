@@ -1,32 +1,88 @@
-use host::main;
+module session::keys;
+use operations::Command;
 use protocol::main;
-use state;
+use state::State;
+use state::LoadMode;
 use document::document;
 use session::session;
 use session::cursors;
 use storage::storage;
-public machine keys(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-    transition s.snapshot[6] == 12u64 && s.snapshot[7] == PRESS { true -> cursors(s, p) _ -> editor(s, p) }
-    state cursors(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.cursor_index = 0u64; cursor_next(s, p) }
-    state editor(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        transition !s.closing && s.snapshot[7] != 0u64 { true -> command(s, p) _ -> after_input(s, p) }
+public machine keys(s: &mut State, code: u64, action: u64) -> Command {
+    transition code == 12u64 && action == PRESS {
+        true -> cursors(s)
+        _ -> editor(s, code, action)
     }
-    state command(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        transition s.snapshot[6] == 6u64 || s.snapshot[6] == 7u64 || s.snapshot[6] == 9u64 || s.snapshot[6] == 10u64 { true -> function(s, p) _ -> text(s, p) }
+    state cursors(s: &mut State) -> Command {
+        s.cursor_index = 0u64;
+        session::cursors::cursor_next(s)
     }
-    state text(s: &mut State, p: &mut [u64; 4096]) -> u64 { let key: u64 = s.snapshot[6]; edit(s, key); after_input(s, p) }
-    state function(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition s.snapshot[7] == PRESS { true -> available(s, p) _ -> after_input(s, p) } }
-    state available(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition s.temporary { true -> failed(s, p, DENIED) _ -> dispatch(s, p) } }
-    state dispatch(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        transition s.snapshot[6] { 6u64 -> f1(s, p) 7u64 -> f2(s, p) 9u64 -> f3(s, p) _ -> f4(s, p) }
+    state editor(s: &mut State, code: u64, action: u64) -> Command {
+        transition !s.closing && action != 0u64 {
+            true -> command(s, code, action)
+            _ -> session::session::after_input(s)
+        }
     }
-    state f1(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        s.loading = 2u64;
-        transition s.error == 0u64 && (changed(s) || s.revision == 0u64) { true -> save(s, p) _ -> load(s, p) }
+    state command(s: &mut State, code: u64, action: u64) -> Command {
+        transition code == 6u64 || code == 7u64 || code == 9u64 || code == 10u64 {
+            true -> function(s, code, action)
+            _ -> text(s, code)
+        }
     }
-    state f2(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.loading = 1u64; load(s, p) }
-    state f3(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition s.error == 0u64 && !changed(s) && s.revision != 0u64 { true -> duplicate(s, p) _ -> unchanged(s, p) } }
-    state f4(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition s.error == 0u64 && !changed(s) && s.count > 1u64 && s.count <= 8u64 && s.current < 8u64 { true -> next(s, p) _ -> unchanged(s, p) } }
-    state next(s: &mut State, p: &mut [u64; 4096]) -> u64 requires s.current < 8u64 && s.count > 1u64 { s.current = (s.current + 1u64) % s.count; s.loading = 1u64; head(s, p) }
-    state unchanged(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.error = 0u64; s.dirty = true; after_input(s, p) }
+    state text(s: &mut State, code: u64) -> Command {
+        document::document::edit(s, code);
+        session::session::after_input(s)
+    }
+    state function(s: &mut State, code: u64, action: u64) -> Command {
+        transition action == PRESS {
+            true -> available(s, code)
+            _ -> session::session::after_input(s)
+        }
+    }
+    state available(s: &mut State, code: u64) -> Command {
+        transition s.temporary {
+            true -> storage::storage::failed(s, DENIED)
+            _ -> dispatch(s, code)
+        }
+    }
+    state dispatch(s: &mut State, code: u64) -> Command {
+        transition code {
+            6u64 -> f1(s)
+            7u64 -> f2(s)
+            9u64 -> f3(s)
+            _ -> f4(s)
+        }
+    }
+    state f1(s: &mut State) -> Command {
+        s.loading = LoadMode::Reconcile;
+        transition s.error == 0u64 && (document::document::changed(s) || s.revision == 0u64) {
+            true -> storage::storage::save(s)
+            _ -> storage::storage::load(s)
+        }
+    }
+    state f2(s: &mut State) -> Command {
+        s.loading = LoadMode::ReplaceDraft;
+        storage::storage::load(s)
+    }
+    state f3(s: &mut State) -> Command {
+        transition s.error == 0u64 && !document::document::changed(s) && s.revision != 0u64 {
+            true -> storage::storage::duplicate(s)
+            _ -> unchanged(s)
+        }
+    }
+    state f4(s: &mut State) -> Command {
+        transition s.error == 0u64 && !document::document::changed(s) && s.count > 1u64 && s.count <= 8u64 && s.current < 8u64 {
+            true -> next(s)
+            _ -> unchanged(s)
+        }
+    }
+    state next(s: &mut State) -> Command requires s.current < 8u64 && s.count > 1u64 {
+        s.current = (s.current + 1u64) % s.count;
+        s.loading = LoadMode::ReplaceDraft;
+        storage::storage::head(s)
+    }
+    state unchanged(s: &mut State) -> Command {
+        s.error = 0u64;
+        s.dirty = true;
+        session::session::after_input(s)
+    }
 }
