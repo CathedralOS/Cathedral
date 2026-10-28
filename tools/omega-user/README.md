@@ -4,14 +4,28 @@
 `runtime::entry::Program`, assembles the platform-owned native entry and kernel
 call leaves, and links an ELF accepted by the reference kernel. It does not
 translate Omega, generate app logic, link Rust, or import a Linux runtime.
-Use the existing [qualified compiler](../omega-ui/README.md#build), plus LLVM
-`clang` and `ld.lld` on PATH. The other agent's compiler checkout need not move.
+Use the standalone-runtime compiler below, plus LLVM `clang` and `ld.lld` on PATH.
+The desktop's compiler and the other agent's checkout need not move.
 
 ```powershell
-python tools/omega-user/build.py source/distribution/lab/user-entry/native
-python tools/omega-user/run_test.py
+python tools/omega-user/build.py source/distribution/lab/user-entry/native --compiler path/to/new/omega.exe
+python tools/omega-user/run_test.py --compiler path/to/new/omega.exe
+python tools/omega-user/connection_test.py --compiler path/to/new/omega.exe
 python -m unittest discover -s tools/omega-user -p "test_*.py"
 ```
+
+The v4 connection witness is qualified with source `ccb6d4791d8d4`,
+[Omega #525](https://github.com/CathedralOS/Omega/pull/525), release opt-level 3
+(published as `a0bc08225d743ab888090f10476817c485820807`).
+Its compiler SHA-256 is
+`089d89f492f6916c8d5e4fef217e1fca4107679cb7d438425a0733de5fe4cfce`.
+The fixes preserve enum-case tail transfers and their local loans through native
+component compilation. Keep this compiler separate from F5's
+[qualified desktop producer](../omega-ui/README.md#build): the newer compiler
+has removed `state`, while that broader source migration remains unfinished.
+`--compiler` explicitly chooses the producer for these standalone runs.
+Compilation is capped at 4 GiB, five minutes and one checking worker by default.
+Component and UI builds share one compiler slot across Cargo processes.
 
 The compiler may request initial review of the runtime's native boundaries.
 Inspect the review path printed in `build/omega-component/distribution/lab/user-entry/native/review.log`
@@ -23,7 +37,7 @@ range bounds, blocking and calling convention. Accept the inspected rows in the
 generated review document and resume with the same qualified compiler:
 
 ```powershell
-build/omega-ui/compiler/target/release/omega.exe update --project source/distribution/lab/user-entry/native --offline --resume
+python tools/omega-component/process.py 4294967296 path/to/new/omega.exe update --project source/distribution/lab/user-entry/native --offline --resume
 ```
 
 Local locks contain checkout-specific identities and are ignored. The builder

@@ -28,7 +28,7 @@ def main():
     print(f'Standalone Omega entry/IPC/parking PASS: {output}', flush=True)
 
 
-def boot(image, output, clock, timeout):
+def boot(image, output, clock, timeout, *, composition=None, verifier=None):
     output.mkdir(parents=True)
     # Own this test's composition; never inherit another profile's grants.
     environment = {key: value for key, value in os.environ.items() if not key.startswith('CATHEDRAL_')}
@@ -37,6 +37,8 @@ def boot(image, output, clock, timeout):
                        CATHEDRAL_IMAGE_COUNT='0', CATHEDRAL_DYNAMIC_TASKS='0',
                        CATHEDRAL_INIT_CLOCK=str(int(clock)), CATHEDRAL_INIT_PRIVATE_PAGES='1',
                        CATHEDRAL_INIT_SHARED_PAGES='1')
+    if composition is not None:
+        environment.update(composition)
     cargo = ROOT / 'build/boot-harness-rs/cargo'
     with (output / 'kernel-build.log').open('w', encoding='utf-8') as log:
         subprocess.run(['cargo', 'build', '--locked', '--release', '--package', 'cathedral-boot-uefi',
@@ -59,7 +61,7 @@ def boot(image, output, clock, timeout):
             raise RuntimeError(f'Clock authority/parking witness failed; see {directory / "serial.log"}')
 
     capture.run(command, output, timeout, getattr(subprocess, 'CREATE_NO_WINDOW', 0),
-                'initial program stopped:', verify, allow_initial_exit=True)
+                'initial program stopped:', verifier or verify, allow_initial_exit=True)
 
 
 if __name__ == '__main__':

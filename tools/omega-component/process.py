@@ -7,6 +7,7 @@ job so neither the caller nor other compiler sessions enter it.
 import ctypes
 import os
 from pathlib import Path
+from locking import exclusive
 import signal
 import subprocess
 import sys
@@ -16,6 +17,14 @@ COMPILER_TIMEOUT = 300
 
 
 def run(command, **kwargs):
+    # Cargo can build several independent apps concurrently. Per-process limits
+    # alone would multiply their aggregate memory allowance during an F5 build.
+    slot = Path(__file__).resolve().parents[2] / 'build/omega-component/.compiler.lock'
+    with exclusive(slot):
+        return _bounded(command, **kwargs)
+
+
+def _bounded(command, **kwargs):
     wrapped = [sys.executable, str(Path(__file__).resolve()), str(COMPILER_MEMORY), *map(str, command)]
     with subprocess.Popen(wrapped, start_new_session=os.name != 'nt', **kwargs) as child:
         try:

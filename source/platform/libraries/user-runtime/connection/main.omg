@@ -1,0 +1,144 @@
+module connection::main;
+// One retained v4 request at a time: acquire setup custody -> publish once ->
+// reconcile mailbox/typed grant -> release on failure. Peer bytes never grant
+// authority. Wire peer: source-rs/platform/libraries/user-runtime/connection/.
+use kernel::Gate;
+use kernel::Kernel;
+use kernel;
+use memory::main::Writer;
+use memory::main::Reader;
+use notification::main::Bell;
+use connection::setup;
+use connection::mailbox;
+use connection::incoming;
+use connection::custody;
+use time;
+
+public data Peer {
+    sender: u64;
+    receiver: u64;
+    writer: Writer;
+    reader: Reader;
+    bell: Bell;
+    signal: u64;
+    sent: u64;
+    received: u64;
+    next_id: u64;
+    pending: u64;
+    fault: u64;
+    frame: Frame;
+    has_frame: bool;
+    grant: u64;
+    grant_id: u64;
+    partial: bool;
+    partial_deadline: u64;
+}
+public data Frame [copy] {
+    id: u64;
+    attachment: u64;
+    bytes: u64;
+    payload: [u64; 8];
+}
+public data Reply {
+    case Pending;
+    case Complete(frame: Frame, notification: u64);
+    case Failed(code: u64);
+}
+
+// Takes custody of both supplied endpoints, including on setup failure. The
+// caller supplies a zero-initialized Peer; it must close before reusing it.
+public machine connect(gate: &Gate, peer: &mut Peer, sender: u64, receiver: u64, deadline: u64) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    peer.sender = sender;
+    peer.receiver = receiver;
+    let status: u64 = block setup::connect(gate, peer, deadline);
+    transition status == 0u64 {
+        true -> (0u64)
+        _ -> block fail(gate, peer, status)
+    }
+}
+public machine begin(gate: &Gate, peer: &mut Peer, payload: &[u64; 8]) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    transition peer.fault != 0u64 {
+        true -> (peer.fault)
+        _ -> block available(gate, peer, payload)
+    }
+    machine available(gate: &Gate, peer: &mut Peer, payload: &[u64; 8]) -> u64 reaches Kernel {
+        transition peer.pending != 0u64 {
+            true -> (kernel::BUSY)
+            _ -> block identified(gate, peer, payload)
+        }
+    }
+    machine identified(gate: &Gate, peer: &mut Peer, payload: &[u64; 8]) -> u64 reaches Kernel {
+        let previous: u64 = peer.next_id;
+        transition previous < 0xffffffffffffffffu64 {
+            true -> block publish(gate, peer, payload, previous + 1u64)
+            _ -> block fail(gate, peer, kernel::IO_ERROR)
+        }
+    }
+}
+machine publish(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], id: u64) -> u64 reaches Kernel {
+    let status: u64 = block mailbox::send(gate, peer, id, payload);
+    transition status == 0u64 {
+        true -> block published(gate, peer, id)
+        // Backpressure before publication is safe to retry; all other errors
+        // retire the connection. Never replay a possibly exposed operation.
+        _ -> block send_failed(gate, peer, status)
+    }
+}
+machine published(gate: &Gate, peer: &mut Peer, id: u64) -> u64 reaches Kernel {
+    peer.next_id = id;
+    peer.pending = id;
+    let status: u64 = Kernel::notify_signal(gate, peer.signal);
+    transition status == 0u64 {
+        true -> (0u64)
+        _ -> block fail(gate, peer, status)
+    }
+}
+machine send_failed(gate: &Gate, peer: &mut Peer, status: u64) -> u64 reaches Kernel {
+    transition status == kernel::WOULD_BLOCK {
+        true -> (status)
+        _ -> block fail(gate, peer, status)
+    }
+}
+public machine poll(gate: &Gate, peer: &mut Peer, now: u64) -> Reply
+    reaches Kernel blocks; invokes Kernel; {
+    transition peer.fault != 0u64 {
+        true -> (Reply::Failed { code: peer.fault })
+        _ -> block polled(gate, peer, now)
+    }
+    machine polled(gate: &Gate, peer: &mut Peer, now: u64) -> Reply reaches Kernel {
+        let reply: Reply = block incoming::poll(gate, peer, now);
+        transition reply {
+            Reply::Failed { code } -> block retired(gate, peer, code)
+            _ -> (reply)
+        }
+    }
+    machine retired(gate: &Gate, peer: &mut Peer, code: u64) -> Reply reaches Kernel {
+        let ignored: u64 = block fail(gate, peer, code);
+        Reply::Failed { code: code }
+    }
+}
+// Poll drains/rechecks first. A wake is only a hint; callers always poll again,
+// including after a deadline or peer-close result to collect a final publication.
+public machine wait(gate: &Gate, peer: &Peer, deadline: u64) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    let mut interests: [u64; 8];
+    interests[0] = 2u64;
+    interests[1] = peer.bell.wait;
+    interests[2] = 0u64;
+    interests[3] = peer.receiver;
+    transition peer.partial && time::reached(deadline, peer.partial_deadline) {
+        true -> block Kernel::wait(gate, &interests, 2u64, peer.partial_deadline)
+        _ -> block Kernel::wait(gate, &interests, 2u64, deadline)
+    }
+}
+public machine close(gate: &Gate, peer: &mut Peer) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    block fail(gate, peer, kernel::PEER_CLOSED)
+}
+machine fail(gate: &Gate, peer: &mut Peer, code: u64) -> u64 reaches Kernel {
+    peer.fault = code;
+    block custody::release(gate, peer);
+    code
+}

@@ -9,14 +9,21 @@ use channel;
 use timing;
 use shared;
 use notification;
+use connection;
 
 public ProgramProvider satisfies Program {
     machine run(gate: &Gate, first: u64, second: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
-        let startup: Startup = start(gate);
-        transition startup {
-            Startup::Ready { environment } -> block environment_ready(gate, environment.count)
-            _ -> (101u64)
+        transition first == 2u64 {
+            true -> block connection::check(gate, second)
+            _ -> block primitives(gate)
         }
+    }
+}
+machine primitives(gate: &Gate) -> u64 reaches Kernel {
+    let startup: Startup = start(gate);
+    transition startup {
+        Startup::Ready { environment } -> block environment_ready(gate, environment.count)
+        _ -> (101u64)
     }
 }
 machine environment_ready(gate: &Gate, endpoints: u64) -> u64 reaches Kernel {

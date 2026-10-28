@@ -5,6 +5,8 @@ mod admission;
 mod connection;
 mod delivery;
 mod notifications;
+#[cfg(feature = "omega-peer")]
+mod omega_peer;
 mod replies;
 mod resources;
 mod scenario;
@@ -21,6 +23,10 @@ use cathedral_user_runtime::{
 };
 cathedral_user_runtime::entry_with_environment!(main);
 fn main(role: u64, mode: u64, environment: cathedral_user_runtime::task::Environment) -> u64 {
+    #[cfg(feature = "omega-peer")]
+    if role <= 1 {
+        return omega_peer::run(role, mode, environment);
+    }
     if role != 0 && (50..=103).contains(&mode) {
         return connection::worker(mode, environment);
     }

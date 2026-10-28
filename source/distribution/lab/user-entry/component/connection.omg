@@ -1,0 +1,142 @@
+module connection;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::main::Startup;
+use runtime::connection::main::Peer;
+use runtime::connection::main::Reply;
+use runtime::connection::main::Frame;
+use runtime::time::Tick;
+use connection_faults;
+
+// The peer is the existing Rust Server, running in a separately isolated task.
+public machine check(gate: &Gate, mode: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let startup: Startup = runtime::main::start(gate);
+    transition startup {
+        Startup::Ready { environment } -> (block environment_ready(gate, mode, environment))
+        _ -> (160u64)
+    }
+}
+machine environment_ready(gate: &Gate, mode: u64, environment: runtime::main::Environment) -> u64 reaches Kernel {
+    transition environment.count == 2u64 {
+        true -> (block timed(gate, mode, environment))
+        _ -> (161u64)
+    }
+}
+machine timed(gate: &Gate, mode: u64, environment: runtime::main::Environment) -> u64 reaches Kernel {
+    let clock: u64 = Kernel::clock(gate);
+    let tick: Tick = runtime::time::read(gate, clock);
+    transition tick {
+        Tick::Read { value } -> (block connected(gate, mode, environment, clock, value))
+        _ -> (162u64)
+    }
+}
+machine connected(gate: &Gate, mode: u64, environment: runtime::main::Environment, clock: u64, now: u64) -> u64 reaches Kernel {
+    let mut peer: Peer;
+    let status: u64 = block runtime::connection::main::connect(gate, &mut peer,
+        environment.endpoints[0], environment.endpoints[1], runtime::time::after(now, 300u64));
+    transition mode {
+        2u64 -> refused(peer, status, kernel::IO_ERROR)
+        3u64 -> refused(peer, status, kernel::TIMED_OUT)
+        _ -> (block connected_mode(gate, &mut peer, clock, mode, status))
+    }
+}
+machine connected_mode(gate: &Gate, peer: &mut Peer, clock: u64, mode: u64, status: u64) -> u64 reaches Kernel {
+    transition mode >= 94u64 && status == 0u64 {
+        true -> (block connection_faults::check(gate, peer, clock, mode))
+        _ -> (block ready(gate, peer, clock, status))
+    }
+}
+machine refused(peer: Peer, status: u64, expected: u64) -> u64 {
+    transition status == expected && peer.sender == 0u64 && peer.receiver == 0u64
+        && peer.writer.handle == 0u64 && peer.reader.handle == 0u64 && peer.bell.wait == 0u64
+        && peer.bell.control == 0u64 && peer.signal == 0u64 {
+        true -> (0u64)
+        _ -> (163u64)
+    }
+}
+machine ready(gate: &Gate, peer: &mut Peer, clock: u64, status: u64) -> u64 reaches Kernel {
+    transition status == 0u64 {
+        true -> (block request(gate, peer, clock, 1u64))
+        _ -> (block finish(gate, peer, 164u64))
+    }
+}
+machine request(gate: &Gate, peer: &mut Peer, clock: u64, index: u64 [1..=16]) -> u64 reaches Kernel {
+    let mut payload: [u64; 8];
+    payload[0] = index;
+    payload[3] = 0xabcdef9876543210u64;
+    payload[7] = index;
+    let tick: Tick = runtime::time::read(gate, clock);
+    transition tick {
+        Tick::Read { value } -> (block begin(gate, peer, clock, index, &payload, runtime::time::after(value, 300u64)))
+        _ -> (block finish(gate, peer, 165u64))
+    }
+}
+machine begin(gate: &Gate, peer: &mut Peer, clock: u64, index: u64 [1..=16], payload: &[u64; 8], deadline: u64) -> u64 reaches Kernel {
+    let status: u64 = block runtime::connection::main::begin(gate, peer, payload);
+    transition status == 0u64 {
+        true -> (block busy(gate, peer, clock, index, payload, deadline))
+        _ -> (block finish(gate, peer, 166u64))
+    }
+}
+machine busy(gate: &Gate, peer: &mut Peer, clock: u64, index: u64 [1..=16], payload: &[u64; 8], deadline: u64) -> u64 reaches Kernel {
+    let status: u64 = block runtime::connection::main::begin(gate, peer, payload);
+    transition status == kernel::BUSY {
+        true -> (block poll(gate, peer, clock, index, deadline))
+        _ -> (block finish(gate, peer, 167u64))
+    }
+}
+machine poll(gate: &Gate, peer: &mut Peer, clock: u64, index: u64 [1..=16], deadline: u64) -> u64 reaches Kernel {
+    let tick: Tick = runtime::time::read(gate, clock);
+    transition tick {
+        Tick::Read { value } -> (block polled(gate, peer, clock, index, deadline, value))
+        _ -> (block finish(gate, peer, 168u64))
+    }
+}
+machine polled(gate: &Gate, peer: &mut Peer, clock: u64, index: u64 [1..=16], deadline: u64, now: u64) -> u64 reaches Kernel {
+    let reply: Reply = block runtime::connection::main::poll(gate, peer, now);
+    transition reply {
+        Reply::Complete { frame, notification } -> (block received(gate, peer, clock, index, frame, notification))
+        Reply::Failed { code } -> (block finish(gate, peer, 169u64))
+        Reply::Pending -> (block pending(gate, peer, clock, index, deadline, now))
+    }
+}
+machine pending(gate: &Gate, peer: &mut Peer, clock: u64, index: u64 [1..=16], deadline: u64, now: u64) -> u64 reaches Kernel {
+    transition runtime::time::reached(now, deadline) {
+        true -> (block finish(gate, peer, 170u64))
+        _ -> (block waited(gate, peer, clock, index, deadline))
+    }
+}
+machine waited(gate: &Gate, peer: &mut Peer, clock: u64, index: u64 [1..=16], deadline: u64) -> u64 reaches Kernel {
+    let ignored: u64 = block runtime::connection::main::wait(gate, peer, deadline);
+    transition { _ -> (block poll(gate, peer, clock, index, deadline)) }
+}
+machine received(gate: &Gate, peer: &mut Peer, clock: u64, index: u64 [1..=16], frame: Frame, notification: u64) -> u64 reaches Kernel {
+    let rights: bool = release(gate, index, notification);
+    transition rights && frame.bytes == 64u64 && frame.payload[0] == index
+        && frame.payload[3] == 0xabcdef9876543210u64 && frame.payload[7] == index {
+        true -> (block next(gate, peer, clock, index))
+        _ -> (block finish(gate, peer, 171u64))
+    }
+}
+machine release(gate: &Gate, index: u64, notification: u64) -> bool reaches Kernel {
+    transition notification != 0u64 {
+        true -> released(gate, index, notification)
+        _ -> (index % 2u64 == 1u64)
+    }
+    machine released(gate: &Gate, index: u64, notification: u64) -> bool reaches Kernel {
+        let denied: u64 = Kernel::notify_signal(gate, notification);
+        let status: u64 = Kernel::notify_drop(gate, notification);
+        index % 2u64 == 0u64 && denied == 0xfffffffffffffff3u64 && status == 0u64
+    }
+}
+machine next(gate: &Gate, peer: &mut Peer, clock: u64, index: u64 [1..=16]) -> u64 reaches Kernel {
+    transition index < 16u64 {
+        true -> (block request(gate, peer, clock, index + 1u64))
+        _ -> (block finish(gate, peer, 0u64))
+    }
+}
+machine finish(gate: &Gate, peer: &mut Peer, result: u64) -> u64 reaches Kernel {
+    let ignored: u64 = block runtime::connection::main::close(gate, peer);
+    result
+}

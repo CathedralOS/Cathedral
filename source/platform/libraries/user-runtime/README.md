@@ -9,6 +9,16 @@ explicit release. [notification/main.omg](notification/main.omg) owns wake right
 and typed handoff. Both distinguish local custody from the peer's independent
 rights; releasing a producer never remotely removes an accepted reader.
 
+[connection/main.omg](connection/main.omg) owns a v4 client connection: setup,
+one outstanding request, mailbox/notification reconciliation and final cleanup.
+Descend into `setup.omg` for the existing Rust-compatible handshake,
+`mailbox.omg` for sequence/acknowledgement publication, `incoming.omg` for typed
+grant correlation and bounded partial replies, and `custody.omg` for release.
+Requests currently carry 64 bytes; replies carry up to 64 bytes and optionally
+one notification right. Unsupported attachment kinds retire the connection.
+The caller supplies a fresh zero-initialized `Peer` and closes it before disposal;
+reconnection uses a fresh value. An error never replays a published operation.
+
 [entry.omg](entry.omg) describes the temporary process entry:
 `Program::run(gate, first, second)`. The two kernel arguments remain ordinary
 data. Endpoint names come from the kernel's environment snapshot, and reading
@@ -28,8 +38,8 @@ borrow. Counts are checked Omega ranges. Allocation, mapping, release, yield, re
 and their callers acknowledge it. Scalar names alone grant no authority.
 
 This is a small platform runtime, **not the replacement for the Rust app host
-yet**. It has no general allocator, shared connection handshake, service
-acquisition or owner-control implementation. In particular, copied IPC is the
+yet**. It has no general allocator, server handshake, service acquisition or
+owner-control implementation. In particular, copied IPC is the
 setup/grant mechanism; it must not become a fallback for the desktop's shared
 service protocol. The ordinary Background executable still uses that Rust host.
 The runtime has only been qualified on x86-64.

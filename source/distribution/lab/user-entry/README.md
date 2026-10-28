@@ -13,7 +13,7 @@ run. The actual process enters through the platform's native entry adapter.
 Run from the repository root:
 
 ```powershell
-python tools/omega-user/run_test.py
+python tools/omega-user/run_test.py --compiler path/to/new/omega.exe
 ```
 
 The runner boots the same Omega ELF twice under the ordinary Rust kernel,
@@ -38,6 +38,24 @@ Artifacts and serial logs live in `build/omega-user/tests/<timestamp>/`.
 The guest's proof is actual process execution, not a mocked table callback.
 
 This witness establishes the entry/syscall foundation needed by standalone
-Background. It does not test the matrix broker, shared mailboxes, notification
-races between separate processes, image attachments or owner-control service.
-Those remain required before changing the ordinary F5 Background executable.
+Background. The separate connection run below adds cross-process shared transport.
+The matrix broker, image attachments and owner-control server remain required
+before changing the ordinary F5 Background executable.
+
+## Rust service interoperability
+
+`component/connection.omg` drives sixteen requests through the ordinary Rust
+`Server` in `source-rs/distribution/lab/channels/omega_peer.rs`. Alternating replies
+carry delegated notification rights. `component/connection_faults.omg` then
+exercises malformed correlation, grant-only and frame-only expiry, a wrong-kind
+grant and a delayed valid pair against the existing malicious-peer fixtures.
+The parent also tests malformed setup and a live stalled handshake, and checks
+memory, channel and notification budgets return to baseline after each case.
+
+```powershell
+python tools/omega-user/connection_test.py --compiler path/to/new/omega.exe
+```
+
+Use the standalone-runtime producer documented in
+[the build guide](../../../../tools/omega-user/README.md), not F5's older compiler.
+Logs live in `build/omega-user/connections/<timestamp>/`.

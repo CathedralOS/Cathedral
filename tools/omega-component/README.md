@@ -33,6 +33,9 @@ Compiler review and compilation run through [process.py](process.py), with a
 limits the whole compiler process tree and closes it if the wrapper exits.
 The wrapper joins the job before starting the compiler; other sessions remain
 outside it. On Unix the inherited address-space limit applies per process.
+All component and UI build invocations also acquire one shared compiler slot,
+so parallel Cargo app builds cannot multiply the compiler memory allowance.
+Waiting for that slot happens before the compilation deadline starts.
 These limits make runaway compilation fail locally instead of exhausting the
 host. They do not turn an incomplete compile into a successful package.
 The default is one checking worker, which kept the current full client review

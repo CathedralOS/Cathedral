@@ -1,0 +1,145 @@
+module connection::incoming;
+// Drain the wake hint -> accept one typed grant -> snapshot the mailbox -> join
+// by request ID. A final complete reply may outlive endpoint closure. Unknown
+// attachment families are refused, never interpreted as an ungranted reply.
+use kernel::Gate;
+use kernel::Kernel;
+use kernel;
+use connection::main::Peer;
+use connection::main::Reply;
+use connection::mailbox;
+use time;
+
+public machine poll(gate: &Gate, peer: &mut Peer, now: u64) -> Reply
+    reaches Kernel blocks; invokes Kernel; {
+    transition peer.partial && time::reached(now, peer.partial_deadline) {
+        true -> (Reply::Failed { code: kernel::TIMED_OUT })
+        _ -> block drain(gate, peer, now)
+    }
+}
+machine drain(gate: &Gate, peer: &mut Peer, now: u64) -> Reply reaches Kernel {
+    let hint: u64 = block Kernel::notify_wait(gate, peer.bell.wait, now, 1u64);
+    let transfer: u64 = block grant(gate, peer, now);
+    transition transfer == 0u64 || transfer == kernel::TIMED_OUT || transfer == kernel::PEER_CLOSED {
+        true -> block frame(gate, peer, now, hint, transfer)
+        _ -> (Reply::Failed { code: transfer })
+    }
+}
+machine grant(gate: &Gate, peer: &mut Peer, now: u64) -> u64 reaches Kernel {
+    let mut interests: [u64; 8];
+    interests[1] = peer.receiver;
+    let ready: u64 = block Kernel::wait(gate, &interests, 1u64, now);
+    transition ready == 0u64 {
+        true -> block receive(gate, peer)
+        _ -> (ready)
+    }
+    machine receive(gate: &Gate, peer: &mut Peer) -> u64 reaches Kernel {
+        let mut packet: [u64; 10];
+        let status: u64 = block Kernel::notify_receive(gate, peer.receiver, &mut packet);
+        transition status < kernel::ERROR_BASE {
+            true -> accepted(gate, peer, status, packet)
+            _ -> (status)
+        }
+    }
+    machine accepted(gate: &Gate, peer: &mut Peer, status: u64, packet: [u64; 10]) -> u64 reaches Kernel {
+        transition peer.grant != 0u64 {
+            true -> duplicate(gate, packet[1])
+            _ -> installed(peer, status, packet)
+        }
+    }
+    machine duplicate(gate: &Gate, handle: u64) -> u64 reaches Kernel {
+        let ignored: u64 = Kernel::notify_drop(gate, handle);
+        kernel::IO_ERROR
+    }
+    machine installed(peer: &mut Peer, status: u64, packet: [u64; 10]) -> u64 {
+        peer.grant = packet[1];
+        peer.grant_id = packet[2];
+        transition status == 8u64 && packet[0] == 8u64 && packet[1] != 0u64
+            && packet[2] != 0u64 && packet[2] == peer.pending {
+            true -> (0u64)
+            _ -> (kernel::IO_ERROR)
+        }
+    }
+}
+machine frame(gate: &Gate, peer: &mut Peer, now: u64, hint: u64, transfer: u64) -> Reply reaches Kernel {
+    transition peer.has_frame {
+        true -> reconcile(peer, now, hint, transfer)
+        _ -> block receive(gate, peer, now, hint, transfer)
+    }
+    machine receive(gate: &Gate, peer: &mut Peer, now: u64, hint: u64, transfer: u64) -> Reply reaches Kernel {
+        let status: u64 = block mailbox::receive(gate, peer);
+        transition status == 0u64 || status == kernel::WOULD_BLOCK {
+            true -> reconcile(peer, now, hint, transfer)
+            _ -> (Reply::Failed { code: status })
+        }
+    }
+}
+machine reconcile(peer: &mut Peer, now: u64, hint: u64, transfer: u64) -> Reply {
+    transition peer.has_frame {
+        true -> identified(peer, now, hint, transfer)
+        _ -> incomplete(peer, now, hint, transfer)
+    }
+}
+machine identified(peer: &mut Peer, now: u64, hint: u64, transfer: u64) -> Reply {
+    transition peer.pending != 0u64 && peer.frame.id == peer.pending {
+        true -> attachment(peer, now, hint, transfer)
+        _ -> (Reply::Failed { code: kernel::IO_ERROR })
+    }
+}
+machine attachment(peer: &mut Peer, now: u64, hint: u64, transfer: u64) -> Reply {
+    transition peer.frame.attachment {
+        0u64 -> plain(peer)
+        3u64 -> notification(peer, now, hint, transfer)
+        _ -> (Reply::Failed { code: kernel::IO_ERROR })
+    }
+    machine plain(peer: &mut Peer) -> Reply {
+        transition peer.grant == 0u64 {
+            true -> complete(peer)
+            _ -> (Reply::Failed { code: kernel::IO_ERROR })
+        }
+    }
+    machine notification(peer: &mut Peer, now: u64, hint: u64, transfer: u64) -> Reply {
+        transition peer.grant != 0u64 && peer.grant_id == peer.frame.id {
+            true -> complete(peer)
+            _ -> incomplete(peer, now, hint, transfer)
+        }
+    }
+}
+machine complete(peer: &mut Peer) -> Reply {
+    let grant: u64 = peer.grant;
+    peer.grant = 0u64;
+    peer.grant_id = 0u64;
+    peer.pending = 0u64;
+    peer.partial = false;
+    peer.has_frame = false;
+    Reply::Complete { frame: peer.frame, notification: grant }
+}
+machine incomplete(peer: &mut Peer, now: u64, hint: u64, transfer: u64) -> Reply {
+    transition hint > 1u64 || transfer == kernel::PEER_CLOSED {
+        true -> (Reply::Failed { code: kernel::PEER_CLOSED })
+        _ -> partial(peer, now)
+    }
+}
+machine partial(peer: &mut Peer, now: u64) -> Reply {
+    transition peer.partial {
+        true -> expiry(peer, now)
+        _ -> arm(peer, now)
+    }
+    machine arm(peer: &mut Peer, now: u64) -> Reply {
+        transition peer.has_frame || peer.grant != 0u64 {
+            true -> armed(peer, now)
+            _ -> (Reply::Pending)
+        }
+    }
+    machine armed(peer: &mut Peer, now: u64) -> Reply {
+        peer.partial = true;
+        peer.partial_deadline = time::after(now, 300u64);
+        Reply::Pending
+    }
+    machine expiry(peer: &mut Peer, now: u64) -> Reply {
+        transition time::reached(now, peer.partial_deadline) {
+            true -> (Reply::Failed { code: kernel::TIMED_OUT })
+            _ -> (Reply::Pending)
+        }
+    }
+}

@@ -1,0 +1,157 @@
+module connection::mailbox;
+// Single writer per direction. Payload precedes release publication; copied
+// input precedes release acknowledgement. No sequence wraps or jumps are accepted.
+// Wire: source-rs/platform/libraries/user-runtime/mailbox.rs (three header words).
+use kernel::Gate;
+use kernel::Kernel;
+use kernel;
+use connection::main::Peer;
+use connection::main::Frame;
+
+public machine send(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8]) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    let mut header: [u64; 8];
+    let status: u64 = block Kernel::shared_read(gate, peer.reader.handle, 1u64, &mut header, 1u64);
+    transition status == 0u64 {
+        true -> block acknowledged(gate, peer, id, payload, header[0])
+        _ -> (status)
+    }
+}
+machine acknowledged(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], ack: u64) -> u64 reaches Kernel {
+    transition ack > peer.sent || peer.sent == 0xffffffffffffffffu64 {
+        true -> (kernel::IO_ERROR)
+        _ -> block available(gate, peer, id, payload, ack)
+    }
+    machine available(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], ack: u64) -> u64 reaches Kernel {
+        transition ack == peer.sent {
+            true -> block body(gate, peer, id, payload)
+            _ -> (kernel::WOULD_BLOCK)
+        }
+    }
+}
+machine body(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8]) -> u64 reaches Kernel {
+    let mut first: [u64; 8];
+    first[0] = id;
+    first[2] = payload[0];
+    first[3] = payload[1];
+    first[4] = payload[2];
+    first[5] = payload[3];
+    first[6] = payload[4];
+    first[7] = payload[5];
+    let status: u64 = block Kernel::shared_write(gate, peer.writer.handle, 3u64, &first, 8u64);
+    transition status == 0u64 {
+        true -> block tail(gate, peer, payload)
+        _ -> (status)
+    }
+}
+machine tail(gate: &Gate, peer: &mut Peer, payload: &[u64; 8]) -> u64 reaches Kernel {
+    let mut last: [u64; 8];
+    last[0] = payload[6];
+    last[1] = payload[7];
+    let status: u64 = block Kernel::shared_write(gate, peer.writer.handle, 11u64, &last, 2u64);
+    transition status == 0u64 {
+        true -> block length(gate, peer)
+        _ -> (status)
+    }
+}
+machine length(gate: &Gate, peer: &mut Peer) -> u64 reaches Kernel {
+    let mut word: [u64; 8];
+    word[0] = 80u64;
+    let status: u64 = block Kernel::shared_write(gate, peer.writer.handle, 2u64, &word, 1u64);
+    transition status == 0u64 {
+        true -> block publish(gate, peer)
+        _ -> (status)
+    }
+}
+machine publish(gate: &Gate, peer: &mut Peer) -> u64 reaches Kernel {
+    let previous: u64 = peer.sent;
+    transition previous < 0xffffffffffffffffu64 {
+        true -> block next(gate, peer, previous + 1u64)
+        _ -> (kernel::IO_ERROR)
+    }
+    machine next(gate: &Gate, peer: &mut Peer, sequence: u64) -> u64 reaches Kernel {
+        let mut word: [u64; 8];
+        word[0] = sequence;
+        let status: u64 = block Kernel::shared_write(gate, peer.writer.handle, 0u64, &word, 1u64);
+        peer.sent = sequence;
+        status
+    }
+}
+
+public machine receive(gate: &Gate, peer: &mut Peer) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    let mut header: [u64; 8];
+    let status: u64 = block Kernel::shared_read(gate, peer.reader.handle, 0u64, &mut header, 3u64);
+    transition status == 0u64 {
+        true -> block published(gate, peer, header[0], header[2])
+        _ -> (status)
+    }
+}
+machine published(gate: &Gate, peer: &mut Peer, sequence: u64, bytes: u64) -> u64 reaches Kernel {
+    transition sequence == peer.received {
+        true -> (kernel::WOULD_BLOCK)
+        _ -> block validate(gate, peer, sequence, bytes)
+    }
+    machine validate(gate: &Gate, peer: &mut Peer, sequence: u64, bytes: u64) -> u64 reaches Kernel {
+        let previous: u64 = peer.received;
+        transition previous < 0xffffffffffffffffu64 {
+            true -> block successor(gate, peer, sequence, bytes, previous + 1u64)
+            _ -> (kernel::IO_ERROR)
+        }
+    }
+    machine successor(gate: &Gate, peer: &mut Peer, sequence: u64, bytes: u64, expected: u64) -> u64 reaches Kernel {
+        transition sequence == expected && bytes >= 16u64 && bytes <= 80u64 {
+            true -> block snapshot(gate, peer, sequence, bytes)
+            _ -> (kernel::IO_ERROR)
+        }
+    }
+}
+machine snapshot(gate: &Gate, peer: &mut Peer, sequence: u64, bytes: u64 [16..=80]) -> u64 reaches Kernel {
+    let mut first: [u64; 8];
+    let status: u64 = block Kernel::shared_read(gate, peer.reader.handle, 3u64, &mut first, 8u64);
+    transition status == 0u64 {
+        true -> block snapshot_tail(gate, peer, sequence, bytes, first)
+        _ -> (status)
+    }
+}
+machine snapshot_tail(gate: &Gate, peer: &mut Peer, sequence: u64, bytes: u64 [16..=80], first: [u64; 8]) -> u64 reaches Kernel {
+    let mut last: [u64; 8];
+    let status: u64 = block Kernel::shared_read(gate, peer.reader.handle, 11u64, &mut last, 2u64);
+    transition status == 0u64 {
+        true -> block stable(gate, peer, sequence, bytes, first, last)
+        _ -> (status)
+    }
+}
+machine stable(gate: &Gate, peer: &mut Peer, sequence: u64, bytes: u64 [16..=80], first: [u64; 8], last: [u64; 8]) -> u64 reaches Kernel {
+    let mut word: [u64; 8];
+    let status: u64 = block Kernel::shared_read(gate, peer.reader.handle, 0u64, &mut word, 1u64);
+    transition status == 0u64 && word[0] == sequence && first[0] != 0u64 {
+        true -> block acknowledge(gate, peer, sequence, bytes, first, last)
+        _ -> (kernel::IO_ERROR)
+    }
+}
+machine acknowledge(gate: &Gate, peer: &mut Peer, sequence: u64, bytes: u64 [16..=80], first: [u64; 8], last: [u64; 8]) -> u64 reaches Kernel {
+    let mut word: [u64; 8];
+    word[0] = sequence;
+    let status: u64 = block Kernel::shared_write(gate, peer.writer.handle, 1u64, &word, 1u64);
+    transition status == 0u64 {
+        true -> installed(peer, sequence, bytes, first, last)
+        _ -> (status)
+    }
+}
+machine installed(peer: &mut Peer, sequence: u64, bytes: u64 [16..=80], first: [u64; 8], last: [u64; 8]) -> u64 {
+    peer.received = sequence;
+    peer.has_frame = true;
+    peer.frame.id = first[0];
+    peer.frame.attachment = first[1];
+    peer.frame.bytes = bytes - 16u64;
+    peer.frame.payload[0] = first[2];
+    peer.frame.payload[1] = first[3];
+    peer.frame.payload[2] = first[4];
+    peer.frame.payload[3] = first[5];
+    peer.frame.payload[4] = first[6];
+    peer.frame.payload[5] = first[7];
+    peer.frame.payload[6] = last[0];
+    peer.frame.payload[7] = last[1];
+    0u64
+}

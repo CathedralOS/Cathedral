@@ -64,8 +64,55 @@ revoked outcome belongs to an already-parked wait. No Rust kernel or compiler
 source changed. The three native/ELF checks and layout check pass. This evidence
 is single-process loopback custody, not cross-process notification race testing.
 
-**Still required for standalone Background:** the existing v4 client/server setup
-and mailbox publication rules, then matrix service acquisition and owner-control handling.
+**The v4 client now passes against a separate Rust service:**
+`source/platform/libraries/user-runtime/connection/main.omg` owns setup, a single
+outstanding request, mailbox publication, notification/frame pairing and release.
+The witness exercises sixteen full requests, notification rights, BUSY refusal,
+malformed setup, stalled setup, wrong correlation, both partial-pair expiries,
+wrong-kind grants and delayed valid pairing. After each of eight cases, the Rust
+parent checks channel, physical-memory and notification budgets return to baseline.
+QEMU evidence: `build/omega-user/connections/20261028T051131208020Z/`.
+The entry/custody/parking variants also pass at
+`build/omega-user/tests/20261028T051629798846Z/`; the combined image uses 29/240 pages.
+Three boundary tests, ten component-tool tests, six UI build-tool tests and the
+89/154-edge layout check pass. This is an x86-64 client with fixed 64-byte
+requests, replies up to 64 bytes and notification attachments, not a complete
+service runtime or cross-architecture proof.
+
+This required two general compiler repairs, source `ccb6d4791d8d4`,
+[Omega #525](https://github.com/CathedralOS/Omega/pull/525), published as
+`a0bc08225d743ab888090f10476817c485820807`: enum-case completing
+calls must become internal loop edges, and callable discovery must not resurrect
+those exact occurrences as separate functions. Arguments still retain their
+calls and custody. Two independent component regressions pass native/Terminal
+execution, three existing nested-machine variations pass, and non-tail recursion
+and incorrect blocking acknowledgements still reject. See
+[the standalone build guide](tools/omega-user/README.md) for the exact producer.
+
+Keep the newer standalone compiler separate from the desktop's `20dcd0409b66`
+producer: newer Omega rejects the desktop's still-present `state` declarations.
+Do not point F5 at arbitrary new main or start a bulk syntax migration as a
+side effect of this transport work. Compiler invocations now have a kernel-enforced
+4 GiB memory cap, a five-minute deadline and one checking worker by default.
+Component and UI builds share one compiler slot, so concurrent Cargo app builds
+do not multiply that allowance. Locally, `build/omega-ui/compiler` points to the
+desktop baseline and `build/omega-user/compiler/omega.exe` retains the newer
+qualified standalone producer; pass the latter with `--compiler` for the new tests.
+The earlier unbounded run reached approximately 60 GB before allocation failure;
+that may relate to the owner's host crash, but its cause has not been established.
+
+**F5 is requalified on the restored desktop compiler:** the ordinary desktop,
+three independent Notes instances, close/capacity handling, Notes/Colors saves
+and cold reopen pass at
+`build/boot-harness-rs/desktop/20261028T052304596153Z/`. The host oracle verifies
+1,925 records. This separately rebuilt `20dcd0409b66` executable has SHA-256
+`62ee455c52e860153c5290740ae8716982b0c56e0a9ca450a57be67391c30874`.
+The log is `build/cathedral-ipc-diagnosis/desktop-final.log`; as with the earlier
+desktop run, PowerShell reports Cargo stderr as a native-command error while
+the Python runner reaches its final PASS and successful cold-boot oracle.
+
+**Still required for standalone Background:** v4 server setup/replies for owner
+control, then matrix service acquisition and owner-control handling.
 Use the current Background app sequence with that runtime. Preserve one-writer
 pages, read-only peer views, grant/frame correlation, drain/recheck/park ordering,
 deadline/refusal behavior and cleanup after partial setup. Copied IPC is needed

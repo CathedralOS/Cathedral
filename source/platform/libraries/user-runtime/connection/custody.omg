@@ -1,0 +1,75 @@
+module connection::custody;
+use kernel::Gate;
+use kernel::Kernel;
+use connection::main::Peer;
+
+// Every phase uses the same cleanup, including half a frame/grant and half setup.
+// Clear custody first. Failure to release one name never skips the remaining ones.
+public machine release(gate: &Gate, peer: &mut Peer) reaches Kernel blocks; invokes Kernel; {
+    let sender: u64 = peer.sender;
+    let receiver: u64 = peer.receiver;
+    let writer: u64 = peer.writer.handle;
+    let reader: u64 = peer.reader.handle;
+    let wait: u64 = peer.bell.wait;
+    let signal: u64 = peer.bell.signal;
+    let control: u64 = peer.bell.control;
+    let remote: u64 = peer.signal;
+    let grant: u64 = peer.grant;
+    peer.sender = 0u64;
+    peer.receiver = 0u64;
+    peer.writer.handle = 0u64;
+    peer.reader.handle = 0u64;
+    peer.bell.wait = 0u64;
+    peer.bell.signal = 0u64;
+    peer.bell.control = 0u64;
+    peer.signal = 0u64;
+    peer.grant = 0u64;
+    peer.pending = 0u64;
+    close_endpoint(gate, sender);
+    close_endpoint(gate, receiver);
+    block release_memory(gate, writer);
+    block release_memory(gate, reader);
+    close_bell(gate, control);
+    drop_notification(gate, wait);
+    drop_notification(gate, signal);
+    drop_notification(gate, control);
+    drop_notification(gate, remote);
+    drop_notification(gate, grant);
+}
+machine close_endpoint(gate: &Gate, handle: u64) reaches Kernel {
+    transition handle != 0u64 {
+        true -> close(gate, handle)
+        _ -> done()
+    }
+    machine close(gate: &Gate, handle: u64) reaches Kernel {
+        let ignored: u64 = Kernel::close(gate, handle);
+    }
+}
+machine release_memory(gate: &Gate, handle: u64) reaches Kernel {
+    transition handle != 0u64 {
+        true -> block release(gate, handle)
+        _ -> done()
+    }
+    machine release(gate: &Gate, handle: u64) reaches Kernel {
+        let ignored: u64 = block Kernel::memory_release(gate, handle);
+    }
+}
+machine close_bell(gate: &Gate, handle: u64) reaches Kernel {
+    transition handle != 0u64 {
+        true -> close(gate, handle)
+        _ -> done()
+    }
+    machine close(gate: &Gate, handle: u64) reaches Kernel {
+        let ignored: u64 = Kernel::notify_control(gate, handle, 0u64);
+    }
+}
+machine drop_notification(gate: &Gate, handle: u64) reaches Kernel {
+    transition handle != 0u64 {
+        true -> release(gate, handle)
+        _ -> done()
+    }
+    machine release(gate: &Gate, handle: u64) reaches Kernel {
+        let ignored: u64 = Kernel::notify_drop(gate, handle);
+    }
+}
+machine done() {}
