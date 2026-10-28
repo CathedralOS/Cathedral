@@ -48,3 +48,10 @@ imports, remaining relocations, TLS or mutable globals. It is not a generic ELF
 loader or a proof that native code is trustworthy. The compiled code runs in an
 ordinary sandboxed process. A tiny Rust entry and the common platform host remain
 until Omega can replace the executable startup and syscall bindings directly.
+
+On macOS the kernel address-space ceiling preserves the launcher’s measured
+existing VM reservation, then allows the declared allocation budget above it.
+Large shared-image/allocator reservations are not resident compiler memory.
+The ceiling remains kernel-enforced and inherited by child processes; this is
+an address-space allowance, not an aggregate resident-set guarantee. An inherited
+stricter hard ceiling is retained.

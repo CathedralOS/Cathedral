@@ -37,7 +37,7 @@ uses the Rust toolchain pinned in the compiler repository:
 ```text
 git clone https://github.com/CathedralOS/Omega.git build/omega-ui/canonical-compiler
 cd build/omega-ui/canonical-compiler
-git checkout fa6aeb6764add3b1e3b65cb6fd1cf46a537f2694
+git checkout b51ac370b6cecc9d2abd0948d86b01fccfc943eb
 cargo build --locked -p omega
 ```
 
@@ -198,3 +198,10 @@ starving its cache to reserve the maximum protocol reply. Larger objects/apps ma
 need explicitly larger owner-selected grants. The image-frame ledger tracks all
 funded translation tables; the caller's admission ceiling and physical frame
 source remain the allocation gates.
+
+On macOS the kernel address-space ceiling preserves the launcher’s measured
+existing VM reservation, then allows the declared allocation budget above it.
+Large shared-image/allocator reservations are not resident compiler memory.
+The ceiling remains kernel-enforced and inherited by child processes; this is
+an address-space allowance, not an aggregate resident-set guarantee. An inherited
+stricter hard ceiling is retained.

@@ -39,9 +39,34 @@ def _bounded(command, **kwargs):
         return subprocess.CompletedProcess(command, child.returncode, stdout, stderr)
 
 
+def darwin_reserved_address_space():
+    # Darwin includes large untouched allocator/shared-image reservations in
+    # its VM-map size. XNU rejects a new RLIMIT_AS below that existing map;
+    # preserve the measured reservation and bound additional address space.
+    # https://github.com/apple-oss-distributions/xnu/blob/main/osfmk/vm/vm_map.c
+    class TaskInfo(ctypes.Structure):
+        _fields_ = [('virtual_size', ctypes.c_uint64), ('resident_size', ctypes.c_uint64),
+                    ('times', ctypes.c_uint64 * 4), ('counters', ctypes.c_int32 * 12)]
+
+    library = ctypes.CDLL('/usr/lib/libproc.dylib', use_errno=True)
+    library.proc_pidinfo.argtypes = [ctypes.c_int, ctypes.c_int, ctypes.c_uint64,
+                                    ctypes.c_void_p, ctypes.c_int]
+    library.proc_pidinfo.restype = ctypes.c_int
+    info = TaskInfo()
+    count = library.proc_pidinfo(os.getpid(), 4, 0, ctypes.byref(info), ctypes.sizeof(info))
+    if count != ctypes.sizeof(info):
+        raise OSError(ctypes.get_errno(), 'cannot read Darwin process address-space reservation')
+    return info.virtual_size
+
+
 def constrain(memory):
     if os.name != 'nt':
         import resource
+        if sys.platform == 'darwin':
+            memory += darwin_reserved_address_space()
+        _, hard = resource.getrlimit(resource.RLIMIT_AS)
+        if hard != resource.RLIM_INFINITY:
+            memory = min(memory, hard)
         resource.setrlimit(resource.RLIMIT_AS, (memory, memory))
         return None
 
@@ -86,12 +111,18 @@ def constrain(memory):
 
 
 if __name__ == '__main__':
-    held_job = constrain(int(sys.argv[1]))
     environment = os.environ.copy()
     # A checking worker retains substantial proof context. Keep the default
     # inside the process budget; an explicit host setting may choose more.
     environment.setdefault('RAYON_NUM_THREADS', '1')
-    completed = subprocess.run(sys.argv[2:], env=environment)
+    command = sys.argv[2:]
+    held_job = constrain(int(sys.argv[1]))
+    if os.name != 'nt':
+        # Replace the launcher after installing its inherited kernel ceiling.
+        # Forking a second interpreter can demand new Darwin allocator zones
+        # before the compiler starts, outside the intended allocation budget.
+        os.execvpe(command[0], command, environment)
+    completed = subprocess.run(command, env=environment)
     if completed.returncode:
         print(f'compiler command exited {completed.returncode}; memory limit {int(sys.argv[1]) // 1024**2} MiB',
               file=sys.stderr)

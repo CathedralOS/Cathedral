@@ -5121,7 +5121,8 @@ Windows adapter. Its private raw requirements have 66 exact Build-owned DLL
 bindings, selected through the public checked provider. The library uses an
 ordinary pinned Git standard-library dependency instead of a copied snapshot.
 
-Current compiler qualification uses optimized Omega source
+The supported compiler is published in [Omega #557](https://github.com/CathedralOS/Omega/pull/557)
+at `b51ac370b6cecc9d2abd0948d86b01fccfc943eb`. Actual qualification uses optimized Omega source
 `bc368540ef794f59e86fcdbc6b670c1ad3363fc0`, binary SHA-256
 `107927814819c956813fde6efef9d492ec2bfc47c2521ff61d4b216fe01a85c3`.
 The authored headless suite passes native and Terminal execution on macOS ARM64
@@ -5130,8 +5131,11 @@ software pixels, keyboard focus, bounded stepping, palette, text retirement,
 UTF-8 rejection and UTF-16 decoding assertions. Independent Linux x86-64 layout/frame component packaging passes; the exports
 remain ABI 2 (272 and 515,360 code bytes). The Windows native-host and complete
 gallery both emit PE images through ordinary package review. Python tool tests
-pass (11 UI, 5 component), as does source-layout checking (85 Omega / 154 Rust
-package edges). These packaging results do not establish foreign-host execution.
+pass (11 UI, 11 component), as does source-layout checking (85 Omega / 154 Rust
+package edges). The shared compiler launcher preserves Darwin’s existing VM
+reservation before imposing its allocation allowance, retains stricter inherited
+ceilings, and is covered by actual over-budget and serialized-process controls.
+These packaging results do not establish foreign-host execution.
 
 Use the [build guide](tools/omega-ui/README.md#build) to prepare canonical UI
 components. Other desktop packages still use legacy Omega syntax. Preserve
