@@ -1,3 +1,25 @@
+module painting;
+
+use dots::GalleryDots;
+use omega_ui::context::UiContext;
+use omega_ui::dock::DockTree;
+use omega_ui::list::UiListRange;
+use omega_ui::paint_boxes::UiBoxList;
+use omega_ui::scene::UiScene;
+use omega_ui::text_field::UiTextSelection;
+use omega_ui::types::Rect;
+use omega_ui::types::add_i32;
+use omega_ui::types::clamp_i32;
+use omega_ui::types::clamp_sat;
+use omega_ui::types::color_mix;
+use omega_ui::types::max_i32;
+use omega_ui::types::max_sat;
+use omega_ui::types::mul_i32;
+use omega_ui::types::select_i32;
+use omega_ui::types::select_sat;
+use omega_ui::types::sub_i32;
+
+
 // Paints gallery-only panels and overlays using the library drawing primitives.
 
 use omega_ui::types;
@@ -14,131 +36,129 @@ use omega_ui::paint_boxes;
 use omega_ui_windows::box_painter;
 use dock_rows;
 
-public data GalleryRaster {}
-
 // Render a semantic label ID by dispatching to `draw_str` (only in 64x64 mode; ClearType handles window text).
-public machine GalleryRaster::draw_label(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, label_id: i32, color: i32) {
+public machine draw_label(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, label_id: i32, color: i32) {
     transition band_y < 0 {
         true -> dispatch_lbl(pixels, band_y, x, y, label_id, color)
         _ -> done()
     }
-    state dispatch_lbl(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, label_id: i32, color: i32) {
+    machine dispatch_lbl(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, label_id: i32, color: i32) {
         transition label_id <= 6 {
             true -> low_lbl(pixels, band_y, x, y, label_id, color)
             _ -> high_lbl(pixels, band_y, x, y, label_id, color)
         }
     }
-    state low_lbl(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, label_id: i32, color: i32) {
+    machine low_lbl(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, label_id: i32, color: i32) {
         transition label_id == 1 {
             true -> l1(pixels, band_y, x, y, color)
             _ -> low2(pixels, band_y, x, y, label_id, color)
         }
     }
-    state l1(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
-        Raster::draw_str_bold(pixels, band_y, x, y, "Omega UI", color);
+    machine l1(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
+        omega_ui::raster::draw_str_bold(pixels, band_y, x, y, "Omega UI", color);
     }
-    state low2(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, label_id: i32, color: i32) {
+    machine low2(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, label_id: i32, color: i32) {
         transition label_id == 2 {
             true -> l2(pixels, band_y, x, y, color)
             _ -> low4(pixels, band_y, x, y, label_id, color)
         }
     }
-    state l2(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
-        Raster::draw_str(pixels, band_y, x, y, "Advance Command Request", color);
+    machine l2(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
+        omega_ui::raster::draw_str(pixels, band_y, x, y, "Advance Command Request", color);
     }
-    state low4(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, label_id: i32, color: i32) {
+    machine low4(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, label_id: i32, color: i32) {
         transition label_id == 4 {
             true -> l4(pixels, band_y, x, y, color)
             _ -> low5(pixels, band_y, x, y, label_id, color)
         }
     }
-    state l4(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
-        Raster::draw_str(pixels, band_y, x, y, "Workspaces", color);
+    machine l4(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
+        omega_ui::raster::draw_str(pixels, band_y, x, y, "Workspaces", color);
     }
-    state low5(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, label_id: i32, color: i32) {
+    machine low5(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, label_id: i32, color: i32) {
         transition label_id == 5 {
             true -> l5(pixels, band_y, x, y, color)
             _ -> l6(pixels, band_y, x, y, color)
         }
     }
-    state l5(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
-        Raster::draw_str(pixels, band_y, x, y, "Pull main and advance", color);
+    machine l5(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
+        omega_ui::raster::draw_str(pixels, band_y, x, y, "Pull main and advance", color);
     }
-    state l6(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
-        Raster::draw_str(pixels, band_y, x, y, "Runtime trajectory", color);
+    machine l6(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
+        omega_ui::raster::draw_str(pixels, band_y, x, y, "Runtime trajectory", color);
     }
-    state high_lbl(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, label_id: i32, color: i32) {
+    machine high_lbl(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, label_id: i32, color: i32) {
         transition label_id == 7 {
             true -> l7(pixels, band_y, x, y, color)
             _ -> high9(pixels, band_y, x, y, label_id, color)
         }
     }
-    state l7(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
-        Raster::draw_str(pixels, band_y, x, y, "Omega 05 RegAlloc", color);
+    machine l7(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
+        omega_ui::raster::draw_str(pixels, band_y, x, y, "Omega 05 RegAlloc", color);
     }
-    state high9(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, label_id: i32, color: i32) {
+    machine high9(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, label_id: i32, color: i32) {
         transition label_id == 9 {
             true -> l9(pixels, band_y, x, y, color)
             _ -> high10(pixels, band_y, x, y, label_id, color)
         }
     }
-    state l9(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
-        Raster::draw_str(pixels, band_y, x, y, "Token Stream", color);
+    machine l9(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
+        omega_ui::raster::draw_str(pixels, band_y, x, y, "Token Stream", color);
     }
-    state high10(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, label_id: i32, color: i32) {
+    machine high10(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, label_id: i32, color: i32) {
         transition label_id == 10 {
             true -> l10(pixels, band_y, x, y, color)
             _ -> high11(pixels, band_y, x, y, label_id, color)
         }
     }
-    state l10(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
-        Raster::draw_str(pixels, band_y, x, y, "Harness controls", color);
+    machine l10(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
+        omega_ui::raster::draw_str(pixels, band_y, x, y, "Harness controls", color);
     }
-    state high11(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, label_id: i32, color: i32) {
+    machine high11(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, label_id: i32, color: i32) {
         transition label_id == 11 {
             true -> l11(pixels, band_y, x, y, color)
             _ -> high13(pixels, band_y, x, y, label_id, color)
         }
     }
-    state l11(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
-        Raster::draw_str_bold(pixels, band_y, x, y, "To-dos", color);
+    machine l11(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
+        omega_ui::raster::draw_str_bold(pixels, band_y, x, y, "To-dos", color);
     }
-    state high13(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, label_id: i32, color: i32) {
+    machine high13(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, label_id: i32, color: i32) {
         transition label_id == 13 {
             true -> l13(pixels, band_y, x, y, color)
             _ -> high14(pixels, band_y, x, y, label_id, color)
         }
     }
-    state l13(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
-        Raster::draw_str_bold(pixels, band_y, x, y, "Compiler Stage Load", color);
+    machine l13(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
+        omega_ui::raster::draw_str_bold(pixels, band_y, x, y, "Compiler Stage Load", color);
     }
-    state high14(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, label_id: i32, color: i32) {
+    machine high14(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, label_id: i32, color: i32) {
         transition label_id == 14 {
             true -> l14(pixels, band_y, x, y, color)
             _ -> high16(pixels, band_y, x, y, label_id, color)
         }
     }
-    state l14(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
-        Raster::draw_str_bold(pixels, band_y, x, y, "Worker Threads", color);
+    machine l14(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
+        omega_ui::raster::draw_str_bold(pixels, band_y, x, y, "Worker Threads", color);
     }
-    state high16(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, label_id: i32, color: i32) {
+    machine high16(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, label_id: i32, color: i32) {
         transition label_id == 16 {
             true -> l16(pixels, band_y, x, y, color)
             _ -> l33(pixels, band_y, x, y, color)
         }
     }
-    state l16(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
-        Raster::draw_str(pixels, band_y, x, y, "More", color);
+    machine l16(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
+        omega_ui::raster::draw_str(pixels, band_y, x, y, "More", color);
     }
-    state l33(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
-        Raster::draw_str_bold(pixels, band_y, x, y, "Arena Memory Usage", color);
+    machine l33(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, color: i32) {
+        omega_ui::raster::draw_str_bold(pixels, band_y, x, y, "Arena Memory Usage", color);
     }
-    state done() {}
+    machine done() {}
 }
 
-public machine GalleryRaster::dot_cell_color(context: &UiContext, node_index: i32, y_off: i32 in Saturating, bottom_pad: i32 in Saturating, py: i32 in Saturating, color: i32) -> i32
+public machine dot_cell_color(context: &UiContext, node_index: i32, y_off: i32 in Saturating, bottom_pad: i32 in Saturating, py: i32 in Saturating, color: i32) -> i32
 requires node_index >= 0 && node_index < 128 && color >= 0 && color < 72 {
-    let nr: Rect = UiContext::paint_rect(context, node_index);
+    let nr: Rect = omega_ui::context::paint_rect(context, node_index);
     let ix: i32 in Saturating = nr.x + (18 as i32 in Saturating);
     let iy: i32 in Saturating = nr.y + y_off + (8 as i32 in Saturating);
     let ih: i32 in Saturating = max_sat(nr.h - (y_off + bottom_pad + (16 as i32 in Saturating)), 6);
@@ -179,9 +199,9 @@ requires node_index >= 0 && node_index < 128 && color >= 0 && color < 72 {
     select_i32(dim, color_mix(context.theme.well, raw_col, 48), raw_col)
 }
 
-public machine GalleryRaster::draw_node_dots_well(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32, y_off: i32 in Saturating, bottom_pad: i32 in Saturating)
+public machine draw_node_dots_well(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32, y_off: i32 in Saturating, bottom_pad: i32 in Saturating)
 requires node_index >= 0 && node_index < 128 {
-    let rectangle: Rect = UiContext::paint_rect(context, node_index);
+    let rectangle: Rect = omega_ui::context::paint_rect(context, node_index);
     let well_r: Rect = Rect {
         x: rectangle.x + (12 as i32 in Saturating),
         y: rectangle.y + y_off,
@@ -190,16 +210,16 @@ requires node_index >= 0 && node_index < 128 {
     };
     let well_y: i32 in Saturating = well_r.y;
     let well_h: i32 in Saturating = well_r.h;
-    Raster::draw_box_band(pixels, band_y, well_r, context.theme.well, context.theme.border, 1, 6);
+    omega_ui::raster::draw_box_band(pixels, band_y, well_r, context.theme.well, context.theme.border, 1, 6);
 
     let is_64: bool = band_y < 0;
-    let cw: i32 in Saturating = Raster::band_width(pixels, band_y);
-    let ch: i32 in Saturating = Raster::band_height(pixels, band_y);
+    let cw: i32 in Saturating = omega_ui::raster::band_width(pixels, band_y);
+    let ch: i32 in Saturating = omega_ui::raster::band_height(pixels, band_y);
     transition !is_64 && ch > 0 {
         true -> check_row(pixels, band_y, context, node_index, y_off, bottom_pad, well_y, well_h, cw, ch)
         _ -> done()
     }
-    state check_row(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32, y_off: i32 in Saturating, bottom_pad: i32 in Saturating, well_y: i32 in Saturating, well_h: i32 in Saturating, cw: i32 in Saturating, ch: i32 in Saturating)
+    machine check_row(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32, y_off: i32 in Saturating, bottom_pad: i32 in Saturating, well_y: i32 in Saturating, well_h: i32 in Saturating, cw: i32 in Saturating, ch: i32 in Saturating)
     requires node_index >= 0 && node_index < 128 && ch > 0 {
         let ly: i32 in Saturating = ((band_y as i32 in Saturating) * (672 as i32 in Saturating)) / ch;
         let iy: i32 in Saturating = well_y + (8 as i32 in Saturating);
@@ -213,196 +233,196 @@ requires node_index >= 0 && node_index < 128 {
             _ -> done()
         }
     }
-    state loop_cols(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32, y_off: i32 in Saturating, bottom_pad: i32 in Saturating, ly: i32 in Saturating, cw: i32 in Saturating, color: i32)
+    machine loop_cols(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32, y_off: i32 in Saturating, bottom_pad: i32 in Saturating, ly: i32 in Saturating, cw: i32 in Saturating, color: i32)
     requires node_index >= 0 && node_index < 128 {
-        let iw: i32 in Saturating = max_sat(UiContext::paint_rect(context, node_index).w - (36 as i32 in Saturating), 0);
+        let iw: i32 in Saturating = max_sat(omega_ui::context::paint_rect(context, node_index).w - (36 as i32 in Saturating), 0);
         let cols: i32 = ((iw + (2 as i32 in Saturating)) / (8 as i32 in Saturating)) as i32;
         transition color >= 0 && color < cols && color < 72 {
             true -> plot_col(pixels, band_y, context, node_index, y_off, bottom_pad, ly, cw, color)
             _ -> done()
         }
     }
-    state plot_col(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32, y_off: i32 in Saturating, bottom_pad: i32 in Saturating, ly: i32 in Saturating, cw: i32 in Saturating, color: i32)
+    machine plot_col(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32, y_off: i32 in Saturating, bottom_pad: i32 in Saturating, ly: i32 in Saturating, cw: i32 in Saturating, color: i32)
     requires node_index >= 0 && node_index < 128 && color >= 0 && color < 72 {
-        let dot_col: i32 = GalleryRaster::dot_cell_color(context, node_index, y_off, bottom_pad, ly, color);
-        let nr: Rect = UiContext::paint_rect(context, node_index);
+        let dot_col: i32 = painting::dot_cell_color(context, node_index, y_off, bottom_pad, ly, color);
+        let nr: Rect = omega_ui::context::paint_rect(context, node_index);
         let dx: i32 in Saturating = nr.x + (18 as i32 in Saturating) + ((color as i32 in Saturating) * (8 as i32 in Saturating));
-        let px0: i32 in Saturating = Raster::to_physical_x(dx, cw, false, 1024);
-        let px1: i32 in Saturating = Raster::to_physical_x(dx + (5 as i32 in Saturating), cw, false, 1024);
-        Raster::hline_raw(pixels, band_y, band_y as i32 in Saturating, px0, px1, dot_col);
+        let px0: i32 in Saturating = omega_ui::raster::to_physical_x(dx, cw, false, 1024);
+        let px1: i32 in Saturating = omega_ui::raster::to_physical_x(dx + (5 as i32 in Saturating), cw, false, 1024);
+        omega_ui::raster::hline_raw(pixels, band_y, band_y as i32 in Saturating, px0, px1, dot_col);
         transition { _ -> loop_cols(pixels, band_y, context, node_index, y_off, bottom_pad, ly, cw, color + 1) }
     }
-    state done() {}
+    machine done() {}
 }
 
 
-public machine GalleryRaster::render_sidebar_item(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
+public machine render_sidebar_item(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
 requires node_index >= 0 && node_index < 128 {}
 
-public machine GalleryRaster::header_top_row(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, lbl: i32, paused: bool) {
-    GalleryRaster::draw_label(pixels, band_y, rectangle.x + (4 as i32 in Saturating), rectangle.y + (5 as i32 in Saturating), lbl, context.theme.text);
+public machine header_top_row(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, lbl: i32, paused: bool) {
+    painting::draw_label(pixels, band_y, rectangle.x + (4 as i32 in Saturating), rectangle.y + (5 as i32 in Saturating), lbl, context.theme.text);
 
     let pause_x: i32 in Saturating = rectangle.x + rectangle.w - (36 as i32 in Saturating);
     let pause_r: Rect = Rect { x: pause_x, y: rectangle.y + (2 as i32 in Saturating), w: 32, h: 24 };
-    Raster::draw_box_band(pixels, band_y, pause_r, context.theme.surface, context.theme.border, 1, 6);
+    omega_ui::raster::draw_box_band(pixels, band_y, pause_r, context.theme.surface, context.theme.border, 1, 6);
 }
 
-public machine GalleryRaster::header_tab_row(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, active_page: i32) {
+public machine header_tab_row(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, active_page: i32) {
     let track: Rect = Rect { x: rectangle.x, y: rectangle.y + (26 as i32 in Saturating), w: 448, h: 32 };
-    Raster::draw_box_band(pixels, band_y, track, context.theme.well, context.theme.border, 1, 12);
+    omega_ui::raster::draw_box_band(pixels, band_y, track, context.theme.well, context.theme.border, 1, 12);
     let progress: i32 in Saturating = clamp_i32(active_page, 0, 1000) as i32 in Saturating;
     let ind_x: i32 in Saturating = rectangle.x + (4 as i32 in Saturating) + progress * (352 as i32 in Saturating) / (1000 as i32 in Saturating);
     let ind_r: Rect = Rect { x: ind_x, y: rectangle.y + (30 as i32 in Saturating), w: 84, h: 24 };
-    Raster::draw_box_band(pixels, band_y, ind_r, context.theme.surface, context.theme.border, 1, 9);
+    omega_ui::raster::draw_box_band(pixels, band_y, ind_r, context.theme.surface, context.theme.border, 1, 9);
 }
 
-public machine GalleryRaster::render_header_bar(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
+public machine render_header_bar(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
 requires node_index >= 0 && node_index < 128 {
-    let r1: Rect = UiContext::paint_rect(context, node_index);
-    let r2: Rect = UiContext::paint_rect(context, node_index);
+    let r1: Rect = omega_ui::context::paint_rect(context, node_index);
+    let r2: Rect = omega_ui::context::paint_rect(context, node_index);
     let packed_state: i32 = context.nodes[node_index].content_value as i32;
     let active_page: i32 = context.nodes[node_index].aux_value as i32;
     let lbl: i32 = context.nodes[node_index].label_id;
     let paused: bool = (packed_state % 10) == 1;
 
-    GalleryRaster::header_top_row(pixels, band_y, context, r1, lbl, paused);
-    GalleryRaster::header_tab_row(pixels, band_y, context, r2, active_page);
+    painting::header_top_row(pixels, band_y, context, r1, lbl, paused);
+    painting::header_tab_row(pixels, band_y, context, r2, active_page);
 }
 
-public machine GalleryRaster::sidebar_nav_ws(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect) {
+public machine sidebar_nav_ws(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect) {
     let r_plug: Rect = Rect { x: rectangle.x + (8 as i32 in Saturating), y: rectangle.y + (4 as i32 in Saturating), w: 14, h: 14 };
-    Raster::draw_icon_band(pixels, band_y, r_plug, 2, context.theme.text_muted);
+    omega_ui::raster::draw_icon_band(pixels, band_y, r_plug, 2, context.theme.text_muted);
 
     let r_auto: Rect = Rect { x: rectangle.x + (8 as i32 in Saturating), y: rectangle.y + (28 as i32 in Saturating), w: 14, h: 14 };
-    Raster::draw_icon_band(pixels, band_y, r_auto, 3, context.theme.text_muted);
+    omega_ui::raster::draw_icon_band(pixels, band_y, r_auto, 3, context.theme.text_muted);
 
     let r_fld: Rect = Rect { x: rectangle.x + (8 as i32 in Saturating), y: rectangle.y + (81 as i32 in Saturating), w: 14, h: 14 };
-    Raster::draw_icon_band(pixels, band_y, r_fld, 4, context.theme.text_muted);
+    omega_ui::raster::draw_icon_band(pixels, band_y, r_fld, 4, context.theme.text_muted);
 }
 
-public machine GalleryRaster::render_sidebar_label(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
+public machine render_sidebar_label(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
 requires node_index >= 0 && node_index < 128 {
-    let rectangle: Rect = UiContext::paint_rect(context, node_index);
+    let rectangle: Rect = omega_ui::context::paint_rect(context, node_index);
     let kind_mode: i32 = context.nodes[node_index].content_value as i32;
     transition kind_mode == 0 {
         true -> brand(pixels, band_y, context, rectangle)
         _ -> check_m1(pixels, band_y, context, rectangle, kind_mode)
     }
-    state brand(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect) {
-        let chip_w: i32 in Saturating = Raster::isotropic_width(context, 22);
+    machine brand(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect) {
+        let chip_w: i32 in Saturating = omega_ui::raster::isotropic_width(context, 22);
         let r_box: Rect = Rect { x: rectangle.x + (4 as i32 in Saturating), y: rectangle.y + (6 as i32 in Saturating), w: chip_w, h: 22 };
-        Raster::draw_box_fill(pixels, band_y, r_box, context.theme.text, 8);
+        omega_ui::raster::draw_box_fill(pixels, band_y, r_box, context.theme.text, 8);
     }
-    state check_m1(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, kind_mode: i32) {
+    machine check_m1(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, kind_mode: i32) {
         transition kind_mode == 1 {
             true -> nav_and_ws(pixels, band_y, context, rectangle)
             _ -> check_m2(pixels, band_y, context, rectangle, kind_mode)
         }
     }
-    state nav_and_ws(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect) {
-        GalleryRaster::sidebar_nav_ws(pixels, band_y, context, rectangle);
+    machine nav_and_ws(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect) {
+        painting::sidebar_nav_ws(pixels, band_y, context, rectangle);
     }
-    state check_m2(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, kind_mode: i32) {
+    machine check_m2(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, kind_mode: i32) {
         transition kind_mode == 2 {
             true -> lower_ws(pixels, band_y, context, rectangle)
             _ -> check_m3(pixels, band_y, context, rectangle, kind_mode)
         }
     }
-    state lower_ws(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect) {
+    machine lower_ws(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect) {
         let r_f1: Rect = Rect { x: rectangle.x + (8 as i32 in Saturating), y: rectangle.y + (7 as i32 in Saturating), w: 14, h: 14 };
-        Raster::draw_icon_band(pixels, band_y, r_f1, 4, context.theme.text_muted);
+        omega_ui::raster::draw_icon_band(pixels, band_y, r_f1, 4, context.theme.text_muted);
 
         let r_f2: Rect = Rect { x: rectangle.x + (8 as i32 in Saturating), y: rectangle.y + (29 as i32 in Saturating), w: 14, h: 14 };
-        Raster::draw_icon_band(pixels, band_y, r_f2, 4, context.theme.text_muted);
+        omega_ui::raster::draw_icon_band(pixels, band_y, r_f2, 4, context.theme.text_muted);
     }
-    state check_m3(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, kind_mode: i32) {
+    machine check_m3(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, kind_mode: i32) {
         transition kind_mode == 3 {
             true -> new_sess_btn()
             _ -> footer_row(pixels, band_y, context, rectangle)
         }
     }
-    state new_sess_btn() {}
-    state footer_row(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect) {}
+    machine new_sess_btn() {}
+    machine footer_row(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect) {}
 }
 
-public machine GalleryRaster::render_metric_tile(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
+public machine render_metric_tile(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
 requires node_index >= 0 && node_index < 128 {
-    let rectangle: Rect = UiContext::paint_rect(context, node_index);
+    let rectangle: Rect = omega_ui::context::paint_rect(context, node_index);
     let packed_val: i32 = context.nodes[node_index].content_value as i32;
     let series_col: i32 = context.nodes[node_index].content_color;
     let icon_id: i32 = (packed_val / 1000) % 16;
 
-    let header: Rect = GalleryUi::card_header(&rectangle);
-    Raster::draw_chip(pixels, band_y, header.x, header.y, header.h, icon_id, context.theme.surface, series_col, false);
+    let header: Rect = view::card_header(&rectangle);
+    omega_ui::raster::draw_chip(pixels, band_y, header.x, header.y, header.h, icon_id, context.theme.surface, series_col, false);
 }
 
-public machine GalleryRaster::chat_sec_0(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, x0: i32 in Saturating, y0: i32 in Saturating) {
-    Raster::draw_code_pill(pixels, band_y, context, x0 + (27 as i32 in Saturating), y0, 63, "checked", context.theme.accent);
+public machine chat_sec_0(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, x0: i32 in Saturating, y0: i32 in Saturating) {
+    omega_ui::raster::draw_code_pill(pixels, band_y, context, x0 + (27 as i32 in Saturating), y0, 63, "checked", context.theme.accent);
 
     let y1: i32 in Saturating = y0 + (30 as i32 in Saturating);
     let b1_dot: Rect = Rect { x: x0 + (4 as i32 in Saturating), y: y1 + (5 as i32 in Saturating), w: 4, h: 4 };
-    Raster::draw_box_fill(pixels, band_y, b1_dot, context.theme.text, 2);
-    Raster::draw_code_pill(pixels, band_y, context, x0 + (136 as i32 in Saturating), y1, 91, "fd880cafc5a", context.theme.text);
-    Raster::draw_code_pill(pixels, band_y, context, x0 + (235 as i32 in Saturating), y1, 238, "samples/cli/facts/as_slice_views", context.theme.accent);
+    omega_ui::raster::draw_box_fill(pixels, band_y, b1_dot, context.theme.text, 2);
+    omega_ui::raster::draw_code_pill(pixels, band_y, context, x0 + (136 as i32 in Saturating), y1, 91, "fd880cafc5a", context.theme.text);
+    omega_ui::raster::draw_code_pill(pixels, band_y, context, x0 + (235 as i32 in Saturating), y1, 238, "samples/cli/facts/as_slice_views", context.theme.accent);
 }
 
-public machine GalleryRaster::chat_sec_1(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, x0: i32 in Saturating, y0: i32 in Saturating) {
+public machine chat_sec_1(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, x0: i32 in Saturating, y0: i32 in Saturating) {
     let y2: i32 in Saturating = y0 + (60 as i32 in Saturating);
     let s1_dot: Rect = Rect { x: x0 + (22 as i32 in Saturating), y: y2 + (5 as i32 in Saturating), w: 4, h: 4 };
-    Raster::draw_box_border(pixels, band_y, s1_dot, context.theme.text_muted, 2);
-    Raster::draw_code_pill(pixels, band_y, context, x0 + (94 as i32 in Saturating), y2, 203, "check_call_borrow_writeback", context.theme.text);
-    Raster::draw_code_pill(pixels, band_y, context, x0 + (305 as i32 in Saturating), y2, 266, "omega-rust/psi/04_check/src/check.rs", context.theme.accent);
+    omega_ui::raster::draw_box_border(pixels, band_y, s1_dot, context.theme.text_muted, 2);
+    omega_ui::raster::draw_code_pill(pixels, band_y, context, x0 + (94 as i32 in Saturating), y2, 203, "check_call_borrow_writeback", context.theme.text);
+    omega_ui::raster::draw_code_pill(pixels, band_y, context, x0 + (305 as i32 in Saturating), y2, 266, "omega-rust/psi/04_check/src/check.rs", context.theme.accent);
 
     let y3: i32 in Saturating = y0 + (90 as i32 in Saturating);
     let s2_dot: Rect = Rect { x: x0 + (22 as i32 in Saturating), y: y3 + (5 as i32 in Saturating), w: 4, h: 4 };
-    Raster::draw_box_border(pixels, band_y, s2_dot, context.theme.text_muted, 2);
-    Raster::draw_code_pill(pixels, band_y, context, x0 + (238 as i32 in Saturating), y3, 168, "consume(wrap(entries))", context.theme.text);
-    Raster::draw_code_pill(pixels, band_y, context, x0 + (414 as i32 in Saturating), y3, 140, "let view = wrap(s)", context.theme.text);
+    omega_ui::raster::draw_box_border(pixels, band_y, s2_dot, context.theme.text_muted, 2);
+    omega_ui::raster::draw_code_pill(pixels, band_y, context, x0 + (238 as i32 in Saturating), y3, 168, "consume(wrap(entries))", context.theme.text);
+    omega_ui::raster::draw_code_pill(pixels, band_y, context, x0 + (414 as i32 in Saturating), y3, 140, "let view = wrap(s)", context.theme.text);
 }
 
-public machine GalleryRaster::chat_sec_2(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, x0: i32 in Saturating, y0: i32 in Saturating) {
+public machine chat_sec_2(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, x0: i32 in Saturating, y0: i32 in Saturating) {
     let y4: i32 in Saturating = y0 + (120 as i32 in Saturating);
     let s3_dot: Rect = Rect { x: x0 + (22 as i32 in Saturating), y: y4 + (5 as i32 in Saturating), w: 4, h: 4 };
-    Raster::draw_box_border(pixels, band_y, s3_dot, context.theme.text_muted, 2);
-    Raster::draw_code_pill(pixels, band_y, context, x0 + (190 as i32 in Saturating), y4, 182, "slice_identity_call_pass", context.theme.success);
-    Raster::draw_code_pill(pixels, band_y, context, x0 + (380 as i32 in Saturating), y4, 182, "slice_identity_call_fail", context.theme.orange);
+    omega_ui::raster::draw_box_border(pixels, band_y, s3_dot, context.theme.text_muted, 2);
+    omega_ui::raster::draw_code_pill(pixels, band_y, context, x0 + (190 as i32 in Saturating), y4, 182, "slice_identity_call_pass", context.theme.success);
+    omega_ui::raster::draw_code_pill(pixels, band_y, context, x0 + (380 as i32 in Saturating), y4, 182, "slice_identity_call_fail", context.theme.orange);
 
     let y5: i32 in Saturating = y0 + (154 as i32 in Saturating);
     let b2_dot: Rect = Rect { x: x0 + (4 as i32 in Saturating), y: y5 + (5 as i32 in Saturating), w: 4, h: 4 };
-    Raster::draw_box_fill(pixels, band_y, b2_dot, context.theme.text, 2);
-    Raster::draw_code_pill(pixels, band_y, context, x0 + (96 as i32 in Saturating), y5, 364, "python3 tools/corpus_gate.py --filter control_flow", context.theme.text);
-    Raster::draw_code_pill(pixels, band_y, context, x0 + (468 as i32 in Saturating), y5, 98, "80/80 passed", context.theme.success);
+    omega_ui::raster::draw_box_fill(pixels, band_y, b2_dot, context.theme.text, 2);
+    omega_ui::raster::draw_code_pill(pixels, band_y, context, x0 + (96 as i32 in Saturating), y5, 364, "python3 tools/corpus_gate.py --filter control_flow", context.theme.text);
+    omega_ui::raster::draw_code_pill(pixels, band_y, context, x0 + (468 as i32 in Saturating), y5, 98, "80/80 passed", context.theme.success);
 }
 
-public machine GalleryRaster::chat_sec_3(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, x0: i32 in Saturating, y0: i32 in Saturating) {
+public machine chat_sec_3(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, x0: i32 in Saturating, y0: i32 in Saturating) {
     let y6: i32 in Saturating = y0 + (184 as i32 in Saturating);
     let doc_chip: Rect = Rect { x: x0 + (34 as i32 in Saturating), y: y6 - (3 as i32 in Saturating), w: 163, h: 20 };
-    Raster::draw_box_fill(pixels, band_y, doc_chip, color_mix(context.theme.surface, context.theme.accent, 22), 5);
-    Raster::draw_code_pill(pixels, band_y, context, x0 + (205 as i32 in Saturating), y6, 126, "omega run --both", context.theme.text);
+    omega_ui::raster::draw_box_fill(pixels, band_y, doc_chip, color_mix(context.theme.surface, context.theme.accent, 22), 5);
+    omega_ui::raster::draw_code_pill(pixels, band_y, context, x0 + (205 as i32 in Saturating), y6, 126, "omega run --both", context.theme.text);
 
     let y7: i32 in Saturating = y0 + (218 as i32 in Saturating);
     let b3_dot: Rect = Rect { x: x0 + (4 as i32 in Saturating), y: y7 + (5 as i32 in Saturating), w: 4, h: 4 };
-    Raster::draw_box_fill(pixels, band_y, b3_dot, context.theme.text, 2);
-    Raster::draw_code_pill(pixels, band_y, context, x0 + (196 as i32 in Saturating), y7, 161, "borrowed_slice_return", context.theme.accent);
+    omega_ui::raster::draw_box_fill(pixels, band_y, b3_dot, context.theme.text, 2);
+    omega_ui::raster::draw_code_pill(pixels, band_y, context, x0 + (196 as i32 in Saturating), y7, 161, "borrowed_slice_return", context.theme.accent);
 }
 
-public machine GalleryRaster::render_dot_graph_card(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
+public machine render_dot_graph_card(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
 requires node_index >= 0 && node_index < 128 {
-    let rectangle: Rect = UiContext::paint_rect(context, node_index);
+    let rectangle: Rect = omega_ui::context::paint_rect(context, node_index);
     let lbl: i32 = context.nodes[node_index].label_id;
     transition lbl <= 10 {
         true -> render_chat_stream(pixels, band_y, context, rectangle)
         _ -> render_telemetry_detail(pixels, band_y, context, node_index, rectangle, lbl)
     }
-    state render_chat_stream(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect) {
+    machine render_chat_stream(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect) {
         let x0: i32 in Saturating = rectangle.x + (8 as i32 in Saturating);
         let y0: i32 in Saturating = rectangle.y + (8 as i32 in Saturating);
-        GalleryRaster::chat_sec_0(pixels, band_y, context, x0, y0);
-        GalleryRaster::chat_sec_1(pixels, band_y, context, x0, y0);
-        GalleryRaster::chat_sec_2(pixels, band_y, context, x0, y0);
-        GalleryRaster::chat_sec_3(pixels, band_y, context, rectangle, x0, y0);
+        painting::chat_sec_0(pixels, band_y, context, x0, y0);
+        painting::chat_sec_1(pixels, band_y, context, x0, y0);
+        painting::chat_sec_2(pixels, band_y, context, x0, y0);
+        painting::chat_sec_3(pixels, band_y, context, rectangle, x0, y0);
     }
-    state render_telemetry_detail(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32, rectangle: Rect, lbl: i32)
+    machine render_telemetry_detail(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32, rectangle: Rect, lbl: i32)
     requires node_index >= 0 && node_index < 128 {
         let packed_val: i32 = context.nodes[node_index].content_value as i32;
         let series_col: i32 = context.nodes[node_index].content_color;
@@ -410,248 +430,248 @@ requires node_index >= 0 && node_index < 128 {
 
         let rx: i32 in Saturating = rectangle.x;
         let ry: i32 in Saturating = rectangle.y;
-        let header: Rect = GalleryUi::card_header(&rectangle);
-        Raster::draw_box_band(pixels, band_y, rectangle, context.theme.surface, context.theme.border, 1, 8);
-        Raster::draw_chip(pixels, band_y, header.x, header.y, header.h, icon_id, context.theme.surface, series_col, false);
+        let header: Rect = view::card_header(&rectangle);
+        omega_ui::raster::draw_box_band(pixels, band_y, rectangle, context.theme.surface, context.theme.border, 1, 8);
+        omega_ui::raster::draw_chip(pixels, band_y, header.x, header.y, header.h, icon_id, context.theme.surface, series_col, false);
     }
 }
 
-public machine GalleryRaster::draw_buttons_card(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect) {
+public machine draw_buttons_card(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect) {
     let by: i32 in Saturating = rectangle.y + (42 as i32 in Saturating);
     let ly: i32 in Saturating = pixels[4093] as i32 in Saturating;
     transition band_y < 0 || (ly >= (by - (2 as i32 in Saturating)) && ly <= (by + (38 as i32 in Saturating))) {
         true -> paint_btns(pixels, band_y, context, rectangle, by)
         _ -> done()
     }
-    state paint_btns(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, by: i32 in Saturating) {
+    machine paint_btns(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, by: i32 in Saturating) {
         let b0: Rect = Rect { x: rectangle.x + (18 as i32 in Saturating), y: by, w: 96, h: 36 };
         let b1: Rect = Rect { x: rectangle.x + (124 as i32 in Saturating), y: by, w: 108, h: 36 };
         let b2: Rect = Rect { x: rectangle.x + (242 as i32 in Saturating), y: by, w: 96, h: 36 };
         let b3: Rect = Rect { x: rectangle.x + (348 as i32 in Saturating), y: by, w: 88, h: 36 };
-        Raster::draw_button(pixels, band_y, context, b0, 0, UiMotion::read(&context.motion, 1140, 0));
-        Raster::draw_button(pixels, band_y, context, b1, 1, UiMotion::read(&context.motion, 1141, 0));
-        Raster::draw_button(pixels, band_y, context, b2, 2, UiMotion::read(&context.motion, 1142, 0));
-        Raster::draw_button(pixels, band_y, context, b3, 3, UiMotion::read(&context.motion, 1143, 0));
-        GalleryRaster::draw_buttons_right(pixels, band_y, context, rectangle, by);
+        omega_ui::raster::draw_button(pixels, band_y, context, b0, 0, omega_ui::motion::read(&context.motion, 1140, 0));
+        omega_ui::raster::draw_button(pixels, band_y, context, b1, 1, omega_ui::motion::read(&context.motion, 1141, 0));
+        omega_ui::raster::draw_button(pixels, band_y, context, b2, 2, omega_ui::motion::read(&context.motion, 1142, 0));
+        omega_ui::raster::draw_button(pixels, band_y, context, b3, 3, omega_ui::motion::read(&context.motion, 1143, 0));
+        painting::draw_buttons_right(pixels, band_y, context, rectangle, by);
     }
-    state done() {}
+    machine done() {}
 }
 
-public machine GalleryRaster::draw_buttons_right(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, by: i32 in Saturating) {
+public machine draw_buttons_right(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, by: i32 in Saturating) {
     let b4: Rect = Rect { x: rectangle.x + (446 as i32 in Saturating), y: by, w: 84, h: 36 };
     let b5: Rect = Rect { x: rectangle.x + (546 as i32 in Saturating), y: by, w: 36, h: 36 };
     let b6: Rect = Rect { x: rectangle.x + (588 as i32 in Saturating), y: by, w: 36, h: 36 };
     let b7: Rect = Rect { x: rectangle.x + (636 as i32 in Saturating), y: by, w: 90, h: 36 };
-    Raster::draw_box_band(pixels, band_y, b4, context.theme.track, context.theme.border, 1, 7);
-    Raster::draw_button(pixels, band_y, context, b5, 1, UiMotion::read(&context.motion, 1145, 0));
-    Raster::draw_button(pixels, band_y, context, b6, 1, UiMotion::read(&context.motion, 1146, 0));
-    Raster::draw_box_band(pixels, band_y, b7, color_mix(context.theme.surface, context.theme.accent, 22), context.theme.accent, 1, 7);
+    omega_ui::raster::draw_box_band(pixels, band_y, b4, context.theme.track, context.theme.border, 1, 7);
+    omega_ui::raster::draw_button(pixels, band_y, context, b5, 1, omega_ui::motion::read(&context.motion, 1145, 0));
+    omega_ui::raster::draw_button(pixels, band_y, context, b6, 1, omega_ui::motion::read(&context.motion, 1146, 0));
+    omega_ui::raster::draw_box_band(pixels, band_y, b7, color_mix(context.theme.surface, context.theme.accent, 22), context.theme.accent, 1, 7);
 }
 
-public machine GalleryRaster::draw_toggles_card(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, mask: i32, anim_packed: i32) {
+public machine draw_toggles_card(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, mask: i32, anim_packed: i32) {
     let s0: i32 = anim_packed % 1024;
     let s1: i32 = (anim_packed / 1024) % 1024;
     let s2: i32 = (anim_packed / 1048576) % 1024;
     let c0: bool = ((mask / 8) % 2) == 1;
     let c1: bool = ((mask / 16) % 2) == 1;
     let c2: bool = ((mask / 32) % 2) == 1;
-    Raster::draw_toggle_progress(pixels, band_y, context, rectangle.x + (18 as i32 in Saturating), rectangle.y + (40 as i32 in Saturating), s0);
-    Raster::draw_toggle_progress(pixels, band_y, context, rectangle.x + (18 as i32 in Saturating), rectangle.y + (72 as i32 in Saturating), s1);
-    Raster::draw_toggle_progress(pixels, band_y, context, rectangle.x + (18 as i32 in Saturating), rectangle.y + (104 as i32 in Saturating), s2);
-    Raster::draw_checkbox_step(pixels, band_y, context, rectangle.x + (388 as i32 in Saturating), rectangle.y + (41 as i32 in Saturating), UiMotion::read(&context.motion, 1110, select_i32(c0, 1000, 0)));
-    Raster::draw_checkbox_step(pixels, band_y, context, rectangle.x + (388 as i32 in Saturating), rectangle.y + (73 as i32 in Saturating), UiMotion::read(&context.motion, 1111, select_i32(c1, 1000, 0)));
-    Raster::draw_checkbox_step(pixels, band_y, context, rectangle.x + (388 as i32 in Saturating), rectangle.y + (105 as i32 in Saturating), UiMotion::read(&context.motion, 1112, select_i32(c2, 1000, 0)));
+    omega_ui::raster::draw_toggle_progress(pixels, band_y, context, rectangle.x + (18 as i32 in Saturating), rectangle.y + (40 as i32 in Saturating), s0);
+    omega_ui::raster::draw_toggle_progress(pixels, band_y, context, rectangle.x + (18 as i32 in Saturating), rectangle.y + (72 as i32 in Saturating), s1);
+    omega_ui::raster::draw_toggle_progress(pixels, band_y, context, rectangle.x + (18 as i32 in Saturating), rectangle.y + (104 as i32 in Saturating), s2);
+    omega_ui::raster::draw_checkbox_step(pixels, band_y, context, rectangle.x + (388 as i32 in Saturating), rectangle.y + (41 as i32 in Saturating), omega_ui::motion::read(&context.motion, 1110, select_i32(c0, 1000, 0)));
+    omega_ui::raster::draw_checkbox_step(pixels, band_y, context, rectangle.x + (388 as i32 in Saturating), rectangle.y + (73 as i32 in Saturating), omega_ui::motion::read(&context.motion, 1111, select_i32(c1, 1000, 0)));
+    omega_ui::raster::draw_checkbox_step(pixels, band_y, context, rectangle.x + (388 as i32 in Saturating), rectangle.y + (105 as i32 in Saturating), omega_ui::motion::read(&context.motion, 1112, select_i32(c2, 1000, 0)));
 }
 
-public machine GalleryRaster::draw_sliders_card(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, volume: i32, speed: i32) {
-    Raster::draw_slider_step(pixels, band_y, context, rectangle.x + (86 as i32 in Saturating), rectangle.y + (44 as i32 in Saturating), 270, volume, context.theme.accent, UiMotion::read(&context.motion, 1120, 0));
-    Raster::draw_inline_bar(pixels, band_y, context, rectangle.x + (86 as i32 in Saturating), rectangle.y + (74 as i32 in Saturating), 270, 10, volume, context.theme.success);
+public machine draw_sliders_card(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, volume: i32, speed: i32) {
+    omega_ui::raster::draw_slider_step(pixels, band_y, context, rectangle.x + (86 as i32 in Saturating), rectangle.y + (44 as i32 in Saturating), 270, volume, context.theme.accent, omega_ui::motion::read(&context.motion, 1120, 0));
+    omega_ui::raster::draw_inline_bar(pixels, band_y, context, rectangle.x + (86 as i32 in Saturating), rectangle.y + (74 as i32 in Saturating), 270, 10, volume, context.theme.success);
     let spd_pct: i32 = clamp_i32(mul_i32(sub_i32(speed, 1), 100) / 9, 0, 100);
-    Raster::draw_slider_step(pixels, band_y, context, rectangle.x + (86 as i32 in Saturating), rectangle.y + (98 as i32 in Saturating), 270, spd_pct, context.theme.purple, UiMotion::read(&context.motion, 1121, 0));
+    omega_ui::raster::draw_slider_step(pixels, band_y, context, rectangle.x + (86 as i32 in Saturating), rectangle.y + (98 as i32 in Saturating), 270, spd_pct, context.theme.purple, omega_ui::motion::read(&context.motion, 1121, 0));
 
     let py: i32 in Saturating = rectangle.y + (40 as i32 in Saturating);
     let p0: Rect = Rect { x: rectangle.x + (436 as i32 in Saturating), y: py, w: 64, h: 28 };
     let p1: Rect = Rect { x: rectangle.x + (508 as i32 in Saturating), y: py, w: 64, h: 28 };
     let p2: Rect = Rect { x: rectangle.x + (580 as i32 in Saturating), y: py, w: 64, h: 28 };
     let p3: Rect = Rect { x: rectangle.x + (652 as i32 in Saturating), y: py, w: 68, h: 28 };
-    Raster::draw_box_band(pixels, band_y, p0, select_i32(volume == 25, context.theme.accent, context.theme.surface_hover), context.theme.border, 1, 6);
-    Raster::draw_box_band(pixels, band_y, p1, select_i32(volume == 50, context.theme.accent, context.theme.surface_hover), context.theme.border, 1, 6);
-    Raster::draw_box_band(pixels, band_y, p2, select_i32(volume == 75, context.theme.accent, context.theme.surface_hover), context.theme.border, 1, 6);
-    Raster::draw_box_band(pixels, band_y, p3, select_i32(volume == 100, context.theme.accent, context.theme.surface_hover), context.theme.border, 1, 6);
+    omega_ui::raster::draw_box_band(pixels, band_y, p0, select_i32(volume == 25, context.theme.accent, context.theme.surface_hover), context.theme.border, 1, 6);
+    omega_ui::raster::draw_box_band(pixels, band_y, p1, select_i32(volume == 50, context.theme.accent, context.theme.surface_hover), context.theme.border, 1, 6);
+    omega_ui::raster::draw_box_band(pixels, band_y, p2, select_i32(volume == 75, context.theme.accent, context.theme.surface_hover), context.theme.border, 1, 6);
+    omega_ui::raster::draw_box_band(pixels, band_y, p3, select_i32(volume == 100, context.theme.accent, context.theme.surface_hover), context.theme.border, 1, 6);
 }
 
-public machine GalleryRaster::draw_palette_card(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, acc_idx: i32, packed_tf: i32) {
+public machine draw_palette_card(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, acc_idx: i32, packed_tf: i32) {
     let sy: i32 in Saturating = rectangle.y + (40 as i32 in Saturating);
     let ly: i32 in Saturating = pixels[4093] as i32 in Saturating;
     transition band_y < 0 || (ly >= (sy - (2 as i32 in Saturating)) && ly <= (sy + (38 as i32 in Saturating))) {
         true -> paint_pal_card(pixels, band_y, context, rectangle, sy, acc_idx, packed_tf)
         _ -> done()
     }
-    state paint_pal_card(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, sy: i32 in Saturating, acc_idx: i32, packed_tf: i32) {
+    machine paint_pal_card(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, sy: i32 in Saturating, acc_idx: i32, packed_tf: i32) {
         let tf_focused: bool = (packed_tf % 2) == 1;
         let caret_off: i32 in Saturating = clamp_i32((packed_tf / 2) % 240, 0, 210) as i32 in Saturating;
         let tf_bd: i32 = select_i32(tf_focused, context.theme.accent, context.theme.border);
         let tf_r: Rect = Rect { x: rectangle.x + (18 as i32 in Saturating), y: sy, w: 268, h: 36 };
-        Raster::draw_box_band(pixels, band_y, tf_r, context.theme.well, tf_bd, 1, 7);
+        omega_ui::raster::draw_box_band(pixels, band_y, tf_r, context.theme.well, tf_bd, 1, 7);
 
         let caret_col: i32 = select_i32(tf_focused, context.theme.accent, context.theme.text_muted);
         let caret_r: Rect = Rect { x: rectangle.x + (28 as i32 in Saturating) + caret_off, y: sy + (8 as i32 in Saturating), w: 2, h: 20 };
-        Raster::draw_box_fill(pixels, band_y, caret_r, caret_col, 1);
+        omega_ui::raster::draw_box_fill(pixels, band_y, caret_r, caret_col, 1);
 
         let key_r: Rect = Rect { x: rectangle.x + (254 as i32 in Saturating), y: sy + (6 as i32 in Saturating), w: 24, h: 24 };
-        Raster::draw_box_band(pixels, band_y, key_r, context.theme.surface_hover, context.theme.border, 1, 5);
+        omega_ui::raster::draw_box_band(pixels, band_y, key_r, context.theme.surface_hover, context.theme.border, 1, 5);
 
         let clr_r: Rect = Rect { x: rectangle.x + (294 as i32 in Saturating), y: sy, w: 64, h: 36 };
-        Raster::draw_box_band(pixels, band_y, clr_r, context.theme.surface_hover, context.theme.border, 1, 7);
+        omega_ui::raster::draw_box_band(pixels, band_y, clr_r, context.theme.surface_hover, context.theme.border, 1, 7);
 
         let s0: Rect = Rect { x: rectangle.x + (370 as i32 in Saturating), y: sy, w: 40, h: 36 };
         let s1: Rect = Rect { x: rectangle.x + (416 as i32 in Saturating), y: sy, w: 40, h: 36 };
         let s2: Rect = Rect { x: rectangle.x + (462 as i32 in Saturating), y: sy, w: 40, h: 36 };
         let s3: Rect = Rect { x: rectangle.x + (508 as i32 in Saturating), y: sy, w: 40, h: 36 };
         let s4: Rect = Rect { x: rectangle.x + (554 as i32 in Saturating), y: sy, w: 40, h: 36 };
-        GalleryRaster::draw_swatch(pixels, band_y, s0, 0x38BDF8, acc_idx == 0);
-        GalleryRaster::draw_swatch(pixels, band_y, s1, 0x34D399, acc_idx == 1);
-        GalleryRaster::draw_swatch(pixels, band_y, s2, 0xFBBF24, acc_idx == 2);
-        GalleryRaster::draw_swatch(pixels, band_y, s3, 0xA78BFA, acc_idx == 3);
-        GalleryRaster::draw_swatch(pixels, band_y, s4, 0xF472B6, acc_idx == 4);
+        painting::draw_swatch(pixels, band_y, s0, 0x38BDF8, acc_idx == 0);
+        painting::draw_swatch(pixels, band_y, s1, 0x34D399, acc_idx == 1);
+        painting::draw_swatch(pixels, band_y, s2, 0xFBBF24, acc_idx == 2);
+        painting::draw_swatch(pixels, band_y, s3, 0xA78BFA, acc_idx == 3);
+        painting::draw_swatch(pixels, band_y, s4, 0xF472B6, acc_idx == 4);
     }
-    state done() {}
+    machine done() {}
 }
 
-public machine GalleryRaster::draw_tasks_toolbar(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, done_cnt: i32, total_cnt: i32) {
+public machine draw_tasks_toolbar(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, done_cnt: i32, total_cnt: i32) {
     let by: i32 in Saturating = rectangle.y + (11 as i32 in Saturating);
     let b_add: Rect = Rect { x: rectangle.x + (16 as i32 in Saturating), y: by, w: 112, h: 30 };
     let b_all: Rect = Rect { x: rectangle.x + (136 as i32 in Saturating), y: by, w: 112, h: 30 };
     let b_clr: Rect = Rect { x: rectangle.x + (256 as i32 in Saturating), y: by, w: 96, h: 30 };
     let b_rst: Rect = Rect { x: rectangle.x + (360 as i32 in Saturating), y: by, w: 80, h: 30 };
-    Raster::draw_box_fill(pixels, band_y, b_add, context.theme.accent, 15);
-    Raster::draw_box_band(pixels, band_y, b_all, context.theme.surface_hover, context.theme.border, 1, 15);
-    Raster::draw_box_band(pixels, band_y, b_clr, context.theme.surface_hover, context.theme.border, 1, 15);
-    Raster::draw_box_band(pixels, band_y, b_rst, context.theme.well, context.theme.border, 1, 15);
+    omega_ui::raster::draw_box_fill(pixels, band_y, b_add, context.theme.accent, 15);
+    omega_ui::raster::draw_box_band(pixels, band_y, b_all, context.theme.surface_hover, context.theme.border, 1, 15);
+    omega_ui::raster::draw_box_band(pixels, band_y, b_clr, context.theme.surface_hover, context.theme.border, 1, 15);
+    omega_ui::raster::draw_box_band(pixels, band_y, b_rst, context.theme.well, context.theme.border, 1, 15);
     let p5: i32 = mul_i32(done_cnt, 20);
     let p4: i32 = mul_i32(done_cnt, 25);
     let p3: i32 = mul_i32(done_cnt, 33);
     let p2: i32 = mul_i32(done_cnt, 50);
     let p1: i32 = mul_i32(done_cnt, 100);
     let pct: i32 = select_i32(total_cnt >= 5, p5, select_i32(total_cnt == 4, p4, select_i32(total_cnt == 3, p3, select_i32(total_cnt == 2, p2, select_i32(total_cnt == 1, p1, 0)))));
-    Raster::draw_inline_bar(pixels, band_y, context, rectangle.x + (460 as i32 in Saturating), rectangle.y + (30 as i32 in Saturating), 266, 8, pct, context.theme.accent);
+    omega_ui::raster::draw_inline_bar(pixels, band_y, context, rectangle.x + (460 as i32 in Saturating), rectangle.y + (30 as i32 in Saturating), 266, 8, pct, context.theme.accent);
 }
 
-public machine GalleryRaster::draw_task_row(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, progress: i32, prio: i32) {
+public machine draw_task_row(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, progress: i32, prio: i32) {
     transition prio < 10 {
         true -> row(pixels, band_y, context, rectangle, progress)
         _ -> done()
     }
-    state row(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, progress: i32) {
-        Raster::draw_checkbox_step(pixels, band_y, context, rectangle.x + (20 as i32 in Saturating), rectangle.y + (17 as i32 in Saturating), progress);
-        Raster::draw_hline(pixels, band_y, rectangle.y + rectangle.h - (1 as i32 in Saturating), rectangle.x + (20 as i32 in Saturating), rectangle.x + rectangle.w - (20 as i32 in Saturating), context.theme.border);
+    machine row(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, progress: i32) {
+        omega_ui::raster::draw_checkbox_step(pixels, band_y, context, rectangle.x + (20 as i32 in Saturating), rectangle.y + (17 as i32 in Saturating), progress);
+        omega_ui::raster::draw_hline(pixels, band_y, rectangle.y + rectangle.h - (1 as i32 in Saturating), rectangle.x + (20 as i32 in Saturating), rectangle.x + rectangle.w - (20 as i32 in Saturating), context.theme.border);
     }
-    state done() {}
+    machine done() {}
 }
 
-public machine GalleryRaster::draw_virtual_list_row(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rx: i32 in Saturating, ry: i32 in Saturating, item_idx: i32, is_top: bool) {
+public machine draw_virtual_list_row(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rx: i32 in Saturating, ry: i32 in Saturating, item_idx: i32, is_top: bool) {
     let ly: i32 in Saturating = pixels[4093] as i32 in Saturating;
     transition band_y < 0 || (ly >= (ry - (2 as i32 in Saturating)) && ly <= (ry + (33 as i32 in Saturating))) {
         true -> paint_vrow(pixels, band_y, context, rx, ry, item_idx, is_top)
         _ -> done()
     }
-    state paint_vrow(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rx: i32 in Saturating, ry: i32 in Saturating, item_idx: i32, is_top: bool) {
+    machine paint_vrow(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rx: i32 in Saturating, ry: i32 in Saturating, item_idx: i32, is_top: bool) {
         let row_bg: i32 = select_i32(is_top, context.theme.surface_hover, context.theme.surface);
         let row_bd: i32 = select_i32(is_top, context.theme.border, context.theme.border);
         let row_r: Rect = Rect { x: rx + (20 as i32 in Saturating), y: ry, w: 682, h: 31 };
-        Raster::draw_box_fill(pixels, band_y, row_r, row_bg, 10);
+        omega_ui::raster::draw_box_fill(pixels, band_y, row_r, row_bg, 10);
 
         let starred: bool = (item_idx % 3) == 0;
         let ico_id: i32 = select_i32(starred, 2, 4);
         let ico_col: i32 = select_i32(starred, context.theme.accent, context.theme.text_muted);
         let ico_r: Rect = Rect { x: rx + (30 as i32 in Saturating), y: ry + (8 as i32 in Saturating), w: 14, h: 14 };
-        Raster::draw_icon_band(pixels, band_y, ico_r, ico_id, ico_col);
+        omega_ui::raster::draw_icon_band(pixels, band_y, ico_r, ico_id, ico_col);
 
     }
-    state done() {}
+    machine done() {}
 }
 
-public machine GalleryRaster::draw_virtual_list(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, scroll_idx: i32, filter_mode: i32) {
+public machine draw_virtual_list(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, scroll_idx: i32, filter_mode: i32) {
     let by: i32 in Saturating = rectangle.y + (8 as i32 in Saturating);
     let f0: Rect = Rect { x: rectangle.x + (332 as i32 in Saturating), y: by, w: 88, h: 24 };
     let f1: Rect = Rect { x: rectangle.x + (426 as i32 in Saturating), y: by, w: 96, h: 24 };
     let f2: Rect = Rect { x: rectangle.x + (528 as i32 in Saturating), y: by, w: 92, h: 24 };
     let f3: Rect = Rect { x: rectangle.x + (626 as i32 in Saturating), y: by, w: 100, h: 24 };
-    Raster::draw_box_band(pixels, band_y, f0, select_i32(filter_mode == 0, context.theme.accent, context.theme.surface_hover), context.theme.border, 1, 12);
-    Raster::draw_box_band(pixels, band_y, f1, select_i32(filter_mode == 1, context.theme.accent, context.theme.surface_hover), context.theme.border, 1, 12);
-    Raster::draw_box_band(pixels, band_y, f2, context.theme.surface_hover, context.theme.border, 1, 12);
-    Raster::draw_box_band(pixels, band_y, f3, context.theme.well, context.theme.border, 1, 12);
+    omega_ui::raster::draw_box_band(pixels, band_y, f0, select_i32(filter_mode == 0, context.theme.accent, context.theme.surface_hover), context.theme.border, 1, 12);
+    omega_ui::raster::draw_box_band(pixels, band_y, f1, select_i32(filter_mode == 1, context.theme.accent, context.theme.surface_hover), context.theme.border, 1, 12);
+    omega_ui::raster::draw_box_band(pixels, band_y, f2, context.theme.surface_hover, context.theme.border, 1, 12);
+    omega_ui::raster::draw_box_band(pixels, band_y, f3, context.theme.well, context.theme.border, 1, 12);
 
     let well_r: Rect = Rect { x: rectangle.x + (14 as i32 in Saturating), y: rectangle.y + (38 as i32 in Saturating), w: 694, h: 186 };
 
     let step: i32 = select_i32(filter_mode == 1, 3, 1);
     let base: i32 = clamp_i32(scroll_idx, 0, 9995);
-    let rows: UiListRange = UiListRange::visible(select_i32(filter_mode == 1, 3334, 10000), 35, 0,
+    let rows: UiListRange = omega_ui::list::visible(select_i32(filter_mode == 1, 3334, 10000), 35, 0,
         max_i32(sub_i32(rectangle.h as i32, 57), 0), mul_i32(scroll_idx, 35), 0);
-    GalleryRaster::draw_virtual_rows(pixels, band_y, context, rectangle.x, rectangle.y, &rows, step);
+    painting::draw_virtual_rows(pixels, band_y, context, rectangle.x, rectangle.y, &rows, step);
 
     let sb_tr: Rect = Rect { x: rectangle.x + (714 as i32 in Saturating), y: rectangle.y + (38 as i32 in Saturating), w: 14, h: 186 };
     let th_off: i32 in Saturating = ((clamp_i32(scroll_idx, 0, 9995) as i32 in Saturating) * (152 as i32 in Saturating)) / (9995 as i32 in Saturating);
     let sb_th: Rect = Rect { x: rectangle.x + (719 as i32 in Saturating), y: rectangle.y + (40 as i32 in Saturating) + th_off, w: 4, h: 30 };
-    Raster::draw_box_fill(pixels, band_y, sb_th, context.theme.text_muted, 2);
+    omega_ui::raster::draw_box_fill(pixels, band_y, sb_th, context.theme.text_muted, 2);
 }
 
-public machine GalleryRaster::draw_virtual_rows(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, x: i32 in Saturating, y: i32 in Saturating, rows: &UiListRange, step: i32) {
+public machine draw_virtual_rows(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, x: i32 in Saturating, y: i32 in Saturating, rows: &UiListRange, step: i32) {
     transition { _ -> row(pixels, band_y, context, x, y, rows, step, rows.first) }
-    state row(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, x: i32 in Saturating, y: i32 in Saturating, rows: &UiListRange, step: i32, index: i32) {
+    machine row(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, x: i32 in Saturating, y: i32 in Saturating, rows: &UiListRange, step: i32, index: i32) {
         transition index >= 0 && index < rows.end && index >= rows.first && index < 10000 {
             true -> draw(pixels, band_y, context, x, y, rows, step, index)
             _ -> done()
         }
     }
-    state draw(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, x: i32 in Saturating, y: i32 in Saturating, rows: &UiListRange, step: i32, index: i32)
+    machine draw(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, x: i32 in Saturating, y: i32 in Saturating, rows: &UiListRange, step: i32, index: i32)
     requires index >= 0 && index < 10000 {
-        let row_y: i32 in Saturating = y + (44 as i32 in Saturating) + (UiListRange::row_y(rows, index) as i32 in Saturating);
-        GalleryRaster::draw_virtual_list_row(pixels, band_y, context, x, row_y, mul_i32(index, step), index == rows.first);
+        let row_y: i32 in Saturating = y + (44 as i32 in Saturating) + (omega_ui::list::row_y(rows, index) as i32 in Saturating);
+        painting::draw_virtual_list_row(pixels, band_y, context, x, row_y, mul_i32(index, step), index == rows.first);
         transition { _ -> row(pixels, band_y, context, x, y, rows, step, index + 1) }
     }
-    state done() {}
+    machine done() {}
 }
 
-public machine GalleryRaster::draw_flow_step_pill(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, x: i32 in Saturating, y: i32 in Saturating, step_idx: i32, active_step: i32) {
+public machine draw_flow_step_pill(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, x: i32 in Saturating, y: i32 in Saturating, step_idx: i32, active_step: i32) {
     let lit: bool = step_idx == active_step;
     let done_st: bool = step_idx < active_step;
     let bg: i32 = select_i32(lit, color_mix(context.theme.surface, context.theme.accent, 22), select_i32(done_st, color_mix(context.theme.surface, context.theme.success, 12), context.theme.well));
     let bd: i32 = select_i32(lit, context.theme.accent, select_i32(done_st, context.theme.success, context.theme.border));
     let pill_r: Rect = Rect { x: x, y: y, w: 162, h: 30 };
-    Raster::draw_box_band(pixels, band_y, pill_r, bg, bd, 1, 7);
+    omega_ui::raster::draw_box_band(pixels, band_y, pill_r, bg, bd, 1, 7);
 
-    let dot_w: i32 in Saturating = Raster::isotropic_width(context, 18);
+    let dot_w: i32 in Saturating = omega_ui::raster::isotropic_width(context, 18);
     let dot_r: Rect = Rect { x: x + (7 as i32 in Saturating), y: y + (6 as i32 in Saturating), w: dot_w, h: 18 };
     let dot_bg: i32 = select_i32(lit, context.theme.accent, select_i32(done_st, context.theme.success, context.theme.surface_hover));
-    Raster::draw_box_fill(pixels, band_y, dot_r, dot_bg, 9);
+    omega_ui::raster::draw_box_fill(pixels, band_y, dot_r, dot_bg, 9);
     transition done_st {
         true -> draw_chk(pixels, band_y, x, y, dot_w, context.theme.accent_text)
         _ -> done()
     }
-    state draw_chk(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, dot_w: i32 in Saturating, color: i32) {
+    machine draw_chk(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, dot_w: i32 in Saturating, color: i32) {
         let ico_r: Rect = Rect { x: x + (7 as i32 in Saturating), y: y + (6 as i32 in Saturating), w: dot_w, h: 18 };
-        Raster::draw_icon_band(pixels, band_y, ico_r, 9, color);
+        omega_ui::raster::draw_icon_band(pixels, band_y, ico_r, 9, color);
     }
-    state done() {}
+    machine done() {}
 }
 
-public machine GalleryRaster::draw_flowchart(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, active_step: i32) {
+public machine draw_flowchart(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, active_step: i32) {
     let sy: i32 in Saturating = rectangle.y + (34 as i32 in Saturating);
-    GalleryRaster::draw_flow_step_pill(pixels, band_y, context, rectangle.x + (18 as i32 in Saturating), sy, 0, active_step);
-    GalleryRaster::draw_flow_step_pill(pixels, band_y, context, rectangle.x + (200 as i32 in Saturating), sy, 1, active_step);
-    GalleryRaster::draw_flow_step_pill(pixels, band_y, context, rectangle.x + (382 as i32 in Saturating), sy, 2, active_step);
-    GalleryRaster::draw_flow_step_pill(pixels, band_y, context, rectangle.x + (564 as i32 in Saturating), sy, 3, active_step);
+    painting::draw_flow_step_pill(pixels, band_y, context, rectangle.x + (18 as i32 in Saturating), sy, 0, active_step);
+    painting::draw_flow_step_pill(pixels, band_y, context, rectangle.x + (200 as i32 in Saturating), sy, 1, active_step);
+    painting::draw_flow_step_pill(pixels, band_y, context, rectangle.x + (382 as i32 in Saturating), sy, 2, active_step);
+    painting::draw_flow_step_pill(pixels, band_y, context, rectangle.x + (564 as i32 in Saturating), sy, 3, active_step);
 
     let c1: Rect = Rect { x: rectangle.x + (182 as i32 in Saturating), y: sy + (14 as i32 in Saturating), w: 16, h: 2 };
     let c2: Rect = Rect { x: rectangle.x + (364 as i32 in Saturating), y: sy + (14 as i32 in Saturating), w: 16, h: 2 };
     let c3: Rect = Rect { x: rectangle.x + (546 as i32 in Saturating), y: sy + (14 as i32 in Saturating), w: 16, h: 2 };
-    Raster::draw_box_fill(pixels, band_y, c1, select_i32(active_step >= 1, context.theme.success, context.theme.border), 1);
-    Raster::draw_box_fill(pixels, band_y, c2, select_i32(active_step >= 2, context.theme.success, context.theme.border), 1);
-    Raster::draw_box_fill(pixels, band_y, c3, select_i32(active_step >= 3, context.theme.success, context.theme.border), 1);
+    omega_ui::raster::draw_box_fill(pixels, band_y, c1, select_i32(active_step >= 1, context.theme.success, context.theme.border), 1);
+    omega_ui::raster::draw_box_fill(pixels, band_y, c2, select_i32(active_step >= 2, context.theme.success, context.theme.border), 1);
+    omega_ui::raster::draw_box_fill(pixels, band_y, c3, select_i32(active_step >= 3, context.theme.success, context.theme.border), 1);
 
     let well_r: Rect = Rect { x: rectangle.x + (18 as i32 in Saturating), y: rectangle.y + (72 as i32 in Saturating), w: 708, h: 132 };
-    Raster::draw_box_band(pixels, band_y, well_r, context.theme.well, context.theme.border, 1, 7);
+    omega_ui::raster::draw_box_band(pixels, band_y, well_r, context.theme.well, context.theme.border, 1, 7);
 
     // Orthogonal Flowchart connector edges + arrowheads
     let e01: Rect = Rect { x: rectangle.x + (152 as i32 in Saturating), y: rectangle.y + (137 as i32 in Saturating), w: 36, h: 2 };
@@ -660,85 +680,85 @@ public machine GalleryRaster::draw_flowchart(pixels: &mut [i32; 4096], band_y: i
     let e1_dn_v: Rect = Rect { x: rectangle.x + (255 as i32 in Saturating), y: rectangle.y + (164 as i32 in Saturating), w: 2, h: 8 };
     let e1_dn_h: Rect = Rect { x: rectangle.x + (255 as i32 in Saturating), y: rectangle.y + (170 as i32 in Saturating), w: 112, h: 2 };
     let e23: Rect = Rect { x: rectangle.x + (512 as i32 in Saturating), y: rectangle.y + (104 as i32 in Saturating), w: 42, h: 2 };
-    Raster::draw_box_fill(pixels, band_y, e01, select_i32(active_step >= 1, context.theme.accent, context.theme.text_muted), 0);
-    Raster::draw_box_fill(pixels, band_y, e1_up_v, select_i32(active_step >= 2, context.theme.success, context.theme.text_muted), 0);
-    Raster::draw_box_fill(pixels, band_y, e1_up_h, select_i32(active_step >= 2, context.theme.success, context.theme.text_muted), 0);
-    Raster::draw_box_fill(pixels, band_y, e1_dn_v, context.theme.danger, 0);
-    Raster::draw_box_fill(pixels, band_y, e1_dn_h, context.theme.danger, 0);
-    Raster::draw_box_fill(pixels, band_y, e23, select_i32(active_step >= 3, context.theme.accent, context.theme.text_muted), 0);
+    omega_ui::raster::draw_box_fill(pixels, band_y, e01, select_i32(active_step >= 1, context.theme.accent, context.theme.text_muted), 0);
+    omega_ui::raster::draw_box_fill(pixels, band_y, e1_up_v, select_i32(active_step >= 2, context.theme.success, context.theme.text_muted), 0);
+    omega_ui::raster::draw_box_fill(pixels, band_y, e1_up_h, select_i32(active_step >= 2, context.theme.success, context.theme.text_muted), 0);
+    omega_ui::raster::draw_box_fill(pixels, band_y, e1_dn_v, context.theme.danger, 0);
+    omega_ui::raster::draw_box_fill(pixels, band_y, e1_dn_h, context.theme.danger, 0);
+    omega_ui::raster::draw_box_fill(pixels, band_y, e23, select_i32(active_step >= 3, context.theme.accent, context.theme.text_muted), 0);
 
     // Rank 0: Source .omg state box
     let n0_r: Rect = Rect { x: rectangle.x + (34 as i32 in Saturating), y: rectangle.y + (120 as i32 in Saturating), w: 118, h: 36 };
     let n0_bg: i32 = select_i32(active_step == 0, color_mix(context.theme.surface, context.theme.accent, 24), context.theme.surface);
     let n0_bd: i32 = select_i32(active_step == 0, context.theme.accent, context.theme.border);
-    Raster::draw_box_band(pixels, band_y, n0_r, n0_bg, n0_bd, 1, 7);
+    omega_ui::raster::draw_box_band(pixels, band_y, n0_r, n0_bg, n0_bd, 1, 7);
 
     // Rank 1: Strip-rasterized Decision Diamond ("Proof OK?")
     let dm_r: Rect = Rect { x: rectangle.x + (188 as i32 in Saturating), y: rectangle.y + (108 as i32 in Saturating), w: 136, h: 60 };
     let dm_bg: i32 = select_i32(active_step == 1, color_mix(context.theme.surface, context.theme.accent, 26), context.theme.surface);
     let dm_bd: i32 = select_i32(active_step == 1, context.theme.accent, context.theme.purple);
-    Raster::draw_diamond(pixels, band_y, dm_r, dm_bg, dm_bd);
+    omega_ui::raster::draw_diamond(pixels, band_y, dm_r, dm_bg, dm_bd);
 
     // Rank 2 Top: PSITERM\0 IR state box
     let n2a_r: Rect = Rect { x: rectangle.x + (368 as i32 in Saturating), y: rectangle.y + (86 as i32 in Saturating), w: 144, h: 36 };
     let n2a_bg: i32 = select_i32(active_step == 2, color_mix(context.theme.surface, context.theme.success, 24), context.theme.surface);
     let n2a_bd: i32 = select_i32(active_step == 2, context.theme.success, context.theme.border);
-    Raster::draw_box_band(pixels, band_y, n2a_r, n2a_bg, n2a_bd, 1, 7);
+    omega_ui::raster::draw_box_band(pixels, band_y, n2a_r, n2a_bg, n2a_bd, 1, 7);
 
     // Rank 2 Bottom: Reject Twin diagnostic box
     let n2b_r: Rect = Rect { x: rectangle.x + (368 as i32 in Saturating), y: rectangle.y + (152 as i32 in Saturating), w: 144, h: 36 };
-    Raster::draw_box_band(pixels, band_y, n2b_r, color_mix(context.theme.surface, context.theme.danger, 14), context.theme.danger, 1, 7);
+    omega_ui::raster::draw_box_band(pixels, band_y, n2b_r, color_mix(context.theme.surface, context.theme.danger, 14), context.theme.danger, 1, 7);
 
     // Rank 3 Top: Native x86_64 PE/ELF Image box
     let n3a_r: Rect = Rect { x: rectangle.x + (554 as i32 in Saturating), y: rectangle.y + (86 as i32 in Saturating), w: 154, h: 36 };
     let n3a_bg: i32 = select_i32(active_step == 3, color_mix(context.theme.surface, context.theme.accent, 26), context.theme.surface);
     let n3a_bd: i32 = select_i32(active_step == 3, context.theme.accent, context.theme.border);
-    Raster::draw_box_band(pixels, band_y, n3a_r, n3a_bg, n3a_bd, 1, 7);
+    omega_ui::raster::draw_box_band(pixels, band_y, n3a_r, n3a_bg, n3a_bd, 1, 7);
 
     // Rank 3 Bottom: Both Agree Verification badge
     let n3b_r: Rect = Rect { x: rectangle.x + (554 as i32 in Saturating), y: rectangle.y + (152 as i32 in Saturating), w: 154, h: 36 };
-    Raster::draw_box_band(pixels, band_y, n3b_r, color_mix(context.theme.surface, context.theme.success, 16), context.theme.success, 1, 7);
+    omega_ui::raster::draw_box_band(pixels, band_y, n3b_r, color_mix(context.theme.surface, context.theme.success, 16), context.theme.success, 1, 7);
 }
 
-public machine GalleryRaster::draw_synth_controls(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, volume: i32, packed: i32) {
+public machine draw_synth_controls(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, volume: i32, packed: i32) {
     let speed: i32 = clamp_i32(packed % 16, 1, 10);
     let harm_step: i32 = (packed / 16) % 1024;
     let anim_step: i32 = (packed / 16384) % 1024;
     let spd_pct: i32 = clamp_i32(mul_i32(sub_i32(speed, 1), 100) / 9, 0, 100);
-    Raster::draw_slider_bar(pixels, band_y, context, rectangle.x + (98 as i32 in Saturating), rectangle.y + (44 as i32 in Saturating), 190, volume, context.theme.accent);
-    Raster::draw_slider_bar(pixels, band_y, context, rectangle.x + (388 as i32 in Saturating), rectangle.y + (44 as i32 in Saturating), 170, spd_pct, context.theme.success);
-    Raster::draw_toggle_progress(pixels, band_y, context, rectangle.x + (614 as i32 in Saturating), rectangle.y + (22 as i32 in Saturating), harm_step);
-    Raster::draw_toggle_progress(pixels, band_y, context, rectangle.x + (614 as i32 in Saturating), rectangle.y + (54 as i32 in Saturating), anim_step);
+    omega_ui::raster::draw_slider_bar(pixels, band_y, context, rectangle.x + (98 as i32 in Saturating), rectangle.y + (44 as i32 in Saturating), 190, volume, context.theme.accent);
+    omega_ui::raster::draw_slider_bar(pixels, band_y, context, rectangle.x + (388 as i32 in Saturating), rectangle.y + (44 as i32 in Saturating), 170, spd_pct, context.theme.success);
+    omega_ui::raster::draw_toggle_progress(pixels, band_y, context, rectangle.x + (614 as i32 in Saturating), rectangle.y + (22 as i32 in Saturating), harm_step);
+    omega_ui::raster::draw_toggle_progress(pixels, band_y, context, rectangle.x + (614 as i32 in Saturating), rectangle.y + (54 as i32 in Saturating), anim_step);
 }
 
-public machine GalleryRaster::draw_typo_card(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect) {
-    Raster::draw_code_pill(pixels, band_y, context, rectangle.x + (18 as i32 in Saturating), rectangle.y + (110 as i32 in Saturating), 360, "const ui = omega_ui::Context::new(1024, 672);", context.theme.accent);
-    Raster::draw_code_pill(pixels, band_y, context, rectangle.x + (390 as i32 in Saturating), rectangle.y + (110 as i32 in Saturating), 210, "CLEARTYPE_QUALITY = 5", context.theme.success);
-    Raster::draw_hline(pixels, band_y, rectangle.y + (136 as i32 in Saturating), rectangle.x + (18 as i32 in Saturating), rectangle.x + rectangle.w - (18 as i32 in Saturating), context.theme.border);
+public machine draw_typo_card(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect) {
+    omega_ui::raster::draw_code_pill(pixels, band_y, context, rectangle.x + (18 as i32 in Saturating), rectangle.y + (110 as i32 in Saturating), 360, "const ui = omega_ui::Context::new(1024, 672);", context.theme.accent);
+    omega_ui::raster::draw_code_pill(pixels, band_y, context, rectangle.x + (390 as i32 in Saturating), rectangle.y + (110 as i32 in Saturating), 210, "CLEARTYPE_QUALITY = 5", context.theme.success);
+    omega_ui::raster::draw_hline(pixels, band_y, rectangle.y + (136 as i32 in Saturating), rectangle.x + (18 as i32 in Saturating), rectangle.x + rectangle.w - (18 as i32 in Saturating), context.theme.border);
 }
 
-public machine GalleryRaster::draw_theme_studio(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, is_dark: bool, acc_idx: i32) {
+public machine draw_theme_studio(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, is_dark: bool, acc_idx: i32) {
     let by: i32 in Saturating = rectangle.y + (38 as i32 in Saturating);
     let m_dark: Rect = Rect { x: rectangle.x + (18 as i32 in Saturating), y: by, w: 152, h: 38 };
     let m_light: Rect = Rect { x: rectangle.x + (180 as i32 in Saturating), y: by, w: 152, h: 38 };
-    Raster::draw_box_band(pixels, band_y, m_dark, 0x111318, select_i32(is_dark, context.theme.accent, context.theme.border), 1, 8);
-    Raster::draw_box_band(pixels, band_y, m_light, 0xF8FAFC, select_i32(!is_dark, context.theme.accent, context.theme.border), 1, 8);
+    omega_ui::raster::draw_box_band(pixels, band_y, m_dark, 0x111318, select_i32(is_dark, context.theme.accent, context.theme.border), 1, 8);
+    omega_ui::raster::draw_box_band(pixels, band_y, m_light, 0xF8FAFC, select_i32(!is_dark, context.theme.accent, context.theme.border), 1, 8);
 
     let s0: Rect = Rect { x: rectangle.x + (356 as i32 in Saturating), y: by, w: 66, h: 38 };
     let s1: Rect = Rect { x: rectangle.x + (430 as i32 in Saturating), y: by, w: 66, h: 38 };
     let s2: Rect = Rect { x: rectangle.x + (504 as i32 in Saturating), y: by, w: 66, h: 38 };
     let s3: Rect = Rect { x: rectangle.x + (578 as i32 in Saturating), y: by, w: 66, h: 38 };
     let s4: Rect = Rect { x: rectangle.x + (652 as i32 in Saturating), y: by, w: 66, h: 38 };
-    GalleryRaster::draw_swatch(pixels, band_y, s0, 0x38BDF8, acc_idx == 0);
-    GalleryRaster::draw_swatch(pixels, band_y, s1, 0x34D399, acc_idx == 1);
-    GalleryRaster::draw_swatch(pixels, band_y, s2, 0xFBBF24, acc_idx == 2);
-    GalleryRaster::draw_swatch(pixels, band_y, s3, 0xA78BFA, acc_idx == 3);
-    GalleryRaster::draw_swatch(pixels, band_y, s4, 0xF472B6, acc_idx == 4);
+    painting::draw_swatch(pixels, band_y, s0, 0x38BDF8, acc_idx == 0);
+    painting::draw_swatch(pixels, band_y, s1, 0x34D399, acc_idx == 1);
+    painting::draw_swatch(pixels, band_y, s2, 0xFBBF24, acc_idx == 2);
+    painting::draw_swatch(pixels, band_y, s3, 0xA78BFA, acc_idx == 3);
+    painting::draw_swatch(pixels, band_y, s4, 0xF472B6, acc_idx == 4);
 }
 
-public machine GalleryRaster::render_playground_card(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
+public machine render_playground_card(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
 requires node_index >= 0 && node_index < 128 {
-    let rectangle: Rect = UiContext::paint_rect(context, node_index);
+    let rectangle: Rect = omega_ui::context::paint_rect(context, node_index);
     let pk: i32 = context.nodes[node_index].label_id;
     let v1: i32 = context.nodes[node_index].content_value as i32;
     let v2: i32 = context.nodes[node_index].aux_value as i32;
@@ -746,169 +766,169 @@ requires node_index >= 0 && node_index < 128 {
         true -> pg_low(pixels, band_y, context, rectangle, pk, v1, v2)
         _ -> pg_high(pixels, band_y, context, rectangle, pk, v1, v2)
     }
-    state pg_low(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, pk: i32, v1: i32, v2: i32) {
+    machine pg_low(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, pk: i32, v1: i32, v2: i32) {
         transition pk == 1 {
             true -> p1(pixels, band_y, context, rectangle)
             _ -> pg_234(pixels, band_y, context, rectangle, pk, v1, v2)
         }
     }
-    state p1(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect) {
-        GalleryRaster::draw_buttons_card(pixels, band_y, context, rectangle);
+    machine p1(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect) {
+        painting::draw_buttons_card(pixels, band_y, context, rectangle);
     }
-    state pg_234(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, pk: i32, v1: i32, v2: i32) {
+    machine pg_234(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, pk: i32, v1: i32, v2: i32) {
         transition pk == 2 {
             true -> p2(pixels, band_y, context, rectangle, v1, v2)
             _ -> pg_34(pixels, band_y, context, rectangle, pk, v1, v2)
         }
     }
-    state p2(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, v1: i32, v2: i32) {
-        GalleryRaster::draw_toggles_card(pixels, band_y, context, rectangle, v1, v2);
+    machine p2(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, v1: i32, v2: i32) {
+        painting::draw_toggles_card(pixels, band_y, context, rectangle, v1, v2);
     }
-    state pg_34(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, pk: i32, v1: i32, v2: i32) {
+    machine pg_34(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, pk: i32, v1: i32, v2: i32) {
         transition pk == 3 {
             true -> p3(pixels, band_y, context, rectangle, v1, v2)
             _ -> p4(pixels, band_y, context, rectangle, v1, v2)
         }
     }
-    state p3(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, v1: i32, v2: i32) {
-        GalleryRaster::draw_sliders_card(pixels, band_y, context, rectangle, v1, v2);
+    machine p3(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, v1: i32, v2: i32) {
+        painting::draw_sliders_card(pixels, band_y, context, rectangle, v1, v2);
     }
-    state p4(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, v1: i32, v2: i32) {
-        GalleryRaster::draw_palette_card(pixels, band_y, context, rectangle, v1, v2);
+    machine p4(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, v1: i32, v2: i32) {
+        painting::draw_palette_card(pixels, band_y, context, rectangle, v1, v2);
     }
-    state pg_high(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, pk: i32, v1: i32, v2: i32) {
+    machine pg_high(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, pk: i32, v1: i32, v2: i32) {
         transition pk == 5 {
             true -> p5(pixels, band_y, context, rectangle, v1, v2)
             _ -> pg_6789(pixels, band_y, context, rectangle, pk, v1, v2)
         }
     }
-    state p5(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, v1: i32, v2: i32) {
-        GalleryRaster::draw_tasks_toolbar(pixels, band_y, context, rectangle, v1, v2);
+    machine p5(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, v1: i32, v2: i32) {
+        painting::draw_tasks_toolbar(pixels, band_y, context, rectangle, v1, v2);
     }
-    state pg_6789(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, pk: i32, v1: i32, v2: i32) {
+    machine pg_6789(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, pk: i32, v1: i32, v2: i32) {
         transition pk == 6 {
             true -> p6(pixels, band_y, context, rectangle, v1, v2)
             _ -> pg_789(pixels, band_y, context, rectangle, pk, v1, v2)
         }
     }
-    state p6(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, progress: i32, prio: i32) {
-        GalleryRaster::draw_task_row(pixels, band_y, context, rectangle, progress % 1024, prio);
+    machine p6(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, progress: i32, prio: i32) {
+        painting::draw_task_row(pixels, band_y, context, rectangle, progress % 1024, prio);
     }
-    state pg_789(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, pk: i32, v1: i32, v2: i32) {
+    machine pg_789(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, pk: i32, v1: i32, v2: i32) {
         transition pk == 7 {
             true -> p7(pixels, band_y, context, rectangle, v1, v2)
             _ -> pg_89(pixels, band_y, context, rectangle, pk, v1, v2)
         }
     }
-    state p7(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, v1: i32, v2: i32) {
-        GalleryRaster::draw_synth_controls(pixels, band_y, context, rectangle, v1, v2);
+    machine p7(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, v1: i32, v2: i32) {
+        painting::draw_synth_controls(pixels, band_y, context, rectangle, v1, v2);
     }
-    state pg_89(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, pk: i32, v1: i32, v2: i32) {
+    machine pg_89(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, pk: i32, v1: i32, v2: i32) {
         transition pk == 8 {
             true -> p8(pixels, band_y, context, rectangle)
             _ -> pg_910(pixels, band_y, context, rectangle, pk, v1, v2)
         }
     }
-    state p8(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect) {
-        GalleryRaster::draw_typo_card(pixels, band_y, context, rectangle);
+    machine p8(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect) {
+        painting::draw_typo_card(pixels, band_y, context, rectangle);
     }
-    state pg_910(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, pk: i32, v1: i32, v2: i32) {
+    machine pg_910(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, pk: i32, v1: i32, v2: i32) {
         transition pk == 9 {
             true -> p9(pixels, band_y, context, rectangle, v1 > 0, v2)
             _ -> pg_101112(pixels, band_y, context, rectangle, pk, v1, v2)
         }
     }
-    state p9(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, is_dark: bool, acc_idx: i32) {
-        GalleryRaster::draw_theme_studio(pixels, band_y, context, rectangle, is_dark, acc_idx);
+    machine p9(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, is_dark: bool, acc_idx: i32) {
+        painting::draw_theme_studio(pixels, band_y, context, rectangle, is_dark, acc_idx);
     }
-    state pg_101112(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, pk: i32, v1: i32, v2: i32) {
+    machine pg_101112(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, pk: i32, v1: i32, v2: i32) {
         transition pk == 10 {
             true -> p10(pixels, band_y, context, rectangle, v1, v2)
             _ -> pg_1112(pixels, band_y, context, rectangle, pk, v1, v2)
         }
     }
-    state p10(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, vis_mask: i32, as_tab: i32) {
-        GalleryRaster::draw_dock_toolbar(pixels, band_y, context, rectangle, vis_mask, as_tab > 0);
+    machine p10(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, vis_mask: i32, as_tab: i32) {
+        painting::draw_dock_toolbar(pixels, band_y, context, rectangle, vis_mask, as_tab > 0);
     }
-    state pg_1112(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, pk: i32, v1: i32, v2: i32) {
+    machine pg_1112(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, pk: i32, v1: i32, v2: i32) {
         transition pk == 11 {
             true -> p11(pixels, band_y, context, rectangle, v1, v2)
             _ -> p12(pixels, band_y, context, rectangle, v1)
         }
     }
-    state p11(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, scroll_idx: i32, filter_mode: i32) {
-        GalleryRaster::draw_virtual_list(pixels, band_y, context, rectangle, scroll_idx, filter_mode);
+    machine p11(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, scroll_idx: i32, filter_mode: i32) {
+        painting::draw_virtual_list(pixels, band_y, context, rectangle, scroll_idx, filter_mode);
     }
-    state p12(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, active_step: i32) {
-        GalleryRaster::draw_flowchart(pixels, band_y, context, rectangle, active_step);
+    machine p12(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, active_step: i32) {
+        painting::draw_flowchart(pixels, band_y, context, rectangle, active_step);
     }
 }
 
-public machine GalleryRaster::draw_vis_pill(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, x: i32 in Saturating, y: i32 in Saturating, on: bool) {
+public machine draw_vis_pill(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, x: i32 in Saturating, y: i32 in Saturating, on: bool) {
     let pill_r: Rect = Rect { x: x, y: y, w: 78, h: 28 };
     let bg: i32 = select_i32(on, color_mix(context.theme.surface, context.theme.accent, 18), context.theme.well);
     let bd: i32 = select_i32(on, context.theme.accent, context.theme.border);
-    Raster::draw_box_band(pixels, band_y, pill_r, bg, bd, 1, 6);
-    let dot_w: i32 in Saturating = Raster::isotropic_width(context, 6);
+    omega_ui::raster::draw_box_band(pixels, band_y, pill_r, bg, bd, 1, 6);
+    let dot_w: i32 in Saturating = omega_ui::raster::isotropic_width(context, 6);
     let dot_r: Rect = Rect { x: x + (8 as i32 in Saturating), y: y + (11 as i32 in Saturating), w: dot_w, h: 6 };
     let dot_c: i32 = select_i32(on, context.theme.success, context.theme.tertiary);
-    Raster::draw_box_fill(pixels, band_y, dot_r, dot_c, 3);
+    omega_ui::raster::draw_box_fill(pixels, band_y, dot_r, dot_c, 3);
 }
 
-public machine GalleryRaster::draw_dock_toolbar(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, vis_mask: i32, as_tab: bool) {
+public machine draw_dock_toolbar(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, vis_mask: i32, as_tab: bool) {
     let by: i32 in Saturating = rectangle.y + (9 as i32 in Saturating);
     let b_eq: Rect = Rect { x: rectangle.x + (12 as i32 in Saturating), y: by, w: 86, h: 28 };
     let b_rep: Rect = Rect { x: rectangle.x + (106 as i32 in Saturating), y: by, w: 118, h: 28 };
     let b_rst: Rect = Rect { x: rectangle.x + (232 as i32 in Saturating), y: by, w: 62, h: 28 };
     let rep_bg: i32 = select_i32(as_tab, color_mix(context.theme.surface, context.theme.purple, 28), context.theme.surface_hover);
     let rep_bd: i32 = select_i32(as_tab, context.theme.purple, context.theme.border);
-    Raster::draw_box_fill(pixels, band_y, b_eq, context.theme.accent, 6);
-    Raster::draw_box_band(pixels, band_y, b_rep, rep_bg, rep_bd, 1, 6);
-    Raster::draw_box_band(pixels, band_y, b_rst, context.theme.well, context.theme.border, 1, 6);
+    omega_ui::raster::draw_box_fill(pixels, band_y, b_eq, context.theme.accent, 6);
+    omega_ui::raster::draw_box_band(pixels, band_y, b_rep, rep_bg, rep_bd, 1, 6);
+    omega_ui::raster::draw_box_band(pixels, band_y, b_rst, context.theme.well, context.theme.border, 1, 6);
 
     let v0: bool = (vis_mask % 2) == 1;
     let v1: bool = ((vis_mask / 2) % 2) == 1;
     let v2: bool = ((vis_mask / 4) % 2) == 1;
     let v3: bool = ((vis_mask / 8) % 2) == 1;
     let v4: bool = ((vis_mask / 16) % 2) == 1;
-    GalleryRaster::draw_vis_pill(pixels, band_y, context, rectangle.x + (312 as i32 in Saturating), by, v0);
-    GalleryRaster::draw_vis_pill(pixels, band_y, context, rectangle.x + (398 as i32 in Saturating), by, v1);
-    GalleryRaster::draw_vis_pill(pixels, band_y, context, rectangle.x + (484 as i32 in Saturating), by, v2);
-    GalleryRaster::draw_vis_pill(pixels, band_y, context, rectangle.x + (570 as i32 in Saturating), by, v3);
-    GalleryRaster::draw_vis_pill(pixels, band_y, context, rectangle.x + (654 as i32 in Saturating), by, v4);
+    painting::draw_vis_pill(pixels, band_y, context, rectangle.x + (312 as i32 in Saturating), by, v0);
+    painting::draw_vis_pill(pixels, band_y, context, rectangle.x + (398 as i32 in Saturating), by, v1);
+    painting::draw_vis_pill(pixels, band_y, context, rectangle.x + (484 as i32 in Saturating), by, v2);
+    painting::draw_vis_pill(pixels, band_y, context, rectangle.x + (570 as i32 in Saturating), by, v3);
+    painting::draw_vis_pill(pixels, band_y, context, rectangle.x + (654 as i32 in Saturating), by, v4);
 }
 
-public machine GalleryRaster::draw_dock_divider(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, is_vert: bool, active: bool) {
+public machine draw_dock_divider(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, is_vert: bool, active: bool) {
     transition rectangle.w > 0 && rectangle.h > 0 {
         true -> paint_div(paint, pixels, band_y, context, rectangle, is_vert, active)
         _ -> done()
     }
-    state paint_div(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, is_vert: bool, active: bool) {
+    machine paint_div(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, is_vert: bool, active: bool) {
         let rx: i32 in Saturating = rectangle.x;
         let ry: i32 in Saturating = rectangle.y;
         let rw: i32 in Saturating = rectangle.w;
         let rh: i32 in Saturating = rectangle.h;
         let two: i32 in Saturating = 2;
         let track_col: i32 = select_i32(active, color_mix(context.theme.background, context.theme.accent, 35), context.theme.background);
-        UiBoxList::fill(paint, pixels, band_y, rectangle, track_col, 3);
+        omega_ui::paint_boxes::fill(paint, pixels, band_y, rectangle, track_col, 3);
         let grip_col: i32 = select_i32(active, context.theme.accent, context.theme.border);
         let gx: i32 in Saturating = select_sat(is_vert, rx + ((rw - two) / two), rx + (rw / two) - (18 as i32 in Saturating));
         let gy: i32 in Saturating = select_sat(is_vert, ry + (rh / two) - (18 as i32 in Saturating), ry + ((rh - two) / two));
         let gw: i32 in Saturating = select_sat(is_vert, 2, 36);
         let gh: i32 in Saturating = select_sat(is_vert, 36, 2);
         let grip_r: Rect = Rect { x: gx, y: gy, w: gw, h: gh };
-        UiBoxList::fill(paint, pixels, band_y, grip_r, grip_col, 1);
+        omega_ui::paint_boxes::fill(paint, pixels, band_y, grip_r, grip_col, 1);
     }
-    state done() {}
+    machine done() {}
 }
 
 // Paint fill and stroke together; layering them re-applies corner coverage.
-public machine GalleryRaster::draw_dock_pane_frame(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, focused: bool, dot_col: i32) {
+public machine draw_dock_pane_frame(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, focused: bool, dot_col: i32) {
     transition rectangle.w > 20 && rectangle.h > 28 {
         true -> frame(paint, pixels, band_y, context, rectangle, focused, dot_col)
         _ -> done()
     }
-    state frame(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, focused: bool, dot_col: i32) {
+    machine frame(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, focused: bool, dot_col: i32) {
         let border: i32 = select_i32(focused, context.theme.accent, context.theme.border);
         let header: i32 = select_i32(focused, color_mix(context.theme.surface_hover, context.theme.accent, 16), context.theme.well);
         transition paint.recording {
@@ -916,188 +936,188 @@ public machine GalleryRaster::draw_dock_pane_frame(paint: &mut UiBoxList, pixels
             _ -> draw(paint, pixels, band_y, context, rectangle, border, header, dot_col)
         }
     }
-    state record(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, border: i32, header: i32, dot_col: i32) {
+    machine record(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, border: i32, header: i32, dot_col: i32) {
         let separator: i32 in Saturating = rectangle.y + (28 as i32 in Saturating);
-        UiBoxList::box(paint, pixels, band_y, Rect::copy(&rectangle), header, border, 1, 8);
-        UiBoxList::clip_header(paint, separator);
-        UiBoxList::box(paint, pixels, band_y, Rect::copy(&rectangle), context.theme.surface, border, 1, 8);
-        UiBoxList::clip_body(paint, separator);
+        omega_ui::paint_boxes::box(paint, pixels, band_y, omega_ui::types::rect_copy(&rectangle), header, border, 1, 8);
+        omega_ui::paint_boxes::clip_header(paint, separator);
+        omega_ui::paint_boxes::box(paint, pixels, band_y, omega_ui::types::rect_copy(&rectangle), context.theme.surface, border, 1, 8);
+        omega_ui::paint_boxes::clip_body(paint, separator);
         transition { _ -> finish(paint, pixels, band_y, context, rectangle, border, dot_col) }
     }
-    state draw(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, border: i32, header: i32, dot_col: i32) {
+    machine draw(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, border: i32, header: i32, dot_col: i32) {
         transition band_y < 0 {
             true -> small(paint, pixels, band_y, context, rectangle, border, header, dot_col, 0)
             _ -> physical(paint, pixels, band_y, context, rectangle, border, header, dot_col)
         }
     }
-    state physical(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, border: i32, header: i32, dot_col: i32) {
-        let separator: i32 in Saturating = Raster::to_physical_y(rectangle.y + (28 as i32 in Saturating), Raster::band_height(pixels, band_y), false, 672);
+    machine physical(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, border: i32, header: i32, dot_col: i32) {
+        let separator: i32 in Saturating = omega_ui::raster::to_physical_y(rectangle.y + (28 as i32 in Saturating), omega_ui::raster::band_height(pixels, band_y), false, 672);
         let background: i32 = select_i32((band_y as i32 in Saturating) < separator, header, context.theme.surface);
-        UiBoxList::box(paint, pixels, band_y, Rect::copy(&rectangle), background, border, 1, 8);
+        omega_ui::paint_boxes::box(paint, pixels, band_y, omega_ui::types::rect_copy(&rectangle), background, border, 1, 8);
         transition { _ -> finish(paint, pixels, band_y, context, rectangle, border, dot_col) }
     }
-    state small(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, border: i32, header: i32, dot_col: i32, row: i32) {
+    machine small(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, border: i32, header: i32, dot_col: i32, row: i32) {
         transition row >= 0 && row < 64 { true -> small_row(paint, pixels, band_y, context, rectangle, border, header, dot_col, row) _ -> finish(paint, pixels, band_y, context, rectangle, border, dot_col) }
     }
-    state small_row(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, border: i32, header: i32, dot_col: i32, row: i32) {
+    machine small_row(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, border: i32, header: i32, dot_col: i32, row: i32) {
         let background: i32 = select_i32((row as i32 in Saturating) < rectangle.y + (28 as i32 in Saturating), header, context.theme.surface);
-        Raster::sdf_box_scanline(pixels, band_y, Rect::copy(&rectangle), row as i32 in Saturating, 8, background, border, true);
+        omega_ui::raster::sdf_box_scanline(pixels, band_y, omega_ui::types::rect_copy(&rectangle), row as i32 in Saturating, 8, background, border, true);
         transition { _ -> small(paint, pixels, band_y, context, rectangle, border, header, dot_col, add_i32(row, 1)) }
     }
-    state finish(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, border: i32, dot_col: i32) {
-        UiBoxList::line(paint, pixels, band_y, rectangle.y + (28 as i32 in Saturating), rectangle.x, rectangle.x + rectangle.w, border);
-        let dot: Rect = Rect { x: rectangle.x + (10 as i32 in Saturating), y: rectangle.y + (11 as i32 in Saturating), w: Raster::isotropic_width(context, 7), h: 7 };
-        UiBoxList::fill(paint, pixels, band_y, dot, dot_col, 4);
+    machine finish(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, rectangle: Rect, border: i32, dot_col: i32) {
+        omega_ui::paint_boxes::line(paint, pixels, band_y, rectangle.y + (28 as i32 in Saturating), rectangle.x, rectangle.x + rectangle.w, border);
+        let dot: Rect = Rect { x: rectangle.x + (10 as i32 in Saturating), y: rectangle.y + (11 as i32 in Saturating), w: omega_ui::raster::isotropic_width(context, 7), h: 7 };
+        omega_ui::paint_boxes::fill(paint, pixels, band_y, dot, dot_col, 4);
     }
-    state done() {}
+    machine done() {}
 }
 
-public machine GalleryRaster::draw_dock_tab_group(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, tree: &DockTree) {
-    let rectangle: Rect = DockTree::node_rect(tree, 2);
+public machine draw_dock_tab_group(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, tree: &DockTree) {
+    let rectangle: Rect = omega_ui::dock::node_rect(tree, 2);
     transition rectangle.w > 20 && rectangle.h > 28 {
         true -> paint_tabs(paint, pixels, band_y, context, tree, rectangle)
         _ -> done()
     }
-    state paint_tabs(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, tree: &DockTree, rectangle: Rect) {
+    machine paint_tabs(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, tree: &DockTree, rectangle: Rect) {
         let rx: i32 in Saturating = rectangle.x;
         let ry: i32 in Saturating = rectangle.y;
         let rw: i32 in Saturating = rectangle.w;
         let foc: bool = tree.focused_window == 1 || tree.focused_window == 2 || (tree.struct_docked_as_tab && tree.focused_window == 3);
-        GalleryRaster::draw_dock_pane_frame(paint, pixels, band_y, context, rectangle, foc, context.theme.accent);
+        painting::draw_dock_pane_frame(paint, pixels, band_y, context, rectangle, foc, context.theme.accent);
         let act: i32 = tree.nodes[2].active_tab;
         let tx: i32 in Saturating = rx + (22 as i32 in Saturating) + ((act as i32 in Saturating) * (72 as i32 in Saturating));
         let tab_pill: Rect = Rect { x: tx, y: ry + (4 as i32 in Saturating), w: 68, h: 21 };
-        UiBoxList::box(paint, pixels, band_y, tab_pill, context.theme.surface, context.theme.border, 1, 5);
+        omega_ui::paint_boxes::box(paint, pixels, band_y, tab_pill, context.theme.surface, context.theme.border, 1, 5);
         let ind_r: Rect = Rect { x: tx + (8 as i32 in Saturating), y: ry + (24 as i32 in Saturating), w: 52, h: 3 };
-        UiBoxList::fill(paint, pixels, band_y, ind_r, context.theme.accent, 1);
+        omega_ui::paint_boxes::fill(paint, pixels, band_y, ind_r, context.theme.accent, 1);
 
         let sel_row: Rect = Rect { x: rx + (12 as i32 in Saturating), y: ry + (38 as i32 in Saturating), w: max_sat(rw - (24 as i32 in Saturating), 10), h: 26 };
-        UiBoxList::box(paint, pixels, band_y, sel_row, context.theme.surface_hover, context.theme.border, 1, 5);
+        omega_ui::paint_boxes::box(paint, pixels, band_y, sel_row, context.theme.surface_hover, context.theme.border, 1, 5);
         let bar_r: Rect = Rect { x: rx + (16 as i32 in Saturating), y: ry + (44 as i32 in Saturating), w: 3, h: 14 };
-        UiBoxList::fill(paint, pixels, band_y, bar_r, context.theme.accent, 1);
+        omega_ui::paint_boxes::fill(paint, pixels, band_y, bar_r, context.theme.accent, 1);
     }
-    state done() {}
+    machine done() {}
 }
 
-public machine GalleryRaster::draw_dock_panes_mid(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, tree: &DockTree, cpu_pct: i32) {
-    let r3: Rect = DockTree::window_rect(tree, 3);
+public machine draw_dock_panes_mid(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, tree: &DockTree, cpu_pct: i32) {
+    let r3: Rect = omega_ui::dock::window_rect(tree, 3);
     let show_s3: bool = !tree.struct_docked_as_tab && r3.w > 20 && r3.h > 28;
     transition show_s3 {
         true -> paint_s3(paint, pixels, band_y, context, tree, r3, cpu_pct)
         _ -> paint_center(paint, pixels, band_y, context, tree, cpu_pct)
     }
-    state paint_s3(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, tree: &DockTree, r3: Rect, cpu_pct: i32) {
+    machine paint_s3(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, tree: &DockTree, r3: Rect, cpu_pct: i32) {
         let rx: i32 in Saturating = r3.x;
         let ry: i32 in Saturating = r3.y;
         let rw: i32 in Saturating = r3.w;
-        GalleryRaster::draw_dock_pane_frame(paint, pixels, band_y, context, r3, tree.focused_window == 3, context.theme.purple);
+        painting::draw_dock_pane_frame(paint, pixels, band_y, context, r3, tree.focused_window == 3, context.theme.purple);
         let w_pill: i32 in Saturating = max_sat(rw - (24 as i32 in Saturating), 16);
         let p1: Rect = Rect { x: rx + (12 as i32 in Saturating), y: ry + (38 as i32 in Saturating), w: w_pill, h: 26 };
         let p2: Rect = Rect { x: rx + (12 as i32 in Saturating), y: ry + (70 as i32 in Saturating), w: w_pill, h: 26 };
-        UiBoxList::box(paint, pixels, band_y, p1, context.theme.well, context.theme.border, 1, 5);
-        UiBoxList::box(paint, pixels, band_y, p2, context.theme.well, context.theme.border, 1, 5);
+        omega_ui::paint_boxes::box(paint, pixels, band_y, p1, context.theme.well, context.theme.border, 1, 5);
+        omega_ui::paint_boxes::box(paint, pixels, band_y, p2, context.theme.well, context.theme.border, 1, 5);
         transition { _ -> paint_center(paint, pixels, band_y, context, tree, cpu_pct) }
     }
-    state paint_center(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, tree: &DockTree, cpu_pct: i32) {
-        let r4: Rect = DockTree::window_rect(tree, 4);
-        let r5: Rect = DockTree::window_rect(tree, 5);
-        let r6: Rect = DockTree::window_rect(tree, 6);
-        GalleryRaster::draw_dock_pane_frame(paint, pixels, band_y, context, Rect::copy(&r4), tree.focused_window == 4, context.theme.accent);
-        GalleryRaster::draw_dock_pane_frame(paint, pixels, band_y, context, Rect::copy(&r5), tree.focused_window == 5, context.theme.success);
-        GalleryRaster::draw_dock_pane_frame(paint, pixels, band_y, context, Rect::copy(&r6), tree.focused_window == 6, context.theme.orange);
+    machine paint_center(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, tree: &DockTree, cpu_pct: i32) {
+        let r4: Rect = omega_ui::dock::window_rect(tree, 4);
+        let r5: Rect = omega_ui::dock::window_rect(tree, 5);
+        let r6: Rect = omega_ui::dock::window_rect(tree, 6);
+        painting::draw_dock_pane_frame(paint, pixels, band_y, context, omega_ui::types::rect_copy(&r4), tree.focused_window == 4, context.theme.accent);
+        painting::draw_dock_pane_frame(paint, pixels, band_y, context, omega_ui::types::rect_copy(&r5), tree.focused_window == 5, context.theme.success);
+        painting::draw_dock_pane_frame(paint, pixels, band_y, context, omega_ui::types::rect_copy(&r6), tree.focused_window == 6, context.theme.orange);
         transition r4.w > 40 && r4.h > 60 {
             true -> bars_r4(paint, pixels, band_y, context, r4, r5, r6, cpu_pct)
             _ -> check_r5(paint, pixels, band_y, context, r5, r6, cpu_pct)
         }
     }
-    state bars_r4(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, r4: Rect, r5: Rect, r6: Rect, cpu_pct: i32) {
+    machine bars_r4(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, r4: Rect, r5: Rect, r6: Rect, cpu_pct: i32) {
         let bw: i32 in Saturating = max_sat(r4.w - (24 as i32 in Saturating), 20);
-        UiBoxList::bar(paint, pixels, band_y, context, r4.x + (12 as i32 in Saturating), r4.y + (40 as i32 in Saturating), bw, 8, cpu_pct, context.theme.accent);
+        omega_ui::paint_boxes::bar(paint, pixels, band_y, context, r4.x + (12 as i32 in Saturating), r4.y + (40 as i32 in Saturating), bw, 8, cpu_pct, context.theme.accent);
         let row1: Rect = Rect { x: r4.x + (12 as i32 in Saturating), y: r4.y + (58 as i32 in Saturating), w: bw, h: 26 };
         let row2: Rect = Rect { x: r4.x + (12 as i32 in Saturating), y: r4.y + (90 as i32 in Saturating), w: bw, h: 26 };
-        UiBoxList::box(paint, pixels, band_y, row1, context.theme.well, context.theme.border, 1, 5);
-        UiBoxList::box(paint, pixels, band_y, row2, context.theme.well, context.theme.border, 1, 5);
+        omega_ui::paint_boxes::box(paint, pixels, band_y, row1, context.theme.well, context.theme.border, 1, 5);
+        omega_ui::paint_boxes::box(paint, pixels, band_y, row2, context.theme.well, context.theme.border, 1, 5);
         transition { _ -> check_r5(paint, pixels, band_y, context, r5, r6, cpu_pct) }
     }
-    state check_r5(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, r5: Rect, r6: Rect, cpu_pct: i32) {
+    machine check_r5(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, r5: Rect, r6: Rect, cpu_pct: i32) {
         transition r5.w > 40 && r5.h > 60 {
             true -> hex_r5(paint, pixels, band_y, context, r5, r6, cpu_pct)
             _ -> check_r6(paint, pixels, band_y, context, r6, cpu_pct)
         }
     }
-    state hex_r5(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, r5: Rect, r6: Rect, cpu_pct: i32) {
+    machine hex_r5(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, r5: Rect, r6: Rect, cpu_pct: i32) {
         let hw: i32 in Saturating = max_sat(r5.w - (24 as i32 in Saturating), 20);
         let h_well: Rect = Rect { x: r5.x + (12 as i32 in Saturating), y: r5.y + (38 as i32 in Saturating), w: hw, h: max_sat(r5.h - (50 as i32 in Saturating), 16) };
-        UiBoxList::box(paint, pixels, band_y, h_well, context.theme.well, context.theme.border, 1, 6);
+        omega_ui::paint_boxes::box(paint, pixels, band_y, h_well, context.theme.well, context.theme.border, 1, 6);
         transition { _ -> check_r6(paint, pixels, band_y, context, r6, cpu_pct) }
     }
-    state check_r6(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, r6: Rect, cpu_pct: i32) {
+    machine check_r6(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, r6: Rect, cpu_pct: i32) {
         transition r6.w > 40 && r6.h > 80 {
             true -> logs_r6(paint, pixels, band_y, context, r6, cpu_pct)
             _ -> done()
         }
     }
-    state logs_r6(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, r6: Rect, cpu_pct: i32) {
+    machine logs_r6(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, r6: Rect, cpu_pct: i32) {
         let lw: i32 in Saturating = max_sat(r6.w - (24 as i32 in Saturating), 16);
         let l1: Rect = Rect { x: r6.x + (12 as i32 in Saturating), y: r6.y + (36 as i32 in Saturating), w: lw, h: 24 };
         let l2: Rect = Rect { x: r6.x + (12 as i32 in Saturating), y: r6.y + (64 as i32 in Saturating), w: lw, h: 24 };
-        UiBoxList::box(paint, pixels, band_y, l1, context.theme.well, context.theme.border, 1, 5);
-        UiBoxList::box(paint, pixels, band_y, l2, context.theme.well, context.theme.border, 1, 5);
-        UiBoxList::bar(paint, pixels, band_y, context, r6.x + (12 as i32 in Saturating), r6.y + (96 as i32 in Saturating), lw, 6, cpu_pct, context.theme.success);
+        omega_ui::paint_boxes::box(paint, pixels, band_y, l1, context.theme.well, context.theme.border, 1, 5);
+        omega_ui::paint_boxes::box(paint, pixels, band_y, l2, context.theme.well, context.theme.border, 1, 5);
+        omega_ui::paint_boxes::bar(paint, pixels, band_y, context, r6.x + (12 as i32 in Saturating), r6.y + (96 as i32 in Saturating), lw, 6, cpu_pct, context.theme.success);
 
         let wb1: Rect = Rect { x: r6.x + (12 as i32 in Saturating), y: r6.y + (112 as i32 in Saturating), w: lw, h: 58 };
-        UiBoxList::box(paint, pixels, band_y, wb1, context.theme.well, context.theme.border, 1, 6);
+        omega_ui::paint_boxes::box(paint, pixels, band_y, wb1, context.theme.well, context.theme.border, 1, 6);
         let wb1_bar: Rect = Rect { x: r6.x + (12 as i32 in Saturating), y: r6.y + (112 as i32 in Saturating), w: 4, h: 58 };
-        UiBoxList::box(paint, pixels, band_y, wb1_bar, context.theme.success, context.theme.success, 0, 2);
+        omega_ui::paint_boxes::box(paint, pixels, band_y, wb1_bar, context.theme.success, context.theme.success, 0, 2);
         let rerun_r: Rect = Rect { x: r6.x + lw - (48 as i32 in Saturating), y: r6.y + (117 as i32 in Saturating), w: 54, h: 18 };
-        UiBoxList::box(paint, pixels, band_y, rerun_r, context.theme.surface_hover, context.theme.accent, 1, 4);
+        omega_ui::paint_boxes::box(paint, pixels, band_y, rerun_r, context.theme.surface_hover, context.theme.accent, 1, 4);
 
         let wb2_h: i32 in Saturating = max_sat(r6.h - (182 as i32 in Saturating), 48);
         let wb2: Rect = Rect { x: r6.x + (12 as i32 in Saturating), y: r6.y + (176 as i32 in Saturating), w: lw, h: wb2_h };
-        UiBoxList::box(paint, pixels, band_y, wb2, context.theme.well, context.theme.border, 1, 6);
+        omega_ui::paint_boxes::box(paint, pixels, band_y, wb2, context.theme.well, context.theme.border, 1, 6);
         let wb2_bar: Rect = Rect { x: r6.x + (12 as i32 in Saturating), y: r6.y + (176 as i32 in Saturating), w: 4, h: wb2_h };
-        UiBoxList::box(paint, pixels, band_y, wb2_bar, context.theme.purple, context.theme.purple, 0, 2);
+        omega_ui::paint_boxes::box(paint, pixels, band_y, wb2_bar, context.theme.purple, context.theme.purple, 0, 2);
         let tool_pill: Rect = Rect { x: r6.x + (22 as i32 in Saturating), y: r6.y + (200 as i32 in Saturating), w: max_sat(lw - (18 as i32 in Saturating), 20), h: 18 };
-        UiBoxList::box(paint, pixels, band_y, tool_pill, context.theme.surface, context.theme.border, 1, 4);
+        omega_ui::paint_boxes::box(paint, pixels, band_y, tool_pill, context.theme.surface, context.theme.border, 1, 4);
     }
-    state done() {}
+    machine done() {}
 }
 
-public machine GalleryRaster::render_dock_tree_band(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, tree: &DockTree, cpu_pct: i32) {
+public machine render_dock_tree_band(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, tree: &DockTree, cpu_pct: i32) {
     let ly: i32 in Saturating = pixels[4093] as i32 in Saturating;
     transition paint.recording || band_y < 0 || (ly >= 140 && ly <= 666) {
         true -> run_dock(paint, pixels, band_y, context, tree, cpu_pct)
         _ -> done()
     }
-    state run_dock(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, tree: &DockTree, cpu_pct: i32) {
-        GalleryRaster::draw_dock_tab_group(paint, pixels, band_y, context, tree);
-        GalleryRaster::draw_dock_panes_mid(paint, pixels, band_y, context, tree, cpu_pct);
+    machine run_dock(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, tree: &DockTree, cpu_pct: i32) {
+        painting::draw_dock_tab_group(paint, pixels, band_y, context, tree);
+        painting::draw_dock_panes_mid(paint, pixels, band_y, context, tree, cpu_pct);
 
         let act0_1: bool = (tree.hot_divider_node == 0 && tree.hot_divider_index == 1) || (tree.drag_divider_node == 0 && tree.drag_divider_index == 1);
         let act0_2: bool = (tree.hot_divider_node == 0 && tree.hot_divider_index == 2) || (tree.drag_divider_node == 0 && tree.drag_divider_index == 2);
         let act1_1: bool = tree.hot_divider_node == 1 || tree.drag_divider_node == 1;
         let act4_1: bool = tree.hot_divider_node == 4 || tree.drag_divider_node == 4;
 
-        GalleryRaster::draw_dock_divider(paint, pixels, band_y, context, DockTree::div1_rect(tree, 0), true, act0_1);
-        GalleryRaster::draw_dock_divider(paint, pixels, band_y, context, DockTree::div2_rect(tree, 0), true, act0_2);
-        GalleryRaster::draw_dock_divider(paint, pixels, band_y, context, DockTree::div1_rect(tree, 1), false, act1_1);
-        GalleryRaster::draw_dock_divider(paint, pixels, band_y, context, DockTree::div1_rect(tree, 4), false, act4_1);
+        painting::draw_dock_divider(paint, pixels, band_y, context, omega_ui::dock::div1_rect(tree, 0), true, act0_1);
+        painting::draw_dock_divider(paint, pixels, band_y, context, omega_ui::dock::div2_rect(tree, 0), true, act0_2);
+        painting::draw_dock_divider(paint, pixels, band_y, context, omega_ui::dock::div1_rect(tree, 1), false, act1_1);
+        painting::draw_dock_divider(paint, pixels, band_y, context, omega_ui::dock::div1_rect(tree, 4), false, act4_1);
 
         transition tree.drag_window_id > 0 {
             true -> paint_drag_overlay(paint, pixels, band_y, context, tree)
             _ -> done()
         }
     }
-    state paint_drag_overlay(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, tree: &DockTree) {
+    machine paint_drag_overlay(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, tree: &DockTree) {
         let dst: i32 = tree.drop_target_window;
-        let dst_r: Rect = DockTree::window_rect(tree, dst);
+        let dst_r: Rect = omega_ui::dock::window_rect(tree, dst);
         let show_dst: bool = dst > 0 && dst != tree.drag_window_id && dst_r.w > 20 && dst_r.h > 28;
         transition show_dst {
             true -> paint_drop_target(paint, pixels, band_y, context, dst_r)
             _ -> paint_ghost(paint, pixels, band_y, context)
         }
     }
-    state paint_drop_target(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, dst_r: Rect) {
+    machine paint_drop_target(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, dst_r: Rect) {
         let inner_r: Rect = Rect {
             x: dst_r.x + (3 as i32 in Saturating),
             y: dst_r.y + (30 as i32 in Saturating),
@@ -1105,79 +1125,79 @@ public machine GalleryRaster::render_dock_tree_band(paint: &mut UiBoxList, pixel
             h: max_sat(dst_r.h - (33 as i32 in Saturating), 10)
         };
         let drop_bg: i32 = color_mix(context.theme.surface, context.theme.accent, 22);
-        UiBoxList::box(paint, pixels, band_y, inner_r, drop_bg, context.theme.accent, 1, 6);
+        omega_ui::paint_boxes::box(paint, pixels, band_y, inner_r, drop_bg, context.theme.accent, 1, 6);
         transition { _ -> paint_ghost(paint, pixels, band_y, context) }
     }
-    state paint_ghost(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext) {
+    machine paint_ghost(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext) {
         let gx: i32 in Saturating = clamp_i32(sub_i32(context.mouse_x, 76), 266, 860) as i32 in Saturating;
         let gy: i32 in Saturating = clamp_i32(sub_i32(context.mouse_y, 14), 146, 624) as i32 in Saturating;
         let ghost_r: Rect = Rect { x: gx, y: gy, w: 152, h: 28 };
         let ghost_bg: i32 = color_mix(context.theme.surface_hover, context.theme.accent, 32);
-        UiBoxList::box(paint, pixels, band_y, ghost_r, ghost_bg, context.theme.accent, 1, 7);
+        omega_ui::paint_boxes::box(paint, pixels, band_y, ghost_r, ghost_bg, context.theme.accent, 1, 7);
     }
-    state done() {}
+    machine done() {}
 }
 
 // A single floating surface, a quiet selection and one-line command rows.
-public machine GalleryRaster::render_palette_modal(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, pick: i32, count: i32, selection_left: i32, selection_right: i32, caret: i32) {
+public machine render_palette_modal(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, pick: i32, count: i32, selection_left: i32, selection_right: i32, caret: i32) {
     let height: i32 in Saturating = add_i32(104, mul_i32(max_i32(count, 2), 36)) as i32 in Saturating;
     let card: Rect = Rect { x: 412, y: 110, w: 448, h: height };
-    Raster::draw_box_band(pixels, band_y, card, context.theme.surface, context.theme.border, 1, 18);
+    omega_ui::raster::draw_box_band(pixels, band_y, card, context.theme.surface, context.theme.border, 1, 18);
     let search: Rect = Rect { x: 414, y: 112, w: 444, h: 52 };
-    Raster::draw_box_fill(pixels, band_y, search, context.theme.well, 16);
-    GalleryRaster::search_icon(pixels, band_y, context);
-    UiTextFieldView::paint_selection(pixels, band_y, context, Rect { x: 450, y: 131, w: 336, h: 20 },
+    omega_ui::raster::draw_box_fill(pixels, band_y, search, context.theme.well, 16);
+    painting::search_icon(pixels, band_y, context);
+    omega_ui::text_field::paint_selection(pixels, band_y, context, Rect { x: 450, y: 131, w: 336, h: 20 },
         UiTextSelection { left: selection_left, right: selection_right, caret: caret, focused: true });
     transition count > 0 {
         true -> highlight(pixels, band_y, context, pick)
         _ -> done()
     }
-    state highlight(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, pick: i32) {
+    machine highlight(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, pick: i32) {
         let row: Rect = Rect { x: 420, y: (172 as i32 in Saturating) + ((pick as i32 in Saturating) * (180 as i32 in Saturating) / (1000 as i32 in Saturating)), w: 432, h: 34 };
-        Raster::draw_box_fill(pixels, band_y, row, context.theme.well, 8);
+        omega_ui::raster::draw_box_fill(pixels, band_y, row, context.theme.well, 8);
     }
-    state done() {}
+    machine done() {}
 }
 
 // Render one physical scanline (`band_y >= 0`) or full 64x64 (`band_y == -1`).
-public machine GalleryRaster::render_band(scene: &UiScene, dots: &GalleryDots, reference: bool, context: &UiContext, pixels: &mut [i32; 4096], band_y: i32) {
-    UiScene::begin_band(scene, context, pixels, band_y);
+public machine render_band(scene: &UiScene, dot_cache: &GalleryDots, reference: bool, context: &UiContext, pixels: &mut [i32; 4096], band_y: i32) {
+    omega_ui::scene::begin_band(scene, context, pixels, band_y);
     let mut cursor: i32 = 0;
-    transition { _ -> next(scene, dots, reference, context, pixels, band_y, &mut cursor) }
-    state next(scene: &UiScene, dots: &GalleryDots, reference: bool, context: &UiContext, pixels: &mut [i32; 4096], band_y: i32, cursor: &mut i32) {
-        let index: i32 = UiScene::next(scene, context, pixels, band_y, cursor);
-        transition index >= 0 && index < 128 { true -> content(scene, dots, reference, context, pixels, band_y, cursor, index) _ -> done() }
+    transition { _ -> next(scene, dot_cache, reference, context, pixels, band_y, &mut cursor) }
+    machine next(scene: &UiScene, dot_cache: &GalleryDots, reference: bool, context: &UiContext, pixels: &mut [i32; 4096], band_y: i32, cursor: &mut i32) {
+        let index: i32 = omega_ui::scene::next(scene, context, pixels, band_y, cursor);
+        transition index >= 0 && index < 128 { true -> content(scene, dot_cache, reference, context, pixels, band_y, cursor, index) _ -> done() }
     }
-    state content(scene: &UiScene, dots: &GalleryDots, reference: bool, context: &UiContext, pixels: &mut [i32; 4096], band_y: i32, cursor: &mut i32, index: i32)
+    machine content(scene: &UiScene, dot_cache: &GalleryDots, reference: bool, context: &UiContext, pixels: &mut [i32; 4096], band_y: i32, cursor: &mut i32, index: i32)
     requires index >= 0 && index < 128 {
-        GalleryRaster::draw_node_content(pixels, band_y, context, index);
+        painting::draw_node_content(pixels, band_y, context, index);
         transition reference || band_y < 0 {
-            true -> scalar(scene, dots, reference, context, pixels, band_y, cursor, index)
-            _ -> cached(scene, dots, reference, context, pixels, band_y, cursor, index)
+            true -> scalar(scene, dot_cache, reference, context, pixels, band_y, cursor, index)
+            _ -> cached(scene, dot_cache, reference, context, pixels, band_y, cursor, index)
         }
     }
-    state cached(scene: &UiScene, dots: &GalleryDots, reference: bool, context: &UiContext, pixels: &mut [i32; 4096], band_y: i32, cursor: &mut i32, index: i32)
+    machine cached(scene: &UiScene, dot_cache: &GalleryDots, reference: bool, context: &UiContext, pixels: &mut [i32; 4096], band_y: i32, cursor: &mut i32, index: i32)
     requires index >= 0 && index < 128 {
-        GalleryDots::draw_band(dots, pixels, band_y, context, index);
-        transition { _ -> next(scene, dots, reference, context, pixels, band_y, cursor) }
+        dots::draw_band(dot_cache, pixels, band_y, context, index);
+        transition { _ -> next(scene, dot_cache, reference, context, pixels, band_y, cursor) }
     }
-    state scalar(scene: &UiScene, dots: &GalleryDots, reference: bool, context: &UiContext, pixels: &mut [i32; 4096], band_y: i32, cursor: &mut i32, index: i32)
+    machine scalar(scene: &UiScene, dot_cache: &GalleryDots, reference: bool, context: &UiContext, pixels: &mut [i32; 4096], band_y: i32, cursor: &mut i32, index: i32)
     requires index >= 0 && index < 128 {
         let kind: i32 = context.nodes[index].content_kind;
         transition kind == 13 || (kind == 14 && context.nodes[index].label_id > 10) {
-            true -> well(scene, dots, reference, context, pixels, band_y, cursor, index, select_i32(kind == 13, 66, 72), select_i32(kind == 13, 12, 14))
-            _ -> next(scene, dots, reference, context, pixels, band_y, cursor)
+            true -> well(scene, dot_cache, reference, context, pixels, band_y, cursor, index, select_i32(kind == 13, 66, 72), select_i32(kind == 13, 12, 14))
+            _ -> next(scene, dot_cache, reference, context, pixels, band_y, cursor)
         }
     }
-    state well(scene: &UiScene, dots: &GalleryDots, reference: bool, context: &UiContext, pixels: &mut [i32; 4096], band_y: i32, cursor: &mut i32, index: i32, offset: i32, padding: i32)
+    machine well(scene: &UiScene, dot_cache: &GalleryDots, reference: bool, context: &UiContext, pixels: &mut [i32; 4096], band_y: i32, cursor: &mut i32, index: i32, offset: i32, padding: i32)
     requires index >= 0 && index < 128 {
-        GalleryRaster::draw_node_dots_well(pixels, band_y, context, index, offset as i32 in Saturating, padding as i32 in Saturating);
-        transition { _ -> next(scene, dots, reference, context, pixels, band_y, cursor) }
+        painting::draw_node_dots_well(pixels, band_y, context, index, offset as i32 in Saturating, padding as i32 in Saturating);
+        transition { _ -> next(scene, dot_cache, reference, context, pixels, band_y, cursor) }
     }
-    state done() {}
+    machine done() {}
 }
 
-public machine GalleryRaster::draw_node_content(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
+public machine draw_node_content(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
 requires node_index >= 0 && node_index < 128 {
     let kind: i32 = context.nodes[node_index].content_kind;
     transition kind {
@@ -1189,79 +1209,79 @@ requires node_index >= 0 && node_index < 128 {
         17 -> render_playground_card(pixels, band_y, context, node_index)
         _ -> basic(pixels, band_y, context, node_index, kind)
     }
-    state render_sidebar_item(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
+    machine render_sidebar_item(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
     requires node_index >= 0 && node_index < 128 {
-        GalleryRaster::render_sidebar_item(pixels, band_y, context, node_index);
+        painting::render_sidebar_item(pixels, band_y, context, node_index);
     }
-    state render_header_bar(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
+    machine render_header_bar(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
     requires node_index >= 0 && node_index < 128 {
-        GalleryRaster::render_header_bar(pixels, band_y, context, node_index);
+        painting::render_header_bar(pixels, band_y, context, node_index);
     }
-    state render_sidebar_label(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
+    machine render_sidebar_label(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
     requires node_index >= 0 && node_index < 128 {
-        GalleryRaster::render_sidebar_label(pixels, band_y, context, node_index);
+        painting::render_sidebar_label(pixels, band_y, context, node_index);
     }
-    state render_metric_tile(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
+    machine render_metric_tile(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
     requires node_index >= 0 && node_index < 128 {
-        GalleryRaster::render_metric_tile(pixels, band_y, context, node_index);
+        painting::render_metric_tile(pixels, band_y, context, node_index);
     }
-    state render_dot_graph_card(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
+    machine render_dot_graph_card(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
     requires node_index >= 0 && node_index < 128 {
-        GalleryRaster::render_dot_graph_card(pixels, band_y, context, node_index);
+        painting::render_dot_graph_card(pixels, band_y, context, node_index);
     }
-    state render_playground_card(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
+    machine render_playground_card(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32)
     requires node_index >= 0 && node_index < 128 {
-        GalleryRaster::render_playground_card(pixels, band_y, context, node_index);
+        painting::render_playground_card(pixels, band_y, context, node_index);
     }
-    state basic(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32, kind: i32)
+    machine basic(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, node_index: i32, kind: i32)
     requires node_index >= 0 && node_index < 128 {
-        Raster::draw_node_content(pixels, band_y, context, node_index);
+        omega_ui::raster::draw_node_content(pixels, band_y, context, node_index);
     }
 }
 
-public machine GalleryRaster::draw_swatch(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, color: i32, selected: bool) {
+public machine draw_swatch(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, color: i32, selected: bool) {
     let surface: Rect = Rect { x: rectangle.x, y: rectangle.y, w: rectangle.w, h: rectangle.h };
-    Raster::draw_box_fill(pixels, band_y, surface, color, 18);
+    omega_ui::raster::draw_box_fill(pixels, band_y, surface, color, 18);
     transition selected {
         true -> mark(pixels, band_y, rectangle)
         _ -> done()
     }
-    state mark(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect) {
+    machine mark(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect) {
         let mark: Rect = Rect { x: rectangle.x + rectangle.w - (13 as i32 in Saturating), y: rectangle.y + (2 as i32 in Saturating), w: 10, h: 10 };
-        Raster::draw_checkmark(pixels, band_y, mark, 0x0B0D11, 1000);
+        omega_ui::raster::draw_checkmark(pixels, band_y, mark, 0x0B0D11, 1000);
     }
-    state done() {}
+    machine done() {}
 }
 
-machine GalleryRaster::search_icon(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext) {
-    let width: i32 in Saturating = Raster::isotropic_width(context, 9);
+machine search_icon(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext) {
+    let width: i32 in Saturating = omega_ui::raster::isotropic_width(context, 9);
     let circle: Rect = Rect { x: 428, y: 132, w: width, h: 9 };
-    Raster::draw_box_border(pixels, band_y, circle, context.theme.tertiary, 5);
+    omega_ui::raster::draw_box_border(pixels, band_y, circle, context.theme.tertiary, 5);
     let row: i32 = pixels[4093];
     transition band_y >= 0 && row >= 138 && row <= 146 {
         true -> handle(pixels, band_y, context, width)
         _ -> done()
     }
-    state handle(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, width: i32 in Saturating) {
-        let cw: i32 in Saturating = Raster::band_width(pixels, band_y);
-        let ch: i32 in Saturating = Raster::band_height(pixels, band_y);
-        let ax: i32 in Saturating = Raster::to_physical_x((428 as i32 in Saturating) + width * (7 as i32 in Saturating) / (9 as i32 in Saturating), cw, false, 1024);
-        let ay: i32 in Saturating = Raster::to_physical_y(139, ch, false, 672);
-        let bx: i32 in Saturating = Raster::to_physical_x((428 as i32 in Saturating) + Raster::isotropic_width(context, 12), cw, false, 1024);
-        let by: i32 in Saturating = Raster::to_physical_y(144, ch, false, 672);
+    machine handle(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, width: i32 in Saturating) {
+        let cw: i32 in Saturating = omega_ui::raster::band_width(pixels, band_y);
+        let ch: i32 in Saturating = omega_ui::raster::band_height(pixels, band_y);
+        let ax: i32 in Saturating = omega_ui::raster::to_physical_x((428 as i32 in Saturating) + width * (7 as i32 in Saturating) / (9 as i32 in Saturating), cw, false, 1024);
+        let ay: i32 in Saturating = omega_ui::raster::to_physical_y(139, ch, false, 672);
+        let bx: i32 in Saturating = omega_ui::raster::to_physical_x((428 as i32 in Saturating) + omega_ui::raster::isotropic_width(context, 12), cw, false, 1024);
+        let by: i32 in Saturating = omega_ui::raster::to_physical_y(144, ch, false, 672);
         transition { _ -> pixel(pixels, band_y, context.theme.tertiary, ax, ay, bx, by, ax - (1 as i32 in Saturating), 0) }
     }
-    state pixel(pixels: &mut [i32; 4096], band_y: i32, color: i32, ax: i32 in Saturating, ay: i32 in Saturating, bx: i32 in Saturating, by: i32 in Saturating, x: i32 in Saturating, count: i32) {
+    machine pixel(pixels: &mut [i32; 4096], band_y: i32, color: i32, ax: i32 in Saturating, ay: i32 in Saturating, bx: i32 in Saturating, by: i32 in Saturating, x: i32 in Saturating, count: i32) {
         transition x <= bx + (1 as i32 in Saturating) && count < 128 {
             true -> paint(pixels, band_y, color, ax, ay, bx, by, x, count)
             _ -> done()
         }
     }
-    state paint(pixels: &mut [i32; 4096], band_y: i32, color: i32, ax: i32 in Saturating, ay: i32 in Saturating, bx: i32 in Saturating, by: i32 in Saturating, x: i32 in Saturating, count: i32) {
+    machine paint(pixels: &mut [i32; 4096], band_y: i32, color: i32, ax: i32 in Saturating, ay: i32 in Saturating, bx: i32 in Saturating, by: i32 in Saturating, x: i32 in Saturating, count: i32) {
         let sixteen: i32 in Saturating = 16;
-        let coverage: i32 = Raster::segment_coverage(x * sixteen + (8 as i32 in Saturating), (band_y as i32 in Saturating) * sixteen + (8 as i32 in Saturating), ax * sixteen, ay * sixteen, bx * sixteen, by * sixteen, 8);
-        Raster::blend_px_raw(pixels, band_y, x, band_y as i32 in Saturating, color, coverage);
+        let coverage: i32 = omega_ui::raster::segment_coverage(x * sixteen + (8 as i32 in Saturating), (band_y as i32 in Saturating) * sixteen + (8 as i32 in Saturating), ax * sixteen, ay * sixteen, bx * sixteen, by * sixteen, 8);
+        omega_ui::raster::blend_px_raw(pixels, band_y, x, band_y as i32 in Saturating, color, coverage);
         transition { _ -> pixel(pixels, band_y, color, ax, ay, bx, by, x + (1 as i32 in Saturating), add_i32(count, 1)) }
     }
-    state done() {}
+    machine done() {}
 }

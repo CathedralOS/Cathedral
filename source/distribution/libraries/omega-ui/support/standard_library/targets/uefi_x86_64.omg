@@ -1,6 +1,0 @@
-// Target-owned UEFI x86-64 physical contract package: `entry` owns the
-// physical-arrival and storage-root schemas; `handoff` owns the nonreturning
-// OS-loader custody-transfer surface.
-use targets::uefi_x86_64::entry;
-use targets::uefi_x86_64::handoff;
-use targets::uefi_x86_64::tables;

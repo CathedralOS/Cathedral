@@ -1,7 +1,7 @@
 machine build(builder: &mut Build) {
     Build::package(builder, "omega_ui_native");
     Build::depend_as(builder, "omega_ui", Source::Path { location: "../../src" });
-    Build::select_provider<UiNativeLayout, UiNativeLayoutProvider>(builder);
-    Build::select_provider<UiNativeFrame, UiNativeFrameProvider>(builder);
+    Build::select_provider<UiNativeLayout, UiNativeLayoutProvider>(builder, linux_x86_64);
+    Build::select_provider<UiNativeFrame, UiNativeFrameProvider>(builder, linux_x86_64);
     Build::bind(builder, linux_x86_64::ProgramEntry, component_entry);
 }

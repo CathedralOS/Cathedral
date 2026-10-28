@@ -1,3 +1,8 @@
+module palette;
+
+use types::Theme;
+
+
 // Resolves two theme modes and eight accents into runtime color roles.
 
 use types;
@@ -34,7 +39,7 @@ public data ThemePalette {
     accent_subtle_alpha: i32;
 }
 
-public machine ThemePalette::resolve(dark: bool, accent: i32) -> ThemePalette {
+public machine resolve(dark: bool, accent: i32) -> ThemePalette {
     transition dark { true -> (dark_palette(accent)) _ -> (light_palette(accent)) }
 }
 
@@ -608,33 +613,33 @@ machine dark_rose() -> ThemePalette {
     }
 }
 
-public machine ThemePalette::to_theme(palette: &ThemePalette, dark: bool) -> Theme {
+public machine to_theme(resolved_palette: &ThemePalette, dark: bool) -> Theme {
     Theme {
         is_dark: dark,
-        background: palette.background,
-        sidebar_bg: palette.background,
-        surface: palette.surface,
-        surface_hover: palette.surface_muted,
-        control_on: palette.control_on,
-        control_glyph: palette.control_glyph,
-        well: palette.surface_muted,
-        empty: palette.control_track,
-        border: palette.border_subtle,
-        text: palette.foreground,
-        text_muted: palette.text_secondary,
-        tertiary: palette.text_muted,
-        accent: palette.accent,
-        accent_hover: palette.accent_strong,
-        accent_text: palette.accent_foreground,
-        danger: palette.danger,
-        success: palette.success,
-        orange: palette.warning,
-        teal: palette.series_4,
-        purple: palette.series_2,
-        blue: palette.series_1,
-        track: palette.control_track,
-        knob: palette.control_thumb,
-        knob_on: palette.control_thumb_on,
+        background: resolved_palette.background,
+        sidebar_bg: resolved_palette.background,
+        surface: resolved_palette.surface,
+        surface_hover: resolved_palette.surface_muted,
+        control_on: resolved_palette.control_on,
+        control_glyph: resolved_palette.control_glyph,
+        well: resolved_palette.surface_muted,
+        empty: resolved_palette.control_track,
+        border: resolved_palette.border_subtle,
+        text: resolved_palette.foreground,
+        text_muted: resolved_palette.text_secondary,
+        tertiary: resolved_palette.text_muted,
+        accent: resolved_palette.accent,
+        accent_hover: resolved_palette.accent_strong,
+        accent_text: resolved_palette.accent_foreground,
+        danger: resolved_palette.danger,
+        success: resolved_palette.success,
+        orange: resolved_palette.warning,
+        teal: resolved_palette.series_4,
+        purple: resolved_palette.series_2,
+        blue: resolved_palette.series_1,
+        track: resolved_palette.control_track,
+        knob: resolved_palette.control_thumb,
+        knob_on: resolved_palette.control_thumb_on,
         shadow: 0x000000
     }
 }

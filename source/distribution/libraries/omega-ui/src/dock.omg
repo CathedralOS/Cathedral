@@ -1,3 +1,17 @@
+module dock;
+
+use types::Rect;
+use types::add_i32;
+use types::clamp_i32;
+use types::max_i32;
+use types::max_sat;
+use types::min_i32;
+use types::select_i32;
+use types::select_rect;
+use types::select_sat;
+use types::sub_i32;
+
+
 // Solves a twelve-slot split and tab tree independently of drawing or operating-system windows.
 
 use types;
@@ -26,7 +40,7 @@ public data DockNode {
     div2_rect: Rect;
 }
 
-public machine DockNode::empty() -> DockNode {
+public machine dock_node_empty() -> DockNode {
     DockNode {
         kind: 0,
         parent: -1,
@@ -40,13 +54,13 @@ public machine DockNode::empty() -> DockNode {
         ratio_b: 500,
         ratio_c: 0,
         is_visible: false,
-        rect: Rect::zero(),
-        div1_rect: Rect::zero(),
-        div2_rect: Rect::zero()
+        rect: types::rect_zero(),
+        div1_rect: types::rect_zero(),
+        div2_rect: types::rect_zero()
     }
 }
 
-public machine DockNode::window(parent: i32, window_id: i32) -> DockNode {
+public machine dock_node_window(parent: i32, window_id: i32) -> DockNode {
     DockNode {
         kind: 4,
         parent: parent,
@@ -60,13 +74,13 @@ public machine DockNode::window(parent: i32, window_id: i32) -> DockNode {
         ratio_b: 0,
         ratio_c: 0,
         is_visible: true,
-        rect: Rect::zero(),
-        div1_rect: Rect::zero(),
-        div2_rect: Rect::zero()
+        rect: types::rect_zero(),
+        div1_rect: types::rect_zero(),
+        div2_rect: types::rect_zero()
     }
 }
 
-public machine DockNode::split2(parent: i32, kind: i32, c0: i32, c1: i32, ra: i32, rb: i32) -> DockNode {
+public machine dock_node_split2(parent: i32, kind: i32, c0: i32, c1: i32, ra: i32, rb: i32) -> DockNode {
     DockNode {
         kind: kind,
         parent: parent,
@@ -80,13 +94,13 @@ public machine DockNode::split2(parent: i32, kind: i32, c0: i32, c1: i32, ra: i3
         ratio_b: rb,
         ratio_c: 0,
         is_visible: true,
-        rect: Rect::zero(),
-        div1_rect: Rect::zero(),
-        div2_rect: Rect::zero()
+        rect: types::rect_zero(),
+        div1_rect: types::rect_zero(),
+        div2_rect: types::rect_zero()
     }
 }
 
-public machine DockNode::split3(parent: i32, kind: i32, c0: i32, c1: i32, c2: i32, ra: i32, rb: i32, rc: i32) -> DockNode {
+public machine dock_node_split3(parent: i32, kind: i32, c0: i32, c1: i32, c2: i32, ra: i32, rb: i32, rc: i32) -> DockNode {
     DockNode {
         kind: kind,
         parent: parent,
@@ -100,13 +114,13 @@ public machine DockNode::split3(parent: i32, kind: i32, c0: i32, c1: i32, c2: i3
         ratio_b: rb,
         ratio_c: rc,
         is_visible: true,
-        rect: Rect::zero(),
-        div1_rect: Rect::zero(),
-        div2_rect: Rect::zero()
+        rect: types::rect_zero(),
+        div1_rect: types::rect_zero(),
+        div2_rect: types::rect_zero()
     }
 }
 
-public machine DockNode::tabs2(parent: i32, c0: i32, c1: i32, active_tab: i32) -> DockNode {
+public machine dock_node_tabs2(parent: i32, c0: i32, c1: i32, active_tab: i32) -> DockNode {
     DockNode {
         kind: 3,
         parent: parent,
@@ -120,9 +134,9 @@ public machine DockNode::tabs2(parent: i32, c0: i32, c1: i32, active_tab: i32) -
         ratio_b: 500,
         ratio_c: 0,
         is_visible: true,
-        rect: Rect::zero(),
-        div1_rect: Rect::zero(),
-        div2_rect: Rect::zero()
+        rect: types::rect_zero(),
+        div1_rect: types::rect_zero(),
+        div2_rect: types::rect_zero()
     }
 }
 
@@ -151,21 +165,21 @@ public data DockTree {
 // - Node 7: Top-Center Window 4 (Element Scanner)
 // - Node 8: Bottom-Center Window 5 (Memory Viewer)
 // - Node 9: Right Window 6 (Output & Logs)
-public machine DockTree::workspace_preset() -> DockTree {
+public machine workspace_preset() -> DockTree {
     DockTree {
         nodes: [
-            DockNode::split3(-1, 1, 1, 4, 9, 260, 460, 280),
-            DockNode::split2(0, 2, 2, 3, 520, 480),
-            DockNode::tabs2(1, 5, 6, 0),
-            DockNode::window(1, 3),
-            DockNode::split2(0, 2, 7, 8, 550, 450),
-            DockNode::window(2, 1),
-            DockNode::window(2, 2),
-            DockNode::window(4, 4),
-            DockNode::window(4, 5),
-            DockNode::window(0, 6),
-            DockNode::empty(),
-            DockNode::empty()
+            dock::dock_node_split3(-1, 1, 1, 4, 9, 260, 460, 280),
+            dock::dock_node_split2(0, 2, 2, 3, 520, 480),
+            dock::dock_node_tabs2(1, 5, 6, 0),
+            dock::dock_node_window(1, 3),
+            dock::dock_node_split2(0, 2, 7, 8, 550, 450),
+            dock::dock_node_window(2, 1),
+            dock::dock_node_window(2, 2),
+            dock::dock_node_window(4, 4),
+            dock::dock_node_window(4, 5),
+            dock::dock_node_window(0, 6),
+            dock::dock_node_empty(),
+            dock::dock_node_empty()
         ],
         node_count: 10,
         root: 0,
@@ -181,7 +195,7 @@ public machine DockTree::workspace_preset() -> DockTree {
     }
 }
 
-public machine DockTree::node_rect(tree: &DockTree, node_index: i32) -> Rect
+public machine node_rect(tree: &DockTree, node_index: i32) -> Rect
 requires node_index >= 0 && node_index < 12 {
     Rect {
         x: tree.nodes[node_index].rect.x,
@@ -191,7 +205,7 @@ requires node_index >= 0 && node_index < 12 {
     }
 }
 
-public machine DockTree::div1_rect(tree: &DockTree, node_index: i32) -> Rect
+public machine div1_rect(tree: &DockTree, node_index: i32) -> Rect
 requires node_index >= 0 && node_index < 12 {
     Rect {
         x: tree.nodes[node_index].div1_rect.x,
@@ -201,7 +215,7 @@ requires node_index >= 0 && node_index < 12 {
     }
 }
 
-public machine DockTree::div2_rect(tree: &DockTree, node_index: i32) -> Rect
+public machine div2_rect(tree: &DockTree, node_index: i32) -> Rect
 requires node_index >= 0 && node_index < 12 {
     Rect {
         x: tree.nodes[node_index].div2_rect.x,
@@ -212,12 +226,12 @@ requires node_index >= 0 && node_index < 12 {
 }
 
 // Check if a leaf or container node has at least one visible window.
-public machine DockTree::is_leaf_or_tab_visible(tree: &DockTree, node_index: i32) -> bool {
+public machine is_leaf_or_tab_visible(tree: &DockTree, node_index: i32) -> bool {
     transition node_index >= 0 && node_index < 12 {
         true -> check_kind(tree, node_index)
         _ -> (false)
     }
-    state check_kind(tree: &DockTree, node_index: i32) -> bool
+    machine check_kind(tree: &DockTree, node_index: i32) -> bool
     requires node_index >= 0 && node_index < 12 {
         let k: i32 = tree.nodes[node_index].kind;
         transition k == 4 {
@@ -225,7 +239,7 @@ public machine DockTree::is_leaf_or_tab_visible(tree: &DockTree, node_index: i32
             _ -> check_tab(tree, node_index, k)
         }
     }
-    state check_tab(tree: &DockTree, node_index: i32, k: i32) -> bool
+    machine check_tab(tree: &DockTree, node_index: i32, k: i32) -> bool
     requires node_index >= 0 && node_index < 12 {
         let c0: i32 = tree.nodes[node_index].first_child;
         let c1: i32 = tree.nodes[node_index].second_child;
@@ -237,41 +251,41 @@ public machine DockTree::is_leaf_or_tab_visible(tree: &DockTree, node_index: i32
     }
 }
 
-public machine DockTree::is_subtree_visible(tree: &DockTree, node_index: i32) -> bool {
+public machine is_subtree_visible(tree: &DockTree, node_index: i32) -> bool {
     transition node_index >= 0 && node_index < 12 {
         true -> check_node(tree, node_index)
         _ -> (false)
     }
-    state check_node(tree: &DockTree, node_index: i32) -> bool
+    machine check_node(tree: &DockTree, node_index: i32) -> bool
     requires node_index >= 0 && node_index < 12 {
         let k: i32 = tree.nodes[node_index].kind;
         transition k == 1 || k == 2 {
             true -> check_split(tree, node_index)
-            _ -> (DockTree::is_leaf_or_tab_visible(tree, node_index))
+            _ -> (dock::is_leaf_or_tab_visible(tree, node_index))
         }
     }
-    state check_split(tree: &DockTree, node_index: i32) -> bool
+    machine check_split(tree: &DockTree, node_index: i32) -> bool
     requires node_index >= 0 && node_index < 12 {
         let c0: i32 = tree.nodes[node_index].first_child;
         let c1: i32 = tree.nodes[node_index].second_child;
         let c2: i32 = tree.nodes[node_index].third_child;
-        let first_visible: bool = DockTree::is_leaf_or_tab_visible(tree, c0);
-        let second_visible: bool = DockTree::is_leaf_or_tab_visible(tree, c1);
-        let v2: bool = DockTree::is_leaf_or_tab_visible(tree, c2);
+        let first_visible: bool = dock::is_leaf_or_tab_visible(tree, c0);
+        let second_visible: bool = dock::is_leaf_or_tab_visible(tree, c1);
+        let v2: bool = dock::is_leaf_or_tab_visible(tree, c2);
         first_visible || second_visible || v2
     }
 }
 
-public machine DockTree::clear_subtree_rects(tree: &mut DockTree, node_index: i32) {
+public machine clear_subtree_rects(tree: &mut DockTree, node_index: i32) {
     transition node_index >= 0 && node_index < 12 {
         true -> do_clear(tree, node_index)
         _ -> done()
     }
-    state do_clear(tree: &mut DockTree, node_index: i32)
+    machine do_clear(tree: &mut DockTree, node_index: i32)
     requires node_index >= 0 && node_index < 12 {
-        tree.nodes[node_index].rect = Rect::zero();
-        tree.nodes[node_index].div1_rect = Rect::zero();
-        tree.nodes[node_index].div2_rect = Rect::zero();
+        tree.nodes[node_index].rect = types::rect_zero();
+        tree.nodes[node_index].div1_rect = types::rect_zero();
+        tree.nodes[node_index].div2_rect = types::rect_zero();
         let c0: i32 = tree.nodes[node_index].first_child;
         let c1: i32 = tree.nodes[node_index].second_child;
         let c2: i32 = tree.nodes[node_index].third_child;
@@ -280,36 +294,36 @@ public machine DockTree::clear_subtree_rects(tree: &mut DockTree, node_index: i3
             _ -> done()
         }
     }
-    state clr0(tree: &mut DockTree, c0: i32, c1: i32, c2: i32)
+    machine clr0(tree: &mut DockTree, c0: i32, c1: i32, c2: i32)
     requires c0 >= 0 && c0 < 12 {
-        tree.nodes[c0].rect = Rect::zero();
+        tree.nodes[c0].rect = types::rect_zero();
         transition c1 >= 0 && c1 < 12 {
             true -> clr1(tree, c1, c2)
             _ -> done()
         }
     }
-    state clr1(tree: &mut DockTree, c1: i32, c2: i32)
+    machine clr1(tree: &mut DockTree, c1: i32, c2: i32)
     requires c1 >= 0 && c1 < 12 {
-        tree.nodes[c1].rect = Rect::zero();
+        tree.nodes[c1].rect = types::rect_zero();
         transition c2 >= 0 && c2 < 12 {
             true -> clr2(tree, c2)
             _ -> done()
         }
     }
-    state clr2(tree: &mut DockTree, c2: i32)
+    machine clr2(tree: &mut DockTree, c2: i32)
     requires c2 >= 0 && c2 < 12 {
-        tree.nodes[c2].rect = Rect::zero();
+        tree.nodes[c2].rect = types::rect_zero();
     }
-    state done() {}
+    machine done() {}
 }
 
 // Solve a TabGroup node: the TabGroup itself gets `r`, and its active visible child
-// window gets `r` (while inactive tab children get `Rect::zero()`).
-public machine DockTree::solve_tab_group(tree: &mut DockTree, node_index: i32, rectangle: Rect)
+// window gets `r` (while inactive tab children get `types::rect_zero()`).
+public machine solve_tab_group(tree: &mut DockTree, node_index: i32, rectangle: Rect)
 requires node_index >= 0 && node_index < 12 {
-    tree.nodes[node_index].rect = Rect::copy(&rectangle);
-    tree.nodes[node_index].div1_rect = Rect::zero();
-    tree.nodes[node_index].div2_rect = Rect::zero();
+    tree.nodes[node_index].rect = types::rect_copy(&rectangle);
+    tree.nodes[node_index].div1_rect = types::rect_zero();
+    tree.nodes[node_index].div2_rect = types::rect_zero();
     let c0: i32 = tree.nodes[node_index].first_child;
     let c1: i32 = tree.nodes[node_index].second_child;
     let c2: i32 = tree.nodes[node_index].third_child;
@@ -318,44 +332,44 @@ requires node_index >= 0 && node_index < 12 {
         true -> set_c0(tree, rectangle, c0, c1, c2, active_tab)
         _ -> done()
     }
-    state set_c0(tree: &mut DockTree, rectangle: Rect, c0: i32, c1: i32, c2: i32, active_tab: i32)
+    machine set_c0(tree: &mut DockTree, rectangle: Rect, c0: i32, c1: i32, c2: i32, active_tab: i32)
     requires c0 >= 0 && c0 < 12 {
-        tree.nodes[c0].rect = select_rect(active_tab == 0 && tree.nodes[c0].is_visible, Rect::copy(&rectangle), Rect::zero());
+        tree.nodes[c0].rect = select_rect(active_tab == 0 && tree.nodes[c0].is_visible, types::rect_copy(&rectangle), types::rect_zero());
         transition c1 >= 0 && c1 < 12 {
             true -> set_c1(tree, rectangle, c1, c2, active_tab)
             _ -> done()
         }
     }
-    state set_c1(tree: &mut DockTree, rectangle: Rect, c1: i32, c2: i32, active_tab: i32)
+    machine set_c1(tree: &mut DockTree, rectangle: Rect, c1: i32, c2: i32, active_tab: i32)
     requires c1 >= 0 && c1 < 12 {
-        tree.nodes[c1].rect = select_rect(active_tab == 1 && tree.nodes[c1].is_visible, Rect::copy(&rectangle), Rect::zero());
+        tree.nodes[c1].rect = select_rect(active_tab == 1 && tree.nodes[c1].is_visible, types::rect_copy(&rectangle), types::rect_zero());
         transition c2 >= 0 && c2 < 12 {
             true -> set_c2(tree, rectangle, c2, active_tab)
             _ -> done()
         }
     }
-    state set_c2(tree: &mut DockTree, rectangle: Rect, c2: i32, active_tab: i32)
+    machine set_c2(tree: &mut DockTree, rectangle: Rect, c2: i32, active_tab: i32)
     requires c2 >= 0 && c2 < 12 {
-        tree.nodes[c2].rect = select_rect(active_tab == 2 && tree.nodes[c2].is_visible, rectangle, Rect::zero());
+        tree.nodes[c2].rect = select_rect(active_tab == 2 && tree.nodes[c2].is_visible, rectangle, types::rect_zero());
     }
-    state done() {}
+    machine done() {}
 }
 
 // A hidden sibling yields its whole rectangle; visible siblings divide the remaining pixels.
-public machine DockTree::solve_split2(tree: &mut DockTree, node_index: i32, rectangle: Rect)
+public machine solve_split2(tree: &mut DockTree, node_index: i32, rectangle: Rect)
 requires node_index >= 0 && node_index < 12 {
-    tree.nodes[node_index].rect = Rect::copy(&rectangle);
-    tree.nodes[node_index].div1_rect = Rect::zero();
-    tree.nodes[node_index].div2_rect = Rect::zero();
+    tree.nodes[node_index].rect = types::rect_copy(&rectangle);
+    tree.nodes[node_index].div1_rect = types::rect_zero();
+    tree.nodes[node_index].div2_rect = types::rect_zero();
     let c0: i32 = tree.nodes[node_index].first_child;
     let c1: i32 = tree.nodes[node_index].second_child;
-    let first_visible: bool = DockTree::is_subtree_visible(tree, c0);
-    let second_visible: bool = DockTree::is_subtree_visible(tree, c1);
+    let first_visible: bool = dock::is_subtree_visible(tree, c0);
+    let second_visible: bool = dock::is_subtree_visible(tree, c1);
     transition first_visible && second_visible {
         true -> both_vis(tree, node_index, rectangle, c0, c1)
         _ -> one_or_none(tree, rectangle, c0, c1, first_visible, second_visible)
     }
-    state both_vis(tree: &mut DockTree, node_index: i32, rectangle: Rect, c0: i32, c1: i32)
+    machine both_vis(tree: &mut DockTree, node_index: i32, rectangle: Rect, c0: i32, c1: i32)
     requires node_index >= 0 && node_index < 12 {
         let is_vert_div: bool = tree.nodes[node_index].kind == 1;
         let d: i32 in Saturating = tree.divider_px;
@@ -367,14 +381,14 @@ requires node_index >= 0 && node_index < 12 {
             _ -> check_split_y(tree, node_index, rectangle, c0, c1, d, ra, total_ratio)
         }
     }
-    state check_split_y(tree: &mut DockTree, node_index: i32, rectangle: Rect, c0: i32, c1: i32, d: i32 in Saturating, ra: i32 in Saturating, total_ratio: i32 in Saturating)
+    machine check_split_y(tree: &mut DockTree, node_index: i32, rectangle: Rect, c0: i32, c1: i32, d: i32 in Saturating, ra: i32 in Saturating, total_ratio: i32 in Saturating)
     requires node_index >= 0 && node_index < 12 {
         transition total_ratio > 0 {
             true -> split_y(tree, node_index, rectangle, c0, c1, d, ra, total_ratio)
             _ -> one_or_none(tree, rectangle, c0, c1, false, false)
         }
     }
-    state split_x(tree: &mut DockTree, node_index: i32, rectangle: Rect, c0: i32, c1: i32, d: i32 in Saturating, ra: i32 in Saturating, total_ratio: i32 in Saturating)
+    machine split_x(tree: &mut DockTree, node_index: i32, rectangle: Rect, c0: i32, c1: i32, d: i32 in Saturating, ra: i32 in Saturating, total_ratio: i32 in Saturating)
     requires node_index >= 0 && node_index < 12 && total_ratio > 0 {
         let avail_w: i32 in Saturating = max_sat(rectangle.w - d, 0);
         let w0: i32 in Saturating = (avail_w * ra) / total_ratio;
@@ -383,10 +397,10 @@ requires node_index >= 0 && node_index < 12 {
         let dv: Rect = Rect { x: rectangle.x + w0, y: rectangle.y, w: d, h: rectangle.h };
         let r1: Rect = Rect { x: rectangle.x + w0 + d, y: rectangle.y, w: w1, h: rectangle.h };
         tree.nodes[node_index].div1_rect = dv;
-        DockTree::solve_child(tree, c0, r0);
-        DockTree::solve_child(tree, c1, r1);
+        dock::solve_child(tree, c0, r0);
+        dock::solve_child(tree, c1, r1);
     }
-    state split_y(tree: &mut DockTree, node_index: i32, rectangle: Rect, c0: i32, c1: i32, d: i32 in Saturating, ra: i32 in Saturating, total_ratio: i32 in Saturating)
+    machine split_y(tree: &mut DockTree, node_index: i32, rectangle: Rect, c0: i32, c1: i32, d: i32 in Saturating, ra: i32 in Saturating, total_ratio: i32 in Saturating)
     requires node_index >= 0 && node_index < 12 && total_ratio > 0 {
         let avail_h: i32 in Saturating = max_sat(rectangle.h - d, 0);
         let h0: i32 in Saturating = (avail_h * ra) / total_ratio;
@@ -395,32 +409,32 @@ requires node_index >= 0 && node_index < 12 {
         let dv: Rect = Rect { x: rectangle.x, y: rectangle.y + h0, w: rectangle.w, h: d };
         let r1: Rect = Rect { x: rectangle.x, y: rectangle.y + h0 + d, w: rectangle.w, h: h1 };
         tree.nodes[node_index].div1_rect = dv;
-        DockTree::solve_child(tree, c0, r0);
-        DockTree::solve_child(tree, c1, r1);
+        dock::solve_child(tree, c0, r0);
+        dock::solve_child(tree, c1, r1);
     }
-    state one_or_none(tree: &mut DockTree, rectangle: Rect, c0: i32, c1: i32, first_visible: bool, second_visible: bool) {
-        DockTree::solve_child(tree, c0, select_rect(first_visible, Rect::copy(&rectangle), Rect::zero()));
-        DockTree::solve_child(tree, c1, select_rect(!first_visible && second_visible, rectangle, Rect::zero()));
+    machine one_or_none(tree: &mut DockTree, rectangle: Rect, c0: i32, c1: i32, first_visible: bool, second_visible: bool) {
+        dock::solve_child(tree, c0, select_rect(first_visible, types::rect_copy(&rectangle), types::rect_zero()));
+        dock::solve_child(tree, c1, select_rect(!first_visible && second_visible, rectangle, types::rect_zero()));
     }
 }
 
 // Solve a leaf or TabGroup child node `node_index` inside `rectangle`.
-public machine DockTree::solve_child(tree: &mut DockTree, node_index: i32, rectangle: Rect) {
+public machine solve_child(tree: &mut DockTree, node_index: i32, rectangle: Rect) {
     transition node_index >= 0 && node_index < 12 {
         true -> check_vis(tree, node_index, rectangle)
         _ -> done()
     }
-    state check_vis(tree: &mut DockTree, node_index: i32, rectangle: Rect)
+    machine check_vis(tree: &mut DockTree, node_index: i32, rectangle: Rect)
     requires node_index >= 0 && node_index < 12 {
         transition rectangle.w > 0 && rectangle.h > 0 {
             true -> dispatch(tree, node_index, rectangle)
             _ -> clear(tree, node_index)
         }
     }
-    state clear(tree: &mut DockTree, node_index: i32) {
-        DockTree::clear_subtree_rects(tree, node_index);
+    machine clear(tree: &mut DockTree, node_index: i32) {
+        dock::clear_subtree_rects(tree, node_index);
     }
-    state dispatch(tree: &mut DockTree, node_index: i32, rectangle: Rect)
+    machine dispatch(tree: &mut DockTree, node_index: i32, rectangle: Rect)
     requires node_index >= 0 && node_index < 12 {
         let k: i32 = tree.nodes[node_index].kind;
         transition k == 3 {
@@ -428,35 +442,35 @@ public machine DockTree::solve_child(tree: &mut DockTree, node_index: i32, recta
             _ -> do_win(tree, node_index, rectangle)
         }
     }
-    state do_tab(tree: &mut DockTree, node_index: i32, rectangle: Rect)
+    machine do_tab(tree: &mut DockTree, node_index: i32, rectangle: Rect)
     requires node_index >= 0 && node_index < 12 {
-        DockTree::solve_tab_group(tree, node_index, rectangle);
+        dock::solve_tab_group(tree, node_index, rectangle);
     }
-    state do_win(tree: &mut DockTree, node_index: i32, rectangle: Rect)
+    machine do_win(tree: &mut DockTree, node_index: i32, rectangle: Rect)
     requires node_index >= 0 && node_index < 12 {
         let vis: bool = tree.nodes[node_index].is_visible;
-        tree.nodes[node_index].rect = select_rect(vis, rectangle, Rect::zero());
+        tree.nodes[node_index].rect = select_rect(vis, rectangle, types::rect_zero());
     }
-    state done() {}
+    machine done() {}
 }
 
 // Solve a column node (`Node 1`, `Node 4`, or `Node 9`) under the 3-way root split.
-public machine DockTree::solve_column(tree: &mut DockTree, node_index: i32, rectangle: Rect) {
+public machine solve_column(tree: &mut DockTree, node_index: i32, rectangle: Rect) {
     transition node_index >= 0 && node_index < 12 {
         true -> check_r(tree, node_index, rectangle)
         _ -> done()
     }
-    state check_r(tree: &mut DockTree, node_index: i32, rectangle: Rect)
+    machine check_r(tree: &mut DockTree, node_index: i32, rectangle: Rect)
     requires node_index >= 0 && node_index < 12 {
         transition rectangle.w > 0 && rectangle.h > 0 {
             true -> dispatch(tree, node_index, rectangle)
             _ -> clear(tree, node_index)
         }
     }
-    state clear(tree: &mut DockTree, node_index: i32) {
-        DockTree::clear_subtree_rects(tree, node_index);
+    machine clear(tree: &mut DockTree, node_index: i32) {
+        dock::clear_subtree_rects(tree, node_index);
     }
-    state dispatch(tree: &mut DockTree, node_index: i32, rectangle: Rect)
+    machine dispatch(tree: &mut DockTree, node_index: i32, rectangle: Rect)
     requires node_index >= 0 && node_index < 12 {
         let k: i32 = tree.nodes[node_index].kind;
         transition k == 1 || k == 2 {
@@ -464,30 +478,30 @@ public machine DockTree::solve_column(tree: &mut DockTree, node_index: i32, rect
             _ -> do_leaf(tree, node_index, rectangle)
         }
     }
-    state do_split(tree: &mut DockTree, node_index: i32, rectangle: Rect)
+    machine do_split(tree: &mut DockTree, node_index: i32, rectangle: Rect)
     requires node_index >= 0 && node_index < 12 {
-        DockTree::solve_split2(tree, node_index, rectangle);
+        dock::solve_split2(tree, node_index, rectangle);
     }
-    state do_leaf(tree: &mut DockTree, node_index: i32, rectangle: Rect) {
-        DockTree::solve_child(tree, node_index, rectangle);
+    machine do_leaf(tree: &mut DockTree, node_index: i32, rectangle: Rect) {
+        dock::solve_child(tree, node_index, rectangle);
     }
-    state done() {}
+    machine done() {}
 }
 
 // Solve the entire docking hierarchy inside `canvas_rect` (0% rendering coupling).
 // and explicit `div1_rect` / `div2_rect` splitter bars.
-public machine DockTree::solve_layout(tree: &mut DockTree, canvas_rect: Rect) {
-    tree.nodes[0].rect = Rect::copy(&canvas_rect);
-    tree.nodes[0].div1_rect = Rect::zero();
-    tree.nodes[0].div2_rect = Rect::zero();
+public machine solve_layout(tree: &mut DockTree, canvas_rect: Rect) {
+    tree.nodes[0].rect = types::rect_copy(&canvas_rect);
+    tree.nodes[0].div1_rect = types::rect_zero();
+    tree.nodes[0].div2_rect = types::rect_zero();
 
     let c0: i32 = tree.nodes[0].first_child;
     let c1: i32 = tree.nodes[0].second_child;
     let c2: i32 = tree.nodes[0].third_child;
 
-    let first_visible: bool = DockTree::is_subtree_visible(tree, c0);
-    let second_visible: bool = DockTree::is_subtree_visible(tree, c1);
-    let v2: bool = DockTree::is_subtree_visible(tree, c2);
+    let first_visible: bool = dock::is_subtree_visible(tree, c0);
+    let second_visible: bool = dock::is_subtree_visible(tree, c1);
+    let v2: bool = dock::is_subtree_visible(tree, c2);
 
     let w0: i32 in Saturating = select_sat(first_visible, max_i32(tree.nodes[0].ratio_a, 140) as i32 in Saturating, 0);
     let w1: i32 in Saturating = select_sat(second_visible, max_i32(tree.nodes[0].ratio_b, 140) as i32 in Saturating, 0);
@@ -497,7 +511,7 @@ public machine DockTree::solve_layout(tree: &mut DockTree, canvas_rect: Rect) {
         true -> solve_cols(tree, canvas_rect, c0, c1, c2, first_visible, second_visible, v2, w0, w1, total_ratio)
         _ -> done()
     }
-    state solve_cols(tree: &mut DockTree, canvas_rect: Rect, c0: i32, c1: i32, c2: i32, first_visible: bool, second_visible: bool, v2: bool, w0: i32 in Saturating, w1: i32 in Saturating, total_ratio: i32 in Saturating)
+    machine solve_cols(tree: &mut DockTree, canvas_rect: Rect, c0: i32, c1: i32, c2: i32, first_visible: bool, second_visible: bool, v2: bool, w0: i32 in Saturating, w1: i32 in Saturating, total_ratio: i32 in Saturating)
     requires total_ratio > 0 {
         let d: i32 in Saturating = tree.divider_px;
         let n_vis: i32 = add_i32(select_i32(first_visible, 1, 0), add_i32(select_i32(second_visible, 1, 0), select_i32(v2, 1, 0)));
@@ -510,57 +524,57 @@ public machine DockTree::solve_layout(tree: &mut DockTree, canvas_rect: Rect) {
         let px2: i32 in Saturating = select_sat(v2, max_sat(rem_after_0 - px1, 0), 0);
 
         let x0: i32 in Saturating = canvas_rect.x;
-        let r0: Rect = select_rect(first_visible, Rect { x: x0, y: canvas_rect.y, w: px0, h: canvas_rect.h }, Rect::zero());
+        let r0: Rect = select_rect(first_visible, Rect { x: x0, y: canvas_rect.y, w: px0, h: canvas_rect.h }, types::rect_zero());
 
         let has_div1: bool = first_visible && (second_visible || v2);
         let div1_x: i32 in Saturating = x0 + px0;
-        tree.nodes[0].div1_rect = select_rect(has_div1, Rect { x: div1_x, y: canvas_rect.y, w: d, h: canvas_rect.h }, Rect::zero());
+        tree.nodes[0].div1_rect = select_rect(has_div1, Rect { x: div1_x, y: canvas_rect.y, w: d, h: canvas_rect.h }, types::rect_zero());
 
         let x1: i32 in Saturating = div1_x + select_sat(has_div1, d, 0);
-        let r1: Rect = select_rect(second_visible, Rect { x: x1, y: canvas_rect.y, w: px1, h: canvas_rect.h }, Rect::zero());
+        let r1: Rect = select_rect(second_visible, Rect { x: x1, y: canvas_rect.y, w: px1, h: canvas_rect.h }, types::rect_zero());
 
         let has_div2: bool = second_visible && v2;
         let div2_x: i32 in Saturating = x1 + px1;
-        tree.nodes[0].div2_rect = select_rect(has_div2, Rect { x: div2_x, y: canvas_rect.y, w: d, h: canvas_rect.h }, Rect::zero());
+        tree.nodes[0].div2_rect = select_rect(has_div2, Rect { x: div2_x, y: canvas_rect.y, w: d, h: canvas_rect.h }, types::rect_zero());
 
         let x2: i32 in Saturating = div2_x + select_sat(has_div2, d, 0);
-        let r2: Rect = select_rect(v2, Rect { x: x2, y: canvas_rect.y, w: px2, h: canvas_rect.h }, Rect::zero());
+        let r2: Rect = select_rect(v2, Rect { x: x2, y: canvas_rect.y, w: px2, h: canvas_rect.h }, types::rect_zero());
 
-        DockTree::solve_column(tree, c0, r0);
-        DockTree::solve_column(tree, c1, r1);
-        DockTree::solve_column(tree, c2, r2);
+        dock::solve_column(tree, c0, r0);
+        dock::solve_column(tree, c1, r1);
+        dock::solve_column(tree, c2, r2);
     }
-    state done() {}
+    machine done() {}
 }
 
 // Lookup the solved bounding box of a window by `window_id` (`1..=6`), analogous to
-public machine DockTree::window_rect(tree: &DockTree, window_id: i32) -> Rect {
+public machine window_rect(tree: &DockTree, window_id: i32) -> Rect {
     transition { _ -> loop_nodes(tree, window_id, 0) }
-    state loop_nodes(tree: &DockTree, window_id: i32, node_index: i32) -> Rect {
+    machine loop_nodes(tree: &DockTree, window_id: i32, node_index: i32) -> Rect {
         transition node_index >= 0 && node_index < tree.node_count && node_index < 12 {
             true -> check_node(tree, window_id, node_index)
-            _ -> (Rect::zero())
+            _ -> (types::rect_zero())
         }
     }
-    state check_node(tree: &DockTree, window_id: i32, node_index: i32) -> Rect
+    machine check_node(tree: &DockTree, window_id: i32, node_index: i32) -> Rect
     requires node_index >= 0 && node_index < 12 {
         transition tree.nodes[node_index].kind == 4 && tree.nodes[node_index].window_id == window_id {
-            true -> (DockTree::node_rect(tree, node_index))
+            true -> (dock::node_rect(tree, node_index))
             _ -> loop_nodes(tree, window_id, node_index + 1)
         }
     }
 }
 
 // Check if a window is currently toggled visible (`is_visible`).
-public machine DockTree::is_window_enabled(tree: &DockTree, window_id: i32) -> bool {
+public machine is_window_enabled(tree: &DockTree, window_id: i32) -> bool {
     transition { _ -> loop_nodes(tree, window_id, 0) }
-    state loop_nodes(tree: &DockTree, window_id: i32, node_index: i32) -> bool {
+    machine loop_nodes(tree: &DockTree, window_id: i32, node_index: i32) -> bool {
         transition node_index >= 0 && node_index < tree.node_count && node_index < 12 {
             true -> check_node(tree, window_id, node_index)
             _ -> (false)
         }
     }
-    state check_node(tree: &DockTree, window_id: i32, node_index: i32) -> bool
+    machine check_node(tree: &DockTree, window_id: i32, node_index: i32) -> bool
     requires node_index >= 0 && node_index < 12 {
         transition tree.nodes[node_index].kind == 4 && tree.nodes[node_index].window_id == window_id {
             true -> (tree.nodes[node_index].is_visible)
@@ -569,29 +583,29 @@ public machine DockTree::is_window_enabled(tree: &DockTree, window_id: i32) -> b
     }
 }
 
-public machine DockTree::toggle_window_visibility(tree: &mut DockTree, window_id: i32) {
+public machine toggle_window_visibility(tree: &mut DockTree, window_id: i32) {
     transition { _ -> loop_nodes(tree, window_id, 0) }
-    state loop_nodes(tree: &mut DockTree, window_id: i32, node_index: i32) {
+    machine loop_nodes(tree: &mut DockTree, window_id: i32, node_index: i32) {
         transition node_index >= 0 && node_index < tree.node_count && node_index < 12 {
             true -> check_node(tree, window_id, node_index)
             _ -> done()
         }
     }
-    state check_node(tree: &mut DockTree, window_id: i32, node_index: i32)
+    machine check_node(tree: &mut DockTree, window_id: i32, node_index: i32)
     requires node_index >= 0 && node_index < 12 {
         transition tree.nodes[node_index].kind == 4 && tree.nodes[node_index].window_id == window_id {
             true -> flip(tree, node_index)
             _ -> loop_nodes(tree, window_id, node_index + 1)
         }
     }
-    state flip(tree: &mut DockTree, node_index: i32)
+    machine flip(tree: &mut DockTree, node_index: i32)
     requires node_index >= 0 && node_index < 12 {
         tree.nodes[node_index].is_visible = !tree.nodes[node_index].is_visible;
     }
-    state done() {}
+    machine done() {}
 }
 
-public machine DockTree::equalize_splits(tree: &mut DockTree) {
+public machine equalize_splits(tree: &mut DockTree) {
     tree.nodes[0].ratio_a = 333;
     tree.nodes[0].ratio_b = 334;
     tree.nodes[0].ratio_c = 333;
@@ -606,14 +620,14 @@ public machine DockTree::equalize_splits(tree: &mut DockTree) {
 // - `struct_docked_as_tab == true`: 3rd tab inside `Node 2` (`[Explorer | Settings | Structs]`),
 //   collapsing the Left split so the TabGroup fills 100% of the left column!
 // - `struct_docked_as_tab == false`: split sibling below `Node 2` inside `Node 1`.
-public machine DockTree::toggle_reparent_struct_tab(tree: &mut DockTree) {
+public machine toggle_reparent_struct_tab(tree: &mut DockTree) {
     let to_tab: bool = !tree.struct_docked_as_tab;
     tree.struct_docked_as_tab = to_tab;
     transition to_tab {
         true -> dock_into_tab(tree)
         _ -> split_below(tree)
     }
-    state dock_into_tab(tree: &mut DockTree) {
+    machine dock_into_tab(tree: &mut DockTree) {
         tree.nodes[2].third_child = 3;
         tree.nodes[2].child_count = 3;
         tree.nodes[2].active_tab = 2;
@@ -622,7 +636,7 @@ public machine DockTree::toggle_reparent_struct_tab(tree: &mut DockTree) {
         tree.nodes[1].child_count = 1;
         tree.focused_window = 3;
     }
-    state split_below(tree: &mut DockTree) {
+    machine split_below(tree: &mut DockTree) {
         tree.nodes[2].third_child = -1;
         tree.nodes[2].child_count = 2;
         tree.nodes[2].active_tab = min_i32(tree.nodes[2].active_tab, 1);
@@ -634,15 +648,15 @@ public machine DockTree::toggle_reparent_struct_tab(tree: &mut DockTree) {
 }
 
 // Find the leaf node index (`0..11`) holding `window_id`, or `-1`.
-public machine DockTree::find_window_node(tree: &DockTree, window_id: i32) -> i32 {
+public machine find_window_node(tree: &DockTree, window_id: i32) -> i32 {
     transition { _ -> loop_nodes(tree, window_id, 0) }
-    state loop_nodes(tree: &DockTree, window_id: i32, node_index: i32) -> i32 {
+    machine loop_nodes(tree: &DockTree, window_id: i32, node_index: i32) -> i32 {
         transition node_index >= 0 && node_index < tree.node_count && node_index < 12 {
             true -> check_node(tree, window_id, node_index)
             _ -> (-1)
         }
     }
-    state check_node(tree: &DockTree, window_id: i32, node_index: i32) -> i32
+    machine check_node(tree: &DockTree, window_id: i32, node_index: i32) -> i32
     requires node_index >= 0 && node_index < 12 {
         transition tree.nodes[node_index].kind == 4 && tree.nodes[node_index].window_id == window_id {
             true -> (node_index)
@@ -652,42 +666,42 @@ public machine DockTree::find_window_node(tree: &DockTree, window_id: i32) -> i3
 }
 
 // Find which visible dock window (`1..=6`) contains `(mx, my)`, or `0` if none.
-public machine DockTree::find_window_at(tree: &DockTree, mx: i32, my: i32) -> i32 {
-    let r1: Rect = DockTree::window_rect(tree, 1);
-    let r2: Rect = DockTree::window_rect(tree, 2);
-    let r3: Rect = DockTree::window_rect(tree, 3);
-    let r4: Rect = DockTree::window_rect(tree, 4);
-    let r5: Rect = DockTree::window_rect(tree, 5);
-    let r6: Rect = DockTree::window_rect(tree, 6);
-    let w1: i32 = select_i32(Rect::contains(&r1, mx, my), 1, 0);
-    let w2: i32 = select_i32(Rect::contains(&r2, mx, my), 2, w1);
-    let w3: i32 = select_i32(Rect::contains(&r3, mx, my), 3, w2);
-    let w4: i32 = select_i32(Rect::contains(&r4, mx, my), 4, w3);
-    let w5: i32 = select_i32(Rect::contains(&r5, mx, my), 5, w4);
-    select_i32(Rect::contains(&r6, mx, my), 6, w5)
+public machine find_window_at(tree: &DockTree, mx: i32, my: i32) -> i32 {
+    let r1: Rect = dock::window_rect(tree, 1);
+    let r2: Rect = dock::window_rect(tree, 2);
+    let r3: Rect = dock::window_rect(tree, 3);
+    let r4: Rect = dock::window_rect(tree, 4);
+    let r5: Rect = dock::window_rect(tree, 5);
+    let r6: Rect = dock::window_rect(tree, 6);
+    let w1: i32 = select_i32(types::rect_contains(&r1, mx, my), 1, 0);
+    let w2: i32 = select_i32(types::rect_contains(&r2, mx, my), 2, w1);
+    let w3: i32 = select_i32(types::rect_contains(&r3, mx, my), 3, w2);
+    let w4: i32 = select_i32(types::rect_contains(&r4, mx, my), 4, w3);
+    let w5: i32 = select_i32(types::rect_contains(&r5, mx, my), 5, w4);
+    select_i32(types::rect_contains(&r6, mx, my), 6, w5)
 }
 
 // Check if `(mx, my)` is inside the 30px titlebar of any visible dock pane (`3..=6`).
-public machine DockTree::find_header_window_at(tree: &DockTree, mx: i32, my: i32) -> i32 {
-    let r3: Rect = DockTree::window_rect(tree, 3);
-    let r4: Rect = DockTree::window_rect(tree, 4);
-    let r5: Rect = DockTree::window_rect(tree, 5);
-    let r6: Rect = DockTree::window_rect(tree, 6);
-    let h3: bool = !tree.struct_docked_as_tab && Rect::contains(&r3, mx, my) && my < add_i32(r3.y as i32, 30);
-    let h4: bool = Rect::contains(&r4, mx, my) && my < add_i32(r4.y as i32, 30);
-    let h5: bool = Rect::contains(&r5, mx, my) && my < add_i32(r5.y as i32, 30);
-    let h6: bool = Rect::contains(&r6, mx, my) && my < add_i32(r6.y as i32, 30);
+public machine find_header_window_at(tree: &DockTree, mx: i32, my: i32) -> i32 {
+    let r3: Rect = dock::window_rect(tree, 3);
+    let r4: Rect = dock::window_rect(tree, 4);
+    let r5: Rect = dock::window_rect(tree, 5);
+    let r6: Rect = dock::window_rect(tree, 6);
+    let h3: bool = !tree.struct_docked_as_tab && types::rect_contains(&r3, mx, my) && my < add_i32(r3.y as i32, 30);
+    let h4: bool = types::rect_contains(&r4, mx, my) && my < add_i32(r4.y as i32, 30);
+    let h5: bool = types::rect_contains(&r5, mx, my) && my < add_i32(r5.y as i32, 30);
+    let h6: bool = types::rect_contains(&r6, mx, my) && my < add_i32(r6.y as i32, 30);
     select_i32(h3, 3, select_i32(h4, 4, select_i32(h5, 5, select_i32(h6, 6, 0))))
 }
 
 // Swap the `window_id` of two leaf nodes (`idx_a` and `idx_b`) so their dock panes
 // trade positions in the layout hierarchy without any heap allocation.
-public machine DockTree::swap_leaf_nodes(tree: &mut DockTree, idx_a: i32, idx_b: i32) {
+public machine swap_leaf_nodes(tree: &mut DockTree, idx_a: i32, idx_b: i32) {
     transition idx_a >= 0 && idx_a < 12 && idx_b >= 0 && idx_b < 12 && idx_a != idx_b {
         true -> do_swap(tree, idx_a, idx_b)
         _ -> done()
     }
-    state do_swap(tree: &mut DockTree, idx_a: i32, idx_b: i32)
+    machine do_swap(tree: &mut DockTree, idx_a: i32, idx_b: i32)
     requires idx_a >= 0 && idx_a < 12 && idx_b >= 0 && idx_b < 12 {
         let wa: i32 = tree.nodes[idx_a].window_id;
         let wb: i32 = tree.nodes[idx_b].window_id;
@@ -698,16 +712,16 @@ public machine DockTree::swap_leaf_nodes(tree: &mut DockTree, idx_a: i32, idx_b:
         tree.nodes[idx_a].is_visible = vb;
         tree.nodes[idx_b].is_visible = va;
     }
-    state done() {}
+    machine done() {}
 }
 
 // Complete a drag-and-drop window move/reparent/swap when releasing `src_win` onto `dst_win`.
-public machine DockTree::complete_window_drop(tree: &mut DockTree, src_win: i32, dst_win: i32) {
+public machine complete_window_drop(tree: &mut DockTree, src_win: i32, dst_win: i32) {
     transition src_win > 0 && dst_win > 0 && src_win != dst_win {
         true -> check_tab_dock(tree, src_win, dst_win)
         _ -> done()
     }
-    state check_tab_dock(tree: &mut DockTree, src_win: i32, dst_win: i32) {
+    machine check_tab_dock(tree: &mut DockTree, src_win: i32, dst_win: i32) {
         let to_tab: bool = src_win == 3 && !tree.struct_docked_as_tab && (dst_win == 1 || dst_win == 2);
         let from_tab: bool = src_win == 3 && tree.struct_docked_as_tab && dst_win >= 3;
         transition to_tab || from_tab {
@@ -715,33 +729,33 @@ public machine DockTree::complete_window_drop(tree: &mut DockTree, src_win: i32,
             _ -> swap_panes(tree, src_win, dst_win)
         }
     }
-    state toggle_tab_and_swap(tree: &mut DockTree, src_win: i32, dst_win: i32, from_tab: bool) {
-        DockTree::toggle_reparent_struct_tab(tree);
+    machine toggle_tab_and_swap(tree: &mut DockTree, src_win: i32, dst_win: i32, from_tab: bool) {
+        dock::toggle_reparent_struct_tab(tree);
         transition from_tab && dst_win > 3 {
             true -> swap_panes(tree, src_win, dst_win)
             _ -> done()
         }
     }
-    state swap_panes(tree: &mut DockTree, src_win: i32, dst_win: i32) {
+    machine swap_panes(tree: &mut DockTree, src_win: i32, dst_win: i32) {
         // Map TabGroup windows (1, 2) onto leaf pane 3 if dragged onto a split pane,
         // or swap any two leaf windows (3..=6) directly.
         let eff_src: i32 = select_i32(src_win <= 2, 3, src_win);
         let eff_dst: i32 = select_i32(dst_win <= 2, 3, dst_win);
-        let ia: i32 = DockTree::find_window_node(tree, eff_src);
-        let ib: i32 = DockTree::find_window_node(tree, eff_dst);
-        DockTree::swap_leaf_nodes(tree, ia, ib);
+        let ia: i32 = dock::find_window_node(tree, eff_src);
+        let ib: i32 = dock::find_window_node(tree, eff_dst);
+        dock::swap_leaf_nodes(tree, ia, ib);
         tree.focused_window = src_win;
     }
-    state done() {}
+    machine done() {}
 }
 
 // Hit-test all splitter bars and handle live mouse drag resizing, plus window titlebar
 // drag-and-drop (`drag_window_id` -> `drop_target_window`), tab bar clicks, and pane focus.
-public machine DockTree::handle_pointer(tree: &mut DockTree, mx: i32, my: i32, mouse_pressed: bool, mouse_down: bool, mouse_released: bool) -> bool {
-    let d0_1: Rect = DockTree::div1_rect(tree, 0);
-    let d0_2: Rect = DockTree::div2_rect(tree, 0);
-    let d1_1: Rect = DockTree::div1_rect(tree, 1);
-    let d4_1: Rect = DockTree::div1_rect(tree, 4);
+public machine handle_pointer(tree: &mut DockTree, mx: i32, my: i32, mouse_pressed: bool, mouse_down: bool, mouse_released: bool) -> bool {
+    let d0_1: Rect = dock::div1_rect(tree, 0);
+    let d0_2: Rect = dock::div2_rect(tree, 0);
+    let d1_1: Rect = dock::div1_rect(tree, 1);
+    let d4_1: Rect = dock::div1_rect(tree, 4);
 
     // Expand hit target by 5px on each side so splitters feel effortless to grab.
     let h0_1: bool = d0_1.w > 0 && mx >= sub_i32(d0_1.x as i32, 5) && mx < add_i32((d0_1.x + d0_1.w) as i32, 5) && my >= (d0_1.y as i32) && my < ((d0_1.y + d0_1.h) as i32);
@@ -756,7 +770,7 @@ public machine DockTree::handle_pointer(tree: &mut DockTree, mx: i32, my: i32, m
         true -> finish_or_clear_drag(tree, mx, my, mouse_pressed)
         _ -> check_start_drag(tree, mx, my, mouse_pressed)
     }
-    state finish_or_clear_drag(tree: &mut DockTree, mx: i32, my: i32, mouse_pressed: bool) -> bool {
+    machine finish_or_clear_drag(tree: &mut DockTree, mx: i32, my: i32, mouse_pressed: bool) -> bool {
         let src_w: i32 = tree.drag_window_id;
         let dst_w: i32 = tree.drop_target_window;
         tree.drag_divider_node = -1;
@@ -768,53 +782,53 @@ public machine DockTree::handle_pointer(tree: &mut DockTree, mx: i32, my: i32, m
             _ -> check_press_after_clear(tree, mx, my, mouse_pressed)
         }
     }
-    state drop_win(tree: &mut DockTree, src_w: i32, dst_w: i32) -> bool {
-        DockTree::complete_window_drop(tree, src_w, dst_w);
+    machine drop_win(tree: &mut DockTree, src_w: i32, dst_w: i32) -> bool {
+        dock::complete_window_drop(tree, src_w, dst_w);
         true
     }
-    state check_press_after_clear(tree: &mut DockTree, mx: i32, my: i32, mouse_pressed: bool) -> bool {
+    machine check_press_after_clear(tree: &mut DockTree, mx: i32, my: i32, mouse_pressed: bool) -> bool {
         transition mouse_pressed {
             true -> click_pane_or_tab(tree, mx, my)
             _ -> (false)
         }
     }
-    state check_start_drag(tree: &mut DockTree, mx: i32, my: i32, mouse_pressed: bool) -> bool {
+    machine check_start_drag(tree: &mut DockTree, mx: i32, my: i32, mouse_pressed: bool) -> bool {
         transition mouse_pressed && tree.hot_divider_node >= 0 {
             true -> begin_drag(tree, mx, my)
             _ -> check_active_drag(tree, mx, my, mouse_pressed)
         }
     }
-    state begin_drag(tree: &mut DockTree, mx: i32, my: i32) -> bool {
+    machine begin_drag(tree: &mut DockTree, mx: i32, my: i32) -> bool {
         tree.drag_divider_node = tree.hot_divider_node;
         tree.drag_divider_index = tree.hot_divider_index;
         tree.drag_window_id = 0;
         tree.drop_target_window = 0;
         transition { _ -> apply_drag(tree, mx, my) }
     }
-    state check_active_drag(tree: &mut DockTree, mx: i32, my: i32, mouse_pressed: bool) -> bool {
+    machine check_active_drag(tree: &mut DockTree, mx: i32, my: i32, mouse_pressed: bool) -> bool {
         transition tree.drag_divider_node >= 0 {
             true -> apply_drag(tree, mx, my)
             _ -> check_win_drag(tree, mx, my, mouse_pressed)
         }
     }
-    state check_win_drag(tree: &mut DockTree, mx: i32, my: i32, mouse_pressed: bool) -> bool {
+    machine check_win_drag(tree: &mut DockTree, mx: i32, my: i32, mouse_pressed: bool) -> bool {
         transition mouse_pressed {
             true -> click_pane_or_tab(tree, mx, my)
             _ -> update_win_drag(tree, mx, my)
         }
     }
-    state update_win_drag(tree: &mut DockTree, mx: i32, my: i32) -> bool {
+    machine update_win_drag(tree: &mut DockTree, mx: i32, my: i32) -> bool {
         transition tree.drag_window_id > 0 {
             true -> track_drop_target(tree, mx, my)
             _ -> (false)
         }
     }
-    state track_drop_target(tree: &mut DockTree, mx: i32, my: i32) -> bool {
-        let hovered_w: i32 = DockTree::find_window_at(tree, mx, my);
+    machine track_drop_target(tree: &mut DockTree, mx: i32, my: i32) -> bool {
+        let hovered_w: i32 = dock::find_window_at(tree, mx, my);
         tree.drop_target_window = hovered_w;
         true
     }
-    state apply_drag(tree: &mut DockTree, mx: i32, my: i32) -> bool {
+    machine apply_drag(tree: &mut DockTree, mx: i32, my: i32) -> bool {
         let dn: i32 = tree.drag_divider_node;
         let di: i32 = tree.drag_divider_index;
         transition dn == 0 {
@@ -822,15 +836,15 @@ public machine DockTree::handle_pointer(tree: &mut DockTree, mx: i32, my: i32, m
             _ -> drag_sub(tree, my, dn)
         }
     }
-    state drag_root(tree: &mut DockTree, mx: i32, di: i32) -> bool {
-        let r0: Rect = DockTree::node_rect(tree, 0);
+    machine drag_root(tree: &mut DockTree, mx: i32, di: i32) -> bool {
+        let r0: Rect = dock::node_rect(tree, 0);
         let rw: i32 in Saturating = max_sat(r0.w, 100);
         transition rw > 0 {
             true -> do_drag_root(tree, mx, di, r0.x, rw)
             _ -> (false)
         }
     }
-    state do_drag_root(tree: &mut DockTree, mx: i32, di: i32, rx0: i32 in Saturating, rw: i32 in Saturating) -> bool
+    machine do_drag_root(tree: &mut DockTree, mx: i32, di: i32, rx0: i32 in Saturating, rw: i32 in Saturating) -> bool
     requires rw > 0 {
         let num: i32 in Saturating = ((mx as i32 in Saturating) - rx0) * (1000 as i32 in Saturating);
         let rel_mille: i32 = clamp_i32((num / rw) as i32, 160, 840);
@@ -846,22 +860,22 @@ public machine DockTree::handle_pointer(tree: &mut DockTree, mx: i32, my: i32, m
         tree.nodes[0].ratio_c = select_i32(di == 2, new_c2, rc);
         true
     }
-    state drag_sub(tree: &mut DockTree, my: i32, dn: i32) -> bool {
+    machine drag_sub(tree: &mut DockTree, my: i32, dn: i32) -> bool {
         transition dn >= 0 && dn < 12 {
             true -> check_sub_h(tree, my, dn)
             _ -> (false)
         }
     }
-    state check_sub_h(tree: &mut DockTree, my: i32, dn: i32) -> bool
+    machine check_sub_h(tree: &mut DockTree, my: i32, dn: i32) -> bool
     requires dn >= 0 && dn < 12 {
-        let rs: Rect = DockTree::node_rect(tree, dn);
+        let rs: Rect = dock::node_rect(tree, dn);
         let rh: i32 in Saturating = max_sat(rs.h, 80);
         transition rh > 0 {
             true -> do_drag_sub(tree, my, dn, rs.y, rh)
             _ -> (false)
         }
     }
-    state do_drag_sub(tree: &mut DockTree, my: i32, dn: i32, ry0: i32 in Saturating, rh: i32 in Saturating) -> bool
+    machine do_drag_sub(tree: &mut DockTree, my: i32, dn: i32, ry0: i32 in Saturating, rh: i32 in Saturating) -> bool
     requires dn >= 0 && dn < 12 && rh > 0 {
         let num: i32 in Saturating = ((my as i32 in Saturating) - ry0) * (1000 as i32 in Saturating);
         let pct_mille: i32 = clamp_i32((num / rh) as i32, 220, 780);
@@ -869,15 +883,15 @@ public machine DockTree::handle_pointer(tree: &mut DockTree, mx: i32, my: i32, m
         tree.nodes[dn].ratio_b = sub_i32(1000, pct_mille);
         true
     }
-    state click_pane_or_tab(tree: &mut DockTree, mx: i32, my: i32) -> bool {
-        let tab_r: Rect = DockTree::node_rect(tree, 2);
-        let in_tab_hdr: bool = Rect::contains(&tab_r, mx, my) && my < add_i32(tab_r.y as i32, 30);
+    machine click_pane_or_tab(tree: &mut DockTree, mx: i32, my: i32) -> bool {
+        let tab_r: Rect = dock::node_rect(tree, 2);
+        let in_tab_hdr: bool = types::rect_contains(&tab_r, mx, my) && my < add_i32(tab_r.y as i32, 30);
         transition in_tab_hdr {
             true -> switch_tab_hdr(tree, mx, tab_r.x as i32)
             _ -> focus_pane_at(tree, mx, my)
         }
     }
-    state switch_tab_hdr(tree: &mut DockTree, mx: i32, tx: i32) -> bool {
+    machine switch_tab_hdr(tree: &mut DockTree, mx: i32, tx: i32) -> bool {
         let relative_x: i32 = sub_i32(mx, tx);
         let cnt: i32 = tree.nodes[2].child_count;
         let picked: i32 = select_i32(relative_x < 92, 0, select_i32(relative_x < 164 || cnt < 3, 1, 2));
@@ -888,9 +902,9 @@ public machine DockTree::handle_pointer(tree: &mut DockTree, mx: i32, my: i32, m
         tree.drop_target_window = win_id;
         true
     }
-    state focus_pane_at(tree: &mut DockTree, mx: i32, my: i32) -> bool {
-        let hdr_w: i32 = DockTree::find_header_window_at(tree, mx, my);
-        let body_w: i32 = DockTree::find_window_at(tree, mx, my);
+    machine focus_pane_at(tree: &mut DockTree, mx: i32, my: i32) -> bool {
+        let hdr_w: i32 = dock::find_header_window_at(tree, mx, my);
+        let body_w: i32 = dock::find_window_at(tree, mx, my);
         let f0: i32 = tree.focused_window;
         let f_next: i32 = select_i32(body_w > 0, body_w, f0);
         tree.focused_window = f_next;

@@ -12,8 +12,9 @@ pixels. The demo's entire model and view now live in
 
 Add `cathedral-omega-ui.workspace = true` to an app's Cargo dependencies. Its build
 script prepares the same native exports automatically; the boot harness contains
-no special preparation rule for the demo. The build always uses Cathedral's
-checked-in distribution source; no sibling checkout, submodule or download is needed.
+no special preparation rule for the demo. The build uses Cathedral's checked-in distribution source. Its standard library
+is an ordinary immutable Git package dependency, acquired through Omega's normal
+package review; the UI does not keep a private standard-library snapshot.
 Set `OMEGA_BIN` to an optimized Omega compiler supporting pure native component
 exports. The current verified Windows producer is
 `20dcd0409b66de0f6d25d1a345e8da57d71bbb0a`, release opt-level 3, available in
@@ -76,7 +77,15 @@ python tools/omega-ui/dev.py gallery
 python tools/omega-ui/dev.py snapshots
 ```
 
-These commands use the same compiler selection as the component builder.
+These commands use the same compiler selection as the component builder. Initial
+review may acquire the pinned Git dependency; `--offline` restricts review to
+already acquired sources. Review the actual pending rows and resume through
+Omega's normal acceptance workflow before running the program.
+
+Omega operations are ordinary module declarations with explicit runtime
+arguments, such as `omega_ui::context::setup(&mut context, width, height)`.
+Import public data by its exact path (`use omega_ui::context::UiContext;`);
+nested machines scope code and receive their own arguments.
 `gallery` and `snapshots` require Windows; the executable and captures are in
 `build/omega-ui/gallery`. Regenerate the font atlas only when changing fonts with
 `python tools/omega-ui/bake_native_font.py` (Pillow required for regeneration).
@@ -94,7 +103,7 @@ These commands use the same compiler selection as the component builder.
    Advance `tick(elapsed_ms)` and build while `stats().animating` is true. The host
    owns scheduling; widgets never poll global devices.
 5. Read paint bounds from the completed build's `Node` values and rows through
-   `Ui::row`, or create `Presenter` for the supplied view and borrow the app's
+   `widgets::row`, or create `Presenter` for the supplied view and borrow the app's
    `Services` owner for presentation. The
    app selects regions covering its painted content to fit its granted image
    backing. Publish once after a bounded input batch, rather than per input edge.

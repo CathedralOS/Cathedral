@@ -1,3 +1,20 @@
+module dots;
+
+use omega_ui::context::UiContext;
+use omega_ui::types::Rect;
+use omega_ui::types::add_i32;
+use omega_ui::types::clamp_i32;
+use omega_ui::types::clamp_sat;
+use omega_ui::types::color_mix;
+use omega_ui::types::max_i32;
+use omega_ui::types::max_sat;
+use omega_ui::types::min_i32;
+use omega_ui::types::mul_i32;
+use omega_ui::types::select_i32;
+use omega_ui::types::select_sat;
+use omega_ui::types::sub_i32;
+
+
 /*
 The waveform's column heights, dimmed colors, and physical X bounds depend on
 the frame, not the scanline. Prepare them once before painting. The uncached
@@ -31,7 +48,7 @@ public data GalleryDots {
     plans: [GalleryDotPlan; 128];
 }
 
-public machine GalleryDots::hover_column(rectangle: &Rect, mouse_x: i32, mouse_y: i32, offset: i32, padding: i32) -> i32 {
+public machine hover_column(rectangle: &Rect, mouse_x: i32, mouse_y: i32, offset: i32, padding: i32) -> i32 {
     let left: i32 = add_i32(rectangle.x as i32, 18);
     let top: i32 = add_i32(add_i32(rectangle.y as i32, offset), 8);
     let height: i32 = max_i32(sub_i32(rectangle.h as i32, add_i32(add_i32(offset, padding), 16)), 6);
@@ -43,9 +60,9 @@ public machine GalleryDots::hover_column(rectangle: &Rect, mouse_x: i32, mouse_y
     }
 }
 
-public machine GalleryDotColumn::prepare(context: &UiContext, node_index: i32, offset: i32 in Saturating, padding: i32 in Saturating, column: i32, width: i32 in Saturating) -> GalleryDotColumn
+public machine dot_column_prepare(context: &UiContext, node_index: i32, offset: i32 in Saturating, padding: i32 in Saturating, column: i32, width: i32 in Saturating) -> GalleryDotColumn
 requires node_index >= 0 && node_index < 128 && column >= 0 && column < 72 {
-    let rectangle: Rect = UiContext::paint_rect(context, node_index);
+    let rectangle: Rect = omega_ui::context::paint_rect(context, node_index);
     let height: i32 in Saturating = max_sat(rectangle.h - (offset + padding + (16 as i32 in Saturating)), 6);
     let rows: i32 in Saturating = (height + (2 as i32 in Saturating)) / (6 as i32 in Saturating);
     let value: i32 in Saturating = context.nodes[node_index].content_value;
@@ -57,14 +74,14 @@ requires node_index >= 0 && node_index < 128 && column >= 0 && column < 72 {
     let secondary: i32 in Saturating = ((position * (5 as i32 in Saturating) + phase) % (11 as i32 in Saturating)) - (5 as i32 in Saturating);
     let total_percent: i32 in Saturating = clamp_sat(value % (1000 as i32 in Saturating) + triangle + secondary, 12, 96);
     let bottom_percent: i32 in Saturating = clamp_sat(auxiliary % (100 as i32 in Saturating) + secondary / (2 as i32 in Saturating), 6, total_percent - (4 as i32 in Saturating));
-    let hovered: i32 = GalleryDots::hover_column(&rectangle, context.mouse_x, context.mouse_y, offset as i32, padding as i32);
+    let hovered: i32 = dots::hover_column(&rectangle, context.mouse_x, context.mouse_y, offset as i32, padding as i32);
     let dimmed: bool = hovered >= 0 && hovered != column;
     let primary: i32 = context.nodes[node_index].content_color;
     let lower: i32 = context.nodes[node_index].aux_color;
     let left: i32 in Saturating = rectangle.x + (18 as i32 in Saturating) + position * (8 as i32 in Saturating);
     GalleryDotColumn {
-        left: Raster::to_physical_x(left, width, false, 1024) as i32,
-        right: Raster::to_physical_x(left + (5 as i32 in Saturating), width, false, 1024) as i32,
+        left: omega_ui::raster::to_physical_x(left, width, false, 1024) as i32,
+        right: omega_ui::raster::to_physical_x(left + (5 as i32 in Saturating), width, false, 1024) as i32,
         total: ((total_percent * rows + (50 as i32 in Saturating)) / (100 as i32 in Saturating)) as i32,
         bottom: ((bottom_percent * rows + (50 as i32 in Saturating)) / (100 as i32 in Saturating)) as i32,
         primary_color: select_i32(dimmed, color_mix(context.theme.well, primary, 48), primary),
@@ -72,83 +89,83 @@ requires node_index >= 0 && node_index < 128 && column >= 0 && column < 72 {
     }
 }
 
-public machine GalleryDotColumn::color(column: &GalleryDotColumn, row: i32, empty: i32) -> i32 {
+public machine dot_column_color(column: &GalleryDotColumn, row: i32, empty: i32) -> i32 {
     select_i32(row < column.bottom, column.auxiliary_color, select_i32(row < column.total, column.primary_color, empty))
 }
 
-public machine GalleryDots::prepare(dots: &mut GalleryDots, context: &UiContext, width: i32) {
-    transition { _ -> node(dots, context, width, 0) }
-    state node(dots: &mut GalleryDots, context: &UiContext, width: i32, index: i32) {
+public machine prepare(dot_state: &mut GalleryDots, context: &UiContext, width: i32) {
+    transition { _ -> node(dot_state, context, width, 0) }
+    machine node(dot_state: &mut GalleryDots, context: &UiContext, width: i32, index: i32) {
         transition index >= 0 && index < context.node_count && index < 128 {
-            true -> classify(dots, context, width, index)
+            true -> classify(dot_state, context, width, index)
             _ -> done()
         }
     }
-    state classify(dots: &mut GalleryDots, context: &UiContext, width: i32, index: i32)
+    machine classify(dot_state: &mut GalleryDots, context: &UiContext, width: i32, index: i32)
     requires index >= 0 && index < 128 {
         let kind: i32 = context.nodes[index].content_kind;
         let active: bool = kind == 13 || (kind == 14 && context.nodes[index].label_id > 10);
-        dots.plans[index].active = active;
+        dot_state.plans[index].active = active;
         transition active {
-            true -> geometry(dots, context, width, index, select_i32(kind == 13, 66, 72), select_i32(kind == 13, 12, 14))
-            _ -> node(dots, context, width, index + 1)
+            true -> geometry(dot_state, context, width, index, select_i32(kind == 13, 66, 72), select_i32(kind == 13, 12, 14))
+            _ -> node(dot_state, context, width, index + 1)
         }
     }
-    state geometry(dots: &mut GalleryDots, context: &UiContext, width: i32, index: i32, offset: i32, padding: i32)
+    machine geometry(dot_state: &mut GalleryDots, context: &UiContext, width: i32, index: i32, offset: i32, padding: i32)
     requires index >= 0 && index < 128 {
-        let rectangle: Rect = UiContext::paint_rect(context, index);
+        let rectangle: Rect = omega_ui::context::paint_rect(context, index);
         let well: Rect = Rect { x: rectangle.x + (12 as i32 in Saturating), y: rectangle.y + (offset as i32 in Saturating), w: max_sat(rectangle.w - (24 as i32 in Saturating), 40), h: max_sat(rectangle.h - ((offset as i32 in Saturating) + (padding as i32 in Saturating)), 24) };
-        dots.plans[index].top = add_i32(well.y as i32, 8);
-        dots.plans[index].paint_rows = add_i32(max_i32(sub_i32(well.h as i32, 14), 0), 2) / 6;
-        dots.plans[index].color_rows = add_i32(max_i32(sub_i32(rectangle.h as i32, add_i32(add_i32(offset, padding), 16)), 6), 2) / 6;
-        dots.plans[index].well = well;
-        dots.plans[index].column_count = clamp_i32(add_i32(max_i32(sub_i32(rectangle.w as i32, 36), 0), 2) / 8, 0, 72);
-        transition { _ -> column(dots, context, width, index, offset, padding, 0) }
+        dot_state.plans[index].top = add_i32(well.y as i32, 8);
+        dot_state.plans[index].paint_rows = add_i32(max_i32(sub_i32(well.h as i32, 14), 0), 2) / 6;
+        dot_state.plans[index].color_rows = add_i32(max_i32(sub_i32(rectangle.h as i32, add_i32(add_i32(offset, padding), 16)), 6), 2) / 6;
+        dot_state.plans[index].well = well;
+        dot_state.plans[index].column_count = clamp_i32(add_i32(max_i32(sub_i32(rectangle.w as i32, 36), 0), 2) / 8, 0, 72);
+        transition { _ -> column(dot_state, context, width, index, offset, padding, 0) }
     }
-    state column(dots: &mut GalleryDots, context: &UiContext, width: i32, index: i32, offset: i32, padding: i32, position: i32)
+    machine column(dot_state: &mut GalleryDots, context: &UiContext, width: i32, index: i32, offset: i32, padding: i32, position: i32)
     requires index >= 0 && index < 128 {
-        transition position >= 0 && position < dots.plans[index].column_count && position < 72 {
-            true -> prepare_column(dots, context, width, index, offset, padding, position)
-            _ -> node(dots, context, width, index + 1)
+        transition position >= 0 && position < dot_state.plans[index].column_count && position < 72 {
+            true -> prepare_column(dot_state, context, width, index, offset, padding, position)
+            _ -> node(dot_state, context, width, index + 1)
         }
     }
-    state prepare_column(dots: &mut GalleryDots, context: &UiContext, width: i32, index: i32, offset: i32, padding: i32, position: i32)
+    machine prepare_column(dot_state: &mut GalleryDots, context: &UiContext, width: i32, index: i32, offset: i32, padding: i32, position: i32)
     requires index >= 0 && index < 128 && position >= 0 && position < 72 {
-        dots.plans[index].columns[position] = GalleryDotColumn::prepare(context, index, offset as i32 in Saturating, padding as i32 in Saturating, position, width as i32 in Saturating);
-        transition { _ -> column(dots, context, width, index, offset, padding, position + 1) }
+        dot_state.plans[index].columns[position] = dots::dot_column_prepare(context, index, offset as i32 in Saturating, padding as i32 in Saturating, position, width as i32 in Saturating);
+        transition { _ -> column(dot_state, context, width, index, offset, padding, position + 1) }
     }
-    state done() {}
+    machine done() {}
 }
 
-public machine GalleryDots::draw_band(dots: &GalleryDots, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, index: i32)
+public machine draw_band(dot_state: &GalleryDots, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, index: i32)
 requires index >= 0 && index < 128 {
-    transition dots.plans[index].active && band_y >= 0 {
-        true -> well(dots, pixels, band_y, context, index)
+    transition dot_state.plans[index].active && band_y >= 0 {
+        true -> well(dot_state, pixels, band_y, context, index)
         _ -> done()
     }
-    state well(dots: &GalleryDots, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, index: i32)
+    machine well(dot_state: &GalleryDots, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, index: i32)
     requires index >= 0 && index < 128 {
-        let well: Rect = Rect { x: dots.plans[index].well.x, y: dots.plans[index].well.y, w: dots.plans[index].well.w, h: dots.plans[index].well.h };
-        Raster::draw_box_band(pixels, band_y, well, context.theme.well, context.theme.border, 1, 6);
-        let relative_y: i32 = sub_i32(pixels[4093], dots.plans[index].top);
-        let inside: bool = relative_y >= 0 && relative_y < mul_i32(dots.plans[index].paint_rows, 6) && relative_y % 6 < 4;
+        let well: Rect = Rect { x: dot_state.plans[index].well.x, y: dot_state.plans[index].well.y, w: dot_state.plans[index].well.w, h: dot_state.plans[index].well.h };
+        omega_ui::raster::draw_box_band(pixels, band_y, well, context.theme.well, context.theme.border, 1, 6);
+        let relative_y: i32 = sub_i32(pixels[4093], dot_state.plans[index].top);
+        let inside: bool = relative_y >= 0 && relative_y < mul_i32(dot_state.plans[index].paint_rows, 6) && relative_y % 6 < 4;
         transition inside {
-            true -> column(dots, pixels, band_y, context.theme.empty, index, sub_i32(sub_i32(dots.plans[index].color_rows, 1), relative_y / 6), 0)
+            true -> column(dot_state, pixels, band_y, context.theme.empty, index, sub_i32(sub_i32(dot_state.plans[index].color_rows, 1), relative_y / 6), 0)
             _ -> done()
         }
     }
-    state column(dots: &GalleryDots, pixels: &mut [i32; 4096], band_y: i32, empty: i32, index: i32, row: i32, position: i32)
+    machine column(dot_state: &GalleryDots, pixels: &mut [i32; 4096], band_y: i32, empty: i32, index: i32, row: i32, position: i32)
     requires index >= 0 && index < 128 {
-        transition position >= 0 && position < dots.plans[index].column_count && position < 72 {
-            true -> paint(dots, pixels, band_y, empty, index, row, position)
+        transition position >= 0 && position < dot_state.plans[index].column_count && position < 72 {
+            true -> paint(dot_state, pixels, band_y, empty, index, row, position)
             _ -> done()
         }
     }
-    state paint(dots: &GalleryDots, pixels: &mut [i32; 4096], band_y: i32, empty: i32, index: i32, row: i32, position: i32)
+    machine paint(dot_state: &GalleryDots, pixels: &mut [i32; 4096], band_y: i32, empty: i32, index: i32, row: i32, position: i32)
     requires index >= 0 && index < 128 && position >= 0 && position < 72 {
-        let color: i32 = GalleryDotColumn::color(&dots.plans[index].columns[position], row, empty);
-        Raster::hline_raw(pixels, band_y, band_y as i32 in Saturating, dots.plans[index].columns[position].left as i32 in Saturating, dots.plans[index].columns[position].right as i32 in Saturating, color);
-        transition { _ -> column(dots, pixels, band_y, empty, index, row, position + 1) }
+        let color: i32 = dots::dot_column_color(&dot_state.plans[index].columns[position], row, empty);
+        omega_ui::raster::hline_raw(pixels, band_y, band_y as i32 in Saturating, dot_state.plans[index].columns[position].left as i32 in Saturating, dot_state.plans[index].columns[position].right as i32 in Saturating, color);
+        transition { _ -> column(dot_state, pixels, band_y, empty, index, row, position + 1) }
     }
-    state done() {}
+    machine done() {}
 }

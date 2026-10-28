@@ -1,5 +1,78 @@
+use omega::language::core::external_binding;
+
 machine build(builder: &mut Build) {
     Build::package(builder, "omega_ui_windows");
+    Build::select_provider<windows_host::WindowsUiHost, windows_native::NativeWindowsUi>(builder, windows_x86_64);
+    Build::bind<win32_imports::WindowsUiIo::get_dc>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "user32.dll", export: "GetDC" } });
+    Build::bind<win32_imports::WindowsUiIo::release_dc>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "user32.dll", export: "ReleaseDC" } });
+    Build::bind<win32_imports::WindowsUiIo::client_rectangle>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "user32.dll", export: "GetClientRect" } });
+    Build::bind<win32_imports::WindowsUiIo::stretch_dibits>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "gdi32.dll", export: "StretchDIBits" } });
+    Build::bind<win32_imports::WindowsUiIo::set_dpi_aware>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "user32.dll", export: "SetProcessDPIAware" } });
+    Build::bind<win32_imports::WindowsUiIo::create_compatible_dc>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "gdi32.dll", export: "CreateCompatibleDC" } });
+    Build::bind<win32_imports::WindowsUiIo::create_compatible_bitmap>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "gdi32.dll", export: "CreateCompatibleBitmap" } });
+    Build::bind<win32_imports::WindowsUiIo::select_object>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "gdi32.dll", export: "SelectObject" } });
+    Build::bind<win32_imports::WindowsUiIo::bit_blt>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "gdi32.dll", export: "BitBlt" } });
+    Build::bind<win32_imports::WindowsUiIo::stretch_blt>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "gdi32.dll", export: "StretchBlt" } });
+    Build::bind<win32_imports::WindowsUiIo::set_stretch_blt_mode>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "gdi32.dll", export: "SetStretchBltMode" } });
+    Build::bind<win32_imports::WindowsUiIo::set_bk_mode>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "gdi32.dll", export: "SetBkMode" } });
+    Build::bind<win32_imports::WindowsUiIo::set_text_color>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "gdi32.dll", export: "SetTextColor" } });
+    Build::bind<win32_imports::WindowsUiIo::get_di_bits>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "gdi32.dll", export: "GetDIBits" } });
+    Build::bind<win32_imports::WindowsUiIo::close_bmp_file>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "kernel32.dll", export: "CloseHandle" } });
+    Build::bind<win32_imports::WindowsUiIo::get_cursor_pos>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "user32.dll", export: "GetCursorPos" } });
+    Build::bind<win32_imports::WindowsUiIo::screen_to_client>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "user32.dll", export: "ScreenToClient" } });
+    Build::bind<win32_imports::WindowsUiIo::get_async_key_state>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "user32.dll", export: "GetAsyncKeyState" } });
+    Build::bind<win32_imports::WindowsUiIo::performance_counter>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "kernel32.dll", export: "QueryPerformanceCounter" } });
+    Build::bind<win32_imports::WindowsUiIo::performance_frequency>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "kernel32.dll", export: "QueryPerformanceFrequency" } });
+    Build::bind<win32_imports::WindowsUiIo::create_dib_section>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "gdi32.dll", export: "CreateDIBSection" } });
+    Build::bind<win32_imports::WindowsUiIo::flush_gdi>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "gdi32.dll", export: "GdiFlush" } });
+    Build::bind<win32_imports::WindowsUiIo::wait_for_compositor>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "dwmapi.dll", export: "DwmFlush" } });
+    Build::bind<win32_imports::WindowsUiIo::intersect_clip_rectangle>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "gdi32.dll", export: "IntersectClipRect" } });
+    Build::bind<win32_imports::WindowsUiIo::select_clip_region>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "gdi32.dll", export: "SelectClipRgn" } });
+    Build::bind<win32_imports::WindowsUiIo::delete_object>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "gdi32.dll", export: "DeleteObject" } });
+    Build::bind<win32_imports::WindowsUiIo::exclude_clip_rectangle>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "gdi32.dll", export: "ExcludeClipRect" } });
+    Build::bind<win32_imports::WindowsUiIo::rectangle_visible>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "gdi32.dll", export: "RectVisible" } });
+    Build::bind<win32_imports::WindowsUiIo::release_mouse>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "user32.dll", export: "ReleaseCapture" } });
+    Build::bind<win32_imports::WindowsUiIo::delete_dc>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "gdi32.dll", export: "DeleteDC" } });
+    Build::bind<win32_imports::WindowsUiIo::create_rectangle_region>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "gdi32.dll", export: "CreateRectRgn" } });
+    Build::bind<win32_imports::WindowsUiIo::combine_regions>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "gdi32.dll", export: "CombineRgn" } });
+    Build::bind<win32_imports::WindowsUiIo::create_window>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "user32.dll", export: "CreateWindowExA" } });
+    Build::bind<win32_imports::WindowsUiIo::foreground_window>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "user32.dll", export: "GetForegroundWindow" } });
+    Build::bind<win32_imports::WindowsUiIo::is_window>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "user32.dll", export: "IsWindow" } });
+    Build::bind<win32_imports::WindowsUiIo::destroy_window>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "user32.dll", export: "DestroyWindow" } });
+    Build::bind<win32_imports::WindowsUiIo::peek_message>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "user32.dll", export: "PeekMessageW" } });
+    Build::bind<win32_imports::WindowsUiIo::translate_message>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "user32.dll", export: "TranslateMessage" } });
+    Build::bind<win32_imports::WindowsUiIo::dispatch_message>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "user32.dll", export: "DispatchMessageW" } });
+    Build::bind<win32_imports::WindowsUiIo::create_font>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "gdi32.dll", export: "CreateFontA" } });
+    Build::bind<win32_imports::WindowsUiIo::text_out>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "gdi32.dll", export: "TextOutA" } });
+    Build::bind<win32_imports::WindowsUiIo::draw_text_a>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "user32.dll", export: "DrawTextA" } });
+    Build::bind<win32_imports::WindowsUiIo::get_text_extent_a>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "gdi32.dll", export: "GetTextExtentPoint32A" } });
+    Build::bind<win32_imports::WindowsUiIo::text_out_wide>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "gdi32.dll", export: "TextOutW" } });
+    Build::bind<win32_imports::WindowsUiIo::draw_text_w>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "user32.dll", export: "DrawTextW" } });
+    Build::bind<win32_imports::WindowsUiIo::get_text_extent_w>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "gdi32.dll", export: "GetTextExtentPoint32W" } });
+    Build::bind<win32_imports::WindowsUiIo::module_filename>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "kernel32.dll", export: "GetModuleFileNameW" } });
+    Build::bind<win32_imports::WindowsUiIo::add_private_font>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "gdi32.dll", export: "AddFontResourceExW" } });
+    Build::bind<win32_imports::WindowsUiIo::text_face>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "gdi32.dll", export: "GetTextFaceW" } });
+    Build::bind<win32_imports::WindowsUiIo::create_file_a>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "kernel32.dll", export: "CreateFileA" } });
+    Build::bind<win32_imports::WindowsUiIo::write_file_i32>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "kernel32.dll", export: "WriteFile" } });
+    Build::bind<win32_imports::WindowsUiIo::get_env_a>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "kernel32.dll", export: "GetEnvironmentVariableA" } });
+    Build::bind<win32_imports::WindowsUiIo::adjust_rectangle>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "user32.dll", export: "AdjustWindowRectEx" } });
+    Build::bind<win32_imports::WindowsUiIo::wait_for_input>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "user32.dll", export: "MsgWaitForMultipleObjectsEx" } });
+    Build::bind<win32_imports::WindowsUiIo::system_parameters>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "user32.dll", export: "SystemParametersInfoW" } });
+    Build::bind<win32_imports::WindowsUiIo::edit_message>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "user32.dll", export: "SendMessageW" } });
+    Build::bind<win32_imports::WindowsUiIo::edit_read>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "user32.dll", export: "GetWindowTextW" } });
+    Build::bind<win32_imports::WindowsUiIo::edit_replace>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "user32.dll", export: "SendMessageW" } });
+    Build::bind<win32_imports::WindowsUiIo::edit_create>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "user32.dll", export: "CreateWindowExW" } });
+    Build::bind<win32_imports::WindowsUiIo::edit_load>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "kernel32.dll", export: "LoadLibraryW" } });
+    Build::bind<win32_imports::WindowsUiIo::decode_utf8>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "kernel32.dll", export: "MultiByteToWideChar" } });
+    Build::bind<win32_imports::WindowsUiIo::get_key_state>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "user32.dll", export: "GetKeyState" } });
+    Build::bind<win32_imports::WindowsUiIo::set_capture>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "user32.dll", export: "SetCapture" } });
+    Build::bind<win32_imports::WindowsUiIo::get_capture>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "user32.dll", export: "GetCapture" } });
+    Build::bind<win32_imports::WindowsUiIo::copy_bitmap_memory>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "kernel32.dll", export: "RtlMoveMemory" } });
+    Build::bind<win32_imports::WindowsUiIo::read_bitmap_memory>(builder, windows_x86_64, ForeignBinding::DllImport { import: DllImport::PeByName { library: "kernel32.dll", export: "RtlMoveMemory" } });
     Build::depend(builder, Source::Path { location: "../../src" });
-    Build::depend(builder, Source::Path { location: "../../support/standard_library" });
+    Build::depend(builder, Source::Git {
+        repository: "https://github.com/CathedralOS/Omega.git",
+        revision: "e53f0955e26aee23fada4957e50b01379e9ce6b4",
+        selection: PackageSelection::Named { package: "omega_language_std" }
+    });
 }

@@ -1,70 +1,80 @@
+module dock_rows;
+
+use omega_ui::context::UiContext;
+use omega_ui::paint_boxes::UiBoxCommand;
+use omega_ui::paint_boxes::UiBoxList;
+use omega_ui::types::Rect;
+use omega_ui::types::add_i32;
+use omega_ui::types::mul_i32;
+use omega_ui::types::sub_i32;
+
+
 // The gallery marks text and demonstration regions that cannot reuse a flat row.
 use omega_ui::types;
 use omega_ui::context;
 use omega_ui::raster;
 use omega_ui::paint_boxes;
 use omega_ui_windows::box_painter;
-public data GalleryDockRows {}
-public machine GalleryDockRows::prepare_rows(paint: &mut UiBoxList, context: &UiContext) {
+public machine prepare_rows(paint: &mut UiBoxList, context: &UiContext) {
     transition { _ -> clear(paint, context, 0) }
-    state clear(paint: &mut UiBoxList, context: &UiContext, row: i32) {
+    machine clear(paint: &mut UiBoxList, context: &UiContext, row: i32) {
         transition row >= 0 && row < 34 { true -> reset(paint, context, row) _ -> boundaries(paint, context) }
     }
-    state boundaries(paint: &mut UiBoxList, context: &UiContext) {
+    machine boundaries(paint: &mut UiBoxList, context: &UiContext) {
         let top: i32 = mul_i32(140, paint.height) / 672;
         let bottom: i32 = mul_i32(667, paint.height) / 672;
-        WindowsBoxPainter::mark(paint, sub_i32(top, 4), add_i32(top, 4));
-        WindowsBoxPainter::mark(paint, sub_i32(bottom, 4), add_i32(bottom, 4));
+        omega_ui_windows::box_painter::mark(paint, sub_i32(top, 4), add_i32(top, 4));
+        omega_ui_windows::box_painter::mark(paint, sub_i32(bottom, 4), add_i32(bottom, 4));
         transition { _ -> box(paint, context, 0) }
     }
-    state reset(paint: &mut UiBoxList, context: &UiContext, row: i32) requires row >= 0 && row < 34 {
+    machine reset(paint: &mut UiBoxList, context: &UiContext, row: i32) requires row >= 0 && row < 34 {
         paint.varying_rows[row] = 0;
         transition { _ -> clear(paint, context, row + 1) }
     }
-    state box(paint: &mut UiBoxList, context: &UiContext, index: i32) {
+    machine box(paint: &mut UiBoxList, context: &UiContext, index: i32) {
         transition index >= 0 && index < paint.count && index < 64 { true -> mark_box(paint, context, index) _ -> node(paint, context, 0) }
     }
-    state mark_box(paint: &mut UiBoxList, context: &UiContext, index: i32) requires index >= 0 && index < 64 {
+    machine mark_box(paint: &mut UiBoxList, context: &UiContext, index: i32) requires index >= 0 && index < 64 {
         let command: &UiBoxCommand = &paint.boxes[index];
-        let rectangle: Rect = UiBoxCommand::rectangle(command);
+        let rectangle: Rect = omega_ui::paint_boxes::box_command_rectangle(command);
         let radius: i32 in Saturating = command.radius;
         let bottom: i32 = command.bottom;
         let top: i32 = command.top;
-        WindowsBoxPainter::mark_box(paint, rectangle, radius, bottom);
-        WindowsBoxPainter::mark(paint, sub_i32(top, 1), add_i32(top, 2));
+        omega_ui_windows::box_painter::mark_box(paint, rectangle, radius, bottom);
+        omega_ui_windows::box_painter::mark(paint, sub_i32(top, 1), add_i32(top, 2));
         transition { _ -> box(paint, context, index + 1) }
     }
-    state node(paint: &mut UiBoxList, context: &UiContext, index: i32) {
+    machine node(paint: &mut UiBoxList, context: &UiContext, index: i32) {
         transition index >= 0 && index < context.node_count && index < 128 { true -> mark_node(paint, context, index) _ -> done() }
     }
-    state mark_node(paint: &mut UiBoxList, context: &UiContext, index: i32) requires index >= 0 && index < 128 {
-        let rectangle: Rect = Raster::to_physical_rect(UiContext::paint_rect(context, index), paint.width as i32 in Saturating, paint.height as i32 in Saturating, false, context.width, context.height);
-        transition context.nodes[index].content_kind > 0 && rectangle.x + rectangle.w > Raster::to_physical_x(250, paint.width as i32 in Saturating, false, context.width) {
+    machine mark_node(paint: &mut UiBoxList, context: &UiContext, index: i32) requires index >= 0 && index < 128 {
+        let rectangle: Rect = omega_ui::raster::to_physical_rect(omega_ui::context::paint_rect(context, index), paint.width as i32 in Saturating, paint.height as i32 in Saturating, false, context.width, context.height);
+        transition context.nodes[index].content_kind > 0 && rectangle.x + rectangle.w > omega_ui::raster::to_physical_x(250, paint.width as i32 in Saturating, false, context.width) {
             true -> content(paint, context, index, rectangle)
             _ -> surface(paint, context, index, rectangle)
         }
     }
-    state content(paint: &mut UiBoxList, context: &UiContext, index: i32, rectangle: Rect) {
-        WindowsBoxPainter::mark(paint, sub_i32(rectangle.y as i32, 8), add_i32(add_i32(rectangle.y as i32, rectangle.h as i32), 52));
+    machine content(paint: &mut UiBoxList, context: &UiContext, index: i32, rectangle: Rect) {
+        omega_ui_windows::box_painter::mark(paint, sub_i32(rectangle.y as i32, 8), add_i32(add_i32(rectangle.y as i32, rectangle.h as i32), 52));
         transition { _ -> node(paint, context, index + 1) }
     }
-    state surface(paint: &mut UiBoxList, context: &UiContext, index: i32, rectangle: Rect) {
-        WindowsBoxPainter::mark_box(paint, Rect::copy(&rectangle), 48, (rectangle.y + rectangle.h) as i32);
+    machine surface(paint: &mut UiBoxList, context: &UiContext, index: i32, rectangle: Rect) {
+        omega_ui_windows::box_painter::mark_box(paint, omega_ui::types::rect_copy(&rectangle), 48, (rectangle.y + rectangle.h) as i32);
         transition { _ -> node(paint, context, index + 1) }
     }
-    state done() {}
+    machine done() {}
 }
 
 
 // The gallery leaves the dock canvas empty below the toolbar. Check the box tree
 // before using a constant background; future content automatically uses the tree.
-public machine GalleryDockRows::flat_background(context: &UiContext) -> bool {
+public machine flat_background(context: &UiContext) -> bool {
     transition { _ -> scan(context, 0) }
-    state scan(context: &UiContext, index: i32) -> bool {
+    machine scan(context: &UiContext, index: i32) -> bool {
         transition index >= 0 && index < context.node_count && index < 128 { true -> node(context, index) _ -> (true) }
     }
-    state node(context: &UiContext, index: i32) -> bool requires index >= 0 && index < 128 {
-        let rectangle: Rect = UiContext::paint_rect(context, index);
+    machine node(context: &UiContext, index: i32) -> bool requires index >= 0 && index < 128 {
+        let rectangle: Rect = omega_ui::context::paint_rect(context, index);
         let intersects: bool = rectangle.x + rectangle.w > 250 && rectangle.y + rectangle.h + (20 as i32 in Saturating) >= 170;
         let foreground: bool = context.nodes[index].content_kind > 0;
         let border: bool = context.nodes[index].style.border >= 0 && context.nodes[index].style.border_width > 0;

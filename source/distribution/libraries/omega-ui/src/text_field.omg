@@ -1,3 +1,13 @@
+module text_field;
+
+use context::UiContext;
+use types::Rect;
+use types::clamp_sat;
+use types::color_mix;
+use types::max_i32;
+use types::min_i32;
+
+
 // Text editing backends provide logical selection offsets; every renderer uses
 // this geometry, including reverse selections and a separately positioned caret.
 use types;
@@ -10,20 +20,18 @@ public data UiTextSelection [copy] {
     caret: i32;
     focused: bool;
 }
-public data UiTextFieldView {}
-
-public machine UiTextFieldView::paint_selection(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, bounds: Rect, selection: UiTextSelection) {
+public machine paint_selection(pixels: &mut [i32; 4096], band_y: i32, ui_context: &UiContext, bounds: Rect, selection: UiTextSelection) {
     let left: i32 in Saturating = clamp_sat(min_i32(selection.left, selection.right) as i32 in Saturating, 0, bounds.w);
     let right: i32 in Saturating = clamp_sat(max_i32(selection.left, selection.right) as i32 in Saturating, 0, bounds.w);
     let highlight: Rect = Rect { x: bounds.x + left, y: bounds.y, w: right - left, h: bounds.h };
-    Raster::draw_box_fill(pixels, band_y, highlight, color_mix(context.theme.surface, context.theme.accent, 24), 2);
+    raster::draw_box_fill(pixels, band_y, highlight, color_mix(ui_context.theme.surface, ui_context.theme.accent, 24), 2);
     transition selection.focused {
-        true -> caret(pixels, band_y, context, bounds, selection.caret)
+        true -> caret(pixels, band_y, ui_context, bounds, selection.caret)
         _ -> done()
     }
-    state caret(pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, bounds: Rect, caret: i32) {
+    machine caret(pixels: &mut [i32; 4096], band_y: i32, ui_context: &UiContext, bounds: Rect, caret: i32) {
         let cursor: Rect = Rect { x: bounds.x + clamp_sat(caret as i32 in Saturating, 0, bounds.w), y: bounds.y, w: 1, h: bounds.h };
-        Raster::draw_box_fill(pixels, band_y, cursor, context.theme.text, 0);
+        raster::draw_box_fill(pixels, band_y, cursor, ui_context.theme.text, 0);
     }
-    state done() {}
+    machine done() {}
 }

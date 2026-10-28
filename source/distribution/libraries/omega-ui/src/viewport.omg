@@ -1,3 +1,5 @@
+module viewport;
+
 /* Layout and input use logical units. Rendering maps the explicit viewport to
 physical pixels; no application canvas dimensions are implicit in this contract. */
 use types;
@@ -9,19 +11,19 @@ public data UiViewport [copy] {
     physical_height: i32;
 }
 
-public machine UiViewport::map(value: i32 in Saturating, physical_extent: i32 in Saturating, logical_extent: i32 in Saturating) -> i32 in Saturating {
+public machine map(value: i32 in Saturating, physical_extent: i32 in Saturating, logical_extent: i32 in Saturating) -> i32 in Saturating {
     transition logical_extent > 0 {
         true -> scale(value, physical_extent, logical_extent)
         _ -> (0)
     }
-    state scale(value: i32 in Saturating, physical_extent: i32 in Saturating, logical_extent: i32 in Saturating) -> i32 in Saturating
+    machine scale(value: i32 in Saturating, physical_extent: i32 in Saturating, logical_extent: i32 in Saturating) -> i32 in Saturating
     requires logical_extent > 0 {
         (value * physical_extent + logical_extent / (2 as i32 in Saturating)) / logical_extent
     }
 }
 
-public machine UiViewport::divide(numerator: i32 in Saturating, denominator: i32 in Saturating) -> i32 in Saturating {
+public machine divide(numerator: i32 in Saturating, denominator: i32 in Saturating) -> i32 in Saturating {
     transition denominator > 0 { true -> quotient(numerator, denominator) _ -> (0) }
-    state quotient(numerator: i32 in Saturating, denominator: i32 in Saturating) -> i32 in Saturating
+    machine quotient(numerator: i32 in Saturating, denominator: i32 in Saturating) -> i32 in Saturating
     requires denominator > 0 { numerator / denominator }
 }

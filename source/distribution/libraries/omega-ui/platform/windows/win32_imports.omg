@@ -1,0 +1,98 @@
+module win32_imports;
+
+use windows_host::WindowsUiHost;
+use windows_host::WindowsUiMessage;
+use windows_host::WindowsUiRectangle;
+use windows_host::WindowsUiTextExtent;
+
+boundary trait WindowsUiIo {
+    machine create_window(extended_style: u32, class_name: &u8, title: &u8, style: u32, x: i32, y: i32, width: i32, height: i32, parent: u64, menu: u64, instance: u64, creation_data: u64) -> u64
+    reaches WindowsUiHost;
+    machine foreground_window() -> u64
+    reaches WindowsUiHost;
+    machine is_window(window: u64) -> i32
+    reaches WindowsUiHost;
+    machine destroy_window(window: u64) -> i32
+    reaches WindowsUiHost;
+    machine peek_message(message: &mut WindowsUiMessage, window: u64, minimum: u32, maximum: u32, remove: u32) -> i32
+    reaches WindowsUiHost;
+    machine translate_message(message: &WindowsUiMessage) -> i32
+    reaches WindowsUiHost;
+    machine dispatch_message(message: &WindowsUiMessage) -> i64
+    reaches WindowsUiHost;
+    machine create_font(cHeight: i32, cWidth: i32, cEscapement: i32, cOrientation: i32, cWeight: i32, bItalic: u32, bUnderline: u32, bStrikeOut: u32, iCharSet: u32, iOutPrecision: u32, iClipPrecision: u32, iQuality: u32, iPitchAndFamily: u32, pszFaceName: &u8) -> u64
+    reaches WindowsUiHost;
+    machine text_out(hdc: u64, x: i32, y: i32, lpString: &u8, c: i32) -> i32
+    reaches WindowsUiHost;
+    machine draw_text_a(hdc: u64, lpchText: &u8, cchText: i32, lprc: &mut WindowsUiRectangle, format: u32) -> i32
+    reaches WindowsUiHost;
+    machine get_text_extent_a(hdc: u64, lpString: &u8, c: i32, psizl: &mut i32) -> i32
+    reaches WindowsUiHost;
+    machine text_out_wide(hdc: u64, x: i32, y: i32, lpString: &u16, c: i32) -> i32
+    reaches WindowsUiHost;
+    machine draw_text_w(hdc: u64, lpchText: &u16, cchText: i32, lprc: &mut WindowsUiRectangle, format: u32) -> i32
+    reaches WindowsUiHost;
+    machine get_text_extent_w(hdc: u64, lpString: &u16, c: i32, psizl: &mut WindowsUiTextExtent) -> i32
+    reaches WindowsUiHost;
+    machine module_filename(module: u64, buffer: &mut u16, capacity: u32) -> u32
+    reaches WindowsUiHost;
+    machine add_private_font(path: &u16, flags: u32, reserved: u64) -> i32
+    reaches WindowsUiHost;
+    machine text_face(device: u64, capacity: i32, face: &mut [u16; 64]) -> i32 reaches WindowsUiHost;
+    machine create_file_a(lpFileName: &u8, dwDesiredAccess: u32, dwShareMode: u32, lpSecurityAttributes: u64, dwCreationDisposition: u32, dwFlagsAndAttributes: u32, hTemplateFile: u64) -> u64
+    reaches WindowsUiHost;
+    machine write_file_i32(hFile: u64, lpBuffer: &i32, nNumberOfBytesToWrite: u32, lpNumberOfBytesWritten: &mut u32, lpOverlapped: u64) -> i32
+    reaches WindowsUiHost;
+    machine get_env_a(lpName: &u8, lpBuffer: &mut u32, nSize: u32) -> u32
+    reaches WindowsUiHost;
+    machine adjust_rectangle(rectangle: &mut WindowsUiRectangle, style: u32, menu: i32, extended_style: u32) -> i32
+    reaches WindowsUiHost;
+    machine copy_bitmap_memory(destination: u64, source: &i32, bytes: u64)
+    reaches WindowsUiHost;
+    machine wait_for_input(count: u32, handles: u64, timeout_ms: u32, wake_mask: u32, flags: u32) -> u32
+    reaches WindowsUiHost;
+    machine system_parameters(action: u32, parameter: u32, result: &mut i32, flags: u32) -> i32
+    reaches WindowsUiHost;
+    machine edit_message(window: u64, message: u32, word: u64, parameter: u64) -> u64 reaches WindowsUiHost;
+    machine edit_read(window: u64, text: &mut u16, capacity: i32) -> u32 reaches WindowsUiHost;
+    machine edit_replace(window: u64, message: u32, undo: u64, text: &u16) -> u64 reaches WindowsUiHost;
+    machine edit_create(extended: u32, class_name: &u16, title: &u16, style: u32, x: i32, y: i32, width: i32, height: i32, parent: u64, menu: u64, instance: u64, parameter: u64) -> u64 reaches WindowsUiHost;
+    machine edit_load(name: &u16) -> u64 reaches WindowsUiHost;
+    machine decode_utf8(code_page: u32, flags: u32, source: &u8, length: i32, destination: &mut u16, capacity: i32) -> i32 reaches WindowsUiHost;
+    machine get_key_state(key: i32) -> i32 reaches WindowsUiHost;
+    machine read_bitmap_memory(destination: &mut i32, source: u64, bytes: u64) reaches WindowsUiHost;
+    machine set_capture(window: u64) -> u64 reaches WindowsUiHost;
+    machine get_capture() -> u64 reaches WindowsUiHost;
+    machine get_dc(window: u64) -> u64 reaches WindowsUiHost;
+    machine release_dc(window: u64, device: u64) -> i32 reaches WindowsUiHost;
+    machine client_rectangle(window: u64, rectangle: &mut WindowsUiRectangle) -> i32 reaches WindowsUiHost;
+    machine stretch_dibits(device: u64, destination_x: i32, destination_y: i32, destination_width: i32, destination_height: i32, source_x: i32, source_y: i32, source_width: i32, source_height: i32, pixels: &i32, info: &i32, usage: u32, raster_operation: u32) -> i32 reaches WindowsUiHost;
+    machine set_dpi_aware() -> i32 reaches WindowsUiHost;
+    machine create_compatible_dc(device: u64) -> u64 reaches WindowsUiHost;
+    machine create_compatible_bitmap(device: u64, width: i32, height: i32) -> u64 reaches WindowsUiHost;
+    machine select_object(device: u64, object: u64) -> u64 reaches WindowsUiHost;
+    machine bit_blt(dest_dc: u64, x: i32, y: i32, width: i32, height: i32, src_dc: u64, src_x: i32, src_y: i32, rop: u32) -> i32 reaches WindowsUiHost;
+    machine stretch_blt(dest_dc: u64, x: i32, y: i32, width: i32, height: i32, src_dc: u64, src_x: i32, src_y: i32, src_width: i32, src_height: i32, rop: u32) -> i32 reaches WindowsUiHost;
+    machine set_stretch_blt_mode(device: u64, mode: i32) -> i32 reaches WindowsUiHost;
+    machine set_bk_mode(device: u64, mode: i32) -> i32 reaches WindowsUiHost;
+    machine set_text_color(device: u64, color: u32) -> u32 reaches WindowsUiHost;
+    machine get_di_bits(device: u64, bitmap: u64, start_scan: u32, scan_lines: u32, bits: &mut i32, info: &i32, usage: u32) -> i32 reaches WindowsUiHost;
+    machine close_bmp_file(handle: u64) -> i32 reaches WindowsUiHost;
+    machine get_cursor_pos(pt: &mut i32) -> i32 reaches WindowsUiHost;
+    machine screen_to_client(window: u64, pt: &mut i32) -> i32 reaches WindowsUiHost;
+    machine get_async_key_state(vkey: i32) -> i32 reaches WindowsUiHost;
+    machine performance_counter(value: &mut i64) -> i32 reaches WindowsUiHost;
+    machine performance_frequency(value: &mut i64) -> i32 reaches WindowsUiHost;
+    machine create_dib_section(device: u64, info: &i32, usage: u32, pixels: &mut u64, section: u64, offset: u32) -> u64 reaches WindowsUiHost;
+    machine flush_gdi() -> i32 reaches WindowsUiHost;
+    machine wait_for_compositor() -> i32 reaches WindowsUiHost;
+    machine intersect_clip_rectangle(device: u64, left: i32, top: i32, right: i32, bottom: i32) -> i32 reaches WindowsUiHost;
+    machine select_clip_region(device: u64, region: u64) -> i32 reaches WindowsUiHost;
+    machine delete_object(object: u64) -> i32 reaches WindowsUiHost;
+    machine exclude_clip_rectangle(device: u64, left: i32, top: i32, right: i32, bottom: i32) -> i32 reaches WindowsUiHost;
+    machine rectangle_visible(device: u64, rectangle: &WindowsUiRectangle) -> i32 reaches WindowsUiHost;
+    machine release_mouse() -> bool reaches WindowsUiHost;
+    machine delete_dc(device: u64) -> i32 reaches WindowsUiHost;
+    machine create_rectangle_region(left: i32, top: i32, right: i32, bottom: i32) -> u64 reaches WindowsUiHost;
+    machine combine_regions(destination: u64, first: u64, second: u64, mode: i32) -> i32 reaches WindowsUiHost;
+}

@@ -1,10 +1,24 @@
+use windows_host::WindowsUiHost;
+module corner_cache;
+
+use fill_cache::WindowsFillCache;
+use omega_ui::types::Rect;
+use omega_ui::types::add_i32;
+use omega_ui::types::color_mix;
+use omega_ui::types::max_i32;
+use omega_ui::types::min_i32;
+use omega_ui::types::mul_i32;
+use omega_ui::types::select_i32;
+use omega_ui::types::sub_i32;
+
+
 /*
 Rounded corners repeat the same integer coverage and source color. Keep those
 samples in a small CPU-only DIB, never selected into a GDI device. A style used
 this frame stays pinned until all prepared boxes have drawn. Allocation, capacity
 or copy failure falls back to the original scalar corner painter.
 */
-use omega_language_std::windows_gui_host;
+
 use omega_ui::types;
 use omega_ui::raster;
 use fill_cache;
@@ -29,114 +43,114 @@ public data WindowsCornerCache {
     misses: u64 in Saturating;
 }
 
-public machine WindowsCornerCache::init(cache: &mut WindowsCornerCache, device: u64) reaches WindowsGuiHost invokes WindowsGuiHost; {
+public machine init(cache: &mut WindowsCornerCache, device: u64) reaches WindowsUiHost invokes WindowsUiHost; {
     transition !cache.attempted { true -> allocate(cache, device) _ -> done() }
-    state allocate(cache: &mut WindowsCornerCache, device: u64) {
+    machine allocate(cache: &mut WindowsCornerCache, device: u64) {
         cache.attempted = true;
-        WindowsFillCache::init(&mut cache.fills, device);
+        fill_cache::init(&mut cache.fills, device);
         let mut info: [i32; 11];
         info[0] = 40; info[1] = 48; info[2] = -1920; info[3] = 2097153;
         let mut address: u64;
-        let bitmap: u64 = WindowsGuiHost::create_dib_section(device, &info[0], 0, &mut address, 0, 0);
+        let bitmap: u64 = WindowsUiHost::create_dib_section(device, &info[0], 0, &mut address, 0, 0);
         cache.bitmap = bitmap;
         cache.pixels = address;
         cache.ready = bitmap > 0 && address > 0;
         transition { _ -> clear(cache, 0) }
     }
-    state clear(cache: &mut WindowsCornerCache, index: i32) {
+    machine clear(cache: &mut WindowsCornerCache, index: i32) {
         transition index >= 0 && index < 40 { true -> invalidate(cache, index) _ -> done() }
     }
-    state invalidate(cache: &mut WindowsCornerCache, index: i32) requires index >= 0 && index < 40 {
+    machine invalidate(cache: &mut WindowsCornerCache, index: i32) requires index >= 0 && index < 40 {
         cache.styles[index].valid = false;
         cache.styles[index].used = false;
         transition { _ -> clear(cache, index + 1) }
     }
-    state done() {}
+    machine done() {}
 }
-public machine WindowsCornerCache::close(cache: &mut WindowsCornerCache) reaches WindowsGuiHost invokes WindowsGuiHost; {
-    WindowsFillCache::close(&mut cache.fills);
+public machine close(cache: &mut WindowsCornerCache) reaches WindowsUiHost invokes WindowsUiHost; {
+    fill_cache::close(&mut cache.fills);
     let bitmap: u64 = cache.bitmap;
     cache.bitmap = 0; cache.pixels = 0; cache.ready = false; cache.attempted = false;
     transition bitmap > 0 { true -> release(bitmap) _ -> done() }
-    state release(bitmap: u64) { let deleted: i32 = WindowsGuiHost::delete_object(bitmap); }
-    state done() {}
+    machine release(bitmap: u64) { let deleted: i32 = WindowsUiHost::delete_object(bitmap); }
+    machine done() {}
 }
-public machine WindowsCornerCache::begin_frame(cache: &mut WindowsCornerCache) {
-    WindowsFillCache::begin_frame(&mut cache.fills);
+public machine begin_frame(cache: &mut WindowsCornerCache) {
+    fill_cache::begin_frame(&mut cache.fills);
     transition { _ -> scan(cache, 0) }
-    state scan(cache: &mut WindowsCornerCache, index: i32) {
+    machine scan(cache: &mut WindowsCornerCache, index: i32) {
         transition index >= 0 && index < 40 { true -> unpin(cache, index) _ -> done() }
     }
-    state unpin(cache: &mut WindowsCornerCache, index: i32) requires index >= 0 && index < 40 {
+    machine unpin(cache: &mut WindowsCornerCache, index: i32) requires index >= 0 && index < 40 {
         cache.styles[index].used = false;
         transition { _ -> scan(cache, index + 1) }
     }
-    state done() {}
+    machine done() {}
 }
 
-public machine WindowsCornerCache::style(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], radius: i32 in Saturating, background: i32, border: i32, has_border: bool) -> i32 reaches WindowsGuiHost invokes WindowsGuiHost; {
+public machine style(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], radius: i32 in Saturating, background: i32, border: i32, has_border: bool) -> i32 reaches WindowsUiHost invokes WindowsUiHost; {
     transition cache.ready && radius > 0 && radius <= 48 { true -> scan(cache, pixels, radius as i32, background, border, has_border, 0, -1) _ -> (-1) }
-    state scan(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], radius: i32, background: i32, border: i32, has_border: bool, index: i32, available: i32) -> i32 requires radius > 0 && radius <= 48 {
+    machine scan(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], radius: i32, background: i32, border: i32, has_border: bool, index: i32, available: i32) -> i32 requires radius > 0 && radius <= 48 {
         transition index >= 0 && index < 40 { true -> entry(cache, pixels, radius, background, border, has_border, index, available) _ -> choose(cache, pixels, radius, background, border, has_border, available) }
     }
-    state entry(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], radius: i32, background: i32, border: i32, has_border: bool, index: i32, available: i32) -> i32 requires radius > 0 && radius <= 48 && index >= 0 && index < 40 {
+    machine entry(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], radius: i32, background: i32, border: i32, has_border: bool, index: i32, available: i32) -> i32 requires radius > 0 && radius <= 48 && index >= 0 && index < 40 {
         let style: WindowsCornerStyle = cache.styles[index];
         let matches: bool = style.valid && style.radius == radius && style.background == background && style.border == border && style.has_border == has_border;
         let next: i32 = select_i32(!style.used && available < 0, index, available);
         transition matches { true -> hit(cache, index) _ -> scan(cache, pixels, radius, background, border, has_border, index + 1, next) }
     }
-    state hit(cache: &mut WindowsCornerCache, index: i32) -> i32 requires index >= 0 && index < 40 {
+    machine hit(cache: &mut WindowsCornerCache, index: i32) -> i32 requires index >= 0 && index < 40 {
         cache.styles[index].used = true;
         index
     }
-    state choose(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], radius: i32, background: i32, border: i32, has_border: bool, available: i32) -> i32 requires radius > 0 && radius <= 48 {
+    machine choose(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], radius: i32, background: i32, border: i32, has_border: bool, available: i32) -> i32 requires radius > 0 && radius <= 48 {
         transition available >= 0 && available < 40 { true -> row(cache, pixels, radius, background, border, has_border, available, 1) _ -> (-1) }
     }
-    state row(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], radius: i32, background: i32, border: i32, has_border: bool, slot: i32, y: i32) -> i32 requires radius > 0 && radius <= 48 && slot >= 0 && slot < 40 {
+    machine row(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], radius: i32, background: i32, border: i32, has_border: bool, slot: i32, y: i32) -> i32 requires radius > 0 && radius <= 48 && slot >= 0 && slot < 40 {
         transition y > 0 && y <= radius { true -> column(cache, pixels, radius, background, border, has_border, slot, y, 0) _ -> complete(cache, radius, background, border, has_border, slot) }
     }
-    state column(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], radius: i32, background: i32, border: i32, has_border: bool, slot: i32, y: i32, x: i32) -> i32 requires radius > 0 && radius <= 48 && slot >= 0 && slot < 40 && y > 0 && y <= 48 {
+    machine column(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], radius: i32, background: i32, border: i32, has_border: bool, slot: i32, y: i32, x: i32) -> i32 requires radius > 0 && radius <= 48 && slot >= 0 && slot < 40 && y > 0 && y <= 48 {
         transition x >= 0 && x < radius && x < 48 { true -> sample(cache, pixels, radius, background, border, has_border, slot, y, x) _ -> upload(cache, pixels, radius, background, border, has_border, slot, y) }
     }
-    state sample(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], radius: i32, background: i32, border: i32, has_border: bool, slot: i32, y: i32, x: i32) -> i32 requires radius > 0 && radius <= 48 && slot >= 0 && slot < 40 && y > 0 && y <= 48 && x >= 0 && x < 48 {
-        pixels[x] = Raster::corner_sample((radius as i32 in Saturating) - (x as i32 in Saturating), y as i32 in Saturating, radius as i32 in Saturating, background, border, has_border);
+    machine sample(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], radius: i32, background: i32, border: i32, has_border: bool, slot: i32, y: i32, x: i32) -> i32 requires radius > 0 && radius <= 48 && slot >= 0 && slot < 40 && y > 0 && y <= 48 && x >= 0 && x < 48 {
+        pixels[x] = omega_ui::raster::corner_sample((radius as i32 in Saturating) - (x as i32 in Saturating), y as i32 in Saturating, radius as i32 in Saturating, background, border, has_border);
         transition { _ -> column(cache, pixels, radius, background, border, has_border, slot, y, x + 1) }
     }
-    state upload(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], radius: i32, background: i32, border: i32, has_border: bool, slot: i32, y: i32) -> i32 requires radius > 0 && radius <= 48 && slot >= 0 && slot < 40 && y > 0 && y <= 48 {
+    machine upload(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], radius: i32, background: i32, border: i32, has_border: bool, slot: i32, y: i32) -> i32 requires radius > 0 && radius <= 48 && slot >= 0 && slot < 40 && y > 0 && y <= 48 {
         let address: u64 = cache.pixels;
         let target: i32 = add_i32(mul_i32(slot, 48), sub_i32(y, 1));
-        let copied: bool = WindowsGuiHost::copy_bitmap_span(address, 48, 1920, target, 0, radius, pixels);
+        let copied: bool = WindowsUiHost::copy_bitmap_span(address, 48, 1920, target, 0, radius, pixels);
         transition copied { true -> row(cache, pixels, radius, background, border, has_border, slot, y + 1) _ -> failed(cache) }
     }
-    state complete(cache: &mut WindowsCornerCache, radius: i32, background: i32, border: i32, has_border: bool, slot: i32) -> i32 requires slot >= 0 && slot < 40 {
+    machine complete(cache: &mut WindowsCornerCache, radius: i32, background: i32, border: i32, has_border: bool, slot: i32) -> i32 requires slot >= 0 && slot < 40 {
         cache.styles[slot] = WindowsCornerStyle { radius: radius, background: background, border: border, has_border: has_border, valid: true, used: true };
         cache.misses = cache.misses + (1u64 as u64 in Saturating);
         slot
     }
-    state failed(cache: &mut WindowsCornerCache) -> i32 { cache.ready = false; -1 }
+    machine failed(cache: &mut WindowsCornerCache) -> i32 { cache.ready = false; -1 }
 }
 
-machine WindowsCornerCache::read_row(cache: &mut WindowsCornerCache, slot: i32, row: i32, radius: i32) -> bool reaches WindowsGuiHost {
+machine read_row(cache: &mut WindowsCornerCache, slot: i32, row: i32, radius: i32) -> bool reaches WindowsUiHost {
     transition cache.ready && slot >= 0 && slot < 40 && row > 0 && row <= 48 && row <= radius && radius > 0 && radius <= 48 { true -> check(cache, slot, row, radius) _ -> (false) }
-    state check(cache: &mut WindowsCornerCache, slot: i32, row: i32, radius: i32) -> bool requires slot >= 0 && slot < 40 {
+    machine check(cache: &mut WindowsCornerCache, slot: i32, row: i32, radius: i32) -> bool requires slot >= 0 && slot < 40 {
         transition cache.styles[slot].valid && cache.styles[slot].radius == radius { true -> read(cache, slot, row, radius) _ -> (false) }
     }
-    state read(cache: &mut WindowsCornerCache, slot: i32, row: i32, radius: i32) -> bool {
+    machine read(cache: &mut WindowsCornerCache, slot: i32, row: i32, radius: i32) -> bool {
         let address: u64 = cache.pixels;
         let source: i32 = add_i32(mul_i32(slot, 48), sub_i32(row, 1));
-        let copied: bool = WindowsGuiHost::read_bitmap_span(address, 48, 1920, source, 0, radius, &mut cache.row);
+        let copied: bool = WindowsUiHost::read_bitmap_span(address, 48, 1920, source, 0, radius, &mut cache.row);
         transition copied { true -> counted(cache) _ -> (false) }
     }
-    state counted(cache: &mut WindowsCornerCache) -> bool { cache.reads = cache.reads + (1u64 as u64 in Saturating); true }
+    machine counted(cache: &mut WindowsCornerCache) -> bool { cache.reads = cache.reads + (1u64 as u64 in Saturating); true }
 }
 
-public machine WindowsCornerCache::draw(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], row: i32, rectangle: Rect, radius: i32 in Saturating, background: i32, border: i32, has_border: bool, slot: i32, fill_slot: i32, left: i32 in Saturating, right: i32 in Saturating) reaches WindowsGuiHost invokes WindowsGuiHost; {
+public machine draw(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], row: i32, rectangle: Rect, radius: i32 in Saturating, background: i32, border: i32, has_border: bool, slot: i32, fill_slot: i32, left: i32 in Saturating, right: i32 in Saturating) reaches WindowsUiHost invokes WindowsUiHost; {
     let bounded: bool = rectangle.x >= -16384 && rectangle.x <= 16384 && rectangle.y >= -16384 && rectangle.y <= 16384 && rectangle.w >= 0 && rectangle.w <= 16384 && rectangle.h > 0 && rectangle.h <= 16384 && row >= 0 && row < 2160 && radius >= 0 && radius <= 48;
     transition bounded && (radius == 0 || slot >= 0) { true -> cached(cache, pixels, row, rectangle, radius, background, border, has_border, slot, fill_slot, left, right) _ -> scalar(pixels, row, rectangle, radius, background, border, has_border) }
-    state scalar(pixels: &mut [i32; 4096], row: i32, rectangle: Rect, radius: i32 in Saturating, background: i32, border: i32, has_border: bool) {
-        Raster::sdf_box_scanline(pixels, row, rectangle, row as i32 in Saturating, radius, background, border, has_border);
+    machine scalar(pixels: &mut [i32; 4096], row: i32, rectangle: Rect, radius: i32 in Saturating, background: i32, border: i32, has_border: bool) {
+        omega_ui::raster::sdf_box_scanline(pixels, row, rectangle, row as i32 in Saturating, radius, background, border, has_border);
     }
-    state cached(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], row: i32, rectangle: Rect, radius: i32 in Saturating, background: i32, border: i32, has_border: bool, slot: i32, fill_slot: i32, left: i32 in Saturating, right: i32 in Saturating) {
+    machine cached(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], row: i32, rectangle: Rect, radius: i32 in Saturating, background: i32, border: i32, has_border: bool, slot: i32, fill_slot: i32, left: i32 in Saturating, right: i32 in Saturating) {
         // The entry bounds keep these physical sums within [-65536, 65536].
         let x: i32 in Wrapping = rectangle.x as i32 in Wrapping;
         let y: i32 in Wrapping = rectangle.y as i32 in Wrapping;
@@ -152,43 +166,43 @@ public machine WindowsCornerCache::draw(cache: &mut WindowsCornerCache, pixels: 
         let start: i32 in Saturating = max_i32(left as i32, (x + margin) as i32) as i32 in Saturating;
         let end: i32 in Saturating = min_i32(right as i32, (x + width - margin) as i32) as i32 in Saturating;
         let selected_fill: i32 = select_i32(cap && has_border, -1, fill_slot);
-        WindowsFillCache::fill_span(&mut cache.fills, pixels, row, start, end, color, selected_fill);
+        fill_cache::fill_span(&mut cache.fills, pixels, row, start, end, color, selected_fill);
         let visible_corner: bool = (left as i32) < ((x + rounded) as i32) || (right as i32) > ((x + width - rounded) as i32);
         transition dy > 0 { true -> visible_corners(cache, pixels, row, rectangle, radius, background, border, has_border, slot, dy as i32 in Saturating, visible_corner) _ -> sides(pixels, row, rectangle, border, has_border && !cap) }
     }
-    state visible_corners(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], row: i32, rectangle: Rect, radius: i32 in Saturating, background: i32, border: i32, has_border: bool, slot: i32, dy: i32 in Saturating, visible: bool) {
+    machine visible_corners(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], row: i32, rectangle: Rect, radius: i32 in Saturating, background: i32, border: i32, has_border: bool, slot: i32, dy: i32 in Saturating, visible: bool) {
         transition visible { true -> corners(cache, pixels, row, rectangle, radius, background, border, has_border, slot, dy) _ -> done() }
     }
-    state corners(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], row: i32, rectangle: Rect, radius: i32 in Saturating, background: i32, border: i32, has_border: bool, slot: i32, dy: i32 in Saturating) {
-        let copied: bool = WindowsCornerCache::read_row(cache, slot, dy as i32, radius as i32);
+    machine corners(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], row: i32, rectangle: Rect, radius: i32 in Saturating, background: i32, border: i32, has_border: bool, slot: i32, dy: i32 in Saturating) {
+        let copied: bool = corner_cache::read_row(cache, slot, dy as i32, radius as i32);
         transition copied { true -> samples(&cache.row, pixels, row, rectangle, radius) _ -> scalar_corners(pixels, row, rectangle, radius, background, border, has_border, dy) }
     }
-    state samples(samples: &[i32; 48], pixels: &mut [i32; 4096], row: i32, rectangle: Rect, radius: i32 in Saturating) {
-        let left: i32 = Raster::clip_left(pixels, row) as i32;
-        let right: i32 = Raster::clip_right(pixels, row) as i32;
+    machine samples(samples: &[i32; 48], pixels: &mut [i32; 4096], row: i32, rectangle: Rect, radius: i32 in Saturating) {
+        let left: i32 = omega_ui::raster::clip_left(pixels, row) as i32;
+        let right: i32 = omega_ui::raster::clip_right(pixels, row) as i32;
         let last: i32 in Wrapping = (rectangle.x as i32 in Wrapping) + (rectangle.w as i32 in Wrapping) - (1 as i32 in Wrapping);
         draw_corner_samples(samples, pixels, row, rectangle.x, last as i32 in Saturating, radius, left, right);
     }
-    state scalar_corners(pixels: &mut [i32; 4096], row: i32, rectangle: Rect, radius: i32 in Saturating, background: i32, border: i32, has_border: bool, dy: i32 in Saturating) {
-        Raster::sdf_corner_row(pixels, row, rectangle, row as i32 in Saturating, dy, radius, background, border, has_border);
+    machine scalar_corners(pixels: &mut [i32; 4096], row: i32, rectangle: Rect, radius: i32 in Saturating, background: i32, border: i32, has_border: bool, dy: i32 in Saturating) {
+        omega_ui::raster::sdf_corner_row(pixels, row, rectangle, row as i32 in Saturating, dy, radius, background, border, has_border);
     }
-    state sides(pixels: &mut [i32; 4096], row: i32, rectangle: Rect, border: i32, draw: bool) {
+    machine sides(pixels: &mut [i32; 4096], row: i32, rectangle: Rect, border: i32, draw: bool) {
         transition draw { true -> side_pixels(pixels, row, rectangle, border) _ -> done() }
     }
-    state side_pixels(pixels: &mut [i32; 4096], row: i32, rectangle: Rect, border: i32) {
-        Raster::put_px_raw(pixels, row, rectangle.x, row as i32 in Saturating, border);
+    machine side_pixels(pixels: &mut [i32; 4096], row: i32, rectangle: Rect, border: i32) {
+        omega_ui::raster::put_px_raw(pixels, row, rectangle.x, row as i32 in Saturating, border);
         let last: i32 in Wrapping = (rectangle.x as i32 in Wrapping) + (rectangle.w as i32 in Wrapping) - (1 as i32 in Wrapping);
-        Raster::put_px_raw(pixels, row, last as i32 in Saturating, row as i32 in Saturating, border);
+        omega_ui::raster::put_px_raw(pixels, row, last as i32 in Saturating, row as i32 in Saturating, border);
     }
-    state done() {}
+    machine done() {}
 }
 
 machine draw_corner_samples(samples: &[i32; 48], pixels: &mut [i32; 4096], row: i32, first: i32 in Saturating, last: i32 in Saturating, radius: i32 in Saturating, left: i32, right: i32) {
     transition { _ -> column(samples, pixels, row, first, last, radius, left, right, 0) }
-    state column(samples: &[i32; 48], pixels: &mut [i32; 4096], row: i32, first: i32 in Saturating, last: i32 in Saturating, radius: i32 in Saturating, left: i32, right: i32, index: i32) {
+    machine column(samples: &[i32; 48], pixels: &mut [i32; 4096], row: i32, first: i32 in Saturating, last: i32 in Saturating, radius: i32 in Saturating, left: i32, right: i32, index: i32) {
         transition index >= 0 && index < 48 && (index as i32 in Saturating) < radius { true -> sample(samples, pixels, row, first, last, radius, left, right, index) _ -> done() }
     }
-    state sample(samples: &[i32; 48], pixels: &mut [i32; 4096], row: i32, first: i32 in Saturating, last: i32 in Saturating, radius: i32 in Saturating, left: i32, right: i32, index: i32) requires index >= 0 && index < 48 {
+    machine sample(samples: &[i32; 48], pixels: &mut [i32; 4096], row: i32, first: i32 in Saturating, last: i32 in Saturating, radius: i32 in Saturating, left: i32, right: i32, index: i32) requires index >= 0 && index < 48 {
         let packed: i32 = samples[index];
         let alpha: i32 = packed / 16777216;
         transition alpha >= 100 {
@@ -196,45 +210,45 @@ machine draw_corner_samples(samples: &[i32; 48], pixels: &mut [i32; 4096], row: 
             _ -> translucent(samples, pixels, row, first, last, radius, left, right, index, packed, alpha)
         }
     }
-    state run(samples: &[i32; 48], pixels: &mut [i32; 4096], row: i32, first: i32 in Saturating, last: i32 in Saturating, radius: i32 in Saturating, left: i32, right: i32, start: i32, end: i32, packed: i32) {
+    machine run(samples: &[i32; 48], pixels: &mut [i32; 4096], row: i32, first: i32 in Saturating, last: i32 in Saturating, radius: i32 in Saturating, left: i32, right: i32, start: i32, end: i32, packed: i32) {
         transition end >= 0 && end < 48 && (end as i32 in Saturating) < radius { true -> extend(samples, pixels, row, first, last, radius, left, right, start, end, packed) _ -> fill(samples, pixels, row, first, last, radius, left, right, start, end, packed) }
     }
-    state extend(samples: &[i32; 48], pixels: &mut [i32; 4096], row: i32, first: i32 in Saturating, last: i32 in Saturating, radius: i32 in Saturating, left: i32, right: i32, start: i32, end: i32, packed: i32) requires end >= 0 && end < 48 {
+    machine extend(samples: &[i32; 48], pixels: &mut [i32; 4096], row: i32, first: i32 in Saturating, last: i32 in Saturating, radius: i32 in Saturating, left: i32, right: i32, start: i32, end: i32, packed: i32) requires end >= 0 && end < 48 {
         transition samples[end] == packed { true -> run(samples, pixels, row, first, last, radius, left, right, start, end + 1, packed) _ -> fill(samples, pixels, row, first, last, radius, left, right, start, end, packed) }
     }
-    state fill(samples: &[i32; 48], pixels: &mut [i32; 4096], row: i32, first: i32 in Saturating, last: i32 in Saturating, radius: i32 in Saturating, left: i32, right: i32, start: i32, end: i32, packed: i32) {
+    machine fill(samples: &[i32; 48], pixels: &mut [i32; 4096], row: i32, first: i32 in Saturating, last: i32 in Saturating, radius: i32 in Saturating, left: i32, right: i32, start: i32, end: i32, packed: i32) {
         let color: i32 = packed & 0xFFFFFF;
         let leading: i32 in Wrapping = first as i32 in Wrapping;
         let trailing: i32 in Wrapping = last as i32 in Wrapping;
         let begin: i32 in Wrapping = start as i32 in Wrapping;
         let finish: i32 in Wrapping = end as i32 in Wrapping;
-        Raster::hline_raw(pixels, row, row as i32 in Saturating, (leading + begin) as i32 in Saturating, (leading + finish) as i32 in Saturating, color);
-        Raster::hline_raw(pixels, row, row as i32 in Saturating, (trailing - finish + (1 as i32 in Wrapping)) as i32 in Saturating, (trailing - begin + (1 as i32 in Wrapping)) as i32 in Saturating, color);
+        omega_ui::raster::hline_raw(pixels, row, row as i32 in Saturating, (leading + begin) as i32 in Saturating, (leading + finish) as i32 in Saturating, color);
+        omega_ui::raster::hline_raw(pixels, row, row as i32 in Saturating, (trailing - finish + (1 as i32 in Wrapping)) as i32 in Saturating, (trailing - begin + (1 as i32 in Wrapping)) as i32 in Saturating, color);
         transition { _ -> column(samples, pixels, row, first, last, radius, left, right, end) }
     }
-    state translucent(samples: &[i32; 48], pixels: &mut [i32; 4096], row: i32, first: i32 in Saturating, last: i32 in Saturating, radius: i32 in Saturating, left: i32, right: i32, index: i32, packed: i32, alpha: i32) {
+    machine translucent(samples: &[i32; 48], pixels: &mut [i32; 4096], row: i32, first: i32 in Saturating, last: i32 in Saturating, radius: i32 in Saturating, left: i32, right: i32, index: i32, packed: i32, alpha: i32) {
         transition alpha > 0 { true -> edge(samples, pixels, row, first, last, radius, left, right, index, packed, alpha) _ -> column(samples, pixels, row, first, last, radius, left, right, add_i32(index, 1)) }
     }
-    state edge(samples: &[i32; 48], pixels: &mut [i32; 4096], row: i32, first: i32 in Saturating, last: i32 in Saturating, radius: i32 in Saturating, left: i32, right: i32, index: i32, packed: i32, alpha: i32) {
+    machine edge(samples: &[i32; 48], pixels: &mut [i32; 4096], row: i32, first: i32 in Saturating, last: i32 in Saturating, radius: i32 in Saturating, left: i32, right: i32, index: i32, packed: i32, alpha: i32) {
         let color: i32 = packed & 0xFFFFFF;
         let x0: i32 in Saturating = ((first as i32 in Wrapping) + (index as i32 in Wrapping)) as i32 in Saturating;
         let x1: i32 in Saturating = ((last as i32 in Wrapping) - (index as i32 in Wrapping)) as i32 in Saturating;
         blend_sample(pixels, x0 as i32, left, right, color, alpha);
         transition x1 > x0 { true -> right_pixel(samples, pixels, row, first, last, radius, left, right, index, x1, color, alpha) _ -> column(samples, pixels, row, first, last, radius, left, right, add_i32(index, 1)) }
     }
-    state right_pixel(samples: &[i32; 48], pixels: &mut [i32; 4096], row: i32, first: i32 in Saturating, last: i32 in Saturating, radius: i32 in Saturating, left: i32, right: i32, index: i32, x: i32 in Saturating, color: i32, alpha: i32) {
+    machine right_pixel(samples: &[i32; 48], pixels: &mut [i32; 4096], row: i32, first: i32 in Saturating, last: i32 in Saturating, radius: i32 in Saturating, left: i32, right: i32, index: i32, x: i32 in Saturating, color: i32, alpha: i32) {
         blend_sample(pixels, x as i32, left, right, color, alpha);
         transition { _ -> column(samples, pixels, row, first, last, radius, left, right, add_i32(index, 1)) }
     }
-    state done() {}
+    machine done() {}
 }
 
 machine blend_sample(pixels: &mut [i32; 4096], index: i32, left: i32, right: i32, color: i32, alpha: i32) {
     transition index >= 0 && index < 3840 && index >= left && index < right && alpha > 0 { true -> write(pixels, index, color, alpha) _ -> done() }
-    state write(pixels: &mut [i32; 4096], index: i32, color: i32, alpha: i32) requires index >= 0 && index < 3840 {
+    machine write(pixels: &mut [i32; 4096], index: i32, color: i32, alpha: i32) requires index >= 0 && index < 3840 {
         transition alpha >= 100 { true -> opaque(pixels, index, color) _ -> edge(pixels, index, color, alpha) }
     }
-    state opaque(pixels: &mut [i32; 4096], index: i32, color: i32) requires index >= 0 && index < 3840 { pixels[index] = color; }
-    state edge(pixels: &mut [i32; 4096], index: i32, color: i32, alpha: i32) requires index >= 0 && index < 3840 { pixels[index] = color_mix(pixels[index], color, alpha); }
-    state done() {}
+    machine opaque(pixels: &mut [i32; 4096], index: i32, color: i32) requires index >= 0 && index < 3840 { pixels[index] = color; }
+    machine edge(pixels: &mut [i32; 4096], index: i32, color: i32, alpha: i32) requires index >= 0 && index < 3840 { pixels[index] = color_mix(pixels[index], color, alpha); }
+    machine done() {}
 }

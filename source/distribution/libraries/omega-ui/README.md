@@ -76,20 +76,20 @@ then `omega run main.omg`. The library suite stays portable and uses `--both`.
 Add a `Build::depend` path to `src/` in your application's `build.omg`.
 Import the modules you use, then retain one `UiContext` across frames:
 
-1. Advance `context.motion` once with `UiMotion::advance` and elapsed milliseconds.
-   Supply input and call `UiFrame::begin`.
+1. Advance `context.motion` once with `motion::advance` and elapsed milliseconds.
+   Supply input and call `frame::begin`.
 2. Add containers and controls with stable, nonzero IDs. Close containers with
-   `Ui::end`; update your application model from the returned interactions.
-3. Supply actual font measurements with `UiContext::set_text_metrics` before
-   layout. `WindowsUiFonts::measure` does this with the same fonts used to paint.
-   Call `UiFrame::next_pass`; when it returns true, build and measure again.
+   `widgets::end`; update your application model from the returned interactions.
+3. Supply actual font measurements with `context::set_text_metrics` before
+   layout. `fonts::measure` does this with the same fonts used to paint.
+   Call `frame::next_pass`; when it returns true, build and measure again.
    Input edges are consumed once, the frame counter advances once, and four
    passes bound a view that keeps changing. Inspect `context.frame_error`.
 4. Keep scheduling while `context.motion.animating` is true; set `motion.reduced`
    to respect a reduced-motion preference. Prepare `UiScene` once after layout;
    its band cursor paints surfaces and identifies foreground nodes in order.
-   `Raster::render` provides a 64-by-64 convenience path. Physical scanline hosts
-   supply an explicit `UiViewport` through `Raster::configure`.
+   `raster::render` provides a 64-by-64 convenience path. Physical scanline hosts
+   supply an explicit `UiViewport` through `raster::configure`.
 5. Rebuild after input or animation changes. The next frame retires old text spans.
 
 The parsed lifecycle example in `src/main.omg` and executable examples show
@@ -98,8 +98,8 @@ be laid out before a pointer can hit its controls.
 
 This revision changes the development API. Replace integer layout options with
 `UiAxis`, `UiSizing`, `UiAlignment`, and `UiJustify`; pass `UiContentKind` to
-`add_node`. The former glyph-only `Ui::button` is `Ui::icon_button`; `Ui::button`
-now takes a label and `ButtonOptions`. `Ui::text` returns its node index for
+`add_node`. The former glyph-only `widgets::button` is `widgets::icon_button`; `widgets::button`
+now takes a label and `ButtonOptions`. `widgets::text` returns its node index for
 measurement. Physical coordinate helpers take the logical extent explicitly.
 Application-specific content uses a named `UiContentKind::Extension` tag rather
 than sharing the built-in control tags. `ThemePalette` is the single theme source.
@@ -138,7 +138,6 @@ tests/
     headless/              executable library checks
     native_component/      independent freestanding layout/frame consumers
     native_host/           Windows adapter checks
-support/standard_library/  retained platform source
 assets/fonts/inter/        gallery fonts
 ```
 
@@ -148,9 +147,11 @@ roles, `motion.omg` elapsed transitions, `text.omg` and `utf16.omg` text storage
 `dock.omg` docking geometry, and `raster.omg` and `tester.omg` drawing and input
 simulation. The package name and `use omega_ui::...` imports remain unchanged.
 
-The standard-library snapshot is source, not generated output. The gallery and
-headless suite use it through the same relative dependency, independently of the
-compiler checkout. `--project headless_test` selects `tests/headless/`.
+The gallery, Windows adapter and headless suite declare the same immutable
+upstream Git standard-library package through ordinary Build dependencies.
+Omega acquires and reviews that package independently of the compiler checkout.
+There is no private standard-library copy to maintain.
+`--project headless_test` selects `tests/headless/`.
 
 The [freestanding backend](platform/native/README.md) uses the same core inside
 Cathedral. Apps describe their own controls; the host adapter receives scoped

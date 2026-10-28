@@ -32,7 +32,7 @@ class DevelopmentOracleTests(unittest.TestCase):
                 dev.main()
             select.assert_called_once_with(None)
             self.assertEqual(dev.PROJECTS['headless_test'], dev.LIBRARY / 'tests/headless')
-            run.assert_any_call([compiler, 'update', '--offline'], cwd=dev.PROJECTS['headless_test'])
+            run.assert_any_call([compiler, 'update'], cwd=dev.PROJECTS['headless_test'])
             self.assertTrue((root / 'build/omega-ui/compiler.json').is_file())
 
     def test_reference_decline_cannot_pass_as_dual_execution(self):

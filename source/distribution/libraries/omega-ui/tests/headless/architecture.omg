@@ -1,3 +1,17 @@
+
+use omega_ui::context::Interaction;
+use omega_ui::context::UiContext;
+use omega_ui::frame::UiFrame;
+use omega_ui::list::UiListRange;
+use omega_ui::motion::UiMotion;
+use omega_ui::scene::UiScene;
+use omega_ui::types::Style;
+use omega_ui::types::UiContentKind;
+use omega_ui::types::UiSizing;
+use omega_ui::viewport::UiViewport;
+use omega_ui::widgets::ButtonOptions;
+use omega_ui::widgets::ButtonVariant;
+
 /* These controls exercise the library's storage boundaries without a window. */
 use omega_ui::types;
 use omega_ui::context;
@@ -10,156 +24,156 @@ use omega_ui::scene;
 use omega_ui::viewport;
 
 public machine verify_allocation_failure(context: &mut UiContext) -> bool {
-    UiContext::setup(context, 800, 600, true);
-    UiContext::begin_frame(context);
+    omega_ui::context::setup(context, 800, 600, true);
+    omega_ui::context::begin_frame(context);
     transition { _ -> fill(context, 0) }
-    state fill(context: &mut UiContext, count: i32) -> bool {
+    machine fill(context: &mut UiContext, count: i32) -> bool {
         transition count >= 0 && count < 130 {
             true -> append(context, count)
             _ -> (false)
         }
     }
-    state append(context: &mut UiContext, count: i32) -> bool requires count >= 0 && count < 130 {
-        let index: i32 = UiContext::add_node(context, count + 10, Style::default_box(), UiContentKind::Box, 0, -1, false, false);
+    machine append(context: &mut UiContext, count: i32) -> bool requires count >= 0 && count < 130 {
+        let index: i32 = omega_ui::context::add_node(context, count + 10, omega_ui::types::style_default_box(), UiContentKind::Box, 0, -1, false, false);
         transition index <= 0 {
             true -> exhausted(context, index)
             _ -> fill(context, count + 1)
         }
     }
-    state exhausted(context: &mut UiContext, index: i32) -> bool {
+    machine exhausted(context: &mut UiContext, index: i32) -> bool {
         context.hot = 42;
         context.mouse_pressed = true;
-        let failed: Interaction = UiContext::activate(context, index, 42);
+        let failed: Interaction = omega_ui::context::activate(context, index, 42);
         index < 0 && !failed.clicked && !context.nodes[0].interactive
     }
 }
 
 public machine verify_nesting_failure(context: &mut UiContext) -> bool {
-    UiContext::setup(context, 800, 600, true);
-    UiContext::begin_frame(context);
+    omega_ui::context::setup(context, 800, 600, true);
+    omega_ui::context::begin_frame(context);
     transition { _ -> push(context, 0) }
-    state push(context: &mut UiContext, depth: i32) -> bool {
+    machine push(context: &mut UiContext, depth: i32) -> bool {
         transition depth >= 0 && depth < 7 { true -> insert(context, depth) _ -> exhausted(context) }
     }
-    state insert(context: &mut UiContext, depth: i32) -> bool requires depth >= 0 && depth < 7 {
-        Ui::column(context, 0, 0, true, true);
+    machine insert(context: &mut UiContext, depth: i32) -> bool requires depth >= 0 && depth < 7 {
+        omega_ui::widgets::column(context, 0, 0, true, true);
         transition { _ -> push(context, depth + 1) }
     }
-    state exhausted(context: &mut UiContext) -> bool {
+    machine exhausted(context: &mut UiContext) -> bool {
         let before: i32 = context.node_count;
-        Ui::column(context, 0, 0, true, true);
+        omega_ui::widgets::column(context, 0, 0, true, true);
         let rejected: bool = context.frame_error == 2 && context.node_count == before && context.stack_len == 8;
-        Ui::end(context);
+        omega_ui::widgets::end(context);
         let balanced: bool = context.stack_len == 8 && context.rejected_containers == 0;
-        Ui::end(context);
+        omega_ui::widgets::end(context);
         rejected && balanced && context.stack_len == 7
     }
 }
 
 public machine verify_frame_and_intrinsics(context: &mut UiContext) -> bool {
-    UiContext::setup(context, 800, 600, true);
-    let mut frame: UiFrame = UiFrame::begin(context);
-    Ui::row(context, 3, 0, false, false);
-    let label: i32 = Ui::text(context, "Measured", 20, 0x112233, 400);
-    UiContext::set_text_metrics(context, label, 73, 18);
-    let button: Interaction = Ui::button(context, 42, "Run", ButtonOptions { variant: ButtonVariant::Secondary, width: 80, height: 36 });
-    UiContext::set_text_metrics(context, 3, 30, 18);
-    Ui::end(context);
-    let again: bool = UiFrame::next_pass(&mut frame, context);
+    omega_ui::context::setup(context, 800, 600, true);
+    let mut frame: UiFrame = omega_ui::frame::begin(context);
+    omega_ui::widgets::row(context, 3, 0, false, false);
+    let label: i32 = omega_ui::widgets::text(context, "Measured", 20, 0x112233, 400);
+    omega_ui::context::set_text_metrics(context, label, 73, 18);
+    let button: Interaction = omega_ui::widgets::button(context, 42, "Run", ButtonOptions { variant: ButtonVariant::Secondary, width: 80, height: 36 });
+    omega_ui::context::set_text_metrics(context, 3, 30, 18);
+    omega_ui::widgets::end(context);
+    let again: bool = omega_ui::frame::next_pass(&mut frame, context);
     let intrinsic: bool = !again && frame.passes == 1 && context.frame == 1 && context.frame_error == 0
         && context.nodes[1].measured.w == 156 && context.nodes[2].rect.w == 73 && context.nodes[2].rect.h == 20
         && context.nodes[3].text.length == 3u64 && context.nodes[3].rect.w == 80 && button.id == 42;
-    let mut missing: UiFrame = UiFrame::begin(context);
-    let unmeasured: i32 = Ui::text(context, "Missing", 20, 0x112233, 400);
-    let rebuilt: bool = UiFrame::next_pass(&mut missing, context);
+    let mut missing: UiFrame = omega_ui::frame::begin(context);
+    let unmeasured: i32 = omega_ui::widgets::text(context, "Missing", 20, 0x112233, 400);
+    let rebuilt: bool = omega_ui::frame::next_pass(&mut missing, context);
     intrinsic && !rebuilt && context.frame_error == 5
 }
 
 public machine verify_frame_rebuild(context: &mut UiContext) -> bool {
-    UiContext::setup(context, 800, 600, true);
+    omega_ui::context::setup(context, 800, 600, true);
     context.mouse_pressed = true;
     context.key_code = 13;
-    let mut frame: UiFrame = UiFrame::begin(context);
+    let mut frame: UiFrame = omega_ui::frame::begin(context);
     context.changed = true;
-    let again: bool = UiFrame::next_pass(&mut frame, context);
+    let again: bool = omega_ui::frame::next_pass(&mut frame, context);
     let consumed: bool = !context.mouse_pressed && context.key_code == 0;
-    let finished: bool = UiFrame::next_pass(&mut frame, context);
+    let finished: bool = omega_ui::frame::next_pass(&mut frame, context);
     let settled: bool = again && !finished && consumed && frame.passes == 2 && context.frame == 1 && context.changed && context.frame_error == 0;
-    let mut unstable: UiFrame = UiFrame::begin(context);
+    let mut unstable: UiFrame = omega_ui::frame::begin(context);
     context.changed = true;
-    let first: bool = UiFrame::next_pass(&mut unstable, context);
+    let first: bool = omega_ui::frame::next_pass(&mut unstable, context);
     context.changed = true;
-    let second: bool = UiFrame::next_pass(&mut unstable, context);
+    let second: bool = omega_ui::frame::next_pass(&mut unstable, context);
     context.changed = true;
-    let third: bool = UiFrame::next_pass(&mut unstable, context);
+    let third: bool = omega_ui::frame::next_pass(&mut unstable, context);
     context.changed = true;
-    let fourth: bool = UiFrame::next_pass(&mut unstable, context);
+    let fourth: bool = omega_ui::frame::next_pass(&mut unstable, context);
     settled && first && second && third && !fourth && unstable.passes == 4 && context.frame == 2 && context.frame_error == 6
 }
 
 public machine verify_list_ranges() -> bool {
-    let middle: UiListRange = UiListRange::visible(10000, 31, 4, 175, 175000, 2);
-    let empty: UiListRange = UiListRange::visible(0, 31, 4, 175, 0, 2);
-    let short: UiListRange = UiListRange::visible(2, 31, 4, 175, 9999, 2);
-    let end: UiListRange = UiListRange::visible(10000, 31, 4, 350, 2147483647, 0);
+    let middle: UiListRange = omega_ui::list::visible(10000, 31, 4, 175, 175000, 2);
+    let empty: UiListRange = omega_ui::list::visible(0, 31, 4, 175, 0, 2);
+    let short: UiListRange = omega_ui::list::visible(2, 31, 4, 175, 9999, 2);
+    let end: UiListRange = omega_ui::list::visible(10000, 31, 4, 350, 2147483647, 0);
     middle.first == 4998 && middle.end == 5007 && middle.leading == 174930
-        && UiListRange::row_y(&middle, 5000) == 0 && empty.end == 0
+        && omega_ui::list::row_y(&middle, 5000) == 0 && empty.end == 0
         && short.first == 0 && short.end == 2 && short.scroll == 0 && end.end == 10000 && end.first == 9989
 }
 
 public machine verify_motion_retirement() -> bool {
     let mut motion: UiMotion;
     transition { _ -> fill(&mut motion, 0) }
-    state fill(motion: &mut UiMotion, index: i32) -> bool {
+    machine fill(motion: &mut UiMotion, index: i32) -> bool {
         transition index >= 0 && index < 64 { true -> append(motion, index) _ -> age(motion, 0) }
     }
-    state append(motion: &mut UiMotion, index: i32) -> bool requires index >= 0 && index < 64 {
-        let value: i32 = UiMotion::target(motion, index + 1, 0, 100);
+    machine append(motion: &mut UiMotion, index: i32) -> bool requires index >= 0 && index < 64 {
+        let value: i32 = omega_ui::motion::target(motion, index + 1, 0, 100);
         transition { _ -> fill(motion, index + 1) }
     }
-    state age(motion: &mut UiMotion, count: i32) -> bool {
+    machine age(motion: &mut UiMotion, count: i32) -> bool {
         transition count >= 0 && count < 121 { true -> advance(motion, count) _ -> reuse(motion) }
     }
-    state advance(motion: &mut UiMotion, count: i32) -> bool requires count >= 0 && count < 121 {
-        let changed: bool = UiMotion::advance(motion, 0);
+    machine advance(motion: &mut UiMotion, count: i32) -> bool requires count >= 0 && count < 121 {
+        let changed: bool = omega_ui::motion::advance(motion, 0);
         transition { _ -> age(motion, count + 1) }
     }
-    state reuse(motion: &mut UiMotion) -> bool {
-        let returning: i32 = UiMotion::target(motion, 1, 1000, 100);
-        let first: i32 = UiMotion::target(motion, 1000, 0, 100);
-        let second: i32 = UiMotion::target(motion, 1000, 1000, 100);
-        let changed: bool = UiMotion::advance(motion, 50);
-        let value: i32 = UiMotion::read(motion, 1000, -1);
+    machine reuse(motion: &mut UiMotion) -> bool {
+        let returning: i32 = omega_ui::motion::target(motion, 1, 1000, 100);
+        let first: i32 = omega_ui::motion::target(motion, 1000, 0, 100);
+        let second: i32 = omega_ui::motion::target(motion, 1000, 1000, 100);
+        let changed: bool = omega_ui::motion::advance(motion, 50);
+        let value: i32 = omega_ui::motion::read(motion, 1000, -1);
         returning == 1000 && first == 0 && second == 0 && changed && value > 0 && value < 1000 && motion.count == 64
     }
 }
 
 public machine verify_scene_and_viewport(context: &mut UiContext, pixels: &mut [i32; 4096]) -> bool {
-    UiContext::setup(context, 800, 600, false);
-    UiContext::begin_frame(context);
-    let mut style: Style = Style::default_box();
+    omega_ui::context::setup(context, 800, 600, false);
+    omega_ui::context::begin_frame(context);
+    let mut style: Style = omega_ui::types::style_default_box();
     style.width_mode = UiSizing::Fixed; style.width_px = 100;
     style.height_mode = UiSizing::Fixed; style.height_px = 100;
     style.background = 0x123456;
-    let node: i32 = UiContext::add_node(context, 42, style, UiContentKind::Box, 0, -1, false, false);
-    UiContext::end_frame(context);
+    let node: i32 = omega_ui::context::add_node(context, 42, style, UiContentKind::Box, 0, -1, false, false);
+    omega_ui::context::end_frame(context);
     let mut scene: UiScene;
-    UiScene::prepare(&mut scene, context);
-    Raster::configure(pixels, UiViewport { logical_width: 800, logical_height: 600, physical_width: 800, physical_height: 600 });
-    UiScene::begin_band(&scene, context, pixels, 10);
+    omega_ui::scene::prepare(&mut scene, context);
+    omega_ui::raster::configure(pixels, UiViewport { logical_width: 800, logical_height: 600, physical_width: 800, physical_height: 600 });
+    omega_ui::scene::begin_band(&scene, context, pixels, 10);
     let mut cursor: i32 = 0;
-    let first: i32 = UiScene::next(&scene, context, pixels, 10, &mut cursor);
-    let last: i32 = UiScene::next(&scene, context, pixels, 10, &mut cursor);
+    let first: i32 = omega_ui::scene::next(&scene, context, pixels, 10, &mut cursor);
+    let last: i32 = omega_ui::scene::next(&scene, context, pixels, 10, &mut cursor);
     let paint: bool = first == node && last == -1 && pixels[99] == 0x123456 && pixels[100] == context.theme.background;
-    let transform: bool = Raster::to_physical_x(800, 800, false, 800) == 800
-        && Raster::to_physical_y(600, 1200, false, 600) == 1200;
-    UiContext::begin_frame(context);
+    let transform: bool = omega_ui::raster::to_physical_x(800, 800, false, 800) == 800
+        && omega_ui::raster::to_physical_y(600, 1200, false, 600) == 1200;
+    omega_ui::context::begin_frame(context);
     cursor = 0;
-    let stale: i32 = UiScene::next(&scene, context, pixels, 10, &mut cursor);
-    UiContext::setup(context, 800, 600, false);
-    UiContext::begin_frame(context);
-    UiContext::end_frame(context);
+    let stale: i32 = omega_ui::scene::next(&scene, context, pixels, 10, &mut cursor);
+    omega_ui::context::setup(context, 800, 600, false);
+    omega_ui::context::begin_frame(context);
+    omega_ui::context::end_frame(context);
     cursor = 0;
-    let reset: i32 = UiScene::next(&scene, context, pixels, 10, &mut cursor);
+    let reset: i32 = omega_ui::scene::next(&scene, context, pixels, 10, &mut cursor);
     paint && transform && stale == -1 && reset == -1
 }

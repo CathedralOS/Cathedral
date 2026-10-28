@@ -1,3 +1,17 @@
+module dock_damage;
+
+use damage::GalleryDamage;
+use omega_ui::context::UiContext;
+use omega_ui::dock::DockTree;
+use omega_ui::types::Rect;
+use omega_ui::types::add_i32;
+use omega_ui::types::clamp_i32;
+use omega_ui::types::max_sat;
+use omega_ui::types::mul_i32;
+use omega_ui::types::select_i32;
+use omega_ui::types::sub_i32;
+
+
 /*
 The dock tree lives outside the box tree. Retain its painted surfaces so a moving
 preview invalidates its old and new bounds, while resizing still covers both
@@ -20,93 +34,93 @@ public data GalleryDockDamage {
     ready: bool;
 }
 
-machine GalleryDockSurface::capture(rectangle: Rect, mark: i32) -> GalleryDockSurface {
+machine capture(rectangle: Rect, mark: i32) -> GalleryDockSurface {
     GalleryDockSurface { x: rectangle.x as i32, y: rectangle.y as i32, width: rectangle.w as i32, height: rectangle.h as i32, mark: mark }
 }
-machine GalleryDockSurface::same(first: &GalleryDockSurface, second: &GalleryDockSurface) -> bool {
+machine same(first: &GalleryDockSurface, second: &GalleryDockSurface) -> bool {
     first.x == second.x && first.y == second.y && first.width == second.width && first.height == second.height && first.mark == second.mark
 }
 
-public machine GalleryDockDamage::prepare(cache: &mut GalleryDockDamage, damage: &mut GalleryDamage, context: &UiContext, tree: &DockTree, cpu: i32) {
-    transition { _ -> surface(cache, damage, context, tree, cpu, 0) }
-    state surface(cache: &mut GalleryDockDamage, damage: &mut GalleryDamage, context: &UiContext, tree: &DockTree, cpu: i32, index: i32) {
+public machine dock_damage_prepare(cache: &mut GalleryDockDamage, frame_damage: &mut GalleryDamage, context: &UiContext, tree: &DockTree, cpu: i32) {
+    transition { _ -> surface(cache, frame_damage, context, tree, cpu, 0) }
+    machine surface(cache: &mut GalleryDockDamage, frame_damage: &mut GalleryDamage, context: &UiContext, tree: &DockTree, cpu: i32, index: i32) {
         transition index >= 0 && index < 12 {
-            true -> capture(cache, damage, context, tree, cpu, index)
+            true -> capture(cache, frame_damage, context, tree, cpu, index)
             _ -> done(cache)
         }
     }
-    state capture(cache: &mut GalleryDockDamage, damage: &mut GalleryDamage, context: &UiContext, tree: &DockTree, cpu: i32, index: i32) requires index >= 0 && index < 12 {
-        let current: GalleryDockSurface = GalleryDockDamage::surface(context, tree, cpu, index);
+    machine capture(cache: &mut GalleryDockDamage, frame_damage: &mut GalleryDamage, context: &UiContext, tree: &DockTree, cpu: i32, index: i32) requires index >= 0 && index < 12 {
+        let current: GalleryDockSurface = dock_damage::dock_damage_surface(context, tree, cpu, index);
         let previous: GalleryDockSurface = cache.surfaces[index];
         cache.surfaces[index] = current;
-        transition cache.ready && GalleryDockSurface::same(&previous, &current) {
-            true -> surface(cache, damage, context, tree, cpu, index + 1)
-            _ -> changed(cache, damage, context, tree, cpu, index, previous, current)
+        transition cache.ready && dock_damage::same(&previous, &current) {
+            true -> surface(cache, frame_damage, context, tree, cpu, index + 1)
+            _ -> changed(cache, frame_damage, context, tree, cpu, index, previous, current)
         }
     }
-    state changed(cache: &mut GalleryDockDamage, damage: &mut GalleryDamage, context: &UiContext, tree: &DockTree, cpu: i32, index: i32, previous: GalleryDockSurface, current: GalleryDockSurface) {
-        GalleryDamage::include_box(damage, previous.x, previous.y, previous.width, previous.height);
-        GalleryDamage::include_box(damage, current.x, current.y, current.width, current.height);
-        transition { _ -> surface(cache, damage, context, tree, cpu, add_i32(index, 1)) }
+    machine changed(cache: &mut GalleryDockDamage, frame_damage: &mut GalleryDamage, context: &UiContext, tree: &DockTree, cpu: i32, index: i32, previous: GalleryDockSurface, current: GalleryDockSurface) {
+        damage::include_box(frame_damage, previous.x, previous.y, previous.width, previous.height);
+        damage::include_box(frame_damage, current.x, current.y, current.width, current.height);
+        transition { _ -> surface(cache, frame_damage, context, tree, cpu, add_i32(index, 1)) }
     }
-    state done(cache: &mut GalleryDockDamage) { cache.ready = true; }
+    machine done(cache: &mut GalleryDockDamage) { cache.ready = true; }
 }
 
-machine GalleryDockDamage::surface(context: &UiContext, tree: &DockTree, cpu: i32, index: i32) -> GalleryDockSurface {
+machine dock_damage_surface(context: &UiContext, tree: &DockTree, cpu: i32, index: i32) -> GalleryDockSurface {
     transition index < 6 {
         true -> window(tree, cpu, index)
         _ -> overlay(context, tree, index)
     }
-    state window(tree: &DockTree, cpu: i32, index: i32) -> GalleryDockSurface {
+    machine window(tree: &DockTree, cpu: i32, index: i32) -> GalleryDockSurface {
         let identifier: i32 = add_i32(index, 1);
         let focus: i32 = select_i32(tree.focused_window == identifier, 1, 0);
         let changing: i32 = select_i32(identifier == 6, add_i32(mul_i32(cpu, 1002001), add_i32(mul_i32(tree.nodes[0].ratio_b, 1001), tree.nodes[0].ratio_c)), 0);
-        let rectangle: Rect = DockTree::window_rect(tree, identifier);
+        let rectangle: Rect = omega_ui::dock::window_rect(tree, identifier);
         let minimum: i32 in Saturating = select_i32(identifier == 3 && rectangle.h > 28, 96, select_i32(identifier == 4 && rectangle.h > 60, 116, select_i32(identifier == 6 && rectangle.h > 80, 224, 0))) as i32 in Saturating;
         let painted: Rect = Rect { x: rectangle.x, y: rectangle.y, w: rectangle.w, h: max_sat(rectangle.h, minimum) };
         let tab: i32 = select_i32(identifier <= 2, mul_i32(tree.nodes[2].active_tab, 8), 0);
-        GalleryDockSurface::capture(painted, add_i32(tab, add_i32(focus, mul_i32(changing, 2))))
+        dock_damage::capture(painted, add_i32(tab, add_i32(focus, mul_i32(changing, 2))))
     }
-    state overlay(context: &UiContext, tree: &DockTree, index: i32) -> GalleryDockSurface {
+    machine overlay(context: &UiContext, tree: &DockTree, index: i32) -> GalleryDockSurface {
         transition index < 10 {
             true -> divider(tree, index)
             _ -> ghost_or_target(context, tree, index)
         }
     }
-    state divider(tree: &DockTree, index: i32) -> GalleryDockSurface {
+    machine divider(tree: &DockTree, index: i32) -> GalleryDockSurface {
         let node: i32 = select_i32(index < 8, 0, select_i32(index == 8, 1, 4));
         let split: i32 = select_i32(index == 7, 2, 1);
         let active: bool = (tree.hot_divider_node == node && tree.hot_divider_index == split) || (tree.drag_divider_node == node && tree.drag_divider_index == split);
         transition index == 7 {
-            true -> (GalleryDockSurface::capture(DockTree::div2_rect(tree, 0), select_i32(active, 1, 0)))
-            _ -> (GalleryDockSurface::capture(DockTree::div1_rect(tree, node), select_i32(active, 1, 0)))
+            true -> (dock_damage::capture(omega_ui::dock::div2_rect(tree, 0), select_i32(active, 1, 0)))
+            _ -> (dock_damage::capture(omega_ui::dock::div1_rect(tree, node), select_i32(active, 1, 0)))
         }
     }
-    state ghost_or_target(context: &UiContext, tree: &DockTree, index: i32) -> GalleryDockSurface {
+    machine ghost_or_target(context: &UiContext, tree: &DockTree, index: i32) -> GalleryDockSurface {
         transition tree.drag_window_id > 0 {
             true -> dragging(context, tree, index)
-            _ -> (GalleryDockSurface::capture(Rect::zero(), 0))
+            _ -> (dock_damage::capture(omega_ui::types::rect_zero(), 0))
         }
     }
-    state dragging(context: &UiContext, tree: &DockTree, index: i32) -> GalleryDockSurface {
+    machine dragging(context: &UiContext, tree: &DockTree, index: i32) -> GalleryDockSurface {
         transition index == 10 {
             true -> ghost(context, tree)
             _ -> target(tree)
         }
     }
-    state ghost(context: &UiContext, tree: &DockTree) -> GalleryDockSurface {
+    machine ghost(context: &UiContext, tree: &DockTree) -> GalleryDockSurface {
         let rectangle: Rect = Rect { x: clamp_i32(sub_i32(context.mouse_x, 76), 266, 860) as i32 in Saturating, y: clamp_i32(sub_i32(context.mouse_y, 14), 146, 624) as i32 in Saturating, w: 152, h: 28 };
-        GalleryDockSurface::capture(rectangle, tree.drag_window_id)
+        dock_damage::capture(rectangle, tree.drag_window_id)
     }
-    state target(tree: &DockTree) -> GalleryDockSurface {
+    machine target(tree: &DockTree) -> GalleryDockSurface {
         let identifier: i32 = tree.drop_target_window;
-        let rectangle: Rect = DockTree::window_rect(tree, identifier);
+        let rectangle: Rect = omega_ui::dock::window_rect(tree, identifier);
         transition identifier > 0 && identifier != tree.drag_window_id && rectangle.w > 20 && rectangle.h > 28 {
             true -> visible_target(rectangle, identifier)
-            _ -> (GalleryDockSurface::capture(Rect::zero(), 0))
+            _ -> (dock_damage::capture(omega_ui::types::rect_zero(), 0))
         }
     }
-    state visible_target(rectangle: Rect, identifier: i32) -> GalleryDockSurface {
-        GalleryDockSurface::capture(Rect { x: rectangle.x + (3 as i32 in Saturating), y: rectangle.y + (30 as i32 in Saturating), w: max_sat(rectangle.w - (6 as i32 in Saturating), 10), h: max_sat(rectangle.h - (33 as i32 in Saturating), 10) }, identifier)
+    machine visible_target(rectangle: Rect, identifier: i32) -> GalleryDockSurface {
+        dock_damage::capture(Rect { x: rectangle.x + (3 as i32 in Saturating), y: rectangle.y + (30 as i32 in Saturating), w: max_sat(rectangle.w - (6 as i32 in Saturating), 10), h: max_sat(rectangle.h - (33 as i32 in Saturating), 10) }, identifier)
     }
 }

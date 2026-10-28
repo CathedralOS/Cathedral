@@ -1,67 +1,73 @@
+module tester;
+
+use context::UiContext;
+use types::Rect;
+use types::clamp_i32;
+use types::min_sat;
+
+
 // Stages pointer input through the same hit-testing path used by an interactive host.
 
 use types;
 use context;
 
-public data Tester { }
-
 // Move the simulated pointer to `(x, y)` and update `context.hot`.
-public machine Tester::move_to(context: &mut UiContext, x: i32, y: i32) {
-    context.mouse_x = x;
-    context.mouse_y = y;
-    UiContext::update_hot(context);
+public machine move_to(ui_context: &mut UiContext, x: i32, y: i32) {
+    ui_context.mouse_x = x;
+    ui_context.mouse_y = y;
+    context::update_hot(ui_context);
 }
 
 // Simulate pressing the left mouse button at `(x, y)` for the next frame.
-public machine Tester::pointer_down_at(context: &mut UiContext, x: i32, y: i32) {
-    context.mouse_x = x;
-    context.mouse_y = y;
-    context.mouse_down = true;
-    context.mouse_pressed = true;
-    context.mouse_released = false;
-    UiContext::update_hot(context);
+public machine pointer_down_at(ui_context: &mut UiContext, x: i32, y: i32) {
+    ui_context.mouse_x = x;
+    ui_context.mouse_y = y;
+    ui_context.mouse_down = true;
+    ui_context.mouse_pressed = true;
+    ui_context.mouse_released = false;
+    context::update_hot(ui_context);
 }
 
 // Simulate releasing the left mouse button at the current pointer position
 // (completing a click on the active widget).
-public machine Tester::pointer_up(context: &mut UiContext) {
-    context.mouse_down = false;
-    context.mouse_pressed = false;
-    context.mouse_released = true;
+public machine pointer_up(ui_context: &mut UiContext) {
+    ui_context.mouse_down = false;
+    ui_context.mouse_pressed = false;
+    ui_context.mouse_released = true;
 }
 
 // Stage a pointer press at the previous frame's widget center. Clicks fire on
 // the press edge; callers release with pointer_up before the next click.
 // begin_frame owns active/focus selection, just as it does in the native host.
-public machine Tester::stage_click_id(context: &mut UiContext, id: i32) -> bool {
-    let r: Rect = UiContext::previous_rect(context, id);
+public machine stage_click_id(ui_context: &mut UiContext, id: i32) -> bool {
+    let r: Rect = context::previous_rect(ui_context, id);
     transition r.w > 0 && r.h > 0 {
-        true -> do_stage(context, id, r)
+        true -> do_stage(ui_context, id, r)
         _ -> (false)
     }
-    state do_stage(context: &mut UiContext, id: i32, r: Rect) -> bool {
+    machine do_stage(ui_context: &mut UiContext, id: i32, r: Rect) -> bool {
         let cx: i32 in Saturating = r.x + (r.w / (2 as i32 in Saturating));
         let cy: i32 in Saturating = r.y + (r.h / (2 as i32 in Saturating));
-        Tester::pointer_down_at(context, cx as i32, cy as i32);
-        context.hot == id
+        tester::pointer_down_at(ui_context, cx as i32, cy as i32);
+        ui_context.hot == id
     }
 }
 
 // Begin a slider drag at a clamped percentage. For continued dragging, move_to
 // keeps the existing pointer capture instead of assigning active directly.
-public machine Tester::stage_slider_pct(context: &mut UiContext, id: i32, pct: i32) -> bool {
-    let r: Rect = UiContext::previous_rect(context, id);
+public machine stage_slider_pct(ui_context: &mut UiContext, id: i32, pct: i32) -> bool {
+    let r: Rect = context::previous_rect(ui_context, id);
     transition r.w > 2 && r.h > 0 {
-        true -> do_drag(context, id, r, pct)
+        true -> do_drag(ui_context, id, r, pct)
         _ -> (false)
     }
-    state do_drag(context: &mut UiContext, id: i32, r: Rect, pct: i32) -> bool {
+    machine do_drag(ui_context: &mut UiContext, id: i32, r: Rect, pct: i32) -> bool {
         let sp: i32 in Saturating = clamp_i32(pct, 0, 100) as i32 in Saturating;
         let rx: i32 in Saturating = r.x + ((r.w * sp) / (100 as i32 in Saturating));
         // Rectangles exclude their right edge; 100% starts at the last pixel.
         let px: i32 in Saturating = min_sat(rx, r.x + r.w - (1 as i32 in Saturating));
         let ry: i32 in Saturating = r.y + (r.h / (2 as i32 in Saturating));
-        Tester::pointer_down_at(context, px as i32, ry as i32);
-        context.hot == id
+        tester::pointer_down_at(ui_context, px as i32, ry as i32);
+        ui_context.hot == id
     }
 }

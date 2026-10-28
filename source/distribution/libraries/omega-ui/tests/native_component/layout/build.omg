@@ -1,6 +1,6 @@
 machine build(builder: &mut Build) {
  Build::application(builder, "omega_ui_native_layout");
  Build::depend_as(builder, "native", Source::Path { location: "../../../platform/native" });
- Build::select_provider<native::UiNativeLayout, native::UiNativeLayoutProvider>(builder, CompositionMode::Independent);
+ Build::select_provider<native::UiNativeLayout, native::UiNativeLayoutProvider>(builder, linux_x86_64, CompositionMode::Independent);
  Build::bind(builder, linux_x86_64::ProgramEntry, main);
 }

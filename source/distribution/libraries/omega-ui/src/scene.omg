@@ -1,3 +1,9 @@
+module scene;
+
+use context::UiContext;
+use types::Rect;
+
+
 /*
 Layout publishes an ordered paint list once. A scanline backend walks these
 commands instead of reinterpreting the box tree for every row. The source node
@@ -29,65 +35,65 @@ public data UiScene {
     text_generation: u64 in Wrapping;
 }
 
-public machine UiScene::prepare(scene: &mut UiScene, context: &UiContext) {
-    scene.count = 0;
-    scene.frame = context.frame;
-    scene.text_generation = context.text_store.generation;
-    transition { _ -> scan(scene, context, 0) }
-    state scan(scene: &mut UiScene, context: &UiContext, index: i32) {
-        transition index >= 0 && index < context.node_count && index < 128 { true -> node(scene, context, index) _ -> done() }
+public machine prepare(active_scene: &mut UiScene, ui_context: &UiContext) {
+    active_scene.count = 0;
+    active_scene.frame = ui_context.frame;
+    active_scene.text_generation = ui_context.text_store.generation;
+    transition { _ -> scan(active_scene, ui_context, 0) }
+    machine scan(active_scene: &mut UiScene, ui_context: &UiContext, index: i32) {
+        transition index >= 0 && index < ui_context.node_count && index < 128 { true -> node(active_scene, ui_context, index) _ -> done() }
     }
-    state node(scene: &mut UiScene, context: &UiContext, index: i32) requires index >= 0 && index < 128 {
-        let visible: bool = context.nodes[index].style.background >= 0
-            || (context.nodes[index].style.border >= 0 && context.nodes[index].style.border_width > 0)
-            || context.nodes[index].content_kind > 0;
-        transition visible && scene.count >= 0 && scene.count < 128 { true -> record(scene, context, index, scene.count) _ -> scan(scene, context, index + 1) }
+    machine node(active_scene: &mut UiScene, ui_context: &UiContext, index: i32) requires index >= 0 && index < 128 {
+        let visible: bool = ui_context.nodes[index].style.background >= 0
+            || (ui_context.nodes[index].style.border >= 0 && ui_context.nodes[index].style.border_width > 0)
+            || ui_context.nodes[index].content_kind > 0;
+        transition visible && active_scene.count >= 0 && active_scene.count < 128 { true -> record(active_scene, ui_context, index, active_scene.count) _ -> scan(active_scene, ui_context, index + 1) }
     }
-    state record(scene: &mut UiScene, context: &UiContext, index: i32, slot: i32)
+    machine record(active_scene: &mut UiScene, ui_context: &UiContext, index: i32, slot: i32)
     requires index >= 0 && index < 128 && slot >= 0 && slot < 128 {
-        let rectangle: Rect = UiContext::paint_rect(context, index);
-        scene.commands[slot] = UiPaintCommand { source_node: index,
+        let rectangle: Rect = context::paint_rect(ui_context, index);
+        active_scene.commands[slot] = UiPaintCommand { source_node: index,
             x: rectangle.x, y: rectangle.y, width: rectangle.w, height: rectangle.h,
-            background: context.nodes[index].style.background, border: context.nodes[index].style.border,
-            border_width: context.nodes[index].style.border_width, radius: context.nodes[index].style.radius };
-        scene.count = slot + 1;
-        transition { _ -> scan(scene, context, index + 1) }
+            background: ui_context.nodes[index].style.background, border: ui_context.nodes[index].style.border,
+            border_width: ui_context.nodes[index].style.border_width, radius: ui_context.nodes[index].style.radius };
+        active_scene.count = slot + 1;
+        transition { _ -> scan(active_scene, ui_context, index + 1) }
     }
-    state done() {}
+    machine done() {}
 }
 
-public machine UiScene::begin_band(scene: &UiScene, context: &UiContext, pixels: &mut [i32; 4096], band_y: i32) {
-    Raster::configure_for_context(context, pixels, band_y);
-    let height: i32 in Saturating = Raster::band_height(pixels, band_y);
-    transition height > 0 { true -> clear(context, pixels, band_y, height) _ -> done() }
-    state clear(context: &UiContext, pixels: &mut [i32; 4096], band_y: i32, height: i32 in Saturating) requires height > 0 {
-        pixels[4093] = (((band_y as i32 in Saturating) * context.height) / height) as i32;
-        Raster::clear_band_buffer(pixels, band_y, context.theme.background);
+public machine begin_band(active_scene: &UiScene, ui_context: &UiContext, pixels: &mut [i32; 4096], band_y: i32) {
+    raster::configure_for_context(ui_context, pixels, band_y);
+    let height: i32 in Saturating = raster::band_height(pixels, band_y);
+    transition height > 0 { true -> clear(ui_context, pixels, band_y, height) _ -> done() }
+    machine clear(ui_context: &UiContext, pixels: &mut [i32; 4096], band_y: i32, height: i32 in Saturating) requires height > 0 {
+        pixels[4093] = (((band_y as i32 in Saturating) * ui_context.height) / height) as i32;
+        raster::clear_band_buffer(pixels, band_y, ui_context.theme.background);
     }
-    state done() {}
+    machine done() {}
 }
 
 // Paint a surface and return its foreground node; -1 means the band is complete.
-public machine UiScene::next(scene: &UiScene, context: &UiContext, pixels: &mut [i32; 4096], band_y: i32, cursor: &mut i32) -> i32 {
-    transition scene.frame == context.frame && scene.text_generation == context.text_store.generation {
-        true -> scan(scene, context, pixels, band_y, cursor)
+public machine next(active_scene: &UiScene, ui_context: &UiContext, pixels: &mut [i32; 4096], band_y: i32, cursor: &mut i32) -> i32 {
+    transition active_scene.frame == ui_context.frame && active_scene.text_generation == ui_context.text_store.generation {
+        true -> scan(active_scene, ui_context, pixels, band_y, cursor)
         _ -> (-1)
     }
-    state scan(scene: &UiScene, context: &UiContext, pixels: &mut [i32; 4096], band_y: i32, cursor: &mut i32) -> i32 {
+    machine scan(active_scene: &UiScene, ui_context: &UiContext, pixels: &mut [i32; 4096], band_y: i32, cursor: &mut i32) -> i32 {
         let index: i32 = cursor;
-        transition index >= 0 && index < scene.count && index < 128 { true -> command(scene, context, pixels, band_y, cursor, index) _ -> (-1) }
+        transition index >= 0 && index < active_scene.count && index < 128 { true -> command(active_scene, ui_context, pixels, band_y, cursor, index) _ -> (-1) }
     }
-    state command(scene: &UiScene, context: &UiContext, pixels: &mut [i32; 4096], band_y: i32, cursor: &mut i32, index: i32) -> i32
+    machine command(active_scene: &UiScene, ui_context: &UiContext, pixels: &mut [i32; 4096], band_y: i32, cursor: &mut i32, index: i32) -> i32
     requires index >= 0 && index < 128 {
         cursor = index + 1;
-        let command: UiPaintCommand = scene.commands[index];
+        let command: UiPaintCommand = active_scene.commands[index];
         let logical_y: i32 in Saturating = pixels[4093] as i32 in Saturating;
         let visible: bool = band_y < 0 || (command.source_node != 0 && logical_y >= command.y - (2 as i32 in Saturating)
             && logical_y <= command.y + command.height + (16 as i32 in Saturating));
-        transition visible { true -> paint(pixels, band_y, command) _ -> scan(scene, context, pixels, band_y, cursor) }
+        transition visible { true -> paint(pixels, band_y, command) _ -> scan(active_scene, ui_context, pixels, band_y, cursor) }
     }
-    state paint(pixels: &mut [i32; 4096], band_y: i32, command: UiPaintCommand) -> i32 {
-        Raster::draw_box_band(pixels, band_y, Rect { x: command.x, y: command.y, w: command.width, h: command.height },
+    machine paint(pixels: &mut [i32; 4096], band_y: i32, command: UiPaintCommand) -> i32 {
+        raster::draw_box_band(pixels, band_y, Rect { x: command.x, y: command.y, w: command.width, h: command.height },
             command.background, command.border, command.border_width, command.radius);
         command.source_node
     }

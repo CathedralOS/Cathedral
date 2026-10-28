@@ -1,3 +1,5 @@
+module types;
+
 // Defines geometry, arithmetic helpers, styles, and resolved runtime theme roles.
 
 public machine select_i32(condition: bool, when_true: i32, when_false: i32) -> i32 {
@@ -45,7 +47,7 @@ public machine clamp_i32(v: i32, lo: i32, hi: i32) -> i32 {
         true -> (lo)
         _ -> check_hi(v, hi)
     }
-    state check_hi(v: i32, hi: i32) -> i32 {
+    machine check_hi(v: i32, hi: i32) -> i32 {
         transition v > hi {
             true -> (hi)
             _ -> (v)
@@ -72,7 +74,7 @@ public machine clamp_sat(v: i32 in Saturating, lo: i32 in Saturating, hi: i32 in
         true -> (lo)
         _ -> check_hi(v, hi)
     }
-    state check_hi(v: i32 in Saturating, hi: i32 in Saturating) -> i32 in Saturating {
+    machine check_hi(v: i32 in Saturating, hi: i32 in Saturating) -> i32 in Saturating {
         transition v > hi {
             true -> (hi)
             _ -> (v)
@@ -97,12 +99,12 @@ public data Edges {
     left: i32 in Saturating;
 }
 
-public machine Edges::all(v: i32) -> Edges {
+public machine edges_all(v: i32) -> Edges {
     let vs: i32 in Saturating = v as i32 in Saturating;
     Edges { top: vs, right: vs, bottom: vs, left: vs }
 }
 
-public machine Edges::xy(x: i32, y: i32) -> Edges {
+public machine edges_xy(x: i32, y: i32) -> Edges {
     let xs: i32 in Saturating = x as i32 in Saturating;
     let ys: i32 in Saturating = y as i32 in Saturating;
     Edges { top: ys, right: xs, bottom: ys, left: xs }
@@ -122,15 +124,15 @@ public machine select_rect(condition: bool, when_true: Rect, when_false: Rect) -
     }
 }
 
-public machine Rect::zero() -> Rect {
+public machine rect_zero() -> Rect {
     Rect { x: 0, y: 0, w: 0, h: 0 }
 }
 
-public machine Rect::copy(rectangle: &Rect) -> Rect {
+public machine rect_copy(rectangle: &Rect) -> Rect {
     Rect { x: rectangle.x, y: rectangle.y, w: rectangle.w, h: rectangle.h }
 }
 
-public machine Rect::contains(rectangle: &Rect, px: i32, py: i32) -> bool {
+public machine rect_contains(rectangle: &Rect, px: i32, py: i32) -> bool {
     let pxs: i32 in Saturating = px as i32 in Saturating;
     let pys: i32 in Saturating = py as i32 in Saturating;
     let x_end: i32 in Saturating = rectangle.x + rectangle.w;
@@ -138,7 +140,7 @@ public machine Rect::contains(rectangle: &Rect, px: i32, py: i32) -> bool {
     pxs >= rectangle.x && pxs < x_end && pys >= rectangle.y && pys < y_end
 }
 
-public machine Rect::inset(rectangle: &Rect, insets: Edges) -> Rect {
+public machine rect_inset(rectangle: &Rect, insets: Edges) -> Rect {
     let nx: i32 in Saturating = rectangle.x + insets.left;
     let ny: i32 in Saturating = rectangle.y + insets.top;
     let pad_w: i32 in Saturating = insets.left + insets.right;
@@ -203,49 +205,49 @@ public data UiAxis [copy] { case Column; case Row; }
 public data UiSizing [copy] { case Fit; case Fixed; case Fill; }
 public data UiAlignment [copy] { case Start; case Center; case End; case Stretch; }
 public data UiJustify [copy] { case Start; case Center; case End; case SpaceBetween; }
-public machine UiAxis::is_column(value: UiAxis) -> bool {
+public machine axis_is_column(value: UiAxis) -> bool {
     transition value { UiAxis::Column -> (true) _ -> (false) }
 }
-public machine UiAxis::is_row(value: UiAxis) -> bool {
+public machine axis_is_row(value: UiAxis) -> bool {
     transition value { UiAxis::Row -> (true) _ -> (false) }
 }
-public machine UiSizing::is_fit(value: UiSizing) -> bool {
+public machine sizing_is_fit(value: UiSizing) -> bool {
     transition value { UiSizing::Fit -> (true) _ -> (false) }
 }
-public machine UiSizing::is_fixed(value: UiSizing) -> bool {
+public machine sizing_is_fixed(value: UiSizing) -> bool {
     transition value { UiSizing::Fixed -> (true) _ -> (false) }
 }
-public machine UiSizing::is_fill(value: UiSizing) -> bool {
+public machine sizing_is_fill(value: UiSizing) -> bool {
     transition value { UiSizing::Fill -> (true) _ -> (false) }
 }
-public machine UiAlignment::is_start(value: UiAlignment) -> bool {
+public machine alignment_is_start(value: UiAlignment) -> bool {
     transition value { UiAlignment::Start -> (true) _ -> (false) }
 }
-public machine UiAlignment::is_center(value: UiAlignment) -> bool {
+public machine alignment_is_center(value: UiAlignment) -> bool {
     transition value { UiAlignment::Center -> (true) _ -> (false) }
 }
-public machine UiAlignment::is_end(value: UiAlignment) -> bool {
+public machine alignment_is_end(value: UiAlignment) -> bool {
     transition value { UiAlignment::End -> (true) _ -> (false) }
 }
-public machine UiAlignment::is_stretch(value: UiAlignment) -> bool {
+public machine alignment_is_stretch(value: UiAlignment) -> bool {
     transition value { UiAlignment::Stretch -> (true) _ -> (false) }
 }
-public machine UiJustify::is_start(value: UiJustify) -> bool {
+public machine justify_is_start(value: UiJustify) -> bool {
     transition value { UiJustify::Start -> (true) _ -> (false) }
 }
-public machine UiJustify::is_center(value: UiJustify) -> bool {
+public machine justify_is_center(value: UiJustify) -> bool {
     transition value { UiJustify::Center -> (true) _ -> (false) }
 }
-public machine UiJustify::is_end(value: UiJustify) -> bool {
+public machine justify_is_end(value: UiJustify) -> bool {
     transition value { UiJustify::End -> (true) _ -> (false) }
 }
-public machine UiJustify::is_space_between(value: UiJustify) -> bool {
+public machine justify_is_space_between(value: UiJustify) -> bool {
     transition value { UiJustify::SpaceBetween -> (true) _ -> (false) }
 }
-public machine UiSizing::select(condition: bool, when_true: UiSizing, when_false: UiSizing) -> UiSizing {
+public machine sizing_select(condition: bool, when_true: UiSizing, when_false: UiSizing) -> UiSizing {
     transition condition { true -> (when_true) _ -> (when_false) }
 }
-public machine UiAlignment::select(condition: bool, when_true: UiAlignment, when_false: UiAlignment) -> UiAlignment {
+public machine alignment_select(condition: bool, when_true: UiAlignment, when_false: UiAlignment) -> UiAlignment {
     transition condition { true -> (when_true) _ -> (when_false) }
 }
 
@@ -254,7 +256,7 @@ public data UiContentKind [copy] {
     case Toggle; case Checkbox; case NumberField; case Text;
     case Extension(tag: i32);
 }
-public machine UiContentKind::code(content: UiContentKind) -> i32 {
+public machine content_kind_code(content: UiContentKind) -> i32 {
     transition content {
         UiContentKind::Box -> (0)
         UiContentKind::Icon -> (1)
@@ -286,11 +288,11 @@ public data Style {
     radius: i32 in Saturating;
 }
 
-public machine Style::default_box() -> Style {
+public machine style_default_box() -> Style {
     Style {
         direction: UiAxis::Column,
         gap: 0,
-        padding: Edges::all(0),
+        padding: types::edges_all(0),
         width_mode: UiSizing::Fit,
         width_px: 0,
         height_mode: UiSizing::Fit,

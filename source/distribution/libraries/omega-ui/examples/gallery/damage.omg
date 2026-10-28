@@ -1,3 +1,16 @@
+module damage;
+
+use omega_ui::context::UiContext;
+use omega_ui::types::Rect;
+use omega_ui::types::add_i32;
+use omega_ui::types::clamp_i32;
+use omega_ui::types::max_i32;
+use omega_ui::types::min_i32;
+use omega_ui::types::mul_i32;
+use omega_ui::types::select_i32;
+use omega_ui::types::sub_i32;
+
+
 /*
 We retain the fields this gallery actually paints, then repaint the union of old
 and new bounds. Every damaged row is rebuilt from the background through
@@ -61,7 +74,7 @@ public data GalleryDamage {
     logical_bottom: i32;
 }
 
-machine GalleryPaintNode::capture(context: &UiContext, index: i32) -> GalleryPaintNode
+machine paint_node_capture(context: &UiContext, index: i32) -> GalleryPaintNode
 requires index >= 0 && index < 128 {
     GalleryPaintNode {
         identifier: context.nodes[index].id,
@@ -82,7 +95,7 @@ requires index >= 0 && index < 128 {
     }
 }
 
-machine GalleryPaintNode::same(first: &GalleryPaintNode, second: &GalleryPaintNode) -> bool {
+machine paint_node_same(first: &GalleryPaintNode, second: &GalleryPaintNode) -> bool {
     first.identifier == second.identifier && first.kind == second.kind
         && first.x == second.x && first.y == second.y && first.width == second.width && first.height == second.height
         && first.background == second.background && first.border == second.border
@@ -92,243 +105,243 @@ machine GalleryPaintNode::same(first: &GalleryPaintNode, second: &GalleryPaintNo
         && first.auxiliary_color == second.auxiliary_color && first.label == second.label
 }
 
-public machine GalleryDamage::include_box(damage: &mut GalleryDamage, left: i32, top: i32, width: i32, height: i32) {
+public machine include_box(damage_state: &mut GalleryDamage, left: i32, top: i32, width: i32, height: i32) {
     transition width > 0 && height > 0 {
-        true -> include(damage, left, top, width, height)
+        true -> include(damage_state, left, top, width, height)
         _ -> done()
     }
-    state include(damage: &mut GalleryDamage, left: i32, top: i32, width: i32, height: i32) {
-        damage.logical_left = min_i32(damage.logical_left, clamp_i32(sub_i32(left, 8), 0, 1024));
-        damage.logical_right = max_i32(damage.logical_right, clamp_i32(add_i32(add_i32(left, width), 8), 0, 1024));
-        damage.logical_top = min_i32(damage.logical_top, clamp_i32(sub_i32(top, 8), 0, 672));
-        damage.logical_bottom = max_i32(damage.logical_bottom, clamp_i32(add_i32(add_i32(top, height), 8), 0, 672));
-        let x0: i32 = mul_i32(clamp_i32(sub_i32(left, 8), 0, 1024), damage.width) / 1024;
-        let x1: i32 = add_i32(mul_i32(clamp_i32(add_i32(add_i32(left, width), 8), 0, 1024), damage.width), 1023) / 1024;
-        let y0: i32 = mul_i32(clamp_i32(sub_i32(top, 8), 0, 672), damage.height) / 672;
-        let y1: i32 = add_i32(mul_i32(clamp_i32(add_i32(add_i32(top, height), 8), 0, 672), damage.height), 671) / 672;
-        GalleryDamage::append(damage, x0, y0, x1, y1);
+    machine include(damage_state: &mut GalleryDamage, left: i32, top: i32, width: i32, height: i32) {
+        damage_state.logical_left = min_i32(damage_state.logical_left, clamp_i32(sub_i32(left, 8), 0, 1024));
+        damage_state.logical_right = max_i32(damage_state.logical_right, clamp_i32(add_i32(add_i32(left, width), 8), 0, 1024));
+        damage_state.logical_top = min_i32(damage_state.logical_top, clamp_i32(sub_i32(top, 8), 0, 672));
+        damage_state.logical_bottom = max_i32(damage_state.logical_bottom, clamp_i32(add_i32(add_i32(top, height), 8), 0, 672));
+        let x0: i32 = mul_i32(clamp_i32(sub_i32(left, 8), 0, 1024), damage_state.width) / 1024;
+        let x1: i32 = add_i32(mul_i32(clamp_i32(add_i32(add_i32(left, width), 8), 0, 1024), damage_state.width), 1023) / 1024;
+        let y0: i32 = mul_i32(clamp_i32(sub_i32(top, 8), 0, 672), damage_state.height) / 672;
+        let y1: i32 = add_i32(mul_i32(clamp_i32(add_i32(add_i32(top, height), 8), 0, 672), damage_state.height), 671) / 672;
+        damage::append(damage_state, x0, y0, x1, y1);
     }
-    state done() {}
+    machine done() {}
 }
 
-machine GalleryDamage::include(damage: &mut GalleryDamage, top: i32, height: i32) {
-    GalleryDamage::include_box(damage, 0, top, 1024, height);
+machine include(damage_state: &mut GalleryDamage, top: i32, height: i32) {
+    damage::include_box(damage_state, 0, top, 1024, height);
 }
 
-public machine GalleryDamage::prepare(damage: &mut GalleryDamage, context: &UiContext, width: i32, height: i32, page: i32, palette_open: bool, force: bool) {
-    let full: bool = force || !damage.ready || damage.width != width || damage.height != height
-        || damage.page != page || damage.node_count != context.node_count
-        || palette_open != damage.palette_open || damage.background != context.theme.background
-        || damage.border != context.theme.border || damage.accent != context.theme.accent;
-    let pointer_changed: bool = damage.mouse_x != context.mouse_x || damage.mouse_y != context.mouse_y || damage.mouse_down != context.mouse_down;
-    damage.logical_left = select_i32(full, 0, 1024);
-    damage.logical_right = select_i32(full, 1024, 0);
-    damage.logical_top = select_i32(full, 0, 672);
-    damage.logical_bottom = select_i32(full, 672, 0);
-    damage.logical_left = select_i32(!full && palette_open, 404, damage.logical_left);
-    damage.logical_right = select_i32(!full && palette_open, 868, damage.logical_right);
+public machine prepare(damage_state: &mut GalleryDamage, context: &UiContext, width: i32, height: i32, page: i32, palette_open: bool, force: bool) {
+    let full: bool = force || !damage_state.ready || damage_state.width != width || damage_state.height != height
+        || damage_state.page != page || damage_state.node_count != context.node_count
+        || palette_open != damage_state.palette_open || damage_state.background != context.theme.background
+        || damage_state.border != context.theme.border || damage_state.accent != context.theme.accent;
+    let pointer_changed: bool = damage_state.mouse_x != context.mouse_x || damage_state.mouse_y != context.mouse_y || damage_state.mouse_down != context.mouse_down;
+    damage_state.logical_left = select_i32(full, 0, 1024);
+    damage_state.logical_right = select_i32(full, 1024, 0);
+    damage_state.logical_top = select_i32(full, 0, 672);
+    damage_state.logical_bottom = select_i32(full, 672, 0);
+    damage_state.logical_left = select_i32(!full && palette_open, 404, damage_state.logical_left);
+    damage_state.logical_right = select_i32(!full && palette_open, 868, damage_state.logical_right);
     // The launcher freezes its background; edits only repaint its bounded rows.
-    damage.logical_top = select_i32(!full && palette_open, 102, damage.logical_top);
-    damage.logical_bottom = select_i32(!full && palette_open, 438, damage.logical_bottom);
-    damage.ready = true;
-    damage.width = width;
-    damage.height = height;
-    damage.page = page;
-    damage.node_count = context.node_count;
-    damage.palette_open = palette_open;
-    damage.background = context.theme.background;
-    damage.border = context.theme.border;
-    damage.accent = context.theme.accent;
-    damage.full = full;
-    damage.rectangle_count = 0;
-    let initial_left: i32 = mul_i32(damage.logical_left, width) / 1024;
-    let initial_top: i32 = mul_i32(damage.logical_top, height) / 672;
-    let initial_right: i32 = add_i32(mul_i32(damage.logical_right, width), 1023) / 1024;
-    let initial_bottom: i32 = add_i32(mul_i32(damage.logical_bottom, height), 671) / 672;
-    GalleryDamage::append(damage, initial_left, initial_top, initial_right, initial_bottom);
-    transition { _ -> node(damage, context, 0, pointer_changed) }
-    state node(damage: &mut GalleryDamage, context: &UiContext, index: i32, pointer_changed: bool) {
+    damage_state.logical_top = select_i32(!full && palette_open, 102, damage_state.logical_top);
+    damage_state.logical_bottom = select_i32(!full && palette_open, 438, damage_state.logical_bottom);
+    damage_state.ready = true;
+    damage_state.width = width;
+    damage_state.height = height;
+    damage_state.page = page;
+    damage_state.node_count = context.node_count;
+    damage_state.palette_open = palette_open;
+    damage_state.background = context.theme.background;
+    damage_state.border = context.theme.border;
+    damage_state.accent = context.theme.accent;
+    damage_state.full = full;
+    damage_state.rectangle_count = 0;
+    let initial_left: i32 = mul_i32(damage_state.logical_left, width) / 1024;
+    let initial_top: i32 = mul_i32(damage_state.logical_top, height) / 672;
+    let initial_right: i32 = add_i32(mul_i32(damage_state.logical_right, width), 1023) / 1024;
+    let initial_bottom: i32 = add_i32(mul_i32(damage_state.logical_bottom, height), 671) / 672;
+    damage::append(damage_state, initial_left, initial_top, initial_right, initial_bottom);
+    transition { _ -> node(damage_state, context, 0, pointer_changed) }
+    machine node(damage_state: &mut GalleryDamage, context: &UiContext, index: i32, pointer_changed: bool) {
         transition index >= 0 && index < context.node_count && index < 128 {
-            true -> compare(damage, context, index, pointer_changed)
-            _ -> motion(damage, context, 0)
+            true -> compare(damage_state, context, index, pointer_changed)
+            _ -> motion(damage_state, context, 0)
         }
     }
-    state compare(damage: &mut GalleryDamage, context: &UiContext, index: i32, pointer_changed: bool)
+    machine compare(damage_state: &mut GalleryDamage, context: &UiContext, index: i32, pointer_changed: bool)
     requires index >= 0 && index < 128 {
-        let current: GalleryPaintNode = GalleryPaintNode::capture(context, index);
-        let previous: GalleryPaintNode = damage.nodes[index];
+        let current: GalleryPaintNode = damage::paint_node_capture(context, index);
+        let previous: GalleryPaintNode = damage_state.nodes[index];
         let pointer_painted: bool = current.kind == 18;
-        let dot_changed: bool = GalleryPaintNode::dot_hover(&current, context.mouse_x, context.mouse_y) != GalleryPaintNode::dot_hover(&previous, damage.mouse_x, damage.mouse_y);
-        let inside: bool = GalleryPaintNode::contains(&current, context.mouse_x, context.mouse_y)
-            || GalleryPaintNode::contains(&previous, damage.mouse_x, damage.mouse_y);
-        let same: bool = GalleryPaintNode::same(&previous, &current) && !dot_changed && !(pointer_changed && pointer_painted && inside);
-        damage.nodes[index] = current;
+        let dot_changed: bool = damage::paint_node_dot_hover(&current, context.mouse_x, context.mouse_y) != damage::paint_node_dot_hover(&previous, damage_state.mouse_x, damage_state.mouse_y);
+        let inside: bool = damage::paint_node_contains(&current, context.mouse_x, context.mouse_y)
+            || damage::paint_node_contains(&previous, damage_state.mouse_x, damage_state.mouse_y);
+        let same: bool = damage::paint_node_same(&previous, &current) && !dot_changed && !(pointer_changed && pointer_painted && inside);
+        damage_state.nodes[index] = current;
         let mut surface: GalleryPaintNode = current;
         surface.value = previous.value;
         surface.auxiliary_value = previous.auxiliary_value;
-        let slider_only: bool = current.identifier == 22 && current.kind == 17 && current.label == 3 && GalleryPaintNode::same(&previous, &surface);
+        let slider_only: bool = current.identifier == 22 && current.kind == 17 && current.label == 3 && damage::paint_node_same(&previous, &surface);
         transition same {
-            true -> node(damage, context, index + 1, pointer_changed)
-            _ -> choose_change(damage, context, index, pointer_changed, previous, current, slider_only, GalleryPaintNode::same(&previous, &current) && dot_changed)
+            true -> node(damage_state, context, index + 1, pointer_changed)
+            _ -> choose_change(damage_state, context, index, pointer_changed, previous, current, slider_only, damage::paint_node_same(&previous, &current) && dot_changed)
         }
     }
-    state choose_change(damage: &mut GalleryDamage, context: &UiContext, index: i32, pointer_changed: bool, previous: GalleryPaintNode, current: GalleryPaintNode, slider_only: bool, dot_only: bool) {
+    machine choose_change(damage_state: &mut GalleryDamage, context: &UiContext, index: i32, pointer_changed: bool, previous: GalleryPaintNode, current: GalleryPaintNode, slider_only: bool, dot_only: bool) {
         transition slider_only {
-            true -> slider_parts(damage, context, index, pointer_changed, previous, current)
-            _ -> header_or_other(damage, context, index, pointer_changed, previous, current, dot_only)
+            true -> slider_parts(damage_state, context, index, pointer_changed, previous, current)
+            _ -> header_or_other(damage_state, context, index, pointer_changed, previous, current, dot_only)
         }
     }
-    state header_or_other(damage: &mut GalleryDamage, context: &UiContext, index: i32, pointer_changed: bool, previous: GalleryPaintNode, current: GalleryPaintNode, dot_only: bool) {
-        transition current.kind == 8 { true -> header(damage, context, index, pointer_changed, previous, current) _ -> changed(damage, context, index, pointer_changed, previous.y, previous.height, current.y, current.height, dot_only) }
+    machine header_or_other(damage_state: &mut GalleryDamage, context: &UiContext, index: i32, pointer_changed: bool, previous: GalleryPaintNode, current: GalleryPaintNode, dot_only: bool) {
+        transition current.kind == 8 { true -> header(damage_state, context, index, pointer_changed, previous, current) _ -> changed(damage_state, context, index, pointer_changed, previous.y, previous.height, current.y, current.height, dot_only) }
     }
-    state header(damage: &mut GalleryDamage, context: &UiContext, index: i32, pointer_changed: bool, previous: GalleryPaintNode, current: GalleryPaintNode) {
-        GalleryDamage::include_box(damage, previous.x, previous.y, previous.width, previous.height);
-        GalleryDamage::include_box(damage, current.x, current.y, current.width, current.height);
-        transition { _ -> node(damage, context, add_i32(index, 1), pointer_changed) }
+    machine header(damage_state: &mut GalleryDamage, context: &UiContext, index: i32, pointer_changed: bool, previous: GalleryPaintNode, current: GalleryPaintNode) {
+        damage::include_box(damage_state, previous.x, previous.y, previous.width, previous.height);
+        damage::include_box(damage_state, current.x, current.y, current.width, current.height);
+        transition { _ -> node(damage_state, context, add_i32(index, 1), pointer_changed) }
     }
-    state slider_parts(damage: &mut GalleryDamage, context: &UiContext, index: i32, pointer_changed: bool, previous: GalleryPaintNode, current: GalleryPaintNode) {
+    machine slider_parts(damage_state: &mut GalleryDamage, context: &UiContext, index: i32, pointer_changed: bool, previous: GalleryPaintNode, current: GalleryPaintNode) {
         transition previous.value != current.value {
-            true -> volume(damage, context, index, pointer_changed, previous, current)
-            _ -> speed(damage, context, index, pointer_changed, previous, current)
+            true -> volume(damage_state, context, index, pointer_changed, previous, current)
+            _ -> speed(damage_state, context, index, pointer_changed, previous, current)
         }
     }
-    state volume(damage: &mut GalleryDamage, context: &UiContext, index: i32, pointer_changed: bool, previous: GalleryPaintNode, current: GalleryPaintNode) {
-        GalleryDamage::include_box(damage, add_i32(current.x, 72), add_i32(current.y, 30), 320, 62);
-        GalleryDamage::preset(damage, current.x, current.y, previous.value);
-        GalleryDamage::preset(damage, current.x, current.y, current.value);
-        transition { _ -> speed(damage, context, index, pointer_changed, previous, current) }
+    machine volume(damage_state: &mut GalleryDamage, context: &UiContext, index: i32, pointer_changed: bool, previous: GalleryPaintNode, current: GalleryPaintNode) {
+        damage::include_box(damage_state, add_i32(current.x, 72), add_i32(current.y, 30), 320, 62);
+        damage::preset(damage_state, current.x, current.y, previous.value);
+        damage::preset(damage_state, current.x, current.y, current.value);
+        transition { _ -> speed(damage_state, context, index, pointer_changed, previous, current) }
     }
-    state speed(damage: &mut GalleryDamage, context: &UiContext, index: i32, pointer_changed: bool, previous: GalleryPaintNode, current: GalleryPaintNode) {
+    machine speed(damage_state: &mut GalleryDamage, context: &UiContext, index: i32, pointer_changed: bool, previous: GalleryPaintNode, current: GalleryPaintNode) {
         transition previous.auxiliary_value != current.auxiliary_value {
-            true -> speed_rows(damage, context, index, pointer_changed, current)
-            _ -> node(damage, context, index + 1, pointer_changed)
+            true -> speed_rows(damage_state, context, index, pointer_changed, current)
+            _ -> node(damage_state, context, index + 1, pointer_changed)
         }
     }
-    state speed_rows(damage: &mut GalleryDamage, context: &UiContext, index: i32, pointer_changed: bool, current: GalleryPaintNode) {
-        GalleryDamage::include_box(damage, add_i32(current.x, 72), add_i32(current.y, 84), 320, 36);
-        transition { _ -> node(damage, context, index + 1, pointer_changed) }
+    machine speed_rows(damage_state: &mut GalleryDamage, context: &UiContext, index: i32, pointer_changed: bool, current: GalleryPaintNode) {
+        damage::include_box(damage_state, add_i32(current.x, 72), add_i32(current.y, 84), 320, 36);
+        transition { _ -> node(damage_state, context, index + 1, pointer_changed) }
     }
-    state changed(damage: &mut GalleryDamage, context: &UiContext, index: i32, pointer_changed: bool, old_top: i32, old_height: i32, top: i32, height: i32, dot_only: bool) {
+    machine changed(damage_state: &mut GalleryDamage, context: &UiContext, index: i32, pointer_changed: bool, old_top: i32, old_height: i32, top: i32, height: i32, dot_only: bool) {
         transition dot_only && index >= 0 && index < 128 {
-            true -> dot_rows(damage, context, index, pointer_changed, top, height)
-            _ -> card_rows(damage, context, index, pointer_changed, old_top, old_height, top, height)
+            true -> dot_rows(damage_state, context, index, pointer_changed, top, height)
+            _ -> card_rows(damage_state, context, index, pointer_changed, old_top, old_height, top, height)
         }
     }
-    state dot_rows(damage: &mut GalleryDamage, context: &UiContext, index: i32, pointer_changed: bool, top: i32, height: i32)
+    machine dot_rows(damage_state: &mut GalleryDamage, context: &UiContext, index: i32, pointer_changed: bool, top: i32, height: i32)
     requires index >= 0 && index < 128 {
         let offset: i32 = select_i32(context.nodes[index].content_kind == 13, 66, 72);
         let padding: i32 = select_i32(context.nodes[index].content_kind == 13, 12, 14);
         let well_height: i32 = max_i32(sub_i32(height, add_i32(offset, padding)), 24);
         let rows: i32 = add_i32(max_i32(sub_i32(well_height, 14), 0), 2) / 6;
-        GalleryDamage::include(damage, add_i32(add_i32(top, offset), 8), mul_i32(rows, 6));
-        transition { _ -> node(damage, context, index + 1, pointer_changed) }
+        damage::include(damage_state, add_i32(add_i32(top, offset), 8), mul_i32(rows, 6));
+        transition { _ -> node(damage_state, context, index + 1, pointer_changed) }
     }
-    state card_rows(damage: &mut GalleryDamage, context: &UiContext, index: i32, pointer_changed: bool, old_top: i32, old_height: i32, top: i32, height: i32) {
-        GalleryDamage::include(damage, old_top, old_height);
-        GalleryDamage::include(damage, top, height);
-        transition { _ -> node(damage, context, index + 1, pointer_changed) }
+    machine card_rows(damage_state: &mut GalleryDamage, context: &UiContext, index: i32, pointer_changed: bool, old_top: i32, old_height: i32, top: i32, height: i32) {
+        damage::include(damage_state, old_top, old_height);
+        damage::include(damage_state, top, height);
+        transition { _ -> node(damage_state, context, index + 1, pointer_changed) }
     }
-    state motion(damage: &mut GalleryDamage, context: &UiContext, index: i32) {
+    machine motion(damage_state: &mut GalleryDamage, context: &UiContext, index: i32) {
         transition index >= 0 && index < context.motion.count && index < 64 {
-            true -> compare_motion(damage, context, index)
-            _ -> finish(damage, context)
+            true -> compare_motion(damage_state, context, index)
+            _ -> finish(damage_state, context)
         }
     }
-    state compare_motion(damage: &mut GalleryDamage, context: &UiContext, index: i32)
+    machine compare_motion(damage_state: &mut GalleryDamage, context: &UiContext, index: i32)
     requires index >= 0 && index < 64 {
         let current: i32 = context.motion.values[index].current;
-        let changed: bool = damage.motion_values[index] != current;
-        damage.motion_values[index] = current;
+        let changed: bool = damage_state.motion_values[index] != current;
+        damage_state.motion_values[index] = current;
         transition changed {
-            true -> motion_owner(damage, context, index, context.motion.values[index].identifier)
-            _ -> motion(damage, context, index + 1)
+            true -> motion_owner(damage_state, context, index, context.motion.values[index].identifier)
+            _ -> motion(damage_state, context, index + 1)
         }
     }
-    state motion_owner(damage: &mut GalleryDamage, context: &UiContext, index: i32, identifier: i32) {
-        let switch_owner: i32 = select_i32(damage.page == 2, 43, 21);
+    machine motion_owner(damage_state: &mut GalleryDamage, context: &UiContext, index: i32, identifier: i32) {
+        let switch_owner: i32 = select_i32(damage_state.page == 2, 43, 21);
         let owner: i32 = select_i32(identifier >= 1100 && identifier <= 1103, switch_owner,
             select_i32(identifier >= 1110 && identifier <= 1112, 21,
             select_i32(identifier == 1120 || identifier == 1121, 22,
             select_i32(identifier >= 1140 && identifier <= 1147, 20, identifier))));
-        let rectangle: Rect = UiContext::previous_rect(context, owner);
+        let rectangle: Rect = omega_ui::context::previous_rect(context, owner);
         let slider: bool = identifier == 1120 || identifier == 1121;
-        GalleryDamage::include_box(damage, select_i32(slider, add_i32(rectangle.x as i32, 72), rectangle.x as i32), select_i32(slider, add_i32(rectangle.y as i32, select_i32(identifier == 1120, 30, 84)), rectangle.y as i32), select_i32(slider, 320, rectangle.w as i32), select_i32(slider, 36, rectangle.h as i32));
-        transition { _ -> motion(damage, context, index + 1) }
+        damage::include_box(damage_state, select_i32(slider, add_i32(rectangle.x as i32, 72), rectangle.x as i32), select_i32(slider, add_i32(rectangle.y as i32, select_i32(identifier == 1120, 30, 84)), rectangle.y as i32), select_i32(slider, 320, rectangle.w as i32), select_i32(slider, 36, rectangle.h as i32));
+        transition { _ -> motion(damage_state, context, index + 1) }
     }
-    state finish(damage: &mut GalleryDamage, context: &UiContext) {
-        damage.mouse_x = context.mouse_x;
-        damage.mouse_y = context.mouse_y;
-        damage.mouse_down = context.mouse_down;
+    machine finish(damage_state: &mut GalleryDamage, context: &UiContext) {
+        damage_state.mouse_x = context.mouse_x;
+        damage_state.mouse_y = context.mouse_y;
+        damage_state.mouse_down = context.mouse_down;
     }
 }
 
-machine GalleryPaintNode::contains(node: &GalleryPaintNode, x: i32, y: i32) -> bool {
+machine paint_node_contains(node: &GalleryPaintNode, x: i32, y: i32) -> bool {
     x >= node.x && x < add_i32(node.x, node.width) && y >= node.y && y < add_i32(node.y, node.height)
 }
 
-machine GalleryPaintNode::dot_hover(node: &GalleryPaintNode, mouse_x: i32, mouse_y: i32) -> i32 {
+machine paint_node_dot_hover(node: &GalleryPaintNode, mouse_x: i32, mouse_y: i32) -> i32 {
     transition node.kind == 13 || (node.kind == 14 && node.label > 10) {
         true -> chart(node, mouse_x, mouse_y)
         _ -> (-1)
     }
-    state chart(node: &GalleryPaintNode, mouse_x: i32, mouse_y: i32) -> i32 {
+    machine chart(node: &GalleryPaintNode, mouse_x: i32, mouse_y: i32) -> i32 {
         let rectangle: Rect = Rect { x: node.x as i32 in Saturating, y: node.y as i32 in Saturating, w: node.width as i32 in Saturating, h: node.height as i32 in Saturating };
-        GalleryDots::hover_column(&rectangle, mouse_x, mouse_y, select_i32(node.kind == 13, 66, 72), select_i32(node.kind == 13, 12, 14))
+        dots::hover_column(&rectangle, mouse_x, mouse_y, select_i32(node.kind == 13, 66, 72), select_i32(node.kind == 13, 12, 14))
     }
 }
 
 // A preset changes appearance only on entering or leaving its exact value.
-machine GalleryDamage::preset(damage: &mut GalleryDamage, x: i32, y: i32, value: i32) {
+machine preset(damage_state: &mut GalleryDamage, x: i32, y: i32, value: i32) {
     transition value == 25 || value == 50 || value == 75 || value == 100 {
-        true -> include(damage, x, y, value)
+        true -> include(damage_state, x, y, value)
         _ -> done()
     }
-    state include(damage: &mut GalleryDamage, x: i32, y: i32, value: i32) {
-        GalleryDamage::include_box(damage, add_i32(x, add_i32(436, mul_i32(sub_i32(value / 25, 1), 72))), add_i32(y, 40), select_i32(value == 100, 68, 64), 28);
+    machine include(damage_state: &mut GalleryDamage, x: i32, y: i32, value: i32) {
+        damage::include_box(damage_state, add_i32(x, add_i32(436, mul_i32(sub_i32(value / 25, 1), 72))), add_i32(y, 40), select_i32(value == 100, 68, 64), 28);
     }
-    state done() {}
+    machine done() {}
 }
 
 // Store bounded rectangles; overflow conservatively collapses to their union.
-machine GalleryDamage::append(damage: &mut GalleryDamage, left: i32, top: i32, right: i32, bottom: i32) {
-    transition left < right && top < bottom && !(damage.full && damage.rectangle_count > 0) {
-        true -> capacity(damage, left, top, right, bottom)
+machine append(damage_state: &mut GalleryDamage, left: i32, top: i32, right: i32, bottom: i32) {
+    transition left < right && top < bottom && !(damage_state.full && damage_state.rectangle_count > 0) {
+        true -> capacity(damage_state, left, top, right, bottom)
         _ -> done()
     }
-    state capacity(damage: &mut GalleryDamage, left: i32, top: i32, right: i32, bottom: i32) {
-        transition damage.rectangle_count >= 0 && damage.rectangle_count < 32 {
-            true -> store(damage, left, top, right, bottom, damage.rectangle_count)
-            _ -> collapse(damage)
+    machine capacity(damage_state: &mut GalleryDamage, left: i32, top: i32, right: i32, bottom: i32) {
+        transition damage_state.rectangle_count >= 0 && damage_state.rectangle_count < 32 {
+            true -> store(damage_state, left, top, right, bottom, damage_state.rectangle_count)
+            _ -> collapse(damage_state)
         }
     }
-    state store(damage: &mut GalleryDamage, left: i32, top: i32, right: i32, bottom: i32, index: i32) requires index >= 0 && index < 32 {
-        damage.rectangles[index] = GalleryDirtyRectangle { left: left, top: top, right: right, bottom: bottom };
-        damage.rectangle_count = index + 1;
+    machine store(damage_state: &mut GalleryDamage, left: i32, top: i32, right: i32, bottom: i32, index: i32) requires index >= 0 && index < 32 {
+        damage_state.rectangles[index] = GalleryDirtyRectangle { left: left, top: top, right: right, bottom: bottom };
+        damage_state.rectangle_count = index + 1;
     }
-    state collapse(damage: &mut GalleryDamage) {
-        damage.rectangles[0] = GalleryDirtyRectangle {
-            left: mul_i32(damage.logical_left, damage.width) / 1024,
-            top: mul_i32(damage.logical_top, damage.height) / 672,
-            right: add_i32(mul_i32(damage.logical_right, damage.width), 1023) / 1024,
-            bottom: add_i32(mul_i32(damage.logical_bottom, damage.height), 671) / 672
+    machine collapse(damage_state: &mut GalleryDamage) {
+        damage_state.rectangles[0] = GalleryDirtyRectangle {
+            left: mul_i32(damage_state.logical_left, damage_state.width) / 1024,
+            top: mul_i32(damage_state.logical_top, damage_state.height) / 672,
+            right: add_i32(mul_i32(damage_state.logical_right, damage_state.width), 1023) / 1024,
+            bottom: add_i32(mul_i32(damage_state.logical_bottom, damage_state.height), 671) / 672
         };
-        damage.rectangle_count = 1;
+        damage_state.rectangle_count = 1;
     }
-    state done() {}
+    machine done() {}
 }
 
 // Decompose the union into disjoint horizontal regions so text is painted once.
-public machine GalleryDamage::region(damage: &GalleryDamage, row: i32) -> GalleryDirtyRectangle {
-    let result: GalleryDirtyRectangle = GalleryDirtyRectangle { left: damage.width, top: row, right: 0, bottom: damage.height };
-    transition { _ -> scan(damage, row, 0, result) }
-    state scan(damage: &GalleryDamage, row: i32, index: i32, result: GalleryDirtyRectangle) -> GalleryDirtyRectangle {
-        transition index >= 0 && index < damage.rectangle_count && index < 32 { true -> rectangle(damage, row, index, result) _ -> (result) }
+public machine region(damage_state: &GalleryDamage, row: i32) -> GalleryDirtyRectangle {
+    let result: GalleryDirtyRectangle = GalleryDirtyRectangle { left: damage_state.width, top: row, right: 0, bottom: damage_state.height };
+    transition { _ -> scan(damage_state, row, 0, result) }
+    machine scan(damage_state: &GalleryDamage, row: i32, index: i32, result: GalleryDirtyRectangle) -> GalleryDirtyRectangle {
+        transition index >= 0 && index < damage_state.rectangle_count && index < 32 { true -> rectangle(damage_state, row, index, result) _ -> (result) }
     }
-    state rectangle(damage: &GalleryDamage, row: i32, index: i32, result: GalleryDirtyRectangle) -> GalleryDirtyRectangle requires index >= 0 && index < 32 {
-        let rectangle: GalleryDirtyRectangle = damage.rectangles[index];
+    machine rectangle(damage_state: &GalleryDamage, row: i32, index: i32, result: GalleryDirtyRectangle) -> GalleryDirtyRectangle requires index >= 0 && index < 32 {
+        let rectangle: GalleryDirtyRectangle = damage_state.rectangles[index];
         let active: bool = row >= rectangle.top && row < rectangle.bottom;
         let bottom: i32 = select_i32(rectangle.top > row, min_i32(result.bottom, rectangle.top), select_i32(active, min_i32(result.bottom, rectangle.bottom), result.bottom));
         let next: GalleryDirtyRectangle = GalleryDirtyRectangle { left: select_i32(active, min_i32(result.left, rectangle.left), result.left), top: row, right: select_i32(active, max_i32(result.right, rectangle.right), result.right), bottom: bottom };
-        transition { _ -> scan(damage, row, index + 1, next) }
+        transition { _ -> scan(damage_state, row, index + 1, next) }
     }
 }
