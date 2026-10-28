@@ -1,0 +1,74 @@
+module operations;
+
+// Completed service work and requested effects. Packet words belong in bridge/.
+public data Input [copy] {
+    case Other;
+    case Pointer(channel: u64, buttons: u64, x: u64, y: u64);
+    case Key(code: u64, action: u64);
+    case Cancel(channel: u64, retire: bool);
+}
+
+public data View [copy] {
+    status: u64;
+    epoch: u64;
+    width: u64;
+    height: u64;
+    frames: bool;
+    more: bool;
+    input: Input;
+}
+
+public data Reply [copy] {
+    case Complete;
+    case View(view: View);
+    case Bound(status: u64, realm: u64);
+    case Listed(status: u64, count: u64, object: u64);
+    case Created(status: u64);
+    case Read(status: u64, revision: u64, length: u64, bytes: [u8; 6]);
+    case Saved(status: u64, object: u64, revision: u64);
+    case Surface(status: u64, handle: u64);
+    case Presented(status: u64);
+    case Wake;
+    case Control(loss: bool, cpu: u64);
+}
+
+public data Completion {
+    transport_status: u64;
+    reply: Reply;
+}
+
+public data Report [copy] {
+    case Loss(error: u64);
+    case Health(paints: u64, wakes: u64, cpu: u64, alternate: u64, error: u64, pointers: u64, revision: u64);
+}
+
+public data Rectangle [copy] {
+    surface: u64;
+    x: u64;
+    y: u64;
+    width: u64;
+    height: u64;
+    color: u64;
+}
+
+public data Asset [copy] {
+    case Checker;
+    case Close(width: u64);
+}
+
+public data Command [copy] {
+    case Exit;
+    case AcquireInteraction;
+    case AcquireStorage;
+    case BindStorage;
+    case List(realm: u64);
+    case Read(object: u64);
+    case Publish(object: u64, revision: u64, realm: u64, bytes: [u8; 6]);
+    case Poll;
+    case View;
+    case CreateSurface(epoch: u64, rank: u64);
+    case Image(epoch: u64, surface: u64, x: u64, y: u64, asset: Asset);
+    case Rectangles(epoch: u64, revision: u64, background: Rectangle, indicator: Rectangle);
+    case Wait;
+    case Control(report: Report);
+}

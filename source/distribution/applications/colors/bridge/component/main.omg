@@ -1,0 +1,33 @@
+module main;
+
+// Temporary ABI only: decode completed work, advance Colors, encode its command.
+use app::main::advance;
+use app::state::State;
+use app::operations::Completion;
+use app::operations::Command;
+use replies;
+use commands;
+
+public boundary trait Colors {
+    machine step(s: &mut State, p: &mut [u64; 4096]) -> u64 reaches;
+}
+public ColorsProvider satisfies Colors {
+    machine step(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition p[15] {
+            1u64 -> (size_of<State>())
+            2u64 -> (align_of<State>())
+            3u64 -> (1u64)
+            _ -> resume(s, p)
+        }
+    }
+}
+machine resume(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    let completion: Completion = replies::decode(s.phase, p);
+    let command: Command = advance(s, &completion);
+    commands::encode(command, p)
+}
+public machine component_entry() reaches Colors invokes Colors; {
+    let mut s: State;
+    let mut p: [u64; 4096];
+    let result: u64 = Colors::step(&mut s, &mut p);
+}

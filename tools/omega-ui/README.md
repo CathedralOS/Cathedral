@@ -15,14 +15,16 @@ script prepares the same native exports automatically; the boot harness contains
 no special preparation rule for the demo. The build always uses Cathedral's
 checked-in distribution source; no sibling checkout, submodule or download is needed.
 Set `OMEGA_BIN` to an optimized Omega compiler supporting pure native component
-exports. The verified Windows producer is `e8bebc16d5883`, published on
-[the component-publication branch](https://github.com/CathedralOS/Omega/tree/work/cathedral-component-publication)
-and merged to main as `e30c4a48ed7f` through
-[Omega #292](https://github.com/CathedralOS/Omega/pull/292).
-It includes pure-component support and correct publication of referenced provider
-plans, needed by the matrix's imported scanner state. No uncommitted compiler patch
-is required. Runtime evidence below refers to this exact producer, not an arbitrary
-later main revision.
+exports. The current verified Windows producer is
+`20dcd0409b66de0f6d25d1a345e8da57d71bbb0a`, release opt-level 3, available in
+main through [Omega #339](https://github.com/CathedralOS/Omega/pull/339).
+It supports the typed Colors app calls and includes pure-component support and
+the referenced-provider publication repair from
+[Omega #292](https://github.com/CathedralOS/Omega/pull/292). No uncommitted compiler
+patch is required. Current desktop, UI and cold-boot evidence is recorded in
+[the handoff](../../TASKS_RUST.md#colors-separates-app-behavior-from-native-packets).
+Older evidence below retains its original producer; it is not a claim about an
+arbitrary later main revision.
 Python 3 is required by the existing Cathedral build tools. No font runtime or new
 external Cargo dependency is needed. `OMEGA_UI_COMPONENT_DIR` explicitly selects
 already-prepared artifacts instead.
@@ -32,9 +34,9 @@ For a checkout-local compiler, run these commands from the Cathedral root. Cargo
 uses the Rust toolchain pinned in the compiler repository:
 
 ```text
-git clone --branch work/cathedral-component-publication https://github.com/CathedralOS/Omega.git build/omega-ui/compiler
+git clone https://github.com/CathedralOS/Omega.git build/omega-ui/compiler
 cd build/omega-ui/compiler
-git checkout e8bebc16d5883145e2ab99afa580832a54f3d040
+git checkout 20dcd0409b66de0f6d25d1a345e8da57d71bbb0a
 cargo build --locked --release -p omega
 ```
 

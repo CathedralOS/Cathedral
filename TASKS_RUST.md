@@ -37,10 +37,11 @@ host's sealed mapping and owns ELF record discovery. Its Rust adapter descends
 through `policy/imports/imports.rs`; the original Rust parser remains an oracle
 and serves consumers not yet migrated. Local evidence includes 97 matrix tests,
 full host tests, both matrix Clippy configurations, and ordinary F5/cold reboot.
-The compiler publication repair is qualified on the recorded producer
-`e8bebc16d5883`, merged through Omega PR #292 as `e30c4a48ed7f`, together with
-the pure-component support previously
-confined to the UI branch. The supported checkout recipe is in
+The current desktop compiler is the qualified release producer `20dcd0409b66`,
+available on Omega main through PR #339. It retains the publication repair from
+PR #292 and supports Colors' typed app calls. Current evidence is under
+[Colors cleanup](#colors-separates-app-behavior-from-native-packets); earlier
+sections retain their historical producer. The supported checkout recipe is in
 [the compiler build guide](tools/omega-ui/README.md#build); no local source patch
 is needed. The default local compiler path resolves to that tested checkout.
 Preserve duplicate/unknown record refusal, load-range overflow and truncation checks;
@@ -80,8 +81,8 @@ of the default `cargo test --locked` suite. The default suite, Background/host
 Clippy (including the guest target and startup-fault feature), format and source
 layout pass. The ordinary F5 desktop and cold reboot pass at
 `build/boot-harness-rs/desktop/20261027T052235517408Z`; independent storage reopen
-verifies the copied user, notes, color and ungranted root. The compiler remains
-the qualified `e8bebc16d5883` producer. Background's component receipt is under
+verifies the copied user, notes, color and ungranted root. This Background pass used
+the then-qualified `e8bebc16d5883` producer. Background's component receipt is under
 `build/omega-component/distribution/applications/background/bridge/native/`.
 Four nested desktops also pass at
 `build/boot-harness-rs/desktop/20261027T052513030543Z`, including protected close,
@@ -90,6 +91,69 @@ The picker, selected-user and background startup-failure fixtures pass at
 `build/boot-harness-rs/nested-failures/20261027T052816308102Z`: bounded local
 retries and repeated reclamation preserve the outer draft. Logs for this pass
 are `build/omega-component/background-{host-suite,desktop,nested,startup-failures}.log`.
+
+### Colors separates app behavior from native packets
+
+Colors now follows Background's separation: [app/main.omg](source/distribution/applications/colors/app/main.omg)
+advances typed session, input, storage and rendering work; the temporary
+`colors/bridge/component/` owns native packet decoding and encoding. Storage owns
+the six-byte `MC01` record codec. Rendering owns image contents and geometry;
+the bridge only packs them for the existing host. No service grant, wire protocol,
+resource ceiling or syscall changed. The installed app remains hosted by Rust.
+
+All 14 compiled Colors tests pass, including the existing persistence, uncertain
+write reconciliation, independent pointer edges, exact image bytes and bounded
+input-drain checks. Added cases cover surface refusal with and without grant
+replacement, malformed stored records, and pointer-slot retirement. Colors is now
+included in the default host test suite. Full host tests, Colors host/guest Clippy
+with all features, Rust format, source layout (83 Omega / 154 Rust edges), and the
+five component-packaging tests pass with the release producer below.
+
+The qualified desktop compiler is `20dcd0409b66de0f6d25d1a345e8da57d71bbb0a`,
+release opt-level 3. The prior `e8bebc16d5883` producer cannot lower the typed
+storage-step call in this cleanup; this is already supported by the newer
+compiler, with no local compiler patch. F5's default now selects that release
+after desktop and UI qualification. Producer identity and binary
+hash: `build/omega-component/colors-typed-release-producer.json`.
+
+The ordinary desktop and cold reboot pass with that producer at
+`build/boot-harness-rs/desktop/20261028T005107350410Z`; the durable oracle checks
+1,819 records. Shared UI host tests also pass. Logs are
+`build/omega-component/colors-typed-release-{host-tests,clippy,desktop-retry,ui-tests}.log`.
+The first desktop build stopped on an orphaned UI compiler lock left by a
+terminated editor check. Its owner PID was verified absent before removing that
+one lock and retrying; no source or compiler workaround was required.
+
+Qualification caveat: the first UI guest run passed its interactive checks, then
+cold boot hit the previously recorded ATA WRITE completion timeout before login
+(`op=30`, LBA 24, status `d0`, 50 ticks). The storage provider stopped and sign-in
+recovery appeared. Evidence is preserved at
+`build/boot-harness-rs/omega-ui/20261028T005745141006Z` and
+`build/omega-component/colors-typed-release-ui-guest.log`. This is not a passing
+cold boot and the existing ATA issue remains unresolved. No deadline was raised.
+The unchanged UI fixture then passes both boots at
+`build/boot-harness-rs/omega-ui/20261028T010054239987Z`, including buttons, slider,
+text editing, conditional rendering, clear/reset and close/reopen. Retry log:
+`build/omega-component/colors-typed-release-ui-guest-retry.log`.
+
+The first default-compiler four-level run reached every desktop, then reproduced
+the previously recorded deep-input observation: Notes displayed `de` after the
+harness sent `deep`, before Colors launched. No guest panic was logged. Preserve
+`build/boot-harness-rs/desktop/20261028T010151806869Z` and
+`build/omega-component/colors-typed-default-nested.log`. This matches the still
+unresolved observation at `desktop/20261024T233351949583Z`; it is not evidence of
+stable deep input or grounds to dismiss the loss as host load. The fixture and
+its input pacing remain unchanged.
+
+The unchanged four-level fixture then passes fresh boot and cold reopen at
+`build/boot-harness-rs/desktop/20261028T010554059900Z`, using F5's default compiler
+path without `OMEGA_BIN`. It covers protected close, saved Notes and Colors,
+repeated subtree reclamation and isolation from the outer realm. Log:
+`build/omega-component/colors-typed-default-nested-retry.log`. This passing replay
+does not resolve the input-loss observation. UI packaging tests (11), source-layout
+laws (8) and changed navigation links also pass. Colors uses 39 of the existing
+240 image pages; the matrix uses 153. No native Omega kernel or ARM64
+qualification is claimed for this app cleanup and desktop compiler upgrade.
 
 ## Language alignment: defer the blocked nested-machine migration
 
@@ -117,8 +181,9 @@ An intermediate experiment with explicit contracts reached a further disagreemen
 between retained and freshly derived mutation summaries; that experiment was
 also discarded. No compiler checking or package-review gate was weakened.
 
-The chooser source has been restored exactly. F5's compiler remains the tested
-`e8bebc16d5883` producer. The owner reports parallel work on unification; Omega's
+The chooser source was restored exactly after that migration probe. F5 used
+`e8bebc16d5883` for that restoration; the current producer is recorded above.
+The owner reports parallel work on unification; Omega's
 claim registry also records `NESTED-MACHINE-UNIFICATION`. Our duplicate compiler
 claim was released without compiler edits. This pauses only this migration,
 not other Omega OS work; no new owner semantic decision is needed.
@@ -181,7 +246,7 @@ live under `chooser/bridge/`, with the Rust probe packet codec in `bridge/policy
 Start at [the chooser map](source/distribution/applications/chooser/README.md).
 
 Chooser cleanup verification: full `cargo test --locked`, including 20 compiled
-chooser tests and 97 matrix tests, passes on the pinned desktop producer above.
+chooser tests and 97 matrix tests, passed on producer `e8bebc16d5883`.
 Layout checks pass with 75 Omega / 151 Rust package edges; all eight layout laws,
 five component-packaging tests and Rust formatting pass. Chooser Clippy passes
 with and without `rust-probes`, with warnings denied. Normal F5 acceptance
@@ -205,9 +270,12 @@ prototypes also need qualification before new kernel features. Start the audit a
 The directory move requires reviewing the compiler's local source-location
 replacement; it grants no new service authority. Migration/compiler qualification
 above remains separate from the architecture correction. The local compiler
-checkout is retained at `C:/Projects/Omega/.agents/worktree/cathedral-component-publication`;
-`build/omega-ui/compiler` is a junction to it. The old UI checkout, including its
-local publication patch, is preserved at `cathedral-legacy-ui` beside it.
+checkout for the current producer is
+`C:/Projects/Omega/.agents/worktree/cathedral-boot-providers`;
+`build/omega-ui/compiler` is a junction to it. The previous qualified checkout is
+preserved at `cathedral-component-publication`, with its junction backed up as
+`build/omega-ui/compiler-e8bebc16`. The older UI checkout, including its local
+publication patch, is preserved at `cathedral-legacy-ui` beside those worktrees.
 
 Verification of the reorganized tree, 2026-10-26: all 97 compiled matrix tests and
 `cargo test --locked` across the host workspace pass. Rust formatting, source layout
@@ -216,7 +284,7 @@ flow passes with three Notes instances, protected close, Colors, saves and cold
 reboot; the durable oracle verifies 1,689 records. Artifacts are under
 `build/boot-harness-rs/desktop/20261026T231306307127Z`; logs are
 `build/omega-component/matrix-structure-{tests,host-tests,desktop}.log`.
-This run used the exact producer above, not an arbitrary current-main compiler.
+This run used producer `e8bebc16d5883`, not an arbitrary current-main compiler.
 The normal session profile also builds through the default compiler path without
 `OMEGA_BIN` (`matrix-default-build.log`).
 
@@ -488,8 +556,9 @@ flow; the ordinary Rust-kernel F5 desktop is a separate baseline.
 
 ## Native Omega boot qualification after the structure pass
 
-The desktop remains on its tested producer `e8bebc16d5883`. Do not switch F5's
-compiler merely to test the native-kernel experiment. The reorganized kernel
+The desktop used producer `e8bebc16d5883` during this native-kernel investigation;
+its current qualified compiler is recorded at the top of this handoff. Do not
+switch F5's compiler merely to test the native-kernel experiment. The reorganized kernel
 is not yet qualified as a complete native boot.
 
 A fresh isolated compiler at `b8c81bbb8c1f` reproduced the `accept_boundary`
@@ -524,8 +593,10 @@ has an older pending package review, which was preserved; the isolated archive
 avoids conflating that review with the source acquisition failure. Evidence:
 `build/omega-component/kernel-current-language-isolated.log` and
 `language-current-producer.json`; snapshot: `kernel-language-current/` beside them.
-The optimized binary in the retained `cathedral-boot-providers` worktree was
-built from `9b9bf65d51cbb`; later source work does not relabel that producer.
+The optimized `target/debug/omega.exe` in the retained `cathedral-boot-providers`
+worktree was built from `9b9bf65d51cbb`; later source work does not relabel that
+producer. Its separate `target/release/omega.exe` now contains the qualified
+`20dcd0409b66` desktop producer recorded above.
 Prior PR #322 evidence remains historical and unchanged.
 The allocator acquisition failure is separate from nested-machine unification.
 

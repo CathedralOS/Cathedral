@@ -194,3 +194,61 @@ fn continuous_input_yields_for_owner_questions_between_bounded_batches() {
         assert!(p.events.is_empty());
     });
 }
+
+#[test]
+fn rejected_surface_rechecks_the_grant_before_rebuilding_or_stopping() {
+    for changed in [false, true] {
+        with_app(|p| {
+            p.reject_surface = true;
+            p.rebind_on_rejection = changed;
+            p.pump();
+            assert_eq!(p.exited, !changed);
+            assert_eq!(p.commands.iter().filter(|q| q[0] == wire::VIEW).count(), 1);
+            if changed {
+                assert_eq!(p.epoch, 8);
+                assert_eq!(p.color(), BLUE);
+                assert_eq!(p.loss(), 0);
+            } else {
+                assert!(p.images.is_empty());
+                assert!(p.paints.is_empty());
+            }
+        });
+    }
+}
+
+#[test]
+fn record_codec_rejects_wrong_lengths_reserved_bytes_and_unknown_colors() {
+    for record in [
+        &b""[..],
+        &b"MC01\0"[..],
+        &b"MC01\0\0x"[..],
+        &b"MC01\x01\0"[..],
+        &b"MC01\0\x02"[..],
+    ] {
+        with_app(|p| {
+            p.record = Some(record.to_vec());
+            p.revision = 12;
+            p.pump();
+            assert_ne!(p.loss(), 0);
+            p.enter();
+            assert_eq!(p.record.as_deref(), Some(record));
+            assert_eq!(p.revision, 12);
+            assert!(!p.commands.iter().any(|q| q[0] == 3));
+        });
+    }
+}
+
+#[test]
+fn retired_channel_frees_one_pointer_slot_without_resetting_other_channels() {
+    with_app(|p| {
+        p.pump();
+        for channel in [19, 20, 21, 22] {
+            p.event(wire::POINTER, 10, 40, 0, channel);
+        }
+        p.click(23);
+        assert!(!p.exited, "a fifth channel cannot take a live pointer slot");
+        p.event(wire::RETIRED, 0, 0, 0, 19);
+        p.click(23);
+        assert!(p.exited, "retirement returns just that channel's slot");
+    });
+}

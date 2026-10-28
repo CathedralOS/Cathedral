@@ -5,7 +5,8 @@ nested desktops. Enter toggles a persisted color; X closes it. Failed writes
 keep confirmed pixels, turn the indicator red and require close confirmation.
 Enter then reconciles committed storage before allowing another mutation.
 
-Start at [app/main.omg](app/main.omg), the native entry. Descend into:
+Start at [app/main.omg](app/main.omg): resume completed service work, preserving
+storage uncertainty while stopping on transport loss elsewhere. Descend into:
 
 - [session/session.omg](app/session/session.omg): service acquisition and the
   receive/act/present loop; [input.omg](app/session/input.omg) tracks independent
@@ -15,10 +16,18 @@ Start at [app/main.omg](app/main.omg), the native entry. Descend into:
 - [rendering/rendering.omg](app/rendering/rendering.omg): local surface lifetime
   and publication; [pixels.omg](app/rendering/pixels.omg) supplies the checker
   image and close glyphs. The confirmation button accommodates the whole label.
-- [state.omg](app/state.omg): app-owned state and named host continuations.
+- [state.omg](app/state.omg): app-owned state and typed storage/rendering phases.
+  [operations.omg](app/operations.omg) names completed replies, scoped input,
+  requested work and app-owned geometry. No native packet offsets appear here.
 
-The [native consumer](native/main.omg) selects the app as an independent Omega
-component. The [Rust entry](../../../../source-rs/distribution/applications/colors/main.rs)
+The [component bridge](bridge/component/main.omg) decodes replies, invokes the
+typed app and encodes its next command. `replies.omg` owns transport interpretation;
+`commands.omg` owns the experimental platform wire formats; `images.omg` packs
+app-authored pixels into attachment bytes. The six-byte schema lives with storage
+in [record.omg](app/storage/record.omg), not in that native codec.
+
+The [native consumer](bridge/native/main.omg) selects this bridge as an independent
+Omega component. The [Rust entry](../../../../source-rs/distribution/applications/colors/main.rs)
 declares the existing service imports and invokes the reusable
 [platform host](../../../../source-rs/platform/libraries/omega-app/README.md).
 Omega owns application behavior; Rust still supplies executable startup,

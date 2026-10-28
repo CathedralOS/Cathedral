@@ -1,0 +1,79 @@
+module replies;
+
+use app::state::Phase;
+use app::state::StorageStep;
+use app::state::RenderStep;
+use app::operations::Completion;
+use app::operations::Reply;
+use app::operations::View;
+use app::operations::Input;
+use protocol::main;
+
+public machine decode(phase: Phase, p: &[u64; 4096]) -> Completion {
+    transition phase {
+        Phase::Start -> (Completion { transport_status: 0u64, reply: Reply::Complete })
+        Phase::Awakened -> awakened(p)
+        _ -> (Completion { transport_status: p[9], reply: response(phase, p) })
+    }
+}
+
+machine response(phase: Phase, p: &[u64; 4096]) -> Reply {
+    transition phase {
+        Phase::Polled -> (Reply::View { view: view(p) })
+        Phase::Storage { step } -> storage(step, p)
+        Phase::Rendering { step } -> rendering(step, p)
+        _ -> (Reply::Complete)
+    }
+}
+
+machine storage(step: StorageStep, p: &[u64; 4096]) -> Reply {
+    transition step {
+        StorageStep::Bound -> (Reply::Bound { status: p[0], realm: p[1] })
+        StorageStep::Listed -> listed(p)
+        StorageStep::Relisted -> listed(p)
+        StorageStep::Created -> (Reply::Created { status: p[0] })
+        StorageStep::Read -> (Reply::Read { status: p[0], revision: p[2], length: p[3], bytes: bytes(p[4]) })
+        StorageStep::Saved -> (Reply::Saved { status: p[0], object: p[1], revision: p[2] })
+    }
+    machine listed(p: &[u64; 4096]) -> Reply {
+        Reply::Listed { status: p[0], count: p[1], object: p[2] }
+    }
+}
+
+machine bytes(word: u64) -> [u8; 6] {
+    [(word & 255u64) as u8, ((word >> 8u64) & 255u64) as u8,
+        ((word >> 16u64) & 255u64) as u8, ((word >> 24u64) & 255u64) as u8,
+        ((word >> 32u64) & 255u64) as u8, ((word >> 40u64) & 255u64) as u8]
+}
+
+machine rendering(step: RenderStep, p: &[u64; 4096]) -> Reply {
+    transition step {
+        RenderStep::ViewRechecked -> (Reply::View { view: view(p) })
+        RenderStep::SurfaceCreated -> (Reply::Surface { status: p[0], handle: p[1] })
+        _ -> (Reply::Presented { status: p[0] })
+    }
+}
+
+machine view(p: &[u64; 4096]) -> View {
+    View { status: p[0], epoch: p[1], width: p[2], height: p[3],
+        frames: (p[4] & NO_FRAMES) == 0u64, more: (p[5] & MORE) != 0u64,
+        input: input(p) }
+}
+
+machine input(p: &[u64; 4096]) -> Input {
+    transition p[5] & 255u64 {
+        POINTER -> (Input::Pointer { channel: p[5] >> 32u64, buttons: (p[5] >> 8u64) & 7u64, x: p[6], y: p[7] })
+        KEY -> (Input::Key { code: p[6], action: p[7] })
+        CANCEL -> (Input::Cancel { channel: p[5] >> 32u64, retire: false })
+        RETIRED -> (Input::Cancel { channel: p[5] >> 32u64, retire: true })
+        _ -> (Input::Other)
+    }
+}
+
+machine awakened(p: &[u64; 4096]) -> Completion {
+    transition p[9] {
+        0u64 -> (Completion { transport_status: 0u64, reply: Reply::Wake })
+        1u64 -> (Completion { transport_status: 0u64, reply: Reply::Control { loss: p[0] == LOSS, cpu: p[10] } })
+        _ -> (Completion { transport_status: p[9], reply: Reply::Complete })
+    }
+}

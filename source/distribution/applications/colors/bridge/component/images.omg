@@ -1,0 +1,58 @@
+module images;
+
+// Only packing lives here. Pixel content and intrinsic sizes belong to the app.
+use app::operations::Asset;
+use app::rendering::pixels;
+use host::main;
+use protocol::main;
+
+public machine encode(p: &mut [u64; 4096], epoch: u64, surface: u64, x: u64, y: u64, asset: Asset) -> u64 {
+    transition asset {
+        Asset::Checker -> checker(p, epoch, surface, x, y)
+        Asset::Close { width } -> close(p, epoch, surface, x, y, width)
+    }
+}
+
+machine checker(p: &mut [u64; 4096], epoch: u64, surface: u64, x: u64, y: u64) -> u64 {
+    message(p, SURFACE_IMAGE, epoch, surface, x, y, pixels::CHECKER_WIDTH, pixels::CHECKER_HEIGHT, pixels::CHECKER_WIDTH);
+    transition { _ -> fill(p, 0u64) }
+    machine fill(p: &mut [u64; 4096], index: u64) -> u64 {
+        transition index < 512u64 {
+            true -> pixel(p, index)
+            _ -> ready(p)
+        }
+    }
+    machine pixel(p: &mut [u64; 4096], index: u64) -> u64 requires index < 512u64 {
+        let color: u64 = pixels::checker(index * 2u64);
+        p[16u64 + index] = color | (color << 32u64);
+        transition { _ -> fill(p, index + 1u64) }
+    }
+    machine ready(p: &mut [u64; 4096]) -> u64 {
+        p[8] = 4096u64;
+        EXCHANGE
+    }
+}
+
+machine close(p: &mut [u64; 4096], epoch: u64, surface: u64, x: u64, y: u64, width: u64) -> u64 {
+    message(p, SURFACE_IMAGE, epoch, surface, x, y, width, pixels::CLOSE_HEIGHT, width);
+    transition width == 20u64 || width == 156u64 {
+        true -> fill(p, width, 0u64)
+        _ -> (EXIT)
+    }
+    machine fill(p: &mut [u64; 4096], width: u64, index: u64) -> u64 {
+        transition index < (((width as u64 in Saturating) * 8) as u64) && index < 1248u64 {
+            true -> pixel(p, width, index)
+            _ -> ready(p, width)
+        }
+    }
+    machine pixel(p: &mut [u64; 4096], width: u64, index: u64) -> u64 requires index < 1248u64 {
+        let lo: u64 = pixels::close_pixel(width, index * 2u64);
+        let hi: u64 = pixels::close_pixel(width, index * 2u64 + 1u64);
+        p[16u64 + index] = lo | (hi << 32u64);
+        transition { _ -> fill(p, width, index + 1u64) }
+    }
+    machine ready(p: &mut [u64; 4096], width: u64) -> u64 {
+        p[8] = ((width as u64 in Saturating) * 64) as u64;
+        EXCHANGE
+    }
+}

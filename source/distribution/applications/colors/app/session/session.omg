@@ -1,93 +1,118 @@
-// Acquire -> load -> receive -> act -> present, one host operation at a time.
-use host::main;
-use protocol::main;
-use state;
+module session::session;
+
+// Acquire -> load -> receive -> act -> present, yielding one operation at a time.
+use state::State;
+use state::Phase;
+use operations::Command;
+use operations::Reply;
+use operations::View;
+use operations::Report;
 use storage::storage;
 use rendering::rendering;
 use session::input;
 
-public machine session(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+public machine resume(s: &mut State, reply: Reply) -> Command {
     transition s.phase {
-        START -> acquire_interaction(s, p)
-        INTERACTION_READY -> acquire_storage(s, p)
-        STORAGE_READY -> start(s, p)
-        POLLED -> observed(s, p)
-        AWAKENED -> awakened(s, p)
-        CONTROL_REPLIED -> wait(s, p)
-        _ -> subsystem(s, p)
-    }
-    state acquire_interaction(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        s.phase = INTERACTION_READY; message(p, 1u64, 1u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64); INTERACTION
-    }
-    state acquire_storage(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        transition p[9] == 0u64 {
-            true -> storage(s, p) _ -> (EXIT)
-        }
-    }
-    state storage(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        s.phase = STORAGE_READY; message(p, 1u64, 1u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64); STORAGE
-    }
-    state start(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        transition p[9] == 0u64 { true -> load(s, p) _ -> (EXIT) }
-    }
-    state subsystem(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        transition s.phase >= STORAGE_BOUND && s.phase <= SAVED {
-            true -> persistence(s, p) _ -> presentation(s, p)
-        }
+        Phase::Start -> acquire_interaction(s)
+        Phase::InteractionReady -> acquire_storage(s)
+        Phase::StorageReady -> storage::storage::load(s)
+        Phase::Polled -> polled(s, reply)
+        Phase::Awakened -> awakened(s, reply)
+        Phase::ControlReplied -> wait(s)
+        Phase::Storage { step } -> storage::storage::complete(s, step, reply)
+        Phase::Rendering { step } -> rendering::rendering::complete(s, step, reply)
     }
 }
-public machine poll(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-    s.phase = POLLED; message(p, MATRIX_POLL, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64); EXCHANGE
+
+machine acquire_interaction(s: &mut State) -> Command {
+    s.phase = Phase::InteractionReady;
+    Command::AcquireInteraction
 }
-machine observed(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-    transition p[9] != 0u64 { true -> (EXIT) _ -> view(s, p) }
-    state view(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        transition p[0] == 0u64 && p[1] != 0u64 && p[2] != 0u64 && p[3] != 0u64 && p[2] < 65536u64 && p[3] < 65536u64 {
-            true -> accept(s, p) _ -> hidden(s, p)
+
+machine acquire_storage(s: &mut State) -> Command {
+    s.phase = Phase::StorageReady;
+    Command::AcquireStorage
+}
+
+public machine poll(s: &mut State) -> Command {
+    s.phase = Phase::Polled;
+    Command::Poll
+}
+
+machine polled(s: &mut State, reply: Reply) -> Command {
+    transition reply {
+        Reply::View { view } -> observed(s, view)
+        _ -> (Command::Exit)
+    }
+}
+
+machine observed(s: &mut State, view: View) -> Command {
+    transition view.status == 0u64 && view.epoch != 0u64
+        && view.width != 0u64 && view.height != 0u64
+        && view.width < 65536u64 && view.height < 65536u64 {
+        true -> accept(s, view)
+        _ -> hidden(s)
+    }
+    machine hidden(s: &mut State) -> Command {
+        s.scene = false;
+        s.dirty = true;
+        wait(s)
+    }
+    machine accept(s: &mut State, view: View) -> Command {
+        transition s.epoch != view.epoch {
+            true -> rebound(s, view)
+            _ -> geometry(s, view)
         }
     }
-    state hidden(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        s.scene = false; s.dirty = true; wait(s, p)
+    machine rebound(s: &mut State, view: View) -> Command {
+        session::input::reset_channels(s);
+        s.scene = false;
+        s.dirty = true;
+        s.epoch = view.epoch;
+        geometry(s, view)
     }
-    state accept(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        transition s.epoch != p[1] { true -> rebound(s, p) _ -> geometry(s, p) }
-    }
-    state rebound(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        reset_channels(s); s.scene = false; s.dirty = true; s.epoch = p[1];
-        transition { _ -> geometry(s, p) }
-    }
-    state geometry(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        s.dirty = s.dirty || s.width != p[2] || s.height != p[3];
-        s.width = p[2]; s.height = p[3];
-        s.frames = (p[4] & NO_FRAMES) == 0u64;
-        s.more = (p[5] & MORE) != 0u64;
-        s.snapshot[0] = p[0]; s.snapshot[1] = p[1]; s.snapshot[2] = p[2]; s.snapshot[3] = p[3];
-        s.snapshot[4] = p[4]; s.snapshot[5] = p[5]; s.snapshot[6] = p[6]; s.snapshot[7] = p[7];
+    machine geometry(s: &mut State, view: View) -> Command {
+        s.dirty = s.dirty || s.width != view.width || s.height != view.height;
+        s.width = view.width;
+        s.height = view.height;
+        s.frames = view.frames;
+        s.more = view.more;
         s.drained = ((s.drained as u64 in Saturating) + 1) as u64;
-        input(s, p)
+        session::input::accept(s, view.input)
     }
 }
-public machine after_input(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-    transition s.more && s.drained < 8u64 { true -> poll(s, p) _ -> render(s, p) }
+
+public machine after_input(s: &mut State) -> Command {
+    transition s.more && s.drained < 8u64 {
+        true -> poll(s)
+        _ -> rendering::rendering::render(s)
+    }
 }
-public machine wait(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.drained = 0u64; s.phase = AWAKENED; WAIT }
-machine awakened(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-    transition p[9] {
-        0u64 -> wake(s, p)
-        1u64 -> control(s, p)
-        _ -> (EXIT)
+
+public machine wait(s: &mut State) -> Command {
+    s.drained = 0u64;
+    s.phase = Phase::Awakened;
+    Command::Wait
+}
+
+machine awakened(s: &mut State, reply: Reply) -> Command {
+    transition reply {
+        Reply::Wake -> wake(s)
+        Reply::Control { loss, cpu } -> control(s, loss, cpu)
+        _ -> (Command::Exit)
     }
-    state wake(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.wakes = ((s.wakes as u64 in Saturating) + 1) as u64; poll(s, p) }
-    state control(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        transition p[0] == LOSS { true -> loss(s, p) _ -> report(s, p) }
+    machine wake(s: &mut State) -> Command {
+        s.wakes = ((s.wakes as u64 in Saturating) + 1) as u64;
+        poll(s)
     }
-    state loss(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        message(p, 0u64, s.error, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64);
-        s.phase = CONTROL_REPLIED; CONTROL
-    }
-    state report(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        let cpu: u64 = p[10];
-        message(p, 0u64, s.paints, s.wakes, cpu, s.alternate, s.error, s.pointers, s.revision);
-        s.phase = CONTROL_REPLIED; CONTROL
+    machine control(s: &mut State, loss: bool, cpu: u64) -> Command {
+        s.phase = Phase::ControlReplied;
+        transition loss {
+            true -> (Command::Control { report: Report::Loss { error: s.error } })
+            _ -> (Command::Control { report: Report::Health {
+                paints: s.paints, wakes: s.wakes, cpu: cpu, alternate: s.alternate,
+                error: s.error, pointers: s.pointers, revision: s.revision
+            } })
+        }
     }
 }

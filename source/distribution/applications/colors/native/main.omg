@@ -1,5 +1,0 @@
-use app::main;
-use app::state;
-machine main() reaches Colors {
-    let mut s: State; let mut p: [u64; 4096]; let result: u64 = Colors::step(&mut s, &mut p);
-}

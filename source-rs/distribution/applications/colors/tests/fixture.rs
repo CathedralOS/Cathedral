@@ -33,6 +33,8 @@ pub(super) fn with_app(run: impl FnOnce(&mut Peer<'_>)) {
         save_error: false,
         commit_before_error: false,
         create_error: false,
+        reject_surface: false,
+        rebind_on_rejection: false,
         exited: false,
         acquired: vec![],
     };
@@ -53,6 +55,8 @@ pub(super) struct Peer<'a> {
     pub save_error: bool,
     pub commit_before_error: bool,
     pub create_error: bool,
+    pub reject_surface: bool,
+    pub rebind_on_rejection: bool,
     pub exited: bool,
     pub acquired: Vec<u64>,
 }
@@ -154,8 +158,21 @@ impl Peer<'_> {
                         }
                         wire::SURFACE_CREATE => {
                             assert_eq!(q[1], self.epoch);
-                            p[1] = self.next_surface;
-                            self.next_surface += 1;
+                            if self.reject_surface {
+                                self.reject_surface = false;
+                                p[0] = (-13i64) as u64;
+                                if self.rebind_on_rejection {
+                                    self.epoch += 1;
+                                }
+                            } else {
+                                p[1] = self.next_surface;
+                                self.next_surface += 1;
+                            }
+                        }
+                        wire::VIEW => {
+                            p[1] = self.epoch;
+                            p[2] = 320;
+                            p[3] = 200;
                         }
                         wire::PRESENT_RECTS => {
                             let (rects, count) =

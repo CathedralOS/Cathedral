@@ -10,7 +10,7 @@ Use the supported optimized compiler described in the
 `OMEGA_BIN`, then the prepared `build/omega-ui/compiler` executable, then PATH.
 
 ```powershell
-python tools/omega-component/build.py source/distribution/applications/colors/native
+python tools/omega-component/build.py source/distribution/applications/colors/bridge/native
 cd source-rs
 cargo test --locked -p cathedral-colors --lib
 cd ..

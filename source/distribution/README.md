@@ -9,8 +9,8 @@ that still execute in Rust and the temporary native bridge.
 [Background](applications/background/README.md). Each app's
 `app/main.omg` exposes its compiled entry and descends into its session and UI
 behavior. Native bridge and app packages remain separate because the Rust host
-loads an independently compiled component. Background keeps packet translation
-under `bridge/` and its typed app sequence under `app/`.
+loads an independently compiled component. Background and Colors keep packet
+translation under `bridge/` and their typed app sequences under `app/`.
 
 [Libraries](libraries/) contains distribution-owned UI code, including the vendored
 Omega UI library. [Lab](lab/) holds independent composition experiments. Common

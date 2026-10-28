@@ -1,0 +1,95 @@
+module commands;
+
+use app::operations::Command;
+use app::operations::Report;
+use app::operations::Rectangle;
+use host::main;
+use protocol::main;
+use images;
+
+public machine encode(command: Command, p: &mut [u64; 4096]) -> u64 {
+    message(p, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64);
+    transition command {
+        Command::Exit -> (EXIT)
+        Command::AcquireInteraction -> acquire(p, INTERACTION)
+        Command::AcquireStorage -> acquire(p, STORAGE)
+        Command::BindStorage -> (BIND)
+        Command::List { realm } -> listing(p, realm)
+        Command::Read { object } -> reading(p, object)
+        Command::Publish { object, revision, realm, bytes } -> publish(p, object, revision, realm, bytes)
+        Command::Poll -> poll(p)
+        Command::View -> view(p)
+        Command::CreateSurface { epoch, rank } -> create(p, epoch, rank)
+        Command::Image { epoch, surface, x, y, asset } -> images::encode(p, epoch, surface, x, y, asset)
+        Command::Rectangles { epoch, revision, background, indicator } -> rectangles(p, epoch, revision, background, indicator)
+        Command::Wait -> (WAIT)
+        Command::Control { report } -> control(p, report)
+    }
+}
+
+machine acquire(p: &mut [u64; 4096], operation: u64) -> u64 {
+    p[0] = 1u64;
+    p[1] = 1u64;
+    operation
+}
+
+machine listing(p: &mut [u64; 4096], realm: u64) -> u64 {
+    p[0] = STORE_LIST;
+    p[1] = realm;
+    STORE
+}
+
+machine reading(p: &mut [u64; 4096], object: u64) -> u64 {
+    message(p, STORE_READ, object, 0u64, 0u64, 6u64, 0u64, 0u64, 0u64);
+    STORE
+}
+
+machine publish(p: &mut [u64; 4096], object: u64, revision: u64, realm: u64, bytes: [u8; 6]) -> u64 {
+    message(p, STORE_PUBLISH, object, revision, realm, 6u64, 0u64, 0u64, 0u64);
+    p[16] = (bytes[0] as u64) | ((bytes[1] as u64) << 8u64)
+        | ((bytes[2] as u64) << 16u64) | ((bytes[3] as u64) << 24u64)
+        | ((bytes[4] as u64) << 32u64) | ((bytes[5] as u64) << 40u64);
+    p[8] = 6u64;
+    STORE
+}
+
+machine poll(p: &mut [u64; 4096]) -> u64 {
+    p[0] = MATRIX_POLL;
+    EXCHANGE
+}
+
+machine view(p: &mut [u64; 4096]) -> u64 {
+    p[0] = MATRIX_VIEW;
+    EXCHANGE
+}
+
+machine create(p: &mut [u64; 4096], epoch: u64, rank: u64) -> u64 {
+    message(p, SURFACE_CREATE, epoch, rank, 0u64, 0u64, 0u64, 0u64, 0u64);
+    EXCHANGE
+}
+
+// The platform packs two rectangles into one message; the app owns geometry.
+machine rectangles(p: &mut [u64; 4096], epoch: u64, revision: u64, a: Rectangle, b: Rectangle) -> u64 {
+    message(p, PRESENT_RECTS, epoch, revision, a.surface,
+        (a.x & 65535u64) | ((a.y & 65535u64) << 16u64)
+            | ((a.width & 65535u64) << 32u64) | ((a.height & 65535u64) << 48u64),
+        a.color | ((b.surface & 4294967295u64) << 32u64),
+        (b.surface >> 32u64) | ((b.x & 65535u64) << 32u64) | ((b.y & 65535u64) << 48u64),
+        (b.width & 65535u64) | ((b.height & 65535u64) << 16u64) | ((b.color & 4294967295u64) << 32u64));
+    EXCHANGE
+}
+
+machine control(p: &mut [u64; 4096], report: Report) -> u64 {
+    transition report {
+        Report::Loss { error } -> loss(p, error)
+        Report::Health { paints, wakes, cpu, alternate, error, pointers, revision } -> health(p, paints, wakes, cpu, alternate, error, pointers, revision)
+    }
+    machine loss(p: &mut [u64; 4096], error: u64) -> u64 {
+        p[1] = error;
+        CONTROL
+    }
+    machine health(p: &mut [u64; 4096], paints: u64, wakes: u64, cpu: u64, alternate: u64, error: u64, pointers: u64, revision: u64) -> u64 {
+        message(p, 0u64, paints, wakes, cpu, alternate, error, pointers, revision);
+        CONTROL
+    }
+}
