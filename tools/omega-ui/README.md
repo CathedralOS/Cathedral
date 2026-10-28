@@ -28,6 +28,9 @@ arbitrary later main revision.
 Python 3 is required by the existing Cathedral build tools. No font runtime or new
 external Cargo dependency is needed. `OMEGA_UI_COMPONENT_DIR` explicitly selects
 already-prepared artifacts instead.
+Review and compilation use the same [bounded compiler process](../omega-component/process.py)
+as application components: 4 GiB and five minutes per invocation. A failed or
+exhausted compiler never publishes a new component receipt.
 
 The default Rust F5 profile includes the UI demo and needs this compiler too.
 For a checkout-local compiler, run these commands from the Cathedral root. Cargo

@@ -9,6 +9,7 @@ import subprocess
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'omega-component'))
 from elf import Elf, component
+import process
 
 ROOT = Path(__file__).resolve().parents[2]
 LIBRARY = ROOT / 'source/distribution/libraries/omega-ui'
@@ -33,6 +34,7 @@ def digest(path):
 def fingerprint(library, compiler):
     inputs = {'compiler': digest(compiler)}
     inputs['adapter/build.py'] = digest(Path(__file__))
+    inputs['adapter/process.py'] = digest(Path(process.__file__))
     inputs['adapter/../omega-component/elf.py'] = digest(Path(__file__).parent.parent / 'omega-component/elf.py')
     for folder in ('src', 'platform/native', 'tests/native_component'):
         for path in sorted((library / folder).rglob('*.omg')):
@@ -77,7 +79,7 @@ def prepare(compiler=None):
             ('compile', ['--target', 'linux_x86_64', '--build-dir', str(directory), str(project / 'main.omg')]),
         ):
             with (OUTPUT / f'{name}-{step}.log').open('w', encoding='utf-8') as log:
-                result = subprocess.run([str(compiler), *arguments], cwd=project, stdout=log, stderr=subprocess.STDOUT)
+                result = process.run([str(compiler), *arguments], cwd=project, stdout=log, stderr=subprocess.STDOUT)
             if result.returncode:
                 raise RuntimeError(f'{name} {step} failed; see {OUTPUT / (name + "-" + step + ".log")}')
         dependencies = Elf((directory / 'omega-program').read_bytes(), 2).needed()
