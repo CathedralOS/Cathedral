@@ -32,11 +32,11 @@ def boot(image, output, clock, timeout):
     output.mkdir(parents=True)
     # Own this test's composition; never inherit another profile's grants.
     environment = {key: value for key, value in os.environ.items() if not key.startswith('CATHEDRAL_')}
-    environment.update(CATHEDRAL_INIT_ELF=str(image), CATHEDRAL_CHANNEL_LIMITS='1',
+    environment.update(CATHEDRAL_INIT_ELF=str(image), CATHEDRAL_CHANNEL_LIMITS='2',
                        CATHEDRAL_CPU_LIMITS='0', CATHEDRAL_LAUNCH_COUNT='0',
                        CATHEDRAL_IMAGE_COUNT='0', CATHEDRAL_DYNAMIC_TASKS='0',
-                       CATHEDRAL_INIT_CLOCK=str(int(clock)), CATHEDRAL_INIT_PRIVATE_PAGES='0',
-                       CATHEDRAL_INIT_SHARED_PAGES='0')
+                       CATHEDRAL_INIT_CLOCK=str(int(clock)), CATHEDRAL_INIT_PRIVATE_PAGES='1',
+                       CATHEDRAL_INIT_SHARED_PAGES='1')
     cargo = ROOT / 'build/boot-harness-rs/cargo'
     with (output / 'kernel-build.log').open('w', encoding='utf-8') as log:
         subprocess.run(['cargo', 'build', '--locked', '--release', '--package', 'cathedral-boot-uefi',

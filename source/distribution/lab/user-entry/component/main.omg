@@ -7,6 +7,8 @@ use runtime::main::yield_now;
 use runtime::entry::Program;
 use channel;
 use timing;
+use shared;
+use notification;
 
 public ProgramProvider satisfies Program {
     machine run(gate: &Gate, first: u64, second: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
@@ -32,6 +34,20 @@ machine yielded(gate: &Gate) -> u64 reaches Kernel {
 }
 machine checked(gate: &Gate) -> u64 reaches Kernel {
     let status: u64 = block channel::check(gate);
+    transition status == 0u64 {
+        true -> block shared_backing(gate)
+        _ -> (status)
+    }
+}
+machine shared_backing(gate: &Gate) -> u64 reaches Kernel {
+    let status: u64 = block shared::check(gate);
+    transition status == 0u64 {
+        true -> block notifications(gate)
+        _ -> (status)
+    }
+}
+machine notifications(gate: &Gate) -> u64 reaches Kernel {
+    let status: u64 = block notification::check(gate);
     transition status == 0u64 {
         true -> block timed(gate)
         _ -> (status)

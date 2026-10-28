@@ -12,6 +12,20 @@ public data Gate {
     clock: addr;
     clock_read: addr;
     wait: addr;
+    memory_allocate: addr;
+    memory_share: addr;
+    memory_release: addr;
+    shared_read: addr;
+    shared_write: addr;
+    shared_send: addr;
+    shared_receive: addr;
+    notify_create: addr;
+    notify_drop: addr;
+    notify_signal: addr;
+    notify_wait: addr;
+    notify_control: addr;
+    notify_send: addr;
+    notify_receive: addr;
 }
 
 public boundary trait Kernel {
@@ -25,4 +39,18 @@ public boundary trait Kernel {
     machine clock(gate: &Gate) -> u64 reaches;
     machine clock_read(gate: &Gate, handle: u64, buffer: &mut [u64; 8]) -> u64 reaches;
     machine wait(gate: &Gate, records: &[u64; 8], count: u64 [0..=4], deadline: u64) -> u64 reaches blocks;
+    machine memory_allocate(gate: &Gate, pages: u64 [1..=256]) -> u64 reaches blocks;
+    machine memory_share(gate: &Gate, handle: u64) -> u64 reaches blocks;
+    machine memory_release(gate: &Gate, handle: u64) -> u64 reaches blocks;
+    machine shared_read(gate: &Gate, handle: u64, index: u64, words: &mut [u64; 8], count: u64 [1..=8]) -> u64 reaches blocks;
+    machine shared_write(gate: &Gate, handle: u64, index: u64, words: &[u64; 8], count: u64 [1..=8]) -> u64 reaches blocks;
+    machine shared_send(gate: &Gate, endpoint: u64, packet: &[u64; 10]) -> u64 reaches;
+    machine shared_receive(gate: &Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64 reaches blocks;
+    machine notify_create(gate: &Gate, record: &mut [u64; 8]) -> u64 reaches;
+    machine notify_drop(gate: &Gate, handle: u64) -> u64 reaches;
+    machine notify_signal(gate: &Gate, handle: u64) -> u64 reaches;
+    machine notify_wait(gate: &Gate, handle: u64, deadline: u64, timed: u64 [0..=1]) -> u64 reaches blocks;
+    machine notify_control(gate: &Gate, handle: u64, action: u64 [0..=2]) -> u64 reaches;
+    machine notify_send(gate: &Gate, endpoint: u64, packet: &[u64; 10]) -> u64 reaches;
+    machine notify_receive(gate: &Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64 reaches blocks;
 }

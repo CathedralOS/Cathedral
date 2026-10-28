@@ -6,7 +6,7 @@ use runtime::ipc::main::Channel;
 use runtime::ipc::main::Opened;
 use runtime::ipc::main::Received;
 
-// One channel of quota: a second successful exchange proves close refunded it.
+// Two transport objects of quota; repeated exchange proves close refunded it.
 public machine check(gate: &Gate) -> u64 reaches Kernel blocks; invokes Kernel; {
     let result: u64 = block once(gate);
     transition result == 0u64 {
@@ -26,8 +26,16 @@ machine once(gate: &Gate) -> u64 reaches Kernel {
 machine capacity(gate: &Gate, channel: Channel) -> u64 reaches Kernel {
     let extra: Opened = runtime::ipc::main::open(gate);
     transition extra {
+        Opened::Failed { code } -> cleanup(gate, channel, 109u64)
+        Opened::Ready { channel as other } -> block exhausted(gate, channel, other)
+    }
+}
+machine exhausted(gate: &Gate, channel: Channel, other: Channel) -> u64 reaches Kernel {
+    let extra: Opened = runtime::ipc::main::open(gate);
+    let ignored: u64 = runtime::ipc::main::close(gate, other);
+    transition extra {
         Opened::Failed { code } -> block exchange(gate, channel)
-        Opened::Ready { channel as other } -> unexpected_capacity(gate, channel, other)
+        Opened::Ready { channel as third } -> unexpected_capacity(gate, channel, third)
     }
 }
 machine unexpected_capacity(gate: &Gate, channel: Channel, other: Channel) -> u64 reaches Kernel {

@@ -1,0 +1,103 @@
+module notification;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::notification::main::Bell;
+use runtime::notification::main::Signal;
+use runtime::notification::main::Creation;
+use runtime::notification::main::Acceptance;
+use runtime::notification::main::Outcome;
+use runtime::ipc::main::Channel;
+use runtime::ipc::main::Opened;
+
+public machine check(gate: &Gate) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let first: u64 = block once(gate);
+    transition first == 0u64 {
+        true -> block once(gate)
+        _ -> (first)
+    }
+}
+machine once(gate: &Gate) -> u64 reaches Kernel {
+    let opened: Opened = runtime::ipc::main::open(gate);
+    transition opened {
+        Opened::Ready { channel } -> block created(gate, channel)
+        _ -> (140u64)
+    }
+}
+machine created(gate: &Gate, channel: Channel) -> u64 reaches Kernel {
+    let creation: Creation = runtime::notification::main::create(gate);
+    transition creation {
+        Creation::Ready { bell } -> block transferred(gate, channel, bell)
+        _ -> finish(gate, channel, 141u64)
+    }
+}
+machine transferred(gate: &Gate, channel: Channel, bell: Bell) -> u64 reaches Kernel {
+    let sent: u64 = runtime::notification::main::delegate(gate, bell.signal, channel.sender, 0x123456789abcdef0u64);
+    transition sent == 8u64 {
+        true -> block accepted(gate, channel, bell)
+        _ -> close(gate, channel, bell, 142u64)
+    }
+}
+machine accepted(gate: &Gate, channel: Channel, bell: Bell) -> u64 reaches Kernel {
+    let acceptance: Acceptance = block runtime::notification::main::accept(gate, channel.receiver);
+    transition acceptance {
+        Acceptance::Ready { signal, correlation } -> block checked(gate, channel, bell, signal, correlation)
+        _ -> close(gate, channel, bell, 143u64)
+    }
+}
+machine checked(gate: &Gate, channel: Channel, bell: Bell, signal: Signal, correlation: u64) -> u64 reaches Kernel {
+    let denied: u64 = Kernel::notify_signal(gate, bell.wait);
+    let sent: u64 = runtime::notification::main::signal(gate, &signal);
+    transition denied == 0xfffffffffffffff3u64 && sent == 0u64 && signal.handle != bell.signal
+        && correlation == 0x123456789abcdef0u64 {
+        true -> block received(gate, channel, bell, signal)
+        _ -> release(gate, channel, bell, signal, 144u64)
+    }
+}
+machine received(gate: &Gate, channel: Channel, bell: Bell, signal: Signal) -> u64 reaches Kernel {
+    let outcome: Outcome = block runtime::notification::main::wait(gate, &bell, 0u64, 0u64);
+    transition outcome {
+        Outcome::Signaled -> block revoked(gate, channel, bell, signal)
+        _ -> release(gate, channel, bell, signal, 145u64)
+    }
+}
+machine revoked(gate: &Gate, channel: Channel, bell: Bell, signal: Signal) -> u64 reaches Kernel {
+    let revoked: u64 = Kernel::notify_control(gate, bell.control, 1u64);
+    let outcome: Outcome = block runtime::notification::main::wait(gate, &bell, 0u64, 0u64);
+    transition outcome {
+        // A wait already parked gets Outcome::Revoked. A NEW wait on withdrawn
+        // authority is refused before registration, with the kernel error.
+        Outcome::Failed { code } -> refusal(gate, channel, bell, signal, revoked, code)
+        _ -> release(gate, channel, bell, signal, 146u64)
+    }
+}
+machine refusal(gate: &Gate, channel: Channel, bell: Bell, signal: Signal, revoked: u64, code: u64) -> u64 reaches Kernel {
+    transition revoked == 0u64 && code == 0xffffffffffffff83u64 {
+        true -> release(gate, channel, bell, signal, 0u64)
+        _ -> release(gate, channel, bell, signal, 146u64)
+    }
+}
+machine release(gate: &Gate, channel: Channel, bell: Bell, signal: Signal, result: u64) -> u64 reaches Kernel {
+    let mut owned: Signal = signal;
+    let old: u64 = owned.handle;
+    let released: u64 = runtime::notification::main::release(gate, &mut owned);
+    let stale: u64 = Kernel::notify_signal(gate, old);
+    transition released == 0u64 && owned.handle == 0u64 && stale == 0xfffffffffffffff7u64 {
+        true -> close(gate, channel, bell, result)
+        _ -> close(gate, channel, bell, 147u64)
+    }
+}
+machine close(gate: &Gate, channel: Channel, bell: Bell, result: u64) -> u64 reaches Kernel {
+    let mut owned: Bell = bell;
+    let closed: u64 = runtime::notification::main::close(gate, &mut owned);
+    transition closed == 0u64 {
+        true -> finish(gate, channel, result)
+        _ -> finish(gate, channel, 148u64)
+    }
+}
+machine finish(gate: &Gate, channel: Channel, result: u64) -> u64 reaches Kernel {
+    let closed: u64 = runtime::ipc::main::close(gate, channel);
+    transition closed == 0u64 {
+        true -> (result)
+        _ -> (149u64)
+    }
+}

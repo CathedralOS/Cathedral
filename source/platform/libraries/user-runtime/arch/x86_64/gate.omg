@@ -27,6 +27,35 @@ linux_x86_64 machine Gate::clock_read_leaf(gate: &Gate, handle: u64, buffer: &mu
 linux_x86_64 machine Gate::wait_leaf(gate: &Gate, records: &[u64; 8], count: u64 [0..=4], deadline: u64) -> u64
     satisfies Kernel::wait via ForeignBinding::TableFunction(wait) blocks;
 
+linux_x86_64 machine Gate::memory_allocate_leaf(gate: &Gate, pages: u64 [1..=256]) -> u64
+    satisfies Kernel::memory_allocate via ForeignBinding::TableFunction(memory_allocate) blocks;
+linux_x86_64 machine Gate::memory_share_leaf(gate: &Gate, handle: u64) -> u64
+    satisfies Kernel::memory_share via ForeignBinding::TableFunction(memory_share) blocks;
+linux_x86_64 machine Gate::memory_release_leaf(gate: &Gate, handle: u64) -> u64
+    satisfies Kernel::memory_release via ForeignBinding::TableFunction(memory_release) blocks;
+linux_x86_64 machine Gate::shared_read_leaf(gate: &Gate, handle: u64, index: u64, words: &mut [u64; 8], count: u64 [1..=8]) -> u64
+    satisfies Kernel::shared_read via ForeignBinding::TableFunction(shared_read) blocks;
+linux_x86_64 machine Gate::shared_write_leaf(gate: &Gate, handle: u64, index: u64, words: &[u64; 8], count: u64 [1..=8]) -> u64
+    satisfies Kernel::shared_write via ForeignBinding::TableFunction(shared_write) blocks;
+linux_x86_64 machine Gate::shared_send_leaf(gate: &Gate, endpoint: u64, packet: &[u64; 10]) -> u64
+    satisfies Kernel::shared_send via ForeignBinding::TableFunction(shared_send);
+linux_x86_64 machine Gate::shared_receive_leaf(gate: &Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64
+    satisfies Kernel::shared_receive via ForeignBinding::TableFunction(shared_receive) blocks;
+linux_x86_64 machine Gate::notify_create_leaf(gate: &Gate, record: &mut [u64; 8]) -> u64
+    satisfies Kernel::notify_create via ForeignBinding::TableFunction(notify_create);
+linux_x86_64 machine Gate::notify_drop_leaf(gate: &Gate, handle: u64) -> u64
+    satisfies Kernel::notify_drop via ForeignBinding::TableFunction(notify_drop);
+linux_x86_64 machine Gate::notify_signal_leaf(gate: &Gate, handle: u64) -> u64
+    satisfies Kernel::notify_signal via ForeignBinding::TableFunction(notify_signal);
+linux_x86_64 machine Gate::notify_wait_leaf(gate: &Gate, handle: u64, deadline: u64, timed: u64 [0..=1]) -> u64
+    satisfies Kernel::notify_wait via ForeignBinding::TableFunction(notify_wait) blocks;
+linux_x86_64 machine Gate::notify_control_leaf(gate: &Gate, handle: u64, action: u64 [0..=2]) -> u64
+    satisfies Kernel::notify_control via ForeignBinding::TableFunction(notify_control);
+linux_x86_64 machine Gate::notify_send_leaf(gate: &Gate, endpoint: u64, packet: &[u64; 10]) -> u64
+    satisfies Kernel::notify_send via ForeignBinding::TableFunction(notify_send);
+linux_x86_64 machine Gate::notify_receive_leaf(gate: &Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64
+    satisfies Kernel::notify_receive via ForeignBinding::TableFunction(notify_receive) blocks;
+
 public NativeKernel satisfies Kernel {
     Kernel::yield_now = Gate::yield_leaf;
     Kernel::environment = Gate::environment_leaf;
@@ -38,4 +67,19 @@ public NativeKernel satisfies Kernel {
     Kernel::clock = Gate::clock_leaf;
     Kernel::clock_read = Gate::clock_read_leaf;
     Kernel::wait = Gate::wait_leaf;
+
+    Kernel::memory_allocate = Gate::memory_allocate_leaf;
+    Kernel::memory_share = Gate::memory_share_leaf;
+    Kernel::memory_release = Gate::memory_release_leaf;
+    Kernel::shared_read = Gate::shared_read_leaf;
+    Kernel::shared_write = Gate::shared_write_leaf;
+    Kernel::shared_send = Gate::shared_send_leaf;
+    Kernel::shared_receive = Gate::shared_receive_leaf;
+    Kernel::notify_create = Gate::notify_create_leaf;
+    Kernel::notify_drop = Gate::notify_drop_leaf;
+    Kernel::notify_signal = Gate::notify_signal_leaf;
+    Kernel::notify_wait = Gate::notify_wait_leaf;
+    Kernel::notify_control = Gate::notify_control_leaf;
+    Kernel::notify_send = Gate::notify_send_leaf;
+    Kernel::notify_receive = Gate::notify_receive_leaf;
 }

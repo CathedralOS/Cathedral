@@ -1,0 +1,94 @@
+module memory::main;
+// Owned shared backing -> typed delegation -> independent reader custody.
+// Shared bytes are copied through the native boundary; no Omega reference ever
+// aliases a peer's mutable mapping. Release clears local custody before the call.
+use kernel::Gate;
+use kernel::Kernel;
+
+public data Writer { handle: u64; }
+public data Reader { handle: u64; }
+public data Allocation {
+    case Ready(writer: Writer);
+    case Failed(code: u64);
+}
+public data Acceptance {
+    case Ready(reader: Reader);
+    case Failed(code: u64);
+}
+
+public machine allocate(gate: &Gate, pages: u64 [1..=256]) -> Allocation
+    reaches Kernel blocks; invokes Kernel; {
+    let handle: u64 = block Kernel::memory_allocate(gate, pages);
+    transition handle > 0u64 && handle < 0x8000000000000000u64 {
+        true -> block share(gate, handle)
+        _ -> (Allocation::Failed { code: handle })
+    }
+}
+machine share(gate: &Gate, handle: u64) -> Allocation reaches Kernel {
+    let status: u64 = block Kernel::memory_share(gate, handle);
+    transition status == 0u64 {
+        true -> (Allocation::Ready { writer: Writer { handle: handle } })
+        _ -> block failed_share(gate, handle, status)
+    }
+}
+machine failed_share(gate: &Gate, handle: u64, status: u64) -> Allocation reaches Kernel {
+    let ignored: u64 = block Kernel::memory_release(gate, handle);
+    Allocation::Failed { code: status }
+}
+
+public machine write(gate: &Gate, writer: &Writer, index: u64,
+    words: &[u64; 8], count: u64 [1..=8]) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    block Kernel::shared_write(gate, writer.handle, index, words, count)
+}
+public machine read(gate: &Gate, reader: &Reader, index: u64,
+    words: &mut [u64; 8], count: u64 [1..=8]) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    block Kernel::shared_read(gate, reader.handle, index, words, count)
+}
+public machine release_writer(gate: &Gate, writer: &mut Writer) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    let handle: u64 = writer.handle;
+    writer.handle = 0u64;
+    block Kernel::memory_release(gate, handle)
+}
+public machine release_reader(gate: &Gate, reader: &mut Reader) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    let handle: u64 = reader.handle;
+    reader.handle = 0u64;
+    block Kernel::memory_release(gate, handle)
+}
+
+// Setup packets have no payload. Both producer and readers can forward a view;
+// the receiver gains a fresh local read right, never writable authority.
+public machine delegate(gate: &Gate, handle: u64, endpoint: u64) -> u64
+    reaches Kernel invokes Kernel; {
+    let mut packet: [u64; 10];
+    packet[1] = handle;
+    Kernel::shared_send(gate, endpoint, &packet)
+}
+public machine accept(gate: &Gate, endpoint: u64) -> Acceptance
+    reaches Kernel blocks; invokes Kernel; {
+    let mut packet: [u64; 10];
+    let status: u64 = block Kernel::shared_receive(gate, endpoint, &mut packet);
+    transition status < 0x8000000000000000u64 {
+        true -> block accepted(gate, status, packet)
+        _ -> (Acceptance::Failed { code: status })
+    }
+}
+machine accepted(gate: &Gate, status: u64, packet: [u64; 10]) -> Acceptance reaches Kernel {
+    transition status == 0u64 && packet[0] == 0u64 && packet[1] != 0u64 {
+        true -> (Acceptance::Ready { reader: Reader { handle: packet[1] } })
+        _ -> block malformed(gate, packet[1])
+    }
+}
+machine malformed(gate: &Gate, handle: u64) -> Acceptance reaches Kernel {
+    transition handle != 0u64 {
+        true -> block discard(gate, handle)
+        _ -> (Acceptance::Failed { code: 0xffffffffffffffEAu64 })
+    }
+    machine discard(gate: &Gate, handle: u64) -> Acceptance reaches Kernel {
+        let ignored: u64 = block Kernel::memory_release(gate, handle);
+        Acceptance::Failed { code: 0xffffffffffffffEAu64 }
+    }
+}

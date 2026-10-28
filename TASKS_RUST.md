@@ -44,9 +44,28 @@ assembly check. The independently linked component still comes from the compiler
 SysV/Linux container path; its host executable is not shipped or run. See
 [build/review instructions](tools/omega-user/README.md).
 
-**Still required for standalone Background:** implement retained shared-memory
-and notification custody, the existing v4 client/server setup and mailbox
-publication rules, then matrix service acquisition and owner-control handling.
+**Shared memory and notification foundation now passes:** Omega owns writer/read
+custody, typed shared-view and notification transfer, explicit release and bell
+cleanup under `source/platform/libraries/user-runtime/{memory,notification}/`.
+The native boundary copies bounded aligned words through authenticated memory
+handles; it never exposes a borrowed reference into peer-mutated storage. It
+checks producer authority before writes, and mapping mode and complete bounds
+before access. This initial adapter pays kernel validation per word batch;
+retained mapped access remains a performance follow-up, not a new kernel ABI.
+
+Both clock variants pass with the unchanged qualified compiler at
+`build/omega-user/tests/20261028T032301187604Z/` (12/240 image pages).
+The witness covers end-of-page data, crossing/overflow bounds, reader-write
+refusal, wrong-type receive preservation, producer release with a surviving
+reader, pinned funding and final refund, distinct delegated wake rights,
+signal/wait role enforcement, revocation refusal and repeated grant cleanup.
+A new wait after revocation returns the kernel's `REVOKED` error; the positive
+revoked outcome belongs to an already-parked wait. No Rust kernel or compiler
+source changed. The three native/ELF checks and layout check pass. This evidence
+is single-process loopback custody, not cross-process notification race testing.
+
+**Still required for standalone Background:** the existing v4 client/server setup
+and mailbox publication rules, then matrix service acquisition and owner-control handling.
 Use the current Background app sequence with that runtime. Preserve one-writer
 pages, read-only peer views, grant/frame correlation, drain/recheck/park ordering,
 deadline/refusal behavior and cleanup after partial setup. Copied IPC is needed

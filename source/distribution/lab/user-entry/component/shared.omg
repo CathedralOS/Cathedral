@@ -1,0 +1,130 @@
+module shared;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::memory::main::Writer;
+use runtime::memory::main::Reader;
+use runtime::memory::main::Allocation;
+use runtime::memory::main::Acceptance;
+use runtime::ipc::main::Channel;
+use runtime::ipc::main::Opened;
+
+// One page each of private and reader budget. Sharing must neither copy backing
+// nor refund it early: the accepted reader pins the original funding.
+public machine check(gate: &Gate) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let opened: Opened = runtime::ipc::main::open(gate);
+    transition opened {
+        Opened::Ready { channel } -> block allocated(gate, channel)
+        _ -> (120u64)
+    }
+}
+machine allocated(gate: &Gate, channel: Channel) -> u64 reaches Kernel {
+    let allocation: Allocation = block runtime::memory::main::allocate(gate, 1u64);
+    transition allocation {
+        Allocation::Ready { writer } -> block published(gate, channel, writer)
+        _ -> finish(gate, channel, 121u64)
+    }
+}
+machine published(gate: &Gate, channel: Channel, writer: Writer) -> u64 reaches Kernel {
+    let mut words: [u64; 8];
+    words[0] = 0xabcdef9876543210u64;
+    words[7] = 0xfedcba1234567890u64;
+    let status: u64 = block runtime::memory::main::write(gate, &writer, 504u64, &words, 8u64);
+    let sent: u64 = runtime::memory::main::delegate(gate, writer.handle, channel.sender);
+    transition status == 0u64 && sent == 0u64 {
+        true -> block wrong_type(gate, channel, writer)
+        _ -> block release_writer(gate, channel, writer, 122u64)
+    }
+}
+machine wrong_type(gate: &Gate, channel: Channel, writer: Writer) -> u64 reaches Kernel {
+    let mut packet: [u64; 10];
+    let status: u64 = block Kernel::notify_receive(gate, channel.receiver, &mut packet);
+    transition status == 0xffffffffffffffa6u64 && packet[1] == 0u64 {
+        true -> block received(gate, channel, writer)
+        _ -> block release_writer(gate, channel, writer, 123u64)
+    }
+}
+machine received(gate: &Gate, channel: Channel, writer: Writer) -> u64 reaches Kernel {
+    let acceptance: Acceptance = block runtime::memory::main::accept(gate, channel.receiver);
+    transition acceptance {
+        Acceptance::Ready { reader } -> block checked(gate, channel, writer, reader)
+        _ -> block release_writer(gate, channel, writer, 124u64)
+    }
+}
+machine checked(gate: &Gate, channel: Channel, writer: Writer, reader: Reader) -> u64 reaches Kernel {
+    let mut words: [u64; 8];
+    let read: u64 = block runtime::memory::main::read(gate, &reader, 504u64, &mut words, 8u64);
+    let denied: u64 = block Kernel::shared_write(gate, reader.handle, 504u64, &words, 8u64);
+    transition read == 0u64 && denied == 0xfffffffffffffff3u64
+        && words[0] == 0xabcdef9876543210u64 && words[7] == 0xfedcba1234567890u64 {
+        true -> block bounds(gate, channel, writer, reader)
+        _ -> block release_both(gate, channel, writer, reader, 125u64)
+    }
+}
+machine bounds(gate: &Gate, channel: Channel, writer: Writer, reader: Reader) -> u64 reaches Kernel {
+    let mut words: [u64; 8];
+    words[0] = 99u64;
+    let read: u64 = block runtime::memory::main::read(gate, &reader, 505u64, &mut words, 8u64);
+    let write: u64 = block runtime::memory::main::write(gate, &writer, 505u64, &words, 8u64);
+    let overflow: u64 = block runtime::memory::main::read(gate, &reader, 0xffffffffffffffffu64, &mut words, 1u64);
+    transition read == 0xffffffffffffffEAu64 && write == read && overflow == read && words[0] == 99u64 {
+        true -> block survivor(gate, channel, writer, reader)
+        _ -> block release_both(gate, channel, writer, reader, 126u64)
+    }
+}
+machine survivor(gate: &Gate, channel: Channel, writer: Writer, reader: Reader) -> u64 reaches Kernel {
+    let mut owned: Writer = writer;
+    let old: u64 = owned.handle;
+    let released: u64 = block runtime::memory::main::release_writer(gate, &mut owned);
+    let mut words: [u64; 8];
+    let stale: u64 = block Kernel::shared_read(gate, old, 0u64, &mut words, 1u64);
+    let read: u64 = block runtime::memory::main::read(gate, &reader, 504u64, &mut words, 8u64);
+    transition released == 0u64 && owned.handle == 0u64 && stale == 0xfffffffffffffff7u64
+        && read == 0u64 && words[0] == 0xabcdef9876543210u64 && words[7] == 0xfedcba1234567890u64 {
+        true -> block pinned(gate, channel, reader)
+        _ -> block release_reader(gate, channel, reader, 127u64)
+    }
+}
+machine pinned(gate: &Gate, channel: Channel, reader: Reader) -> u64 reaches Kernel {
+    let extra: Allocation = block runtime::memory::main::allocate(gate, 1u64);
+    transition extra {
+        Allocation::Failed { code } -> block refund(gate, channel, reader)
+        Allocation::Ready { writer } -> block release_both(gate, channel, writer, reader, 128u64)
+    }
+}
+machine refund(gate: &Gate, channel: Channel, reader: Reader) -> u64 reaches Kernel {
+    let mut owned: Reader = reader;
+    let released: u64 = block runtime::memory::main::release_reader(gate, &mut owned);
+    transition released == 0u64 && owned.handle == 0u64 {
+        true -> block reuse(gate, channel)
+        _ -> finish(gate, channel, 129u64)
+    }
+}
+machine reuse(gate: &Gate, channel: Channel) -> u64 reaches Kernel {
+    let allocation: Allocation = block runtime::memory::main::allocate(gate, 1u64);
+    transition allocation {
+        Allocation::Ready { writer } -> block release_writer(gate, channel, writer, 0u64)
+        _ -> finish(gate, channel, 130u64)
+    }
+}
+machine release_both(gate: &Gate, channel: Channel, writer: Writer, reader: Reader, result: u64) -> u64 reaches Kernel {
+    let mut owned: Reader = reader;
+    let ignored: u64 = block runtime::memory::main::release_reader(gate, &mut owned);
+    block release_writer(gate, channel, writer, result)
+}
+machine release_writer(gate: &Gate, channel: Channel, writer: Writer, result: u64) -> u64 reaches Kernel {
+    let mut owned: Writer = writer;
+    let ignored: u64 = block runtime::memory::main::release_writer(gate, &mut owned);
+    finish(gate, channel, result)
+}
+machine release_reader(gate: &Gate, channel: Channel, reader: Reader, result: u64) -> u64 reaches Kernel {
+    let mut owned: Reader = reader;
+    let ignored: u64 = block runtime::memory::main::release_reader(gate, &mut owned);
+    finish(gate, channel, result)
+}
+machine finish(gate: &Gate, channel: Channel, result: u64) -> u64 reaches Kernel {
+    let closed: u64 = runtime::ipc::main::close(gate, channel);
+    transition closed == 0u64 {
+        true -> (result)
+        _ -> (131u64)
+    }
+}

@@ -1,0 +1,105 @@
+module notification::main;
+// A bell owns three local rights. Delegating its signal copies only that right;
+// closing the object and dropping local grants are separate operations.
+use kernel::Gate;
+use kernel::Kernel;
+
+public data Bell { wait: u64; signal: u64; control: u64; }
+public data Signal { handle: u64; }
+public data Creation {
+    case Ready(bell: Bell);
+    case Failed(code: u64);
+}
+public data Acceptance {
+    case Ready(signal: Signal, correlation: u64);
+    case Failed(code: u64);
+}
+public data Outcome [copy] {
+    case Signaled;
+    case TimedOut;
+    case Closed;
+    case Revoked;
+    case Cancelled;
+    case Failed(code: u64);
+}
+
+public machine create(gate: &Gate) -> Creation reaches Kernel invokes Kernel; {
+    let mut record: [u64; 8];
+    let status: u64 = Kernel::notify_create(gate, &mut record);
+    transition status == 0u64 {
+        true -> (Creation::Ready { bell: Bell { wait: record[0], signal: record[1], control: record[2] } })
+        _ -> (Creation::Failed { code: status })
+    }
+}
+public machine signal(gate: &Gate, signal: &Signal) -> u64 reaches Kernel invokes Kernel; {
+    Kernel::notify_signal(gate, signal.handle)
+}
+public machine wait(gate: &Gate, bell: &Bell, deadline: u64, timed: u64 [0..=1]) -> Outcome
+    reaches Kernel blocks; invokes Kernel; {
+    let status: u64 = block Kernel::notify_wait(gate, bell.wait, deadline, timed);
+    transition status {
+        0u64 -> (Outcome::Signaled)
+        1u64 -> (Outcome::TimedOut)
+        2u64 -> (Outcome::Closed)
+        3u64 -> (Outcome::Revoked)
+        4u64 -> (Outcome::Cancelled)
+        _ -> (Outcome::Failed { code: status })
+    }
+}
+public machine close(gate: &Gate, bell: &mut Bell) -> u64 reaches Kernel invokes Kernel; {
+    let wait: u64 = bell.wait;
+    let signal: u64 = bell.signal;
+    let control: u64 = bell.control;
+    bell.wait = 0u64;
+    bell.signal = 0u64;
+    bell.control = 0u64;
+    let closed: u64 = Kernel::notify_control(gate, control, 0u64);
+    let dropped_wait: u64 = Kernel::notify_drop(gate, wait);
+    let dropped_signal: u64 = Kernel::notify_drop(gate, signal);
+    let dropped_control: u64 = Kernel::notify_drop(gate, control);
+    transition closed == 0u64 && dropped_wait == 0u64 && dropped_signal == 0u64 {
+        true -> (dropped_control)
+        _ -> (0xfffffffffffffffbu64)
+    }
+}
+public machine release(gate: &Gate, signal: &mut Signal) -> u64 reaches Kernel invokes Kernel; {
+    let handle: u64 = signal.handle;
+    signal.handle = 0u64;
+    Kernel::notify_drop(gate, handle)
+}
+
+// Connection setup uses zero correlation; established request grants use a
+// nonzero request ID. Decoding returns it for the connection to authenticate.
+public machine delegate(gate: &Gate, signal: u64, endpoint: u64, correlation: u64) -> u64
+    reaches Kernel invokes Kernel; {
+    let mut packet: [u64; 10];
+    packet[0] = 8u64;
+    packet[1] = signal;
+    packet[2] = correlation;
+    Kernel::notify_send(gate, endpoint, &packet)
+}
+public machine accept(gate: &Gate, endpoint: u64) -> Acceptance
+    reaches Kernel blocks; invokes Kernel; {
+    let mut packet: [u64; 10];
+    let status: u64 = block Kernel::notify_receive(gate, endpoint, &mut packet);
+    transition status < 0x8000000000000000u64 {
+        true -> accepted(gate, status, packet)
+        _ -> (Acceptance::Failed { code: status })
+    }
+}
+machine accepted(gate: &Gate, status: u64, packet: [u64; 10]) -> Acceptance reaches Kernel {
+    transition status == 8u64 && packet[0] == 8u64 && packet[1] != 0u64 {
+        true -> (Acceptance::Ready { signal: Signal { handle: packet[1] }, correlation: packet[2] })
+        _ -> malformed(gate, packet[1])
+    }
+}
+machine malformed(gate: &Gate, handle: u64) -> Acceptance reaches Kernel {
+    transition handle != 0u64 {
+        true -> discard(gate, handle)
+        _ -> (Acceptance::Failed { code: 0xffffffffffffffEAu64 })
+    }
+    machine discard(gate: &Gate, handle: u64) -> Acceptance reaches Kernel {
+        let ignored: u64 = Kernel::notify_drop(gate, handle);
+        Acceptance::Failed { code: 0xffffffffffffffEAu64 }
+    }
+}

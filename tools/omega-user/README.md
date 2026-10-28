@@ -16,9 +16,9 @@ python -m unittest discover -s tools/omega-user -p "test_*.py"
 The compiler may request initial review of the runtime's native boundaries.
 Inspect the review path printed in `build/omega-component/distribution/lab/user-entry/native/review.log`
 and the declarations in `source/platform/libraries/user-runtime/kernel.omg` and
-`arch/x86_64/gate.omg` against `entry.S`. The ten calls are yield, environment,
-channel creation, send, receive, close, diagnostic write, clock acquisition,
-clock read and event wait. The native leaves must preserve the declared buffers,
+`arch/x86_64/gate.omg` against `entry.S`. The table includes process/IPC/clock calls plus shared-memory allocation,
+release, typed read-view transfer, bounded shared word access and notification
+creation, handoff, signal, wait, control and drop. The native leaves must preserve the declared buffers,
 range bounds, blocking and calling convention. Accept the inspected rows in the
 generated review document and resume with the same qualified compiler:
 
