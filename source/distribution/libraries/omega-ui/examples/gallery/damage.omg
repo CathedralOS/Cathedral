@@ -257,7 +257,7 @@ public machine prepare(damage_state: &mut GalleryDamage, context: &UiContext, wi
             _ -> motion(damage_state, context, index + 1)
         }
     }
-    machine motion_owner(damage_state: &mut GalleryDamage, context: &UiContext, index: i32, identifier: i32) {
+    machine motion_owner(damage_state: &mut GalleryDamage, context: &UiContext, index: i32, identifier: i32) requires index >= 0 && index < 64 {
         let switch_owner: i32 = select_i32(damage_state.page == 2, 43, 21);
         let owner: i32 = select_i32(identifier >= 1100 && identifier <= 1103, switch_owner,
             select_i32(identifier >= 1110 && identifier <= 1112, 21,
