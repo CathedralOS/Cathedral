@@ -15,17 +15,12 @@ script prepares the same native exports automatically; the boot harness contains
 no special preparation rule for the demo. The build uses Cathedral's checked-in distribution source. Its standard library
 is an ordinary immutable Git package dependency, acquired through Omega's normal
 package review; the UI does not keep a private standard-library snapshot.
-Set `OMEGA_BIN` to an optimized Omega compiler supporting pure native component
-exports. The current verified Windows producer is
-`20dcd0409b66de0f6d25d1a345e8da57d71bbb0a`, release opt-level 3, available in
-main through [Omega #339](https://github.com/CathedralOS/Omega/pull/339).
-It supports the typed Colors app calls and includes pure-component support and
-the referenced-provider publication repair from
-[Omega #292](https://github.com/CathedralOS/Omega/pull/292). No uncommitted compiler
-patch is required. Current desktop, UI and cold-boot evidence is recorded in
-[the handoff](../../TASKS_RUST.md#colors-separates-app-behavior-from-native-packets).
-Older evidence below retains its original producer; it is not a claim about an
-arbitrary later main revision.
+The canonical UI source uses explicit machine arguments and Build-owned native
+bindings. Its compiler requirements and current qualification are recorded in
+[the handoff](../../TASKS_RUST.md#canonical-omega-ui-source).
+The earlier `20dcd0409b66` producer and desktop runs below are historical evidence
+for the previous source revision; that compiler cannot compile this migrated UI.
+An arbitrary later compiler revision is not a substitute for a qualified producer.
 Python 3 is required by the existing Cathedral build tools. No font runtime or new
 external Cargo dependency is needed. `OMEGA_UI_COMPONENT_DIR` explicitly selects
 already-prepared artifacts instead.
@@ -33,18 +28,41 @@ Review and compilation use the same [bounded compiler process](../omega-componen
 as application components: 4 GiB and five minutes per invocation. A failed or
 exhausted compiler never publishes a new component receipt.
 
-The default Rust F5 profile includes the UI demo and needs this compiler too.
-For a checkout-local compiler, run these commands from the Cathedral root. Cargo
+The Rust F5 profile includes the UI demo. Its existing prepared-component input
+keeps that consumer independent of the compiler used for other desktop packages.
+Keep an existing legacy compiler checkout intact. For the canonical UI compiler,
+run these commands from the Cathedral root. Cargo
 uses the Rust toolchain pinned in the compiler repository:
 
 ```text
-git clone https://github.com/CathedralOS/Omega.git build/omega-ui/compiler
-cd build/omega-ui/compiler
-git checkout 20dcd0409b66de0f6d25d1a345e8da57d71bbb0a
-cargo build --locked --release -p omega
+git clone https://github.com/CathedralOS/Omega.git build/omega-ui/canonical-compiler
+cd build/omega-ui/canonical-compiler
+git checkout fa6aeb6764add3b1e3b65cb6fd1cf46a537f2694
+cargo build --locked -p omega
 ```
 
-Return to Cathedral and use F5 normally. The build selects an explicit `--compiler`,
+Omega's ordinary Cargo profile is optimized at level 1; the `debug` output
+directory does not mean an unoptimized compiler. Return to Cathedral and prepare
+the UI with the selected compiler:
+
+```text
+python tools/omega-ui/build.py --compiler build/omega-ui/canonical-compiler/target/debug/omega
+```
+
+On Windows the executable is `omega.exe`. Package review may first request
+ordinary acceptance; inspect the named proposal and resume, then repeat the
+build. Preserve that component directory and its receipt together.
+
+Other desktop packages still contain legacy Omega source. Until they migrate,
+keep their existing `20dcd0409b66` compiler selection and set
+`OMEGA_UI_COMPONENT_DIR` to the absolute `build/omega-ui/component` directory
+prepared above. This is the library's existing explicit artifact input; it
+selects no compiler behind the caller's back. The ABI 2 Rust callers stay the
+same. A cold F5 run using the new artifacts still needs Windows/QEMU validation;
+the earlier desktop evidence does not establish it.
+
+For current UI source development, pass the canonical compiler explicitly or
+set `OMEGA_BIN` to it. The build selects an explicit `--compiler`,
 then `OMEGA_BIN`, then `build/omega-ui/compiler/target/release/omega.exe` (Windows)
 or `omega` (macOS/Linux), then `omega` on PATH. A selected compiler's failure is
 reported rather than silently trying another one. For a compiler built elsewhere,

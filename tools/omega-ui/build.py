@@ -75,7 +75,7 @@ def prepare(compiler=None):
         project = library / 'tests/native_component' / name
         directory = OUTPUT / name
         for step, arguments in (
-            ('review', ['update', '--project', str(project), '--target', 'linux_x86_64', '--offline']),
+            ('review', ['update', '--project', str(project), '--target', 'linux_x86_64']),
             ('compile', ['--target', 'linux_x86_64', '--build-dir', str(directory), str(project / 'main.omg')]),
         ):
             with (OUTPUT / f'{name}-{step}.log').open('w', encoding='utf-8') as log:

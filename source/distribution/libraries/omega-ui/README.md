@@ -119,6 +119,10 @@ src/                       omega_ui package and public modules
     list.omg               viewport-derived uniform-list ranges
     text_field.omg         selection and caret geometry
 platform/windows/          omega_ui_windows adapter package
+    windows_host.omg       portable host contract
+    windows_native.omg     checked native provider and ABI adapters
+    win32_imports.omg      private exact raw native requirements
+    build.omg              native locator bindings and package composition
     fonts.omg              native intrinsic measurement and text painting
     text_field.omg         Unicode editing, selection and pointer navigation
     box_painter.omg        cached scanline and direct bitmap backend

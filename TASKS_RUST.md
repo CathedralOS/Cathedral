@@ -5110,7 +5110,39 @@ authority model. Further broad specification is unnecessary for these steps.
 The later accepted input contract excludes mandatory agent attribution from child
 input/cursor APIs; owner-side session UI remains separately authorized.
 
-Current integration 2026-10-24: **reusable Omega UI library**, over `ab0d76f8`.
+### Canonical Omega UI source
+
+The reusable `source/distribution/libraries/omega-ui` source and its headless,
+freestanding component, Windows adapter and gallery callers now use explicit
+machine arguments and independent data/code. The public `omega_ui` package,
+ABI 2 component exports and Rust app interface remain the same. Pure UI
+behavior stays in `src/`; Windows policy and exact native mappings stay in the
+Windows adapter. Its private raw requirements have 66 exact Build-owned DLL
+bindings, selected through the public checked provider. The library uses an
+ordinary pinned Git standard-library dependency instead of a copied snapshot.
+
+Current compiler qualification uses optimized Omega source
+`bc368540ef794f59e86fcdbc6b670c1ad3363fc0`, binary SHA-256
+`107927814819c956813fde6efef9d492ec2bfc47c2521ff61d4b216fe01a85c3`.
+The authored headless suite passes native and Terminal execution on macOS ARM64
+(exit 0 in both, 38.85 seconds), preserving pointer held/released edges, layout,
+software pixels, keyboard focus, bounded stepping, palette, text retirement,
+UTF-8 rejection and UTF-16 decoding assertions. Independent Linux x86-64 layout/frame component packaging passes; the exports
+remain ABI 2 (272 and 515,360 code bytes). The Windows native-host and complete
+gallery both emit PE images through ordinary package review. Python tool tests
+pass (11 UI, 5 component), as does source-layout checking (85 Omega / 154 Rust
+package edges). These packaging results do not establish foreign-host execution.
+
+Use the [build guide](tools/omega-ui/README.md#build) to prepare canonical UI
+components. Other desktop packages still use legacy Omega syntax. Preserve
+their compiler selection and pass the prepared UI artifacts through the existing
+`OMEGA_UI_COMPONENT_DIR` input; the build never silently selects a different
+compiler per program. A fresh F5 desktop boot with these new components,
+Windows gallery interaction/snapshots and Windows native-host execution remain
+unverified: this qualification host has neither a Windows runner nor QEMU.
+Historical desktop execution below belongs to its original source and producer.
+
+Historical integration 2026-10-24: **reusable Omega UI library**, over `ab0d76f8`.
 `cathedral-omega-ui` exposes caller-authored frames, independent field values,
 stable control IDs and checked instance/build-local nodes. Applications compose
 rows, columns, cards, text, four button variants, toggles, checkboxes, sliders,
