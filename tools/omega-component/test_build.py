@@ -36,7 +36,7 @@ class BuildTests(unittest.TestCase):
 
             with patch.object(build, 'ROOT', root), \
                     patch.object(build.subprocess, 'check_output', return_value='{"opt_level":"3"}'), \
-                    patch.object(build.subprocess, 'run', side_effect=compile) as invoke, \
+                    patch.object(build.process, 'run', side_effect=compile) as invoke, \
                     patch.object(build, 'Elf') as elf, \
                     patch.object(build, 'component', return_value=(b'checked code', ('entry', 0))):
                 elf.return_value.needed.return_value = [b'$ORIGIN/libapp.so']

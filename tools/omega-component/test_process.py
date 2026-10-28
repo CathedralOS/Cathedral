@@ -3,6 +3,8 @@ from pathlib import Path
 import subprocess
 import sys
 import unittest
+from unittest.mock import patch
+import process
 
 
 class ProcessBudget(unittest.TestCase):
@@ -20,6 +22,18 @@ class ProcessBudget(unittest.TestCase):
         result = self.invoke('try:\n bytearray(512 * 1024**2)\nexcept MemoryError:\n print("refused")\nelse:\n raise SystemExit(9)')
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout.strip(), 'refused')
+
+    def test_build_wrapper_preserves_output(self):
+        result = process.run([sys.executable, '-c', 'print("wrapped")'],
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), 'wrapped')
+
+    def test_build_wrapper_stops_on_deadline(self):
+        with patch.object(process, 'COMPILER_TIMEOUT', 0.5):
+            with self.assertRaisesRegex(RuntimeError, 'exceeded'):
+                process.run([sys.executable, '-c', 'import time; time.sleep(60)'],
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
 
 if __name__ == '__main__':
