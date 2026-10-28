@@ -7,6 +7,7 @@ job so neither the caller nor other compiler sessions enter it.
 import ctypes
 import os
 from pathlib import Path
+import signal
 import subprocess
 import sys
 
@@ -15,12 +16,18 @@ COMPILER_TIMEOUT = 300
 
 
 def run(command, **kwargs):
-    try:
-        return subprocess.run([sys.executable, str(Path(__file__).resolve()),
-                               str(COMPILER_MEMORY), *map(str, command)],
-                              timeout=COMPILER_TIMEOUT, **kwargs)
-    except subprocess.TimeoutExpired as error:
-        raise RuntimeError(f'compiler exceeded {COMPILER_TIMEOUT}s; stopped its process group') from error
+    wrapped = [sys.executable, str(Path(__file__).resolve()), str(COMPILER_MEMORY), *map(str, command)]
+    with subprocess.Popen(wrapped, start_new_session=os.name != 'nt', **kwargs) as child:
+        try:
+            stdout, stderr = child.communicate(timeout=COMPILER_TIMEOUT)
+        except subprocess.TimeoutExpired as error:
+            if os.name == 'nt':
+                child.kill()  # Closing the wrapper's job handle kills its children.
+            else:
+                os.killpg(child.pid, signal.SIGKILL)
+            child.communicate()
+            raise RuntimeError(f'compiler exceeded {COMPILER_TIMEOUT}s; stopped its process group') from error
+        return subprocess.CompletedProcess(command, child.returncode, stdout, stderr)
 
 
 def constrain(memory):
