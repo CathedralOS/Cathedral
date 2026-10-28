@@ -35,6 +35,10 @@ The wrapper joins the job before starting the compiler; other sessions remain
 outside it. On Unix the inherited address-space limit applies per process.
 These limits make runaway compilation fail locally instead of exhausting the
 host. They do not turn an incomplete compile into a successful package.
+The default is one checking worker, which kept the current full client review
+around 650 MiB. An explicit `RAYON_NUM_THREADS` setting is retained, while the
+memory allowance still applies. Concurrent checking previously exhausted the
+host during this work; higher worker counts need measured qualification.
 
 This packaging route permits exactly one local component, with no dynamic
 imports, remaining relocations, TLS or mutable globals. It is not a generic ELF

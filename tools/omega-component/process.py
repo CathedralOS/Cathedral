@@ -78,7 +78,11 @@ def constrain(memory):
 
 if __name__ == '__main__':
     held_job = constrain(int(sys.argv[1]))
-    completed = subprocess.run(sys.argv[2:])
+    environment = os.environ.copy()
+    # A checking worker retains substantial proof context. Keep the default
+    # inside the process budget; an explicit host setting may choose more.
+    environment.setdefault('RAYON_NUM_THREADS', '1')
+    completed = subprocess.run(sys.argv[2:], env=environment)
     if completed.returncode:
         print(f'compiler command exited {completed.returncode}; memory limit {int(sys.argv[1]) // 1024**2} MiB',
               file=sys.stderr)
