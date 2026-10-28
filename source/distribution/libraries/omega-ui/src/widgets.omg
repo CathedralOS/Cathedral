@@ -1,11 +1,31 @@
+module widgets;
+
+use context::Interaction;
+use context::UiContext;
+use text::UiTextSpan;
+use types::Edges;
+use types::Style;
+use types::UiAlignment;
+use types::UiAxis;
+use types::UiContentKind;
+use types::UiSizing;
+use types::add_i32;
+use types::clamp_i32;
+use types::color_mix;
+use types::max_i32;
+use types::min_sat;
+use types::mul_i32;
+use types::select_i32;
+use types::select_sat;
+use types::sub_i32;
+
+
 // Builds reusable controls and containers, with input handled against the previous frame.
 
 use types;
 use motion;
 use context;
 use text;
-
-public data Ui { }
 
 public data ButtonVariant [copy] {
     case Primary;
@@ -19,7 +39,7 @@ public data ButtonOptions [copy] {
     height: i32;
 }
 
-public machine ButtonVariant::index(variant: ButtonVariant) -> i32 {
+public machine button_variant_index(variant: ButtonVariant) -> i32 {
     transition variant {
         ButtonVariant::Primary -> (0)
         ButtonVariant::Secondary -> (1)
@@ -30,205 +50,205 @@ public machine ButtonVariant::index(variant: ButtonVariant) -> i32 {
 
 // A button owns its label and hit rectangle. Hosts measure and paint that text
 // through the same node contract as ordinary labels; no separate overlay label.
-public machine Ui::button(context: &mut UiContext, id: i32, label: &[u8], options: ButtonOptions) -> Interaction {
-    let variant: i32 = ButtonVariant::index(options.variant);
-    let interaction: Interaction = Ui::icon_button(context, id, variant, options.width, options.height, 0);
-    let span: UiTextSpan = UiTextStore::append(&mut context.text_store, label);
-    let index: i32 = sub_i32(context.node_count, 1);
+public machine button(ui_context: &mut UiContext, id: i32, label: &[u8], options: ButtonOptions) -> Interaction {
+    let variant: i32 = widgets::button_variant_index(options.variant);
+    let interaction: Interaction = widgets::icon_button(ui_context, id, variant, options.width, options.height, 0);
+    let span: UiTextSpan = text::append(&mut ui_context.text_store, label);
+    let index: i32 = sub_i32(ui_context.node_count, 1);
     transition interaction.id != 0 && index > 0 && index < 128 {
-        true -> attach(context, index, span, interaction)
+        true -> attach(ui_context, index, span, interaction)
         _ -> (interaction)
     }
-    state attach(context: &mut UiContext, index: i32, span: UiTextSpan, interaction: Interaction) -> Interaction
+    machine attach(ui_context: &mut UiContext, index: i32, span: UiTextSpan, interaction: Interaction) -> Interaction
     requires index > 0 && index < 128 {
-        context.nodes[index].content_kind = 19;
-        context.nodes[index].content_value = 500;
-        context.nodes[index].text = span;
-        context.nodes[index].text_align = 1;
+        ui_context.nodes[index].content_kind = 19;
+        ui_context.nodes[index].content_value = 500;
+        ui_context.nodes[index].text = span;
+        ui_context.nodes[index].text_align = 1;
         interaction
     }
 }
 
 // Labels own their frame's bytes. The host supplies the font's actual metrics;
 // a fill-width label clips inside its layout rectangle rather than spilling out.
-public machine Ui::text(context: &mut UiContext, text: &[u8], line_height: i32, color: i32, weight: i32) -> i32 {
-    let span: UiTextSpan = UiTextStore::append(&mut context.text_store, text);
-    let mut style: Style = Style::default_box();
+public machine text(ui_context: &mut UiContext, label_bytes: &[u8], line_height: i32, color: i32, weight: i32) -> i32 {
+    let span: UiTextSpan = text::append(&mut ui_context.text_store, label_bytes);
+    let mut style: Style = types::style_default_box();
     style.width_mode = UiSizing::Fit;
     style.height_mode = UiSizing::Fixed;
     style.height_px = max_i32(line_height, 1) as i32 in Saturating;
-    let index: i32 = UiContext::add_node(context, 0, style, UiContentKind::Text, weight, color, false, false);
+    let index: i32 = context::add_node(ui_context, 0, style, UiContentKind::Text, weight, color, false, false);
     transition index > 0 && index < 128 {
-        true -> store_span(context, index, span)
+        true -> store_span(ui_context, index, span)
         _ -> (-1)
     }
-    state store_span(context: &mut UiContext, index: i32, span: UiTextSpan) -> i32
+    machine store_span(ui_context: &mut UiContext, index: i32, span: UiTextSpan) -> i32
     requires index > 0 && index < 128 {
-        context.nodes[index].text = span;
+        ui_context.nodes[index].text = span;
         index
     }
 }
 
 // Editing belongs to the host/editor; the shared field owns its skin and text.
-public machine Ui::text_field(context: &mut UiContext, id: i32, text: &[u8], width: i32) -> i32 {
-    let mut style: Style = Style::default_box();
+public machine text_field(ui_context: &mut UiContext, id: i32, label_bytes: &[u8], width: i32) -> i32 {
+    let mut style: Style = types::style_default_box();
     style.width_mode = UiSizing::Fixed; style.width_px = max_i32(width, 80) as i32 in Saturating;
     style.height_mode = UiSizing::Fixed; style.height_px = 40;
-    style.radius = 8; style.background = context.theme.well;
+    style.radius = 8; style.background = ui_context.theme.well;
     style.border_width = 1;
-    style.border = select_i32(context.focus == id, color_mix(context.theme.border, context.theme.accent, 40), context.theme.border);
+    style.border = select_i32(ui_context.focus == id, color_mix(ui_context.theme.border, ui_context.theme.accent, 40), ui_context.theme.border);
     style.padding = Edges { left: 12, top: 10, right: 12, bottom: 10 };
-    let field: i32 = UiContext::add_node(context, id, style, UiContentKind::Box, 0, -1, true, true);
-    let color: i32 = context.theme.text;
-    let label: i32 = Ui::text(context, text, 20, color, 400);
-    Ui::end(context);
+    let field: i32 = context::add_node(ui_context, id, style, UiContentKind::Box, 0, -1, true, true);
+    let color: i32 = ui_context.theme.text;
+    let label: i32 = widgets::text(ui_context, label_bytes, 20, color, 400);
+    widgets::end(ui_context);
     field
 }
 
-public machine Ui::column(context: &mut UiContext, gap: i32, pad: i32, fill_w: bool, fill_h: bool) {
-    let mut style: Style = Style::default_box();
+public machine column(ui_context: &mut UiContext, gap: i32, pad: i32, fill_w: bool, fill_h: bool) {
+    let mut style: Style = types::style_default_box();
     style.direction = UiAxis::Column;
     style.gap = gap as i32 in Saturating;
-    style.padding = Edges::all(pad);
-    style.width_mode = UiSizing::select(fill_w, UiSizing::Fill, UiSizing::Fit);
-    style.height_mode = UiSizing::select(fill_h, UiSizing::Fill, UiSizing::Fit);
+    style.padding = types::edges_all(pad);
+    style.width_mode = types::sizing_select(fill_w, UiSizing::Fill, UiSizing::Fit);
+    style.height_mode = types::sizing_select(fill_h, UiSizing::Fill, UiSizing::Fit);
     style.grow = select_sat(fill_w || fill_h, 1, 0);
-    let node_index: i32 = UiContext::add_node(context, 0, style, UiContentKind::Box, 0, -1, false, true);
+    let node_index: i32 = context::add_node(ui_context, 0, style, UiContentKind::Box, 0, -1, false, true);
 }
 
-public machine Ui::row(context: &mut UiContext, gap: i32, pad: i32, fill_w: bool, center_items: bool) {
-    let mut style: Style = Style::default_box();
+public machine row(ui_context: &mut UiContext, gap: i32, pad: i32, fill_w: bool, center_items: bool) {
+    let mut style: Style = types::style_default_box();
     style.direction = UiAxis::Row;
     style.gap = gap as i32 in Saturating;
-    style.padding = Edges::all(pad);
-    style.width_mode = UiSizing::select(fill_w, UiSizing::Fill, UiSizing::Fit);
-    style.align_items = UiAlignment::select(center_items, UiAlignment::Center, UiAlignment::Start);
-    let node_index: i32 = UiContext::add_node(context, 0, style, UiContentKind::Box, 0, -1, false, true);
+    style.padding = types::edges_all(pad);
+    style.width_mode = types::sizing_select(fill_w, UiSizing::Fill, UiSizing::Fit);
+    style.align_items = types::alignment_select(center_items, UiAlignment::Center, UiAlignment::Start);
+    let node_index: i32 = context::add_node(ui_context, 0, style, UiContentKind::Box, 0, -1, false, true);
 }
 
-public machine Ui::sidebar(context: &mut UiContext, width_px: i32, gap: i32, pad: i32) {
-    let mut style: Style = Style::default_box();
+public machine sidebar(ui_context: &mut UiContext, width_px: i32, gap: i32, pad: i32) {
+    let mut style: Style = types::style_default_box();
     style.direction = UiAxis::Column;
     style.gap = gap as i32 in Saturating;
-    style.padding = Edges::all(pad);
+    style.padding = types::edges_all(pad);
     style.width_mode = UiSizing::Fixed;
     style.width_px = width_px as i32 in Saturating;
     style.height_mode = UiSizing::Fill;
-    style.background = context.theme.sidebar_bg;
-    style.border = context.theme.border;
+    style.background = ui_context.theme.sidebar_bg;
+    style.border = ui_context.theme.border;
     style.border_width = 1;
-    let node_index: i32 = UiContext::add_node(context, 0, style, UiContentKind::Box, 0, -1, false, true);
+    let node_index: i32 = context::add_node(ui_context, 0, style, UiContentKind::Box, 0, -1, false, true);
 }
 
-public machine Ui::card(context: &mut UiContext, gap: i32, pad: i32, fill_w: bool) {
-    let mut style: Style = Style::default_box();
+public machine card(ui_context: &mut UiContext, gap: i32, pad: i32, fill_w: bool) {
+    let mut style: Style = types::style_default_box();
     style.direction = UiAxis::Column;
     style.gap = gap as i32 in Saturating;
-    style.padding = Edges::all(pad);
-    style.width_mode = UiSizing::select(fill_w, UiSizing::Fill, UiSizing::Fit);
-    style.background = context.theme.surface;
-    style.border = context.theme.border;
+    style.padding = types::edges_all(pad);
+    style.width_mode = types::sizing_select(fill_w, UiSizing::Fill, UiSizing::Fit);
+    style.background = ui_context.theme.surface;
+    style.border = ui_context.theme.border;
     style.border_width = 1;
     style.radius = 26;
-    let node_index: i32 = UiContext::add_node(context, 0, style, UiContentKind::Box, 0, -1, false, true);
+    let node_index: i32 = context::add_node(ui_context, 0, style, UiContentKind::Box, 0, -1, false, true);
 }
 
-public machine Ui::end(context: &mut UiContext) {
-    UiContext::end_container(context);
+public machine end(ui_context: &mut UiContext) {
+    context::end_container(ui_context);
 }
 
-public machine Ui::spacer(context: &mut UiContext) {
-    let mut style: Style = Style::default_box();
+public machine spacer(ui_context: &mut UiContext) {
+    let mut style: Style = types::style_default_box();
     style.grow = 1;
-    let node_index: i32 = UiContext::add_node(context, 0, style, UiContentKind::Box, 0, -1, false, false);
+    let node_index: i32 = context::add_node(ui_context, 0, style, UiContentKind::Box, 0, -1, false, false);
 }
 
-public machine Ui::divider(context: &mut UiContext) {
-    let mut style: Style = Style::default_box();
+public machine divider(ui_context: &mut UiContext) {
+    let mut style: Style = types::style_default_box();
     style.width_mode = UiSizing::Fill;
     style.height_mode = UiSizing::Fixed;
     style.height_px = 1;
-    style.background = context.theme.border;
-    let node_index: i32 = UiContext::add_node(context, 0, style, UiContentKind::Box, 0, -1, false, false);
+    style.background = ui_context.theme.border;
+    let node_index: i32 = context::add_node(ui_context, 0, style, UiContentKind::Box, 0, -1, false, false);
 }
 
-public machine Ui::nav_item(context: &mut UiContext, id: i32, selected: bool, icon_glyph: i32) -> bool {
-    let mut style: Style = Style::default_box();
+public machine nav_item(ui_context: &mut UiContext, id: i32, selected: bool, icon_glyph: i32) -> bool {
+    let mut style: Style = types::style_default_box();
     style.width_mode = UiSizing::Fill;
     style.height_mode = UiSizing::Fixed;
     style.height_px = 32;
     style.radius = 6;
-    let initial_foreground: i32 = context.theme.text;
-    let node_index: i32 = UiContext::add_node(context, id, style, UiContentKind::Icon, icon_glyph, initial_foreground, true, false);
-    let interaction: Interaction = UiContext::activate(context, node_index, id);
-    let hover_bg: i32 = select_i32(interaction.hovered, context.theme.surface_hover, -1);
-    let background_color: i32 = select_i32(selected, context.theme.surface_hover, hover_bg);
-    let foreground_color: i32 = select_i32(selected, context.theme.text, context.theme.text_muted);
+    let initial_foreground: i32 = ui_context.theme.text;
+    let node_index: i32 = context::add_node(ui_context, id, style, UiContentKind::Icon, icon_glyph, initial_foreground, true, false);
+    let interaction: Interaction = context::activate(ui_context, node_index, id);
+    let hover_bg: i32 = select_i32(interaction.hovered, ui_context.theme.surface_hover, -1);
+    let background_color: i32 = select_i32(selected, ui_context.theme.surface_hover, hover_bg);
+    let foreground_color: i32 = select_i32(selected, ui_context.theme.text, ui_context.theme.text_muted);
     transition node_index >= 0 && node_index < 128 {
-        true -> apply_style(context, node_index, background_color, foreground_color, interaction.clicked)
+        true -> apply_style(ui_context, node_index, background_color, foreground_color, interaction.clicked)
         _ -> (interaction.clicked)
     }
-    state apply_style(context: &mut UiContext, node_index: i32, background_color: i32, foreground_color: i32, clicked: bool) -> bool
+    machine apply_style(ui_context: &mut UiContext, node_index: i32, background_color: i32, foreground_color: i32, clicked: bool) -> bool
     requires node_index >= 0 && node_index < 128 {
-        context.nodes[node_index].style.background = background_color;
-        context.nodes[node_index].content_color = foreground_color;
+        ui_context.nodes[node_index].style.background = background_color;
+        ui_context.nodes[node_index].content_color = foreground_color;
         transition clicked {
-            true -> mark_changed(context)
+            true -> mark_changed(ui_context)
             _ -> (false)
         }
     }
-    state mark_changed(context: &mut UiContext) -> bool {
-        context.changed = true;
+    machine mark_changed(ui_context: &mut UiContext) -> bool {
+        ui_context.changed = true;
         true
     }
 }
 
 
 // Button variants: 0 = primary, 1 = secondary, 2 = ghost, 3 = danger
-public machine Ui::icon_button(context: &mut UiContext, id: i32, variant: i32, width_px: i32, height_px: i32, icon_glyph: i32) -> Interaction {
-    let mut style: Style = Style::default_box();
+public machine icon_button(ui_context: &mut UiContext, id: i32, variant: i32, width_px: i32, height_px: i32, icon_glyph: i32) -> Interaction {
+    let mut style: Style = types::style_default_box();
     style.width_mode = UiSizing::Fixed;
     style.width_px = width_px as i32 in Saturating;
     style.height_mode = UiSizing::Fixed;
     style.height_px = height_px as i32 in Saturating;
     style.radius = 18;
-    let initial_foreground: i32 = context.theme.text;
-    let node_index: i32 = UiContext::add_node(context, id, style, UiContentKind::Icon, icon_glyph, initial_foreground, true, false);
-    let interaction: Interaction = UiContext::activate(context, node_index, id);
+    let initial_foreground: i32 = ui_context.theme.text;
+    let node_index: i32 = context::add_node(ui_context, id, style, UiContentKind::Icon, icon_glyph, initial_foreground, true, false);
+    let interaction: Interaction = context::activate(ui_context, node_index, id);
     let target: i32 = select_i32(interaction.pressed, 1000, select_i32(interaction.hovered, 400, 0));
-    let feedback: i32 = UiMotion::target(&mut context.motion, id, target, select_i32(interaction.pressed, 120, 160));
+    let feedback: i32 = motion::target(&mut ui_context.motion, id, target, select_i32(interaction.pressed, 120, 160));
     let hover_blend_percent: i32 = clamp_i32(feedback / 4, 0, 100);
-    let primary_background: i32 = color_mix(context.theme.accent, context.theme.surface, select_i32(interaction.pressed, 16, mul_i32(hover_blend_percent, 9) / 100));
-    let danger_background: i32 = color_mix(context.theme.surface, context.theme.surface_hover, hover_blend_percent);
-    let secondary_background: i32 = color_mix(context.theme.surface, context.theme.surface_hover, hover_blend_percent);
-    let ghost_bg: i32 = select_i32(feedback > 0, color_mix(context.theme.surface, context.theme.surface_hover, hover_blend_percent), -1);
+    let primary_background: i32 = color_mix(ui_context.theme.accent, ui_context.theme.surface, select_i32(interaction.pressed, 16, mul_i32(hover_blend_percent, 9) / 100));
+    let danger_background: i32 = color_mix(ui_context.theme.surface, ui_context.theme.surface_hover, hover_blend_percent);
+    let secondary_background: i32 = color_mix(ui_context.theme.surface, ui_context.theme.surface_hover, hover_blend_percent);
+    let ghost_bg: i32 = select_i32(feedback > 0, color_mix(ui_context.theme.surface, ui_context.theme.surface_hover, hover_blend_percent), -1);
     let base_bg: i32 = select_i32(variant == 0, primary_background, select_i32(variant == 3, danger_background, select_i32(variant == 2, ghost_bg, secondary_background)));
-    let foreground_color: i32 = select_i32(variant == 0, context.theme.accent_text, select_i32(variant == 3, context.theme.danger, context.theme.text));
-    let border_color: i32 = select_i32(interaction.focused && context.focus_visible, context.theme.accent, select_i32(variant == 3, color_mix(context.theme.border, context.theme.danger, hover_blend_percent), select_i32(variant == 1, context.theme.border, -1)));
+    let foreground_color: i32 = select_i32(variant == 0, ui_context.theme.accent_text, select_i32(variant == 3, ui_context.theme.danger, ui_context.theme.text));
+    let border_color: i32 = select_i32(interaction.focused && ui_context.focus_visible, ui_context.theme.accent, select_i32(variant == 3, color_mix(ui_context.theme.border, ui_context.theme.danger, hover_blend_percent), select_i32(variant == 1, ui_context.theme.border, -1)));
     transition node_index >= 0 && node_index < 128 {
-        true -> style_btn(context, node_index, base_bg, foreground_color, border_color, feedback, interaction)
+        true -> style_btn(ui_context, node_index, base_bg, foreground_color, border_color, feedback, interaction)
         _ -> (interaction)
     }
-    state style_btn(context: &mut UiContext, node_index: i32, base_bg: i32, foreground_color: i32, border_color: i32, feedback: i32, interaction: Interaction) -> Interaction
+    machine style_btn(ui_context: &mut UiContext, node_index: i32, base_bg: i32, foreground_color: i32, border_color: i32, feedback: i32, interaction: Interaction) -> Interaction
     requires node_index >= 0 && node_index < 128 {
-        context.nodes[node_index].aux_value = feedback as i32 in Saturating;
-        context.nodes[node_index].style.background = base_bg;
-        context.nodes[node_index].style.border = border_color;
-        context.nodes[node_index].style.border_width = select_sat(border_color >= 0, 1, 0);
-        context.nodes[node_index].content_color = foreground_color;
+        ui_context.nodes[node_index].aux_value = feedback as i32 in Saturating;
+        ui_context.nodes[node_index].style.background = base_bg;
+        ui_context.nodes[node_index].style.border = border_color;
+        ui_context.nodes[node_index].style.border_width = select_sat(border_color >= 0, 1, 0);
+        ui_context.nodes[node_index].content_color = foreground_color;
         transition interaction.clicked {
-            true -> mark_btn(context, interaction)
+            true -> mark_btn(ui_context, interaction)
             _ -> (interaction)
         }
     }
-    state mark_btn(context: &mut UiContext, interaction: Interaction) -> Interaction {
-        context.changed = true;
+    machine mark_btn(ui_context: &mut UiContext, interaction: Interaction) -> Interaction {
+        ui_context.changed = true;
         interaction
     }
 }
 
-public machine Ui::badge(context: &mut UiContext, id: i32, value: i32, bg_color: i32) {
-    let mut style: Style = Style::default_box();
+public machine badge(ui_context: &mut UiContext, id: i32, value: i32, bg_color: i32) {
+    let mut style: Style = types::style_default_box();
     style.width_mode = UiSizing::Fixed;
     style.width_px = 48;
     style.height_mode = UiSizing::Fixed;
@@ -236,45 +256,45 @@ public machine Ui::badge(context: &mut UiContext, id: i32, value: i32, bg_color:
     style.radius = 6;
     style.background = bg_color;
     let clamped: i32 = clamp_i32(value, 0, 99);
-    let initial_foreground: i32 = context.theme.accent_text;
-    let node_index: i32 = UiContext::add_node(context, id, style, UiContentKind::Badge, clamped, initial_foreground, false, false);
+    let initial_foreground: i32 = ui_context.theme.accent_text;
+    let node_index: i32 = context::add_node(ui_context, id, style, UiContentKind::Badge, clamped, initial_foreground, false, false);
 }
 
-public machine Ui::number_box(context: &mut UiContext, id: i32, value: i32, width_px: i32, height_px: i32) {
-    let mut style: Style = Style::default_box();
+public machine number_box(ui_context: &mut UiContext, id: i32, value: i32, width_px: i32, height_px: i32) {
+    let mut style: Style = types::style_default_box();
     style.width_mode = UiSizing::Fixed;
     style.width_px = width_px as i32 in Saturating;
     style.height_mode = UiSizing::Fixed;
     style.height_px = height_px as i32 in Saturating;
     style.radius = 6;
-    style.background = context.theme.well;
-    style.border = context.theme.border;
+    style.background = ui_context.theme.well;
+    style.border = ui_context.theme.border;
     style.border_width = 1;
     let clamped: i32 = clamp_i32(value, 0, 999);
-    let initial_foreground: i32 = context.theme.text;
-    let node_index: i32 = UiContext::add_node(context, id, style, UiContentKind::Number, clamped, initial_foreground, false, false);
+    let initial_foreground: i32 = ui_context.theme.text;
+    let node_index: i32 = context::add_node(ui_context, id, style, UiContentKind::Number, clamped, initial_foreground, false, false);
 }
 
 // the host paints its numeric text, as it does for number_box (0..999).
-public machine Ui::number_field(context: &mut UiContext, id: i32, value: &mut i32, minimum: i32, maximum: i32, step: i32, width_px: i32) -> bool
+public machine number_field(ui_context: &mut UiContext, id: i32, value: &mut i32, minimum: i32, maximum: i32, step: i32, width_px: i32) -> bool
 requires minimum >= 0 && minimum <= maximum && maximum <= 999 && step > 0 {
-    let mut style: Style = Style::default_box();
+    let mut style: Style = types::style_default_box();
     style.width_mode = UiSizing::Fixed;
     style.width_px = max_i32(width_px, 120) as i32 in Saturating;
     style.height_mode = UiSizing::Fixed;
     style.height_px = 36;
     style.radius = 10;
-    style.background = context.theme.well;
-    style.border = context.theme.border;
+    style.background = ui_context.theme.well;
+    style.border = ui_context.theme.border;
     style.border_width = 1;
-    let foreground: i32 = context.theme.text;
+    let foreground: i32 = ui_context.theme.text;
     let current: i32 = clamp_i32(value, minimum, maximum);
-    let index: i32 = UiContext::add_node(context, id, style, UiContentKind::NumberField, current, foreground, true, false);
-    let interaction: Interaction = UiContext::interact(context, index, id);
+    let index: i32 = context::add_node(ui_context, id, style, UiContentKind::NumberField, current, foreground, true, false);
+    let interaction: Interaction = context::interact(ui_context, index, id);
     let button_width: i32 in Saturating = min_sat(36, interaction.rectangle_width / (3 as i32 in Saturating));
     let pointer_minus: bool = interaction.clicked && interaction.relative_x < button_width;
     let pointer_plus: bool = interaction.clicked && interaction.relative_x >= interaction.rectangle_width - button_width;
-    let key: i32 = select_i32(interaction.focused, context.key_code, 0);
+    let key: i32 = select_i32(interaction.focused, ui_context.key_code, 0);
     let decrement: bool = pointer_minus || key == 40;
     let increment: bool = pointer_plus || key == 38;
     let decreased: i32 = select_i32(decrement, clamp_i32(sub_i32(current, step), minimum, maximum), current);
@@ -282,66 +302,66 @@ requires minimum >= 0 && minimum <= maximum && maximum <= 999 && step > 0 {
     let next: i32 = select_i32(key == 36, minimum, select_i32(key == 35, maximum, increased));
     let changed: bool = next != value;
     value = next;
-    context.changed = context.changed || changed;
+    ui_context.changed = ui_context.changed || changed;
     let enabled: i32 = add_i32(select_i32(next > minimum, 1, 0), select_i32(next < maximum, 2, 0));
-    let border: i32 = select_i32(interaction.focused, context.theme.accent, context.theme.border);
+    let border: i32 = select_i32(interaction.focused, ui_context.theme.accent, ui_context.theme.border);
     transition index >= 0 && index < 128 {
-        true -> update_node(context, index, next, enabled, border, changed)
+        true -> update_node(ui_context, index, next, enabled, border, changed)
         _ -> (changed)
     }
-    state update_node(context: &mut UiContext, index: i32, next: i32, enabled: i32, border: i32, changed: bool) -> bool
+    machine update_node(ui_context: &mut UiContext, index: i32, next: i32, enabled: i32, border: i32, changed: bool) -> bool
     requires index >= 0 && index < 128 {
-        context.nodes[index].content_value = next as i32 in Saturating;
-        context.nodes[index].aux_value = enabled as i32 in Saturating;
-        context.nodes[index].style.border = border;
+        ui_context.nodes[index].content_value = next as i32 in Saturating;
+        ui_context.nodes[index].aux_value = enabled as i32 in Saturating;
+        ui_context.nodes[index].style.border = border;
         changed
     }
 }
 
-public machine Ui::toggle(context: &mut UiContext, id: i32, value: &mut bool) -> bool {
-    let mut style: Style = Style::default_box();
+public machine toggle(ui_context: &mut UiContext, id: i32, value: &mut bool) -> bool {
+    let mut style: Style = types::style_default_box();
     style.width_mode = UiSizing::Fixed;
     style.width_px = 46;
     style.height_mode = UiSizing::Fixed;
     style.height_px = 24;
     style.radius = 12;
     let init_v: i32 = select_i32(value, 1, 0);
-    let initial_foreground: i32 = context.theme.knob;
-    let node_index: i32 = UiContext::add_node(context, id, style, UiContentKind::Toggle, init_v, initial_foreground, true, false);
-    let interaction: Interaction = UiContext::activate(context, node_index, id);
+    let initial_foreground: i32 = ui_context.theme.knob;
+    let node_index: i32 = context::add_node(ui_context, id, style, UiContentKind::Toggle, init_v, initial_foreground, true, false);
+    let interaction: Interaction = context::activate(ui_context, node_index, id);
     transition interaction.clicked {
-        true -> flip(context, node_index, value)
-        _ -> apply_visual(context, node_index, value, false)
+        true -> flip(ui_context, node_index, value)
+        _ -> apply_visual(ui_context, node_index, value, false)
     }
-    state flip(context: &mut UiContext, node_index: i32, value: &mut bool) -> bool {
+    machine flip(ui_context: &mut UiContext, node_index: i32, value: &mut bool) -> bool {
         value = !value;
-        context.changed = true;
-        transition { _ -> apply_visual(context, node_index, value, true) }
+        ui_context.changed = true;
+        transition { _ -> apply_visual(ui_context, node_index, value, true) }
     }
-    state apply_visual(context: &mut UiContext, node_index: i32, value: &bool, toggled: bool) -> bool {
+    machine apply_visual(ui_context: &mut UiContext, node_index: i32, value: &bool, toggled: bool) -> bool {
         let on_pct: i32 = select_i32(value, 100, 0);
-        let track_col: i32 = color_mix(context.theme.well, context.theme.success, on_pct);
+        let track_col: i32 = color_mix(ui_context.theme.well, ui_context.theme.success, on_pct);
         let v_int: i32 in Saturating = select_sat(value, 1, 0);
         transition node_index >= 0 && node_index < 128 {
-            true -> write_node(context, node_index, track_col, v_int, toggled)
+            true -> write_node(ui_context, node_index, track_col, v_int, toggled)
             _ -> (toggled)
         }
     }
-    state write_node(context: &mut UiContext, node_index: i32, track_col: i32, v_int: i32 in Saturating, toggled: bool) -> bool
+    machine write_node(ui_context: &mut UiContext, node_index: i32, track_col: i32, v_int: i32 in Saturating, toggled: bool) -> bool
     requires node_index >= 0 && node_index < 128 {
-        let progress: i32 = UiMotion::target(&mut context.motion, context.nodes[node_index].id, select_i32(v_int > 0, 1000, 0), 260);
-        context.nodes[node_index].aux_value = progress as i32 in Saturating;
-        context.nodes[node_index].style.background = color_mix(context.theme.track, context.theme.control_on, progress / 10);
-        context.nodes[node_index].style.border = -1;
-        context.nodes[node_index].style.border_width = 0;
-        context.nodes[node_index].content_value = v_int;
-        context.nodes[node_index].content_color = color_mix(context.theme.knob, context.theme.knob_on, progress / 10);
+        let progress: i32 = motion::target(&mut ui_context.motion, ui_context.nodes[node_index].id, select_i32(v_int > 0, 1000, 0), 260);
+        ui_context.nodes[node_index].aux_value = progress as i32 in Saturating;
+        ui_context.nodes[node_index].style.background = color_mix(ui_context.theme.track, ui_context.theme.control_on, progress / 10);
+        ui_context.nodes[node_index].style.border = -1;
+        ui_context.nodes[node_index].style.border_width = 0;
+        ui_context.nodes[node_index].content_value = v_int;
+        ui_context.nodes[node_index].content_color = color_mix(ui_context.theme.knob, ui_context.theme.knob_on, progress / 10);
         toggled
     }
 }
 
-public machine Ui::checkbox(context: &mut UiContext, id: i32, value: &mut bool) -> bool {
-    let mut style: Style = Style::default_box();
+public machine checkbox(ui_context: &mut UiContext, id: i32, value: &mut bool) -> bool {
+    let mut style: Style = types::style_default_box();
     style.width_mode = UiSizing::Fixed;
     style.width_px = 24;
     style.height_mode = UiSizing::Fixed;
@@ -349,42 +369,42 @@ public machine Ui::checkbox(context: &mut UiContext, id: i32, value: &mut bool) 
     style.radius = 6;
     style.border_width = 1;
     let init_v: i32 = select_i32(value, 1, 0);
-    let initial_foreground: i32 = context.theme.accent_text;
-    let node_index: i32 = UiContext::add_node(context, id, style, UiContentKind::Checkbox, init_v, initial_foreground, true, false);
-    let interaction: Interaction = UiContext::activate(context, node_index, id);
+    let initial_foreground: i32 = ui_context.theme.accent_text;
+    let node_index: i32 = context::add_node(ui_context, id, style, UiContentKind::Checkbox, init_v, initial_foreground, true, false);
+    let interaction: Interaction = context::activate(ui_context, node_index, id);
     transition interaction.clicked {
-        true -> flip(context, node_index, value)
-        _ -> apply_visual(context, node_index, value, interaction.hovered, false)
+        true -> flip(ui_context, node_index, value)
+        _ -> apply_visual(ui_context, node_index, value, interaction.hovered, false)
     }
-    state flip(context: &mut UiContext, node_index: i32, value: &mut bool) -> bool {
+    machine flip(ui_context: &mut UiContext, node_index: i32, value: &mut bool) -> bool {
         value = !value;
-        context.changed = true;
-        transition { _ -> apply_visual(context, node_index, value, true, true) }
+        ui_context.changed = true;
+        transition { _ -> apply_visual(ui_context, node_index, value, true, true) }
     }
-    state apply_visual(context: &mut UiContext, node_index: i32, value: &bool, hovered: bool, toggled: bool) -> bool {
-        let uncheck_bg: i32 = select_i32(hovered, context.theme.surface_hover, context.theme.well);
-        let background_color: i32 = select_i32(value, context.theme.accent, uncheck_bg);
-        let border_c: i32 = select_i32(value, context.theme.accent, context.theme.border);
+    machine apply_visual(ui_context: &mut UiContext, node_index: i32, value: &bool, hovered: bool, toggled: bool) -> bool {
+        let uncheck_bg: i32 = select_i32(hovered, ui_context.theme.surface_hover, ui_context.theme.well);
+        let background_color: i32 = select_i32(value, ui_context.theme.accent, uncheck_bg);
+        let border_c: i32 = select_i32(value, ui_context.theme.accent, ui_context.theme.border);
         let v_int: i32 in Saturating = select_sat(value, 1, 0);
         transition node_index >= 0 && node_index < 128 {
-            true -> write_node(context, node_index, background_color, border_c, v_int, toggled)
+            true -> write_node(ui_context, node_index, background_color, border_c, v_int, toggled)
             _ -> (toggled)
         }
     }
-    state write_node(context: &mut UiContext, node_index: i32, background_color: i32, border_c: i32, v_int: i32 in Saturating, toggled: bool) -> bool
+    machine write_node(ui_context: &mut UiContext, node_index: i32, background_color: i32, border_c: i32, v_int: i32 in Saturating, toggled: bool) -> bool
     requires node_index >= 0 && node_index < 128 {
-        let progress: i32 = UiMotion::target(&mut context.motion, context.nodes[node_index].id, select_i32(v_int > 0, 1000, 0), 260);
-        context.nodes[node_index].aux_value = progress as i32 in Saturating;
-        context.nodes[node_index].style.background = color_mix(context.theme.well, context.theme.control_on, progress / 10);
-        context.nodes[node_index].content_color = context.theme.control_glyph;
-        context.nodes[node_index].style.border = color_mix(context.theme.border, context.theme.control_on, progress / 10);
-        context.nodes[node_index].content_value = v_int;
+        let progress: i32 = motion::target(&mut ui_context.motion, ui_context.nodes[node_index].id, select_i32(v_int > 0, 1000, 0), 260);
+        ui_context.nodes[node_index].aux_value = progress as i32 in Saturating;
+        ui_context.nodes[node_index].style.background = color_mix(ui_context.theme.well, ui_context.theme.control_on, progress / 10);
+        ui_context.nodes[node_index].content_color = ui_context.theme.control_glyph;
+        ui_context.nodes[node_index].style.border = color_mix(ui_context.theme.border, ui_context.theme.control_on, progress / 10);
+        ui_context.nodes[node_index].content_value = v_int;
         toggled
     }
 }
 
-public machine Ui::slider(context: &mut UiContext, id: i32, value: &mut i32, width_px: i32) -> bool {
-    let mut style: Style = Style::default_box();
+public machine slider(ui_context: &mut UiContext, id: i32, value: &mut i32, width_px: i32) -> bool {
+    let mut style: Style = types::style_default_box();
     style.width_mode = UiSizing::Fixed;
     style.width_px = width_px as i32 in Saturating;
     style.height_mode = UiSizing::Fixed;
@@ -394,43 +414,43 @@ public machine Ui::slider(context: &mut UiContext, id: i32, value: &mut i32, wid
     style.border = -1;
     style.border_width = 0;
     let clamped_in: i32 = clamp_i32(value, 0, 100);
-    let initial_foreground: i32 = context.theme.accent;
-    let node_index: i32 = UiContext::add_node(context, id, style, UiContentKind::Slider, clamped_in, initial_foreground, true, false);
-    let interaction: Interaction = UiContext::interact(context, node_index, id);
-    let emphasis: i32 = UiMotion::target(&mut context.motion, id, select_i32(interaction.hovered || interaction.pressed, 1000, 0), 260);
-    UiContext::set_node_meta(context, node_index, emphasis, -1, 0);
+    let initial_foreground: i32 = ui_context.theme.accent;
+    let node_index: i32 = context::add_node(ui_context, id, style, UiContentKind::Slider, clamped_in, initial_foreground, true, false);
+    let interaction: Interaction = context::interact(ui_context, node_index, id);
+    let emphasis: i32 = motion::target(&mut ui_context.motion, id, select_i32(interaction.hovered || interaction.pressed, 1000, 0), 260);
+    context::set_node_meta(ui_context, node_index, emphasis, -1, 0);
     let rw: i32 in Saturating = interaction.rectangle_width;
     transition (interaction.pressed || interaction.clicked) && rw > 2 {
-        true -> update_val(context, node_index, value, interaction.relative_x, rw)
+        true -> update_val(ui_context, node_index, value, interaction.relative_x, rw)
         _ -> (false)
     }
-    state update_val(context: &mut UiContext, node_index: i32, value: &mut i32, relative_x: i32 in Saturating, rw: i32 in Saturating) -> bool
+    machine update_val(ui_context: &mut UiContext, node_index: i32, value: &mut i32, relative_x: i32 in Saturating, rw: i32 in Saturating) -> bool
     requires rw > 2 {
         let pct_s: i32 in Saturating = (relative_x * (100 as i32 in Saturating)) / rw;
         let new_v: i32 = clamp_i32(pct_s as i32, 0, 100);
         let changed: bool = value != new_v;
         value = new_v;
-        context.changed = context.changed || changed;
+        ui_context.changed = ui_context.changed || changed;
         transition node_index >= 0 && node_index < 128 {
-            true -> write_slider(context, node_index, new_v, changed)
+            true -> write_slider(ui_context, node_index, new_v, changed)
             _ -> (changed)
         }
     }
-    state write_slider(context: &mut UiContext, node_index: i32, new_v: i32, changed: bool) -> bool
+    machine write_slider(ui_context: &mut UiContext, node_index: i32, new_v: i32, changed: bool) -> bool
     requires node_index >= 0 && node_index < 128 {
-        context.nodes[node_index].content_value = new_v as i32 in Saturating;
+        ui_context.nodes[node_index].content_value = new_v as i32 in Saturating;
         changed
     }
 }
 
-public machine Ui::progress(context: &mut UiContext, id: i32, value: i32, width_px: i32, color: i32) {
-    let mut style: Style = Style::default_box();
+public machine progress(ui_context: &mut UiContext, id: i32, value: i32, width_px: i32, color: i32) {
+    let mut style: Style = types::style_default_box();
     style.width_mode = UiSizing::Fixed;
     style.width_px = width_px as i32 in Saturating;
     style.height_mode = UiSizing::Fixed;
     style.height_px = 12;
     style.radius = 6;
-    style.background = context.theme.well;
+    style.background = ui_context.theme.well;
     let clamped: i32 = clamp_i32(value, 0, 100);
-    let node_index: i32 = UiContext::add_node(context, id, style, UiContentKind::Slider, clamped, color, false, false);
+    let node_index: i32 = context::add_node(ui_context, id, style, UiContentKind::Slider, clamped, color, false, false);
 }

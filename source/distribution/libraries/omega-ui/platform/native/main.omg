@@ -1,3 +1,10 @@
+
+use omega_ui::text::UiTextStore;
+use omega_ui::types::Rect;
+use omega_ui::types::clamp_sat;
+use omega_ui::types::select_sat;
+use omega_ui::viewport::UiViewport;
+
 /*
 Caller-authored UI frames over ABI 2. Apps retain their models; core widgets own
 input, layout, motion and rasterization. No application IDs or views live here.
@@ -32,109 +39,109 @@ public UiNativeFrameProvider satisfies UiNativeFrame {
 machine dispatch(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
     packet[4060] = 0; packet[4061] = 0; packet[4062] = 0; packet[4064] = 0;
     transition packet[4080] == 0 { true -> resize(surface, packet) _ -> ready(surface, packet) }
-    state resize(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+    machine resize(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
         transition packet[4081] >= 1 && packet[4081] <= 3840 && packet[4082] >= 1 && packet[4082] <= 2160 && !surface.building {
             true -> initialize(surface, packet) _ -> (3u64)
         }
     }
-    state initialize(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+    machine initialize(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
         transition surface.ready { true -> dimensions(surface, packet) _ -> first(surface, packet) }
     }
-    state first(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
-        UiContext::setup(&mut surface.context, packet[4081], packet[4082], true);
+    machine first(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+        omega_ui::context::setup(&mut surface.context, packet[4081], packet[4082], true);
         surface.ready = true;
         transition { _ -> dimensions(surface, packet) }
     }
-    state dimensions(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+    machine dimensions(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
         surface.context.width = packet[4081] as i32 in Saturating;
         surface.context.height = packet[4082] as i32 in Saturating;
         surface.context.active = 0; surface.context.mouse_down = false; surface.prepared = false;
         transition { _ -> report(surface, packet) }
     }
-    state ready(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+    machine ready(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
         transition surface.ready { true -> operation(surface, packet) _ -> (1u64) }
     }
-    state operation(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+    machine operation(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
         transition packet[4080] {
             7 -> theme(surface, packet) 11 -> finish(surface, packet) 12 -> abort(surface, packet) _ -> phase(surface, packet)
         }
     }
-    state phase(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+    machine phase(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
         transition surface.building { true -> (apply_widget(surface, packet)) _ -> idle(surface, packet) }
     }
-    state idle(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+    machine idle(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
         transition packet[4080] {
             1 -> pointer(surface, packet) 2 -> key(surface, packet) 3 -> row(surface, packet)
             5 -> bounds(surface, packet, packet[4081]) 6 -> tick(surface, packet) 10 -> begin(surface, packet) _ -> (2u64)
         }
     }
-    state pointer(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+    machine pointer(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
         surface.context.mouse_x = packet[4081]; surface.context.mouse_y = packet[4082];
         surface.context.mouse_down = (packet[4083] & 1) != 0;
         surface.context.mouse_pressed = (packet[4083] & 2) != 0; surface.context.mouse_released = (packet[4083] & 4) != 0;
         transition { _ -> report(surface, packet) }
     }
-    state key(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+    machine key(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
         surface.context.key_code = packet[4081]; surface.character = packet[4082];
         surface.control = (packet[4083] & 1) != 0; surface.shift = (packet[4083] & 2) != 0;
         transition packet[4081] == 9 { true -> tab(surface, packet) _ -> report(surface, packet) }
     }
-    state tab(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
-        UiContext::focus_next(&mut surface.context, surface.shift);
+    machine tab(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+        omega_ui::context::focus_next(&mut surface.context, surface.shift);
         surface.context.key_code = 0; surface.character = 0;
         transition { _ -> report(surface, packet) }
     }
-    state tick(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+    machine tick(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
         transition packet[4081] >= 0 && packet[4081] <= 1000 { true -> advance(surface, packet) _ -> (3u64) }
     }
-    state advance(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
-        let changed: bool = UiMotion::advance(&mut surface.context.motion, packet[4081]);
+    machine advance(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+        let changed: bool = omega_ui::motion::advance(&mut surface.context.motion, packet[4081]);
         transition { _ -> report(surface, packet) }
     }
-    state theme(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+    machine theme(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
         let dark: bool = packet[4081] != 0;
         let changed: bool = dark != surface.context.theme.is_dark;
-        UiContext::set_theme(&mut surface.context, dark);
+        omega_ui::context::set_theme(&mut surface.context, dark);
         surface.context.changed = surface.context.changed || changed;
         transition { _ -> report(surface, packet) }
     }
-    state begin(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
-        surface.frame = UiFrame::begin(&mut surface.context);
+    machine begin(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+        surface.frame = omega_ui::frame::begin(&mut surface.context);
         surface.building = true; surface.prepared = false; clear_paint(surface, 0);
         transition { _ -> report(surface, packet) }
     }
-    state finish(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+    machine finish(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
         transition surface.building { true -> arrange(surface, packet) _ -> (2u64) }
     }
-    state arrange(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
-        NativeUiFont::measure(&mut surface.context);
-        let again: bool = UiFrame::next_pass(&mut surface.frame, &mut surface.context);
+    machine arrange(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+        font::measure(&mut surface.context);
+        let again: bool = omega_ui::frame::next_pass(&mut surface.frame, &mut surface.context);
         surface.character = 0; surface.control = false; surface.shift = false;
         transition again { true -> rebuild(surface, packet) _ -> prepare(surface, packet) }
     }
-    state rebuild(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+    machine rebuild(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
         packet[4064] = 1; clear_paint(surface, 0);
         transition { _ -> report(surface, packet) }
     }
-    state prepare(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+    machine prepare(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
         surface.building = false; surface.prepared = surface.context.frame_error == 0;
-        UiScene::prepare(&mut surface.scene, &surface.context);
+        omega_ui::scene::prepare(&mut surface.scene, &surface.context);
         surface.revision = surface.revision + (1 as i32 in Saturating);
         transition { _ -> report(surface, packet) }
     }
-    state abort(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+    machine abort(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
         surface.building = false; surface.prepared = false;
         surface.context.mouse_pressed = false; surface.context.mouse_released = false;
         surface.context.key_code = 0; surface.character = 0; surface.context.frame_error = 0;
         transition { _ -> report(surface, packet) }
     }
-    state bounds(surface: &NativeUiState, packet: &mut [i32; 4096], node: i32) -> u64 {
+    machine bounds(surface: &NativeUiState, packet: &mut [i32; 4096], node: i32) -> u64 {
         transition surface.prepared && node > 0 && node < surface.context.node_count && node < 128 {
             true -> rectangle(surface, packet, node) _ -> (4u64)
         }
     }
-    state rectangle(surface: &NativeUiState, packet: &mut [i32; 4096], node: i32) -> u64 requires node > 0 && node < 128 {
-        let rectangle: Rect = UiContext::node_rect(&surface.context, node);
+    machine rectangle(surface: &NativeUiState, packet: &mut [i32; 4096], node: i32) -> u64 requires node > 0 && node < 128 {
+        let rectangle: Rect = omega_ui::context::node_rect(&surface.context, node);
         let outside: i32 in Saturating = select_sat(surface.context.nodes[node].content_kind == 4 && surface.context.nodes[node].interactive, 14, 0);
         let vertical: i32 in Saturating = select_sat(outside > 0, 6, 0);
         let left: i32 in Saturating = clamp_sat(rectangle.x - outside, 0, surface.context.width);
@@ -144,32 +151,32 @@ machine dispatch(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
         packet[4003] = (clamp_sat(rectangle.y + rectangle.h + vertical, top, surface.context.height) - top) as i32;
         transition { _ -> report(surface, packet) }
     }
-    state row(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+    machine row(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
         let y: i32 = packet[4081];
         transition surface.prepared && y >= 0 && (y as i32 in Saturating) < surface.context.height {
-            true -> paint(surface, packet, y) _ -> (3u64)
+            true -> render_row(surface, packet, y) _ -> (3u64)
         }
     }
-    state paint(surface: &mut NativeUiState, packet: &mut [i32; 4096], y: i32) -> u64 {
-        Raster::configure(packet, UiViewport { logical_width: surface.context.width as i32, logical_height: surface.context.height as i32,
+    machine render_row(surface: &mut NativeUiState, packet: &mut [i32; 4096], y: i32) -> u64 {
+        omega_ui::raster::configure(packet, UiViewport { logical_width: surface.context.width as i32, logical_height: surface.context.height as i32,
             physical_width: surface.context.width as i32, physical_height: surface.context.height as i32 });
-        NativeUiRaster::paint(&surface.scene, &surface.context, packet, y);
+        paint::paint(&surface.scene, &surface.context, packet, y);
         paint_selections(surface, packet, y, 1);
-        NativeUiFont::paint(&surface.context, packet, y, &surface.text_paint);
+        font::paint(&surface.context, packet, y, &surface.text_paint);
         transition { _ -> report(surface, packet) }
     }
-    state report(surface: &NativeUiState, packet: &mut [i32; 4096]) -> u64 { native_report(surface, packet) }
+    machine report(surface: &NativeUiState, packet: &mut [i32; 4096]) -> u64 { native_report(surface, packet) }
 }
 machine clear_paint(surface: &mut NativeUiState, index: i32) {
     transition { _ -> scan(surface, index) }
-    state scan(surface: &mut NativeUiState, index: i32) {
+    machine scan(surface: &mut NativeUiState, index: i32) {
         transition index >= 0 && index < 128 { true -> clear(surface, index) _ -> done() }
     }
-    state clear(surface: &mut NativeUiState, index: i32) requires index >= 0 && index < 128 {
+    machine clear(surface: &mut NativeUiState, index: i32) requires index >= 0 && index < 128 {
         surface.text_paint[index] = NativeTextPaint { field: 0, scroll: 0, left: 0, right: 0, caret: 0 };
         transition { _ -> scan(surface, index + 1) }
     }
-    state done() {}
+    machine done() {}
 }
 public machine component_entry() reaches UiNativeLayout, UiNativeFrame invokes UiNativeLayout; invokes UiNativeFrame; {
     let result: u64 = UiNativeLayout::query(0u64);

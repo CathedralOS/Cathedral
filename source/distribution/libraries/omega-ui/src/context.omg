@@ -1,3 +1,25 @@
+module context;
+
+use motion::UiMotion;
+use palette::ThemePalette;
+use text::UiTextSpan;
+use text::UiTextStore;
+use types::Rect;
+use types::Size;
+use types::Style;
+use types::Theme;
+use types::UiAlignment;
+use types::UiAxis;
+use types::UiContentKind;
+use types::UiJustify;
+use types::UiSizing;
+use types::clamp_i32;
+use types::max_sat;
+use types::select_i32;
+use types::select_sat;
+use types::sub_i32;
+
+
 // Owns frame-local nodes, prior-frame hit rectangles, keyboard focus, and two-pass layout.
 
 use types;
@@ -38,7 +60,7 @@ public data UiNode {
     rect: Rect;
 }
 
-public machine UiNode::empty() -> UiNode {
+public machine node_empty() -> UiNode {
     UiNode {
         id: 0,
         parent: -1,
@@ -46,7 +68,7 @@ public machine UiNode::empty() -> UiNode {
         first_child: -1,
         last_child: -1,
         next_sibling: -1,
-        style: Style::default_box(),
+        style: types::style_default_box(),
         content_kind: 0,
         content_value: 0,
         content_color: -1,
@@ -59,7 +81,7 @@ public machine UiNode::empty() -> UiNode {
         measured: Size { w: 0, h: 0 },
         intrinsic: Size { w: 0, h: 0 },
         text_measured: false,
-        rect: Rect::zero()
+        rect: types::rect_zero()
     }
 }
 
@@ -98,132 +120,132 @@ public data UiContext {
     hit_count: i32;
 }
 
-public machine UiContext::new(width: i32 in Saturating, height: i32 in Saturating) -> UiContext {
-    let mut context: UiContext;
-    UiContext::setup(&mut context, width as i32, height as i32, true);
-    context
+public machine new(width: i32 in Saturating, height: i32 in Saturating) -> UiContext {
+    let mut ui_context: UiContext;
+    context::setup(&mut ui_context, width as i32, height as i32, true);
+    ui_context
 }
 
-public machine UiContext::set_accent(context: &mut UiContext, requested_accent_index: i32) {
+public machine set_accent(ui_context: &mut UiContext, requested_accent_index: i32) {
     let accent_index: i32 = clamp_i32(requested_accent_index, 0, 7);
-    context.accent_index = accent_index;
-    let palette: ThemePalette = ThemePalette::resolve(context.theme.is_dark, accent_index);
-    context.theme = ThemePalette::to_theme(&palette, context.theme.is_dark);
+    ui_context.accent_index = accent_index;
+    let resolved_palette: ThemePalette = palette::resolve(ui_context.theme.is_dark, accent_index);
+    ui_context.theme = palette::to_theme(&resolved_palette, ui_context.theme.is_dark);
 }
 
-public machine UiContext::set_theme(context: &mut UiContext, dark: bool) {
-    context.accent_index = clamp_i32(context.accent_index, 0, 7);
-    let palette: ThemePalette = ThemePalette::resolve(dark, context.accent_index);
-    context.theme = ThemePalette::to_theme(&palette, dark);
+public machine set_theme(ui_context: &mut UiContext, dark: bool) {
+    ui_context.accent_index = clamp_i32(ui_context.accent_index, 0, 7);
+    let resolved_palette: ThemePalette = palette::resolve(dark, ui_context.accent_index);
+    ui_context.theme = palette::to_theme(&resolved_palette, dark);
 }
 
-public machine UiContext::setup(context: &mut UiContext, width: i32, height: i32, dark: bool) {
-    let motion: UiMotion;
-    context.motion = motion;
-    // Reinitialization retires earlier spans and scenes from this context.
-    UiTextStore::begin_frame(&mut context.text_store);
-    context.width = width as i32 in Saturating;
-    context.height = height as i32 in Saturating;
-    context.frame = 0;
-    context.mouse_x = -1;
-    context.mouse_y = -1;
-    context.mouse_down = false;
-    context.mouse_pressed = false;
-    context.mouse_released = false;
-    context.key_code = 0;
-    context.hot = 0;
-    context.active = 0;
-    context.focus = 0;
-    context.focus_visible = false;
-    context.changed = false;
-    context.frame_error = 0;
-    context.rejected_containers = 0;
-    context.accent_index = 0;
-    context.aspect_pct = 1000;
-    context.node_count = 0;
-    context.stack_len = 0;
-    context.hit_count = 0;
-    UiContext::set_theme(context, dark);
+public machine setup(ui_context: &mut UiContext, width: i32, height: i32, dark: bool) {
+    let animation: UiMotion;
+    ui_context.motion = animation;
+    // Reinitialization retires earlier spans and scenes from this ui_context.
+    text::begin_frame(&mut ui_context.text_store);
+    ui_context.width = width as i32 in Saturating;
+    ui_context.height = height as i32 in Saturating;
+    ui_context.frame = 0;
+    ui_context.mouse_x = -1;
+    ui_context.mouse_y = -1;
+    ui_context.mouse_down = false;
+    ui_context.mouse_pressed = false;
+    ui_context.mouse_released = false;
+    ui_context.key_code = 0;
+    ui_context.hot = 0;
+    ui_context.active = 0;
+    ui_context.focus = 0;
+    ui_context.focus_visible = false;
+    ui_context.changed = false;
+    ui_context.frame_error = 0;
+    ui_context.rejected_containers = 0;
+    ui_context.accent_index = 0;
+    ui_context.aspect_pct = 1000;
+    ui_context.node_count = 0;
+    ui_context.stack_len = 0;
+    ui_context.hit_count = 0;
+    context::set_theme(ui_context, dark);
 }
 
 // Copy the scalar fields of `context.nodes[node_index].rect` without moving out of borrowed storage.
-public machine UiContext::node_rect(context: &UiContext, node_index: i32) -> Rect
+public machine node_rect(ui_context: &UiContext, node_index: i32) -> Rect
 requires node_index >= 0 && node_index < 128 {
     Rect {
-        x: context.nodes[node_index].rect.x,
-        y: context.nodes[node_index].rect.y,
-        w: context.nodes[node_index].rect.w,
-        h: context.nodes[node_index].rect.h
+        x: ui_context.nodes[node_index].rect.x,
+        y: ui_context.nodes[node_index].rect.y,
+        w: ui_context.nodes[node_index].rect.w,
+        h: ui_context.nodes[node_index].rect.h
     }
 }
 
 // Copy the scalar fields of `context.hit_rects[hit_index]` without moving out of borrowed storage.
-public machine UiContext::hit_rect(context: &UiContext, hit_index: i32) -> Rect
+public machine hit_rect(ui_context: &UiContext, hit_index: i32) -> Rect
 requires hit_index >= 0 && hit_index < 128 {
     Rect {
-        x: context.hit_rects[hit_index].x,
-        y: context.hit_rects[hit_index].y,
-        w: context.hit_rects[hit_index].w,
-        h: context.hit_rects[hit_index].h
+        x: ui_context.hit_rects[hit_index].x,
+        y: ui_context.hit_rects[hit_index].y,
+        w: ui_context.hit_rects[hit_index].w,
+        h: ui_context.hit_rects[hit_index].h
     }
 }
 
-public machine UiContext::update_hot(context: &mut UiContext) {
-    context.hot = 0;
-    transition { _ -> loop_hits(context, 0) }
+public machine update_hot(ui_context: &mut UiContext) {
+    ui_context.hot = 0;
+    transition { _ -> loop_hits(ui_context, 0) }
 
-    state loop_hits(context: &mut UiContext, hit_index: i32) {
-        transition hit_index >= 0 && hit_index < context.hit_count && hit_index < 128 {
-            true -> check_one(context, hit_index)
+    machine loop_hits(ui_context: &mut UiContext, hit_index: i32) {
+        transition hit_index >= 0 && hit_index < ui_context.hit_count && hit_index < 128 {
+            true -> check_one(ui_context, hit_index)
             _ -> done()
         }
     }
-    state check_one(context: &mut UiContext, hit_index: i32)
+    machine check_one(ui_context: &mut UiContext, hit_index: i32)
     requires hit_index >= 0 && hit_index < 128 {
-        let r: Rect = UiContext::hit_rect(context, hit_index);
-        let inside: bool = Rect::contains(&r, context.mouse_x, context.mouse_y);
+        let r: Rect = context::hit_rect(ui_context, hit_index);
+        let inside: bool = types::rect_contains(&r, ui_context.mouse_x, ui_context.mouse_y);
         transition inside {
-            true -> mark_hot(context, hit_index)
-            _ -> loop_hits(context, hit_index + 1)
+            true -> mark_hot(ui_context, hit_index)
+            _ -> loop_hits(ui_context, hit_index + 1)
         }
     }
-    state mark_hot(context: &mut UiContext, hit_index: i32)
+    machine mark_hot(ui_context: &mut UiContext, hit_index: i32)
     requires hit_index >= 0 && hit_index < 128 {
-        context.hot = context.hit_ids[hit_index];
-        transition { _ -> loop_hits(context, hit_index + 1) }
+        ui_context.hot = ui_context.hit_ids[hit_index];
+        transition { _ -> loop_hits(ui_context, hit_index + 1) }
     }
-    state done() {}
+    machine done() {}
 }
 
-public machine UiContext::begin_frame(context: &mut UiContext) {
-    UiTextStore::begin_frame(&mut context.text_store);
-    UiContext::update_hot(context);
-    transition context.mouse_pressed {
-        true -> on_press(context)
-        _ -> after_press(context)
+public machine begin_frame(ui_context: &mut UiContext) {
+    text::begin_frame(&mut ui_context.text_store);
+    context::update_hot(ui_context);
+    transition ui_context.mouse_pressed {
+        true -> on_press(ui_context)
+        _ -> after_press(ui_context)
     }
-    state on_press(context: &mut UiContext) {
-        context.active = context.hot;
-        context.focus = context.hot;
-        context.focus_visible = false;
-        transition { _ -> after_press(context) }
+    machine on_press(ui_context: &mut UiContext) {
+        ui_context.active = ui_context.hot;
+        ui_context.focus = ui_context.hot;
+        ui_context.focus_visible = false;
+        transition { _ -> after_press(ui_context) }
     }
-    state after_press(context: &mut UiContext) {
-        context.changed = false;
-        context.frame_error = 0;
-        context.rejected_containers = 0;
-        context.node_count = 1;
-        context.stack_len = 1;
+    machine after_press(ui_context: &mut UiContext) {
+        ui_context.changed = false;
+        ui_context.frame_error = 0;
+        ui_context.rejected_containers = 0;
+        ui_context.node_count = 1;
+        ui_context.stack_len = 1;
 
-        let mut root_style: Style = Style::default_box();
+        let mut root_style: Style = types::style_default_box();
         root_style.direction = UiAxis::Row; // row root
         root_style.width_mode = UiSizing::Fixed;
-        root_style.width_px = context.width;
+        root_style.width_px = ui_context.width;
         root_style.height_mode = UiSizing::Fixed;
-        root_style.height_px = context.height;
-        root_style.background = context.theme.background;
+        root_style.height_px = ui_context.height;
+        root_style.background = ui_context.theme.background;
 
-        context.nodes[0] = UiNode {
+        ui_context.nodes[0] = UiNode {
             id: 1,
             parent: -1,
             child_count: 0,
@@ -240,55 +262,55 @@ public machine UiContext::begin_frame(context: &mut UiContext) {
             text: UiTextSpan { offset: 0, length: 0, generation: 0 },
             text_align: 0,
             interactive: false,
-            measured: Size { w: context.width, h: context.height },
+            measured: Size { w: ui_context.width, h: ui_context.height },
             intrinsic: Size { w: 0, h: 0 },
             text_measured: false,
-            rect: Rect { x: 0, y: 0, w: context.width, h: context.height }
+            rect: Rect { x: 0, y: 0, w: ui_context.width, h: ui_context.height }
         };
-        context.stack[0] = 0;
+        ui_context.stack[0] = 0;
     }
 }
 
 // Tab walks the previous frame's actual interactive nodes. A removed focus
 // target starts at the appropriate edge; empty views clear focus.
-public machine UiContext::focus_next(context: &mut UiContext, backward: bool) {
-    transition { _ -> scan(context, backward, 0, 0, 0, 0) }
-    state scan(context: &mut UiContext, backward: bool, index: i32, first: i32, previous: i32, target: i32) {
-        transition index >= 0 && index < context.hit_count && index < 128 {
-            true -> visit(context, backward, index, first, previous, target)
-            _ -> finish(context, backward, first, previous, target)
+public machine focus_next(ui_context: &mut UiContext, backward: bool) {
+    transition { _ -> scan(ui_context, backward, 0, 0, 0, 0) }
+    machine scan(ui_context: &mut UiContext, backward: bool, index: i32, first: i32, previous: i32, target: i32) {
+        transition index >= 0 && index < ui_context.hit_count && index < 128 {
+            true -> visit(ui_context, backward, index, first, previous, target)
+            _ -> finish(ui_context, backward, first, previous, target)
         }
     }
-    state visit(context: &mut UiContext, backward: bool, index: i32, first: i32, previous: i32, target: i32)
+    machine visit(ui_context: &mut UiContext, backward: bool, index: i32, first: i32, previous: i32, target: i32)
     requires index >= 0 && index < 128 {
-        let identifier: i32 = context.hit_ids[index];
+        let identifier: i32 = ui_context.hit_ids[index];
         transition identifier != 0 {
-            true -> consider(context, backward, index, first, previous, target, identifier)
-            _ -> scan(context, backward, index + 1, first, previous, target)
+            true -> consider(ui_context, backward, index, first, previous, target, identifier)
+            _ -> scan(ui_context, backward, index + 1, first, previous, target)
         }
     }
-    state consider(context: &mut UiContext, backward: bool, index: i32, first: i32, previous: i32, target: i32, identifier: i32)
+    machine consider(ui_context: &mut UiContext, backward: bool, index: i32, first: i32, previous: i32, target: i32, identifier: i32)
     requires index >= 0 && index < 128 {
         let first_identifier: i32 = select_i32(first == 0, identifier, first);
-        let follows_focus: bool = previous == context.focus && context.focus != 0;
-        let precedes_focus: bool = identifier == context.focus;
+        let follows_focus: bool = previous == ui_context.focus && ui_context.focus != 0;
+        let precedes_focus: bool = identifier == ui_context.focus;
         let candidate: i32 = select_i32(backward, previous, identifier);
         let matched: bool = select_i32(backward, select_i32(precedes_focus, 1, 0), select_i32(follows_focus, 1, 0)) == 1;
         let next_target: i32 = select_i32(target == 0 && matched, candidate, target);
-        transition { _ -> scan(context, backward, index + 1, first_identifier, identifier, next_target) }
+        transition { _ -> scan(ui_context, backward, index + 1, first_identifier, identifier, next_target) }
     }
-    state finish(context: &mut UiContext, backward: bool, first: i32, last: i32, target: i32) {
+    machine finish(ui_context: &mut UiContext, backward: bool, first: i32, last: i32, target: i32) {
         let wrapped: i32 = select_i32(backward, last, first);
-        context.focus = select_i32(target != 0, target, wrapped);
-        context.focus_visible = context.focus != 0;
+        ui_context.focus = select_i32(target != 0, target, wrapped);
+        ui_context.focus_visible = ui_context.focus != 0;
     }
 }
 
 // Button-like controls consume a staged key press through the same activation
 // result as the pointer. The host stages edges; end_frame consumes the key.
-public machine UiContext::activate(context: &mut UiContext, node_index: i32, identifier: i32) -> Interaction {
-    let interaction: Interaction = UiContext::interact(context, node_index, identifier);
-    let keyboard: bool = interaction.id != 0 && interaction.focused && (context.key_code == 13 || context.key_code == 32);
+public machine activate(ui_context: &mut UiContext, node_index: i32, identifier: i32) -> Interaction {
+    let interaction: Interaction = context::interact(ui_context, node_index, identifier);
+    let keyboard: bool = interaction.id != 0 && interaction.focused && (ui_context.key_code == 13 || ui_context.key_code == 32);
     Interaction {
         id: interaction.id,
         hovered: interaction.hovered,
@@ -300,42 +322,42 @@ public machine UiContext::activate(context: &mut UiContext, node_index: i32, ide
     }
 }
 
-public machine UiContext::set_node_meta(context: &mut UiContext, node_index: i32, aux_value: i32, aux_color: i32, label_id: i32) {
+public machine set_node_meta(ui_context: &mut UiContext, node_index: i32, aux_value: i32, aux_color: i32, label_id: i32) {
     transition node_index >= 0 && node_index < 128 {
-        true -> apply(context, node_index, aux_value, aux_color, label_id)
+        true -> apply(ui_context, node_index, aux_value, aux_color, label_id)
         _ -> done()
     }
-    state apply(context: &mut UiContext, node_index: i32, aux_value: i32, aux_color: i32, label_id: i32)
+    machine apply(ui_context: &mut UiContext, node_index: i32, aux_value: i32, aux_color: i32, label_id: i32)
     requires node_index >= 0 && node_index < 128 {
-        context.nodes[node_index].aux_value = aux_value as i32 in Saturating;
-        context.nodes[node_index].aux_color = aux_color;
-        context.nodes[node_index].label_id = label_id;
+        ui_context.nodes[node_index].aux_value = aux_value as i32 in Saturating;
+        ui_context.nodes[node_index].aux_color = aux_color;
+        ui_context.nodes[node_index].label_id = label_id;
     }
-    state done() {}
+    machine done() {}
 }
 
-public machine UiContext::add_node(context: &mut UiContext, id: i32, style: Style, content: UiContentKind, content_value: i32, content_color: i32, interactive: bool, push_stack: bool) -> i32 {
-    let content_kind: i32 = UiContentKind::code(content);
-    context.frame_error = select_i32(context.frame_error == 0 && content_kind < 0, 7, context.frame_error);
-    transition context.frame_error == 0 && context.node_count >= 1 && context.node_count < 128 && context.stack_len >= 1 && context.stack_len <= 8 && (!push_stack || context.stack_len < 8) {
-        true -> check_parent(context, id, style, content_kind, content_value, content_color, interactive, push_stack)
-        _ -> reject(context, push_stack)
+public machine add_node(ui_context: &mut UiContext, id: i32, style: Style, content: UiContentKind, content_value: i32, content_color: i32, interactive: bool, push_stack: bool) -> i32 {
+    let content_kind: i32 = types::content_kind_code(content);
+    ui_context.frame_error = select_i32(ui_context.frame_error == 0 && content_kind < 0, 7, ui_context.frame_error);
+    transition ui_context.frame_error == 0 && ui_context.node_count >= 1 && ui_context.node_count < 128 && ui_context.stack_len >= 1 && ui_context.stack_len <= 8 && (!push_stack || ui_context.stack_len < 8) {
+        true -> check_parent(ui_context, id, style, content_kind, content_value, content_color, interactive, push_stack)
+        _ -> reject(ui_context, push_stack)
     }
-    state check_parent(context: &mut UiContext, id: i32, style: Style, content_kind: i32, content_value: i32, content_color: i32, interactive: bool, push_stack: bool) -> i32
-    requires context.node_count >= 1 && context.node_count < 128 && context.stack_len >= 1 && context.stack_len <= 8 {
-        let top_slot: i32 = context.stack_len - 1;
-        let parent_idx: i32 = context.stack[top_slot];
-        transition parent_idx >= 0 && parent_idx < context.node_count && parent_idx < 128 {
-            true -> insert_node(context, id, style, content_kind, content_value, content_color, interactive, push_stack, parent_idx)
-            _ -> reject(context, push_stack)
+    machine check_parent(ui_context: &mut UiContext, id: i32, style: Style, content_kind: i32, content_value: i32, content_color: i32, interactive: bool, push_stack: bool) -> i32
+    requires ui_context.node_count >= 1 && ui_context.node_count < 128 && ui_context.stack_len >= 1 && ui_context.stack_len <= 8 {
+        let top_slot: i32 = ui_context.stack_len - 1;
+        let parent_idx: i32 = ui_context.stack[top_slot];
+        transition parent_idx >= 0 && parent_idx < ui_context.node_count && parent_idx < 128 {
+            true -> insert_node(ui_context, id, style, content_kind, content_value, content_color, interactive, push_stack, parent_idx)
+            _ -> reject(ui_context, push_stack)
         }
     }
-    state insert_node(context: &mut UiContext, id: i32, style: Style, content_kind: i32, content_value: i32, content_color: i32, interactive: bool, push_stack: bool, parent_idx: i32) -> i32
-    requires context.node_count >= 1 && context.node_count < 128 && parent_idx >= 0 && parent_idx < 128 {
-        let node_index: i32 = context.node_count;
+    machine insert_node(ui_context: &mut UiContext, id: i32, style: Style, content_kind: i32, content_value: i32, content_color: i32, interactive: bool, push_stack: bool, parent_idx: i32) -> i32
+    requires ui_context.node_count >= 1 && ui_context.node_count < 128 && parent_idx >= 0 && parent_idx < 128 {
+        let node_index: i32 = ui_context.node_count;
         let init_w: i32 in Saturating = style.width_px;
         let init_h: i32 in Saturating = style.height_px;
-        context.nodes[node_index] = UiNode {
+        ui_context.nodes[node_index] = UiNode {
             id: id,
             parent: parent_idx,
             child_count: 0,
@@ -355,107 +377,107 @@ public machine UiContext::add_node(context: &mut UiContext, id: i32, style: Styl
             measured: Size { w: init_w, h: init_h },
             intrinsic: Size { w: 0, h: 0 },
             text_measured: false,
-            rect: Rect::zero()
+            rect: types::rect_zero()
         };
-        context.node_count = node_index + 1;
-        context.nodes[parent_idx].child_count = context.nodes[parent_idx].child_count + (1 as i32 in Saturating);
-        let previous: i32 = context.nodes[parent_idx].last_child;
-        context.nodes[parent_idx].last_child = node_index;
+        ui_context.node_count = node_index + 1;
+        ui_context.nodes[parent_idx].child_count = ui_context.nodes[parent_idx].child_count + (1 as i32 in Saturating);
+        let previous: i32 = ui_context.nodes[parent_idx].last_child;
+        ui_context.nodes[parent_idx].last_child = node_index;
         transition previous >= 0 && previous < 128 {
-            true -> link(context, previous, node_index, push_stack)
-            _ -> first(context, parent_idx, node_index, push_stack)
+            true -> link(ui_context, previous, node_index, push_stack)
+            _ -> first(ui_context, parent_idx, node_index, push_stack)
         }
     }
-    state link(context: &mut UiContext, previous: i32, node_index: i32, push_stack: bool) -> i32
+    machine link(ui_context: &mut UiContext, previous: i32, node_index: i32, push_stack: bool) -> i32
     requires previous >= 0 && previous < 128 {
-        context.nodes[previous].next_sibling = node_index;
-        transition { _ -> maybe_push(context, node_index, push_stack) }
+        ui_context.nodes[previous].next_sibling = node_index;
+        transition { _ -> maybe_push(ui_context, node_index, push_stack) }
     }
-    state first(context: &mut UiContext, parent: i32, node_index: i32, push_stack: bool) -> i32
+    machine first(ui_context: &mut UiContext, parent: i32, node_index: i32, push_stack: bool) -> i32
     requires parent >= 0 && parent < 128 {
-        context.nodes[parent].first_child = node_index;
-        transition { _ -> maybe_push(context, node_index, push_stack) }
+        ui_context.nodes[parent].first_child = node_index;
+        transition { _ -> maybe_push(ui_context, node_index, push_stack) }
     }
-    state maybe_push(context: &mut UiContext, node_index: i32, push_stack: bool) -> i32 {
-        transition push_stack && context.stack_len >= 1 && context.stack_len < 8 {
-            true -> do_push(context, node_index)
+    machine maybe_push(ui_context: &mut UiContext, node_index: i32, push_stack: bool) -> i32 {
+        transition push_stack && ui_context.stack_len >= 1 && ui_context.stack_len < 8 {
+            true -> do_push(ui_context, node_index)
             _ -> (node_index)
         }
     }
-    state do_push(context: &mut UiContext, node_index: i32) -> i32
-    requires context.stack_len >= 1 && context.stack_len < 8 {
-        let s: i32 = context.stack_len;
-        context.stack[s] = node_index;
-        context.stack_len = s + 1;
+    machine do_push(ui_context: &mut UiContext, node_index: i32) -> i32
+    requires ui_context.stack_len >= 1 && ui_context.stack_len < 8 {
+        let s: i32 = ui_context.stack_len;
+        ui_context.stack[s] = node_index;
+        ui_context.stack_len = s + 1;
         node_index
     }
-    state reject(context: &mut UiContext, push_stack: bool) -> i32 {
-        context.frame_error = select_i32(context.frame_error != 0, context.frame_error,
-            select_i32(context.node_count >= 128, 1, select_i32(push_stack && context.stack_len >= 8, 2, 3)));
-        context.rejected_containers = context.rejected_containers + select_sat(push_stack, 1, 0);
+    machine reject(ui_context: &mut UiContext, push_stack: bool) -> i32 {
+        ui_context.frame_error = select_i32(ui_context.frame_error != 0, ui_context.frame_error,
+            select_i32(ui_context.node_count >= 128, 1, select_i32(push_stack && ui_context.stack_len >= 8, 2, 3)));
+        ui_context.rejected_containers = ui_context.rejected_containers + select_sat(push_stack, 1, 0);
         -1
     }
 }
 
-public machine UiContext::end_container(context: &mut UiContext) {
-    transition context.rejected_containers > 0 {
-        true -> reject_pop(context)
-        _ -> accepted(context)
+public machine end_container(ui_context: &mut UiContext) {
+    transition ui_context.rejected_containers > 0 {
+        true -> reject_pop(ui_context)
+        _ -> accepted(ui_context)
     }
-    state reject_pop(context: &mut UiContext) {
-        context.rejected_containers = context.rejected_containers - (1 as i32 in Saturating);
+    machine reject_pop(ui_context: &mut UiContext) {
+        ui_context.rejected_containers = ui_context.rejected_containers - (1 as i32 in Saturating);
     }
-    state accepted(context: &mut UiContext) {
-        transition context.stack_len > 1 {
-            true -> pop(context)
-            _ -> unbalanced(context)
+    machine accepted(ui_context: &mut UiContext) {
+        transition ui_context.stack_len > 1 {
+            true -> pop(ui_context)
+            _ -> unbalanced(ui_context)
         }
     }
-    state unbalanced(context: &mut UiContext) {
-        context.frame_error = select_i32(context.frame_error == 0, 4, context.frame_error);
+    machine unbalanced(ui_context: &mut UiContext) {
+        ui_context.frame_error = select_i32(ui_context.frame_error == 0, 4, ui_context.frame_error);
     }
-    state pop(context: &mut UiContext)
-    requires context.stack_len > 1 {
-        context.stack_len = context.stack_len - 1;
+    machine pop(ui_context: &mut UiContext)
+    requires ui_context.stack_len > 1 {
+        ui_context.stack_len = ui_context.stack_len - 1;
     }
-    state done() {}
+    machine done() {}
 }
 
-public machine UiContext::previous_rect(context: &UiContext, id: i32) -> Rect {
-    transition { _ -> search(context, id, 0) }
+public machine previous_rect(ui_context: &UiContext, id: i32) -> Rect {
+    transition { _ -> search(ui_context, id, 0) }
 
-    state search(context: &UiContext, id: i32, hit_index: i32) -> Rect {
-        transition hit_index >= 0 && hit_index < context.hit_count && hit_index < 128 {
-            true -> check(context, id, hit_index)
-            _ -> (Rect::zero())
+    machine search(ui_context: &UiContext, id: i32, hit_index: i32) -> Rect {
+        transition hit_index >= 0 && hit_index < ui_context.hit_count && hit_index < 128 {
+            true -> check(ui_context, id, hit_index)
+            _ -> (types::rect_zero())
         }
     }
-    state check(context: &UiContext, id: i32, hit_index: i32) -> Rect
+    machine check(ui_context: &UiContext, id: i32, hit_index: i32) -> Rect
     requires hit_index >= 0 && hit_index < 128 {
-        transition context.hit_ids[hit_index] == id {
-            true -> (UiContext::hit_rect(context, hit_index))
-            _ -> search(context, id, hit_index + 1)
+        transition ui_context.hit_ids[hit_index] == id {
+            true -> (context::hit_rect(ui_context, hit_index))
+            _ -> search(ui_context, id, hit_index + 1)
         }
     }
 }
 
-public machine UiContext::interact(context: &mut UiContext, node_idx: i32, id: i32) -> Interaction {
-    transition node_idx > 0 && node_idx < context.node_count && node_idx < 128 {
-        true -> mark_interactive(context, node_idx, id)
+public machine interact(ui_context: &mut UiContext, node_idx: i32, id: i32) -> Interaction {
+    transition node_idx > 0 && node_idx < ui_context.node_count && node_idx < 128 {
+        true -> mark_interactive(ui_context, node_idx, id)
         _ -> invalid()
     }
-    state mark_interactive(context: &mut UiContext, node_idx: i32, id: i32) -> Interaction
+    machine mark_interactive(ui_context: &mut UiContext, node_idx: i32, id: i32) -> Interaction
     requires node_idx >= 0 && node_idx < 128 {
-        context.nodes[node_idx].interactive = true;
-        transition { _ -> compute(context, id) }
+        ui_context.nodes[node_idx].interactive = true;
+        transition { _ -> compute(ui_context, id) }
     }
-    state compute(context: &mut UiContext, id: i32) -> Interaction {
-        let r: Rect = UiContext::previous_rect(context, id);
-        let hovered: bool = id != 0 && context.hot == id;
-        let pressed: bool = id != 0 && context.active == id && context.mouse_down;
-        let clicked: bool = id != 0 && context.hot == id && context.mouse_pressed;
-        let focused: bool = id != 0 && context.focus == id;
-        let mx: i32 in Saturating = context.mouse_x as i32 in Saturating;
+    machine compute(ui_context: &mut UiContext, id: i32) -> Interaction {
+        let r: Rect = context::previous_rect(ui_context, id);
+        let hovered: bool = id != 0 && ui_context.hot == id;
+        let pressed: bool = id != 0 && ui_context.active == id && ui_context.mouse_down;
+        let clicked: bool = id != 0 && ui_context.hot == id && ui_context.mouse_pressed;
+        let focused: bool = id != 0 && ui_context.focus == id;
+        let mx: i32 in Saturating = ui_context.mouse_x as i32 in Saturating;
         let relative_x: i32 in Saturating = mx - r.x;
         Interaction {
             id: id,
@@ -467,331 +489,331 @@ public machine UiContext::interact(context: &mut UiContext, node_idx: i32, id: i
             rectangle_width: r.w
         }
     }
-    state invalid() -> Interaction {
+    machine invalid() -> Interaction {
         Interaction { id: 0, hovered: false, pressed: false, clicked: false,
             focused: false, relative_x: 0, rectangle_width: 0 }
     }
 }
 
 // Single-cycle 1D child measurement helper for node `node_index`.
-public machine UiContext::measure_children_of(context: &UiContext, node_index: i32, dir: UiAxis) -> Size
+public machine measure_children_of(ui_context: &UiContext, node_index: i32, dir: UiAxis) -> Size
 requires node_index >= 0 && node_index < 128 {
-    transition { _ -> loop_children(context, node_index, dir, context.nodes[node_index].first_child, 0, 0) }
+    transition { _ -> loop_children(ui_context, node_index, dir, ui_context.nodes[node_index].first_child, 0, 0) }
 
-    state loop_children(context: &UiContext, node_index: i32, dir: UiAxis, child: i32, cw: i32 in Saturating, ch: i32 in Saturating) -> Size {
-        transition child >= 0 && child < context.node_count && child < 128 {
-            true -> check_one(context, node_index, dir, child, cw, ch)
+    machine loop_children(ui_context: &UiContext, node_index: i32, dir: UiAxis, child: i32, cw: i32 in Saturating, ch: i32 in Saturating) -> Size {
+        transition child >= 0 && child < ui_context.node_count && child < 128 {
+            true -> check_one(ui_context, node_index, dir, child, cw, ch)
             _ -> (Size { w: cw, h: ch })
         }
     }
-    state check_one(context: &UiContext, node_index: i32, dir: UiAxis, child: i32, cw: i32 in Saturating, ch: i32 in Saturating) -> Size
+    machine check_one(ui_context: &UiContext, node_index: i32, dir: UiAxis, child: i32, cw: i32 in Saturating, ch: i32 in Saturating) -> Size
     requires child >= 0 && child < 128 {
-        transition context.nodes[child].parent == node_index {
-            true -> branch_dir(context, node_index, dir, child, cw, ch)
-            _ -> loop_children(context, node_index, dir, context.nodes[child].next_sibling, cw, ch)
+        transition ui_context.nodes[child].parent == node_index {
+            true -> branch_dir(ui_context, node_index, dir, child, cw, ch)
+            _ -> loop_children(ui_context, node_index, dir, ui_context.nodes[child].next_sibling, cw, ch)
         }
     }
-    state branch_dir(context: &UiContext, node_index: i32, dir: UiAxis, child: i32, cw: i32 in Saturating, ch: i32 in Saturating) -> Size
+    machine branch_dir(ui_context: &UiContext, node_index: i32, dir: UiAxis, child: i32, cw: i32 in Saturating, ch: i32 in Saturating) -> Size
     requires child >= 0 && child < 128 {
-        let mw: i32 in Saturating = context.nodes[child].measured.w;
-        let mh: i32 in Saturating = context.nodes[child].measured.h;
-        transition UiAxis::is_row(dir) {
-            true -> accum_row(context, node_index, dir, child, cw + mw, ch, mh)
-            _ -> accum_col(context, node_index, dir, child, cw, mw, ch + mh)
+        let mw: i32 in Saturating = ui_context.nodes[child].measured.w;
+        let mh: i32 in Saturating = ui_context.nodes[child].measured.h;
+        transition types::axis_is_row(dir) {
+            true -> accum_row(ui_context, node_index, dir, child, cw + mw, ch, mh)
+            _ -> accum_col(ui_context, node_index, dir, child, cw, mw, ch + mh)
         }
     }
-    state accum_row(context: &UiContext, node_index: i32, dir: UiAxis, child: i32, ncw: i32 in Saturating, ch: i32 in Saturating, mh: i32 in Saturating) -> Size
+    machine accum_row(ui_context: &UiContext, node_index: i32, dir: UiAxis, child: i32, ncw: i32 in Saturating, ch: i32 in Saturating, mh: i32 in Saturating) -> Size
     requires child >= 0 && child < 128 {
         transition mh > ch {
-            true -> loop_children(context, node_index, dir, context.nodes[child].next_sibling, ncw, mh)
-            _ -> loop_children(context, node_index, dir, context.nodes[child].next_sibling, ncw, ch)
+            true -> loop_children(ui_context, node_index, dir, ui_context.nodes[child].next_sibling, ncw, mh)
+            _ -> loop_children(ui_context, node_index, dir, ui_context.nodes[child].next_sibling, ncw, ch)
         }
     }
-    state accum_col(context: &UiContext, node_index: i32, dir: UiAxis, child: i32, cw: i32 in Saturating, mw: i32 in Saturating, nch: i32 in Saturating) -> Size
+    machine accum_col(ui_context: &UiContext, node_index: i32, dir: UiAxis, child: i32, cw: i32 in Saturating, mw: i32 in Saturating, nch: i32 in Saturating) -> Size
     requires child >= 0 && child < 128 {
         transition mw > cw {
-            true -> loop_children(context, node_index, dir, context.nodes[child].next_sibling, mw, nch)
-            _ -> loop_children(context, node_index, dir, context.nodes[child].next_sibling, cw, nch)
+            true -> loop_children(ui_context, node_index, dir, ui_context.nodes[child].next_sibling, mw, nch)
+            _ -> loop_children(ui_context, node_index, dir, ui_context.nodes[child].next_sibling, cw, nch)
         }
     }
 }
 
-public machine UiContext::measure_all(context: &mut UiContext) {
-    transition context.node_count > 0 && context.node_count <= 128 {
-        true -> measure_loop(context, context.node_count - 1)
+public machine measure_all(ui_context: &mut UiContext) {
+    transition ui_context.node_count > 0 && ui_context.node_count <= 128 {
+        true -> measure_loop(ui_context, ui_context.node_count - 1)
         _ -> done()
     }
 
-    state measure_loop(context: &mut UiContext, node_index: i32) {
+    machine measure_loop(ui_context: &mut UiContext, node_index: i32) {
         transition node_index >= 0 && node_index < 128 {
-            true -> measure_node(context, node_index)
+            true -> measure_node(ui_context, node_index)
             _ -> done()
         }
     }
-    state measure_node(context: &mut UiContext, node_index: i32)
+    machine measure_node(ui_context: &mut UiContext, node_index: i32)
     requires node_index >= 0 && node_index < 128 {
-        let dir: UiAxis = context.nodes[node_index].style.direction;
-        let child_sum: Size = UiContext::measure_children_of(context, node_index, dir);
-        let count: i32 in Saturating = context.nodes[node_index].child_count;
-        let gap: i32 in Saturating = context.nodes[node_index].style.gap;
-        let pad_w: i32 in Saturating = context.nodes[node_index].style.padding.left + context.nodes[node_index].style.padding.right;
-        let pad_h: i32 in Saturating = context.nodes[node_index].style.padding.top + context.nodes[node_index].style.padding.bottom;
+        let dir: UiAxis = ui_context.nodes[node_index].style.direction;
+        let child_sum: Size = context::measure_children_of(ui_context, node_index, dir);
+        let count: i32 in Saturating = ui_context.nodes[node_index].child_count;
+        let gap: i32 in Saturating = ui_context.nodes[node_index].style.gap;
+        let pad_w: i32 in Saturating = ui_context.nodes[node_index].style.padding.left + ui_context.nodes[node_index].style.padding.right;
+        let pad_h: i32 in Saturating = ui_context.nodes[node_index].style.padding.top + ui_context.nodes[node_index].style.padding.bottom;
         let gaps: i32 in Saturating = max_sat(count - (1 as i32 in Saturating), 0);
         let gap_total: i32 in Saturating = gap * gaps;
-        transition UiAxis::is_row(dir) {
-            true -> finish_measure(context, node_index, child_sum.w + pad_w + gap_total, child_sum.h + pad_h)
-            _ -> finish_measure(context, node_index, child_sum.w + pad_w, child_sum.h + pad_h + gap_total)
+        transition types::axis_is_row(dir) {
+            true -> finish_measure(ui_context, node_index, child_sum.w + pad_w + gap_total, child_sum.h + pad_h)
+            _ -> finish_measure(ui_context, node_index, child_sum.w + pad_w, child_sum.h + pad_h + gap_total)
         }
     }
-    state finish_measure(context: &mut UiContext, node_index: i32, base_w: i32 in Saturating, base_h: i32 in Saturating)
+    machine finish_measure(ui_context: &mut UiContext, node_index: i32, base_w: i32 in Saturating, base_h: i32 in Saturating)
     requires node_index >= 0 && node_index < 128 {
-        let has_text: bool = context.nodes[node_index].text.length > 0u64;
-        context.frame_error = select_i32(context.frame_error == 0 && has_text && !context.nodes[node_index].text_measured, 5, context.frame_error);
-        let w_mode: UiSizing = context.nodes[node_index].style.width_mode;
-        let h_mode: UiSizing = context.nodes[node_index].style.height_mode;
-        context.nodes[node_index].measured.w = select_sat(UiSizing::is_fixed(w_mode), context.nodes[node_index].style.width_px, max_sat(base_w, context.nodes[node_index].intrinsic.w));
-        context.nodes[node_index].measured.h = select_sat(UiSizing::is_fixed(h_mode), context.nodes[node_index].style.height_px, max_sat(base_h, context.nodes[node_index].intrinsic.h));
-        transition { _ -> measure_loop(context, node_index - 1) }
+        let has_text: bool = ui_context.nodes[node_index].text.length > 0u64;
+        ui_context.frame_error = select_i32(ui_context.frame_error == 0 && has_text && !ui_context.nodes[node_index].text_measured, 5, ui_context.frame_error);
+        let w_mode: UiSizing = ui_context.nodes[node_index].style.width_mode;
+        let h_mode: UiSizing = ui_context.nodes[node_index].style.height_mode;
+        ui_context.nodes[node_index].measured.w = select_sat(types::sizing_is_fixed(w_mode), ui_context.nodes[node_index].style.width_px, max_sat(base_w, ui_context.nodes[node_index].intrinsic.w));
+        ui_context.nodes[node_index].measured.h = select_sat(types::sizing_is_fixed(h_mode), ui_context.nodes[node_index].style.height_px, max_sat(base_h, ui_context.nodes[node_index].intrinsic.h));
+        transition { _ -> measure_loop(ui_context, node_index - 1) }
     }
-    state done() {}
+    machine done() {}
 }
 
 // Single-cycle 1D helper returning Size { w: used_main, h: grow_total } for children of `node_index`.
-public machine UiContext::sum_main_children(context: &UiContext, node_index: i32, is_row: bool) -> Size
+public machine sum_main_children(ui_context: &UiContext, node_index: i32, is_row: bool) -> Size
 requires node_index >= 0 && node_index < 128 {
-    transition { _ -> loop_children(context, node_index, is_row, context.nodes[node_index].first_child, 0, 0) }
+    transition { _ -> loop_children(ui_context, node_index, is_row, ui_context.nodes[node_index].first_child, 0, 0) }
 
-    state loop_children(context: &UiContext, node_index: i32, is_row: bool, child: i32, used: i32 in Saturating, grow_total: i32 in Saturating) -> Size {
-        transition child >= 0 && child < context.node_count && child < 128 {
-            true -> check_child(context, node_index, is_row, child, used, grow_total)
+    machine loop_children(ui_context: &UiContext, node_index: i32, is_row: bool, child: i32, used: i32 in Saturating, grow_total: i32 in Saturating) -> Size {
+        transition child >= 0 && child < ui_context.node_count && child < 128 {
+            true -> check_child(ui_context, node_index, is_row, child, used, grow_total)
             _ -> (Size { w: used, h: grow_total })
         }
     }
-    state check_child(context: &UiContext, node_index: i32, is_row: bool, child: i32, used: i32 in Saturating, grow_total: i32 in Saturating) -> Size
+    machine check_child(ui_context: &UiContext, node_index: i32, is_row: bool, child: i32, used: i32 in Saturating, grow_total: i32 in Saturating) -> Size
     requires child >= 0 && child < 128 {
-        transition context.nodes[child].parent == node_index {
-            true -> step_axis(context, node_index, is_row, child, used, grow_total)
-            _ -> loop_children(context, node_index, is_row, context.nodes[child].next_sibling, used, grow_total)
+        transition ui_context.nodes[child].parent == node_index {
+            true -> step_axis(ui_context, node_index, is_row, child, used, grow_total)
+            _ -> loop_children(ui_context, node_index, is_row, ui_context.nodes[child].next_sibling, used, grow_total)
         }
     }
-    state step_axis(context: &UiContext, node_index: i32, is_row: bool, child: i32, used: i32 in Saturating, grow_total: i32 in Saturating) -> Size
+    machine step_axis(ui_context: &UiContext, node_index: i32, is_row: bool, child: i32, used: i32 in Saturating, grow_total: i32 in Saturating) -> Size
     requires child >= 0 && child < 128 {
         transition is_row {
-            true -> step_mode(context, node_index, is_row, child, used, grow_total, context.nodes[child].style.width_mode, context.nodes[child].measured.w, context.nodes[child].style.grow)
-            _ -> step_mode(context, node_index, is_row, child, used, grow_total, context.nodes[child].style.height_mode, context.nodes[child].measured.h, context.nodes[child].style.grow)
+            true -> step_mode(ui_context, node_index, is_row, child, used, grow_total, ui_context.nodes[child].style.width_mode, ui_context.nodes[child].measured.w, ui_context.nodes[child].style.grow)
+            _ -> step_mode(ui_context, node_index, is_row, child, used, grow_total, ui_context.nodes[child].style.height_mode, ui_context.nodes[child].measured.h, ui_context.nodes[child].style.grow)
         }
     }
-    state step_mode(context: &UiContext, node_index: i32, is_row: bool, child: i32, used: i32 in Saturating, grow_total: i32 in Saturating, main_mode: UiSizing, main_meas: i32 in Saturating, cg: i32 in Saturating) -> Size
+    machine step_mode(ui_context: &UiContext, node_index: i32, is_row: bool, child: i32, used: i32 in Saturating, grow_total: i32 in Saturating, main_mode: UiSizing, main_meas: i32 in Saturating, cg: i32 in Saturating) -> Size
     requires child >= 0 && child < 128 {
-        transition UiSizing::is_fill(main_mode) {
-            true -> step_fill(context, node_index, is_row, child, used, grow_total, cg)
-            _ -> loop_children(context, node_index, is_row, context.nodes[child].next_sibling, used + main_meas, grow_total + cg)
+        transition types::sizing_is_fill(main_mode) {
+            true -> step_fill(ui_context, node_index, is_row, child, used, grow_total, cg)
+            _ -> loop_children(ui_context, node_index, is_row, ui_context.nodes[child].next_sibling, used + main_meas, grow_total + cg)
         }
     }
-    state step_fill(context: &UiContext, node_index: i32, is_row: bool, child: i32, used: i32 in Saturating, grow_total: i32 in Saturating, cg: i32 in Saturating) -> Size
+    machine step_fill(ui_context: &UiContext, node_index: i32, is_row: bool, child: i32, used: i32 in Saturating, grow_total: i32 in Saturating, cg: i32 in Saturating) -> Size
     requires child >= 0 && child < 128 {
         transition cg > 0 {
-            true -> loop_children(context, node_index, is_row, context.nodes[child].next_sibling, used, grow_total + cg)
-            _ -> loop_children(context, node_index, is_row, context.nodes[child].next_sibling, used, grow_total + (1 as i32 in Saturating))
+            true -> loop_children(ui_context, node_index, is_row, ui_context.nodes[child].next_sibling, used, grow_total + cg)
+            _ -> loop_children(ui_context, node_index, is_row, ui_context.nodes[child].next_sibling, used, grow_total + (1 as i32 in Saturating))
         }
     }
 }
 
 // Single-cycle 1D helper to arrange direct children of `node_index`.
-public machine UiContext::place_children_of(context: &mut UiContext, node_index: i32, inner: Rect, free: i32 in Saturating, grow_total: i32 in Saturating, init_pos: i32 in Saturating, spacing: i32 in Saturating)
+public machine place_children_of(ui_context: &mut UiContext, node_index: i32, inner: Rect, free: i32 in Saturating, grow_total: i32 in Saturating, init_pos: i32 in Saturating, spacing: i32 in Saturating)
 requires node_index >= 0 && node_index < 128 {
-    transition { _ -> loop_children(context, node_index, inner, free, grow_total, init_pos, spacing, context.nodes[node_index].first_child) }
+    transition { _ -> loop_children(ui_context, node_index, inner, free, grow_total, init_pos, spacing, ui_context.nodes[node_index].first_child) }
 
-    state loop_children(context: &mut UiContext, node_index: i32, inner: Rect, free: i32 in Saturating, grow_total: i32 in Saturating, pos: i32 in Saturating, spacing: i32 in Saturating, child: i32) {
-        transition node_index >= 0 && node_index < 128 && child >= 0 && child < context.node_count && child < 128 {
-            true -> check_child(context, node_index, inner, free, grow_total, pos, spacing, child)
+    machine loop_children(ui_context: &mut UiContext, node_index: i32, inner: Rect, free: i32 in Saturating, grow_total: i32 in Saturating, pos: i32 in Saturating, spacing: i32 in Saturating, child: i32) {
+        transition node_index >= 0 && node_index < 128 && child >= 0 && child < ui_context.node_count && child < 128 {
+            true -> check_child(ui_context, node_index, inner, free, grow_total, pos, spacing, child)
             _ -> done()
         }
     }
-    state check_child(context: &mut UiContext, node_index: i32, inner: Rect, free: i32 in Saturating, grow_total: i32 in Saturating, pos: i32 in Saturating, spacing: i32 in Saturating, child: i32)
+    machine check_child(ui_context: &mut UiContext, node_index: i32, inner: Rect, free: i32 in Saturating, grow_total: i32 in Saturating, pos: i32 in Saturating, spacing: i32 in Saturating, child: i32)
     requires node_index >= 0 && node_index < 128 && child >= 0 && child < 128 {
-        transition context.nodes[child].parent == node_index {
-            true -> branch_axis(context, node_index, inner, free, grow_total, pos, spacing, child)
-            _ -> loop_children(context, node_index, inner, free, grow_total, pos, spacing, context.nodes[child].next_sibling)
+        transition ui_context.nodes[child].parent == node_index {
+            true -> branch_axis(ui_context, node_index, inner, free, grow_total, pos, spacing, child)
+            _ -> loop_children(ui_context, node_index, inner, free, grow_total, pos, spacing, ui_context.nodes[child].next_sibling)
         }
     }
-    state branch_axis(context: &mut UiContext, node_index: i32, inner: Rect, free: i32 in Saturating, grow_total: i32 in Saturating, pos: i32 in Saturating, spacing: i32 in Saturating, child: i32)
+    machine branch_axis(ui_context: &mut UiContext, node_index: i32, inner: Rect, free: i32 in Saturating, grow_total: i32 in Saturating, pos: i32 in Saturating, spacing: i32 in Saturating, child: i32)
     requires node_index >= 0 && node_index < 128 && child >= 0 && child < 128 {
         let ih: i32 in Saturating = inner.h;
         let iw: i32 in Saturating = inner.w;
-        transition UiAxis::is_row(context.nodes[node_index].style.direction) {
-            true -> compute_main(context, node_index, inner, free, grow_total, pos, spacing, child, true, ih, context.nodes[child].style.width_mode, context.nodes[child].style.height_mode, context.nodes[child].measured.w, context.nodes[child].measured.h)
-            _ -> compute_main(context, node_index, inner, free, grow_total, pos, spacing, child, false, iw, context.nodes[child].style.height_mode, context.nodes[child].style.width_mode, context.nodes[child].measured.h, context.nodes[child].measured.w)
+        transition types::axis_is_row(ui_context.nodes[node_index].style.direction) {
+            true -> compute_main(ui_context, node_index, inner, free, grow_total, pos, spacing, child, true, ih, ui_context.nodes[child].style.width_mode, ui_context.nodes[child].style.height_mode, ui_context.nodes[child].measured.w, ui_context.nodes[child].measured.h)
+            _ -> compute_main(ui_context, node_index, inner, free, grow_total, pos, spacing, child, false, iw, ui_context.nodes[child].style.height_mode, ui_context.nodes[child].style.width_mode, ui_context.nodes[child].measured.h, ui_context.nodes[child].measured.w)
         }
     }
-    state compute_main(context: &mut UiContext, node_index: i32, inner: Rect, free: i32 in Saturating, grow_total: i32 in Saturating, pos: i32 in Saturating, spacing: i32 in Saturating, child: i32, is_row: bool, inner_cross: i32 in Saturating, main_mode: UiSizing, cross_mode: UiSizing, meas_main: i32 in Saturating, meas_cross: i32 in Saturating)
+    machine compute_main(ui_context: &mut UiContext, node_index: i32, inner: Rect, free: i32 in Saturating, grow_total: i32 in Saturating, pos: i32 in Saturating, spacing: i32 in Saturating, child: i32, is_row: bool, inner_cross: i32 in Saturating, main_mode: UiSizing, cross_mode: UiSizing, meas_main: i32 in Saturating, meas_cross: i32 in Saturating)
     requires node_index >= 0 && node_index < 128 && child >= 0 && child < 128 {
-        let base_main: i32 in Saturating = select_sat(UiSizing::is_fill(main_mode), 0, meas_main);
-        let cg: i32 in Saturating = context.nodes[child].style.grow;
-        let child_grow: i32 in Saturating = select_sat(cg > 0, cg, select_sat(UiSizing::is_fill(main_mode), 1, 0));
+        let base_main: i32 in Saturating = select_sat(types::sizing_is_fill(main_mode), 0, meas_main);
+        let cg: i32 in Saturating = ui_context.nodes[child].style.grow;
+        let child_grow: i32 in Saturating = select_sat(cg > 0, cg, select_sat(types::sizing_is_fill(main_mode), 1, 0));
         transition free > 0 && grow_total > 0 && child_grow > 0 {
-            true -> add_flex(context, node_index, inner, free, grow_total, pos, spacing, child, is_row, inner_cross, cross_mode, base_main, meas_cross, child_grow)
-            _ -> compute_cross(context, node_index, inner, free, grow_total, pos, spacing, child, is_row, inner_cross, cross_mode, base_main, meas_cross)
+            true -> add_flex(ui_context, node_index, inner, free, grow_total, pos, spacing, child, is_row, inner_cross, cross_mode, base_main, meas_cross, child_grow)
+            _ -> compute_cross(ui_context, node_index, inner, free, grow_total, pos, spacing, child, is_row, inner_cross, cross_mode, base_main, meas_cross)
         }
     }
-    state add_flex(context: &mut UiContext, node_index: i32, inner: Rect, free: i32 in Saturating, grow_total: i32 in Saturating, pos: i32 in Saturating, spacing: i32 in Saturating, child: i32, is_row: bool, inner_cross: i32 in Saturating, cross_mode: UiSizing, base_main: i32 in Saturating, meas_cross: i32 in Saturating, child_grow: i32 in Saturating)
+    machine add_flex(ui_context: &mut UiContext, node_index: i32, inner: Rect, free: i32 in Saturating, grow_total: i32 in Saturating, pos: i32 in Saturating, spacing: i32 in Saturating, child: i32, is_row: bool, inner_cross: i32 in Saturating, cross_mode: UiSizing, base_main: i32 in Saturating, meas_cross: i32 in Saturating, child_grow: i32 in Saturating)
     requires node_index >= 0 && node_index < 128 && child >= 0 && child < 128 && grow_total > 0 {
         let extra_main: i32 in Saturating = (free * child_grow) / grow_total;
-        transition { _ -> compute_cross(context, node_index, inner, free, grow_total, pos, spacing, child, is_row, inner_cross, cross_mode, base_main + extra_main, meas_cross) }
+        transition { _ -> compute_cross(ui_context, node_index, inner, free, grow_total, pos, spacing, child, is_row, inner_cross, cross_mode, base_main + extra_main, meas_cross) }
     }
-    state compute_cross(context: &mut UiContext, node_index: i32, inner: Rect, free: i32 in Saturating, grow_total: i32 in Saturating, pos: i32 in Saturating, spacing: i32 in Saturating, child: i32, is_row: bool, inner_cross: i32 in Saturating, cross_mode: UiSizing, m_len: i32 in Saturating, meas_cross: i32 in Saturating)
+    machine compute_cross(ui_context: &mut UiContext, node_index: i32, inner: Rect, free: i32 in Saturating, grow_total: i32 in Saturating, pos: i32 in Saturating, spacing: i32 in Saturating, child: i32, is_row: bool, inner_cross: i32 in Saturating, cross_mode: UiSizing, m_len: i32 in Saturating, meas_cross: i32 in Saturating)
     requires node_index >= 0 && node_index < 128 && child >= 0 && child < 128 {
-        let align_items: UiAlignment = context.nodes[node_index].style.align_items;
-        let stretch: bool = UiSizing::is_fill(cross_mode) || (UiAlignment::is_stretch(align_items) && UiSizing::is_fit(cross_mode));
+        let align_items: UiAlignment = ui_context.nodes[node_index].style.align_items;
+        let stretch: bool = types::sizing_is_fill(cross_mode) || (types::alignment_is_stretch(align_items) && types::sizing_is_fit(cross_mode));
         let c_len: i32 in Saturating = select_sat(stretch, inner_cross, meas_cross);
         let rem_cross: i32 in Saturating = max_sat(inner_cross - c_len, 0);
-        let c_pos: i32 in Saturating = select_sat(UiAlignment::is_center(align_items), rem_cross / (2 as i32 in Saturating), select_sat(UiAlignment::is_end(align_items), rem_cross, 0));
+        let c_pos: i32 in Saturating = select_sat(types::alignment_is_center(align_items), rem_cross / (2 as i32 in Saturating), select_sat(types::alignment_is_end(align_items), rem_cross, 0));
         transition is_row {
-            true -> write_row(context, node_index, inner, free, grow_total, pos, spacing, child, m_len, c_len, c_pos)
-            _ -> write_col(context, node_index, inner, free, grow_total, pos, spacing, child, m_len, c_len, c_pos)
+            true -> write_row(ui_context, node_index, inner, free, grow_total, pos, spacing, child, m_len, c_len, c_pos)
+            _ -> write_col(ui_context, node_index, inner, free, grow_total, pos, spacing, child, m_len, c_len, c_pos)
         }
     }
-    state write_row(context: &mut UiContext, node_index: i32, inner: Rect, free: i32 in Saturating, grow_total: i32 in Saturating, pos: i32 in Saturating, spacing: i32 in Saturating, child: i32, m_len: i32 in Saturating, c_len: i32 in Saturating, c_pos: i32 in Saturating)
+    machine write_row(ui_context: &mut UiContext, node_index: i32, inner: Rect, free: i32 in Saturating, grow_total: i32 in Saturating, pos: i32 in Saturating, spacing: i32 in Saturating, child: i32, m_len: i32 in Saturating, c_len: i32 in Saturating, c_pos: i32 in Saturating)
     requires node_index >= 0 && node_index < 128 && child >= 0 && child < 128 {
-        context.nodes[child].rect = Rect {
+        ui_context.nodes[child].rect = Rect {
             x: inner.x + pos,
             y: inner.y + c_pos,
             w: m_len,
             h: c_len
         };
-        transition { _ -> loop_children(context, node_index, inner, free, grow_total, pos + m_len + spacing, spacing, context.nodes[child].next_sibling) }
+        transition { _ -> loop_children(ui_context, node_index, inner, free, grow_total, pos + m_len + spacing, spacing, ui_context.nodes[child].next_sibling) }
     }
-    state write_col(context: &mut UiContext, node_index: i32, inner: Rect, free: i32 in Saturating, grow_total: i32 in Saturating, pos: i32 in Saturating, spacing: i32 in Saturating, child: i32, m_len: i32 in Saturating, c_len: i32 in Saturating, c_pos: i32 in Saturating)
+    machine write_col(ui_context: &mut UiContext, node_index: i32, inner: Rect, free: i32 in Saturating, grow_total: i32 in Saturating, pos: i32 in Saturating, spacing: i32 in Saturating, child: i32, m_len: i32 in Saturating, c_len: i32 in Saturating, c_pos: i32 in Saturating)
     requires node_index >= 0 && node_index < 128 && child >= 0 && child < 128 {
-        context.nodes[child].rect = Rect {
+        ui_context.nodes[child].rect = Rect {
             x: inner.x + c_pos,
             y: inner.y + pos,
             w: c_len,
             h: m_len
         };
-        transition { _ -> loop_children(context, node_index, inner, free, grow_total, pos + m_len + spacing, spacing, context.nodes[child].next_sibling) }
+        transition { _ -> loop_children(ui_context, node_index, inner, free, grow_total, pos + m_len + spacing, spacing, ui_context.nodes[child].next_sibling) }
     }
-    state done() {}
+    machine done() {}
 }
 
-public machine UiContext::arrange_all(context: &mut UiContext) {
-    context.hit_count = 0;
-    context.nodes[0].rect = Rect { x: 0, y: 0, w: context.width, h: context.height };
-    transition { _ -> arrange_loop(context, 0) }
+public machine arrange_all(ui_context: &mut UiContext) {
+    ui_context.hit_count = 0;
+    ui_context.nodes[0].rect = Rect { x: 0, y: 0, w: ui_context.width, h: ui_context.height };
+    transition { _ -> arrange_loop(ui_context, 0) }
 
-    state arrange_loop(context: &mut UiContext, node_index: i32) {
-        transition node_index >= 0 && node_index < context.node_count && node_index < 128 {
-            true -> arrange_node(context, node_index)
-            _ -> finish_frame(context)
+    machine arrange_loop(ui_context: &mut UiContext, node_index: i32) {
+        transition node_index >= 0 && node_index < ui_context.node_count && node_index < 128 {
+            true -> arrange_node(ui_context, node_index)
+            _ -> finish_frame(ui_context)
         }
     }
-    state arrange_node(context: &mut UiContext, node_index: i32)
+    machine arrange_node(ui_context: &mut UiContext, node_index: i32)
     requires node_index >= 0 && node_index < 128 {
-        let is_inter: bool = context.nodes[node_index].interactive;
-        transition is_inter && context.hit_count >= 0 && context.hit_count < 128 {
-            true -> record_hit(context, node_index)
-            _ -> check_children(context, node_index)
+        let is_inter: bool = ui_context.nodes[node_index].interactive;
+        transition is_inter && ui_context.hit_count >= 0 && ui_context.hit_count < 128 {
+            true -> record_hit(ui_context, node_index)
+            _ -> check_children(ui_context, node_index)
         }
     }
-    state record_hit(context: &mut UiContext, node_index: i32)
-    requires node_index >= 0 && node_index < 128 && context.hit_count >= 0 && context.hit_count < 128 {
-        let h_idx: i32 = context.hit_count;
-        context.hit_ids[h_idx] = context.nodes[node_index].id;
-        context.hit_rects[h_idx] = UiContext::node_rect(context, node_index);
-        context.hit_count = h_idx + 1;
-        transition { _ -> check_children(context, node_index) }
+    machine record_hit(ui_context: &mut UiContext, node_index: i32)
+    requires node_index >= 0 && node_index < 128 && ui_context.hit_count >= 0 && ui_context.hit_count < 128 {
+        let h_idx: i32 = ui_context.hit_count;
+        ui_context.hit_ids[h_idx] = ui_context.nodes[node_index].id;
+        ui_context.hit_rects[h_idx] = context::node_rect(ui_context, node_index);
+        ui_context.hit_count = h_idx + 1;
+        transition { _ -> check_children(ui_context, node_index) }
     }
-    state check_children(context: &mut UiContext, node_index: i32)
+    machine check_children(ui_context: &mut UiContext, node_index: i32)
     requires node_index >= 0 && node_index < 128 {
-        let count: i32 in Saturating = context.nodes[node_index].child_count;
+        let count: i32 in Saturating = ui_context.nodes[node_index].child_count;
         transition count > 0 {
-            true -> arrange_children(context, node_index, count)
-            _ -> arrange_loop(context, node_index + 1)
+            true -> arrange_children(ui_context, node_index, count)
+            _ -> arrange_loop(ui_context, node_index + 1)
         }
     }
-    state arrange_children(context: &mut UiContext, node_index: i32, count: i32 in Saturating)
+    machine arrange_children(ui_context: &mut UiContext, node_index: i32, count: i32 in Saturating)
     requires node_index >= 0 && node_index < 128 {
-        let pad_l: i32 in Saturating = context.nodes[node_index].style.padding.left;
-        let pad_r: i32 in Saturating = context.nodes[node_index].style.padding.right;
-        let pad_t: i32 in Saturating = context.nodes[node_index].style.padding.top;
-        let pad_b: i32 in Saturating = context.nodes[node_index].style.padding.bottom;
-        let ix: i32 in Saturating = context.nodes[node_index].rect.x + pad_l;
-        let iy: i32 in Saturating = context.nodes[node_index].rect.y + pad_t;
-        let iw: i32 in Saturating = max_sat(context.nodes[node_index].rect.w - (pad_l + pad_r), 0);
-        let ih: i32 in Saturating = max_sat(context.nodes[node_index].rect.h - (pad_t + pad_b), 0);
+        let pad_l: i32 in Saturating = ui_context.nodes[node_index].style.padding.left;
+        let pad_r: i32 in Saturating = ui_context.nodes[node_index].style.padding.right;
+        let pad_t: i32 in Saturating = ui_context.nodes[node_index].style.padding.top;
+        let pad_b: i32 in Saturating = ui_context.nodes[node_index].style.padding.bottom;
+        let ix: i32 in Saturating = ui_context.nodes[node_index].rect.x + pad_l;
+        let iy: i32 in Saturating = ui_context.nodes[node_index].rect.y + pad_t;
+        let iw: i32 in Saturating = max_sat(ui_context.nodes[node_index].rect.w - (pad_l + pad_r), 0);
+        let ih: i32 in Saturating = max_sat(ui_context.nodes[node_index].rect.h - (pad_t + pad_b), 0);
         let inner: Rect = Rect { x: ix, y: iy, w: iw, h: ih };
-        let is_row: bool = UiAxis::is_row(context.nodes[node_index].style.direction);
-        let summary: Size = UiContext::sum_main_children(context, node_index, is_row);
+        let is_row: bool = types::axis_is_row(ui_context.nodes[node_index].style.direction);
+        let summary: Size = context::sum_main_children(ui_context, node_index, is_row);
         let used: i32 in Saturating = summary.w;
         let grow_total: i32 in Saturating = summary.h;
-        let gap: i32 in Saturating = context.nodes[node_index].style.gap;
-        let justify: UiJustify = context.nodes[node_index].style.justify;
+        let gap: i32 in Saturating = ui_context.nodes[node_index].style.gap;
+        let justify: UiJustify = ui_context.nodes[node_index].style.justify;
         let gaps: i32 in Saturating = max_sat(count - (1 as i32 in Saturating), 0);
         let total_used: i32 in Saturating = used + gap * gaps;
         let inner_main: i32 in Saturating = select_sat(is_row, inner.w, inner.h);
         let free: i32 in Saturating = max_sat(inner_main - total_used, 0);
         let can_justify: bool = grow_total == 0 && free > 0;
-        let pos: i32 in Saturating = select_sat(can_justify && UiJustify::is_center(justify), free / (2 as i32 in Saturating), select_sat(can_justify && UiJustify::is_end(justify), free, 0));
-        transition can_justify && UiJustify::is_space_between(justify) && gaps > 0 {
-            true -> place_between(context, node_index, inner, free, grow_total, pos, gap, gaps)
-            _ -> do_place(context, node_index, inner, free, grow_total, pos, gap)
+        let pos: i32 in Saturating = select_sat(can_justify && types::justify_is_center(justify), free / (2 as i32 in Saturating), select_sat(can_justify && types::justify_is_end(justify), free, 0));
+        transition can_justify && types::justify_is_space_between(justify) && gaps > 0 {
+            true -> place_between(ui_context, node_index, inner, free, grow_total, pos, gap, gaps)
+            _ -> do_place(ui_context, node_index, inner, free, grow_total, pos, gap)
         }
     }
-    state place_between(context: &mut UiContext, node_index: i32, inner: Rect, free: i32 in Saturating, grow_total: i32 in Saturating, pos: i32 in Saturating, gap: i32 in Saturating, gaps: i32 in Saturating)
+    machine place_between(ui_context: &mut UiContext, node_index: i32, inner: Rect, free: i32 in Saturating, grow_total: i32 in Saturating, pos: i32 in Saturating, gap: i32 in Saturating, gaps: i32 in Saturating)
     requires node_index >= 0 && node_index < 128 && gaps > 0 {
         let extra: i32 in Saturating = free / gaps;
-        transition { _ -> do_place(context, node_index, inner, free, grow_total, pos, gap + extra) }
+        transition { _ -> do_place(ui_context, node_index, inner, free, grow_total, pos, gap + extra) }
     }
-    state do_place(context: &mut UiContext, node_index: i32, inner: Rect, free: i32 in Saturating, grow_total: i32 in Saturating, pos: i32 in Saturating, spacing: i32 in Saturating)
+    machine do_place(ui_context: &mut UiContext, node_index: i32, inner: Rect, free: i32 in Saturating, grow_total: i32 in Saturating, pos: i32 in Saturating, spacing: i32 in Saturating)
     requires node_index >= 0 && node_index < 128 {
-        UiContext::place_children_of(context, node_index, inner, free, grow_total, pos, spacing);
-        transition { _ -> arrange_loop(context, node_index + 1) }
+        context::place_children_of(ui_context, node_index, inner, free, grow_total, pos, spacing);
+        transition { _ -> arrange_loop(ui_context, node_index + 1) }
     }
-    state finish_frame(context: &mut UiContext) {
-        context.active = select_i32(context.mouse_down && !context.mouse_released, context.active, 0);
-        context.mouse_pressed = false;
-        context.mouse_released = false;
-        context.key_code = 0;
-        context.frame = context.frame + (1 as i32 in Saturating);
+    machine finish_frame(ui_context: &mut UiContext) {
+        ui_context.active = select_i32(ui_context.mouse_down && !ui_context.mouse_released, ui_context.active, 0);
+        ui_context.mouse_pressed = false;
+        ui_context.mouse_released = false;
+        ui_context.key_code = 0;
+        ui_context.frame = ui_context.frame + (1 as i32 in Saturating);
     }
 }
 
-public machine UiContext::end_frame(context: &mut UiContext) {
-    context.frame_error = select_i32(context.frame_error == 0 && (context.stack_len != 1 || context.rejected_containers != 0), 4, context.frame_error);
-    context.frame_error = select_i32(context.frame_error == 0 && context.text_store.overflow, 1, context.frame_error);
-    UiContext::measure_all(context);
-    UiContext::arrange_all(context);
+public machine end_frame(ui_context: &mut UiContext) {
+    ui_context.frame_error = select_i32(ui_context.frame_error == 0 && (ui_context.stack_len != 1 || ui_context.rejected_containers != 0), 4, ui_context.frame_error);
+    ui_context.frame_error = select_i32(ui_context.frame_error == 0 && ui_context.text_store.overflow, 1, ui_context.frame_error);
+    context::measure_all(ui_context);
+    context::arrange_all(ui_context);
 }
 
 // Width and height are logical units measured by the same font used to paint.
 // A missing measurement is an explicit frame error, never a zero-width label.
-public machine UiContext::set_text_metrics(context: &mut UiContext, index: i32, width: i32, height: i32) {
-    transition index > 0 && index < context.node_count && index < 128 && width >= 0 && height > 0 {
-        true -> store(context, index, width, height)
+public machine set_text_metrics(ui_context: &mut UiContext, index: i32, width: i32, height: i32) {
+    transition index > 0 && index < ui_context.node_count && index < 128 && width >= 0 && height > 0 {
+        true -> store(ui_context, index, width, height)
         _ -> done()
     }
-    state store(context: &mut UiContext, index: i32, width: i32, height: i32)
+    machine store(ui_context: &mut UiContext, index: i32, width: i32, height: i32)
     requires index > 0 && index < 128 {
-        context.nodes[index].intrinsic = Size { w: width as i32 in Saturating, h: height as i32 in Saturating };
-        context.nodes[index].text_measured = true;
+        ui_context.nodes[index].intrinsic = Size { w: width as i32 in Saturating, h: height as i32 in Saturating };
+        ui_context.nodes[index].text_measured = true;
     }
-    state done() {}
+    machine done() {}
 }
 
-public machine UiContext::paint_rect(context: &UiContext, index: i32) -> Rect
+public machine paint_rect(ui_context: &UiContext, index: i32) -> Rect
 requires index >= 0 && index < 128 {
     // Most nodes have no press transform; avoid recomputing it for every scanline.
-    transition (context.nodes[index].content_kind == 1 || (context.nodes[index].content_kind == 19 && context.nodes[index].interactive)) && context.nodes[index].aux_value > 400 {
-        true -> pressed(context, index)
-        _ -> (UiContext::node_rect(context, index))
+    transition (ui_context.nodes[index].content_kind == 1 || (ui_context.nodes[index].content_kind == 19 && ui_context.nodes[index].interactive)) && ui_context.nodes[index].aux_value > 400 {
+        true -> pressed(ui_context, index)
+        _ -> (context::node_rect(ui_context, index))
     }
-    state pressed(context: &UiContext, index: i32) -> Rect requires index >= 0 && index < 128 {
-        let rectangle: Rect = UiContext::node_rect(context, index);
-        UiContext::pressed_rect(rectangle, context.nodes[index].aux_value as i32)
+    machine pressed(ui_context: &UiContext, index: i32) -> Rect requires index >= 0 && index < 128 {
+        let rectangle: Rect = context::node_rect(ui_context, index);
+        context::pressed_rect(rectangle, ui_context.nodes[index].aux_value as i32)
     }
 }
 
-public machine UiContext::pressed_rect(rectangle: Rect, feedback: i32) -> Rect {
+public machine pressed_rect(rectangle: Rect, feedback: i32) -> Rect {
     let press: i32 in Saturating = clamp_i32(sub_i32(feedback, 400), 0, 600) as i32 in Saturating;
     let depth: i32 in Saturating = select_sat(rectangle.w <= 48, 40, select_sat(rectangle.w > 220, 15, 30));
     let width: i32 in Saturating = rectangle.w - rectangle.w * press * depth / (600000 as i32 in Saturating);

@@ -3,11 +3,13 @@ machine build(builder: &mut Build) {
     Build::depend(builder, Source::Path {
         location: "../../src"
     });
-    Build::depend(builder, Source::Path {
-        location: "../../support/standard_library"
+    Build::depend(builder, Source::Git {
+        repository: "https://github.com/CathedralOS/Omega.git",
+        revision: "e53f0955e26aee23fada4957e50b01379e9ce6b4",
+        selection: PackageSelection::Named { package: "omega_language_std" }
     });
-    Build::bind(builder, windows_x86_64::ProgramEntry, Main::main);
-    Build::bind(builder, linux_x86_64::ProgramEntry, Main::main);
-    Build::bind(builder, linux_arm64::ProgramEntry, Main::main);
-    Build::bind(builder, macos_arm64::ProgramEntry, Main::main);
+    Build::bind(builder, windows_x86_64::ProgramEntry, main);
+    Build::bind(builder, linux_x86_64::ProgramEntry, main);
+    Build::bind(builder, linux_arm64::ProgramEntry, main);
+    Build::bind(builder, macos_arm64::ProgramEntry, main);
 }

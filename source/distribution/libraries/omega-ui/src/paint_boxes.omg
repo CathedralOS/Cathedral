@@ -1,3 +1,13 @@
+module paint_boxes;
+
+use context::UiContext;
+use types::Rect;
+use types::add_i32;
+use types::clamp_i32;
+use types::clamp_sat;
+use types::min_sat;
+
+
 /*
 Ordered physical box commands are recorded once, then consumed by a renderer.
 Overflow is explicit so a host can replay its scalar reference painter. Header
@@ -35,80 +45,80 @@ public data UiBoxList {
     overflow: bool;
 }
 
-public machine UiBoxList::box(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, background: i32, border: i32, border_width: i32 in Saturating, radius: i32 in Saturating) {
+public machine box(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, background: i32, border: i32, border_width: i32 in Saturating, radius: i32 in Saturating) {
     transition paint.recording {
         true -> record(paint, rectangle, background, border, border_width, radius)
         _ -> draw(pixels, band_y, rectangle, background, border, border_width, radius)
     }
-    state draw(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, background: i32, border: i32, border_width: i32 in Saturating, radius: i32 in Saturating) {
-        Raster::draw_box_band(pixels, band_y, rectangle, background, border, border_width, radius);
+    machine draw(pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, background: i32, border: i32, border_width: i32 in Saturating, radius: i32 in Saturating) {
+        raster::draw_box_band(pixels, band_y, rectangle, background, border, border_width, radius);
     }
-    state record(paint: &mut UiBoxList, rectangle: Rect, background: i32, border: i32, border_width: i32 in Saturating, radius: i32 in Saturating) {
+    machine record(paint: &mut UiBoxList, rectangle: Rect, background: i32, border: i32, border_width: i32 in Saturating, radius: i32 in Saturating) {
         transition rectangle.w > 0 && rectangle.h > 0 && (background >= 0 || (border >= 0 && border_width > 0)) {
             true -> capacity(paint, rectangle, background, border, border_width, radius)
             _ -> done()
         }
     }
-    state capacity(paint: &mut UiBoxList, rectangle: Rect, background: i32, border: i32, border_width: i32 in Saturating, radius: i32 in Saturating) {
+    machine capacity(paint: &mut UiBoxList, rectangle: Rect, background: i32, border: i32, border_width: i32 in Saturating, radius: i32 in Saturating) {
         transition paint.count >= 0 && paint.count < 64 {
             true -> append(paint, rectangle, background, border, border_width, radius, paint.count)
             _ -> overflow(paint)
         }
     }
-    state append(paint: &mut UiBoxList, rectangle: Rect, background: i32, border: i32, border_width: i32 in Saturating, radius: i32 in Saturating, index: i32) requires index >= 0 && index < 64 {
-        let physical: Rect = Raster::to_physical_rect(rectangle, paint.width as i32 in Saturating, paint.height as i32 in Saturating, false, paint.logical_width as i32 in Saturating, paint.logical_height as i32 in Saturating);
-        let scaled: i32 in Saturating = UiViewport::map(radius, paint.height as i32 in Saturating, paint.logical_height as i32 in Saturating);
+    machine append(paint: &mut UiBoxList, rectangle: Rect, background: i32, border: i32, border_width: i32 in Saturating, radius: i32 in Saturating, index: i32) requires index >= 0 && index < 64 {
+        let physical: Rect = raster::to_physical_rect(rectangle, paint.width as i32 in Saturating, paint.height as i32 in Saturating, false, paint.logical_width as i32 in Saturating, paint.logical_height as i32 in Saturating);
+        let scaled: i32 in Saturating = viewport::map(radius, paint.height as i32 in Saturating, paint.logical_height as i32 in Saturating);
         let effective: i32 in Saturating = clamp_sat(scaled, 0, min_sat(48, min_sat(physical.w, physical.h) / (2 as i32 in Saturating)));
         paint.boxes[index] = UiBoxCommand { x: physical.x, y: physical.y, width: physical.w, height: physical.h, corner_slot: -1, fill_slot: -1, radius: effective, background: background, border: border, has_border: border >= 0 && border_width > 0, top: physical.y as i32, bottom: (physical.y + physical.h) as i32 };
         paint.count = index + 1;
     }
-    state overflow(paint: &mut UiBoxList) { paint.overflow = true; }
-    state done() {}
+    machine overflow(paint: &mut UiBoxList) { paint.overflow = true; }
+    machine done() {}
 }
 
-public machine UiBoxList::fill(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, background: i32, radius: i32 in Saturating) {
-    UiBoxList::box(paint, pixels, band_y, rectangle, background, -1, 0, radius);
+public machine fill(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, background: i32, radius: i32 in Saturating) {
+    paint_boxes::box(paint, pixels, band_y, rectangle, background, -1, 0, radius);
 }
-public machine UiBoxList::border(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, border: i32, radius: i32 in Saturating) {
-    UiBoxList::box(paint, pixels, band_y, rectangle, -1, border, 1, radius);
+public machine border(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, rectangle: Rect, border: i32, radius: i32 in Saturating) {
+    paint_boxes::box(paint, pixels, band_y, rectangle, -1, border, 1, radius);
 }
-public machine UiBoxList::line(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, y: i32 in Saturating, left: i32 in Saturating, right: i32 in Saturating, color: i32) {
+public machine line(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, y: i32 in Saturating, left: i32 in Saturating, right: i32 in Saturating, color: i32) {
     transition paint.recording && right > left && color >= 0 {
         true -> record(paint, pixels, y, left, right, color)
         _ -> draw(pixels, band_y, y, left, right, color)
     }
-    state record(paint: &mut UiBoxList, pixels: &mut [i32; 4096], y: i32 in Saturating, left: i32 in Saturating, right: i32 in Saturating, color: i32) {
-        UiBoxList::fill(paint, pixels, 0, Rect { x: left, y: y, w: right - left, h: 1 }, color, 0);
+    machine record(paint: &mut UiBoxList, pixels: &mut [i32; 4096], y: i32 in Saturating, left: i32 in Saturating, right: i32 in Saturating, color: i32) {
+        paint_boxes::fill(paint, pixels, 0, Rect { x: left, y: y, w: right - left, h: 1 }, color, 0);
         transition paint.count > 0 && paint.count <= 64 { true -> single_row(paint, paint.count - 1) _ -> done() }
     }
-    state single_row(paint: &mut UiBoxList, index: i32) requires index >= 0 && index < 64 {
+    machine single_row(paint: &mut UiBoxList, index: i32) requires index >= 0 && index < 64 {
         paint.boxes[index].height = 1;
         paint.boxes[index].bottom = add_i32(paint.boxes[index].y as i32, 1);
     }
-    state draw(pixels: &mut [i32; 4096], band_y: i32, y: i32 in Saturating, left: i32 in Saturating, right: i32 in Saturating, color: i32) { Raster::draw_hline(pixels, band_y, y, left, right, color); }
-    state done() {}
+    machine draw(pixels: &mut [i32; 4096], band_y: i32, y: i32 in Saturating, left: i32 in Saturating, right: i32 in Saturating, color: i32) { raster::draw_hline(pixels, band_y, y, left, right, color); }
+    machine done() {}
 }
-public machine UiBoxList::bar(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, context: &UiContext, x: i32 in Saturating, y: i32 in Saturating, width: i32 in Saturating, height: i32 in Saturating, value: i32, color: i32) {
+public machine bar(paint: &mut UiBoxList, pixels: &mut [i32; 4096], band_y: i32, ui_context: &UiContext, x: i32 in Saturating, y: i32 in Saturating, width: i32 in Saturating, height: i32 in Saturating, value: i32, color: i32) {
     let radius: i32 in Saturating = height / (2 as i32 in Saturating);
-    UiBoxList::fill(paint, pixels, band_y, Rect { x: x, y: y, w: width, h: height }, context.theme.well, radius);
-    UiBoxList::fill(paint, pixels, band_y, Rect { x: x, y: y, w: width * (clamp_i32(value, 0, 100) as i32 in Saturating) / (100 as i32 in Saturating), h: height }, color, radius);
+    paint_boxes::fill(paint, pixels, band_y, Rect { x: x, y: y, w: width, h: height }, ui_context.theme.well, radius);
+    paint_boxes::fill(paint, pixels, band_y, Rect { x: x, y: y, w: width * (clamp_i32(value, 0, 100) as i32 in Saturating) / (100 as i32 in Saturating), h: height }, color, radius);
 }
-public machine UiBoxList::clip_header(paint: &mut UiBoxList, bottom: i32 in Saturating) {
+public machine clip_header(paint: &mut UiBoxList, bottom: i32 in Saturating) {
     transition paint.recording && paint.count > 0 && paint.count <= 64 { true -> clip(paint, paint.count - 1, bottom) _ -> done() }
-    state clip(paint: &mut UiBoxList, index: i32, bottom: i32 in Saturating) requires index >= 0 && index < 64 {
-        paint.boxes[index].bottom = Raster::to_physical_y(bottom, paint.height as i32 in Saturating, false, paint.logical_height as i32 in Saturating) as i32;
+    machine clip(paint: &mut UiBoxList, index: i32, bottom: i32 in Saturating) requires index >= 0 && index < 64 {
+        paint.boxes[index].bottom = raster::to_physical_y(bottom, paint.height as i32 in Saturating, false, paint.logical_height as i32 in Saturating) as i32;
     }
-    state done() {}
+    machine done() {}
 }
 
-public machine UiBoxList::clip_body(paint: &mut UiBoxList, top: i32 in Saturating) {
+public machine clip_body(paint: &mut UiBoxList, top: i32 in Saturating) {
     transition paint.recording && paint.count > 0 && paint.count <= 64 { true -> clip(paint, paint.count - 1, top) _ -> done() }
-    state clip(paint: &mut UiBoxList, index: i32, top: i32 in Saturating) requires index >= 0 && index < 64 {
-        paint.boxes[index].top = Raster::to_physical_y(top, paint.height as i32 in Saturating, false, paint.logical_height as i32 in Saturating) as i32;
+    machine clip(paint: &mut UiBoxList, index: i32, top: i32 in Saturating) requires index >= 0 && index < 64 {
+        paint.boxes[index].top = raster::to_physical_y(top, paint.height as i32 in Saturating, false, paint.logical_height as i32 in Saturating) as i32;
     }
-    state done() {}
+    machine done() {}
 }
 
-public machine UiBoxCommand::rectangle(command: &UiBoxCommand) -> Rect {
+public machine box_command_rectangle(command: &UiBoxCommand) -> Rect {
     Rect { x: command.x, y: command.y, w: command.width, h: command.height }
 }

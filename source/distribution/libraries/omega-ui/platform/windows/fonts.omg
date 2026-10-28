@@ -1,14 +1,27 @@
+use windows_host::WindowsUiHost;
+use windows_host::WindowsUiRectangle;
+use windows_host::WindowsUiTextExtent;
+module fonts;
+
+use omega_ui::context::UiContext;
+use omega_ui::types::Rect;
+use omega_ui::types::add_i32;
+use omega_ui::types::mul_i32;
+use omega_ui::types::sub_i32;
+use omega_ui::utf16::UiUtf16Text;
+
+
 /*
-The same selected native fonts measure and paint the library's text nodes.
+The same selected native font_state measure and paint the library's text nodes.
 Measurements return logical units before layout. Windows handles and UTF-16
 conversion stay in this adapter; the core only receives intrinsic dimensions.
-The caller supplies a clipped device and retains its fonts for the whole frame.
+The caller supplies a clipped device and retains its font_state for the whole frame.
 */
 use omega_ui::types;
 use omega_ui::context;
 use omega_ui::text;
 use omega_ui::utf16;
-use omega_language_std::windows_gui_host;
+
 
 public data WindowsUiFonts {
     device: u64;
@@ -19,85 +32,85 @@ public data WindowsUiFonts {
     height: i32;
 }
 
-public machine WindowsUiFonts::font(fonts: &WindowsUiFonts, weight: i32) -> u64 {
-    transition weight >= 600 { true -> (fonts.bold) _ -> normal(fonts, weight) }
-    state normal(fonts: &WindowsUiFonts, weight: i32) -> u64 {
-        transition weight >= 500 { true -> (fonts.medium) _ -> (fonts.regular) }
+public machine font(font_state: &WindowsUiFonts, weight: i32) -> u64 {
+    transition weight >= 600 { true -> (font_state.bold) _ -> normal(font_state, weight) }
+    machine normal(font_state: &WindowsUiFonts, weight: i32) -> u64 {
+        transition weight >= 500 { true -> (font_state.medium) _ -> (font_state.regular) }
     }
 }
 
-public machine WindowsUiFonts::measure(fonts: &WindowsUiFonts, context: &mut UiContext) reaches WindowsGuiHost invokes WindowsGuiHost; {
-    transition { _ -> scan(fonts, context, 1) }
-    state scan(fonts: &WindowsUiFonts, context: &mut UiContext, index: i32) {
-        transition index > 0 && index < context.node_count && index < 128 { true -> node(fonts, context, index) _ -> done() }
+public machine measure(font_state: &WindowsUiFonts, context: &mut UiContext) reaches WindowsUiHost invokes WindowsUiHost; {
+    transition { _ -> scan(font_state, context, 1) }
+    machine scan(font_state: &WindowsUiFonts, context: &mut UiContext, index: i32) {
+        transition index > 0 && index < context.node_count && index < 128 { true -> node(font_state, context, index) _ -> done() }
     }
-    state node(fonts: &WindowsUiFonts, context: &mut UiContext, index: i32) requires index > 0 && index < 128 {
-        transition context.nodes[index].text.length > 0u64 { true -> text(fonts, context, index) _ -> scan(fonts, context, index + 1) }
+    machine node(font_state: &WindowsUiFonts, context: &mut UiContext, index: i32) requires index > 0 && index < 128 {
+        transition context.nodes[index].text.length > 0u64 { true -> text(font_state, context, index) _ -> scan(font_state, context, index + 1) }
     }
-    state text(fonts: &WindowsUiFonts, context: &mut UiContext, index: i32) requires index > 0 && index < 128 {
-        let bytes: &[u8] = UiTextStore::view(&context.text_store, context.nodes[index].text);
+    machine text(font_state: &WindowsUiFonts, context: &mut UiContext, index: i32) requires index > 0 && index < 128 {
+        let bytes: &[u8] = omega_ui::text::view(&context.text_store, context.nodes[index].text);
         let mut wide: UiUtf16Text;
-        let decoded: bool = UiUtf16Text::decode(&mut wide, bytes);
-        transition decoded && wide.length <= 8192u64 && fonts.width > 0 && fonts.height > 0 {
-            true -> extent(fonts, context, index, &wide.units[0..wide.length])
-            _ -> scan(fonts, context, index + 1)
+        let decoded: bool = omega_ui::utf16::decode(&mut wide, bytes);
+        transition decoded && wide.length <= 8192u64 && font_state.width > 0 && font_state.height > 0 {
+            true -> extent(font_state, context, index, &wide.units[0..wide.length])
+            _ -> scan(font_state, context, index + 1)
         }
     }
-    state extent(fonts: &WindowsUiFonts, context: &mut UiContext, index: i32, text: &[u16])
-    requires index > 0 && index < 128 && fonts.width > 0 && fonts.height > 0 {
-        let font: u64 = WindowsUiFonts::font(fonts, context.nodes[index].content_value as i32);
-        let previous: u64 = WindowsGuiHost::select_object(fonts.device, font);
-        let mut extent: WindowsTextExtent;
-        let measured: i32 = WindowsGuiHost::get_text_extent_wide(fonts.device, text, &mut extent);
-        let restored: u64 = WindowsGuiHost::select_object(fonts.device, previous);
+    machine extent(font_state: &WindowsUiFonts, context: &mut UiContext, index: i32, text: &[u16])
+    requires index > 0 && index < 128 && font_state.width > 0 && font_state.height > 0 {
+        let font: u64 = fonts::font(font_state, context.nodes[index].content_value as i32);
+        let previous: u64 = WindowsUiHost::select_object(font_state.device, font);
+        let mut extent: WindowsUiTextExtent;
+        let measured: i32 = WindowsUiHost::get_text_extent_wide(font_state.device, text, &mut extent);
+        let restored: u64 = WindowsUiHost::select_object(font_state.device, previous);
         transition measured != 0 && font != 0u64 {
-            true -> store(fonts, context, index, extent)
-            _ -> scan(fonts, context, index + 1)
+            true -> store(font_state, context, index, extent)
+            _ -> scan(font_state, context, index + 1)
         }
     }
-    state store(fonts: &WindowsUiFonts, context: &mut UiContext, index: i32, extent: WindowsTextExtent)
-    requires fonts.width > 0 && fonts.height > 0 {
-        let width: i32 = add_i32(mul_i32(extent.width, context.width as i32), sub_i32(fonts.width, 1)) / fonts.width;
-        let height: i32 = add_i32(mul_i32(extent.height, context.height as i32), sub_i32(fonts.height, 1)) / fonts.height;
-        UiContext::set_text_metrics(context, index, width, height);
-        transition { _ -> scan(fonts, context, add_i32(index, 1)) }
+    machine store(font_state: &WindowsUiFonts, context: &mut UiContext, index: i32, extent: WindowsUiTextExtent)
+    requires font_state.width > 0 && font_state.height > 0 {
+        let width: i32 = add_i32(mul_i32(extent.width, context.width as i32), sub_i32(font_state.width, 1)) / font_state.width;
+        let height: i32 = add_i32(mul_i32(extent.height, context.height as i32), sub_i32(font_state.height, 1)) / font_state.height;
+        omega_ui::context::set_text_metrics(context, index, width, height);
+        transition { _ -> scan(font_state, context, add_i32(index, 1)) }
     }
-    state done() {}
+    machine done() {}
 }
 
-public machine WindowsUiFonts::paint(fonts: &WindowsUiFonts, context: &UiContext) reaches WindowsGuiHost invokes WindowsGuiHost; {
-    transition { _ -> scan(fonts, context, 1) }
-    state scan(fonts: &WindowsUiFonts, context: &UiContext, index: i32) {
-        transition index > 0 && index < context.node_count && index < 128 { true -> node(fonts, context, index) _ -> done() }
+public machine paint(font_state: &WindowsUiFonts, context: &UiContext) reaches WindowsUiHost invokes WindowsUiHost; {
+    transition { _ -> scan(font_state, context, 1) }
+    machine scan(font_state: &WindowsUiFonts, context: &UiContext, index: i32) {
+        transition index > 0 && index < context.node_count && index < 128 { true -> node(font_state, context, index) _ -> done() }
     }
-    state node(fonts: &WindowsUiFonts, context: &UiContext, index: i32) requires index > 0 && index < 128 {
-        transition context.nodes[index].text.length > 0u64 { true -> text(fonts, context, index) _ -> scan(fonts, context, index + 1) }
+    machine node(font_state: &WindowsUiFonts, context: &UiContext, index: i32) requires index > 0 && index < 128 {
+        transition context.nodes[index].text.length > 0u64 { true -> text(font_state, context, index) _ -> scan(font_state, context, index + 1) }
     }
-    state text(fonts: &WindowsUiFonts, context: &UiContext, index: i32) requires index > 0 && index < 128 {
-        let bytes: &[u8] = UiTextStore::view(&context.text_store, context.nodes[index].text);
+    machine text(font_state: &WindowsUiFonts, context: &UiContext, index: i32) requires index > 0 && index < 128 {
+        let bytes: &[u8] = omega_ui::text::view(&context.text_store, context.nodes[index].text);
         let mut wide: UiUtf16Text;
-        let decoded: bool = UiUtf16Text::decode(&mut wide, bytes);
+        let decoded: bool = omega_ui::utf16::decode(&mut wide, bytes);
         transition decoded && wide.length <= 8192u64 && context.width > 0 && context.height > 0 {
-            true -> draw(fonts, context, index, &wide.units[0..wide.length])
-            _ -> scan(fonts, context, index + 1)
+            true -> draw(font_state, context, index, &wide.units[0..wide.length])
+            _ -> scan(font_state, context, index + 1)
         }
     }
-    state draw(fonts: &WindowsUiFonts, context: &UiContext, index: i32, text: &[u16])
+    machine draw(font_state: &WindowsUiFonts, context: &UiContext, index: i32, text: &[u16])
     requires index > 0 && index < 128 && context.width > 0 && context.height > 0 {
-        let rectangle: Rect = UiContext::paint_rect(context, index);
-        let x: i32 = mul_i32(rectangle.x as i32, fonts.width) / (context.width as i32);
-        let y: i32 = mul_i32(rectangle.y as i32, fonts.height) / (context.height as i32);
-        let right: i32 = mul_i32((rectangle.x + rectangle.w) as i32, fonts.width) / (context.width as i32);
-        let bottom: i32 = mul_i32((rectangle.y + rectangle.h) as i32, fonts.height) / (context.height as i32);
-        let mut target: WindowsRectangle = WindowsRectangle { left: x, top: y, right: right, bottom: bottom };
-        let previous: u64 = WindowsGuiHost::select_object(fonts.device, WindowsUiFonts::font(fonts, context.nodes[index].content_value as i32));
+        let rectangle: Rect = omega_ui::context::paint_rect(context, index);
+        let x: i32 = mul_i32(rectangle.x as i32, font_state.width) / (context.width as i32);
+        let y: i32 = mul_i32(rectangle.y as i32, font_state.height) / (context.height as i32);
+        let right: i32 = mul_i32((rectangle.x + rectangle.w) as i32, font_state.width) / (context.width as i32);
+        let bottom: i32 = mul_i32((rectangle.y + rectangle.h) as i32, font_state.height) / (context.height as i32);
+        let mut target: WindowsUiRectangle = WindowsUiRectangle { left: x, top: y, right: right, bottom: bottom };
+        let previous: u64 = WindowsUiHost::select_object(font_state.device, fonts::font(font_state, context.nodes[index].content_value as i32));
         let rgb: i32 = context.nodes[index].content_color;
         let reference: u32 = add_i32(add_i32(mul_i32(rgb & 255, 65536), rgb & 65280), (rgb / 65536) & 255) as u32;
-        let color: u32 = WindowsGuiHost::set_text_color(fonts.device, reference);
+        let color: u32 = WindowsUiHost::set_text_color(font_state.device, reference);
         let flags: u32 = match context.nodes[index].text_align { 1 -> 2085u32 2 -> 2086u32 _ -> 2084u32 };
-        let drawn: i32 = WindowsGuiHost::draw_text_rect_wide(fonts.device, text, &mut target, flags);
-        let restored: u64 = WindowsGuiHost::select_object(fonts.device, previous);
-        transition { _ -> scan(fonts, context, index + 1) }
+        let drawn: i32 = WindowsUiHost::draw_text_rect_wide(font_state.device, text, &mut target, flags);
+        let restored: u64 = WindowsUiHost::select_object(font_state.device, previous);
+        transition { _ -> scan(font_state, context, index + 1) }
     }
-    state done() {}
+    machine done() {}
 }

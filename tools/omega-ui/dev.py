@@ -117,6 +117,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("review", "resume", "test", "gallery", "snapshots"))
     parser.add_argument("--compiler", type=Path, help="optimized Omega compiler; defaults to the Cathedral build selection")
+    parser.add_argument("--offline", action="store_true", help="review using already acquired package sources")
     parser.add_argument("--project", choices=("headless_test", "gallery"), default="gallery",
                         help="project for review/resume")
     arguments = parser.parse_args()
@@ -135,7 +136,9 @@ def main():
 
     project = PROJECTS["headless_test" if arguments.action == "test" else arguments.project]
     if arguments.action in ("review", "resume"):
-        command = [compiler, "update", "--offline"]
+        command = [compiler, "update"]
+        if arguments.offline:
+            command.append("--offline")
         if arguments.action == "resume":
             command.append("--resume")
         run(command, cwd=project)

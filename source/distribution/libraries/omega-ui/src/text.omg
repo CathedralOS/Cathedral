@@ -1,3 +1,6 @@
+module text;
+
+
 // Stores frame-owned UTF-8 labels with generation-checked spans and explicit capacity failure.
 
 public data UiTextSpan [copy] {
@@ -13,7 +16,7 @@ public data UiTextStore {
     overflow: bool;
 }
 
-public machine UiTextStore::new() -> UiTextStore {
+public machine new() -> UiTextStore {
     let mut store: UiTextStore;
     store.used = 0;
     store.generation = 1;
@@ -21,7 +24,7 @@ public machine UiTextStore::new() -> UiTextStore {
     store
 }
 
-public machine UiTextStore::begin_frame(store: &mut UiTextStore) {
+public machine begin_frame(store: &mut UiTextStore) {
     store.used = 0;
     store.overflow = false;
     store.generation = store.generation + (1u64 as u64 in Wrapping);
@@ -29,55 +32,55 @@ public machine UiTextStore::begin_frame(store: &mut UiTextStore) {
         true -> skip_zero(store)
         _ -> done()
     }
-    state skip_zero(store: &mut UiTextStore) {
+    machine skip_zero(store: &mut UiTextStore) {
         store.generation = 1;
     }
-    state done() {}
+    machine done() {}
 }
 
-public machine UiTextStore::append(store: &mut UiTextStore, text: &[u8]) -> UiTextSpan {
-    transition store.used <= 8192u64 && text.len <= 8192u64 {
-        true -> size_text(store, text)
+public machine append(store: &mut UiTextStore, label_bytes: &[u8]) -> UiTextSpan {
+    transition store.used <= 8192u64 && label_bytes.len <= 8192u64 {
+        true -> size_text(store, label_bytes)
         _ -> exhausted(store)
     }
-    state size_text(store: &mut UiTextStore, text: &[u8]) -> UiTextSpan
-    requires store.used <= 8192u64 && text.len <= 8192u64 {
+    machine size_text(store: &mut UiTextStore, label_bytes: &[u8]) -> UiTextSpan
+    requires store.used <= 8192u64 && label_bytes.len <= 8192u64 {
         let start: u64 = store.used;
-        let end: u64 = start + text.len;
+        let end: u64 = start + label_bytes.len;
         transition end <= 8192u64 {
-            true -> copy_bytes(store, text, start, end, 0)
+            true -> copy_bytes(store, label_bytes, start, end, 0)
             _ -> exhausted(store)
         }
     }
-    state copy_bytes(store: &mut UiTextStore, text: &[u8], start: u64, end: u64, index: u64) -> UiTextSpan
-    requires start <= 8192u64 && end <= 8192u64 && text.len <= 8192u64 && index <= 8192u64 {
+    machine copy_bytes(store: &mut UiTextStore, label_bytes: &[u8], start: u64, end: u64, index: u64) -> UiTextSpan
+    requires start <= 8192u64 && end <= 8192u64 && label_bytes.len <= 8192u64 && index <= 8192u64 {
         let destination: u64 = start + index;
-        transition index < text.len && destination < 8192u64 {
-            true -> write_byte(store, text, start, end, index, destination)
-            _ -> finish(store, text, start, end)
+        transition index < label_bytes.len && destination < 8192u64 {
+            true -> write_byte(store, label_bytes, start, end, index, destination)
+            _ -> finish(store, label_bytes, start, end)
         }
     }
-    state write_byte(store: &mut UiTextStore, text: &[u8], start: u64, end: u64, index: u64, destination: u64) -> UiTextSpan
-    requires start <= 8192u64 && end <= 8192u64 && text.len <= 8192u64 && index < text.len && destination < 8192u64 {
-        store.bytes[destination] = text[index];
-        transition { _ -> copy_bytes(store, text, start, end, index + 1u64) }
+    machine write_byte(store: &mut UiTextStore, label_bytes: &[u8], start: u64, end: u64, index: u64, destination: u64) -> UiTextSpan
+    requires start <= 8192u64 && end <= 8192u64 && label_bytes.len <= 8192u64 && index < label_bytes.len && destination < 8192u64 {
+        store.bytes[destination] = label_bytes[index];
+        transition { _ -> copy_bytes(store, label_bytes, start, end, index + 1u64) }
     }
-    state finish(store: &mut UiTextStore, text: &[u8], start: u64, end: u64) -> UiTextSpan {
+    machine finish(store: &mut UiTextStore, label_bytes: &[u8], start: u64, end: u64) -> UiTextSpan {
         store.used = end;
-        UiTextSpan { offset: start, length: text.len, generation: store.generation }
+        UiTextSpan { offset: start, length: label_bytes.len, generation: store.generation }
     }
-    state exhausted(store: &mut UiTextStore) -> UiTextSpan {
+    machine exhausted(store: &mut UiTextStore) -> UiTextSpan {
         store.overflow = true;
         UiTextSpan { offset: 0, length: 0, generation: 0 }
     }
 }
 
-public machine UiTextStore::view(store: &UiTextStore, span: UiTextSpan) -> &[u8] {
+public machine view(store: &UiTextStore, span: UiTextSpan) -> &[u8] {
     transition span.generation != 0 && span.generation == store.generation && span.offset <= 8192u64 && span.length <= 8192u64 {
         true -> check_extent(store, span)
         _ -> (&store.bytes[0..0])
     }
-    state check_extent(store: &UiTextStore, span: UiTextSpan) -> &[u8]
+    machine check_extent(store: &UiTextStore, span: UiTextSpan) -> &[u8]
     requires span.offset <= 8192u64 && span.length <= 8192u64 {
         let end: u64 = span.offset + span.length;
         transition end <= store.used && end <= 8192u64 {

@@ -1,3 +1,10 @@
+module frame;
+
+use context::UiContext;
+use types::add_i32;
+use types::select_i32;
+
+
 /*
 A frame may rebuild after a control changes the model, but input edges are
 consumed once and the public frame counter advances once. Hosts build the view,
@@ -15,29 +22,29 @@ public data UiFrame {
     frame_number: i32 in Saturating;
 }
 
-public machine UiFrame::begin(context: &mut UiContext) -> UiFrame {
-    let frame: UiFrame = UiFrame { passes: 0, changed: false, frame_number: context.frame };
-    UiContext::begin_frame(context);
-    frame
+public machine begin(ui_context: &mut UiContext) -> UiFrame {
+    let active_frame: UiFrame = UiFrame { passes: 0, changed: false, frame_number: ui_context.frame };
+    context::begin_frame(ui_context);
+    active_frame
 }
 
-public machine UiFrame::next_pass(frame: &mut UiFrame, context: &mut UiContext) -> bool {
-    UiContext::end_frame(context);
-    frame.passes = add_i32(frame.passes, 1);
-    frame.changed = frame.changed || context.changed;
-    context.frame = frame.frame_number + (1 as i32 in Saturating);
-    transition context.frame_error == 0 && context.changed && frame.passes < 4 {
-        true -> rebuild(frame, context)
-        _ -> finish(frame, context)
+public machine next_pass(active_frame: &mut UiFrame, ui_context: &mut UiContext) -> bool {
+    context::end_frame(ui_context);
+    active_frame.passes = add_i32(active_frame.passes, 1);
+    active_frame.changed = active_frame.changed || ui_context.changed;
+    ui_context.frame = active_frame.frame_number + (1 as i32 in Saturating);
+    transition ui_context.frame_error == 0 && ui_context.changed && active_frame.passes < 4 {
+        true -> rebuild(active_frame, ui_context)
+        _ -> finish(active_frame, ui_context)
     }
-    state rebuild(frame: &mut UiFrame, context: &mut UiContext) -> bool {
-        UiContext::begin_frame(context);
+    machine rebuild(active_frame: &mut UiFrame, ui_context: &mut UiContext) -> bool {
+        context::begin_frame(ui_context);
         true
     }
-    state finish(frame: &UiFrame, context: &mut UiContext) -> bool {
-        let unsettled: bool = context.changed;
-        context.changed = frame.changed;
-        context.frame_error = select_i32(context.frame_error == 0 && unsettled && frame.passes >= 4, 6, context.frame_error);
+    machine finish(active_frame: &UiFrame, ui_context: &mut UiContext) -> bool {
+        let unsettled: bool = ui_context.changed;
+        ui_context.changed = active_frame.changed;
+        ui_context.frame_error = select_i32(ui_context.frame_error == 0 && unsettled && active_frame.passes >= 4, 6, ui_context.frame_error);
         false
     }
 }

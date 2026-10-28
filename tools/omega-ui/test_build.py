@@ -9,7 +9,7 @@ from build import LIBRARY, ROOT, fingerprint, prepare, select_compiler
 class CompilerTests(unittest.TestCase):
     def test_explicit_environment_local_and_path_precedence(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             local = root / 'local'
             with patch('build.LOCAL_COMPILER', local), patch.dict('os.environ', {}, clear=True), \
                     patch('build.shutil.which', return_value=str(root / 'installed')):
@@ -44,7 +44,7 @@ class FingerprintTests(unittest.TestCase):
                     prepare(Path(directory) / 'missing-compiler')
                 invoke.assert_not_called()
 
-    def test_default_library_and_all_package_dependencies_are_inside_cathedral(self):
+    def test_default_library_and_local_package_dependencies_are_inside_cathedral(self):
         import re
         self.assertEqual(LIBRARY, ROOT / 'source/distribution/libraries/omega-ui')
         for source in ('src/main.omg', 'platform/native/main.omg', 'platform/native/font_atlas.omg',

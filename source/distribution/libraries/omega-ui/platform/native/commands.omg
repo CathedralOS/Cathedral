@@ -1,3 +1,12 @@
+
+use omega_ui::context::Interaction;
+use omega_ui::context::UiContext;
+use omega_ui::types::clamp_i32;
+use omega_ui::types::select_i32;
+use omega_ui::types::sub_i32;
+use omega_ui::widgets::ButtonOptions;
+use omega_ui::widgets::ButtonVariant;
+
 // Commands compose canonical widgets; IDs and packet text are checked before use.
 use omega_ui::types;
 use omega_ui::context;
@@ -8,16 +17,16 @@ public data NativeText { bytes: [u8; 256]; length: i32; }
 public machine read_text(packet: &[i32; 4096], text: &mut NativeText) -> bool {
     text.length = packet[4040];
     transition text.length >= 0 && text.length <= 256 { true -> scan(packet, text, 0) _ -> (false) }
-    state scan(packet: &[i32; 4096], text: &mut NativeText, index: i32) -> bool {
+    machine scan(packet: &[i32; 4096], text: &mut NativeText, index: i32) -> bool {
         transition index >= 0 && index < text.length && index < 256 {
             true -> byte(packet, text, index) _ -> (index == text.length)
         }
     }
-    state byte(packet: &[i32; 4096], text: &mut NativeText, index: i32) -> bool requires index >= 0 && index < 256 {
+    machine byte(packet: &[i32; 4096], text: &mut NativeText, index: i32) -> bool requires index >= 0 && index < 256 {
         let character: i32 = packet[index];
         transition character >= 32 && character <= 126 { true -> store(packet, text, index, character) _ -> (false) }
     }
-    state store(packet: &[i32; 4096], text: &mut NativeText, index: i32, character: i32) -> bool
+    machine store(packet: &[i32; 4096], text: &mut NativeText, index: i32, character: i32) -> bool
     requires index >= 0 && index < 256 && character >= 32 && character <= 126 {
         text.bytes[index] = character as u8;
         transition { _ -> scan(packet, text, index + 1) }
@@ -25,12 +34,12 @@ public machine read_text(packet: &[i32; 4096], text: &mut NativeText) -> bool {
 }
 public machine unique_id(context: &UiContext, id: i32) -> bool {
     transition id > 0 { true -> scan(context, id, 1) _ -> (false) }
-    state scan(context: &UiContext, id: i32, index: i32) -> bool {
+    machine scan(context: &UiContext, id: i32, index: i32) -> bool {
         transition index > 0 && index < context.node_count && index < 128 {
             true -> check(context, id, index) _ -> (true)
         }
     }
-    state check(context: &UiContext, id: i32, index: i32) -> bool requires index > 0 && index < 128 {
+    machine check(context: &UiContext, id: i32, index: i32) -> bool requires index > 0 && index < 128 {
         transition context.nodes[index].interactive && context.nodes[index].id == id {
             true -> (false) _ -> scan(context, id, index + 1)
         }
@@ -42,86 +51,86 @@ public machine apply_widget(surface: &mut NativeUiState, packet: &mut [i32; 4096
         23 -> text_command(surface, packet) 28 -> spacer(surface, packet) 29 -> divider(surface, packet)
         32 -> card(surface, packet) _ -> interactive(surface, packet)
     }
-    state column(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
-        Ui::column(&mut surface.context, clamp_i32(packet[4081], 0, 2160), clamp_i32(packet[4082], 0, 2160), (packet[4083] & 1) != 0, (packet[4083] & 2) != 0);
+    machine column(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+        omega_ui::widgets::column(&mut surface.context, clamp_i32(packet[4081], 0, 2160), clamp_i32(packet[4082], 0, 2160), (packet[4083] & 1) != 0, (packet[4083] & 2) != 0);
         transition { _ -> last_node(surface, packet) }
     }
-    state row(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
-        Ui::row(&mut surface.context, clamp_i32(packet[4081], 0, 2160), clamp_i32(packet[4082], 0, 2160), (packet[4083] & 1) != 0, (packet[4083] & 2) != 0);
+    machine row(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+        omega_ui::widgets::row(&mut surface.context, clamp_i32(packet[4081], 0, 2160), clamp_i32(packet[4082], 0, 2160), (packet[4083] & 1) != 0, (packet[4083] & 2) != 0);
         transition { _ -> last_node(surface, packet) }
     }
-    state card(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
-        Ui::card(&mut surface.context, clamp_i32(packet[4081], 0, 2160), clamp_i32(packet[4082], 0, 2160), packet[4083] != 0);
+    machine card(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+        omega_ui::widgets::card(&mut surface.context, clamp_i32(packet[4081], 0, 2160), clamp_i32(packet[4082], 0, 2160), packet[4083] != 0);
         transition { _ -> last_node(surface, packet) }
     }
-    state end(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
-        Ui::end(&mut surface.context); transition { _ -> report(surface, packet) }
+    machine end(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+        omega_ui::widgets::end(&mut surface.context); transition { _ -> report(surface, packet) }
     }
-    state spacer(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
-        Ui::spacer(&mut surface.context); transition { _ -> last_node(surface, packet) }
+    machine spacer(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+        omega_ui::widgets::spacer(&mut surface.context); transition { _ -> last_node(surface, packet) }
     }
-    state divider(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
-        Ui::divider(&mut surface.context); transition { _ -> last_node(surface, packet) }
+    machine divider(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+        omega_ui::widgets::divider(&mut surface.context); transition { _ -> last_node(surface, packet) }
     }
-    state text_command(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+    machine text_command(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
         let mut text: NativeText;
         let valid: bool = read_text(packet, &mut text);
         transition valid && text.length >= 0 && text.length <= 256 { true -> label(surface, packet, &text) _ -> (5u64) }
     }
-    state label(surface: &mut NativeUiState, packet: &mut [i32; 4096], text: &NativeText) -> u64 requires text.length >= 0 && text.length <= 256 {
+    machine label(surface: &mut NativeUiState, packet: &mut [i32; 4096], text: &NativeText) -> u64 requires text.length >= 0 && text.length <= 256 {
         let color: i32 = select_i32(packet[4083] == -2, surface.context.theme.text_muted, select_i32(packet[4083] < 0, surface.context.theme.text, packet[4083]));
-        packet[4060] = Ui::text(&mut surface.context, &text.bytes[0..(text.length as u64)], clamp_i32(packet[4081], 1, 2160), color, packet[4082]);
+        packet[4060] = omega_ui::widgets::text(&mut surface.context, &text.bytes[0..(text.length as u64)], clamp_i32(packet[4081], 1, 2160), color, packet[4082]);
         transition { _ -> report(surface, packet) }
     }
-    state interactive(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+    machine interactive(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
         let valid: bool = unique_id(&surface.context, packet[4081]);
         transition valid { true -> control(surface, packet) _ -> (5u64) }
     }
-    state control(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+    machine control(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
         transition packet[4080] {
             24 -> button_command(surface, packet) 25 -> toggle(surface, packet)
             26 -> slider(surface, packet) 27 -> (edit_field(surface, packet))
             30 -> checkbox(surface, packet) 31 -> progress(surface, packet) _ -> (2u64)
         }
     }
-    state button_command(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+    machine button_command(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
         let mut text: NativeText;
         let valid: bool = read_text(packet, &mut text);
         transition valid && text.length >= 0 && text.length <= 256 { true -> button(surface, packet, &text) _ -> (5u64) }
     }
-    state button(surface: &mut NativeUiState, packet: &mut [i32; 4096], text: &NativeText) -> u64 requires text.length >= 0 && text.length <= 256 {
-        let interaction: Interaction = Ui::button(&mut surface.context, packet[4081], &text.bytes[0..(text.length as u64)],
+    machine button(surface: &mut NativeUiState, packet: &mut [i32; 4096], text: &NativeText) -> u64 requires text.length >= 0 && text.length <= 256 {
+        let interaction: Interaction = omega_ui::widgets::button(&mut surface.context, packet[4081], &text.bytes[0..(text.length as u64)],
             ButtonOptions { variant: variant(packet[4082]), width: clamp_i32(packet[4083], 1, 3840), height: clamp_i32(packet[4084], 1, 2160) });
         packet[4061] = select_i32(interaction.clicked, 1, 0) | select_i32(interaction.hovered, 4, 0) | select_i32(interaction.focused, 8, 0) | select_i32(interaction.pressed, 16, 0);
         transition { _ -> last_node(surface, packet) }
     }
-    state toggle(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+    machine toggle(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
         let mut value: bool = packet[4082] != 0;
-        let changed: bool = Ui::toggle(&mut surface.context, packet[4081], &mut value);
+        let changed: bool = omega_ui::widgets::toggle(&mut surface.context, packet[4081], &mut value);
         packet[4061] = select_i32(changed, 2, 0); packet[4062] = select_i32(value, 1, 0);
         transition { _ -> last_node(surface, packet) }
     }
-    state checkbox(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+    machine checkbox(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
         let mut value: bool = packet[4082] != 0;
-        let changed: bool = Ui::checkbox(&mut surface.context, packet[4081], &mut value);
+        let changed: bool = omega_ui::widgets::checkbox(&mut surface.context, packet[4081], &mut value);
         packet[4061] = select_i32(changed, 2, 0); packet[4062] = select_i32(value, 1, 0);
         transition { _ -> last_node(surface, packet) }
     }
-    state slider(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+    machine slider(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
         let mut value: i32 = clamp_i32(packet[4082], 0, 100);
-        let changed: bool = Ui::slider(&mut surface.context, packet[4081], &mut value, clamp_i32(packet[4083], 1, 3840));
+        let changed: bool = omega_ui::widgets::slider(&mut surface.context, packet[4081], &mut value, clamp_i32(packet[4083], 1, 3840));
         packet[4061] = select_i32(changed, 2, 0); packet[4062] = value;
         transition { _ -> last_node(surface, packet) }
     }
-    state progress(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+    machine progress(surface: &mut NativeUiState, packet: &mut [i32; 4096]) -> u64 {
         let color: i32 = surface.context.theme.success;
-        Ui::progress(&mut surface.context, packet[4081], clamp_i32(packet[4082], 0, 100), clamp_i32(packet[4083], 1, 3840), color);
+        omega_ui::widgets::progress(&mut surface.context, packet[4081], clamp_i32(packet[4082], 0, 100), clamp_i32(packet[4083], 1, 3840), color);
         transition { _ -> last_node(surface, packet) }
     }
-    state last_node(surface: &NativeUiState, packet: &mut [i32; 4096]) -> u64 {
+    machine last_node(surface: &NativeUiState, packet: &mut [i32; 4096]) -> u64 {
         packet[4060] = sub_i32(surface.context.node_count, 1); transition { _ -> report(surface, packet) }
     }
-    state report(surface: &NativeUiState, packet: &mut [i32; 4096]) -> u64 { native_report(surface, packet) }
+    machine report(surface: &NativeUiState, packet: &mut [i32; 4096]) -> u64 { native_report(surface, packet) }
 }
 machine variant(value: i32) -> ButtonVariant {
     transition value { 1 -> (ButtonVariant::Secondary) 2 -> (ButtonVariant::Ghost) 3 -> (ButtonVariant::Danger) _ -> (ButtonVariant::Primary) }

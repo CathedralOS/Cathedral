@@ -1,28 +1,32 @@
+
+use omega_ui::edit::UiLineEdit;
+use omega_ui::types::add_i32;
+
 use omega_ui::types;
 use omega_ui::edit;
 
 public machine verify_line_editor() -> bool {
     let mut editor: UiLineEdit;
-    let a: bool = UiLineEdit::key(&mut editor, 0, 97, false, false);
-    let b: bool = UiLineEdit::key(&mut editor, 0, 98, false, false);
-    let left: bool = UiLineEdit::key(&mut editor, 37, 0, false, true);
-    let replacement: bool = UiLineEdit::key(&mut editor, 0, 99, false, false);
+    let a: bool = omega_ui::edit::key(&mut editor, 0, 97, false, false);
+    let b: bool = omega_ui::edit::key(&mut editor, 0, 98, false, false);
+    let left: bool = omega_ui::edit::key(&mut editor, 37, 0, false, true);
+    let replacement: bool = omega_ui::edit::key(&mut editor, 0, 99, false, false);
     let replaced: bool = editor.length == 2 && editor.bytes[0] == 97u8 && editor.bytes[1] == 99u8;
-    let all: bool = UiLineEdit::key(&mut editor, 65, 0, true, false);
-    let erased: bool = UiLineEdit::key(&mut editor, 8, 0, false, false);
+    let all: bool = omega_ui::edit::key(&mut editor, 65, 0, true, false);
+    let erased: bool = omega_ui::edit::key(&mut editor, 8, 0, false, false);
     transition a && b && left && replacement && replaced && all && erased && editor.length == 0 {
         true -> fill(&mut editor, 0)
         _ -> (false)
     }
-    state fill(editor: &mut UiLineEdit, count: i32) -> bool {
+    machine fill(editor: &mut UiLineEdit, count: i32) -> bool {
         transition count < 128 { true -> insert(editor, count) _ -> full(editor) }
     }
-    state insert(editor: &mut UiLineEdit, count: i32) -> bool {
-        let inserted: bool = UiLineEdit::key(editor, 0, 120, false, false);
+    machine insert(editor: &mut UiLineEdit, count: i32) -> bool {
+        let inserted: bool = omega_ui::edit::key(editor, 0, 120, false, false);
         transition inserted { true -> fill(editor, add_i32(count, 1)) _ -> (false) }
     }
-    state full(editor: &mut UiLineEdit) -> bool {
-        let overflow: bool = UiLineEdit::key(editor, 0, 121, false, false);
+    machine full(editor: &mut UiLineEdit) -> bool {
+        let overflow: bool = omega_ui::edit::key(editor, 0, 121, false, false);
         !overflow && editor.length == 128 && editor.bytes[0] == 120u8 && editor.bytes[127] == 120u8
     }
 }

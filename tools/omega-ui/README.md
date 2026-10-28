@@ -12,19 +12,15 @@ pixels. The demo's entire model and view now live in
 
 Add `cathedral-omega-ui.workspace = true` to an app's Cargo dependencies. Its build
 script prepares the same native exports automatically; the boot harness contains
-no special preparation rule for the demo. The build always uses Cathedral's
-checked-in distribution source; no sibling checkout, submodule or download is needed.
-Set `OMEGA_BIN` to an optimized Omega compiler supporting pure native component
-exports. The current verified Windows producer is
-`20dcd0409b66de0f6d25d1a345e8da57d71bbb0a`, release opt-level 3, available in
-main through [Omega #339](https://github.com/CathedralOS/Omega/pull/339).
-It supports the typed Colors app calls and includes pure-component support and
-the referenced-provider publication repair from
-[Omega #292](https://github.com/CathedralOS/Omega/pull/292). No uncommitted compiler
-patch is required. Current desktop, UI and cold-boot evidence is recorded in
-[the handoff](../../TASKS_RUST.md#colors-separates-app-behavior-from-native-packets).
-Older evidence below retains its original producer; it is not a claim about an
-arbitrary later main revision.
+no special preparation rule for the demo. The build uses Cathedral's checked-in distribution source. Its standard library
+is an ordinary immutable Git package dependency, acquired through Omega's normal
+package review; the UI does not keep a private standard-library snapshot.
+The canonical UI source uses explicit machine arguments and Build-owned native
+bindings. Its compiler requirements and current qualification are recorded in
+[the handoff](../../TASKS_RUST.md#canonical-omega-ui-source).
+The earlier `20dcd0409b66` producer and desktop runs below are historical evidence
+for the previous source revision; that compiler cannot compile this migrated UI.
+An arbitrary later compiler revision is not a substitute for a qualified producer.
 Python 3 is required by the existing Cathedral build tools. No font runtime or new
 external Cargo dependency is needed. `OMEGA_UI_COMPONENT_DIR` explicitly selects
 already-prepared artifacts instead.
@@ -32,18 +28,41 @@ Review and compilation use the same [bounded compiler process](../omega-componen
 as application components: 4 GiB and five minutes per invocation. A failed or
 exhausted compiler never publishes a new component receipt.
 
-The default Rust F5 profile includes the UI demo and needs this compiler too.
-For a checkout-local compiler, run these commands from the Cathedral root. Cargo
+The Rust F5 profile includes the UI demo. Its existing prepared-component input
+keeps that consumer independent of the compiler used for other desktop packages.
+Keep an existing legacy compiler checkout intact. For the canonical UI compiler,
+run these commands from the Cathedral root. Cargo
 uses the Rust toolchain pinned in the compiler repository:
 
 ```text
-git clone https://github.com/CathedralOS/Omega.git build/omega-ui/compiler
-cd build/omega-ui/compiler
-git checkout 20dcd0409b66de0f6d25d1a345e8da57d71bbb0a
-cargo build --locked --release -p omega
+git clone https://github.com/CathedralOS/Omega.git build/omega-ui/canonical-compiler
+cd build/omega-ui/canonical-compiler
+git checkout b51ac370b6cecc9d2abd0948d86b01fccfc943eb
+cargo build --locked -p omega
 ```
 
-Return to Cathedral and use F5 normally. The build selects an explicit `--compiler`,
+Omega's ordinary Cargo profile is optimized at level 1; the `debug` output
+directory does not mean an unoptimized compiler. Return to Cathedral and prepare
+the UI with the selected compiler:
+
+```text
+python tools/omega-ui/build.py --compiler build/omega-ui/canonical-compiler/target/debug/omega
+```
+
+On Windows the executable is `omega.exe`. Package review may first request
+ordinary acceptance; inspect the named proposal and resume, then repeat the
+build. Preserve that component directory and its receipt together.
+
+Other desktop packages still contain legacy Omega source. Until they migrate,
+keep their existing `20dcd0409b66` compiler selection and set
+`OMEGA_UI_COMPONENT_DIR` to the absolute `build/omega-ui/component` directory
+prepared above. This is the library's existing explicit artifact input; it
+selects no compiler behind the caller's back. The ABI 2 Rust callers stay the
+same. A cold F5 run using the new artifacts still needs Windows/QEMU validation;
+the earlier desktop evidence does not establish it.
+
+For current UI source development, pass the canonical compiler explicitly or
+set `OMEGA_BIN` to it. The build selects an explicit `--compiler`,
 then `OMEGA_BIN`, then `build/omega-ui/compiler/target/release/omega.exe` (Windows)
 or `omega` (macOS/Linux), then `omega` on PATH. A selected compiler's failure is
 reported rather than silently trying another one. For a compiler built elsewhere,
@@ -76,7 +95,15 @@ python tools/omega-ui/dev.py gallery
 python tools/omega-ui/dev.py snapshots
 ```
 
-These commands use the same compiler selection as the component builder.
+These commands use the same compiler selection as the component builder. Initial
+review may acquire the pinned Git dependency; `--offline` restricts review to
+already acquired sources. Review the actual pending rows and resume through
+Omega's normal acceptance workflow before running the program.
+
+Omega operations are ordinary module declarations with explicit runtime
+arguments, such as `omega_ui::context::setup(&mut context, width, height)`.
+Import public data by its exact path (`use omega_ui::context::UiContext;`);
+nested machines scope code and receive their own arguments.
 `gallery` and `snapshots` require Windows; the executable and captures are in
 `build/omega-ui/gallery`. Regenerate the font atlas only when changing fonts with
 `python tools/omega-ui/bake_native_font.py` (Pillow required for regeneration).
@@ -94,7 +121,7 @@ These commands use the same compiler selection as the component builder.
    Advance `tick(elapsed_ms)` and build while `stats().animating` is true. The host
    owns scheduling; widgets never poll global devices.
 5. Read paint bounds from the completed build's `Node` values and rows through
-   `Ui::row`, or create `Presenter` for the supplied view and borrow the app's
+   `widgets::row`, or create `Presenter` for the supplied view and borrow the app's
    `Services` owner for presentation. The
    app selects regions covering its painted content to fit its granted image
    backing. Publish once after a bounded input batch, rather than per input edge.
@@ -171,3 +198,10 @@ starving its cache to reserve the maximum protocol reply. Larger objects/apps ma
 need explicitly larger owner-selected grants. The image-frame ledger tracks all
 funded translation tables; the caller's admission ceiling and physical frame
 source remain the allocation gates.
+
+On macOS the kernel address-space ceiling preserves the launcher’s measured
+existing VM reservation, then allows the declared allocation budget above it.
+Large shared-image/allocator reservations are not resident compiler memory.
+The ceiling remains kernel-enforced and inherited by child processes; this is
+an address-space allowance, not an aggregate resident-set guarantee. An inherited
+stricter hard ceiling is retained.

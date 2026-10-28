@@ -11,8 +11,10 @@ import process
 
 class ProcessBudget(unittest.TestCase):
     def invoke(self, source):
+        # Darwin's exec/image startup can itself need more than 128 MiB of
+        # additional VM. Keep a launchable ceiling below the 512 MiB control.
         return subprocess.run([sys.executable, str(Path(__file__).with_name('process.py')),
-                               str(128 * 1024**2), sys.executable, '-c', source],
+                               str(256 * 1024**2), sys.executable, '-c', source],
                               capture_output=True, text=True, timeout=20)
 
     def test_small_program_keeps_output_and_status(self):
@@ -22,6 +24,14 @@ class ProcessBudget(unittest.TestCase):
 
     def test_large_allocation_is_refused(self):
         result = self.invoke('try:\n bytearray(512 * 1024**2)\nexcept MemoryError:\n print("refused")\nelse:\n raise SystemExit(9)')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), 'refused')
+
+    def test_nested_wrapper_retains_the_stricter_budget(self):
+        allocate = 'try:\n bytearray(512 * 1024**2)\nexcept MemoryError:\n print("refused")\nelse:\n raise SystemExit(9)'
+        command = [sys.executable, str(Path(__file__).with_name('process.py')),
+                   str(1024**3), sys.executable, '-c', allocate]
+        result = self.invoke(f'import subprocess; raise SystemExit(subprocess.run({command!r}).returncode)')
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(result.stdout.strip(), 'refused')
 
@@ -38,9 +48,11 @@ class ProcessBudget(unittest.TestCase):
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     def test_parallel_builds_share_one_compiler_slot(self):
+        # Python 3.9 on macOS uses per-process monotonic epochs; compare
+        # timestamps from the shared wall clock across these child processes.
         def invoke(_):
             result = process.run([sys.executable, '-c',
-                'import json,time; start=time.monotonic(); time.sleep(0.2); print(json.dumps([start,time.monotonic()]))'],
+                'import json,time; start=time.time_ns(); time.sleep(0.2); print(json.dumps([start,time.time_ns()]))'],
                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
             return json.loads(result.stdout)

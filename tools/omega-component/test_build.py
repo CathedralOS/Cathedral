@@ -13,7 +13,7 @@ from locking import exclusive
 class BuildTests(unittest.TestCase):
     def test_dependency_and_output_changes_rebuild_but_an_intact_cache_does_not(self):
         with tempfile.TemporaryDirectory() as directory:
-            root = Path(directory)
+            root = Path(directory).resolve()
             app = root / 'source/distribution/app'
             library = root / 'source/platform/lib'
             app.mkdir(parents=True)

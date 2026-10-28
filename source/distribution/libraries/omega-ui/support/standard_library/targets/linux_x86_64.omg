@@ -1,6 +1,0 @@
-// The `linux_x86_64` std target definition (file shape settled 2026-07-07:
-// `std/targets/<target>.omg` = the target def; checked per-subsystem target
-// implementations live beneath `std/targets/linux_x86_64/`). Target filtering
-// keeps non-selected implementations inert.
-use targets::linux_x86_64::filesystem_impl;
-use targets::linux_x86_64::entry;

@@ -1,0 +1,6 @@
+// Windows owns native handles, fonts, editing and bitmap backing. The portable
+// core receives measured geometry and input values; Build selects these host
+// implementations and their exact Win32 imports for Windows consumers.
+use windows_host;
+use windows_native;
+use win32_imports;

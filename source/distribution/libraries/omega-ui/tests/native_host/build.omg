@@ -1,6 +1,11 @@
 machine build(builder: &mut Build) {
     Build::application(builder, "omega_ui_native_host_test");
     Build::depend(builder, Source::Path { location: "../../platform/windows" });
-    Build::depend(builder, Source::Path { location: "../../support/standard_library" });
+    Build::depend(builder, Source::Git {
+        repository: "https://github.com/CathedralOS/Omega.git",
+        revision: "e53f0955e26aee23fada4957e50b01379e9ce6b4",
+        selection: PackageSelection::Named { package: "omega_language_std" }
+    });
+    Build::select_provider<omega_ui_windows::windows_host::WindowsUiHost, omega_ui_windows::windows_native::NativeWindowsUi>(builder, windows_x86_64);
     Build::bind(builder, windows_x86_64::ProgramEntry, main);
 }

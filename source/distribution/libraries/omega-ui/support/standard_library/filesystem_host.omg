@@ -1,4 +1,0 @@
-// Shared filesystem path domain for portable and raw OS-family services.
-// POSIX preserves these NUL-free bytes; Windows encodes them as UTF-16.
-public domain [u8]::Path(path)
-requires no_nul(path);

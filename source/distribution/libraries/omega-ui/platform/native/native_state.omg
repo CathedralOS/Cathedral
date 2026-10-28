@@ -1,3 +1,9 @@
+
+use omega_ui::context::UiContext;
+use omega_ui::frame::UiFrame;
+use omega_ui::scene::UiScene;
+use omega_ui::types::select_i32;
+
 // Private instance state and bounded results shared by native command modules.
 use omega_ui::types;
 use omega_ui::context;
