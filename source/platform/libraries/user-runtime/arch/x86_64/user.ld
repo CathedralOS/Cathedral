@@ -9,6 +9,6 @@ SECTIONS {
     . = 0x8000000000;
     .text : { KEEP(*(.text._start)) *(.text .text.*) } :text
     . = ALIGN(4096);
-    .rodata : { *(.rodata .rodata.*) } :rodata
+    .rodata : { KEEP(*(.cathedral.imports)) *(.rodata .rodata.*) } :rodata
     /DISCARD/ : { *(.eh_frame*) *(.comment) *(.note*) }
 }

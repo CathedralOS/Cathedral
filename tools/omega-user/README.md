@@ -58,6 +58,13 @@ layout, component and builder. Publication rejects input changes during linking.
 There is no dynamic loader, runtime relocation, writable load or additional
 image-page allowance. The ordinary F5 build path is unchanged.
 
+An optional `process.json` beside the native consumer declares `imports`
+(`contract`, `minimum`, `maximum`, `required`), `channels` and `descendants`.
+[manifest.py](manifest.py) encodes the platform's existing funded import record;
+the linker places it first in the read-only load, and packaging verifies that
+position. This requests launch authority from the owner; it grants none itself.
+The Background migration supplies such a record but is not installed yet.
+
 The current compiler rejects a raw `int` inside checked user assembly as a
 hidden control transfer. The native leaves use Omega's existing declared
 `TableFunction` boundary instead; this preserves explicit external-contract

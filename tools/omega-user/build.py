@@ -20,6 +20,7 @@ component_build = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(component_build)
 from elf import Elf
 from locking import exclusive
+import manifest
 
 ABI = ROOT / 'source/platform/libraries/user-runtime/arch/x86_64'
 
@@ -47,17 +48,38 @@ def prepare(source, compiler=None):
         if not clang or not linker:
             raise ValueError('LLVM clang and ld.lld are required to assemble the native entry adapter')
         inputs = [Path(__file__), ABI / 'entry.S', ABI / 'user.ld', component / 'component.S',
-                  component / 'app.bin', component / 'receipt.json']
+                  component / 'app.bin', component / 'receipt.json', Path(manifest.__file__)]
+        declaration = source / 'process.json'
+        declared_bytes = declaration.read_bytes() if declaration.is_file() else None
+        record = manifest.encode(json.loads(declared_bytes)) if declared_bytes is not None else None
+        if record is not None:
+            inputs.append(declaration)
         hashes = {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in inputs}
+        if declared_bytes is not None:
+            hashes[str(declaration)] = hashlib.sha256(declared_bytes).hexdigest()
         for source_file, object_name in ((ABI / 'entry.S', 'entry.o'), (component / 'component.S', 'program.o')):
             subprocess.run([clang, '--target=x86_64-unknown-none', '-c', str(source_file),
                             '-o', str(output / object_name)], check=True)
+        objects = [output / 'entry.o', output / 'program.o']
+        if record is not None:
+            (output / 'imports.bin').write_bytes(record)
+            imports_source = output / 'imports.S'
+            imports_source.write_bytes(('.section .cathedral.imports,"a",@progbits\n.balign 8\n'
+                                       f'.incbin "{(output / "imports.bin").as_posix()}"\n').encode())
+            subprocess.run([clang, '--target=x86_64-unknown-none', '-c', str(imports_source),
+                            '-o', str(output / 'imports.o')], check=True)
+            objects.append(output / 'imports.o')
         image = output / 'program.pending.elf'
         subprocess.run([linker, '-m', 'elf_x86_64', '-T', str(ABI / 'user.ld'),
-                        '--no-undefined', '-o', str(image), str(output / 'entry.o'),
-                        str(output / 'program.o')], check=True)
-        validate(image.read_bytes())
-        if any(hashlib.sha256(p.read_bytes()).hexdigest() != hashes[str(p)] for p in inputs):
+                        '--no-undefined', '-o', str(image), *map(str, objects)], check=True)
+        image_bytes = image.read_bytes()
+        elf = validate(image_bytes)
+        if record is not None and not any(flags == 4 and files >= len(record)
+                and image_bytes[offset:offset + len(record)] == record
+                for offset, _, files, _, flags in elf.loads):
+            raise ValueError('process imports must begin a read-only load segment')
+        if declaration.is_file() != (declared_bytes is not None) or any(
+                hashlib.sha256(p.read_bytes()).hexdigest() != hashes[str(p)] for p in inputs):
             raise RuntimeError('entry or component changed during linking; retry')
         final = output / 'program.elf'
         image.replace(final)
