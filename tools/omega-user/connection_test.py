@@ -1,4 +1,4 @@
-"""Exercise an Omega v4 client against the unchanged Rust transport implementation."""
+"""Exercise Omega v4 client and owner server against the Rust transport."""
 import argparse
 from datetime import datetime, timezone
 from pathlib import Path
@@ -34,7 +34,9 @@ def main():
                             f'CATHEDRAL_LAUNCH_{index}_SHARED_PAGES': '1'})
 
     def verify(stream, directory, text):
-        if 'Omega shared connection PASS\n' not in text or 'initial program stopped: Some(Returned(0))' not in text:
+        if not all(marker in text for marker in (
+                'Omega shared connection PASS\n', 'Omega owner connection PASS\n',
+                'initial program stopped: Some(Returned(0))')):
             raise RuntimeError(f'Omega/Rust connection witness failed: {directory / "serial.log"}')
 
     boot(provider, output / 'boot', True, args.timeout, composition=composition, verifier=verify)

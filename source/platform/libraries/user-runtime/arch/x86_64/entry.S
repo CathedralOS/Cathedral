@@ -42,11 +42,18 @@ cathedral_kernel_gate:
     .quad cathedral_notify_control
     .quad cathedral_notify_send
     .quad cathedral_notify_receive
+    .quad cathedral_bootstrap
 
 .section .text.cathedral_kernel_gate,"ax",@progbits
 cathedral_yield:
     mov eax, 1                       // YIELD
     xor edi, edi
+    xor esi, esi
+    xor edx, edx
+    int 0x80
+    ret
+cathedral_bootstrap:
+    mov eax, 3                       // IPC_HANDLE
     xor esi, esi
     xor edx, edx
     int 0x80

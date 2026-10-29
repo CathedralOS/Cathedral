@@ -39,7 +39,7 @@ The guest's proof is actual process execution, not a mocked table callback.
 
 This witness establishes the entry/syscall foundation needed by standalone
 Background. The separate connection run below adds cross-process shared transport.
-The matrix broker, image attachments and owner-control server remain required
+The matrix broker and application event-loop integration remain required
 before changing the ordinary F5 Background executable.
 
 ## Rust service interoperability
@@ -59,3 +59,11 @@ python tools/omega-user/connection_test.py --compiler path/to/new/omega.exe
 Use the standalone-runtime producer documented in
 [the build guide](../../../../tools/omega-user/README.md), not F5's older compiler.
 Logs live in `build/omega-user/connections/<timestamp>/`.
+
+`component/control.omg` also accepts the kernel-installed owner connection from
+a Rust `Client`. Its sixteen requests check full payloads, BUSY while a request
+is retained, correct replies and duplicate-reply refusal. Four additional cases
+cover malformed OPEN, a live stalled handshake, a wrong-type setup grant and a
+copied request after setup. The parent verifies channel, memory and notification
+refunds after each child; the runner requires both client and owner PASS markers.
+No environment endpoint substitutes for the real owner control pair.

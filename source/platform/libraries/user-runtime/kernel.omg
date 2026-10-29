@@ -32,6 +32,7 @@ public data Gate {
     notify_control: addr;
     notify_send: addr;
     notify_receive: addr;
+    bootstrap: addr;
 }
 
 public boundary trait Kernel {
@@ -59,4 +60,5 @@ public boundary trait Kernel {
     machine notify_control(gate: &Gate, handle: u64, action: u64 [0..=2]) -> u64 reaches;
     machine notify_send(gate: &Gate, endpoint: u64, packet: &[u64; 10]) -> u64 reaches;
     machine notify_receive(gate: &Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64 reaches blocks;
+    machine bootstrap(gate: &Gate, index: u64) -> u64 reaches;
 }

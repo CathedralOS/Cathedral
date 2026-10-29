@@ -10,13 +10,20 @@ use timing;
 use shared;
 use notification;
 use connection;
+use control;
 
 public ProgramProvider satisfies Program {
     machine run(gate: &Gate, first: u64, second: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
         transition first == 2u64 {
-            true -> block connection::check(gate, second)
+            true -> block transport(gate, second)
             _ -> block primitives(gate)
         }
+    }
+}
+machine transport(gate: &Gate, mode: u64) -> u64 reaches Kernel {
+    transition mode >= 110u64 {
+        true -> block control::check(gate, mode)
+        _ -> block connection::check(gate, mode)
     }
 }
 machine primitives(gate: &Gate) -> u64 reaches Kernel {

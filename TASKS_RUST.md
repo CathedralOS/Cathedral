@@ -111,8 +111,41 @@ The log is `build/cathedral-ipc-diagnosis/desktop-final.log`; as with the earlie
 desktop run, PowerShell reports Cargo stderr as a native-command error while
 the Python runner reaches its final PASS and successful cold-boot oracle.
 
-**Still required for standalone Background:** v4 server setup/replies for owner
-control, then matrix service acquisition and owner-control handling.
+**Installed owner-control transport now passes:**
+`source/platform/libraries/user-runtime/server/main.omg` sequences accept, poll,
+retained request, reply and retirement; `server/owner.omg` reads only the existing
+kernel-installed control endpoints. The Rust parent uses the ordinary `Client`,
+not an environment-supplied imitation. Sixteen full requests check pending-request
+BUSY, exact replies and duplicate-reply refusal. Malformed OPEN, stalled setup,
+wrong-type reader setup and copied traffic after setup all refuse and release
+resources. Parent channel, physical and notification budgets return to baseline
+after each of five cases. The previous eight client cases also pass at
+`build/omega-user/connections/20261029T005510460292Z/`.
+Clock-granted and clock-denied primitive runs pass at
+`build/omega-user/tests/20261029T005556734373Z/` (37/240 image pages).
+Three native/ELF tests, Rust format/clippy for `omega-peer` and the 89/154-edge
+layout check pass. This is an x86-64, single-request server with plain requests
+up to 64 bytes and fixed 64-byte replies. It does not accept request attachments
+or pipelining; malformed owner traffic retires that connection, not the process.
+
+The new source uses explicit target selections in its three standalone Build
+manifests. The tested compiler is source `66f71d0ebcea4bb82b62c3cf1c951d83329846a6`,
+SHA-256 `13506b64d041dfef9791a1a43c777b985b87e5cb77844a1c55a166d013131f9c`,
+saved behind `build/omega-user/compiler/omega.exe`. A missing computed-operand
+type catalog required a local fix, but [Omega #729](https://github.com/CathedralOS/Omega/pull/729)
+was closed as superseded: [#557](https://github.com/CathedralOS/Omega/pull/557),
+`b51ac370b6cecc9d2abd0948d86b01fccfc943eb`, had already landed the same source-owner
+walk plus further domain preservation. The retained source branch reproduces
+our qualified compiler; it is not a merged commit or evidence for current main.
+Pinned native/Terminal qualification passes three component oracles and three
+refusal controls without invalidations. See `tools/omega-user/README.md`.
+Do not share Cargo target directories between this producer and the older desktop
+worktree: doing so previously left stale first-party dependency artifacts.
+The F5 executable path and qualified desktop producer remain unchanged; this
+step did not rerun the desktop or install standalone Background.
+
+**Still required for standalone Background:** matrix service acquisition, then
+the application event loop and owner-control policy integration.
 Use the current Background app sequence with that runtime. Preserve one-writer
 pages, read-only peer views, grant/frame correlation, drain/recheck/park ordering,
 deadline/refusal behavior and cleanup after partial setup. Copied IPC is needed

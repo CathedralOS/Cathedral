@@ -24,7 +24,7 @@ another Rust-only feature or isolated proof. Keep F5 usable throughout.
 | Reference deletion and scoped erasure | [Deletion outcome](TASKS_RUST.md#reference-deletion-and-scoped-erasure) | Storage retention policy, independent copies and explicit guarantee refusal |
 | Independent installation and component-owned activation | [App update outcome](TASKS_RUST.md#independent-installation-and-component-owned-activation) | Platform updater, scoped lifecycle owners and immutable executable backing |
 | Moving distribution behavior to Omega | [Current migration and next matrix step](TASKS_RUST.md) | `source/distribution/applications/`, `source/distribution/matrix/`, [independent matrix proof](source/distribution/lab/matrix-composition/README.md) |
-| Standalone Omega userspace | [Process runtime](source/platform/libraries/user-runtime/README.md) | Entry, shared-page custody, notifications and Rust-compatible v4 client work; owner-control server and service acquisition are next before replacing Background's Rust host |
+| Standalone Omega userspace | [Process runtime](source/platform/libraries/user-runtime/README.md) | Entry, shared-page custody, v4 client and installed owner-control server work; matrix service acquisition and app-loop integration are next before replacing Background's Rust host |
 | Omega kernel boot | [Current boot frontier](source/kernel/boot/uefi/README.md) | `source/kernel/` |
 | Translating upstream Rust OS libraries into Omega | [Omega porting queue](TASKS_OMEGA_PORTS.md) | `source/`, verification under `tools/ports/` |
 | Unresolved owner-level semantics or trust choices | [Owner questions](OWNER_QUESTIONS.md) | Resolve into the owning specification/contract |

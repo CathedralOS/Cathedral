@@ -2,7 +2,7 @@ machine build(builder: &mut Build) {
     Build::application(builder, "cathedral_user_entry_native");
     Build::depend_as(builder, "component", Source::Path { location: "../component" });
     Build::depend_as(builder, "runtime", Source::Path { location: "../../../../platform/libraries/user-runtime" });
-    Build::select_provider<runtime::entry::Program, component::main::ProgramProvider>(builder, CompositionMode::Independent);
-    Build::select_provider<runtime::kernel::Kernel, runtime::arch::x86_64::gate::NativeKernel>(builder);
+    Build::select_provider<runtime::entry::Program, component::main::ProgramProvider>(builder, linux_x86_64, CompositionMode::Independent);
+    Build::select_provider<runtime::kernel::Kernel, runtime::arch::x86_64::gate::NativeKernel>(builder, linux_x86_64);
     Build::bind(builder, linux_x86_64::ProgramEntry, main);
 }

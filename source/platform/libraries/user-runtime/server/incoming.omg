@@ -1,0 +1,51 @@
+module server::incoming;
+// Drain notifications and inspect liveness before the mailbox. Copied data or
+// typed attachments are not admitted as a second request transport.
+use kernel::Gate;
+use kernel::Kernel;
+use kernel;
+use server::main::Server;
+use server::main::Event;
+use connection::mailbox;
+
+public machine poll(gate: &Gate, listener: &mut Server, now: u64) -> Event
+    reaches Kernel blocks; invokes Kernel; {
+    let hint: u64 = block Kernel::notify_wait(gate, listener.peer.bell.wait, now, 1u64);
+    let mut interests: [u64; 8];
+    interests[1] = listener.peer.receiver;
+    let live: u64 = block Kernel::wait(gate, &interests, 1u64, now);
+    transition live == kernel::TIMED_OUT || live == kernel::PEER_CLOSED {
+        true -> block receive(gate, listener, hint, live)
+        _ -> (Event::Failed { code: kernel::IO_ERROR })
+    }
+}
+machine receive(gate: &Gate, listener: &mut Server, hint: u64, live: u64) -> Event reaches Kernel {
+    let status: u64 = block mailbox::receive(gate, &mut listener.peer);
+    transition {
+        status == 0u64 -> validate(gate, listener)
+        status == kernel::WOULD_BLOCK -> idle(hint, live)
+        _ -> (Event::Failed { code: status })
+    }
+}
+machine validate(gate: &Gate, listener: &mut Server) -> Event reaches Kernel {
+    transition listener.peer.frame.id > listener.last && listener.peer.frame.attachment == 0u64 {
+        true -> accepted(gate, listener)
+        _ -> (Event::Failed { code: kernel::IO_ERROR })
+    }
+}
+machine accepted(gate: &Gate, listener: &mut Server) -> Event reaches Kernel {
+    listener.last = listener.peer.frame.id;
+    listener.pending = listener.last;
+    listener.peer.has_frame = false;
+    let status: u64 = Kernel::notify_signal(gate, listener.peer.signal);
+    transition status == 0u64 {
+        true -> (Event::Request { frame: listener.peer.frame })
+        _ -> (Event::Failed { code: status })
+    }
+}
+machine idle(hint: u64, live: u64) -> Event {
+    transition hint > 1u64 || live == kernel::PEER_CLOSED {
+        true -> (Event::Failed { code: kernel::PEER_CLOSED })
+        _ -> (Event::Pending)
+    }
+}

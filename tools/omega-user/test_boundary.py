@@ -29,7 +29,7 @@ class BoundaryTests(unittest.TestCase):
         numbers = dict(re.findall(r'pub const (\w+): u64 = (\d+);', contract))
         assembly = (ABI / 'entry.S').read_text(encoding='utf-8')
         calls = re.findall(r'(?:mov eax, (\d+)|xor eax, eax)\s*// (\w+)\n', assembly)
-        self.assertEqual(len(calls), 26)  # source sites, including the shared-access macro
+        self.assertEqual(len(calls), 27)  # source sites, including the shared-access macro
         for number, name in calls:
             self.assertEqual(int(number or '0'), int(numbers[name]), name)
 
@@ -39,7 +39,7 @@ class BoundaryTests(unittest.TestCase):
         assembly = (ABI / 'entry.S').read_text(encoding='utf-8')
         table = re.findall(r'^    \.quad cathedral_(\w+)$', assembly, re.MULTILINE)
         self.assertEqual(['yield' if field == 'yield_now' else field for field in fields], table)
-        self.assertEqual(len(table), 24)
+        self.assertEqual(len(table), 25)
 
 
 if __name__ == '__main__':

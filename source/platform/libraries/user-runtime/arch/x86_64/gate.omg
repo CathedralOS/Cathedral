@@ -56,7 +56,11 @@ linux_x86_64 machine Gate::notify_send_leaf(gate: &Gate, endpoint: u64, packet: 
 linux_x86_64 machine Gate::notify_receive_leaf(gate: &Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64
     satisfies Kernel::notify_receive via ForeignBinding::TableFunction(notify_receive) blocks;
 
+linux_x86_64 machine Gate::bootstrap_leaf(gate: &Gate, index: u64) -> u64
+    satisfies Kernel::bootstrap via ForeignBinding::TableFunction(bootstrap);
+
 public NativeKernel satisfies Kernel {
+    Kernel::bootstrap = Gate::bootstrap_leaf;
     Kernel::yield_now = Gate::yield_leaf;
     Kernel::environment = Gate::environment_leaf;
     Kernel::channel = Gate::channel_leaf;

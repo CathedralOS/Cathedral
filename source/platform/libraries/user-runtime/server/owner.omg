@@ -1,0 +1,27 @@
+module server::owner;
+// Installed control endpoints are separate from the app's service environment.
+// Reading their names never creates authority or restores a retired endpoint.
+use kernel::Gate;
+use kernel::Kernel;
+use kernel;
+use server::main::Server;
+
+public machine open(gate: &Gate, listener: &mut Server, deadline: u64) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    let receiver: u64 = Kernel::bootstrap(gate, 0u64);
+    transition receiver < kernel::ERROR_BASE {
+        true -> block sender(gate, listener, receiver, deadline)
+        _ -> (receiver)
+    }
+    machine sender(gate: &Gate, listener: &mut Server, receiver: u64, deadline: u64) -> u64 reaches Kernel {
+        let sender: u64 = Kernel::bootstrap(gate, 1u64);
+        transition sender < kernel::ERROR_BASE {
+            true -> block server::main::accept(gate, listener, sender, receiver, deadline)
+            _ -> failed(gate, receiver, sender)
+        }
+    }
+    machine failed(gate: &Gate, receiver: u64, code: u64) -> u64 reaches Kernel {
+        let ignored: u64 = Kernel::close(gate, receiver);
+        code
+    }
+}

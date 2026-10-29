@@ -143,7 +143,7 @@ machine commit(gate: &Gate, peer: &mut Peer, deadline: u64) -> u64 reaches Kerne
         _ -> (status)
     }
 }
-machine ack(gate: &Gate, receiver: u64, deadline: u64) -> u64 reaches Kernel {
+public machine ack(gate: &Gate, receiver: u64, deadline: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
     let status: u64 = block ready(gate, receiver, deadline);
     transition status == 0u64 {
         true -> block received(gate, receiver)

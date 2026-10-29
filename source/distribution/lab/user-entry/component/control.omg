@@ -1,0 +1,104 @@
+module control;
+// Real installed owner endpoints, not an environment-provided stand-in.
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::time::Tick;
+use runtime::server::main::Server;
+use runtime::server::owner;
+use runtime::server::main::Event;
+use runtime::connection::main::Frame;
+
+public machine check(gate: &Gate, mode: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let clock: u64 = Kernel::clock(gate);
+    let tick: Tick = runtime::time::read(gate, clock);
+    transition tick {
+        Tick::Read { value } -> block open(gate, mode, clock, value)
+        _ -> (180u64)
+    }
+}
+machine open(gate: &Gate, mode: u64, clock: u64, now: u64) -> u64 reaches Kernel {
+    let mut listener: Server;
+    let status: u64 = block owner::open(gate, &mut listener, runtime::time::after(now, 300u64));
+    transition mode == 111u64 || mode == 112u64 || mode == 114u64 {
+        true -> refused(listener, mode, status)
+        _ -> block opened(gate, &mut listener, mode, clock, status)
+    }
+}
+machine refused(listener: Server, mode: u64, status: u64) -> u64 {
+    transition status != 0u64 && listener.peer.sender == 0u64 && listener.peer.receiver == 0u64
+        && listener.peer.writer.handle == 0u64 && listener.peer.reader.handle == 0u64
+        && listener.peer.bell.wait == 0u64 && listener.peer.bell.control == 0u64
+        && (mode != 112u64 || status == kernel::TIMED_OUT) {
+        true -> (0u64)
+        _ -> (181u64)
+    }
+}
+machine opened(gate: &Gate, listener: &mut Server, mode: u64, clock: u64, status: u64) -> u64 reaches Kernel {
+    transition status == 0u64 {
+        true -> block poll(gate, listener, mode, clock, 1u64)
+        _ -> (182u64)
+    }
+}
+machine poll(gate: &Gate, listener: &mut Server, mode: u64, clock: u64, index: u64 [1..=16]) -> u64 reaches Kernel {
+    let tick: Tick = runtime::time::read(gate, clock);
+    transition tick {
+        Tick::Read { value } -> block receive(gate, listener, mode, clock, index, value)
+        _ -> (183u64)
+    }
+}
+machine receive(gate: &Gate, listener: &mut Server, mode: u64, clock: u64, index: u64 [1..=16], now: u64) -> u64 reaches Kernel {
+    let event: Event = block runtime::server::main::poll(gate, listener, now);
+    transition event {
+        Event::Request { frame } -> block received(gate, listener, mode, clock, index, now, frame)
+        Event::Pending -> block wait(gate, listener, mode, clock, index, now)
+        Event::Failed { code } -> failed(mode, code)
+    }
+}
+machine failed(mode: u64, code: u64) -> u64 {
+    transition mode == 113u64 && code == kernel::IO_ERROR {
+        true -> (0u64)
+        _ -> (184u64)
+    }
+}
+machine wait(gate: &Gate, listener: &mut Server, mode: u64, clock: u64, index: u64 [1..=16], now: u64) -> u64 reaches Kernel {
+    let ignored: u64 = block runtime::connection::main::wait(gate, &listener.peer, runtime::time::after(now, 100u64));
+    transition { _ -> (block poll(gate, listener, mode, clock, index)) }
+}
+machine received(gate: &Gate, listener: &mut Server, mode: u64, clock: u64, index: u64 [1..=16], now: u64, frame: Frame) -> u64 reaches Kernel {
+    transition frame.bytes == 64u64 && frame.payload[0] == index && frame.payload[7] == index {
+        true -> block retained(gate, listener, mode, clock, index, now, frame)
+        _ -> (185u64)
+    }
+}
+machine retained(gate: &Gate, listener: &mut Server, mode: u64, clock: u64, index: u64 [1..=16], now: u64, frame: Frame) -> u64 reaches Kernel {
+    let event: Event = block runtime::server::main::poll(gate, listener, now);
+    transition event {
+        Event::Failed { code } -> block reply(gate, listener, mode, clock, index, frame, code)
+        _ -> (186u64)
+    }
+}
+machine reply(gate: &Gate, listener: &mut Server, mode: u64, clock: u64, index: u64 [1..=16], frame: Frame, code: u64) -> u64 reaches Kernel {
+    let status: u64 = block runtime::server::main::reply(gate, listener, &frame.payload);
+    transition code == kernel::BUSY && status == 0u64 {
+        true -> block replied(gate, listener, mode, clock, index, frame)
+        _ -> (187u64)
+    }
+}
+machine replied(gate: &Gate, listener: &mut Server, mode: u64, clock: u64, index: u64 [1..=16], frame: Frame) -> u64 reaches Kernel {
+    let status: u64 = block runtime::server::main::reply(gate, listener, &frame.payload);
+    transition status != 0u64 {
+        true -> block next(gate, listener, mode, clock, index)
+        _ -> (188u64)
+    }
+}
+machine next(gate: &Gate, listener: &mut Server, mode: u64, clock: u64, index: u64 [1..=16]) -> u64 reaches Kernel {
+    transition index < 16u64 {
+        true -> (block poll(gate, listener, mode, clock, index + 1u64))
+        _ -> block done(gate, listener)
+    }
+}
+machine done(gate: &Gate, listener: &mut Server) -> u64 reaches Kernel {
+    block runtime::server::main::close(gate, listener);
+    0u64
+}

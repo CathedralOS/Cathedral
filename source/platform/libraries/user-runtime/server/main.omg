@@ -1,0 +1,88 @@
+module server::main;
+// Accept one explicit connection -> deliver one request -> reply under its exact
+// ID. The owner adapter supplies installed endpoints; this listener discovers none.
+use kernel::Gate;
+use kernel::Kernel;
+use kernel;
+use connection::main::Peer;
+use connection::main::Frame;
+use connection::mailbox;
+use server::setup;
+use server::incoming;
+
+public data Server {
+    peer: Peer;
+    last: u64;
+    pending: u64;
+}
+public data Event {
+    case Pending;
+    case Request(frame: Frame);
+    case Failed(code: u64);
+}
+public machine accept(gate: &Gate, listener: &mut Server, sender: u64, receiver: u64, deadline: u64) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    listener.peer.sender = sender;
+    listener.peer.receiver = receiver;
+    let status: u64 = block setup::accept(gate, &mut listener.peer, deadline);
+    transition status == 0u64 {
+        true -> (0u64)
+        _ -> block retire(gate, listener, status)
+    }
+}
+public machine poll(gate: &Gate, listener: &mut Server, now: u64) -> Event
+    reaches Kernel blocks; invokes Kernel; {
+    transition listener.peer.fault != 0u64 {
+        true -> (Event::Failed { code: listener.peer.fault })
+        _ -> block available(gate, listener, now)
+    }
+    machine available(gate: &Gate, listener: &mut Server, now: u64) -> Event reaches Kernel {
+        transition listener.pending != 0u64 {
+            true -> (Event::Failed { code: kernel::BUSY })
+            _ -> block receive(gate, listener, now)
+        }
+    }
+    machine receive(gate: &Gate, listener: &mut Server, now: u64) -> Event reaches Kernel {
+        let event: Event = block incoming::poll(gate, listener, now);
+        transition event {
+            Event::Failed { code } -> block failed(gate, listener, code)
+            _ -> (event)
+        }
+    }
+    machine failed(gate: &Gate, listener: &mut Server, code: u64) -> Event reaches Kernel {
+        let ignored: u64 = block retire(gate, listener, code);
+        Event::Failed { code: code }
+    }
+}
+public machine reply(gate: &Gate, listener: &mut Server, payload: &[u64; 8]) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    transition listener.pending != 0u64 && listener.peer.fault == 0u64 {
+        true -> block publish(gate, listener, payload)
+        _ -> (kernel::IO_ERROR)
+    }
+    machine publish(gate: &Gate, listener: &mut Server, payload: &[u64; 8]) -> u64 reaches Kernel {
+        let status: u64 = block mailbox::send(gate, &mut listener.peer, listener.pending, payload);
+        transition {
+            status == 0u64 -> block published(gate, listener)
+            status == kernel::WOULD_BLOCK -> (status)
+            _ -> block retire(gate, listener, status)
+        }
+    }
+    machine published(gate: &Gate, listener: &mut Server) -> u64 reaches Kernel {
+        listener.pending = 0u64;
+        let status: u64 = Kernel::notify_signal(gate, listener.peer.signal);
+        transition status == 0u64 {
+            true -> (0u64)
+            _ -> block retire(gate, listener, status)
+        }
+    }
+}
+public machine close(gate: &Gate, listener: &mut Server) reaches Kernel blocks; invokes Kernel; {
+    let ignored: u64 = block retire(gate, listener, kernel::PEER_CLOSED);
+}
+machine retire(gate: &Gate, listener: &mut Server, code: u64) -> u64 reaches Kernel {
+    listener.pending = 0u64;
+    let ignored: u64 = block connection::main::close(gate, &mut listener.peer);
+    listener.peer.fault = code;
+    code
+}

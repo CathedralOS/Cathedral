@@ -14,13 +14,19 @@ python tools/omega-user/connection_test.py --compiler path/to/new/omega.exe
 python -m unittest discover -s tools/omega-user -p "test_*.py"
 ```
 
-The v4 connection witness is qualified with source `ccb6d4791d8d4`,
-[Omega #525](https://github.com/CathedralOS/Omega/pull/525), release opt-level 3
-(published as `a0bc08225d743ab888090f10476817c485820807`).
-Its compiler SHA-256 is
-`089d89f492f6916c8d5e4fef217e1fca4107679cb7d438425a0733de5fe4cfce`.
-The fixes preserve enum-case tail transfers and their local loans through native
-component compilation. Keep this compiler separate from F5's
+The client and owner-server witnesses are qualified with source
+`66f71d0ebcea4bb82b62c3cf1c951d83329846a6`, release opt-level 3. Its SHA-256 is
+`13506b64d041dfef9791a1a43c777b985b87e5cb77844a1c55a166d013131f9c`.
+This reproducible source is retained on `work/cathedral-owner-operands` in Omega.
+[PR #729](https://github.com/CathedralOS/Omega/pull/729) was closed **without
+merging**: the same source-owner type-catalog correction had already landed in
+[PR #557](https://github.com/CathedralOS/Omega/pull/557), published as
+`b51ac370b6cecc9d2abd0948d86b01fccfc943eb`, with additional domain corrections.
+That newer main has not been qualified for this runtime. The local
+`build/omega-user/compiler/omega.exe` points to the saved, tested producer, with
+its source/hash receipt beside it. Do not replace it just because main advances.
+It includes the preceding enum-case tail-transfer repairs from #525.
+Keep this compiler separate from F5's
 [qualified desktop producer](../omega-ui/README.md#build): the newer compiler
 has removed `state`, while that broader source migration remains unfinished.
 `--compiler` explicitly chooses the producer for these standalone runs.
@@ -32,7 +38,8 @@ Inspect the review path printed in `build/omega-component/distribution/lab/user-
 and the declarations in `source/platform/libraries/user-runtime/kernel.omg` and
 `arch/x86_64/gate.omg` against `entry.S`. The table includes process/IPC/clock calls plus shared-memory allocation,
 release, typed read-view transfer, bounded shared word access and notification
-creation, handoff, signal, wait, control and drop. The native leaves must preserve the declared buffers,
+creation, handoff, signal, wait, control and drop, plus lookup of installed owner
+endpoints. The native leaves must preserve the declared buffers,
 range bounds, blocking and calling convention. Accept the inspected rows in the
 generated review document and resume with the same qualified compiler:
 

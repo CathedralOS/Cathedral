@@ -19,6 +19,16 @@ one notification right. Unsupported attachment kinds retire the connection.
 The caller supplies a fresh zero-initialized `Peer` and closes it before disposal;
 reconnection uses a fresh value. An error never replays a published operation.
 
+[server/main.omg](server/main.omg) accepts the same v4 connection, retains one
+request until its exact reply, refuses a second poll while that request is pending,
+and closes all retained rights on protocol failure. Its `setup.omg` owns the
+bounded reverse handshake and `incoming.omg` owns mailbox/liveness checks.
+[server/owner.omg](server/owner.omg) supplies only the kernel-installed owner
+endpoints, separate from the app's service environment. Callers supply a fresh
+zero-initialized `Server`; close it before disposal and reconnect with a fresh value.
+This server accepts plain requests up to 64 bytes and sends 64-byte replies.
+Pipelining, request attachments and copied-request fallback are refused.
+
 [entry.omg](entry.omg) describes the temporary process entry:
 `Program::run(gate, first, second)`. The two kernel arguments remain ordinary
 data. Endpoint names come from the kernel's environment snapshot, and reading
@@ -38,8 +48,9 @@ borrow. Counts are checked Omega ranges. Allocation, mapping, release, yield, re
 and their callers acknowledge it. Scalar names alone grant no authority.
 
 This is a small platform runtime, **not the replacement for the Rust app host
-yet**. It has no general allocator, server handshake, service acquisition or
-owner-control implementation. In particular, copied IPC is the
+yet**. It has no general allocator or matrix service acquisition. Owner-control
+transport now works; the app still owns control policy and its event loop.
+In particular, copied IPC is the
 setup/grant mechanism; it must not become a fallback for the desktop's shared
 service protocol. The ordinary Background executable still uses that Rust host.
 The runtime has only been qualified on x86-64.
