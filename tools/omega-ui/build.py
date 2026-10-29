@@ -14,7 +14,9 @@ import process
 ROOT = Path(__file__).resolve().parents[2]
 LIBRARY = ROOT / 'source/distribution/libraries/omega-ui'
 OUTPUT = ROOT / 'build/omega-ui/component'
-LOCAL_COMPILER = ROOT / 'build/omega-ui/compiler/target/release' / ('omega.exe' if os.name == 'nt' else 'omega')
+# UI source has migrated independently of the still-legacy desktop apps. Give
+# its automatic Cargo build an explicit compiler home, without changing theirs.
+LOCAL_COMPILER = ROOT / 'build/omega-ui/canonical-compiler/target/release' / ('omega.exe' if os.name == 'nt' else 'omega')
 
 
 def select_compiler(explicit=None):

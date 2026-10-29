@@ -5,9 +5,13 @@ consumer, and packages one pure export for the reference OS. [elf.py](elf.py)
 validates its restricted ELF container and preserves relative code/data spacing.
 The same validator is used by the [UI builder](../omega-ui/build.py).
 
-Use the supported optimized compiler described in the
-[UI build guide](../omega-ui/README.md#build). Selection is `--compiler`, then
-`OMEGA_BIN`, then the prepared `build/omega-ui/compiler` executable, then PATH.
+Legacy desktop app components still use the optimized `20dcd0409b66` producer
+recorded in [the handoff](../../TASKS_RUST.md). Selection is `--compiler`, then
+`OMEGA_BIN`, then `build/omega-ui/compiler/target/release/omega.exe` on Windows
+(`omega` elsewhere), then PATH. The migrated [UI library](../omega-ui/README.md#build)
+has its own `canonical-compiler` home; changing that does not migrate these apps.
+The standalone [process runtime](../omega-user/README.md) likewise names its own
+explicitly qualified producer.
 
 ```powershell
 python tools/omega-component/build.py source/distribution/applications/colors/bridge/native

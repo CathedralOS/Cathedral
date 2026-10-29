@@ -26,9 +26,10 @@ That newer main has not been qualified for this runtime. The local
 `build/omega-user/compiler/omega.exe` points to the saved, tested producer, with
 its source/hash receipt beside it. Do not replace it just because main advances.
 It includes the preceding enum-case tail-transfer repairs from #525.
-Keep this compiler separate from F5's
-[qualified desktop producer](../omega-ui/README.md#build): the newer compiler
-has removed `state`, while that broader source migration remains unfinished.
+Keep this compiler separate from the
+[legacy desktop app producer](../omega-component/README.md) and the migrated
+[UI library producer](../omega-ui/README.md#build). Desktop app source still
+contains `state`; that broader source migration remains unfinished.
 `--compiler` explicitly chooses the producer for these standalone runs.
 Compilation is capped at 4 GiB, five minutes and one checking worker by default.
 Component and UI builds share one compiler slot across Cargo processes.

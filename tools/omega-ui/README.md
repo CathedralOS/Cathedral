@@ -38,32 +38,37 @@ uses the Rust toolchain pinned in the compiler repository:
 git clone https://github.com/CathedralOS/Omega.git build/omega-ui/canonical-compiler
 cd build/omega-ui/canonical-compiler
 git checkout b51ac370b6cecc9d2abd0948d86b01fccfc943eb
-cargo build --locked -p omega
+cargo build --locked --release -p omega
 ```
 
-Omega's ordinary Cargo profile is optimized at level 1; the `debug` output
-directory does not mean an unoptimized compiler. Return to Cathedral and prepare
-the UI with the selected compiler:
+Return to Cathedral and prepare the UI with the selected compiler:
 
 ```text
-python tools/omega-ui/build.py --compiler build/omega-ui/canonical-compiler/target/debug/omega
+python tools/omega-ui/build.py --compiler build/omega-ui/canonical-compiler/target/release/omega
 ```
 
 On Windows the executable is `omega.exe`. Package review may first request
 ordinary acceptance; inspect the named proposal and resume, then repeat the
 build. Preserve that component directory and its receipt together.
 
-Other desktop packages still contain legacy Omega source. Until they migrate,
-keep their existing `20dcd0409b66` compiler selection and set
-`OMEGA_UI_COMPONENT_DIR` to the absolute `build/omega-ui/component` directory
-prepared above. This is the library's existing explicit artifact input; it
-selects no compiler behind the caller's back. The ABI 2 Rust callers stay the
-same. A cold F5 run using the new artifacts still needs Windows/QEMU validation;
-the earlier desktop evidence does not establish it.
+Other desktop packages still contain legacy Omega source. Keep their existing
+`20dcd0409b66` compiler selection. The UI builder now uses the separate
+`canonical-compiler/target/release` home by default, so F5 can prepare both source
+generations without a global compiler override or stale prepared artifacts.
+`OMEGA_UI_COMPONENT_DIR` remains an explicit override for already-prepared UI
+artifacts. The ABI 2 Rust callers stay the same.
+
+Windows release source `b51ac370b6cec`, SHA-256
+`9c1085895855ceb2cd75aac5080e16490a55b57f0738f1cc086c7a2927cfde6b`, is qualified
+through the ordinary F5 desktop and cold reopen, plus actual UI-app launch and
+owner-controlled close on both boots. See [the handoff](../../TASKS_RUST.md#canonical-omega-ui-source)
+for artifacts and scope. This does not qualify the separate Windows gallery.
+If an older generated `omega.lock` is rejected for its schema, preserve it outside
+the package and run fresh ordinary review; do not edit its version or bypass review.
 
 For current UI source development, pass the canonical compiler explicitly or
 set `OMEGA_BIN` to it. The build selects an explicit `--compiler`,
-then `OMEGA_BIN`, then `build/omega-ui/compiler/target/release/omega.exe` (Windows)
+then `OMEGA_BIN`, then `build/omega-ui/canonical-compiler/target/release/omega.exe` (Windows)
 or `omega` (macOS/Linux), then `omega` on PATH. A selected compiler's failure is
 reported rather than silently trying another one. For a compiler built elsewhere,
 set `OMEGA_BIN` to its absolute executable path. The local compiler checkout is

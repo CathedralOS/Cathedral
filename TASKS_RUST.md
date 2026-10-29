@@ -101,7 +101,7 @@ qualified standalone producer; pass the latter with `--compiler` for the new tes
 The earlier unbounded run reached approximately 60 GB before allocation failure;
 that may relate to the owner's host crash, but its cause has not been established.
 
-**F5 is requalified on the restored desktop compiler:** the ordinary desktop,
+**Historical F5 baseline before the UI source migration:** the ordinary desktop,
 three independent Notes instances, close/capacity handling, Notes/Colors saves
 and cold reopen pass at
 `build/boot-harness-rs/desktop/20261028T052304596153Z/`. The host oracle verifies
@@ -141,12 +141,17 @@ Pinned native/Terminal qualification passes three component oracles and three
 refusal controls without invalidations. See `tools/omega-user/README.md`.
 Do not share Cargo target directories between this producer and the older desktop
 worktree: doing so previously left stale first-party dependency artifacts.
-The F5 executable path and qualified desktop producer remain unchanged; this
-step did not rerun the desktop or install standalone Background.
+This owner-control step did not change the F5 executable path or install
+standalone Background. See [canonical UI](#canonical-omega-ui-source) for the
+subsequent UI migration and its separate compiler selection.
 
 **Still required for standalone Background:** matrix service acquisition, then
 the application event loop and owner-control policy integration.
-Use the current Background app sequence with that runtime. Preserve one-writer
+Keep the same broker connection and request sequence across service acquisition
+and subsequent interaction calls; it is not a reconnect after discovery. Establish
+the supplied owner-control connection first, as the Rust host does. Use the
+current Background app sequence directly with that runtime, without reproducing
+the temporary 4,096-word Rust host packet bridge. Preserve one-writer
 pages, read-only peer views, grant/frame correlation, drain/recheck/park ordering,
 deadline/refusal behavior and cleanup after partial setup. Copied IPC is needed
 for setup; it must not replace ordinary shared service transport as a shortcut.
@@ -5170,13 +5175,30 @@ reservation before imposing its allocation allowance, retains stricter inherited
 ceilings, and is covered by actual over-budget and serialized-process controls.
 These packaging results do not establish foreign-host execution.
 
-Use the [build guide](tools/omega-ui/README.md#build) to prepare canonical UI
-components. Other desktop packages still use legacy Omega syntax. Preserve
-their compiler selection and pass the prepared UI artifacts through the existing
-`OMEGA_UI_COMPONENT_DIR` input; the build never silently selects a different
-compiler per program. A fresh F5 desktop boot with these new components,
-Windows gallery interaction/snapshots and Windows native-host execution remain
-unverified: this qualification host has neither a Windows runner nor QEMU.
+**Windows/F5 integration now passes on the migrated source.** The UI builder
+automatically uses `build/omega-ui/canonical-compiler/target/release/omega.exe`,
+separate from legacy desktop apps' `build/omega-ui/compiler` home. Explicit
+`--compiler` and `OMEGA_BIN` still take precedence; a selected producer's failure
+does not fall back. `OMEGA_UI_COMPONENT_DIR` remains an optional explicit artifact
+input, not a requirement for F5. Use the [build guide](tools/omega-ui/README.md#build).
+
+The clean Windows release build of published `b51ac370b6cec` has SHA-256
+`9c1085895855ceb2cd75aac5080e16490a55b57f0738f1cc086c7a2927cfde6b`.
+Both native exports package successfully (272 / 515,360 code bytes). Older local
+layout/frame package locks used an incompatible compiler schema; they were
+preserved under `build/cathedral-ipc-diagnosis/legacy-ui-*.omega.lock` before
+fresh ordinary review. The reusable source itself needed no further change.
+
+The default F5 composition, three Notes instances, protected close/capacity,
+Notes/Colors saves and cold reopen pass at
+`build/boot-harness-rs/desktop/20261029T012142029027Z/` (1,913-record host oracle).
+The shared-control fixture passes at
+`build/boot-harness-rs/desktop/20261029T012515732819Z/`, including actual Omega UI
+launch, surface readiness and owner-controlled close on fresh and cold boots.
+Logs are `build/cathedral-ipc-diagnosis/canonical-ui-{desktop,control}.log`.
+Eleven UI-tool tests, eleven component-tool tests and source layout (85 Omega /
+154 Rust edges) pass. Windows gallery interaction/snapshots and the separate
+Windows native-host adapter remain untested here; these are QEMU guest checks.
 Historical desktop execution below belongs to its original source and producer.
 
 Historical integration 2026-10-24: **reusable Omega UI library**, over `ab0d76f8`.
