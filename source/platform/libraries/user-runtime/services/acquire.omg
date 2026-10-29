@@ -1,0 +1,54 @@
+module services::acquire;
+// A complete refusal is an ordinary answer. A malformed reply or wrong grant
+// poisons only this binding; no late grant can be consumed by a later request.
+use kernel::Gate;
+use kernel::Kernel;
+use kernel;
+use protocol::services::request;
+use protocol::services::INTERACTION;
+use services::main::Services;
+use connection::main::Frame;
+use connection::call;
+use connection::call::CallReply;
+
+public machine interaction(gate: &Gate, binding: &mut Services, clock: u64, minimum: u64, maximum: u64) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    let words: [u64; 8] = request(INTERACTION, minimum, maximum, 0u64);
+    let result: CallReply = block call::exchange(gate, &mut binding.broker, clock, &words);
+    transition result {
+        CallReply::Received { frame, notification } -> block received(gate, binding, frame, notification)
+        CallReply::Failed { code } -> (code)
+    }
+}
+machine received(gate: &Gate, binding: &mut Services, frame: Frame, notification: u64) -> u64 reaches Kernel {
+    transition frame.bytes == 64u64 && frame.payload[2] == 0u64 && frame.payload[3] == 0u64
+        && frame.payload[4] == 0u64 && frame.payload[5] == 0u64 && frame.payload[6] == 0u64 && frame.payload[7] == 0u64 {
+        true -> block answer(gate, binding, frame.payload[0], frame.payload[1], notification)
+        _ -> block malformed(gate, binding, notification)
+    }
+}
+machine answer(gate: &Gate, binding: &mut Services, code: u64, version: u64, notification: u64) -> u64 reaches Kernel {
+    transition {
+        code != 0u64 && version == 0u64 && notification == 0u64 -> (code)
+        code == 0u64 && version == 1u64 && notification != 0u64 -> block granted(gate, binding, notification)
+        _ -> block malformed(gate, binding, notification)
+    }
+}
+machine granted(gate: &Gate, binding: &mut Services, notification: u64) -> u64 reaches Kernel {
+    // Check wait authority without retaining a borrow into provider memory. A
+    // consumed initial hint is harmless: the app polls presentation after acquire.
+    let status: u64 = block Kernel::notify_wait(gate, notification, 0u64, 1u64);
+    transition status <= 1u64 {
+        true -> retained(binding, notification)
+        _ -> block malformed(gate, binding, notification)
+    }
+}
+machine retained(binding: &mut Services, notification: u64) -> u64 {
+    binding.wake = notification;
+    0u64
+}
+machine malformed(gate: &Gate, binding: &mut Services, notification: u64) -> u64 reaches Kernel {
+    let ignored: u64 = Kernel::notify_drop(gate, notification);
+    block services::main::close(gate, binding);
+    kernel::IO_ERROR
+}

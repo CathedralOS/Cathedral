@@ -1,0 +1,50 @@
+module connection::call;
+// Publish once, then retain that request until its reply or terminal failure.
+// Parking intervals are not cancellation deadlines. A partial typed reply still
+// has the connection's bounded pairing deadline; an empty live peer does not.
+use kernel::Gate;
+use kernel::Kernel;
+use kernel;
+use connection::main::Peer;
+use connection::main::Reply;
+use connection::main::Frame;
+use time::Tick;
+
+public data CallReply {
+    case Received(frame: Frame, notification: u64);
+    case Failed(code: u64);
+}
+public machine exchange(gate: &Gate, peer: &mut Peer, clock: u64, words: &[u64; 8]) -> CallReply
+    reaches Kernel blocks; invokes Kernel; {
+    let status: u64 = block connection::main::begin(gate, peer, words);
+    transition status == 0u64 {
+        true -> block poll(gate, peer, clock)
+        _ -> (CallReply::Failed { code: status })
+    }
+}
+machine poll(gate: &Gate, peer: &mut Peer, clock: u64) -> CallReply reaches Kernel {
+    let tick: Tick = time::read(gate, clock);
+    transition tick {
+        Tick::Read { value } -> block receive(gate, peer, clock, value)
+        Tick::Failed { code } -> block failed(gate, peer, code)
+    }
+}
+machine receive(gate: &Gate, peer: &mut Peer, clock: u64, now: u64) -> CallReply reaches Kernel {
+    let reply: Reply = block connection::main::poll(gate, peer, now);
+    transition reply {
+        Reply::Complete { frame, notification } -> (CallReply::Received { frame: frame, notification: notification })
+        Reply::Failed { code } -> (CallReply::Failed { code: code })
+        Reply::Pending -> block wait(gate, peer, clock, now)
+    }
+}
+machine wait(gate: &Gate, peer: &mut Peer, clock: u64, now: u64) -> CallReply reaches Kernel {
+    let status: u64 = block connection::main::wait(gate, peer, time::after(now, 300u64));
+    transition status == 0u64 || status == 1u64 || status == kernel::TIMED_OUT || status == kernel::PEER_CLOSED {
+        true -> (block poll(gate, peer, clock))
+        _ -> block failed(gate, peer, status)
+    }
+}
+machine failed(gate: &Gate, peer: &mut Peer, code: u64) -> CallReply reaches Kernel {
+    let ignored: u64 = block connection::main::close(gate, peer);
+    CallReply::Failed { code: code }
+}

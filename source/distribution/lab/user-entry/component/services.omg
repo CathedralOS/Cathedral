@@ -1,0 +1,103 @@
+module services;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::services::main::Services;
+use runtime::services::main::Reply;
+use runtime::main::Startup;
+use runtime::time::Tick;
+
+public machine check(gate: &Gate, mode: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let startup: Startup = runtime::main::start(gate);
+    transition startup {
+        Startup::Ready { environment } -> block timed(gate, mode, environment)
+        _ -> (190u64)
+    }
+}
+machine timed(gate: &Gate, mode: u64, environment: runtime::main::Environment) -> u64 reaches Kernel {
+    let clock: u64 = Kernel::clock(gate);
+    let tick: Tick = runtime::time::read(gate, clock);
+    transition tick {
+        Tick::Read { value } -> block open(gate, mode, environment, clock, value)
+        _ -> (191u64)
+    }
+}
+machine open(gate: &Gate, mode: u64, environment: runtime::main::Environment, clock: u64, now: u64) -> u64 reaches Kernel {
+    let mut binding: Services;
+    let status: u64 = block runtime::services::main::open(gate, &mut binding, &environment, runtime::time::after(now, 300u64));
+    transition status == 0u64 {
+        true -> block acquire(gate, &mut binding, mode, clock)
+        _ -> (192u64)
+    }
+}
+machine acquire(gate: &Gate, binding: &mut Services, mode: u64, clock: u64) -> u64 reaches Kernel {
+    let incompatible: u64 = block runtime::services::main::interaction(gate, binding, clock, 2u64, 2u64);
+    transition incompatible != 0u64 && binding.broker.next_id == 0u64 {
+        true -> block compatible(gate, binding, mode, clock)
+        _ -> (193u64)
+    }
+}
+machine compatible(gate: &Gate, binding: &mut Services, mode: u64, clock: u64) -> u64 reaches Kernel {
+    let status: u64 = block runtime::services::main::interaction(gate, binding, clock, 1u64, 1u64);
+    transition {
+        mode == 121u64 -> block refused(gate, binding, clock, status)
+        mode >= 122u64 && mode <= 124u64 -> malformed(binding, status)
+        _ -> block granted(gate, binding, clock, status)
+    }
+}
+machine malformed(binding: &Services, status: u64) -> u64 {
+    transition status == kernel::IO_ERROR && binding.wake == 0u64 && binding.broker.sender == 0u64
+        && binding.broker.receiver == 0u64 && binding.broker.writer.handle == 0u64 && binding.broker.reader.handle == 0u64 {
+        true -> (0u64)
+        _ -> (194u64)
+    }
+}
+machine refused(gate: &Gate, binding: &mut Services, clock: u64, status: u64) -> u64 reaches Kernel {
+    transition status == 0x53520001u64 && binding.broker.fault == 0u64 {
+        true -> block retry(gate, binding, clock)
+        _ -> (195u64)
+    }
+    machine retry(gate: &Gate, binding: &mut Services, clock: u64) -> u64 reaches Kernel {
+        let status: u64 = block runtime::services::main::interaction(gate, binding, clock, 1u64, 1u64);
+        transition { _ -> (block granted(gate, binding, clock, status)) }
+    }
+}
+machine granted(gate: &Gate, binding: &mut Services, clock: u64, status: u64) -> u64 reaches Kernel {
+    let previous: u64 = binding.broker.next_id;
+    let cached: u64 = block runtime::services::main::interaction(gate, binding, clock, 1u64, 1u64);
+    transition status == 0u64 && cached == 0u64 && binding.wake != 0u64 && binding.broker.next_id == previous {
+        true -> block storage(gate, binding, clock)
+        _ -> (196u64)
+    }
+}
+machine storage(gate: &Gate, binding: &mut Services, clock: u64) -> u64 reaches Kernel {
+    let mut words: [u64; 8];
+    words[0] = 0x53525601u64; words[1] = 2u64; words[2] = 2u64; words[3] = 1u64; words[4] = 1u64;
+    let reply: Reply = block runtime::services::main::exchange(gate, binding, clock, &words);
+    transition reply {
+        Reply::Received { words } -> block denied(gate, binding, clock, words[0])
+        _ -> (197u64)
+    }
+}
+machine denied(gate: &Gate, binding: &mut Services, clock: u64, code: u64) -> u64 reaches Kernel {
+    transition code == 0x53520001u64 && binding.broker.fault == 0u64 {
+        true -> block continued(gate, binding, clock)
+        _ -> (198u64)
+    }
+}
+machine continued(gate: &Gate, binding: &mut Services, clock: u64) -> u64 reaches Kernel {
+    let mut words: [u64; 8]; words[0] = 5u64;
+    let reply: Reply = block runtime::services::main::exchange(gate, binding, clock, &words);
+    transition reply {
+        Reply::Received { words } -> block finish(gate, binding, words)
+        _ -> (199u64)
+    }
+}
+machine finish(gate: &Gate, binding: &mut Services, words: [u64; 8]) -> u64 reaches Kernel {
+    block runtime::services::main::close(gate, binding);
+    transition words[0] == 0u64 && words[1] == 77u64 && words[2] == 640u64 && words[3] == 480u64
+        && binding.wake == 0u64 && binding.broker.writer.handle == 0u64 && binding.broker.reader.handle == 0u64 {
+        true -> (0u64)
+        _ -> (200u64)
+    }
+}

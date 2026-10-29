@@ -1,4 +1,5 @@
 machine build(builder: &mut Build) {
     Build::package(builder, "cathedral_user_runtime");
+    Build::depend_as(builder, "protocol", Source::Path { location: "../../contracts/reference" });
     Build::select_provider<kernel::Kernel, arch::x86_64::gate::NativeKernel>(builder, linux_x86_64);
 }

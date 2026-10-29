@@ -1,0 +1,21 @@
+module services;
+// Service acquisition over the supplied matrix connection. Names and versions
+// request a grant; only the authenticated provider chooses the actual authority.
+// Wire owner: source-rs/platform/contracts/services/services.rs.
+public const ACQUIRE: u64 = 0x53525601u64;
+public const VERSION: u64 = 2u64;
+public const INTERACTION: u64 = 1u64;
+public const STORAGE: u64 = 2u64;
+public const UNAVAILABLE: u64 = 0x53520001u64;
+public const INCOMPATIBLE: u64 = 0x53520002u64;
+
+public machine request(contract: u64, minimum: u64, maximum: u64, part: u64) -> [u64; 8] {
+    let mut words: [u64; 8];
+    words[0] = ACQUIRE;
+    words[1] = VERSION;
+    words[2] = contract;
+    words[3] = minimum;
+    words[4] = maximum;
+    words[5] = part;
+    words
+}

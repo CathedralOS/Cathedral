@@ -1,0 +1,67 @@
+module services::main;
+// Open the installed broker -> acquire interaction -> keep using that same
+// request stream. No global discovery, connection reset or implicit grant.
+use kernel::Gate;
+use kernel::Kernel;
+use kernel;
+use protocol::services::INCOMPATIBLE;
+use main::Environment;
+use connection::main::Peer;
+use connection::call;
+use connection::call::CallReply;
+use services::acquire;
+
+public data Services { broker: Peer; wake: u64; }
+public data Reply {
+    case Received(words: [u64; 8]);
+    case Failed(code: u64);
+}
+public machine open(gate: &Gate, binding: &mut Services, environment: &Environment, deadline: u64) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    transition environment.count == 2u64 {
+        true -> block connection::main::connect(gate, &mut binding.broker,
+            environment.endpoints[0], environment.endpoints[1], deadline)
+        _ -> (kernel::INVALID_ARGUMENT)
+    }
+}
+public machine interaction(gate: &Gate, binding: &mut Services, clock: u64, minimum: u64, maximum: u64) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    transition minimum > 0u64 && minimum <= 1u64 && maximum >= 1u64 {
+        true -> block selected(gate, binding, clock, minimum, maximum)
+        _ -> (INCOMPATIBLE)
+    }
+    machine selected(gate: &Gate, binding: &mut Services, clock: u64, minimum: u64, maximum: u64) -> u64 reaches Kernel {
+        transition {
+            binding.broker.fault != 0u64 -> (binding.broker.fault)
+            binding.wake != 0u64 -> (0u64)
+            _ -> block acquire::interaction(gate, binding, clock, minimum, maximum)
+        }
+    }
+}
+// Plain broker operations, including refusals, retain correlation. Unexpected
+// attachments retire this connection and release the received right.
+public machine exchange(gate: &Gate, binding: &mut Services, clock: u64, words: &[u64; 8]) -> Reply
+    reaches Kernel blocks; invokes Kernel; {
+    let result: CallReply = block call::exchange(gate, &mut binding.broker, clock, words);
+    transition result {
+        CallReply::Received { frame, notification } -> block received(gate, binding, frame, notification)
+        CallReply::Failed { code } -> (Reply::Failed { code: code })
+    }
+    machine received(gate: &Gate, binding: &mut Services, frame: connection::main::Frame, notification: u64) -> Reply reaches Kernel {
+        transition frame.bytes == 64u64 && notification == 0u64 {
+            true -> (Reply::Received { words: frame.payload })
+            _ -> block malformed(gate, binding, notification)
+        }
+    }
+    machine malformed(gate: &Gate, binding: &mut Services, notification: u64) -> Reply reaches Kernel {
+        let ignored: u64 = Kernel::notify_drop(gate, notification);
+        block close(gate, binding);
+        Reply::Failed { code: kernel::IO_ERROR }
+    }
+}
+public machine close(gate: &Gate, binding: &mut Services) reaches Kernel blocks; invokes Kernel; {
+    let wake: u64 = binding.wake;
+    binding.wake = 0u64;
+    let ignored: u64 = Kernel::notify_drop(gate, wake);
+    let closed: u64 = block connection::main::close(gate, &mut binding.broker);
+}

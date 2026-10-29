@@ -1,5 +1,5 @@
-//! Cross-language transport witness. The service is the existing Rust Server;
-//! the independently linked client lives in source/distribution/lab/user-entry/.
+// Cross-language transport witness. The service is the existing Rust Server;
+// the independently linked client lives in source/distribution/lab/user-entry/.
 use cathedral_user_runtime::{
     ipc,
     notification::Notification,
@@ -12,7 +12,7 @@ pub fn run(role: u64, mode: u64, environment: Environment) -> u64 {
     if role == 1 {
         return serve(mode, environment);
     }
-    for mode in [1, 2, 3, 94, 95, 96, 97, 98] {
+    for mode in [1, 2, 3, 94, 95, 96, 97, 98, 120, 121, 122, 123, 124, 125] {
         let baseline = cathedral_user_runtime::resources::budget().unwrap();
         let physical = cathedral_user_runtime::resources::physical_budget().unwrap();
         let notifications = cathedral_user_runtime::notification::budget().unwrap();
@@ -50,12 +50,16 @@ pub fn run(role: u64, mode: u64, environment: Environment) -> u64 {
             notifications
         );
     }
+    cathedral_user_runtime::write(b"Omega service acquisition PASS\n").unwrap();
     owners();
     cathedral_user_runtime::write(b"Omega shared connection PASS\n").unwrap();
     0
 }
 
 fn serve(mode: u64, environment: Environment) -> u64 {
+    if mode >= 120 {
+        return services::serve(mode, environment);
+    }
     if (94..=98).contains(&mode) {
         return super::connection::worker(mode, environment);
     }

@@ -5,6 +5,7 @@ public const IO_ERROR: u64 = 0xfffffffffffffffbu64;
 public const PEER_CLOSED: u64 = 0xffffffffffffffe0u64;
 public const TIMED_OUT: u64 = 0xffffffffffffff92u64;
 public const BUSY: u64 = 0xfffffffffffffff0u64;
+public const INVALID_ARGUMENT: u64 = 0xffffffffffffffeau64;
 // Temporary native boundary, not a matrix service bundle. The table comes from
 // this executable's read-only image; the kernel still authenticates every handle.
 public data Gate {

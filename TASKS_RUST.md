@@ -145,8 +145,30 @@ This owner-control step did not change the F5 executable path or install
 standalone Background. See [canonical UI](#canonical-omega-ui-source) for the
 subsequent UI migration and its separate compiler selection.
 
-**Still required for standalone Background:** matrix service acquisition, then
-the application event loop and owner-control policy integration.
+**Interaction acquisition now passes:** the Omega client opens the supplied
+broker, accepts a validated notification wait grant, and keeps the same peer
+and request sequence for subsequent operations. An optional storage refusal
+does not break presentation. Six live Rust-server cases cover valid acquisition,
+refusal/retry, missing grant, wrong grant role, reserved-word corruption and a
+healthy response delayed beyond the parking interval. Successful acquisitions
+are cached without another request. All cases release channel, memory and
+notification budgets back to baseline. The previous eight client and five
+owner cases also pass at `build/omega-user/connections/20261029T014116544618Z/`.
+Clock-granted and clock-denied primitives pass at
+`build/omega-user/tests/20261029T014143670564Z/`, using 42/240 image pages.
+The same qualified `66f71d0e` producer built this change; no compiler or kernel
+changes were needed. Three native/ELF checks, Rust format/clippy for `omega-peer`
+and the 86 Omega / 154 Rust edge layout check pass.
+
+Start at `user-runtime/services/main.omg`, then `acquire.omg` for grant checks.
+`connection/call.omg` retains a published request across parking intervals;
+only partial typed replies have a pairing expiry. It does not dispatch owner
+control during a synchronous call. Endpoint-grant service acquisition is not
+implemented. This is real IPC with a Rust service fixture, not yet a stock
+matrix launch or a replacement of the desktop Background.
+
+**Still required for standalone Background:** the application event loop and
+owner-control policy integration, then native image installation in F5.
 Keep the same broker connection and request sequence across service acquisition
 and subsequent interaction calls; it is not a reconnect after discovery. Establish
 the supplied owner-control connection first, as the Rust host does. Use the

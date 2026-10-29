@@ -36,6 +36,7 @@ def main():
     def verify(stream, directory, text):
         if not all(marker in text for marker in (
                 'Omega shared connection PASS\n', 'Omega owner connection PASS\n',
+                'Omega service acquisition PASS\n',
                 'initial program stopped: Some(Returned(0))')):
             raise RuntimeError(f'Omega/Rust connection witness failed: {directory / "serial.log"}')
 

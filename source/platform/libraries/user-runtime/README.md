@@ -19,6 +19,22 @@ one notification right. Unsupported attachment kinds retire the connection.
 The caller supplies a fresh zero-initialized `Peer` and closes it before disposal;
 reconnection uses a fresh value. An error never replays a published operation.
 
+[services/main.omg](services/main.omg) opens the supplied matrix broker, acquires
+the interaction notification, and keeps subsequent requests on that same peer.
+The provider decides authority; the request only names an interface/version.
+`acquire.omg` checks the complete reply and wait-right kind before retaining it.
+A refusal leaves the broker usable. A malformed grant retires it and releases
+received rights. Callers supply a fresh zero-initialized `Services` and close it
+before disposal, including after a failed call. Repeated successful acquisition
+uses the retained grant; a failed broker cannot return cached success.
+
+[connection/call.omg](connection/call.omg) publishes once and parks until a reply
+or terminal failure. Its wake interval is not a request expiry: a live slow
+provider does not trigger a replay or retirement. Incomplete typed reply pairs
+still expire at the transport's bounded deadline. This synchronous convenience
+does not dispatch owner-control requests while waiting; callers needing that
+must drive the existing begin/poll/wait operations in their event loop.
+
 [server/main.omg](server/main.omg) accepts the same v4 connection, retains one
 request until its exact reply, refuses a second poll while that request is pending,
 and closes all retained rights on protocol failure. Its `setup.omg` owns the
@@ -48,7 +64,7 @@ borrow. Counts are checked Omega ranges. Allocation, mapping, release, yield, re
 and their callers acknowledge it. Scalar names alone grant no authority.
 
 This is a small platform runtime, **not the replacement for the Rust app host
-yet**. It has no general allocator or matrix service acquisition. Owner-control
+yet**. It has no general allocator or endpoint-service acquisition. Owner-control
 transport now works; the app still owns control policy and its event loop.
 In particular, copied IPC is the
 setup/grant mechanism; it must not become a fallback for the desktop's shared

@@ -39,13 +39,13 @@ The guest's proof is actual process execution, not a mocked table callback.
 
 This witness establishes the entry/syscall foundation needed by standalone
 Background. The separate connection run below adds cross-process shared transport.
-The matrix broker and application event-loop integration remain required
+The application event-loop integration remains required
 before changing the ordinary F5 Background executable.
 
 ## Rust service interoperability
 
 `component/connection.omg` drives sixteen requests through the ordinary Rust
-`Server` in `source-rs/distribution/lab/channels/omega_peer.rs`. Alternating replies
+`Server` in `source-rs/distribution/lab/channels/omega_peer/peer.rs`. Alternating replies
 carry delegated notification rights. `component/connection_faults.omg` then
 exercises malformed correlation, grant-only and frame-only expiry, a wrong-kind
 grant and a delayed valid pair against the existing malicious-peer fixtures.
@@ -67,3 +67,13 @@ cover malformed OPEN, a live stalled handshake, a wrong-type setup grant and a
 copied request after setup. The parent verifies channel, memory and notification
 refunds after each child; the runner requires both client and owner PASS markers.
 No environment endpoint substitutes for the real owner control pair.
+
+`component/services.omg` drives the interaction acquisition path against the
+ordinary Rust server in `omega_peer/services.rs`. Six cases cover a valid grant,
+refusal followed by retry, missing grant, wrong notification role, nonzero
+reserved reply words, and a healthy response delayed past one parking interval.
+The successful cases cache the grant, request optional storage and receive a
+refusal, then poll presentation on the same connection and request sequence.
+The provider checks the exact packets and request count; the parent checks all
+three resource budgets return to baseline. The runner also requires the service
+acquisition PASS marker. These are live IPC tests, not a real matrix launch yet.
