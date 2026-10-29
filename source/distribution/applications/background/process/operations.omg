@@ -1,0 +1,31 @@
+module operations;
+use main::Context;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use app::model::Command;
+use app::model::Event;
+use app::model::Failure;
+use presentation;
+use waiting;
+use diagnostic;
+
+public machine execute(gate: &Gate, context: &mut Context, command: Command) -> Event reaches Kernel blocks; invokes Kernel; {
+    transition command {
+        Command::AcquireInteraction -> block acquire(gate, context)
+        Command::Poll -> block presentation::poll(gate, context)
+        Command::ProbeStorage -> block presentation::probe_storage(gate, context)
+        Command::CreateSurface { epoch } -> block presentation::create(gate, context, epoch)
+        Command::Paint { view, surface, color } -> block presentation::paint(gate, context, view, surface, color)
+        Command::Wait { ticks } -> block waiting::next(gate, context, ticks)
+        Command::ReplyControl { accepted } -> block waiting::reply(gate, context, accepted)
+        Command::ReportScope -> diagnostic::scope(gate)
+        _ -> (Event::Failed { failure: Failure::UnexpectedReply })
+    }
+}
+machine acquire(gate: &Gate, context: &mut Context) -> Event reaches Kernel {
+    let status: u64 = block runtime::services::main::interaction(gate, &mut context.services, context.clock, 1u64, 1u64);
+    transition status == 0u64 {
+        true -> (Event::Complete)
+        _ -> (Event::Failed { failure: Failure::Transport { code: status } })
+    }
+}

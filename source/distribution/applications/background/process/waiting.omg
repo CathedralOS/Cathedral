@@ -1,0 +1,112 @@
+module waiting;
+// Drain owner and input readiness, then park. Owner protocol failure retires
+// that stream only; an independent presentation wake remains usable.
+use main::Context;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::time::Tick;
+use runtime::server::main::Event;
+use app::model;
+use app::model::Failure;
+use protocol::main;
+
+public machine next(gate: &Gate, context: &mut Context, ticks: u64) -> app::model::Event reaches Kernel blocks; invokes Kernel; {
+    let tick: Tick = runtime::time::read(gate, context.clock);
+    transition tick {
+        Tick::Read { value } -> block deadline(gate, context, value, ticks)
+        Tick::Failed { code } -> failed(code)
+    }
+}
+machine deadline(gate: &Gate, context: &mut Context, now: u64, ticks: u64) -> app::model::Event reaches Kernel {
+    transition ticks <= 0x7fffffffffffffffu64 {
+        true -> block poll(gate, context, now, runtime::time::after(now, ticks))
+        _ -> failed(INVALID_ARGUMENT)
+    }
+}
+machine poll(gate: &Gate, context: &mut Context, now: u64, deadline: u64) -> app::model::Event reaches Kernel {
+    transition context.owner.peer.fault == 0u64 {
+        true -> block owner(gate, context, now, deadline)
+        _ -> block input(gate, context, now, deadline)
+    }
+}
+machine owner(gate: &Gate, context: &mut Context, now: u64, deadline: u64) -> app::model::Event reaches Kernel {
+    let event: runtime::server::main::Event = block runtime::server::main::poll(gate, &mut context.owner, now);
+    transition event {
+        Event::Request { frame } -> control(frame.bytes, frame.payload)
+        _ -> block input(gate, context, now, deadline)
+    }
+}
+machine control(bytes: u64, words: [u64; 8]) -> app::model::Event {
+    app::model::Event::Control { accepted: bytes == 64u64 && (words[0] == HEALTH || words[0] == LOSS)
+        && words[1] == 0u64 && words[2] == 0u64 && words[3] == 0u64 && words[4] == 0u64
+        && words[5] == 0u64 && words[6] == 0u64 && words[7] == 0u64 }
+}
+machine input(gate: &Gate, context: &mut Context, now: u64, deadline: u64) -> app::model::Event reaches Kernel {
+    let hint: u64 = block Kernel::notify_wait(gate, context.services.wake, now, 1u64);
+    transition {
+        hint == 1u64 -> (app::model::Event::Wake)
+        hint != 0u64 -> failed(hint)
+        runtime::time::reached(now, deadline) -> (app::model::Event::Wake)
+        _ -> block park(gate, context, deadline)
+    }
+}
+machine park(gate: &Gate, context: &mut Context, deadline: u64) -> app::model::Event reaches Kernel {
+    let mut interests: [u64; 8];
+    interests[0] = 2u64; interests[1] = context.services.wake;
+    transition context.owner.peer.fault == 0u64 {
+        true -> block combined(gate, context, &mut interests, deadline)
+        _ -> block wait(gate, context, &interests, 1u64, deadline)
+    }
+    machine combined(gate: &Gate, context: &mut Context, interests: &mut [u64; 8], deadline: u64) -> app::model::Event reaches Kernel {
+        interests[2] = 2u64; interests[3] = context.owner.peer.bell.wait;
+        interests[5] = context.owner.peer.receiver;
+        transition { _ -> (block wait(gate, context, interests, 3u64, deadline)) }
+    }
+}
+machine wait(gate: &Gate, context: &mut Context, interests: &[u64; 8], count: u64 [0..=4], deadline: u64) -> app::model::Event reaches Kernel {
+    let status: u64 = block Kernel::wait(gate, interests, count, deadline);
+    transition status < count || status == runtime::kernel::TIMED_OUT || status == runtime::kernel::PEER_CLOSED {
+        true -> block recheck(gate, context, deadline)
+        _ -> block bad_wait(gate, context, deadline, status)
+    }
+}
+machine bad_wait(gate: &Gate, context: &mut Context, deadline: u64, code: u64) -> app::model::Event reaches Kernel {
+    transition context.owner.peer.fault == 0u64 {
+        true -> block retire_owner(gate, context, deadline)
+        _ -> failed(code)
+    }
+    machine retire_owner(gate: &Gate, context: &mut Context, deadline: u64) -> app::model::Event reaches Kernel {
+        block runtime::server::main::close(gate, &mut context.owner);
+        transition { _ -> (block recheck(gate, context, deadline)) }
+    }
+}
+machine recheck(gate: &Gate, context: &mut Context, deadline: u64) -> app::model::Event reaches Kernel {
+    // A wake is a hint. Drain both sources again; peer death may still leave a
+    // final complete message. A bad independent grant fails its own next check.
+    let tick: Tick = runtime::time::read(gate, context.clock);
+    transition tick {
+        Tick::Read { value } -> (block poll(gate, context, value, deadline))
+        Tick::Failed { code } -> failed(code)
+    }
+}
+public machine reply(gate: &Gate, context: &mut Context, accepted: bool) -> app::model::Event reaches Kernel blocks; invokes Kernel; {
+    let mut words: [u64; 8];
+    transition accepted {
+        true -> block send(gate, context, &words)
+        _ -> block refused(gate, context, &mut words)
+    }
+    machine refused(gate: &Gate, context: &mut Context, words: &mut [u64; 8]) -> app::model::Event reaches Kernel {
+        words[0] = DENIED;
+        transition { _ -> (block send(gate, context, words)) }
+    }
+    machine send(gate: &Gate, context: &mut Context, words: &[u64; 8]) -> app::model::Event reaches Kernel {
+        let status: u64 = block runtime::server::main::reply(gate, &mut context.owner, words);
+        transition status == 0u64 {
+            true -> (app::model::Event::Complete)
+            _ -> failed(status)
+        }
+    }
+}
+machine failed(code: u64) -> app::model::Event {
+    app::model::Event::Failed { failure: Failure::Transport { code: code } }
+}

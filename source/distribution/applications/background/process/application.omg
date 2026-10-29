@@ -1,0 +1,37 @@
+module application;
+// The app chooses work. This driver performs it through the supplied runtime and
+// resumes with the real result; no duplicate phase machine or oversized packet.
+use main::Context;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use app::model::Session;
+use app::model::Event;
+use app::model::Command;
+use app::model::Failure;
+use app::main::advance;
+use operations;
+
+public machine run(gate: &Gate, context: &mut Context) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let mut session: Session;
+    transition { _ -> (block drive(gate, context, &mut session, Event::Complete)) }
+}
+machine drive(gate: &Gate, context: &mut Context, session: &mut Session, event: Event) -> u64 reaches Kernel {
+    let command: Command = app::main::advance(session, event);
+    transition command {
+        Command::Exit -> (0u64)
+        Command::Fail { failure } -> failure_code(failure)
+        _ -> block execute(gate, context, session, command)
+    }
+}
+machine execute(gate: &Gate, context: &mut Context, session: &mut Session, command: Command) -> u64 reaches Kernel {
+    let event: Event = block operations::execute(gate, context, command);
+    transition { _ -> (block drive(gate, context, session, event)) }
+}
+machine failure_code(failure: Failure) -> u64 {
+    transition failure {
+        Failure::Transport { code } -> (code)
+        Failure::Provider { code } -> (code)
+        Failure::UnexpectedReply -> (runtime::kernel::INVALID_ARGUMENT)
+        Failure::UnexpectedStorageGrant -> (0xfffffffffffffff3u64)
+    }
+}

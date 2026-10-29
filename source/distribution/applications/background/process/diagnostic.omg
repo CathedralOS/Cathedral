@@ -1,0 +1,29 @@
+module diagnostic;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use app::model::Event;
+use app::model::Failure;
+
+public machine scope(gate: &Gate) -> Event reaches Kernel invokes Kernel; {
+    let text: [u8; 63] = "Cathedral background: shared interaction ready; storage denied\n";
+    let mut words: [u64; 8];
+    transition { _ -> pack(gate, &text, &mut words, 0u64) }
+    machine pack(gate: &Gate, text: &[u8; 63], words: &mut [u64; 8], index: u64) -> Event requires index <= 63u64 reaches Kernel {
+        transition index < 63u64 {
+            true -> byte(gate, text, words, index)
+            _ -> write(gate, words)
+        }
+    }
+    machine byte(gate: &Gate, text: &[u8; 63], words: &mut [u64; 8], index: u64) -> Event requires index < 63u64 reaches Kernel {
+        let word: u64 = index / 8u64;
+        words[word] = words[word] | ((text[index] as u64) << ((index % 8u64) * 8u64));
+        transition { _ -> pack(gate, text, words, index + 1u64) }
+    }
+    machine write(gate: &Gate, words: &[u64; 8]) -> Event reaches Kernel {
+        let status: u64 = Kernel::write(gate, words, 63u64);
+        transition status == 63u64 {
+            true -> (Event::Complete)
+            _ -> (Event::Failed { failure: Failure::Transport { code: status } })
+        }
+    }
+}

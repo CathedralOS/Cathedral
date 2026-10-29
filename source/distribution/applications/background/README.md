@@ -11,6 +11,15 @@ changes the backdrop without changing the kernel, compositor or chrome. The
 current app is a solid fill. Wallpaper, animation and role-selection UI remain
 distribution choices; retry and fallback belong to the owning matrix.
 
+The standalone replacement is being built at [process/main.omg](process/main.omg).
+It establishes owner control before the broker, drives this same app model,
+and waits on owner requests plus presentation notifications. `presentation.omg`
+encodes actual service packets; there is no Rust host packet between it and the
+runtime. [native/main.omg](native/main.omg) supplies component packaging and
+`native/process.json` declares the existing interaction-only import and channel
+request. This path is not installed yet: see the compiler frontier in
+[the current tasks](../../../../TASKS_RUST.md). The paths below still supply F5.
+
 [bridge/component/main.omg](bridge/component/main.omg) adapts this session to
 the temporary [Omega app host](../../../../source-rs/platform/libraries/omega-app/README.md).
 Its codec owns packet offsets, protocol values and strict HEALTH/LOSS decoding.

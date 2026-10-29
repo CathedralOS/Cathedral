@@ -169,6 +169,37 @@ matrix launch or a replacement of the desktop Background.
 
 **Still required for standalone Background:** the application event loop and
 owner-control policy integration, then native image installation in F5.
+Work in progress lives under `source/distribution/applications/background/process/`
+and `native/`; it invokes the existing app model directly. It is **not installed
+or verified**. Compilation currently fails in `waiting::owner` with
+`captured loan forwarding changes descriptor type`, reproduced with both retained
+producers and freshly built upstream `f48087186eedb7e49f7e0ec1c148fb74cb34ece5`.
+The isolated Omega worktree `.agents/worktree/cathedral-background-runtime`
+holds the repair investigation under claim `9696692650aa4a7483a18bbacbe8dac9`.
+`tests/omega/pass/borrows/captured_state_shared_reborrow` reproduces the error
+with an array passed through mutable and shared arrivals; its write-through-shared
+negative control rejects for the expected mutability reason. The current local
+candidate keeps mutable/shared descriptor groups distinct and fixes a spurious
+pointer crossing for whole borrowed parameters, but **does not fix the customer**:
+Background now fails with `captured loan arrival has no matching owner`. Its
+conditional branch needs to retain the mutable parent only on the route that
+created it. The three-route regression additionally rejects an explicit mutable
+formation arriving at a shared formal with incompatible descriptor types.
+Do not weaken those guards or rewrite the app to hide the join. Read the isolated
+worktree's `build/cathedral-background/STATUS.md` for exact candidate logs and
+source snapshots. No compiler repair has been qualified or landed, and no new
+compiler was selected for F5. The first fresh release build took 22 minutes;
+subsequent work uses that worktree's own warm target directory.
+
+Process packaging landed in `6101b001`: optional `process.json` encodes the
+existing funded imports. Seven tool tests pass, including real LLVM assembly/link
+placement and removal of a prior declaration without retaining stale authority.
+The unchanged primitive guest still passes both clock variants
+at `build/omega-user/tests/20261029T021401808110Z/` (42/240 pages) after its linker
+change. The encoder's actual Background installation remains untested until the
+compiler issue is resolved. Source layout passes (91 Omega / 154 Rust edges).
+F5 continues to use the working Rust-hosted Background.
+
 Keep the same broker connection and request sequence across service acquisition
 and subsequent interaction calls; it is not a reconnect after discovery. Establish
 the supplied owner-control connection first, as the Rust host does. Use the
