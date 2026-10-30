@@ -88,6 +88,14 @@ page-end and overflow bounds, preserved output tail, wrong-kind and expired
 handles, and rejected writes. Three additional cases ensure plain services,
 interaction acquisition and endpoint acquisition reject and release unexpected
 objects. The parent checks full resource refunds after each case. Together these
-make 29 connection cases. The connection fixture grants each process two private
-pages and two reader pages to cover the mailbox and one sealed object;
+make 29 connection cases.
+
+`component/construction.omg` adds a thirtieth case: build a 46,080-byte image in
+8 KiB chunks, seal it and send it to Rust, which checks every word and the zeroed
+page tail. It rejects logical/physical overflow and writes through shared,
+sealed or expired handles. A staging buffer can also be abandoned explicitly; a deliberately failed seal
+must clear its handle and refund enough quota for the subsequent full image.
+The client has thirteen private pages and the provider thirteen reader pages
+for its mailbox plus this twelve-page image; the reverse direction has two each;
+the fixture root has sixteen pages of each allowance;
 this does not change kernel limits or the primitive runner above.

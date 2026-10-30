@@ -9,6 +9,45 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
+### Notes migration: bounded image construction
+
+The Omega runtime now assembles immutable images in funded private pages through
+`memory/staging.omg`: allocate the logical length, copy chunks of at most 8 KiB,
+then seal and unmap. The whole image never needs to fit on the process stack.
+Sealing consumes staging custody on success and failure; abandonment releases it.
+The new kernel query `MEMORY_PRIVATE_ADDRESS` (88) requires the exact live owner
+name, private mode and a current mapping. Ordinary address lookup alone remains
+insufficient write authority. The native boundary validates physical bounds and
+mode independently of the Omega buffer's claimed logical length.
+
+All 30 connection cases pass at
+`build/omega-user/connections/20261030T053748209517Z/`. The new Omega process
+constructs Notes' 46,080-byte image in six chunks; Rust checks every word and the
+zeroed tail to the twelve-page boundary. Logical/physical overflow, shared and
+sealed names, stale names, explicit abandonment and a deliberately failed seal
+are exercised. The failed seal must clear custody and refund enough quota for
+the subsequent full image. The fixture
+funds thirteen client private pages and thirteen provider reader pages for the
+mailbox plus image; OS quotas and the 32 KiB process stack are unchanged.
+The existing 158 core tests, including the new authority test, pass. Kernel smoke
+passes at `build/boot-harness-rs/smoke/serial.log`; primitive clock-granted/denied
+runs pass at `build/omega-user/tests/20261030T053810933552Z/` (55/240 pages).
+ARM64 portability also passes (`build/omega-user/staging-arm64.log`); the Omega
+native adapter remains x86-64 only. Background control/idle passes at
+`build/omega-user/background-control/20261030T053438215149Z/`, and Colors
+storage/images/control/idle at
+`build/omega-user/colors-control/20261030T053558624943Z/`. The default F5 desktop
+and cold reopen pass at `build/boot-harness-rs/desktop/20261030T053616955201Z/`
+with the 2,001-record oracle. Installed outer/nested Background and Colors match
+the tested standalone images (38/240 and 68/240 pages). Seven tool checks,
+source layout, formatting, core and fixture clippy checks pass.
+
+Next is the actual Notes process port: preserve its editor/storage model, replace
+its Rust process host, use the new incoming record reader and image staging, and
+keep owner HEALTH/LOSS responsive during service waits. Qualify ordinary F5
+save/reload/close and cold reopen before selecting it in the distribution profile.
+No Notes source or F5 composition has changed yet.
+
 ### Notes migration: incoming immutable data
 
 The Omega runtime now accepts sealed-object replies and reads them through a
@@ -37,13 +76,8 @@ Seven tool tests, source layout, formatting and the affected Rust fixture's
 clippy checks pass. Nested pointer stress was not repeated for this change;
 the prior qualification and unresolved intermittent close occurrence remain below.
 
-Next, add bounded incremental construction for Notes' 46,080-byte text image.
-Do not retain a whole image on its 32 KiB process stack. Private writes must
-validate ownership and writable mode, including forged and retired handles;
-`MEMORY_ADDRESS` alone checks access, not write authority. Then replace Notes'
-Rust process host with an Omega event loop that services owner control while
-waiting, and qualify ordinary F5 save/reload/close and cold reopen. The existing
-Notes behavior/model and Rust tests remain the comparison oracle.
+The subsequent image-construction step is recorded above. Notes' behavior/model
+and Rust tests remain the comparison oracle for the process migration.
 
 ### Standalone Colors: process and storage
 

@@ -57,6 +57,7 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
         abi::MEMORY_ALLOCATE..=abi::MEMORY_PAGES
         | abi::MEMORY_SHARE_MUTABLE
         | abi::MEMORY_MAP_SHARED
+        | abi::MEMORY_PRIVATE_ADDRESS
         | abi::MEMORY_FREEZE..=abi::MEMORY_UNMAP_OBJECT => {
             memory::syscall(session, slot, call, &mut event)
         }

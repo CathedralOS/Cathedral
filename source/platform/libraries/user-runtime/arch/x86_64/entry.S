@@ -48,6 +48,8 @@ cathedral_kernel_gate:
     .quad cathedral_object_send
     .quad cathedral_object_receive
     .quad cathedral_object_read
+    .quad cathedral_private_write
+    .quad cathedral_object_freeze
 
 .section .text.cathedral_kernel_gate,"ax",@progbits
 cathedral_yield:
@@ -455,5 +457,61 @@ cathedral_object_receive:
     xor edx, edx
     int 0x80
     finish_packet 1
+
+// Copy one bounded chunk into a live private allocation. Reauthenticate mode
+// and the entire physical span on every call; no mapped address escapes. The
+// single execution lane prevents local release/seal between validation and copy.
+cathedral_private_write:
+    test rcx, rcx
+    jz .Lprivate_invalid
+    cmp rcx, 8192
+    ja .Lprivate_invalid
+    mov r8, rdi                      // private handle
+    mov r9, rsi                      // byte offset
+    mov r10, rdx                     // borrowed source
+    mov r11, rcx                     // exact byte count
+    xor esi, esi
+    xor edx, edx
+    mov eax, 32                      // MEMORY_PAGES
+    int 0x80
+    test rax, rax
+    js .Lprivate_done
+    cmp rax, 256
+    ja .Lprivate_invalid
+    shl rax, 12
+    mov rcx, r9
+    add rcx, r11
+    jc .Lprivate_invalid
+    cmp rcx, rax
+    ja .Lprivate_invalid
+    mov rdi, r8
+    mov eax, 88                      // MEMORY_PRIVATE_ADDRESS
+    int 0x80
+    test rax, rax
+    js .Lprivate_done
+    lea rdi, [rax + r9]
+    mov rsi, r10
+    mov rcx, r11
+    rep movsb
+    xor eax, eax
+    ret
+.Lprivate_invalid:
+    mov rax, -22
+.Lprivate_done:
+    ret
+
+// Freeze first, then remove the caller's alias. Failure leaves custody with the
+// caller, which must release even if the first phase already sealed the object.
+cathedral_object_freeze:
+    xor esi, esi
+    xor edx, edx
+    mov eax, 59                      // MEMORY_FREEZE
+    int 0x80
+    test rax, rax
+    jnz .Lfreeze_done
+    mov eax, 61                      // MEMORY_UNMAP_OBJECT
+    int 0x80
+.Lfreeze_done:
+    ret
 
 .section .note.GNU-stack,"",@progbits

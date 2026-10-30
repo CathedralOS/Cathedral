@@ -42,6 +42,8 @@ public data Gate {
     object_send: addr;
     object_receive: addr;
     object_read: addr;
+    private_write: addr;
+    object_freeze: addr;
 }
 
 public boundary trait Kernel {
@@ -75,4 +77,6 @@ public boundary trait Kernel {
     machine object_receive(gate: &Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64 reaches blocks;
     machine object_read(gate: &Gate, handle: u64, index: u64, words: &mut [u64; 8], count: u64 [1..=8]) -> u64 reaches blocks;
     machine object_send(gate: &Gate, endpoint: u64, packet: &[u64; 10]) -> u64 reaches;
+    machine private_write(gate: &Gate, handle: u64, offset: u64, words: &[u64; 1024], bytes: u64 [1..=8192]) -> u64 reaches blocks;
+    machine object_freeze(gate: &Gate, handle: u64) -> u64 reaches blocks;
 }

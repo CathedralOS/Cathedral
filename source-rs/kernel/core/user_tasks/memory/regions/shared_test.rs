@@ -111,3 +111,37 @@ fn mutable_escrow_reserves_quota_and_discard_returns_it() {
     m.release(0, owner).unwrap();
     assert_eq!(m.charged(0)[0], 0);
 }
+
+#[test]
+fn private_mapping_rejects_every_shared_mode_and_retired_name() {
+    let mut m = model();
+    let index = m.allocate(0, 1).unwrap();
+    let owner = m.handle(0, index);
+    assert_eq!(m.private_mapping(0, owner), Ok(m.mapping(0, index)));
+    assert_eq!(m.private_mapping(1, owner), Err(abi::BAD_HANDLE));
+    m.entries[index].owner_mapped = false;
+    assert_eq!(m.private_mapping(0, owner), Err(abi::BAD_ADDRESS));
+    m.entries[index].owner_mapped = true;
+    m.share_mutable(0, owner).unwrap();
+    assert_eq!(m.private_mapping(0, owner), Err(abi::DENIED));
+    let escrow = m.reserve_view(0, owner, 1, true).unwrap();
+    let reader = m.publish_read(1, escrow);
+    assert_eq!(m.private_mapping(1, reader), Err(abi::DENIED));
+    let frozen = m.allocate(0, 1).unwrap();
+    let frozen = m.handle(0, frozen);
+    m.freeze(0, frozen).unwrap();
+    assert_eq!(m.private_mapping(0, frozen), Err(abi::DENIED));
+    let escrow = m.reserve_read(0, frozen, 1).unwrap();
+    let reader = m.publish_read(1, escrow);
+    assert_eq!(m.private_mapping(1, reader), Err(abi::DENIED));
+    let index = m.allocate(0, 1).unwrap();
+    let retired = m.handle(0, index);
+    m.release(0, retired).unwrap();
+    let replacement = m.allocate(0, 1).unwrap();
+    assert_eq!(replacement, index);
+    assert_eq!(m.private_mapping(0, retired), Err(abi::BAD_HANDLE));
+    assert_eq!(
+        m.private_mapping(0, m.handle(0, replacement)),
+        Ok(m.mapping(0, replacement))
+    );
+}

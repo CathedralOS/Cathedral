@@ -88,8 +88,18 @@ valid after producer release or connection closure, until its own release.
 Plain service, interaction and endpoint acquisition paths reject an unexpected
 object and release it before retiring their connection.
 
+[memory/staging.omg](memory/staging.omg) constructs larger immutable objects
+without keeping their contents on the stack. Allocate an exact logical byte
+length, copy chunks of at most 8 KiB, then seal and unmap before handing off the
+resulting `Object`. The writer checks the logical extent; the native boundary
+independently checks the full physical span and current private-owner authority
+through `MEMORY_PRIVATE_ADDRESS`. Shared, sealed and expired names cannot write.
+Fresh allocation tails stay zero. Sealing consumes staging custody on success
+and failure; abandonment explicitly releases it. This is the same funded page
+mechanism, not a second allocator or a new way to bypass memory grants.
+
 This small platform runtime replaces the Rust app host for the installed
-Background and Colors. It has no general allocator or incremental immutable-object builder yet.
+Background and Colors. It has no general allocator.
 Owner-control transport works; the app owns control policy and its event loop.
 In particular, copied IPC is the
 setup/grant mechanism; it must not become a fallback for the desktop's shared

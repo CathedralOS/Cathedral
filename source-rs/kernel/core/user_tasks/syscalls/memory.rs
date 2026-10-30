@@ -12,6 +12,13 @@ pub(super) fn syscall(
     if third != 0 || (!matches!(number, abi::MEMORY_SEAL | abi::MEMORY_MAP) && second != 0) {
         return Err(abi::INVALID_ARGUMENT);
     }
+    if number == abi::MEMORY_PRIVATE_ADDRESS {
+        return session
+            .memory
+            .model
+            .private_mapping(slot, first)
+            .map(wire::address);
+    }
     if number == abi::MEMORY_ADDRESS || number == abi::MEMORY_PAGES {
         let index = session.memory.model.access(slot, first)?;
         return Ok(if number == abi::MEMORY_ADDRESS {

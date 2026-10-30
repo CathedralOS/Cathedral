@@ -1,0 +1,60 @@
+module memory::staging;
+// Allocate once -> fill bounded chunks -> seal/unmap -> hand off immutable
+// custody. No private mapping or source borrow survives an operation.
+use kernel::Gate;
+use kernel::Kernel;
+use kernel;
+use memory::object::Object;
+use memory::object::Creation;
+
+public data Buffer { handle: u64; bytes: u64; }
+public data Allocation {
+    case Ready(buffer: Buffer);
+    case Failed(code: u64);
+}
+public machine allocate(gate: &Gate, bytes: u64 [1..=1048576]) -> Allocation
+    reaches Kernel blocks; invokes Kernel; {
+    let pages: u64 = (bytes + 4095u64) / 4096u64;
+    transition pages >= 1u64 && pages <= 256u64 {
+        true -> block create(gate, bytes, pages)
+        _ -> (Allocation::Failed { code: kernel::INVALID_ARGUMENT })
+    }
+    machine create(gate: &Gate, bytes: u64, pages: u64 [1..=256]) -> Allocation reaches Kernel {
+        let handle: u64 = block Kernel::memory_allocate(gate, pages);
+        transition handle != 0u64 && handle < kernel::ERROR_BASE {
+            true -> (Allocation::Ready { buffer: Buffer { handle: handle, bytes: bytes } })
+            _ -> (Allocation::Failed { code: handle })
+        }
+    }
+}
+public machine write(gate: &Gate, buffer: &Buffer, offset: u64, words: &[u64; 1024], bytes: u64 [1..=8192]) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    transition offset <= buffer.bytes && bytes <= buffer.bytes - offset {
+        true -> block Kernel::private_write(gate, buffer.handle, offset, words, bytes)
+        _ -> (kernel::INVALID_ARGUMENT)
+    }
+}
+// Takes custody on success AND failure. A failed unmap after sealing cannot
+// leave a writable-looking staging value or leak its already frozen allocation.
+public machine seal(gate: &Gate, buffer: &mut Buffer) -> Creation
+    reaches Kernel blocks; invokes Kernel; {
+    let handle: u64 = buffer.handle;
+    buffer.handle = 0u64;
+    buffer.bytes = 0u64;
+    let status: u64 = block Kernel::object_freeze(gate, handle);
+    transition status == 0u64 {
+        true -> (Creation::Ready { object: Object { handle: handle } })
+        _ -> block failed(gate, handle, status)
+    }
+    machine failed(gate: &Gate, handle: u64, status: u64) -> Creation reaches Kernel {
+        let released: u64 = block Kernel::memory_release(gate, handle);
+        Creation::Failed { code: status }
+    }
+}
+public machine release(gate: &Gate, buffer: &mut Buffer) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    let handle: u64 = buffer.handle;
+    buffer.handle = 0u64;
+    buffer.bytes = 0u64;
+    block Kernel::memory_release(gate, handle)
+}

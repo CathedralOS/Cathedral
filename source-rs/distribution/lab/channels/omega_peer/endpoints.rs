@@ -9,7 +9,7 @@ use cathedral_user_runtime::{
 
 pub(super) fn serve(mode: u64, environment: Environment) -> u64 {
     let mut server = Server::open_clients(1).unwrap();
-    if mode == 135 {
+    if matches!(mode, 135 | 140) {
         server.enable_memory();
     }
     server
@@ -89,14 +89,24 @@ pub(super) fn serve(mode: u64, environment: Environment) -> u64 {
                 }
             }
             Event::Memory(request, mut object) => {
-                assert_eq!(mode, 135);
+                assert!(matches!(mode, 135 | 140));
                 assert_eq!(calls, 0);
                 calls += 1;
                 let words = matrix::decode(&request.bytes[..request.len]).unwrap();
-                assert_eq!(words, [135, 0, 0, 0, 0, 0, 0, 0]);
                 let bytes = object.map().unwrap();
-                assert_eq!(&bytes[..6], &[0xbc, 0x9a, 0x78, 0x56, 0x34, 0x12]);
-                assert!(bytes[6..].iter().all(|&byte| byte == 0));
+                if mode == 140 {
+                    assert_eq!(words, [140, 46080, 0, 0, 0, 0, 0, 0]);
+                    assert_eq!(bytes.len(), 12 * 4096);
+                    for (i, word) in bytes[..46080].chunks_exact(8).enumerate() {
+                        assert_eq!(word, ((i as u64) ^ 0x123456789abcdef0).to_le_bytes());
+                    }
+                    assert!(bytes[46080..].iter().all(|&byte| byte == 0));
+                } else {
+                    assert_eq!(words, [135, 0, 0, 0, 0, 0, 0, 0]);
+                    assert_eq!(&bytes[..6], &[0xbc, 0x9a, 0x78, 0x56, 0x34, 0x12]);
+                    assert!(bytes[6..].iter().all(|&byte| byte == 0));
+                }
+                drop(object);
                 server.reply(&request, &matrix::encode([0; 8])).unwrap();
             }
             Event::Disconnected { client: 0, .. } => break,

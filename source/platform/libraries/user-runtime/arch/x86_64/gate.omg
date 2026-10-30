@@ -64,6 +64,8 @@ public NativeKernel satisfies Kernel {
     Kernel::object_send = Gate::object_send_leaf;
     Kernel::object_receive = Gate::object_receive_leaf;
     Kernel::object_read = Gate::object_read_leaf;
+    Kernel::private_write = Gate::private_write_leaf;
+    Kernel::object_freeze = Gate::object_freeze_leaf;
     Kernel::endpoint_receive = Gate::endpoint_receive_leaf;
     Kernel::bootstrap = Gate::bootstrap_leaf;
     Kernel::yield_now = Gate::yield_leaf;
@@ -104,3 +106,8 @@ linux_x86_64 machine Gate::object_receive_leaf(gate: &Gate, endpoint: u64, packe
     satisfies Kernel::object_receive via ForeignBinding::TableFunction(object_receive) blocks;
 linux_x86_64 machine Gate::object_read_leaf(gate: &Gate, handle: u64, index: u64, words: &mut [u64; 8], count: u64 [1..=8]) -> u64
     satisfies Kernel::object_read via ForeignBinding::TableFunction(object_read) blocks;
+
+linux_x86_64 machine Gate::private_write_leaf(gate: &Gate, handle: u64, offset: u64, words: &[u64; 1024], bytes: u64 [1..=8192]) -> u64
+    satisfies Kernel::private_write via ForeignBinding::TableFunction(private_write) blocks;
+linux_x86_64 machine Gate::object_freeze_leaf(gate: &Gate, handle: u64) -> u64
+    satisfies Kernel::object_freeze via ForeignBinding::TableFunction(object_freeze) blocks;

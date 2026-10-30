@@ -1,0 +1,188 @@
+module construction;
+// Exercise Notes-sized construction in a real Omega process, including forged
+// private handles, exact byte tails and independent Rust inspection of all bytes.
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::services::main::Services;
+use runtime::memory::staging;
+use runtime::memory::staging::Buffer;
+use runtime::memory::staging::Allocation;
+use runtime::memory::object::Creation;
+use runtime::memory::object::Object;
+use runtime::connection::call::CallReply;
+
+public machine check(gate: &Gate, binding: &mut Services, clock: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let checked: u64 = block wrong_modes(gate, binding);
+    transition checked == 0u64 {
+        true -> block cleanup(gate, binding, clock)
+        _ -> (checked)
+    }
+}
+machine cleanup(gate: &Gate, binding: &mut Services, clock: u64) -> u64 reaches Kernel {
+    let status: u64 = block failed_seal(gate);
+    transition status == 0u64 {
+        true -> block prepare(gate, binding, clock)
+        _ -> (status)
+    }
+}
+machine failed_seal(gate: &Gate) -> u64 reaches Kernel {
+    let allocation: Allocation = block staging::allocate(gate, 1u64);
+    transition allocation {
+        Allocation::Ready { buffer } -> block share(gate, buffer)
+        _ -> (237u64)
+    }
+    machine share(gate: &Gate, mut buffer: Buffer) -> u64 reaches Kernel {
+        let status: u64 = block Kernel::memory_share(gate, buffer.handle);
+        let result: Creation = block staging::seal(gate, &mut buffer);
+        transition result {
+            Creation::Failed { code } -> cleared(buffer, status, code)
+            Creation::Ready { object } -> block unexpected_object(gate, object.handle)
+        }
+    }
+    machine cleared(buffer: Buffer, status: u64, code: u64) -> u64 {
+        transition status == 0u64 && code == kernel::BUSY && buffer.handle == 0u64 && buffer.bytes == 0u64 {
+            true -> (0u64)
+            _ -> (238u64)
+        }
+    }
+}
+machine wrong_modes(gate: &Gate, binding: &Services) -> u64 reaches Kernel {
+    let words: [u64; 1024];
+    let owner: u64 = block Kernel::private_write(gate, binding.broker.writer.handle, 0u64, &words, 1u64);
+    let reader: u64 = block Kernel::private_write(gate, binding.broker.reader.handle, 0u64, &words, 1u64);
+    transition owner == kernel::DENIED && reader == kernel::DENIED {
+        true -> block abandoned(gate)
+        _ -> (230u64)
+    }
+}
+machine abandoned(gate: &Gate) -> u64 reaches Kernel {
+    let allocation: Allocation = block staging::allocate(gate, 1u64);
+    transition allocation {
+        Allocation::Ready { buffer } -> block release(gate, buffer)
+        _ -> (231u64)
+    }
+    machine release(gate: &Gate, mut buffer: Buffer) -> u64 reaches Kernel {
+        let handle: u64 = buffer.handle;
+        let status: u64 = block staging::release(gate, &mut buffer);
+        let words: [u64; 1024];
+        let stale: u64 = block Kernel::private_write(gate, handle, 0u64, &words, 1u64);
+        transition status == 0u64 && buffer.handle == 0u64 && buffer.bytes == 0u64 && stale >= kernel::ERROR_BASE {
+            true -> (0u64)
+            _ -> (232u64)
+        }
+    }
+}
+machine prepare(gate: &Gate, binding: &mut Services, clock: u64) -> u64 reaches Kernel {
+    let created: Creation = block image(gate);
+    transition created {
+        Creation::Ready { object } -> block send(gate, binding, clock, object)
+        Creation::Failed { code } -> (code)
+    }
+}
+machine image(gate: &Gate) -> Creation reaches Kernel {
+    let allocation: Allocation = block staging::allocate(gate, 46080u64);
+    transition allocation {
+        Allocation::Ready { buffer } -> block fill(gate, buffer)
+        Allocation::Failed { code } -> (Creation::Failed { code: code })
+    }
+    machine fill(gate: &Gate, mut buffer: Buffer) -> Creation reaches Kernel {
+        let status: u64 = block chunks(gate, &buffer, 0u64);
+        transition status == 0u64 {
+            true -> block seal(gate, &mut buffer)
+            _ -> block failed(gate, &mut buffer, status)
+        }
+    }
+    machine seal(gate: &Gate, buffer: &mut Buffer) -> Creation reaches Kernel {
+        let status: u64 = block rejected_bounds(gate, buffer);
+        transition status == 0u64 {
+            true -> block staging::seal(gate, buffer)
+            _ -> block failed(gate, buffer, status)
+        }
+    }
+    machine failed(gate: &Gate, buffer: &mut Buffer, status: u64) -> Creation reaches Kernel {
+        let released: u64 = block staging::release(gate, buffer);
+        Creation::Failed { code: status }
+    }
+}
+machine chunks(gate: &Gate, buffer: &Buffer, offset: u64) -> u64 reaches Kernel {
+    transition offset < 46080u64 {
+        true -> block chunk(gate, buffer, offset)
+        _ -> (0u64)
+    }
+    machine chunk(gate: &Gate, buffer: &Buffer, offset: u64) -> u64 reaches Kernel requires offset < 46080u64 {
+        let status: u64 = block pixels(gate, buffer, offset);
+        transition status == 0u64 {
+            true -> block chunks(gate, buffer, offset + 8192u64)
+            _ -> (status)
+        }
+    }
+}
+machine pixels(gate: &Gate, buffer: &Buffer, offset: u64) -> u64 reaches Kernel requires offset < 46080u64 {
+    let mut words: [u64; 1024];
+    fill(&mut words, offset / 8u64, 0u64);
+    transition offset <= 37888u64 {
+        true -> block staging::write(gate, buffer, offset, &words, 8192u64)
+        _ -> block tail(gate, buffer, offset, &words)
+    }
+    machine tail(gate: &Gate, buffer: &Buffer, offset: u64, words: &[u64; 1024]) -> u64 reaches Kernel requires offset > 37888u64 && offset < 46080u64 {
+        block staging::write(gate, buffer, offset, words, 46080u64 - offset)
+    }
+    machine fill(words: &mut [u64; 1024], first: u64 [0..=5759], i: u64) {
+        transition i < 1024u64 {
+            true -> word(words, first, i)
+            _ -> done()
+        }
+    }
+    machine word(words: &mut [u64; 1024], first: u64 [0..=5759], i: u64) requires i < 1024u64 {
+        words[i] = (first + i) ^ 0x123456789abcdef0u64;
+        transition { _ -> fill(words, first, i + 1u64) }
+    }
+    machine done() {}
+}
+machine rejected_bounds(gate: &Gate, buffer: &Buffer) -> u64 reaches Kernel {
+    let mut words: [u64; 1024]; words[0] = 0xffffffffffffffffu64;
+    let logical: u64 = block staging::write(gate, buffer, 46076u64, &words, 8u64);
+    let physical: u64 = block Kernel::private_write(gate, buffer.handle, 49148u64, &words, 8u64);
+    let overflow: u64 = block Kernel::private_write(gate, buffer.handle, 0xffffffffffffffffu64, &words, 1u64);
+    transition logical == kernel::INVALID_ARGUMENT && physical == kernel::INVALID_ARGUMENT && overflow == kernel::INVALID_ARGUMENT {
+        true -> (0u64)
+        _ -> (233u64)
+    }
+}
+machine frozen(gate: &Gate, object: &Object) -> u64 reaches Kernel {
+    let words: [u64; 1024];
+    let refused: u64 = block Kernel::private_write(gate, object.handle, 0u64, &words, 1u64);
+    transition refused == kernel::DENIED {
+        true -> (0u64)
+        _ -> (234u64)
+    }
+}
+machine send(gate: &Gate, binding: &mut Services, clock: u64, object: Object) -> u64 reaches Kernel {
+    let checked: u64 = block frozen(gate, &object);
+    let words: [u64; 8] = [140u64, 46080u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64];
+    let reply: CallReply = block runtime::connection::call::exchange_object(gate, &mut binding.broker, clock, &words, object.handle);
+    let released: u64 = block Kernel::memory_release(gate, object.handle);
+    block runtime::services::main::close(gate, binding);
+    transition reply {
+        CallReply::Received { frame, notification } -> received(gate, frame, notification, checked, released)
+        CallReply::Object { frame, object } -> block unexpected_object(gate, object)
+        CallReply::Endpoint { frame, endpoint } -> unexpected_endpoint(gate, endpoint)
+        CallReply::Failed { code } -> (code)
+    }
+}
+machine received(gate: &Gate, frame: runtime::connection::main::Frame, notification: u64, checked: u64, released: u64) -> u64 reaches Kernel {
+    let ignored: u64 = Kernel::notify_drop(gate, notification);
+    transition checked == 0u64 && released == 0u64 && frame.bytes == 64u64 && frame.payload[0] == 0u64 && notification == 0u64 {
+        true -> (0u64)
+        _ -> (235u64)
+    }
+}
+machine unexpected_object(gate: &Gate, object: u64) -> u64 reaches Kernel {
+    let ignored: u64 = block Kernel::memory_release(gate, object);
+    236u64
+}
+machine unexpected_endpoint(gate: &Gate, endpoint: u64) -> u64 reaches Kernel {
+    let ignored: u64 = Kernel::close(gate, endpoint);
+    236u64
+}

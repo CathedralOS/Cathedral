@@ -9,6 +9,7 @@ use runtime::time::Tick;
 use endpoints;
 use sealed;
 use objects;
+use construction;
 
 public machine check(gate: &Gate, mode: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
     let startup: Startup = runtime::main::start(gate);
@@ -35,6 +36,7 @@ machine open(gate: &Gate, mode: u64, environment: runtime::main::Environment, cl
 }
 machine acquire(gate: &Gate, binding: &mut Services, mode: u64, clock: u64) -> u64 reaches Kernel {
     transition {
+        mode == 140u64 -> block construction::check(gate, binding, clock)
         mode >= 136u64 -> block objects::check(gate, binding, clock, mode)
         mode == 135u64 -> block sealed::check(gate, binding, clock)
         mode >= 130u64 -> block endpoints::check(gate, binding, mode, clock)

@@ -1036,6 +1036,11 @@ link, then sends the handle over copied IPC. Sealing permanently removes write
 permission. The consumer supplies its service-side link to `Shared::accept_from`, which
 authenticates the producer and installs a separate reader-local handle. Raw
 `MEMORY_MAP` returns that handle; `MEMORY_ADDRESS` returns its local address.
+`MEMORY_PRIVATE_ADDRESS` additionally requires the exact current owner name,
+private (neither sealed nor shared-mutable) mode, and an existing mapping.
+Checked native copy boundaries use it before writes; ordinary address lookup
+alone is not write authorization. This query grants no new memory, does not pin
+an address, and cannot protect a pointer retained across later release or sealing.
 The consumer reads RO pages and releases its mapping
 before replying; the producer then releases its owner reference. An accepted
 reader survives producer death and retains its shared-page charge. An unaccepted

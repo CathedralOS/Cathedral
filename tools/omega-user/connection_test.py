@@ -24,17 +24,17 @@ def main():
                        stdout=log, stderr=subprocess.STDOUT, check=True)
     provider = cargo / 'x86_64-unknown-none/release/cathedral-channels-lab'
     composition = dict(CATHEDRAL_LAUNCH_COUNT='2', CATHEDRAL_CHANNEL_LIMITS='16,4,2',
-                       CATHEDRAL_CPU_LIMITS='0,0,0', CATHEDRAL_INIT_PRIVATE_PAGES='8',
-                       CATHEDRAL_INIT_SHARED_PAGES='8',
+                       CATHEDRAL_CPU_LIMITS='0,0,0', CATHEDRAL_INIT_PRIVATE_PAGES='16',
+                       CATHEDRAL_INIT_SHARED_PAGES='16',
                        CATHEDRAL_LAUNCH_0_ELF=str(provider), CATHEDRAL_LAUNCH_0_ARGUMENT='1',
                        CATHEDRAL_LAUNCH_1_ELF=str(client), CATHEDRAL_LAUNCH_1_ARGUMENT='2')
     for index in range(2):
         composition.update({f'CATHEDRAL_LAUNCH_{index}_CLOCK': '1',
                             f'CATHEDRAL_LAUNCH_{index}_PRIVATE_PAGES': '1',
                             f'CATHEDRAL_LAUNCH_{index}_SHARED_PAGES': '1'})
-    # The client retains its live mailbox while staging one sealed payload.
-    composition['CATHEDRAL_LAUNCH_1_PRIVATE_PAGES'] = '2'
-    composition['CATHEDRAL_LAUNCH_0_SHARED_PAGES'] = '2'
+    # The client retains its mailbox while staging a 12-page Notes-sized image.
+    composition['CATHEDRAL_LAUNCH_1_PRIVATE_PAGES'] = '13'
+    composition['CATHEDRAL_LAUNCH_0_SHARED_PAGES'] = '13'
     composition['CATHEDRAL_LAUNCH_0_PRIVATE_PAGES'] = '2'
     composition['CATHEDRAL_LAUNCH_1_SHARED_PAGES'] = '2'
 

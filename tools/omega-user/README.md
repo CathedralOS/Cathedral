@@ -48,7 +48,7 @@ and the declarations in `source/platform/libraries/user-runtime/kernel.omg` and
 release, typed read-view transfer, bounded shared word access and notification
 creation, handoff, signal, wait, control and drop, plus lookup of installed owner
 endpoints, typed endpoint acceptance, bounded immutable object creation/send, and sealed
-reply acceptance/read.
+reply acceptance/read, private chunk copying and sealing/unmapping.
 The native leaves must preserve the declared buffers,
 range bounds, blocking and calling convention. Accept the inspected rows in the
 generated review document and resume with the same qualified compiler:

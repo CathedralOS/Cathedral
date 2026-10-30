@@ -14,7 +14,7 @@ pub fn run(role: u64, mode: u64, environment: Environment) -> u64 {
     }
     for mode in [
         1, 2, 3, 94, 95, 96, 97, 98, 120, 121, 122, 123, 124, 125, 130, 131, 132, 133, 134, 135,
-        136, 137, 138, 139,
+        136, 137, 138, 139, 140,
     ] {
         let baseline = cathedral_user_runtime::resources::budget().unwrap();
         let physical = cathedral_user_runtime::resources::physical_budget().unwrap();

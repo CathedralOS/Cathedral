@@ -130,6 +130,23 @@ impl Regions {
             })
             .ok_or(abi::BAD_HANDLE)
     }
+    /// A checked write boundary needs more than access: readers and formerly
+    /// private allocations must not acquire writable-pointer authority.
+    pub fn private_mapping(&self, caller: usize, handle: u64) -> Result<usize, u64> {
+        let index = self.access(caller, handle)?;
+        let region = self.entries[index];
+        if region.owner != Some(caller)
+            || region.owner_name != handle
+            || region.sealed
+            || region.shared_mutable
+        {
+            return Err(abi::DENIED);
+        }
+        if !region.owner_mapped {
+            return Err(abi::BAD_ADDRESS);
+        }
+        Ok(region.owner_slot)
+    }
     pub fn mapping(&self, caller: usize, index: usize) -> usize {
         let region = self.entries[index];
         if region.owner == Some(caller) {
