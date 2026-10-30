@@ -21,7 +21,7 @@ registry or fixed three-client limit was added to the platform.
 Requests may opt into one sealed-object attachment. The runtime joins its grant
 and mailbox frame in either arrival order, retains it through application work,
 and releases it on reply or retirement. Delayed replies use a connection
-incarnation/request ticket. Existing synchronous acceptance and plain owner
+endpoint/incarnation/request ticket. Existing synchronous acceptance and plain owner
 control still use the same handshake implementation. A single appended native
 leaf exposes the kernel's existing 48-interest wait; no kernel implementation,
 limit, default grant, storage format or compiler changed.
@@ -32,7 +32,7 @@ Rust-peer scenarios check independent owner/client progress, stalled setup,
 held-request disconnect, malformed grants, both arrival orders, repeated image
 replies and complete refunds. A surviving client must fill all five reader pages
 after its sibling retires, proving reclamation while the service remains alive.
-Wrong generation/request tickets are rejected without consuming the request;
+Foreign-connection and wrong generation/request tickets cannot consume a request;
 replacement of an actual connection in the same slot is not yet exercised.
 
 Candidate evidence, relative to `C:/Projects/Cathedral-service-native`:
@@ -47,6 +47,21 @@ Candidate evidence, relative to `C:/Projects/Cathedral-service-native`:
 - All seven packager tests, service-fixture clippy, Rust formatting and layout
   (111 Omega / 154 Rust edges) pass. Initial native review covers the same 32
   leaves plus the new bounded wait, 33 declarations and 33 external supplies.
+
+Final main-checkout evidence, using the normal saved producers:
+
+- Service isolation, including the genuine foreign-connection ticket with matching
+  generation/request IDs: `build/omega-user/connections/20261030T221228344594Z/`.
+- Default F5 desktop and cold reopen:
+  `build/boot-harness-rs/desktop/20261030T221417375314Z/`. Three Notes instances,
+  independent drafts, protected close, reuse, Colors and the 2,161-record storage
+  oracle pass. The preceding run before endpoint-bound tickets also passed at
+  `build/boot-harness-rs/desktop/20261030T220444820400Z/`.
+- Normal `run.py --release --build-only` prepares
+  `build/boot-harness-rs/interactive/esp/EFI/BOOT/BOOTX64.EFI` successfully.
+- Main layout, seven packager tests, formatting and service-fixture clippy pass.
+  Existing native approvals stay intact; only the new wait declaration and
+  external supply require review in each already-qualified native consumer.
 
 The installed apps remain Omega and the installed matrix host remains Rust.
 Next, bring the existing independent Omega matrix proof onto this common runtime,

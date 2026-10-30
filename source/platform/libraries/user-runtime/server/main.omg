@@ -27,10 +27,11 @@ public data Server {
 }
 public data Ticket [copy] {
     incarnation: u64;
+    receiver: u64;
     request: u64;
 }
 public machine ticket(listener: &Server) -> Ticket {
-    Ticket { incarnation: listener.incarnation, request: listener.pending }
+    Ticket { incarnation: listener.incarnation, receiver: listener.peer.receiver, request: listener.pending }
 }
 // Takes custody only on success. Close before rebinding; generation never wraps.
 public machine begin(listener: &mut Server, sender: u64, receiver: u64, deadline: u64, objects: bool) -> u64 {
@@ -128,7 +129,8 @@ public machine reply_to(gate: &Gate, listener: &mut Server, issued: Ticket, payl
 public machine reply_object_to(gate: &Gate, listener: &mut Server, issued: Ticket, payload: &[u64; 8], object: u64) -> u64
     reaches Kernel blocks; invokes Kernel; {
     transition listener.pending != 0u64 && listener.peer.fault == 0u64
-        && listener.incarnation == issued.incarnation && listener.pending == issued.request {
+        && listener.incarnation == issued.incarnation && listener.peer.receiver == issued.receiver
+        && listener.pending == issued.request {
         true -> block publish(gate, listener, payload, object)
         _ -> (kernel::IO_ERROR)
     }

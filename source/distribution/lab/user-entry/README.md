@@ -116,7 +116,8 @@ request surviving unrelated calls, disconnect cleanup, repeated image echoes,
 both separately observed grant/frame arrival orders, incomplete-pair expiry,
 mismatched/duplicate/zero grant IDs, undeclared attachments and wrong packet
 families. Wrong connection-generation and request-ID tickets cannot consume the
-pending request. This does not yet test reconnecting a replacement client into
+pending request. A genuine ticket from another client is rejected even when
+both clients have the same generation and request ID. This does not yet test reconnecting a replacement client into
 the same slot.
 
 After each failed client retires, the surviving client sends three-page images.

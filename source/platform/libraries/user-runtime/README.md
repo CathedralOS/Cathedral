@@ -56,8 +56,8 @@ limits; the runtime has no global client registry or matrix policy.
   sealed-object grant in either arrival order. Attachments require explicit
   opt-in at `begin`. Wrong kinds, duplicate/mismatched grants and incomplete
   pairs retire that connection and release its retained rights.
-- A request remains pending until its exact reply. Its `Ticket` pairs the local
-  connection incarnation with the request ID; delayed work uses `reply_to` or
+- A request remains pending until its exact reply. Its `Ticket` binds the local
+  receiver endpoint, connection incarnation and request ID; delayed work uses `reply_to` or
   `reply_object_to`. Reuse the **closed Server value** for a replacement so its
   incarnation advances. Do not reset that value while old tickets remain live.
 - `Server.object` is borrowed request backing: it stays valid until reply or

@@ -57,13 +57,29 @@ machine owner(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Ker
 machine client(gate: &Gate, context: &mut State, index: u64 [0..=2], frame: Frame) -> u64 reaches Kernel {
     let issued: Ticket = runtime::server::main::ticket(&context.clients[index]);
     // Wrong generation, then wrong ID: neither may consume the real request.
-    let stale: Ticket = Ticket { incarnation: 0u64, request: issued.request };
+    let stale: Ticket = Ticket { incarnation: 0u64, receiver: issued.receiver, request: issued.request };
     let wrong: u64 = block runtime::server::main::reply_to(gate, &mut context.clients[index], stale, &frame.payload);
-    let stale_id: Ticket = Ticket { incarnation: issued.incarnation, request: 0u64 };
+    let stale_id: Ticket = Ticket { incarnation: issued.incarnation, receiver: issued.receiver, request: 0u64 };
     let wrong_id: u64 = block runtime::server::main::reply_to(gate, &mut context.clients[index], stale_id, &frame.payload);
     transition wrong != 0u64 && wrong_id != 0u64 {
-        true -> block valid(gate, context, index, frame, issued)
+        true -> block connection(gate, context, index, frame, issued)
         _ -> (209u64)
+    }
+}
+// The first B request has the same generation and request ID as held A.
+// Its genuine ticket must still be rejected when presented to B's server.
+machine connection(gate: &Gate, context: &mut State, index: u64 [0..=2], frame: Frame, issued: Ticket) -> u64 reaches Kernel {
+    transition index == 1u64 && context.clients[0].pending != 0u64 {
+        true -> block foreign_ticket(gate, context, index, frame, issued)
+        _ -> block valid(gate, context, index, frame, issued)
+    }
+}
+machine foreign_ticket(gate: &Gate, context: &mut State, index: u64 [0..=2], frame: Frame, issued: Ticket) -> u64 reaches Kernel {
+    let foreign: Ticket = runtime::server::main::ticket(&context.clients[0]);
+    let status: u64 = block runtime::server::main::reply_to(gate, &mut context.clients[index], foreign, &frame.payload);
+    transition status != 0u64 {
+        true -> block valid(gate, context, index, frame, issued)
+        _ -> (210u64)
     }
 }
 machine valid(gate: &Gate, context: &mut State, index: u64 [0..=2], frame: Frame, issued: Ticket) -> u64 reaches Kernel {
