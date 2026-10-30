@@ -1,0 +1,34 @@
+module main;
+// Compatibility boundary for the retained Rust host and compiled model tests.
+// No host packet is passed into the chooser app itself.
+use app::main::advance;
+use app::state::State;
+use app::state::Phase;
+use app::operations::Command;
+use app::operations::Exchange;
+use packets;
+public boundary trait ChooserApp {
+    machine step(s: &mut State, p: &mut [u64; 4096]) -> u64 reaches;
+}
+public ChooserAppProvider satisfies ChooserApp {
+    machine step(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+        transition p[15] {
+            1u64 -> (size_of<State>())
+            2u64 -> (align_of<State>())
+            3u64 -> (1u64)
+            _ -> execute(s, p)
+        }
+    }
+}
+machine execute(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    let mut exchange: Exchange;
+    packets::decode(s, p, &mut exchange);
+    let command: Command = app::main::advance(s, &mut exchange);
+    packets::encode(p, &exchange);
+    packets::operation(command)
+}
+public machine component_entry() reaches ChooserApp invokes ChooserApp; {
+    let mut s: State;
+    let mut p: [u64; 4096];
+    let result: u64 = ChooserApp::step(&mut s, &mut p);
+}

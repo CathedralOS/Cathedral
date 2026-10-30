@@ -1,70 +1,77 @@
+module catalogue::catalogue;
+use protocol::main;
 use decisions::outcomes;
 // Stream scoped entry pages, resolve presentation roles, then publish one model.
-use host::main;
-use protocol::main;
+use operations::Command;
+use operations::Exchange;
 use decisions::catalogue::metadata;
 use decisions::catalogue::catalogue;
-use state;
-use transport;
-use session::session;
-public machine reload(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-    s.phase = BOUND; s.found = 0u64; s.template = 0u64; s.background = 0u64; s.after = 0u64; BIND
+use state::State;
+use state::Phase;
+use transport::storage;
+use transport::failed;
+use transport::byte;
+use transport::subtract;
+use transport::add;
+use session::session::cycle;
+public machine reload(s: &mut State, p: &mut Exchange) -> Command {
+    s.phase = Phase::Bound; s.found = 0u64; s.template = 0u64; s.background = 0u64; s.after = 0u64; Command::BindStorage
 }
-public machine bound(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+public machine bound(s: &mut State, p: &mut Exchange) -> Command {
     transition failed(p) { true -> unavailable(s, p) _ -> ready(s, p) }
-    state ready(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.realm = p[1]; page(s, p) }
+    machine ready(s: &mut State, p: &mut Exchange) -> Command { s.realm = p.frame[1]; page(s, p) }
 }
-machine page(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+machine page(s: &mut State, p: &mut Exchange) -> Command {
     let realm: u64 = s.realm; let after: u64 = s.after;
-    let op: u64 = storage(s, p, LISTED, 19u64, realm, 0u64, after, 0u64); p[11] = 4080u64; op
+    let op: Command = storage(s, p, Phase::Listed, 19u64, realm, 0u64, after, 0u64); p.receive_limit = 4080u64; op
 }
-public machine listed(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-    transition failed(p) || p[1] > 51u64 || p[8] != p[1] * 80u64 { true -> unavailable(s, p) _ -> scan(s, p, 0u64) }
-    state scan(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 {
-        transition i < p[1] && i < 51u64 { true -> row(s, p, i) _ -> complete(s, p) }
+public machine listed(s: &mut State, p: &mut Exchange) -> Command {
+    transition failed(p) || p.frame[1] > 51u64 || p.payload_bytes != p.frame[1] * 80u64 { true -> unavailable(s, p) _ -> scan(s, p, 0u64) }
+    machine scan(s: &mut State, p: &mut Exchange, i: u64) -> Command {
+        transition i < p.frame[1] && i < 51u64 { true -> row(s, p, i) _ -> complete(s, p) }
     }
-    state row(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 requires i < 51u64 {
+    machine row(s: &mut State, p: &mut Exchange, i: u64) -> Command requires i < 51u64 {
         transition { _ -> metadata(s, p, i, 0u64) }
     }
-    state metadata(s: &mut State, p: &mut [u64; 4096], i: u64, j: u64) -> u64 {
+    machine metadata(s: &mut State, p: &mut Exchange, i: u64, j: u64) -> Command {
         transition i < 51u64 && j < 64u64 { true -> field(s, p, i, j) _ -> classify_row(s, p, i) }
     }
-    state field(s: &mut State, p: &mut [u64; 4096], i: u64, j: u64) -> u64 requires i < 51u64 && j < 64u64 {
+    machine field(s: &mut State, p: &mut Exchange, i: u64, j: u64) -> Command requires i < 51u64 && j < 64u64 {
         s.metadata[j] = byte(p, i * 80u64 + 16u64 + j) as u64;
         transition { _ -> metadata(s, p, i, j + 1u64) }
     }
-    state classify_row(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 {
+    machine classify_row(s: &mut State, p: &mut Exchange, i: u64) -> Command {
         decisions::catalogue::metadata::classify(&s.metadata, &mut s.classification);
         transition i < 51u64 { true -> roles(s, p, i) _ -> unavailable(s, p) }
     }
-    state roles(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 requires i < 51u64 {
-        let id: u64 = p[16u64 + i * 10u64];
+    machine roles(s: &mut State, p: &mut Exchange, i: u64) -> Command requires i < 51u64 {
+        let id: u64 = p.payload[i * 10u64];
         transition s.classification.template { true -> template(s, p, i, id) _ -> background(s, p, i, id) }
     }
-    state template(s: &mut State, p: &mut [u64; 4096], i: u64, id: u64) -> u64 { s.template = id; transition { _ -> background(s, p, i, id) } }
-    state background(s: &mut State, p: &mut [u64; 4096], i: u64, id: u64) -> u64 {
+    machine template(s: &mut State, p: &mut Exchange, i: u64, id: u64) -> Command { s.template = id; transition { _ -> background(s, p, i, id) } }
+    machine background(s: &mut State, p: &mut Exchange, i: u64, id: u64) -> Command {
         transition s.classification.background { true -> mark_background(s, p, i, id) _ -> executable(s, p, i, id) }
     }
-    state mark_background(s: &mut State, p: &mut [u64; 4096], i: u64, id: u64) -> u64 { s.background = id; transition { _ -> executable(s, p, i, id) } }
-    state executable(s: &mut State, p: &mut [u64; 4096], i: u64, id: u64) -> u64 {
+    machine mark_background(s: &mut State, p: &mut Exchange, i: u64, id: u64) -> Command { s.background = id; transition { _ -> executable(s, p, i, id) } }
+    machine executable(s: &mut State, p: &mut Exchange, i: u64, id: u64) -> Command {
         transition s.classification.executable && s.found < 51u64 { true -> append(s, p, i, id) _ -> next(s, p, i) }
     }
-    state append(s: &mut State, p: &mut [u64; 4096], i: u64, id: u64) -> u64 requires s.found < 51u64 {
+    machine append(s: &mut State, p: &mut Exchange, i: u64, id: u64) -> Command requires s.found < 51u64 {
         s.catalogue_request.ids[s.found] = id; transition { _ -> label(s, p, i, 0u64) }
     }
-    state label(s: &mut State, p: &mut [u64; 4096], i: u64, j: u64) -> u64 {
+    machine label(s: &mut State, p: &mut Exchange, i: u64, j: u64) -> Command {
         transition j < 13u64 && s.found < 51u64 { true -> letter(s, p, i, j) _ -> appended(s, p, i) }
     }
-    state letter(s: &mut State, p: &mut [u64; 4096], i: u64, j: u64) -> u64 requires j < 13u64 && s.found < 51u64 {
+    machine letter(s: &mut State, p: &mut Exchange, i: u64, j: u64) -> Command requires j < 13u64 && s.found < 51u64 {
         s.candidate_names[s.found][j] = (s.classification.label[j] & 255u64) as u8; transition { _ -> label(s, p, i, j + 1u64) }
     }
-    state appended(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 { s.found = add(s.found, 1u64); transition { _ -> next(s, p, i) } }
-    state next(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 requires i < 51u64 { transition { _ -> scan(s, p, i + 1u64) } }
-    state complete(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        s.after = p[2]; transition p[1] == 51u64 { true -> page(s, p) _ -> resolve(s, p) }
+    machine appended(s: &mut State, p: &mut Exchange, i: u64) -> Command { s.found = add(s.found, 1u64); transition { _ -> next(s, p, i) } }
+    machine next(s: &mut State, p: &mut Exchange, i: u64) -> Command { let following: u64 = add(i, 1u64); transition { _ -> scan(s, p, following) } }
+    machine complete(s: &mut State, p: &mut Exchange) -> Command {
+        s.after = p.frame[2]; transition p.frame[1] == 51u64 { true -> page(s, p) _ -> resolve(s, p) }
     }
 }
-machine resolve(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+machine resolve(s: &mut State, p: &mut Exchange) -> Command {
     s.catalogue_request.picker = s.picker;
     s.catalogue_request.own = s.own;
     s.catalogue_request.template = s.template;
@@ -75,26 +82,26 @@ machine resolve(s: &mut State, p: &mut [u64; 4096]) -> u64 {
         true -> names(s, p, 0u64)
         _ -> unavailable(s, p)
     }
-    state names(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 {
+    machine names(s: &mut State, p: &mut Exchange, i: u64) -> Command {
         transition i < 6u64 {
             true -> name(s, p, i, 0u64)
             _ -> finished(s, p)
         }
     }
-    state name(s: &mut State, p: &mut [u64; 4096], i: u64, j: u64) -> u64 {
+    machine name(s: &mut State, p: &mut Exchange, i: u64, j: u64) -> Command {
         transition i < 6u64 && j < s.found && j < 51u64 { true -> match_name(s, p, i, j) _ -> advance(s, p, i) }
     }
-    state match_name(s: &mut State, p: &mut [u64; 4096], i: u64, j: u64) -> u64 requires i < 6u64 && j < 51u64 {
+    machine match_name(s: &mut State, p: &mut Exchange, i: u64, j: u64) -> Command requires i < 6u64 && j < 51u64 {
         transition s.entries.ids[i] == s.catalogue_request.ids[j] { true -> copy_name(s, p, i, j, 0u64) _ -> name(s, p, i, j + 1u64) }
     }
-    state copy_name(s: &mut State, p: &mut [u64; 4096], i: u64, j: u64, k: u64) -> u64 {
+    machine copy_name(s: &mut State, p: &mut Exchange, i: u64, j: u64, k: u64) -> Command {
         transition i < 6u64 && j < 51u64 && k < 13u64 { true -> copy_letter(s, p, i, j, k) _ -> advance(s, p, i) }
     }
-    state copy_letter(s: &mut State, p: &mut [u64; 4096], i: u64, j: u64, k: u64) -> u64 requires i < 6u64 && j < 51u64 && k < 13u64 {
+    machine copy_letter(s: &mut State, p: &mut Exchange, i: u64, j: u64, k: u64) -> Command requires i < 6u64 && j < 51u64 && k < 13u64 {
         s.names[i][k] = s.candidate_names[j][k]; transition { _ -> copy_name(s, p, i, j, k + 1u64) }
     }
-    state advance(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 requires i < 6u64 { transition { _ -> names(s, p, i + 1u64) } }
-    state finished(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.dirty = true; transition s.selected == 6u64 { true -> choose_new(s, p) _ -> cycle(s, p) } }
-    state choose_new(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.selected = subtract(s.entries.count, 1u64); cycle(s, p) }
+    machine advance(s: &mut State, p: &mut Exchange, i: u64) -> Command { let following: u64 = add(i, 1u64); transition { _ -> names(s, p, following) } }
+    machine finished(s: &mut State, p: &mut Exchange) -> Command { s.dirty = true; transition s.selected == 6u64 { true -> choose_new(s, p) _ -> cycle(s, p) } }
+    machine choose_new(s: &mut State, p: &mut Exchange) -> Command { s.selected = subtract(s.entries.count, 1u64); cycle(s, p) }
 }
-public machine unavailable(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.notice = decisions::outcomes::Notice::Unavailable; s.dirty = true; cycle(s, p) }
+public machine unavailable(s: &mut State, p: &mut Exchange) -> Command { s.notice = decisions::outcomes::Notice::Unavailable; s.dirty = true; cycle(s, p) }

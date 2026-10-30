@@ -1,25 +1,29 @@
+module rendering::pixels;
+use operations::Exchange;
 // Distribution-owned rasterization. The host sees only bounded image bytes.
-use state;
-use transport;
-use rendering::text;
-use rendering::tiles;
-use rendering::panels;
-public machine pixels(s: &State, p: &mut [u64; 4096], words: u64) {
+use state::State;
+use rendering::tiles::avatar;
+use rendering::tiles::icon;
+use rendering::panels::settings_pixel;
+use rendering::panels::management_pixel;
+use rendering::panels::footer_pixel;
+use rendering::panels::task_pixel;
+public machine pixels(s: &State, p: &mut Exchange, words: u64) {
     transition { _ -> fill(s, p, words, 0u64) }
-    state fill(s: &State, p: &mut [u64; 4096], words: u64, i: u64) {
-        transition i < words && i < 4080u64 && s.image_offset < 65536u64 { true -> pair(s, p, words, i) _ -> done() }
+    machine fill(s: &State, p: &mut Exchange, words: u64, i: u64) {
+        transition i < words && i < 510u64 && s.image_offset < 65536u64 { true -> pair(s, p, words, i) _ -> done() }
     }
-    state pair(s: &State, p: &mut [u64; 4096], words: u64, i: u64) requires i < 4080u64 && s.image_offset < 65536u64 {
+    machine pair(s: &State, p: &mut Exchange, words: u64, i: u64) requires i < 510u64 && s.image_offset < 65536u64 {
         let at: u64 = s.image_offset / 4u64 + i * 2u64;
         let lo: u64 = pixel(s, at); let hi: u64 = pixel(s, at + 1u64);
-        p[16u64 + i] = lo | ((hi & 4294967295u64) << 32u64);
+        p.payload[i] = lo | ((hi & 4294967295u64) << 32u64);
         transition { _ -> fill(s, p, words, i + 1u64) }
     }
-    state done() {}
+    machine done() {}
 }
 machine pixel(s: &State, at: u64) -> u64 {
     transition s.image_width > 0u64 { true -> coordinate(s, at) _ -> (0u64) }
-    state coordinate(s: &State, at: u64) -> u64 requires s.image_width > 0u64 {
+    machine coordinate(s: &State, at: u64) -> u64 requires s.image_width > 0u64 {
         let x: u64 = at % s.image_width; let y: u64 = at / s.image_width;
         transition s.image_kind { 1u64 -> avatar(s, x, y) 2u64 -> icon(s, x, y) 3u64 -> settings_pixel(s, x, y) 4u64 -> management_pixel(s, x, y) 5u64 -> footer_pixel(s, x, y) _ -> task_pixel(s, x, y) }
     }

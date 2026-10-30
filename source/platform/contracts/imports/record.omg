@@ -13,39 +13,39 @@ public machine header(bytes: &[u8; 168], length: u64, output: &mut Declaration) 
     transition length != 0u64 && length == record_bytes(magic) {
         true -> fields(bytes, output, magic) _ -> (false)
     }
-    state fields(bytes: &[u8; 168], output: &mut Declaration, magic: u64) -> bool {
+    machine fields(bytes: &[u8; 168], output: &mut Declaration, magic: u64) -> bool {
         let bits: u64 = word(bytes, 8u64);
         transition magic == FUNDED || magic == PROFILE { true -> funded(bytes, output, magic, bits) _ -> plain(bytes, output, magic, bits) }
     }
-    state funded(bytes: &[u8; 168], output: &mut Declaration, magic: u64, bits: u64) -> bool {
+    machine funded(bytes: &[u8; 168], output: &mut Declaration, magic: u64, bits: u64) -> bool {
         transition (bits >> 48u64) == 0u64 && (bits & 65280u64) == 0u64 {
             true -> demands(bytes, output, magic, bits) _ -> (false)
         }
     }
-    state demands(bytes: &[u8; 168], output: &mut Declaration, magic: u64, bits: u64) -> bool {
+    machine demands(bytes: &[u8; 168], output: &mut Declaration, magic: u64, bits: u64) -> bool {
         output.funded = true; output.channels = (bits >> 16u64) & 65535u64; output.descendants = (bits >> 32u64) & 65535u64;
         transition { _ -> metadata(bytes, output, magic, bits & 255u64) }
     }
-    state plain(bytes: &[u8; 168], output: &mut Declaration, magic: u64, bits: u64) -> bool {
+    machine plain(bytes: &[u8; 168], output: &mut Declaration, magic: u64, bits: u64) -> bool {
         output.funded = false; output.channels = 0u64; output.descendants = 0u64;
         transition { _ -> metadata(bytes, output, magic, bits) }
     }
-    state metadata(bytes: &[u8; 168], output: &mut Declaration, magic: u64, count: u64) -> bool {
+    machine metadata(bytes: &[u8; 168], output: &mut Declaration, magic: u64, count: u64) -> bool {
         output.count = count; output.brokered = magic != POSITIONAL; output.profiled = magic == PROFILE;
         output.private_pages = 0u64; output.reader_pages = 0u64; output.surfaces = 0u64;
         transition magic == PROFILE { true -> profile(bytes, output) _ -> (count <= 4u64) }
     }
-    state profile(bytes: &[u8; 168], output: &mut Declaration) -> bool {
+    machine profile(bytes: &[u8; 168], output: &mut Declaration) -> bool {
         output.private_pages = word(bytes, 144u64); output.reader_pages = word(bytes, 152u64); output.surfaces = word(bytes, 160u64);
         output.count <= 4u64
     }
 }
 public machine entries(bytes: &[u8; 168], output: &mut Declaration) -> bool {
     transition output.count <= 4u64 { true -> next(bytes, output, 0u64) _ -> (false) }
-    state next(bytes: &[u8; 168], output: &mut Declaration, i: u64) -> bool {
+    machine next(bytes: &[u8; 168], output: &mut Declaration, i: u64) -> bool {
         transition i < output.count && i < 4u64 { true -> inspect(bytes, output, i) _ -> (true) }
     }
-    state inspect(bytes: &[u8; 168], output: &mut Declaration, i: u64) -> bool requires i < 4u64 {
+    machine inspect(bytes: &[u8; 168], output: &mut Declaration, i: u64) -> bool requires i < 4u64 {
         let at: u64 = 16u64 + i * 32u64;
         let contract: u64 = word(bytes, at); let minimum: u64 = word(bytes, at + 8u64);
         let maximum: u64 = word(bytes, at + 16u64); let required: u64 = word(bytes, at + 24u64);
@@ -53,30 +53,30 @@ public machine entries(bytes: &[u8; 168], output: &mut Declaration) -> bool {
             true -> accepted(bytes, output, i, contract, minimum, maximum, required) _ -> (false)
         }
     }
-    state accepted(bytes: &[u8; 168], output: &mut Declaration, i: u64, contract: u64, minimum: u64, maximum: u64, required: u64) -> bool requires i < 4u64 {
+    machine accepted(bytes: &[u8; 168], output: &mut Declaration, i: u64, contract: u64, minimum: u64, maximum: u64, required: u64) -> bool requires i < 4u64 {
         output.entries[i] = Import { contract: contract, minimum: minimum, maximum: maximum, required: required != 0u64 };
         transition { _ -> duplicates(bytes, output, i, contract, 0u64) }
     }
-    state duplicates(bytes: &[u8; 168], output: &mut Declaration, i: u64, contract: u64, prior: u64) -> bool requires i < 4u64 {
+    machine duplicates(bytes: &[u8; 168], output: &mut Declaration, i: u64, contract: u64, prior: u64) -> bool requires i < 4u64 {
         transition prior < i { true -> compare(bytes, output, i, contract, prior) _ -> next(bytes, output, i + 1u64) }
     }
-    state compare(bytes: &[u8; 168], output: &mut Declaration, i: u64, contract: u64, prior: u64) -> bool requires i < 4u64 && prior < i {
+    machine compare(bytes: &[u8; 168], output: &mut Declaration, i: u64, contract: u64, prior: u64) -> bool requires i < 4u64 && prior < i {
         transition output.entries[prior].contract == contract { true -> (false) _ -> duplicates(bytes, output, i, contract, prior + 1u64) }
     }
 }
 public machine padding(bytes: &[u8; 168], count: u64) -> bool {
     transition count <= 4u64 { true -> scan(bytes, 16u64 + count * 32u64) _ -> (false) }
-    state scan(bytes: &[u8; 168], at: u64) -> bool { transition at < 144u64 { true -> zero(bytes, at) _ -> (true) } }
-    state zero(bytes: &[u8; 168], at: u64) -> bool requires at < 144u64 {
+    machine scan(bytes: &[u8; 168], at: u64) -> bool { transition at < 144u64 { true -> zero(bytes, at) _ -> (true) } }
+    machine zero(bytes: &[u8; 168], at: u64) -> bool requires at < 144u64 {
         transition bytes[at] == 0u8 { true -> scan(bytes, at + 1u64) _ -> (false) }
     }
 }
 machine word(bytes: &[u8; 168], at: u64) -> u64 {
     transition { _ -> read(bytes, at, 0u64, 0u64) }
-    state read(bytes: &[u8; 168], at: u64, i: u64, value: u64) -> u64 {
+    machine read(bytes: &[u8; 168], at: u64, i: u64, value: u64) -> u64 {
         transition at <= 160u64 && i < 8u64 { true -> byte(bytes, at, i, value) _ -> (value) }
     }
-    state byte(bytes: &[u8; 168], at: u64, i: u64, value: u64) -> u64 requires at <= 160u64 && i < 8u64 {
+    machine byte(bytes: &[u8; 168], at: u64, i: u64, value: u64) -> u64 requires at <= 160u64 && i < 8u64 {
         transition { _ -> read(bytes, at, i + 1u64, value | ((bytes[at + i] as u64) << (i * 8u64))) }
     }
 }

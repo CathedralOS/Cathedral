@@ -1,33 +1,45 @@
-// Retain surfaces; publish complete bounded images. Re-poll after an epoch race.
-use host::main;
+module rendering::rendering;
 use protocol::main;
+// Retain surfaces; publish complete bounded images. Re-poll after an epoch race.
+use operations::Command;
+use operations::Exchange;
 use decisions::layout;
 use decisions::outcomes::Notice;
-use state;
-use transport;
-use session::session;
-use rendering::images;
-public machine render(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+use state::State;
+use state::Phase;
+use transport::interaction;
+use transport::failed;
+use transport::subtract;
+use transport::add;
+use session::session::cycle;
+use session::session::poll;
+use session::session::finish;
+use rendering::images::tile_image;
+use rendering::images::settings_image;
+use rendering::images::management_image;
+use rendering::images::footer_image;
+use rendering::images::tasks_image;
+public machine render(s: &mut State, p: &mut Exchange) -> Command {
     transition !s.scene { true -> create(s, p) _ -> repaint(s, p) }
-    state create(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.rank = 0u64; create_surface(s, p) }
+    machine create(s: &mut State, p: &mut Exchange) -> Command { s.rank = 0u64; create_surface(s, p) }
 }
-machine create_surface(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-    let epoch: u64 = s.epoch; let rank: u64 = s.rank; interaction(s, p, SURFACE, SURFACE_CREATE, epoch, rank, 0u64, 0u64, 0u64, 0u64, 0u64)
+machine create_surface(s: &mut State, p: &mut Exchange) -> Command {
+    let epoch: u64 = s.epoch; let rank: u64 = s.rank; interaction(s, p, Phase::Surface, SURFACE_CREATE, epoch, rank, 0u64, 0u64, 0u64, 0u64, 0u64)
 }
-public machine surface_reply(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+public machine surface_reply(s: &mut State, p: &mut Exchange) -> Command {
     transition failed(p) || s.rank >= 8u64 { true -> recheck(s, p) _ -> created(s, p) }
-    state created(s: &mut State, p: &mut [u64; 4096]) -> u64 requires s.rank < 8u64 {
-        s.surfaces[s.rank] = p[1]; s.rank = add(s.rank, 1u64);
+    machine created(s: &mut State, p: &mut Exchange) -> Command requires s.rank < 8u64 {
+        s.surfaces[s.rank] = p.frame[1]; s.rank = add(s.rank, 1u64);
         transition s.rank < surface_count(s) { true -> create_surface(s, p) _ -> ready(s, p) }
     }
-    state ready(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.scene = true; s.dirty = true; repaint(s, p) }
+    machine ready(s: &mut State, p: &mut Exchange) -> Command { s.scene = true; s.dirty = true; repaint(s, p) }
 }
 machine surface_count(s: &State) -> u64 { transition s.picker { true -> (6u64) _ -> (8u64) } }
-machine repaint(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+machine repaint(s: &mut State, p: &mut Exchange) -> Command {
     transition s.dirty { true -> begin(s, p) _ -> finish(s, p) }
-    state begin(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.paint_step = 0u64; s.rank = 0u64; paint_next(s, p) }
+    machine begin(s: &mut State, p: &mut Exchange) -> Command { s.paint_step = 0u64; s.rank = 0u64; paint_next(s, p) }
 }
-public machine paint_next(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+public machine paint_next(s: &mut State, p: &mut Exchange) -> Command {
     transition s.paint_step {
         0u64 -> background(s, p)
         1u64 -> release_footer(s, p)
@@ -38,54 +50,54 @@ public machine paint_next(s: &mut State, p: &mut [u64; 4096]) -> u64 {
         6u64 -> tasks(s, p)
         _ -> done(s, p)
     }
-    state background(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    machine background(s: &mut State, p: &mut Exchange) -> Command {
         s.paint_step = 1u64; let epoch: u64 = s.epoch; let surface: u64 = s.surfaces[0]; let w: u64 = s.width; let h: u64 = s.height;
-        interaction(s, p, PAINTED, MATRIX_PAINT, epoch, surface, 0u64, 0u64, w, h, 1054759u64)
+        interaction(s, p, Phase::Painted, MATRIX_PAINT, epoch, surface, 0u64, 0u64, w, h, 1054759u64)
     }
-    state release_footer(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    machine release_footer(s: &mut State, p: &mut Exchange) -> Command {
         s.paint_step = 2u64; s.rank = 4u64; let slot: u64 = footer_slot(s); clear_surface(s, p, slot)
     }
-    state clear_panels(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    machine clear_panels(s: &mut State, p: &mut Exchange) -> Command {
         transition (s.editing || s.confirming != 0u64) && s.rank < 8u64 { true -> clear_panel(s, p) _ -> primary_start(s, p) }
     }
-    state clear_panel(s: &mut State, p: &mut [u64; 4096]) -> u64 { let slot: u64 = s.rank; s.rank = add(s.rank, 1u64); clear_surface(s, p, slot) }
-    state primary_start(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.rank = 0u64; s.paint_step = 3u64; transition { _ -> primary(s, p) } }
-    state primary(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    machine clear_panel(s: &mut State, p: &mut Exchange) -> Command { let slot: u64 = s.rank; s.rank = add(s.rank, 1u64); clear_surface(s, p, slot) }
+    machine primary_start(s: &mut State, p: &mut Exchange) -> Command { s.rank = 0u64; s.paint_step = 3u64; transition { _ -> primary(s, p) } }
+    machine primary(s: &mut State, p: &mut Exchange) -> Command {
         transition s.confirming != 0u64 { true -> management(s, p) _ -> editor(s, p) }
     }
-    state management(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition s.rank < 3u64 { true -> management_image(s, p) _ -> footer_start(s, p) } }
-    state editor(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition s.editing { true -> settings(s, p) _ -> tiles(s, p) } }
-    state settings(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition s.rank < 3u64 { true -> settings_image(s, p) _ -> footer_start(s, p) } }
-    state tiles(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    machine management(s: &mut State, p: &mut Exchange) -> Command { transition s.rank < 3u64 { true -> management_image(s, p) _ -> footer_start(s, p) } }
+    machine editor(s: &mut State, p: &mut Exchange) -> Command { transition s.editing { true -> settings(s, p) _ -> tiles(s, p) } }
+    machine settings(s: &mut State, p: &mut Exchange) -> Command { transition s.rank < 3u64 { true -> settings_image(s, p) _ -> footer_start(s, p) } }
+    machine tiles(s: &mut State, p: &mut Exchange) -> Command {
         geometry(s); transition s.rank < s.geometry.count && s.rank < 6u64 { true -> tile_image(s, p) _ -> clear_start(s, p) }
     }
-    state clear_start(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.paint_step = 4u64; transition { _ -> clear_unused(s, p) } }
-    state clear_unused(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    machine clear_start(s: &mut State, p: &mut Exchange) -> Command { s.paint_step = 4u64; transition { _ -> clear_unused(s, p) } }
+    machine clear_unused(s: &mut State, p: &mut Exchange) -> Command {
         transition s.rank < subtract(footer_slot(s), 1u64) { true -> clear_tile(s, p) _ -> footer_start(s, p) }
     }
-    state clear_tile(s: &mut State, p: &mut [u64; 4096]) -> u64 { let slot: u64 = add(s.rank, 1u64); s.rank = slot; clear_surface(s, p, slot) }
-    state footer_start(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.paint_step = 5u64; transition { _ -> footer(s, p) } }
-    state footer(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    machine clear_tile(s: &mut State, p: &mut Exchange) -> Command { let slot: u64 = add(s.rank, 1u64); s.rank = slot; clear_surface(s, p, slot) }
+    machine footer_start(s: &mut State, p: &mut Exchange) -> Command { s.paint_step = 5u64; transition { _ -> footer(s, p) } }
+    machine footer(s: &mut State, p: &mut Exchange) -> Command {
         s.paint_step = 6u64;
         transition footer_status(s) != 0u64 || normal_chrome(s) { true -> footer_image(s, p) _ -> tasks(s, p) }
     }
-    state tasks(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    machine tasks(s: &mut State, p: &mut Exchange) -> Command {
         s.paint_step = 7u64; transition normal_chrome(s) { true -> tasks_image(s, p) _ -> done(s, p) }
     }
-    state done(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.dirty = false; finish(s, p) }
+    machine done(s: &mut State, p: &mut Exchange) -> Command { s.dirty = false; finish(s, p) }
 }
-public machine painted(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition failed(p) { true -> recheck(s, p) _ -> paint_next(s, p) } }
-public machine image_reply(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition failed(p) { true -> recheck(s, p) _ -> paint_next(s, p) } }
-machine clear_surface(s: &mut State, p: &mut [u64; 4096], slot: u64) -> u64 {
-    transition slot < 8u64 { true -> clear(s, p, slot) _ -> (EXIT) }
-    state clear(s: &mut State, p: &mut [u64; 4096], slot: u64) -> u64 requires slot < 8u64 {
-        let epoch: u64 = s.epoch; let surface: u64 = s.surfaces[slot]; interaction(s, p, PAINTED, MATRIX_PAINT, epoch, surface, 0u64, 0u64, 0u64, 0u64, 0u64)
+public machine painted(s: &mut State, p: &mut Exchange) -> Command { transition failed(p) { true -> recheck(s, p) _ -> paint_next(s, p) } }
+public machine image_reply(s: &mut State, p: &mut Exchange) -> Command { transition failed(p) { true -> recheck(s, p) _ -> paint_next(s, p) } }
+machine clear_surface(s: &mut State, p: &mut Exchange, slot: u64) -> Command {
+    transition slot < 8u64 { true -> clear(s, p, slot) _ -> (Command::Exit) }
+    machine clear(s: &mut State, p: &mut Exchange, slot: u64) -> Command requires slot < 8u64 {
+        let epoch: u64 = s.epoch; let surface: u64 = s.surfaces[slot]; interaction(s, p, Phase::Painted, MATRIX_PAINT, epoch, surface, 0u64, 0u64, 0u64, 0u64, 0u64)
     }
 }
-public machine recheck(s: &mut State, p: &mut [u64; 4096]) -> u64 { interaction(s, p, RECHECK, MATRIX_VIEW, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64) }
-public machine rechecked(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-    transition p[9] != 0u64 || (p[0] == 0u64 && p[1] == s.epoch) { true -> (EXIT) _ -> retry(s, p) }
-    state retry(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.scene = false; s.dirty = true; s.channels[0] = 0u64; s.channels[1] = 0u64; s.channels[2] = 0u64; s.channels[3] = 0u64; s.buttons[0] = 0u64; s.buttons[1] = 0u64; s.buttons[2] = 0u64; s.buttons[3] = 0u64; cycle(s, p) }
+public machine recheck(s: &mut State, p: &mut Exchange) -> Command { interaction(s, p, Phase::Recheck, MATRIX_VIEW, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64) }
+public machine rechecked(s: &mut State, p: &mut Exchange) -> Command {
+    transition p.transport_status != 0u64 || (p.frame[0] == 0u64 && p.frame[1] == s.epoch) { true -> (Command::Exit) _ -> retry(s, p) }
+    machine retry(s: &mut State, p: &mut Exchange) -> Command { s.scene = false; s.dirty = true; s.channels[0] = 0u64; s.channels[1] = 0u64; s.channels[2] = 0u64; s.channels[3] = 0u64; s.buttons[0] = 0u64; s.buttons[1] = 0u64; s.buttons[2] = 0u64; s.buttons[3] = 0u64; cycle(s, p) }
 }
 public machine geometry(s: &mut State) {
     s.geometry = decisions::layout::geometry(s.picker, s.entries.count, s.width, s.height, s.rank);
@@ -95,8 +107,8 @@ public machine normal_chrome(s: &State) -> bool { !s.picker && !s.editing && s.c
 public machine footer_managed(s: &State) -> bool { normal_chrome(s) && s.managed != 0u64 }
 public machine footer_status(s: &State) -> u64 {
     transition s.confirming != 0u64 { true -> (s.management_status) _ -> editor(s) }
-    state editor(s: &State) -> u64 { transition s.editing { true -> (s.setting_status) _ -> availability(s) } }
-    state availability(s: &State) -> u64 { transition s.saves { 1u64 -> (6u64) 2u64 -> (7u64) _ -> (notice_code(s.notice)) } }
+    machine editor(s: &State) -> u64 { transition s.editing { true -> (s.setting_status) _ -> availability(s) } }
+    machine availability(s: &State) -> u64 { transition s.saves { 1u64 -> (6u64) 2u64 -> (7u64) _ -> (notice_code(s.notice)) } }
 }
 
 // The existing footer painter shares numeric presentation tags with its panels.

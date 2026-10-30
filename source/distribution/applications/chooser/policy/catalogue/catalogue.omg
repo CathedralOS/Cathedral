@@ -22,57 +22,57 @@ public machine catalogue(request: &Request, result: &mut Catalogue) -> bool {
         true -> hidden(request, result)
         _ -> (false)
     }
-    state hidden(request: &Request, result: &mut Catalogue) -> bool {
+    machine hidden(request: &Request, result: &mut Catalogue) -> bool {
         transition request.picker {
             true -> template(request, result)
             _ -> find_own(request, result, 0u64)
         }
     }
-    state template(request: &Request, result: &mut Catalogue) -> bool {
+    machine template(request: &Request, result: &mut Catalogue) -> bool {
         transition request.template != 0u64 {
             true -> start(request, result, request.template)
             _ -> (false)
         }
     }
-    state find_own(request: &Request, result: &mut Catalogue, i: u64) -> bool {
+    machine find_own(request: &Request, result: &mut Catalogue, i: u64) -> bool {
         transition i < request.count && i < 51u64 {
             true -> own(request, result, i)
             _ -> (false)
         }
     }
-    state own(request: &Request, result: &mut Catalogue, i: u64) -> bool requires i < 51u64 {
+    machine own(request: &Request, result: &mut Catalogue, i: u64) -> bool requires i < 51u64 {
         transition request.ids[i] == request.own && request.own != 0u64 {
             true -> start(request, result, request.own)
             _ -> find_own(request, result, i + 1u64)
         }
     }
-    state start(request: &Request, result: &mut Catalogue, hidden: u64) -> bool {
+    machine start(request: &Request, result: &mut Catalogue, hidden: u64) -> bool {
         result.count = 1u64;
         result.ids[0] = hidden;
         transition {
             _ -> scan(request, result, hidden, 0u64, 1u64)
         }
     }
-    state scan(request: &Request, result: &mut Catalogue, hidden: u64, i: u64, count: u64) -> bool {
+    machine scan(request: &Request, result: &mut Catalogue, hidden: u64, i: u64, count: u64) -> bool {
         transition i < request.count && i < 51u64 && count < 6u64 && (!request.picker || count < 4u64) {
             true -> candidate(request, result, hidden, i, count)
             _ -> (true)
         }
     }
-    state candidate(request: &Request, result: &mut Catalogue, hidden: u64, i: u64, count: u64) -> bool requires i < 51u64 {
+    machine candidate(request: &Request, result: &mut Catalogue, hidden: u64, i: u64, count: u64) -> bool requires i < 51u64 {
         let id: u64 = request.ids[i];
         transition id != hidden && id != request.background {
             true -> add(request, result, hidden, i, count, id)
             _ -> scan(request, result, hidden, i + 1u64, count)
         }
     }
-    state add(request: &Request, result: &mut Catalogue, hidden: u64, i: u64, count: u64, id: u64) -> bool {
+    machine add(request: &Request, result: &mut Catalogue, hidden: u64, i: u64, count: u64, id: u64) -> bool {
         transition count < 6u64 && i < 51u64 {
             true -> put(request, result, hidden, i, count, id)
             _ -> (false)
         }
     }
-    state put(request: &Request, result: &mut Catalogue, hidden: u64, i: u64, count: u64, id: u64) -> bool requires count < 6u64 && i < 51u64 {
+    machine put(request: &Request, result: &mut Catalogue, hidden: u64, i: u64, count: u64, id: u64) -> bool requires count < 6u64 && i < 51u64 {
         result.ids[count] = id;
         result.count = count + 1u64;
         transition {

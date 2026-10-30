@@ -5,42 +5,42 @@ use record;
 // On false the output is unspecified and must not be used for admission.
 public machine decode(bytes: &[u8; 168], length: u64, output: &mut Declaration) -> bool {
     transition header(bytes, length, output) { true -> records(bytes, output) _ -> (false) }
-    state records(bytes: &[u8; 168], output: &mut Declaration) -> bool {
+    machine records(bytes: &[u8; 168], output: &mut Declaration) -> bool {
         transition entries(bytes, output) { true -> padding(bytes, output.count) _ -> (false) }
     }
 }
 public machine bind(entries: &[Import; 4], count: u64, offered: u64) -> Binding {
     transition count <= 4u64 && (offered & ~SUPPORTED) == 0u64 { true -> next(entries, count, offered, 0u64, 0u64) _ -> failed(MALFORMED, 0u64) }
-    state next(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64) -> Binding requires count <= 4u64 {
+    machine next(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64) -> Binding requires count <= 4u64 {
         transition i < count { true -> inspect(entries, count, offered, i, mask) _ -> (Binding { status: 0u64, mask: mask, contract: 0u64 }) }
     }
-    state inspect(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64) -> Binding requires count <= 4u64 && i < count {
+    machine inspect(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64) -> Binding requires count <= 4u64 && i < count {
         let item: Import = entries[i];
         transition item.contract != 0u64 && item.minimum != 0u64 && item.minimum <= item.maximum {
             true -> duplicates(entries, count, offered, i, mask, item, 0u64) _ -> failed(MALFORMED, 0u64)
         }
     }
-    state duplicates(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: Import, prior: u64) -> Binding requires count <= 4u64 && i < count {
+    machine duplicates(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: Import, prior: u64) -> Binding requires count <= 4u64 && i < count {
         transition prior < i { true -> compare(entries, count, offered, i, mask, item, prior) _ -> known(entries, count, offered, i, mask, item) }
     }
-    state compare(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: Import, prior: u64) -> Binding requires count <= 4u64 && i < count && prior < i {
+    machine compare(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: Import, prior: u64) -> Binding requires count <= 4u64 && i < count && prior < i {
         transition entries[prior].contract == item.contract { true -> failed(MALFORMED, 0u64) _ -> duplicates(entries, count, offered, i, mask, item, prior + 1u64) }
     }
-    state known(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: Import) -> Binding requires count <= 4u64 && i < count {
+    machine known(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: Import) -> Binding requires count <= 4u64 && i < count {
         transition item.contract == INTERACTION || item.contract == STORAGE || item.contract == INPUT_PRODUCER || item.contract == CAPTURE {
             true -> offered(entries, count, offered, i, mask, item) _ -> absent(entries, count, offered, i, mask, item)
         }
     }
-    state offered(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: Import) -> Binding requires count <= 4u64 && i < count {
+    machine offered(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: Import) -> Binding requires count <= 4u64 && i < count {
         transition (offered & item.contract) != 0u64 { true -> version(entries, count, offered, i, mask, item) _ -> absent(entries, count, offered, i, mask, item) }
     }
-    state absent(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: Import) -> Binding requires count <= 4u64 && i < count {
+    machine absent(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: Import) -> Binding requires count <= 4u64 && i < count {
         transition item.required { true -> failed(MISSING, item.contract) _ -> next(entries, count, offered, i + 1u64, mask) }
     }
-    state version(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: Import) -> Binding requires count <= 4u64 && i < count {
+    machine version(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: Import) -> Binding requires count <= 4u64 && i < count {
         transition item.minimum == 1u64 { true -> next(entries, count, offered, i + 1u64, mask | item.contract) _ -> incompatible(entries, count, offered, i, mask, item) }
     }
-    state incompatible(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: Import) -> Binding requires count <= 4u64 && i < count {
+    machine incompatible(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: Import) -> Binding requires count <= 4u64 && i < count {
         transition item.required { true -> failed(VERSION, item.contract) _ -> next(entries, count, offered, i + 1u64, mask) }
     }
 }

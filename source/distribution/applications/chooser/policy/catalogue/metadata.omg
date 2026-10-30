@@ -37,13 +37,13 @@ public machine classify(metadata: &[u64; 64], result: &mut Classification) {
     transition {
         _ -> label(metadata, result, 0u64)
     }
-    state label(metadata: &[u64; 64], result: &mut Classification, i: u64) {
+    machine label(metadata: &[u64; 64], result: &mut Classification, i: u64) {
         transition i < 13u64 {
             true -> character(metadata, result, i)
             _ -> done()
         }
     }
-    state character(metadata: &[u64; 64], result: &mut Classification, i: u64) requires i < 13u64 {
+    machine character(metadata: &[u64; 64], result: &mut Classification, i: u64) requires i < 13u64 {
         let byte: u64 = metadata[i];
         result.label[i] = upper(byte);
         transition {
@@ -59,7 +59,7 @@ machine upper(byte: u64) -> u64 {
         true -> letter(byte)
         _ -> (byte)
     }
-    state letter(byte: u64) -> u64 requires byte >= 97u64 {
+    machine letter(byte: u64) -> u64 requires byte >= 97u64 {
         byte - 32u64
     }
 }
@@ -69,14 +69,14 @@ machine executable(metadata: &[u64; 64]) -> bool {
     transition {
         _ -> scan(metadata, &expected, 0u64)
     }
-    state scan(metadata: &[u64; 64], expected: &[u64; 23], i: u64) -> bool {
+    machine scan(metadata: &[u64; 64], expected: &[u64; 23], i: u64) -> bool {
         transition i < 23u64 {
             true -> compare(metadata, expected, i)
             _ -> (metadata[55] == 101u64
         && metadata[56] == 0u64)
         }
     }
-    state compare(metadata: &[u64; 64], expected: &[u64; 23], i: u64) -> bool requires i < 23u64 {
+    machine compare(metadata: &[u64; 64], expected: &[u64; 23], i: u64) -> bool requires i < 23u64 {
         transition metadata[32u64 + i] == expected[i] {
             true -> scan(metadata, expected, i + 1u64)
             _ -> (false)

@@ -1,21 +1,10 @@
-// Acquire supplied services -> list this realm -> receive -> act -> present.
-use state;
-use session::session;
-public boundary trait ChooserApp {
-    machine step(s: &mut State, p: &mut [u64; 4096]) -> u64 reaches;
-}
-public ChooserAppProvider satisfies ChooserApp {
-    machine step(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        transition p[15] {
-            1u64 -> (size_of<State>())
-            2u64 -> (align_of<State>())
-            3u64 -> (1u64)
-            _ -> session(s, p)
-        }
-    }
-}
-public machine component_entry() reaches ChooserApp invokes ChooserApp; {
-    let mut s: State;
-    let mut p: [u64; 4096];
-    let result: u64 = ChooserApp::step(&mut s, &mut p);
+module main;
+// The process completes the last command, then this entry chooses the next.
+// Typed continuations and bounded data are shared with both real and test hosts.
+use state::State;
+use operations::Command;
+use operations::Exchange;
+use session::session::session;
+public machine advance(s: &mut State, exchange: &mut Exchange) -> Command {
+    session(s, exchange)
 }

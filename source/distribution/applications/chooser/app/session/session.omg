@@ -1,119 +1,143 @@
-// Startup -> refresh scoped observations -> poll -> dispatch -> present -> wait.
-use host::main;
+module session::session;
 use protocol::main;
+use rendering::images::staged;
+// Startup -> refresh scoped observations -> poll -> dispatch -> present -> wait.
+use operations::Command;
+use operations::Exchange;
+use operations::message;
 use decisions::outcomes;
-use state;
-use transport;
-use catalogue::catalogue;
-use session::input;
-use session::actions;
-use settings::settings;
-use settings::persistence;
-use management;
-use rendering::rendering;
+use state::State;
+use state::Phase;
+use transport::interaction;
+use transport::status;
+use transport::add;
+use catalogue::catalogue::reload;
+use catalogue::catalogue::bound;
+use catalogue::catalogue::listed;
+use session::input::input;
+use session::actions::copy_head;
+use session::actions::copied;
+use session::actions::launched;
+use session::actions::retried;
+use session::actions::closed;
+use session::actions::selected_reply;
+use settings::settings::settings_dirty;
+use settings::persistence::setting_bound;
+use settings::persistence::looked;
+use settings::persistence::head;
+use settings::persistence::read_reply;
+use settings::persistence::saved_reply;
+use settings::persistence::applied;
+use management::terminated;
+use rendering::rendering::render;
+use rendering::rendering::surface_reply;
+use rendering::rendering::painted;
+use rendering::rendering::image_reply;
+use rendering::rendering::rechecked;
+use rendering::rendering::geometry;
 
-public machine session(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+public machine session(s: &mut State, p: &mut Exchange) -> Command {
     transition s.phase {
-        START -> start(s, p)
-        INTERACTION_READY -> acquire_storage(s, p)
-        STORAGE_READY -> storage_ready(s, p)
-        BOUND -> bound(s, p)
-        LISTED -> listed(s, p)
-        COPY_HEAD -> copy_head(s, p)
-        COPIED -> copied(s, p)
-        CLOCKED -> clocked(s, p)
-        TASKED -> tasked(s, p)
-        MANAGED -> managed(s, p)
-        AVAIL -> availability(s, p)
-        OBSERVED -> observed(s, p)
-        POLLED -> polled(s, p)
-        SELECTED -> selected_reply(s, p)
-        CLOSED -> closed(s, p)
-        LAUNCHED -> launched(s, p)
-        RETRIED -> retried(s, p)
-        WAITED -> awakened(s, p)
-        CONTROLLED -> cycle(s, p)
-        SETTING_BOUND -> setting_bound(s, p)
-        LOOKED -> looked(s, p)
-        HEAD -> head(s, p)
-        READ -> read_reply(s, p)
-        SAVED -> saved_reply(s, p)
-        APPLIED -> applied(s, p)
-        TERMINATED -> terminated(s, p)
-        SURFACE -> surface_reply(s, p)
-        PAINTED -> painted(s, p)
-        STAGED -> staged(s, p)
-        IMAGE -> image_reply(s, p)
-        RECHECK -> rechecked(s, p)
-        _ -> (EXIT)
+        Phase::Start -> start(s, p)
+        Phase::InteractionReady -> acquire_storage(s, p)
+        Phase::StorageReady -> storage_ready(s, p)
+        Phase::Bound -> bound(s, p)
+        Phase::Listed -> listed(s, p)
+        Phase::CopyHead -> copy_head(s, p)
+        Phase::Copied -> copied(s, p)
+        Phase::Clocked -> clocked(s, p)
+        Phase::Tasked -> tasked(s, p)
+        Phase::Managed -> managed(s, p)
+        Phase::Avail -> availability(s, p)
+        Phase::Observed -> observed(s, p)
+        Phase::Polled -> polled(s, p)
+        Phase::Selected -> selected_reply(s, p)
+        Phase::Closed -> closed(s, p)
+        Phase::Launched -> launched(s, p)
+        Phase::Retried -> retried(s, p)
+        Phase::Waited -> awakened(s, p)
+        Phase::Controlled -> cycle(s, p)
+        Phase::SettingBound -> setting_bound(s, p)
+        Phase::Looked -> looked(s, p)
+        Phase::Head -> head(s, p)
+        Phase::Read -> read_reply(s, p)
+        Phase::Saved -> saved_reply(s, p)
+        Phase::Applied -> applied(s, p)
+        Phase::Terminated -> terminated(s, p)
+        Phase::Surface -> surface_reply(s, p)
+        Phase::Painted -> painted(s, p)
+        Phase::Staged -> staged(s, p)
+        Phase::Image -> image_reply(s, p)
+        Phase::Recheck -> rechecked(s, p)
+        _ -> (Command::Exit)
     }
 }
-machine start(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-    let role: u64 = p[12] & 255u64;
-    s.picker = role == 1u64 || role == 2u64; s.own = p[12] >> 8u64;
+machine start(s: &mut State, p: &mut Exchange) -> Command {
+    let role: u64 = p.argument & 255u64;
+    s.picker = role == 1u64 || role == 2u64; s.own = p.argument >> 8u64;
     s.notice = initial_notice(role); s.selected = 1u64; s.dirty = true; s.force_refresh = true;
-    s.phase = INTERACTION_READY; p[0] = 1u64; p[1] = 1u64; INTERACTION
+    s.phase = Phase::InteractionReady; p.frame[0] = 1u64; p.frame[1] = 1u64; Command::AcquireInteraction
 }
-machine acquire_storage(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-    transition p[9] != 0u64 { true -> (EXIT) _ -> request(s, p) }
-    state request(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.phase = STORAGE_READY; p[0] = 1u64; p[1] = 1u64; STORAGE }
+machine acquire_storage(s: &mut State, p: &mut Exchange) -> Command {
+    transition p.transport_status != 0u64 { true -> (Command::Exit) _ -> request(s, p) }
+    machine request(s: &mut State, p: &mut Exchange) -> Command { s.phase = Phase::StorageReady; p.frame[0] = 1u64; p.frame[1] = 1u64; Command::AcquireStorage }
 }
-machine storage_ready(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition p[9] != 0u64 { true -> (EXIT) _ -> reload(s, p) } }
-public machine cycle(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.phase = CLOCKED; CLOCK }
-machine clocked(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-    transition p[9] != 0u64 { true -> (EXIT) _ -> route(s, p) }
-    state route(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+machine storage_ready(s: &mut State, p: &mut Exchange) -> Command { transition p.transport_status != 0u64 { true -> (Command::Exit) _ -> reload(s, p) } }
+public machine cycle(s: &mut State, p: &mut Exchange) -> Command { s.phase = Phase::Clocked; Command::Clock }
+machine clocked(s: &mut State, p: &mut Exchange) -> Command {
+    transition p.transport_status != 0u64 { true -> (Command::Exit) _ -> route(s, p) }
+    machine route(s: &mut State, p: &mut Exchange) -> Command {
         transition s.picker { true -> observe(s, p) _ -> refresh(s, p) }
     }
-    state refresh(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        transition s.force_refresh || p[0] >= s.next_refresh { true -> tasks(s, p) _ -> management(s, p) }
+    machine refresh(s: &mut State, p: &mut Exchange) -> Command {
+        transition s.force_refresh || p.frame[0] >= s.next_refresh { true -> tasks(s, p) _ -> management(s, p) }
     }
-    state tasks(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        s.force_refresh = false; s.next_refresh = add(p[0], 10u64); s.task_index = 0u64;
-        interaction(s, p, TASKED, 23u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64)
+    machine tasks(s: &mut State, p: &mut Exchange) -> Command {
+        s.force_refresh = false; s.next_refresh = add(p.frame[0], 10u64); s.task_index = 0u64;
+        interaction(s, p, Phase::Tasked, 23u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64)
     }
 }
-machine tasked(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-    transition p[9] != 0u64 || s.task_index >= 3u64 { true -> (EXIT) _ -> compare(s, p, 0u64) }
-    state compare(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 {
+machine tasked(s: &mut State, p: &mut Exchange) -> Command {
+    transition p.transport_status != 0u64 || s.task_index >= 3u64 { true -> (Command::Exit) _ -> compare(s, p, 0u64) }
+    machine compare(s: &mut State, p: &mut Exchange, i: u64) -> Command {
         transition i < 8u64 && s.task_index < 3u64 { true -> word(s, p, i) _ -> next(s, p) }
     }
-    state word(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 requires i < 8u64 && s.task_index < 3u64 {
-        s.dirty = s.dirty || s.tasks[s.task_index][i] != p[i]; s.tasks[s.task_index][i] = p[i];
+    machine word(s: &mut State, p: &mut Exchange, i: u64) -> Command requires i < 8u64 && s.task_index < 3u64 {
+        s.dirty = s.dirty || s.tasks[s.task_index][i] != p.frame[i]; s.tasks[s.task_index][i] = p.frame[i];
         transition { _ -> compare(s, p, i + 1u64) }
     }
-    state next(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    machine next(s: &mut State, p: &mut Exchange) -> Command {
         s.task_index = add(s.task_index, 1u64);
         transition s.task_index < 3u64 { true -> request(s, p) _ -> management(s, p) }
     }
-    state request(s: &mut State, p: &mut [u64; 4096]) -> u64 { let i: u64 = s.task_index; interaction(s, p, TASKED, 23u64, i, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64) }
+    machine request(s: &mut State, p: &mut Exchange) -> Command { let i: u64 = s.task_index; interaction(s, p, Phase::Tasked, 23u64, i, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64) }
 }
-machine management(s: &mut State, p: &mut [u64; 4096]) -> u64 { interaction(s, p, MANAGED, 18u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64) }
-machine managed(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-    transition p[9] != 0u64 { true -> (EXIT) _ -> result(s, p) }
-    state result(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+machine management(s: &mut State, p: &mut Exchange) -> Command { interaction(s, p, Phase::Managed, 18u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64) }
+machine managed(s: &mut State, p: &mut Exchange) -> Command {
+    transition p.transport_status != 0u64 { true -> (Command::Exit) _ -> result(s, p) }
+    machine result(s: &mut State, p: &mut Exchange) -> Command {
         let current: u64 = ticket(p);
         transition current != s.managed { true -> changed(s, p, current) _ -> saves(s, p) }
     }
-    state changed(s: &mut State, p: &mut [u64; 4096], current: u64) -> u64 { s.managed = current; s.confirming = 0u64; s.dirty = true; transition { _ -> saves(s, p) } }
-    state saves(s: &mut State, p: &mut [u64; 4096]) -> u64 { interaction(s, p, AVAIL, 21u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64) }
+    machine changed(s: &mut State, p: &mut Exchange, current: u64) -> Command { s.managed = current; s.confirming = 0u64; s.dirty = true; transition { _ -> saves(s, p) } }
+    machine saves(s: &mut State, p: &mut Exchange) -> Command { interaction(s, p, Phase::Avail, 21u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64) }
 }
-machine ticket(p: &[u64; 4096]) -> u64 { transition p[0] == 0u64 { true -> (p[1]) _ -> (0u64) } }
-machine availability(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-    transition p[9] != 0u64 { true -> (EXIT) _ -> result(s, p) }
-    state result(s: &mut State, p: &mut [u64; 4096]) -> u64 { let next: u64 = ticket(p); s.dirty = s.dirty || s.saves != next; s.saves = next; observe(s, p) }
+machine ticket(p: &Exchange) -> u64 { transition p.frame[0] == 0u64 { true -> (p.frame[1]) _ -> (0u64) } }
+machine availability(s: &mut State, p: &mut Exchange) -> Command {
+    transition p.transport_status != 0u64 { true -> (Command::Exit) _ -> result(s, p) }
+    machine result(s: &mut State, p: &mut Exchange) -> Command { let next: u64 = ticket(p); s.dirty = s.dirty || s.saves != next; s.saves = next; observe(s, p) }
 }
-machine observe(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+machine observe(s: &mut State, p: &mut Exchange) -> Command {
     transition s.launched != 0u64 { true -> request(s, p) _ -> poll(s, p) }
-    state request(s: &mut State, p: &mut [u64; 4096]) -> u64 { let receipt: u64 = s.launched; interaction(s, p, OBSERVED, 17u64, receipt, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64) }
+    machine request(s: &mut State, p: &mut Exchange) -> Command { let receipt: u64 = s.launched; interaction(s, p, Phase::Observed, 17u64, receipt, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64) }
 }
-machine observed(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-    let result: decisions::outcomes::Observation = decisions::outcomes::observation(status(p), p[1]);
+machine observed(s: &mut State, p: &mut Exchange) -> Command {
+    let result: decisions::outcomes::Observation = decisions::outcomes::observation(status(p), p.frame[1]);
     transition result.running {
         true -> poll(s, p)
         _ -> stopped(s, p, result.notice)
     }
-    state stopped(s: &mut State, p: &mut [u64; 4096], notice: decisions::outcomes::Notice) -> u64 {
+    machine stopped(s: &mut State, p: &mut Exchange, notice: decisions::outcomes::Notice) -> Command {
         s.launched = 0u64;
         s.notice = notice;
         s.dirty = true;
@@ -128,33 +152,36 @@ machine initial_notice(role: u64) -> decisions::outcomes::Notice {
     }
 }
 
-public machine poll(s: &mut State, p: &mut [u64; 4096]) -> u64 { interaction(s, p, POLLED, MATRIX_POLL, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64) }
-machine polled(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-    transition p[9] != 0u64 { true -> (EXIT) _ -> view(s, p) }
-    state view(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        s.more = p[5] & MORE != 0u64;
-        transition p[0] == 0u64 { true -> geometry(s, p) _ -> hidden(s, p) }
+public machine poll(s: &mut State, p: &mut Exchange) -> Command { interaction(s, p, Phase::Polled, MATRIX_POLL, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64) }
+machine polled(s: &mut State, p: &mut Exchange) -> Command {
+    transition p.transport_status != 0u64 { true -> (Command::Exit) _ -> view(s, p) }
+    machine view(s: &mut State, p: &mut Exchange) -> Command {
+        s.more = p.frame[5] & MORE != 0u64;
+        transition p.frame[0] == 0u64 { true -> geometry(s, p) _ -> hidden(s, p) }
     }
-    state hidden(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.scene = false; finish(s, p) }
-    state geometry(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        transition s.epoch != p[1] { true -> changed(s, p) _ -> snapshot(s, p, 0u64) }
+    machine hidden(s: &mut State, p: &mut Exchange) -> Command { s.scene = false; finish(s, p) }
+    machine geometry(s: &mut State, p: &mut Exchange) -> Command {
+        transition s.epoch != p.frame[1] { true -> changed(s, p) _ -> snapshot(s, p, 0u64) }
     }
-    state changed(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.epoch = p[1]; s.width = p[2]; s.height = p[3]; s.scene = false; s.dirty = true; transition { _ -> snapshot(s, p, 0u64) } }
-    state snapshot(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 { transition i < 8u64 { true -> word(s, p, i) _ -> input(s, p) } }
-    state word(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 requires i < 8u64 { s.snapshot[i] = p[i]; transition { _ -> snapshot(s, p, i + 1u64) } }
+    machine changed(s: &mut State, p: &mut Exchange) -> Command { s.epoch = p.frame[1]; s.width = p.frame[2]; s.height = p.frame[3]; s.scene = false; s.dirty = true; transition { _ -> snapshot(s, p, 0u64) } }
+    machine snapshot(s: &mut State, p: &mut Exchange, i: u64) -> Command { transition i < 8u64 { true -> word(s, p, i) _ -> input(s, p) } }
+    machine word(s: &mut State, p: &mut Exchange, i: u64) -> Command requires i < 8u64 { s.snapshot[i] = p.frame[i]; transition { _ -> snapshot(s, p, i + 1u64) } }
 }
-public machine after_input(s: &mut State, p: &mut [u64; 4096]) -> u64 { render(s, p) }
-public machine finish(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+public machine after_input(s: &mut State, p: &mut Exchange) -> Command { render(s, p) }
+public machine finish(s: &mut State, p: &mut Exchange) -> Command {
     transition s.more { true -> cycle(s, p) _ -> wait(s, p) }
     // Task collection can finish after its last surface notification. Refresh
     // observations even when there is no further input or presentation wake.
-    state wait(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.phase = WAITED; p[13] = 100u64; WAIT }
+    machine wait(s: &mut State, p: &mut Exchange) -> Command { s.phase = Phase::Waited; p.refresh_ticks = 100u64; Command::Wait }
 }
-machine awakened(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-    transition p[9] { 0u64 -> cycle(s, p) 1u64 -> control(s, p) _ -> (EXIT) }
-    state control(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        transition p[0] { 105u64 -> reply(s, p, 0u64, 0u64) LOSS -> loss(s, p) _ -> reply(s, p, DENIED, 0u64) }
+machine awakened(s: &mut State, p: &mut Exchange) -> Command {
+    transition p.transport_status != 0u64 { true -> (Command::Exit) _ -> delivered(s, p) }
+    machine delivered(s: &mut State, p: &mut Exchange) -> Command {
+        transition p.owner_request { true -> control(s, p) _ -> cycle(s, p) }
     }
-    state loss(s: &mut State, p: &mut [u64; 4096]) -> u64 { let dirty: bool = s.editing && settings_dirty(s); transition { _ -> reply(s, p, 0u64, dirty as u64) } }
-    state reply(s: &mut State, p: &mut [u64; 4096], code: u64, dirty: u64) -> u64 { s.phase = CONTROLLED; message(p, code, dirty, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64); CONTROL }
+    machine control(s: &mut State, p: &mut Exchange) -> Command {
+        transition p.frame[0] { 105u64 -> reply(s, p, 0u64, 0u64) LOSS -> loss(s, p) _ -> reply(s, p, DENIED, 0u64) }
+    }
+    machine loss(s: &mut State, p: &mut Exchange) -> Command { let dirty: bool = s.editing && settings_dirty(s); transition { _ -> reply(s, p, 0u64, dirty as u64) } }
+    machine reply(s: &mut State, p: &mut Exchange, code: u64, dirty: u64) -> Command { s.phase = Phase::Controlled; message(p, code, dirty, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64); Command::Control }
 }

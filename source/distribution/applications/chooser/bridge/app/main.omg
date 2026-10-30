@@ -1,5 +1,7 @@
-use app::main;
-use app::state;
+use component::main::ChooserApp;
+use app::state::State;
 machine main() reaches ChooserApp {
-    let mut s: State; let mut p: [u64; 4096]; let result: u64 = ChooserApp::step(&mut s, &mut p);
+    let mut s: State;
+    let mut p: [u64; 4096];
+    let result: u64 = ChooserApp::step(&mut s, &mut p);
 }

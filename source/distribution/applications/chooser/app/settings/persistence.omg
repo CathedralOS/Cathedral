@@ -1,84 +1,92 @@
+module settings::persistence;
+use protocol::main;
 use decisions::outcomes;
 // Resolve -> pinned inline reads -> compare -> publish -> apply. A lost reply
 // stays uncertain until readback; an intervening edit is never overwritten.
-use host::main;
-use protocol::main;
-use state;
-use transport;
-use session::session;
-use settings::settings;
+use operations::Command;
+use operations::Exchange;
+use state::State;
+use state::Phase;
+use transport::interaction;
+use transport::storage;
+use transport::failed;
+use transport::byte;
+use transport::put;
+use transport::add;
+use session::session::cycle;
+use settings::settings::settings_dirty;
 use matrix_service::children::configuration::encoding;
-public machine load_settings(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.phase = SETTING_BOUND; BIND }
-public machine setting_bound(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+public machine load_settings(s: &mut State, p: &mut Exchange) -> Command { s.phase = Phase::SettingBound; Command::BindStorage }
+public machine setting_bound(s: &mut State, p: &mut Exchange) -> Command {
     transition failed(p) { true -> load_error(s, p) _ -> lookup(s, p) }
-    state lookup(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        s.realm = p[1]; let realm: u64 = s.realm; let op: u64 = storage(s, p, LOOKED, 16u64, realm, 0u64, 0u64, 6u64);
-        p[16] = 132394287128909u64; p[8] = 6u64; op
+    machine lookup(s: &mut State, p: &mut Exchange) -> Command {
+        s.realm = p.frame[1]; let realm: u64 = s.realm; let op: Command = storage(s, p, Phase::Looked, 16u64, realm, 0u64, 0u64, 6u64);
+        p.payload[0] = 132394287128909u64; p.payload_bytes = 6u64; op
     }
 }
-public machine looked(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+public machine looked(s: &mut State, p: &mut Exchange) -> Command {
     transition failed(p) { true -> load_error(s, p) _ -> head_request(s, p) }
-    state head_request(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.reading_object = p[1]; let object: u64 = s.reading_object; storage(s, p, HEAD, STORE_HEAD, object, 0u64, 0u64, 0u64) }
+    machine head_request(s: &mut State, p: &mut Exchange) -> Command { s.reading_object = p.frame[1]; let object: u64 = s.reading_object; storage(s, p, Phase::Head, STORE_HEAD, object, 0u64, 0u64, 0u64) }
 }
-public machine head(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-    transition failed(p) || p[3] != 104u64 { true -> load_error(s, p) _ -> begin(s, p) }
-    state begin(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.reading_revision = p[2]; s.read_at = 0u64; read_request(s, p) }
+public machine head(s: &mut State, p: &mut Exchange) -> Command {
+    transition failed(p) || p.frame[3] != 104u64 { true -> load_error(s, p) _ -> begin(s, p) }
+    machine begin(s: &mut State, p: &mut Exchange) -> Command { s.reading_revision = p.frame[2]; s.read_at = 0u64; read_request(s, p) }
 }
-machine read_request(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+machine read_request(s: &mut State, p: &mut Exchange) -> Command {
     let object: u64 = s.reading_object; let revision: u64 = s.reading_revision; let at: u64 = s.read_at; let length: u64 = read_length(at);
-    storage(s, p, READ, STORE_READ, object, revision, at, length)
+    storage(s, p, Phase::Read, STORE_READ, object, revision, at, length)
 }
 machine read_length(at: u64) -> u64 { transition at == 96u64 { true -> (8u64) _ -> (32u64) } }
-public machine read_reply(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-    transition failed(p) || p[2] != s.reading_revision || p[3] != 104u64 { true -> load_error(s, p) _ -> copy(s, p, 0u64) }
-    state copy(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 { transition i < read_length(s.read_at) && i < 32u64 && s.read_at < 104u64 { true -> byte(s, p, i) _ -> next(s, p) } }
-    state byte(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 requires i < 32u64 {
+public machine read_reply(s: &mut State, p: &mut Exchange) -> Command {
+    transition failed(p) || p.frame[2] != s.reading_revision || p.frame[3] != 104u64 { true -> load_error(s, p) _ -> copy(s, p, 0u64) }
+    machine copy(s: &mut State, p: &mut Exchange, i: u64) -> Command { transition i < read_length(s.read_at) && i < 32u64 && s.read_at < 104u64 { true -> byte(s, p, i) _ -> next(s, p) } }
+    machine byte(s: &mut State, p: &mut Exchange, i: u64) -> Command requires i < 32u64 {
         let at: u64 = add(s.read_at, i); transition at < 104u64 { true -> put(s, p, i, at) _ -> load_error(s, p) }
     }
-    state put(s: &mut State, p: &mut [u64; 4096], i: u64, at: u64) -> u64 requires i < 32u64 && at < 104u64 {
-        s.reading[at] = ((p[4u64 + i / 8u64] >> ((i % 8u64) * 8u64)) & 255u64) as u8;
+    machine put(s: &mut State, p: &mut Exchange, i: u64, at: u64) -> Command requires i < 32u64 && at < 104u64 {
+        s.reading[at] = ((p.frame[4u64 + i / 8u64] >> ((i % 8u64) * 8u64)) & 255u64) as u8;
         transition { _ -> copy(s, p, i + 1u64) }
     }
-    state next(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.read_at = add(s.read_at, read_length(s.read_at)); transition s.read_at < 104u64 { true -> read_request(s, p) _ -> validate(s, p) } }
-    state validate(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition matrix_service::children::configuration::encoding::normalize(&mut s.reading) { true -> loaded(s, p) _ -> load_error(s, p) } }
+    machine next(s: &mut State, p: &mut Exchange) -> Command { s.read_at = add(s.read_at, read_length(s.read_at)); transition s.read_at < 104u64 { true -> read_request(s, p) _ -> validate(s, p) } }
+    machine validate(s: &mut State, p: &mut Exchange) -> Command { transition matrix_service::children::configuration::encoding::normalize(&mut s.reading) { true -> loaded(s, p) _ -> load_error(s, p) } }
 }
-machine loaded(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+machine loaded(s: &mut State, p: &mut Exchange) -> Command {
     transition s.reconciling { true -> reconcile(s, p) _ -> opened(s, p) }
-    state opened(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    machine opened(s: &mut State, p: &mut Exchange) -> Command {
         s.config_object = s.reading_object; s.config_revision = s.reading_revision; s.saved = s.reading; s.draft = s.reading;
         s.editing = true; s.uncertain = false; s.setting_selected = 0u64; s.setting_status = 0u64; s.notice = decisions::outcomes::Notice::None; s.dirty = true; cycle(s, p)
     }
-    state reconcile(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition s.config_object != s.reading_object { true -> conflict(s, p) _ -> desired(s, p) } }
-    state desired(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition matrix_service::children::configuration::encoding::equal(&s.reading, &s.draft) { true -> confirmed(s, p) _ -> baseline(s, p) } }
-    state confirmed(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.saved = s.reading; s.config_revision = s.reading_revision; s.uncertain = false; apply_settings(s, p) }
-    state baseline(s: &mut State, p: &mut [u64; 4096]) -> u64 { transition s.reading_revision != s.config_revision || !matrix_service::children::configuration::encoding::equal(&s.reading, &s.saved) { true -> conflict(s, p) _ -> publish(s, p) } }
-    state publish(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    machine reconcile(s: &mut State, p: &mut Exchange) -> Command { transition s.config_object != s.reading_object { true -> conflict(s, p) _ -> desired(s, p) } }
+    machine desired(s: &mut State, p: &mut Exchange) -> Command { transition matrix_service::children::configuration::encoding::equal(&s.reading, &s.draft) { true -> confirmed(s, p) _ -> baseline(s, p) } }
+    machine confirmed(s: &mut State, p: &mut Exchange) -> Command { s.saved = s.reading; s.config_revision = s.reading_revision; s.uncertain = false; apply_settings(s, p) }
+    machine baseline(s: &mut State, p: &mut Exchange) -> Command { transition s.reading_revision != s.config_revision || !matrix_service::children::configuration::encoding::equal(&s.reading, &s.saved) { true -> conflict(s, p) _ -> publish(s, p) } }
+    machine publish(s: &mut State, p: &mut Exchange) -> Command {
         s.uncertain = true; let object: u64 = s.config_object; let revision: u64 = s.config_revision;
-        let op: u64 = storage(s, p, SAVED, STORE_PUBLISH, object, revision, 0u64, 104u64);
+        let op: Command = storage(s, p, Phase::Saved, STORE_PUBLISH, object, revision, 0u64, 104u64);
         transition { _ -> bytes(s, p, 0u64) }
     }
-    state bytes(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 { transition i < 104u64 { true -> byte(s, p, i) _ -> send(s, p) } }
-    state byte(s: &mut State, p: &mut [u64; 4096], i: u64) -> u64 requires i < 104u64 { put(p, i, s.draft[i] as u64); transition { _ -> bytes(s, p, i + 1u64) } }
-    state send(s: &mut State, p: &mut [u64; 4096]) -> u64 { p[8] = 104u64; STORE }
-    state conflict(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.setting_status = 18u64; s.dirty = true; cycle(s, p) }
+    machine bytes(s: &mut State, p: &mut Exchange, i: u64) -> Command { transition i < 104u64 { true -> byte(s, p, i) _ -> send(s, p) } }
+    machine byte(s: &mut State, p: &mut Exchange, i: u64) -> Command requires i < 104u64 { put(p, i, s.draft[i] as u64); transition { _ -> bytes(s, p, i + 1u64) } }
+    machine send(s: &mut State, p: &mut Exchange) -> Command { p.payload_bytes = 104u64; Command::Storage }
+    machine conflict(s: &mut State, p: &mut Exchange) -> Command { s.setting_status = 18u64; s.dirty = true; cycle(s, p) }
 }
-public machine save_settings(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+public machine save_settings(s: &mut State, p: &mut Exchange) -> Command {
     transition settings_dirty(s) { true -> reconcile(s, p) _ -> apply_settings(s, p) }
-    state reconcile(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.reconciling = true; load_settings(s, p) }
+    machine reconcile(s: &mut State, p: &mut Exchange) -> Command { s.reconciling = true; load_settings(s, p) }
 }
-public machine saved_reply(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+public machine saved_reply(s: &mut State, p: &mut Exchange) -> Command {
     transition failed(p) { true -> load_error(s, p) _ -> confirmed(s, p) }
-    state confirmed(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.config_revision = p[2]; s.saved = s.draft; s.uncertain = false; apply_settings(s, p) }
+    machine confirmed(s: &mut State, p: &mut Exchange) -> Command { s.config_revision = p.frame[2]; s.saved = s.draft; s.uncertain = false; apply_settings(s, p) }
 }
-machine apply_settings(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+machine apply_settings(s: &mut State, p: &mut Exchange) -> Command {
     let epoch: u64 = s.epoch; let margin: u64 = matrix_service::children::configuration::encoding::word(&s.draft, 64u64); let height: u64 = matrix_service::children::configuration::encoding::word(&s.draft, 72u64); let gap: u64 = matrix_service::children::configuration::encoding::word(&s.draft, 80u64);
-    interaction(s, p, APPLIED, 16u64, epoch, margin, height, gap, 0u64, 0u64, 0u64)
+    interaction(s, p, Phase::Applied, 16u64, epoch, margin, height, gap, 0u64, 0u64, 0u64)
 }
-public machine applied(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+public machine applied(s: &mut State, p: &mut Exchange) -> Command {
     s.setting_status = 16u64 + failed(p) as u64; s.dirty = true; cycle(s, p)
 }
-machine load_error(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+machine load_error(s: &mut State, p: &mut Exchange) -> Command {
     s.dirty = true; transition s.reconciling { true -> save_failed(s, p) _ -> open_failed(s, p) }
-    state save_failed(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.setting_status = 19u64; cycle(s, p) }
-    state open_failed(s: &mut State, p: &mut [u64; 4096]) -> u64 { s.notice = decisions::outcomes::Notice::Unavailable; cycle(s, p) }
+    machine save_failed(s: &mut State, p: &mut Exchange) -> Command { s.setting_status = 19u64; cycle(s, p) }
+    machine open_failed(s: &mut State, p: &mut Exchange) -> Command { s.notice = decisions::outcomes::Notice::Unavailable; cycle(s, p) }
 }

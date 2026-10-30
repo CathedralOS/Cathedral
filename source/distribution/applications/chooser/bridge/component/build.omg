@@ -1,0 +1,6 @@
+machine build(builder: &mut Build) {
+    Build::package(builder, "cathedral_chooser_session_bridge");
+    Build::depend_as(builder, "app", Source::Path { location: "../../app" });
+    Build::select_provider<ChooserApp, ChooserAppProvider>(builder);
+    Build::bind(builder, linux_x86_64::ProgramEntry, component_entry);
+}

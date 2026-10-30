@@ -1,42 +1,44 @@
-use state;
-use transport;
-use rendering::font;
+module rendering::text;
+use state::State;
+use transport::byte;
+use transport::subtract;
+use rendering::font::glyph;
+use rendering::font::label_length;
+use rendering::font::label;
 public machine letter(ch: u64, x: u64, y: u64) -> bool {
     transition x < 5u64 && y < 7u64 { true -> bit(ch, x, y) _ -> (false) }
-    state bit(ch: u64, x: u64, y: u64) -> bool requires x < 5u64 && y < 7u64 { ((glyph(ch) >> (y * 8u64)) & (1u64 << (4u64 - x))) != 0u64 }
+    machine bit(ch: u64, x: u64, y: u64) -> bool requires x < 5u64 && y < 7u64 { ((glyph(ch) >> (y * 8u64)) & (1u64 << (4u64 - x))) != 0u64 }
 }
 public machine label_pixel(kind: u64, x: u64, y: u64, left: u64, top: u64) -> bool {
     transition x >= left && y >= top { true -> at(kind, x - left, y - top) _ -> (false) }
-    state at(kind: u64, x: u64, y: u64) -> bool { letter(label(kind, x / 12u64), (x % 12u64) / 2u64, y / 2u64) }
+    machine at(kind: u64, x: u64, y: u64) -> bool { letter(label(kind, x / 12u64), (x % 12u64) / 2u64, y / 2u64) }
 }
 public machine centered_label(kind: u64, width: u64, x: u64, y: u64, top: u64) -> bool {
     let len: u64 = label_length(kind); label_pixel(kind, x, y, subtract(width, ((len as u64 in Saturating) * 12) as u64) / 2u64, top)
 }
 public machine name_length(s: &State, index: u64, maximum: u64) -> u64 {
     transition index < 6u64 { true -> scan(s, index, maximum, 0u64) _ -> (0u64) }
-    state scan(s: &State, index: u64, maximum: u64, i: u64) -> u64 requires index < 6u64 { transition i < maximum && i < 13u64 { true -> byte(s, index, maximum, i) _ -> (i) } }
-    state byte(s: &State, index: u64, maximum: u64, i: u64) -> u64 requires index < 6u64 && i < 13u64 { transition s.names[index][i] == 0u8 { true -> (i) _ -> scan(s, index, maximum, i + 1u64) } }
+    machine scan(s: &State, index: u64, maximum: u64, i: u64) -> u64 requires index < 6u64 { transition i < maximum && i < 13u64 { true -> byte(s, index, maximum, i) _ -> (i) } }
+    machine byte(s: &State, index: u64, maximum: u64, i: u64) -> u64 requires index < 6u64 && i < 13u64 { transition s.names[index][i] == 0u8 { true -> (i) _ -> scan(s, index, maximum, i + 1u64) } }
 }
 public machine name_pixel(s: &State, index: u64, maximum: u64, x: u64, y: u64, left: u64, top: u64) -> bool {
     transition x >= left && y >= top { true -> at(s, index, maximum, x - left, y - top) _ -> (false) }
-    state at(s: &State, index: u64, maximum: u64, x: u64, y: u64) -> bool {
+    machine at(s: &State, index: u64, maximum: u64, x: u64, y: u64) -> bool {
         transition index < 6u64 && x / 12u64 < maximum && x / 12u64 < 13u64 { true -> byte(s, index, x, y) _ -> (false) }
     }
-    state byte(s: &State, index: u64, x: u64, y: u64) -> bool requires index < 6u64 && x / 12u64 < 13u64 { letter(s.names[index][x / 12u64] as u64, (x % 12u64) / 2u64, y / 2u64) }
+    machine byte(s: &State, index: u64, x: u64, y: u64) -> bool requires index < 6u64 && x / 12u64 < 13u64 { letter(s.names[index][x / 12u64] as u64, (x % 12u64) / 2u64, y / 2u64) }
 }
 public machine number_pixel(value: u64, x: u64, y: u64) -> bool {
     let digits: u64 = digit_count(value); let left: u64 = subtract(160u64, digits * 12u64) / 2u64;
     transition x >= left && y >= 22u64 { true -> at(value, digits, x - left, y - 22u64) _ -> (false) }
-    state at(value: u64, digits: u64, x: u64, y: u64) -> bool {
+    machine at(value: u64, digits: u64, x: u64, y: u64) -> bool {
         transition x / 12u64 < digits { true -> digit(value, digits, x, y) _ -> (false) }
     }
-    state digit(value: u64, digits: u64, x: u64, y: u64) -> bool requires x / 12u64 < digits {
+    machine digit(value: u64, digits: u64, x: u64, y: u64) -> bool requires x / 12u64 < digits {
         let divisor: u64 = power(digits - x / 12u64 - 1u64); letter(48u64 + (value / divisor) % 10u64, (x % 12u64) / 2u64, y / 2u64)
     }
 }
 machine digit_count(v: u64) -> u64 ensures result <= 4u64 {
-    transition v < 10u64 { true -> (1u64) _ -> tens(v) }
-    state tens(v: u64) -> u64 { transition v < 100u64 { true -> (2u64) _ -> hundreds(v) } }
-    state hundreds(v: u64) -> u64 { transition v < 1000u64 { true -> (3u64) _ -> (4u64) } }
+    transition { v < 10u64 -> (1u64) v < 100u64 -> (2u64) v < 1000u64 -> (3u64) _ -> (4u64) }
 }
 machine power(n: u64) -> u64 ensures result > 0u64 { transition n { 0u64 -> (1u64) 1u64 -> (10u64) 2u64 -> (100u64) _ -> (1000u64) } }

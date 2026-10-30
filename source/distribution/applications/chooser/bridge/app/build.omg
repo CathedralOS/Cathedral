@@ -1,6 +1,7 @@
 machine build(builder: &mut Build) {
     Build::application(builder, "cathedral_chooser_session_native");
+    Build::depend_as(builder, "component", Source::Path { location: "../component" });
     Build::depend_as(builder, "app", Source::Path { location: "../../app" });
-    Build::select_provider<app::ChooserApp, app::ChooserAppProvider>(builder, CompositionMode::Independent);
+    Build::select_provider<component::main::ChooserApp, component::main::ChooserAppProvider>(builder, CompositionMode::Independent);
     Build::bind(builder, linux_x86_64::ProgramEntry, main);
 }

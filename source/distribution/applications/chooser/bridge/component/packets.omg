@@ -1,0 +1,64 @@
+module packets;
+// Legacy packet offsets stop here. Always copy bounded bodies, never raw names
+// or mapping addresses. The app decides how service frames affect its state.
+use app::state::State;
+use app::state::Phase;
+use app::operations::Command;
+use app::operations::Exchange;
+public machine decode(s: &State, p: &[u64; 4096], e: &mut Exchange) {
+    e.transport_status = p[9];
+    e.payload_bytes = p[8];
+    e.receive_limit = p[11];
+    e.argument = p[12];
+    e.refresh_ticks = p[13];
+    frames(p, e, 0u64);
+    body(p, e, 0u64);
+    transition s.phase == Phase::Waited && p[9] == 1u64 {
+        true -> control(e)
+        _ -> done()
+    }
+    machine control(e: &mut Exchange) { e.owner_request = true; e.transport_status = 0u64; }
+}
+machine frames(p: &[u64; 4096], e: &mut Exchange, i: u64) {
+    transition i < 8u64 { true -> word(p, e, i) _ -> done() }
+    machine word(p: &[u64; 4096], e: &mut Exchange, i: u64) requires i < 8u64 {
+        e.frame[i] = p[i];
+        transition { _ -> frames(p, e, i + 1u64) }
+    }
+}
+machine body(p: &[u64; 4096], e: &mut Exchange, i: u64) {
+    transition i < 510u64 && i * 8u64 < e.payload_bytes { true -> word(p, e, i) _ -> done() }
+    machine word(p: &[u64; 4096], e: &mut Exchange, i: u64) requires i < 510u64 {
+        e.payload[i] = p[16u64 + i];
+        transition { _ -> body(p, e, i + 1u64) }
+    }
+}
+public machine encode(p: &mut [u64; 4096], e: &Exchange) {
+    p[8] = e.payload_bytes; p[9] = e.transport_status; p[11] = e.receive_limit;
+    p[12] = e.argument; p[13] = e.refresh_ticks;
+    transition { _ -> copy(p, e, 0u64) }
+    machine copy(p: &mut [u64; 4096], e: &Exchange, i: u64) {
+        transition { i < 8u64 -> frame(p, e, i) i < 518u64 && (i - 8u64) * 8u64 < e.payload_bytes -> body(p, e, i) _ -> done() }
+    }
+    machine frame(p: &mut [u64; 4096], e: &Exchange, i: u64) requires i < 8u64 {
+        p[i] = e.frame[i]; transition { _ -> copy(p, e, i + 1u64) }
+    }
+    machine body(p: &mut [u64; 4096], e: &Exchange, i: u64) requires i >= 8u64 && i < 518u64 {
+        p[i + 8u64] = e.payload[i - 8u64]; transition { _ -> copy(p, e, i + 1u64) }
+    }
+}
+public machine operation(command: Command) -> u64 {
+    transition command {
+        Command::Exit -> (0u64)
+        Command::AcquireInteraction -> (1u64)
+        Command::AcquireStorage -> (2u64)
+        Command::BindStorage -> (3u64)
+        Command::Storage -> (4u64)
+        Command::Interaction -> (5u64)
+        Command::Wait -> (6u64)
+        Command::Control -> (7u64)
+        Command::StageImage -> (9u64)
+        Command::Clock -> (11u64)
+    }
+}
+machine done() {}

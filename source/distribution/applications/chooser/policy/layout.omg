@@ -43,7 +43,7 @@ public machine tile_left(width: u64, n: u64, picker: bool, tile: u64) -> u64 {
         true -> centered(width, n, tile)
         _ -> (plus(8u64, times(limit(tile), 56u64)))
     }
-    state centered(width: u64, n: u64, tile: u64) -> u64 {
+    machine centered(width: u64, n: u64, tile: u64) -> u64 {
         let total: u64 = minus(times(limit(n), 152u64), 24u64);
         let left: u64 = minus(width, total) / 2u64;
         plus(left, times(limit(tile), 152u64))
@@ -62,7 +62,7 @@ public machine inside(value: u64, start: u64, length: u64) -> bool {
         true -> distance(value, start, length)
         _ -> (false)
     }
-    state distance(value: u64, start: u64, length: u64) -> bool requires value >= start {
+    machine distance(value: u64, start: u64, length: u64) -> bool requires value >= start {
         value - start < length
     }
 }

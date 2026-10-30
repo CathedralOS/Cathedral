@@ -1,6 +1,8 @@
-// Choose an intent, execute it through supplied endpoints, reconcile the reply.
-use host::main;
+module session::actions;
 use protocol::main;
+// Choose an intent, execute it through supplied endpoints, reconcile the reply.
+use operations::Command;
+use operations::Exchange;
 use decisions::interaction::model::Action;
 use decisions::interaction::model::ActionRequest;
 use decisions::interaction::actions;
@@ -8,13 +10,21 @@ use decisions::catalogue::name;
 use decisions::outcomes;
 use decisions::outcomes::Operation;
 use decisions::outcomes::Notice;
-use state;
-use transport;
-use session::session;
-use catalogue::catalogue;
-use settings::persistence;
+use state::State;
+use state::Phase;
+use transport::interaction;
+use transport::storage;
+use transport::failed;
+use transport::status;
+use transport::put;
+use session::session::session;
+use session::session::cycle;
+use session::session::after_input;
+use catalogue::catalogue::reload;
+use catalogue::catalogue::unavailable;
+use settings::persistence::load_settings;
 
-public machine act(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+public machine act(s: &mut State, p: &mut Exchange) -> Command {
     let request: ActionRequest = ActionRequest {
         picker: s.picker, count: s.entries.count, selected: s.selected,
         object: selected_object(s), template: s.entries.ids[0], retry: s.saves == 1u64
@@ -30,24 +40,24 @@ public machine act(s: &mut State, p: &mut [u64; 4096]) -> u64 {
         Action::Retry -> retry(s, p)
         _ -> after_input(s, p)
     }
-    state launch(s: &mut State, p: &mut [u64; 4096], object: u64) -> u64 {
-        interaction(s, p, LAUNCHED, 14u64, object, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64)
+    machine launch(s: &mut State, p: &mut Exchange, object: u64) -> Command {
+        interaction(s, p, Phase::Launched, 14u64, object, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64)
     }
-    state copy(s: &mut State, p: &mut [u64; 4096], object: u64) -> u64 {
-        storage(s, p, COPY_HEAD, STORE_HEAD, object, 0u64, 0u64, 0u64)
+    machine copy(s: &mut State, p: &mut Exchange, object: u64) -> Command {
+        storage(s, p, Phase::CopyHead, STORE_HEAD, object, 0u64, 0u64, 0u64)
     }
-    state settings(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    machine settings(s: &mut State, p: &mut Exchange) -> Command {
         s.reconciling = false;
         load_settings(s, p)
     }
-    state manage(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    machine manage(s: &mut State, p: &mut Exchange) -> Command {
         s.confirming = s.managed;
         s.cancel = true;
         s.management_status = 0u64;
         after_input(s, p)
     }
-    state retry(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        interaction(s, p, RETRIED, 22u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64)
+    machine retry(s: &mut State, p: &mut Exchange) -> Command {
+        interaction(s, p, Phase::Retried, 22u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64)
     }
 }
 
@@ -56,99 +66,99 @@ machine selected_object(s: &State) -> u64 {
         true -> item(s)
         _ -> (0u64)
     }
-    state item(s: &State) -> u64 requires s.selected < 6u64 {
+    machine item(s: &State) -> u64 requires s.selected < 6u64 {
         s.entries.ids[s.selected]
     }
 }
 
-public machine copy_head(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+public machine copy_head(s: &mut State, p: &mut Exchange) -> Command {
     transition failed(p) {
         true -> copy_failed(s, p)
         _ -> copy(s, p)
     }
-    state copy(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    machine copy(s: &mut State, p: &mut Exchange) -> Command {
         let mut name: [u64; 6];
         let valid: bool = decisions::catalogue::name::user_name(s.entries.count, &mut name);
-        let result: u64 = copy_request(s, p, &name, valid);
+        let result: Command = copy_request(s, p, &name, valid);
         result
     }
 }
 
-public machine copied(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+public machine copied(s: &mut State, p: &mut Exchange) -> Command {
     transition failed(p) {
         true -> copy_failed(s, p)
         _ -> reload_new(s, p)
     }
-    state reload_new(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+    machine reload_new(s: &mut State, p: &mut Exchange) -> Command {
         s.notice = Notice::None;
         reload(s, p)
     }
 }
 
-machine copy_failed(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+machine copy_failed(s: &mut State, p: &mut Exchange) -> Command {
     let result: decisions::outcomes::Outcome = record_outcome(s, p, Operation::Copy);
     cycle(s, p)
 }
 
-public machine launched(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+public machine launched(s: &mut State, p: &mut Exchange) -> Command {
     let result: decisions::outcomes::Outcome = record_outcome(s, p, Operation::Launch);
     transition result.receipt != 0u64 {
         true -> receipt(s, p, result.receipt)
         _ -> cycle(s, p)
     }
-    state receipt(s: &mut State, p: &mut [u64; 4096], receipt: u64) -> u64 {
+    machine receipt(s: &mut State, p: &mut Exchange, receipt: u64) -> Command {
         s.launched = receipt;
         cycle(s, p)
     }
 }
 
-public machine retried(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+public machine retried(s: &mut State, p: &mut Exchange) -> Command {
     let result: decisions::outcomes::Outcome = record_outcome(s, p, Operation::Retry);
     cycle(s, p)
 }
 
-public machine closed(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+public machine closed(s: &mut State, p: &mut Exchange) -> Command {
     let result: decisions::outcomes::Outcome = record_outcome(s, p, Operation::Close);
     cycle(s, p)
 }
 
-public machine selected_reply(s: &mut State, p: &mut [u64; 4096]) -> u64 {
+public machine selected_reply(s: &mut State, p: &mut Exchange) -> Command {
     let result: decisions::outcomes::SelectionReply = decisions::outcomes::after_select(status(p), s.close_selected);
     s.notice = result.notice;
     transition result.close {
         true -> close(s, p)
         _ -> cycle(s, p)
     }
-    state close(s: &mut State, p: &mut [u64; 4096]) -> u64 {
-        interaction(s, p, CLOSED, 15u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64)
+    machine close(s: &mut State, p: &mut Exchange) -> Command {
+        interaction(s, p, Phase::Closed, 15u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64)
     }
 }
 
-machine record_outcome(s: &mut State, p: &[u64; 4096], operation: Operation) -> decisions::outcomes::Outcome {
-    let result: decisions::outcomes::Outcome = decisions::outcomes::outcome(operation, status(p), p[2]);
+machine record_outcome(s: &mut State, p: &Exchange, operation: Operation) -> decisions::outcomes::Outcome {
+    let result: decisions::outcomes::Outcome = decisions::outcomes::outcome(operation, status(p), p.frame[2]);
     s.notice = result.notice;
     s.dirty = true;
     s.force_refresh = true;
     result
 }
 
-machine copy_request(s: &mut State, p: &mut [u64; 4096], name: &[u64; 6], valid: bool) -> u64 {
+machine copy_request(s: &mut State, p: &mut Exchange, name: &[u64; 6], valid: bool) -> Command {
     transition valid {
         true -> request(s, p, name)
         _ -> unavailable(s, p)
     }
-    state request(s: &mut State, p: &mut [u64; 4096], name: &[u64; 6]) -> u64 {
-        let revision: u64 = p[2];
+    machine request(s: &mut State, p: &mut Exchange, name: &[u64; 6]) -> Command {
+        let revision: u64 = p.frame[2];
         let object: u64 = s.entries.ids[0];
         let realm: u64 = s.realm;
-        let op: u64 = storage(s, p, COPIED, 13u64, object, revision, realm, 6u64);
+        let op: Command = storage(s, p, Phase::Copied, 13u64, object, revision, realm, 6u64);
         put(p, 0u64, name[0]);
         put(p, 1u64, name[1]);
         put(p, 2u64, name[2]);
         put(p, 3u64, name[3]);
         put(p, 4u64, name[4]);
         put(p, 5u64, name[5]);
-        p[8] = 6u64;
-        STORE
+        p.payload_bytes = 6u64;
+        Command::Storage
     }
 }

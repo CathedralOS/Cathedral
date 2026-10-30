@@ -1,0 +1,34 @@
+module operations;
+// Typed app/driver boundary. Service frames retain their real eight-word wire
+// representation; host opcodes, packet offsets and scratch sizes do not leak in.
+public data Command [copy] {
+    case Exit;
+    case AcquireInteraction;
+    case AcquireStorage;
+    case BindStorage;
+    case Storage;
+    case Interaction;
+    case Wait;
+    case Control;
+    case StageImage;
+    case Clock;
+}
+// One in-place workspace, reused by the process between app steps. The largest
+// inbound page is 51 directory entries of 80 bytes. Raster chunks use that same
+// bounded body; the full image lives in independently funded pages.
+public data Exchange {
+    frame: [u64; 8];
+    payload: [u64; 510];
+    payload_bytes: u64;
+    transport_status: u64;
+    receive_limit: u64;
+    argument: u64;
+    refresh_ticks: u64;
+    owner_request: bool;
+}
+public machine message(p: &mut Exchange, op: u64, a: u64, b: u64, c: u64,
+    d: u64, e: u64, f: u64, g: u64) {
+    p.frame = [op, a, b, c, d, e, f, g];
+    p.payload_bytes = 0u64;
+    p.receive_limit = 0u64;
+}

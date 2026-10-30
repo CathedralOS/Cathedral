@@ -9,6 +9,49 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
+### Chooser: isolate the app from its process host
+
+The chooser app now runs on named `State`, `Phase`, `Exchange` and `Command`
+values. The legacy `ChooserApp` boundary, numeric host opcodes and 4,096-word
+packet live only in `chooser/bridge/component/`. `app/main.omg` is a one-step
+entrance into the session dispatcher. Explicit module entrances/imports replace
+the former implicit routing. The app payload is one 4,080-byte directory page;
+large images use contiguous chunks of that size into the same at-most-64-KiB
+backing. The retained Rust host's nine-page reservation is unchanged.
+
+Nested `state` declarations in this app, its chooser policy, matrix configuration
+codec and service-import decoder use `machine`. Small local evaluations preserve
+borrow ordering; the digit-count helper now expresses its four cases directly.
+No new owner decision, syscall, resource grant or composition policy is involved.
+
+**Standalone is not promoted.** A process/fixture prototype is preserved in
+`C:/Projects/Cathedral-chooser-native` on local branch `work/chooser-native` at `dcce600e`.
+Its README records the unqualified work and compiler investigation. It must not
+replace the installed chooser until actual-process, settings/recovery, desktop
+and nested tests pass. Background, Colors and Notes remain standalone Omega;
+the chooser still uses the Rust process host.
+
+The qualified compiler remains `build/omega-user/compiler/omega.exe`, source
+`a88a8b63956f99da3f6a1338d6e9d9bf2badc61d`. The standalone candidate hit the
+existing 300-second/4-GiB build bound without a diagnostic. Checking its protocol
+and matrix-service dependencies alone completed in seconds. An app-only sample
+spent about 146 CPU seconds in nested numeric-observation/normal-return analysis
+before debugger inspection; that inspected run's wall time is not a clean
+benchmark. A font/label data-table experiment also stalled in checking and was stopped. These observations locate checking work;
+they do not establish a compiler fix or justify restating app contracts by hand.
+The table/inline-raster experiments remain only on the prototype branch.
+
+Before syntax migration, the refactored bridge passed ordinary F5 and cold reopen
+at `build/boot-harness-rs/desktop/20261030T161158101039Z/` (2,069-record oracle).
+The final all-machine sources pass 139 affected host tests: 20 compiled chooser,
+97 matrix and 22 platform-contract tests. They ran with an isolated Cargo target
+directory because the editor held the ordinary artifact lock. Source layout
+passes at 106 Omega / 154 Rust edges; `git diff --check` passes. The actual default F5 desktop and cold reopen pass at
+`build/boot-harness-rs/desktop/20261030T165758097363Z/`, including three Notes
+instances, independent drafts, protected close, slot reuse, Colors and the
+2,077-record storage oracle. The retained chooser is 60/240 image pages. No
+standalone-chooser, ARM64 or full harness-suite pass is claimed here.
+
 ### Standalone Notes: editor, storage and presentation
 
 Normal F5 now selects `source/distribution/applications/notes/native/` for outer,

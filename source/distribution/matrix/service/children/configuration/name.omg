@@ -6,44 +6,44 @@ public machine valid_name(bytes: &[u8; 104]) -> bool {
         true -> scan(bytes, 8u64)
         _ -> (false)
     }
-    state scan(bytes: &[u8; 104], i: u64) -> bool {
+    machine scan(bytes: &[u8; 104], i: u64) -> bool {
         transition i < 40u64 {
             true -> lead(bytes, i)
             _ -> (true)
         }
     }
-    state lead(bytes: &[u8; 104], i: u64) -> bool requires i < 40u64 {
+    machine lead(bytes: &[u8; 104], i: u64) -> bool requires i < 40u64 {
         let b: u64 = bytes[i] as u64;
         transition b == 0u64 {
             true -> padding(bytes, i)
             _ -> ascii(bytes, i, b)
         }
     }
-    state padding(bytes: &[u8; 104], i: u64) -> bool {
+    machine padding(bytes: &[u8; 104], i: u64) -> bool {
         transition i < 40u64 {
             true -> zero(bytes, i)
             _ -> (true)
         }
     }
-    state zero(bytes: &[u8; 104], i: u64) -> bool requires i < 40u64 {
+    machine zero(bytes: &[u8; 104], i: u64) -> bool requires i < 40u64 {
         transition bytes[i] == 0u8 {
             true -> padding(bytes, i + 1u64)
             _ -> (false)
         }
     }
-    state ascii(bytes: &[u8; 104], i: u64, b: u64) -> bool requires i < 40u64 {
+    machine ascii(bytes: &[u8; 104], i: u64, b: u64) -> bool requires i < 40u64 {
         transition b >= 32u64 && b < 127u64 {
             true -> scan(bytes, i + 1u64)
             _ -> two(bytes, i, b)
         }
     }
-    state two(bytes: &[u8; 104], i: u64, b: u64) -> bool requires i < 40u64 {
+    machine two(bytes: &[u8; 104], i: u64, b: u64) -> bool requires i < 40u64 {
         transition b >= 194u64 && b <= 223u64 {
             true -> continuation(bytes, i + 1u64, 1u64, 128u64, 191u64)
             _ -> three(bytes, i, b)
         }
     }
-    state three(bytes: &[u8; 104], i: u64, b: u64) -> bool requires i < 40u64 {
+    machine three(bytes: &[u8; 104], i: u64, b: u64) -> bool requires i < 40u64 {
         transition b {
             224u64 -> continuation(bytes, i + 1u64, 2u64, 160u64, 191u64)
             237u64 -> continuation(bytes, i + 1u64, 2u64, 128u64, 159u64)
@@ -52,31 +52,31 @@ public machine valid_name(bytes: &[u8; 104]) -> bool {
             _ -> general(bytes, i, b)
         }
     }
-    state general(bytes: &[u8; 104], i: u64, b: u64) -> bool requires i < 40u64 {
+    machine general(bytes: &[u8; 104], i: u64, b: u64) -> bool requires i < 40u64 {
         transition b >= 225u64 && b <= 239u64 {
             true -> continuation(bytes, i + 1u64, 2u64, 128u64, 191u64)
             _ -> four(bytes, i, b)
         }
     }
-    state four(bytes: &[u8; 104], i: u64, b: u64) -> bool requires i < 40u64 {
+    machine four(bytes: &[u8; 104], i: u64, b: u64) -> bool requires i < 40u64 {
         transition b >= 241u64 && b <= 243u64 {
             true -> continuation(bytes, i + 1u64, 3u64, 128u64, 191u64)
             _ -> (false)
         }
     }
-    state continuation(bytes: &[u8; 104], i: u64, remaining: u64, low: u64, high: u64) -> bool {
+    machine continuation(bytes: &[u8; 104], i: u64, remaining: u64, low: u64, high: u64) -> bool {
         transition i < 40u64 && remaining > 0u64 {
             true -> check(bytes, i, remaining, low, high)
             _ -> (false)
         }
     }
-    state check(bytes: &[u8; 104], i: u64, remaining: u64, low: u64, high: u64) -> bool requires i < 40u64 && remaining > 0u64 {
+    machine check(bytes: &[u8; 104], i: u64, remaining: u64, low: u64, high: u64) -> bool requires i < 40u64 && remaining > 0u64 {
         transition bytes[i] as u64 >= low && bytes[i] as u64 <= high {
             true -> consumed(bytes, i, remaining)
             _ -> (false)
         }
     }
-    state consumed(bytes: &[u8; 104], i: u64, remaining: u64) -> bool requires i < 40u64 && remaining > 0u64 {
+    machine consumed(bytes: &[u8; 104], i: u64, remaining: u64) -> bool requires i < 40u64 && remaining > 0u64 {
         transition remaining == 1u64 {
             true -> scan(bytes, i + 1u64)
             _ -> continuation(bytes, i + 1u64, remaining - 1u64, 128u64, 191u64)

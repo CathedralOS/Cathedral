@@ -1,25 +1,29 @@
+module transport;
 // Continuation-bearing requests; every service is supplied by this matrix.
-use host::main;
-use state;
-public machine interaction(s: &mut State, p: &mut [u64; 4096], next: u64, op: u64, a: u64, b: u64, c: u64, d: u64, e: u64, f: u64, g: u64) -> u64 {
-    s.phase = next; message(p, op, a, b, c, d, e, f, g); EXCHANGE
+use operations::Command;
+use operations::Exchange;
+use operations::message;
+use state::State;
+use state::Phase;
+public machine interaction(s: &mut State, p: &mut Exchange, next: Phase, op: u64, a: u64, b: u64, c: u64, d: u64, e: u64, f: u64, g: u64) -> Command {
+    s.phase = next; message(p, op, a, b, c, d, e, f, g); Command::Interaction
 }
-public machine storage(s: &mut State, p: &mut [u64; 4096], next: u64, op: u64, object: u64, revision: u64, argument: u64, length: u64) -> u64 {
-    s.phase = next; message(p, op, object, revision, argument, length, 0u64, 0u64, 0u64); STORE
+public machine storage(s: &mut State, p: &mut Exchange, next: Phase, op: u64, object: u64, revision: u64, argument: u64, length: u64) -> Command {
+    s.phase = next; message(p, op, object, revision, argument, length, 0u64, 0u64, 0u64); Command::Storage
 }
-public machine failed(p: &[u64; 4096]) -> bool { p[9] != 0u64 || p[0] != 0u64 }
-public machine status(p: &[u64; 4096]) -> u64 { transition p[9] != 0u64 { true -> (p[9]) _ -> (p[0]) } }
-public machine byte(p: &[u64; 4096], offset: u64) -> u8 {
-    transition offset < 32640u64 { true -> read(p, offset) _ -> (0u8) }
-    state read(p: &[u64; 4096], offset: u64) -> u8 requires offset < 32640u64 { ((p[16u64 + offset / 8u64] >> ((offset % 8u64) * 8u64)) & 255u64) as u8 }
+public machine failed(p: &Exchange) -> bool { p.transport_status != 0u64 || p.frame[0] != 0u64 }
+public machine status(p: &Exchange) -> u64 { transition p.transport_status != 0u64 { true -> (p.transport_status) _ -> (p.frame[0]) } }
+public machine byte(p: &Exchange, offset: u64) -> u8 {
+    transition offset < 4080u64 { true -> read(p, offset) _ -> (0u8) }
+    machine read(p: &Exchange, offset: u64) -> u8 requires offset < 4080u64 { ((p.payload[offset / 8u64] >> ((offset % 8u64) * 8u64)) & 255u64) as u8 }
 }
-public machine put(p: &mut [u64; 4096], offset: u64, value: u64) {
-    transition offset < 32640u64 { true -> write(p, offset, value) _ -> done() }
-    state write(p: &mut [u64; 4096], offset: u64, value: u64) requires offset < 32640u64 {
-        let at: u64 = 16u64 + offset / 8u64; let shift: u64 = (offset % 8u64) * 8u64;
-        p[at] = (p[at] & ~(255u64 << shift)) | ((value & 255u64) << shift);
+public machine put(p: &mut Exchange, offset: u64, value: u64) {
+    transition offset < 4080u64 { true -> write(p, offset, value) _ -> done() }
+    machine write(p: &mut Exchange, offset: u64, value: u64) requires offset < 4080u64 {
+        let at: u64 = offset / 8u64; let shift: u64 = (offset % 8u64) * 8u64;
+        p.payload[at] = (p.payload[at] & ~(255u64 << shift)) | ((value & 255u64) << shift);
     }
-    state done() {}
+    machine done() {}
 }
 public machine subtract(a: u64, b: u64) -> u64 { ((a as u64 in Saturating) - (b as u64 in Saturating)) as u64 }
 public machine add(a: u64, b: u64) -> u64 { ((a as u64 in Saturating) + (b as u64 in Saturating)) as u64 }
