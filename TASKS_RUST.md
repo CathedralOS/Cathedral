@@ -11,8 +11,8 @@ supplies a missing mechanism needed by that migration.
 
 ### Standalone Omega userspace: entry and kernel calls
 
-The next target is Background running without the Rust application host. Its
-first prerequisite now works: an independently compiled Omega process linked
+Background now runs without the Rust application host in the normal desktop.
+The steps below record its qualification: an independently compiled Omega process linked
 with a small native assembly adapter, running under the unchanged Rust kernel.
 Start at [the platform runtime](source/platform/libraries/user-runtime/README.md)
 and [the executable witness](source/distribution/lab/user-entry/README.md).
@@ -167,7 +167,7 @@ control during a synchronous call. Endpoint-grant service acquisition is not
 implemented. This is real IPC with a Rust service fixture, not yet a stock
 matrix launch or a replacement of the desktop Background.
 
-**Standalone Background now runs in a candidate desktop:**
+**Standalone Background is selected by the normal desktop profile:**
 `source/distribution/applications/background/process/` owns startup, the existing
 app model, scoped service calls, owner-control replies and waiting. `native/`
 links it with the small kernel-call adapter, with no Rust application host.
@@ -176,7 +176,14 @@ at `build/boot-harness-rs/desktop/20261030T010827886709Z/`, with the storage-ref
 witness, background pixels, application workflows and 1,935-record host oracle.
 The mixed-producer build helper selects the compiler from the profile's source
 entry; `desktop_test.py --profile` tests a candidate without changing F5.
-**The default profile remains Rust-hosted Background.**
+Both the outer and nested template Background entries select the native Omega
+package. F5 uses the exact tested compiler below; current-main compiler integration
+is separate and must not silently replace that producer.
+The actual default profile, without a candidate override or `OMEGA_USER_BIN`,
+passes desktop and cold reopen at
+`build/boot-harness-rs/desktop/20261030T012843326363Z/` (1,935 records).
+The previous compiler junction is retained at `build/omega-user/compiler-owner-baseline`;
+the default slot contains an independent copy of the tested executable and receipt.
 
 Compiler repairs live in Omega's isolated
 `.agents/worktree/cathedral-background-runtime`, fixed base
@@ -236,7 +243,8 @@ The unchanged primitive guest still passes both clock variants
 at `build/omega-user/tests/20261029T021401808110Z/` (42/240 pages) after its linker
 change. The candidate desktop above now exercises Background's encoded import
 record at installation. Source layout currently passes (95 Omega / 154 Rust edges).
-F5 continues to use the working Rust-hosted Background.
+The retained Rust Background remains available for comparison; it is no longer
+the default installed background.
 
 Keep the same broker connection and request sequence across service acquisition
 and subsequent interaction calls; it is not a reconnect after discovery. Establish
@@ -246,8 +254,8 @@ the temporary 4,096-word Rust host packet bridge. Preserve one-writer
 pages, read-only peer views, grant/frame correlation, drain/recheck/park ordering,
 deadline/refusal behavior and cleanup after partial setup. Copied IPC is needed
 for setup; it must not replace ordinary shared service transport as a shortcut.
-Only then switch the installed Background and run desktop, nested and startup
-failure fixtures. F5 currently still uses the Rust-hosted Background. The native
+The installed Background now follows this route. Keep desktop, nested and
+startup-failure fixtures as acceptance for further runtime migrations. The native
 Omega kernel boot and bulk `state` migration remain separate work.
 
 The app catalogue, instance tickets, current selection, switch admission,

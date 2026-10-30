@@ -11,21 +11,23 @@ The desktop's compiler and the other agent's checkout need not move.
 python tools/omega-user/build.py source/distribution/lab/user-entry/native --compiler path/to/new/omega.exe
 python tools/omega-user/run_test.py --compiler path/to/new/omega.exe
 python tools/omega-user/connection_test.py --compiler path/to/new/omega.exe
+python tools/omega-user/background_test.py --compiler path/to/new/omega.exe
 python -m unittest discover -s tools/omega-user -p "test_*.py"
 ```
 
-The client and owner-server witnesses are qualified with source
-`66f71d0ebcea4bb82b62c3cf1c951d83329846a6`, release opt-level 3. Its SHA-256 is
-`13506b64d041dfef9791a1a43c777b985b87e5cb77844a1c55a166d013131f9c`.
-This reproducible source is retained on `work/cathedral-owner-operands` in Omega.
-[PR #729](https://github.com/CathedralOS/Omega/pull/729) was closed **without
-merging**: the same source-owner type-catalog correction had already landed in
-[PR #557](https://github.com/CathedralOS/Omega/pull/557), published as
-`b51ac370b6cecc9d2abd0948d86b01fccfc943eb`, with additional domain corrections.
-That newer main has not been qualified for this runtime. The local
-`build/omega-user/compiler/omega.exe` points to the saved, tested producer, with
-its source/hash receipt beside it. Do not replace it just because main advances.
-It includes the preceding enum-case tail-transfer repairs from #525.
+The standalone producer is source
+`8ae6029050dbff7489a6e2e32039373e2974cc00`, release opt-level 3, SHA-256
+`e4f9e026f162a2f96b3a65bae523595c35a492ccc5f74587a8646aaee016266d`.
+It is retained in Omega's `work/cathedral-background-runtime` history and
+[PR #846](https://github.com/CathedralOS/Omega/pull/846). Reproduce it with
+`cargo build --locked --release -p omega` in an isolated worktree at that exact
+source, following Omega's build-slot instructions. The local
+`build/omega-user/compiler/omega.exe` is the saved tested executable with its
+source/hash receipt beside it. It passes the runtime witnesses and standalone
+Background's desktop, nested and startup-failure checks. Later PR integration
+revisions are separate producers; do not substitute one merely because it is newer.
+The preceding `66f71d0e` owner-control producer remains locally preserved at
+`build/omega-user/compiler-owner-baseline/`; its history is in TASKS_RUST.md.
 Keep this compiler separate from the
 [legacy desktop app producer](../omega-component/README.md) and the migrated
 [UI library producer](../omega-ui/README.md#build). Desktop app source still
@@ -56,14 +58,17 @@ The component compiler and native linker have separate receipts. The linked
 receipt embeds the component receipt and hashes the entry adapter, linker
 layout, component and builder. Publication rejects input changes during linking.
 There is no dynamic loader, runtime relocation, writable load or additional
-image-page allowance. The ordinary F5 build path is unchanged.
+image-page allowance. The ordinary F5 profile now selects Background's
+`distribution/applications/background/native/main.omg`. The mixed-producer
+harness uses `OMEGA_USER_BIN`, or the saved standalone compiler above, for that
+entry. Rust entries retain their normal Cargo build.
 
 An optional `process.json` beside the native consumer declares `imports`
 (`contract`, `minimum`, `maximum`, `required`), `channels` and `descendants`.
 [manifest.py](manifest.py) encodes the platform's existing funded import record;
 the linker places it first in the read-only load, and packaging verifies that
 position. This requests launch authority from the owner; it grants none itself.
-The Background migration supplies such a record but is not installed yet.
+The installed standalone Background supplies such a record.
 
 The current compiler rejects a raw `int` inside checked user assembly as a
 hidden control transfer. The native leaves use Omega's existing declared

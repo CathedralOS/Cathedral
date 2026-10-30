@@ -66,12 +66,12 @@ leaves retain the input tail, copy back before returning, and do not retain a
 borrow. Counts are checked Omega ranges. Allocation, mapping, release, yield, receive and wait declare blocking
 and their callers acknowledge it. Scalar names alone grant no authority.
 
-This is a small platform runtime, **not the replacement for the Rust app host
-yet**. It has no general allocator or endpoint-service acquisition. Owner-control
-transport now works; the app still owns control policy and its event loop.
+This small platform runtime replaces the Rust app host for the installed
+Background. It has no general allocator or endpoint-service acquisition.
+Owner-control transport works; the app owns control policy and its event loop.
 In particular, copied IPC is the
 setup/grant mechanism; it must not become a fallback for the desktop's shared
-service protocol. The ordinary Background executable still uses that Rust host.
+service protocol. Other desktop apps still use the Rust host.
 The runtime has only been qualified on x86-64.
 
 The [process witness](../../../distribution/lab/user-entry/README.md) exercises

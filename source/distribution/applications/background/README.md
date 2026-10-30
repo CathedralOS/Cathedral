@@ -11,7 +11,7 @@ changes the backdrop without changing the kernel, compositor or chrome. The
 current app is a solid fill. Wallpaper, animation and role-selection UI remain
 distribution choices; retry and fallback belong to the owning matrix.
 
-The standalone replacement is being built at [process/main.omg](process/main.omg).
+The installed process starts at [process/main.omg](process/main.omg).
 It establishes owner control before the broker, drives this same app model,
 and waits on owner requests plus presentation notifications.
 [exchange.omg](process/exchange.omg) keeps answering owner control while a broker
@@ -22,8 +22,8 @@ runtime. [native/main.omg](native/main.omg) supplies component packaging and
 `native/process.json` declares the existing interaction-only import and channel
 request. This path passes the candidate ordinary desktop, three-level fresh/cold
 nesting and startup-failure recovery. An intermittent nested close timeout also
-reproduces in the Rust baseline. It is not installed by F5 yet: see
-[the current tasks](../../../../TASKS_RUST.md). The paths below still supply F5.
+reproduces in the Rust baseline. Normal F5 installs this process: see
+[the current tasks](../../../../TASKS_RUST.md).
 
 [bridge/component/main.omg](bridge/component/main.omg) adapts this session to
 the temporary [Omega app host](../../../../source-rs/platform/libraries/omega-app/README.md).
@@ -32,7 +32,7 @@ The diagnostic encoder preserves the ordinary desktop's storage-refusal witness.
 [bridge/native/main.omg](bridge/native/main.omg) selects the independently built
 component. Neither package contains a second copy of the app's behavior.
 
-The installed [Rust entry](../../../../source-rs/distribution/applications/background/main.rs)
+The retained comparison [Rust entry](../../../../source-rs/distribution/applications/background/main.rs)
 declares interaction only and runs that export through the common host. Rust
 retains executable startup, scoped IPC and buffer custody, plus the existing
 startup-failure injection. The stock matrix funds five transport pages and nine

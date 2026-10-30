@@ -181,7 +181,7 @@
       {
         "path": "Background",
         "package": "cathedral-background",
-        "entry": "distribution/applications/background/main.rs",
+        "entry": "distribution/applications/background/native/main.omg",
         "target": "x86_64-unknown-none",
         "display_title": "BACKGROUND"
       },
@@ -250,7 +250,7 @@
       {
         "path": "Nested/Users/Template/Background",
         "package": "cathedral-background",
-        "entry": "distribution/applications/background/main.rs",
+        "entry": "distribution/applications/background/native/main.omg",
         "target": "x86_64-unknown-none",
         "display_title": "BACKGROUND"
       },
