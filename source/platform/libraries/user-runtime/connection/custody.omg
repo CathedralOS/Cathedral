@@ -15,6 +15,7 @@ public machine release(gate: &Gate, peer: &mut Peer) reaches Kernel blocks; invo
     let control: u64 = peer.bell.control;
     let remote: u64 = peer.signal;
     let grant: u64 = peer.grant;
+    let kind: u64 = peer.grant_kind;
     peer.sender = 0u64;
     peer.receiver = 0u64;
     peer.writer.handle = 0u64;
@@ -24,6 +25,7 @@ public machine release(gate: &Gate, peer: &mut Peer) reaches Kernel blocks; invo
     peer.bell.control = 0u64;
     peer.signal = 0u64;
     peer.grant = 0u64;
+    peer.grant_kind = 0u64;
     peer.pending = 0u64;
     close_endpoint(gate, sender);
     close_endpoint(gate, receiver);
@@ -34,7 +36,13 @@ public machine release(gate: &Gate, peer: &mut Peer) reaches Kernel blocks; invo
     drop_notification(gate, signal);
     drop_notification(gate, control);
     drop_notification(gate, remote);
-    drop_notification(gate, grant);
+    release_grant(gate, kind, grant);
+}
+public machine release_grant(gate: &Gate, kind: u64, handle: u64) reaches Kernel invokes Kernel; {
+    transition kind == 2u64 {
+        true -> close_endpoint(gate, handle)
+        _ -> drop_notification(gate, handle)
+    }
 }
 machine close_endpoint(gate: &Gate, handle: u64) reaches Kernel {
     transition handle != 0u64 {

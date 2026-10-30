@@ -1,0 +1,41 @@
+module sealed;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::services::main::Services;
+use runtime::memory::object::Creation;
+use runtime::memory::object::Object;
+use runtime::connection::call::CallReply;
+
+public machine check(gate: &Gate, binding: &mut Services, clock: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let mut bytes: [u64; 2048];
+    bytes[0] = 0xffff123456789abcu64;
+    let created: Creation = block runtime::memory::object::create(gate, &bytes, 6u64);
+    transition created {
+        Creation::Ready { object } -> block send(gate, binding, clock, object)
+        _ -> (212u64)
+    }
+}
+machine send(gate: &Gate, binding: &mut Services, clock: u64, object: Object) -> u64 reaches Kernel {
+    let mut words: [u64; 8]; words[0] = 135u64;
+    let refused: u64 = block Kernel::shared_write(gate, object.handle, 0u64, &words, 1u64);
+    let reply: CallReply = block runtime::connection::call::exchange_object(gate, &mut binding.broker, clock, &words, object.handle);
+    let released: u64 = block Kernel::memory_release(gate, object.handle);
+    block runtime::services::main::close(gate, binding);
+    transition reply {
+        CallReply::Received { frame, notification } -> notification_reply(gate, frame, notification, refused, released)
+        CallReply::Endpoint { frame, endpoint } -> endpoint_reply(gate, endpoint)
+        CallReply::Failed { code } -> (code)
+    }
+}
+machine notification_reply(gate: &Gate, frame: runtime::connection::main::Frame, notification: u64, refused: u64, released: u64) -> u64 reaches Kernel {
+    let ignored: u64 = Kernel::notify_drop(gate, notification);
+    transition frame.bytes == 64u64 && frame.payload[0] == 0u64 && notification == 0u64
+        && refused >= runtime::kernel::ERROR_BASE && released == 0u64 {
+        true -> (0u64)
+        _ -> (214u64)
+    }
+}
+machine endpoint_reply(gate: &Gate, endpoint: u64) -> u64 reaches Kernel {
+    let ignored: u64 = Kernel::close(gate, endpoint);
+    215u64
+}

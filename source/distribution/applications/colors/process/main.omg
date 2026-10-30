@@ -1,0 +1,36 @@
+module main;
+// Establish installed authority -> run the existing app -> release local custody.
+// No Rust application host or host packet ABI participates in this process.
+use runtime::entry::Program;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::services::main::Services;
+use runtime::server::main::Server;
+use startup;
+use application;
+
+public data Context { services: Services; owner: Server; clock: u64; storage: runtime::storage::main::Scope; pending_storage: bool; pending_deadline: u64; }
+public ProgramProvider satisfies Program {
+    machine run(gate: &Gate, first: u64, second: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+        let mut context: Context;
+        let status: u64 = block startup::open(gate, &mut context);
+        transition status == 0u64 {
+            true -> block started(gate, &mut context)
+            _ -> block finished(gate, &mut context, status)
+        }
+    }
+}
+machine started(gate: &Gate, context: &mut Context) -> u64 reaches Kernel {
+    let status: u64 = block application::run(gate, context);
+    transition { _ -> (block finished(gate, context, status)) }
+}
+machine finished(gate: &Gate, context: &mut Context, status: u64) -> u64 reaches Kernel {
+    let closed: u64 = block runtime::connection::main::close(gate, &mut context.storage.peer);
+    block runtime::services::main::close(gate, &mut context.services);
+    block runtime::server::main::close(gate, &mut context.owner);
+    status
+}
+public machine component_entry() reaches Program + Kernel blocks; invokes Program; invokes Kernel; {
+    let gate: Gate;
+    let status: u64 = block Program::run(&gate, 0u64, 0u64);
+}

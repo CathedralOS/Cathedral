@@ -35,10 +35,15 @@ machine poll(gate: &Gate, peer: &mut Peer, clock: u64, mode: u64, deadline: u64)
 machine polled(gate: &Gate, peer: &mut Peer, clock: u64, mode: u64, deadline: u64, now: u64) -> u64 reaches Kernel {
     let reply: Reply = block runtime::connection::main::poll(gate, peer, now);
     transition reply {
+        Reply::Endpoint { frame, endpoint } -> block unexpected(gate, peer, endpoint)
         Reply::Failed { code } -> (block refused(gate, peer, mode, code))
         Reply::Complete { frame, notification } -> (block delivered(gate, peer, mode, frame, notification))
         Reply::Pending -> (block pending(gate, peer, clock, mode, deadline, now))
     }
+}
+machine unexpected(gate: &Gate, peer: &mut Peer, endpoint: u64) -> u64 reaches Kernel {
+    let ignored: u64 = Kernel::close(gate, endpoint);
+    block finish(gate, peer, 184u64)
 }
 machine pending(gate: &Gate, peer: &mut Peer, clock: u64, mode: u64, deadline: u64, now: u64) -> u64 reaches Kernel {
     transition time::reached(now, deadline) {

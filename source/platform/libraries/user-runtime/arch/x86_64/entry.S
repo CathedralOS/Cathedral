@@ -43,6 +43,9 @@ cathedral_kernel_gate:
     .quad cathedral_notify_send
     .quad cathedral_notify_receive
     .quad cathedral_bootstrap
+    .quad cathedral_endpoint_receive
+    .quad cathedral_object_create
+    .quad cathedral_object_send
 
 .section .text.cathedral_kernel_gate,"ax",@progbits
 cathedral_yield:
@@ -357,5 +360,83 @@ cathedral_notify_receive:
     xor edx, edx
     int 0x80
     finish_packet 1
+
+cathedral_endpoint_receive:
+    stage_packet
+    mov eax, 37                      // IPC_RECEIVE_CAP
+    mov rdi, r8
+    mov rsi, rsp
+    xor edx, edx
+    int 0x80
+    finish_packet 1
+
+// Copy from one borrowed private array into fresh zeroed pages, then seal and
+// unmap before returning its handle. No raw mapping escapes. Every failed phase
+// releases the newly allocated object; caller data is never modified/retained.
+cathedral_object_create:
+    test rsi, rsi
+    jz .Lobject_invalid
+    cmp rsi, 16384
+    ja .Lobject_invalid
+    push r12
+    push r13
+    push r14
+    mov r12, rdi                    // borrowed source
+    mov r13, rsi                    // exact byte count
+    lea rdi, [rsi + 4095]
+    shr rdi, 12
+    xor esi, esi
+    xor edx, edx
+    mov eax, 27                     // MEMORY_ALLOCATE
+    int 0x80
+    test rax, rax
+    js .Lobject_done
+    mov r14, rax                    // exclusively owned private handle
+    mov rdi, r14
+    mov eax, 28                     // MEMORY_ADDRESS
+    int 0x80
+    test rax, rax
+    js .Lobject_release
+    mov rdi, rax
+    mov rsi, r12
+    mov rcx, r13
+    rep movsb
+    mov rdi, r14
+    xor esi, esi
+    xor edx, edx
+    mov eax, 59                     // MEMORY_FREEZE
+    int 0x80
+    test rax, rax
+    jnz .Lobject_release
+    mov eax, 61                     // MEMORY_UNMAP_OBJECT
+    int 0x80
+    test rax, rax
+    jnz .Lobject_release
+    mov rax, r14
+    jmp .Lobject_done
+.Lobject_release:
+    mov r12, rax
+    mov rdi, r14
+    xor esi, esi
+    xor edx, edx
+    mov eax, 29                     // MEMORY_RELEASE
+    int 0x80
+    mov rax, r12
+.Lobject_done:
+    pop r14
+    pop r13
+    pop r12
+    ret
+.Lobject_invalid:
+    mov rax, -22
+    ret
+cathedral_object_send:
+    stage_packet
+    mov eax, 56                     // IPC_SEND_MEMORY
+    mov rdi, r8
+    mov rsi, rsp
+    xor edx, edx
+    int 0x80
+    finish_packet 0
 
 .section .note.GNU-stack,"",@progbits

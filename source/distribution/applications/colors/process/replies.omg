@@ -1,0 +1,52 @@
+module replies;
+// Wire decoding stops here. The application receives named completed work.
+use app::operations::Command;
+use app::operations::Completion;
+use app::operations::Reply;
+use app::operations::View;
+use app::operations::Input;
+use protocol::main;
+
+public machine failed(code: u64) -> Completion {
+    Completion { transport_status: code, reply: Reply::Complete }
+}
+public machine decoded(command: Command, words: [u64; 8]) -> Completion {
+    Completion { transport_status: 0u64, reply: reply(command, words) }
+}
+machine reply(command: Command, words: [u64; 8]) -> Reply {
+    transition command {
+        Command::Poll -> view(words)
+        Command::View -> view(words)
+        Command::List { realm } -> (Reply::Listed { status: words[0], count: words[1], object: words[2] })
+        Command::Read { object } -> (Reply::Read { status: words[0], revision: words[2], length: words[3], bytes: bytes(words[4]) })
+        Command::Publish { object, revision, realm, bytes } -> published(object, words)
+        Command::CreateSurface { epoch, rank } -> (Reply::Surface { status: words[0], handle: words[1] })
+        Command::Image { epoch, surface, x, y, asset } -> (Reply::Presented { status: words[0] })
+        Command::Rectangles { epoch, revision, background, indicator } -> (Reply::Presented { status: words[0] })
+        _ -> (Reply::Complete)
+    }
+}
+machine published(object: u64, words: [u64; 8]) -> Reply {
+    transition object == 0u64 {
+        true -> (Reply::Created { status: words[0] })
+        _ -> (Reply::Saved { status: words[0], object: words[1], revision: words[2] })
+    }
+}
+machine bytes(word: u64) -> [u8; 6] {
+    [(word & 255u64) as u8, ((word >> 8u64) & 255u64) as u8,
+        ((word >> 16u64) & 255u64) as u8, ((word >> 24u64) & 255u64) as u8,
+        ((word >> 32u64) & 255u64) as u8, ((word >> 40u64) & 255u64) as u8]
+}
+machine view(words: [u64; 8]) -> Reply {
+    Reply::View { view: View { status: words[0], epoch: words[1], width: words[2], height: words[3],
+        frames: (words[4] & NO_FRAMES) == 0u64, more: (words[5] & MORE) != 0u64, input: input(words) } }
+}
+machine input(words: [u64; 8]) -> Input {
+    transition words[5] & 255u64 {
+        POINTER -> (Input::Pointer { channel: words[5] >> 32u64, buttons: (words[5] >> 8u64) & 7u64, x: words[6], y: words[7] })
+        KEY -> (Input::Key { code: words[6], action: words[7] })
+        CANCEL -> (Input::Cancel { channel: words[5] >> 32u64, retire: false })
+        RETIRED -> (Input::Cancel { channel: words[5] >> 32u64, retire: true })
+        _ -> (Input::Other)
+    }
+}

@@ -1,0 +1,98 @@
+module storage;
+use main::Context;
+use app::state::State;
+use app::operations::Command;
+use app::operations::Completion;
+use app::operations::Reply;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::time::Tick;
+use runtime::connection::call::CallReply;
+use runtime::memory::object::Creation;
+use runtime::storage::main;
+use exchange;
+use transfer;
+use replies;
+
+public machine bind(gate: &Gate, context: &mut Context, state: &State) -> Completion reaches Kernel blocks; invokes Kernel; {
+    let tick: Tick = runtime::time::read(gate, context.clock);
+    transition tick {
+        Tick::Read { value } -> block binding(gate, context, state, value)
+        Tick::Failed { code } -> replies::failed(code)
+    }
+}
+machine binding(gate: &Gate, context: &mut Context, state: &State, now: u64) -> Completion reaches Kernel {
+    let words: [u64; 8] = runtime::storage::main::bind_request(now);
+    let reply: CallReply = block exchange::request(gate, context, state, true, &words, 0u64, words[7]);
+    transition reply {
+        CallReply::Received { frame, notification } -> block bound(gate, context, frame, notification)
+        CallReply::Endpoint { frame, endpoint } -> block endpoint(gate, context, endpoint)
+        CallReply::Failed { code } -> replies::failed(code)
+    }
+}
+machine bound(gate: &Gate, context: &mut Context, frame: runtime::connection::main::Frame, notification: u64) -> Completion reaches Kernel {
+    transition frame.bytes == 64u64 && notification == 0u64 {
+        true -> installed(context, frame.payload)
+        _ -> block notification(gate, context, notification)
+    }
+}
+machine installed(context: &mut Context, words: [u64; 8]) -> Completion {
+    let status: u64 = runtime::storage::main::bound(&mut context.storage, words);
+    Completion { transport_status: 0u64, reply: Reply::Bound { status: status, realm: context.storage.realm } }
+}
+machine endpoint(gate: &Gate, context: &mut Context, endpoint: u64) -> Completion reaches Kernel {
+    let ignored: u64 = Kernel::close(gate, endpoint);
+    transition { _ -> block malformed(gate, context) }
+}
+machine notification(gate: &Gate, context: &mut Context, notification: u64) -> Completion reaches Kernel {
+    let ignored: u64 = Kernel::notify_drop(gate, notification);
+    transition { _ -> block malformed(gate, context) }
+}
+machine malformed(gate: &Gate, context: &mut Context) -> Completion reaches Kernel {
+    let ignored: u64 = block runtime::connection::main::close(gate, &mut context.storage.peer);
+    replies::failed(runtime::kernel::IO_ERROR)
+}
+public machine execute(gate: &Gate, context: &mut Context, state: &State, command: Command) -> Completion reaches Kernel blocks; invokes Kernel; {
+    let tick: Tick = runtime::time::read(gate, context.clock);
+    transition tick {
+        Tick::Read { value } -> block scoped(gate, context, state, command, value)
+        Tick::Failed { code } -> replies::failed(code)
+    }
+}
+machine scoped(gate: &Gate, context: &mut Context, state: &State, command: Command, now: u64) -> Completion reaches Kernel {
+    let mut words: [u64; 8] = encode(command);
+    let status: u64 = runtime::storage::main::request(&context.storage, &mut words, now);
+    transition status == 0u64 {
+        true -> block send(gate, context, state, command, &words)
+        _ -> replies::failed(status)
+    }
+}
+machine send(gate: &Gate, context: &mut Context, state: &State, command: Command, words: &[u64; 8]) -> Completion reaches Kernel {
+    transition command {
+        Command::Publish { object, revision, realm, bytes } -> block publish(gate, context, state, command, words, bytes)
+        _ -> block transfer::plain(gate, context, state, command, true, words, 0u64, words[7])
+    }
+}
+machine publish(gate: &Gate, context: &mut Context, state: &State, command: Command, words: &[u64; 8], bytes: [u8; 6]) -> Completion reaches Kernel {
+    let created: Creation = block record(gate, bytes);
+    transition created {
+        Creation::Ready { object } -> block transfer::retained(gate, context, state, command, true, words, object.handle, words[7])
+        Creation::Failed { code } -> replies::failed(code)
+    }
+}
+// The staging frame ends before any service or owner-control wait begins.
+machine record(gate: &Gate, bytes: [u8; 6]) -> Creation reaches Kernel {
+    let mut buffer: [u64; 2048];
+    buffer[0] = (bytes[0] as u64) | ((bytes[1] as u64) << 8u64) | ((bytes[2] as u64) << 16u64)
+        | ((bytes[3] as u64) << 24u64) | ((bytes[4] as u64) << 32u64) | ((bytes[5] as u64) << 40u64);
+    block runtime::memory::object::create(gate, &buffer, 6u64)
+}
+
+machine encode(command: Command) -> [u64; 8] {
+    transition command {
+        Command::List { realm } -> ([6u64, realm, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64])
+        Command::Read { object } -> ([2u64, object, 0u64, 0u64, 6u64, 0u64, 0u64, 0u64])
+        Command::Publish { object, revision, realm, bytes } -> ([3u64, object, revision, realm, 6u64, 0u64, 0u64, 0u64])
+        _ -> ([0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64])
+    }
+}

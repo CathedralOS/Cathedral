@@ -1,0 +1,28 @@
+module control;
+// Owner queries inspect state without advancing or replaying pending service work.
+use state::State;
+use state::Phase;
+use state::StorageStep;
+use operations::Report;
+use protocol::main;
+
+public machine report(s: &State, loss: bool, cpu: u64) -> Report {
+    transition loss {
+        true -> pending(s)
+        _ -> (Report::Health { paints: s.paints, wakes: s.wakes, cpu: cpu,
+            alternate: s.alternate, error: s.error, pointers: s.pointers, revision: s.revision })
+    }
+}
+machine pending(s: &State) -> Report {
+    transition s.phase {
+        Phase::Storage { step } -> storage(s, step)
+        _ -> (Report::Loss { error: s.error })
+    }
+    machine storage(s: &State, step: StorageStep) -> Report {
+        transition step {
+            StorageStep::Saved -> (Report::Loss { error: BUSY })
+            StorageStep::Created -> (Report::Loss { error: BUSY })
+            _ -> (Report::Loss { error: s.error })
+        }
+    }
+}

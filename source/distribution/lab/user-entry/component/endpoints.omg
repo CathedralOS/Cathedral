@@ -1,0 +1,49 @@
+module endpoints;
+// Use both transferred endpoints, then prove an ordinary broker call still works.
+// The parent checks aggregate resources after success and every refused half pair.
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::services::main::Services;
+use runtime::services::endpoints::Part;
+
+public machine check(gate: &Gate, binding: &mut Services, mode: u64, clock: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let first: Part = block runtime::services::endpoints::acquire(gate, binding, clock, 2u64, 0u64);
+    transition first {
+        Part::Granted { endpoint } -> block second(gate, binding, mode, clock, endpoint)
+        Part::Refused { code } -> block refused(gate, binding, mode, code)
+    }
+}
+machine second(gate: &Gate, binding: &mut Services, mode: u64, clock: u64, sender: u64) -> u64 reaches Kernel {
+    let second: Part = block runtime::services::endpoints::acquire(gate, binding, clock, 2u64, 1u64);
+    transition second {
+        Part::Granted { endpoint } -> block exercise(gate, binding, sender, endpoint)
+        Part::Refused { code } -> block half(gate, binding, mode, sender, code)
+    }
+}
+machine half(gate: &Gate, binding: &mut Services, mode: u64, sender: u64, code: u64) -> u64 reaches Kernel {
+    let closed: u64 = Kernel::close(gate, sender);
+    transition { _ -> block refused(gate, binding, mode, code) }
+}
+machine refused(gate: &Gate, binding: &mut Services, mode: u64, code: u64) -> u64 reaches Kernel {
+    let healthy: bool = binding.broker.fault == 0u64;
+    block runtime::services::main::close(gate, binding);
+    transition (mode == 131u64 && code == 0x53520001u64 && healthy)
+        || (mode >= 132u64 && code == kernel::IO_ERROR && !healthy) {
+        true -> (0u64)
+        _ -> (210u64)
+    }
+}
+machine exercise(gate: &Gate, binding: &mut Services, sender: u64, receiver: u64) -> u64 reaches Kernel {
+    let mut words: [u64; 8];
+    words[0] = 0x12345678u64;
+    let sent: u64 = Kernel::send(gate, sender, &words, 8u64);
+    let received: u64 = block Kernel::receive(gate, receiver, &mut words);
+    let a: u64 = Kernel::close(gate, sender);
+    let b: u64 = Kernel::close(gate, receiver);
+    block runtime::services::main::close(gate, binding);
+    transition sent == 8u64 && received == 8u64 && words[0] == 0x12345678u64 && a == 0u64 && b == 0u64 {
+        true -> (0u64)
+        _ -> (211u64)
+    }
+}

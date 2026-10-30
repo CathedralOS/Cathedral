@@ -36,23 +36,35 @@ machine grant(gate: &Gate, peer: &mut Peer, now: u64) -> u64 reaches Kernel {
     machine receive(gate: &Gate, peer: &mut Peer) -> u64 reaches Kernel {
         let mut packet: [u64; 10];
         let status: u64 = block Kernel::notify_receive(gate, peer.receiver, &mut packet);
+        transition status == 0xffffffffffffffa6u64 {
+            true -> block endpoint(gate, peer)
+            _ -> received(gate, peer, status, packet, 3u64)
+        }
+    }
+    machine endpoint(gate: &Gate, peer: &mut Peer) -> u64 reaches Kernel {
+        let mut packet: [u64; 10];
+        let status: u64 = block Kernel::endpoint_receive(gate, peer.receiver, &mut packet);
+        transition { _ -> received(gate, peer, status, packet, 2u64) }
+    }
+    machine received(gate: &Gate, peer: &mut Peer, status: u64, packet: [u64; 10], kind: u64) -> u64 reaches Kernel {
         transition status < kernel::ERROR_BASE {
-            true -> accepted(gate, peer, status, packet)
+            true -> accepted(gate, peer, status, packet, kind)
             _ -> (status)
         }
     }
-    machine accepted(gate: &Gate, peer: &mut Peer, status: u64, packet: [u64; 10]) -> u64 reaches Kernel {
+    machine accepted(gate: &Gate, peer: &mut Peer, status: u64, packet: [u64; 10], kind: u64) -> u64 reaches Kernel {
         transition peer.grant != 0u64 {
-            true -> duplicate(gate, packet[1])
-            _ -> installed(peer, status, packet)
+            true -> duplicate(gate, packet[1], kind)
+            _ -> installed(peer, status, packet, kind)
         }
     }
-    machine duplicate(gate: &Gate, handle: u64) -> u64 reaches Kernel {
-        let ignored: u64 = Kernel::notify_drop(gate, handle);
+    machine duplicate(gate: &Gate, handle: u64, kind: u64) -> u64 reaches Kernel {
+        connection::custody::release_grant(gate, kind, handle);
         kernel::IO_ERROR
     }
-    machine installed(peer: &mut Peer, status: u64, packet: [u64; 10]) -> u64 {
+    machine installed(peer: &mut Peer, status: u64, packet: [u64; 10], kind: u64) -> u64 {
         peer.grant = packet[1];
+        peer.grant_kind = kind;
         peer.grant_id = packet[2];
         transition status == 8u64 && packet[0] == 8u64 && packet[1] != 0u64
             && packet[2] != 0u64 && packet[2] == peer.pending {
@@ -90,6 +102,7 @@ machine attachment(peer: &mut Peer, now: u64, hint: u64, transfer: u64) -> Reply
     transition peer.frame.attachment {
         0u64 -> plain(peer)
         3u64 -> notification(peer, now, hint, transfer)
+        2u64 -> notification(peer, now, hint, transfer)
         _ -> (Reply::Failed { code: kernel::IO_ERROR })
     }
     machine plain(peer: &mut Peer) -> Reply {
@@ -100,19 +113,30 @@ machine attachment(peer: &mut Peer, now: u64, hint: u64, transfer: u64) -> Reply
     }
     machine notification(peer: &mut Peer, now: u64, hint: u64, transfer: u64) -> Reply {
         transition peer.grant != 0u64 && peer.grant_id == peer.frame.id {
-            true -> complete(peer)
+            true -> matched(peer)
             _ -> incomplete(peer, now, hint, transfer)
+        }
+    }
+    machine matched(peer: &mut Peer) -> Reply {
+        transition peer.grant_kind == peer.frame.attachment {
+            true -> complete(peer)
+            _ -> (Reply::Failed { code: kernel::IO_ERROR })
         }
     }
 }
 machine complete(peer: &mut Peer) -> Reply {
     let grant: u64 = peer.grant;
+    let kind: u64 = peer.grant_kind;
     peer.grant = 0u64;
+    peer.grant_kind = 0u64;
     peer.grant_id = 0u64;
     peer.pending = 0u64;
     peer.partial = false;
     peer.has_frame = false;
-    Reply::Complete { frame: peer.frame, notification: grant }
+    transition kind == 2u64 {
+        true -> (Reply::Endpoint { frame: peer.frame, endpoint: grant })
+        _ -> (Reply::Complete { frame: peer.frame, notification: grant })
+    }
 }
 machine incomplete(peer: &mut Peer, now: u64, hint: u64, transfer: u64) -> Reply {
     transition hint > 1u64 || transfer == kernel::PEER_CLOSED {

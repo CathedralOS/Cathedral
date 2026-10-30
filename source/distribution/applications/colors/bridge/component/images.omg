@@ -48,7 +48,7 @@ machine close(p: &mut [u64; 4096], epoch: u64, surface: u64, x: u64, y: u64, wid
     machine pixel(p: &mut [u64; 4096], width: u64, index: u64) -> u64 requires index < 1248u64 {
         let lo: u64 = pixels::close_pixel(width, index * 2u64);
         let hi: u64 = pixels::close_pixel(width, index * 2u64 + 1u64);
-        p[16u64 + index] = lo | (hi << 32u64);
+        p[16u64 + index] = (lo & 0xffffffffu64) | ((hi & 0xffffffffu64) << 32u64);
         transition { _ -> fill(p, width, index + 1u64) }
     }
     machine ready(p: &mut [u64; 4096], width: u64) -> u64 {

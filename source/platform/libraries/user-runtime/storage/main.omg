@@ -1,0 +1,43 @@
+module storage::main;
+// Child-local storage binding. The matrix substitutes upstream authority at
+// every hop; neither object IDs nor the realm number grant access themselves.
+use connection::main::Peer;
+use protocol::main;
+use time;
+
+public data Scope { peer: Peer; binding: u64; realm: u64; }
+public machine bind_request(now: u64) -> [u64; 8] {
+    let mut words: [u64; 8];
+    words[0] = 12u64;
+    words[7] = time::after(now, 1200u64);
+    words
+}
+public machine bound(scope: &mut Scope, words: [u64; 8]) -> u64 {
+    transition words[0] == 0u64 {
+        true -> validate(scope, words)
+        _ -> (words[0])
+    }
+    machine validate(scope: &mut Scope, words: [u64; 8]) -> u64 {
+        transition words[1] != 0u64 && words[1] <= 0xffffffffffffu64 {
+            true -> installed(scope, words)
+            _ -> (IO_ERROR)
+        }
+    }
+    machine installed(scope: &mut Scope, words: [u64; 8]) -> u64 {
+        scope.binding = words[1];
+        scope.realm = words[2];
+        0u64
+    }
+}
+public machine request(scope: &Scope, words: &mut [u64; 8], now: u64) -> u64 {
+    let operation: u64 = words[0];
+    transition scope.binding != 0u64 && scope.binding <= 0xffffffffffffu64 && operation < 256u64 {
+        true -> scoped(scope, words, now, operation)
+        _ -> (DENIED)
+    }
+    machine scoped(scope: &Scope, words: &mut [u64; 8], now: u64, operation: u64 [0..=255]) -> u64 {
+        words[0] = ((scope.binding & 0xffffffffffffu64) << 16u64) | (256u64 + operation);
+        words[7] = time::after(now, 1200u64);
+        0u64
+    }
+}

@@ -61,7 +61,7 @@ public machine reply(gate: &Gate, listener: &mut Server, payload: &[u64; 8]) -> 
         _ -> (kernel::IO_ERROR)
     }
     machine publish(gate: &Gate, listener: &mut Server, payload: &[u64; 8]) -> u64 reaches Kernel {
-        let status: u64 = block mailbox::send(gate, &mut listener.peer, listener.pending, payload);
+        let status: u64 = block mailbox::send(gate, &mut listener.peer, listener.pending, payload, 0u64);
         transition {
             status == 0u64 -> block published(gate, listener)
             status == kernel::WOULD_BLOCK -> (status)

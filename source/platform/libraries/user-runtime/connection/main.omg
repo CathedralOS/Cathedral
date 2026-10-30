@@ -29,6 +29,7 @@ public data Peer {
     frame: Frame;
     has_frame: bool;
     grant: u64;
+    grant_kind: u64;
     grant_id: u64;
     partial: bool;
     partial_deadline: u64;
@@ -42,6 +43,7 @@ public data Frame [copy] {
 public data Reply {
     case Pending;
     case Complete(frame: Frame, notification: u64);
+    case Endpoint(frame: Frame, endpoint: u64);
     case Failed(code: u64);
 }
 
@@ -59,31 +61,43 @@ public machine connect(gate: &Gate, peer: &mut Peer, sender: u64, receiver: u64,
 }
 public machine begin(gate: &Gate, peer: &mut Peer, payload: &[u64; 8]) -> u64
     reaches Kernel blocks; invokes Kernel; {
+    block begin_object(gate, peer, payload, 0u64)
+}
+// Retain the sealed source until reply or retirement. Even a publication failure
+// after handing off its reader retires this stream; a mutation is never replayed.
+public machine begin_object(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], object: u64) -> u64
+    reaches Kernel blocks; invokes Kernel; {
     transition peer.fault != 0u64 {
         true -> (peer.fault)
-        _ -> block available(gate, peer, payload)
+        _ -> block available(gate, peer, payload, object)
     }
-    machine available(gate: &Gate, peer: &mut Peer, payload: &[u64; 8]) -> u64 reaches Kernel {
+    machine available(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], object: u64) -> u64 reaches Kernel {
         transition peer.pending != 0u64 {
             true -> (kernel::BUSY)
-            _ -> block identified(gate, peer, payload)
+            _ -> block identified(gate, peer, payload, object)
         }
     }
-    machine identified(gate: &Gate, peer: &mut Peer, payload: &[u64; 8]) -> u64 reaches Kernel {
+    machine identified(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], object: u64) -> u64 reaches Kernel {
         let previous: u64 = peer.next_id;
         transition previous < 0xffffffffffffffffu64 {
-            true -> block publish(gate, peer, payload, previous + 1u64)
+            true -> block publish(gate, peer, payload, object, previous + 1u64)
             _ -> block fail(gate, peer, kernel::IO_ERROR)
         }
     }
 }
-machine publish(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], id: u64) -> u64 reaches Kernel {
-    let status: u64 = block mailbox::send(gate, peer, id, payload);
+machine publish(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], object: u64, id: u64) -> u64 reaches Kernel {
+    let status: u64 = block mailbox::send(gate, peer, id, payload, object);
     transition status == 0u64 {
         true -> block published(gate, peer, id)
         // Backpressure before publication is safe to retry; all other errors
         // retire the connection. Never replay a possibly exposed operation.
-        _ -> block send_failed(gate, peer, status)
+        _ -> block attachment_failed(gate, peer, status, object)
+    }
+}
+machine attachment_failed(gate: &Gate, peer: &mut Peer, code: u64, object: u64) -> u64 reaches Kernel {
+    transition object == 0u64 {
+        true -> block send_failed(gate, peer, code)
+        _ -> block fail(gate, peer, code)
     }
 }
 machine published(gate: &Gate, peer: &mut Peer, id: u64) -> u64 reaches Kernel {

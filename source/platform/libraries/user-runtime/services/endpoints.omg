@@ -1,0 +1,53 @@
+module services::endpoints;
+// Acquire one explicitly requested endpoint from the installed broker. A half
+// pair remains caller-owned: close it if the second acquisition is refused.
+// Decoding is separate so event loops can service owner control while waiting.
+use kernel::Gate;
+use kernel::Kernel;
+use kernel;
+use connection::call::CallReply;
+use services::main::Services;
+use protocol::services::request;
+
+public data Part {
+    case Granted(endpoint: u64);
+    case Refused(code: u64);
+}
+public machine acquire(gate: &Gate, binding: &mut Services, clock: u64,
+    contract: u64, part: u64) -> Part reaches Kernel blocks; invokes Kernel; {
+    let words: [u64; 8] = request(contract, 1u64, 1u64, part);
+    let reply: CallReply = block connection::call::exchange(gate, &mut binding.broker, clock, &words);
+    transition reply {
+        CallReply::Endpoint { frame, endpoint } -> block endpoint_reply(gate, binding, frame, endpoint)
+        CallReply::Received { frame, notification } -> block plain_reply(gate, binding, frame, notification)
+        CallReply::Failed { code } -> (Part::Refused { code: code })
+    }
+}
+public machine endpoint_reply(gate: &Gate, binding: &mut Services, frame: connection::main::Frame, endpoint: u64) -> Part reaches Kernel blocks; invokes Kernel; {
+    transition valid(frame) && frame.payload[0] == 0u64 && frame.payload[1] == 1u64 && endpoint != 0u64 {
+        true -> (Part::Granted { endpoint: endpoint })
+        _ -> block invalid_endpoint(gate, binding, endpoint)
+    }
+}
+machine invalid_endpoint(gate: &Gate, binding: &mut Services, endpoint: u64) -> Part reaches Kernel {
+    let ignored: u64 = Kernel::close(gate, endpoint);
+    transition { _ -> block malformed(gate, binding) }
+}
+public machine plain_reply(gate: &Gate, binding: &mut Services, frame: connection::main::Frame, notification: u64) -> Part reaches Kernel blocks; invokes Kernel; {
+    transition valid(frame) && frame.payload[0] != 0u64 && frame.payload[1] == 0u64 && notification == 0u64 {
+        true -> (Part::Refused { code: frame.payload[0] })
+        _ -> block invalid_notification(gate, binding, notification)
+    }
+}
+machine invalid_notification(gate: &Gate, binding: &mut Services, notification: u64) -> Part reaches Kernel {
+    let ignored: u64 = Kernel::notify_drop(gate, notification);
+    transition { _ -> block malformed(gate, binding) }
+}
+machine malformed(gate: &Gate, binding: &mut Services) -> Part reaches Kernel {
+    block services::main::close(gate, binding);
+    Part::Refused { code: kernel::IO_ERROR }
+}
+machine valid(frame: connection::main::Frame) -> bool {
+    frame.bytes == 64u64 && frame.payload[2] == 0u64 && frame.payload[3] == 0u64
+        && frame.payload[4] == 0u64 && frame.payload[5] == 0u64 && frame.payload[6] == 0u64 && frame.payload[7] == 0u64
+}

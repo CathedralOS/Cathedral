@@ -12,6 +12,7 @@ python tools/omega-user/build.py source/distribution/lab/user-entry/native --com
 python tools/omega-user/run_test.py --compiler path/to/new/omega.exe
 python tools/omega-user/connection_test.py --compiler path/to/new/omega.exe
 python tools/omega-user/background_test.py --compiler path/to/new/omega.exe
+python tools/omega-user/colors_test.py --compiler path/to/new/omega.exe
 python -m unittest discover -s tools/omega-user -p "test_*.py"
 ```
 
@@ -46,7 +47,8 @@ and the declarations in `source/platform/libraries/user-runtime/kernel.omg` and
 `arch/x86_64/gate.omg` against `entry.S`. The table includes process/IPC/clock calls plus shared-memory allocation,
 release, typed read-view transfer, bounded shared word access and notification
 creation, handoff, signal, wait, control and drop, plus lookup of installed owner
-endpoints. The native leaves must preserve the declared buffers,
+endpoints, typed endpoint acceptance, and bounded immutable object creation/send.
+The native leaves must preserve the declared buffers,
 range bounds, blocking and calling convention. Accept the inspected rows in the
 generated review document and resume with the same qualified compiler:
 
@@ -62,8 +64,8 @@ The component compiler and native linker have separate receipts. The linked
 receipt embeds the component receipt and hashes the entry adapter, linker
 layout, component and builder. Publication rejects input changes during linking.
 There is no dynamic loader, runtime relocation, writable load or additional
-image-page allowance. The ordinary F5 profile now selects Background's
-`distribution/applications/background/native/main.omg`. The mixed-producer
+image-page allowance. The ordinary F5 profile selects Background's and Colors'
+`distribution/applications/{background,colors}/native/main.omg` entries. The mixed-producer
 harness uses `OMEGA_USER_BIN`, or the saved standalone compiler above, for that
 entry. Rust entries retain their normal Cargo build.
 
@@ -72,10 +74,20 @@ An optional `process.json` beside the native consumer declares `imports`
 [manifest.py](manifest.py) encodes the platform's existing funded import record;
 the linker places it first in the read-only load, and packaging verifies that
 position. This requests launch authority from the owner; it grants none itself.
-The installed standalone Background supplies such a record.
+Both installed standalone apps supply such a record.
 
 The current compiler rejects a raw `int` inside checked user assembly as a
 hidden control transfer. The native leaves use Omega's existing declared
 `TableFunction` boundary instead; this preserves explicit external-contract
 admission and does not teach the compiler to treat arbitrary interrupts as safe.
 A native Cathedral target/entry provider can eventually replace this adapter.
+
+`colors_test.py` runs the actual standalone Colors process against a controlled
+Rust service. It holds a save while requiring owner HEALTH/LOSS responses,
+rejects that save and checks confirmed pixels and loss reporting, validates
+checker/close image backing, and repeats with the owner connection retired.
+It also checks that idle Colors parks, one real notification resumes it, and
+a queued batch longer than the app drain bound needs no second signal.
+Cancellation must refund channels, pages and notifications in both cases.
+The ordinary desktop test additionally checks successful saves and cold reopen;
+this focused test alone is not desktop acceptance.

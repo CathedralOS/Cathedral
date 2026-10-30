@@ -53,6 +53,8 @@ machine retire_owner(gate: &Gate, context: &mut Context, now: u64) -> runtime::s
 machine broker(gate: &Gate, context: &mut Context, now: u64) -> runtime::services::main::Reply reaches Kernel {
     let reply: Reply = block runtime::connection::main::poll(gate, &mut context.services.broker, now);
     transition reply {
+        Reply::Endpoint { frame, endpoint } ->
+            block runtime::services::main::unexpected_endpoint(gate, &mut context.services, endpoint)
         Reply::Complete { frame, notification } ->
             block runtime::services::main::received(gate, &mut context.services, frame, notification)
         Reply::Failed { code } -> (runtime::services::main::Reply::Failed { code: code })

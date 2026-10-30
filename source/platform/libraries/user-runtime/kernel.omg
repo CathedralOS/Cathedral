@@ -4,6 +4,8 @@ public const WOULD_BLOCK: u64 = 0xfffffffffffffff5u64;
 public const IO_ERROR: u64 = 0xfffffffffffffffbu64;
 public const PEER_CLOSED: u64 = 0xffffffffffffffe0u64;
 public const TIMED_OUT: u64 = 0xffffffffffffff92u64;
+public const NOTIFY_SIGNALED: u64 = 0u64;
+public const NOTIFY_TIMED_OUT: u64 = 1u64;
 public const BUSY: u64 = 0xfffffffffffffff0u64;
 public const INVALID_ARGUMENT: u64 = 0xffffffffffffffeau64;
 // Temporary native boundary, not a matrix service bundle. The table comes from
@@ -34,6 +36,9 @@ public data Gate {
     notify_send: addr;
     notify_receive: addr;
     bootstrap: addr;
+    endpoint_receive: addr;
+    object_create: addr;
+    object_send: addr;
 }
 
 public boundary trait Kernel {
@@ -62,4 +67,7 @@ public boundary trait Kernel {
     machine notify_send(gate: &Gate, endpoint: u64, packet: &[u64; 10]) -> u64 reaches;
     machine notify_receive(gate: &Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64 reaches blocks;
     machine bootstrap(gate: &Gate, index: u64) -> u64 reaches;
+    machine endpoint_receive(gate: &Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64 reaches blocks;
+    machine object_create(gate: &Gate, words: &[u64; 2048], bytes: u64 [1..=16384]) -> u64 reaches blocks;
+    machine object_send(gate: &Gate, endpoint: u64, packet: &[u64; 10]) -> u64 reaches;
 }

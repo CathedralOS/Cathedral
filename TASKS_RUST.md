@@ -9,6 +9,74 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
+### Standalone Colors: process and storage
+
+Normal F5 now selects `source/distribution/applications/colors/native/` for
+both outer and nested Colors. The standalone process runs the existing app model
+through its Omega `process/main.omg` entrance.
+Startup, service acquisition, shared transport, storage binding, sealed image and
+record backing, owner control and waits no longer need the Rust app host.
+The runtime gained typed endpoint reply acceptance and bounded outgoing sealed
+objects; the platform owns those mechanisms, while Colors owns its `MC01` schema,
+rendering commands, uncertainty handling and event loop. No kernel mechanism,
+limit, storage format or compiler source changed. The qualified standalone
+producer remains `a88a8b63956f99da3f6a1338d6e9d9bf2badc61d` below.
+
+A held save cannot block independent HEALTH/LOSS requests or replay the mutation.
+LOSS reports BUSY until a pending write completes. A failed save retains confirmed
+pixels and loss state. Owner retirement leaves independent service connections
+usable; cancellation returns channel, page and notification budgets. The actual
+process witness is `python tools/omega-user/colors_test.py`.
+
+Two problems surfaced during integration:
+
+- Retaining a 16 KiB staging array across a service wait exhausted the unchanged
+  32 KiB user stack when owner control arrived. Image/record preparation now
+  returns the sealed handle before waiting; no large local array spans that wait.
+- The standalone Colors and Background wait loops had the notification results
+  reversed: signaled is zero, timeout is one. They now use named constants.
+  Colors also honors retained MORE after servicing owner control between bounded
+  input batches, without requiring another coalesced notification. Its fixture
+  now requires idle parking, a real wake, then more than one queued batch.
+  The pre-fix ELF fails that fixture with `idle Colors polled without a wake` at
+  `build/omega-user/colors-control/20261030T043808558203Z/`; corrected Colors passes
+  at `build/omega-user/colors-control/20261030T044246105821Z/`.
+
+The first desktop/cold-reopen candidate passes at
+`build/boot-harness-rs/desktop/20261030T042646648545Z/` (1,995-record host oracle).
+Before the wait correction, nesting with pointer stress stalled on the saved
+Colors pixels at `20261030T042832532215Z`; a no-stress repeat stalled on Notes
+input at `20261030T043448924493Z`. Neither is a passing nested qualification.
+The corrected candidate passes both fresh and cold three-level nesting under
+continuous pointer input at `20261030T044638139850Z`, including deep saves,
+protected close, repeated subtree reclamation and outer/inner isolation. This
+passing run does not establish that the older intermittent nested-close issue
+recorded below is fixed. Background's corrected idle/control fixture passes at
+`build/omega-user/background-control/20261030T044612456718Z/`.
+The actual default F5 profile passes desktop and cold reopen at
+`build/boot-harness-rs/desktop/20261030T045147310093Z/`, with the 1,995-record host
+oracle. Both installed Colors images match the tested standalone ELF after ordinary
+load-segment trimming/title packaging (66/240 image pages). The local receipt is
+`build/omega-user/colors-promotion.json`.
+
+The runtime's endpoint/sealed-object tests pass all 25 connection cases at
+`build/omega-user/connections/20261030T045301270575Z/`. Both primitive clock
+variants pass at `build/omega-user/tests/20261030T045347627160Z/` (47/240 pages).
+The retained hosted Colors model passes all fourteen tests, including bounded
+owner-query opportunities;
+the Rust host remains a comparison fixture. Seven standalone tool checks and
+source layout (100 Omega / 154 Rust edges), affected clippy features and format
+checks pass. The native adapter is x86-64 only, creates outgoing immutable objects
+up to 16 KiB, and does not yet receive
+sealed-object replies. Colors HEALTH currently supplies zero CPU time; that
+optional diagnostic call is not yet in the Omega runtime.
+
+The next useful migration is Notes: reuse the same process foundation and add
+only the attachment/custody support its larger documents need.
+Keep the kernel and provider implementations as the Rust infrastructure while
+moving app ownership into Omega. Bulk language migration and native-kernel
+qualification remain separate work.
+
 ### Standalone Omega userspace: entry and kernel calls
 
 Background now runs without the Rust application host in the normal desktop.

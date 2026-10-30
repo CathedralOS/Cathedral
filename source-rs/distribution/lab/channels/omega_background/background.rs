@@ -49,9 +49,7 @@ fn exercise(retire_owner: bool) {
     static mut SHARED: SharedSlot = SharedSlot::empty();
     let shared = &raw mut SHARED;
     // SAFETY: Each exercise owns this slot through server drop, before reuse.
-    server
-        .enable_shared(0, unsafe { &mut *shared })
-        .unwrap();
+    server.enable_shared(0, unsafe { &mut *shared }).unwrap();
     let rights = Notification::create().unwrap();
     let mut polls = 0;
     loop {
@@ -112,6 +110,16 @@ fn exercise(retire_owner: bool) {
         } else {
             assert_eq!(words[0], matrix::PAINT);
             server.reply(&request, &matrix::encode([0; 8])).unwrap();
+            // Its periodic refresh is 100 ticks. It must park before that,
+            // and an actual interaction signal must wake it promptly.
+            assert!(
+                server
+                    .next_event_for(&[], Some(time::after(20).unwrap()))
+                    .unwrap()
+                    .is_none(),
+                "idle Background polled without a wake"
+            );
+            rights[1].signal(false).unwrap();
         }
     }
     child.cancel().unwrap();

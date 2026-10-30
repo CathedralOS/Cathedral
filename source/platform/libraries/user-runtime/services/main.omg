@@ -45,8 +45,15 @@ public machine exchange(gate: &Gate, binding: &mut Services, clock: u64, words: 
     let result: CallReply = block call::exchange(gate, &mut binding.broker, clock, words);
     transition result {
         CallReply::Received { frame, notification } -> block received(gate, binding, frame, notification)
+        CallReply::Endpoint { frame, endpoint } -> block unexpected_endpoint(gate, binding, endpoint)
         CallReply::Failed { code } -> (Reply::Failed { code: code })
     }
+}
+public machine unexpected_endpoint(gate: &Gate, binding: &mut Services, endpoint: u64) -> Reply
+    reaches Kernel blocks; invokes Kernel; {
+    let ignored: u64 = Kernel::close(gate, endpoint);
+    block close(gate, binding);
+    Reply::Failed { code: kernel::IO_ERROR }
 }
 // Finish a plain service reply after either the blocking helper or an app-owned
 // multiplexed wait. Attachment validation and release stay at this boundary.

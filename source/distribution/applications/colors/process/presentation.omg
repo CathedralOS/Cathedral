@@ -1,0 +1,92 @@
+module presentation;
+// Serialize the existing drawing contract. Geometry and pixel contents remain
+// app decisions; transfer owns immutable attachment lifetime.
+use main::Context;
+use app::state::State;
+use app::operations::Command;
+use app::operations::Completion;
+use app::operations::Asset;
+use app::operations::Rectangle;
+use app::rendering::pixels;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::memory::object::Creation;
+use transfer;
+use replies;
+
+public machine execute(gate: &Gate, context: &mut Context, state: &State, command: Command) -> Completion reaches Kernel blocks; invokes Kernel; {
+    transition command {
+        Command::Image { epoch, surface, x, y, asset } -> block image(gate, context, state, command, epoch, surface, x, y, asset)
+        _ -> block plain(gate, context, state, command)
+    }
+}
+machine plain(gate: &Gate, context: &mut Context, state: &State, command: Command) -> Completion reaches Kernel {
+    let words: [u64; 8] = encode(command);
+    block transfer::plain(gate, context, state, command, false, &words, 0u64, 0u64)
+}
+machine encode(command: Command) -> [u64; 8] {
+    transition command {
+        Command::Poll -> ([5u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64])
+        Command::View -> ([1u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64])
+        Command::CreateSurface { epoch, rank } -> ([6u64, epoch, rank, 0u64, 0u64, 0u64, 0u64, 0u64])
+        Command::Rectangles { epoch, revision, background, indicator } -> rectangles(epoch, revision, background, indicator)
+        _ -> ([0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64])
+    }
+}
+machine rectangles(epoch: u64, revision: u64, a: Rectangle, b: Rectangle) -> [u64; 8] {
+    [13u64, epoch, revision, a.surface,
+        (a.x & 65535u64) | ((a.y & 65535u64) << 16u64) | ((a.width & 65535u64) << 32u64) | ((a.height & 65535u64) << 48u64),
+        a.color | ((b.surface & 4294967295u64) << 32u64),
+        (b.surface >> 32u64) | ((b.x & 65535u64) << 32u64) | ((b.y & 65535u64) << 48u64),
+        (b.width & 65535u64) | ((b.height & 65535u64) << 16u64) | ((b.color & 4294967295u64) << 32u64)]
+}
+machine image(gate: &Gate, context: &mut Context, state: &State, command: Command,
+    epoch: u64, surface: u64, x: u64, y: u64, asset: Asset) -> Completion reaches Kernel {
+    transition asset {
+        Asset::Checker -> block raster(gate, context, state, command, epoch, surface, x, y, asset, 32u64, 32u64, 4096u64)
+        Asset::Close { width } -> block close(gate, context, state, command, epoch, surface, x, y, asset, width)
+    }
+}
+machine close(gate: &Gate, context: &mut Context, state: &State, command: Command,
+    epoch: u64, surface: u64, x: u64, y: u64, asset: Asset, width: u64) -> Completion reaches Kernel {
+    transition width {
+        20u64 -> block raster(gate, context, state, command, epoch, surface, x, y, asset, width, 16u64, 1280u64)
+        156u64 -> block raster(gate, context, state, command, epoch, surface, x, y, asset, width, 16u64, 9984u64)
+        _ -> replies::failed(runtime::kernel::INVALID_ARGUMENT)
+    }
+}
+machine raster(gate: &Gate, context: &mut Context, state: &State, command: Command,
+    epoch: u64, surface: u64, x: u64, y: u64, asset: Asset, width: u64, height: u64, length: u64 [1..=16384]) -> Completion reaches Kernel {
+    let created: Creation = block backing(gate, asset, length);
+    let words: [u64; 8] = [8u64, epoch, surface, x, y, width, height, width];
+    transition created {
+        Creation::Ready { object } -> block transfer::retained(gate, context, state, command, false, &words, object.handle, 0u64)
+        Creation::Failed { code } -> replies::failed(code)
+    }
+}
+// Finish the raster's local stack allocation before handling service waits.
+machine backing(gate: &Gate, asset: Asset, length: u64 [1..=16384]) -> Creation reaches Kernel {
+    let mut buffer: [u64; 2048];
+    fill(&mut buffer, asset, length / 8u64, 0u64);
+    block runtime::memory::object::create(gate, &buffer, length)
+}
+
+machine fill(buffer: &mut [u64; 2048], asset: Asset, count: u64, index: u64) {
+    transition index < count && index < 2048u64 {
+        true -> pixel(buffer, asset, count, index)
+        _ -> done()
+    }
+    machine pixel(buffer: &mut [u64; 2048], asset: Asset, count: u64, index: u64) requires index < 2048u64 {
+        let lo: u64 = color(asset, index * 2u64);
+        let hi: u64 = color(asset, index * 2u64 + 1u64);
+        buffer[index] = (lo & 0xffffffffu64) | ((hi & 0xffffffffu64) << 32u64);
+        transition { _ -> fill(buffer, asset, count, index + 1u64) }
+    }
+}
+machine color(asset: Asset, index: u64) -> u64 {
+    transition asset {
+        Asset::Checker -> pixels::checker(index)
+        Asset::Close { width } -> pixels::close_pixel(width, index)
+    }
+}
+machine done() {}

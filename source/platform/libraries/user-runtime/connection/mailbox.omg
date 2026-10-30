@@ -8,30 +8,31 @@ use kernel;
 use connection::main::Peer;
 use connection::main::Frame;
 
-public machine send(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8]) -> u64
+public machine send(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], object: u64) -> u64
     reaches Kernel blocks; invokes Kernel; {
     let mut header: [u64; 8];
     let status: u64 = block Kernel::shared_read(gate, peer.reader.handle, 1u64, &mut header, 1u64);
     transition status == 0u64 {
-        true -> block acknowledged(gate, peer, id, payload, header[0])
+        true -> block acknowledged(gate, peer, id, payload, object, header[0])
         _ -> (status)
     }
 }
-machine acknowledged(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], ack: u64) -> u64 reaches Kernel {
+machine acknowledged(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], object: u64, ack: u64) -> u64 reaches Kernel {
     transition ack > peer.sent || peer.sent == 0xffffffffffffffffu64 {
         true -> (kernel::IO_ERROR)
-        _ -> block available(gate, peer, id, payload, ack)
+        _ -> block available(gate, peer, id, payload, object, ack)
     }
-    machine available(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], ack: u64) -> u64 reaches Kernel {
+    machine available(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], object: u64, ack: u64) -> u64 reaches Kernel {
         transition ack == peer.sent {
-            true -> block body(gate, peer, id, payload)
+            true -> block attached(gate, peer, id, payload, object)
             _ -> (kernel::WOULD_BLOCK)
         }
     }
 }
-machine body(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8]) -> u64 reaches Kernel {
+machine body(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], attachment: u64) -> u64 reaches Kernel {
     let mut first: [u64; 8];
     first[0] = id;
+    first[1] = attachment;
     first[2] = payload[0];
     first[3] = payload[1];
     first[4] = payload[2];
@@ -42,6 +43,21 @@ machine body(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8]) -> u64 r
     transition status == 0u64 {
         true -> block tail(gate, peer, payload)
         _ -> (status)
+    }
+}
+machine attached(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], object: u64) -> u64 reaches Kernel {
+    transition object == 0u64 {
+        true -> block body(gate, peer, id, payload, 0u64)
+        _ -> block delegate(gate, peer, id, payload, object)
+    }
+    machine delegate(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], object: u64) -> u64 reaches Kernel {
+        let mut packet: [u64; 10];
+        packet[0] = 8u64; packet[1] = object; packet[2] = id;
+        let status: u64 = Kernel::object_send(gate, peer.sender, &packet);
+        transition status == 8u64 {
+            true -> block body(gate, peer, id, payload, 1u64)
+            _ -> (status)
+        }
     }
 }
 machine tail(gate: &Gate, peer: &mut Peer, payload: &[u64; 8]) -> u64 reaches Kernel {

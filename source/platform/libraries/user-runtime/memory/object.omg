@@ -1,0 +1,26 @@
+module memory::object;
+// Bounded immutable backing, distinct from a live single-writer mailbox.
+// Creation copies only the declared bytes; fresh page tails remain zero. Sending
+// delegates a read right; the producer retains custody until explicit release.
+use kernel::Gate;
+use kernel::Kernel;
+use kernel;
+
+public data Object { handle: u64; }
+public data Creation {
+    case Ready(object: Object);
+    case Failed(code: u64);
+}
+public machine create(gate: &Gate, words: &[u64; 2048], bytes: u64 [1..=16384]) -> Creation
+    reaches Kernel blocks; invokes Kernel; {
+    let handle: u64 = block Kernel::object_create(gate, words, bytes);
+    transition handle != 0u64 && handle < kernel::ERROR_BASE {
+        true -> (Creation::Ready { object: Object { handle: handle } })
+        _ -> (Creation::Failed { code: handle })
+    }
+}
+public machine release(gate: &Gate, object: &mut Object) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let handle: u64 = object.handle;
+    object.handle = 0u64;
+    block Kernel::memory_release(gate, handle)
+}

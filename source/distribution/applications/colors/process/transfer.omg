@@ -1,0 +1,52 @@
+module transfer;
+// Seal app-owned pixels/data -> publish once -> retain through completion ->
+// release locally. Accepted compositor readers have independent lifetimes.
+use main::Context;
+use app::state::State;
+use app::operations::Command;
+use app::operations::Completion;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::connection::call::CallReply;
+use exchange;
+use replies;
+
+public machine retained(gate: &Gate, context: &mut Context, state: &State, command: Command,
+    storage: bool, words: &[u64; 8], object: u64, deadline: u64) -> Completion reaches Kernel blocks; invokes Kernel; {
+    let result: Completion = block plain(gate, context, state, command, storage, words, object, deadline);
+    let released: u64 = block Kernel::memory_release(gate, object);
+    result
+}
+public machine plain(gate: &Gate, context: &mut Context, state: &State, command: Command,
+    storage: bool, words: &[u64; 8], object: u64, deadline: u64) -> Completion reaches Kernel blocks; invokes Kernel; {
+    let reply: CallReply = block exchange::request(gate, context, state, storage, words, object, deadline);
+    transition reply {
+        CallReply::Received { frame, notification } -> block received(gate, context, command, frame, notification)
+        CallReply::Endpoint { frame, endpoint } -> block unexpected_endpoint(gate, context, endpoint)
+        CallReply::Failed { code } -> replies::failed(code)
+    }
+}
+machine received(gate: &Gate, context: &mut Context, command: Command, frame: runtime::connection::main::Frame, notification: u64) -> Completion reaches Kernel {
+    transition frame.bytes == 64u64 && notification == 0u64 {
+        true -> replies::decoded(command, frame.payload)
+        _ -> block unexpected_notification(gate, context, notification)
+    }
+}
+machine unexpected_endpoint(gate: &Gate, context: &mut Context, endpoint: u64) -> Completion reaches Kernel {
+    let ignored: u64 = Kernel::close(gate, endpoint);
+    transition { _ -> block malformed(gate, context) }
+}
+machine unexpected_notification(gate: &Gate, context: &mut Context, notification: u64) -> Completion reaches Kernel {
+    let ignored: u64 = Kernel::notify_drop(gate, notification);
+    transition { _ -> block malformed(gate, context) }
+}
+machine malformed(gate: &Gate, context: &mut Context) -> Completion reaches Kernel {
+    let ignored: u64 = block retire(gate, context);
+    replies::failed(runtime::kernel::IO_ERROR)
+}
+machine retire(gate: &Gate, context: &mut Context) -> u64 reaches Kernel {
+    transition context.pending_storage {
+        true -> block runtime::connection::main::close(gate, &mut context.storage.peer)
+        _ -> block runtime::connection::main::close(gate, &mut context.services.broker)
+    }
+}

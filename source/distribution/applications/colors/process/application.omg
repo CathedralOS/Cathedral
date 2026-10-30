@@ -1,0 +1,28 @@
+module application;
+// The app chooses work. This driver performs it through the supplied runtime and
+// resumes with the real result; no duplicate phase machine or oversized packet.
+use main::Context;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use app::state::State;
+use app::operations::Completion;
+use app::operations::Reply;
+use app::operations::Command;
+use app::main::advance;
+use operations;
+
+public machine run(gate: &Gate, context: &mut Context) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let mut session: State;
+    transition { _ -> (block drive(gate, context, &mut session, Completion { transport_status: 0u64, reply: Reply::Complete })) }
+}
+machine drive(gate: &Gate, context: &mut Context, session: &mut State, event: Completion) -> u64 reaches Kernel {
+    let command: Command = app::main::advance(session, &event);
+    transition command {
+        Command::Exit -> (0u64)
+        _ -> block execute(gate, context, session, command)
+    }
+}
+machine execute(gate: &Gate, context: &mut Context, session: &mut State, command: Command) -> u64 reaches Kernel {
+    let event: Completion = block operations::execute(gate, context, session, command);
+    transition { _ -> (block drive(gate, context, session, event)) }
+}

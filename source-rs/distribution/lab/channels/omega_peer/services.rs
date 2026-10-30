@@ -10,6 +10,9 @@ use cathedral_user_runtime::{
 };
 
 pub(super) fn serve(mode: u64, environment: Environment) -> u64 {
+    if mode >= 130 {
+        return super::endpoints::serve(mode, environment);
+    }
     let mut server = Server::open_clients(1).unwrap();
     server
         .install(

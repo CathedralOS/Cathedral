@@ -9,6 +9,7 @@ publish.workspace = true
 dynamic-admission = []
 omega-peer = []
 omega-background = []
+omega-colors = []
 
 [[bin]]
 name = "cathedral-channels-lab"

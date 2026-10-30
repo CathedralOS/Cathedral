@@ -32,6 +32,9 @@ def main():
         composition.update({f'CATHEDRAL_LAUNCH_{index}_CLOCK': '1',
                             f'CATHEDRAL_LAUNCH_{index}_PRIVATE_PAGES': '1',
                             f'CATHEDRAL_LAUNCH_{index}_SHARED_PAGES': '1'})
+    # The client retains its live mailbox while staging one sealed payload.
+    composition['CATHEDRAL_LAUNCH_1_PRIVATE_PAGES'] = '2'
+    composition['CATHEDRAL_LAUNCH_0_SHARED_PAGES'] = '2'
 
     def verify(stream, directory, text):
         if not all(marker in text for marker in (

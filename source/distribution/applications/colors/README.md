@@ -20,28 +20,47 @@ storage uncertainty while stopping on transport loss elsewhere. Descend into:
   [operations.omg](app/operations.omg) names completed replies, scoped input,
   requested work and app-owned geometry. No native packet offsets appear here.
 
-The [component bridge](bridge/component/main.omg) decodes replies, invokes the
-typed app and encodes its next command. `replies.omg` owns transport interpretation;
-`commands.omg` owns the experimental platform wire formats; `images.omg` packs
-app-authored pixels into attachment bytes. The six-byte schema lives with storage
-in [record.omg](app/storage/record.omg), not in that native codec.
+The standalone executable starts at [native/main.omg](native/main.omg). Its
+[process entrance](process/main.omg) establishes installed authority, runs the
+app and releases custody. [application.omg](process/application.omg) alternates
+completed work with app decisions; [operations.omg](process/operations.omg)
+dispatches those decisions to service acquisition, storage, presentation and
+waiting. Follow that dispatch into:
 
-The [native consumer](bridge/native/main.omg) selects this bridge as an independent
-Omega component. The [Rust entry](../../../../source-rs/distribution/applications/colors/main.rs)
-declares the existing service imports and invokes the reusable
-[platform host](../../../../source-rs/platform/libraries/omega-app/README.md).
-Omega owns application behavior; Rust still supplies executable startup,
-syscalls, service transport, waits and immutable attachment custody. This is
-an x86-64 bridge into the reference OS, not a standalone Omega OS executable or
-the final Omega application ABI. No new syscall, ambient locator or authority
-is involved. UI-library adoption is a separate step; this app uses the existing
-platform rectangles and sealed images directly.
+- [services.omg](process/services.omg): interaction and storage endpoint grants,
+  including half-pair cleanup. The platform runtime owns grant validation.
+- [storage.omg](process/storage.omg): bound requests and immutable `MC01` backing.
+  The platform's [storage scope](../../../platform/libraries/user-runtime/storage/main.omg)
+  encodes the child-local binding; app policy still owns retries and persistence.
+- [presentation.omg](process/presentation.omg): drawing packets and image backing.
+  Pixel staging ends before any wait; only the sealed handle stays live.
+- [exchange.omg](process/exchange.omg): publish once, then service the independent
+  owner connection while waiting. [control.omg](process/control.omg) answers
+  HEALTH/LOSS without advancing the app. A pending save reports BUSY.
+- [transfer.omg](process/transfer.omg): retain/release attachment custody and
+  reject unexpected reply grants. [replies.omg](process/replies.omg) decodes the
+  64-byte protocol into named app completions.
 
-Build/packaging starts at [tools/omega-component](../../../../tools/omega-component/README.md).
-Compiled-code tests in the
-[Rust wrapper](../../../../source-rs/distribution/applications/colors/tests/behavior.rs)
-drive actual Omega exports against controlled service replies. The ordinary
-desktop harness verifies the installed program, persistence and cold boot;
-the nested desktop harness also saves Colors four levels down and checks that
-the outer Colors remains independent. Kernel-lab probes continue using the
-old Rust library; they are not the installed application.
+The common [Omega runtime](../../../platform/libraries/user-runtime/README.md)
+provides startup, kernel calls, transport and waits. This is an x86-64 Omega
+process under the Rust kernel, with a small reviewed native assembly adapter;
+no Rust application host is linked. The process has no new ambient authority.
+HEALTH's CPU counter currently reports zero because that diagnostic kernel call
+has not been added to the Omega runtime. Other app counters and loss state remain
+available. UI-library adoption is separate; Colors uses the existing rectangles
+and sealed images directly.
+
+The retained [component bridge](bridge/component/main.omg) and
+[Rust entry](../../../../source-rs/distribution/applications/colors/main.rs)
+provide a comparison fixture. They adapt the same app model through the earlier
+host packet format. [Compiled-code tests](../../../../source-rs/distribution/applications/colors/tests/behavior.rs)
+exercise this model's save, uncertainty, close and input policy.
+
+Build the independent process with [tools/omega-user](../../../../tools/omega-user/README.md).
+`colors_test.py` holds and rejects a real save, requires concurrent owner replies,
+checks confirmed pixels and image backing, retires the owner independently and
+checks resource refunds after cancellation. It also verifies idle parking and
+draining multiple queued batches after one wake, with owner progress between
+batches. The desktop harness additionally
+checks successful saves and cold reopen; nested testing checks that inner and
+outer Colors remain independent. Kernel-lab probes still use the old Rust library.

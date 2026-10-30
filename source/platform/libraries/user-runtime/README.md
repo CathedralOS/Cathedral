@@ -15,7 +15,10 @@ Descend into `setup.omg` for the existing Rust-compatible handshake,
 `mailbox.omg` for sequence/acknowledgement publication, `incoming.omg` for typed
 grant correlation and bounded partial replies, and `custody.omg` for release.
 Requests currently carry 64 bytes; replies carry up to 64 bytes and optionally
-one notification right. Unsupported attachment kinds retire the connection.
+one notification right or transferred endpoint. The typed reply distinguishes
+these authorities; unsupported attachment kinds retire the connection.
+Outgoing requests may delegate one sealed object after mailbox backpressure is
+checked. A failure after delegation retires the connection without replay.
 The caller supplies a fresh zero-initialized `Peer` and closes it before disposal;
 reconnection uses a fresh value. An error never replays a published operation.
 
@@ -23,6 +26,9 @@ reconnection uses a fresh value. An error never replays a published operation.
 the interaction notification, and keeps subsequent requests on that same peer.
 The provider decides authority; the request only names an interface/version.
 `acquire.omg` checks the complete reply and wait-right kind before retaining it.
+[endpoints.omg](services/endpoints.omg) acquires an explicitly selected endpoint
+part; a caller owns and must release a half pair if the second part fails.
+Its reply validators also support app-owned multiplexed waits.
 A refusal leaves the broker usable. A malformed grant retires it and releases
 received rights. Callers supply a fresh zero-initialized `Services` and close it
 before disposal, including after a failed call. Repeated successful acquisition
@@ -66,12 +72,22 @@ leaves retain the input tail, copy back before returning, and do not retain a
 borrow. Counts are checked Omega ranges. Allocation, mapping, release, yield, receive and wait declare blocking
 and their callers acknowledge it. Scalar names alone grant no authority.
 
+[storage/main.omg](storage/main.omg) retains a child-local binding revision and
+realm, encoding scoped requests with the existing end-to-end deadline. It
+does not choose objects, schemas, retries or application save policy.
+
+[memory/object.omg](memory/object.omg) creates bounded immutable backing from
+one private buffer (up to 16 KiB). The adapter copies the declared bytes into
+fresh zeroed pages, seals and unmaps before returning a handle. It releases
+failed allocations, and exposes no raw mapping. The caller retains its source
+right through request completion; remote readers have independent lifetimes.
+
 This small platform runtime replaces the Rust app host for the installed
-Background. It has no general allocator or endpoint-service acquisition.
+Background and Colors. It has no general allocator or incoming sealed-object reply support.
 Owner-control transport works; the app owns control policy and its event loop.
 In particular, copied IPC is the
 setup/grant mechanism; it must not become a fallback for the desktop's shared
-service protocol. Other desktop apps still use the Rust host.
+service protocol. Notes, the chooser and the matrix still use their Rust hosts.
 The runtime has only been qualified on x86-64.
 
 The [process witness](../../../distribution/lab/user-entry/README.md) exercises

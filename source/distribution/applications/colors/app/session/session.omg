@@ -6,7 +6,7 @@ use state::Phase;
 use operations::Command;
 use operations::Reply;
 use operations::View;
-use operations::Report;
+use control::report;
 use storage::storage;
 use rendering::rendering;
 use session::input;
@@ -107,12 +107,6 @@ machine awakened(s: &mut State, reply: Reply) -> Command {
     }
     machine control(s: &mut State, loss: bool, cpu: u64) -> Command {
         s.phase = Phase::ControlReplied;
-        transition loss {
-            true -> (Command::Control { report: Report::Loss { error: s.error } })
-            _ -> (Command::Control { report: Report::Health {
-                paints: s.paints, wakes: s.wakes, cpu: cpu, alternate: s.alternate,
-                error: s.error, pointers: s.pointers, revision: s.revision
-            } })
-        }
+        Command::Control { report: report(s, loss, cpu) }
     }
 }

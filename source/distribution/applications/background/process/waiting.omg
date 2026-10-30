@@ -49,8 +49,8 @@ public machine accepts(bytes: u64, words: [u64; 8]) -> bool {
 machine input(gate: &Gate, context: &mut Context, now: u64, deadline: u64) -> app::model::Event reaches Kernel {
     let hint: u64 = block Kernel::notify_wait(gate, context.services.wake, now, 1u64);
     transition {
-        hint == 1u64 -> (app::model::Event::Wake)
-        hint != 0u64 -> failed(hint)
+        hint == runtime::kernel::NOTIFY_SIGNALED -> (app::model::Event::Wake)
+        hint != runtime::kernel::NOTIFY_TIMED_OUT -> failed(hint)
         runtime::time::reached(now, deadline) -> (app::model::Event::Wake)
         _ -> block park(gate, context, deadline)
     }

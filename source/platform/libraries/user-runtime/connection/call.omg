@@ -12,11 +12,16 @@ use time::Tick;
 
 public data CallReply {
     case Received(frame: Frame, notification: u64);
+    case Endpoint(frame: Frame, endpoint: u64);
     case Failed(code: u64);
 }
 public machine exchange(gate: &Gate, peer: &mut Peer, clock: u64, words: &[u64; 8]) -> CallReply
     reaches Kernel blocks; invokes Kernel; {
-    let status: u64 = block connection::main::begin(gate, peer, words);
+    block exchange_object(gate, peer, clock, words, 0u64)
+}
+public machine exchange_object(gate: &Gate, peer: &mut Peer, clock: u64, words: &[u64; 8], object: u64) -> CallReply
+    reaches Kernel blocks; invokes Kernel; {
+    let status: u64 = block connection::main::begin_object(gate, peer, words, object);
     transition status == 0u64 {
         true -> block poll(gate, peer, clock)
         _ -> (CallReply::Failed { code: status })
@@ -33,6 +38,7 @@ machine receive(gate: &Gate, peer: &mut Peer, clock: u64, now: u64) -> CallReply
     let reply: Reply = block connection::main::poll(gate, peer, now);
     transition reply {
         Reply::Complete { frame, notification } -> (CallReply::Received { frame: frame, notification: notification })
+        Reply::Endpoint { frame, endpoint } -> (CallReply::Endpoint { frame: frame, endpoint: endpoint })
         Reply::Failed { code } -> (CallReply::Failed { code: code })
         Reply::Pending -> block wait(gate, peer, clock, now)
     }

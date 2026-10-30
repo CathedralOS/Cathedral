@@ -1,0 +1,40 @@
+module operations;
+// App intent dispatches to service acquisition, storage, presentation or waiting.
+use main::Context;
+use app::state::State;
+use app::operations::Command;
+use app::operations::Completion;
+use app::operations::Reply;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use services;
+use storage;
+use presentation;
+use waiting;
+use control;
+
+public machine execute(gate: &Gate, context: &mut Context, state: &State, command: Command) -> Completion reaches Kernel blocks; invokes Kernel; {
+    transition command {
+        Command::AcquireInteraction -> block interaction(gate, context, state)
+        Command::AcquireStorage -> block acquire_storage(gate, context, state)
+        Command::BindStorage -> block storage::bind(gate, context, state)
+        Command::List { realm } -> block storage::execute(gate, context, state, command)
+        Command::Read { object } -> block storage::execute(gate, context, state, command)
+        Command::Publish { object, revision, realm, bytes } -> block storage::execute(gate, context, state, command)
+        Command::Wait -> block waiting::next(gate, context, state)
+        Command::Control { report } -> block report(gate, context, report)
+        _ -> block presentation::execute(gate, context, state, command)
+    }
+}
+machine interaction(gate: &Gate, context: &mut Context, state: &State) -> Completion reaches Kernel {
+    let status: u64 = block services::interaction(gate, context, state);
+    Completion { transport_status: status, reply: Reply::Complete }
+}
+machine acquire_storage(gate: &Gate, context: &mut Context, state: &State) -> Completion reaches Kernel {
+    let status: u64 = block services::storage(gate, context, state);
+    Completion { transport_status: status, reply: Reply::Complete }
+}
+machine report(gate: &Gate, context: &mut Context, report: app::operations::Report) -> Completion reaches Kernel {
+    block control::answer(gate, context, report);
+    Completion { transport_status: 0u64, reply: Reply::Complete }
+}

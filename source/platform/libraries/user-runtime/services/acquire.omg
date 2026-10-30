@@ -17,10 +17,16 @@ public machine interaction(gate: &Gate, binding: &mut Services, clock: u64, mini
     let result: CallReply = block call::exchange(gate, &mut binding.broker, clock, &words);
     transition result {
         CallReply::Received { frame, notification } -> block received(gate, binding, frame, notification)
+        CallReply::Endpoint { frame, endpoint } -> block unexpected_endpoint(gate, binding, endpoint)
         CallReply::Failed { code } -> (code)
     }
 }
-machine received(gate: &Gate, binding: &mut Services, frame: Frame, notification: u64) -> u64 reaches Kernel {
+machine unexpected_endpoint(gate: &Gate, binding: &mut Services, endpoint: u64) -> u64 reaches Kernel {
+    let ignored: u64 = Kernel::close(gate, endpoint);
+    block services::main::close(gate, binding);
+    kernel::IO_ERROR
+}
+public machine received(gate: &Gate, binding: &mut Services, frame: Frame, notification: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
     transition frame.bytes == 64u64 && frame.payload[2] == 0u64 && frame.payload[3] == 0u64
         && frame.payload[4] == 0u64 && frame.payload[5] == 0u64 && frame.payload[6] == 0u64 && frame.payload[7] == 0u64 {
         true -> block answer(gate, binding, frame.payload[0], frame.payload[1], notification)
