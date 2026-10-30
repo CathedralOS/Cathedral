@@ -1,0 +1,45 @@
+module application::operations;
+use application::application;
+// App intent dispatches to service acquisition, storage, presentation or waiting.
+use main::Context;
+use app::state::State;
+use app::operations::Command;
+use app::operations::Completion;
+use app::operations::Reply;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use services::services;
+use storage::requests;
+use presentation::presentation;
+use services::waiting;
+use services::control;
+use application::diagnostics;
+
+public machine execute(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, command: &application::application::Request) reaches Kernel blocks; invokes Kernel; {
+    transition command.command {
+        Command::AcquireInteraction -> block interaction(output, gate, context, state)
+        Command::AcquireStorage -> block acquire_storage(output, gate, context, state)
+        Command::BindStorage -> block storage::requests::bind(output, gate, context, state)
+        Command::List { realm, after } -> block storage::requests::execute(output, gate, context, state, command)
+        Command::Read { object, revision, length } -> block storage::requests::execute(output, gate, context, state, command)
+        Command::Publish { object, revision, realm, record } -> block storage::requests::execute(output, gate, context, state, command)
+        Command::Head { object } -> block storage::requests::execute(output, gate, context, state, command)
+        Command::Copy { object, revision, realm } -> block storage::requests::execute(output, gate, context, state, command)
+        Command::Loaded { temporary } -> application::diagnostics::loaded(output, gate, temporary)
+        Command::Wait -> block services::waiting::next(output, gate, context, state)
+        Command::Control { report } -> block report(output, gate, context, report)
+        _ -> block presentation::presentation::execute(output, gate, context, state, command)
+    }
+}
+machine interaction(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State) reaches Kernel {
+    let status: u64 = block services::services::interaction(gate, context, state);
+    output.event = Completion { transport_status: status, reply: Reply::Complete };
+}
+machine acquire_storage(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State) reaches Kernel {
+    let status: u64 = block services::services::storage(gate, context, state);
+    output.event = Completion { transport_status: status, reply: Reply::Complete };
+}
+machine report(output: &mut application::application::Work, gate: &Gate, context: &mut Context, report: app::operations::Report) reaches Kernel {
+    block services::control::answer(gate, context, report);
+    output.event = Completion { transport_status: 0u64, reply: Reply::Complete };
+}

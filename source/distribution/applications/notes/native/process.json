@@ -1,0 +1,18 @@
+{
+  "imports": [
+    {
+      "contract": 1,
+      "minimum": 1,
+      "maximum": 1,
+      "required": true
+    },
+    {
+      "contract": 2,
+      "minimum": 1,
+      "maximum": 1,
+      "required": false
+    }
+  ],
+  "channels": 3,
+  "descendants": 0
+}

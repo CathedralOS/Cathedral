@@ -9,6 +9,8 @@ mod notifications;
 mod omega_background;
 #[cfg(feature = "omega-colors")]
 mod omega_colors;
+#[cfg(feature = "omega-notes")]
+mod omega_notes;
 #[cfg(feature = "omega-peer")]
 mod omega_peer;
 mod replies;
@@ -27,6 +29,10 @@ use cathedral_user_runtime::{
 };
 cathedral_user_runtime::entry_with_environment!(main);
 fn main(role: u64, mode: u64, environment: cathedral_user_runtime::task::Environment) -> u64 {
+    #[cfg(feature = "omega-notes")]
+    if role == 0 {
+        return omega_notes::run();
+    }
     #[cfg(feature = "omega-colors")]
     if role == 0 {
         return omega_colors::run();

@@ -80,14 +80,14 @@ use this source directly, rather than a sibling repository or platform-to-distri
 dependency.
 UI development, font generation and capture tools live in `tools/omega-ui/`;
 their host artifacts belong in the ignored `build/omega-ui/` tree.
-The installed Colors program now lives in `source/distribution/applications/colors`.
-Its Rust executable only supplies startup and the common
-`platform/libraries/omega-app` host. That host performs requested scoped IPC and
-buffer custody; app state, input decisions, storage schema and presentation stay
-in distribution-owned Omega. This temporary native bridge is not the final
-Omega application ABI. The Rust Colors library remains a mechanism-lab probe.
-Notes and the chooser use the same host. Their sessions, settings, input and
-painting live in distribution-owned Omega. The chooser's separate pure policy
+Installed Background, Colors and Notes live in
+`source/distribution/applications/` as standalone Omega processes. Each native
+entry selects its process coordinator; the common Omega runtime supplies shared
+IPC and attachment custody, while the distribution app owns behavior, storage
+schemas and presentation. Their Rust executable hosts remain comparison and
+mechanism-test fixtures. The chooser still uses the Rust
+`platform/libraries/omega-app` host for its Omega session and UI component.
+The chooser's separate pure policy
 export remains only for decision tests and explicit Rust fault probes; ordinary
 F5 calls that policy directly from Omega. See the
 [chooser boundary](../../source/distribution/applications/chooser/README.md).

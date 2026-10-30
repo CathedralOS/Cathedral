@@ -1,0 +1,32 @@
+module application::application;
+// One editor state and one command/result workspace. Dispatch borrows the work
+// instead of retaining large record-valued return buffers through service waits.
+use main::Context;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use app::state::State;
+use app::operations::Completion;
+use app::operations::Command;
+use application::operations;
+use app::main::advance;
+
+public data Work { event: Completion; }
+public data Request { command: Command; }
+
+public machine run(gate: &Gate, context: &mut Context) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let mut session: State;
+    let mut output: Work;
+    let mut request: Request;
+    transition { _ -> block drive(gate, context, &mut session, &mut output, &mut request) }
+}
+machine drive(gate: &Gate, context: &mut Context, session: &mut State, output: &mut Work, request: &mut Request) -> u64 reaches Kernel {
+    request.command = app::main::advance(session, &output.event);
+    transition request.command {
+        Command::Exit -> (0u64)
+        _ -> block dispatch(gate, context, session, output, request)
+    }
+}
+machine dispatch(gate: &Gate, context: &mut Context, session: &mut State, output: &mut Work, request: &mut Request) -> u64 reaches Kernel {
+    block application::operations::execute(output, gate, context, session, request);
+    transition { _ -> block drive(gate, context, session, output, request) }
+}

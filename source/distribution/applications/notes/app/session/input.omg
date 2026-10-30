@@ -141,7 +141,7 @@ machine find(s: &State, name: u64, index: u64) -> u64 {
         true -> inspect(s, name, index)
         _ -> (4u64)
     }
-    state inspect(s: &State, name: u64, index: u64) -> u64 requires index < 4u64 {
+    machine inspect(s: &State, name: u64, index: u64) -> u64 requires index < 4u64 {
         transition s.channels[index] == name {
             true -> (index)
             _ -> find(s, name, index + 1u64)

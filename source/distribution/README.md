@@ -8,9 +8,10 @@ that still execute in Rust and the temporary native bridge.
 [Applications](applications/) contains the chooser, Notes, Colors and
 [Background](applications/background/README.md). Each app's
 `app/main.omg` exposes its compiled entry and descends into its session and UI
-behavior. Native bridge and app packages remain separate because the Rust host
-loads an independently compiled component. Background, Colors and Notes keep packet
-translation under `bridge/` and their typed app sequences under `app/`.
+behavior. Background, Colors and Notes install standalone `native/` executables;
+`process/` owns their service communication and app execution, while `app/` owns
+behavior. Their retained `bridge/` packages support explicit comparison tests.
+The chooser still uses a Rust host to load its Omega component.
 
 [Libraries](libraries/) contains distribution-owned UI code, including the vendored
 Omega UI library. [Lab](lab/) holds independent composition experiments. Common

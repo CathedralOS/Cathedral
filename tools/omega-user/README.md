@@ -13,6 +13,7 @@ python tools/omega-user/run_test.py --compiler path/to/new/omega.exe
 python tools/omega-user/connection_test.py --compiler path/to/new/omega.exe
 python tools/omega-user/background_test.py --compiler path/to/new/omega.exe
 python tools/omega-user/colors_test.py --compiler path/to/new/omega.exe
+python tools/omega-user/notes_test.py --compiler path/to/new/omega.exe
 python -m unittest discover -s tools/omega-user -p "test_*.py"
 ```
 
@@ -65,8 +66,8 @@ The component compiler and native linker have separate receipts. The linked
 receipt embeds the component receipt and hashes the entry adapter, linker
 layout, component and builder. Publication rejects input changes during linking.
 There is no dynamic loader, runtime relocation, writable load or additional
-image-page allowance. The ordinary F5 profile selects Background's and Colors'
-`distribution/applications/{background,colors}/native/main.omg` entries. The mixed-producer
+image-page allowance. The ordinary F5 profile selects Background's, Colors' and Notes'
+`distribution/applications/{background,colors,notes}/native/main.omg` entries. The mixed-producer
 harness uses `OMEGA_USER_BIN`, or the saved standalone compiler above, for that
 entry. Rust entries retain their normal Cargo build.
 
@@ -75,7 +76,7 @@ An optional `process.json` beside the native consumer declares `imports`
 [manifest.py](manifest.py) encodes the platform's existing funded import record;
 the linker places it first in the read-only load, and packaging verifies that
 position. This requests launch authority from the owner; it grants none itself.
-Both installed standalone apps supply such a record.
+All three installed standalone apps supply such a record.
 
 The current compiler rejects a raw `int` inside checked user assembly as a
 hidden control transfer. The native leaves use Omega's existing declared
@@ -92,3 +93,15 @@ a queued batch longer than the app drain bound needs no second signal.
 Cancellation must refund channels, pages and notifications in both cases.
 The ordinary desktop test additionally checks successful saves and cold reopen;
 this focused test alone is not desktop acceptance.
+
+`notes_test.py` runs standalone Notes against a controlled service. A keystroke
+arriving with first placement must survive the sealed-document load. One wake
+must drain more than eight queued inputs, and idle Notes must remain parked.
+The provider holds a save while owner HEALTH/LOSS progresses, rejects it, then
+checks that the draft and error survive. A full-size case also checks all four incoming read chunks and every outgoing
+record byte. A second case retires owner control
+while the independent storage connection remains usable. Cancellation with a
+published image must refund pages, channels and notifications. The fixture
+funds twenty private pages and four reader pages for Notes: the text image needs
+twelve private pages, and three shared mailboxes plus a document need four reader
+pages. These fixture grants do not alter kernel limits or default matrix grants.

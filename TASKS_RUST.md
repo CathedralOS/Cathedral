@@ -9,6 +9,78 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
+### Standalone Notes: editor, storage and presentation
+
+Normal F5 now selects `source/distribution/applications/notes/native/` for outer,
+Split and nested Notes. Its process entrance runs the existing editor directly
+through the Omega runtime: installed authority, optional service acquisition,
+sealed document reads, storage publication, staged images, owner control and
+parking no longer need the Rust application host. The app's 96 nested `state`
+declarations became `machine`; editor behavior and the NTS1 schema remain the same.
+One nested text-layout calculation became an explicit local before transition,
+keeping both the standalone compiler and retained legacy test compiler working.
+
+Follow `process/main.omg` into `application/application.omg` and its intent
+dispatcher, then `services/`, `storage/` and `presentation/`. The model stays in
+`app/`; shared transport, memory and syscall mechanisms stay in the platform.
+The existing qualified standalone compiler is unchanged. No kernel code, stack
+size, quota, default resource grant or disk format changed for this migration.
+
+The first desktop candidate faulted below the 32 KiB user stack, before Notes
+loaded. A small actual-process fixture reproduced it. Large record-bearing
+command/result sums accumulated as temporaries through dispatch and service
+waits. The process now keeps one reusable command/result workspace and borrows
+it through dispatch. Text pixels use bounded private staging, and no large
+raster/record scratch frame spans an IPC wait. This fixes the observed execution
+path; it is not a compiler-wide stack bound or an optimization claim.
+
+`python tools/omega-user/notes_test.py --compiler build/omega-user/compiler/omega.exe`
+passes at `build/omega-user/notes-control/20261030T150909540102Z/`. The provider
+loads NTS1 bytes through a sealed reader, then requires the first placed keystroke
+to survive loading. Idle Notes parks; one actual wake drains more than eight
+queued inputs. A held save allows independent HEALTH/LOSS queries, and a failed
+save retains draft/error state without replay. Retiring the owner leaves storage
+usable. Cancellation during image publication refunds page, channel and
+notification budgets. Fixture funding includes the twelve-page text image and
+three shared mailbox readers plus one document reader. A third case reads a
+239-character document through all four chunks, preserves the arriving key as
+the 240th character, and checks every byte of the full 244-byte saved record.
+
+The first full desktop/cold-reopen candidate passes at
+`build/boot-harness-rs/desktop/20261030T145746334517Z/`, including three independent
+Notes windows, duplication, save/reload, close protection and a 2,067-record host
+oracle. After grouping the process folders, three-level nesting under continuous
+pointer input passes fresh and cold at
+`build/boot-harness-rs/desktop/20261030T150159310976Z/`, including deep saves,
+protected close, repeated subtree reclamation and outer/inner isolation. This
+does not claim the older intermittent nested-close occurrence is resolved.
+
+The retained editor passes all fourteen compiled tests. Seven standalone tool
+tests, four mixed-producer/probe checks, source layout (105 Omega / 154 Rust
+edges), affected fixture clippy and workspace formatting pass. Rust-only Notes
+fault/render/input witnesses now explicitly select the Rust fixture entry;
+ordinary builds still reject Cargo options on Omega programs. Global tracing
+adds Rust features only to Rust entries; it does not replace the selected Omega
+app or claim native app tracing has been ported.
+
+The actual default F5 profile passes desktop and cold reopen with both tracing
+flags at `build/boot-harness-rs/desktop/20261030T150551831439Z/`, including the
+2,127-record host oracle. All three installed Notes images match the tested
+standalone ELF after ordinary trimming/title packaging (116/240 image pages).
+The receipt is `build/omega-user/notes-promotion.json`. Optional storage withheld
+by manifest passes fresh and cold at `20261030T150917156054Z`: drafts and dirty
+close protection work, while Colors retains its independent storage binding.
+The explicit Rust delayed-control fixture passes fresh and cold at
+`20261030T151028526419Z`, including stale clean LOSS rejection and live editing.
+The native adapter remains x86-64 only; no new ARM64 qualification is claimed.
+
+Next: remove the chooser's Rust process host while preserving the same normal
+F5 login/launcher flow. Reuse this runtime and control/wait pattern; establish
+its UI backing and optional-service requirements before changing composition.
+The chooser, matrix and providers still depend on Rust process mechanisms;
+Background, Colors and Notes are now standalone Omega userspace. The independent
+Omega kernel remains an early boot experiment, not the kernel running F5.
+
 ### Notes migration: bounded image construction
 
 The Omega runtime now assembles immutable images in funded private pages through
@@ -42,11 +114,8 @@ with the 2,001-record oracle. Installed outer/nested Background and Colors match
 the tested standalone images (38/240 and 68/240 pages). Seven tool checks,
 source layout, formatting, core and fixture clippy checks pass.
 
-Next is the actual Notes process port: preserve its editor/storage model, replace
-its Rust process host, use the new incoming record reader and image staging, and
-keep owner HEALTH/LOSS responsive during service waits. Qualify ordinary F5
-save/reload/close and cold reopen before selecting it in the distribution profile.
-No Notes source or F5 composition has changed yet.
+This prerequisite is now consumed by the standalone Notes migration above.
+At this milestone no Notes source or F5 composition had changed yet.
 
 ### Notes migration: incoming immutable data
 

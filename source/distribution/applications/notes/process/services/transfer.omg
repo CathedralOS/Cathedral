@@ -1,0 +1,58 @@
+module services::transfer;
+use application::application;
+// Seal app-owned pixels/data -> publish once -> retain through completion ->
+// release locally. Accepted compositor readers have independent lifetimes.
+use main::Context;
+use app::state::State;
+use app::operations::Command;
+use app::operations::Completion;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::connection::call::CallReply;
+use services::exchange;
+use services::replies;
+
+public machine retained(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, command: &application::application::Request,
+    storage: bool, words: &[u64; 8], object: u64, deadline: u64) reaches Kernel blocks; invokes Kernel; {
+    block plain(output, gate, context, state, command, storage, words, object, deadline);
+    let released: u64 = block Kernel::memory_release(gate, object);
+}
+public machine plain(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, command: &application::application::Request,
+    storage: bool, words: &[u64; 8], object: u64, deadline: u64) reaches Kernel blocks; invokes Kernel; {
+    let reply: CallReply = block services::exchange::request(gate, context, state, storage, words, object, deadline);
+    transition reply {
+        CallReply::Received { frame, notification } -> block received(output, gate, context, command, frame, notification)
+        CallReply::Object { frame, object } -> block unexpected_object(output, gate, context, object)
+        CallReply::Endpoint { frame, endpoint } -> block unexpected_endpoint(output, gate, context, endpoint)
+        CallReply::Failed { code } -> services::replies::failed(output, code)
+    }
+}
+machine received(output: &mut application::application::Work, gate: &Gate, context: &mut Context, command: &application::application::Request, frame: runtime::connection::main::Frame, notification: u64) reaches Kernel {
+    transition frame.bytes == 64u64 && notification == 0u64 {
+        true -> services::replies::decoded(output, command, frame.payload)
+        _ -> block unexpected_notification(output, gate, context, notification)
+    }
+}
+machine unexpected_endpoint(output: &mut application::application::Work, gate: &Gate, context: &mut Context, endpoint: u64) reaches Kernel {
+    let ignored: u64 = Kernel::close(gate, endpoint);
+    transition { _ -> block malformed(output, gate, context) }
+}
+machine unexpected_notification(output: &mut application::application::Work, gate: &Gate, context: &mut Context, notification: u64) reaches Kernel {
+    let ignored: u64 = Kernel::notify_drop(gate, notification);
+    transition { _ -> block malformed(output, gate, context) }
+}
+machine malformed(output: &mut application::application::Work, gate: &Gate, context: &mut Context) reaches Kernel {
+    let ignored: u64 = block retire(gate, context);
+    services::replies::failed(output, runtime::kernel::IO_ERROR)
+}
+machine retire(gate: &Gate, context: &mut Context) -> u64 reaches Kernel {
+    transition context.pending_storage {
+        true -> block runtime::connection::main::close(gate, &mut context.storage.peer)
+        _ -> block runtime::connection::main::close(gate, &mut context.services.broker)
+    }
+}
+
+machine unexpected_object(output: &mut application::application::Work, gate: &Gate, context: &mut Context, object: u64) reaches Kernel {
+    let ignored: u64 = block Kernel::memory_release(gate, object);
+    transition { _ -> block malformed(output, gate, context) }
+}

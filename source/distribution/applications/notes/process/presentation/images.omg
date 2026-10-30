@@ -1,0 +1,152 @@
+module presentation::images;
+use application::application;
+// Retain only the private text backing between commands. Each bounded raster
+// buffer's stack frame ends before any service wait can dispatch owner control.
+use main::Context;
+use app::state::State;
+use app::operations::Command;
+use app::operations::Completion;
+use app::operations::Reply;
+use app::operations::Image;
+use app::operations::Decoration;
+use app::rendering::pixels;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::memory::staging;
+use runtime::memory::staging::Buffer;
+use runtime::memory::staging::Allocation;
+use runtime::memory::object::Creation;
+use services::transfer;
+use services::replies;
+
+public machine stage(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, offset: u64, words: u64) reaches Kernel blocks; invokes Kernel; {
+    transition offset <= 46080u64 && words > 0u64 && words <= 4080u64 && words * 8u64 <= 46080u64 - offset {
+        true -> block prepare(output, gate, context, state, offset, words)
+        _ -> services::replies::failed(output, kernel::INVALID_ARGUMENT)
+    }
+}
+machine prepare(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, offset: u64 [0..=46080], words: u64 [1..=4080]) reaches Kernel {
+    transition offset == 0u64 {
+        true -> block allocate(output, gate, context, state, words)
+        _ -> block continued(output, gate, context, state, offset, words)
+    }
+}
+machine allocate(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, words: u64 [1..=4080]) reaches Kernel {
+    let discarded: u64 = block staging::release(gate, &mut context.text);
+    context.text_filled = 0u64;
+    let allocation: Allocation = block staging::allocate(gate, 46080u64);
+    transition allocation {
+        Allocation::Ready { buffer } -> block installed(output, gate, context, state, words, buffer)
+        Allocation::Failed { code } -> services::replies::failed(output, code)
+    }
+    machine installed(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, words: u64 [1..=4080], buffer: Buffer) reaches Kernel {
+        context.text = buffer;
+        transition { _ -> block continued(output, gate, context, state, 0u64, words) }
+    }
+}
+machine continued(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, offset: u64 [0..=46080], words: u64 [1..=4080]) reaches Kernel {
+    transition context.text.handle != 0u64 && context.text_filled == offset {
+        true -> block fill(output, gate, context, state, offset, words)
+        _ -> services::replies::failed(output, kernel::INVALID_ARGUMENT)
+    }
+    machine fill(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, offset: u64 [0..=46080], words: u64 [1..=4080]) reaches Kernel {
+        let status: u64 = block chunks(gate, &context.text, state, offset, words);
+        transition status == 0u64 {
+            true -> filled(output, context, offset, words)
+            _ -> services::replies::failed(output, status)
+        }
+    }
+    machine filled(output: &mut application::application::Work, context: &mut Context, offset: u64 [0..=46080], words: u64 [1..=4080]) {
+        context.text_filled = offset + words * 8u64;
+        output.event = Completion { transport_status: 0u64, reply: Reply::Presented { status: 0u64 } };
+    }
+}
+machine chunks(gate: &Gate, buffer: &Buffer, state: &State, offset: u64, remaining: u64 [0..=4080]) -> u64 reaches Kernel {
+    transition {
+        remaining == 0u64 -> (0u64)
+        remaining > 1024u64 -> block chunk(gate, buffer, state, offset, remaining, 1024u64)
+        _ -> block chunk(gate, buffer, state, offset, remaining, remaining)
+    }
+    machine chunk(gate: &Gate, buffer: &Buffer, state: &State, offset: u64, remaining: u64 [1..=4080], count: u64 [1..=1024]) -> u64 reaches Kernel requires count <= remaining {
+        let status: u64 = block text(gate, buffer, state, offset, count);
+        transition status == 0u64 && offset <= 46080u64 {
+            true -> block chunks(gate, buffer, state, offset + count * 8u64, remaining - count)
+            _ -> (status)
+        }
+    }
+}
+machine text(gate: &Gate, buffer: &Buffer, state: &State, offset: u64, count: u64 [1..=1024]) -> u64 reaches Kernel {
+    let mut words: [u64; 1024];
+    transition offset <= 46080u64 {
+        true -> block fill(gate, buffer, state, offset, count, &mut words)
+        _ -> (kernel::INVALID_ARGUMENT)
+    }
+    machine fill(gate: &Gate, buffer: &Buffer, state: &State, offset: u64 [0..=46080], count: u64 [1..=1024], words: &mut [u64; 1024]) -> u64 reaches Kernel {
+        raster(state, words, offset / 4u64, count, 0u64);
+        block staging::write(gate, buffer, offset, words, count * 8u64)
+    }
+}
+machine raster(state: &State, words: &mut [u64; 1024], first: u64 [0..=11520], count: u64, i: u64) {
+    transition i < count && i < 1024u64 {
+        true -> pair(state, words, first, count, i)
+        _ -> done()
+    }
+    machine pair(state: &State, words: &mut [u64; 1024], first: u64 [0..=11520], count: u64, i: u64) requires i < 1024u64 {
+        let lo: u64 = pixels::text_pixel(state, first + i * 2u64);
+        let hi: u64 = pixels::text_pixel(state, first + i * 2u64 + 1u64);
+        words[i] = (lo & 0xffffffffu64) | ((hi & 0xffffffffu64) << 32u64);
+        transition { _ -> raster(state, words, first, count, i + 1u64) }
+    }
+}
+public machine publish(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, command: &application::application::Request, image: Image) reaches Kernel blocks; invokes Kernel; {
+    transition context.text.handle != 0u64 && context.text_filled == 46080u64 {
+        true -> block seal(output, gate, context, state, command, image)
+        _ -> services::replies::failed(output, kernel::INVALID_ARGUMENT)
+    }
+    machine seal(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, command: &application::application::Request, image: Image) reaches Kernel {
+        context.text_filled = 0u64;
+        let created: Creation = block staging::seal(gate, &mut context.text);
+        transition created {
+            Creation::Ready { object } -> block send(output, gate, context, state, command, image, object.handle)
+            Creation::Failed { code } -> services::replies::failed(output, code)
+        }
+    }
+}
+public machine decorate(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, command: &application::application::Request, image: Image, decoration: Decoration) reaches Kernel blocks; invokes Kernel; {
+    let created: Creation = block backing(gate, state, decoration);
+    transition created {
+        Creation::Ready { object } -> block send(output, gate, context, state, command, image, object.handle)
+        Creation::Failed { code } -> services::replies::failed(output, code)
+    }
+}
+machine send(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, command: &application::application::Request, image: Image, object: u64) reaches Kernel {
+    let words: [u64; 8] = [8u64, image.epoch, image.surface, image.x, image.y, image.width, image.height, image.width];
+    block services::transfer::retained(output, gate, context, state, command, false, &words, object, 0u64)
+}
+
+machine backing(gate: &Gate, state: &State, decoration: Decoration) -> Creation reaches Kernel {
+    transition decoration {
+        Decoration::Close -> block pixels(gate, state, 0u64, 160u64)
+        Decoration::Temporary -> block pixels(gate, state, 1u64, 1440u64)
+        Decoration::Tabs -> block pixels(gate, state, 2u64, 496u64)
+    }
+    machine pixels(gate: &Gate, state: &State, kind: u64, count: u64 [1..=1440]) -> Creation reaches Kernel {
+        let mut words: [u64; 2048];
+        decoration(state, &mut words, kind, count, 0u64);
+        block runtime::memory::object::create(gate, &words, count * 8u64)
+    }
+}
+machine decoration(state: &State, words: &mut [u64; 2048], kind: u64, count: u64, i: u64) {
+    transition i < count && i < 1440u64 {
+        true -> pair(state, words, kind, count, i)
+        _ -> done()
+    }
+    machine pair(state: &State, words: &mut [u64; 2048], kind: u64, count: u64, i: u64) requires i < 1440u64 {
+        let lo: u64 = pixels::decoration_pixel(state, kind, i * 2u64);
+        let hi: u64 = pixels::decoration_pixel(state, kind, i * 2u64 + 1u64);
+        words[i] = (lo & 0xffffffffu64) | ((hi & 0xffffffffu64) << 32u64);
+        transition { _ -> decoration(state, words, kind, count, i + 1u64) }
+    }
+}
+machine done() {}

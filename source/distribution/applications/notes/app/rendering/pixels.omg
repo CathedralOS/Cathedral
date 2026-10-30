@@ -7,19 +7,19 @@ public machine layout(s: &mut State) {
     transition {
         _ -> clear(s, 0u64)
     }
-    state clear(s: &mut State, i: u64) {
+    machine clear(s: &mut State, i: u64) {
         transition i < 60u64 {
             true -> zero(s, i)
             _ -> caret(s)
         }
     }
-    state zero(s: &mut State, i: u64) requires i < 60u64 {
+    machine zero(s: &mut State, i: u64) requires i < 60u64 {
         s.cells[i] = 0u64;
         transition {
             _ -> clear(s, i + 1u64)
         }
     }
-    state caret(s: &mut State) {
+    machine caret(s: &mut State) {
         let pos: u64 = position(s, 0u64, 0u64);
         let top: u64 = ((((pos / 15u64) as u64 in Saturating) - 3) * 15) as u64;
         s.caret = ((pos as u64 in Saturating) - (top as u64 in Saturating)) as u64;
@@ -27,45 +27,46 @@ public machine layout(s: &mut State) {
             _ -> text(s, 0u64, 0u64, top)
         }
     }
-    state text(s: &mut State, i: u64, pos: u64, top: u64) {
+    machine text(s: &mut State, i: u64, pos: u64, top: u64) {
         transition i < s.length && i < 240u64 {
             true -> byte(s, i, pos, top)
             _ -> done()
         }
     }
-    state byte(s: &mut State, i: u64, pos: u64, top: u64) requires i < 240u64 {
+    machine byte(s: &mut State, i: u64, pos: u64, top: u64) requires i < 240u64 {
         transition pos >= top && pos - top < 60u64 && s.draft[i] != 10u8 {
             true -> cell(s, i, pos, top)
             _ -> next(s, i, pos, top)
         }
     }
-    state cell(s: &mut State, i: u64, pos: u64, top: u64) requires i < 240u64 && pos >= top && pos - top < 60u64 {
+    machine cell(s: &mut State, i: u64, pos: u64, top: u64) requires i < 240u64 && pos >= top && pos - top < 60u64 {
         s.cells[pos - top] = s.draft[i] as u64;
         transition {
             _ -> next(s, i, pos, top)
         }
     }
-    state next(s: &mut State, i: u64, pos: u64, top: u64) requires i < 240u64 {
+    machine next(s: &mut State, i: u64, pos: u64, top: u64) requires i < 240u64 {
         let next_pos: u64 = advance(pos, s.draft[i]);
         transition {
             _ -> text(s, i + 1u64, next_pos, top)
         }
     }
-    state done() {}
+    machine done() {}
 }
 machine position(s: &State, i: u64, pos: u64) -> u64 {
     transition {
         _ -> scan(s, i, pos)
     }
-    state scan(s: &State, i: u64, pos: u64) -> u64 {
+    machine scan(s: &State, i: u64, pos: u64) -> u64 {
         transition i < s.cursor && i < 240u64 {
             true -> next(s, i, pos)
             _ -> (pos)
         }
     }
-    state next(s: &State, i: u64, pos: u64) -> u64 requires i < 240u64 {
+    machine next(s: &State, i: u64, pos: u64) -> u64 requires i < 240u64 {
+        let next_pos: u64 = advance(pos, s.draft[i]);
         transition {
-            _ -> scan(s, i + 1u64, advance(pos, s.draft[i]))
+            _ -> scan(s, i + 1u64, next_pos)
         }
     }
 }
@@ -81,24 +82,24 @@ public machine text_pixel(s: &State, at: u64) -> u64 {
         true -> pixel(s, at % 180u64, at / 180u64)
         _ -> (0x182132u64)
     }
-    state pixel(s: &State, x: u64, y: u64) -> u64 {
+    machine pixel(s: &State, x: u64, y: u64) -> u64 {
         transition s.closing {
             true -> dialog(s, x, y)
             _ -> editor(s, x, y)
         }
     }
-    state dialog(s: &State, x: u64, y: u64) -> u64 {
+    machine dialog(s: &State, x: u64, y: u64) -> u64 {
         let kind: u64 = dialog_kind(s, y / 16u64);
         letter_pixel(rendering::font::label(kind, x / 12u64), (x % 12u64) / 2u64, (y % 16u64) / 2u64, 0x182132u64)
     }
-    state editor(s: &State, x: u64, y: u64) -> u64 {
+    machine editor(s: &State, x: u64, y: u64) -> u64 {
         let cell: u64 = (((y / 16u64) as u64 in Saturating) * 15 + ((x / 12u64) as u64 in Saturating)) as u64;
         transition cell < 60u64 {
             true -> character(s, x, y, cell)
             _ -> (0x182132u64)
         }
     }
-    state character(s: &State, x: u64, y: u64, cell: u64) -> u64 requires cell < 60u64 {
+    machine character(s: &State, x: u64, y: u64, cell: u64) -> u64 requires cell < 60u64 {
         transition cell == s.caret && y % 16u64 == 14u64 && x % 12u64 < 10u64 {
             true -> (0x66ccffu64)
             _ -> letter_pixel(s.cells[cell], (x % 12u64) / 2u64, (y % 16u64) / 2u64, 0x182132u64)
@@ -112,13 +113,13 @@ machine dialog_kind(s: &State, row: u64) -> u64 {
         2u64 -> (4u64)
         _ -> (5u64)
     }
-    state title(s: &State) -> u64 {
+    machine title(s: &State) -> u64 {
         transition s.error == 0u64 {
             true -> (0u64)
             _ -> (1u64)
         }
     }
-    state save(s: &State) -> u64 {
+    machine save(s: &State) -> u64 {
         transition s.temporary {
             true -> (3u64)
             _ -> (2u64)
@@ -130,7 +131,7 @@ machine letter_pixel(ch: u64, x: u64, y: u64, background: u64) -> u64 {
         true -> bit(ch, x, y, background)
         _ -> (background)
     }
-    state bit(ch: u64, x: u64, y: u64, background: u64) -> u64 requires x < 5u64 && y < 7u64 {
+    machine bit(ch: u64, x: u64, y: u64, background: u64) -> u64 requires x < 5u64 && y < 7u64 {
         transition ((rendering::font::glyph(ch) >> (y * 8u64)) & (1u64 << (4u64 - x))) != 0u64 {
             true -> (0xffffffu64)
             _ -> (background)
@@ -144,19 +145,19 @@ public machine decoration_pixel(s: &State, kind: u64, at: u64) -> u64 {
         1u64 -> temporary(at % 180u64, at / 180u64)
         _ -> tab(s, at % 124u64)
     }
-    state close(x: u64, y: u64) -> u64 {
+    machine close(x: u64, y: u64) -> u64 {
         transition x >= 5u64 && x < 15u64 && y >= 1u64 {
             true -> cross(x, y)
             _ -> (0x993f46u64)
         }
     }
-    state cross(x: u64, y: u64) -> u64 requires x >= 5u64 && y >= 1u64 {
+    machine cross(x: u64, y: u64) -> u64 requires x >= 5u64 && y >= 1u64 {
         letter_pixel(88u64, (x - 5u64) / 2u64, (y - 1u64) / 2u64, 0x993f46u64)
     }
-    state temporary(x: u64, y: u64) -> u64 {
+    machine temporary(x: u64, y: u64) -> u64 {
         letter_pixel(rendering::font::label(6u64, x / 12u64), (x % 12u64) / 2u64, y / 2u64, 0x182132u64)
     }
-    state tab(s: &State, x: u64) -> u64 {
+    machine tab(s: &State, x: u64) -> u64 {
         let start: u64 = ((s.current as u64 in Saturating) * 16) as u64;
         let end: u64 = (((s.count as u64 in Saturating) * 16) - 4) as u64;
         transition s.count != 0u64 && x >= start && ((x as u64 in Saturating) - (start as u64 in Saturating)) < 12 {
@@ -164,7 +165,7 @@ public machine decoration_pixel(s: &State, kind: u64, at: u64) -> u64 {
             _ -> track(s, x, end)
         }
     }
-    state track(s: &State, x: u64, end: u64) -> u64 {
+    machine track(s: &State, x: u64, end: u64) -> u64 {
         transition s.count != 0u64 && x < end {
             true -> (0x3a4a63u64)
             _ -> (0x182132u64)

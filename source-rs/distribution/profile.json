@@ -164,7 +164,7 @@
       },
       {
         "package": "cathedral-notes",
-        "entry": "distribution/applications/notes/main.rs",
+        "entry": "distribution/applications/notes/native/main.omg",
         "target": "x86_64-unknown-none",
         "inside": 2,
         "display_title": "NOTES"
@@ -195,7 +195,7 @@
       {
         "path": "Split/Notes",
         "package": "cathedral-notes",
-        "entry": "distribution/applications/notes/main.rs",
+        "entry": "distribution/applications/notes/native/main.omg",
         "target": "x86_64-unknown-none",
         "display_title": "NOTES"
       },
@@ -257,7 +257,7 @@
       {
         "path": "Nested/Users/Template/Notes",
         "package": "cathedral-notes",
-        "entry": "distribution/applications/notes/main.rs",
+        "entry": "distribution/applications/notes/native/main.omg",
         "target": "x86_64-unknown-none",
         "display_title": "NOTES"
       },

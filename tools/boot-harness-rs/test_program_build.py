@@ -5,6 +5,7 @@ import unittest
 from unittest.mock import patch
 
 import program_build
+import probe_programs
 
 
 class ProgramBuildTests(unittest.TestCase):
@@ -42,6 +43,21 @@ class ProgramBuildTests(unittest.TestCase):
         self.assertEqual(command[-2:], ['--features', 'startup-fault'])
         self.assertNotIn('--release', command)
         self.assertEqual(image, program_build.BUILD / 'cargo/x86_64-unknown-none/debug/cathedral-background')
+
+    def test_notes_probe_is_an_explicit_producer_change(self):
+        program = dict(self.program, package='cathedral-notes',
+                       entry='distribution/applications/notes/native/main.omg')
+        with self.assertRaisesRegex(ValueError, 'Unknown'):
+            probe_programs.notes(program, 'trace-storage')
+        self.assertTrue(program['entry'].endswith('.omg'))
+        probe_programs.notes(program, 'control-delay-probe')
+        self.assertEqual(program['entry'], 'distribution/applications/notes/main.rs')
+        with patch.object(program_build.subprocess, 'run') as run:
+            program_build.build(program, True, program['features'])
+        self.assertEqual(run.call_args.args[0][0], 'cargo')
+        self.assertIn('control-delay-probe', run.call_args.args[0])
+        with self.assertRaisesRegex(ValueError, 'Notes program'):
+            probe_programs.notes(self.program, 'control-delay-probe')
 
 
 if __name__ == '__main__':

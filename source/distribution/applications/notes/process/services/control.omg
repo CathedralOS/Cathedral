@@ -1,0 +1,75 @@
+module services::control;
+// The independent owner never has to wait for a storage or compositor reply.
+use main::Context;
+use app::state::State;
+use app::document::document;
+use app::operations::Report;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::server::main::Event;
+use protocol::main;
+
+public machine poll(gate: &Gate, context: &mut Context, state: &State, now: u64)
+    reaches Kernel blocks; invokes Kernel; {
+    transition context.owner.peer.fault == 0u64 {
+        true -> block receive(gate, context, state, now)
+        _ -> done()
+    }
+}
+machine receive(gate: &Gate, context: &mut Context, state: &State, now: u64) reaches Kernel {
+    let event: Event = block runtime::server::main::poll(gate, &mut context.owner, now);
+    transition event {
+        Event::Request { frame } -> block request(gate, context, state, frame.bytes, frame.payload)
+        _ -> done()
+    }
+}
+machine request(gate: &Gate, context: &mut Context, state: &State, bytes: u64, words: [u64; 8]) reaches Kernel {
+    transition bytes == 64u64 && (words[0] == HEALTH || words[0] == LOSS)
+        && words[1] == 0u64 && words[2] == 0u64 && words[3] == 0u64 && words[4] == 0u64
+        && words[5] == 0u64 && words[6] == 0u64 && words[7] == 0u64 {
+        true -> block answer(gate, context, report(state, words[0] == LOSS))
+        _ -> block refuse(gate, context)
+    }
+}
+machine refuse(gate: &Gate, context: &mut Context) reaches Kernel {
+    let mut words: [u64; 8]; words[0] = INVALID_ARGUMENT;
+    block send(gate, context, &words);
+}
+public machine answer(gate: &Gate, context: &mut Context, report: Report) reaches Kernel blocks; invokes Kernel; {
+    transition report {
+        Report::Loss { changed } -> block loss(gate, context, changed)
+        Report::Health { revision, length, error, changed, count, selected } ->
+            block health(gate, context, revision, length, error, changed, count, selected)
+    }
+    machine loss(gate: &Gate, context: &mut Context, changed: bool) reaches Kernel {
+        let words: [u64; 8] = [0u64, changed as u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64];
+        block send(gate, context, &words);
+    }
+    machine health(gate: &Gate, context: &mut Context, revision: u64, length: u64,
+        error: u64, changed: bool, count: u64, selected: u64) reaches Kernel {
+        let words: [u64; 8] = [0u64, revision, length, error, changed as u64, count, selected, 0u64];
+        block send(gate, context, &words);
+    }
+}
+machine report(state: &State, loss: bool) -> Report {
+    transition loss {
+        true -> (Report::Loss { changed: document::changed(state) })
+        _ -> (Report::Health { revision: state.revision, length: state.length, error: state.error,
+            changed: document::changed(state), count: state.count, selected: selection(state) })
+    }
+}
+machine selection(state: &State) -> u64 {
+    transition state.count == 0u64 {
+        true -> (0u64)
+        _ -> (((state.current as u64 in Saturating) + 1) as u64)
+    }
+}
+
+machine send(gate: &Gate, context: &mut Context, words: &[u64; 8]) reaches Kernel {
+    let status: u64 = block runtime::server::main::reply(gate, &mut context.owner, words);
+    transition status == 0u64 {
+        true -> done()
+        _ -> block runtime::server::main::close(gate, &mut context.owner)
+    }
+}
+machine done() {}

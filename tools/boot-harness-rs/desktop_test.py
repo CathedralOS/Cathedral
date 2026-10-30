@@ -14,6 +14,7 @@ import database_image
 import disk_image
 import desktop_timing
 import pointer_test
+import probe_programs
 import run as harness
 
 HERE = Path(__file__).resolve().parent
@@ -458,13 +459,16 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
     if render_demand or masked_capture:
         for entry in composition['startup']['realm_programs']:
             if entry.get('path') in ('Split', 'Split/Notes'):
-                entry.setdefault('features', []).append('render-demand-probe')
+                if entry.get('package') == 'cathedral-notes':
+                    probe_programs.notes(entry, 'render-demand-probe')
+                else:
+                    entry.setdefault('features', []).append('render-demand-probe')
             if masked_capture and entry.get('path') == 'Split/Capture':
                 entry.setdefault('features', []).append('capture-probe')
     if capture_case and capture_case != 'ordinary':
         for entry in composition['startup']['realm_programs']:
             if entry.get('path') == 'Split/Notes':
-                entry.setdefault('features', []).append('capture-source-exit' if capture_case == 'source' else 'capture-source-stall')
+                probe_programs.notes(entry, 'capture-source-exit' if capture_case == 'source' else 'capture-source-stall')
             if entry.get('path') == 'Split/Capture' and capture_case != 'source':
                 entry.setdefault('features', []).append('capture-recipient-exit' if capture_case == 'recipient' else 'capture-timeout')
     if cursor_producer:
@@ -476,12 +480,12 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
             if entry.get('package') == 'cathedral-input-demo':
                 entry.setdefault('features', []).append(participant_fault + '-probe')
             if entry.get('path') == 'Split/Notes':
-                entry.setdefault('features', []).append('input-receiver-probe')
+                probe_programs.notes(entry, 'input-receiver-probe')
     if input_producer:
         def producer_variant(value):
             if isinstance(value, dict):
                 if value.get('package') == 'cathedral-notes':
-                    value.setdefault('features', []).append('input-producer-partial' if input_producer == 'partial' else 'input-producer-probe')
+                    probe_programs.notes(value, 'input-producer-partial' if input_producer == 'partial' else 'input-producer-probe')
                 if value.get('package') == 'cathedral-stock-matrix' and input_producer != 'denied':
                     value.setdefault('features', []).append('input-producer-probe')
                 for child in value.values(): producer_variant(child)

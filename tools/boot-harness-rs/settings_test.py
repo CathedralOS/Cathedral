@@ -1,4 +1,5 @@
 """Edit saved matrix layout through F5; verify cancel, live apply, retained drafts and clone isolation."""
+import probe_programs
 import argparse
 import json
 from datetime import datetime, timezone
@@ -228,7 +229,7 @@ def run(source, recovery=False, render_race=False):
         else:
             for program in startup['programs']:
                 if program.get('package') == 'cathedral-notes':
-                    program.setdefault('features', []).append('render-probes')
+                    probe_programs.notes(program, 'render-probes')
         profile = output / ('settings-recovery.json' if recovery else 'settings-render-race.json')
         profile.write_text(json.dumps(composition, indent=2), encoding='utf-8', newline='\n')
         build += ['--profile', str(profile), '--trace-storage']

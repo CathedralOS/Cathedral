@@ -10,23 +10,23 @@ public machine cursor_next(s: &mut State) -> Command {
     transition {
         _ -> scan(s)
     }
-    state scan(s: &mut State) -> Command {
+    machine scan(s: &mut State) -> Command {
         transition s.cursor_index < 4u64 {
             true -> pointer(s)
             _ -> session::session::after_input(s)
         }
     }
-    state pointer(s: &mut State) -> Command requires s.cursor_index < 4u64 {
+    machine pointer(s: &mut State) -> Command requires s.cursor_index < 4u64 {
         transition s.channels[s.cursor_index] != 0u64 && s.groups[s.cursor_index] == s.cursor_group {
             true -> request(s)
             _ -> next(s)
         }
     }
-    state request(s: &mut State) -> Command requires s.cursor_index < 4u64 {
+    machine request(s: &mut State) -> Command requires s.cursor_index < 4u64 {
         s.phase = Phase::CursorChanged;
         Command::Cursor { epoch: s.epoch, channel: s.channels[s.cursor_index], hidden: !s.hidden[s.cursor_index] }
     }
-    state next(s: &mut State) -> Command requires s.cursor_index < 4u64 {
+    machine next(s: &mut State) -> Command requires s.cursor_index < 4u64 {
         s.cursor_index = s.cursor_index + 1u64;
         transition {
             _ -> scan(s)

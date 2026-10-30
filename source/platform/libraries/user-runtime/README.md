@@ -99,11 +99,11 @@ and failure; abandonment explicitly releases it. This is the same funded page
 mechanism, not a second allocator or a new way to bypass memory grants.
 
 This small platform runtime replaces the Rust app host for the installed
-Background and Colors. It has no general allocator.
+Background, Colors and Notes. It has no general allocator.
 Owner-control transport works; the app owns control policy and its event loop.
 In particular, copied IPC is the
 setup/grant mechanism; it must not become a fallback for the desktop's shared
-service protocol. Notes, the chooser and the matrix still use their Rust hosts.
+service protocol. The chooser and the matrix still use their Rust hosts.
 The runtime has only been qualified on x86-64.
 
 The [process witness](../../../distribution/lab/user-entry/README.md) exercises

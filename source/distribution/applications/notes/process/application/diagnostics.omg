@@ -1,0 +1,17 @@
+module application::diagnostics;
+use application::application;
+// Existing startup markers are best effort; they are not service authority.
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use app::operations::Completion;
+use app::operations::Reply;
+public machine loaded(output: &mut application::application::Work, gate: &Gate, temporary: bool) reaches Kernel invokes Kernel; {
+    transition temporary {
+        true -> write(output, gate, [7021785155730956611u64, 4211821627279548524u64, 7021797297686410272u64, 8295753032394307954u64, 7286935691776388980u64, 753348436797973614u64, 0u64, 0u64], 48u64)
+        _ -> write(output, gate, [7021785155730956611u64, 4211821627279548524u64, 8028842149463158304u64, 44634039393u64, 0u64, 0u64, 0u64, 0u64], 29u64)
+    }
+}
+machine write(output: &mut application::application::Work, gate: &Gate, words: [u64; 8], bytes: u64 [0..=64]) reaches Kernel {
+    let ignored: u64 = Kernel::write(gate, &words, bytes);
+    output.event = Completion { transport_status: 0u64, reply: Reply::Complete };
+}

@@ -19,7 +19,7 @@ public machine render(s: &mut State) -> Command {
         true -> demand(s)
         _ -> scene(s)
     }
-    state demand(s: &mut State) -> Command {
+    machine demand(s: &mut State) -> Command {
         s.phase = Phase::Rendering { step: RenderStep::DemandReady };
         Command::FrameDemand { epoch: s.epoch }
     }
@@ -29,13 +29,13 @@ machine scene(s: &mut State) -> Command {
         true -> available(s)
         _ -> finished(s)
     }
-    state available(s: &mut State) -> Command {
+    machine available(s: &mut State) -> Command {
         transition s.scene {
             true -> base(s)
             _ -> allocate(s)
         }
     }
-    state allocate(s: &mut State) -> Command {
+    machine allocate(s: &mut State) -> Command {
         s.rank = 0u64;
         s.background = 0u64;
         s.close_width = 0u64;
@@ -143,13 +143,13 @@ machine color(s: &State) -> u64 {
         true -> (0x993f46u64)
         _ -> dirty(s)
     }
-    state dirty(s: &State) -> u64 {
+    machine dirty(s: &State) -> u64 {
         transition document::document::changed(s) {
             true -> (0x9b7028u64)
             _ -> storage(s)
         }
     }
-    state storage(s: &State) -> u64 {
+    machine storage(s: &State) -> u64 {
         transition s.temporary {
             true -> (0x55447au64)
             _ -> (0x27664au64)
@@ -162,7 +162,7 @@ machine base(s: &mut State) -> Command {
         true -> paint(s, value)
         _ -> text(s)
     }
-    state paint(s: &mut State, value: u64) -> Command {
+    machine paint(s: &mut State, value: u64) -> Command {
         s.background = value;
         s.cached_width = s.width;
         s.cached_height = s.height;
@@ -180,7 +180,7 @@ machine chunk(s: &mut State) -> Command {
         true -> fill(s, 4080u64)
         _ -> fill(s, 1680u64)
     }
-    state fill(s: &mut State, words: u64) -> Command {
+    machine fill(s: &mut State, words: u64) -> Command {
         let offset: u64 = s.image_offset;
         s.image_offset = ((s.image_offset as u64 in Saturating) + ((words as u64 in Saturating) * 8)) as u64;
         s.phase = Phase::Rendering { step: RenderStep::TextStaged };
@@ -192,7 +192,7 @@ machine close(s: &mut State) -> Command {
         true -> image(s)
         _ -> tabs(s)
     }
-    state image(s: &mut State) -> Command {
+    machine image(s: &mut State) -> Command {
         s.close_width = s.width;
         s.phase = Phase::Rendering { step: RenderStep::CloseReady };
         let left: u64 = ((s.width as u64 in Saturating) - 24) as u64;
@@ -204,7 +204,7 @@ machine tabs(s: &mut State) -> Command {
         true -> painted(s)
         _ -> image(s)
     }
-    state image(s: &mut State) -> Command {
+    machine image(s: &mut State) -> Command {
         s.tabs_valid = true;
         s.cached_count = s.count;
         s.cached_current = s.current;
@@ -214,10 +214,10 @@ machine tabs(s: &mut State) -> Command {
             _ -> stored(s)
         }
     }
-    state temporary(s: &mut State) -> Command {
+    machine temporary(s: &mut State) -> Command {
         Command::Decorate { image: Image { epoch: s.epoch, surface: s.surfaces[2], x: 10u64, y: 88u64, width: 180u64, height: 16u64 }, decoration: Decoration::Temporary }
     }
-    state stored(s: &mut State) -> Command {
+    machine stored(s: &mut State) -> Command {
         Command::Decorate { image: Image { epoch: s.epoch, surface: s.surfaces[2], x: 10u64, y: 88u64, width: 124u64, height: 8u64 }, decoration: Decoration::Tabs }
     }
 }
@@ -230,7 +230,7 @@ machine finished(s: &mut State) -> Command {
         true -> ready(s)
         _ -> session::session::wait(s)
     }
-    state ready(s: &mut State) -> Command {
+    machine ready(s: &mut State) -> Command {
         s.phase = Phase::Rendering { step: RenderStep::FrameSent };
         Command::FrameReady { epoch: s.epoch, ticket: s.ticket }
     }

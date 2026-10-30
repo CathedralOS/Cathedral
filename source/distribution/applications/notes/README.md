@@ -31,32 +31,48 @@ uncertainty and optional service refusal. Then follow:
   [operations.omg](app/operations.omg) describes requested work, completed replies,
   input, images and document bytes without native packet offsets.
 
-The [component bridge](bridge/component/main.omg) decodes a completed operation,
-advances the app and encodes its next request. `replies.omg` and `commands.omg`
-own transport interpretation; `records.omg` transfers bounded bytes while the
-document codec owns `NTS1` validation. `images.omg` packs pixels supplied by the
-app's renderer, and `diagnostics.omg` encodes the existing startup messages.
-Neither the bridge nor the Rust host decides how to edit, save or close Notes.
+The installed executable starts at [native/main.omg](native/main.omg), which
+selects the [process entrance](process/main.omg). That entrance establishes
+installed authority, runs the editor, and releases local custody. Descend into:
 
-The [native consumer](bridge/native/main.omg) builds an independent Omega export.
-The [Rust executable](../../../../source-rs/distribution/applications/notes/main.rs)
-declares the existing imports and enters the shared
-[platform host](../../../../source-rs/platform/libraries/omega-app/README.md).
-Rust owns runtime transport, waits and attachment custody. Omega owns all normal
-editor, persistence, input, rendering and close decisions. No new syscall or
-ambient authority is involved. This remains a synchronous x86-64 bridge to the
-reference OS, not the final Omega application ABI.
+- [application/application.omg](process/application/application.omg): one editor
+  state and reusable command/result workspace. [operations.omg](process/application/operations.omg)
+  dispatches real editor requests to their owners. Borrowing this workspace avoids
+  retaining large sum-type return buffers at every process dispatch step in the
+  current compiler; the process still uses the kernel's unchanged 32 KiB stack.
+- [services/services.omg](process/services/services.omg): obtain the supplied
+  interaction and optional storage endpoints. [exchange.omg](process/services/exchange.omg)
+  publishes once and multiplexes owner control with the selected service wait;
+  [control.omg](process/services/control.omg) answers HEALTH/LOSS from editor state.
+  [waiting.omg](process/services/waiting.omg) parks until actual input or owner
+  work, retaining MORE across bounded input batches.
+- [storage/requests.omg](process/storage/requests.omg): bind the scoped store and
+  encode requests. [records.omg](process/storage/records.omg) reads immutable
+  document attachments, checks transport extents, and releases reader custody.
+  Schema/revision validation stays in the editor's storage and document modules.
+- [presentation/presentation.omg](process/presentation/presentation.omg): encode
+  geometry and presentation requests. [images.omg](process/presentation/images.omg)
+  constructs the 46,080-byte text image in private pages with at most 8 KiB of
+  pixel scratch per chunk, then seals and unmaps it. No pixel array spans an IPC
+  wait. Accepted compositor readers have independent lifetimes.
 
-[Compiled export tests](../../../../source-rs/distribution/applications/notes/tests/behavior.rs)
-exercise actual Omega code against controlled peers. The desktop harness checks
-exact pixels, independent drafts, durable records and cold boot. Feature-selected
-fault/admission/producer/render probes explicitly enable `rust-probes`, retaining
-the old Rust session for those mechanism fixtures. Such runs do not validate this
-Omega editor. The standalone Rust document tests remain an independent schema
-oracle. Native startup diagnostics retain the `note-loaded` marker; detailed Rust
-editor timing/probe markers have not been ported.
+No Rust application host participates in this installed process. The kernel,
+matrix and service providers remain the Rust reference. The native adapter is
+currently x86-64 only; no kernel limits, storage schema or compiler source changed
+for this app migration. The editor's nested declarations now use `machine`.
 
-Build with `python tools/omega-component/build.py
-source/distribution/applications/notes/bridge/native` or let Cargo prepare the component.
-Run `cargo test --locked -p cathedral-notes` from `source-rs/` on Windows to replay
-the compiled export; the integrated desktop runs it in QEMU.
+The [component bridge](bridge/component/main.omg) and
+[Rust executable](../../../../source-rs/distribution/applications/notes/main.rs)
+remain explicit comparison fixtures. The bridge passes the same editor model
+through the shared Rust app host. Feature-selected fault, admission, producer
+and render probes instead enable `rust-probes`; those mechanism tests do not
+validate the standalone Omega process. Harness fixture setup selects the Rust
+entry explicitly. Ordinary builds never silently substitute it.
+
+Run `python tools/omega-user/notes_test.py --compiler build/omega-user/compiler/omega.exe`
+for actual-process storage, image, owner-control, idle/wake and resource-refund
+checks. Run `cargo test --locked -p cathedral-notes` from `source-rs/` for the
+retained compiled editor tests. The desktop harness additionally checks exact
+pixels, independent drafts, successful saves, duplication, close protection and
+cold reopen. See [the current handoff](../../../../TASKS_RUST.md) for qualification
+scope and remaining work.

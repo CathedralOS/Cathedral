@@ -1,11 +1,12 @@
 """Real stock owner control: old clean LOSS must not authorize a later dirty close."""
 from nested_desktop_test import Nested
+import probe_programs
 
 
 def configure(value):
     if isinstance(value, dict):
         if value.get('package') == 'cathedral-notes':
-            value.setdefault('features', []).append('control-delay-probe')
+            probe_programs.notes(value, 'control-delay-probe')
         for child in value.values():
             configure(child)
     elif isinstance(value, list):

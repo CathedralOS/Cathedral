@@ -112,7 +112,7 @@ public machine label(kind: u64, index: u64) -> u64 {
         6u64 -> label_6(index)
         _ -> (0u64)
     }
-    state label_0(index: u64) -> u64 {
+    machine label_0(index: u64) -> u64 {
         transition index {
             0u64 -> (85u64)
             1u64 -> (78u64)
@@ -129,7 +129,7 @@ public machine label(kind: u64, index: u64) -> u64 {
             _ -> (0u64)
         }
     }
-    state label_1(index: u64) -> u64 {
+    machine label_1(index: u64) -> u64 {
         transition index {
             0u64 -> (83u64)
             1u64 -> (65u64)
@@ -144,7 +144,7 @@ public machine label(kind: u64, index: u64) -> u64 {
             _ -> (0u64)
         }
     }
-    state label_2(index: u64) -> u64 {
+    machine label_2(index: u64) -> u64 {
         transition index {
             0u64 -> (83u64)
             1u64 -> (65u64)
@@ -153,7 +153,7 @@ public machine label(kind: u64, index: u64) -> u64 {
             _ -> (0u64)
         }
     }
-    state label_3(index: u64) -> u64 {
+    machine label_3(index: u64) -> u64 {
         transition index {
             0u64 -> (78u64)
             1u64 -> (79u64)
@@ -168,7 +168,7 @@ public machine label(kind: u64, index: u64) -> u64 {
             _ -> (0u64)
         }
     }
-    state label_4(index: u64) -> u64 {
+    machine label_4(index: u64) -> u64 {
         transition index {
             0u64 -> (68u64)
             1u64 -> (73u64)
@@ -180,7 +180,7 @@ public machine label(kind: u64, index: u64) -> u64 {
             _ -> (0u64)
         }
     }
-    state label_5(index: u64) -> u64 {
+    machine label_5(index: u64) -> u64 {
         transition index {
             0u64 -> (67u64)
             1u64 -> (65u64)
@@ -191,7 +191,7 @@ public machine label(kind: u64, index: u64) -> u64 {
             _ -> (0u64)
         }
     }
-    state label_6(index: u64) -> u64 {
+    machine label_6(index: u64) -> u64 {
         transition index {
             0u64 -> (84u64)
             1u64 -> (69u64)

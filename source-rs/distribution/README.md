@@ -37,7 +37,9 @@ Notes holds up to eight notes of 240 characters: **F1** saves or reconciles,
 changes on **Enter**. Arrows and Enter also navigate a focused picker/launcher.
 Installed [Colors](../../source/distribution/applications/colors/README.md) and
 [Notes](../../source/distribution/applications/notes/README.md) behavior is authored
-in Omega; their ordinary controls and scoped storage remain the same.
+in Omega and now runs in standalone Omega processes, alongside Background.
+Their ordinary controls and scoped storage remain the same. The chooser and
+matrix still use Rust process hosts.
 There is no logout yet; restart QEMU to select another user. The picker handles
 up to three users without scrolling and hides New User at its limit.
 

@@ -1,0 +1,37 @@
+module presentation::presentation;
+use application::application;
+// Geometry and pixels belong to the editor. This owner encodes presentation
+// requests and delegates attachment lifetime to images/transfer.
+use main::Context;
+use app::state::State;
+use app::operations::Command;
+use app::operations::Completion;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use protocol::main;
+use presentation::images;
+use services::transfer;
+public machine execute(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, command: &application::application::Request) reaches Kernel blocks; invokes Kernel; {
+    transition command.command {
+        Command::StageText { offset, words } -> block presentation::images::stage(output, gate, context, state, offset, words)
+        Command::PublishText { image } -> block presentation::images::publish(output, gate, context, state, command, image)
+        Command::Decorate { image, decoration } -> block presentation::images::decorate(output, gate, context, state, command, image, decoration)
+        _ -> block plain(output, gate, context, state, command)
+    }
+}
+machine plain(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, command: &application::application::Request) reaches Kernel {
+    let words: [u64; 8] = encode(command);
+    block services::transfer::plain(output, gate, context, state, command, false, &words, 0u64, 0u64)
+}
+machine encode(command: &application::application::Request) -> [u64; 8] {
+    transition command.command {
+        Command::Poll -> ([MATRIX_POLL, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64])
+        Command::View -> ([MATRIX_VIEW, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64])
+        Command::Cursor { epoch, channel, hidden } -> ([CURSOR_PREFERENCE, epoch, channel, hidden as u64, 0u64, 0u64, 0u64, 0u64])
+        Command::CreateSurface { epoch, rank } -> ([SURFACE_CREATE, epoch, rank, 0u64, 0u64, 0u64, 0u64, 0u64])
+        Command::Paint { epoch, surface, width, height, color } -> ([MATRIX_PAINT, epoch, surface, 0u64, 0u64, width, height, color])
+        Command::FrameDemand { epoch } -> ([FRAME_DEMAND, epoch, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64])
+        Command::FrameReady { epoch, ticket } -> ([FRAME_READY, epoch, ticket, 0u64, 0u64, 0u64, 0u64, 0u64])
+        _ -> ([0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64])
+    }
+}

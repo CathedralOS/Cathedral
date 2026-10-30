@@ -1,0 +1,116 @@
+module storage::records;
+use application::application;
+// Storage transport owns attachment custody and extents. The editor alone
+// interprets NTS1 and decides whether these bytes replace its draft.
+use main::Context;
+use app::state::State;
+use app::operations::Command;
+use app::operations::Completion;
+use app::operations::Record;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::connection::call::CallReply;
+use runtime::connection::main::Frame;
+use runtime::memory::object::Creation;
+use services::exchange;
+use services::replies;
+
+public machine receive(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, command: &application::application::Request,
+    words: &[u64; 8], requested: u64) reaches Kernel blocks; invokes Kernel; {
+    let reply: CallReply = block services::exchange::request(gate, context, state, true, words, 0u64, words[7]);
+    transition reply {
+        CallReply::Object { frame, object } -> block object(output, gate, context, frame, object, requested)
+        CallReply::Received { frame, notification } -> block plain(output, gate, context, command, frame, notification)
+        CallReply::Endpoint { frame, endpoint } -> block unexpected_endpoint(output, gate, context, endpoint)
+        CallReply::Failed { code } -> services::replies::failed(output, code)
+    }
+}
+machine plain(output: &mut application::application::Work, gate: &Gate, context: &mut Context, command: &application::application::Request, frame: Frame, notification: u64) reaches Kernel {
+    transition frame.bytes == 64u64 && frame.payload[0] != 0u64 && notification == 0u64 {
+        true -> services::replies::decoded(output, command, frame.payload)
+        _ -> block unexpected_notification(output, gate, context, notification)
+    }
+}
+machine object(output: &mut application::application::Work, gate: &Gate, context: &mut Context, frame: Frame, object: u64, requested: u64) reaches Kernel {
+    let mut record: Record;
+    let status: u64 = block contents(gate, frame, object, requested, &mut record);
+    let released: u64 = block Kernel::memory_release(gate, object);
+    transition status == 0u64 && released == 0u64 {
+        true -> services::replies::read(output, frame.payload, record)
+        _ -> block malformed(output, gate, context)
+    }
+}
+machine contents(gate: &Gate, frame: Frame, object: u64, requested: u64, record: &mut Record) -> u64 reaches Kernel {
+    transition frame.bytes == 64u64 && frame.payload[0] == 0u64
+        && frame.payload[4] > 0u64 && frame.payload[4] <= 244u64 && frame.payload[4] <= requested {
+        true -> block copy(gate, object, record, frame.payload[4])
+        _ -> (kernel::IO_ERROR)
+    }
+    machine copy(gate: &Gate, object: u64, record: &mut Record, length: u64) -> u64 reaches Kernel {
+        record.length = length;
+        transition { _ -> block chunk(gate, object, record, 0u64) }
+    }
+}
+machine chunk(gate: &Gate, object: u64, record: &mut Record, offset: u64) -> u64 reaches Kernel {
+    transition offset < record.length && offset < 244u64 {
+        true -> block read(gate, object, record, offset)
+        _ -> (0u64)
+    }
+    machine read(gate: &Gate, object: u64, record: &mut Record, offset: u64) -> u64 reaches Kernel requires offset < 244u64 {
+        let mut words: [u64; 8];
+        let status: u64 = block Kernel::object_read(gate, object, offset / 8u64, &mut words, 8u64);
+        transition status == 0u64 {
+            true -> block copied(gate, object, record, offset, &words)
+            _ -> (status)
+        }
+    }
+    machine copied(gate: &Gate, object: u64, record: &mut Record, offset: u64, words: &[u64; 8]) -> u64 reaches Kernel requires offset < 244u64 {
+        unpack(record, offset, words, 0u64);
+        transition { _ -> block chunk(gate, object, record, offset + 64u64) }
+    }
+}
+machine unpack(record: &mut Record, offset: u64 [0..=243], words: &[u64; 8], i: u64) {
+    transition i < 64u64 && offset + i < 244u64 && offset + i < record.length {
+        true -> byte(record, offset, words, i)
+        _ -> done()
+    }
+    machine byte(record: &mut Record, offset: u64 [0..=243], words: &[u64; 8], i: u64) requires i < 64u64 && offset + i < 244u64 {
+        record.bytes[offset + i] = ((words[i / 8u64] >> ((i % 8u64) * 8u64)) & 255u64) as u8;
+        transition { _ -> unpack(record, offset, words, i + 1u64) }
+    }
+}
+public machine backing(gate: &Gate, record: &Record) -> Creation reaches Kernel blocks; invokes Kernel; {
+    transition record.length > 0u64 && record.length <= 244u64 {
+        true -> block pack(gate, record)
+        _ -> (Creation::Failed { code: kernel::INVALID_ARGUMENT })
+    }
+    machine pack(gate: &Gate, record: &Record) -> Creation reaches Kernel requires record.length > 0u64 && record.length <= 244u64 {
+        let mut words: [u64; 2048];
+        bytes(record, &mut words, 0u64);
+        block runtime::memory::object::create(gate, &words, record.length)
+    }
+}
+machine bytes(record: &Record, words: &mut [u64; 2048], i: u64) {
+    transition i < record.length && i < 244u64 {
+        true -> byte(record, words, i)
+        _ -> done()
+    }
+    machine byte(record: &Record, words: &mut [u64; 2048], i: u64) requires i < 244u64 {
+        words[i / 8u64] = words[i / 8u64] | ((record.bytes[i] as u64) << ((i % 8u64) * 8u64));
+        transition { _ -> bytes(record, words, i + 1u64) }
+    }
+}
+machine unexpected_endpoint(output: &mut application::application::Work, gate: &Gate, context: &mut Context, endpoint: u64) reaches Kernel {
+    let ignored: u64 = Kernel::close(gate, endpoint);
+    transition { _ -> block malformed(output, gate, context) }
+}
+machine unexpected_notification(output: &mut application::application::Work, gate: &Gate, context: &mut Context, notification: u64) reaches Kernel {
+    let ignored: u64 = Kernel::notify_drop(gate, notification);
+    transition { _ -> block malformed(output, gate, context) }
+}
+machine malformed(output: &mut application::application::Work, gate: &Gate, context: &mut Context) reaches Kernel {
+    let ignored: u64 = block runtime::connection::main::close(gate, &mut context.storage.peer);
+    services::replies::failed(output, kernel::IO_ERROR)
+}
+machine done() {}
