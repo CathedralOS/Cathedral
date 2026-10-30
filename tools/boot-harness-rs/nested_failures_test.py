@@ -1,5 +1,6 @@
 """Fault only Nested's installed programs; outer apps and grants must survive."""
 import argparse
+import json
 from datetime import datetime, timezone
 import os
 from pathlib import Path
@@ -11,6 +12,7 @@ import database_image
 import desktop_test
 import disk_image
 import elf_trim
+import program_build
 from nested_desktop_test import Nested
 import run as harness
 
@@ -54,21 +56,29 @@ def check(mode, output, click, key, scan, width, height, reboot):
     print(f'PASS: Nested {mode} failures, bounded local recovery and repeated reclamation; outer draft survives')
 
 
-def run(source):
+def run(source, source_profile=None):
     before=source.read_bytes()
     output=harness.BUILD/'nested-failures'/datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     output.mkdir(parents=True)
     profile=output/'nested-failures.json'
-    shutil.copyfile(harness.WORKSPACE/'distribution/profile.json',profile)
+    shutil.copyfile(source_profile or harness.WORKSPACE/'distribution/profile.json',profile)
+    composition=json.loads(profile.read_text())
+    background=next(program for program in composition['startup']['realm_programs']
+                    if program.get('package')=='cathedral-background')
     subprocess.run([sys.executable,str(Path(__file__).with_name('run.py')),'--release','--build-only','--profile',str(profile)],check=True)
     specs=[('picker','cathedral-chooser','picker-startup-fault','Nested/Login','deliberate picker startup failure'),
            ('user','cathedral-stock-matrix','startup-fault','Nested/Users/User 1','deliberate matrix startup failure'),
            ('background','cathedral-background','startup-fault','Nested/Users/User 1/Background','deliberate background startup failure')]
     oracle=database_image.oracle()
     for mode,package,feature,target,panic in specs:
-        subprocess.run(['cargo','build','--locked','--release','--target','x86_64-unknown-none','--target-dir',str(harness.BUILD/'cargo'),'--package',package,'--features',feature],cwd=harness.WORKSPACE,check=True)
+        if mode=='background' and program_build.omega_source(background) is not None:
+            failure=dict(background, entry='distribution/lab/background-startup-failure/native/main.omg')
+            built=program_build.build(failure,True,[])
+        else:
+            subprocess.run(['cargo','build','--locked','--release','--target','x86_64-unknown-none','--target-dir',str(harness.BUILD/'cargo'),'--package',package,'--features',feature],cwd=harness.WORKSPACE,check=True)
+            built=harness.BUILD/'cargo/x86_64-unknown-none/release'/package
         fault=output/(mode+'.elf')
-        elf_trim.trim(harness.BUILD/'cargo/x86_64-unknown-none/release'/package,fault,None)
+        elf_trim.trim(built,fault,None)
         folder=output/mode; folder.mkdir()
         shutil.copytree(harness.BUILD/'nested-failures-interactive/esp',folder/'esp')
         image=folder/'guest.raw';shutil.copyfile(source,image)
@@ -85,4 +95,6 @@ def run(source):
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('image',type=Path,help='three-level nested desktop fixture; copies only')
-    run(parser.parse_args().image)
+    parser.add_argument('--profile',type=Path,help='composition matching the supplied desktop fixture')
+    args=parser.parse_args()
+    run(args.image,args.profile)

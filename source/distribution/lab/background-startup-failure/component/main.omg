@@ -1,0 +1,32 @@
+module main;
+// Exit after Background's actual startup acquired its service custody. The
+// kernel must reap that custody; the owning matrix decides retry and fallback.
+use runtime::entry::Program;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use background::main::Context;
+public ProgramProvider satisfies Program {
+    machine run(gate: &Gate, first: u64, second: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+        let mut context: Context;
+        let status: u64 = block background::startup::open(gate, &mut context);
+        transition status == 0u64 {
+            true -> failed(gate)
+            _ -> (status)
+        }
+    }
+}
+machine failed(gate: &Gate) -> u64 reaches Kernel {
+    let mut words: [u64; 8];
+    words[0] = 0x61726562696c6564u64;
+    words[1] = 0x676b636162206574u64;
+    words[2] = 0x747320646e756f72u64;
+    words[3] = 0x6166207075747261u64;
+    words[4] = 0x00000a6572756c69u64;
+    let written: u64 = Kernel::write(gate, &words, 38u64);
+    1u64
+}
+
+public machine component_entry() reaches Program + Kernel blocks; invokes Program; invokes Kernel; {
+    let gate: Gate;
+    let status: u64 = block Program::run(&gate, 0u64, 0u64);
+}

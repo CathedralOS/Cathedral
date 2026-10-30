@@ -21,6 +21,7 @@ import protocol_test
 import matrix_desktop_test
 import resource_budgets
 import timing_report
+import program_build
 
 REPO = Path(__file__).resolve().parents[2]
 WORKSPACE = REPO / "source-rs"
@@ -106,7 +107,6 @@ def program_images(profile_path, composition, release):
     Built program ELFs are trimmed to their loadable bytes beside the harness
     output so the host lab can install them as objects of the first root."""
     installed = composition.get("startup", {}).get("programs", [])
-    mode = "release" if release else "debug"
     images = []
     for index, program in enumerate(installed):
         elf_trim.title_record(program.get("display_title"))
@@ -120,7 +120,7 @@ def program_images(profile_path, composition, release):
             # An empty object: a container other programs sit inside.
             images.append((parent, None, BUILD / "programs" / Path(profile_path).stem / f"{index}-folder"))
             continue
-        built = BUILD / "cargo" / program["target"] / mode / program["package"]
+        built = program_build.image(program, release)
         trimmed = BUILD / "programs" / Path(profile_path).stem / f"{index}-{program['package']}.elf"
         images.append((parent, built, trimmed))
     return images
@@ -374,8 +374,6 @@ def main():
     profile = "release" if args.release else "debug"
     captured = {}
     for name, user in programs.items():
-        user_cargo = ["cargo", "build", "--locked", "--package", user['package'],
-                      "--target", user['target'], "--target-dir", str(BUILD / "cargo")]
         user_features = list(user.get("features", []))
         if args.startup_probes and user['package'] == 'cathedral-compositor-lab':
             user_features.append('session-probes')
@@ -389,12 +387,7 @@ def main():
             user_features.append("trace-storage")
         if args.collection_pressure and user["package"] == "cathedral-storage-service":
             user_features.append("collection-pressure")
-        if user_features:
-            user_cargo.extend(["--features", ",".join(user_features)])
-        if args.release:
-            user_cargo.append("--release")
-        subprocess.run(user_cargo, cwd=WORKSPACE, check=True)
-        user_elf = BUILD / "cargo" / user['target'] / profile / user['package']
+        user_elf = program_build.build(user, args.release, user_features)
         elf_limits.check(user_elf)
         captured[name] = artifacts.capture(user_elf, BUILD / 'artifacts')
         environment[f'CATHEDRAL_{name.upper()}_ELF'] = str(captured[name])

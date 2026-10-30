@@ -1,0 +1,106 @@
+module exchange;
+// Publish once; answer Background's independent owner while awaiting the broker.
+// Neither a parking interval nor a control request cancels/replays presentation.
+use main::Context;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::time::Tick;
+use runtime::connection::main::Reply;
+use runtime::server::main::Event;
+use app::model;
+use waiting;
+
+public machine request(gate: &Gate, context: &mut Context, words: &[u64; 8]) -> runtime::services::main::Reply
+    reaches Kernel blocks; invokes Kernel; {
+    let status: u64 = block runtime::connection::main::begin(gate, &mut context.services.broker, words);
+    transition status == 0u64 {
+        true -> block poll(gate, context)
+        _ -> (runtime::services::main::Reply::Failed { code: status })
+    }
+}
+machine poll(gate: &Gate, context: &mut Context) -> runtime::services::main::Reply reaches Kernel {
+    let tick: Tick = runtime::time::read(gate, context.clock);
+    transition tick {
+        Tick::Read { value } -> block owner(gate, context, value)
+        Tick::Failed { code } -> block failed(gate, context, code)
+    }
+}
+machine owner(gate: &Gate, context: &mut Context, now: u64) -> runtime::services::main::Reply reaches Kernel {
+    transition context.owner.peer.fault == 0u64 {
+        true -> block query(gate, context, now)
+        _ -> block broker(gate, context, now)
+    }
+    machine query(gate: &Gate, context: &mut Context, now: u64) -> runtime::services::main::Reply reaches Kernel {
+        let event: Event = block runtime::server::main::poll(gate, &mut context.owner, now);
+        transition event {
+            Event::Request { frame } -> block answer(gate, context, now, waiting::accepts(frame.bytes, frame.payload))
+            _ -> block broker(gate, context, now)
+        }
+    }
+    machine answer(gate: &Gate, context: &mut Context, now: u64, accepted: bool) -> runtime::services::main::Reply reaches Kernel {
+        let event: app::model::Event = block waiting::reply(gate, context, accepted);
+        transition event {
+            app::model::Event::Complete -> block broker(gate, context, now)
+            _ -> block retire_owner(gate, context, now)
+        }
+    }
+}
+machine retire_owner(gate: &Gate, context: &mut Context, now: u64) -> runtime::services::main::Reply reaches Kernel {
+    block runtime::server::main::close(gate, &mut context.owner);
+    transition { _ -> (block broker(gate, context, now)) }
+}
+machine broker(gate: &Gate, context: &mut Context, now: u64) -> runtime::services::main::Reply reaches Kernel {
+    let reply: Reply = block runtime::connection::main::poll(gate, &mut context.services.broker, now);
+    transition reply {
+        Reply::Complete { frame, notification } ->
+            block runtime::services::main::received(gate, &mut context.services, frame, notification)
+        Reply::Failed { code } -> (runtime::services::main::Reply::Failed { code: code })
+        Reply::Pending -> block park(gate, context, now)
+    }
+}
+machine park(gate: &Gate, context: &mut Context, now: u64) -> runtime::services::main::Reply reaches Kernel {
+    let deadline: u64 = runtime::time::after(now, 300u64);
+    transition context.services.broker.partial && runtime::time::reached(deadline, context.services.broker.partial_deadline) {
+        true -> block interests(gate, context, context.services.broker.partial_deadline)
+        _ -> block interests(gate, context, deadline)
+    }
+}
+machine interests(gate: &Gate, context: &mut Context, deadline: u64) -> runtime::services::main::Reply reaches Kernel {
+    let mut interests: [u64; 8];
+    interests[0] = 2u64; interests[1] = context.services.broker.bell.wait;
+    interests[3] = context.services.broker.receiver;
+    transition context.owner.peer.fault == 0u64 {
+        true -> block combined(gate, context, &mut interests, deadline)
+        _ -> block wait(gate, context, &interests, 2u64, deadline)
+    }
+    machine combined(gate: &Gate, context: &mut Context, interests: &mut [u64; 8], deadline: u64) -> runtime::services::main::Reply reaches Kernel {
+        interests[4] = 2u64; interests[5] = context.owner.peer.bell.wait;
+        interests[7] = context.owner.peer.receiver;
+        transition { _ -> (block wait(gate, context, interests, 4u64, deadline)) }
+    }
+}
+machine wait(gate: &Gate, context: &mut Context, interests: &[u64; 8], count: u64 [0..=4], deadline: u64) -> runtime::services::main::Reply reaches Kernel {
+    let status: u64 = block Kernel::wait(gate, interests, count, deadline);
+    // Recheck both streams after peer closure; a final complete reply may exist.
+    transition status < count || status == kernel::TIMED_OUT || status == kernel::PEER_CLOSED {
+        true -> (block poll(gate, context))
+        _ -> block interrupted(gate, context, status)
+    }
+}
+machine interrupted(gate: &Gate, context: &mut Context, code: u64) -> runtime::services::main::Reply reaches Kernel {
+    // An owner grant can be revoked between polling and parking. Retire that
+    // stream and let the broker's own poll decide its independent validity.
+    transition context.owner.peer.fault == 0u64 {
+        true -> block detached(gate, context)
+        _ -> block failed(gate, context, code)
+    }
+    machine detached(gate: &Gate, context: &mut Context) -> runtime::services::main::Reply reaches Kernel {
+        block runtime::server::main::close(gate, &mut context.owner);
+        transition { _ -> (block poll(gate, context)) }
+    }
+}
+machine failed(gate: &Gate, context: &mut Context, code: u64) -> runtime::services::main::Reply reaches Kernel {
+    block runtime::services::main::close(gate, &mut context.services);
+    runtime::services::main::Reply::Failed { code: code }
+}

@@ -118,6 +118,15 @@ def check_rust():
         users.extend(lab.get('executables', []))
         users.extend(program for program in lab.get('programs', []) if 'package' in program)
     for user in users:
+        if Path(user['entry']).suffix == '.omg':
+            entry = (ROOT / 'source' / user['entry']).resolve()
+            if not any(entry.is_relative_to(ROOT / 'source' / owner)
+                       for owner in ('distribution', 'platform/services')) or entry.name != 'main.omg' \
+                    or not entry.is_file() or not entry.with_name('build.omg').is_file():
+                raise ValueError('Omega profile user entry must name a distribution or platform service package')
+            if user['target'] != 'x86_64-unknown-none':
+                raise ValueError('standalone Omega profile requires the implemented x86-64 ELF target')
+            continue
         entry = (tree / user['entry']).resolve()
         package = packages[user['package']]
         entries = [Path(t['src_path']).resolve() for t in package['targets'] if 'bin' in t['kind']]

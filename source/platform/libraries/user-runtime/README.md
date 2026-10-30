@@ -34,6 +34,9 @@ provider does not trigger a replay or retirement. Incomplete typed reply pairs
 still expire at the transport's bounded deadline. This synchronous convenience
 does not dispatch owner-control requests while waiting; callers needing that
 must drive the existing begin/poll/wait operations in their event loop.
+[Background's exchange](../../../distribution/applications/background/process/exchange.omg)
+does that while keeping its independent owner-control connection responsive;
+`services::received` applies the same plain-reply validation to its completed call.
 
 [server/main.omg](server/main.omg) accepts the same v4 connection, retains one
 request until its exact reply, refuses a second poll while that request is pending,

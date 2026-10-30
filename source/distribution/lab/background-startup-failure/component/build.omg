@@ -1,0 +1,8 @@
+machine build(builder: &mut Build) {
+    Build::package(builder, "cathedral_background_startup_failure");
+    Build::depend_as(builder, "background", Source::Path { location: "../../../applications/background/process" });
+    Build::depend_as(builder, "runtime", Source::Path { location: "../../../../platform/libraries/user-runtime" });
+    Build::select_provider<runtime::entry::Program, main::ProgramProvider>(builder, linux_x86_64);
+    Build::select_provider<runtime::kernel::Kernel, runtime::arch::x86_64::gate::NativeKernel>(builder, linux_x86_64);
+    Build::bind(builder, linux_x86_64::ProgramEntry, main::component_entry);
+}

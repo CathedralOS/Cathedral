@@ -37,9 +37,14 @@ machine owner(gate: &Gate, context: &mut Context, now: u64, deadline: u64) -> ap
     }
 }
 machine control(bytes: u64, words: [u64; 8]) -> app::model::Event {
-    app::model::Event::Control { accepted: bytes == 64u64 && (words[0] == HEALTH || words[0] == LOSS)
+    app::model::Event::Control { accepted: accepts(bytes, words) }
+}
+// Background has no unsaved work. The same exact owner protocol applies while
+// idle and while presentation is pending; it cannot authorize another app's loss.
+public machine accepts(bytes: u64, words: [u64; 8]) -> bool {
+    bytes == 64u64 && (words[0] == HEALTH || words[0] == LOSS)
         && words[1] == 0u64 && words[2] == 0u64 && words[3] == 0u64 && words[4] == 0u64
-        && words[5] == 0u64 && words[6] == 0u64 && words[7] == 0u64 }
+        && words[5] == 0u64 && words[6] == 0u64 && words[7] == 0u64
 }
 machine input(gate: &Gate, context: &mut Context, now: u64, deadline: u64) -> app::model::Event reaches Kernel {
     let hint: u64 = block Kernel::notify_wait(gate, context.services.wake, now, 1u64);
