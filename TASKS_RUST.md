@@ -185,24 +185,41 @@ passes desktop and cold reopen at
 The previous compiler junction is retained at `build/omega-user/compiler-owner-baseline`;
 the default slot contains an independent copy of the tested executable and receipt.
 
-Compiler repairs live in Omega's isolated
-`.agents/worktree/cathedral-background-runtime`, fixed base
-`f48087186eedb7e49f7e0ec1c148fb74cb34ece5`, claim
-`9696692650aa4a7483a18bbacbe8dac9`. They retain distinct captured-loan arrivals,
-read the current v5 provider-plan schema, distinguish component claims from the
-complete selected plan, and preserve a copied scalar field's checked type.
-The candidate passes 22 targeted native/Terminal and refusal checks, including
-both minimal customer regressions and the nine-place borrowed-projection row.
-The fifth repair retains package identity when selecting independent provider
-exports; equal names in different packages must not become duplicate realizations.
-The immutable executable comes from source `8ae6029050dbff7489a6e2e32039373e2974cc00`,
-SHA-256 `e4f9e026f162a2f96b3a65bae523595c35a492ccc5f74587a8646aaee016266d`.
-Fixed-base qualification passes three new native/Terminal witnesses, two existing
-nine-place rows, fourteen check/refusal fixtures and three provider-plan byte
-tests. [Omega #846](https://github.com/CathedralOS/Omega/pull/846) is open.
-Publication required resolving conflicts with newer main; the integrated compiler
-is rebuilding and has not inherited the old producer's runtime qualification.
-See the worktree's `build/cathedral-background/qualification.json` and receipts.
+Compiler repairs are qualified in Omega's isolated
+`.agents/worktree/cathedral-background-runtime`. They retain distinct captured-loan
+arrivals, distinguish component claims from the complete selected provider plan,
+preserve copied scalar declaration identity, and join independent provider exports
+by package identity. The v5 input-reader repair also landed independently upstream.
+Actual publication conflicts required integrating main `06b1091df2e81`.
+An added borrowed-slice witness caught over-normalization of view parameters;
+using the common stored-reference classification fixed it, and that witness now
+passes native execution and the interpreter. No customer rewrite or relaxed
+ownership check was used to conceal it.
+
+The default immutable compiler is source `a88a8b63956f99da3f6a1338d6e9d9bf2badc61d`,
+SHA-256 `91a48585ca9626deeb784235c8ed1fe9f5367167016856354d1ec652632480e1`.
+Final qualification at `f4c881eb36f8b3bfd164b8dca23600c4fcf9b922` passes 23
+native/Terminal witnesses, seventeen check/refusal fixtures (thirteen expected
+refusals), three provider-plan byte tests, scoped clippy and affected Rust format.
+[Omega #846](https://github.com/CathedralOS/Omega/pull/846) merged as
+`7516f0970de014e3c13009bf67d9c69f087d4671`. That publication identity is distinct
+from the tested producer source above; arbitrary newer main is not qualified.
+The worktree's `build/cathedral-background/qualification.json` retains earlier
+failed/interrupted attempts and their corrections; its final assessment reuses
+all six passing checks without invalidation. Independent review authorized only
+interrupted-capture recovery, not semantic approval.
+
+The corrected producer passes Background control at
+`build/omega-user/background-control/20261030T020343741428Z/` and desktop/cold
+reopen at `build/boot-harness-rs/desktop/20261030T020348656895Z/`. Its copied
+normal compiler slot rebuilds exactly that tested Background ELF; see
+`build/omega-user/background-promotion.json`. The earlier `8ae60290` producer is
+preserved at `build/omega-user/compiler-background-baseline/`; nested and
+startup-failure observations below belong to that earlier producer, not the new
+compiler. No compiler, kernel or image-page limit was increased.
+The final producer also passes every connection case at
+`build/omega-user/connections/20261030T021812604539Z/` and both primitive clock
+configurations at `build/omega-user/tests/20261030T021832487728Z/` (42/240 pages).
 
 **Independent owner progress now passes:** Background previously waited for a
 presentation reply before answering owner HEALTH/LOSS. A matrix waiting for that
@@ -211,11 +228,11 @@ publishes once and services both independent connections while parked. It does
 not replay requests or advance the app model to answer control. The deterministic
 test holds the broker reply, requires valid and malformed control responses,
 disconnects the owner, and checks channel, page and notification refunds after
-two teardowns. Current-source evidence:
+two teardowns. Earlier `8ae60290` producer evidence:
 `build/omega-user/background-control/20261030T010738096652Z/`.
 The complete ordinary candidate desktop and cold reopen pass at
 `build/boot-harness-rs/desktop/20261030T010827886709Z/` (1,935-record oracle).
-The current compiler also passes all runtime connection cases at
+That earlier producer also passes all runtime connection cases at
 `build/omega-user/connections/20261030T005108156185Z/` and both primitive clock
 variants at `build/omega-user/tests/20261030T005129969334Z/`.
 

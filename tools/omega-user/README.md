@@ -16,16 +16,20 @@ python -m unittest discover -s tools/omega-user -p "test_*.py"
 ```
 
 The standalone producer is source
-`8ae6029050dbff7489a6e2e32039373e2974cc00`, release opt-level 3, SHA-256
-`e4f9e026f162a2f96b3a65bae523595c35a492ccc5f74587a8646aaee016266d`.
+`a88a8b63956f99da3f6a1338d6e9d9bf2badc61d`, release opt-level 3, SHA-256
+`91a48585ca9626deeb784235c8ed1fe9f5367167016856354d1ec652632480e1`.
 It is retained in Omega's `work/cathedral-background-runtime` history and
-[PR #846](https://github.com/CathedralOS/Omega/pull/846). Reproduce it with
+[PR #846](https://github.com/CathedralOS/Omega/pull/846), published as
+`7516f0970de014e3c13009bf67d9c69f087d4671`. Reproduce the tested executable with
 `cargo build --locked --release -p omega` in an isolated worktree at that exact
 source, following Omega's build-slot instructions. The local
 `build/omega-user/compiler/omega.exe` is the saved tested executable with its
-source/hash receipt beside it. It passes the runtime witnesses and standalone
-Background's desktop, nested and startup-failure checks. Later PR integration
-revisions are separate producers; do not substitute one merely because it is newer.
+source/hash receipt beside it. It passes standalone Background's owner-control
+and desktop/cold-reboot checks, runtime connection and primitive witnesses, plus
+the focused compiler regressions. Nested and
+startup-failure evidence from the earlier `8ae60290` producer is recorded separately
+in TASKS_RUST.md; that executable remains at `compiler-background-baseline/`.
+Do not substitute a newer compiler without affected qualification.
 The preceding `66f71d0e` owner-control producer remains locally preserved at
 `build/omega-user/compiler-owner-baseline/`; its history is in TASKS_RUST.md.
 Keep this compiler separate from the
