@@ -11,6 +11,7 @@ The desktop's compiler and the other agent's checkout need not move.
 python tools/omega-user/build.py source/distribution/lab/user-entry/native --compiler path/to/new/omega.exe
 python tools/omega-user/run_test.py --compiler path/to/new/omega.exe
 python tools/omega-user/connection_test.py --compiler path/to/new/omega.exe
+python tools/omega-user/connection_test.py --service --compiler path/to/new/omega.exe
 python tools/omega-user/background_test.py --compiler path/to/new/omega.exe
 python tools/omega-user/colors_test.py --compiler path/to/new/omega.exe
 python tools/omega-user/notes_test.py --compiler path/to/new/omega.exe
@@ -48,7 +49,8 @@ and the declarations in `source/platform/libraries/user-runtime/kernel.omg` and
 release, typed read-view transfer, bounded shared word access and notification
 creation, handoff, signal, wait, control and drop, plus lookup of installed owner
 endpoints, typed endpoint acceptance, bounded immutable object creation/send, and sealed
-reply acceptance/read, private chunk copying and sealing/unmapping.
+reply acceptance/read, private chunk copying and sealing/unmapping, and a
+page-contained wait for up to 48 interests.
 The native leaves must preserve the declared buffers,
 range bounds, blocking and calling convention. Accept the inspected rows in the
 generated review document and resume with the same qualified compiler:
@@ -112,3 +114,10 @@ image bytes/padding, and observes refresh without another notification. Cancelli
 the process refunds its pages, channels and notifications. Full desktop and
 settings/recovery tests cover user copy, app launch, saved configuration and
 nested login against the ordinary services.
+
+`connection_test.py --service` runs the standalone multi-client service fixture.
+It checks asynchronous setup, sealed request/reply custody, independent owner
+progress, malformed handoffs and cleanup under a tight reader allowance. See the
+[service witness](../../source/distribution/lab/user-entry/README.md#independent-service-clients)
+for the exact scenarios. This qualifies reusable transport for a future standalone
+matrix; the installed stock matrix still uses its Rust resource host.

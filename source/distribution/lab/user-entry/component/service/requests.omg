@@ -1,0 +1,79 @@
+module service::requests;
+use service::main::State;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::server::main::Event;
+use runtime::server::main::Ticket;
+use runtime::connection::main::Frame;
+public machine step(gate: &Gate, context: &mut State, index: u64 [0..=2], now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    transition context.clients[index].peer.fault != 0u64 {
+        true -> (0u64)
+        _ -> block active(gate, context, index, now)
+    }
+}
+machine active(gate: &Gate, context: &mut State, index: u64 [0..=2], now: u64) -> u64 reaches Kernel {
+    transition context.clients[index].pending != 0u64 {
+        true -> block held(gate, context, index, now)
+        _ -> block receive(gate, context, index, now)
+    }
+}
+machine held(gate: &Gate, context: &mut State, index: u64 [0..=2], now: u64) -> u64 reaches Kernel {
+    let status: u64 = block runtime::server::main::maintain(gate, &mut context.clients[index], now);
+    0u64
+}
+machine receive(gate: &Gate, context: &mut State, index: u64 [0..=2], now: u64) -> u64 reaches Kernel {
+    let event: Event = block runtime::server::main::poll(gate, &mut context.clients[index], now);
+    transition event {
+        Event::Request { frame } -> block request(gate, context, index, frame)
+        Event::Pending -> (0u64)
+        Event::Failed { code } -> (0u64)
+    }
+}
+machine request(gate: &Gate, context: &mut State, index: u64 [0..=2], frame: Frame) -> u64 reaches Kernel {
+    transition frame.bytes == 64u64 {
+        true -> block routed(gate, context, index, frame)
+        _ -> (208u64)
+    }
+}
+machine routed(gate: &Gate, context: &mut State, index: u64 [0..=2], frame: Frame) -> u64 reaches Kernel {
+    transition index == 2u64 {
+        true -> block owner(gate, context, frame)
+        _ -> block client(gate, context, index, frame)
+    }
+}
+machine owner(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Kernel {
+    let mut reply: [u64; 8];
+    reply[0] = context.clients[0].peer.fault;
+    reply[1] = context.clients[0].object;
+    reply[2] = context.clients[0].pending;
+    reply[3] = context.handled;
+    reply[4] = context.parks;
+    reply[5] = context.clients[0].peer.grant;
+    reply[6] = context.clients[0].peer.frame.id;
+    context.stopped = frame.payload[0] == 99u64;
+    block runtime::server::main::reply(gate, &mut context.clients[2], &reply)
+}
+machine client(gate: &Gate, context: &mut State, index: u64 [0..=2], frame: Frame) -> u64 reaches Kernel {
+    let issued: Ticket = runtime::server::main::ticket(&context.clients[index]);
+    // Wrong generation, then wrong ID: neither may consume the real request.
+    let stale: Ticket = Ticket { incarnation: 0u64, request: issued.request };
+    let wrong: u64 = block runtime::server::main::reply_to(gate, &mut context.clients[index], stale, &frame.payload);
+    let stale_id: Ticket = Ticket { incarnation: issued.incarnation, request: 0u64 };
+    let wrong_id: u64 = block runtime::server::main::reply_to(gate, &mut context.clients[index], stale_id, &frame.payload);
+    transition wrong != 0u64 && wrong_id != 0u64 {
+        true -> block valid(gate, context, index, frame, issued)
+        _ -> (209u64)
+    }
+}
+machine valid(gate: &Gate, context: &mut State, index: u64 [0..=2], frame: Frame, issued: Ticket) -> u64 reaches Kernel {
+    transition frame.payload[0] == 10u64 {
+        true -> (0u64)
+        _ -> block reply(gate, context, index, frame, issued)
+    }
+}
+machine reply(gate: &Gate, context: &mut State, index: u64 [0..=2], frame: Frame, issued: Ticket) -> u64 reaches Kernel {
+    let object: u64 = context.clients[index].object;
+    context.handled = ((context.handled as u64 in Wrapping) + 1u64) as u64;
+    block runtime::server::main::reply_object_to(gate, &mut context.clients[index], issued, &frame.payload, object)
+}

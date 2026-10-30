@@ -80,14 +80,12 @@ use this source directly, rather than a sibling repository or platform-to-distri
 dependency.
 UI development, font generation and capture tools live in `tools/omega-ui/`;
 their host artifacts belong in the ignored `build/omega-ui/` tree.
-Installed Background, Colors and Notes live in
+Installed chooser, Background, Colors and Notes live in
 `source/distribution/applications/` as standalone Omega processes. Each native
 entry selects its process coordinator; the common Omega runtime supplies shared
 IPC and attachment custody, while the distribution app owns behavior, storage
 schemas and presentation. Their Rust executable hosts remain comparison and
-mechanism-test fixtures. The chooser still uses the Rust
-`platform/libraries/omega-app` host for its Omega session and UI component.
-The chooser's separate pure policy
+mechanism-test fixtures. The chooser's separate pure policy
 export remains only for decision tests and explicit Rust fault probes; ordinary
 F5 calls that policy directly from Omega. See the
 [chooser boundary](../../source/distribution/applications/chooser/README.md).
@@ -128,7 +126,11 @@ kernel grants. Live-layout plans and stock service offers execute in Omega;
 the common [image scanner, record decoder and service matcher](../../source/platform/contracts/imports/README.md)
 live in platform contracts without a distribution dependency. The host retains
 mapped-byte access and live-grant validation/application; a
-general-purpose matrix server runtime is not yet a separate platform package.
+complete standalone matrix host is not yet implemented. The common Omega
+[process runtime](../../source/platform/libraries/user-runtime/README.md) now supplies
+independent service connections, asynchronous acceptance, sealed request backing,
+exact reply tickets and multiplexed parking. Its provider chooses client limits
+and dispatch policy; it imports no stock matrix behavior.
 The independent Rust `distribution/lab/matrix-composition/matrix` program uses
 the shared runtime server and matrix commands for three local peers without any
 stock distribution import. The same proof now also runs an

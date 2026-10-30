@@ -1,0 +1,47 @@
+module server::attachments;
+// Receive only a sealed object. Retain before validation so every error refunds it.
+use kernel::Gate;
+use kernel::Kernel;
+use kernel;
+use server::main::Server;
+public machine receive(gate: &Gate, listener: &mut Server, now: u64) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    let mut interests: [u64; 8];
+    interests[1] = listener.peer.receiver;
+    let status: u64 = block Kernel::wait(gate, &interests, 1u64, now);
+    transition status == 0u64 {
+        true -> block receive_packet(gate, listener)
+        _ -> (status)
+    }
+}
+machine receive_packet(gate: &Gate, listener: &mut Server) -> u64 reaches Kernel {
+    let mut packet: [u64; 10];
+    let status: u64 = block Kernel::object_receive(gate, listener.peer.receiver, &mut packet);
+    transition status < kernel::ERROR_BASE {
+        true -> block received(gate, listener, status, packet)
+        _ -> rejected(status)
+    }
+}
+// A different packet family is not a request payload fallback.
+machine rejected(status: u64) -> u64 {
+    transition status == kernel::TOO_SMALL { true -> (kernel::IO_ERROR) _ -> (status) }
+}
+machine received(gate: &Gate, listener: &mut Server, status: u64, packet: [u64; 10]) -> u64 reaches Kernel {
+    transition listener.peer.grant != 0u64 {
+        true -> block duplicate(gate, packet[1])
+        _ -> retained(listener, status, packet)
+    }
+}
+machine retained(listener: &mut Server, status: u64, packet: [u64; 10]) -> u64 {
+    listener.peer.grant = packet[1];
+    listener.peer.grant_kind = 1u64;
+    listener.peer.grant_id = packet[2];
+    transition listener.objects && status == 8u64 && packet[0] == 8u64 && packet[1] != 0u64 && packet[2] > listener.last {
+        true -> (0u64)
+        _ -> (kernel::IO_ERROR)
+    }
+}
+machine duplicate(gate: &Gate, object: u64) -> u64 reaches Kernel {
+    let ignored: u64 = block Kernel::memory_release(gate, object);
+    kernel::IO_ERROR
+}

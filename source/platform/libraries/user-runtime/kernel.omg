@@ -1,6 +1,7 @@
 module kernel;
 public const ERROR_BASE: u64 = 0x8000000000000000u64;
 public const WOULD_BLOCK: u64 = 0xfffffffffffffff5u64;
+public const TOO_SMALL: u64 = 0xffffffffffffffa6u64;
 public const IO_ERROR: u64 = 0xfffffffffffffffbu64;
 public const PEER_CLOSED: u64 = 0xffffffffffffffe0u64;
 public const TIMED_OUT: u64 = 0xffffffffffffff92u64;
@@ -44,9 +45,11 @@ public data Gate {
     object_read: addr;
     private_write: addr;
     object_freeze: addr;
+    wait_many: addr;
 }
 
 public boundary trait Kernel {
+    machine wait_many(gate: &Gate, records: &[u64; 96], count: u64 [0..=48], deadline: u64) -> u64 reaches blocks;
     machine yield_now(gate: &Gate) -> u64 reaches blocks;
     machine environment(gate: &Gate, buffer: &mut [u64; 8]) -> u64 reaches;
     machine channel(gate: &Gate, buffer: &mut [u64; 8]) -> u64 reaches;

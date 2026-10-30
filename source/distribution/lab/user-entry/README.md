@@ -99,3 +99,29 @@ The client has thirteen private pages and the provider thirteen reader pages
 for its mailbox plus this twelve-page image; the reverse direction has two each;
 the fixture root has sixteen pages of each allowance;
 this does not change kernel limits or the primitive runner above.
+
+## Independent service clients
+
+Run `python tools/omega-user/connection_test.py --service --compiler path/to/omega.exe`.
+[service/main.omg](component/service/main.omg) alternates two independent clients
+and owner control, then parks on all live interests. Its startup establishes
+connections asynchronously; its request dispatcher holds or echoes sealed images
+and reports test state to the owner. These are fixture policies, not platform
+roles or a fixed client limit. The provider is a standalone Omega process; the
+[Rust adversarial peers](../../../../source-rs/distribution/lab/channels/omega_peer/service/service.rs)
+use the real kernel and existing v4 protocol.
+
+Thirteen scenarios cover stalled setup, parent and sibling progress, a held
+request surviving unrelated calls, disconnect cleanup, repeated image echoes,
+both separately observed grant/frame arrival orders, incomplete-pair expiry,
+mismatched/duplicate/zero grant IDs, undeclared attachments and wrong packet
+families. Wrong connection-generation and request-ID tickets cannot consume the
+pending request. This does not yet test reconnecting a replacement client into
+the same slot.
+
+After each failed client retires, the surviving client sends three-page images.
+Together with its and the owner's mailboxes this consumes all five funded reader
+pages: a leaked partial/held reader would prevent progress while the service is
+still alive. Final teardown must restore logical pages, physical backing and
+notification quotas. The fixture funds three notification objects for its three
+connections; it changes no kernel limit or normal desktop grant.

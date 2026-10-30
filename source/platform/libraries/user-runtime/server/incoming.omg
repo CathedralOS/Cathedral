@@ -1,51 +1,102 @@
 module server::incoming;
-// Drain notifications and inspect liveness before the mailbox. Copied data or
-// typed attachments are not admitted as a second request transport.
+use server::attachments;
+// Join a mailbox frame and optional sealed reader by ID, in either arrival order.
+// The server owns the reader until reply/retirement. There is no copied fallback.
 use kernel::Gate;
 use kernel::Kernel;
 use kernel;
 use server::main::Server;
 use server::main::Event;
 use connection::mailbox;
-
+use time;
 public machine poll(gate: &Gate, listener: &mut Server, now: u64) -> Event
     reaches Kernel blocks; invokes Kernel; {
+    transition listener.peer.partial && time::reached(now, listener.peer.partial_deadline) {
+        true -> (Event::Failed { code: kernel::TIMED_OUT })
+        _ -> block drain(gate, listener, now)
+    }
+}
+machine drain(gate: &Gate, listener: &mut Server, now: u64) -> Event reaches Kernel {
     let hint: u64 = block Kernel::notify_wait(gate, listener.peer.bell.wait, now, 1u64);
-    let mut interests: [u64; 8];
-    interests[1] = listener.peer.receiver;
-    let live: u64 = block Kernel::wait(gate, &interests, 1u64, now);
-    transition live == kernel::TIMED_OUT || live == kernel::PEER_CLOSED {
-        true -> block receive(gate, listener, hint, live)
+    let transfer: u64 = block server::attachments::receive(gate, listener, now);
+    transition transfer == 0u64 || transfer == kernel::TIMED_OUT || transfer == kernel::PEER_CLOSED {
+        true -> block frame(gate, listener, now, hint, transfer)
+        _ -> (Event::Failed { code: transfer })
+    }
+}
+machine frame(gate: &Gate, listener: &mut Server, now: u64, hint: u64, transfer: u64) -> Event reaches Kernel {
+    transition listener.peer.has_frame {
+        true -> reconcile(gate, listener, now, hint, transfer)
+        _ -> block receive(gate, listener, now, hint, transfer)
+    }
+    machine receive(gate: &Gate, listener: &mut Server, now: u64, hint: u64, transfer: u64) -> Event reaches Kernel {
+        let status: u64 = block mailbox::receive(gate, &mut listener.peer);
+        transition status == 0u64 || status == kernel::WOULD_BLOCK {
+            true -> reconcile(gate, listener, now, hint, transfer)
+            _ -> (Event::Failed { code: status })
+        }
+    }
+}
+machine reconcile(gate: &Gate, listener: &mut Server, now: u64, hint: u64, transfer: u64) -> Event reaches Kernel {
+    transition listener.peer.has_frame {
+        true -> identified(gate, listener, now, hint, transfer)
+        _ -> incomplete(listener, now, hint, transfer)
+    }
+}
+machine identified(gate: &Gate, listener: &mut Server, now: u64, hint: u64, transfer: u64) -> Event reaches Kernel {
+    transition listener.peer.frame.id > listener.last {
+        true -> attachment(gate, listener, now, hint, transfer)
         _ -> (Event::Failed { code: kernel::IO_ERROR })
     }
 }
-machine receive(gate: &Gate, listener: &mut Server, hint: u64, live: u64) -> Event reaches Kernel {
-    let status: u64 = block mailbox::receive(gate, &mut listener.peer);
+machine attachment(gate: &Gate, listener: &mut Server, now: u64, hint: u64, transfer: u64) -> Event reaches Kernel {
     transition {
-        status == 0u64 -> validate(gate, listener)
-        status == kernel::WOULD_BLOCK -> idle(hint, live)
-        _ -> (Event::Failed { code: status })
+        listener.peer.frame.attachment == 0u64 && listener.peer.grant == 0u64 -> accepted(gate, listener)
+        listener.peer.frame.attachment == 1u64 && listener.objects -> object(gate, listener, now, hint, transfer)
+        _ -> (Event::Failed { code: kernel::IO_ERROR })
     }
 }
-machine validate(gate: &Gate, listener: &mut Server) -> Event reaches Kernel {
-    transition listener.peer.frame.id > listener.last && listener.peer.frame.attachment == 0u64 {
-        true -> accepted(gate, listener)
-        _ -> (Event::Failed { code: kernel::IO_ERROR })
+machine object(gate: &Gate, listener: &mut Server, now: u64, hint: u64, transfer: u64) -> Event reaches Kernel {
+    transition listener.peer.grant != 0u64 {
+        true -> matched(gate, listener)
+        _ -> incomplete(listener, now, hint, transfer)
+    }
+    machine matched(gate: &Gate, listener: &mut Server) -> Event reaches Kernel {
+        transition listener.peer.grant_id == listener.peer.frame.id {
+            true -> accepted(gate, listener)
+            _ -> (Event::Failed { code: kernel::IO_ERROR })
+        }
     }
 }
 machine accepted(gate: &Gate, listener: &mut Server) -> Event reaches Kernel {
     listener.last = listener.peer.frame.id;
     listener.pending = listener.last;
+    listener.object = listener.peer.grant;
+    listener.peer.grant = 0u64;
+    listener.peer.grant_kind = 0u64;
+    listener.peer.grant_id = 0u64;
     listener.peer.has_frame = false;
+    listener.peer.partial = false;
     let status: u64 = Kernel::notify_signal(gate, listener.peer.signal);
     transition status == 0u64 {
         true -> (Event::Request { frame: listener.peer.frame })
         _ -> (Event::Failed { code: status })
     }
 }
-machine idle(hint: u64, live: u64) -> Event {
-    transition hint > 1u64 || live == kernel::PEER_CLOSED {
+machine incomplete(listener: &mut Server, now: u64, hint: u64, transfer: u64) -> Event {
+    transition hint > 1u64 || transfer == kernel::PEER_CLOSED {
         true -> (Event::Failed { code: kernel::PEER_CLOSED })
+        _ -> partial(listener, now)
+    }
+}
+machine partial(listener: &mut Server, now: u64) -> Event {
+    transition !listener.peer.partial && (listener.peer.has_frame || listener.peer.grant != 0u64) {
+        true -> armed(listener, now)
         _ -> (Event::Pending)
+    }
+    machine armed(listener: &mut Server, now: u64) -> Event {
+        listener.peer.partial = true;
+        listener.peer.partial_deadline = time::after(now, 300u64);
+        Event::Pending
     }
 }

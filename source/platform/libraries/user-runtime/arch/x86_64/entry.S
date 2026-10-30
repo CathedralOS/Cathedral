@@ -50,6 +50,7 @@ cathedral_kernel_gate:
     .quad cathedral_object_read
     .quad cathedral_private_write
     .quad cathedral_object_freeze
+    .quad cathedral_wait_many
 
 .section .text.cathedral_kernel_gate,"ax",@progbits
 cathedral_yield:
@@ -512,6 +513,29 @@ cathedral_object_freeze:
     mov eax, 61                      // MEMORY_UNMAP_OBJECT
     int 0x80
 .Lfreeze_done:
+    ret
+
+// The kernel already supports 48 interests. Stage all 768 borrowed bytes in
+// one page-contained 1024-byte slot, preserving the caller's stack and inputs.
+.section .text.cathedral_kernel_gate,"ax",@progbits
+cathedral_wait_many:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 2048
+    and rsp, -1024
+    mov r8, rsi
+    mov r9, rdx
+    mov rsi, rdi
+    mov rdi, rsp
+    mov ecx, 96
+    rep movsq
+    mov eax, 68                      // EVENT_WAIT
+    mov rdi, rsp
+    mov rsi, r8
+    mov rdx, r9
+    int 0x80
+    mov rsp, rbp
+    pop rbp
     ret
 
 .section .note.GNU-stack,"",@progbits

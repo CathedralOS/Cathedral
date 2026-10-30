@@ -1,4 +1,9 @@
 module server::main;
+use waiting;
+use waiting::Set;
+use server::pending;
+use server::opening;
+use server::opening::Opening;
 // Accept one explicit connection -> deliver one request -> reply under its exact
 // ID. The owner adapter supplies installed endpoints; this listener discovers none.
 use kernel::Gate;
@@ -14,6 +19,40 @@ public data Server {
     peer: Peer;
     last: u64;
     pending: u64;
+    incarnation: u64;
+    opening: server::opening::Opening;
+    ready: bool;
+    objects: bool;
+    object: u64;
+}
+public data Ticket [copy] {
+    incarnation: u64;
+    request: u64;
+}
+public machine ticket(listener: &Server) -> Ticket {
+    Ticket { incarnation: listener.incarnation, request: listener.pending }
+}
+// Takes custody only on success. Close before rebinding; generation never wraps.
+public machine begin(listener: &mut Server, sender: u64, receiver: u64, deadline: u64, objects: bool) -> u64 {
+    transition listener.peer.sender == 0u64 && listener.peer.receiver == 0u64
+        && listener.incarnation < 0xffffffffffffffffu64 && sender != 0u64 && receiver != 0u64 {
+        true -> initialized(listener, sender, receiver, deadline, objects)
+        _ -> (kernel::INVALID_ARGUMENT)
+    }
+    machine initialized(listener: &mut Server, sender: u64, receiver: u64, deadline: u64, objects: bool) -> u64
+        requires listener.incarnation < 0xffffffffffffffffu64 {
+        let peer: Peer;
+        listener.peer = peer;
+        listener.peer.sender = sender;
+        listener.peer.receiver = receiver;
+        listener.incarnation = listener.incarnation + 1u64;
+        listener.last = 0u64;
+        listener.pending = 0u64;
+        listener.ready = false;
+        listener.objects = objects;
+        server::opening::start(&mut listener.opening, deadline);
+        0u64
+    }
 }
 public data Event {
     case Pending;
@@ -22,20 +61,42 @@ public data Event {
 }
 public machine accept(gate: &Gate, listener: &mut Server, sender: u64, receiver: u64, deadline: u64) -> u64
     reaches Kernel blocks; invokes Kernel; {
-    listener.peer.sender = sender;
-    listener.peer.receiver = receiver;
-    let status: u64 = block setup::accept(gate, &mut listener.peer, deadline);
+    let status: u64 = begin(listener, sender, receiver, deadline, false);
     transition status == 0u64 {
-        true -> (0u64)
-        _ -> block retire(gate, listener, status)
+        true -> block connect(gate, listener, deadline)
+        _ -> (status)
     }
+    machine connect(gate: &Gate, listener: &mut Server, deadline: u64) -> u64 reaches Kernel {
+        let status: u64 = block setup::accept(gate, &mut listener.peer, deadline);
+        transition status == 0u64 {
+            true -> connected(listener)
+            _ -> block retire(gate, listener, status)
+        }
+    }
+    machine connected(listener: &mut Server) -> u64 { listener.ready = true; 0u64 }
 }
+
 public machine poll(gate: &Gate, listener: &mut Server, now: u64) -> Event
     reaches Kernel blocks; invokes Kernel; {
     transition listener.peer.fault != 0u64 {
         true -> (Event::Failed { code: listener.peer.fault })
-        _ -> block available(gate, listener, now)
+        _ -> block prepared(gate, listener, now)
     }
+    machine prepared(gate: &Gate, listener: &mut Server, now: u64) -> Event reaches Kernel {
+        transition listener.ready {
+            true -> block available(gate, listener, now)
+            _ -> block opening(gate, listener, now)
+        }
+    }
+    machine opening(gate: &Gate, listener: &mut Server, now: u64) -> Event reaches Kernel {
+        let status: u64 = block server::opening::poll(gate, &mut listener.peer, &mut listener.opening, now);
+        transition {
+            status == 0u64 -> connected(listener)
+            status == kernel::WOULD_BLOCK -> (Event::Pending)
+            _ -> block failed(gate, listener, status)
+        }
+    }
+    machine connected(listener: &mut Server) -> Event { listener.ready = true; Event::Pending }
     machine available(gate: &Gate, listener: &mut Server, now: u64) -> Event reaches Kernel {
         transition listener.pending != 0u64 {
             true -> (Event::Failed { code: kernel::BUSY })
@@ -56,20 +117,32 @@ public machine poll(gate: &Gate, listener: &mut Server, now: u64) -> Event
 }
 public machine reply(gate: &Gate, listener: &mut Server, payload: &[u64; 8]) -> u64
     reaches Kernel blocks; invokes Kernel; {
-    transition listener.pending != 0u64 && listener.peer.fault == 0u64 {
-        true -> block publish(gate, listener, payload)
+    let issued: Ticket = ticket(listener);
+    block reply_to(gate, listener, issued, payload)
+}
+// Delayed providers use the ticket captured at receipt, never a client-supplied ID.
+public machine reply_to(gate: &Gate, listener: &mut Server, issued: Ticket, payload: &[u64; 8]) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    block reply_object_to(gate, listener, issued, payload, 0u64)
+}
+public machine reply_object_to(gate: &Gate, listener: &mut Server, issued: Ticket, payload: &[u64; 8], object: u64) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    transition listener.pending != 0u64 && listener.peer.fault == 0u64
+        && listener.incarnation == issued.incarnation && listener.pending == issued.request {
+        true -> block publish(gate, listener, payload, object)
         _ -> (kernel::IO_ERROR)
     }
-    machine publish(gate: &Gate, listener: &mut Server, payload: &[u64; 8]) -> u64 reaches Kernel {
-        let status: u64 = block mailbox::send(gate, &mut listener.peer, listener.pending, payload, 0u64);
+    machine publish(gate: &Gate, listener: &mut Server, payload: &[u64; 8], object: u64) -> u64 reaches Kernel {
+        let status: u64 = block mailbox::send(gate, &mut listener.peer, listener.pending, payload, object);
         transition {
             status == 0u64 -> block published(gate, listener)
-            status == kernel::WOULD_BLOCK -> (status)
+            status == kernel::WOULD_BLOCK && object == 0u64 -> (status)
             _ -> block retire(gate, listener, status)
         }
     }
     machine published(gate: &Gate, listener: &mut Server) -> u64 reaches Kernel {
         listener.pending = 0u64;
+        block release_object(gate, listener);
         let status: u64 = Kernel::notify_signal(gate, listener.peer.signal);
         transition status == 0u64 {
             true -> (0u64)
@@ -82,7 +155,56 @@ public machine close(gate: &Gate, listener: &mut Server) reaches Kernel blocks; 
 }
 machine retire(gate: &Gate, listener: &mut Server, code: u64) -> u64 reaches Kernel {
     listener.pending = 0u64;
+    listener.ready = false;
+    block release_object(gate, listener);
     let ignored: u64 = block connection::main::close(gate, &mut listener.peer);
     listener.peer.fault = code;
     code
 }
+
+// A service calls this while its application is working on a retained request.
+// A disconnected or pipelining client loses only its own connection and backing.
+public machine maintain(gate: &Gate, listener: &mut Server, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    transition {
+        listener.peer.fault != 0u64 -> (listener.peer.fault)
+        !listener.ready || listener.pending == 0u64 -> (kernel::BUSY)
+        _ -> block checked(gate, listener, now)
+    }
+    machine checked(gate: &Gate, listener: &mut Server, now: u64) -> u64 reaches Kernel {
+        let status: u64 = block server::pending::check(gate, listener, now);
+        transition status == 0u64 {
+            true -> (0u64)
+            _ -> block retire(gate, listener, status)
+        }
+    }
+}
+public machine watch(listener: &Server, set: &mut waiting::Set) {
+    transition listener.peer.fault == 0u64 && listener.peer.receiver != 0u64 {
+        true -> watched(listener, set)
+        _ -> done()
+    }
+    machine watched(listener: &Server, set: &mut waiting::Set) {
+        waiting::add(set, waiting::IPC, listener.peer.receiver);
+        transition listener.ready {
+            true -> active(listener, set)
+            _ -> waiting::expire_by(set, listener.opening.deadline)
+        }
+    }
+    machine active(listener: &Server, set: &mut waiting::Set) {
+        waiting::add(set, waiting::NOTIFICATION, listener.peer.bell.wait);
+        transition listener.peer.partial {
+            true -> waiting::expire_by(set, listener.peer.partial_deadline)
+            _ -> done()
+        }
+    }
+}
+machine release_object(gate: &Gate, listener: &mut Server) reaches Kernel {
+    let object: u64 = listener.object;
+    listener.object = 0u64;
+    transition object != 0u64 {
+        true -> block release(gate, object)
+        _ -> done()
+    }
+    machine release(gate: &Gate, object: u64) reaches Kernel { let ignored: u64 = block Kernel::memory_release(gate, object); }
+}
+machine done() {}

@@ -1,0 +1,173 @@
+module server::opening;
+// One available handshake message per turn. No step waits for its next message.
+use kernel::Gate;
+use kernel::Kernel;
+use kernel;
+use connection::main::Peer;
+use memory::main::Allocation;
+use memory::main::Acceptance;
+use notification::main::Creation;
+use time;
+public data Phase [copy] {
+    case Open;
+    case Reader;
+    case Signal;
+    case ReaderAck;
+    case Commit;
+    case Complete;
+}
+public data Opening { phase: Phase; deadline: u64; }
+public machine start(opening: &mut Opening, deadline: u64) {
+    opening.phase = Phase::Open;
+    opening.deadline = deadline;
+}
+public machine poll(gate: &Gate, peer: &mut Peer, opening: &mut Opening, now: u64) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    transition time::reached(now, opening.deadline) {
+        true -> (kernel::TIMED_OUT)
+        _ -> block available(gate, peer, opening, now)
+    }
+}
+machine available(gate: &Gate, peer: &mut Peer, opening: &mut Opening, now: u64) -> u64 reaches Kernel {
+    let mut interests: [u64; 8];
+    interests[1] = peer.receiver;
+    let status: u64 = block Kernel::wait(gate, &interests, 1u64, now);
+    transition {
+        status == 0u64 -> block step(gate, peer, opening)
+        status == kernel::TIMED_OUT -> (kernel::WOULD_BLOCK)
+        _ -> (status)
+    }
+}
+machine step(gate: &Gate, peer: &mut Peer, opening: &mut Opening) -> u64 reaches Kernel {
+    let status: u64 = block dispatch(gate, peer, opening.phase);
+    transition status == 0u64 {
+        true -> next(opening)
+        _ -> (status)
+    }
+}
+machine dispatch(gate: &Gate, peer: &mut Peer, phase: Phase) -> u64 reaches Kernel {
+    transition phase {
+        Phase::Open -> block begin(gate, peer)
+        Phase::Reader -> block reader(gate, peer)
+        Phase::Signal -> block signal(gate, peer)
+        Phase::ReaderAck -> block bell(gate, peer)
+        Phase::Commit -> block commit(gate, peer)
+        Phase::Complete -> (kernel::IO_ERROR)
+    }
+}
+machine next(opening: &mut Opening) -> u64 {
+    transition opening.phase {
+        Phase::Open -> advance(opening, Phase::Reader)
+        Phase::Reader -> advance(opening, Phase::Signal)
+        Phase::Signal -> advance(opening, Phase::ReaderAck)
+        Phase::ReaderAck -> advance(opening, Phase::Commit)
+        Phase::Commit -> complete(opening)
+        _ -> (kernel::IO_ERROR)
+    }
+    machine advance(opening: &mut Opening, phase: Phase) -> u64 {
+        opening.phase = phase;
+        kernel::WOULD_BLOCK
+    }
+    machine complete(opening: &mut Opening) -> u64 {
+        opening.phase = Phase::Complete;
+        0u64
+    }
+}
+machine begin(gate: &Gate, peer: &mut Peer) -> u64 reaches Kernel {
+    let mut packet: [u64; 8];
+    let status: u64 = block Kernel::receive(gate, peer.receiver, &mut packet);
+    transition status == 19u64 && packet[0] == 0x6172646568746163u64
+        && packet[1] == 0x6465726168732e6cu64 && packet[2] == 0x34762eu64 {
+        true -> block allocate(gate, peer)
+        _ -> (kernel::IO_ERROR)
+    }
+}
+machine allocate(gate: &Gate, peer: &mut Peer) -> u64 reaches Kernel {
+    let result: Allocation = block memory::main::allocate(gate, 1u64);
+    transition result {
+        Allocation::Ready { writer } -> allocated(gate, peer, writer)
+        Allocation::Failed { code } -> (code)
+    }
+    machine allocated(gate: &Gate, peer: &mut Peer, writer: memory::main::Writer) -> u64 reaches Kernel {
+        peer.writer = writer;
+        let result: Creation = notification::main::create(gate);
+        transition result {
+            Creation::Ready { bell } -> acknowledged(gate, peer, bell)
+            Creation::Failed { code } -> (code)
+        }
+    }
+    machine acknowledged(gate: &Gate, peer: &mut Peer, bell: notification::main::Bell) -> u64 reaches Kernel {
+        peer.bell = bell;
+        acknowledge(gate, peer.sender)
+    }
+}
+machine reader(gate: &Gate, peer: &mut Peer) -> u64 reaches Kernel {
+    let result: Acceptance = block memory::main::accept(gate, peer.receiver);
+    transition result {
+        Acceptance::Ready { reader } -> retained(gate, peer, reader)
+        Acceptance::Failed { code } -> (code)
+    }
+    machine retained(gate: &Gate, peer: &mut Peer, reader: memory::main::Reader) -> u64 reaches Kernel {
+        peer.reader = reader;
+        acknowledge(gate, peer.sender)
+    }
+}
+machine signal(gate: &Gate, peer: &mut Peer) -> u64 reaches Kernel {
+    let mut packet: [u64; 10];
+    let status: u64 = block Kernel::notify_receive(gate, peer.receiver, &mut packet);
+    transition status < kernel::ERROR_BASE {
+        true -> retained(gate, peer, status, packet)
+        _ -> (status)
+    }
+    machine retained(gate: &Gate, peer: &mut Peer, status: u64, packet: [u64; 10]) -> u64 reaches Kernel {
+        peer.signal = packet[1];
+        transition status == 0u64 && packet[0] == 0u64 && packet[1] != 0u64 {
+            true -> checked(gate, peer)
+            _ -> (kernel::IO_ERROR)
+        }
+    }
+    machine checked(gate: &Gate, peer: &mut Peer) -> u64 reaches Kernel {
+        let status: u64 = Kernel::notify_signal(gate, peer.signal);
+        transition status == 0u64 {
+            true -> memory::main::delegate(gate, peer.writer.handle, peer.sender)
+            _ -> (status)
+        }
+    }
+}
+machine bell(gate: &Gate, peer: &mut Peer) -> u64 reaches Kernel {
+    let mut packet: [u64; 8];
+    let status: u64 = block Kernel::receive(gate, peer.receiver, &mut packet);
+    transition status == 15u64 && packet[0] == 0x722e646572616873u64 && packet[1] == 0x34762e79646165u64 {
+        true -> delegate(gate, peer)
+        _ -> (kernel::IO_ERROR)
+    }
+    machine delegate(gate: &Gate, peer: &mut Peer) -> u64 reaches Kernel {
+        let mut packet: [u64; 10];
+        packet[1] = peer.bell.signal;
+        let status: u64 = Kernel::notify_send(gate, peer.sender, &packet);
+        transition status == 0u64 {
+            true -> released(gate, peer)
+            _ -> (status)
+        }
+    }
+    machine released(gate: &Gate, peer: &mut Peer) -> u64 reaches Kernel {
+        let handle: u64 = peer.bell.signal;
+        peer.bell.signal = 0u64;
+        Kernel::notify_drop(gate, handle)
+    }
+}
+machine commit(gate: &Gate, peer: &mut Peer) -> u64 reaches Kernel {
+    let mut packet: [u64; 8];
+    let status: u64 = block Kernel::receive(gate, peer.receiver, &mut packet);
+    transition status == 16u64 && packet[0] == 0x632e646572616873u64 && packet[1] == 0x34762e74696d6d6fu64 {
+        true -> acknowledge(gate, peer.sender)
+        _ -> (kernel::IO_ERROR)
+    }
+}
+machine acknowledge(gate: &Gate, sender: u64) -> u64 reaches Kernel {
+    let mut packet: [u64; 8];
+    packet[0] = 0x722e646572616873u64;
+    packet[1] = 0x34762e79646165u64;
+    let status: u64 = Kernel::send(gate, sender, &packet, 15u64);
+    transition status == 15u64 { true -> (0u64) _ -> (kernel::IO_ERROR) }
+}

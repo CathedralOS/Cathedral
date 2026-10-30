@@ -1,0 +1,49 @@
+module waiting;
+// Caller-owned wait assembly; a full set fails instead of silently omitting a peer.
+use kernel::Gate;
+use kernel::Kernel;
+use kernel;
+use time;
+public const IPC: u64 = 0u64;
+public const NOTIFICATION: u64 = 2u64;
+public data Set {
+    records: [u64; 96];
+    count: u64;
+    deadline: u64;
+    fault: u64;
+}
+public machine reset(set: &mut Set, deadline: u64) {
+    set.count = 0u64;
+    set.fault = 0u64;
+    set.deadline = deadline;
+}
+public machine add(set: &mut Set, kind: u64 [0..=2], handle: u64) {
+    transition set.count < 48u64 && handle != 0u64 {
+        true -> append(set, kind, handle)
+        _ -> failed(set)
+    }
+    machine append(set: &mut Set, kind: u64 [0..=2], handle: u64) requires set.count < 48u64 {
+        let index: u64 = set.count * 2u64;
+        set.records[index] = kind;
+        set.records[index + 1u64] = handle;
+        set.count = set.count + 1u64;
+    }
+}
+public machine expire_by(set: &mut Set, deadline: u64) {
+    transition time::reached(set.deadline, deadline) {
+        true -> earlier(set, deadline)
+        _ -> done()
+    }
+    machine earlier(set: &mut Set, deadline: u64) { set.deadline = deadline; }
+}
+public machine wait(gate: &Gate, set: &Set) -> u64 reaches Kernel blocks; invokes Kernel; {
+    transition set.fault == 0u64 && set.count <= 48u64 {
+        true -> block parked(gate, set)
+        _ -> (kernel::INVALID_ARGUMENT)
+    }
+    machine parked(gate: &Gate, set: &Set) -> u64 reaches Kernel requires set.count <= 48u64 {
+        block Kernel::wait_many(gate, &set.records, set.count, set.deadline)
+    }
+}
+machine failed(set: &mut Set) { set.fault = kernel::INVALID_ARGUMENT; }
+machine done() {}

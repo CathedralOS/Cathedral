@@ -1,0 +1,32 @@
+module service::startup;
+use service::main::State;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::time::Tick;
+public machine open(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks; invokes Kernel; {
+    context.clock = Kernel::clock(gate);
+    let tick: Tick = runtime::time::read(gate, context.clock);
+    transition tick {
+        Tick::Read { value } -> installed(gate, context, value)
+        _ -> (205u64)
+    }
+}
+machine installed(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    let mut env: [u64; 8];
+    let status: u64 = Kernel::environment(gate, &mut env);
+    transition status == 0u64 && env[0] == 4u64 {
+        true -> connections(gate, context, now, env)
+        _ -> (206u64)
+    }
+}
+machine connections(gate: &Gate, context: &mut State, now: u64, env: [u64; 8]) -> u64 reaches Kernel {
+    let receiver: u64 = Kernel::bootstrap(gate, 0u64);
+    let sender: u64 = Kernel::bootstrap(gate, 1u64);
+    let deadline: u64 = runtime::time::after(now, 300u64);
+    context.deadline = runtime::time::after(now, 3000u64);
+    let a: u64 = runtime::server::main::begin(&mut context.clients[0], env[2], env[1], deadline, true);
+    let b: u64 = runtime::server::main::begin(&mut context.clients[1], env[4], env[3], deadline, true);
+    let c: u64 = runtime::server::main::begin(&mut context.clients[2], sender, receiver, deadline, false);
+    transition a == 0u64 && b == 0u64 && c == 0u64 { true -> (0u64) _ -> (207u64) }
+}

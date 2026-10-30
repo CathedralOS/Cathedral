@@ -12,6 +12,7 @@ use notification;
 use connection;
 use control;
 use services;
+use service::main;
 
 public ProgramProvider satisfies Program {
     machine run(gate: &Gate, first: u64, second: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
@@ -22,6 +23,12 @@ public ProgramProvider satisfies Program {
     }
 }
 machine transport(gate: &Gate, mode: u64) -> u64 reaches Kernel {
+    transition mode >= 200u64 {
+        true -> block service::main::check(gate)
+        _ -> block existing(gate, mode)
+    }
+}
+machine existing(gate: &Gate, mode: u64) -> u64 reaches Kernel {
     transition mode >= 120u64 {
         true -> block services::check(gate, mode)
         _ -> block owner_or_client(gate, mode)

@@ -59,7 +59,11 @@ linux_x86_64 machine Gate::notify_receive_leaf(gate: &Gate, endpoint: u64, packe
 linux_x86_64 machine Gate::bootstrap_leaf(gate: &Gate, index: u64) -> u64
     satisfies Kernel::bootstrap via ForeignBinding::TableFunction(bootstrap);
 
+linux_x86_64 machine Gate::wait_many_leaf(gate: &Gate, records: &[u64; 96], count: u64 [0..=48], deadline: u64) -> u64
+    satisfies Kernel::wait_many via ForeignBinding::TableFunction(wait_many) blocks;
+
 public NativeKernel satisfies Kernel {
+    Kernel::wait_many = Gate::wait_many_leaf;
     Kernel::object_create = Gate::object_create_leaf;
     Kernel::object_send = Gate::object_send_leaf;
     Kernel::object_receive = Gate::object_receive_leaf;

@@ -44,15 +44,38 @@ must drive the existing begin/poll/wait operations in their event loop.
 does that while keeping its independent owner-control connection responsive;
 `services::received` applies the same plain-reply validation to its completed call.
 
-[server/main.omg](server/main.omg) accepts the same v4 connection, retains one
-request until its exact reply, refuses a second poll while that request is pending,
-and closes all retained rights on protocol failure. Its `setup.omg` owns the
-bounded reverse handshake and `incoming.omg` owns mailbox/liveness checks.
-[server/owner.omg](server/owner.omg) supplies only the kernel-installed owner
-endpoints, separate from the app's service environment. Callers supply a fresh
-zero-initialized `Server`; close it before disposal and reconnect with a fresh value.
-This server accepts plain requests up to 64 bytes and sends 64-byte replies.
-Pipelining, request attachments and copied-request fallback are refused.
+[server/main.omg](server/main.omg) owns each accepted v4 connection. The provider
+stores one `Server` per client and chooses its own dispatch order and admission
+limits; the runtime has no global client registry or matrix policy.
+
+- `begin` takes endpoint custody on success and starts setup without waiting for
+  the peer's next message. `poll` advances [opening.omg](server/opening.omg) one
+  available handshake message at a time. Existing `accept` is the synchronous
+  convenience over that same state machine.
+- [incoming.omg](server/incoming.omg) joins a mailbox request with its optional
+  sealed-object grant in either arrival order. Attachments require explicit
+  opt-in at `begin`. Wrong kinds, duplicate/mismatched grants and incomplete
+  pairs retire that connection and release its retained rights.
+- A request remains pending until its exact reply. Its `Ticket` pairs the local
+  connection incarnation with the request ID; delayed work uses `reply_to` or
+  `reply_object_to`. Reuse the **closed Server value** for a replacement so its
+  incarnation advances. Do not reset that value while old tickets remain live.
+- `Server.object` is borrowed request backing: it stays valid until reply or
+  close, and must not be independently released by the application. A reply may
+  delegate it; the recipient then owns an independent reader. Publication failure
+  after a possible object handoff retires the link without replay.
+- `maintain` checks liveness while application work holds a request. `watch`
+  contributes IPC, notification and partial/setup deadlines to a caller-owned
+  [waiting::Set](waiting.omg). One kernel wait accepts up to 48 interests;
+  overflowing the set fails explicitly. It does not silently omit a client.
+
+A caller starts with a zero-initialized `Server` and explicitly closes it before
+disposal. Protocol failure already closes its retained resources. Requests carry
+up to 64 bytes; replies carry 64 bytes, optionally with a sealed object. Pipelined
+requests, transferred endpoint/notification requests and copied-request fallback
+remain unsupported. [owner.omg](server/owner.omg) selects only kernel-installed
+owner endpoints, independently of the app's service environment; ordinary owner
+control continues to accept plain requests only.
 
 [entry.omg](entry.omg) describes the temporary process entry:
 `Program::run(gate, first, second)`. The two kernel arguments remain ordinary

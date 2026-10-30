@@ -9,6 +9,52 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
+### Omega service runtime: independent clients and retained requests
+
+The common `source/platform/libraries/user-runtime/server/main.omg` now supports
+caller-owned collections of independent service connections. `begin` and `poll`
+advance setup without waiting for another message from that peer; `maintain`
+checks a held request; `watch` contributes readiness and deadlines to one wait.
+Providers choose admission and dispatch policy. No stock matrix role, global
+registry or fixed three-client limit was added to the platform.
+
+Requests may opt into one sealed-object attachment. The runtime joins its grant
+and mailbox frame in either arrival order, retains it through application work,
+and releases it on reply or retirement. Delayed replies use a connection
+incarnation/request ticket. Existing synchronous acceptance and plain owner
+control still use the same handshake implementation. A single appended native
+leaf exposes the kernel's existing 48-interest wait; no kernel implementation,
+limit, default grant, storage format or compiler changed.
+
+The actual standalone Omega witness is
+`source/distribution/lab/user-entry/component/service/main.omg`. Thirteen real
+Rust-peer scenarios check independent owner/client progress, stalled setup,
+held-request disconnect, malformed grants, both arrival orders, repeated image
+replies and complete refunds. A surviving client must fill all five reader pages
+after its sibling retires, proving reclamation while the service remains alive.
+Wrong generation/request tickets are rejected without consuming the request;
+replacement of an actual connection in the same slot is not yet exercised.
+
+Candidate evidence, relative to `C:/Projects/Cathedral-service-native`:
+
+- Service: `build/omega-user/connections/20261030T214442150038Z/`.
+- Existing connection suite: `build/omega-user/connections/20261030T214458368541Z/`.
+- Process/IPC/parking: `build/omega-user/tests/20261030T214520471843Z/`.
+- Background: `build/omega-user/background-control/20261030T215110115287Z/`.
+- Colors: `build/omega-user/colors-control/20261030T215146867585Z/`.
+- Notes: `build/omega-user/notes-control/20261030T215231758894Z/`.
+- Chooser: `build/omega-user/chooser-control/20261030T215338024947Z/`.
+- All seven packager tests, service-fixture clippy, Rust formatting and layout
+  (111 Omega / 154 Rust edges) pass. Initial native review covers the same 32
+  leaves plus the new bounded wait, 33 declarations and 33 external supplies.
+
+The installed apps remain Omega and the installed matrix host remains Rust.
+Next, bring the existing independent Omega matrix proof onto this common runtime,
+adding the missing provider handoffs and child-lifecycle operations as needed.
+Keep its existing policy and use it to qualify the replacement before attempting
+the stock host. The sustained pointer-stress close timeout recorded below remains
+open; this transport work neither diagnoses nor claims to fix it.
+
 ### Standalone chooser: login and taskbar
 
 Normal F5 now selects `source/distribution/applications/chooser/native/main.omg`

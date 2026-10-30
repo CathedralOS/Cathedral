@@ -1,0 +1,40 @@
+module server::pending;
+use connection::mailbox;
+use server::attachments;
+// Do not consume a second request while work on the first one remains outstanding.
+use kernel::Gate;
+use kernel::Kernel;
+use kernel;
+use server::main::Server;
+public machine check(gate: &Gate, listener: &mut Server, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    transition listener.ready && listener.pending != 0u64 {
+        true -> block live(gate, listener, now)
+        _ -> (kernel::BUSY)
+    }
+}
+machine live(gate: &Gate, listener: &mut Server, now: u64) -> u64 reaches Kernel {
+    let hint: u64 = block Kernel::notify_wait(gate, listener.peer.bell.wait, now, 1u64);
+    let mut interests: [u64; 8];
+    interests[1] = listener.peer.receiver;
+    let status: u64 = block Kernel::wait(gate, &interests, 1u64, now);
+    transition {
+        hint > 1u64 -> (kernel::PEER_CLOSED)
+        status == kernel::TIMED_OUT -> block mailbox(gate, listener)
+        status == 0u64 -> block queued(gate, listener, now)
+        _ -> (status)
+    }
+}
+machine mailbox(gate: &Gate, listener: &mut Server) -> u64 reaches Kernel {
+    let status: u64 = block connection::mailbox::receive(gate, &mut listener.peer);
+    transition {
+        status == kernel::WOULD_BLOCK -> (0u64)
+        status == 0u64 -> (kernel::IO_ERROR)
+        _ -> (status)
+    }
+}
+// Readiness also means endpoint closure. Inspect the typed receive before
+// classifying a ready endpoint as an illegal second request.
+machine queued(gate: &Gate, listener: &mut Server, now: u64) -> u64 reaches Kernel {
+    let status: u64 = block attachments::receive(gate, listener, now);
+    transition status == 0u64 { true -> (kernel::IO_ERROR) _ -> (status) }
+}
