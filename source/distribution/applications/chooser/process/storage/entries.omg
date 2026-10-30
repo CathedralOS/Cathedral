@@ -1,0 +1,58 @@
+module storage::entries;
+// Bound the declared rows before reading; never expose page padding to the app.
+use app::operations::Exchange;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use protocol::storage::entries;
+public machine receive(gate: &Gate, exchange: &mut Exchange, object: u64, limit: u64, after: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    transition limit > 0u64 && limit <= 4080u64 && exchange.frame[0] == 0u64
+        && exchange.frame[1] > 0u64 && exchange.frame[1] <= 51u64 && exchange.frame[2] > after {
+        true -> block extent(gate, exchange, object, limit, after)
+        _ -> (kernel::IO_ERROR)
+    }
+    machine extent(gate: &Gate, exchange: &mut Exchange, object: u64, limit: u64, after: u64) -> u64 reaches Kernel requires exchange.frame[1] <= 51u64 {
+        let bytes: u64 = exchange.frame[1] * 80u64;
+        transition bytes <= limit {
+            true -> block copy(gate, exchange, object, bytes, after)
+            _ -> (kernel::IO_ERROR)
+        }
+    }
+    machine copy(gate: &Gate, exchange: &mut Exchange, object: u64, bytes: u64, after: u64) -> u64 reaches Kernel {
+        let status: u64 = block chunk(gate, exchange, object, bytes, 0u64);
+        transition status == 0u64 && protocol::storage::entries::valid(&exchange.payload, exchange.frame[1], after, exchange.frame[2]) {
+            true -> accepted(exchange, bytes)
+            _ -> (kernel::IO_ERROR)
+        }
+    }
+    machine accepted(exchange: &mut Exchange, bytes: u64) -> u64 { exchange.payload_bytes = bytes; 0u64 }
+}
+machine chunk(gate: &Gate, exchange: &mut Exchange, object: u64, bytes: u64, offset: u64) -> u64 reaches Kernel {
+    transition offset < 510u64 && offset * 8u64 < bytes {
+        true -> block read(gate, exchange, object, bytes, offset)
+        _ -> (0u64)
+    }
+    machine read(gate: &Gate, exchange: &mut Exchange, object: u64, bytes: u64, offset: u64) -> u64 reaches Kernel requires offset < 510u64 {
+        let mut words: [u64; 8];
+        let status: u64 = block Kernel::object_read(gate, object, offset, &mut words, 8u64);
+        transition status == 0u64 {
+            true -> block copied(gate, exchange, object, bytes, offset, &words)
+            _ -> (status)
+        }
+    }
+    machine copied(gate: &Gate, exchange: &mut Exchange, object: u64, bytes: u64, offset: u64, words: &[u64; 8]) -> u64 reaches Kernel requires offset < 510u64 {
+        unpack(exchange, words, bytes, offset, 0u64);
+        transition { _ -> block chunk(gate, exchange, object, bytes, offset + 8u64) }
+    }
+}
+machine unpack(exchange: &mut Exchange, words: &[u64; 8], bytes: u64, offset: u64 [0..=509], i: u64) {
+    transition i < 8u64 && offset + i < 510u64 && (offset + i) * 8u64 < bytes {
+        true -> word(exchange, words, bytes, offset, i)
+        _ -> done()
+    }
+    machine word(exchange: &mut Exchange, words: &[u64; 8], bytes: u64, offset: u64 [0..=509], i: u64) requires i < 8u64 && offset + i < 510u64 {
+        exchange.payload[offset + i] = words[i];
+        transition { _ -> unpack(exchange, words, bytes, offset, i + 1u64) }
+    }
+}
+machine done() {}

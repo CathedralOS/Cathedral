@@ -1,11 +1,11 @@
 # Chooser: Omega login picker and desktop taskbar
 
-The installed chooser runs entirely through the common Omega app host. Its
-[Rust entry](../../../../source-rs/distribution/applications/chooser/main.rs)
-declares required interaction/storage imports and passes its startup argument
-to the host. No chooser state, rendering, settings or input policy lives in the
-normal Rust executable. The argument selects picker/taskbar presentation and
-names the launcher's own scoped object; it grants no authority.
+The installed chooser is a standalone Omega process. Its
+[native entry](native/main.omg) selects [process/main.omg](process/main.omg),
+which acquires supplied interaction/storage connections, runs the app and cleans
+up. Its manifest requests required imports; it grants no authority. The startup
+argument selects picker/taskbar presentation and names the launcher's own scoped
+object.
 
 The app now accepts named `State` and `Exchange` values and returns a `Command`.
 `Exchange` names its frame, payload, transport result, startup argument and wait
@@ -44,33 +44,31 @@ Actual host/Matrix/storage wire data is still decoded at the session boundary.
 
 ## Native boundary and ownership
 
-[bridge/app/main.omg](bridge/app/main.omg) selects
-[bridge/component/main.omg](bridge/component/main.omg) as one independent
-component. Only that bridge declares `ChooserApp` and translates the legacy
-host packet/opcodes through [packets.omg](bridge/component/packets.omg). The [packager](../../../../tools/omega-component/README.md)
-checks its relocation-free export; [omega-app](../../../../source-rs/platform/libraries/omega-app/README.md)
-supplies scoped IPC, attachment custody and the existing task's monotonic clock.
-It knows neither the chooser's state layout nor its configuration schema.
+The [process reading path](process/README.md) separates application dispatch,
+service exchange, storage decoding, image custody and waiting. It uses the common
+[Omega user runtime](../../../platform/libraries/user-runtime/README.md) for
+scoped IPC, kernel objects, notifications and clock access. The app receives
+plain observations and emits named commands; transport handles stay in the
+process adapter. Owner HEALTH/LOSS continues while a service reply is pending.
 
-Incoming `ENTRIES` returns at most 51 80-byte rows. The host checks the declared
+Incoming `ENTRIES` returns at most 51 80-byte rows. The process adapter checks the declared
 extent, canonical metadata and ascending cursor, copies only those bytes and
-releases the reader before resuming Omega. The chooser gathers at most 51
+releases the reader before resuming the app. The chooser gathers at most 51
 executable candidates while continuing to resolve named roles. `HEAD`/`READ`
 are inline; `COPY_TREE` carries a name; settings `PUBLISH` carries 104 bytes.
 Images use 4,080-byte sequential chunks into one object of at most 64 KiB. No raw handles,
-PIDs, global locators or device access are passed to the component.
+PIDs, global locators or device access are passed to the app.
 
-The retained Rust host still reserves nine private pages for its legacy state
-and packet ABI. The smaller app workspace does not change that host grant.
 Existing chooser grants suffice, including the settings panels. Kernel,
 supervision, storage authority and matrix resource grants are unchanged.
 
-`rust-probes` explicitly selects the old Rust session for the recovery and
-startup-fault fixtures. These features still use the shared Omega policy via
-[bridge/native/main.omg](bridge/native/main.omg); ordinary F5 has no fallback to that session.
-A standalone process prototype is isolated on `work/chooser-native`, outside
-the F5 composition. Its qualified-compiler check currently times out; this is
-not a completed process migration. See [the handoff](../../../../TASKS_RUST.md).
+The retained [bridge/app/main.omg](bridge/app/main.omg) and
+[bridge/component/main.omg](bridge/component/main.omg) support host model tests
+and explicit Rust fixtures. Only that bridge declares `ChooserApp` and translates
+the legacy packet/opcodes; its Rust host still reserves nine private pages.
+`rust-probes` selects the old Rust session for recovery/startup-fault fixtures,
+using shared Omega policy through [bridge/native/main.omg](bridge/native/main.omg).
+Ordinary F5 does not select either Rust session.
 
 The [bridge policy entrance](bridge/policy/main.omg) alone decodes the temporary
 128-word Rust probe packet. Its typed calls enter the same policy the app uses.
@@ -84,6 +82,7 @@ user copy and launch, settings loss and save reconciliation, intervening edits,
 task selection before close, replacement during confirmation and image epoch
 races. The host has separate attachment extent/canonical-row tests.
 
-QEMU acceptance includes normal F5 login, app instances and taskbar close,
+`tools/omega-user/chooser_test.py` checks the actual executable against held and
+malformed peers, images, refresh and custody refunds. QEMU acceptance includes normal F5 login, app instances and taskbar close,
 settings and lost-save recovery, cold persistence and four recursive desktops.
 Exact evidence and outstanding work live in [the handoff](../../../../TASKS_RUST.md).

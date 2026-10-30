@@ -16,3 +16,13 @@ def notes(program, feature):
         raise ValueError(f'Unknown Rust Notes probe: {feature}')
     program['entry'] = 'distribution/applications/notes/main.rs'
     program.setdefault('features', []).append(feature)
+
+
+def chooser(program, feature):
+    if program.get('package') != 'cathedral-chooser':
+        raise ValueError('Chooser probe requires a chooser program entry')
+    if feature not in {'rust-probes', 'recovery-probes',
+                       'launcher-startup-fault', 'picker-startup-fault'}:
+        raise ValueError(f'Unknown Rust chooser probe: {feature}')
+    program['entry'] = 'distribution/applications/chooser/main.rs'
+    program.setdefault('features', []).append(feature)

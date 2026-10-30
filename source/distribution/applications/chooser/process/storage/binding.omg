@@ -1,0 +1,29 @@
+module storage::binding;
+use main::Context;
+use app::state::State;
+use app::operations::Exchange;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::time::Tick;
+use runtime::storage::main;
+use services::requests;
+public machine bind(gate: &Gate, context: &mut Context, state: &State, exchange: &mut Exchange) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let tick: Tick = runtime::time::read(gate, context.clock);
+    transition tick {
+        Tick::Read { value } -> block request(gate, context, state, exchange, value)
+        Tick::Failed { code } -> (code)
+    }
+    machine request(gate: &Gate, context: &mut Context, state: &State, exchange: &mut Exchange, now: u64) -> u64 reaches Kernel {
+        let words: [u64; 8] = runtime::storage::main::bind_request(now);
+        let status: u64 = block services::requests::call(gate, context, state, exchange, true, &words, 0u64, 0u64, 0u64);
+        transition status == 0u64 {
+            true -> installed(context, exchange)
+            _ -> (status)
+        }
+    }
+    machine installed(context: &mut Context, exchange: &mut Exchange) -> u64 {
+        let status: u64 = runtime::storage::main::bound(&mut context.storage, exchange.frame);
+        exchange.frame = [status, context.storage.realm, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64];
+        status
+    }
+}

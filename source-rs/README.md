@@ -22,13 +22,15 @@ The desktop builds its UI from checked-in
 Build the supported Omega compiler in `build/omega-ui/compiler`, set `OMEGA_BIN`
 to it elsewhere, or put it on PATH. The
 [UI build guide](../tools/omega-ui/README.md#build) includes the producer and build commands.
-The installed [Colors](../source/distribution/applications/colors/README.md),
+The installed [Background](../source/distribution/applications/background/README.md),
+[Colors](../source/distribution/applications/colors/README.md),
 [Notes](../source/distribution/applications/notes/README.md) and
-[chooser](../source/distribution/applications/chooser/README.md) apps own their
-sessions, input, storage behavior and presentation in Omega. A reusable
-[platform host](platform/libraries/omega-app/README.md) supplies its existing
-scoped service transport. The kernel and remaining desktop applications are
-still Rust; this is an incremental application migration.
+[chooser](../source/distribution/applications/chooser/README.md) are standalone
+Omega processes. Their process adapters use the common
+[Omega runtime](../source/platform/libraries/user-runtime/README.md) for scoped
+service transport. The [standalone build guide](../tools/omega-user/README.md)
+names its separately qualified compiler. The kernel, matrix host and remaining
+services are still Rust; this is an incremental migration.
 
 Press **F5** at the repository root, or run
 `python tools/boot-harness-rs/run.py --release --window --fresh`. One desktop boots to a

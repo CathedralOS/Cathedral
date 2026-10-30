@@ -1,6 +1,7 @@
 """Normal nested desktop with a held recovery read; only disposable builds add probes."""
 import time
 from nested_desktop_test import Nested
+import probe_programs
 
 
 def configure(composition, mode):
@@ -9,7 +10,7 @@ def configure(composition, mode):
             if value.get('package') == 'cathedral-stock-matrix':
                 value.setdefault('features', []).append('recovery-delay')
             if value.get('path') == 'Nested/Users/Template/Desktop':
-                value.setdefault('features', []).append('recovery-probes')
+                probe_programs.chooser(value, 'recovery-probes')
             for child in value.values(): enable(child)
         elif isinstance(value, list):
             for child in value: enable(child)
@@ -41,8 +42,9 @@ def exercise(output, click, key, scan, width, height, reboot, mode):
         assert transcript.index('read cancellation requested') < transcript.index('launcher-read-released')
         assert 'launcher recovered; retry consumed' not in transcript
         assert 'launcher fallback admitted' not in transcript
+    # The unsaved edits live in the editor process. Restarting would reload
+    # only `base`; verify survival through the app rather than Rust-host traces.
     n.note(1, base + 'ab', True)
-    assert log().count('note-loaded') == 1, 'sibling restarted during recovery'
     n.app_close(1)
     n.label(x+18, y+28, 'UNSAVED NOTE')
     click(x+38,y+84)  # Cancel the app-owned close dialog.

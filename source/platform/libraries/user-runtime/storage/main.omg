@@ -3,13 +3,14 @@ module storage::main;
 // every hop; neither object IDs nor the realm number grant access themselves.
 use connection::main::Peer;
 use protocol::main;
+use protocol::storage::timing::EXCHANGE_TICKS;
 use time;
 
 public data Scope { peer: Peer; binding: u64; realm: u64; }
 public machine bind_request(now: u64) -> [u64; 8] {
     let mut words: [u64; 8];
     words[0] = 12u64;
-    words[7] = time::after(now, 1200u64);
+    words[7] = time::after(now, EXCHANGE_TICKS);
     words
 }
 public machine bound(scope: &mut Scope, words: [u64; 8]) -> u64 {
@@ -37,7 +38,7 @@ public machine request(scope: &Scope, words: &mut [u64; 8], now: u64) -> u64 {
     }
     machine scoped(scope: &Scope, words: &mut [u64; 8], now: u64, operation: u64 [0..=255]) -> u64 {
         words[0] = ((scope.binding & 0xffffffffffffu64) << 16u64) | (256u64 + operation);
-        words[7] = time::after(now, 1200u64);
+        words[7] = time::after(now, EXCHANGE_TICKS);
         0u64
     }
 }

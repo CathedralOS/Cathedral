@@ -7,6 +7,8 @@ mod delivery;
 mod notifications;
 #[cfg(feature = "omega-background")]
 mod omega_background;
+#[cfg(feature = "omega-chooser")]
+mod omega_chooser;
 #[cfg(feature = "omega-colors")]
 mod omega_colors;
 #[cfg(feature = "omega-notes")]
@@ -29,6 +31,10 @@ use cathedral_user_runtime::{
 };
 cathedral_user_runtime::entry_with_environment!(main);
 fn main(role: u64, mode: u64, environment: cathedral_user_runtime::task::Environment) -> u64 {
+    #[cfg(feature = "omega-chooser")]
+    if role == 0 {
+        return omega_chooser::run();
+    }
     #[cfg(feature = "omega-notes")]
     if role == 0 {
         return omega_notes::run();

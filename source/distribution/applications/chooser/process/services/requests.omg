@@ -1,0 +1,78 @@
+module services::requests;
+// Scope storage requests, transfer outgoing custody, then validate the reply.
+use main::Context;
+use app::state::State;
+use app::operations::Exchange;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::time::Tick;
+use runtime::memory::object::Creation;
+use runtime::connection::call::CallReply;
+use runtime::storage::main;
+use services::exchange;
+use services::replies;
+use memory::payload;
+use presentation::images;
+public machine storage(gate: &Gate, context: &mut Context, state: &State, output: &mut Exchange) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let tick: Tick = runtime::time::read(gate, context.clock);
+    transition tick {
+        Tick::Read { value } -> block scoped(gate, context, state, output, value)
+        Tick::Failed { code } -> (code)
+    }
+    machine scoped(gate: &Gate, context: &mut Context, state: &State, output: &mut Exchange, now: u64) -> u64 reaches Kernel {
+        let mut words: [u64; 8] = output.frame;
+        let status: u64 = runtime::storage::main::request(&context.storage, &mut words, now);
+        transition status == 0u64 {
+            true -> block outgoing(gate, context, state, output, true, &words)
+            _ -> (status)
+        }
+    }
+}
+public machine interaction(gate: &Gate, context: &mut Context, state: &State, output: &mut Exchange) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let words: [u64; 8] = output.frame;
+    transition context.services.wake != 0u64 {
+        true -> block outgoing(gate, context, state, output, false, &words)
+        _ -> (kernel::DENIED)
+    }
+}
+machine outgoing(gate: &Gate, context: &mut Context, state: &State, output: &mut Exchange, storage: bool, words: &[u64; 8]) -> u64 reaches Kernel {
+    transition !storage && words[0] == 8u64 && output.payload_bytes == 0u64 && context.ready_image != 0u64 {
+        true -> block image(gate, context, state, output, words)
+        _ -> block body(gate, context, state, output, storage, words)
+    }
+}
+machine image(gate: &Gate, context: &mut Context, state: &State, output: &mut Exchange, words: &[u64; 8]) -> u64 reaches Kernel {
+    let object: u64 = context.ready_image;
+    context.ready_image = 0u64;
+    transition { _ -> block call(gate, context, state, output, false, words, object, 0u64, 0u64) }
+}
+machine body(gate: &Gate, context: &mut Context, state: &State, output: &mut Exchange, storage: bool, words: &[u64; 8]) -> u64 reaches Kernel {
+    block presentation::images::discard(gate, context);
+    transition output.payload_bytes == 0u64 {
+        true -> block prepared(gate, context, state, output, storage, words, 0u64)
+        _ -> block create(gate, context, state, output, storage, words)
+    }
+}
+machine create(gate: &Gate, context: &mut Context, state: &State, output: &mut Exchange, storage: bool, words: &[u64; 8]) -> u64 reaches Kernel {
+    let result: Creation = block memory::payload::create(gate, output);
+    transition result {
+        Creation::Ready { object } -> block prepared(gate, context, state, output, storage, words, object.handle)
+        Creation::Failed { code } -> (code)
+    }
+}
+machine prepared(gate: &Gate, context: &mut Context, state: &State, output: &mut Exchange, storage: bool, words: &[u64; 8], object: u64) -> u64 reaches Kernel {
+    let limit: u64 = output.receive_limit;
+    transition storage && (words[0] & 255u64) == 19u64 {
+        true -> block call(gate, context, state, output, storage, words, object, limit, words[3])
+        _ -> block call(gate, context, state, output, storage, words, object, 0u64, 0u64)
+    }
+}
+public machine call(gate: &Gate, context: &mut Context, state: &State, output: &mut Exchange, storage: bool,
+    words: &[u64; 8], object: u64, limit: u64, after: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    output.payload_bytes = 0u64; output.receive_limit = 0u64;
+    let result: CallReply = block services::exchange::request(gate, context, state, storage, words, object, deadline(storage, words));
+    let released: u64 = block Kernel::memory_release(gate, object);
+    block services::replies::accept(gate, context, output, result, limit, after)
+}
+machine deadline(storage: bool, words: &[u64; 8]) -> u64 { transition storage { true -> (words[7]) _ -> (0u64) } }

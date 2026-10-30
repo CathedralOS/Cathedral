@@ -11,6 +11,7 @@ omega-peer = []
 omega-background = []
 omega-colors = []
 omega-notes = []
+omega-chooser = []
 
 [[bin]]
 name = "cathedral-channels-lab"

@@ -1,0 +1,61 @@
+module services::replies;
+// The only incoming attachment is a bounded ENTRIES page. Every path releases it.
+use main::Context;
+use app::operations::Exchange;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::connection::call::CallReply;
+use runtime::connection::main::Frame;
+use storage::entries;
+public machine accept(gate: &Gate, context: &mut Context, output: &mut Exchange, result: CallReply, limit: u64, after: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    transition result {
+        CallReply::Received { frame, notification } -> block plain(gate, context, output, frame, notification, limit)
+        CallReply::Object { frame, object } -> block object(gate, context, output, frame, object, limit, after)
+        CallReply::Endpoint { frame, endpoint } -> block unexpected_endpoint(gate, context, endpoint)
+        CallReply::Failed { code } -> (code)
+    }
+}
+machine plain(gate: &Gate, context: &mut Context, output: &mut Exchange, frame: Frame, notification: u64, limit: u64) -> u64 reaches Kernel {
+    transition frame.bytes == 64u64 && notification == 0u64 && (limit == 0u64 || frame.payload[0] != 0u64 || (limit <= 4080u64 && frame.payload[1] == 0u64)) {
+        true -> decoded(output, frame.payload)
+        _ -> block unexpected_notification(gate, context, notification)
+    }
+    machine decoded(output: &mut Exchange, words: [u64; 8]) -> u64 { output.frame = words; 0u64 }
+}
+machine object(gate: &Gate, context: &mut Context, output: &mut Exchange, frame: Frame, object: u64, limit: u64, after: u64) -> u64 reaches Kernel {
+    let status: u64 = block contents(gate, output, frame, object, limit, after);
+    let released: u64 = block Kernel::memory_release(gate, object);
+    transition status == 0u64 && released == 0u64 {
+        true -> (0u64)
+        _ -> block malformed(gate, context)
+    }
+}
+machine contents(gate: &Gate, output: &mut Exchange, frame: Frame, object: u64, limit: u64, after: u64) -> u64 reaches Kernel {
+    transition frame.bytes == 64u64 && limit != 0u64 {
+        true -> block entries(gate, output, frame.payload, object, limit, after)
+        _ -> (kernel::IO_ERROR)
+    }
+    machine entries(gate: &Gate, output: &mut Exchange, words: [u64; 8], object: u64, limit: u64, after: u64) -> u64 reaches Kernel {
+        output.frame = words;
+        block storage::entries::receive(gate, output, object, limit, after)
+    }
+}
+machine unexpected_endpoint(gate: &Gate, context: &mut Context, endpoint: u64) -> u64 reaches Kernel {
+    let ignored: u64 = Kernel::close(gate, endpoint);
+    transition { _ -> block malformed(gate, context) }
+}
+machine unexpected_notification(gate: &Gate, context: &mut Context, notification: u64) -> u64 reaches Kernel {
+    let ignored: u64 = Kernel::notify_drop(gate, notification);
+    transition { _ -> block malformed(gate, context) }
+}
+machine malformed(gate: &Gate, context: &mut Context) -> u64 reaches Kernel {
+    let ignored: u64 = block retire(gate, context);
+    kernel::IO_ERROR
+}
+machine retire(gate: &Gate, context: &mut Context) -> u64 reaches Kernel {
+    transition context.pending_storage {
+        true -> block runtime::connection::main::close(gate, &mut context.storage.peer)
+        _ -> block runtime::connection::main::close(gate, &mut context.services.broker)
+    }
+}

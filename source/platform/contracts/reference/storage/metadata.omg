@@ -1,0 +1,38 @@
+module storage::metadata;
+// Two canonical 32-byte UTF-8 fields. Names additionally exclude path syntax.
+public machine valid(text: &[u8; 32], name: bool) -> bool {
+    transition name && text[0] == 46u8 && (text[1] == 0u8 || (text[1] == 46u8 && text[2] == 0u8)) {
+        true -> (false)
+        _ -> scan(text, name, 0u64, 0u64, 128u64, 191u64, false)
+    }
+}
+machine scan(text: &[u8; 32], name: bool, i: u64, remaining: u64, low: u64, high: u64, ended: bool) -> bool {
+    transition i < 32u64 {
+        true -> byte(text, name, i, remaining, low, high, ended)
+        _ -> (remaining == 0u64)
+    }
+}
+machine byte(text: &[u8; 32], name: bool, i: u64, remaining: u64, low: u64, high: u64, ended: bool) -> bool requires i < 32u64 {
+    let value: u64 = text[i] as u64;
+    transition {
+        ended && value != 0u64 -> (false)
+        remaining > 0u64 -> continuation(text, name, i, remaining, low, high, value)
+        value == 0u64 -> scan(text, name, i + 1u64, 0u64, 128u64, 191u64, true)
+        value < 32u64 || value == 127u64 || (name && value == 47u64) -> (false)
+        value < 128u64 -> scan(text, name, i + 1u64, 0u64, 128u64, 191u64, false)
+        value >= 194u64 && value <= 223u64 -> scan(text, name, i + 1u64, 1u64, 128u64, 191u64, false)
+        value == 224u64 -> scan(text, name, i + 1u64, 2u64, 160u64, 191u64, false)
+        value == 237u64 -> scan(text, name, i + 1u64, 2u64, 128u64, 159u64, false)
+        value >= 225u64 && value <= 239u64 -> scan(text, name, i + 1u64, 2u64, 128u64, 191u64, false)
+        value == 240u64 -> scan(text, name, i + 1u64, 3u64, 144u64, 191u64, false)
+        value >= 241u64 && value <= 243u64 -> scan(text, name, i + 1u64, 3u64, 128u64, 191u64, false)
+        value == 244u64 -> scan(text, name, i + 1u64, 3u64, 128u64, 143u64, false)
+        _ -> (false)
+    }
+}
+machine continuation(text: &[u8; 32], name: bool, i: u64, remaining: u64, low: u64, high: u64, value: u64) -> bool requires i < 32u64 && remaining > 0u64 {
+    transition value >= low && value <= high {
+        true -> scan(text, name, i + 1u64, remaining - 1u64, 128u64, 191u64, false)
+        _ -> (false)
+    }
+}

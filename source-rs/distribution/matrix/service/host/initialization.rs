@@ -9,12 +9,6 @@ impl Host {
         // SAFETY: Single-threaded executable enters once. Persistent buffers live in
         // process-owned data pages, not constructor temporaries on the guarded stack.
         let parent = unsafe { &mut *parent_address };
-        parent.initialize(&environment, storage_root)?;
-        let startup = if parent.upstream {
-            Startup::Realm
-        } else {
-            Startup::Hosted
-        };
         static mut WORLD: World = World::empty();
         let world_address = &raw mut WORLD;
         // SAFETY: Single-threaded executable enters this service exactly once. This
@@ -38,6 +32,19 @@ impl Host {
         let control = &raw mut CONTROL;
         // SAFETY: This process lends its owner-control storage once, until exit.
         server.enable_shared_control(unsafe { &mut *control })?;
+        if !storage_root && environment.len() == 2 {
+            // Brokered admission initiates control independently. Finish it
+            // before parent service setup can park through the ancestor chain.
+            // Positional fixtures still select their control protocol on receipt.
+            server.establish_control(cathedral_user_runtime::time::after(300)?)?;
+            cathedral_user_runtime::write(b"Cathedral matrix: shared owner control ready\n")?;
+        }
+        parent.initialize(&environment, storage_root)?;
+        let startup = if parent.upstream {
+            Startup::Realm
+        } else {
+            Startup::Hosted
+        };
         static mut REPLIES: cathedral_user_runtime::server::Replies =
             cathedral_user_runtime::server::Replies::empty();
         let replies_address = &raw mut REPLIES;

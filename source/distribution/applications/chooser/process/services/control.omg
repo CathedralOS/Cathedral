@@ -1,0 +1,53 @@
+module services::control;
+// Owner queries are independent of a pending storage or compositor request.
+use main::Context;
+use app::state::State;
+use app::settings::settings::settings_dirty;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::server::main::Event;
+use protocol::main;
+public machine poll(gate: &Gate, context: &mut Context, state: &State, now: u64) reaches Kernel blocks; invokes Kernel; {
+    transition context.owner.peer.fault == 0u64 {
+        true -> block receive(gate, context, state, now)
+        _ -> done()
+    }
+}
+machine receive(gate: &Gate, context: &mut Context, state: &State, now: u64) reaches Kernel {
+    let event: Event = block runtime::server::main::poll(gate, &mut context.owner, now);
+    transition event {
+        Event::Request { frame } -> block answer(gate, context, state, frame.bytes, frame.payload)
+        _ -> done()
+    }
+}
+machine answer(gate: &Gate, context: &mut Context, state: &State, bytes: u64, request: [u64; 8]) reaches Kernel {
+    let mut reply: [u64; 8];
+    transition bytes == 64u64 && (request[0] == HEALTH || request[0] == LOSS)
+        && request[1] == 0u64 && request[2] == 0u64 && request[3] == 0u64
+        && request[4] == 0u64 && request[5] == 0u64 && request[6] == 0u64 && request[7] == 0u64 {
+        true -> block report(gate, context, state, request[0], &mut reply)
+        _ -> block refuse(gate, context, &mut reply)
+    }
+    machine report(gate: &Gate, context: &mut Context, state: &State, operation: u64, reply: &mut [u64; 8]) reaches Kernel {
+        reply[1] = (operation == LOSS && state.editing && settings_dirty(state)) as u64;
+        let ignored: u64 = block send(gate, context, reply);
+    }
+    machine refuse(gate: &Gate, context: &mut Context, reply: &mut [u64; 8]) reaches Kernel {
+        reply[0] = INVALID_ARGUMENT;
+        let ignored: u64 = block send(gate, context, reply);
+    }
+}
+public machine send(gate: &Gate, context: &mut Context, words: &[u64; 8]) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let status: u64 = block runtime::server::main::reply(gate, &mut context.owner, words);
+    transition status == 0u64 {
+        true -> (0u64)
+        _ -> block failed(gate, context, status)
+    }
+    // A failed publication must not leave a pending owner request wedged while
+    // the chooser continues servicing its independent storage/presentation peers.
+    machine failed(gate: &Gate, context: &mut Context, status: u64) -> u64 reaches Kernel {
+        block runtime::server::main::close(gate, &mut context.owner);
+        status
+    }
+}
+machine done() {}

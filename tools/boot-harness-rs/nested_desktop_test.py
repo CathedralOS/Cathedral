@@ -121,6 +121,8 @@ def exercise(output, click, key, scan, width, height, reboot, pointer_stress=Fal
     # Each level admits a workspace and then its user matrix, in addition to the
     # outer user. Their input wakes must not quietly fall back to positional queues.
     assert log.count('Cathedral matrix: brokered startup and notification input wake ready') >= 2*nested_depth+1, log[-4000:]
+    assert log.count('Cathedral matrix: shared owner control ready') >= 2*nested_depth+1, log[-4000:]
+    assert 'matrix-control-open-refused' not in log, log[-4000:]
     launch(nested_depth,0)
     note(nested_depth,'deep' if reboot else '')
     if not reboot:
@@ -173,6 +175,8 @@ def exercise(output, click, key, scan, width, height, reboot, pointer_stress=Fal
         task_close(0); background(0)
         for depth in range(1,nested_depth+1): enter(depth,False)
         launch(nested_depth,0); note(nested_depth,'deep'); app_close(nested_depth); background(nested_depth)
+    log = (output/'serial.log').read_text(errors='replace')
+    assert 'matrix-control-open-refused' not in log, log[-4000:]
     task_close(0); background(0)
     launch(0,0); note(0,'') # Inner saved content never leaks to the outer realm.
     if interaction_delay:

@@ -1,0 +1,40 @@
+module application::operations;
+// App intent selects a supplied service, image staging, clock or parking.
+use main::Context;
+use app::state::State;
+use app::operations::Exchange;
+use app::operations::Command;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::time::Tick;
+use services::services;
+use services::requests;
+use services::control;
+use services::waiting;
+use storage::binding;
+use presentation::images;
+public machine execute(gate: &Gate, context: &mut Context, state: &State, exchange: &mut Exchange, command: Command) -> u64 reaches Kernel blocks; invokes Kernel; {
+    transition command {
+        Command::AcquireInteraction -> block services::services::interaction(gate, context, state)
+        Command::AcquireStorage -> block services::services::storage(gate, context, state)
+        Command::BindStorage -> block storage::binding::bind(gate, context, state, exchange)
+        Command::Storage -> block services::requests::storage(gate, context, state, exchange)
+        Command::Interaction -> block services::requests::interaction(gate, context, state, exchange)
+        Command::StageImage -> block presentation::images::stage(gate, context, exchange)
+        Command::Wait -> block services::waiting::next(gate, context, state, exchange.refresh_ticks)
+        Command::Control -> block services::control::send(gate, context, &exchange.frame)
+        Command::Clock -> clock(gate, context, exchange)
+        Command::Exit -> (0u64)
+    }
+}
+machine clock(gate: &Gate, context: &Context, exchange: &mut Exchange) -> u64 reaches Kernel {
+    let tick: Tick = runtime::time::read(gate, context.clock);
+    transition tick {
+        Tick::Read { value } -> read(exchange, value)
+        Tick::Failed { code } -> (code)
+    }
+    machine read(exchange: &mut Exchange, value: u64) -> u64 {
+        exchange.frame = [value, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64];
+        0u64
+    }
+}

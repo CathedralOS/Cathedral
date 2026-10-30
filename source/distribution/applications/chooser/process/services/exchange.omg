@@ -1,0 +1,118 @@
+module services::exchange;
+// Publish exactly once, then service independent owner control while waiting.
+// Storage carries its end-to-end deadline. Presentation parking is only a hint.
+use main::Context;
+use app::state::State;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::time::Tick;
+use runtime::connection::main::Peer;
+use runtime::connection::main::Reply;
+use runtime::connection::call::CallReply;
+use services::control;
+
+public machine request(gate: &Gate, context: &mut Context, state: &State, storage: bool,
+    words: &[u64; 8], object: u64, deadline: u64) -> CallReply reaches Kernel blocks; invokes Kernel; {
+    context.pending_storage = storage;
+    context.pending_deadline = deadline;
+    let status: u64 = block begin(gate, context, words, object);
+    transition status == 0u64 {
+        true -> block poll(gate, context, state)
+        _ -> (CallReply::Failed { code: status })
+    }
+}
+machine begin(gate: &Gate, context: &mut Context, words: &[u64; 8], object: u64) -> u64 reaches Kernel {
+    transition context.pending_storage {
+        true -> block runtime::connection::main::begin_object(gate, &mut context.storage.peer, words, object)
+        _ -> block runtime::connection::main::begin_object(gate, &mut context.services.broker, words, object)
+    }
+}
+machine poll(gate: &Gate, context: &mut Context, state: &State) -> CallReply reaches Kernel {
+    let tick: Tick = runtime::time::read(gate, context.clock);
+    transition tick {
+        Tick::Read { value } -> block owner(gate, context, state, value)
+        Tick::Failed { code } -> block failed(gate, context, code)
+    }
+}
+machine owner(gate: &Gate, context: &mut Context, state: &State, now: u64) -> CallReply reaches Kernel {
+    block services::control::poll(gate, context, state, now);
+    let reply: Reply = block receive(gate, context, now);
+    transition reply {
+        Reply::Complete { frame, notification } -> (CallReply::Received { frame: frame, notification: notification })
+        Reply::Object { frame, object } -> (CallReply::Object { frame: frame, object: object })
+        Reply::Endpoint { frame, endpoint } -> (CallReply::Endpoint { frame: frame, endpoint: endpoint })
+        Reply::Failed { code } -> (CallReply::Failed { code: code })
+        Reply::Pending -> block pending(gate, context, state, now)
+    }
+}
+machine receive(gate: &Gate, context: &mut Context, now: u64) -> Reply reaches Kernel {
+    transition context.pending_storage {
+        true -> block runtime::connection::main::poll(gate, &mut context.storage.peer, now)
+        _ -> block runtime::connection::main::poll(gate, &mut context.services.broker, now)
+    }
+}
+machine pending(gate: &Gate, context: &mut Context, state: &State, now: u64) -> CallReply reaches Kernel {
+    transition context.pending_deadline != 0u64 && runtime::time::reached(now, context.pending_deadline) {
+        true -> block failed(gate, context, kernel::TIMED_OUT)
+        _ -> block prepare(gate, context, state, now)
+    }
+}
+machine prepare(gate: &Gate, context: &mut Context, state: &State, now: u64) -> CallReply reaches Kernel {
+    let mut interests: [u64; 8];
+    let deadline: u64 = selected(context, &mut interests, runtime::time::after(now, 300u64));
+    transition context.owner.peer.fault == 0u64 {
+        true -> block combined(gate, context, state, &mut interests, deadline)
+        _ -> block wait(gate, context, state, &interests, 2u64, deadline)
+    }
+}
+machine selected(context: &Context, interests: &mut [u64; 8], deadline: u64) -> u64 {
+    transition context.pending_storage {
+        true -> peer(&context.storage.peer, interests, deadline, context.pending_deadline)
+        _ -> peer(&context.services.broker, interests, deadline, context.pending_deadline)
+    }
+}
+machine peer(peer: &Peer, interests: &mut [u64; 8], deadline: u64, expiry: u64) -> u64 {
+    interests[0] = 2u64; interests[1] = peer.bell.wait; interests[3] = peer.receiver;
+    transition peer.partial && runtime::time::reached(deadline, peer.partial_deadline) {
+        true -> bounded(peer.partial_deadline, expiry)
+        _ -> bounded(deadline, expiry)
+    }
+}
+machine bounded(deadline: u64, expiry: u64) -> u64 {
+    transition expiry != 0u64 && runtime::time::reached(deadline, expiry) {
+        true -> (expiry)
+        _ -> (deadline)
+    }
+}
+machine combined(gate: &Gate, context: &mut Context, state: &State, interests: &mut [u64; 8], deadline: u64) -> CallReply reaches Kernel {
+    interests[4] = 2u64; interests[5] = context.owner.peer.bell.wait; interests[7] = context.owner.peer.receiver;
+    transition { _ -> (block wait(gate, context, state, interests, 4u64, deadline)) }
+}
+machine wait(gate: &Gate, context: &mut Context, state: &State, interests: &[u64; 8], count: u64 [0..=4], deadline: u64) -> CallReply reaches Kernel {
+    let status: u64 = block Kernel::wait(gate, interests, count, deadline);
+    transition status < count || status == kernel::TIMED_OUT || status == kernel::PEER_CLOSED {
+        true -> (block poll(gate, context, state))
+        _ -> block interrupted(gate, context, state, status)
+    }
+}
+machine interrupted(gate: &Gate, context: &mut Context, state: &State, code: u64) -> CallReply reaches Kernel {
+    transition context.owner.peer.fault == 0u64 {
+        true -> block detach(gate, context, state)
+        _ -> block failed(gate, context, code)
+    }
+    machine detach(gate: &Gate, context: &mut Context, state: &State) -> CallReply reaches Kernel {
+        block runtime::server::main::close(gate, &mut context.owner);
+        transition { _ -> (block poll(gate, context, state)) }
+    }
+}
+machine failed(gate: &Gate, context: &mut Context, code: u64) -> CallReply reaches Kernel {
+    let ignored: u64 = block close(gate, context);
+    CallReply::Failed { code: code }
+}
+machine close(gate: &Gate, context: &mut Context) -> u64 reaches Kernel {
+    transition context.pending_storage {
+        true -> block runtime::connection::main::close(gate, &mut context.storage.peer)
+        _ -> block runtime::connection::main::close(gate, &mut context.services.broker)
+    }
+}

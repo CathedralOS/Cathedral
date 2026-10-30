@@ -73,7 +73,10 @@ borrow. Counts are checked Omega ranges. Allocation, mapping, release, yield, re
 and their callers acknowledge it. Scalar names alone grant no authority.
 
 [storage/main.omg](storage/main.omg) retains a child-local binding revision and
-realm, encoding scoped requests with the existing end-to-end deadline. It
+realm, encoding scoped requests with the existing end-to-end deadline. The
+[reference timing contract](../../contracts/reference/storage/timing.omg) gives
+clients 2,400 ticks while the root caps provider work at 1,200, leaving room for
+a failure reply to return without retiring every nested connection. It
 does not choose objects, schemas, retries or application save policy.
 
 [memory/object.omg](memory/object.omg) creates bounded immutable backing from
@@ -99,11 +102,11 @@ and failure; abandonment explicitly releases it. This is the same funded page
 mechanism, not a second allocator or a new way to bypass memory grants.
 
 This small platform runtime replaces the Rust app host for the installed
-Background, Colors and Notes. It has no general allocator.
+chooser, Background, Colors and Notes. It has no general allocator.
 Owner-control transport works; the app owns control policy and its event loop.
 In particular, copied IPC is the
 setup/grant mechanism; it must not become a fallback for the desktop's shared
-service protocol. The chooser and the matrix still use their Rust hosts.
+service protocol. The matrix still uses its Rust host.
 The runtime has only been qualified on x86-64.
 
 The [process witness](../../../distribution/lab/user-entry/README.md) exercises

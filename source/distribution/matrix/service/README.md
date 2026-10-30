@@ -49,7 +49,11 @@ arenas, `progress.rs` for retained storage completion, `wait.rs` for actual wait
 rights/deadlines, and `events.rs` for event movement. The large server and child
 records occupy process-owned arenas, alongside the existing world/parent arenas;
 returning them together by value would duplicate them across the guarded stack.
-The stack allowance and kernel are unchanged.
+The stack allowance and kernel are unchanged. Brokered nested matrices finish
+the independently supplied owner-control handshake before opening parent services.
+Otherwise ancestor service waits can consume the control setup window, leaving a
+rendering matrix whose loss/close connection never established. Positional lab
+owners still select their protocol when their first request arrives.
 
 The `Request` operation continues into [Omega request routing](requests/README.md).
 Owner child-control dispatch and launch target/role choices also execute in Omega.

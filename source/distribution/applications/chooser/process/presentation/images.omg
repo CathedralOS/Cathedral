@@ -1,0 +1,83 @@
+module presentation::images;
+// Ordered app-owned chunks -> sealed immutable backing -> request custody.
+use main::Context;
+use app::operations::Exchange;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::memory::staging;
+use runtime::memory::staging::Buffer;
+use runtime::memory::staging::Allocation;
+use runtime::memory::object::Creation;
+use memory::payload;
+public machine stage(gate: &Gate, context: &mut Context, exchange: &Exchange) -> u64 reaches Kernel blocks; invokes Kernel; {
+    transition exchange.frame[0] > 0u64 && exchange.frame[0] <= 65536u64
+        && exchange.payload_bytes > 0u64 && exchange.payload_bytes <= 4080u64 {
+        true -> block prepare(gate, context, exchange)
+        _ -> block failed(gate, context, kernel::INVALID_ARGUMENT)
+    }
+}
+machine prepare(gate: &Gate, context: &mut Context, exchange: &Exchange) -> u64 reaches Kernel {
+    transition exchange.frame[1] == 0u64 {
+        true -> block allocate(gate, context, exchange)
+        _ -> block append(gate, context, exchange)
+    }
+}
+machine allocate(gate: &Gate, context: &mut Context, exchange: &Exchange) -> u64 reaches Kernel {
+    block discard(gate, context);
+    transition exchange.frame[0] > 0u64 && exchange.frame[0] <= 65536u64 {
+        true -> block create(gate, context, exchange)
+        _ -> (kernel::INVALID_ARGUMENT)
+    }
+    machine create(gate: &Gate, context: &mut Context, exchange: &Exchange) -> u64 reaches Kernel requires exchange.frame[0] > 0u64 && exchange.frame[0] <= 65536u64 {
+        let result: Allocation = block staging::allocate(gate, exchange.frame[0]);
+        transition result {
+            Allocation::Ready { buffer } -> block installed(gate, context, exchange, buffer)
+            Allocation::Failed { code } -> (code)
+        }
+    }
+    machine installed(gate: &Gate, context: &mut Context, exchange: &Exchange, buffer: Buffer) -> u64 reaches Kernel {
+        context.image = buffer;
+        transition { _ -> block append(gate, context, exchange) }
+    }
+}
+machine append(gate: &Gate, context: &mut Context, exchange: &Exchange) -> u64 reaches Kernel {
+    transition context.image.handle != 0u64 && context.ready_image == 0u64
+        && context.image.bytes == exchange.frame[0] && context.image_filled == exchange.frame[1] {
+        true -> block fill(gate, context, exchange)
+        _ -> block failed(gate, context, kernel::INVALID_ARGUMENT)
+    }
+}
+machine fill(gate: &Gate, context: &mut Context, exchange: &Exchange) -> u64 reaches Kernel {
+    let status: u64 = block memory::payload::write(gate, &context.image, exchange.frame[1], exchange);
+    transition status == 0u64 && context.image_filled <= 65536u64 && exchange.payload_bytes <= 4080u64 {
+        true -> block progress(gate, context, exchange)
+        _ -> block failed(gate, context, status)
+    }
+    machine progress(gate: &Gate, context: &mut Context, exchange: &Exchange) -> u64 reaches Kernel requires context.image_filled <= 65536u64 && exchange.payload_bytes <= 4080u64 {
+        context.image_filled = context.image_filled + exchange.payload_bytes;
+        transition context.image_filled == context.image.bytes {
+            true -> block seal(gate, context)
+            _ -> (0u64)
+        }
+    }
+}
+machine seal(gate: &Gate, context: &mut Context) -> u64 reaches Kernel {
+    let result: Creation = block staging::seal(gate, &mut context.image);
+    context.image_filled = 0u64;
+    transition result {
+        Creation::Ready { object } -> ready(context, object.handle)
+        Creation::Failed { code } -> (code)
+    }
+    machine ready(context: &mut Context, handle: u64) -> u64 { context.ready_image = handle; 0u64 }
+}
+public machine discard(gate: &Gate, context: &mut Context) reaches Kernel blocks; invokes Kernel; {
+    let partial: u64 = block staging::release(gate, &mut context.image);
+    let ready: u64 = block Kernel::memory_release(gate, context.ready_image);
+    context.ready_image = 0u64; context.image_filled = 0u64;
+}
+machine failed(gate: &Gate, context: &mut Context, code: u64) -> u64 reaches Kernel {
+    block discard(gate, context);
+    code
+}
+machine done() {}

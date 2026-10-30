@@ -1,13 +1,14 @@
 # Rust implementation map
 
-Installed [Colors](../source/distribution/applications/colors/README.md) and
-[Notes](../source/distribution/applications/notes/README.md) own their input,
-persistence, close policy and presentation in Omega. Their Rust entries delegate
-to the shared [platform host](platform/libraries/omega-app/README.md) for scoped
-transport and bounded attachment custody. Notes exercises incoming bulk objects
-and staged outgoing bitmaps. Normal F5, Split and nested desktops use these same
-programs; explicit fault/probe features retain the Rust Notes fixture. The native
-bridge is still x86-64 and synchronous, not the final Omega application ABI.
+Installed [chooser](../source/distribution/applications/chooser/README.md),
+[Background](../source/distribution/applications/background/README.md),
+[Colors](../source/distribution/applications/colors/README.md) and
+[Notes](../source/distribution/applications/notes/README.md) are standalone Omega
+processes. They use the common Omega user runtime for scoped service transport,
+owner control and bounded attachment custody. F5, Split and nested desktops
+select these executables; explicit probes retain the Rust hosts. The native
+adapter is x86-64. The kernel, matrix host and service implementations remain
+Rust, with distribution policy increasingly supplied by Omega components.
 
 [Omega UI](../tools/omega-ui/README.md) is a reusable userspace library. Apps
 compose their own rows, columns and controls through a checked frame API; native

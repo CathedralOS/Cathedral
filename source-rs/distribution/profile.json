@@ -141,7 +141,7 @@
     "programs": [
       {
         "package": "cathedral-chooser",
-        "entry": "distribution/applications/chooser/main.rs",
+        "entry": "distribution/applications/chooser/native/main.omg",
         "target": "x86_64-unknown-none",
         "display_title": "LAUNCHER"
       },
@@ -157,7 +157,7 @@
       },
       {
         "package": "cathedral-chooser",
-        "entry": "distribution/applications/chooser/main.rs",
+        "entry": "distribution/applications/chooser/native/main.omg",
         "target": "x86_64-unknown-none",
         "inside": 2,
         "display_title": "LAUNCHER"
@@ -225,7 +225,7 @@
       {
         "path": "Nested/Login",
         "package": "cathedral-chooser",
-        "entry": "distribution/applications/chooser/main.rs",
+        "entry": "distribution/applications/chooser/native/main.omg",
         "target": "x86_64-unknown-none",
         "display_title": "LAUNCHER"
       },
@@ -243,7 +243,7 @@
       {
         "path": "Nested/Users/Template/Desktop",
         "package": "cathedral-chooser",
-        "entry": "distribution/applications/chooser/main.rs",
+        "entry": "distribution/applications/chooser/native/main.omg",
         "target": "x86_64-unknown-none",
         "display_title": "LAUNCHER"
       },

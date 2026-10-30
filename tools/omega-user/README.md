@@ -14,30 +14,29 @@ python tools/omega-user/connection_test.py --compiler path/to/new/omega.exe
 python tools/omega-user/background_test.py --compiler path/to/new/omega.exe
 python tools/omega-user/colors_test.py --compiler path/to/new/omega.exe
 python tools/omega-user/notes_test.py --compiler path/to/new/omega.exe
+python tools/omega-user/chooser_test.py --compiler path/to/new/omega.exe
 python -m unittest discover -s tools/omega-user -p "test_*.py"
 ```
 
 The standalone producer is source
-`a88a8b63956f99da3f6a1338d6e9d9bf2badc61d`, release opt-level 3, SHA-256
-`91a48585ca9626deeb784235c8ed1fe9f5367167016856354d1ec652632480e1`.
-It is retained in Omega's `work/cathedral-background-runtime` history and
-[PR #846](https://github.com/CathedralOS/Omega/pull/846), published as
-`7516f0970de014e3c13009bf67d9c69f087d4671`. Reproduce the tested executable with
-`cargo build --locked --release -p omega` in an isolated worktree at that exact
-source, following Omega's build-slot instructions. The local
-`build/omega-user/compiler/omega.exe` is the saved tested executable with its
-source/hash receipt beside it. It passes standalone Background's owner-control
-and desktop/cold-reboot checks, runtime connection and primitive witnesses, plus
-the focused compiler regressions. Nested and
-startup-failure evidence from the earlier `8ae60290` producer is recorded separately
-in TASKS_RUST.md; that executable remains at `compiler-background-baseline/`.
-Do not substitute a newer compiler without affected qualification.
-The preceding `66f71d0e` owner-control producer remains locally preserved at
-`build/omega-user/compiler-owner-baseline/`; its history is in TASKS_RUST.md.
+`92aec21e421bb10fe28012c521cf34b3813088e5`, release opt-level 3, SHA-256
+`8ec9d529695afcce984dc8228dd561f019937fa8ae1843385f0c6baf2f766b35`.
+Build `cargo build --locked --release -p omega` in an isolated worktree at that
+exact source, following Omega's build-slot instructions. The local
+`build/omega-user/compiler/omega.exe` is the saved executable with its
+source/hash/build receipt beside it. Qualification and artifact paths are
+recorded in TASKS_RUST.md. This compiler includes upstream checking fixes that
+allow the chooser to compile within the existing bound, without changing its
+font/raster implementation or manually restating app contracts.
+
+The preceding `a88a8b63956f99da3f6a1338d6e9d9bf2badc61d` producer is preserved
+locally at `build/omega-user/compiler-chooser-baseline/`. Earlier runtime and
+compiler evidence remains in TASKS_RUST.md. Do not substitute a newer compiler
+without affected qualification.
 Keep this compiler separate from the
 [legacy desktop app producer](../omega-component/README.md) and the migrated
-[UI library producer](../omega-ui/README.md#build). Desktop app source still
-contains `state`; that broader source migration remains unfinished.
+[UI library producer](../omega-ui/README.md#build). Some retained component source still contains `state`; that broader migration
+remains unfinished.
 `--compiler` explicitly chooses the producer for these standalone runs.
 Compilation is capped at 4 GiB, five minutes and one checking worker by default.
 Component and UI builds share one compiler slot across Cargo processes.
@@ -66,8 +65,8 @@ The component compiler and native linker have separate receipts. The linked
 receipt embeds the component receipt and hashes the entry adapter, linker
 layout, component and builder. Publication rejects input changes during linking.
 There is no dynamic loader, runtime relocation, writable load or additional
-image-page allowance. The ordinary F5 profile selects Background's, Colors' and Notes'
-`distribution/applications/{background,colors,notes}/native/main.omg` entries. The mixed-producer
+image-page allowance. The ordinary F5 profile selects the chooser's, Background's, Colors' and Notes'
+`distribution/applications/{chooser,background,colors,notes}/native/main.omg` entries. The mixed-producer
 harness uses `OMEGA_USER_BIN`, or the saved standalone compiler above, for that
 entry. Rust entries retain their normal Cargo build.
 
@@ -76,7 +75,7 @@ An optional `process.json` beside the native consumer declares `imports`
 [manifest.py](manifest.py) encodes the platform's existing funded import record;
 the linker places it first in the read-only load, and packaging verifies that
 position. This requests launch authority from the owner; it grants none itself.
-All three installed standalone apps supply such a record.
+All four installed standalone apps supply such a record.
 
 The current compiler rejects a raw `int` inside checked user assembly as a
 hidden control transfer. The native leaves use Omega's existing declared
@@ -105,3 +104,11 @@ published image must refund pages, channels and notifications. The fixture
 funds twenty private pages and four reader pages for Notes: the text image needs
 twelve private pages, and three shared mailboxes plus a document need four reader
 pages. These fixture grants do not alter kernel limits or default matrix grants.
+
+`chooser_test.py` runs the actual login/taskbar process against a controlled
+provider. It checks 51-row directory pages and continuation, rejects malformed
+metadata/order/count, answers owner HEALTH/LOSS during a held listing, validates
+image bytes/padding, and observes refresh without another notification. Cancelling
+the process refunds its pages, channels and notifications. Full desktop and
+settings/recovery tests cover user copy, app launch, saved configuration and
+nested login against the ordinary services.

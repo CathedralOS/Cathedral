@@ -260,10 +260,9 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     assert log.count('Cathedral input: startup control retired') == 1, log[-2000:]
     if rust_chooser:
         assert log.count('Cathedral chooser probe: shared interaction and storage ready') >= 2, log[-2000:]
-    else:
-        assert 'Cathedral Omega host: shared storage ready' in log, log[-2000:]
-        assert 'Cathedral Omega host: shared interaction broker ready' in log, log[-2000:]
-        assert 'Cathedral Omega host: notification input wake ready' in log, log[-2000:]
+    # The copied user and rendered catalogue above prove the installed chooser's
+    # storage/interaction path. Do not require traces from the retired Rust host;
+    # the process fixture separately verifies notification and owner progress.
     scan(lambda _width, _pixels: 'Cathedral background: shared interaction ready; storage denied'
          in (output/'serial.log').read_text(errors='replace'), 'shared background with storage denied')
     scan(lambda _width, _pixels: (output/'serial.log').read_text(errors='replace').count(
@@ -428,7 +427,7 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
         def chooser_variant(value):
             if isinstance(value, dict):
                 if value.get('package') == 'cathedral-chooser':
-                    value.setdefault('features', []).append('rust-probes')
+                    probe_programs.chooser(value, 'rust-probes')
                 for child in value.values():
                     chooser_variant(child)
             elif isinstance(value, list):

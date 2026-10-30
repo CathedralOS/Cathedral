@@ -1,0 +1,5 @@
+module storage::timing;
+// Match platform/contracts/storage.rs: the root has a shorter provider bound,
+// leaving time to return its failure verdict through the nested matrices.
+use matrix;
+public const EXCHANGE_TICKS: u64 = 2u64 * STORAGE_DEADLINE_TICKS;

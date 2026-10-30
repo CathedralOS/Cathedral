@@ -9,48 +9,113 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-### Chooser: isolate the app from its process host
+### Standalone chooser: login and taskbar
 
-The chooser app now runs on named `State`, `Phase`, `Exchange` and `Command`
-values. The legacy `ChooserApp` boundary, numeric host opcodes and 4,096-word
-packet live only in `chooser/bridge/component/`. `app/main.omg` is a one-step
-entrance into the session dispatcher. Explicit module entrances/imports replace
-the former implicit routing. The app payload is one 4,080-byte directory page;
-large images use contiguous chunks of that size into the same at-most-64-KiB
-backing. The retained Rust host's nine-page reservation is unchanged.
+Normal F5 now selects `source/distribution/applications/chooser/native/main.omg`
+for the login picker and desktop taskbar, including nested copies. Background,
+Colors and Notes also run as standalone Omega processes. The kernel, matrix host
+and storage/input/compositor services remain Rust; existing matrix policy is Omega.
 
-Nested `state` declarations in this app, its chooser policy, matrix configuration
-codec and service-import decoder use `machine`. Small local evaluations preserve
-borrow ordering; the digit-count helper now expresses its four cases directly.
-No new owner decision, syscall, resource grant or composition policy is involved.
+Follow `chooser/process/main.omg` through startup, application dispatch and
+cleanup. The named app `State`, `Phase`, `Exchange` and `Command` remain unchanged.
+Service exchange continues owner HEALTH/LOSS while storage or presentation waits;
+directory replies use the shared canonical metadata/ordered-row validators.
+Images stage contiguous chunks of at most 4,080 bytes into a sealed backing of
+at most 64 KiB. The existing grants suffice; no kernel limit or storage schema
+changes. Legacy Rust bridges remain for compiled model tests and explicit probes.
+The old font/table experiments are removed; the tested app raster is unchanged.
 
-**Standalone is not promoted.** A process/fixture prototype is preserved in
-`C:/Projects/Cathedral-chooser-native` on local branch `work/chooser-native` at `dcce600e`.
-Its README records the unqualified work and compiler investigation. It must not
-replace the installed chooser until actual-process, settings/recovery, desktop
-and nested tests pass. Background, Colors and Notes remain standalone Omega;
-the chooser still uses the Rust process host.
+The saved standalone compiler is exact Omega source
+`92aec21e421bb10fe28012c521cf34b3813088e5`, release opt-level 3, SHA-256
+`8ec9d529695afcce984dc8228dd561f019937fa8ae1843385f0c6baf2f766b35`.
+It was built in Omega's isolated `cathedral-chooser-check` worktree, without
+compiler source edits. Upstream checking fixes resolve the earlier bounded
+chooser check failure. The chooser fits 86/240 image pages. The normal legacy
+component and UI producers remain separate.
 
-The qualified compiler remains `build/omega-user/compiler/omega.exe`, source
-`a88a8b63956f99da3f6a1338d6e9d9bf2badc61d`. The standalone candidate hit the
-existing 300-second/4-GiB build bound without a diagnostic. Checking its protocol
-and matrix-service dependencies alone completed in seconds. An app-only sample
-spent about 146 CPU seconds in nested numeric-observation/normal-return analysis
-before debugger inspection; that inspected run's wall time is not a clean
-benchmark. A font/label data-table experiment also stalled in checking and was stopped. These observations locate checking work;
-they do not establish a compiler fix or justify restating app contracts by hand.
-The table/inline-raster experiments remain only on the prototype branch.
+Recovery exposed an existing Omega runtime drift: it sent 1,200-tick client
+budgets, now equal to the root's provider budget, so both nested and root links
+retired together before regrant. `storage/timing.omg` now mirrors the Rust
+contract's 2,400-tick end-to-end budget, preserving the shorter provider bound.
+The actual chooser fixture compares emitted deadlines against the Rust constants.
+This changes no deadline policy; it makes the Omega encoding conform to it.
 
-Before syntax migration, the refactored bridge passed ordinary F5 and cold reopen
-at `build/boot-harness-rs/desktop/20261030T161158101039Z/` (2,069-record oracle).
-The final all-machine sources pass 139 affected host tests: 20 compiled chooser,
-97 matrix and 22 platform-contract tests. They ran with an isolated Cargo target
-directory because the editor held the ordinary artifact lock. Source layout
-passes at 106 Omega / 154 Rust edges; `git diff --check` passes. The actual default F5 desktop and cold reopen pass at
-`build/boot-harness-rs/desktop/20261030T165758097363Z/`, including three Notes
-instances, independent drafts, protected close, slot reuse, Colors and the
-2,077-record storage oracle. The retained chooser is 60/240 image pages. No
-standalone-chooser, ARM64 or full harness-suite pass is claimed here.
+Qualification evidence (candidate paths are relative to
+`C:/Projects/Cathedral-chooser-native`):
+
+- Actual chooser process: `build/omega-user/chooser-control/20261030T194422780602Z/`:
+  full/continued directory pages; malformed UTF-8, padding, duplicate IDs and
+  count; owner progress during a held call; images; periodic refresh; refunds;
+  and corrected storage deadline separation.
+- Full desktop and cold reopen before the timing correction:
+  `build/boot-harness-rs/desktop/20261030T193446800003Z/`, 2,129-record oracle.
+  Three Notes instances, independent drafts, protected close, reuse and Colors.
+- Settings cancel/live layout/cold persistence/independent user defaults:
+  `build/boot-harness-rs/settings/20261030T193629019995Z/`.
+- The failed lost-save recovery is retained at
+  `build/boot-harness-rs/settings/20261030T193709435382Z/`.
+- Corrected lost-save recovery and cold reopen pass at
+  `build/boot-harness-rs/settings/20261030T194505244919Z/`, with one committed
+  settings write and readback reconciliation.
+- Four-level pointer stress reached all desktops and repeated subtree reopening,
+  but final close refused at `build/boot-harness-rs/desktop/20261030T195516697622Z/`.
+  A matrix owner-control handshake had expired during startup. The retained Rust
+  host now establishes brokered owner control before parent-service setup, which
+  can park through ancestors; the nested oracle checks every handshake. Its
+  corrected run establishes all nine owner links, but still hit the separately
+  recorded 100-tick recursive loss-survey timeout on clean close:
+  `build/boot-harness-rs/desktop/20261030T200910634449Z/`. No timeout was enlarged
+  and uncertainty still refuses close. The matched retained-chooser stress run
+  also fails the first clean collapse with recursive `TIMED_OUT` replies at
+  `build/boot-harness-rs/desktop/20261030T201547076629Z/`; all owner handshakes
+  succeeded there too. This reproduces the pre-existing stress limitation without
+  the standalone chooser; neither run panicked or killed the subtree.
+  Ordinary four-level fresh/cold qualification passes at
+  `build/boot-harness-rs/desktop/20261030T201957335198Z/`: three trips through
+  four levels per boot, saved Notes/Colors, protected close, reclamation and
+  confinement all pass.
+- Corrected shared runtime: Colors passes at
+  `build/omega-user/colors-control/20261030T201532925939Z/`; Notes passes at
+  `build/omega-user/notes-control/20261030T201539556880Z/`.
+- All 139 affected host tests pass (20 chooser, 97 matrix, 22 contracts).
+  Layout passes at 111 Omega / 154 Rust edges; all Rust formatting, seven
+  Python packager tests, chooser fixture clippy and matrix desktop-host clippy
+  checks pass.
+- Main checkout, with normal saved compiler/UI paths and no producer overrides:
+  `C:/Projects/Cathedral/build/boot-harness-rs/desktop/20261030T202911664027Z/`.
+  Default F5 composition, copied user, three Notes instances, protected close,
+  Colors and cold persistence pass; the host oracle verifies 2,127 records.
+
+The new compiler and build receipt are installed in the main checkout. The
+preceding `a88a8b63` binary/receipt are preserved at
+`build/omega-user/compiler-chooser-baseline/`. Main's initial native review accepts
+the same 32 Gate declarations and 32 external supplies already inspected and
+qualified in the candidate; no new native authority or kernel grant was added.
+
+The desktop oracle uses visible user copy/catalogue/interaction behavior and the
+independent real-process custody/control fixture, without retired Rust chooser
+host traces. Explicit fault tests select the retained Rust probe entry; normal
+builds never silently substitute that host. Launcher recovery verifies the
+surviving editor's unsaved text instead of an unavailable Rust Notes load marker.
+Main checkout runtime startup/IPC/parking passes at
+`build/omega-user/tests/20261030T204002501852Z/`; Omega/Rust shared connections
+pass at `build/omega-user/connections/20261030T204008978404Z/`. The unmodified F5
+build command (`run.py --release --build-only`) also passes and prepares
+`build/boot-harness-rs/interactive/esp/EFI/BOOT/BOOTX64.EFI`.
+Launcher recovery also passes on both boots at
+`build/boot-harness-rs/desktop/20261030T204158767323Z/`: a held recovery read
+allows sibling input, one ticketed restart restores the launcher, the native
+editor retains its unsaved draft, then save and subtree cleanup complete.
+These are the verified scenarios; the full historical fixture suite was not rerun.
+
+Follow-up: the sustained pointer-stress close timeout above remains unresolved.
+Several older selection/provider/recovery fixtures also still assert Rust-only
+`note-loaded` trace counts; audit their oracles before claiming the entire
+historical fixture suite passes with standalone Notes. Forced render probes
+that explicitly select Rust Notes may retain their own trace checks.
+
+The sections below retain earlier migration checkpoints; compiler and installed
+program status above take precedence over their historical snapshots.
 
 ### Standalone Notes: editor, storage and presentation
 

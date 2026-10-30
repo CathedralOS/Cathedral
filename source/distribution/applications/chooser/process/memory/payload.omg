@@ -1,0 +1,57 @@
+module memory::payload;
+use app::operations::Exchange;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::memory::staging;
+use runtime::memory::staging::Buffer;
+use runtime::memory::staging::Allocation;
+use runtime::memory::object::Creation;
+public machine create(gate: &Gate, exchange: &Exchange) -> Creation reaches Kernel blocks; invokes Kernel; {
+    transition exchange.payload_bytes > 0u64 && exchange.payload_bytes <= 4080u64 {
+        true -> block allocate(gate, exchange)
+        _ -> (Creation::Failed { code: kernel::INVALID_ARGUMENT })
+    }
+    machine allocate(gate: &Gate, exchange: &Exchange) -> Creation reaches Kernel requires exchange.payload_bytes > 0u64 && exchange.payload_bytes <= 4080u64 {
+        let result: Allocation = block staging::allocate(gate, exchange.payload_bytes);
+        transition result {
+            Allocation::Ready { buffer } -> block fill(gate, exchange, buffer)
+            Allocation::Failed { code } -> (Creation::Failed { code: code })
+        }
+    }
+    machine fill(gate: &Gate, exchange: &Exchange, buffer: Buffer) -> Creation reaches Kernel {
+        let mut backing: Buffer = buffer;
+        let status: u64 = block write(gate, &backing, 0u64, exchange);
+        transition status == 0u64 {
+            true -> block staging::seal(gate, &mut backing)
+            _ -> block failed(gate, &mut backing, status)
+        }
+    }
+    machine failed(gate: &Gate, buffer: &mut Buffer, code: u64) -> Creation reaches Kernel {
+        let ignored: u64 = block staging::release(gate, buffer);
+        Creation::Failed { code: code }
+    }
+}
+// This scratch frame ends before a service wait can dispatch owner control.
+public machine write(gate: &Gate, buffer: &Buffer, offset: u64, exchange: &Exchange) -> u64 reaches Kernel blocks; invokes Kernel; {
+    transition exchange.payload_bytes > 0u64 && exchange.payload_bytes <= 4080u64 {
+        true -> block bounded(gate, buffer, offset, exchange)
+        _ -> (kernel::INVALID_ARGUMENT)
+    }
+    machine bounded(gate: &Gate, buffer: &Buffer, offset: u64, exchange: &Exchange) -> u64 reaches Kernel requires exchange.payload_bytes > 0u64 && exchange.payload_bytes <= 4080u64 {
+        let mut words: [u64; 1024];
+        pack(&mut words, exchange, 0u64);
+        block staging::write(gate, buffer, offset, &words, exchange.payload_bytes)
+    }
+}
+machine pack(words: &mut [u64; 1024], exchange: &Exchange, i: u64) {
+    transition i < 510u64 && i * 8u64 < exchange.payload_bytes {
+        true -> word(words, exchange, i)
+        _ -> done()
+    }
+    machine word(words: &mut [u64; 1024], exchange: &Exchange, i: u64) requires i < 510u64 {
+        words[i] = exchange.payload[i];
+        transition { _ -> pack(words, exchange, i + 1u64) }
+    }
+}
+machine done() {}

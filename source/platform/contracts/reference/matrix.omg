@@ -20,6 +20,7 @@ public const MANAGED_TASK: u64 = 18u64;
 public const TERMINATE_TASK: u64 = 19u64;
 public const STORAGE_INFO: u64 = 12u64;
 public const STORAGE_BASE: u64 = 256u64;
+public const STORAGE_DEADLINE_TICKS: u64 = 1200u64;
 public const STORAGE_GRANT: u64 = 113u64;
 public const STORAGE_REVOKE: u64 = 114u64;
 public const STORAGE_STATUS: u64 = 115u64;
