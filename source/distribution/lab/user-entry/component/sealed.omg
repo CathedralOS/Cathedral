@@ -23,6 +23,7 @@ machine send(gate: &Gate, binding: &mut Services, clock: u64, object: Object) ->
     block runtime::services::main::close(gate, binding);
     transition reply {
         CallReply::Received { frame, notification } -> notification_reply(gate, frame, notification, refused, released)
+        CallReply::Object { frame, object } -> block object_reply(gate, object)
         CallReply::Endpoint { frame, endpoint } -> endpoint_reply(gate, endpoint)
         CallReply::Failed { code } -> (code)
     }
@@ -37,5 +38,10 @@ machine notification_reply(gate: &Gate, frame: runtime::connection::main::Frame,
 }
 machine endpoint_reply(gate: &Gate, endpoint: u64) -> u64 reaches Kernel {
     let ignored: u64 = Kernel::close(gate, endpoint);
+    215u64
+}
+
+machine object_reply(gate: &Gate, object: u64) -> u64 reaches Kernel {
+    let ignored: u64 = block Kernel::memory_release(gate, object);
     215u64
 }

@@ -35,6 +35,7 @@ machine poll(gate: &Gate, peer: &mut Peer, clock: u64, mode: u64, deadline: u64)
 machine polled(gate: &Gate, peer: &mut Peer, clock: u64, mode: u64, deadline: u64, now: u64) -> u64 reaches Kernel {
     let reply: Reply = block runtime::connection::main::poll(gate, peer, now);
     transition reply {
+        Reply::Object { frame, object } -> block unexpected_object(gate, peer, object)
         Reply::Endpoint { frame, endpoint } -> block unexpected(gate, peer, endpoint)
         Reply::Failed { code } -> (block refused(gate, peer, mode, code))
         Reply::Complete { frame, notification } -> (block delivered(gate, peer, mode, frame, notification))
@@ -86,4 +87,9 @@ machine release(gate: &Gate, peer: &mut Peer, mode: u64, frame: runtime::connect
 machine finish(gate: &Gate, peer: &mut Peer, result: u64) -> u64 reaches Kernel {
     let ignored: u64 = block runtime::connection::main::close(gate, peer);
     result
+}
+
+machine unexpected_object(gate: &Gate, peer: &mut Peer, object: u64) -> u64 reaches Kernel {
+    let ignored: u64 = block Kernel::memory_release(gate, object);
+    block finish(gate, peer, 184u64)
 }

@@ -40,6 +40,7 @@ machine owner(gate: &Gate, context: &mut Context, state: &State, now: u64) -> Ca
     let reply: Reply = block receive(gate, context, now);
     transition reply {
         Reply::Complete { frame, notification } -> (CallReply::Received { frame: frame, notification: notification })
+        Reply::Object { frame, object } -> (CallReply::Object { frame: frame, object: object })
         Reply::Endpoint { frame, endpoint } -> (CallReply::Endpoint { frame: frame, endpoint: endpoint })
         Reply::Failed { code } -> (CallReply::Failed { code: code })
         Reply::Pending -> block pending(gate, context, state, now)

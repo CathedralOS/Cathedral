@@ -36,11 +36,12 @@ public machine release(gate: &Gate, peer: &mut Peer) reaches Kernel blocks; invo
     drop_notification(gate, signal);
     drop_notification(gate, control);
     drop_notification(gate, remote);
-    release_grant(gate, kind, grant);
+    block release_grant(gate, kind, grant);
 }
-public machine release_grant(gate: &Gate, kind: u64, handle: u64) reaches Kernel invokes Kernel; {
-    transition kind == 2u64 {
-        true -> close_endpoint(gate, handle)
+public machine release_grant(gate: &Gate, kind: u64, handle: u64) reaches Kernel blocks; invokes Kernel; {
+    transition {
+        kind == 1u64 -> block release_memory(gate, handle)
+        kind == 2u64 -> close_endpoint(gate, handle)
         _ -> drop_notification(gate, handle)
     }
 }

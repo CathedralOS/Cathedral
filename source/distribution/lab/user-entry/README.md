@@ -82,7 +82,12 @@ second-part refusal with half-pair cleanup, a wrong notification grant, corrupt
 reserved fields and a missing grant. `component/sealed.omg` sends a six-byte
 immutable object over the shared connection; the Rust receiver checks its exact
 payload and zero tail, and the sender checks that sealed backing refuses writes.
-The parent checks full resource refunds after each case. Together these make
-25 connection cases. The connection fixture grants the client two private pages
-and the server two reader pages to cover the mailbox and one sealed object;
+`component/objects.omg` receives an immutable record after the producer drops
+its source right and reads it after closing the connection. It checks exact data,
+page-end and overflow bounds, preserved output tail, wrong-kind and expired
+handles, and rejected writes. Three additional cases ensure plain services,
+interaction acquisition and endpoint acquisition reject and release unexpected
+objects. The parent checks full resource refunds after each case. Together these
+make 29 connection cases. The connection fixture grants each process two private
+pages and two reader pages to cover the mailbox and one sealed object;
 this does not change kernel limits or the primitive runner above.

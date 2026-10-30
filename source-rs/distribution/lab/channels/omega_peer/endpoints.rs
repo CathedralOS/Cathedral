@@ -33,6 +33,33 @@ pub(super) fn serve(mode: u64, environment: Environment) -> u64 {
         match server.next_event().unwrap() {
             Event::Request(request) => {
                 let words = matrix::decode(&request.bytes[..request.len]).unwrap();
+                if mode >= 136 {
+                    assert_eq!(calls, 0);
+                    calls += 1;
+                    let expected = match mode {
+                        138 => services::request(imports::INTERACTION, 1, 1, 0),
+                        139 => services::request(imports::STORAGE, 1, 1, 0),
+                        _ => [mode, 0, 0, 0, 0, 0, 0, 0],
+                    };
+                    assert_eq!(words, expected);
+                    let mut backing = cathedral_user_runtime::memory::Private::allocate(1).unwrap();
+                    for (i, byte) in backing.bytes_mut()[..244].iter_mut().enumerate() {
+                        *byte = i as u8;
+                    }
+                    backing.bytes_mut()[4088..]
+                        .copy_from_slice(&0x1122334455667788u64.to_le_bytes());
+                    let object = backing.freeze().unwrap();
+                    let reply = if mode >= 138 {
+                        [0, 1, 0, 0, 0, 0, 0, 0]
+                    } else {
+                        [0, 901, 17, 0, 244, 0, 0, 0]
+                    };
+                    server
+                        .reply_memory(&request, &matrix::encode(reply), &object)
+                        .unwrap();
+                    drop(object); // The accepted reader must retain this backing.
+                    continue;
+                }
                 assert!(calls < 2);
                 assert_eq!(words, services::request(imports::STORAGE, 1, 1, calls));
                 let part = calls as usize;

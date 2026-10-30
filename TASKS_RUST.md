@@ -9,6 +9,42 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
+### Notes migration: incoming immutable data
+
+The Omega runtime now accepts sealed-object replies and reads them through a
+bounded native boundary. Transport and memory access belong to the platform
+runtime; Notes will own record validation and editor behavior. Notes itself still uses
+its Rust host: this is the document-read prerequisite, not a completed app port.
+
+The connection witness passes all 29 cases at
+`build/omega-user/connections/20261030T051021367228Z/`. New cases read a document
+after its producer releases the source and the client closes the connection,
+check exact bytes, full-span bounds, expired and wrong-kind handles, reject writes,
+and reject unexpected objects in plain services and both acquisition paths.
+Every case returns channel, memory and notification budgets to its baseline.
+No kernel code, quota, storage schema or compiler source changed.
+
+Background control/idle passes at
+`build/omega-user/background-control/20261030T051712371015Z/`; Colors
+storage/images/control/idle passes at
+`build/omega-user/colors-control/20261030T051804439428Z/`. Both primitive clock
+variants pass at `build/omega-user/tests/20261030T051438267477Z/` (51/240 pages).
+The actual default F5 desktop and cold reopen pass at
+`build/boot-harness-rs/desktop/20261030T051832962650Z/`, with the 2,001-record
+host oracle. Installed outer/nested Background and Colors match their tested
+standalone ELFs after ordinary trimming/title packaging (38 and 68 pages).
+Seven tool tests, source layout, formatting and the affected Rust fixture's
+clippy checks pass. Nested pointer stress was not repeated for this change;
+the prior qualification and unresolved intermittent close occurrence remain below.
+
+Next, add bounded incremental construction for Notes' 46,080-byte text image.
+Do not retain a whole image on its 32 KiB process stack. Private writes must
+validate ownership and writable mode, including forged and retired handles;
+`MEMORY_ADDRESS` alone checks access, not write authority. Then replace Notes'
+Rust process host with an Omega event loop that services owner control while
+waiting, and qualify ordinary F5 save/reload/close and cold reopen. The existing
+Notes behavior/model and Rust tests remain the comparison oracle.
+
 ### Standalone Colors: process and storage
 
 Normal F5 now selects `source/distribution/applications/colors/native/` for
@@ -66,9 +102,9 @@ The retained hosted Colors model passes all fourteen tests, including bounded
 owner-query opportunities;
 the Rust host remains a comparison fixture. Seven standalone tool checks and
 source layout (100 Omega / 154 Rust edges), affected clippy features and format
-checks pass. The native adapter is x86-64 only, creates outgoing immutable objects
-up to 16 KiB, and does not yet receive
-sealed-object replies. Colors HEALTH currently supplies zero CPU time; that
+checks pass. The native adapter is x86-64 only and creates outgoing immutable objects
+up to 16 KiB. Incoming sealed replies were added in the Notes prerequisite above.
+Colors HEALTH currently supplies zero CPU time; that
 optional diagnostic call is not yet in the Omega runtime.
 
 The next useful migration is Notes: reuse the same process foundation and add

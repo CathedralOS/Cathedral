@@ -26,6 +26,7 @@ machine binding(gate: &Gate, context: &mut Context, state: &State, now: u64) -> 
     let reply: CallReply = block exchange::request(gate, context, state, true, &words, 0u64, words[7]);
     transition reply {
         CallReply::Received { frame, notification } -> block bound(gate, context, frame, notification)
+        CallReply::Object { frame, object } -> block object(gate, context, object)
         CallReply::Endpoint { frame, endpoint } -> block endpoint(gate, context, endpoint)
         CallReply::Failed { code } -> replies::failed(code)
     }
@@ -95,4 +96,9 @@ machine encode(command: Command) -> [u64; 8] {
         Command::Publish { object, revision, realm, bytes } -> ([3u64, object, revision, realm, 6u64, 0u64, 0u64, 0u64])
         _ -> ([0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64])
     }
+}
+
+machine object(gate: &Gate, context: &mut Context, object: u64) -> Completion reaches Kernel {
+    let ignored: u64 = block Kernel::memory_release(gate, object);
+    transition { _ -> block malformed(gate, context) }
 }

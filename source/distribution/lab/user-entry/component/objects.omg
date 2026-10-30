@@ -1,0 +1,111 @@
+module objects;
+// Sealed reply custody survives producer release and connection retirement.
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::services::main::Services;
+use runtime::services::main::Reply;
+use runtime::services::endpoints::Part;
+use runtime::connection::call::CallReply;
+use runtime::memory::object::Object;
+
+public machine check(gate: &Gate, binding: &mut Services, clock: u64, mode: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    transition {
+        mode == 138u64 -> block interaction(gate, binding, clock)
+        mode == 139u64 -> block endpoint(gate, binding, clock)
+        mode == 137u64 -> block plain(gate, binding, clock)
+        _ -> block receive(gate, binding, clock)
+    }
+}
+machine interaction(gate: &Gate, binding: &mut Services, clock: u64) -> u64 reaches Kernel {
+    let code: u64 = block runtime::services::main::interaction(gate, binding, clock, 1u64, 1u64);
+    refused(binding, code)
+}
+machine endpoint(gate: &Gate, binding: &mut Services, clock: u64) -> u64 reaches Kernel {
+    let reply: runtime::services::endpoints::Part = block runtime::services::endpoints::acquire(gate, binding, clock, 2u64, 0u64);
+    transition reply {
+        Part::Refused { code } -> refused(binding, code)
+        Part::Granted { endpoint } -> unexpected_endpoint(gate, endpoint)
+    }
+}
+machine plain(gate: &Gate, binding: &mut Services, clock: u64) -> u64 reaches Kernel {
+    let words: [u64; 8] = [137u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64];
+    let reply: runtime::services::main::Reply = block runtime::services::main::exchange(gate, binding, clock, &words);
+    transition reply {
+        Reply::Failed { code } -> refused(binding, code)
+        _ -> (220u64)
+    }
+}
+machine refused(binding: &Services, code: u64) -> u64 {
+    transition code == kernel::IO_ERROR && binding.broker.fault != 0u64 && binding.broker.sender == 0u64 {
+        true -> (0u64)
+        _ -> (221u64)
+    }
+}
+machine receive(gate: &Gate, binding: &mut Services, clock: u64) -> u64 reaches Kernel {
+    let mut probe: [u64; 8]; probe[0] = 123u64;
+    let wrong_kind: u64 = block Kernel::object_read(gate, binding.broker.reader.handle, 0u64, &mut probe, 1u64);
+    transition wrong_kind == kernel::DENIED && probe[0] == 123u64 {
+        true -> block exchange(gate, binding, clock)
+        _ -> (228u64)
+    }
+}
+machine exchange(gate: &Gate, binding: &mut Services, clock: u64) -> u64 reaches Kernel {
+    let words: [u64; 8] = [136u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64];
+    let reply: CallReply = block runtime::connection::call::exchange(gate, &mut binding.broker, clock, &words);
+    block runtime::services::main::close(gate, binding);
+    transition reply {
+        CallReply::Object { frame, object } -> block validate(gate, frame, Object { handle: object })
+        CallReply::Endpoint { frame, endpoint } -> unexpected_endpoint(gate, endpoint)
+        CallReply::Received { frame, notification } -> unexpected_notification(gate, notification)
+        CallReply::Failed { code } -> (code)
+    }
+}
+machine validate(gate: &Gate, frame: runtime::connection::main::Frame, object: Object) -> u64 reaches Kernel {
+    let status: u64 = block contents(gate, &object);
+    let released: u64 = block Kernel::memory_release(gate, object.handle);
+    let mut words: [u64; 8]; words[0] = 123u64;
+    let stale: u64 = block runtime::memory::object::read(gate, &object, 0u64, &mut words, 1u64);
+    transition frame.bytes == 64u64 && frame.payload[0] == 0u64 && frame.payload[2] == 17u64
+        && frame.payload[4] == 244u64 && status == 0u64 && released == 0u64
+        && stale >= kernel::ERROR_BASE && words[0] == 123u64 {
+        true -> (0u64)
+        _ -> (222u64)
+    }
+}
+machine contents(gate: &Gate, object: &Object) -> u64 reaches Kernel {
+    let mut words: [u64; 8]; words[1] = 123u64;
+    let head: u64 = block runtime::memory::object::read(gate, object, 0u64, &mut words, 1u64);
+    transition head == 0u64 && words[0] == 0x0706050403020100u64 && words[1] == 123u64 {
+        true -> block tail(gate, object)
+        _ -> (223u64)
+    }
+}
+machine tail(gate: &Gate, object: &Object) -> u64 reaches Kernel {
+    let mut words: [u64; 8];
+    let last: u64 = block runtime::memory::object::read(gate, object, 30u64, &mut words, 1u64);
+    transition last == 0u64 && words[0] == 0xf3f2f1f0u64 {
+        true -> block bounds(gate, object)
+        _ -> (224u64)
+    }
+}
+machine bounds(gate: &Gate, object: &Object) -> u64 reaches Kernel {
+    let mut words: [u64; 8];
+    let end: u64 = block runtime::memory::object::read(gate, object, 511u64, &mut words, 1u64);
+    let crossing: u64 = block runtime::memory::object::read(gate, object, 511u64, &mut words, 2u64);
+    let overflow: u64 = block runtime::memory::object::read(gate, object, 0xffffffffffffffffu64, &mut words, 1u64);
+    let write: u64 = block Kernel::shared_write(gate, object.handle, 0u64, &words, 1u64);
+    transition end == 0u64 && words[0] == 0x1122334455667788u64 && crossing == kernel::INVALID_ARGUMENT
+        && overflow == kernel::INVALID_ARGUMENT && write >= kernel::ERROR_BASE {
+        true -> (0u64)
+        _ -> (225u64)
+    }
+}
+machine unexpected_endpoint(gate: &Gate, endpoint: u64) -> u64 reaches Kernel {
+    let ignored: u64 = Kernel::close(gate, endpoint);
+    226u64
+}
+machine unexpected_notification(gate: &Gate, notification: u64) -> u64 reaches Kernel {
+    let ignored: u64 = Kernel::notify_drop(gate, notification);
+    227u64
+}

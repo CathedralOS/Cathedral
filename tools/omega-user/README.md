@@ -47,7 +47,8 @@ and the declarations in `source/platform/libraries/user-runtime/kernel.omg` and
 `arch/x86_64/gate.omg` against `entry.S`. The table includes process/IPC/clock calls plus shared-memory allocation,
 release, typed read-view transfer, bounded shared word access and notification
 creation, handoff, signal, wait, control and drop, plus lookup of installed owner
-endpoints, typed endpoint acceptance, and bounded immutable object creation/send.
+endpoints, typed endpoint acceptance, bounded immutable object creation/send, and sealed
+reply acceptance/read.
 The native leaves must preserve the declared buffers,
 range bounds, blocking and calling convention. Accept the inspected rows in the
 generated review document and resume with the same qualified compiler:

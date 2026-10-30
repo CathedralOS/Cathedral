@@ -17,6 +17,7 @@ public machine interaction(gate: &Gate, binding: &mut Services, clock: u64, mini
     let result: CallReply = block call::exchange(gate, &mut binding.broker, clock, &words);
     transition result {
         CallReply::Received { frame, notification } -> block received(gate, binding, frame, notification)
+        CallReply::Object { frame, object } -> block unexpected_object(gate, binding, object)
         CallReply::Endpoint { frame, endpoint } -> block unexpected_endpoint(gate, binding, endpoint)
         CallReply::Failed { code } -> (code)
     }
@@ -55,6 +56,12 @@ machine retained(binding: &mut Services, notification: u64) -> u64 {
 }
 machine malformed(gate: &Gate, binding: &mut Services, notification: u64) -> u64 reaches Kernel {
     let ignored: u64 = Kernel::notify_drop(gate, notification);
+    block services::main::close(gate, binding);
+    kernel::IO_ERROR
+}
+
+machine unexpected_object(gate: &Gate, binding: &mut Services, object: u64) -> u64 reaches Kernel {
+    let ignored: u64 = block Kernel::memory_release(gate, object);
     block services::main::close(gate, binding);
     kernel::IO_ERROR
 }

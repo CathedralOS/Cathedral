@@ -44,6 +44,7 @@ public data Reply {
     case Pending;
     case Complete(frame: Frame, notification: u64);
     case Endpoint(frame: Frame, endpoint: u64);
+    case Object(frame: Frame, object: u64);
     case Failed(code: u64);
 }
 

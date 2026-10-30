@@ -45,6 +45,7 @@ public machine exchange(gate: &Gate, binding: &mut Services, clock: u64, words: 
     let result: CallReply = block call::exchange(gate, &mut binding.broker, clock, words);
     transition result {
         CallReply::Received { frame, notification } -> block received(gate, binding, frame, notification)
+        CallReply::Object { frame, object } -> block unexpected_object(gate, binding, object)
         CallReply::Endpoint { frame, endpoint } -> block unexpected_endpoint(gate, binding, endpoint)
         CallReply::Failed { code } -> (Reply::Failed { code: code })
     }
@@ -74,4 +75,11 @@ public machine close(gate: &Gate, binding: &mut Services) reaches Kernel blocks;
     binding.wake = 0u64;
     let ignored: u64 = Kernel::notify_drop(gate, wake);
     let closed: u64 = block connection::main::close(gate, &mut binding.broker);
+}
+
+public machine unexpected_object(gate: &Gate, binding: &mut Services, object: u64) -> Reply
+    reaches Kernel blocks; invokes Kernel; {
+    let ignored: u64 = block Kernel::memory_release(gate, object);
+    block close(gate, binding);
+    Reply::Failed { code: kernel::IO_ERROR }
 }

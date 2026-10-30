@@ -24,3 +24,10 @@ public machine release(gate: &Gate, object: &mut Object) -> u64 reaches Kernel b
     object.handle = 0u64;
     block Kernel::memory_release(gate, handle)
 }
+
+// Copy a bounded snapshot from authenticated sealed backing. The output array
+// stays private; no reference into a peer's object escapes this operation.
+public machine read(gate: &Gate, object: &Object, index: u64, words: &mut [u64; 8], count: u64 [1..=8]) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    block Kernel::object_read(gate, object.handle, index, words, count)
+}

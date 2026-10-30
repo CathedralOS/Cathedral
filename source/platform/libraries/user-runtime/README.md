@@ -15,7 +15,7 @@ Descend into `setup.omg` for the existing Rust-compatible handshake,
 `mailbox.omg` for sequence/acknowledgement publication, `incoming.omg` for typed
 grant correlation and bounded partial replies, and `custody.omg` for release.
 Requests currently carry 64 bytes; replies carry up to 64 bytes and optionally
-one notification right or transferred endpoint. The typed reply distinguishes
+one notification right, transferred endpoint or sealed object reader. The typed reply distinguishes
 these authorities; unsupported attachment kinds retire the connection.
 Outgoing requests may delegate one sealed object after mailbox backpressure is
 checked. A failure after delegation retires the connection without replay.
@@ -81,9 +81,15 @@ one private buffer (up to 16 KiB). The adapter copies the declared bytes into
 fresh zeroed pages, seals and unmaps before returning a handle. It releases
 failed allocations, and exposes no raw mapping. The caller retains its source
 right through request completion; remote readers have independent lifetimes.
+Incoming sealed replies transfer explicit custody to the caller. `object::read`
+checks the authenticated handle, sealed mode and complete word span before
+copying up to eight words; it preserves the unused output tail. A reader remains
+valid after producer release or connection closure, until its own release.
+Plain service, interaction and endpoint acquisition paths reject an unexpected
+object and release it before retiring their connection.
 
 This small platform runtime replaces the Rust app host for the installed
-Background and Colors. It has no general allocator or incoming sealed-object reply support.
+Background and Colors. It has no general allocator or incremental immutable-object builder yet.
 Owner-control transport works; the app owns control policy and its event loop.
 In particular, copied IPC is the
 setup/grant mechanism; it must not become a fallback for the desktop's shared

@@ -17,6 +17,7 @@ public machine interaction(gate: &Gate, context: &mut Context, state: &State) ->
     let reply: CallReply = block exchange::request(gate, context, state, false, &words, 0u64, 0u64);
     transition reply {
         CallReply::Received { frame, notification } -> block runtime::services::acquire::received(gate, &mut context.services, frame, notification)
+        CallReply::Object { frame, object } -> block invalid_object(gate, context, object)
         CallReply::Endpoint { frame, endpoint } -> block invalid_endpoint(gate, context, endpoint)
         CallReply::Failed { code } -> (code)
     }
@@ -60,8 +61,15 @@ machine part(gate: &Gate, context: &mut Context, state: &State, part: u64) -> Pa
     let words: [u64; 8] = request(2u64, 1u64, 1u64, part);
     let reply: CallReply = block exchange::request(gate, context, state, false, &words, 0u64, 0u64);
     transition reply {
+        CallReply::Object { frame, object } -> block runtime::services::endpoints::invalid_object(gate, &mut context.services, object)
         CallReply::Endpoint { frame, endpoint } -> block runtime::services::endpoints::endpoint_reply(gate, &mut context.services, frame, endpoint)
         CallReply::Received { frame, notification } -> block runtime::services::endpoints::plain_reply(gate, &mut context.services, frame, notification)
         CallReply::Failed { code } -> (Part::Refused { code: code })
     }
+}
+
+machine invalid_object(gate: &Gate, context: &mut Context, object: u64) -> u64 reaches Kernel {
+    let ignored: u64 = block Kernel::memory_release(gate, object);
+    block runtime::services::main::close(gate, &mut context.services);
+    kernel::IO_ERROR
 }

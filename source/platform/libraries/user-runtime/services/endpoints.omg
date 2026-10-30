@@ -18,6 +18,7 @@ public machine acquire(gate: &Gate, binding: &mut Services, clock: u64,
     let words: [u64; 8] = request(contract, 1u64, 1u64, part);
     let reply: CallReply = block connection::call::exchange(gate, &mut binding.broker, clock, &words);
     transition reply {
+        CallReply::Object { frame, object } -> block invalid_object(gate, binding, object)
         CallReply::Endpoint { frame, endpoint } -> block endpoint_reply(gate, binding, frame, endpoint)
         CallReply::Received { frame, notification } -> block plain_reply(gate, binding, frame, notification)
         CallReply::Failed { code } -> (Part::Refused { code: code })
@@ -50,4 +51,9 @@ machine malformed(gate: &Gate, binding: &mut Services) -> Part reaches Kernel {
 machine valid(frame: connection::main::Frame) -> bool {
     frame.bytes == 64u64 && frame.payload[2] == 0u64 && frame.payload[3] == 0u64
         && frame.payload[4] == 0u64 && frame.payload[5] == 0u64 && frame.payload[6] == 0u64 && frame.payload[7] == 0u64
+}
+
+public machine invalid_object(gate: &Gate, binding: &mut Services, object: u64) -> Part reaches Kernel blocks; invokes Kernel; {
+    let ignored: u64 = block Kernel::memory_release(gate, object);
+    transition { _ -> block malformed(gate, binding) }
 }

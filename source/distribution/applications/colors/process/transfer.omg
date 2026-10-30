@@ -22,6 +22,7 @@ public machine plain(gate: &Gate, context: &mut Context, state: &State, command:
     let reply: CallReply = block exchange::request(gate, context, state, storage, words, object, deadline);
     transition reply {
         CallReply::Received { frame, notification } -> block received(gate, context, command, frame, notification)
+        CallReply::Object { frame, object } -> block unexpected_object(gate, context, object)
         CallReply::Endpoint { frame, endpoint } -> block unexpected_endpoint(gate, context, endpoint)
         CallReply::Failed { code } -> replies::failed(code)
     }
@@ -49,4 +50,9 @@ machine retire(gate: &Gate, context: &mut Context) -> u64 reaches Kernel {
         true -> block runtime::connection::main::close(gate, &mut context.storage.peer)
         _ -> block runtime::connection::main::close(gate, &mut context.services.broker)
     }
+}
+
+machine unexpected_object(gate: &Gate, context: &mut Context, object: u64) -> Completion reaches Kernel {
+    let ignored: u64 = block Kernel::memory_release(gate, object);
+    transition { _ -> block malformed(gate, context) }
 }

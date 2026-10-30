@@ -46,6 +46,8 @@ cathedral_kernel_gate:
     .quad cathedral_endpoint_receive
     .quad cathedral_object_create
     .quad cathedral_object_send
+    .quad cathedral_object_receive
+    .quad cathedral_object_read
 
 .section .text.cathedral_kernel_gate,"ax",@progbits
 cathedral_yield:
@@ -201,7 +203,7 @@ cathedral_memory_release:
 // address can outlive release or alias a reused mapping slot. INT 80 preserves
 // every register except RAX. The current kernel has one execution lane per task.
 // These checked calls are deliberately a first adapter, not a fast mapping API.
-.macro shared_words write
+.macro shared_words write, sealed=0
     mov r8, rdi                     // local memory authority
     mov r9, rsi                     // first word
     mov r10, rdx                    // borrowed private array
@@ -238,7 +240,11 @@ cathedral_memory_release:
     jc .Linvalid\@
     cmp rcx, rax
     ja .Linvalid\@
-    mov eax, 83                      // MEMORY_MAP_SHARED
+    .if \sealed
+        mov eax, 60                  // MEMORY_MAP_OBJECT
+    .else
+        mov eax, 83                  // MEMORY_MAP_SHARED
+    .endif
     mov rdi, r8
     xor esi, esi
     xor edx, edx
@@ -271,6 +277,8 @@ cathedral_shared_read:
     shared_words 0
 cathedral_shared_write:
     shared_words 1
+cathedral_object_read:
+    shared_words 0, 1
 
 // Typed handoffs use length + handle + 64 payload bytes. An aligned 128-byte
 // scratch keeps the entire 80-byte packet within one page, including its tail.
@@ -438,5 +446,14 @@ cathedral_object_send:
     xor edx, edx
     int 0x80
     finish_packet 0
+
+cathedral_object_receive:
+    stage_packet
+    mov eax, 57                      // IPC_RECEIVE_MEMORY
+    mov rdi, r8
+    mov rsi, rsp
+    xor edx, edx
+    int 0x80
+    finish_packet 1
 
 .section .note.GNU-stack,"",@progbits

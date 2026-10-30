@@ -97,6 +97,7 @@ machine polled(gate: &Gate, peer: &mut Peer, clock: u64, index: u64 [1..=16], de
     let reply: Reply = block runtime::connection::main::poll(gate, peer, now);
     transition reply {
         Reply::Complete { frame, notification } -> (block received(gate, peer, clock, index, frame, notification))
+        Reply::Object { frame, object } -> block unexpected_object(gate, object)
         Reply::Endpoint { frame, endpoint } -> unexpected(gate, endpoint)
         Reply::Failed { code } -> (block finish(gate, peer, 169u64))
         Reply::Pending -> (block pending(gate, peer, clock, index, deadline, now))
@@ -143,5 +144,10 @@ machine finish(gate: &Gate, peer: &mut Peer, result: u64) -> u64 reaches Kernel 
 }
 machine unexpected(gate: &Gate, endpoint: u64) -> u64 reaches Kernel {
     let ignored: u64 = Kernel::close(gate, endpoint);
+    171u64
+}
+
+machine unexpected_object(gate: &Gate, object: u64) -> u64 reaches Kernel {
+    let ignored: u64 = block Kernel::memory_release(gate, object);
     171u64
 }
