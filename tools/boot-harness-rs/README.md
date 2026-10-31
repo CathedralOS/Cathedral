@@ -353,6 +353,17 @@ validates this before executable builds; boot configuration and kernel admission
 also validate the bound. Run `python tools/boot-harness-rs/resource_budgets_test.py`
 for profile validation tests. Existing boot connections use a separate fixed arena.
 
+## Desktop over the Omega stock matrix
+
+`python tools/boot-harness-rs/omega_desktop_test.py` composes the stock desktop
+with the [standalone Omega stock matrix](../../source/distribution/matrix/process/README.md)
+in the root matrix's launch and the supervisor built with `omega-root`, which
+admits the root exactly as F5 does and then parks instead of starting storage.
+The proof reads the supervisor's and the drivers' startup lines, moves the
+pointer over QMP and checks that the compositor's cursor follows it through the
+Omega matrix. Logs and a PNG are in `build/boot-harness-rs/omega-desktop/`.
+The slices still missing from that program are listed in its README.
+
 ## Integrated matrix desktop
 
 `python tools/boot-harness-rs/run.py --matrix-desktop-test --release --timeout 120`

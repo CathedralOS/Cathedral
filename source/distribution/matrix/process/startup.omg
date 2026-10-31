@@ -1,0 +1,62 @@
+module startup;
+// Learn what this instance is from its environment. Four endpoints make the
+// display root: owner control opens first, because the supervisor connects it
+// right after spawning this task; then the display connection; then the source
+// listener, whose driver connects once the owner has bound the extent. Other
+// environment shapes arrive in later slices.
+use main::State;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::main::Startup;
+use runtime::main::Environment;
+use runtime::time::Tick;
+use runtime::server::owner;
+use scene;
+use report;
+
+public machine open(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks; invokes Kernel; {
+    context.clock = Kernel::clock(gate);
+    context.world.slots = 4u64;
+    let startup: Startup = runtime::main::start(gate);
+    transition startup {
+        Startup::Ready { environment } -> block timed(gate, context, environment)
+        Startup::Failed { code } -> (code)
+        Startup::InvalidEnvironment -> (kernel::INVALID_ARGUMENT)
+    }
+}
+machine timed(gate: &Gate, context: &mut State, environment: Environment) -> u64 reaches Kernel {
+    let tick: Tick = runtime::time::read(gate, context.clock);
+    transition tick {
+        Tick::Read { value } -> block shaped(gate, context, environment, value)
+        Tick::Failed { code } -> (code)
+    }
+}
+machine shaped(gate: &Gate, context: &mut State, environment: Environment, now: u64) -> u64 reaches Kernel {
+    transition environment.count == 4u64 {
+        true -> block control(gate, context, environment, now)
+        _ -> (kernel::INVALID_ARGUMENT)
+    }
+}
+machine control(gate: &Gate, context: &mut State, environment: Environment, now: u64) -> u64 reaches Kernel {
+    let status: u64 = block owner::open(gate, &mut context.owner, runtime::time::after(now, 300u64));
+    transition status == 0u64 {
+        true -> block presented(gate, context, environment, now)
+        _ -> (status)
+    }
+}
+machine presented(gate: &Gate, context: &mut State, environment: Environment, now: u64) -> u64 reaches Kernel {
+    let status: u64 = block scene::connect(gate, context, environment.endpoints[0], environment.endpoints[1],
+        runtime::time::after(now, 300u64));
+    transition status == 0u64 {
+        true -> sourced(gate, context, environment, now)
+        _ -> (status)
+    }
+}
+// The supervisor supplies the source pair as this task's receive end then its
+// send end, the opposite order from the display pair it connects as a client.
+machine sourced(gate: &Gate, context: &mut State, environment: Environment, now: u64) -> u64 reaches Kernel {
+    report::display_ready(gate);
+    runtime::server::main::begin(&mut context.source, environment.endpoints[3], environment.endpoints[2],
+        runtime::time::after(now, 3000u64), false)
+}

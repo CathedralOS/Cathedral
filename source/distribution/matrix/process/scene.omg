@@ -1,0 +1,43 @@
+module scene;
+// The root's display connection: one shared client to the compositor, speaking
+// six-word frames. This slice moves the physical cursor; tiles, images and the
+// begin/commit transaction follow with children.
+use protocol::main;
+use protocol::display;
+use main::State;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::connection::call;
+use runtime::connection::call::CallReply;
+use runtime::connection::main::Frame;
+
+public machine connect(gate: &Gate, context: &mut State, sender: u64, receiver: u64, deadline: u64) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    let status: u64 = block runtime::connection::main::connect(gate, &mut context.scene, sender, receiver, deadline);
+    context.has_scene = status == 0u64;
+    status
+}
+// Report the physical pointer's position; the compositor draws its cursor there.
+public machine pointer(gate: &Gate, context: &mut State, x: u64, y: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let mut words: [u64; 8];
+    words[0] = display::MATRIX_POINTER;
+    words[1] = x;
+    words[2] = y;
+    let reply: CallReply = block call::exchange_bytes(gate, &mut context.scene, context.clock, &words, 48u64);
+    transition reply {
+        CallReply::Received { frame, notification } -> (status_of(frame))
+        CallReply::Failed { code } -> lost(context, code)
+        _ -> lost(context, kernel::IO_ERROR)
+    }
+    machine lost(context: &mut State, code: u64) -> u64 {
+        context.has_scene = false;
+        code
+    }
+}
+machine status_of(frame: Frame) -> u64 {
+    transition frame.bytes == 48u64 {
+        true -> (frame.payload[0])
+        _ -> (IO_ERROR)
+    }
+}

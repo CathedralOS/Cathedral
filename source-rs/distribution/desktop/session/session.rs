@@ -20,6 +20,9 @@ pub(crate) fn run() -> u64 {
     let Some(mut session) = admission::interactive() else {
         return 1;
     };
+    if cfg!(feature = "omega-root") {
+        return omega_root(&mut session);
+    }
     #[cfg(any(
         feature = "launcher-read-revoke-probe",
         feature = "launcher-read-stop-probe",
@@ -128,6 +131,22 @@ pub(crate) fn run() -> u64 {
             }
             result => panic!(
                 "desktop idle {result:?}; root {:?}",
+                session.root.wait_until(time::now().unwrap())
+            ),
+        }
+    }
+}
+
+/// Keep an admitted Omega root alive without starting storage: the boot
+/// harness drives its display and source paths and reads the scanout.
+#[cfg(feature = "shell")]
+fn omega_root(session: &mut admission::Session) -> u64 {
+    cathedral_user_runtime::write(b"Cathedral desktop: Omega root admitted\n").unwrap();
+    loop {
+        match session.matrix.idle(time::after(10).unwrap()) {
+            Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
+            result => panic!(
+                "Omega root idle {result:?}; root {:?}",
                 session.root.wait_until(time::now().unwrap())
             ),
         }

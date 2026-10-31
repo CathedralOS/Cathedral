@@ -130,4 +130,6 @@ and storage, and reclaims them; see the
 Together these qualify the reusable transport and child lifecycle that the
 [independent Omega matrix](../../source/distribution/lab/matrix-composition/README.md)
 now runs on; `tools/boot-harness-rs/matrix_composition_test.py --omega` and
-`--upstream` boot it. The installed stock matrix still uses its Rust resource host.
+`--upstream` boot it. The installed stock matrix still uses its Rust resource
+host; its standalone Omega replacement is admitted at the display root by
+`tools/boot-harness-rs/omega_desktop_test.py`.

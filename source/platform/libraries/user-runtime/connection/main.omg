@@ -62,32 +62,41 @@ public machine connect(gate: &Gate, peer: &mut Peer, sender: u64, receiver: u64,
 }
 public machine begin(gate: &Gate, peer: &mut Peer, payload: &[u64; 8]) -> u64
     reaches Kernel blocks; invokes Kernel; {
-    block begin_object(gate, peer, payload, 0u64)
+    block begin_sized(gate, peer, payload, 0u64, 64u64)
+}
+// A request shorter than 64 bytes, for a peer whose frames have another fixed
+// size, such as the display's six words.
+public machine begin_bytes(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], bytes: u64 [0..=64]) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    block begin_sized(gate, peer, payload, 0u64, bytes)
 }
 // Retain the sealed source until reply or retirement. Even a publication failure
 // after handing off its reader retires this stream; a mutation is never replayed.
 public machine begin_object(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], object: u64) -> u64
     reaches Kernel blocks; invokes Kernel; {
+    block begin_sized(gate, peer, payload, object, 64u64)
+}
+machine begin_sized(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], object: u64, bytes: u64 [0..=64]) -> u64 reaches Kernel {
     transition peer.fault != 0u64 {
         true -> (peer.fault)
-        _ -> block available(gate, peer, payload, object)
+        _ -> block available(gate, peer, payload, object, bytes)
     }
-    machine available(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], object: u64) -> u64 reaches Kernel {
+    machine available(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], object: u64, bytes: u64 [0..=64]) -> u64 reaches Kernel {
         transition peer.pending != 0u64 {
             true -> (kernel::BUSY)
-            _ -> block identified(gate, peer, payload, object)
+            _ -> block identified(gate, peer, payload, object, bytes)
         }
     }
-    machine identified(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], object: u64) -> u64 reaches Kernel {
+    machine identified(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], object: u64, bytes: u64 [0..=64]) -> u64 reaches Kernel {
         let previous: u64 = peer.next_id;
         transition previous < 0xffffffffffffffffu64 {
-            true -> block publish(gate, peer, payload, object, previous + 1u64)
+            true -> block publish(gate, peer, payload, object, bytes, previous + 1u64)
             _ -> block fail(gate, peer, kernel::IO_ERROR)
         }
     }
 }
-machine publish(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], object: u64, id: u64) -> u64 reaches Kernel {
-    let status: u64 = block mailbox::send(gate, peer, id, payload, object);
+machine publish(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], object: u64, bytes: u64 [0..=64], id: u64) -> u64 reaches Kernel {
+    let status: u64 = block mailbox::send_sized(gate, peer, id, payload, object, bytes);
     transition status == 0u64 {
         true -> block published(gate, peer, id)
         // Backpressure before publication is safe to retry; all other errors

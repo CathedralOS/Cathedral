@@ -1,0 +1,121 @@
+module commands;
+// Owner words over the kernel-installed control pair: liveness, the root
+// binding, launch policy for a slot, and the World's placement words. Child
+// lifecycle, storage and the rest of the stock vocabulary arrive in later
+// slices; until then they are denied, never silently accepted.
+use protocol::main;
+use protocol::matrix;
+use main::State;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::server::main::Event;
+use runtime::connection::main::Frame;
+use world::level;
+use world::surfaces;
+use world::geometry::Grant;
+use world::geometry::zeros_from;
+use world::main::owner_command;
+use source;
+
+public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    transition {
+        context.owner.peer.fault != 0u64 -> (context.owner.peer.fault)
+        context.owner.pending != 0u64 -> block held(gate, context, now)
+        _ -> block receive(gate, context, now)
+    }
+}
+machine held(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    let status: u64 = block runtime::server::main::maintain(gate, &mut context.owner, now);
+    0u64
+}
+machine receive(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    let event: Event = block runtime::server::main::poll(gate, &mut context.owner, now);
+    transition event {
+        Event::Request { frame } -> block command(gate, context, frame)
+        Event::Pending -> (0u64)
+        Event::Failed { code } -> (code)
+    }
+}
+machine command(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Kernel {
+    transition {
+        frame.bytes != 64u64 -> block reply(gate, context, error(kernel::DENIED))
+        frame.payload[0] == HEALTH && zeros_from(&frame.payload, 1u64) -> block reply(gate, context, ok())
+        frame.payload[0] == BIND && zeros_from(&frame.payload, 4u64) ->
+            block bound(gate, context, frame.payload[1], frame.payload[2], frame.payload[3])
+        frame.payload[0] == LAUNCH_IMAGES || frame.payload[0] == LAUNCH_POLICY || frame.payload[0] == LAUNCH_PLACE ->
+            block policy(gate, context, frame)
+        _ -> block arranged(gate, context, frame)
+    }
+}
+// The root binding: the display's extent and keys become this world's grant,
+// with the compositor's whole tile allowance behind it and the source streams bound.
+machine bound(gate: &Gate, context: &mut State, width: u64, height: u64, keys: u64) -> u64 reaches Kernel {
+    transition width >= 1u64 && width <= MAX_EXTENT && height >= 1u64 && height <= MAX_EXTENT && (keys & ~VALID_KEY_MASK) == 0u64 {
+        true -> block binding(gate, context, width, height, keys)
+        _ -> block reply(gate, context, error(kernel::DENIED))
+    }
+}
+machine binding(gate: &Gate, context: &mut State, width: u64, height: u64, keys: u64) -> u64 reaches Kernel {
+    context.width = width;
+    context.height = height;
+    context.keys = keys;
+    level::inherit(&mut context.world, Grant { epoch: 1u64, width: width, height: height, keys: keys });
+    surfaces::capacity(&mut context.world, MAX_SURFACES);
+    let status: u64 = source::bind_streams(&mut context.world);
+    block reply(gate, context, error(status))
+}
+// Policy for the next launch into a slot: permitted images, resource ceilings
+// and the placement it will receive. Recorded now, applied when launches arrive.
+machine policy(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Kernel {
+    transition frame.payload[1] < 5u64 {
+        true -> block slotted(gate, context, frame, frame.payload[1])
+        _ -> block reply(gate, context, error(kernel::DENIED))
+    }
+    machine slotted(gate: &Gate, context: &mut State, frame: Frame, slot: u64 [0..=4]) -> u64 reaches Kernel {
+        transition {
+            frame.payload[0] == LAUNCH_IMAGES && zeros_from(&frame.payload, 3u64) -> block images(gate, context, slot, frame.payload[2])
+            frame.payload[0] == LAUNCH_POLICY -> block ceilings(gate, context, frame, slot)
+            frame.payload[0] == LAUNCH_PLACE && frame.payload[7] == 0u64 -> block placement(gate, context, frame, slot)
+            _ -> block reply(gate, context, error(kernel::DENIED))
+        }
+    }
+    machine images(gate: &Gate, context: &mut State, slot: u64 [0..=4], mask: u64) -> u64 reaches Kernel {
+        context.policies[slot].images = mask;
+        block reply(gate, context, ok())
+    }
+    machine ceilings(gate: &Gate, context: &mut State, frame: Frame, slot: u64 [0..=4]) -> u64 reaches Kernel {
+        context.policies[slot].private_pages = frame.payload[2];
+        context.policies[slot].reader_pages = frame.payload[3];
+        context.policies[slot].channels = frame.payload[4];
+        context.policies[slot].descendants = frame.payload[5];
+        context.policies[slot].cpu = frame.payload[6];
+        context.policies[slot].surfaces = frame.payload[7];
+        block reply(gate, context, ok())
+    }
+    machine placement(gate: &Gate, context: &mut State, frame: Frame, slot: u64 [0..=4]) -> u64 reaches Kernel {
+        context.policies[slot].placed = true;
+        context.policies[slot].x = frame.payload[2];
+        context.policies[slot].y = frame.payload[3];
+        context.policies[slot].width = frame.payload[4];
+        context.policies[slot].height = frame.payload[5];
+        context.policies[slot].keys = frame.payload[6];
+        block reply(gate, context, ok())
+    }
+}
+machine arranged(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Kernel {
+    let answer: [u64; 8] = owner_command(&mut context.world, &frame.payload);
+    block reply(gate, context, answer)
+}
+machine reply(gate: &Gate, context: &mut State, words: [u64; 8]) -> u64 reaches Kernel {
+    block runtime::server::main::reply(gate, &mut context.owner, &words)
+}
+machine error(code: u64) -> [u64; 8] {
+    let mut words: [u64; 8];
+    words[0] = code;
+    words
+}
+machine ok() -> [u64; 8] {
+    let words: [u64; 8];
+    words
+}

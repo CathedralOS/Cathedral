@@ -9,6 +9,63 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
+### Stock matrix migration: the display root in Omega
+
+The stock matrix is leaving its Rust host for a standalone Omega process,
+`source/distribution/matrix/process/`, built beside the host the way the lab
+matrix is: it links the process runtime, the Omega World and, in later slices,
+the stock policy packages directly. Each slice adds one host responsibility and
+is proven under its own composition; F5 keeps the Rust host until the program
+reaches parity, then the desktop profile swaps and the bridge is deleted.
+
+This first slice is the display root. The desktop supervisor admits the Omega
+program exactly as it admits the Rust host: owner control over the kernel
+installed pair with HEALTH, BIND and the LAUNCH_IMAGES, LAUNCH_POLICY and
+LAUNCH_PLACE policy words; a shared client to the compositor speaking its
+six-word frames; and the installed source endpoint served as a listener, where
+POINTER_SOURCE moves the compositor's physical cursor before the World routes
+it on the pointer stream, KEY_SOURCE routes on the keyboard stream and RESET
+cancels both. The input service's own authority check (owner words must be
+denied on that link) passes against it. The runtime gained `begin_bytes` and
+`exchange_bytes` so a client can publish a request shorter than 64 bytes, and
+the reference contracts gained `display.omg`.
+
+`tools/boot-harness-rs/omega_desktop_test.py` composes the stock desktop with
+the Omega program in the root launch and the supervisor built with
+`omega-root` (admit as F5 does, then park instead of starting storage), boots
+it, checks the supervisor's and drivers' startup lines, moves the pointer over
+QMP and watches the cursor follow it through the Omega matrix.
+
+Two facts for the next slices. The World keeps four child slots for the
+reference kernel's eight-page process stack, while the stock composition uses
+five (chrome, three app instances, background): a stack allowance per launch
+is the engineering answer and is a kernel-level change; reducing the stock
+composition would be an owner decision. The supervisor supplies the source pair
+as this task's receive end then its send end, the opposite order from the
+display pair it connects as a client.
+
+Evidence in the main checkout with the saved standalone producer:
+
+- Desktop over the Omega root: `build/boot-harness-rs/omega-desktop/20261031T190612659664Z/`.
+- Omega matrix, top level: `build/boot-harness-rs/omega-matrix/20261031T191219700010Z/`;
+  under a real parent: `build/boot-harness-rs/omega-matrix-upstream/20261031T191235386345Z/`.
+- Witnesses after the runtime change: primitives `build/omega-user/tests/20261031T190853340197Z/`;
+  connections `build/omega-user/connections/20261031T190900511415Z/`, service
+  `.../20261031T190922279055Z/`, admission `.../20261031T190936208138Z/`;
+  Background `build/omega-user/background-control/20261031T190940661683Z/`;
+  Colors `build/omega-user/colors-control/20261031T190946264271Z/`;
+  Notes `build/omega-user/notes-control/20261031T190952369823Z/`;
+  Chooser `build/omega-user/chooser-control/20261031T191000434991Z/`.
+- Default F5 desktop and cold reopen: `build/boot-harness-rs/desktop/20261031T191009565625Z/`.
+- Layout (121 Omega / 153 Rust edges), Rust formatting and clippy for the
+  desktop crate with `shell,omega-root` pass. The new native package accepted
+  the complete gate in review; no kernel limit changed.
+
+Next: children. Admit the chrome, app and background slots from the realm
+through the runtime's admission, serve their World requests and surfaces, and
+present their tiles through the begin/commit transaction, proving each under the
+same composition. Then storage binding and forwarding, then nested operation.
+
 ### Omega World: layout control, management and launch observations
 
 The last World features the stock matrix depends on are in Omega. `layout.omg`
@@ -50,9 +107,7 @@ Still in Rust only: the presentation batch behind PRESENT_BEGIN and
 PRESENT_COMMIT, and the storage scopes that stamp a child's storage requests.
 Both belong with the stock host's presentation and storage paths.
 
-Next: begin moving the stock matrix host onto the runtime and World slice by
-slice while F5 keeps working, porting the presentation batch and storage scopes
-when those paths move.
+The stock matrix migration began in the step recorded above.
 
 ### Omega World: the input model
 

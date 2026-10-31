@@ -1,5 +1,12 @@
 # Stock matrix behavior in Omega
 
+The stock matrix is moving out of its Rust host into a standalone Omega
+process: start at [process/README.md](process/README.md). That program owns its
+connections, tasks and World and is admitted by the desktop supervisor at the
+display root today; children, presentation, storage and nested operation follow
+slice by slice, and F5 keeps the Rust host until the program reaches parity.
+The policy below still executes inside the Rust host through the bridge.
+
 Start at [service/main.omg](service/main.omg): it chooses work from named commands,
 current facts and the authenticated event kind. [progress.omg](service/progress.omg)
 shows what follows each completion. The [service boundary](service/README.md)

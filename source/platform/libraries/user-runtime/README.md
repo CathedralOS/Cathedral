@@ -14,8 +14,10 @@ one outstanding request, mailbox/notification reconciliation and final cleanup.
 Descend into `setup.omg` for the existing Rust-compatible handshake,
 `mailbox.omg` for sequence/acknowledgement publication, `incoming.omg` for typed
 grant correlation and bounded partial replies, and `custody.omg` for release.
-Requests currently carry 64 bytes; replies carry up to 64 bytes and optionally
-one notification right, transferred endpoint or sealed object reader. The typed reply distinguishes
+Requests carry 64 bytes, or fewer through `begin_bytes` for a peer whose frames
+have another fixed size, such as the display's six words; replies carry up to
+64 bytes and optionally one notification right, transferred endpoint or sealed
+object reader. The typed reply distinguishes
 these authorities; unsupported attachment kinds retire the connection.
 Outgoing requests may delegate one sealed object after mailbox backpressure is
 checked. A failure after delegation retires the connection without replay.

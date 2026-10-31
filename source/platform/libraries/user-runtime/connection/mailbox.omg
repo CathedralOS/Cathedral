@@ -16,33 +16,42 @@ public const ENDPOINT: u64 = 2u64;
 public const NOTIFICATION: u64 = 3u64;
 public machine send(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], object: u64) -> u64
     reaches Kernel blocks; invokes Kernel; {
+    block send_sized(gate, peer, id, payload, object, 64u64)
+}
+// Frames carry `bytes` of the payload; the display's six-word requests use 48.
+public machine send_sized(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], object: u64, bytes: u64 [0..=64]) -> u64
+    reaches Kernel blocks; invokes Kernel; {
     transition object == 0u64 {
-        true -> block send_attached(gate, peer, id, payload, NONE, 0u64)
-        _ -> block send_attached(gate, peer, id, payload, OBJECT, object)
+        true -> block send_attached_sized(gate, peer, id, payload, NONE, 0u64, bytes)
+        _ -> block send_attached_sized(gate, peer, id, payload, OBJECT, object, bytes)
     }
 }
 public machine send_attached(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], kind: u64 [0..=3], handle: u64) -> u64
     reaches Kernel blocks; invokes Kernel; {
+    block send_attached_sized(gate, peer, id, payload, kind, handle, 64u64)
+}
+public machine send_attached_sized(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], kind: u64 [0..=3], handle: u64, bytes: u64 [0..=64]) -> u64
+    reaches Kernel blocks; invokes Kernel; {
     let mut header: [u64; 8];
     let status: u64 = block Kernel::shared_read(gate, peer.reader.handle, 1u64, &mut header, 1u64);
     transition status == 0u64 {
-        true -> block acknowledged(gate, peer, id, payload, kind, handle, header[0])
+        true -> block acknowledged(gate, peer, id, payload, kind, handle, bytes, header[0])
         _ -> (status)
     }
 }
-machine acknowledged(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], kind: u64 [0..=3], handle: u64, ack: u64) -> u64 reaches Kernel {
+machine acknowledged(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], kind: u64 [0..=3], handle: u64, bytes: u64 [0..=64], ack: u64) -> u64 reaches Kernel {
     transition ack > peer.sent || peer.sent == 0xffffffffffffffffu64 {
         true -> (kernel::IO_ERROR)
-        _ -> block available(gate, peer, id, payload, kind, handle, ack)
+        _ -> block available(gate, peer, id, payload, kind, handle, bytes, ack)
     }
-    machine available(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], kind: u64 [0..=3], handle: u64, ack: u64) -> u64 reaches Kernel {
+    machine available(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], kind: u64 [0..=3], handle: u64, bytes: u64 [0..=64], ack: u64) -> u64 reaches Kernel {
         transition ack == peer.sent {
-            true -> block attached(gate, peer, id, payload, kind, handle)
+            true -> block attached(gate, peer, id, payload, kind, handle, bytes)
             _ -> (kernel::WOULD_BLOCK)
         }
     }
 }
-machine body(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], attachment: u64) -> u64 reaches Kernel {
+machine body(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], attachment: u64, bytes: u64 [0..=64]) -> u64 reaches Kernel {
     let mut first: [u64; 8];
     first[0] = id;
     first[1] = attachment;
@@ -54,46 +63,47 @@ machine body(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], attachme
     first[7] = payload[5];
     let status: u64 = block Kernel::shared_write(gate, peer.writer.handle, 3u64, &first, 8u64);
     transition status == 0u64 {
-        true -> block tail(gate, peer, payload)
+        true -> block tail(gate, peer, payload, bytes)
         _ -> (status)
     }
 }
-machine attached(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], kind: u64 [0..=3], handle: u64) -> u64 reaches Kernel {
+machine attached(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], kind: u64 [0..=3], handle: u64, bytes: u64 [0..=64]) -> u64 reaches Kernel {
     transition kind == NONE || handle == 0u64 {
-        true -> block body(gate, peer, id, payload, NONE)
-        _ -> block delegate(gate, peer, id, payload, kind, handle)
+        true -> block body(gate, peer, id, payload, NONE, bytes)
+        _ -> block delegate(gate, peer, id, payload, kind, handle, bytes)
     }
     // Each typed send carries the request ID as its correlation word. A failed
     // send leaves the right with the caller; the frame is never written without it.
-    machine delegate(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], kind: u64 [0..=3], handle: u64) -> u64 reaches Kernel {
+    machine delegate(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], kind: u64 [0..=3], handle: u64, bytes: u64 [0..=64]) -> u64 reaches Kernel {
         let mut packet: [u64; 10];
         packet[0] = 8u64; packet[1] = handle; packet[2] = id;
         transition kind {
-            OBJECT -> block delegated(gate, peer, id, payload, kind, Kernel::object_send(gate, peer.sender, &packet))
-            ENDPOINT -> block delegated(gate, peer, id, payload, kind, Kernel::endpoint_send(gate, peer.sender, &packet))
-            _ -> block delegated(gate, peer, id, payload, kind, Kernel::notify_send(gate, peer.sender, &packet))
+            OBJECT -> block delegated(gate, peer, id, payload, kind, bytes, Kernel::object_send(gate, peer.sender, &packet))
+            ENDPOINT -> block delegated(gate, peer, id, payload, kind, bytes, Kernel::endpoint_send(gate, peer.sender, &packet))
+            _ -> block delegated(gate, peer, id, payload, kind, bytes, Kernel::notify_send(gate, peer.sender, &packet))
         }
     }
-    machine delegated(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], kind: u64 [0..=3], status: u64) -> u64 reaches Kernel {
+    machine delegated(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], kind: u64 [0..=3], bytes: u64 [0..=64], status: u64) -> u64 reaches Kernel {
         transition status == 8u64 {
-            true -> block body(gate, peer, id, payload, kind)
+            true -> block body(gate, peer, id, payload, kind, bytes)
             _ -> (status)
         }
     }
 }
-machine tail(gate: &Gate, peer: &mut Peer, payload: &[u64; 8]) -> u64 reaches Kernel {
+machine tail(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], bytes: u64 [0..=64]) -> u64 reaches Kernel {
     let mut last: [u64; 8];
     last[0] = payload[6];
     last[1] = payload[7];
     let status: u64 = block Kernel::shared_write(gate, peer.writer.handle, 11u64, &last, 2u64);
     transition status == 0u64 {
-        true -> block length(gate, peer)
+        true -> block length(gate, peer, bytes)
         _ -> (status)
     }
 }
-machine length(gate: &Gate, peer: &mut Peer) -> u64 reaches Kernel {
+// The header length counts the three header words beside the payload bytes.
+machine length(gate: &Gate, peer: &mut Peer, bytes: u64 [0..=64]) -> u64 reaches Kernel {
     let mut word: [u64; 8];
-    word[0] = 80u64;
+    word[0] = 16u64 + bytes;
     let status: u64 = block Kernel::shared_write(gate, peer.writer.handle, 2u64, &word, 1u64);
     transition status == 0u64 {
         true -> block publish(gate, peer)

@@ -1,0 +1,173 @@
+module source;
+// The explicitly installed source endpoint: physical input arrives here as
+// POINTER_SOURCE and KEY_SOURCE words on two local streams in one focus group,
+// described as the pointer and the keyboard. A pointer sample moves the
+// compositor's physical cursor before it is routed; RESET cancels both streams.
+// These are this adapter's local names, not global input roles.
+use protocol::main;
+use protocol::matrix;
+use main::State;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::server::main::Event;
+use runtime::server::main::Ticket;
+use runtime::connection::main::Frame;
+use world::level::World;
+use world::level;
+use world::names;
+use world::geometry;
+use world::geometry::zeros_from;
+use world::description::Description;
+use world::input::main::Admitted;
+use world::input::main::bind;
+use world::input::main::stream_of;
+use world::input::describe;
+use world::input::capacity;
+use scene;
+
+public const POINTER_STREAM: u64 = 1u64;
+public const KEYBOARD_STREAM: u64 = 2u64;
+public const GROUP: u64 = 1u64;
+// The key value that announces a lost or reset device.
+public const RESET_KEY: u64 = 0u64;
+public const POINTER_LABEL: u64 = 0x7265746e696f50u64;
+public const KEYBOARD_LABEL: u64 = 0x6472616f6279654bu64;
+
+// Both streams, bound once the root grant exists; repeating is harmless.
+public machine bind_streams(local: &mut World) -> u64 {
+    transition geometry::valid_grant(local.parent) {
+        true -> pointer(local)
+        _ -> (DENIED)
+    }
+    machine pointer(local: &mut World) -> u64 {
+        let admitted: Admitted = bind(&mut local.input, names::local(POINTER_STREAM), names::local(GROUP));
+        transition admitted {
+            Admitted::Slot { index } -> keyboard(local)
+            Admitted::Failed { code } -> (code)
+        }
+    }
+    machine keyboard(local: &mut World) -> u64 {
+        let admitted: Admitted = bind(&mut local.input, names::local(KEYBOARD_STREAM), names::local(GROUP));
+        transition admitted {
+            Admitted::Slot { index } -> described_pointer(local)
+            Admitted::Failed { code } -> (code)
+        }
+    }
+    machine described_pointer(local: &mut World) -> u64 {
+        let status: u64 = describe::describe(local, names::local(POINTER_STREAM),
+            Description { first: POINTER_LABEL, second: 0u64, controls: POINTER_CONTROL });
+        transition status == 0u64 {
+            true -> described_keyboard(local)
+            _ -> (status)
+        }
+    }
+    machine described_keyboard(local: &mut World) -> u64 {
+        describe::describe(local, names::local(KEYBOARD_STREAM),
+            Description { first: KEYBOARD_LABEL, second: 0u64, controls: KEY_CONTROL })
+    }
+}
+// The device was reset or lost: interrupt both streams everywhere they were delivered.
+public machine cancel_streams(local: &mut World) {
+    let bound: u64 = bind_streams(local);
+    transition bound == 0u64 {
+        true -> cancelling(local, POINTER_STREAM)
+        _ -> done()
+    }
+    machine cancelling(local: &mut World, channel: u64) {
+        let index: u64 = stream_of(&local.input, names::local(channel));
+        transition index < 4u64 {
+            true -> cancelled(local, channel, index)
+            _ -> next(local, channel)
+        }
+    }
+    machine cancelled(local: &mut World, channel: u64, index: u64) requires index < 4u64 {
+        level::cancel_stream(local, index);
+        transition { _ -> next(local, channel) }
+    }
+    machine next(local: &mut World, channel: u64) {
+        transition channel == POINTER_STREAM {
+            true -> cancelling(local, KEYBOARD_STREAM)
+            _ -> done()
+        }
+    }
+}
+// One turn of the source listener: a departed driver leaves the slot idle.
+public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    transition {
+        context.source.peer.fault != 0u64 -> (0u64)
+        context.source.pending != 0u64 -> block held(gate, context, now)
+        _ -> block receive(gate, context, now)
+    }
+}
+machine held(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    let status: u64 = block runtime::server::main::maintain(gate, &mut context.source, now);
+    0u64
+}
+machine receive(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    let event: Event = block runtime::server::main::poll(gate, &mut context.source, now);
+    transition event {
+        Event::Request { frame } -> block served(gate, context, frame)
+        Event::Pending -> (0u64)
+        Event::Failed { code } -> (0u64)
+    }
+}
+machine served(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Kernel {
+    let issued: Ticket = runtime::server::main::ticket(&context.source);
+    let answer: [u64; 8] = block dispatch(gate, context, frame);
+    let status: u64 = block runtime::server::main::reply_to(gate, &mut context.source, issued, &answer);
+    0u64
+}
+// Samples outside the bound extent and any other word are denied; the driver
+// checks that owner words are refused on this connection before it trusts it.
+machine dispatch(gate: &Gate, context: &mut State, frame: Frame) -> [u64; 8] reaches Kernel {
+    transition {
+        frame.bytes != 64u64 -> (error(kernel::DENIED))
+        frame.payload[0] == POINTER_SOURCE && frame.payload[3] <= 7u64 && zeros_from(&frame.payload, 4u64)
+            && frame.payload[1] < context.width && frame.payload[2] < context.height ->
+            block pointed(gate, context, frame.payload[1], frame.payload[2], frame.payload[3])
+        frame.payload[0] == KEY_SOURCE && zeros_from(&frame.payload, 3u64) -> (keyed(context, frame.payload[1], frame.payload[2]))
+        _ -> (error(kernel::DENIED))
+    }
+}
+machine pointed(gate: &Gate, context: &mut State, x: u64, y: u64, buttons: u64) -> [u64; 8] reaches Kernel {
+    let bound: u64 = bind_streams(&mut context.world);
+    transition bound == 0u64 {
+        true -> block moved(gate, context, x, y, buttons)
+        _ -> (error(bound))
+    }
+}
+machine moved(gate: &Gate, context: &mut State, x: u64, y: u64, buttons: u64) -> [u64; 8] reaches Kernel {
+    let status: u64 = block scene::pointer(gate, context, x, y);
+    transition status == 0u64 {
+        true -> (sampled(context, POINTER_STREAM, POINTER, x, y, buttons))
+        _ -> (error(status))
+    }
+}
+machine keyed(context: &mut State, key: u64, state: u64) -> [u64; 8] {
+    let bound: u64 = bind_streams(&mut context.world);
+    transition {
+        bound != 0u64 -> (error(bound))
+        key == RESET_KEY -> reset(context)
+        _ -> (sampled(context, KEYBOARD_STREAM, KEY, key, state, 0u64))
+    }
+    machine reset(context: &mut State) -> [u64; 8] {
+        cancel_streams(&mut context.world);
+        ok()
+    }
+}
+// Capacity pressure interrupts the stream instead of failing the sample.
+machine sampled(context: &mut State, channel: u64, kind: u64, x: u64, y: u64, value: u64) -> [u64; 8] {
+    let status: u64 = capacity::sample(&mut context.world, channel, kind, x, y, value);
+    error(status)
+}
+machine error(code: u64) -> [u64; 8] {
+    let mut words: [u64; 8];
+    words[0] = code;
+    words
+}
+machine ok() -> [u64; 8] {
+    let words: [u64; 8];
+    words
+}
+machine done() {}
