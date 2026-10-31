@@ -10,6 +10,8 @@ public const NOTIFY_TIMED_OUT: u64 = 1u64;
 public const DENIED: u64 = 0xfffffffffffffff3u64;
 public const BUSY: u64 = 0xfffffffffffffff0u64;
 public const INVALID_ARGUMENT: u64 = 0xffffffffffffffeau64;
+public const NO_MEMORY: u64 = 0xfffffffffffffff4u64;
+public const BAD_HANDLE: u64 = 0xfffffffffffffff7u64;
 // Temporary native boundary, not a matrix service bundle. The table comes from
 // this executable's read-only image; the kernel still authenticates every handle.
 public data Gate {
@@ -46,6 +48,13 @@ public data Gate {
     private_write: addr;
     object_freeze: addr;
     wait_many: addr;
+    launch_at: addr;
+    launch_port: addr;
+    task_connect: addr;
+    spawn_tree: addr;
+    task_cancel: addr;
+    task_wait: addr;
+    endpoint_send: addr;
 }
 
 public boundary trait Kernel {
@@ -82,4 +91,14 @@ public boundary trait Kernel {
     machine object_send(gate: &Gate, endpoint: u64, packet: &[u64; 10]) -> u64 reaches;
     machine private_write(gate: &Gate, handle: u64, offset: u64, words: &[u64; 1024], bytes: u64 [1..=8192]) -> u64 reaches blocks;
     machine object_freeze(gate: &Gate, handle: u64) -> u64 reaches blocks;
+    // Child tasks: lent launch authority -> admitted child -> owner control -> collection.
+    // The 22-word spawn record is argument, endpoint count, five endpoints, loan count
+    // and fourteen loans; unused words stay zero. Exit records occupy five words.
+    machine launch_at(gate: &Gate, index: u64) -> u64 reaches;
+    machine launch_port(gate: &Gate, launch: u64) -> u64 reaches;
+    machine task_connect(gate: &Gate, port: u64) -> u64 reaches;
+    machine spawn_tree(gate: &Gate, launch: u64, record: &[u64; 22]) -> u64 reaches blocks;
+    machine task_cancel(gate: &Gate, child: u64) -> u64 reaches blocks;
+    machine task_wait(gate: &Gate, child: u64, record: &mut [u64; 8]) -> u64 reaches blocks;
+    machine endpoint_send(gate: &Gate, endpoint: u64, packet: &[u64; 10]) -> u64 reaches;
 }

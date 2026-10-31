@@ -1,0 +1,127 @@
+module supervisor::slots;
+// One slot per turn: a retired listener means the child left, so reclaim it;
+// a held request is maintained; otherwise take one request. Acquisition goes to
+// the runtime's offer, request word 10 is held unanswered, anything else echoes.
+// A copied message on the provider's storage end counts as stored.
+use supervisor::main::State;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::server::main::Event;
+use runtime::server::main::Ticket;
+use runtime::connection::main::Frame;
+use runtime::task::main::Exit;
+use runtime::waiting::Set;
+use runtime::admission::offer;
+use protocol::services::ACQUIRE;
+public machine step(gate: &Gate, context: &mut State, slot: u64 [0..=1], now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    transition {
+        !context.slots[slot].live -> (0u64)
+        context.slots[slot].listener.peer.fault != 0u64 -> block departed(gate, context, slot)
+        context.slots[slot].listener.pending != 0u64 -> block held(gate, context, slot, now)
+        _ -> block receive(gate, context, slot, now)
+    }
+}
+machine departed(gate: &Gate, context: &mut State, slot: u64 [0..=1]) -> u64 reaches Kernel {
+    block reclaim(gate, context, slot);
+    0u64
+}
+machine held(gate: &Gate, context: &mut State, slot: u64 [0..=1], now: u64) -> u64 reaches Kernel {
+    let status: u64 = block runtime::server::main::maintain(gate, &mut context.slots[slot].listener, now);
+    block storage(gate, context, slot, now)
+}
+machine receive(gate: &Gate, context: &mut State, slot: u64 [0..=1], now: u64) -> u64 reaches Kernel {
+    let event: Event = block runtime::server::main::poll(gate, &mut context.slots[slot].listener, now);
+    transition event {
+        Event::Request { frame } -> block request(gate, context, slot, now, frame)
+        Event::Pending -> block storage(gate, context, slot, now)
+        Event::Failed { code } -> block departed(gate, context, slot)
+    }
+}
+machine request(gate: &Gate, context: &mut State, slot: u64 [0..=1], now: u64, frame: Frame) -> u64 reaches Kernel {
+    let issued: Ticket = runtime::server::main::ticket(&context.slots[slot].listener);
+    transition {
+        frame.bytes != 64u64 -> block departed(gate, context, slot)
+        frame.payload[0] == ACQUIRE -> block acquire(gate, context, slot, now, issued, frame)
+        frame.payload[0] == 10u64 -> block storage(gate, context, slot, now)
+        _ -> block echo(gate, context, slot, now, issued, frame)
+    }
+}
+machine acquire(gate: &Gate, context: &mut State, slot: u64 [0..=1], now: u64, issued: Ticket, frame: Frame) -> u64 reaches Kernel {
+    let status: u64 = block offer::reply(gate, &mut context.slots[slot], issued, &frame.payload);
+    block storage(gate, context, slot, now)
+}
+machine echo(gate: &Gate, context: &mut State, slot: u64 [0..=1], now: u64, issued: Ticket, frame: Frame) -> u64 reaches Kernel {
+    let status: u64 = block runtime::server::main::reply_to(gate, &mut context.slots[slot].listener, issued, &frame.payload);
+    context.handled = ((context.handled as u64 in Wrapping) + 1u64) as u64;
+    block storage(gate, context, slot, now)
+}
+// Readiness on the provider's storage receiver includes closure; count only
+// delivered messages. The child's departure is reclaimed through its listener.
+machine storage(gate: &Gate, context: &mut State, slot: u64 [0..=1], now: u64) -> u64 reaches Kernel {
+    let receiver: u64 = context.slots[slot].storage.receiver;
+    transition receiver != 0u64 {
+        true -> block ready(gate, context, slot, now, receiver)
+        _ -> (0u64)
+    }
+    machine ready(gate: &Gate, context: &mut State, slot: u64 [0..=1], now: u64, receiver: u64) -> u64 reaches Kernel {
+        let mut interests: [u64; 8];
+        interests[1] = receiver;
+        let status: u64 = block Kernel::wait(gate, &interests, 1u64, now);
+        transition status == 0u64 {
+            true -> block message(gate, context, receiver)
+            _ -> (0u64)
+        }
+    }
+    machine message(gate: &Gate, context: &mut State, receiver: u64) -> u64 reaches Kernel {
+        let mut bytes: [u64; 8];
+        let received: u64 = block Kernel::receive(gate, receiver, &mut bytes);
+        transition received <= 64u64 {
+            true -> counted(context)
+            _ -> (0u64)
+        }
+    }
+    machine counted(context: &mut State) -> u64 {
+        context.stored = ((context.stored as u64 in Wrapping) + 1u64) as u64;
+        0u64
+    }
+}
+// Stop, collect and release the slot; remember how the child ended.
+public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=1]) reaches Kernel blocks; invokes Kernel; {
+    transition context.slots[slot].live {
+        true -> block stopping(gate, context, slot)
+        _ -> done()
+    }
+    machine stopping(gate: &Gate, context: &mut State, slot: u64 [0..=1]) reaches Kernel {
+        let exit: Exit = block runtime::admission::main::stop(gate, &mut context.slots[slot]);
+        context.exits[slot] = kind(exit);
+    }
+}
+machine kind(exit: Exit) -> u64 {
+    transition exit {
+        Exit::Returned { status } -> returned(status)
+        Exit::Fault { vector, error, address, instruction } -> (2u64)
+        Exit::Cancelled -> (3u64)
+        Exit::Failed { code } -> (4u64)
+    }
+    machine returned(status: u64) -> u64 {
+        transition status == 0u64 { true -> (1u64) _ -> (5u64) }
+    }
+}
+public machine watch(context: &State, slot: u64 [0..=1], set: &mut Set) {
+    transition context.slots[slot].live {
+        true -> watched(context, slot, set)
+        _ -> done()
+    }
+    machine watched(context: &State, slot: u64 [0..=1], set: &mut Set) {
+        runtime::server::main::watch(&context.slots[slot].listener, set);
+        transition context.slots[slot].storage.receiver != 0u64 {
+            true -> runtime::waiting::add(set, runtime::waiting::IPC, context.slots[slot].storage.receiver)
+            _ -> done()
+        }
+    }
+}
+public machine flag(live: bool) -> u64 {
+    transition live { true -> (1u64) _ -> (0u64) }
+}
+machine done() {}

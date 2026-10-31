@@ -8,6 +8,10 @@ public const INTERACTION: u64 = 1u64;
 public const STORAGE: u64 = 2u64;
 public const UNAVAILABLE: u64 = 0x53520001u64;
 public const INCOMPATIBLE: u64 = 0x53520002u64;
+public const INVALID: u64 = 0x53520003u64;
+public const TAKEN: u64 = 0x53520004u64;
+public const INPUT_PRODUCER: u64 = 4u64;
+public const CAPTURE: u64 = 8u64;
 
 public machine request(contract: u64, minimum: u64, maximum: u64, part: u64) -> [u64; 8] {
     let mut words: [u64; 8];
@@ -18,4 +22,46 @@ public machine request(contract: u64, minimum: u64, maximum: u64, part: u64) -> 
     words[4] = maximum;
     words[5] = part;
     words
+}
+
+// Provider-side selection of a preallocated right: 0 interaction wait, 1/2 storage
+// send/receive, 3/4 input-producer send/receive, 5/6 capture send/receive. The
+// request bytes choose among rights the provider already granted; they carry no
+// caller identity or scope. Mirrors select() in the Rust services contract.
+public data Selection [copy] {
+    case Right(index: u64 [0..=6]);
+    case Refused(code: u64);
+}
+public machine select(granted: u64, words: &[u64; 8]) -> Selection {
+    transition words[0] == ACQUIRE && words[6] == 0u64 && words[7] == 0u64 {
+        true -> bounds(granted, words[1], words[2], words[3], words[4], words[5])
+        _ -> (Selection::Refused { code: INVALID })
+    }
+    machine bounds(granted: u64, version: u64, contract: u64, minimum: u64, maximum: u64, part: u64) -> Selection {
+        transition {
+            minimum == 0u64 || minimum > maximum -> (Selection::Refused { code: INVALID })
+            version != VERSION -> (Selection::Refused { code: INCOMPATIBLE })
+            _ -> contracted(granted, contract, minimum, maximum, part)
+        }
+    }
+    machine contracted(granted: u64, contract: u64, minimum: u64, maximum: u64, part: u64) -> Selection {
+        let known: bool = contract == INTERACTION || contract == STORAGE || contract == INPUT_PRODUCER || contract == CAPTURE;
+        transition {
+            !known || (granted & contract) == 0u64 -> (Selection::Refused { code: UNAVAILABLE })
+            minimum > 1u64 || maximum < 1u64 -> (Selection::Refused { code: INCOMPATIBLE })
+            _ -> part_of(contract, part)
+        }
+    }
+    machine part_of(contract: u64, part: u64) -> Selection {
+        transition {
+            contract == INTERACTION && part == 0u64 -> (Selection::Right { index: 0u64 })
+            contract == STORAGE && part == 0u64 -> (Selection::Right { index: 1u64 })
+            contract == STORAGE && part == 1u64 -> (Selection::Right { index: 2u64 })
+            contract == INPUT_PRODUCER && part == 0u64 -> (Selection::Right { index: 3u64 })
+            contract == INPUT_PRODUCER && part == 1u64 -> (Selection::Right { index: 4u64 })
+            contract == CAPTURE && part == 0u64 -> (Selection::Right { index: 5u64 })
+            contract == CAPTURE && part == 1u64 -> (Selection::Right { index: 6u64 })
+            _ -> (Selection::Refused { code: INVALID })
+        }
+    }
 }

@@ -126,3 +126,41 @@ pages: a leaked partial/held reader would prevent progress while the service is
 still alive. Final teardown must restore logical pages, physical backing and
 notification quotas. The fixture funds three notification objects for its three
 connections; it changes no kernel limit or normal desktop grant.
+
+## Child admission
+
+Run `python tools/omega-user/connection_test.py --admission --compiler path/to/omega.exe`.
+[supervisor/main.omg](component/supervisor/main.omg) is a standalone Omega
+process that owns two lent launches. On owner command it admits a Rust peer into
+a slot through the runtime's [admission](../../../platform/libraries/user-runtime/admission/main.omg),
+answers the peer's service acquisition from the preallocated offers, echoes its
+other requests, counts copied messages on the provider's storage end, and
+reclaims the slot when the peer exits or dies. [owner.omg](component/supervisor/owner.omg)
+decodes admit, stop, status and exit; [slots.omg](component/supervisor/slots.omg)
+steps one slot per turn. Two slots, the echo protocol and the status words are
+fixture policy, not platform roles.
+
+The [Rust owner](../../../../source-rs/distribution/lab/channels/omega_peer/supervisor/supervisor.rs)
+is the initial program. It lends launches 1 and 2 to the supervisor at launch 0,
+because the kernel lends a launch only toward a lower task slot, and drives it
+through the kernel-installed control pair. Six scenarios, each with a fresh
+supervisor and full budget checks afterwards:
+
+- Six echo children admitted into one slot in turn, each exiting by itself, under
+  a fourteen-channel reservation that a per-child leak would exhaust.
+- A storage child acquires both endpoint parts, sends three copied messages the
+  supervisor must drain, then echoes.
+- An idle child is stopped on command with a cancelled outcome; then the
+  supervisor itself is cancelled with a live child and the kernel reclaims the tree.
+- One child dies holding an unanswered request; another holds while six owner
+  status calls still answer, then is stopped.
+- Refused admissions (no interaction, unsupported capture, unknown launch, bad
+  slot, occupied slot, launch already in use) leave nothing behind and a later
+  storage admission still succeeds; stopping an empty slot is refused.
+- A child checks every refusal code: taken interaction, incompatible range and
+  version, invalid bounds and parts, unavailable contracts and reserved words;
+  another child finds storage unavailable when it was not granted.
+
+The peers use the ordinary Rust service bindings over the shared v4 transport.
+This proves admission, offers and reclamation on the common runtime; it does not
+place children, route input or claim a matrix.

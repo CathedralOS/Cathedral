@@ -26,6 +26,7 @@ another Rust-only feature or isolated proof. Keep F5 usable throughout.
 | Moving distribution behavior to Omega | [Current migration and next matrix step](TASKS_RUST.md) | `source/distribution/applications/`, `source/distribution/matrix/`, [independent matrix proof](source/distribution/lab/matrix-composition/README.md) |
 | Independent Omega service clients | [Service runtime outcome](TASKS_RUST.md#omega-service-runtime-independent-clients-and-retained-requests) | Shared acceptance, sealed request custody, reply tickets and parking; real multi-client fault tests |
 | Standalone Omega userspace | [Process runtime](source/platform/libraries/user-runtime/README.md) | Installed chooser, Background, Colors and Notes run as standalone Omega processes, including shared IPC, owner control, storage and images; the matrix retains its Rust host |
+| Omega child admission and service offers | [Admission outcome](TASKS_RUST.md#omega-child-admission-and-service-offers) | Lent launches, brokered admission with rollback, endpoint and wait-right replies, reclamation; proven by the standalone supervisor witness |
 | Omega kernel boot | [Current boot frontier](source/kernel/boot/uefi/README.md) | `source/kernel/` |
 | Translating upstream Rust OS libraries into Omega | [Omega porting queue](TASKS_OMEGA_PORTS.md) | `source/`, verification under `tools/ports/` |
 | Unresolved owner-level semantics or trust choices | [Owner questions](OWNER_QUESTIONS.md) | Resolve into the owning specification/contract |

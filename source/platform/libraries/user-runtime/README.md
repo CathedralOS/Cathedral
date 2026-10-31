@@ -57,9 +57,12 @@ limits; the runtime has no global client registry or matrix policy.
   opt-in at `begin`. Wrong kinds, duplicate/mismatched grants and incomplete
   pairs retire that connection and release its retained rights.
 - A request remains pending until its exact reply. Its `Ticket` binds the local
-  receiver endpoint, connection incarnation and request ID; delayed work uses `reply_to` or
-  `reply_object_to`. Reuse the **closed Server value** for a replacement so its
-  incarnation advances. Do not reset that value while old tickets remain live.
+  receiver endpoint, connection incarnation and request ID; delayed work uses `reply_to`,
+  `reply_object_to`, `reply_endpoint_to` or `reply_notification_to`. A reply may
+  carry one sealed object, move one endpoint, or delegate one wait right; the
+  typed grant is sent before the frame that names it. Reuse the **closed Server
+  value** for a replacement so its incarnation advances. Do not reset that value
+  while old tickets remain live.
 - `Server.object` is borrowed request backing: it stays valid until reply or
   close, and must not be independently released by the application. A reply may
   delegate it; the recipient then owns an independent reader. Publication failure
@@ -71,11 +74,31 @@ limits; the runtime has no global client registry or matrix policy.
 
 A caller starts with a zero-initialized `Server` and explicitly closes it before
 disposal. Protocol failure already closes its retained resources. Requests carry
-up to 64 bytes; replies carry 64 bytes, optionally with a sealed object. Pipelined
-requests, transferred endpoint/notification requests and copied-request fallback
-remain unsupported. [owner.omg](server/owner.omg) selects only kernel-installed
-owner endpoints, independently of the app's service environment; ordinary owner
-control continues to accept plain requests only.
+up to 64 bytes; replies carry 64 bytes plus at most one attachment. Pipelined
+requests, endpoint or notification attachments on requests, and copied-request
+fallback remain unsupported. [owner.omg](server/owner.omg) selects only
+kernel-installed owner endpoints, independently of the app's service
+environment; ordinary owner control continues to accept plain requests only.
+
+[task/main.omg](task/main.omg) names the child-task mechanisms over lent launch
+authority: index a launch, spawn a child with up to five startup endpoints and
+fourteen further loans, accept its owner control pair, cancel it and collect its
+exit. [admission/main.omg](admission/main.omg) sequences one brokered admission:
+allocate the request/reply channels, the optional storage pair and the
+interaction bell, move the two broker endpoints into the child, accept owner
+control, then begin the child's listener on the retained provider ends. Every
+failed phase releases exactly what this task still holds; a child that exists
+when a later phase fails is cancelled and collected first. `stop` cancels,
+collects and releases; `release` alone closes whatever remains. The caller
+chooses the launch, argument, loans, granted services and admission deadline.
+Interaction is required and storage is the only other service; input producers
+and capture are not offered here. [admission/offer.omg](admission/offer.omg)
+answers a child's acquisition from the rights preallocated at admission, using
+the [shared selection](../../contracts/reference/services.omg): the wait right is
+delegated once and then dropped locally, each storage endpoint moves once, and a
+repeated request finds the right taken. Selection never widens a grant and takes
+no caller identity from the message; the listener that received the request is
+the authenticated child.
 
 [entry.omg](entry.omg) describes the temporary process entry:
 `Program::run(gate, first, second)`. The two kernel arguments remain ordinary
@@ -92,8 +115,11 @@ The x86-64 realization is under [arch/x86_64/gate.omg](arch/x86_64/gate.omg).
 reference kernel's `INT 0x80` leaves. Native buffer leaves stage 64-byte messages or 80-byte typed packets
 into page-contained scratch; read-only inputs are never written back. Output
 leaves retain the input tail, copy back before returning, and do not retain a
-borrow. Counts are checked Omega ranges. Allocation, mapping, release, yield, receive and wait declare blocking
-and their callers acknowledge it. Scalar names alone grant no authority.
+borrow. The 176-byte spawn record and 40-byte exit record are staged the same
+way. Counts are checked Omega ranges. Allocation, mapping, release, yield,
+receive, wait, spawn, cancel and collection declare blocking and their callers
+acknowledge it. Launch, port and child values are kernel tickets scoped to the
+calling task; scalar names alone grant no authority.
 
 [storage/main.omg](storage/main.omg) retains a child-local binding revision and
 realm, encoding scoped requests with the existing end-to-end deadline. The
@@ -129,7 +155,9 @@ chooser, Background, Colors and Notes. It has no general allocator.
 Owner-control transport works; the app owns control policy and its event loop.
 In particular, copied IPC is the
 setup/grant mechanism; it must not become a fallback for the desktop's shared
-service protocol. The matrix still uses its Rust host.
+service protocol. Child admission and service offers are proven by the
+[admission witness](../../../distribution/lab/user-entry/README.md#child-admission);
+no installed program admits children yet, and the matrix still uses its Rust host.
 The runtime has only been qualified on x86-64.
 
 The [process witness](../../../distribution/lab/user-entry/README.md) exercises

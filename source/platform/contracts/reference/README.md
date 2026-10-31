@@ -2,6 +2,8 @@
 
 [main.omg](main.omg) names the wire subset used by installed Omega apps.
 [matrix.omg](matrix.omg) adds request families for the stock Omega matrix router.
+[services.omg](services.omg) names service acquisition and the provider's
+selection among preallocated rights, mirroring the Rust services contract.
 These are separate imports so matrix operation names do not collide with app host
 commands. The reference encodings remain owned by the Rust
 [platform contracts](../../../../source-rs/platform/contracts/README.md).

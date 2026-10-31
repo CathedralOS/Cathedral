@@ -1,0 +1,217 @@
+module admission::main;
+// Admit one brokered child: allocate its startup bundle, move the broker pair
+// into the child, accept its owner control, then listen on the retained provider
+// ends. Every failed phase releases exactly what this task still holds. The
+// caller chooses the launch, argument, granted services and loans; the kernel
+// authenticates each of them. Policy such as slots, roles and restarts stays
+// with the provider. Wire owner: source-rs/platform/libraries/user-runtime/matrix/admission/.
+use kernel::Gate;
+use kernel::Kernel;
+use kernel;
+use ipc::main::Channel;
+use ipc::main::Opened;
+use notification::main::Bell;
+use notification::main::Creation;
+use server::main::Server;
+use task::main::Control;
+use task::main::Exit;
+use protocol::services::INTERACTION;
+use protocol::services::STORAGE;
+
+public data Admitted {
+    live: bool;
+    task: u64;
+    granted: u64;
+    // Owner-side control pair: requests to the child, replies from it.
+    control: Channel;
+    // The child's brokered service connection over the data pair.
+    listener: Server;
+    // Provider-side storage pair; zero unless storage was granted.
+    storage: Channel;
+    // Child-side storage sender/receiver, retained until the child acquires them.
+    offers: [u64; 2];
+    // Interaction wake: the wait right is offered once; signal/control stay here.
+    bell: Bell;
+    // Provider ends before the listener takes them, child ends before they move.
+    data: Channel;
+    handoff: [u64; 2];
+}
+
+// The child starts with `argument` and the lent launches; admission supplies its
+// two broker endpoints. Interaction is required; storage is the only other service.
+// `deadline` bounds the child's service handshake; `objects` admits sealed requests.
+public machine admit(gate: &Gate, child: &mut Admitted, launch: u64, argument: u64,
+    loans: &[u64; 14], loan_count: u64 [0..=14], granted: u64, deadline: u64, objects: bool) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    transition !child.live && child.listener.peer.sender == 0u64 && child.listener.peer.receiver == 0u64
+        && (granted == INTERACTION || granted == (INTERACTION | STORAGE)) {
+        true -> block allocate(gate, child, launch, argument, loans, loan_count, granted, deadline, objects)
+        _ -> (kernel::INVALID_ARGUMENT)
+    }
+}
+machine allocate(gate: &Gate, child: &mut Admitted, launch: u64, argument: u64,
+    loans: &[u64; 14], loan_count: u64 [0..=14], granted: u64, deadline: u64, objects: bool) -> u64 reaches Kernel {
+    child.granted = granted;
+    let status: u64 = bundle(gate, child, granted);
+    transition status == 0u64 {
+        true -> block spawn(gate, child, launch, argument, loans, loan_count, deadline, objects)
+        _ -> block failed(gate, child, status)
+    }
+}
+// Requests flow child -> provider on the first channel, replies back on the second.
+machine bundle(gate: &Gate, child: &mut Admitted, granted: u64) -> u64 reaches Kernel {
+    let requests: Opened = ipc::main::open(gate);
+    transition requests {
+        Opened::Ready { channel } -> replies(gate, child, granted, channel)
+        Opened::Failed { code } -> (code)
+    }
+    machine replies(gate: &Gate, child: &mut Admitted, granted: u64, requests: Channel) -> u64 reaches Kernel {
+        child.handoff[0] = requests.sender;
+        child.data.receiver = requests.receiver;
+        let replies: Opened = ipc::main::open(gate);
+        transition replies {
+            Opened::Ready { channel } -> stored(gate, child, granted, channel)
+            Opened::Failed { code } -> (code)
+        }
+    }
+    machine stored(gate: &Gate, child: &mut Admitted, granted: u64, replies: Channel) -> u64 reaches Kernel {
+        child.handoff[1] = replies.receiver;
+        child.data.sender = replies.sender;
+        transition (granted & STORAGE) != 0u64 {
+            true -> storage_sender(gate, child)
+            _ -> bell(gate, child)
+        }
+    }
+    machine storage_sender(gate: &Gate, child: &mut Admitted) -> u64 reaches Kernel {
+        let opened: Opened = ipc::main::open(gate);
+        transition opened {
+            Opened::Ready { channel } -> storage_receiver(gate, child, channel)
+            Opened::Failed { code } -> (code)
+        }
+    }
+    machine storage_receiver(gate: &Gate, child: &mut Admitted, outbound: Channel) -> u64 reaches Kernel {
+        child.offers[0] = outbound.sender;
+        child.storage.receiver = outbound.receiver;
+        let opened: Opened = ipc::main::open(gate);
+        transition opened {
+            Opened::Ready { channel } -> storage_retained(gate, child, channel)
+            Opened::Failed { code } -> (code)
+        }
+    }
+    machine storage_retained(gate: &Gate, child: &mut Admitted, inbound: Channel) -> u64 reaches Kernel {
+        child.offers[1] = inbound.receiver;
+        child.storage.sender = inbound.sender;
+        transition { _ -> bell(gate, child) }
+    }
+    machine bell(gate: &Gate, child: &mut Admitted) -> u64 reaches Kernel {
+        let created: Creation = notification::main::create(gate);
+        transition created {
+            Creation::Ready { bell } -> installed(child, bell)
+            Creation::Failed { code } -> (code)
+        }
+    }
+    machine installed(child: &mut Admitted, bell: Bell) -> u64 {
+        child.bell = bell;
+        0u64
+    }
+}
+machine spawn(gate: &Gate, child: &mut Admitted, launch: u64, argument: u64,
+    loans: &[u64; 14], loan_count: u64 [0..=14], deadline: u64, objects: bool) -> u64 reaches Kernel {
+    let mut endpoints: [u64; 5];
+    endpoints[0] = child.handoff[0];
+    endpoints[1] = child.handoff[1];
+    let ticket: u64 = block task::main::spawn(gate, launch, argument, &endpoints, 2u64, loans, loan_count);
+    transition ticket < kernel::ERROR_BASE {
+        true -> block moved(gate, child, launch, ticket, deadline, objects)
+        _ -> block failed(gate, child, ticket)
+    }
+    // The broker endpoints now belong to the child; only our names are gone.
+    machine moved(gate: &Gate, child: &mut Admitted, launch: u64, ticket: u64, deadline: u64, objects: bool) -> u64 reaches Kernel {
+        child.task = ticket;
+        child.live = true;
+        child.handoff[0] = 0u64;
+        child.handoff[1] = 0u64;
+        let control: Control = task::main::control(gate, launch);
+        transition control {
+            Control::Ready { channel } -> block listen(gate, child, channel, deadline, objects)
+            Control::Failed { code } -> block undo(gate, child, code)
+        }
+    }
+    machine listen(gate: &Gate, child: &mut Admitted, control: Channel, deadline: u64, objects: bool) -> u64 reaches Kernel {
+        child.control = control;
+        let status: u64 = server::main::begin(&mut child.listener, child.data.sender, child.data.receiver, deadline, objects);
+        transition status == 0u64 {
+            true -> handed(child)
+            _ -> block undo(gate, child, status)
+        }
+    }
+    machine handed(child: &mut Admitted) -> u64 {
+        child.data.sender = 0u64;
+        child.data.receiver = 0u64;
+        0u64
+    }
+}
+// The child exists but a later phase failed: stop it, then release everything.
+machine undo(gate: &Gate, child: &mut Admitted, code: u64) -> u64 reaches Kernel {
+    let cancelled: u64 = block task::main::cancel(gate, child.task);
+    let exit: Exit = block task::main::wait(gate, child.task);
+    block failed(gate, child, code)
+}
+machine failed(gate: &Gate, child: &mut Admitted, code: u64) -> u64 reaches Kernel {
+    block release(gate, child);
+    code
+}
+
+// Stop and collect the child, then release every retained right. A child that
+// already exited keeps its original outcome.
+public machine stop(gate: &Gate, child: &mut Admitted) -> Exit reaches Kernel blocks; invokes Kernel; {
+    transition child.live {
+        true -> block cancelling(gate, child)
+        _ -> (Exit::Failed { code: kernel::PEER_CLOSED })
+    }
+    machine cancelling(gate: &Gate, child: &mut Admitted) -> Exit reaches Kernel {
+        let cancelled: u64 = block task::main::cancel(gate, child.task);
+        let exit: Exit = block task::main::wait(gate, child.task);
+        block release(gate, child);
+        exit
+    }
+}
+// Close whatever this task still names. Names already moved to the child fail
+// harmlessly; no release is skipped because an earlier one failed.
+public machine release(gate: &Gate, child: &mut Admitted) reaches Kernel blocks; invokes Kernel; {
+    block server::main::close(gate, &mut child.listener);
+    close_endpoint(gate, child.control.sender);
+    close_endpoint(gate, child.control.receiver);
+    close_endpoint(gate, child.data.sender);
+    close_endpoint(gate, child.data.receiver);
+    close_endpoint(gate, child.storage.sender);
+    close_endpoint(gate, child.storage.receiver);
+    close_endpoint(gate, child.handoff[0]);
+    close_endpoint(gate, child.handoff[1]);
+    close_endpoint(gate, child.offers[0]);
+    close_endpoint(gate, child.offers[1]);
+    let bell: u64 = notification::main::close(gate, &mut child.bell);
+    child.control.sender = 0u64;
+    child.control.receiver = 0u64;
+    child.data.sender = 0u64;
+    child.data.receiver = 0u64;
+    child.storage.sender = 0u64;
+    child.storage.receiver = 0u64;
+    child.handoff[0] = 0u64;
+    child.handoff[1] = 0u64;
+    child.offers[0] = 0u64;
+    child.offers[1] = 0u64;
+    child.task = 0u64;
+    child.granted = 0u64;
+    child.live = false;
+}
+machine close_endpoint(gate: &Gate, handle: u64) reaches Kernel {
+    transition handle != 0u64 {
+        true -> close(gate, handle)
+        _ -> done()
+    }
+    machine close(gate: &Gate, handle: u64) reaches Kernel {
+        let ignored: u64 = Kernel::close(gate, handle);
+    }
+}
+machine done() {}

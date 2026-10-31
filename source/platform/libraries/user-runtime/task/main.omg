@@ -1,0 +1,100 @@
+module task::main;
+// Child-task mechanisms over lent launch authority: name a launch, admit a child
+// with its startup endpoints and loans, open its owner control, stop and collect.
+// Which launch, how many children and any restart policy stay with the caller.
+// Launch, port and child values are kernel tickets scoped to this task.
+use kernel::Gate;
+use kernel::Kernel;
+use kernel;
+use ipc::main::Channel;
+
+public data Exit [copy] {
+    case Returned(status: u64);
+    case Fault(vector: u64, error: u64, address: u64, instruction: u64);
+    case Cancelled;
+    case Failed(code: u64);
+}
+public data Control {
+    case Ready(channel: Channel);
+    case Failed(code: u64);
+}
+
+// Index into this task's own and lent launches, in kernel order.
+public machine launch(gate: &Gate, index: u64) -> u64 reaches Kernel invokes Kernel; {
+    Kernel::launch_at(gate, index)
+}
+// Startup bundle: at most five endpoints move into the child; at most fourteen
+// idle launches are lent until the child's subtree is reclaimed. Entries beyond
+// each count must be zero. Returns the child ticket, or an error with nothing moved.
+public machine spawn(gate: &Gate, launch: u64, argument: u64, endpoints: &[u64; 5], endpoint_count: u64 [0..=5],
+    loans: &[u64; 14], loan_count: u64 [0..=14]) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let mut record: [u64; 22];
+    record[0] = argument;
+    record[1] = endpoint_count;
+    record[2] = endpoints[0];
+    record[3] = endpoints[1];
+    record[4] = endpoints[2];
+    record[5] = endpoints[3];
+    record[6] = endpoints[4];
+    record[7] = loan_count;
+    record[8] = loans[0];
+    record[9] = loans[1];
+    record[10] = loans[2];
+    record[11] = loans[3];
+    record[12] = loans[4];
+    record[13] = loans[5];
+    record[14] = loans[6];
+    record[15] = loans[7];
+    record[16] = loans[8];
+    record[17] = loans[9];
+    record[18] = loans[10];
+    record[19] = loans[11];
+    record[20] = loans[12];
+    record[21] = loans[13];
+    block Kernel::spawn_tree(gate, launch, &record)
+}
+// The owner-side control pair for this launch's current child: a request sender
+// and a reply receiver. Connecting accepts the kernel-installed pair exactly once.
+public machine control(gate: &Gate, launch: u64) -> Control reaches Kernel invokes Kernel; {
+    let port: u64 = Kernel::launch_port(gate, launch);
+    transition port < kernel::ERROR_BASE {
+        true -> connect(gate, port)
+        _ -> (Control::Failed { code: port })
+    }
+    machine connect(gate: &Gate, port: u64) -> Control reaches Kernel {
+        let first: u64 = Kernel::task_connect(gate, port);
+        transition first < kernel::ERROR_BASE {
+            true -> named(gate, first, first + 1u64)
+            _ -> (Control::Failed { code: first })
+        }
+    }
+    machine named(gate: &Gate, first: u64, second: u64) -> Control reaches Kernel {
+        let sender: u64 = Kernel::bootstrap(gate, first);
+        let receiver: u64 = Kernel::bootstrap(gate, second);
+        transition sender < kernel::ERROR_BASE && receiver < kernel::ERROR_BASE {
+            true -> (Control::Ready { channel: Channel { sender: sender, receiver: receiver } })
+            _ -> (Control::Failed { code: kernel::BAD_HANDLE })
+        }
+    }
+}
+// Stop and reclaim this exact child before returning; its outcome stays collectible.
+public machine cancel(gate: &Gate, child: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    block Kernel::task_cancel(gate, child)
+}
+// Returns only after address-space reclamation and consumes the outcome.
+public machine wait(gate: &Gate, child: u64) -> Exit reaches Kernel blocks; invokes Kernel; {
+    let mut record: [u64; 8];
+    let status: u64 = block Kernel::task_wait(gate, child, &mut record);
+    transition status < kernel::ERROR_BASE {
+        true -> decode(record)
+        _ -> (Exit::Failed { code: status })
+    }
+    machine decode(record: [u64; 8]) -> Exit {
+        transition record[0] {
+            0u64 -> (Exit::Returned { status: record[1] })
+            1u64 -> (Exit::Fault { vector: record[1], error: record[2], address: record[3], instruction: record[4] })
+            2u64 -> (Exit::Cancelled)
+            _ -> (Exit::Failed { code: kernel::IO_ERROR })
+        }
+    }
+}

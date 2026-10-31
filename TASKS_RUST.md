@@ -9,6 +9,50 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
+### Omega child admission and service offers
+
+The common runtime now owns the child lifecycle a matrix needs. Seven native
+leaves expose the kernel's existing launch indexing, launch port, control
+connection, spawn-tree, cancel, wait and endpoint transfer; the x86-64 adapter
+stages the 176-byte spawn record and 40-byte exit record like its other buffers.
+`task/main.omg` wraps them. `admission/main.omg` performs one brokered admission
+with per-phase rollback and begins the child's listener on the retained provider
+ends; `admission/offer.omg` answers acquisition from the preallocated rights.
+The server can reply with a moved endpoint or a delegated wait right as well as
+a sealed object; the mailbox sends the typed grant before the frame. The Omega
+services contract carries the same selection as the Rust one. No kernel
+implementation, limit, default grant or compiler changed. Interaction is required
+and storage is the only other offered service; producers and capture are not.
+
+The witness is `source/distribution/lab/user-entry/component/supervisor/main.omg`,
+a standalone process owning two lent launches under a Rust owner. Six scenarios
+cover repeated admit/exit/reclaim under a channel reservation that a leak would
+exhaust, storage endpoint transfer with drained copied messages, commanded stop,
+subtree reclamation when the supervisor is cancelled, a child dying with a held
+request, owner progress beside a held request, every refused admission, and every
+service refusal code. Budgets return to baseline after each scenario. The kernel
+lends a launch only toward a lower task slot, so the supervisor is launch 0 and
+its peers launches 1 and 2.
+
+Evidence in the main checkout with the saved standalone producer:
+
+- Admission: `build/omega-user/connections/20261031T052107000052Z/`.
+- Primitives: `build/omega-user/tests/20261031T053055906492Z/`; connection suite: `build/omega-user/connections/20261031T053105261556Z/`;
+  service isolation: `build/omega-user/connections/20261031T053131354574Z/`.
+- Background: `build/omega-user/background-control/20261031T053225381440Z/`; Colors: `build/omega-user/colors-control/20261031T053313340384Z/`;
+  Notes: `build/omega-user/notes-control/20261031T053502189047Z/`; Chooser: `build/omega-user/chooser-control/20261031T053724281709Z/`.
+- Default F5 desktop and cold reopen: `build/boot-harness-rs/desktop/20261031T053751150674Z/`.
+- Seven process-tool tests, eleven component-tool tests, layout (112 Omega /
+  154 Rust edges), Rust formatting and admission-fixture clippy pass. Each of the
+  five native packages accepted the same seven declarations and seven table
+  bindings in review; nothing else changed in their locks.
+
+Next: build the standalone Omega lab matrix on this runtime, admitting three
+Rust peers with fixed placement and no input, under a Rust fixture parent that
+lends its loans. World attenuation (geometry, keys, input routing) has no Omega
+port yet and is the remaining large piece before the existing lab proof and then
+the stock host can move. The nested-close timeout recorded below remains open.
+
 ### Omega service runtime: independent clients and retained requests
 
 The common `source/platform/libraries/user-runtime/server/main.omg` now supports
@@ -64,10 +108,8 @@ Final main-checkout evidence, using the normal saved producers:
   external supply require review in each already-qualified native consumer.
 
 The installed apps remain Omega and the installed matrix host remains Rust.
-Next, bring the existing independent Omega matrix proof onto this common runtime,
-adding the missing provider handoffs and child-lifecycle operations as needed.
-Keep its existing policy and use it to qualify the replacement before attempting
-the stock host. The sustained pointer-stress close timeout recorded below remains
+The child-lifecycle operations and provider handoffs this step called for are
+recorded above. The sustained pointer-stress close timeout recorded below remains
 open; this transport work neither diagnoses nor claims to fix it.
 
 ### Standalone chooser: login and taskbar

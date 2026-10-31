@@ -12,6 +12,7 @@ python tools/omega-user/build.py source/distribution/lab/user-entry/native --com
 python tools/omega-user/run_test.py --compiler path/to/new/omega.exe
 python tools/omega-user/connection_test.py --compiler path/to/new/omega.exe
 python tools/omega-user/connection_test.py --service --compiler path/to/new/omega.exe
+python tools/omega-user/connection_test.py --admission --compiler path/to/new/omega.exe
 python tools/omega-user/background_test.py --compiler path/to/new/omega.exe
 python tools/omega-user/colors_test.py --compiler path/to/new/omega.exe
 python tools/omega-user/notes_test.py --compiler path/to/new/omega.exe
@@ -49,8 +50,10 @@ and the declarations in `source/platform/libraries/user-runtime/kernel.omg` and
 release, typed read-view transfer, bounded shared word access and notification
 creation, handoff, signal, wait, control and drop, plus lookup of installed owner
 endpoints, typed endpoint acceptance, bounded immutable object creation/send, and sealed
-reply acceptance/read, private chunk copying and sealing/unmapping, and a
-page-contained wait for up to 48 interests.
+reply acceptance/read, private chunk copying and sealing/unmapping, a
+page-contained wait for up to 48 interests, child launch indexing, spawn with a
+staged 176-byte startup record, owner-control connection, cancellation,
+collection of the 40-byte exit record, and endpoint transfer.
 The native leaves must preserve the declared buffers,
 range bounds, blocking and calling convention. Accept the inspected rows in the
 generated review document and resume with the same qualified compiler:
@@ -119,5 +122,9 @@ nested login against the ordinary services.
 It checks asynchronous setup, sealed request/reply custody, independent owner
 progress, malformed handoffs and cleanup under a tight reader allowance. See the
 [service witness](../../source/distribution/lab/user-entry/README.md#independent-service-clients)
-for the exact scenarios. This qualifies reusable transport for a future standalone
-matrix; the installed stock matrix still uses its Rust resource host.
+for the exact scenarios. `connection_test.py --admission` runs the standalone
+supervisor that admits Rust peers from lent launches, offers them interaction
+and storage, and reclaims them; see the
+[admission witness](../../source/distribution/lab/user-entry/README.md#child-admission).
+Together these qualify the reusable transport and child lifecycle for a future
+standalone matrix; the installed stock matrix still uses its Rust resource host.

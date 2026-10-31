@@ -51,6 +51,13 @@ cathedral_kernel_gate:
     .quad cathedral_private_write
     .quad cathedral_object_freeze
     .quad cathedral_wait_many
+    .quad cathedral_launch_at
+    .quad cathedral_launch_port
+    .quad cathedral_task_connect
+    .quad cathedral_spawn_tree
+    .quad cathedral_task_cancel
+    .quad cathedral_task_wait
+    .quad cathedral_endpoint_send
 
 .section .text.cathedral_kernel_gate,"ax",@progbits
 cathedral_yield:
@@ -537,5 +544,74 @@ cathedral_wait_many:
     mov rsp, rbp
     pop rbp
     ret
+
+
+// Child tasks. Launch, port and child names are kernel tickets scoped to this
+// task; the kernel checks ownership of each one. Nothing here infers a PID.
+cathedral_launch_at:
+    mov eax, 7                       // TASK_LAUNCH
+    xor esi, esi
+    xor edx, edx
+    int 0x80
+    ret
+cathedral_launch_port:
+    mov eax, 49                      // TASK_LAUNCH_PORT
+    xor esi, esi
+    xor edx, edx
+    int 0x80
+    ret
+cathedral_task_connect:
+    mov eax, 11                      // TASK_CONNECT
+    xor esi, esi
+    xor edx, edx
+    int 0x80
+    ret
+cathedral_task_cancel:
+    mov eax, 13                      // TASK_CANCEL
+    xor esi, esi
+    xor edx, edx
+    int 0x80
+    ret
+
+// Stage the borrowed 176-byte spawn record in one 256-byte-aligned slot so the
+// kernel's single-page copy-in never straddles a boundary. Nothing is written back.
+cathedral_spawn_tree:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 512
+    and rsp, -256
+    mov r8, rdi
+    mov rdi, rsp
+    mov ecx, 22
+    rep movsq
+    mov eax, 40                      // TASK_SPAWN_TREE
+    mov rdi, r8
+    mov rsi, rsp
+    xor edx, edx
+    int 0x80
+    mov rsp, rbp
+    pop rbp
+    ret
+
+// The kernel writes the 40-byte exit record; copy it back into the borrowed array.
+cathedral_task_wait:
+    mov r8, rdi
+    mov rdi, rsi
+    stage_buffer
+    mov eax, 9                       // TASK_WAIT
+    mov rdi, r8
+    mov rsi, rsp
+    mov edx, 40
+    int 0x80
+    finish_buffer 1
+
+cathedral_endpoint_send:
+    stage_packet
+    mov eax, 36                      // IPC_SEND_CAP
+    mov rdi, r8
+    mov rsi, rsp
+    xor edx, edx
+    int 0x80
+    finish_packet 0
 
 .section .note.GNU-stack,"",@progbits

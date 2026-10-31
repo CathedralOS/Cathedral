@@ -1,0 +1,104 @@
+module supervisor::main;
+// Child admission witness: a standalone Omega process admits Rust peers into two
+// slots on owner command, offers them services, echoes their requests, reclaims
+// them when they exit or die, and keeps answering its owner throughout. One turn
+// polls the owner and each live slot once, then parks on every live interest.
+// Two slots, the echo protocol and the status words are fixture policy only.
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::server::main::Server;
+use runtime::admission::main::Admitted;
+use runtime::task::main::Exit;
+use runtime::time::Tick;
+use runtime::waiting::Set;
+use supervisor::owner;
+use supervisor::slots;
+public data State {
+    owner: Server;
+    slots: [Admitted; 2];
+    exits: [u64; 2];
+    clock: u64;
+    deadline: u64;
+    stopped: bool;
+    handled: u64;
+    stored: u64;
+}
+public machine check(gate: &Gate) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let mut context: State;
+    let status: u64 = startup(gate, &mut context);
+    transition status == 0u64 {
+        true -> block run(gate, &mut context)
+        _ -> block cleanup(gate, &mut context, status)
+    }
+}
+machine startup(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+    context.clock = Kernel::clock(gate);
+    let tick: Tick = runtime::time::read(gate, context.clock);
+    transition tick {
+        Tick::Read { value } -> installed(gate, context, value)
+        _ -> (305u64)
+    }
+}
+// The owner connects through the kernel-installed control pair. No environment
+// endpoint is expected: this process owns only lent launches.
+machine installed(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    let mut env: [u64; 8];
+    let status: u64 = Kernel::environment(gate, &mut env);
+    transition status == 0u64 && env[0] == 0u64 {
+        true -> control(gate, context, now)
+        _ -> (306u64)
+    }
+}
+machine control(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    let receiver: u64 = Kernel::bootstrap(gate, 0u64);
+    let sender: u64 = Kernel::bootstrap(gate, 1u64);
+    context.deadline = runtime::time::after(now, 6000u64);
+    runtime::server::main::begin(&mut context.owner, sender, receiver, runtime::time::after(now, 300u64), false)
+}
+machine run(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+    let tick: Tick = runtime::time::read(gate, context.clock);
+    transition tick {
+        Tick::Read { value } -> block turn(gate, context, value)
+        _ -> block cleanup(gate, context, 301u64)
+    }
+}
+machine turn(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    transition runtime::time::reached(now, context.deadline) {
+        true -> block cleanup(gate, context, 302u64)
+        _ -> block served(gate, context, now)
+    }
+}
+machine served(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    let commanded: u64 = block owner::step(gate, context, now);
+    let first: u64 = block slots::step(gate, context, 0u64, now);
+    let second: u64 = block slots::step(gate, context, 1u64, now);
+    transition commanded == 0u64 && first == 0u64 && second == 0u64 {
+        true -> block wait(gate, context, now)
+        _ -> block cleanup(gate, context, 303u64)
+    }
+}
+machine wait(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    transition context.stopped {
+        true -> block cleanup(gate, context, 0u64)
+        _ -> block parked(gate, context, now)
+    }
+    machine parked(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+        let mut set: Set;
+        runtime::waiting::reset(&mut set, context.deadline);
+        runtime::server::main::watch(&context.owner, &mut set);
+        slots::watch(context, 0u64, &mut set);
+        slots::watch(context, 1u64, &mut set);
+        let status: u64 = block runtime::waiting::wait(gate, &set);
+        transition status < kernel::ERROR_BASE || status == kernel::TIMED_OUT || status == kernel::PEER_CLOSED {
+            true -> block run(gate, context)
+            _ -> block cleanup(gate, context, 304u64)
+        }
+    }
+}
+machine cleanup(gate: &Gate, context: &mut State, status: u64) -> u64 reaches Kernel {
+    block slots::reclaim(gate, context, 0u64);
+    block slots::reclaim(gate, context, 1u64);
+    block runtime::server::main::close(gate, &mut context.owner);
+    status
+}

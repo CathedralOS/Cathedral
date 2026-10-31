@@ -1,0 +1,82 @@
+module admission::offer;
+// Answer a child's service acquisition from the rights preallocated at admission.
+// The request words select among already-granted rights; they never widen the
+// grant. The caller authenticated the child by the listener that received the
+// request, so no caller identity comes from the message.
+use kernel::Gate;
+use kernel::Kernel;
+use kernel;
+use server::main::Ticket;
+use admission::main::Admitted;
+use protocol::services::Selection;
+use protocol::services::select;
+use protocol::services::TAKEN;
+use protocol::services::UNAVAILABLE;
+
+public machine reply(gate: &Gate, child: &mut Admitted, issued: Ticket, words: &[u64; 8]) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    let selection: Selection = select(child.granted, words);
+    transition selection {
+        Selection::Right { index } -> block right(gate, child, issued, index)
+        Selection::Refused { code } -> block refuse(gate, child, issued, code)
+    }
+}
+machine right(gate: &Gate, child: &mut Admitted, issued: Ticket, index: u64 [0..=6]) -> u64 reaches Kernel {
+    transition {
+        index == 0u64 -> block interaction(gate, child, issued)
+        index == 1u64 -> block storage(gate, child, issued, 0u64)
+        index == 2u64 -> block storage(gate, child, issued, 1u64)
+        _ -> block refuse(gate, child, issued, UNAVAILABLE)
+    }
+}
+// Delegate the wait right once. Receiver escrow owns the copy after a successful
+// handoff, so the local name is dropped; a second request finds it taken.
+machine interaction(gate: &Gate, child: &mut Admitted, issued: Ticket) -> u64 reaches Kernel {
+    let wait: u64 = child.bell.wait;
+    transition wait != 0u64 {
+        true -> block delegate(gate, child, issued, wait)
+        _ -> block refuse(gate, child, issued, TAKEN)
+    }
+    machine delegate(gate: &Gate, child: &mut Admitted, issued: Ticket, wait: u64) -> u64 reaches Kernel {
+        let mut granted: [u64; 8];
+        granted[1] = 1u64;
+        let status: u64 = block server::main::reply_notification_to(gate, &mut child.listener, issued, &granted, wait);
+        transition status == 0u64 {
+            true -> handed(gate, child)
+            _ -> (status)
+        }
+    }
+    machine handed(gate: &Gate, child: &mut Admitted) -> u64 reaches Kernel {
+        let wait: u64 = child.bell.wait;
+        child.bell.wait = 0u64;
+        let ignored: u64 = Kernel::notify_drop(gate, wait);
+        0u64
+    }
+}
+// Move one storage endpoint. A failed transfer keeps the local name; release
+// later tolerates a name the kernel already moved.
+machine storage(gate: &Gate, child: &mut Admitted, issued: Ticket, part: u64 [0..=1]) -> u64 reaches Kernel {
+    let endpoint: u64 = child.offers[part];
+    transition endpoint != 0u64 {
+        true -> block transfer(gate, child, issued, part, endpoint)
+        _ -> block refuse(gate, child, issued, TAKEN)
+    }
+    machine transfer(gate: &Gate, child: &mut Admitted, issued: Ticket, part: u64 [0..=1], endpoint: u64) -> u64 reaches Kernel {
+        let mut granted: [u64; 8];
+        granted[1] = 1u64;
+        let status: u64 = block server::main::reply_endpoint_to(gate, &mut child.listener, issued, &granted, endpoint);
+        transition status == 0u64 {
+            true -> moved(child, part)
+            _ -> (status)
+        }
+    }
+    machine moved(child: &mut Admitted, part: u64 [0..=1]) -> u64 {
+        child.offers[part] = 0u64;
+        0u64
+    }
+}
+machine refuse(gate: &Gate, child: &mut Admitted, issued: Ticket, code: u64) -> u64 reaches Kernel {
+    let mut refusal: [u64; 8];
+    refusal[0] = code;
+    block server::main::reply_to(gate, &mut child.listener, issued, &refusal)
+}

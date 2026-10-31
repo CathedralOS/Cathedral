@@ -144,8 +144,10 @@ The Omega proof also accepts a real parent-supplied broker and attenuates its
 view/input to three peers; its private synchronous adapter is a boundary proof,
 not the stock desktop event loop. Child connection
 construction, spawn and failure rollback are shared through
-`platform/libraries/user-runtime/matrix/admission/`; each program retains code,
-budget, placement and recovery policy. Scoped service acquisition also lives in
+`platform/libraries/user-runtime/matrix/admission/` in Rust and through the
+Omega runtime's `admission/` and `task/` modules; each program retains code,
+budget, placement and recovery policy. The Omega runtime's server can also hand
+a child an endpoint or a wait right in a reply, which is how offers are kept. Scoped service acquisition also lives in
 platform contracts/runtime; the stock owner resolves declarations and selects the
 per-child offer. The kernel transfers endpoints without knowing service names.
 

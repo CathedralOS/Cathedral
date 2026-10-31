@@ -62,8 +62,30 @@ linux_x86_64 machine Gate::bootstrap_leaf(gate: &Gate, index: u64) -> u64
 linux_x86_64 machine Gate::wait_many_leaf(gate: &Gate, records: &[u64; 96], count: u64 [0..=48], deadline: u64) -> u64
     satisfies Kernel::wait_many via ForeignBinding::TableFunction(wait_many) blocks;
 
+linux_x86_64 machine Gate::launch_at_leaf(gate: &Gate, index: u64) -> u64
+    satisfies Kernel::launch_at via ForeignBinding::TableFunction(launch_at);
+linux_x86_64 machine Gate::launch_port_leaf(gate: &Gate, launch: u64) -> u64
+    satisfies Kernel::launch_port via ForeignBinding::TableFunction(launch_port);
+linux_x86_64 machine Gate::task_connect_leaf(gate: &Gate, port: u64) -> u64
+    satisfies Kernel::task_connect via ForeignBinding::TableFunction(task_connect);
+linux_x86_64 machine Gate::spawn_tree_leaf(gate: &Gate, launch: u64, record: &[u64; 22]) -> u64
+    satisfies Kernel::spawn_tree via ForeignBinding::TableFunction(spawn_tree) blocks;
+linux_x86_64 machine Gate::task_cancel_leaf(gate: &Gate, child: u64) -> u64
+    satisfies Kernel::task_cancel via ForeignBinding::TableFunction(task_cancel) blocks;
+linux_x86_64 machine Gate::task_wait_leaf(gate: &Gate, child: u64, record: &mut [u64; 8]) -> u64
+    satisfies Kernel::task_wait via ForeignBinding::TableFunction(task_wait) blocks;
+linux_x86_64 machine Gate::endpoint_send_leaf(gate: &Gate, endpoint: u64, packet: &[u64; 10]) -> u64
+    satisfies Kernel::endpoint_send via ForeignBinding::TableFunction(endpoint_send);
+
 public NativeKernel satisfies Kernel {
     Kernel::wait_many = Gate::wait_many_leaf;
+    Kernel::launch_at = Gate::launch_at_leaf;
+    Kernel::launch_port = Gate::launch_port_leaf;
+    Kernel::task_connect = Gate::task_connect_leaf;
+    Kernel::spawn_tree = Gate::spawn_tree_leaf;
+    Kernel::task_cancel = Gate::task_cancel_leaf;
+    Kernel::task_wait = Gate::task_wait_leaf;
+    Kernel::endpoint_send = Gate::endpoint_send_leaf;
     Kernel::object_create = Gate::object_create_leaf;
     Kernel::object_send = Gate::object_send_leaf;
     Kernel::object_receive = Gate::object_receive_leaf;

@@ -9,6 +9,13 @@ use cathedral_user_runtime::{
 };
 
 pub fn run(role: u64, mode: u64, environment: Environment) -> u64 {
+    if cfg!(feature = "omega-admission") {
+        if role == 0 {
+            supervisor::run();
+            return 0;
+        }
+        return supervisor::child(mode, environment);
+    }
     if role == 1 {
         return serve(mode, environment);
     }
