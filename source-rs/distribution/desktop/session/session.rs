@@ -11,7 +11,13 @@ pub(crate) const KEYS: u64 = if cfg!(feature = "notes") {
 } else {
     wire::KEY_MASK
 };
-pub(crate) const BACKGROUND: u64 = 0x101827;
+/// The backdrop the compositor shows behind every matrix tile. The Omega root
+/// proof shifts it so the background program's own fill stays distinguishable.
+pub(crate) const BACKGROUND: u64 = if cfg!(feature = "omega-root") {
+    0x303030
+} else {
+    0x101827
+};
 pub(crate) fn owner(matrix: &mut RootControl, words: wire::Packet) {
     assert_eq!(call(matrix, words), [0; 8], "owner request {words:?}");
 }
@@ -137,11 +143,24 @@ pub(crate) fn run() -> u64 {
     }
 }
 
-/// Keep an admitted Omega root alive without starting storage: the boot
-/// harness drives its display and source paths and reads the scanout.
+/// Keep an admitted Omega root alive without starting storage: run the
+/// catalogue's background into its slot over a sub-rectangle so the boot
+/// harness can see the child's paint beside the backdrop, then park while the
+/// harness drives the display and source paths and reads the scanout.
 #[cfg(feature = "shell")]
 fn omega_root(session: &mut admission::Session) -> u64 {
     cathedral_user_runtime::write(b"Cathedral desktop: Omega root admitted\n").unwrap();
+    const BACKGROUND_SLOT: u64 = 4;
+    const BACKGROUND_IMAGE: u64 = 1;
+    for words in [
+        [wire::RUN_PAGES, BACKGROUND_SLOT, 14, 2, 0, 0, 0, 0],
+        [wire::RUN, BACKGROUND_SLOT, BACKGROUND_IMAGE, 0, 2, 0, 0, 0],
+        [wire::SURFACE_LIMIT, BACKGROUND_SLOT, 1, 0, 0, 0, 0, 0],
+        [wire::PLACE, BACKGROUND_SLOT, 200, 150, 400, 300, 0, 0],
+    ] {
+        owner(&mut session.matrix, words);
+    }
+    cathedral_user_runtime::write(b"Cathedral desktop: Omega root background placed\n").unwrap();
     loop {
         match session.matrix.idle(time::after(10).unwrap()) {
             Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),

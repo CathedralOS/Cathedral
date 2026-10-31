@@ -60,6 +60,16 @@ cathedral_kernel_gate:
     .quad cathedral_endpoint_send
     .quad cathedral_resource_budget
     .quad cathedral_notification_budget
+    .quad cathedral_image_at
+    .quad cathedral_image_from_object
+    .quad cathedral_image_release
+    .quad cathedral_task_reserve
+    .quad cathedral_task_release
+    .quad cathedral_pool_assign
+    .quad cathedral_image_allow
+    .quad cathedral_cpu_assign
+    .quad cathedral_physical_assign
+    .quad cathedral_resource_assign
 
 .section .text.cathedral_kernel_gate,"ax",@progbits
 cathedral_yield:
@@ -633,5 +643,85 @@ cathedral_notification_budget:
     xor edx, edx
     int 0x80
     finish_buffer 1
+
+// Executables and funded reservations. Launch, image and executable names are
+// kernel tickets scoped to this task; records are staged in one aligned slot.
+cathedral_image_at:
+    mov eax, 50                      // TASK_IMAGE_AT
+    xor esi, esi
+    xor edx, edx
+    int 0x80
+    ret
+cathedral_image_from_object:
+    mov eax, 69                      // TASK_IMAGE_FROM_OBJECT
+    xor edx, edx
+    int 0x80
+    ret
+cathedral_image_release:
+    mov eax, 72                      // TASK_IMAGE_RELEASE
+    xor esi, esi
+    xor edx, edx
+    int 0x80
+    ret
+cathedral_task_reserve:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 128
+    and rsp, -64
+    mov r8, rdi
+    mov rdi, rsp
+    mov ecx, 6
+    rep movsq
+    mov eax, 46                      // TASK_RESERVE
+    mov rdi, r8
+    mov rsi, rsp
+    xor edx, edx
+    int 0x80
+    mov rsp, rbp
+    pop rbp
+    ret
+cathedral_task_release:
+    mov eax, 47                      // TASK_RELEASE
+    xor esi, esi
+    xor edx, edx
+    int 0x80
+    ret
+cathedral_pool_assign:
+    mov eax, 48                      // TASK_POOL_ASSIGN
+    xor edx, edx
+    int 0x80
+    ret
+cathedral_image_allow:
+    mov eax, 52                      // TASK_IMAGE_ALLOW
+    xor edx, edx
+    int 0x80
+    ret
+cathedral_cpu_assign:
+    mov eax, 53                      // TASK_CPU_ASSIGN
+    xor edx, edx
+    int 0x80
+    ret
+cathedral_physical_assign:
+    mov eax, 55                      // PHYSICAL_ASSIGN
+    xor edx, edx
+    int 0x80
+    ret
+cathedral_resource_assign:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 128
+    and rsp, -64
+    mov r8, rdi
+    mov rdi, rsp
+    mov ecx, 3
+    rep movsq
+    mov eax, 44                      // RESOURCE_ASSIGN
+    mov rdi, r8
+    mov rsi, rsp
+    xor edx, edx
+    int 0x80
+    mov rsp, rbp
+    pop rbp
+    ret
 
 .section .note.GNU-stack,"",@progbits

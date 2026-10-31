@@ -1,0 +1,258 @@
+module children;
+// Children this matrix funds and admits itself. RUN_PAGES and RUN_MEMORY stage
+// the next launch's allowances for a slot; RUN reserves a launch for an image
+// from the owner's catalogue under those allowances, admits the child through
+// the runtime's brokered admission with interaction, and the child's listener
+// serves it from then on. STOP reclaims the whole subtree and returns the
+// reservation. Launches from the realm's objects, storage grants and the stock
+// launch policy arrive in later slices.
+use protocol::main;
+use protocol::matrix;
+use protocol::services::INTERACTION;
+use main::State;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::connection::main::Frame;
+use runtime::task::main::Exit;
+use runtime::time::Tick;
+use runtime::waiting::Set;
+use world::level;
+use world::geometry::zeros_from;
+use report;
+
+// The per-load admission ceiling every stock child is reserved with.
+public const ADMISSION_FRAMES: u64 = 256u64;
+// How long a child has to complete each startup handshake, as the Rust host allows.
+public const HANDSHAKE_TICKS: u64 = 300u64;
+public const MAX_IMAGES: u64 = 14u64;
+
+public machine owner_word(op: u64) -> bool {
+    op == RUN_PAGES || op == RUN_MEMORY || op == RUN || op == STOP
+}
+public machine owner(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel blocks; invokes Kernel; {
+    transition frame.payload[1] < 5u64 {
+        true -> block slotted(gate, context, now, frame, frame.payload[1])
+        _ -> block reply(gate, context, error(kernel::DENIED))
+    }
+    machine slotted(gate: &Gate, context: &mut State, now: u64, frame: Frame, slot: u64 [0..=4]) -> u64 reaches Kernel {
+        transition {
+            frame.payload[0] == RUN_PAGES && zeros_from(&frame.payload, 4u64) -> block paged(gate, context, slot, frame.payload[2], frame.payload[3])
+            frame.payload[0] == RUN_MEMORY && zeros_from(&frame.payload, 3u64) -> block funded(gate, context, slot, frame.payload[2])
+            frame.payload[0] == RUN && frame.payload[5] < 16384u64 && frame.payload[4] < 64u64 -> block running(gate, context, now, slot, frame)
+            frame.payload[0] == STOP && zeros_from(&frame.payload, 2u64) -> block stopping(gate, context, slot)
+            _ -> block reply(gate, context, error(kernel::DENIED))
+        }
+    }
+    // Allowances for the next launch into this slot.
+    machine paged(gate: &Gate, context: &mut State, slot: u64 [0..=4], private_pages: u64, reader_pages: u64) -> u64 reaches Kernel {
+        context.staged_private[slot] = private_pages;
+        context.staged_reader[slot] = reader_pages;
+        block reply(gate, context, ok())
+    }
+    machine funded(gate: &Gate, context: &mut State, slot: u64 [0..=4], frames: u64) -> u64 reaches Kernel {
+        context.staged_frames[slot] = frames;
+        block reply(gate, context, ok())
+    }
+    machine running(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], frame: Frame) -> u64 reaches Kernel {
+        let status: u64 = block run(gate, context, now, slot, frame.payload[2], frame.payload[3], frame.payload[4],
+            frame.payload[5], frame.payload[6], frame.payload[7]);
+        block reply(gate, context, error(status))
+    }
+    machine stopping(gate: &Gate, context: &mut State, slot: u64 [0..=4]) -> u64 reaches Kernel {
+        transition context.slots[slot].live {
+            true -> block stopped(gate, context, slot)
+            _ -> block reply(gate, context, error(kernel::PEER_CLOSED))
+        }
+    }
+    machine stopped(gate: &Gate, context: &mut State, slot: u64 [0..=4]) -> u64 reaches Kernel {
+        block reclaim(gate, context, slot);
+        block reply(gate, context, ok())
+    }
+}
+// Reserve and admit: the image grant from the owner's catalogue, the staged
+// allowances (physical frames default to the load plus the private pages, or a
+// whole admission allowance per descendant slot), the CPU ceiling and the
+// images the child may run in turn, then the brokered admission. Every failed
+// step leaves no reservation behind.
+public machine run(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], image: u64, argument: u64, channels: u64,
+    descendants: u64, images: u64, cpu: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    transition !context.slots[slot].live && images < 16384u64 && descendants < 64u64 {
+        true -> block imaged(gate, context, now, slot, image, argument, channels, descendants, images, cpu)
+        _ -> (kernel::BUSY)
+    }
+    machine imaged(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], image: u64, argument: u64, channels: u64,
+        descendants: u64, images: u64, cpu: u64) -> u64 reaches Kernel requires images < 16384u64 && descendants < 64u64 {
+        let executable: u64 = runtime::task::main::image_at(gate, image);
+        transition executable < kernel::ERROR_BASE {
+            true -> block reserving(gate, context, now, slot, executable, argument, channels, descendants, images, cpu)
+            _ -> (executable)
+        }
+    }
+    machine reserving(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], executable: u64, argument: u64, channels: u64,
+        descendants: u64, images: u64, cpu: u64) -> u64 reaches Kernel requires images < 16384u64 && descendants < 64u64 {
+        let private_pages: u64 = context.staged_private[slot];
+        let reader_pages: u64 = context.staged_reader[slot];
+        let frames: u64 = physical_frames(context.staged_frames[slot], private_pages, descendants);
+        context.staged_private[slot] = 0u64;
+        context.staged_reader[slot] = 0u64;
+        context.staged_frames[slot] = 0u64;
+        let launch: u64 = runtime::task::main::reserve(gate, executable, private_pages, reader_pages, channels,
+            descendants, ADMISSION_FRAMES, frames);
+        transition launch < kernel::ERROR_BASE {
+            true -> block limited(gate, context, now, slot, launch, argument, images, cpu)
+            _ -> (launch)
+        }
+    }
+    machine limited(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64, argument: u64, images: u64, cpu: u64) -> u64
+        reaches Kernel requires images < 16384u64 {
+        let status: u64 = cpu_ceiling(gate, launch, cpu);
+        transition status == 0u64 {
+            true -> block allowing(gate, context, now, slot, launch, argument, images, 0u64)
+            _ -> refused(gate, launch, status)
+        }
+    }
+    // Each set bit lends the child the same catalogue executable.
+    machine allowing(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64, argument: u64, images: u64, index: u64) -> u64
+        reaches Kernel requires index <= 14u64 {
+        transition index < 14u64 {
+            true -> block allowed(gate, context, now, slot, launch, argument, images, index)
+            _ -> block admitting(gate, context, now, slot, launch, argument)
+        }
+    }
+    machine allowed(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64, argument: u64, images: u64, index: u64) -> u64
+        reaches Kernel requires index < 14u64 {
+        transition ((images >> index) & 1u64) == 1u64 {
+            true -> block lending(gate, context, now, slot, launch, argument, images, index)
+            _ -> block allowing(gate, context, now, slot, launch, argument, images, index + 1u64)
+        }
+    }
+    machine lending(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64, argument: u64, images: u64, index: u64) -> u64
+        reaches Kernel requires index < 14u64 {
+        let grant: u64 = runtime::task::main::image_at(gate, index);
+        let status: u64 = allow(gate, launch, grant);
+        transition status == 0u64 {
+            true -> block allowing(gate, context, now, slot, launch, argument, images, index + 1u64)
+            _ -> refused(gate, launch, status)
+        }
+    }
+    // The handshake windows start at admission, after the reservation work above.
+    machine admitting(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64, argument: u64) -> u64 reaches Kernel {
+        let tick: Tick = runtime::time::read(gate, context.clock);
+        transition tick {
+            Tick::Read { value } -> block spawning(gate, context, value, slot, launch, argument)
+            Tick::Failed { code } -> refused(gate, launch, code)
+        }
+    }
+    machine spawning(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64, argument: u64) -> u64 reaches Kernel {
+        let loans: [u64; 14];
+        level::disconnected(&mut context.world, slot);
+        let status: u64 = block runtime::admission::main::admit(gate, &mut context.slots[slot], launch, argument,
+            &loans, 0u64, INTERACTION, runtime::time::after(now, HANDSHAKE_TICKS), false);
+        transition status == 0u64 {
+            true -> block controlling(gate, context, now, slot, launch)
+            _ -> refused(gate, launch, status)
+        }
+    }
+    // The child accepts its owner control as its first act and only then asks
+    // the broker for services, so this matrix connects to that control before
+    // anything else can wait on the child. The connection takes custody of the
+    // kernel-installed pair either way.
+    machine controlling(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64) -> u64 reaches Kernel {
+        let sender: u64 = context.slots[slot].control.sender;
+        let receiver: u64 = context.slots[slot].control.receiver;
+        context.slots[slot].control.sender = 0u64;
+        context.slots[slot].control.receiver = 0u64;
+        let status: u64 = block runtime::connection::main::connect(gate, &mut context.controls[slot], sender, receiver,
+            runtime::time::after(now, HANDSHAKE_TICKS));
+        transition status == 0u64 {
+            true -> admitted(context, slot, launch)
+            _ -> block uncontrolled(gate, context, slot, launch, status)
+        }
+    }
+    machine uncontrolled(gate: &Gate, context: &mut State, slot: u64 [0..=4], launch: u64, status: u64) -> u64 reaches Kernel {
+        let exit: Exit = block runtime::admission::main::stop(gate, &mut context.slots[slot]);
+        refused(gate, launch, status)
+    }
+    machine admitted(context: &mut State, slot: u64 [0..=4], launch: u64) -> u64 {
+        context.reservations[slot] = launch;
+        0u64
+    }
+    machine refused(gate: &Gate, launch: u64, status: u64) -> u64 reaches Kernel {
+        let ignored: u64 = runtime::task::main::release(gate, launch);
+        status
+    }
+}
+machine cpu_ceiling(gate: &Gate, launch: u64, cpu: u64) -> u64 reaches Kernel invokes Kernel; {
+    transition cpu == 0u64 {
+        true -> (0u64)
+        _ -> (runtime::task::main::assign_cpu(gate, launch, cpu))
+    }
+}
+machine allow(gate: &Gate, launch: u64, grant: u64) -> u64 reaches Kernel invokes Kernel; {
+    transition grant < kernel::ERROR_BASE {
+        true -> (runtime::task::main::allow_image(gate, launch, grant))
+        _ -> (grant)
+    }
+}
+// Backing for the load and its private pages, never below one admission
+// allowance per slot the child may fill, unless the owner staged an amount.
+machine physical_frames(staged: u64, private_pages: u64, descendants: u64) -> u64 requires descendants < 64u64 {
+    let subtree: u64 = (descendants + 1u64) * ADMISSION_FRAMES;
+    let load: u64 = world::geometry::plus(ADMISSION_FRAMES, private_pages);
+    transition {
+        staged != 0u64 -> (staged)
+        load > subtree -> (load)
+        _ -> (subtree)
+    }
+}
+// Drop the owner control, stop and collect the child, return its reservation
+// and forget its view.
+public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel blocks; invokes Kernel; {
+    transition context.slots[slot].live {
+        true -> block stopping(gate, context, slot)
+        _ -> done()
+    }
+    machine stopping(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+        let closed: u64 = block runtime::connection::main::close(gate, &mut context.controls[slot]);
+        let exit: Exit = block runtime::admission::main::stop(gate, &mut context.slots[slot]);
+        exited(gate, slot, exit);
+        let ignored: u64 = runtime::task::main::release(gate, context.reservations[slot]);
+        context.reservations[slot] = 0u64;
+        level::disconnected(&mut context.world, slot);
+    }
+}
+// The exit goes to the console; the Rust host keeps child exits silent, but a
+// proof over this program reads them there.
+machine exited(gate: &Gate, slot: u64, exit: Exit) reaches Kernel invokes Kernel; {
+    transition exit {
+        Exit::Returned { status } -> report::child(gate, slot, 1u64, status)
+        Exit::Fault { vector, error, address, instruction } -> faulted(gate, slot, vector, address, instruction)
+        Exit::Cancelled -> report::child(gate, slot, 3u64, 0u64)
+        Exit::Failed { code } -> report::child(gate, slot, 4u64, code)
+    }
+    machine faulted(gate: &Gate, slot: u64, vector: u64, address: u64, instruction: u64) reaches Kernel {
+        report::child(gate, slot, 2u64, vector);
+        report::child(gate, slot, 0x2au64, address);
+        report::child(gate, slot, 0x2bu64, instruction);
+    }
+}
+public machine watch(context: &State, slot: u64 [0..=4], set: &mut Set) {
+    transition context.slots[slot].live {
+        true -> runtime::server::main::watch(&context.slots[slot].listener, set)
+        _ -> done()
+    }
+}
+machine reply(gate: &Gate, context: &mut State, words: [u64; 8]) -> u64 reaches Kernel {
+    block runtime::server::main::reply(gate, &mut context.owner, &words)
+}
+machine error(code: u64) -> [u64; 8] {
+    let mut words: [u64; 8];
+    words[0] = code;
+    words
+}
+machine ok() -> [u64; 8] {
+    let words: [u64; 8];
+    words
+}
+machine done() {}

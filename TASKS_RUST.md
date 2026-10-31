@@ -84,10 +84,71 @@ Evidence in the main checkout with the saved standalone producer:
   desktop crate with `shell,omega-root` pass. The new native package accepted
   the complete gate in review; no kernel limit changed.
 
-Next: children. Admit the chrome, app and background slots from the realm
-through the runtime's admission, serve their World requests and surfaces, and
-present their tiles through the begin/commit transaction, proving each under the
-same composition. Then storage binding and forwarding, then nested operation.
+Children followed in the step recorded below.
+
+### Stock matrix migration: children at the display root
+
+The stock matrix process now funds and admits its own children. RUN_PAGES and
+RUN_MEMORY stage a slot's allowances; RUN takes an image from the owner's
+catalogue, reserves a launch under them with a physical budget of the load plus
+the private pages or one admission allowance per descendant slot, sets the CPU
+ceiling and the images the child may run in turn, admits it through the
+runtime's brokered admission with interaction, then connects to the child's
+owner control, which the child accepts as its first act before it asks the
+broker for anything. STOP, or a listener that retires, reclaims the subtree,
+returns the reservation and reports the exit on the console. Each child's
+listener is served one request per turn: service acquisition through the
+runtime's offer, SURFACE_CREATE named to the compositor tile behind the
+owner-allotted rank, MATRIX_PAINT, MATRIX_ERASE and SURFACE_CURSOR clipped and
+translated by the World and committed only once the compositor accepts the
+tile's rectangle, and every other word to the World under the connection's
+incarnation. Owed erasures flush between turns.
+
+The runtime gained the reservation leaves the Rust host had from its own
+library: `image_at`, `image_from_object`, `image_release`, `task_reserve` over
+a six-word record, `task_release`, `pool_assign`, `image_allow`, `cpu_assign`,
+`physical_assign` and `resource_assign` over a three-word record, named in
+`task/main.omg`. The gate table holds 52 entries behind 60 call sites, and
+every native package that consumes the runtime accepted the leaves in review.
+
+Two facts from the proof. A child's `owner::open` is a full shared handshake,
+so the admitting matrix must connect to the kernel-installed control pair as a
+client right after admission, as the Rust host does; storing the pair leaves
+the child blocked until its deadline and the broker handshake times out
+behind it. Both handshake windows start at admission, after the reservation
+work, not at the turn's start.
+
+`tools/boot-harness-rs/omega_desktop_test.py` now adds the Omega background to
+the catalogue; the supervisor under `omega-root` sends RUN_PAGES, RUN,
+SURFACE_LIMIT and PLACE for the background slot over a backdrop shifted to
+0x303030, and the harness sees the child's 0x101827 fill at (200,150) 400x300
+with the backdrop outside before the cursor check.
+
+Evidence in the main checkout with the saved standalone producer:
+
+- Desktop over the Omega root with the background child: `build/boot-harness-rs/omega-desktop/20261031T202914585611Z/`.
+- Omega matrix, top level: `build/boot-harness-rs/omega-matrix/20261031T203355480249Z/`;
+  under a real parent: `build/boot-harness-rs/omega-matrix-upstream/20261031T203403122736Z/`;
+  Rust comparison matrix: `build/boot-harness-rs/matrix-composition/20261031T203150317066Z/`.
+- Witnesses after the gate change: primitives `build/omega-user/tests/20261031T202801525277Z/`;
+  connections `build/omega-user/connections/20261031T202807863078Z/`, service
+  `.../20261031T202828986249Z/`, admission `.../20261031T202842894848Z/`;
+  Background `build/omega-user/background-control/20261031T202847204489Z/`;
+  Colors `build/omega-user/colors-control/20261031T202852376359Z/`;
+  Notes `build/omega-user/notes-control/20261031T202858288181Z/`;
+  Chooser `build/omega-user/chooser-control/20261031T202905610023Z/`.
+- Kernel smoke labs of 2026-10-31 20:34 UTC pass; default F5 desktop and cold
+  reopen: `build/boot-harness-rs/desktop/20261031T203452417447Z/`.
+- Boundary test (60 calls, 52 table entries), layout (121 Omega / 153 Rust
+  edges), Rust formatting and clippy for the desktop crate with
+  `shell,omega-root` pass. No kernel limit changed.
+
+Next: launches from the realm's objects under the stock launch policy, storage
+binding and forwarding, images and the begin/commit presentation batch, loss
+surveys and close, management and launch observation words, nested operation
+under a parent matrix, then the stock policy packages linked directly. Dynamic
+launches still cap reserved frames at MAX_ADMISSION_FRAMES, which a nested
+Omega matrix with a declared stack will exceed.
 
 ### Omega World: layout control, management and launch observations
 

@@ -359,9 +359,12 @@ for profile validation tests. Existing boot connections use a separate fixed are
 with the [standalone Omega stock matrix](../../source/distribution/matrix/process/README.md)
 in the root matrix's launch and the supervisor built with `omega-root`, which
 admits the root exactly as F5 does and then parks instead of starting storage.
-The proof reads the supervisor's and the drivers' startup lines, moves the
-pointer over QMP and checks that the compositor's cursor follows it through the
-Omega matrix. Logs and a PNG are in `build/boot-harness-rs/omega-desktop/`.
+The composition also carries the Omega background in its catalogue, which the
+supervisor runs into the root's background slot over a sub-rectangle of a
+shifted backdrop. The proof reads the supervisor's and the drivers' startup
+lines, sees the child's fill inside its placement and the backdrop outside,
+then moves the pointer over QMP and checks that the compositor's cursor follows
+it through the Omega matrix. Logs and a PNG are in `build/boot-harness-rs/omega-desktop/`.
 The slices still missing from that program are listed in its README.
 
 ## Integrated matrix desktop

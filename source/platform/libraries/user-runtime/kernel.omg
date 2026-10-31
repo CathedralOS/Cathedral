@@ -57,6 +57,16 @@ public data Gate {
     endpoint_send: addr;
     resource_budget: addr;
     notification_budget: addr;
+    image_at: addr;
+    image_from_object: addr;
+    image_release: addr;
+    task_reserve: addr;
+    task_release: addr;
+    pool_assign: addr;
+    image_allow: addr;
+    cpu_assign: addr;
+    physical_assign: addr;
+    resource_assign: addr;
 }
 
 public boundary trait Kernel {
@@ -107,4 +117,18 @@ public boundary trait Kernel {
     // channels; notification reservation, charged objects, handle limit and use.
     machine resource_budget(gate: &Gate, record: &mut [u64; 8]) -> u64 reaches;
     machine notification_budget(gate: &Gate, record: &mut [u64; 8]) -> u64 reaches;
+    // Executables and funded reservations: an image grant from the owner's
+    // catalogue or a sealed object, a reservation over quotas/slots/load ceiling/
+    // physical frames (six words), its release, and the idle launch's pool,
+    // allowed images, CPU, frames and three absolute limits.
+    machine image_at(gate: &Gate, index: u64) -> u64 reaches;
+    machine image_from_object(gate: &Gate, object: u64, role: u64) -> u64 reaches;
+    machine image_release(gate: &Gate, image: u64) -> u64 reaches;
+    machine task_reserve(gate: &Gate, executable: u64, request: &[u64; 6]) -> u64 reaches;
+    machine task_release(gate: &Gate, launch: u64) -> u64 reaches;
+    machine pool_assign(gate: &Gate, launch: u64, count: u64) -> u64 reaches;
+    machine image_allow(gate: &Gate, launch: u64, image: u64) -> u64 reaches;
+    machine cpu_assign(gate: &Gate, launch: u64, limit: u64) -> u64 reaches;
+    machine physical_assign(gate: &Gate, launch: u64, frames: u64) -> u64 reaches;
+    machine resource_assign(gate: &Gate, launch: u64, limits: &[u64; 3]) -> u64 reaches;
 }

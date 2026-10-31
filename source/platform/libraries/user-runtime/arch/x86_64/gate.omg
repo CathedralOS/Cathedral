@@ -80,6 +80,26 @@ linux_x86_64 machine Gate::resource_budget_leaf(gate: &Gate, record: &mut [u64; 
     satisfies Kernel::resource_budget via ForeignBinding::TableFunction(resource_budget);
 linux_x86_64 machine Gate::notification_budget_leaf(gate: &Gate, record: &mut [u64; 8]) -> u64
     satisfies Kernel::notification_budget via ForeignBinding::TableFunction(notification_budget);
+linux_x86_64 machine Gate::image_at_leaf(gate: &Gate, index: u64) -> u64
+    satisfies Kernel::image_at via ForeignBinding::TableFunction(image_at);
+linux_x86_64 machine Gate::image_from_object_leaf(gate: &Gate, object: u64, role: u64) -> u64
+    satisfies Kernel::image_from_object via ForeignBinding::TableFunction(image_from_object);
+linux_x86_64 machine Gate::image_release_leaf(gate: &Gate, image: u64) -> u64
+    satisfies Kernel::image_release via ForeignBinding::TableFunction(image_release);
+linux_x86_64 machine Gate::task_reserve_leaf(gate: &Gate, executable: u64, request: &[u64; 6]) -> u64
+    satisfies Kernel::task_reserve via ForeignBinding::TableFunction(task_reserve);
+linux_x86_64 machine Gate::task_release_leaf(gate: &Gate, launch: u64) -> u64
+    satisfies Kernel::task_release via ForeignBinding::TableFunction(task_release);
+linux_x86_64 machine Gate::pool_assign_leaf(gate: &Gate, launch: u64, count: u64) -> u64
+    satisfies Kernel::pool_assign via ForeignBinding::TableFunction(pool_assign);
+linux_x86_64 machine Gate::image_allow_leaf(gate: &Gate, launch: u64, image: u64) -> u64
+    satisfies Kernel::image_allow via ForeignBinding::TableFunction(image_allow);
+linux_x86_64 machine Gate::cpu_assign_leaf(gate: &Gate, launch: u64, limit: u64) -> u64
+    satisfies Kernel::cpu_assign via ForeignBinding::TableFunction(cpu_assign);
+linux_x86_64 machine Gate::physical_assign_leaf(gate: &Gate, launch: u64, frames: u64) -> u64
+    satisfies Kernel::physical_assign via ForeignBinding::TableFunction(physical_assign);
+linux_x86_64 machine Gate::resource_assign_leaf(gate: &Gate, launch: u64, limits: &[u64; 3]) -> u64
+    satisfies Kernel::resource_assign via ForeignBinding::TableFunction(resource_assign);
 
 public NativeKernel satisfies Kernel {
     Kernel::wait_many = Gate::wait_many_leaf;
@@ -92,6 +112,16 @@ public NativeKernel satisfies Kernel {
     Kernel::endpoint_send = Gate::endpoint_send_leaf;
     Kernel::resource_budget = Gate::resource_budget_leaf;
     Kernel::notification_budget = Gate::notification_budget_leaf;
+    Kernel::image_at = Gate::image_at_leaf;
+    Kernel::image_from_object = Gate::image_from_object_leaf;
+    Kernel::image_release = Gate::image_release_leaf;
+    Kernel::task_reserve = Gate::task_reserve_leaf;
+    Kernel::task_release = Gate::task_release_leaf;
+    Kernel::pool_assign = Gate::pool_assign_leaf;
+    Kernel::image_allow = Gate::image_allow_leaf;
+    Kernel::cpu_assign = Gate::cpu_assign_leaf;
+    Kernel::physical_assign = Gate::physical_assign_leaf;
+    Kernel::resource_assign = Gate::resource_assign_leaf;
     Kernel::object_create = Gate::object_create_leaf;
     Kernel::object_send = Gate::object_send_leaf;
     Kernel::object_receive = Gate::object_receive_leaf;

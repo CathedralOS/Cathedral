@@ -23,3 +23,53 @@ public machine display_ready(gate: &Gate) reaches Kernel invokes Kernel; {
         let status: u64 = Kernel::write(gate, words, 50u64);
     }
 }
+// A child's retirement on the console: its slot, then the exit's variant and
+// code in hex (1 returned, 2 fault with 2a address and 2b instruction,
+// 3 cancelled, 4 failed).
+public machine child(gate: &Gate, slot: u64, kind: u64, value: u64) reaches Kernel invokes Kernel; {
+    let text: [u8; 24] = "Cathedral matrix: child ";
+    let mut words: [u64; 8];
+    transition { _ -> pack(gate, &text, &mut words, 0u64, slot, kind, value) }
+    machine pack(gate: &Gate, text: &[u8; 24], words: &mut [u64; 8], index: u64, slot: u64, kind: u64, value: u64) requires index <= 24u64 reaches Kernel {
+        transition index < 24u64 {
+            true -> byte(gate, text, words, index, slot, kind, value)
+            _ -> numbered(gate, words, slot, kind, value)
+        }
+    }
+    machine byte(gate: &Gate, text: &[u8; 24], words: &mut [u64; 8], index: u64, slot: u64, kind: u64, value: u64) requires index < 24u64 reaches Kernel {
+        let word: u64 = index / 8u64;
+        words[word] = words[word] | ((text[index] as u64) << ((index % 8u64) * 8u64));
+        transition { _ -> pack(gate, text, words, index + 1u64, slot, kind, value) }
+    }
+    machine numbered(gate: &Gate, words: &mut [u64; 8], slot: u64, kind: u64, value: u64) reaches Kernel {
+        put(words, 24u64, 48u64 + (slot & 7u64));
+        put(words, 25u64, 32u64);
+        hex(words, 26u64, kind, 0u64);
+        put(words, 42u64, 32u64);
+        hex(words, 43u64, value, 0u64);
+        put(words, 59u64, 10u64);
+        let status: u64 = Kernel::write(gate, words, 60u64);
+    }
+}
+machine put(words: &mut [u64; 8], index: u64, byte: u64) requires index < 64u64 {
+    let word: u64 = index / 8u64;
+    words[word] = words[word] | ((byte & 255u64) << ((index % 8u64) * 8u64));
+}
+machine hex(words: &mut [u64; 8], start: u64, value: u64, digit: u64) requires start <= 43u64 && digit <= 16u64 {
+    transition digit < 16u64 {
+        true -> nibble(words, start, value, digit, (value >> (60u64 - 4u64 * digit)) & 15u64)
+        _ -> done()
+    }
+    machine nibble(words: &mut [u64; 8], start: u64, value: u64, digit: u64, nibble: u64) requires start <= 43u64 && digit < 16u64 {
+        transition {
+            nibble < 10u64 -> placed(words, start, value, digit, 48u64 + nibble)
+            nibble < 16u64 -> placed(words, start, value, digit, 87u64 + nibble)
+            _ -> done()
+        }
+    }
+    machine placed(words: &mut [u64; 8], start: u64, value: u64, digit: u64, byte: u64) requires start <= 43u64 && digit < 16u64 {
+        put(words, start + digit, byte);
+        transition { _ -> hex(words, start, value, digit + 1u64) }
+    }
+}
+machine done() {}

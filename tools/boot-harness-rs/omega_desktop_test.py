@@ -45,6 +45,12 @@ def compose(output):
                                'shared_pages': launch['shared_pages']}
             replaced += 1
     assert replaced == 1, 'the stock composition launches one root matrix'
+    # The catalogue's second executable: the Omega background the root runs
+    # into its background slot during the proof.
+    executables = composition['startup']['executables']
+    assert len(executables) == 1, 'the shell catalogue carries only the recovery screen'
+    executables.append({'entry': 'distribution/applications/background/native/main.omg',
+                        'target': 'x86_64-unknown-none'})
     profile = output / f'omega-desktop-{output.name}.json'
     profile.write_text(json.dumps(composition, indent=2), encoding='utf-8', newline='\n')
     return profile
@@ -67,6 +73,25 @@ def check(stream, output, serial):
             raise RuntimeError(f'missing {marker!r}; logs: {output}')
     if 'Cathedral input: absolute pointer ready' not in serial:
         raise RuntimeError(f'the input service did not offer an absolute pointer; logs: {output}')
+    # The background child paints its whole view, placed at (200,150) 400x300,
+    # in its own colour over the proof's shifted backdrop.
+    deadline = time.monotonic() + 20
+    while 'Cathedral desktop: Omega root background placed' not in (output / 'serial.log').read_text(encoding='utf-8', errors='replace'):
+        if time.monotonic() > deadline:
+            raise RuntimeError(f'the root never placed the background child; logs: {output}')
+        time.sleep(0.2)
+    deadline = time.monotonic() + 15
+    while True:
+        width, height, pixels = pointer_test.read_scanout(stream, output)
+        def pixel(x, y):
+            return pixels[(y * width + x) * 3:(y * width + x) * 3 + 3].hex()
+        inside = [pixel(200, 150), pixel(399, 299), pixel(599, 449)]
+        outside = [pixel(100, 100), pixel(620, 460), pixel(900, 700)]
+        if all(p == '101827' for p in inside) and all(p == '303030' for p in outside):
+            break
+        if time.monotonic() > deadline:
+            raise RuntimeError(f'background child not visible: inside {inside}, outside {outside}; logs: {output}')
+        time.sleep(0.2)
     width, height, before = pointer_test.read_scanout(stream, output)
     target = (600, 400)
     capture.command(stream, 'input-send-event', {'events': [

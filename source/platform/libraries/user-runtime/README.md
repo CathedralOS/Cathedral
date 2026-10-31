@@ -85,7 +85,11 @@ environment; ordinary owner control continues to accept plain requests only.
 [task/main.omg](task/main.omg) names the child-task mechanisms over lent launch
 authority: index a launch, spawn a child with up to five startup endpoints and
 fourteen further loans, accept its owner control pair, cancel it and collect its
-exit. [admission/main.omg](admission/main.omg) sequences one brokered admission:
+exit. It also names funded reservations for children a task admits itself: an
+image grant from the owner's catalogue or a sealed object, a reservation over
+quotas, child slots, the per-load admission ceiling and physical frames, its
+release, and the idle launch's pool, allowed images, CPU and absolute limits.
+[admission/main.omg](admission/main.omg) sequences one brokered admission:
 allocate the request/reply channels, the optional storage pair and the
 interaction bell, move the two broker endpoints into the child, accept owner
 control, then begin the child's listener on the retained provider ends. Every

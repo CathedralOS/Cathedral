@@ -1,0 +1,116 @@
+module presentation;
+// A child's surfaces on the root display. Creation validates in the World and
+// names the compositor tile behind the rank; children receive matrix-local
+// names, never tile indices. Paint, erase and cursor updates are clipped and
+// translated by the World, sent to the compositor as that tile's rectangle,
+// and committed only after the compositor accepts them. Erasures owed for
+// retired surfaces are flushed between turns the same way. Images and the
+// begin/commit batch arrive in a later slice.
+use protocol::main;
+use protocol::matrix;
+use protocol::display;
+use main::State;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::connection::main::Frame;
+use world::surfaces;
+use world::surfaces::Prepared;
+use world::surfaces::Updated;
+use world::surfaces::Retained;
+use scene;
+
+// The rank the owner allotted names the tile; the key is that rank plus one so
+// zero never names a tile.
+public machine create(context: &mut State, slot: u64 [0..=4], incarnation: u64, words: &[u64; 8]) -> [u64; 8] {
+    let prepared: Prepared = surfaces::prepare(&mut context.world, slot, incarnation, words[1], words[2]);
+    transition prepared {
+        Prepared::Rank { upstream } -> keyed(context, slot, words[2], upstream)
+        Prepared::Refused { code } -> (error(code))
+    }
+    machine keyed(context: &mut State, slot: u64 [0..=4], rank: u64, upstream: u64) -> [u64; 8] {
+        transition rank < 16u64 && upstream < display::MATRIX_TILES {
+            true -> named(context, slot, rank, upstream + 1u64)
+            _ -> (error(NO_MEMORY))
+        }
+    }
+    machine named(context: &mut State, slot: u64 [0..=4], rank: u64, key: u64) -> [u64; 8] requires rank < 16u64 {
+        let name: u64 = surfaces::create(&mut context.world, slot, rank, key);
+        let mut reply: [u64; 8];
+        reply[1] = name;
+        reply
+    }
+}
+public machine update(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame) -> [u64; 8]
+    reaches Kernel blocks; invokes Kernel; {
+    let preview: Updated = surfaces::update(&mut context.world, slot, incarnation, &frame.payload, false);
+    transition preview {
+        Updated::Packet { words } -> block publishing(gate, context, slot, incarnation, frame, words)
+        Updated::Refused { code } -> (error(code))
+    }
+    machine publishing(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, packet: [u64; 8]) -> [u64; 8] reaches Kernel {
+        transition packet[0] == SURFACE_IMAGE {
+            true -> (error(DENIED))
+            _ -> block sent(gate, context, slot, incarnation, frame, packet)
+        }
+    }
+    machine sent(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, packet: [u64; 8]) -> [u64; 8] reaches Kernel {
+        let status: u64 = block scene::command(gate, context, tile(packet));
+        transition status == 0u64 {
+            true -> committed(context, slot, incarnation, frame)
+            _ -> (error(status))
+        }
+    }
+    machine committed(context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame) -> [u64; 8] {
+        let committed: Updated = surfaces::update(&mut context.world, slot, incarnation, &frame.payload, true);
+        let reply: [u64; 8];
+        reply
+    }
+}
+// The compositor's six words for a translated packet: tile in the high bits of
+// the word, then the rectangle and colour; an erase removes the tile.
+machine tile(packet: [u64; 8]) -> [u64; 6] {
+    let mut words: [u64; 6];
+    let index: u64 = ((packet[2] as u64 in Wrapping) - 1u64) as u64;
+    words[0] = selected(packet[0]) | (((index as u64 in Wrapping) << 16u64) as u64);
+    transition packet[0] == MATRIX_ERASE {
+        true -> (words)
+        _ -> (drawn(words, packet))
+    }
+    machine drawn(words: [u64; 6], packet: [u64; 8]) -> [u64; 6] {
+        let mut filled: [u64; 6] = words;
+        filled[1] = packet[3];
+        filled[2] = packet[4];
+        filled[3] = packet[5];
+        filled[4] = packet[6];
+        filled[5] = packet[7];
+        filled
+    }
+}
+machine selected(op: u64) -> u64 {
+    transition op == SURFACE_CURSOR {
+        true -> (display::MATRIX_CURSOR)
+        _ -> (display::MATRIX_RECT)
+    }
+}
+// Erasures owed since the last flush: the compositor may already have removed
+// that tile.
+public machine flush(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let owed: Retained = surfaces::take_owed(&mut context.world);
+    transition owed {
+        Retained::Packet { words } -> block owed_one(gate, context, words)
+        Retained::Nothing -> (0u64)
+    }
+    machine owed_one(gate: &Gate, context: &mut State, words: [u64; 8]) -> u64 reaches Kernel {
+        let status: u64 = block scene::command(gate, context, tile(words));
+        transition status == 0u64 || status == DENIED || status == BAD_HANDLE || status == INVALID_ARGUMENT {
+            true -> block flush(gate, context)
+            _ -> (status)
+        }
+    }
+}
+public machine error(code: u64) -> [u64; 8] {
+    let mut words: [u64; 8];
+    words[0] = code;
+    words
+}
