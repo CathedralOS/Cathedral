@@ -12,6 +12,7 @@ use runtime::main::Startup;
 use runtime::main::Environment;
 use runtime::time::Tick;
 use world::level;
+use world::surfaces;
 use world::geometry::Grant;
 use world::geometry::Rect;
 use protocol::services::INTERACTION;
@@ -22,7 +23,7 @@ use upstream;
 
 public machine open(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks; invokes Kernel; {
     context.clock = Kernel::clock(gate);
-    context.world.capacity = 3u64;
+    context.world.slots = 3u64;
     let startup: Startup = runtime::main::start(gate);
     transition startup {
         Startup::Ready { environment } -> block timed(gate, context, environment)
@@ -59,6 +60,8 @@ machine area(gate: &Gate, context: &mut State, environment: Environment, now: u6
 // The top-level proof owns a virtual 300 by 600 area with the navigation keys.
 machine fixed(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
     level::inherit(&mut context.world, Grant { epoch: 1u64, width: 300u64, height: 600u64, keys: KEY_MASK });
+    // Virtual backing for twelve surfaces; there is no display behind them.
+    surfaces::capacity(&mut context.world, 12u64);
     let grant: Grant = context.world.parent;
     transition { _ -> block layout(gate, context, now, grant) }
 }

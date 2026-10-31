@@ -30,6 +30,7 @@ pub fn run() -> u64 {
         height: 800,
         keys: wire::KEY_MASK,
     });
+    world.surface_capacity(8);
     let mut server = Server::open_clients(1).unwrap();
     server.pause(1); // Root supervises lifetime; no fixture commands on this edge.
     #[cfg(feature = "omega-matrix")]
@@ -89,6 +90,8 @@ impl Parent {
         self.child = Some(child);
         assert!(loans[0].spawn(0).is_err());
         self.place(240, 450, 16);
+        // The matrix inherits four of the eight backed surfaces through its poll.
+        self.world.surface_limit(0, 4).unwrap();
     }
     fn stop(&mut self) {
         #[cfg(feature = "omega-matrix")]
@@ -97,6 +100,7 @@ impl Parent {
         }
         self.server.remove(0);
         self.world.disconnected(0);
+        while self.world.take_retired_surface().is_some() {}
         let child = self.child.take().unwrap();
         child.task.cancel().unwrap();
         child.task.wait().unwrap();
@@ -122,6 +126,35 @@ impl Parent {
                 .unwrap()
                 .reply(&mut self.server, &request, words)
                 .unwrap();
+        } else if words[0] == wire::SURFACE_CREATE {
+            // Backing names are the upstream rank plus one hundred, so a leaf's
+            // packet can never carry its own rank through this edge by accident.
+            let reply = match self
+                .world
+                .prepare_surface(0, request.incarnation, words[1], words[2])
+            {
+                Ok(rank) => [
+                    0,
+                    self.world.create_surface(0, words[2] as usize, rank + 100),
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                ],
+                Err(code) => wire::error(code),
+            };
+            self.server.reply(&request, &wire::encode(reply)).unwrap();
+        } else if matches!(
+            words[0],
+            wire::PAINT | wire::ERASE | wire::SURFACE_CURSOR | wire::SURFACE_IMAGE
+        ) {
+            let reply = match self.world.surface(0, request.incarnation, words) {
+                Ok(_) => [0; 8],
+                Err(code) => wire::error(code),
+            };
+            self.server.reply(&request, &wire::encode(reply)).unwrap();
         } else {
             assert_eq!(words, [wire::POLL, 0, 0, 0, 0, 0, 0, 0]);
             let reply = self.world.request(0, request.incarnation, words);

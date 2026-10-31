@@ -1,0 +1,469 @@
+module surfaces;
+// Owned surface names, conserving allowances and one-level clipping and
+// translation. Each child draws on ranks inside an owner-chosen range of the
+// world's allowance; the upstream name behind a rank and any stacking offset
+// never cross a child-facing connection. A child keeps at most sixteen ranks
+// so four children fit beside their input queues on a process stack.
+use protocol::main;
+use geometry;
+use demand;
+use protocol::matrix;
+use level::World;
+use children::Child;
+
+public const CHILD_SURFACES: u64 = 16u64;
+public const WORLD_SURFACES: u64 = 64u64;
+public data Surface [copy] {
+    live: bool;
+    name: u64;
+    upstream: u64;
+    // The last committed update, kept for replay under new geometry.
+    drawn: bool;
+    op: u64;
+    x: u64;
+    y: u64;
+    width: u64;
+    height: u64;
+    colour: u64;
+}
+public data Prepared [copy] {
+    case Rank(upstream: u64);
+    case Refused(code: u64);
+}
+public data Updated [copy] {
+    case Packet(words: [u64; 8]);
+    case Refused(code: u64);
+}
+public data Retained [copy] {
+    case Nothing;
+    case Packet(words: [u64; 8]);
+}
+
+// The parent's allowance changed: every child's range and content is gone.
+public machine capacity(world: &mut World, allowance: u64) {
+    let bounded: u64 = geometry::smaller(allowance, WORLD_SURFACES);
+    transition bounded <= 64u64 && bounded != world.allowance {
+        true -> changed(world, bounded, 0u64)
+        _ -> done()
+    }
+    machine changed(world: &mut World, bounded: u64, slot: u64) requires bounded <= 64u64 && slot <= 4u64 {
+        transition slot < 4u64 {
+            true -> cleared(world, bounded, slot)
+            _ -> adopted(world, bounded)
+        }
+    }
+    machine cleared(world: &mut World, bounded: u64, slot: u64) requires bounded <= 64u64 && slot < 4u64 {
+        retire(world, slot);
+        world.children[slot].surface_limit = 0u64;
+        world.children[slot].frame_ticket = 0u64;
+        world.children[slot].frame_ready = false;
+        demand::refresh_child(world, slot);
+        world.children[slot].notify = true;
+        transition { _ -> changed(world, bounded, slot + 1u64) }
+    }
+    machine adopted(world: &mut World, bounded: u64) requires bounded <= 64u64 {
+        world.authority = ((world.authority as u64 in Wrapping) + 1u64) as u64;
+        world.allowance = bounded;
+    }
+}
+// Give a slot `count` ranks at the lowest free base, never moving a sibling.
+public machine limit(world: &mut World, slot: u64, count: u64) -> u64 {
+    transition slot < 4u64 && count <= world.allowance && count <= CHILD_SURFACES {
+        true -> checked(world, slot, count)
+        _ -> (NO_MEMORY)
+    }
+    machine checked(world: &mut World, slot: u64, count: u64) -> u64 requires slot < 4u64 && count <= 16u64 {
+        transition world.children[slot].surface_limit == count {
+            true -> (0u64)
+            _ -> searching(world, slot, count, 0u64)
+        }
+    }
+    machine searching(world: &mut World, slot: u64, count: u64, base: u64) -> u64 requires slot < 4u64 && count <= 16u64 && base <= 64u64 {
+        transition base < 64u64 && base + count <= world.allowance {
+            true -> candidate(world, slot, count, base)
+            _ -> (NO_MEMORY)
+        }
+    }
+    machine candidate(world: &mut World, slot: u64, count: u64, base: u64) -> u64 requires slot < 4u64 && count <= 16u64 && base < 64u64 {
+        transition overlaps(world, slot, base, count, 0u64) {
+            true -> searching(world, slot, count, base + 1u64)
+            _ -> range(world, slot, base, count)
+        }
+    }
+}
+// Does [base, base + count) cross another slot's live range?
+machine overlaps(world: &World, slot: u64, base: u64, count: u64, other: u64) -> bool requires other <= 4u64 && base <= 64u64 && count <= 64u64 {
+    transition other < 4u64 {
+        true -> compared(world, slot, base, count, other)
+        _ -> (false)
+    }
+    machine compared(world: &World, slot: u64, base: u64, count: u64, other: u64) -> bool requires other < 4u64 && base <= 64u64 && count <= 64u64 {
+        let limit: u64 = world.children[other].surface_limit;
+        let start: u64 = world.children[other].surface_base;
+        transition other != slot && count != 0u64 && limit != 0u64 && base < start + limit && base + count > start {
+            true -> (true)
+            _ -> overlaps(world, slot, base, count, other + 1u64)
+        }
+    }
+}
+// Owner-selected stacking range. Refuse overlap or relocating live surfaces.
+public machine range(world: &mut World, slot: u64, base: u64, count: u64) -> u64 {
+    transition slot < 4u64 && count <= CHILD_SURFACES && base <= 64u64 && base + count <= world.allowance {
+        true -> clear(world, slot, base, count)
+        _ -> (NO_MEMORY)
+    }
+    machine clear(world: &mut World, slot: u64, base: u64, count: u64) -> u64 requires slot < 4u64 && count <= 16u64 && base <= 64u64 {
+        transition overlaps(world, slot, base, count, 0u64) {
+            true -> (NO_MEMORY)
+            _ -> unchanged(world, slot, base, count)
+        }
+    }
+    machine unchanged(world: &mut World, slot: u64, base: u64, count: u64) -> u64 requires slot < 4u64 && count <= 16u64 && base <= 64u64 {
+        transition world.children[slot].surface_limit == count && world.children[slot].surface_base == base {
+            true -> (0u64)
+            _ -> idle(world, slot, base, count)
+        }
+    }
+    machine idle(world: &mut World, slot: u64, base: u64, count: u64) -> u64 requires slot < 4u64 && count <= 16u64 && base <= 64u64 {
+        transition live_count(&world.children[slot], 0u64, 0u64) != 0u64 {
+            true -> (BUSY)
+            _ -> assigned(world, slot, base, count)
+        }
+    }
+    machine assigned(world: &mut World, slot: u64, base: u64, count: u64) -> u64 requires slot < 4u64 && count <= 16u64 && base <= 64u64 {
+        world.children[slot].surface_base = base;
+        world.children[slot].surface_limit = count;
+        world.children[slot].frame_ticket = 0u64;
+        world.children[slot].frame_ready = false;
+        demand::refresh_child(world, slot);
+        world.children[slot].notify = true;
+        0u64
+    }
+}
+public machine live_count(child: &Child, rank: u64, count: u64) -> u64 requires rank <= 16u64 && count <= rank {
+    transition rank < 16u64 {
+        true -> counted(child, rank, count)
+        _ -> (count)
+    }
+    machine counted(child: &Child, rank: u64, count: u64) -> u64 requires rank < 16u64 && count <= rank {
+        transition child.surfaces[rank].live {
+            true -> live_count(child, rank + 1u64, count + 1u64)
+            _ -> live_count(child, rank + 1u64, count)
+        }
+    }
+}
+// Validate a child's creation before upstream allocation; returns only the
+// provider-internal rank the owner should allocate behind it.
+public machine prepare(world: &mut World, slot: u64, incarnation: u64, epoch: u64, rank: u64) -> Prepared {
+    transition level::identify(world, slot, incarnation) && slot < 4u64 {
+        true -> viewed(world, slot, epoch, rank)
+        _ -> (Prepared::Refused { code: DENIED })
+    }
+    machine viewed(world: &World, slot: u64, epoch: u64, rank: u64) -> Prepared requires slot < 4u64 {
+        transition geometry::valid_grant(world.children[slot].grant) && world.children[slot].grant.epoch == epoch && rank < 16u64 {
+            true -> ranked(world, slot, rank)
+            _ -> (Prepared::Refused { code: DENIED })
+        }
+    }
+    machine ranked(world: &World, slot: u64, rank: u64) -> Prepared requires slot < 4u64 && rank < 16u64 {
+        transition {
+            live_count(&world.children[slot], 0u64, 0u64) == world.children[slot].surface_limit -> (Prepared::Refused { code: NO_MEMORY })
+            rank >= world.children[slot].surface_limit -> (Prepared::Refused { code: DENIED })
+            world.children[slot].surfaces[rank].live -> (Prepared::Refused { code: BUSY })
+            world.children[slot].next_surface == 0xffffffffffffffffu64 -> (Prepared::Refused { code: NO_MEMORY })
+            _ -> (Prepared::Rank { upstream: rank + world.children[slot].surface_base })
+        }
+    }
+}
+// Commit after upstream success; the caller dispatches nothing in between.
+// Returns the child-local name, or zero if the rank cannot be named.
+public machine create(world: &mut World, slot: u64 [0..=3], rank: u64 [0..=15], upstream: u64) -> u64 {
+    let previous: u64 = world.children[slot].next_surface;
+    transition previous < 0xffffffffffffffffu64 {
+        true -> named(world, slot, rank, upstream, previous + 1u64)
+        _ -> (0u64)
+    }
+    machine named(world: &mut World, slot: u64 [0..=3], rank: u64 [0..=15], upstream: u64, name: u64) -> u64 {
+        world.children[slot].next_surface = name;
+        let mut surface: Surface;
+        surface.live = true;
+        surface.name = name;
+        surface.upstream = upstream;
+        world.children[slot].surfaces[rank] = surface;
+        name
+    }
+}
+// A child's draw, erase, image or cursor update, translated for the parent.
+// `commit` retains it; a preview only computes the upstream packet.
+public machine update(world: &mut World, slot: u64, incarnation: u64, words: &[u64; 8], commit: bool) -> Updated {
+    transition level::identify(world, slot, incarnation) && slot < 4u64 {
+        true -> viewed(world, slot, words, commit)
+        _ -> (Updated::Refused { code: DENIED })
+    }
+    machine viewed(world: &mut World, slot: u64, words: &[u64; 8], commit: bool) -> Updated requires slot < 4u64 {
+        let view: [u64; 8] = children::view(&world.children[slot]);
+        let rank: u64 = rank_of(&world.children[slot], words[2], 0u64);
+        transition view[0] == 0u64 && view[1] == words[1] {
+            true -> located(world, slot, words, commit, view, rank)
+            _ -> (Updated::Refused { code: DENIED })
+        }
+    }
+    machine located(world: &mut World, slot: u64, words: &[u64; 8], commit: bool, view: [u64; 8], rank: u64) -> Updated requires slot < 4u64 {
+        transition rank < 16u64 {
+            true -> kind(world, slot, words, commit, view, rank)
+            _ -> (Updated::Refused { code: BAD_HANDLE })
+        }
+    }
+    machine kind(world: &mut World, slot: u64, words: &[u64; 8], commit: bool, view: [u64; 8], rank: u64) -> Updated requires slot < 4u64 && rank < 16u64 {
+        transition {
+            words[0] == MATRIX_ERASE && geometry::zeros_from(words, 3u64) && commit -> erased(world, slot, rank)
+            words[0] == MATRIX_ERASE && geometry::zeros_from(words, 3u64) -> (erase_packet(world, slot, rank))
+            !valid_update(words) -> (Updated::Refused { code: DENIED })
+            commit -> drawn(world, slot, words, view, rank)
+            _ -> (translated(world, slot, words, view, rank))
+        }
+    }
+    machine erased(world: &mut World, slot: u64, rank: u64) -> Updated requires slot < 4u64 && rank < 16u64 {
+        let packet: Updated = erase_packet(world, slot, rank);
+        let empty: Surface;
+        world.children[slot].surfaces[rank] = empty;
+        packet
+    }
+    machine erase_packet(world: &World, slot: u64, rank: u64) -> Updated requires slot < 4u64 && rank < 16u64 {
+        let mut packet: [u64; 8];
+        packet[0] = MATRIX_ERASE;
+        packet[1] = world.parent.epoch;
+        packet[2] = world.children[slot].surfaces[rank].upstream;
+        Updated::Packet { words: packet }
+    }
+    machine drawn(world: &mut World, slot: u64, words: &[u64; 8], view: [u64; 8], rank: u64) -> Updated requires slot < 4u64 && rank < 16u64 {
+        world.children[slot].surfaces[rank].drawn = true;
+        world.children[slot].surfaces[rank].op = words[0];
+        world.children[slot].surfaces[rank].x = words[3];
+        world.children[slot].surfaces[rank].y = words[4];
+        world.children[slot].surfaces[rank].width = words[5];
+        world.children[slot].surfaces[rank].height = words[6];
+        world.children[slot].surfaces[rank].colour = words[7];
+        translated(world, slot, words, view, rank)
+    }
+    machine translated(world: &World, slot: u64, words: &[u64; 8], view: [u64; 8], rank: u64) -> Updated requires slot < 4u64 && rank < 16u64 {
+        let upstream: u64 = world.children[slot].surfaces[rank].upstream;
+        Updated::Packet { words: translate(world, slot, words, view, upstream) }
+    }
+}
+// The retained update as a packet for `epoch`, before clipping or offset.
+machine retained(surface: Surface, epoch: u64) -> [u64; 8] {
+    let mut words: [u64; 8];
+    words[0] = surface.op;
+    words[1] = epoch;
+    words[2] = surface.upstream;
+    words[3] = surface.x;
+    words[4] = surface.y;
+    words[5] = surface.width;
+    words[6] = surface.height;
+    words[7] = surface.colour;
+    words
+}
+// Rank holding the child-local name, or 16 when none does.
+machine rank_of(child: &Child, name: u64, rank: u64) -> u64 requires rank <= 16u64 {
+    transition rank < 16u64 {
+        true -> compared(child, name, rank)
+        _ -> (16u64)
+    }
+    machine compared(child: &Child, name: u64, rank: u64) -> u64 requires rank < 16u64 {
+        transition child.surfaces[rank].live && child.surfaces[rank].name == name {
+            true -> (rank)
+            _ -> rank_of(child, name, rank + 1u64)
+        }
+    }
+}
+// Paint, image and cursor updates: bounded colour, extent and cursor shape.
+machine valid_update(words: &[u64; 8]) -> bool {
+    let op: u64 = words[0];
+    let known: bool = op == MATRIX_PAINT || op == SURFACE_IMAGE || op == SURFACE_CURSOR;
+    let colour: bool = op == SURFACE_IMAGE || words[7] <= 0xffffffu64;
+    let cursor: bool = op != SURFACE_CURSOR || (words[5] <= CURSOR_WIDTH && words[6] <= CURSOR_HEIGHT);
+    let image: bool = op != SURFACE_IMAGE
+        || (words[7] != 0u64 && words[5] <= words[7] && words[7] <= MAX_EXTENT && words[6] <= MAX_EXTENT);
+    let extents: bool = words[3] <= 0xffffffffffffffffu64 - words[5] && words[4] <= 0xffffffffffffffffu64 - words[6];
+    known && colour && cursor && image && extents
+}
+// Clip to the child's view, then offset by its placement; hidden or empty output
+// keeps the operation and colour with a zero rectangle.
+machine translate(world: &World, slot: u64, words: &[u64; 8], view: [u64; 8], upstream: u64) -> [u64; 8] requires slot < 4u64 {
+    let width: u64 = geometry::smaller(words[5], past(view[2], words[3]));
+    let height: u64 = geometry::smaller(words[6], past(view[3], words[4]));
+    let mut packet: [u64; 8];
+    packet[0] = words[0];
+    packet[1] = world.parent.epoch;
+    packet[2] = upstream;
+    packet[7] = words[7];
+    transition !world.children[slot].hidden && width != 0u64 && height != 0u64 {
+        true -> placed(world, slot, words, packet, width, height)
+        _ -> (packet)
+    }
+    machine placed(world: &World, slot: u64, words: &[u64; 8], packet: [u64; 8], width: u64, height: u64) -> [u64; 8] requires slot < 4u64 {
+        let mut translated: [u64; 8] = packet;
+        translated[3] = ((world.children[slot].rect.x as u64 in Wrapping) + (words[3] as u64 in Wrapping)) as u64;
+        translated[4] = ((world.children[slot].rect.y as u64 in Wrapping) + (words[4] as u64 in Wrapping)) as u64;
+        translated[5] = width;
+        translated[6] = height;
+        translated
+    }
+}
+machine past(extent: u64, offset: u64) -> u64 {
+    transition extent > offset { true -> (extent - offset) _ -> (0u64) }
+}
+// Owner-only snapshot of a surface in source-local coordinates, independent of
+// visibility. Nothing is returned for an undrawn or fully clipped surface.
+public machine capture(world: &World, slot: u64, incarnation: u64, epoch: u64, rank: u64) -> Retained {
+    transition level::binding_matches(world, slot, incarnation, epoch) && slot < 4u64 && rank < 16u64 {
+        true -> drawn(world, slot, rank, epoch)
+        _ -> (Retained::Nothing)
+    }
+    machine drawn(world: &World, slot: u64, rank: u64, epoch: u64) -> Retained requires slot < 4u64 && rank < 16u64 {
+        transition world.children[slot].surfaces[rank].live && world.children[slot].surfaces[rank].drawn {
+            true -> clipped(world, slot, rank, epoch)
+            _ -> (Retained::Nothing)
+        }
+    }
+    machine clipped(world: &World, slot: u64, rank: u64, epoch: u64) -> Retained requires slot < 4u64 && rank < 16u64 {
+        let mut words: [u64; 8] = retained(world.children[slot].surfaces[rank], epoch);
+        words[5] = geometry::smaller(words[5], past(world.children[slot].grant.width, words[3]));
+        words[6] = geometry::smaller(words[6], past(world.children[slot].grant.height, words[4]));
+        transition words[5] != 0u64 && words[6] != 0u64 {
+            true -> (Retained::Packet { words: words })
+            _ -> (Retained::Nothing)
+        }
+    }
+}
+// Replay one retained surface for the parent under the current geometry.
+public machine replay(world: &mut World, slot: u64, rank: u64) -> Retained {
+    transition slot < 4u64 && rank < 16u64 {
+        true -> live(world, slot, rank)
+        _ -> (Retained::Nothing)
+    }
+    machine live(world: &mut World, slot: u64, rank: u64) -> Retained requires slot < 4u64 && rank < 16u64 {
+        transition world.children[slot].surfaces[rank].live && world.children[slot].surfaces[rank].drawn {
+            true -> replaying(world, slot, rank)
+            _ -> (Retained::Nothing)
+        }
+    }
+    machine replaying(world: &mut World, slot: u64, rank: u64) -> Retained requires slot < 4u64 && rank < 16u64 {
+        let mut words: [u64; 8] = retained(world.children[slot].surfaces[rank], world.children[slot].grant.epoch);
+        words[2] = world.children[slot].surfaces[rank].name;
+        let incarnation: u64 = world.children[slot].incarnation;
+        let updated: Updated = update(world, slot, incarnation, &words, true);
+        transition updated {
+            Updated::Packet { words } -> (Retained::Packet { words: words })
+            Updated::Refused { code } -> (Retained::Nothing)
+        }
+    }
+}
+// Preview an owner visibility change without touching routes, demand or content.
+public machine preview_replay(world: &World, slot: u64, rank: u64, visible: bool) -> Retained {
+    transition slot < 4u64 && rank < 16u64 {
+        true -> bound(world, slot, rank, visible)
+        _ -> (Retained::Nothing)
+    }
+    machine bound(world: &World, slot: u64, rank: u64, visible: bool) -> Retained requires slot < 4u64 && rank < 16u64 {
+        transition geometry::valid_grant(world.children[slot].grant) && world.children[slot].placed
+            && world.children[slot].surfaces[rank].live && world.children[slot].surfaces[rank].drawn {
+            true -> previewed(world, slot, rank, visible)
+            _ -> (Retained::Nothing)
+        }
+    }
+    machine previewed(world: &World, slot: u64, rank: u64, visible: bool) -> Retained requires slot < 4u64 && rank < 16u64 {
+        let mut words: [u64; 8] = retained(world.children[slot].surfaces[rank], world.parent.epoch);
+        words[5] = geometry::smaller(words[5], past(world.children[slot].grant.width, words[3]));
+        words[6] = geometry::smaller(words[6], past(world.children[slot].grant.height, words[4]));
+        transition !visible || words[5] == 0u64 || words[6] == 0u64 {
+            true -> (Retained::Packet { words: blank(words) })
+            _ -> (Retained::Packet { words: offset(world, slot, words) })
+        }
+    }
+    machine blank(words: [u64; 8]) -> [u64; 8] {
+        let mut blanked: [u64; 8] = words;
+        blanked[3] = 0u64; blanked[4] = 0u64; blanked[5] = 0u64; blanked[6] = 0u64;
+        blanked
+    }
+    machine offset(world: &World, slot: u64, words: [u64; 8]) -> [u64; 8] requires slot < 4u64 {
+        let mut moved: [u64; 8] = words;
+        moved[3] = ((world.children[slot].rect.x as u64 in Wrapping) + (words[3] as u64 in Wrapping)) as u64;
+        moved[4] = ((world.children[slot].rect.y as u64 in Wrapping) + (words[4] as u64 in Wrapping)) as u64;
+        moved
+    }
+}
+// Queue an ERASE for every live surface of the slot; the owner flushes the
+// queue to its parent between dispatches, so it never fills.
+public machine retire(world: &mut World, slot: u64) {
+    transition slot < 4u64 {
+        true -> retiring(world, slot, 0u64)
+        _ -> done()
+    }
+    machine retiring(world: &mut World, slot: u64, rank: u64) requires slot < 4u64 && rank <= 16u64 {
+        transition rank < 16u64 {
+            true -> examined(world, slot, rank)
+            _ -> done()
+        }
+    }
+    machine examined(world: &mut World, slot: u64, rank: u64) requires slot < 4u64 && rank < 16u64 {
+        let entry: u64 = free_owed(world, 0u64);
+        transition world.children[slot].surfaces[rank].live {
+            true -> queued(world, slot, rank, entry)
+            _ -> retiring(world, slot, rank + 1u64)
+        }
+    }
+    machine queued(world: &mut World, slot: u64, rank: u64, entry: u64) requires slot < 4u64 && rank < 16u64 {
+        transition entry < 64u64 {
+            true -> recorded(world, slot, rank, entry)
+            _ -> forgotten(world, slot, rank)
+        }
+    }
+    machine recorded(world: &mut World, slot: u64, rank: u64, entry: u64) requires slot < 4u64 && rank < 16u64 && entry < 64u64 {
+        world.owed_live[entry] = true;
+        world.owed[entry] = world.children[slot].surfaces[rank].upstream;
+        transition { _ -> forgotten(world, slot, rank) }
+    }
+    machine forgotten(world: &mut World, slot: u64, rank: u64) requires slot < 4u64 && rank < 16u64 {
+        let empty: Surface;
+        world.children[slot].surfaces[rank] = empty;
+        transition { _ -> retiring(world, slot, rank + 1u64) }
+    }
+}
+machine free_owed(world: &World, entry: u64) -> u64 requires entry <= 64u64 {
+    transition entry < 64u64 {
+        true -> checked(world, entry)
+        _ -> (64u64)
+    }
+    machine checked(world: &World, entry: u64) -> u64 requires entry < 64u64 {
+        transition world.owed_live[entry] {
+            true -> free_owed(world, entry + 1u64)
+            _ -> (entry)
+        }
+    }
+}
+public machine take_owed(world: &mut World) -> Retained {
+    transition { _ -> scan(world, 0u64) }
+    machine scan(world: &mut World, entry: u64) -> Retained requires entry <= 64u64 {
+        transition entry < 64u64 {
+            true -> checked(world, entry)
+            _ -> (Retained::Nothing)
+        }
+    }
+    machine checked(world: &mut World, entry: u64) -> Retained requires entry < 64u64 {
+        transition world.owed_live[entry] {
+            true -> taken(world, entry)
+            _ -> scan(world, entry + 1u64)
+        }
+    }
+    machine taken(world: &mut World, entry: u64) -> Retained requires entry < 64u64 {
+        world.owed_live[entry] = false;
+        let mut packet: [u64; 8];
+        packet[0] = MATRIX_ERASE;
+        packet[1] = world.parent.epoch;
+        packet[2] = world.owed[entry];
+        Retained::Packet { words: packet }
+    }
+}
+machine done() {}

@@ -72,6 +72,53 @@ pub(super) fn check(parent: &mut Parent) {
         parent.call([wire::PLACE, 0, 0, 0, 240, 150, 31, 0], None),
         wire::error(abi::DENIED)
     );
+    #[cfg(feature = "omega-matrix")]
+    {
+        // Surfaces cross both edges: the matrix allots its inherited allowance,
+        // forwards a leaf's creation and paint, and this parent sees the result
+        // clipped to the leaf's view and placed at (100,80) plus (0,300).
+        assert_eq!(
+            parent.call([wire::SURFACE_LIMIT, 2, 5, 0, 0, 0, 0, 0], None),
+            wire::error(abi::NO_MEMORY)
+        );
+        assert_eq!(
+            parent.call([wire::SURFACE_LIMIT, 2, 4, 0, 0, 0, 0, 0], None),
+            [0; 8]
+        );
+        let info = [wire::SURFACE_INFO, 0, 0, 0, 0, 0, 0, 0];
+        assert_eq!(parent.call(info, Some(2)), [0, 4, 0, 0, 0, 0, 0, 0]);
+        assert_eq!(
+            parent.call(
+                [wire::SURFACE_CREATE, views[2][1], 0, 0, 0, 0, 0, 0],
+                Some(2)
+            ),
+            [0, 1, 0, 0, 0, 0, 0, 0]
+        );
+        assert_eq!(
+            parent.call(
+                [wire::PAINT, views[2][1], 1, 10, 20, 50, 200, 0xabcdef],
+                Some(2)
+            ),
+            [0; 8]
+        );
+        assert_eq!(
+            parent.world.replay(0, 0),
+            Some([wire::PAINT, 1, 100, 110, 400, 50, 130, 0xabcdef])
+        );
+        // Withdrawn demand reaches the leaf through the matrix's next poll.
+        parent.world.render_demand(false);
+        let poll = [wire::POLL, 0, 0, 0, 0, 0, 0, 0];
+        assert_ne!(parent.call(poll, Some(2))[4] & wire::NO_FRAMES, 0);
+        parent.world.render_demand(true);
+        assert_eq!(parent.call(poll, Some(2))[4] & wire::NO_FRAMES, 0);
+        // Revoking the leaf erases its surface upstream before anything else.
+        assert_eq!(
+            parent.call([wire::REVOKE, 2, 0, 0, 0, 0, 0, 0], None),
+            [0; 8]
+        );
+        assert_eq!(parent.call(info, Some(2)), wire::error(abi::DENIED));
+        assert_eq!(parent.world.replay(0, 0), None);
+    }
     // A new parent view epoch invalidates old placements, including on resize.
     parent.place(120, 330, 0);
     assert_eq!(parent.view(2), wire::error(abi::DENIED));

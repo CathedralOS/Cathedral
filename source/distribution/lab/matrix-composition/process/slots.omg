@@ -17,6 +17,9 @@ use world::level;
 use world::main::request;
 use protocol::services::ACQUIRE;
 use upstream;
+use presentation;
+use protocol::main;
+use protocol::matrix;
 
 public machine step(gate: &Gate, context: &mut State, slot: u64 [0..=2], now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
     transition {
@@ -72,7 +75,26 @@ machine acquire(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Tic
 // same slot never inherits the old view or queued input.
 machine viewed(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, frame: Frame) -> u64 reaches Kernel {
     let incarnation: u64 = context.slots[slot].listener.incarnation;
+    transition {
+        frame.payload[0] == SURFACE_CREATE -> block creating(gate, context, slot, issued, frame, incarnation)
+        frame.payload[0] == MATRIX_PAINT || frame.payload[0] == MATRIX_ERASE || frame.payload[0] == SURFACE_IMAGE || frame.payload[0] == SURFACE_CURSOR
+            -> block updating(gate, context, slot, issued, frame, incarnation)
+        _ -> block asked(gate, context, slot, issued, frame, incarnation)
+    }
+}
+machine creating(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, frame: Frame, incarnation: u64) -> u64 reaches Kernel {
+    let reply: [u64; 8] = block presentation::create(gate, context, slot, incarnation, &frame.payload);
+    block answered(gate, context, slot, issued, reply)
+}
+machine updating(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, frame: Frame, incarnation: u64) -> u64 reaches Kernel {
+    let reply: [u64; 8] = block presentation::update(gate, context, slot, incarnation, frame);
+    block answered(gate, context, slot, issued, reply)
+}
+machine asked(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, frame: Frame, incarnation: u64) -> u64 reaches Kernel {
     let reply: [u64; 8] = request(&mut context.world, slot, incarnation, &frame.payload);
+    block answered(gate, context, slot, issued, reply)
+}
+machine answered(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, reply: [u64; 8]) -> u64 reaches Kernel {
     let status: u64 = block runtime::server::main::reply_to(gate, &mut context.slots[slot].listener, issued, &reply);
     0u64
 }

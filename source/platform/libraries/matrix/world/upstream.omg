@@ -3,6 +3,8 @@ module upstream;
 // carries under the parent's stream and group names. A snapshot that cannot be
 // honoured drops the parent grant rather than guessing; a later snapshot regrants.
 use protocol::main;
+use surfaces;
+use demand;
 use level::World;
 use geometry::Grant;
 use names::Name;
@@ -13,6 +15,8 @@ use input::keys;
 public machine inherit_poll(world: &mut World, reply: &[u64; 8]) -> Grant {
     let grant: Grant = snapshot(reply);
     level::inherit(world, grant);
+    demand::render_demand(world, poll_frames(reply));
+    surfaces::capacity(world, allowance_of(reply, geometry::valid_grant(grant)));
     transition geometry::valid_grant(grant) {
         true -> event(world, grant, reply[5] & 255u64, reply[6], reply[7], (reply[5] >> 8u64) & 7u64,
             reply[5] >> 32u64, (reply[5] >> 17u64) & 0x7fffu64)
@@ -69,6 +73,12 @@ public machine inherit_poll(world: &mut World, reply: &[u64; 8]) -> Grant {
         level::inherit(world, geometry::no_grant());
         geometry::no_grant()
     }
+}
+machine poll_frames(reply: &[u64; 8]) -> bool {
+    reply[0] == 0u64 && reply[1] != 0u64 && reply[2] != 0u64 && reply[3] != 0u64 && (reply[4] & NO_FRAMES) == 0u64
+}
+machine allowance_of(reply: &[u64; 8], valid: bool) -> u64 {
+    transition valid { true -> (reply[4] >> SURFACE_BITS) _ -> (0u64) }
 }
 machine snapshot(reply: &[u64; 8]) -> Grant {
     transition reply[0] == 0u64 {

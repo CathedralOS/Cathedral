@@ -50,7 +50,10 @@ spare for partial allocation rollback.
 The `omega-matrix` fixture feature switches the owner in [main.rs](main.rs) and
 the peers to the shared v4 protocol, which is the only one the Omega matrix
 speaks; without it they keep copied broker and control payloads for the Rust
-matrix. The two Omega profiles build every fixture entry with that feature.
+matrix. The two Omega profiles build every fixture entry with that feature. The
+same feature gates the surface checks, which only the Omega matrix serves:
+allowance ranges, names, clipped and translated paint, refusals, the frame
+handshake, visibility and the erasures a replacement owes.
 
 The lab's owner probe envelope routes to a child with the high 32-bit word of
 the opcode (slot + 1); the low word remains its requested operation. This is
@@ -83,9 +86,11 @@ the inner World or simulates a leaf reply. It connects owner control right after
 admission and serves the matrix's broker only while an owner call is outstanding,
 which is why the Omega matrix accepts owner control before it opens that broker.
 
-The supplied region is offset (100,80), size 240x450 and Enter-only. The matrix
-derives three 240x150 regions. The proof checks translation, queued key edges,
-withheld keys, forbidden child commands, shrink/revoke/regrant and old-epoch
-rejection. It repeatedly kills the matrix with its leaves alive and checks
+The supplied region is offset (100,80), size 240x450 and Enter-only, with four
+of this parent's eight backed surfaces. The matrix derives three 240x150
+regions. The proof checks translation, queued key edges, withheld keys,
+forbidden child commands, shrink/revoke/regrant and old-epoch rejection; with
+the Omega matrix it also checks a leaf's paint arriving here clipped and placed,
+withdrawn demand reaching the leaf, and an erasure preceding revocation. It repeatedly kills the matrix with its leaves alive and checks
 resource recovery. The parent finally exits with a live subtree; the root
 supervisor restarts that entire composition using the returned launch loans.

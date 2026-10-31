@@ -21,6 +21,16 @@ from its words. Wire owner: `source-rs/platform/libraries/matrix/world/`.
   and the POLL packet.
 - [events.omg](events.omg) is one stream's bounded FIFO inside one child: sixteen
   events plus a boundary slot, trailing-motion coalescing, overflow to CANCEL.
+  Each event packs into one word beside its order number.
+- [surfaces.omg](surfaces.omg) owns surface names and allowances: an owner
+  gives a child a range of ranks inside the world's allowance, a child creates
+  named surfaces on those ranks, and its paint, image, cursor and erase updates
+  are clipped to its view and translated for the parent. Retained updates
+  replay under new geometry; retired surfaces owe the parent an erasure. A child
+  keeps at most sixteen ranks so four children fit on a process stack.
+- [demand.omg](demand.omg) composes render demand: the parent's demand, each
+  child's visibility and one pending owner-requested frame decide whether a
+  child's poll asks for frames, and the frame handshake runs ticket by ticket.
 - [input/main.omg](input/main.omg) admits stream names into groups and keeps
   each stream's capture, buttons and held keys. [input/pointer.omg](input/pointer.omg)
   hit-tests, selects on press, captures through a drag and translates
@@ -33,9 +43,10 @@ attenuation. It depends only on the reference protocol contracts and performs no
 kernel calls. The [independent matrix](../../../../distribution/lab/matrix-composition/README.md)
 is its first consumer.
 
-Not yet ported from the Rust library: surfaces and frame demand, input
-producers, the input directory and descriptions, cursor preference, capacity
-limits, owner-registered streams, stream retirement, the layout controller and
-management grants. An inherited DESCRIBED, RETIRED or GROUP_RETIRED event drops
-the parent grant until the next poll regrants it. The stock matrix needs those
-before it can move onto this world.
+Not yet ported from the Rust library: input producers, the input directory and
+descriptions, cursor preference, capacity limits, owner-registered streams,
+stream retirement, the layout controller and management grants. An inherited
+DESCRIBED, RETIRED or GROUP_RETIRED event drops the parent grant until the next
+poll regrants it. The stock matrix needs those before it can move onto this
+world. The record is sized for the reference kernel's eight-page process stack;
+a larger stock matrix will need more stack or a sparser record.

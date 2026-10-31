@@ -4,6 +4,8 @@ module level;
 // root adapter and a nested matrix. Programs choose placement, slots and
 // lifecycle; this record enforces attenuation: no child sees beyond its grant.
 use protocol::main;
+use demand;
+use surfaces;
 use geometry::Grant;
 use geometry::Rect;
 use children::Child;
@@ -13,11 +15,48 @@ public const SLOTS: u64 = 4u64;
 public data World {
     parent: Grant;
     // Slots this program uses; commands addressing higher slots are denied.
-    capacity: u64 [0..=4];
-    // Advances on every parent change; owner-held snapshots compare against it.
+    slots: u64 [0..=4];
+    // Advances on every parent or allowance change; owner-held snapshots compare against it.
     authority: u64;
     children: [Child; 4];
     input: Input;
+    // Surface allowance received from above, and whether frames are wanted.
+    allowance: u64 [0..=64];
+    no_frames: bool;
+    // Upstream names of surfaces retired since the last flush; each owes the
+    // parent an ERASE under whatever epoch is current when it is taken.
+    owed: [u64; 64];
+    owed_live: [bool; 64];
+}
+// A request from `slot` under `incarnation` names this occupant. A changed
+// incarnation on the same slot is a replacement whose predecessor is forgotten.
+public machine identify(world: &mut World, slot: u64, incarnation: u64) -> bool {
+    transition slot < world.slots {
+        true -> occupant(world, slot, incarnation)
+        _ -> (false)
+    }
+    machine occupant(world: &mut World, slot: u64, incarnation: u64) -> bool requires slot < 4u64 {
+        let previous: u64 = world.children[slot].incarnation;
+        transition previous != 0u64 && previous != incarnation {
+            true -> replaced(world, slot, incarnation)
+            _ -> current(world, slot, incarnation)
+        }
+    }
+    machine replaced(world: &mut World, slot: u64, incarnation: u64) -> bool requires slot < 4u64 {
+        disconnected(world, slot);
+        transition { _ -> current(world, slot, incarnation) }
+    }
+    machine current(world: &mut World, slot: u64, incarnation: u64) -> bool requires slot < 4u64 {
+        world.children[slot].incarnation = incarnation;
+        true
+    }
+}
+public machine binding_matches(world: &World, slot: u64, incarnation: u64, epoch: u64) -> bool {
+    transition slot < 4u64 {
+        true -> (world.children[slot].incarnation == incarnation && geometry::valid_grant(world.children[slot].grant)
+            && world.children[slot].grant.epoch == epoch)
+        _ -> (false)
+    }
 }
 
 // Adopt a parent grant. A new epoch invalidates every placement and all input
@@ -54,7 +93,9 @@ public machine inherit(world: &mut World, grant: Grant) {
         }
     }
     machine unplace(world: &mut World, accepted: Grant, replaced: bool, index: u64) requires index < 4u64 {
+        surfaces::retire(world, index);
         world.children[index].placed = false;
+        world.children[index].surface_limit = 0u64;
         transition { _ -> unplaced(world, accepted, replaced, index + 1u64) }
     }
     machine adopted(world: &mut World, accepted: Grant, replaced: bool) {
@@ -73,6 +114,7 @@ machine refresh_all(world: &mut World, force: bool, index: u64) requires index <
     machine refreshed(world: &mut World, force: bool, index: u64) requires index < 4u64 {
         let previous: Grant = world.children[index].grant;
         children::refresh(&mut world.children[index], world.parent, force);
+        demand::refresh_child(world, index);
         transition geometry::same_grant(world.children[index].grant, previous) {
             true -> refresh_all(world, force, index + 1u64)
             _ -> forgotten(world, force, index)
@@ -80,13 +122,14 @@ machine refresh_all(world: &mut World, force: bool, index: u64) requires index <
     }
     machine forgotten(world: &mut World, force: bool, index: u64) requires index < 4u64 {
         input::main::forget(&mut world.input, index);
+        surfaces::retire(world, index);
         transition { _ -> refresh_all(world, force, index + 1u64) }
     }
 }
 // Placement within already supplied authority: keys may only narrow the parent's.
 public machine place(world: &mut World, slot: u64, rect: Rect, keys: u64) -> u64 {
     transition geometry::valid_grant(world.parent) && geometry::valid_rect(rect)
-        && (keys & ~world.parent.keys) == 0u64 && slot < world.capacity {
+        && (keys & ~world.parent.keys) == 0u64 && slot < world.slots {
         true -> placing(world, slot, rect, keys)
         _ -> (DENIED)
     }
@@ -96,6 +139,7 @@ public machine place(world: &mut World, slot: u64, rect: Rect, keys: u64) -> u64
         world.children[slot].rect = rect;
         world.children[slot].keys = keys;
         children::refresh(&mut world.children[slot], world.parent, false);
+        demand::refresh_child(world, slot);
         transition geometry::same_grant(world.children[slot].grant, previous) {
             true -> (0u64)
             _ -> forgotten(world, slot)
@@ -103,18 +147,22 @@ public machine place(world: &mut World, slot: u64, rect: Rect, keys: u64) -> u64
     }
     machine forgotten(world: &mut World, slot: u64) -> u64 requires slot < 4u64 {
         input::main::forget(&mut world.input, slot);
+        surfaces::retire(world, slot);
         0u64
     }
 }
 public machine revoke(world: &mut World, slot: u64) -> u64 {
-    transition slot < world.capacity {
+    transition slot < world.slots {
         true -> revoking(world, slot)
         _ -> (DENIED)
     }
     machine revoking(world: &mut World, slot: u64) -> u64 requires slot < 4u64 {
         input::main::forget(&mut world.input, slot);
         world.children[slot].placed = false;
+        surfaces::retire(world, slot);
+        world.children[slot].surface_limit = 0u64;
         children::refresh(&mut world.children[slot], world.parent, false);
+        demand::refresh_child(world, slot);
         0u64
     }
 }
@@ -137,7 +185,7 @@ public machine notify(world: &mut World, slot: u64 [0..=3]) {
 public machine hit_pointer(world: &World, x: u64, y: u64) -> u64 {
     transition { _ -> scan(world, x, y, 0u64, 0u64) }
     machine scan(world: &World, x: u64, y: u64, index: u64, best: u64) -> u64 requires index <= 4u64 {
-        transition index < world.capacity && index < 4u64 {
+        transition index < world.slots && index < 4u64 {
             true -> tested(world, x, y, index, best)
             _ -> (best)
         }
@@ -150,7 +198,7 @@ public machine hit_pointer(world: &World, x: u64, y: u64) -> u64 {
     }
 }
 machine contains(child: &Child, x: u64, y: u64) -> bool {
-    child.placed && geometry::valid_grant(child.grant) && x >= child.rect.x && y >= child.rect.y
+    child.placed && !child.hidden && geometry::valid_grant(child.grant) && x >= child.rect.x && y >= child.rect.y
         && x - child.rect.x < child.grant.width && y - child.rect.y < child.grant.height
 }
 // Interrupt one routed stream everywhere it was delivered.

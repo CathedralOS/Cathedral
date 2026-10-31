@@ -35,6 +35,15 @@ Descend by responsibility:
 - [upstream.omg](process/upstream.omg): with a supplied parent, one synchronous
   poll before each local decision, adopted through the World's upstream
   inheritance. The top-level proof has no parent.
+- [presentation.omg](process/presentation.omg): a peer's surface creation and
+  updates. Creation validates locally, allocates upstream (the parent's own
+  creation, or a virtual name at the top level) and publishes the child-local
+  name; updates are previewed into the parent's coordinates, forwarded or
+  recorded, and committed only after the upstream accepts them. Erasures owed
+  for retired surfaces are flushed between turns the same way.
+- [inspection.omg](process/inspection.omg): proof-only owner words above 900
+  that read the last presented packet, count flushed erasures, and drive the
+  owner side of frame demand and visibility. Lab orchestration, not a protocol.
 
 Run the live IPC proof against the Omega matrix and against the original Rust
 program, which remains the comparison path:
@@ -54,14 +63,18 @@ listeners' bells, the owner bell, the parent client's bell, and two spare for
 the exhaustion probe. The [Rust fixtures](../../../../source-rs/distribution/lab/matrix-composition/README.md)
 describe what the guest proof checks: service transfers, forged and forbidden
 requests, sibling isolation, stale views, repeated replacement, interrupted
-transfers, failed-admission rollback and whole-subtree reclamation; under a
-parent, coordinate translation, queued key edges, withheld keys, shrink, revoke
-and regrant, and old-epoch rejection.
+transfers, failed-admission rollback and whole-subtree reclamation; surface
+allowances and ranges, child-local names, clipped and translated paint, every
+creation and update refusal, the frame-demand handshake, visibility, and the
+erasures a replacement owes; under a parent, coordinate translation, queued key
+edges, withheld keys, shrink, revoke and regrant, old-epoch rejection, and a
+paint that reaches the parent clipped and placed, withdrawn demand reaching the
+leaf, and an erasure that precedes revocation.
 
 This proves a matrix program in Omega over the common runtime. Its storage grant
 exercises endpoint custody only; it does not serve a filesystem or distinguish
-persistent realms. It has a virtual input space, no framebuffer and no
-rendering. The upstream refresh is synchronous on local requests, so a slow
-parent delays local dispatch; the stock desktop's asynchronous parent handling
-must be preserved when that program moves. The stock F5 matrix still runs its
-Rust host.
+persistent realms. It has a virtual input space and twelve virtual surfaces at
+the top level, no framebuffer and no rendering. The upstream refresh is
+synchronous on local requests, so a slow parent delays local dispatch; the stock
+desktop's asynchronous parent handling must be preserved when that program
+moves. The stock F5 matrix still runs its Rust host.

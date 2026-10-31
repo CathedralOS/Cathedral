@@ -57,3 +57,16 @@ public machine ok() -> [u64; 8] {
     let words: [u64; 8];
     words
 }
+// True when every word from `from` to the end is zero.
+public machine zeros_from(words: &[u64; 8], from: u64) -> bool requires from <= 8u64 {
+    transition from < 8u64 {
+        true -> checked(words, from)
+        _ -> (true)
+    }
+    machine checked(words: &[u64; 8], from: u64) -> bool requires from < 8u64 {
+        transition words[from] == 0u64 {
+            true -> zeros_from(words, from + 1u64)
+            _ -> (false)
+        }
+    }
+}

@@ -1,0 +1,81 @@
+module inspection;
+// Proof-only owner words, numbered far above the platform's: read the last
+// packet this matrix presented upstream, count the erasures it flushed, and
+// drive the owner side of frame demand and visibility for one slot. The stock
+// matrix reaches the same World operations from its capture and layout policy.
+// This is lab orchestration, not a platform protocol.
+use main::State;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::connection::main::Frame;
+use world::demand;
+use world::demand::Requested;
+
+public const LAST_PRESENTED: u64 = 900u64;
+public const ERASED: u64 = 901u64;
+public const REQUEST_FRAME: u64 = 902u64;
+public const FRAME_READY: u64 = 903u64;
+public const RELEASE_FRAME: u64 = 904u64;
+public const VISIBLE: u64 = 905u64;
+
+public machine answer(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Kernel blocks; invokes Kernel; {
+    transition {
+        frame.payload[0] == LAST_PRESENTED -> block reply(gate, context, context.last_presented)
+        frame.payload[0] == ERASED -> block counted(gate, context)
+        frame.payload[1] < 3u64 -> block slotted(gate, context, frame, frame.payload[1])
+        _ -> block refused(gate, context, kernel::DENIED)
+    }
+    machine counted(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+        let mut words: [u64; 8];
+        words[1] = context.erased;
+        block reply(gate, context, words)
+    }
+    machine slotted(gate: &Gate, context: &mut State, frame: Frame, slot: u64 [0..=2]) -> u64 reaches Kernel {
+        let incarnation: u64 = context.world.children[slot].incarnation;
+        let epoch: u64 = context.world.children[slot].grant.epoch;
+        transition {
+            frame.payload[0] == REQUEST_FRAME -> block requested(gate, context, slot, incarnation, epoch)
+            frame.payload[0] == FRAME_READY -> block ready(gate, context, slot, incarnation, epoch, frame.payload[2])
+            frame.payload[0] == RELEASE_FRAME -> block released(gate, context, slot, incarnation, epoch, frame.payload[2])
+            frame.payload[0] == VISIBLE -> block shown(gate, context, slot, frame.payload[2] != 0u64)
+            _ -> block refused(gate, context, kernel::DENIED)
+        }
+    }
+    machine requested(gate: &Gate, context: &mut State, slot: u64 [0..=2], incarnation: u64, epoch: u64) -> u64 reaches Kernel {
+        let requested: Requested = demand::request_frame(&mut context.world, slot, incarnation, epoch);
+        transition requested {
+            Requested::Ticket { ticket } -> block ticketed(gate, context, ticket)
+            Requested::Refused { code } -> block refused(gate, context, code)
+        }
+    }
+    machine ticketed(gate: &Gate, context: &mut State, ticket: u64) -> u64 reaches Kernel {
+        let mut words: [u64; 8];
+        words[1] = ticket;
+        block reply(gate, context, words)
+    }
+    machine ready(gate: &Gate, context: &mut State, slot: u64 [0..=2], incarnation: u64, epoch: u64, ticket: u64) -> u64 reaches Kernel {
+        let mut words: [u64; 8];
+        words[1] = flag(demand::frame_ready(&context.world, slot, incarnation, epoch, ticket));
+        block reply(gate, context, words)
+    }
+    machine released(gate: &Gate, context: &mut State, slot: u64 [0..=2], incarnation: u64, epoch: u64, ticket: u64) -> u64 reaches Kernel {
+        let status: u64 = demand::release_frame(&mut context.world, slot, incarnation, epoch, ticket);
+        block refused(gate, context, status)
+    }
+    machine shown(gate: &Gate, context: &mut State, slot: u64 [0..=2], visible: bool) -> u64 reaches Kernel {
+        let status: u64 = demand::visible(&mut context.world, slot, visible);
+        block refused(gate, context, status)
+    }
+}
+machine flag(value: bool) -> u64 {
+    transition value { true -> (1u64) _ -> (0u64) }
+}
+machine refused(gate: &Gate, context: &mut State, code: u64) -> u64 reaches Kernel {
+    let mut words: [u64; 8];
+    words[0] = code;
+    block reply(gate, context, words)
+}
+machine reply(gate: &Gate, context: &mut State, words: [u64; 8]) -> u64 reaches Kernel {
+    block runtime::server::main::reply(gate, &mut context.owner, &words)
+}

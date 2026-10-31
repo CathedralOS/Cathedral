@@ -20,6 +20,7 @@ use slots;
 use probe;
 use probe::Probe;
 use rollback;
+use presentation;
 public data State {
     owner: Server;
     slots: [Admitted; 3];
@@ -31,6 +32,9 @@ public data State {
     deadline: u64;
     // The channel-exhaustion probe waits until every listener holds its bell.
     probe_rollback: bool;
+    // Proof-only observations: the last packet presented upstream, erasures flushed.
+    last_presented: [u64; 8];
+    erased: u64;
     width: u64;
     height: u64;
     keys: u64;
@@ -65,7 +69,8 @@ machine served(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel
     let second: u64 = block slots::step(gate, context, 1u64, now);
     let third: u64 = block slots::step(gate, context, 2u64, now);
     let relayed: u64 = block probe::progress(gate, context, now);
-    transition probed == 0u64 && commanded == 0u64 && first == 0u64 && second == 0u64 && third == 0u64 && relayed == 0u64 {
+    let flushed: u64 = block presentation::flush(gate, context);
+    transition probed == 0u64 && commanded == 0u64 && first == 0u64 && second == 0u64 && third == 0u64 && relayed == 0u64 && flushed == 0u64 {
         true -> block parked(gate, context)
         _ -> block cleanup(gate, context, 403u64)
     }

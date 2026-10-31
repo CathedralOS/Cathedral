@@ -3,6 +3,8 @@ module events;
 // events plus one reserved boundary slot. Overflow collapses this stream to a
 // CANCEL boundary and cannot disturb another stream. Entries keep their global
 // order number so a child can drain several streams in arrival order per group.
+// Each event packs into one word beside its order: kind in three bits, then
+// thirteen bits each of x and y (extents stay below 4096), then the value.
 use protocol::main;
 use names::Name;
 
@@ -14,13 +16,20 @@ public data Queue {
     source: Name;
     // Child-local group name.
     group: u64;
-    kinds: [u64; 17];
-    xs: [u64; 17];
-    ys: [u64; 17];
-    values: [u64; 17];
+    entries: [u64; 17];
     orders: [u64; 17];
     len: u64 [0..=17];
 }
+public machine pack(kind: u64, x: u64, y: u64, value: u64) -> u64 {
+    (kind & 7u64) | (((x & 0x1fffu64) as u64 in Wrapping) << 3u64) as u64
+        | (((y & 0x1fffu64) as u64 in Wrapping) << 16u64) as u64
+        | (((value & 0xffffu64) as u64 in Wrapping) << 29u64) as u64
+}
+public machine kind_of(entry: u64) -> u64 { entry & 7u64 }
+public machine x_of(entry: u64) -> u64 { (entry >> 3u64) & 0x1fffu64 }
+public machine y_of(entry: u64) -> u64 { (entry >> 16u64) & 0x1fffu64 }
+public machine value_of(entry: u64) -> u64 { (entry >> 29u64) & 0xffffu64 }
+
 public machine pending(queue: &Queue) -> bool { queue.len != 0u64 }
 // Order numbers start at one, so zero means no entry.
 public machine first_order(queue: &Queue) -> u64 {
@@ -29,7 +38,7 @@ public machine first_order(queue: &Queue) -> u64 {
 public machine last_order(queue: &Queue) -> u64 {
     transition queue.len != 0u64 { true -> (queue.orders[queue.len - 1u64]) _ -> (0u64) }
 }
-public machine retiring(queue: &Queue) -> bool { queue.len == 1u64 && queue.kinds[0] == RETIRED }
+public machine retiring(queue: &Queue) -> bool { queue.len == 1u64 && kind_of(queue.entries[0]) == RETIRED }
 
 // True when the event was queued; false when the stream overflowed and collapsed.
 public machine push(queue: &mut Queue, kind: u64, x: u64, y: u64, value: u64, order: u64, coalesce: bool) -> bool {
@@ -41,15 +50,14 @@ public machine push(queue: &mut Queue, kind: u64, x: u64, y: u64, value: u64, or
     machine coalescing(queue: &mut Queue, kind: u64, x: u64, y: u64, value: u64, order: u64) -> bool requires queue.len >= 2u64 {
         let tail: u64 = queue.len - 1u64;
         let before: u64 = queue.len - 2u64;
-        transition queue.kinds[tail] == POINTER && queue.kinds[before] == POINTER
-            && queue.values[tail] == value && queue.values[before] == value {
-            true -> merged(queue, tail, x, y, order)
+        transition kind_of(queue.entries[tail]) == POINTER && kind_of(queue.entries[before]) == POINTER
+            && value_of(queue.entries[tail]) == value && value_of(queue.entries[before]) == value {
+            true -> merged(queue, tail, x, y, value, order)
             _ -> appending(queue, kind, x, y, value, order)
         }
     }
-    machine merged(queue: &mut Queue, tail: u64, x: u64, y: u64, order: u64) -> bool requires tail < 17u64 {
-        queue.xs[tail] = x;
-        queue.ys[tail] = y;
+    machine merged(queue: &mut Queue, tail: u64, x: u64, y: u64, value: u64, order: u64) -> bool requires tail < 17u64 {
+        queue.entries[tail] = pack(POINTER, x, y, value);
         queue.orders[tail] = order;
         true
     }
@@ -61,10 +69,7 @@ public machine push(queue: &mut Queue, kind: u64, x: u64, y: u64, value: u64, or
     }
     machine append(queue: &mut Queue, kind: u64, x: u64, y: u64, value: u64, order: u64) -> bool requires queue.len < 16u64 {
         let at: u64 = queue.len;
-        queue.kinds[at] = kind;
-        queue.xs[at] = x;
-        queue.ys[at] = y;
-        queue.values[at] = value;
+        queue.entries[at] = pack(kind, x, y, value);
         queue.orders[at] = order;
         queue.len = at + 1u64;
         true
@@ -88,10 +93,7 @@ public machine retire(queue: &mut Queue, order: u64) {
     }
 }
 machine boundary(queue: &mut Queue, kind: u64, order: u64) {
-    queue.kinds[0] = kind;
-    queue.xs[0] = 0u64;
-    queue.ys[0] = 0u64;
-    queue.values[0] = 0u64;
+    queue.entries[0] = pack(kind, 0u64, 0u64, 0u64);
     queue.orders[0] = order;
     queue.len = 1u64;
 }
@@ -103,12 +105,13 @@ public machine next(queue: &mut Queue, epoch: u64) -> [u64; 8] {
         _ -> (empty_packet(epoch))
     }
     machine popped(queue: &mut Queue, epoch: u64) -> [u64; 8] requires queue.len >= 1u64 {
+        let entry: u64 = queue.entries[0];
         let mut packet: [u64; 8];
         packet[1] = epoch;
-        packet[2] = queue.kinds[0];
-        packet[3] = queue.xs[0];
-        packet[4] = queue.ys[0];
-        packet[5] = queue.values[0];
+        packet[2] = kind_of(entry);
+        packet[3] = x_of(entry);
+        packet[4] = y_of(entry);
+        packet[5] = value_of(entry);
         packet[6] = queue.channel;
         packet[7] = queue.group;
         let remaining: u64 = queue.len - 1u64;
@@ -141,10 +144,7 @@ machine shift(queue: &mut Queue, index: u64) requires index < 17u64 {
         _ -> done()
     }
     machine moved(queue: &mut Queue, index: u64) requires index < 16u64 {
-        queue.kinds[index] = queue.kinds[index + 1u64];
-        queue.xs[index] = queue.xs[index + 1u64];
-        queue.ys[index] = queue.ys[index + 1u64];
-        queue.values[index] = queue.values[index + 1u64];
+        queue.entries[index] = queue.entries[index + 1u64];
         queue.orders[index] = queue.orders[index + 1u64];
         transition { _ -> shift(queue, index + 1u64) }
     }
@@ -162,16 +162,14 @@ public machine cancel_keys(queue: &mut Queue, order: u64) {
         }
     }
     machine examine(queue: &mut Queue, index: u64, keep: u64, order: u64) requires keep <= index && index < 17u64 {
-        transition queue.kinds[index] == KEY || queue.kinds[index] == CANCEL_KEYS {
+        let kind: u64 = kind_of(queue.entries[index]);
+        transition kind == KEY || kind == CANCEL_KEYS {
             true -> compact(queue, index + 1u64, keep, order)
             _ -> kept(queue, index, keep, order)
         }
     }
     machine kept(queue: &mut Queue, index: u64, keep: u64, order: u64) requires keep <= index && index < 17u64 {
-        queue.kinds[keep] = queue.kinds[index];
-        queue.xs[keep] = queue.xs[index];
-        queue.ys[keep] = queue.ys[index];
-        queue.values[keep] = queue.values[index];
+        queue.entries[keep] = queue.entries[index];
         queue.orders[keep] = queue.orders[index];
         transition { _ -> compact(queue, index + 1u64, keep + 1u64, order) }
     }
@@ -183,10 +181,7 @@ public machine cancel_keys(queue: &mut Queue, order: u64) {
         }
     }
     machine closed(queue: &mut Queue, keep: u64, order: u64) requires keep < 17u64 {
-        queue.kinds[keep] = CANCEL_KEYS;
-        queue.xs[keep] = 0u64;
-        queue.ys[keep] = 0u64;
-        queue.values[keep] = 0u64;
+        queue.entries[keep] = pack(CANCEL_KEYS, 0u64, 0u64, 0u64);
         queue.orders[keep] = order;
         queue.len = keep + 1u64;
     }

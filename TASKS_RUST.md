@@ -9,6 +9,59 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
+### Omega World: surfaces and frame demand
+
+The Omega World now carries the Rust library's surfaces and render demand for
+the subset the independent matrix proves. `surfaces.omg` gives a child an
+owner-chosen rank range inside the world's allowance, names its surfaces,
+clips and translates its paint, image, cursor and erase updates for the parent,
+replays retained updates under new geometry, snapshots a surface for capture,
+and owes the parent an erasure for every surface retired by revocation,
+replacement, regrant or a changed allowance. `demand.omg` composes the parent's
+demand with each child's visibility and one pending owner-requested frame, and
+runs the frame handshake ticket by ticket. POLL carries the allowance, the
+pending request and the demand bits; SURFACE_INFO, FRAME_DEMAND and FRAME_READY
+answer children; SURFACE_LIMIT is an owner word; the parent's poll sets demand
+and allowance through upstream inheritance.
+
+Two sizing decisions follow from the reference kernel's eight-page process
+stack, which admission accounting and every profile's physical budget assume:
+a child keeps at most sixteen surface ranks while the world-wide allowance stays
+at sixty-four, and each queued event packs into one word beside its order. The
+first attempt faulted just below the stack base; the compact record fits with
+room for the lab process. A larger stock matrix will need more stack or a
+sparser record, and that is a kernel-level decision.
+
+The independent matrix serves surface traffic: creation validates locally,
+allocates upstream (a real parent's creation, or a virtual name at the top
+level) and publishes the child-local name; updates are previewed into the
+parent's coordinates, forwarded or recorded, and committed only after the
+upstream accepts them; owed erasures flush between turns. Proof-only owner
+words above 900 expose the last presented packet, the erasure count, and the
+owner side of frame demand and visibility. The guest proof checks allowance
+ranges and their refusals, names, clipped and translated paint, every creation
+and update refusal, the frame handshake with stale tickets, hidden output,
+demand propagation, and the three erasures a replacement owes; under a real
+parent it checks a leaf's paint arriving clipped and placed at (110,400),
+withdrawn demand reaching the leaf, and an erasure preceding revocation. The
+Rust comparison matrix never served surfaces, so those checks are gated behind
+the fixtures' `omega-matrix` feature.
+
+Evidence in the main checkout with the saved standalone producer:
+
+- Omega matrix, top level: `build/boot-harness-rs/omega-matrix/20261031T162028311902Z/`.
+- Omega matrix under a real parent: `build/boot-harness-rs/omega-matrix-upstream/20261031T162052422270Z/`.
+- Rust comparison matrix: `build/boot-harness-rs/matrix-composition/20261031T162109925897Z/`.
+- Default F5 desktop and cold reopen after the contract additions: `build/boot-harness-rs/desktop/20261031T162207965669Z/`.
+- Layout (116 Omega / 153 Rust edges), process-tool tests, Rust formatting and
+  clippy for the lab crate in every feature combination pass. No native leaf,
+  kernel limit or runtime module changed in this step.
+
+Next: input producers and the input directory, then cursor preference and
+capacity limits, then registered streams and retirement, the layout controller
+and management grants. After that the stock matrix host can start moving onto
+the runtime and World slice by slice while F5 keeps working.
+
 ### Omega World and the standalone independent matrix
 
 `source/platform/libraries/matrix/world/` is the Omega World: grants, placement
@@ -53,10 +106,8 @@ Evidence in the main checkout with the saved standalone producer:
   feature combination pass. The six native packages accepted the two budget
   leaves in review; the new lab package accepted the complete gate.
 
-Next: port the stock-only World features listed above, starting with surfaces
-and frame demand, then move the stock matrix's host onto the runtime and World
-slice by slice while F5 keeps working. The nested-close timeout recorded below
-remains open.
+Surfaces and frame demand followed in the step recorded above. The
+nested-close timeout recorded below remains open.
 
 ### Omega child admission and service offers
 

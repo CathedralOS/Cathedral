@@ -8,6 +8,7 @@ use names::Name;
 use geometry::Grant;
 use geometry::Rect;
 use events::Queue;
+use surfaces::Surface;
 
 public const STREAMS: u64 = 4u64;
 public const GROUPS: u64 = 4u64;
@@ -19,6 +20,17 @@ public data Child {
     incarnation: u64;
     notify: bool;
     epoch: u64;
+    // Owner-selected visibility; zero means visible.
+    hidden: bool;
+    // Current display demand; zero means frames are wanted.
+    no_frames: bool;
+    frame_serial: u64;
+    frame_ticket: u64;
+    frame_ready: bool;
+    surfaces: [Surface; 16];
+    surface_base: u64 [0..=64];
+    surface_limit: u64 [0..=16];
+    next_surface: u64;
     queues: [Queue; 4];
     next_stream: u64 [0..=3];
     next_input_name: u64;
@@ -45,6 +57,8 @@ public machine refresh(child: &mut Child, parent: Grant, force: bool) {
         _ -> reset(child, clipped)
     }
     machine reset(child: &mut Child, clipped: Grant) {
+        child.frame_ticket = 0u64;
+        child.frame_ready = false;
         clear_queues(child, 0u64);
         child.next_stream = 0u64;
         child.next_input_name = 0u64;
@@ -302,15 +316,43 @@ machine earlier_in_group(child: &Child, index: u64, order: u64, other: u64) -> b
         }
     }
 }
-// Atomic view plus one event, with MORE while anything stays queued.
+// Interrupt every stream delivered to this child; its grant and names survive.
+public machine cancel_all(child: &mut Child) {
+    transition { _ -> cancelling(child, 0u64) }
+    machine cancelling(child: &mut Child, index: u64) requires index <= 4u64 {
+        transition index < 4u64 && child.next_event < 0xffffffffffffffffu64 {
+            true -> cancelled(child, index)
+            _ -> finished(child)
+        }
+    }
+    machine cancelled(child: &mut Child, index: u64) requires index < 4u64 && child.next_event < 0xffffffffffffffffu64 {
+        child.next_event = child.next_event + 1u64;
+        events::cancel(&mut child.queues[index], child.next_event);
+        transition { _ -> cancelling(child, index + 1u64) }
+    }
+    machine finished(child: &mut Child) {
+        clear_last_events(child, 0u64);
+        child.notify = true;
+    }
+}
+// Atomic view plus one event, with MORE while anything stays queued. Word four
+// also carries the surface allowance, a pending frame request and demand.
 public machine poll(child: &mut Child) -> [u64; 8] {
     let event: [u64; 8] = next(child);
     let mut reply: [u64; 8] = view(child);
+    reply[4] = reply[4] | (((child.surface_limit as u64 in Wrapping) << SURFACE_BITS) as u64)
+        | requested(child) | demand_flag(child);
     reply[5] = event[2] | (((event[7] as u64 in Wrapping) << 17u64) as u64) | (((event[5] as u64 in Wrapping) << 8u64) as u64)
         | (((event[6] as u64 in Wrapping) << 32u64) as u64) | more(child, 0u64);
     reply[6] = event[3];
     reply[7] = event[4];
     reply
+}
+machine requested(child: &Child) -> u64 {
+    transition child.frame_ticket != 0u64 && !child.frame_ready { true -> (FRAME_REQUESTED) _ -> (0u64) }
+}
+machine demand_flag(child: &Child) -> u64 {
+    transition child.no_frames { true -> (NO_FRAMES) _ -> (0u64) }
 }
 machine more(child: &Child, index: u64) -> u64 requires index <= 4u64 {
     transition index < 4u64 {

@@ -15,7 +15,8 @@ The [Omega process runtime](libraries/user-runtime/README.md) is the path
 toward removing that host. The installed chooser, Background, Colors and Notes
 run on it, and it now admits child tasks and offers them services. The
 [World](libraries/matrix/world/README.md) supplies a matrix's local authority:
-grants, placement and attenuated input routing, with no kernel calls of its own.
+grants, placement, attenuated input routing, surfaces and render demand, with no
+kernel calls of its own.
 The [independent Omega matrix](../distribution/lab/matrix-composition/README.md)
 is the first program built from both; the stock matrix still runs its Rust host.
 

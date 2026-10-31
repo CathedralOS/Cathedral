@@ -6,6 +6,7 @@ public const FUND: u64 = 25u64;
 public const BIND: u64 = 100u64;
 public const PLACE: u64 = 101u64;
 public const REVOKE: u64 = 102u64;
+public const SURFACE_LIMIT: u64 = 110u64;
 public const READ_PIXEL: u64 = 108u64;
 public const RESOLVE_PATH: u64 = 124u64;
 public const PRODUCER_INFO: u64 = 40u64;

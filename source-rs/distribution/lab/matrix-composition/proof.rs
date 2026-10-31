@@ -57,7 +57,8 @@ fn start() -> (Child, Lab) {
 }
 pub fn run() -> u64 {
     let (matrix, mut lab) = start();
-    let views = [0, 1, 2].map(|slot| lab.view(slot));
+    #[allow(unused_mut)]
+    let mut views = [0, 1, 2].map(|slot| lab.view(slot));
     use cathedral_platform_contracts::{imports, services};
     for slot in 0..3 {
         for _ in 0..16 {
@@ -147,6 +148,8 @@ pub fn run() -> u64 {
     assert_eq!(lab.view(1)[2], 300);
     assert_eq!(lab.view(0), views[0]);
     assert_eq!(lab.view(2), views[2]);
+    #[cfg(feature = "omega-matrix")]
+    surfaces(&mut lab, &mut views);
     // Repeated replacement exercises retained-endpoint teardown and channel reuse.
     for _ in 0..16 {
         assert_eq!(lab.owner([wire::STOP, 1, 0, 0, 0, 0, 0, 0]), [0; 8]);
@@ -178,4 +181,159 @@ pub fn run() -> u64 {
     let (_, idle) = ipc::channel().unwrap();
     let _ = idle.receive(&mut [0; 64]);
     0
+}
+
+/// Surfaces on the Omega matrix: allowance ranges, child-local names, clipping
+/// and translation, refusals, frame demand, visibility and retirement through
+/// replacement. The proof-only owner words above 900 read the last presented
+/// packet, count flushed erasures and drive the owner side of demand.
+#[cfg(feature = "omega-matrix")]
+fn surfaces(lab: &mut Lab, views: &mut [wire::Packet; 3]) {
+    const LAST_PRESENTED: u64 = 900;
+    const ERASED: u64 = 901;
+    const REQUEST_FRAME: u64 = 902;
+    const FRAME_READY: u64 = 903;
+    const RELEASE_FRAME: u64 = 904;
+    const VISIBLE: u64 = 905;
+    fn poll(lab: &mut Lab) -> wire::Packet {
+        lab.call(Some(2), [wire::POLL, 0, 0, 0, 0, 0, 0, 0])
+    }
+    for slot in 0..3 {
+        assert_eq!(
+            lab.owner([wire::SURFACE_LIMIT, slot, 4, 0, 0, 0, 0, 0]),
+            [0; 8]
+        );
+    }
+    // Twelve virtual surfaces are fully allotted; a fifth rank has no room.
+    assert_eq!(
+        lab.owner([wire::SURFACE_LIMIT, 0, 5, 0, 0, 0, 0, 0]),
+        wire::error(abi::NO_MEMORY)
+    );
+    let epoch = views[2][1];
+    let info = [wire::SURFACE_INFO, 0, 0, 0, 0, 0, 0, 0];
+    assert_eq!(lab.call(Some(2), info), [0, 4, 0, 0, 0, 0, 0, 0]);
+    let create = |rank| [wire::SURFACE_CREATE, epoch, rank, 0, 0, 0, 0, 0];
+    assert_eq!(lab.call(Some(2), create(0)), [0, 1, 0, 0, 0, 0, 0, 0]);
+    assert_eq!(lab.call(Some(2), create(0)), wire::error(abi::BUSY));
+    assert_eq!(lab.call(Some(2), create(4)), wire::error(abi::DENIED));
+    assert_eq!(
+        lab.call(Some(2), [wire::SURFACE_CREATE, epoch + 1, 1, 0, 0, 0, 0, 0]),
+        wire::error(abi::DENIED)
+    );
+    for rank in 1..4 {
+        assert_eq!(
+            lab.call(Some(2), create(rank)),
+            [0, rank + 1, 0, 0, 0, 0, 0, 0]
+        );
+    }
+    assert_eq!(lab.call(Some(2), create(0)), wire::error(abi::NO_MEMORY));
+    assert_eq!(lab.call(Some(2), info), [0, 4, 4, 0, 0, 0, 0, 0]);
+    // Paint near the corner: clipped to the view, then offset by the third region.
+    assert_eq!(
+        lab.call(Some(2), [wire::PAINT, epoch, 1, 290, 190, 50, 50, 0x123456]),
+        [0; 8]
+    );
+    assert_eq!(
+        lab.owner([LAST_PRESENTED, 0, 0, 0, 0, 0, 0, 0]),
+        [wire::PAINT, 1, 9, 290, 590, 10, 10, 0x123456]
+    );
+    for bad in [
+        [wire::PAINT, epoch, 1, 0, 0, 1, 1, 0x1000000],
+        [wire::PAINT, epoch + 1, 1, 0, 0, 1, 1, 0],
+    ] {
+        assert_eq!(lab.call(Some(2), bad), wire::error(abi::DENIED));
+    }
+    assert_eq!(
+        lab.call(Some(2), [wire::PAINT, epoch, 99, 0, 0, 1, 1, 0]),
+        wire::error(abi::BAD_HANDLE)
+    );
+    // A sibling cannot name this surface.
+    assert_eq!(
+        lab.call(Some(0), [wire::PAINT, views[0][1], 1, 0, 0, 1, 1, 0]),
+        wire::error(abi::BAD_HANDLE)
+    );
+    assert_eq!(
+        lab.call(Some(2), [wire::ERASE, epoch, 2, 0, 0, 0, 0, 0]),
+        [0; 8]
+    );
+    assert_eq!(
+        lab.owner([LAST_PRESENTED, 0, 0, 0, 0, 0, 0, 0]),
+        [wire::ERASE, 1, 10, 0, 0, 0, 0, 0]
+    );
+    assert_eq!(lab.call(Some(2), info), [0, 4, 3, 0, 0, 0, 0, 0]);
+    // Frame demand: the owner's request shows in the poll until the source
+    // acknowledges that ticket; a stale ticket is refused on both sides.
+    assert_eq!(poll(lab)[4] & (wire::FRAME_REQUESTED | wire::NO_FRAMES), 0);
+    assert_eq!(poll(lab)[4] >> wire::SURFACE_BITS, 4);
+    assert_eq!(
+        lab.owner([REQUEST_FRAME, 2, 0, 0, 0, 0, 0, 0]),
+        [0, 1, 0, 0, 0, 0, 0, 0]
+    );
+    assert_eq!(
+        lab.owner([REQUEST_FRAME, 2, 0, 0, 0, 0, 0, 0]),
+        wire::error(abi::BUSY)
+    );
+    assert_ne!(poll(lab)[4] & wire::FRAME_REQUESTED, 0);
+    assert_eq!(
+        lab.call(Some(2), [wire::FRAME_DEMAND, epoch, 0, 0, 0, 0, 0, 0]),
+        [0, epoch, 1, 0, 0, 0, 0, 0]
+    );
+    assert_eq!(
+        lab.call(Some(2), [wire::FRAME_READY, epoch, 7, 0, 0, 0, 0, 0]),
+        wire::error(abi::DENIED)
+    );
+    assert_eq!(lab.owner([FRAME_READY, 2, 1, 0, 0, 0, 0, 0]), [0; 8]);
+    assert_eq!(
+        lab.call(Some(2), [wire::FRAME_READY, epoch, 1, 0, 0, 0, 0, 0]),
+        [0; 8]
+    );
+    assert_eq!(
+        lab.owner([FRAME_READY, 2, 1, 0, 0, 0, 0, 0]),
+        [0, 1, 0, 0, 0, 0, 0, 0]
+    );
+    assert_eq!(poll(lab)[4] & wire::FRAME_REQUESTED, 0);
+    assert_eq!(
+        lab.owner([RELEASE_FRAME, 2, 7, 0, 0, 0, 0, 0]),
+        wire::error(abi::DENIED)
+    );
+    assert_eq!(lab.owner([RELEASE_FRAME, 2, 1, 0, 0, 0, 0, 0]), [0; 8]);
+    assert_eq!(
+        lab.call(Some(2), [wire::FRAME_DEMAND, epoch, 0, 0, 0, 0, 0, 0]),
+        [0, epoch, 0, 0, 0, 0, 0, 0]
+    );
+    // Hidden: no demand and no visible output, with the same view and names.
+    assert_eq!(lab.owner([VISIBLE, 2, 0, 0, 0, 0, 0, 0]), [0; 8]);
+    assert_ne!(poll(lab)[4] & wire::NO_FRAMES, 0);
+    assert_eq!(wire::poll_view(poll(lab)), views[2]);
+    assert_eq!(
+        lab.call(Some(2), [wire::PAINT, epoch, 1, 1, 2, 3, 4, 0xabcdef]),
+        [0; 8]
+    );
+    assert_eq!(
+        lab.owner([LAST_PRESENTED, 0, 0, 0, 0, 0, 0, 0]),
+        [wire::PAINT, 1, 9, 0, 0, 0, 0, 0xabcdef]
+    );
+    assert_eq!(lab.owner([VISIBLE, 2, 1, 0, 0, 0, 0, 0]), [0; 8]);
+    assert_eq!(poll(lab)[4] & wire::NO_FRAMES, 0);
+    // Replacement retires every surface and the allowance; the owner reissues it.
+    assert_eq!(lab.owner([ERASED, 0, 0, 0, 0, 0, 0, 0]), [0; 8]);
+    assert_eq!(lab.owner([wire::STOP, 2, 0, 0, 0, 0, 0, 0]), [0; 8]);
+    assert_eq!(lab.owner([wire::SPAWN, 2, 0, 0, 0, 0, 0, 0]), [0; 8]);
+    assert_eq!(
+        lab.owner([ERASED, 0, 0, 0, 0, 0, 0, 0]),
+        [0, 3, 0, 0, 0, 0, 0, 0]
+    );
+    assert_eq!(lab.call(Some(2), info), wire::error(abi::DENIED));
+    assert_eq!(
+        lab.owner([wire::PLACE, 2, 0, 400, 300, 200, wire::KEY_MASK, 0]),
+        [0; 8]
+    );
+    assert_eq!(lab.call(Some(2), info), [0; 8]);
+    assert_eq!(
+        lab.owner([wire::SURFACE_LIMIT, 2, 4, 0, 0, 0, 0, 0]),
+        [0; 8]
+    );
+    assert_eq!(lab.call(Some(2), info), [0, 4, 0, 0, 0, 0, 0, 0]);
+    views[2] = lab.view(2);
+    assert_eq!(&views[2][2..4], &[300, 200]);
 }
