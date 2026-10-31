@@ -12,6 +12,7 @@ public const BUSY: u64 = 0xfffffffffffffff0u64;
 public const INVALID_ARGUMENT: u64 = 0xffffffffffffffeau64;
 public const NO_MEMORY: u64 = 0xfffffffffffffff4u64;
 public const BAD_HANDLE: u64 = 0xfffffffffffffff7u64;
+public const BAD_EXECUTABLE: u64 = 0xfffffffffffffff8u64;
 // Temporary native boundary, not a matrix service bundle. The table comes from
 // this executable's read-only image; the kernel still authenticates every handle.
 public data Gate {

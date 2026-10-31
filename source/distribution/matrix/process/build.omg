@@ -3,6 +3,8 @@ machine build(builder: &mut Build) {
     Build::depend_as(builder, "runtime", Source::Path { location: "../../../platform/libraries/user-runtime" });
     Build::depend_as(builder, "protocol", Source::Path { location: "../../../platform/contracts/reference" });
     Build::depend_as(builder, "world", Source::Path { location: "../../../platform/libraries/matrix/world" });
+    Build::depend_as(builder, "policy", Source::Path { location: "../service" });
+    Build::depend_as(builder, "services", Source::Path { location: "../../../platform/contracts/imports" });
     Build::select_provider<runtime::entry::Program, main::ProgramProvider>(builder, linux_x86_64);
     Build::select_provider<runtime::kernel::Kernel, runtime::arch::x86_64::gate::NativeKernel>(builder, linux_x86_64);
     Build::bind(builder, linux_x86_64::ProgramEntry, main::component_entry);

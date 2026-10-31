@@ -215,15 +215,64 @@ Evidence in the main checkout with the saved standalone producer:
   `shell,omega-root` pass. Every native package that consumes the runtime
   accepted the two link leaves in review. No kernel limit changed.
 
-Next: launches from the realm's objects, which read the program over the
-matrix's own binding and admit it through `image_from_object`, with the
-RESOLVE_PATH own read and the stock launch policy's roles and recipes; then
-the startup realm discovery that admits the picker and background, loss
-surveys and close over the owner-control client, management and launch
-observation words, nested operation under a parent matrix with an upstream
-storage binding, then the stock policy packages linked directly. Dynamic
-launches still cap reserved frames at MAX_ADMISSION_FRAMES, which a nested
-Omega matrix with a declared stack will exceed.
+Launches from the realm's objects followed in the step recorded below.
+
+### Stock matrix migration: launches from the realm's objects
+
+The stock matrix process now runs programs out of its realm. RUN_OBJECT reads
+the whole program object over the matrix's own binding, the same relay the
+children use, stamped with nothing because the owner names the realm. The
+sealed reply is scanned with the platform's bounded image reads from the
+import contract, its declaration record decoded and matched to the services
+LAUNCH_IMPORTS offers the slot by the stock policy's import selection, and
+the program fitted to the staged allowances by the stock resource policy;
+the process links the stock policy package and the import contract directly
+for that, which is the first of the stock policy executing outside the Rust
+host. The image becomes an executable grant through `image_from_object`, the
+reservation and admission go through the same chain as RUN with the services
+the declaration selected, and a child that imports storage is bound to the
+realm the owner named; a binding that cannot be made takes the child down
+again. The import contract's image scan moved from the retired nested
+`state` form to nested machines so the current compiler accepts it; the
+bridge's older compiler then needed two `requires` clauses for facts the
+nested states used to inherit from their parent's guard, which both
+compilers now check. The component compile allowance rose from 4 to 12 GiB,
+since code generation for the process with the policy package linked in
+exceeded the old limit on the first attempt.
+
+The proof's realm holds only the Omega Colors; the supervisor runs it from
+that object with the object as its realm and the checks are unchanged:
+Colors paints its view, indicator and checker image through the matrix and
+saves on Enter, so its record now lives beneath its own program object.
+
+Evidence in the main checkout with the saved standalone producer:
+
+- Desktop over the Omega root with Colors run from its realm object: `build/boot-harness-rs/omega-desktop/20261031T230129235225Z/`.
+- Omega matrix, top level: `build/boot-harness-rs/omega-matrix/20261031T225521792184Z/`;
+  under a real parent: `build/boot-harness-rs/omega-matrix-upstream/20261031T225533377004Z/`;
+  Rust comparison matrix: `build/boot-harness-rs/matrix-composition/20261031T225142419065Z/`.
+- Witnesses: primitives `build/omega-user/tests/20261031T224621474829Z/`;
+  connections `build/omega-user/connections/20261031T224627903809Z/`, service
+  `.../20261031T224649915291Z/`, admission `.../20261031T224705171525Z/`;
+  Background `build/omega-user/background-control/20261031T224745256030Z/`;
+  Colors `build/omega-user/colors-control/20261031T224750093372Z/`;
+  Notes `build/omega-user/notes-control/20261031T224858980703Z/`;
+  Chooser `build/omega-user/chooser-control/20261031T230811805465Z/`.
+- Kernel smoke labs of 2026-10-31 22:56 UTC pass; default F5 desktop and cold
+  reopen: `build/boot-harness-rs/desktop/20261031T230821048363Z/`.
+- Boundary test, layout (123 Omega / 153 Rust edges), Rust formatting and
+  clippy for the desktop crate with `shell,omega-root` pass. No native leaf
+  or kernel limit changed.
+
+Next: a child's own LAUNCH word, read under the requester's scope with the
+stock admission decision choosing the slot and a receipt recorded for
+LAUNCH_STATUS, proven by the Omega chooser launching Colors; then the startup
+realm discovery that admits the picker and background, RESOLVE_PATH, loss
+surveys and close over the owner-control client, management words, nested
+operation under a parent matrix with an upstream storage binding, then the
+rest of the stock policy. Dynamic launches still cap reserved frames at
+MAX_ADMISSION_FRAMES, which a nested Omega matrix with a declared stack will
+exceed.
 
 ### Omega World: layout control, management and launch observations
 

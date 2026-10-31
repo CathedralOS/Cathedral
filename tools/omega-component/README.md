@@ -33,7 +33,7 @@ compilation refuse publication. Generated binaries and Omega package-manager
 workspaces are not checked in.
 
 Compiler review and compilation run through [process.py](process.py), with a
-4 GiB memory allowance and a five-minute deadline. On Windows a kernel job
+12 GiB memory allowance and a five-minute deadline. On Windows a kernel job
 limits the whole compiler process tree and closes it if the wrapper exits.
 The wrapper joins the job before starting the compiler; other sessions remain
 outside it. On Unix the inherited address-space limit applies per process.

@@ -40,7 +40,7 @@ Keep this compiler separate from the
 [UI library producer](../omega-ui/README.md#build). Some retained component source still contains `state`; that broader migration
 remains unfinished.
 `--compiler` explicitly chooses the producer for these standalone runs.
-Compilation is capped at 4 GiB, five minutes and one checking worker by default.
+Compilation is capped at 12 GiB, five minutes and one checking worker by default.
 Component and UI builds share one compiler slot across Cargo processes.
 
 The compiler may request initial review of the runtime's native boundaries.

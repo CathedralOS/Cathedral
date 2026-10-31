@@ -20,11 +20,6 @@ pub(super) fn assign(root: Launch) -> Result<(), Error> {
     // must remain loadable when Login itself is missing or unusable.
     #[cfg(feature = "shell")]
     root.allow_executable(Executable::at(0)?)?;
-    // The Omega root proof also lends the catalogue's Background and Colors.
-    if cfg!(feature = "omega-root") {
-        root.allow_executable(Executable::at(1)?)?;
-        root.allow_executable(Executable::at(2)?)?;
-    }
     #[cfg(not(feature = "shell"))]
     for index in 0..if pressure { 3 } else { 2 } {
         root.allow_executable(Executable::at(index)?)?;

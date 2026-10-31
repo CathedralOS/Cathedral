@@ -12,6 +12,7 @@ module storage;
 use protocol::main;
 use protocol::matrix;
 use protocol::storage::scope;
+use protocol::storage::operations;
 use main::State;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
@@ -110,34 +111,52 @@ machine binding_words(bound: Bound) -> [u64; 8] {
     words[2] = bound.scope;
     words
 }
-// Bind a child's live storage connection to a source and scope. The grant
-// also re-establishes the source's link, so a grant after provider
-// replacement connects to the fresh incarnation.
 machine granting(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], source: u64, subtree: u64) -> [u64; 8] reaches Kernel {
+    let status: u64 = block bind(gate, context, now, slot, source, subtree);
+    error(status)
+}
+// Bind a child's live storage connection to a source and scope. The binding
+// also re-establishes the source's link, so one made after provider
+// replacement connects to the fresh incarnation.
+public machine bind(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], source: u64, subtree: u64) -> u64
+    reaches Kernel blocks; invokes Kernel; {
     let available: u64 = available(context);
     transition source < available && source < 2u64 {
         true -> block refreshing(gate, context, now, slot, source, subtree, available)
-        _ -> (error(kernel::DENIED))
+        _ -> (kernel::DENIED)
     }
-    machine refreshing(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], source: u64 [0..=1], subtree: u64, available: u64) -> [u64; 8]
+    machine refreshing(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], source: u64 [0..=1], subtree: u64, available: u64) -> u64
         reaches Kernel {
         let status: u64 = block refresh(gate, context, now, source);
         transition status == 0u64 {
             true -> (installing(context, slot, source, subtree, available))
-            _ -> (error(status))
+            _ -> (status)
         }
     }
-    machine installing(context: &mut State, slot: u64 [0..=4], source: u64 [0..=1], subtree: u64, available: u64) -> [u64; 8] {
+    machine installing(context: &mut State, slot: u64 [0..=4], source: u64 [0..=1], subtree: u64, available: u64) -> u64 {
         let incarnation: u64 = context.store.listeners[slot].incarnation;
         let status: u64 = scopes::grant(&mut context.store.scopes, slot, incarnation, source, subtree, available);
         transition status == 0u64 {
             true -> healthy(context, source)
-            _ -> (error(status))
+            _ -> (status)
         }
     }
-    machine healthy(context: &mut State, source: u64 [0..=1]) -> [u64; 8] {
+    machine healthy(context: &mut State, source: u64 [0..=1]) -> u64 {
         context.store.failed = context.store.failed & ~(1u64 << source);
-        ok()
+        0u64
+    }
+}
+// The matrix's own read of a whole object over its first source: the sealed
+// program behind a launch. `stamp` narrows a child's launch to its realm.
+public machine read_object(gate: &Gate, context: &mut State, now: u64, object: u64, stamp: u64) -> Outcome
+    reaches Kernel blocks; invokes Kernel; {
+    let mut words: [u64; 8];
+    words[0] = ((STORAGE_BASE as u64 in Wrapping) + (operations::BULK as u64 in Wrapping)) as u64;
+    words[1] = object;
+    let fits: bool = scope::stamp(&mut words, stamp);
+    transition fits && context.store.root {
+        true -> block exchange(gate, context, now, 0u64, words, 0u64)
+        _ -> (failed(kernel::DENIED))
     }
 }
 machine available(context: &State) -> u64 {

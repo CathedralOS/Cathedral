@@ -1,0 +1,189 @@
+module declaration;
+// What a program declares about itself, scanned out of its sealed image with
+// the platform's bounded reads: the services it imports, whether it expects a
+// broker, and the funding and profile it asks for. The owner's offer is
+// matched against that declaration here, and a program without one gets the
+// stock defaults. Nothing here grants authority; the kernel still validates
+// the image when it is admitted.
+use services::image;
+use services::types;
+use services::main;
+use policy::children::launch::imports;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::memory::object::Object;
+
+// The ordinary launch offer: interaction and storage, never more by default.
+public const ALL: u64 = 3u64;
+// Platform launch refusals; these are not kernel errors.
+public const MISSING_IMPORT: u64 = 0x494d0001u64;
+public const INCOMPATIBLE_IMPORT: u64 = 0x494d0002u64;
+public data Declared [copy] {
+    status: u64;
+    brokered: bool;
+    mask: u64;
+    funded: bool;
+    channels: u64;
+    descendants: u64;
+    profiled: bool;
+    private_pages: u64;
+    reader_pages: u64;
+    surfaces: u64;
+}
+
+// Scan the image for its record, decode it and match it to `offered`.
+public machine resolve(gate: &Gate, object: u64, length: u64, offered: u64) -> Declared reaches Kernel blocks; invokes Kernel; {
+    let mut scan: ImageScan;
+    let read: ImageRead = begin_image(length, &mut scan);
+    transition { _ -> (block scanning(gate, object, offered, &mut scan, read, 0u64)) }
+}
+// Every read the scan asks for lands on a word boundary of the sealed image.
+machine scanning(gate: &Gate, object: u64, offered: u64, scan: &mut ImageScan, read: ImageRead, steps: u64) -> Declared
+    reaches Kernel requires steps <= 64u64 {
+    let aligned: bool = (read.offset % 8u64) == 0u64;
+    transition {
+        read.kind == IMAGE_READ && steps < 64u64 && read.bytes >= 1u64 && read.bytes <= 64u64 && aligned ->
+            block reading(gate, object, offered, scan, read.offset, read.bytes, steps)
+        read.kind == IMAGE_ABSENT -> (defaults(offered))
+        read.kind == IMAGE_FOUND && read.bytes >= 1u64 && read.bytes <= 168u64 && aligned -> block found(gate, object, offered, read.offset, read.bytes)
+        _ -> (refused(kernel::BAD_EXECUTABLE))
+    }
+}
+machine reading(gate: &Gate, object: u64, offered: u64, scan: &mut ImageScan, offset: u64, bytes: u64, steps: u64) -> Declared
+    reaches Kernel requires steps < 64u64 && bytes >= 1u64 && bytes <= 64u64 {
+    let mut words: [u64; 8];
+    let count: u64 = (bytes + 7u64) / 8u64;
+    let status: u64 = block read_words(gate, object, offset / 8u64, &mut words, count);
+    transition status == 0u64 {
+        true -> block advancing(gate, object, offered, scan, &words, bytes, steps)
+        _ -> (refused(status))
+    }
+}
+machine advancing(gate: &Gate, object: u64, offered: u64, scan: &mut ImageScan, words: &[u64; 8], bytes: u64, steps: u64) -> Declared
+    reaches Kernel requires steps < 64u64 {
+    let mut buffer: [u8; 64];
+    unpack(words, &mut buffer, 0u64);
+    let next: ImageRead = advance_image(scan, &buffer, bytes);
+    transition { _ -> (block scanning(gate, object, offered, scan, next, steps + 1u64)) }
+}
+// The record itself, up to 168 bytes, read eight words at a time.
+machine found(gate: &Gate, object: u64, offered: u64, offset: u64, bytes: u64) -> Declared reaches Kernel requires bytes >= 1u64 && bytes <= 168u64 {
+    let mut record: [u8; 168];
+    let status: u64 = block fill(gate, object, offset / 8u64, &mut record, 0u64, (bytes + 7u64) / 8u64);
+    transition status == 0u64 {
+        true -> (decoded(&record, bytes, offered))
+        _ -> (refused(status))
+    }
+}
+machine fill(gate: &Gate, object: u64, index: u64, record: &mut [u8; 168], at: u64, remaining: u64) -> u64
+    reaches Kernel requires at <= 168u64 && remaining <= 21u64 {
+    transition remaining == 0u64 || at > 160u64 {
+        true -> (0u64)
+        _ -> block chunk(gate, object, index, record, at, remaining)
+    }
+    machine chunk(gate: &Gate, object: u64, index: u64, record: &mut [u8; 168], at: u64, remaining: u64) -> u64
+        reaches Kernel requires at <= 160u64 && remaining >= 1u64 && remaining <= 21u64 {
+        let mut words: [u64; 8];
+        let count: u64 = smaller(remaining, 8u64);
+        transition count >= 1u64 && count <= 8u64 {
+            true -> block reading_chunk(gate, object, index, record, at, remaining, &mut words, count)
+            _ -> (kernel::INVALID_ARGUMENT)
+        }
+    }
+    machine reading_chunk(gate: &Gate, object: u64, index: u64, record: &mut [u8; 168], at: u64, remaining: u64, words: &mut [u64; 8], count: u64) -> u64
+        reaches Kernel requires at <= 160u64 && remaining >= 1u64 && remaining <= 21u64 && count >= 1u64 && count <= 8u64 {
+        let status: u64 = block read_words(gate, object, index, words, count);
+        transition status == 0u64 {
+            true -> block copied(gate, object, index, record, at, remaining, words, count)
+            _ -> (status)
+        }
+    }
+    machine copied(gate: &Gate, object: u64, index: u64, record: &mut [u8; 168], at: u64, remaining: u64, words: &[u64; 8], count: u64) -> u64
+        reaches Kernel requires at <= 160u64 && remaining >= 1u64 && remaining <= 21u64 && count >= 1u64 && count <= 8u64 {
+        place(words, record, at, 0u64, count * 8u64);
+        let next_index: u64 = ((index as u64 in Wrapping) + (count as u64 in Wrapping)) as u64;
+        let next_at: u64 = ((at as u64 in Wrapping) + ((count * 8u64) as u64 in Wrapping)) as u64;
+        let left: u64 = ((remaining as u64 in Wrapping) - (count as u64 in Wrapping)) as u64;
+        transition next_at <= 168u64 && left <= 21u64 {
+            true -> block fill(gate, object, next_index, record, next_at, left)
+            _ -> (kernel::INVALID_ARGUMENT)
+        }
+    }
+}
+machine decoded(record: &[u8; 168], bytes: u64, offered: u64) -> Declared {
+    let mut declaration: Declaration;
+    let valid: bool = decode(record, bytes, &mut declaration);
+    transition valid {
+        true -> (selected(&declaration, offered))
+        _ -> (refused(kernel::BAD_EXECUTABLE))
+    }
+}
+machine selected(declaration: &Declaration, offered: u64) -> Declared {
+    let binding: Binding = imports::select(&declaration.entries, declaration.count, declaration.brokered, offered);
+    transition binding.status == 0u64 {
+        true -> (Declared {
+            status: 0u64, brokered: declaration.brokered, mask: binding.mask,
+            funded: declaration.funded, channels: declaration.channels, descendants: declaration.descendants,
+            profiled: declaration.profiled, private_pages: declaration.private_pages,
+            reader_pages: declaration.reader_pages, surfaces: declaration.surfaces })
+        _ -> (refused(code_of(binding.status)))
+    }
+}
+// A program without a record is positional and asks for the stock defaults.
+machine defaults(offered: u64) -> Declared {
+    let mut entries: [Import; 4];
+    imports::default_imports(&mut entries);
+    let binding: Binding = imports::select(&entries, imports::DEFAULT_IMPORT_COUNT, false, offered);
+    transition binding.status == 0u64 {
+        true -> (Declared {
+            status: 0u64, brokered: false, mask: binding.mask, funded: false, channels: 0u64, descendants: 0u64,
+            profiled: false, private_pages: 0u64, reader_pages: 0u64, surfaces: 0u64 })
+        _ -> (refused(code_of(binding.status)))
+    }
+}
+machine code_of(status: u64) -> u64 {
+    transition {
+        status == MISSING -> (MISSING_IMPORT)
+        status == VERSION -> (INCOMPATIBLE_IMPORT)
+        _ -> (kernel::BAD_EXECUTABLE)
+    }
+}
+machine refused(status: u64) -> Declared {
+    let mut declared: Declared;
+    declared.status = status;
+    declared
+}
+machine read_words(gate: &Gate, object: u64, index: u64, words: &mut [u64; 8], count: u64) -> u64 reaches Kernel {
+    let holder: Object = Object { handle: object };
+    transition count >= 1u64 && count <= 8u64 {
+        true -> block runtime::memory::object::read(gate, &holder, index, words, count)
+        _ -> (kernel::INVALID_ARGUMENT)
+    }
+}
+// Little-endian bytes out of eight words.
+machine unpack(words: &[u64; 8], buffer: &mut [u8; 64], index: u64) requires index <= 64u64 {
+    transition index < 64u64 {
+        true -> byte(words, buffer, index)
+        _ -> done()
+    }
+    machine byte(words: &[u64; 8], buffer: &mut [u8; 64], index: u64) requires index < 64u64 {
+        buffer[index] = ((words[index / 8u64] >> ((index % 8u64) * 8u64)) & 255u64) as u8;
+        transition { _ -> unpack(words, buffer, index + 1u64) }
+    }
+}
+machine place(words: &[u64; 8], record: &mut [u8; 168], at: u64, index: u64, bytes: u64) requires at <= 160u64 && index <= 64u64 && bytes <= 64u64 {
+    transition index < bytes && index < 64u64 && at + index < 168u64 {
+        true -> byte(words, record, at, index, bytes)
+        _ -> done()
+    }
+    machine byte(words: &[u64; 8], record: &mut [u8; 168], at: u64, index: u64, bytes: u64)
+        requires at <= 160u64 && index < 64u64 && bytes <= 64u64 && at + index < 168u64 {
+        record[at + index] = ((words[index / 8u64] >> ((index % 8u64) * 8u64)) & 255u64) as u8;
+        transition { _ -> place(words, record, at, index + 1u64, bytes) }
+    }
+}
+machine smaller(a: u64, b: u64) -> u64 {
+    transition a < b { true -> (a) _ -> (b) }
+}
+machine done() {}

@@ -12,7 +12,7 @@ import signal
 import subprocess
 import sys
 
-COMPILER_MEMORY = 4 * 1024**3
+COMPILER_MEMORY = 12 * 1024**3
 COMPILER_TIMEOUT = 300
 
 

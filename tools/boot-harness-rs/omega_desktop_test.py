@@ -3,10 +3,10 @@ its display, source, children, presentation and storage paths through the
 real display, input and storage services.
 
 The composition is the stock desktop's with the root matrix launch replaced by
-the Omega program, the catalogue carrying the Omega Background and Colors, an
-empty database, and the supervisor built with `omega-root`, which admits the
-root as F5 does, starts storage, runs Colors into an app slot with its storage
-bound to the whole first root, and then parks. The proof reads the
+the Omega program, a realm holding only the Omega Colors, and the supervisor
+built with `omega-root`, which admits the root as F5 does, starts storage,
+runs Colors from that realm object into an app slot with the object as its
+realm, and then parks. The proof reads the
 supervisor's and the services' startup lines, sees Colors paint its view, its
 indicator and its checker image through the matrix, moves the pointer over QMP
 and watches the compositor's cursor follow it, then clicks Colors for focus and
@@ -62,15 +62,11 @@ def compose(output):
                                'shared_pages': launch['shared_pages']}
             replaced += 1
     assert replaced == 1, 'the stock composition launches one root matrix'
-    # The catalogue's second and third executables: the Omega Background and
-    # Colors the root may run into its slots.
-    executables = composition['startup']['executables']
-    assert len(executables) == 1, 'the shell catalogue carries only the recovery screen'
-    for application in ('background', 'colors'):
-        executables.append({'entry': f'distribution/applications/{application}/native/main.omg',
-                            'target': 'x86_64-unknown-none'})
-    # No realm: Colors keeps its record at the top of an empty first root.
-    composition['startup']['programs'] = []
+    # The realm holds one program, the Omega Colors, as object one of the
+    # first root; the root runs it from there and it keeps its record beneath.
+    composition['startup']['programs'] = [{'package': 'cathedral-colors',
+                                           'entry': 'distribution/applications/colors/native/main.omg',
+                                           'target': 'x86_64-unknown-none', 'display_title': 'COLORS'}]
     composition['startup']['realm_programs'] = []
     profile = output / f'omega-desktop-{output.name}.json'
     profile.write_text(json.dumps(composition, indent=2), encoding='utf-8', newline='\n')
@@ -131,8 +127,9 @@ def check(stream, output, serial):
                               and pixel(COLORS[0] + 192, COLORS[1] + 114) == CHECKER[1]
                               and pixel(100, 100) == '303030' and pixel(620, 460) == '303030')
 
-    # Colors reads its empty realm, creates its record, and paints its view,
-    # a healthy indicator and the checker image over the shifted backdrop.
+    # Colors reads its realm (its own object, empty beneath), creates its
+    # record, and paints its view, a healthy indicator and the checker image
+    # over the shifted backdrop.
     width, height, before = expect('Colors not painted through the Omega matrix', 20, painted(INITIAL))
     target = (600, 400)
     def point(x, y):
@@ -181,7 +178,7 @@ def main():
                     '--profile', str(profile), '--release', '--build-only'], cwd=ROOT, check=True)
     shutil.copytree(harness.BUILD / f'{profile.stem}-interactive/esp', output / 'esp')
     data = output / 'guest.raw'
-    database_image.prepare(data)
+    database_image.prepare(data, harness.seeded_programs(profile, True))
     qemu = harness.find_qemu()
     command = [qemu, '-machine', 'q35', '-cpu', 'qemu64', '-accel', 'tcg', '-smp', '1', '-m', '128']
     command += harness.firmware_args(qemu, output)

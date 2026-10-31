@@ -4,8 +4,10 @@ Start at [main.omg](main.omg): the stock matrix as a standalone Omega process on
 the [process runtime](../../../platform/libraries/user-runtime/README.md) and the
 [World](../../../platform/libraries/matrix/world/README.md). It is replacing the
 [Rust host](../../../../source-rs/distribution/matrix/CHARTER.md) one responsibility
-at a time; F5 keeps the Rust host until this program reaches parity, then the
-desktop profile swaps and the [bridge](../bridge/policy/main.omg) goes. The
+at a time, linking the [stock policy](../service/README.md) and the
+[import contracts](../../../platform/contracts/imports/README.md) directly;
+F5 keeps the Rust host until this program reaches parity, then the desktop
+profile swaps and the [bridge](../bridge/policy/main.omg) goes. The
 [native consumer](../native/main.omg) links it the same way as the installed apps
 and declares a 128-page stack in [native/link.json](../native/link.json).
 
@@ -54,8 +56,17 @@ children with their interaction and storage connections.
   failed sources. Each child's storage request is relayed one hop under the
   World's scopes: authenticated, stamped, proven when both scope words are
   taken, forwarded with its sealed attachment and answered with the provider's
-  reply and attachment. A lost or late link retires that source's bindings
-  until a grant reconnects it.
+  reply and attachment. The matrix's own reads, the whole of a program object
+  behind a launch, take the same path over the first source. A lost or late
+  link retires that source's bindings until a grant reconnects it.
+- [stored.omg](stored.omg): children from objects in the realm. RUN_OBJECT
+  reads the program over the matrix's own binding, resolves its declaration
+  through [declaration.omg](declaration.omg) (the platform's bounded image
+  scan, the decoded record and the stock import selection against the
+  services LAUNCH_IMPORTS offers the slot), fits it to the staged allowances
+  with the stock resource policy, reserves it from the sealed image, admits it
+  as RUN does and binds its storage to the realm the owner named; a binding
+  that cannot be made takes the child back down.
 - [source.omg](source.omg): the installed source endpoint. POINTER_SOURCE moves
   the compositor's physical cursor, then routes through the World on the pointer
   stream; KEY_SOURCE routes on the keyboard stream, and RESET cancels both. The
@@ -67,20 +78,20 @@ children with their interaction and storage connections.
   retired child's slot and exit in hex.
 
 Prove it with `python tools/boot-harness-rs/omega_desktop_test.py`: the stock
-composition with this program in the root matrix's launch, the Omega
-Background and Colors added to the catalogue, an empty database, and the
-supervisor built with `omega-root`, which admits the root as F5 does, starts
-the storage service, runs Colors into an app slot over a sub-rectangle of a
-shifted backdrop with its storage bound to the whole first root, and then
-parks. The proof reads the supervisor's and the services' startup lines, sees
+composition with this program in the root matrix's launch, a realm holding
+only the Omega Colors, and the supervisor built with `omega-root`, which admits
+the root as F5 does, starts the storage service, runs Colors from that realm
+object into an app slot over a sub-rectangle of a shifted backdrop with the
+object as its realm, and then parks. The proof reads the supervisor's and the services' startup lines, sees
 Colors paint its view, a healthy indicator and its checker image through this
 matrix, moves the pointer over QMP and watches the compositor's cursor follow
 it, then clicks Colors for focus and presses Enter, which saves a record
 through the storage relay and repaints the view in the saved colour.
 
-Not yet here: launches from the realm's objects and the stock launch policy,
-the matrix's own realm reads behind RESOLVE_PATH and startup, loss surveys and
-close, management and launch observation words, nested operation under a
-parent matrix with an upstream storage binding, and the stock policy packages
-under [service/](../service/README.md), which still execute inside the Rust
-host through the bridge.
+Not yet here: a child's own LAUNCH word with the stock admission decision and
+launch receipts, the matrix's realm reads behind RESOLVE_PATH and startup,
+loss surveys and close, management and launch observation words, nested
+operation under a parent matrix with an upstream storage binding, and the
+rest of the stock policy under [service/](../service/README.md), which still
+executes inside the Rust host through the bridge; this process links that
+package directly for what it already uses.

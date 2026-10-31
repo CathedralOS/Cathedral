@@ -30,7 +30,7 @@ use presentation;
 use storage;
 
 public const CHILDREN: u64 = 5u64;
-// Owner-declared policy for the next launch into a slot.
+// Owner-declared policy for launches into a slot.
 public data SlotPolicy [copy] {
     images: u64;
     private_pages: u64;
@@ -45,6 +45,9 @@ public data SlotPolicy [copy] {
     width: u64;
     height: u64;
     keys: u64;
+    // The services a launch into the slot is offered, once the owner set them.
+    imports: u64;
+    imports_set: bool;
 }
 // A sealed image held behind the compositor tile it was last shown on.
 public data Image [copy] {

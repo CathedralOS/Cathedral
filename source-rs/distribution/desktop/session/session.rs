@@ -144,10 +144,10 @@ pub(crate) fn run() -> u64 {
 }
 
 /// Keep an admitted Omega root alive: start the storage service as F5 does
-/// behind an interactive screen, run the catalogue's Colors into an app slot
-/// over a sub-rectangle with its storage bound to the whole first root, then
-/// park while the boot harness drives the display, input and storage paths
-/// through the Omega matrix and reads the scanout.
+/// behind an interactive screen, run Colors from the realm's first object into
+/// an app slot over a sub-rectangle with that object as its realm, then park
+/// while the boot harness drives the display, input and storage paths through
+/// the Omega matrix and reads the scanout.
 #[cfg(feature = "shell")]
 fn omega_root(session: &mut admission::Session) -> u64 {
     cathedral_user_runtime::write(b"Cathedral desktop: Omega root admitted
@@ -164,11 +164,10 @@ fn omega_root(session: &mut admission::Session) -> u64 {
     cathedral_user_runtime::write(b"Cathedral desktop: Omega root storage ready
 ").unwrap();
     const COLORS_SLOT: u64 = 1;
-    const COLORS_IMAGE: u64 = 2;
+    const COLORS_OBJECT: u64 = 1;
     for words in [
         [wire::RUN_PAGES, COLORS_SLOT, 24, 8, 0, 0, 0, 0],
-        [wire::RUN, COLORS_SLOT, COLORS_IMAGE, 0, 3, 0, 0, 0],
-        [wire::STORAGE_GRANT, COLORS_SLOT, 0, 0, 0, 0, 0, 0],
+        [wire::RUN_OBJECT, COLORS_SLOT, COLORS_OBJECT, COLORS_OBJECT, 0, 3, 0, 0],
         [wire::SURFACE_LIMIT, COLORS_SLOT, 4, 0, 0, 0, 0, 0],
         [wire::PLACE, COLORS_SLOT, 650, 100, 300, 300, KEYS, 0],
     ] {

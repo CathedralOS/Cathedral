@@ -110,49 +110,57 @@ public machine run(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4]
     }
     machine limited(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64, argument: u64, images: u64, cpu: u64) -> u64
         reaches Kernel requires images < 16384u64 {
-        let status: u64 = cpu_ceiling(gate, launch, cpu);
-        transition status == 0u64 {
-            true -> block allowing(gate, context, now, slot, launch, argument, images, 0u64)
-            _ -> refused(gate, launch, status)
-        }
+        block admit_reserved(gate, context, now, slot, launch, argument, images, cpu, INTERACTION | STORAGE)
+    }
+}
+// Admit a reserved launch into a slot: the CPU ceiling, the catalogue images
+// the child may run in turn, the brokered admission offering `granted`, the
+// owner-control client and the storage listener. A refused step returns the
+// reservation.
+public machine admit_reserved(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64, argument: u64, images: u64,
+    cpu: u64, granted: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let status: u64 = cpu_ceiling(gate, launch, cpu);
+    transition status == 0u64 && images < 16384u64 {
+        true -> block allowing(gate, context, now, slot, launch, argument, images, 0u64, granted)
+        _ -> refused(gate, launch, status)
     }
     // Each set bit lends the child the same catalogue executable.
-    machine allowing(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64, argument: u64, images: u64, index: u64) -> u64
-        reaches Kernel requires index <= 14u64 {
+    machine allowing(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64, argument: u64, images: u64, index: u64,
+        granted: u64) -> u64 reaches Kernel requires index <= 14u64 {
         transition index < 14u64 {
-            true -> block allowed(gate, context, now, slot, launch, argument, images, index)
-            _ -> block admitting(gate, context, now, slot, launch, argument)
+            true -> block allowed(gate, context, now, slot, launch, argument, images, index, granted)
+            _ -> block admitting(gate, context, now, slot, launch, argument, granted)
         }
     }
-    machine allowed(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64, argument: u64, images: u64, index: u64) -> u64
-        reaches Kernel requires index < 14u64 {
+    machine allowed(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64, argument: u64, images: u64, index: u64,
+        granted: u64) -> u64 reaches Kernel requires index < 14u64 {
         transition ((images >> index) & 1u64) == 1u64 {
-            true -> block lending(gate, context, now, slot, launch, argument, images, index)
-            _ -> block allowing(gate, context, now, slot, launch, argument, images, index + 1u64)
+            true -> block lending(gate, context, now, slot, launch, argument, images, index, granted)
+            _ -> block allowing(gate, context, now, slot, launch, argument, images, index + 1u64, granted)
         }
     }
-    machine lending(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64, argument: u64, images: u64, index: u64) -> u64
-        reaches Kernel requires index < 14u64 {
+    machine lending(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64, argument: u64, images: u64, index: u64,
+        granted: u64) -> u64 reaches Kernel requires index < 14u64 {
         let grant: u64 = runtime::task::main::image_at(gate, index);
         let status: u64 = allow(gate, launch, grant);
         transition status == 0u64 {
-            true -> block allowing(gate, context, now, slot, launch, argument, images, index + 1u64)
+            true -> block allowing(gate, context, now, slot, launch, argument, images, index + 1u64, granted)
             _ -> refused(gate, launch, status)
         }
     }
     // The handshake windows start at admission, after the reservation work above.
-    machine admitting(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64, argument: u64) -> u64 reaches Kernel {
+    machine admitting(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64, argument: u64, granted: u64) -> u64 reaches Kernel {
         let tick: Tick = runtime::time::read(gate, context.clock);
         transition tick {
-            Tick::Read { value } -> block spawning(gate, context, value, slot, launch, argument)
+            Tick::Read { value } -> block spawning(gate, context, value, slot, launch, argument, granted)
             Tick::Failed { code } -> refused(gate, launch, code)
         }
     }
-    machine spawning(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64, argument: u64) -> u64 reaches Kernel {
+    machine spawning(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64, argument: u64, granted: u64) -> u64 reaches Kernel {
         let loans: [u64; 14];
         level::disconnected(&mut context.world, slot);
         let status: u64 = block runtime::admission::main::admit(gate, &mut context.slots[slot], launch, argument,
-            &loans, 0u64, INTERACTION | STORAGE, runtime::time::after(now, HANDSHAKE_TICKS), true);
+            &loans, 0u64, granted, runtime::time::after(now, HANDSHAKE_TICKS), true);
         transition status == 0u64 {
             true -> block controlling(gate, context, now, slot, launch)
             _ -> refused(gate, launch, status)
@@ -175,10 +183,10 @@ public machine run(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4]
         }
     }
     // The child's storage connection is served from admission on, whenever it
-    // chooses to acquire it; the owner binds it with a grant.
+    // chooses to acquire it; the owner or the launch binds it.
     machine storing(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64) -> u64 reaches Kernel {
         let status: u64 = storage::listen(context, slot, now);
-        transition status == 0u64 {
+        transition status == 0u64 || status == kernel::INVALID_ARGUMENT {
             true -> admitted(context, slot, launch)
             _ -> block uncontrolled(gate, context, slot, launch, status)
         }
@@ -192,10 +200,10 @@ public machine run(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4]
         context.reservations[slot] = launch;
         0u64
     }
-    machine refused(gate: &Gate, launch: u64, status: u64) -> u64 reaches Kernel {
-        let ignored: u64 = runtime::task::main::release(gate, launch);
-        status
-    }
+}
+machine refused(gate: &Gate, launch: u64, status: u64) -> u64 reaches Kernel {
+    let ignored: u64 = runtime::task::main::release(gate, launch);
+    status
 }
 machine cpu_ceiling(gate: &Gate, launch: u64, cpu: u64) -> u64 reaches Kernel invokes Kernel; {
     transition cpu == 0u64 {
@@ -211,7 +219,7 @@ machine allow(gate: &Gate, launch: u64, grant: u64) -> u64 reaches Kernel invoke
 }
 // Backing for the load and its private pages, never below one admission
 // allowance per slot the child may fill, unless the owner staged an amount.
-machine physical_frames(staged: u64, private_pages: u64, descendants: u64) -> u64 requires descendants < 64u64 {
+public machine physical_frames(staged: u64, private_pages: u64, descendants: u64) -> u64 requires descendants < 64u64 {
     let subtree: u64 = (descendants + 1u64) * ADMISSION_FRAMES;
     let load: u64 = world::geometry::plus(ADMISSION_FRAMES, private_pages);
     transition {
