@@ -41,6 +41,11 @@ Descend by responsibility:
   name; updates are previewed into the parent's coordinates, forwarded or
   recorded, and committed only after the upstream accepts them. Erasures owed
   for retired surfaces are flushed between turns the same way.
+- [delegation.omg](process/delegation.omg): authority a child exercises
+  beyond its view. MANAGEMENT_GRANT, MANAGED_TASK, TERMINATE_TASK and
+  LAUNCH_STATUS are the platform's words; the words above 906 grant layout
+  control, capture and reissue a placement, stage and apply an arrangement
+  row by row, and record launch observations this lab has no launcher to make.
 - [inspection.omg](process/inspection.omg): proof-only owner words above 900
   that read the last presented packet, count flushed erasures, drive the owner
   side of frame demand and visibility, and resolve the cursor a local stream
@@ -70,7 +75,9 @@ creation and update refusal, the frame-demand handshake, visibility, and the
 erasures a replacement owes; owner-registered channels and groups, selection,
 the directory and descriptions a recipient sees, retirement that waits for
 every recipient, producer grants by generation, capacity limits and cursor
-preferences; under a parent, coordinate translation, queued key edges, withheld
+preferences; a layout controller moving every live view at once, a placement
+reissued to the controller's replacement, management of a sibling's exact task
+and launch receipts local to one endpoint; under a parent, coordinate translation, queued key edges, withheld
 keys, shrink, revoke and regrant, old-epoch rejection, a paint that reaches the
 parent clipped and placed, withdrawn demand reaching the leaf, an erasure that
 precedes revocation, and a described channel registered above that reaches the

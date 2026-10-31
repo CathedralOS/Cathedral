@@ -1,8 +1,10 @@
 module slots;
 // One slot per turn. A retired listener means the peer left: stop and release
-// it and drop its view. Service acquisition goes to the runtime's offer; every
-// other 64-byte request is a world request under the connection's incarnation.
-// Shorter requests are denied. With a parent, each request follows one poll.
+// it and drop its view with any delegated authority. Service acquisition goes
+// to the runtime's offer, delegation words to the child's granted authority,
+// surface words to presentation; every other 64-byte request is a world request
+// under the connection's incarnation. Shorter requests are denied. With a
+// parent, each request follows one poll.
 use main::State;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
@@ -14,10 +16,13 @@ use runtime::task::main::Exit;
 use runtime::waiting::Set;
 use runtime::admission::offer;
 use world::level;
+use world::management;
+use world::launches;
 use world::main::request;
 use protocol::services::ACQUIRE;
 use upstream;
 use presentation;
+use delegation;
 use protocol::main;
 use protocol::matrix;
 
@@ -75,7 +80,9 @@ machine acquire(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Tic
 // same slot never inherits the old view or queued input.
 machine viewed(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, frame: Frame) -> u64 reaches Kernel {
     let incarnation: u64 = context.slots[slot].listener.incarnation;
+    let delegated: bool = delegation::child_word(frame.payload[0]);
     transition {
+        delegated -> block delegation::child(gate, context, slot, issued, frame, incarnation)
         frame.payload[0] == SURFACE_CREATE -> block creating(gate, context, slot, issued, frame, incarnation)
         frame.payload[0] == MATRIX_PAINT || frame.payload[0] == MATRIX_ERASE || frame.payload[0] == SURFACE_IMAGE || frame.payload[0] == SURFACE_CURSOR
             -> block updating(gate, context, slot, issued, frame, incarnation)
@@ -107,6 +114,8 @@ public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=2]) reac
     machine stopping(gate: &Gate, context: &mut State, slot: u64 [0..=2]) reaches Kernel {
         let exit: Exit = block runtime::admission::main::stop(gate, &mut context.slots[slot]);
         level::disconnected(&mut context.world, slot);
+        management::disconnected(&mut context.managers, slot);
+        launches::disconnected(&mut context.observations, slot);
     }
 }
 public machine watch(context: &State, slot: u64 [0..=2], set: &mut Set) {

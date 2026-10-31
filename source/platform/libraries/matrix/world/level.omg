@@ -25,6 +25,9 @@ public data World {
     // One bounded input grant per slot, and the generation each slot last issued.
     producers: [Producer; 4];
     next_producer: [u64; 4];
+    // The owner-chosen layout controller: slot plus one (zero means none) and its incarnation.
+    controller: u64;
+    controller_incarnation: u64;
     // Surface allowance received from above, and whether frames are wanted.
     allowance: u64 [0..=64];
     no_frames: bool;
@@ -65,8 +68,8 @@ public machine binding_matches(world: &World, slot: u64, incarnation: u64, epoch
 }
 
 // Adopt a parent grant. Any change ends every producer grant; a new epoch
-// invalidates every placement and all input bindings; losing authority cannot
-// be repaired by a later regrant alone.
+// invalidates every placement, all input bindings and the layout controller;
+// losing authority cannot be repaired by a later regrant alone.
 public machine inherit(world: &mut World, grant: Grant) {
     let accepted: Grant = accept(grant);
     transition geometry::same_grant(world.parent, accepted) {
@@ -85,6 +88,8 @@ public machine inherit(world: &mut World, grant: Grant) {
     machine rebound(world: &mut World, accepted: Grant, replaced: bool) {
         let empty: Input;
         world.input = empty;
+        world.controller = 0u64;
+        world.controller_incarnation = 0u64;
         transition { _ -> kept(world, accepted, replaced) }
     }
     machine kept(world: &mut World, accepted: Grant, replaced: bool) {
@@ -167,6 +172,7 @@ public machine revoke(world: &mut World, slot: u64) -> u64 {
     }
     machine revoking(world: &mut World, slot: u64) -> u64 requires slot < 4u64 {
         producer::revoke(world, slot);
+        release_controller(world, slot);
         input::main::forget(&mut world.input, slot);
         world.children[slot].placed = false;
         surfaces::retire(world, slot);
@@ -174,6 +180,17 @@ public machine revoke(world: &mut World, slot: u64) -> u64 {
         children::refresh(&mut world.children[slot], world.parent, false);
         demand::refresh_child(world, slot);
         0u64
+    }
+}
+// A revoked controller loses its authority with its view.
+machine release_controller(world: &mut World, slot: u64) requires slot < 4u64 {
+    transition world.controller == slot + 1u64 {
+        true -> released(world)
+        _ -> done()
+    }
+    machine released(world: &mut World) {
+        world.controller = 0u64;
+        world.controller_incarnation = 0u64;
     }
 }
 // The occupant left: its grant, queued input, incarnation and capacity limits are gone.

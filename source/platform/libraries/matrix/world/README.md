@@ -56,6 +56,15 @@ from its words. Wire owner: `source-rs/platform/libraries/matrix/world/`.
   the cursor a stream currently presents, for an owner's renderer.
   [input/capacity.omg](input/capacity.omg) turns capacity pressure on a consumed
   sample into a stream interruption and reports the inherited headroom.
+- [layout.omg](layout.omg) is the owner-chosen layout controller: one child
+  may move every live view under a single validated arrangement, and the
+  owner's placement snapshot reissues the controller's captured view, surface
+  range and grant to its replacement. It is never a child-visible capability.
+- [management.omg](management.omg) delegates one sibling slot to a manager:
+  a query mints a ticket for the exact task there, and only that ticket on
+  that connection authorizes its termination.
+- [launches.omg](launches.omg) keeps bounded launch observations: receipts
+  local to the endpoint that recorded them, following an exact child handle.
 - [names.omg](names.omg) distinguishes locally admitted from inherited names.
 
 The program chooses placement, slots and lifecycle; the world enforces
@@ -63,7 +72,8 @@ attenuation. It depends only on the reference protocol contracts and performs no
 kernel calls. The [independent matrix](../../../../distribution/lab/matrix-composition/README.md)
 is its first consumer.
 
-Not yet ported from the Rust library: the layout controller and management
-grants. The stock matrix needs those before it can move onto this world. The
-record is sized for the reference kernel's eight-page process stack; a larger
-stock matrix will need more stack or a sparser record.
+Not yet ported from the Rust library: the presentation batch behind
+PRESENT_BEGIN and PRESENT_COMMIT, and the storage scopes that stamp a child's
+storage requests. The stock matrix needs those before it can move onto this
+world. The record is sized for the reference kernel's eight-page process stack;
+a larger stock matrix will need more stack or a sparser record.

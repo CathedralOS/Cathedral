@@ -1,0 +1,126 @@
+module layout;
+// An explicit controller grant permits geometry changes inside this world only.
+// All geometry is validated before any child changes; key masks, revoked views,
+// surface allowances and process identities stay authoritative. The owner's
+// placement snapshot reissues one child's captured view to its replacement; it
+// is never a child-visible capability.
+use protocol::main;
+use level::World;
+use geometry::Grant;
+use geometry::Rect;
+use surfaces;
+
+public data Placement [copy] {
+    captured: bool;
+    slot: u64 [0..=3];
+    parent: Grant;
+    authority: u64;
+    rect: Rect;
+    keys: u64;
+    surfaces: u64 [0..=16];
+    surface_base: u64 [0..=64];
+}
+// The owner chooses the controller; a child cannot grant this to itself.
+public machine grant(world: &mut World, slot: u64, incarnation: u64) -> u64 {
+    transition slot < world.slots && slot < 4u64 && incarnation != 0u64 {
+        true -> granted(world, slot, incarnation)
+        _ -> (DENIED)
+    }
+    machine granted(world: &mut World, slot: u64, incarnation: u64) -> u64 requires slot < 4u64 {
+        world.controller = slot + 1u64;
+        world.controller_incarnation = incarnation;
+        0u64
+    }
+}
+public machine allowed(world: &World, slot: u64, incarnation: u64, epoch: u64) -> bool {
+    let bound: bool = level::binding_matches(world, slot, incarnation, epoch);
+    slot < 4u64 && geometry::plus(slot, 1u64) == world.controller && world.controller_incarnation == incarnation && bound
+}
+// Owner-held snapshot of the controller's current view; nothing when the slot
+// is not the live controller or has no placed, backed view.
+public machine placement(world: &World, slot: u64, incarnation: u64) -> Placement {
+    transition slot < 4u64 && geometry::plus(slot, 1u64) == world.controller && world.controller_incarnation == incarnation
+        && geometry::valid_grant(world.children[slot].grant) && world.children[slot].surface_limit != 0u64
+        && world.children[slot].placed {
+        true -> (captured(world, slot))
+        _ -> (none())
+    }
+}
+machine captured(world: &World, slot: u64) -> Placement requires slot < 4u64 {
+    Placement { captured: true, slot: slot, parent: world.parent, authority: world.authority,
+        rect: world.children[slot].rect, keys: world.children[slot].keys,
+        surfaces: world.children[slot].surface_limit, surface_base: world.children[slot].surface_base }
+}
+machine none() -> Placement { let saved: Placement; saved }
+public machine parent_matches(world: &World, saved: Placement) -> bool {
+    geometry::same_grant(world.parent, saved.parent) && geometry::valid_grant(world.parent) && world.authority == saved.authority
+}
+// Reissue only the captured view. Sibling scenes, epochs, focus, input and
+// surface allowance are untouched; a changed ancestor grant refuses.
+public machine restore(world: &mut World, saved: Placement, incarnation: u64, controls_layout: bool) -> u64 {
+    let matches: bool = parent_matches(world, saved);
+    transition saved.captured && matches && incarnation != 0u64 && saved.slot < world.slots
+        && !world.children[saved.slot].placed && world.controller == 0u64 {
+        true -> ranging(world, saved, incarnation, controls_layout)
+        _ -> (DENIED)
+    }
+    machine ranging(world: &mut World, saved: Placement, incarnation: u64, controls_layout: bool) -> u64 {
+        let status: u64 = surfaces::range(world, saved.slot, saved.surface_base, saved.surfaces);
+        transition status == 0u64 {
+            true -> placing(world, saved, incarnation, controls_layout)
+            _ -> (status)
+        }
+    }
+    machine placing(world: &mut World, saved: Placement, incarnation: u64, controls_layout: bool) -> u64 {
+        let status: u64 = level::place(world, saved.slot, saved.rect, saved.keys);
+        transition status == 0u64 && controls_layout {
+            true -> (grant(world, saved.slot, incarnation))
+            _ -> (status)
+        }
+    }
+}
+// Apply a whole arrangement at once, validated before any child changes.
+// Revocation is not undone by moving the remaining live views.
+public machine layout(world: &mut World, slot: u64, incarnation: u64, epoch: u64, rects: &[Rect; 4]) -> u64 {
+    let permitted: bool = allowed(world, slot, incarnation, epoch);
+    let valid: bool = all_fit(world, rects, 0u64);
+    transition {
+        !permitted -> (DENIED)
+        !valid -> (INVALID_ARGUMENT)
+        _ -> applying(world, rects, 0u64)
+    }
+    machine applying(world: &mut World, rects: &[Rect; 4], index: u64) -> u64 requires index <= 4u64 {
+        transition index < world.slots && index < 4u64 {
+            true -> moved(world, rects, index)
+            _ -> (0u64)
+        }
+    }
+    machine moved(world: &mut World, rects: &[Rect; 4], index: u64) -> u64 requires index < 4u64 {
+        let keys: u64 = world.children[index].keys & world.parent.keys;
+        let status: u64 = moving(world, rects[index], index, keys);
+        transition { _ -> applying(world, rects, index + 1u64) }
+    }
+}
+machine moving(world: &mut World, rect: Rect, index: u64, keys: u64) -> u64 requires index < 4u64 {
+    transition world.children[index].placed {
+        true -> (level::place(world, index, rect, keys))
+        _ -> (0u64)
+    }
+}
+machine all_fit(world: &World, rects: &[Rect; 4], index: u64) -> bool requires index <= 4u64 {
+    transition index < world.slots && index < 4u64 {
+        true -> checked(world, rects, index)
+        _ -> (true)
+    }
+    machine checked(world: &World, rects: &[Rect; 4], index: u64) -> bool requires index < 4u64 {
+        transition fits(world, rects[index]) {
+            true -> all_fit(world, rects, index + 1u64)
+            _ -> (false)
+        }
+    }
+}
+// Inside the parent. A valid rectangle keeps both sums far below overflow.
+machine fits(world: &World, rect: Rect) -> bool {
+    geometry::valid_rect(rect) && geometry::plus(rect.x, rect.width) <= world.parent.width
+        && geometry::plus(rect.y, rect.height) <= world.parent.height
+}

@@ -1,8 +1,9 @@
 module commands;
 // Owner commands over the kernel-installed control pair. A nonzero high word
 // relays the packet to that child's control link (a proof-only probe). STOP and
-// SPAWN change slots; source words inject input; everything else is a world
-// command. With a parent, each decision follows one upstream poll.
+// SPAWN change slots; source words inject input; delegation words grant a child
+// authority beyond its view; everything else is a world command. With a parent,
+// each decision follows one upstream poll.
 use protocol::main;
 use protocol::matrix;
 use main::State;
@@ -21,6 +22,7 @@ use slots;
 use probe;
 use upstream;
 use inspection;
+use delegation;
 
 public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
     transition context.owner.pending != 0u64 {
@@ -50,12 +52,14 @@ machine refreshed(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u
 }
 machine command(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel {
     let issued: Ticket = runtime::server::main::ticket(&context.owner);
+    let delegated: bool = delegation::owner_word(frame.payload[0]);
     transition {
         frame.bytes != 64u64 -> block reply(gate, context, kernel::DENIED)
         frame.payload[0] >> 32u64 != 0u64 -> block probing(gate, context, now, issued, frame.payload)
         frame.payload[0] == STOP -> block stop(gate, context, frame)
         frame.payload[0] == SPAWN -> block spawn(gate, context, now, frame)
         frame.payload[0] == POINTER_SOURCE || frame.payload[0] == KEY_SOURCE -> block source(gate, context, frame)
+        delegated -> block delegation::owner(gate, context, frame)
         frame.payload[0] >= inspection::LAST_PRESENTED && frame.payload[0] <= inspection::CURSOR -> block inspection::answer(gate, context, frame)
         _ -> block arranged(gate, context, frame)
     }

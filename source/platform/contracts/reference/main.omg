@@ -41,7 +41,9 @@ public const F4: u64 = 10u64;
 public const BUSY: u64 = 18446744073709551600u64;
 public const NO_MEMORY: u64 = 18446744073709551604u64;
 public const LAUNCH_RUNNING: u64 = 1u64;
+public const LAUNCH_EXITED: u64 = 2u64;
 public const LAUNCH_FAILED: u64 = 3u64;
+public const LAUNCH_STOPPED: u64 = 4u64;
 // Local-world protocol words used by the Omega World and matrices.
 public const MATRIX_NEXT: u64 = 2u64;
 public const POLL_TAGGED: u64 = 26u64;

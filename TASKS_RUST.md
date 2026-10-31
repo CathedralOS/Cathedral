@@ -9,6 +9,51 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
+### Omega World: layout control, management and launch observations
+
+The last World features the stock matrix depends on are in Omega. `layout.omg`
+holds the owner-chosen layout controller: one child moves every live view
+under a single arrangement validated before anything changes, revoked views
+stay revoked, and the owner's placement snapshot reissues the controller's
+captured view, surface range and grant to its replacement while siblings keep
+their scenes, epochs, focus and queues. `management.omg` delegates one sibling
+slot to a manager: a query mints a ticket for the exact task there, the same
+task keeps its ticket, an empty slot clears it, and only that ticket on that
+connection authorizes termination. `launches.omg` keeps bounded launch
+observations whose receipts are local to the endpoint that recorded them and
+follow an exact child handle. The World record carries the controller; a new
+parent epoch, revocation or disconnection ends it. LAUNCH_EXITED and
+LAUNCH_STOPPED join the reference contract.
+
+The lab matrix gained `delegation.omg`: MANAGEMENT_GRANT, MANAGED_TASK,
+TERMINATE_TASK and LAUNCH_STATUS are served as the platform defines them, and
+proof-only words 907 to 913 grant layout control, capture and reissue a
+placement, stage and apply an arrangement row by row, and record launch
+observations this lab has no launcher to make. The guest proof swaps two
+regions through the controller and sees the pointer follow, shrinks one view
+and watches only its epoch change, refuses layouts from the wrong slot, epoch
+or an arrangement that does not fit, replaces the controller and restores its
+view and grant, then drives management tickets through termination and
+replacement and launch receipts through completion and reconnection.
+
+Evidence in the main checkout with the saved standalone producer:
+
+- Omega matrix, top level: `build/boot-harness-rs/omega-matrix/20261031T181214490214Z/`.
+- Omega matrix under a real parent: `build/boot-harness-rs/omega-matrix-upstream/20261031T181315783686Z/`.
+- Rust comparison matrix: `build/boot-harness-rs/matrix-composition/20261031T181324218583Z/`.
+- Default F5 desktop and cold reopen after the contract additions: `build/boot-harness-rs/desktop/20261031T181327700683Z/`.
+- Layout (116 Omega / 153 Rust edges), process-tool tests, Rust formatting and
+  clippy for the lab crate in every feature combination pass. No native leaf,
+  kernel limit or runtime module changed in this step.
+
+Still in Rust only: the presentation batch behind PRESENT_BEGIN and
+PRESENT_COMMIT, and the storage scopes that stamp a child's storage requests.
+Both belong with the stock host's presentation and storage paths.
+
+Next: begin moving the stock matrix host onto the runtime and World slice by
+slice while F5 keeps working, porting the presentation batch and storage scopes
+when those paths move.
+
 ### Omega World: the input model
 
 The Omega World now carries the Rust library's whole input model.
@@ -57,9 +102,8 @@ Evidence in the main checkout with the saved standalone producer:
   clippy for the lab crate in every feature combination pass. No native leaf,
   kernel limit or runtime module changed in this step.
 
-Next: the layout controller and management grants, the last World features not
-yet ported. After that the stock matrix host can start moving onto the runtime
-and World slice by slice while F5 keeps working.
+Layout control, management and launch observations followed in the step
+recorded above.
 
 ### Omega World: surfaces and frame demand
 

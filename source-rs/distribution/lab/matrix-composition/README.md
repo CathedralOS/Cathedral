@@ -55,7 +55,8 @@ same feature gates the surface and input-model checks, which only the Omega
 matrix serves: allowance ranges, names, clipped and translated paint, refusals,
 the frame handshake, visibility and the erasures a replacement owes; registered
 channels and groups, selection, the directory, descriptions, retirement,
-producer grants, capacity limits and cursor preferences.
+producer grants, capacity limits and cursor preferences; the layout controller,
+placement snapshots, management grants and launch receipts.
 
 The lab's owner probe envelope routes to a child with the high 32-bit word of
 the opcode (slot + 1); the low word remains its requested operation. This is

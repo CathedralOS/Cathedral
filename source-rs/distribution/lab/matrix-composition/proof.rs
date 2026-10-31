@@ -152,6 +152,8 @@ pub fn run() -> u64 {
     surfaces(&mut lab, &mut views);
     #[cfg(feature = "omega-matrix")]
     input_model(&mut lab);
+    #[cfg(feature = "omega-matrix")]
+    delegation(&mut lab, &mut views);
     // Repeated replacement exercises retained-endpoint teardown and channel reuse.
     for _ in 0..16 {
         assert_eq!(lab.owner([wire::STOP, 1, 0, 0, 0, 0, 0, 0]), [0; 8]);
@@ -773,5 +775,170 @@ fn input_model(lab: &mut Lab) {
     assert_eq!(
         capacity(lab, epoch(1), 4, 4),
         [0, epoch(1), 4, 4, 0, 0, 0, 0]
+    );
+}
+
+/// Delegated authority on the Omega matrix: the layout controller moves every
+/// live view under one validated arrangement, the owner's placement snapshot
+/// reissues the controller's view to its replacement, a management grant lets
+/// one child observe and terminate a sibling's exact task, and launch receipts
+/// stay local to the endpoint that recorded them. Owner words 907 to 913 are
+/// proof-only orchestration; the management and launch words are the platform's.
+#[cfg(feature = "omega-matrix")]
+fn delegation(lab: &mut Lab, views: &mut [wire::Packet; 3]) {
+    const GRANT_LAYOUT: u64 = 907;
+    const PLACEMENT: u64 = 908;
+    const RESTORE: u64 = 909;
+    const LAYOUT_ROW: u64 = 910;
+    const LAYOUT_APPLY: u64 = 911;
+    const LAUNCH_RECORD: u64 = 912;
+    const LAUNCH_FINISHED: u64 = 913;
+    let row = |index: u64, y: u64, height: u64| [LAYOUT_ROW, index, 0, y, 300, height, 0, 0];
+    let apply = |epoch: u64| [LAYOUT_APPLY, epoch, 0, 0, 0, 0, 0, 0];
+    *views = [0, 1, 2].map(|slot| lab.view(slot));
+    // Swap the first two regions. Nothing moves without the owner's grant, under
+    // another slot or epoch, or when any rectangle fails to fit.
+    for (index, y) in [(0, 200), (1, 0), (2, 400)] {
+        assert_eq!(lab.call(Some(0), row(index, y, 200)), [0; 8]);
+    }
+    assert_eq!(
+        lab.call(Some(0), apply(views[0][1])),
+        wire::error(abi::DENIED)
+    );
+    assert_eq!(lab.owner([GRANT_LAYOUT, 0, 0, 0, 0, 0, 0, 0]), [0; 8]);
+    assert_eq!(
+        lab.call(Some(1), apply(views[1][1])),
+        wire::error(abi::DENIED)
+    );
+    assert_eq!(
+        lab.call(Some(0), apply(views[0][1] + 1)),
+        wire::error(abi::DENIED)
+    );
+    assert_eq!(lab.call(Some(0), row(1, 0, 700)), [0; 8]);
+    assert_eq!(
+        lab.call(Some(0), apply(views[0][1])),
+        wire::error(abi::INVALID_ARGUMENT)
+    );
+    assert_eq!(lab.call(Some(0), row(1, 0, 200)), [0; 8]);
+    assert_eq!(lab.call(Some(0), apply(views[0][1])), [0; 8]);
+    // Unchanged extents keep every view; the pointer now finds the second peer
+    // at the top. The first sample only unblocks the source's interrupted hold.
+    assert_eq!(lab.view(0), views[0]);
+    assert_eq!(lab.view(1), views[1]);
+    for _ in 0..2 {
+        assert_eq!(
+            lab.owner([wire::POINTER_SOURCE, 20, 50, 0, 0, 0, 0, 0]),
+            [0; 8]
+        );
+    }
+    assert_eq!(&lab.next(1, views[1][1])[2..6], &[wire::POINTER, 20, 50, 0]);
+    assert_eq!(lab.next(0, views[0][1])[2], wire::NONE);
+    // A shrunk third region changes only that view's epoch.
+    assert_eq!(lab.call(Some(0), row(2, 400, 150)), [0; 8]);
+    assert_eq!(lab.call(Some(0), apply(views[0][1])), [0; 8]);
+    let shrunk = lab.view(2);
+    assert_eq!(&shrunk[2..4], &[300, 150]);
+    assert_ne!(shrunk[1], views[2][1]);
+    assert_eq!(lab.view(0), views[0]);
+    assert_eq!(lab.call(Some(0), row(2, 400, 200)), [0; 8]);
+    assert_eq!(lab.call(Some(0), apply(views[0][1])), [0; 8]);
+    views[2] = lab.view(2);
+    assert_eq!(&views[2][2..4], &[300, 200]);
+    // Only the live controller's placed, backed view can be captured; its
+    // replacement receives exactly that view, its surface range and the grant.
+    assert_eq!(lab.owner([PLACEMENT, 1, 0, 0, 0, 0, 0, 0]), [0; 8]);
+    assert_eq!(
+        lab.owner([PLACEMENT, 0, 0, 0, 0, 0, 0, 0]),
+        [0, 1, 0, 0, 0, 0, 0, 0]
+    );
+    assert_eq!(lab.owner([wire::STOP, 0, 0, 0, 0, 0, 0, 0]), [0; 8]);
+    assert_eq!(lab.owner([wire::SPAWN, 0, 0, 0, 0, 0, 0, 0]), [0; 8]);
+    assert_eq!(lab.view(0), wire::error(abi::DENIED));
+    assert_eq!(lab.owner([RESTORE, 0, 1, 0, 0, 0, 0, 0]), [0; 8]);
+    views[0] = lab.view(0);
+    assert_eq!(&views[0][2..5], &[300, 200, wire::KEY_MASK]);
+    assert_eq!(
+        lab.call(Some(0), [wire::SURFACE_INFO, 0, 0, 0, 0, 0, 0, 0]),
+        [0, 4, 0, 0, 0, 0, 0, 0]
+    );
+    assert_eq!(
+        lab.owner([RESTORE, 0, 1, 0, 0, 0, 0, 0]),
+        wire::error(abi::DENIED)
+    );
+    assert_eq!(lab.call(Some(0), apply(views[0][1])), [0; 8]);
+    assert_eq!(lab.view(1), views[1]);
+    // Management: a grant lets one child observe and terminate a sibling's
+    // exact task. Tickets follow the task, not the slot, and die with the grant.
+    let task = [wire::MANAGED_TASK, 0, 0, 0, 0, 0, 0, 0];
+    let terminate = |ticket: u64| [wire::TERMINATE_TASK, ticket, 0, 0, 0, 0, 0, 0];
+    assert_eq!(lab.call(Some(0), task), wire::error(abi::DENIED));
+    assert_eq!(
+        lab.owner([wire::MANAGEMENT_GRANT, 0, 1, 0, 0, 0, 0, 0]),
+        wire::error(abi::DENIED)
+    );
+    assert_eq!(
+        lab.owner([wire::MANAGEMENT_GRANT, 5, 1, 0, 0, 0, 0, 0]),
+        wire::error(abi::DENIED)
+    );
+    assert_eq!(
+        lab.owner([wire::MANAGEMENT_GRANT, 0, 3, 0, 0, 0, 0, 0]),
+        [0; 8]
+    );
+    assert_eq!(lab.call(Some(0), task), [0, 1, 0, 0, 0, 0, 0, 0]);
+    assert_eq!(lab.call(Some(0), task), [0, 1, 0, 0, 0, 0, 0, 0]);
+    assert_eq!(lab.call(Some(1), task), wire::error(abi::DENIED));
+    assert_eq!(lab.call(Some(0), terminate(2)), wire::error(abi::DENIED));
+    assert_eq!(lab.call(Some(1), terminate(1)), wire::error(abi::DENIED));
+    assert_eq!(lab.call(Some(0), terminate(1)), [0; 8]);
+    assert_eq!(lab.call(Some(0), task), [0; 8]);
+    assert_eq!(lab.owner([wire::SPAWN, 2, 0, 0, 0, 0, 0, 0]), [0; 8]);
+    assert_eq!(
+        lab.owner([wire::PLACE, 2, 0, 400, 300, 200, wire::KEY_MASK, 0]),
+        [0; 8]
+    );
+    assert_eq!(
+        lab.owner([wire::SURFACE_LIMIT, 2, 4, 0, 0, 0, 0, 0]),
+        [0; 8]
+    );
+    views[2] = lab.view(2);
+    assert_eq!(lab.call(Some(0), task), [0, 2, 0, 0, 0, 0, 0, 0]);
+    assert_eq!(lab.call(Some(0), terminate(1)), wire::error(abi::DENIED));
+    assert_eq!(
+        lab.owner([wire::MANAGEMENT_GRANT, 0, 0, 0, 0, 0, 0, 0]),
+        [0; 8]
+    );
+    assert_eq!(lab.call(Some(0), task), wire::error(abi::DENIED));
+    // Launch receipts stay local to the endpoint that recorded them and follow
+    // the exact child; a replacement connection starts counting afresh.
+    let status = |receipt: u64| [wire::LAUNCH_STATUS, receipt, 0, 0, 0, 0, 0, 0];
+    assert_eq!(lab.call(Some(1), status(1)), wire::error(abi::DENIED));
+    assert_eq!(
+        lab.owner([LAUNCH_RECORD, 1, 777, 0, 0, 0, 0, 0]),
+        [0, 1, 0, 0, 0, 0, 0, 0]
+    );
+    assert_eq!(
+        lab.call(Some(1), status(1)),
+        [0, wire::LAUNCH_RUNNING, 0, 0, 0, 0, 0, 0]
+    );
+    assert_eq!(lab.call(Some(0), status(1)), wire::error(abi::DENIED));
+    assert_eq!(lab.call(Some(1), status(2)), wire::error(abi::DENIED));
+    assert_eq!(
+        lab.owner([LAUNCH_FINISHED, 777, wire::LAUNCH_EXITED, 0, 0, 0, 0, 0]),
+        [0, 2, 0, 0, 0, 0, 0, 0]
+    );
+    assert_eq!(
+        lab.owner([LAUNCH_FINISHED, 777, wire::LAUNCH_EXITED, 0, 0, 0, 0, 0]),
+        [0; 8]
+    );
+    assert_eq!(
+        lab.call(Some(1), status(1)),
+        [0, wire::LAUNCH_EXITED, 0, 0, 0, 0, 0, 0]
+    );
+    assert_eq!(lab.owner([wire::STOP, 1, 0, 0, 0, 0, 0, 0]), [0; 8]);
+    assert_eq!(lab.owner([wire::SPAWN, 1, 0, 0, 0, 0, 0, 0]), [0; 8]);
+    assert_eq!(lab.call(Some(1), status(1)), wire::error(abi::DENIED));
+    assert_eq!(
+        lab.owner([LAUNCH_RECORD, 1, 778, 0, 0, 0, 0, 0]),
+        [0, 1, 0, 0, 0, 0, 0, 0]
     );
 }

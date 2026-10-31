@@ -1,0 +1,206 @@
+module delegation;
+// Authority a child exercises beyond its own view: control of the layout,
+// management of one sibling's task, and observation of its own launches. The
+// owner grants each by slot; the child's connection incarnation authenticates
+// its use. MANAGEMENT_GRANT, MANAGED_TASK, TERMINATE_TASK and LAUNCH_STATUS are
+// the platform's words. The words above 906 are proof-only orchestration: they
+// grant layout control, capture and reissue a placement, stage and apply an
+// arrangement row by row, and record launch observations this lab has no
+// launcher to make.
+use protocol::main;
+use protocol::matrix;
+use main::State;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::server::main::Ticket;
+use runtime::connection::main::Frame;
+use world::layout;
+use world::layout::Placement;
+use world::management;
+use world::management::Target;
+use world::launches;
+use world::launches::Recorded;
+use world::geometry::Rect;
+use world::geometry::zeros_from;
+use slots;
+
+public const GRANT_LAYOUT: u64 = 907u64;
+public const PLACEMENT: u64 = 908u64;
+public const RESTORE: u64 = 909u64;
+public const LAYOUT_ROW: u64 = 910u64;
+public const LAYOUT_APPLY: u64 = 911u64;
+public const LAUNCH_RECORD: u64 = 912u64;
+public const LAUNCH_FINISHED: u64 = 913u64;
+
+public machine owner_word(op: u64) -> bool {
+    op == MANAGEMENT_GRANT || (op >= GRANT_LAYOUT && op <= RESTORE) || op == LAUNCH_RECORD || op == LAUNCH_FINISHED
+}
+public machine child_word(op: u64) -> bool {
+    op == LAUNCH_STATUS || op == MANAGED_TASK || op == TERMINATE_TASK || op == LAYOUT_ROW || op == LAYOUT_APPLY
+}
+// Owner words. MANAGEMENT_GRANT names the manager and the target slot plus one;
+// zero revokes. The others name a slot whose current occupant they concern.
+public machine owner(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Kernel blocks; invokes Kernel; {
+    transition {
+        frame.payload[0] == MANAGEMENT_GRANT && frame.payload[1] < 3u64 && frame.payload[2] <= 3u64 && zeros_from(&frame.payload, 3u64) ->
+            block managed(gate, context, frame.payload[1], frame.payload[2])
+        frame.payload[0] == LAUNCH_FINISHED && zeros_from(&frame.payload, 3u64) -> block finished(gate, context, frame.payload[1], frame.payload[2])
+        frame.payload[1] < 3u64 -> block slotted(gate, context, frame, frame.payload[1])
+        _ -> block reply(gate, context, error(kernel::DENIED))
+    }
+    machine managed(gate: &Gate, context: &mut State, manager: u64 [0..=2], target: u64) -> u64 reaches Kernel {
+        let incarnation: u64 = context.slots[manager].listener.incarnation;
+        transition target == 0u64 {
+            true -> block revoked(gate, context, manager)
+            _ -> block granted(gate, context, manager, incarnation, target - 1u64)
+        }
+    }
+    machine revoked(gate: &Gate, context: &mut State, manager: u64 [0..=2]) -> u64 reaches Kernel {
+        management::revoke(&mut context.managers, manager);
+        block reply(gate, context, ok())
+    }
+    machine granted(gate: &Gate, context: &mut State, manager: u64 [0..=2], incarnation: u64, target: u64) -> u64 reaches Kernel {
+        let status: u64 = management::grant(&mut context.managers, manager, incarnation, target, 3u64);
+        block reply(gate, context, error(status))
+    }
+    // The exact child handle ended with the given state; the reply names the observer.
+    machine finished(gate: &Gate, context: &mut State, child: u64, state: u64) -> u64 reaches Kernel {
+        let observer: u64 = launches::finished(&mut context.observations, child, state);
+        block reply(gate, context, word(observer))
+    }
+    machine slotted(gate: &Gate, context: &mut State, frame: Frame, slot: u64 [0..=2]) -> u64 reaches Kernel {
+        let incarnation: u64 = context.slots[slot].listener.incarnation;
+        transition {
+            frame.payload[0] == GRANT_LAYOUT && zeros_from(&frame.payload, 2u64) -> block controlled(gate, context, slot, incarnation)
+            frame.payload[0] == PLACEMENT && zeros_from(&frame.payload, 2u64) -> block captured(gate, context, slot, incarnation)
+            frame.payload[0] == RESTORE && zeros_from(&frame.payload, 3u64) -> block restored(gate, context, incarnation, frame.payload[2] != 0u64)
+            frame.payload[0] == LAUNCH_RECORD && zeros_from(&frame.payload, 3u64) -> block recorded(gate, context, slot, incarnation, frame.payload[2])
+            _ -> block reply(gate, context, error(kernel::DENIED))
+        }
+    }
+    machine controlled(gate: &Gate, context: &mut State, slot: u64 [0..=2], incarnation: u64) -> u64 reaches Kernel {
+        let status: u64 = layout::grant(&mut context.world, slot, incarnation);
+        block reply(gate, context, error(status))
+    }
+    // The owner keeps one snapshot; the reply says whether anything was captured.
+    machine captured(gate: &Gate, context: &mut State, slot: u64 [0..=2], incarnation: u64) -> u64 reaches Kernel {
+        context.saved_placement = layout::placement(&context.world, slot, incarnation);
+        let held: bool = context.saved_placement.captured;
+        block reply(gate, context, word(flag(held)))
+    }
+    // Reissue the snapshot to the slot's current occupant, with layout control when asked.
+    machine restored(gate: &Gate, context: &mut State, incarnation: u64, controls_layout: bool) -> u64 reaches Kernel {
+        let saved: Placement = context.saved_placement;
+        let status: u64 = layout::restore(&mut context.world, saved, incarnation, controls_layout);
+        block reply(gate, context, error(status))
+    }
+    machine recorded(gate: &Gate, context: &mut State, slot: u64 [0..=2], incarnation: u64, child: u64) -> u64 reaches Kernel {
+        let recorded: Recorded = launches::record(&mut context.observations, slot, incarnation, child);
+        transition recorded {
+            Recorded::Receipt { value } -> block reply(gate, context, word(value))
+            Recorded::Refused { code } -> block reply(gate, context, error(code))
+        }
+    }
+}
+// A child's words under its listener's incarnation.
+public machine child(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, frame: Frame, incarnation: u64) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    transition {
+        frame.payload[0] == LAUNCH_STATUS && zeros_from(&frame.payload, 2u64) -> block status(gate, context, slot, issued, incarnation, frame.payload[1])
+        frame.payload[0] == MANAGED_TASK && zeros_from(&frame.payload, 1u64) -> block managed(gate, context, slot, issued, incarnation)
+        frame.payload[0] == TERMINATE_TASK && zeros_from(&frame.payload, 2u64) -> block terminating(gate, context, slot, issued, incarnation, frame.payload[1])
+        frame.payload[0] == LAYOUT_ROW && frame.payload[1] < 4u64 && zeros_from(&frame.payload, 6u64) -> block row(gate, context, slot, issued, frame, frame.payload[1])
+        frame.payload[0] == LAYOUT_APPLY && zeros_from(&frame.payload, 2u64) -> block applied(gate, context, slot, issued, incarnation, frame.payload[1])
+        _ -> block answered(gate, context, slot, issued, error(kernel::DENIED))
+    }
+    machine status(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, incarnation: u64, receipt: u64) -> u64 reaches Kernel {
+        let reply: [u64; 8] = launches::query(&context.observations, slot, incarnation, receipt);
+        block answered(gate, context, slot, issued, reply)
+    }
+    machine managed(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, incarnation: u64) -> u64 reaches Kernel {
+        let found: Target = management::target(&context.managers, slot, incarnation);
+        transition found {
+            Target::Slot { index } -> block queried(gate, context, slot, issued, incarnation, index)
+            Target::Refused { code } -> block answered(gate, context, slot, issued, error(code))
+        }
+    }
+    machine queried(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, incarnation: u64, index: u64 [0..=3]) -> u64 reaches Kernel {
+        transition index < 3u64 {
+            true -> block observed(gate, context, slot, issued, incarnation, index)
+            _ -> block answered(gate, context, slot, issued, error(kernel::DENIED))
+        }
+    }
+    // The ticket follows the exact task now in the target slot.
+    machine observed(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, incarnation: u64, target: u64 [0..=2]) -> u64 reaches Kernel {
+        let live: bool = context.slots[target].live;
+        let task: u64 = context.slots[target].task;
+        let reply: [u64; 8] = management::query(&mut context.managers, slot, incarnation, live, task);
+        block answered(gate, context, slot, issued, reply)
+    }
+    machine terminating(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, incarnation: u64, ticket: u64) -> u64 reaches Kernel {
+        let found: Target = management::target(&context.managers, slot, incarnation);
+        transition found {
+            Target::Slot { index } -> block authorizing(gate, context, slot, issued, incarnation, ticket, index)
+            Target::Refused { code } -> block answered(gate, context, slot, issued, error(code))
+        }
+    }
+    machine authorizing(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, incarnation: u64, ticket: u64, index: u64 [0..=3]) -> u64 reaches Kernel {
+        transition index < 3u64 {
+            true -> block confirming(gate, context, slot, issued, incarnation, ticket, index)
+            _ -> block answered(gate, context, slot, issued, error(kernel::DENIED))
+        }
+    }
+    machine confirming(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, incarnation: u64, ticket: u64, target: u64 [0..=2]) -> u64 reaches Kernel {
+        let live: bool = context.slots[target].live;
+        let task: u64 = context.slots[target].task;
+        let authorized: Target = management::authorize(&context.managers, slot, incarnation, ticket, live, task);
+        transition authorized {
+            Target::Slot { index } -> block stopping(gate, context, slot, issued, index)
+            Target::Refused { code } -> block answered(gate, context, slot, issued, error(code))
+        }
+    }
+    machine stopping(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, index: u64 [0..=3]) -> u64 reaches Kernel {
+        transition index < 3u64 {
+            true -> block stopped(gate, context, slot, issued, index)
+            _ -> block answered(gate, context, slot, issued, error(kernel::DENIED))
+        }
+    }
+    // The grant authorizes this; no LOSS survey precedes it.
+    machine stopped(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, target: u64 [0..=2]) -> u64 reaches Kernel {
+        block slots::reclaim(gate, context, target);
+        block answered(gate, context, slot, issued, ok())
+    }
+    machine row(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, frame: Frame, index: u64 [0..=3]) -> u64 reaches Kernel {
+        context.layout_rows[index] = Rect { x: frame.payload[2], y: frame.payload[3], width: frame.payload[4], height: frame.payload[5] };
+        block answered(gate, context, slot, issued, ok())
+    }
+    machine applied(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, incarnation: u64, epoch: u64) -> u64 reaches Kernel {
+        let status: u64 = layout::layout(&mut context.world, slot, incarnation, epoch, &context.layout_rows);
+        block answered(gate, context, slot, issued, error(status))
+    }
+}
+machine answered(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, reply: [u64; 8]) -> u64 reaches Kernel {
+    let status: u64 = block runtime::server::main::reply_to(gate, &mut context.slots[slot].listener, issued, &reply);
+    0u64
+}
+machine reply(gate: &Gate, context: &mut State, words: [u64; 8]) -> u64 reaches Kernel {
+    block runtime::server::main::reply(gate, &mut context.owner, &words)
+}
+machine error(code: u64) -> [u64; 8] {
+    let mut words: [u64; 8];
+    words[0] = code;
+    words
+}
+machine ok() -> [u64; 8] {
+    let words: [u64; 8];
+    words
+}
+machine word(value: u64) -> [u64; 8] {
+    let mut words: [u64; 8];
+    words[1] = value;
+    words
+}
+machine flag(value: bool) -> u64 {
+    transition value { true -> (1u64) _ -> (0u64) }
+}
