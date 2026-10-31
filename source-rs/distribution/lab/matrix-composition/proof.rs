@@ -150,6 +150,8 @@ pub fn run() -> u64 {
     assert_eq!(lab.view(2), views[2]);
     #[cfg(feature = "omega-matrix")]
     surfaces(&mut lab, &mut views);
+    #[cfg(feature = "omega-matrix")]
+    input_model(&mut lab);
     // Repeated replacement exercises retained-endpoint teardown and channel reuse.
     for _ in 0..16 {
         assert_eq!(lab.owner([wire::STOP, 1, 0, 0, 0, 0, 0, 0]), [0; 8]);
@@ -336,4 +338,440 @@ fn surfaces(lab: &mut Lab, views: &mut [wire::Packet; 3]) {
     assert_eq!(lab.call(Some(2), info), [0, 4, 0, 0, 0, 0, 0, 0]);
     views[2] = lab.view(2);
     assert_eq!(&views[2][2..4], &[300, 200]);
+}
+
+/// The input model on the Omega matrix: owner-registered groups and channels,
+/// keyboard selection, the directory and descriptions a recipient may observe,
+/// retirement that waits for every recipient, bounded producer grants, capacity
+/// limits and cursor preferences. The proof-only owner word 906 resolves the
+/// cursor a local stream currently presents.
+#[cfg(feature = "omega-matrix")]
+fn input_model(lab: &mut Lab) {
+    use cathedral_platform_contracts::input::description::{self, Description};
+    const CURSOR: u64 = 906;
+    fn created(packet: wire::Packet) -> u64 {
+        assert_eq!(packet[0], 0);
+        packet[1]
+    }
+    let views = [0, 1, 2].map(|slot| lab.view(slot));
+    let epoch = |slot: usize| views[slot][1];
+    // Owner-registered names are local to this world and never reused.
+    let group = created(lab.owner([wire::INPUT_GROUP_CREATE, 0, 0, 0, 0, 0, 0, 0]));
+    let channel = created(lab.owner([wire::INPUT_CHANNEL_CREATE, group, 0, 0, 0, 0, 0, 0]));
+    assert_eq!(
+        lab.owner([wire::INPUT_CHANNEL_CREATE, 99, 0, 0, 0, 0, 0, 0]),
+        wire::error(abi::DENIED)
+    );
+    assert_eq!(
+        lab.owner([wire::INPUT_POINTER, 99, 20, 450, 0, 0, 0, 0]),
+        wire::error(abi::DENIED)
+    );
+    assert_eq!(
+        lab.owner([wire::INPUT_POINTER, channel, 20, 450, 1, 0, 0, 0]),
+        [0; 8]
+    );
+    assert_eq!(
+        &lab.next(2, epoch(2))[2..],
+        &[wire::POINTER, 20, 50, 1, 1, 1]
+    );
+    assert_eq!(
+        lab.owner([wire::INPUT_POINTER, channel, 20, 450, 0, 0, 0, 0]),
+        [0; 8]
+    );
+    assert_eq!(&lab.next(2, epoch(2))[2..6], &[wire::POINTER, 20, 50, 0]);
+    // Keys follow the group's selection; the press selected the third region.
+    let key = |state: u64| {
+        [
+            wire::INPUT_KEY,
+            channel,
+            input::ENTER as u64,
+            state,
+            0,
+            0,
+            0,
+            0,
+        ]
+    };
+    for state in [input::PRESS, input::RELEASE] {
+        assert_eq!(lab.owner(key(state as u64)), [0; 8]);
+        assert_eq!(
+            &lab.next(2, epoch(2))[2..5],
+            &[wire::KEY, input::ENTER as u64, state as u64]
+        );
+    }
+    // INPUT_SELECT moves the selection to the first region without a pointer;
+    // the old target sees its queued keys cancelled.
+    assert_eq!(
+        lab.owner([wire::INPUT_SELECT, group, 4, 0, 0, 0, 0, 0]),
+        wire::error(abi::DENIED)
+    );
+    assert_eq!(
+        lab.owner([wire::INPUT_SELECT, 99, 1, 0, 0, 0, 0, 0]),
+        wire::error(abi::DENIED)
+    );
+    assert_eq!(
+        lab.owner([wire::INPUT_SELECT, group, 1, 0, 0, 0, 0, 0]),
+        [0; 8]
+    );
+    assert_eq!(lab.next(2, epoch(2))[2], wire::CANCEL_KEYS);
+    for state in [input::PRESS, input::RELEASE] {
+        assert_eq!(lab.owner(key(state as u64)), [0; 8]);
+        assert_eq!(
+            &lab.next(0, epoch(0))[2..],
+            &[wire::KEY, input::ENTER as u64, state as u64, 0, 1, 1]
+        );
+    }
+    assert_eq!(lab.next(2, epoch(2))[2], wire::NONE);
+    // The directory shows each recipient only its own names, one revision per membership.
+    let directory = |lab: &mut Lab, slot: u64, revision: u64, after: u64| {
+        lab.call(
+            Some(slot),
+            [
+                wire::INPUT_DIRECTORY,
+                views[slot as usize][1],
+                revision,
+                after,
+                0,
+                0,
+                0,
+                0,
+            ],
+        )
+    };
+    let row = directory(lab, 0, 0, 0);
+    assert_eq!(&row[3..], &[1, 1, wire::CHANNEL_LIVE, wire::KEY_MASK, 0]);
+    let revision = row[2];
+    assert_eq!(
+        directory(lab, 0, revision, 1),
+        [0, epoch(0), revision, 0, 0, 0, 0, 0]
+    );
+    assert_eq!(directory(lab, 0, revision + 1, 0), wire::error(abi::BUSY));
+    assert_eq!(directory(lab, 0, 0, 1), wire::error(abi::DENIED));
+    assert_eq!(
+        lab.call(
+            Some(0),
+            [wire::INPUT_DIRECTORY, epoch(0) + 1, 0, 0, 0, 0, 0, 0]
+        ),
+        wire::error(abi::DENIED)
+    );
+    assert_eq!(directory(lab, 1, 0, 0), [0, epoch(1), 1, 0, 0, 0, 0, 0]);
+    // Retirement waits for every recipient; the group cannot go before its channel.
+    assert_eq!(
+        lab.owner([wire::INPUT_CHANNEL_RETIRE, channel, 0, 0, 0, 0, 0, 0]),
+        [0; 8]
+    );
+    assert_eq!(
+        lab.owner(key(input::RELEASE as u64)),
+        wire::error(abi::DENIED)
+    );
+    assert_eq!(
+        lab.owner([wire::INPUT_GROUP_RELEASE, group, 0, 0, 0, 0, 0, 0]),
+        wire::error(abi::BUSY)
+    );
+    let retiring = directory(lab, 0, 0, 0);
+    assert_eq!(&retiring[3..6], &[1, 1, wire::CHANNEL_RETIRING]);
+    assert_ne!(retiring[2], revision);
+    for slot in [0, 2] {
+        assert_eq!(
+            &lab.next(slot, epoch(slot as usize))[2..],
+            &[wire::RETIRED, 0, 0, 0, 1, 1]
+        );
+    }
+    assert_eq!(
+        lab.owner([wire::INPUT_GROUP_RELEASE, group, 0, 0, 0, 0, 0, 0]),
+        [0; 8]
+    );
+    for slot in [0, 2] {
+        assert_eq!(
+            &lab.next(slot, epoch(slot as usize))[2..],
+            &[wire::GROUP_RETIRED, 0, 0, 0, 0, 1]
+        );
+    }
+    assert_eq!(lab.next(1, epoch(1))[2], wire::NONE);
+    assert_eq!(directory(lab, 0, 0, 0)[3], 0);
+    assert_eq!(
+        lab.owner([wire::INPUT_CHANNEL_CREATE, group, 0, 0, 0, 0, 0, 0]),
+        wire::error(abi::DENIED)
+    );
+    assert_eq!(
+        lab.owner([wire::INPUT_POINTER, channel, 20, 450, 0, 0, 0, 0]),
+        wire::error(abi::DENIED)
+    );
+    let fresh = created(lab.owner([wire::INPUT_GROUP_CREATE, 0, 0, 0, 0, 0, 0, 0]));
+    assert!(fresh > group);
+    let fresh_channel = created(lab.owner([wire::INPUT_CHANNEL_CREATE, fresh, 0, 0, 0, 0, 0, 0]));
+    assert!(fresh_channel > channel);
+    assert_eq!(
+        lab.owner([wire::INPUT_CHANNEL_RETIRE, fresh_channel, 0, 0, 0, 0, 0, 0]),
+        [0; 8]
+    );
+    assert_eq!(
+        lab.owner([wire::INPUT_GROUP_RELEASE, fresh, 0, 0, 0, 0, 0, 0]),
+        [0; 8]
+    );
+    // A producer grant: private channels in a private group, by generation.
+    let info = [wire::PRODUCER_INFO, 0, 0, 0, 0, 0, 0, 0];
+    assert_eq!(lab.call(Some(0), info), wire::error(abi::DENIED));
+    let grant = |slot: u64, count: u64, rights: u64| {
+        [wire::INPUT_PRODUCER_GRANT, slot, count, rights, 0, 0, 0, 0]
+    };
+    assert_eq!(lab.owner(grant(0, 1, wire::PRODUCER_FOCUS)), [0; 8]);
+    assert_eq!(
+        lab.owner(grant(0, 1, wire::PRODUCER_FOCUS)),
+        wire::error(abi::BUSY)
+    );
+    assert_eq!(lab.owner(grant(1, 5, 0)), wire::error(abi::DENIED));
+    assert_eq!(lab.owner(grant(1, 1, 2)), wire::error(abi::DENIED));
+    assert_eq!(
+        lab.call(Some(0), info),
+        [0, 1, 300, 600, wire::KEY_MASK, 1, wire::PRODUCER_FOCUS, 0]
+    );
+    assert_eq!(lab.call(Some(1), info), wire::error(abi::DENIED));
+    let described = Description::new(description::POINTER | description::KEYS, "Virtual input")
+        .unwrap()
+        .words();
+    let describe = |words: [u64; 3], generation: u64, ordinal: u64| {
+        [
+            wire::PRODUCER_DESCRIBE,
+            generation,
+            ordinal,
+            words[0],
+            words[1],
+            words[2],
+            0,
+            0,
+        ]
+    };
+    assert_eq!(lab.call(Some(0), describe(described, 1, 1)), [0; 8]);
+    assert_eq!(lab.call(Some(0), describe(described, 1, 1)), [0; 8]);
+    assert_eq!(
+        lab.call(
+            Some(0),
+            describe([described[0], described[1], description::POINTER], 1, 1)
+        ),
+        wire::error(abi::BUSY)
+    );
+    assert_eq!(
+        lab.call(Some(0), describe([0xff, 0, description::POINTER], 1, 1)),
+        wire::error(abi::INVALID_ARGUMENT)
+    );
+    assert_eq!(
+        lab.call(Some(0), describe(described, 1, 2)),
+        wire::error(abi::DENIED)
+    );
+    assert_eq!(
+        lab.call(Some(0), describe(described, 2, 1)),
+        wire::error(abi::DENIED)
+    );
+    let pointer = |generation: u64, ordinal: u64, x: u64, y: u64, buttons: u64| {
+        [
+            wire::PRODUCER_POINTER,
+            generation,
+            ordinal,
+            x,
+            y,
+            buttons,
+            0,
+            0,
+        ]
+    };
+    assert_eq!(lab.call(Some(0), pointer(1, 1, 20, 450, 1)), [0; 8]);
+    let announced = lab.next(2, epoch(2));
+    assert_eq!(announced[2], wire::DESCRIBED);
+    assert_eq!(&announced[3..6], &described);
+    assert_eq!(&announced[6..], &[2, 2]);
+    assert_eq!(
+        &lab.next(2, epoch(2))[2..],
+        &[wire::POINTER, 20, 50, 1, 2, 2]
+    );
+    let row = directory(lab, 2, 0, 0);
+    assert_eq!(&row[3..], &[2, 2, wire::CHANNEL_LIVE, wire::KEY_MASK, 0]);
+    let description_of = |lab: &mut Lab, revision: u64, name: u64| {
+        lab.call(
+            Some(2),
+            [
+                wire::INPUT_DESCRIPTION,
+                epoch(2),
+                revision,
+                name,
+                0,
+                0,
+                0,
+                0,
+            ],
+        )
+    };
+    assert_eq!(
+        description_of(lab, row[2], 2),
+        [
+            0,
+            epoch(2),
+            row[2],
+            2,
+            described[0],
+            described[1],
+            described[2],
+            0
+        ]
+    );
+    assert_eq!(description_of(lab, row[2], 1), wire::error(abi::DENIED));
+    assert_eq!(description_of(lab, 0, 2), wire::error(abi::DENIED));
+    assert_eq!(lab.call(Some(0), pointer(1, 1, 20, 450, 0)), [0; 8]);
+    assert_eq!(&lab.next(2, epoch(2))[2..6], &[wire::POINTER, 20, 50, 0]);
+    for bad in [
+        pointer(1, 1, 300, 450, 0),
+        pointer(2, 1, 20, 450, 0),
+        pointer(1, 2, 20, 450, 0),
+    ] {
+        assert_eq!(lab.call(Some(0), bad), wire::error(abi::DENIED));
+    }
+    // The focus right let that press select; keys follow it.
+    let producer_key = |generation: u64, state: u64| {
+        [
+            wire::PRODUCER_KEY,
+            generation,
+            1,
+            input::ENTER as u64,
+            state,
+            0,
+            0,
+            0,
+        ]
+    };
+    for state in [input::PRESS, input::RELEASE] {
+        assert_eq!(lab.call(Some(0), producer_key(1, state as u64)), [0; 8]);
+        assert_eq!(
+            &lab.next(2, epoch(2))[2..],
+            &[wire::KEY, input::ENTER as u64, state as u64, 0, 2, 2]
+        );
+    }
+    // Without that right a producer delivers pointer events but never selects.
+    assert_eq!(lab.owner(grant(1, 1, 0)), [0; 8]);
+    assert_eq!(
+        lab.call(Some(1), info),
+        [0, 1, 300, 600, wire::KEY_MASK, 1, 0, 0]
+    );
+    assert_eq!(lab.call(Some(1), pointer(1, 1, 20, 50, 1)), [0; 8]);
+    assert_eq!(
+        &lab.next(0, epoch(0))[2..],
+        &[wire::POINTER, 20, 50, 1, 2, 2]
+    );
+    assert_eq!(
+        lab.call(Some(1), producer_key(1, input::PRESS as u64)),
+        [0; 8]
+    );
+    assert_eq!(lab.next(0, epoch(0))[2], wire::NONE);
+    assert_eq!(
+        lab.call(Some(1), producer_key(1, input::RELEASE as u64)),
+        [0; 8]
+    );
+    assert_eq!(lab.call(Some(1), pointer(1, 1, 20, 50, 0)), [0; 8]);
+    assert_eq!(&lab.next(0, epoch(0))[2..6], &[wire::POINTER, 20, 50, 0]);
+    // Release retires the held channel; capacity returns only as recipients drain.
+    assert_eq!(
+        lab.call(Some(0), [wire::PRODUCER_RELEASE, 1, 0, 0, 0, 0, 0, 0]),
+        [0; 8]
+    );
+    assert_eq!(lab.call(Some(0), info), wire::error(abi::DENIED));
+    assert_eq!(lab.owner(grant(0, 3, 0)), wire::error(abi::NO_MEMORY));
+    assert_eq!(&lab.next(2, epoch(2))[2..], &[wire::RETIRED, 0, 0, 0, 2, 2]);
+    assert_eq!(lab.owner(grant(0, 3, 0)), wire::error(abi::NO_MEMORY));
+    assert_eq!(lab.owner(grant(0, 2, 0)), [0; 8]);
+    assert_eq!(
+        lab.call(Some(0), info),
+        [0, 2, 300, 600, wire::KEY_MASK, 2, 0, 0]
+    );
+    assert_eq!(
+        &lab.next(2, epoch(2))[2..],
+        &[wire::GROUP_RETIRED, 0, 0, 0, 0, 2]
+    );
+    // Owner revocation ends a grant the same way; the next registration reaps its group.
+    assert_eq!(
+        lab.owner([wire::INPUT_PRODUCER_REVOKE, 1, 0, 0, 0, 0, 0, 0]),
+        [0; 8]
+    );
+    assert_eq!(lab.call(Some(1), info), wire::error(abi::DENIED));
+    assert_eq!(&lab.next(0, epoch(0))[2..], &[wire::RETIRED, 0, 0, 0, 2, 2]);
+    assert_eq!(
+        lab.owner([wire::INPUT_PRODUCER_REVOKE, 0, 0, 0, 0, 0, 0, 0]),
+        [0; 8]
+    );
+    assert_eq!(lab.call(Some(0), info), wire::error(abi::DENIED));
+    // Capacity limits are the recipient's own ceiling; the cursor preference
+    // follows the pointer's current target.
+    let fresh = created(lab.owner([wire::INPUT_GROUP_CREATE, 0, 0, 0, 0, 0, 0, 0]));
+    assert_eq!(
+        &lab.next(0, epoch(0))[2..],
+        &[wire::GROUP_RETIRED, 0, 0, 0, 0, 2]
+    );
+    let fresh_channel = created(lab.owner([wire::INPUT_CHANNEL_CREATE, fresh, 0, 0, 0, 0, 0, 0]));
+    let capacity = |lab: &mut Lab, epoch: u64, channels: u64, groups: u64| {
+        lab.call(
+            Some(1),
+            [wire::INPUT_CAPACITY, epoch, channels, groups, 0, 0, 0, 0],
+        )
+    };
+    assert_eq!(
+        capacity(lab, epoch(1), 0, 0),
+        [0, epoch(1), 0, 0, 0, 0, 0, 0]
+    );
+    let hover = |x: u64, y: u64| [wire::INPUT_POINTER, fresh_channel, x, y, 0, 0, 0, 0];
+    assert_eq!(lab.owner(hover(20, 250)), wire::error(abi::NO_MEMORY));
+    assert_eq!(lab.next(1, epoch(1))[2], wire::NONE);
+    assert_eq!(capacity(lab, epoch(1), 5, 1), wire::error(abi::DENIED));
+    assert_eq!(capacity(lab, epoch(1) + 1, 1, 1), wire::error(abi::DENIED));
+    assert_eq!(
+        capacity(lab, epoch(1), 1, 1),
+        [0, epoch(1), 1, 1, 0, 0, 0, 0]
+    );
+    assert_eq!(lab.owner(hover(20, 250)), [0; 8]);
+    assert_eq!(
+        &lab.next(1, epoch(1))[2..],
+        &[wire::POINTER, 20, 50, 0, 1, 1]
+    );
+    assert_eq!(capacity(lab, epoch(1), 0, 0), wire::error(abi::BUSY));
+    assert_eq!(capacity(lab, epoch(1), 1, 0), wire::error(abi::BUSY));
+    let preference = |lab: &mut Lab, name: u64, mode: u64| {
+        lab.call(
+            Some(1),
+            [wire::CURSOR_PREFERENCE, epoch(1), name, mode, 0, 0, 0, 0],
+        )
+    };
+    assert_eq!(preference(lab, 1, wire::CURSOR_HIDDEN), [0; 8]);
+    assert_eq!(
+        preference(lab, 99, wire::CURSOR_HIDDEN),
+        wire::error(abi::DENIED)
+    );
+    assert_eq!(preference(lab, 1, 2), wire::error(abi::DENIED));
+    let cursor = [CURSOR, fresh_channel, 0, 0, 0, 0, 0, 0];
+    assert_eq!(
+        lab.owner(cursor),
+        [0, 1, fresh_channel, 0, 1, wire::CURSOR_HIDDEN, 0, 0]
+    );
+    assert_eq!(lab.owner(hover(20, 50)), [0; 8]);
+    assert_eq!(
+        lab.owner(cursor),
+        [0, 1, fresh_channel, 0, 1, wire::CURSOR_DEFAULT, 0, 0]
+    );
+    assert_eq!(lab.next(0, epoch(0))[2], wire::POINTER);
+    assert_eq!(lab.owner([CURSOR, 99, 0, 0, 0, 0, 0, 0]), [0; 8]);
+    assert_eq!(
+        lab.owner([wire::INPUT_CHANNEL_RETIRE, fresh_channel, 0, 0, 0, 0, 0, 0]),
+        [0; 8]
+    );
+    assert_eq!(lab.owner(cursor), [0; 8]);
+    for slot in [0, 1] {
+        assert_eq!(lab.next(slot, epoch(slot as usize))[2], wire::RETIRED);
+    }
+    assert_eq!(
+        lab.owner([wire::INPUT_GROUP_RELEASE, fresh, 0, 0, 0, 0, 0, 0]),
+        [0; 8]
+    );
+    for slot in [0, 1] {
+        assert_eq!(lab.next(slot, epoch(slot as usize))[2], wire::GROUP_RETIRED);
+    }
+    assert_eq!(
+        capacity(lab, epoch(1), 4, 4),
+        [0, epoch(1), 4, 4, 0, 0, 0, 0]
+    );
 }

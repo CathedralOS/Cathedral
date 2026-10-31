@@ -1,0 +1,95 @@
+module input::capacity;
+// Capacity pressure on an already consumed sample is a stream interruption, not
+// adapter death or a parent grant violation: remember the sample's button or key
+// state, then interrupt the stream everywhere it was delivered, as with queue
+// overflow. Headroom tells an owner how many inherited names still fit beside
+// the local ones; the parent must acknowledge before that capacity is used.
+use protocol::main;
+use level::World;
+use names::Name;
+use input::pointer;
+use input::keys;
+use input::registration;
+
+public data Headroom [copy] {
+    case Free(channels: u64, groups: u64);
+    case Refused(code: u64);
+}
+// A device adapter has already consumed this sample and cannot retry it as an
+// app command.
+public machine sample(world: &mut World, channel: u64, kind: u64, x: u64, y: u64, value: u64) -> u64 {
+    let name: Name = names::local(channel);
+    let status: u64 = routed(world, name, kind, x, y, value);
+    transition status == NO_MEMORY {
+        true -> interrupted(world, name, kind, x, y, value)
+        _ -> (status)
+    }
+    machine interrupted(world: &mut World, name: Name, kind: u64, x: u64, y: u64, value: u64) -> u64 {
+        loss(world, name, kind, x, y, value);
+        0u64
+    }
+}
+machine routed(world: &mut World, name: Name, kind: u64, x: u64, y: u64, value: u64) -> u64 {
+    transition {
+        kind == POINTER -> (pointer::route(world, name, x, y, value, true))
+        kind == KEY && value == 0u64 -> (keys::route(world, name, x, y))
+        _ -> (INVALID_ARGUMENT)
+    }
+}
+// Remember the stream's new button or key state, then interrupt its delivery.
+public machine loss(world: &mut World, channel: Name, kind: u64, x: u64, y: u64, value: u64) {
+    let index: u64 = input::main::stream_of(&world.input, channel);
+    transition index < 4u64 {
+        true -> remembered(world, kind, x, y, value, index)
+        _ -> done()
+    }
+    machine remembered(world: &mut World, kind: u64, x: u64, y: u64, value: u64, index: u64) requires index < 4u64 {
+        transition {
+            kind == POINTER -> buttons(world, value, index)
+            kind == KEY && x >= 1u64 && x <= 64u64 -> keyed(world, 1u64 << (x - 1u64), y, index)
+            _ -> interrupted(world, index)
+        }
+    }
+    machine buttons(world: &mut World, value: u64, index: u64) requires index < 4u64 {
+        world.input.streams[index].buttons = value;
+        transition { _ -> interrupted(world, index) }
+    }
+    machine keyed(world: &mut World, bit: u64, state: u64, index: u64) requires index < 4u64 {
+        transition state == RELEASE {
+            true -> released(world, bit, index)
+            _ -> pressed(world, bit, index)
+        }
+    }
+    machine released(world: &mut World, bit: u64, index: u64) requires index < 4u64 {
+        world.input.streams[index].held = world.input.streams[index].held & ~bit;
+        transition { _ -> interrupted(world, index) }
+    }
+    machine pressed(world: &mut World, bit: u64, index: u64) requires index < 4u64 {
+        world.input.streams[index].held = world.input.streams[index].held | bit;
+        transition { _ -> interrupted(world, index) }
+    }
+    machine interrupted(world: &mut World, index: u64) requires index < 4u64 {
+        level::cancel_stream(world, index);
+    }
+}
+// Inherited names that still fit after the local ones and `additional` reserved ones.
+public machine headroom(world: &mut World, additional_channels: u64, additional_groups: u64) -> Headroom {
+    registration::reap(world);
+    let local_streams: u64 = input::main::streams_counted(&world.input, input::main::LOCAL);
+    let local_groups: u64 = input::main::groups_counted(&world.input, input::main::LOCAL);
+    transition additional_channels <= 4u64 && additional_groups <= 4u64 {
+        true -> bounded(local_streams, local_groups, additional_channels, additional_groups)
+        _ -> (Headroom::Refused { code: NO_MEMORY })
+    }
+    machine bounded(local_streams: u64, local_groups: u64, additional_channels: u64, additional_groups: u64) -> Headroom
+        requires additional_channels <= 4u64 && additional_groups <= 4u64 {
+        // Local counts are at most four, so these sums cannot wrap.
+        let used_streams: u64 = geometry::plus(local_streams, additional_channels);
+        let used_groups: u64 = geometry::plus(local_groups, additional_groups);
+        transition used_streams <= 4u64 && used_groups <= 4u64 {
+            true -> (Headroom::Free { channels: 4u64 - used_streams, groups: 4u64 - used_groups })
+            _ -> (Headroom::Refused { code: NO_MEMORY })
+        }
+    }
+}
+machine done() {}

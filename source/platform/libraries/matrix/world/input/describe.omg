@@ -1,0 +1,38 @@
+module input::describe;
+// Descriptions are fixed before delivery, scoped with the channel and retained
+// through cancellation. A source cannot rename another source or a live binding.
+use protocol::main;
+use level::World;
+use names::Name;
+use description::Description;
+
+// Three wire words for a stream: unknown is refused, a malformed label is
+// invalid, and a change after a recipient bound the name is BUSY.
+public machine from_words(world: &mut World, channel: Name, first: u64, second: u64, controls: u64) -> u64 {
+    transition {
+        first == 0u64 && second == 0u64 && controls == 0u64 -> (DENIED)
+        description::valid(first, second, controls) ->
+            (describe(world, channel, Description { first: first, second: second, controls: controls }))
+        _ -> (INVALID_ARGUMENT)
+    }
+}
+public machine describe(world: &mut World, channel: Name, described: Description) -> u64 {
+    let index: u64 = input::main::stream_of(&world.input, channel);
+    transition geometry::valid_grant(world.parent) && !description::is_unknown(described) && index < 4u64 {
+        true -> located(world, described, index)
+        _ -> (DENIED)
+    }
+    machine located(world: &mut World, described: Description, index: u64) -> u64 requires index < 4u64 {
+        let current: Description = world.input.streams[index].described;
+        transition {
+            world.input.streams[index].retiring -> (DENIED)
+            description::same(current, described) -> (0u64)
+            !description::is_unknown(current) || world.input.streams[index].describe_locked -> (BUSY)
+            _ -> stored(world, described, index)
+        }
+    }
+    machine stored(world: &mut World, described: Description, index: u64) -> u64 requires index < 4u64 {
+        world.input.streams[index].described = described;
+        0u64
+    }
+}

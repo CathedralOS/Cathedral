@@ -1,0 +1,88 @@
+module input::cursor;
+// Resolve one pointer's current presentation preference, independently of key
+// focus: the child under the pointer, or the captured child during a drag, chose
+// it through CURSOR_PREFERENCE. Owners read this for a cursor renderer and
+// translate inherited names when forwarding; children never see these names or
+// targets. Geometry changes re-evaluate it without new motion.
+use protocol::main;
+use level::World;
+use names::Name;
+
+public data Cursor [copy] {
+    channel: u64;
+    inherited: bool;
+    cycle: u64;
+    mode: u64;
+}
+public data Found [copy] {
+    case Nothing;
+    case Observed(seen: Cursor);
+}
+// Owner observation of routing slot `index`; replacement or cancellation
+// invalidates whatever a renderer cached for the previous cycle.
+public machine cursor(world: &World, index: u64) -> Found {
+    transition index < 4u64 {
+        true -> checked(world, index)
+        _ -> (Found::Nothing)
+    }
+    machine checked(world: &World, index: u64) -> Found requires index < 4u64 {
+        transition geometry::valid_grant(world.parent) && names::valid(world.input.streams[index].id)
+            && !world.input.streams[index].retiring && world.input.streams[index].cursor_cycle != 0u64
+            && world.input.streams[index].pointed {
+            true -> targeted(world, index, target(world, index))
+            _ -> (Found::Nothing)
+        }
+    }
+    machine targeted(world: &World, index: u64, target: u64) -> Found requires index < 4u64 {
+        transition target != 0u64 && target <= 4u64 {
+            true -> resolved(world, index, target - 1u64)
+            _ -> (found(world, index, CURSOR_DEFAULT))
+        }
+    }
+    machine resolved(world: &World, index: u64, slot: u64) -> Found requires index < 4u64 && slot < 4u64 {
+        transition world.children[slot].cursors[index] == children::HIDDEN_CURSOR {
+            true -> (found(world, index, CURSOR_HIDDEN))
+            _ -> (found(world, index, CURSOR_DEFAULT))
+        }
+    }
+}
+machine found(world: &World, index: u64, mode: u64) -> Found requires index < 4u64 {
+    let seen: Cursor = Cursor { channel: world.input.streams[index].id.value, inherited: world.input.streams[index].id.inherited,
+        cycle: world.input.streams[index].cursor_cycle, mode: mode };
+    Found::Observed { seen: seen }
+}
+// Slot plus one of the child this pointer currently addresses, or zero.
+machine target(world: &World, index: u64) -> u64 requires index < 4u64 {
+    transition {
+        world.input.streams[index].blocked -> (0u64)
+        world.input.streams[index].buttons != 0u64 -> captured(world, world.input.streams[index].capture)
+        _ -> (level::hit_pointer(world, world.input.streams[index].point_x, world.input.streams[index].point_y))
+    }
+    machine captured(world: &World, capture: u64) -> u64 {
+        transition capture != 0u64 && capture <= 4u64 {
+            true -> held(world, capture)
+            _ -> (0u64)
+        }
+    }
+    machine held(world: &World, capture: u64) -> u64 requires capture >= 1u64 && capture <= 4u64 {
+        transition geometry::valid_grant(world.children[capture - 1u64].grant) {
+            true -> (capture)
+            _ -> (0u64)
+        }
+    }
+}
+// Owner lookup for a cursor renderer paired with an admitted producer's ordinal.
+public machine producer_cursor(world: &World, slot: u64, ordinal: u64) -> Found {
+    transition slot < 4u64 && ordinal < 4u64 {
+        true -> granted(world, slot, ordinal)
+        _ -> (Found::Nothing)
+    }
+    machine granted(world: &World, slot: u64, ordinal: u64) -> Found requires slot < 4u64 && ordinal < 4u64 {
+        let name: Name = names::local(world.producers[slot].channels[ordinal]);
+        let index: u64 = input::main::stream_of(&world.input, name);
+        transition world.producers[slot].generation != 0u64 && ordinal < world.producers[slot].count {
+            true -> (cursor(world, index))
+            _ -> (Found::Nothing)
+        }
+    }
+}

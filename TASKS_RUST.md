@@ -9,6 +9,58 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
+### Omega World: the input model
+
+The Omega World now carries the Rust library's whole input model.
+`input/registration.omg` lets the owner register local groups and channels,
+inject on them, move a group's selection and retire them; a retired name stays
+charged until every recipient consumes its RETIRED boundary, a released group
+follows its last channel with GROUP_RETIRED, and no name is reused.
+`input/producer.omg` grants a connected child a quota of private channels in a
+private group, authenticated by connection and generation, with an optional
+focus right; the child names its channels by ordinal and may describe them
+before their first delivery. `description.omg` validates the bounded label
+words (controls, canonical padding, UTF-8, no control characters) and
+`input/describe.omg` fixes a description before any recipient binds the name.
+Children read their admitted bindings through INPUT_DIRECTORY at one revision
+per membership and INPUT_DESCRIPTION behind each row, set their own
+INPUT_CAPACITY ceiling, and choose a CURSOR_PREFERENCE for pointers delivered
+to them; `input/cursor.omg` resolves the cursor a stream currently presents for
+an owner's renderer, and `input/capacity.omg` turns capacity pressure on a
+consumed sample into a stream interruption and reports inherited headroom.
+Hit testing stacks by surface rank before slot, as the Rust library does, and
+upstream inheritance honours DESCRIBED, RETIRED and GROUP_RETIRED instead of
+dropping the grant.
+
+The guest proof drives all of it over real IPC: registered names, a press
+selecting one region and INPUT_SELECT moving the selection with the old
+target's keys cancelled, the directory and its revisions, retirement that
+leaves RETIRING rows until both recipients drain and refuses the group release
+until then, fresh names that never repeat, producer grants with INFO, DESCRIBE
+(identical repeats accepted, changes BUSY, malformed labels refused), pointer
+and key injection by ordinal, the focus right deciding whether a press selects,
+release and revocation retiring held channels with capacity returning only as
+the recipient drains, capacity limits refusing a delivery without touching
+state, and cursor preferences resolved through the proof-only owner word 906.
+Under a real parent it registers and describes a channel in the parent's World
+and watches it reach the leaf described, then retire and drain its group
+through the matrix one poll per event. The Rust comparison matrix never served
+these words, so the checks stay behind the fixtures' `omega-matrix` feature.
+
+Evidence in the main checkout with the saved standalone producer:
+
+- Omega matrix, top level: `build/boot-harness-rs/omega-matrix/20261031T170938560729Z/`.
+- Omega matrix under a real parent: `build/boot-harness-rs/omega-matrix-upstream/20261031T170953818351Z/`.
+- Rust comparison matrix: `build/boot-harness-rs/matrix-composition/20261031T171000981806Z/`.
+- Default F5 desktop and cold reopen after the contract additions: `build/boot-harness-rs/desktop/20261031T171234295273Z/`.
+- Layout (116 Omega / 153 Rust edges), process-tool tests, Rust formatting and
+  clippy for the lab crate in every feature combination pass. No native leaf,
+  kernel limit or runtime module changed in this step.
+
+Next: the layout controller and management grants, the last World features not
+yet ported. After that the stock matrix host can start moving onto the runtime
+and World slice by slice while F5 keeps working.
+
 ### Omega World: surfaces and frame demand
 
 The Omega World now carries the Rust library's surfaces and render demand for
@@ -57,10 +109,8 @@ Evidence in the main checkout with the saved standalone producer:
   clippy for the lab crate in every feature combination pass. No native leaf,
   kernel limit or runtime module changed in this step.
 
-Next: input producers and the input directory, then cursor preference and
-capacity limits, then registered streams and retirement, the layout controller
-and management grants. After that the stock matrix host can start moving onto
-the runtime and World slice by slice while F5 keeps working.
+The input model followed in the step recorded above; the layout controller and
+management grants remain.
 
 ### Omega World and the standalone independent matrix
 

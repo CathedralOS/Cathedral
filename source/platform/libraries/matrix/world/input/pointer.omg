@@ -1,11 +1,13 @@
 module input::pointer;
 // Per-stream hit testing, selection and drag capture. A press selects the
 // stream's group onto the child under it and captures that child until release;
-// coordinates delivered to a child are relative to its own placement.
+// coordinates delivered to a child are relative to its own placement. The first
+// delivery to a recipient fixes the stream's description.
 use protocol::main;
 use level::World;
 use names::Name;
 use children::Pushed;
+use description::Description;
 use input::main::Admitted;
 
 public machine route(world: &mut World, channel: Name, x: u64, y: u64, buttons: u64, select: bool) -> u64 {
@@ -20,10 +22,12 @@ public machine route(world: &mut World, channel: Name, x: u64, y: u64, buttons: 
             Admitted::Failed { code } -> (code)
         }
     }
-    // A stream blocked by an interrupted hold stays silent until its release.
+    // A stream whose cursor cycle is exhausted cannot be observed and refuses.
+    // One blocked by an interrupted hold stays silent until its release.
     machine stream(world: &mut World, channel: Name, x: u64, y: u64, buttons: u64, select: bool, index: u64 [0..=3]) -> u64 {
-        transition world.input.streams[index].blocked {
-            true -> blocked(world, buttons, index)
+        transition {
+            world.input.streams[index].cursor_cycle == 0u64 -> (NO_MEMORY)
+            world.input.streams[index].blocked -> blocked(world, buttons, index)
             _ -> clamped(world, channel, geometry::within(x, world.parent.width),
                 geometry::within(y, world.parent.height), buttons, select, index)
         }
@@ -53,9 +57,13 @@ public machine route(world: &mut World, channel: Name, x: u64, y: u64, buttons: 
         let group: u64 [0..=3] = world.input.streams[index].group;
         let code: u64 = children::can_push(&world.children[slot], index, group, world.input.groups[group].id);
         transition code == 0u64 {
-            true -> pressed(world, channel, x, y, buttons, select, index, hit, slot + 1u64)
+            true -> locked(world, channel, x, y, buttons, select, index, hit, slot + 1u64)
             _ -> (code)
         }
+    }
+    machine locked(world: &mut World, channel: Name, x: u64, y: u64, buttons: u64, select: bool, index: u64 [0..=3], hit: u64, target: u64) -> u64 {
+        world.input.streams[index].describe_locked = true;
+        transition { _ -> pressed(world, channel, x, y, buttons, select, index, hit, target) }
     }
     // A fresh press selects and captures; the hit may be nothing at all.
     machine pressed(world: &mut World, channel: Name, x: u64, y: u64, buttons: u64, select: bool, index: u64 [0..=3], hit: u64, target: u64) -> u64 {
@@ -81,6 +89,9 @@ public machine route(world: &mut World, channel: Name, x: u64, y: u64, buttons: 
     }
     machine moved(world: &mut World, channel: Name, x: u64, y: u64, buttons: u64, index: u64 [0..=3], target: u64) -> u64 {
         world.input.streams[index].buttons = buttons;
+        world.input.streams[index].pointed = true;
+        world.input.streams[index].point_x = x;
+        world.input.streams[index].point_y = y;
         transition target != 0u64 && target <= 4u64 {
             true -> delivering(world, channel, x, y, buttons, index, target - 1u64)
             _ -> released(world, buttons, index)
@@ -97,7 +108,8 @@ public machine route(world: &mut World, channel: Name, x: u64, y: u64, buttons: 
         let local_y: u64 = geometry::within(past(y, world.children[slot].rect.y), world.children[slot].grant.height);
         let group: u64 [0..=3] = world.input.streams[index].group;
         let group_name: Name = world.input.groups[group].id;
-        let pushed: Pushed = children::push(&mut world.children[slot], index, channel, group, group_name, POINTER, local_x, local_y, buttons);
+        let described: Description = world.input.streams[index].described;
+        let pushed: Pushed = children::push(&mut world.children[slot], index, channel, group, group_name, described, POINTER, local_x, local_y, buttons);
         transition pushed {
             Pushed::Delivered -> released(world, buttons, index)
             // This source may hold keys in another child; interrupt every recipient.

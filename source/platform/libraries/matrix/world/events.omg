@@ -4,9 +4,12 @@ module events;
 // CANCEL boundary and cannot disturb another stream. Entries keep their global
 // order number so a child can drain several streams in arrival order per group.
 // Each event packs into one word beside its order: kind in three bits, then
-// thirteen bits each of x and y (extents stay below 4096), then the value.
+// thirteen bits each of x and y (extents stay below 4096), then the value. A
+// described channel announces its description once, before its first event,
+// apart from queue pressure.
 use protocol::main;
 use names::Name;
+use description::Description;
 
 public const CAPACITY: u64 = 17u64;
 public data Queue {
@@ -16,6 +19,8 @@ public data Queue {
     source: Name;
     // Child-local group name.
     group: u64;
+    described: Description;
+    describe_pending: bool;
     entries: [u64; 17];
     orders: [u64; 17];
     len: u64 [0..=17];
@@ -97,12 +102,26 @@ machine boundary(queue: &mut Queue, kind: u64, order: u64) {
     queue.orders[0] = order;
     queue.len = 1u64;
 }
-// Deliver the oldest entry as a NEXT packet for the given view epoch. A drained
-// RETIRED boundary forgets the whole stream. An empty queue reports NONE.
+// Deliver the pending description, else the oldest entry, as a NEXT packet for
+// the given view epoch. A drained RETIRED boundary forgets the whole stream. An
+// empty queue reports NONE.
 public machine next(queue: &mut Queue, epoch: u64) -> [u64; 8] {
-    transition queue.len != 0u64 {
-        true -> popped(queue, epoch)
+    transition {
+        queue.describe_pending -> announced(queue, epoch)
+        queue.len != 0u64 -> popped(queue, epoch)
         _ -> (empty_packet(epoch))
+    }
+    machine announced(queue: &mut Queue, epoch: u64) -> [u64; 8] {
+        queue.describe_pending = false;
+        let mut packet: [u64; 8];
+        packet[1] = epoch;
+        packet[2] = DESCRIBED;
+        packet[3] = queue.described.first;
+        packet[4] = queue.described.second;
+        packet[5] = queue.described.controls;
+        packet[6] = queue.channel;
+        packet[7] = queue.group;
+        packet
     }
     machine popped(queue: &mut Queue, epoch: u64) -> [u64; 8] requires queue.len >= 1u64 {
         let entry: u64 = queue.entries[0];
@@ -127,6 +146,8 @@ public machine next(queue: &mut Queue, epoch: u64) -> [u64; 8] {
         queue.channel = empty.channel;
         queue.source = empty.source;
         queue.group = empty.group;
+        queue.described = empty.described;
+        queue.describe_pending = false;
         queue.len = 0u64;
         packet
     }

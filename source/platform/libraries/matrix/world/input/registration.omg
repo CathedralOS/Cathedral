@@ -1,0 +1,314 @@
+module input::registration;
+// Provider-side admission and retirement of local stream and group names. The
+// program authenticates its owner before entering here; numeric names are never
+// caller authority. A retired name stays charged until every recipient consumes
+// its boundary, and is never reused.
+use protocol::main;
+use level::World;
+use names::Name;
+use input::main::Stream;
+use input::main::Group;
+use input::main::Admitted;
+use input::pointer;
+use input::keys;
+use input::producer;
+
+public data Registered [copy] {
+    case Created(value: u64);
+    case Refused(code: u64);
+}
+// Owner words from INPUT_GROUP_CREATE to INPUT_SELECT. Creation replies with the
+// fresh local name; injection accepts only a registered, retained channel.
+public machine owner_command(world: &mut World, words: &[u64; 8]) -> [u64; 8] {
+    let injectable: bool = registered(world, words[1]);
+    transition {
+        words[0] == INPUT_GROUP_CREATE && geometry::zeros_from(words, 1u64) -> created(register_group(world))
+        words[0] == INPUT_CHANNEL_CREATE && words[1] <= 0xffffffffu64 && geometry::zeros_from(words, 2u64) ->
+            created(register_stream(world, words[1]))
+        words[0] == INPUT_GROUP_RELEASE && words[1] <= 0xffffffffu64 && geometry::zeros_from(words, 2u64) ->
+            (geometry::error(release_group(world, words[1])))
+        words[0] == INPUT_CHANNEL_RETIRE && words[1] <= 0xffffffffu64 && geometry::zeros_from(words, 2u64) ->
+            (geometry::error(retire_stream(world, words[1])))
+        words[0] == INPUT_SELECT && words[1] <= 0xffffffffu64 && words[2] <= world.slots && geometry::zeros_from(words, 3u64) ->
+            (geometry::error(select(world, words[1], words[2])))
+        words[0] == INPUT_POINTER && injectable && geometry::zeros_from(words, 5u64) ->
+            (geometry::error(pointer::route(world, names::local(words[1]), words[2], words[3], words[4], true)))
+        words[0] == INPUT_KEY && injectable && geometry::zeros_from(words, 4u64) ->
+            (geometry::error(keys::route(world, names::local(words[1]), words[2], words[3])))
+        _ -> (geometry::error(DENIED))
+    }
+    machine created(result: Registered) -> [u64; 8] {
+        transition result {
+            Registered::Created { value } -> (named(value))
+            Registered::Refused { code } -> (geometry::error(code))
+        }
+    }
+}
+machine named(value: u64) -> [u64; 8] {
+    let mut words: [u64; 8];
+    words[1] = value;
+    words
+}
+// A live local channel whose group is retained by this owner.
+machine registered(world: &World, id: u64) -> bool {
+    let index: u64 = input::main::stream_of(&world.input, names::local(id));
+    transition id != 0u64 && id <= 0xffffffffu64 && index < 4u64 {
+        true -> live(world, index)
+        _ -> (false)
+    }
+    machine live(world: &World, index: u64) -> bool requires index < 4u64 {
+        let group: u64 [0..=3] = world.input.streams[index].group;
+        !world.input.streams[index].retiring && world.input.groups[group].retained
+    }
+}
+// A fresh local group that this owner retains until it releases it.
+public machine register_group(world: &mut World) -> Registered {
+    transition geometry::valid_grant(world.parent) {
+        true -> reaped(world)
+        _ -> (Registered::Refused { code: DENIED })
+    }
+    machine reaped(world: &mut World) -> Registered {
+        reap(world);
+        let last: u64 = world.input.last_local_group;
+        let free: u64 = input::main::free_group_slot(&world.input);
+        transition last < 0xffffffffu64 && free < 4u64 {
+            true -> allocated(world, last + 1u64, free)
+            _ -> (Registered::Refused { code: NO_MEMORY })
+        }
+    }
+    machine allocated(world: &mut World, id: u64, free: u64) -> Registered requires free < 4u64 {
+        let mut group: Group;
+        group.id = names::local(id);
+        group.retained = true;
+        world.input.groups[free] = group;
+        world.input.last_local_group = id;
+        Registered::Created { value: id }
+    }
+}
+// A fresh local stream in a retained group.
+public machine register_stream(world: &mut World, group: u64) -> Registered {
+    transition geometry::valid_grant(world.parent) {
+        true -> reaped(world, group)
+        _ -> (Registered::Refused { code: DENIED })
+    }
+    machine reaped(world: &mut World, group: u64) -> Registered {
+        reap(world);
+        let index: u64 = input::main::group_of(&world.input, names::local(group));
+        transition index < 4u64 {
+            true -> held(world, group, index)
+            _ -> (Registered::Refused { code: DENIED })
+        }
+    }
+    machine held(world: &mut World, group: u64, index: u64) -> Registered requires index < 4u64 {
+        let last: u64 = world.input.last_local_stream;
+        transition {
+            !world.input.groups[index].retained || world.input.groups[index].retiring -> (Registered::Refused { code: DENIED })
+            last >= 0xffffffffu64 -> (Registered::Refused { code: NO_MEMORY })
+            _ -> bound(world, group, last + 1u64)
+        }
+    }
+    machine bound(world: &mut World, group: u64, id: u64) -> Registered {
+        let admitted: Admitted = input::main::bind(&mut world.input, names::local(id), names::local(group));
+        transition admitted {
+            Admitted::Slot { index } -> (Registered::Created { value: id })
+            Admitted::Failed { code } -> (Registered::Refused { code: code })
+        }
+    }
+}
+public machine release_group(world: &mut World, id: u64) -> u64 { retire_group_named(world, names::local(id)) }
+// A retained group ends once no stream routes through it; recipients then
+// receive GROUP_RETIRED after their channel boundaries.
+public machine retire_group_named(world: &mut World, id: Name) -> u64 {
+    transition geometry::valid_grant(world.parent) {
+        true -> reaped(world, id)
+        _ -> (DENIED)
+    }
+    machine reaped(world: &mut World, id: Name) -> u64 {
+        reap(world);
+        let index: u64 = input::main::group_of(&world.input, id);
+        transition index < 4u64 {
+            true -> found(world, id, index)
+            _ -> (DENIED)
+        }
+    }
+    machine found(world: &mut World, id: Name, index: u64) -> u64 requires index < 4u64 {
+        let in_use: bool = input::main::group_in_use(&world.input, index);
+        transition {
+            !world.input.groups[index].retained -> (DENIED)
+            in_use -> (BUSY)
+            _ -> ending(world, id, index)
+        }
+    }
+    machine ending(world: &mut World, id: Name, index: u64) -> u64 requires index < 4u64 {
+        world.input.groups[index].retiring = true;
+        retire_group_in_children(world, index, id, 0u64);
+        reap(world);
+        0u64
+    }
+}
+public machine retire_stream(world: &mut World, id: u64) -> u64 { retire_named(world, names::local(id)) }
+public machine retire_named(world: &mut World, id: Name) -> u64 {
+    let index: u64 = input::main::stream_of(&world.input, id);
+    transition geometry::valid_grant(world.parent) && names::valid(id) && index < 4u64 {
+        true -> found(world, id, index)
+        _ -> (DENIED)
+    }
+    machine found(world: &mut World, id: Name, index: u64) -> u64 requires index < 4u64 {
+        transition world.input.streams[index].retiring {
+            true -> (0u64)
+            _ -> ending(world, id, index)
+        }
+    }
+    machine ending(world: &mut World, id: Name, index: u64) -> u64 requires index < 4u64 {
+        retire_index(world, index, id);
+        reap(world);
+        0u64
+    }
+}
+// Stop accepting on the stream and give every recipient its RETIRED boundary.
+public machine retire_index(world: &mut World, index: u64 [0..=3], id: Name) {
+    world.input.streams[index].retiring = true;
+    input::main::cancel(&mut world.input.streams[index]);
+    retire_in_children(world, index, id, 0u64);
+}
+machine retire_in_children(world: &mut World, index: u64 [0..=3], id: Name, slot: u64) requires slot <= 4u64 {
+    transition slot < 4u64 {
+        true -> retired_in(world, index, id, slot)
+        _ -> done()
+    }
+    machine retired_in(world: &mut World, index: u64 [0..=3], id: Name, slot: u64) requires slot < 4u64 {
+        children::retire_stream(&mut world.children[slot], index, id);
+        transition { _ -> retire_in_children(world, index, id, slot + 1u64) }
+    }
+}
+machine retire_group_in_children(world: &mut World, index: u64 [0..=3], id: Name, slot: u64) requires slot <= 4u64 {
+    transition slot < 4u64 {
+        true -> retired_in(world, index, id, slot)
+        _ -> done()
+    }
+    machine retired_in(world: &mut World, index: u64 [0..=3], id: Name, slot: u64) requires slot < 4u64 {
+        children::retire_input_group(&mut world.children[slot], index, id);
+        transition { _ -> retire_group_in_children(world, index, id, slot + 1u64) }
+    }
+}
+// Release what no recipient holds any more: dead producer grants, drained
+// retiring streams, groups without streams that nobody retains, drained groups.
+public machine reap(world: &mut World) {
+    producer::reap(world);
+    reap_streams(world, 0u64);
+    reap_groups(world, 0u64);
+}
+machine reap_streams(world: &mut World, index: u64) requires index <= 4u64 {
+    transition index < 4u64 {
+        true -> checked(world, index)
+        _ -> done()
+    }
+    machine checked(world: &mut World, index: u64) requires index < 4u64 {
+        let id: Name = world.input.streams[index].id;
+        let retained: bool = stream_retained(world, index, id, 0u64);
+        transition world.input.streams[index].retiring && !retained {
+            true -> emptied(world, index)
+            _ -> reap_streams(world, index + 1u64)
+        }
+    }
+    machine emptied(world: &mut World, index: u64) requires index < 4u64 {
+        let empty: Stream;
+        world.input.streams[index] = empty;
+        transition { _ -> reap_streams(world, index + 1u64) }
+    }
+}
+machine stream_retained(world: &World, index: u64 [0..=3], id: Name, slot: u64) -> bool requires slot <= 4u64 {
+    transition slot < 4u64 {
+        true -> checked(world, index, id, slot)
+        _ -> (false)
+    }
+    machine checked(world: &World, index: u64 [0..=3], id: Name, slot: u64) -> bool requires slot < 4u64 {
+        transition children::retains_input(&world.children[slot], index, id) {
+            true -> (true)
+            _ -> stream_retained(world, index, id, slot + 1u64)
+        }
+    }
+}
+machine reap_groups(world: &mut World, index: u64) requires index <= 4u64 {
+    transition index < 4u64 {
+        true -> checked(world, index)
+        _ -> done()
+    }
+    machine checked(world: &mut World, index: u64) requires index < 4u64 {
+        let id: Name = world.input.groups[index].id;
+        let in_use: bool = input::main::group_in_use(&world.input, index);
+        transition names::valid(id) && !world.input.groups[index].retained && !world.input.groups[index].retiring && !in_use {
+            true -> ending(world, index, id)
+            _ -> drained(world, index, id)
+        }
+    }
+    // An unretained group ends with its last stream.
+    machine ending(world: &mut World, index: u64, id: Name) requires index < 4u64 {
+        world.input.groups[index].retiring = true;
+        retire_group_in_children(world, index, id, 0u64);
+        transition { _ -> drained(world, index, id) }
+    }
+    machine drained(world: &mut World, index: u64, id: Name) requires index < 4u64 {
+        let retained: bool = group_retained(world, index, id, 0u64);
+        transition world.input.groups[index].retiring && !retained {
+            true -> emptied(world, index)
+            _ -> reap_groups(world, index + 1u64)
+        }
+    }
+    machine emptied(world: &mut World, index: u64) requires index < 4u64 {
+        let empty: Group;
+        world.input.groups[index] = empty;
+        transition { _ -> reap_groups(world, index + 1u64) }
+    }
+}
+machine group_retained(world: &World, index: u64 [0..=3], id: Name, slot: u64) -> bool requires slot <= 4u64 {
+    transition slot < 4u64 {
+        true -> checked(world, index, id, slot)
+        _ -> (false)
+    }
+    machine checked(world: &World, index: u64 [0..=3], id: Name, slot: u64) -> bool requires slot < 4u64 {
+        transition children::retains_input_group(&world.children[slot], index, id) {
+            true -> (true)
+            _ -> group_retained(world, index, id, slot + 1u64)
+        }
+    }
+}
+// Before taking another upstream snapshot, let recipients drain their boundaries
+// so a replacement channel cannot arrive while an old binding still holds its slot.
+public machine ready(world: &mut World) -> bool {
+    reap(world);
+    !any_retiring(&world.input, 0u64)
+}
+machine any_retiring(input: &input::main::Input, index: u64) -> bool requires index <= 4u64 {
+    transition index < 4u64 {
+        true -> checked(input, index)
+        _ -> (false)
+    }
+    machine checked(input: &input::main::Input, index: u64) -> bool requires index < 4u64 {
+        transition input.streams[index].retiring || input.groups[index].retiring {
+            true -> (true)
+            _ -> any_retiring(input, index + 1u64)
+        }
+    }
+}
+// Move a local group's keyboard selection to child `target` (slot plus one; zero clears).
+public machine select(world: &mut World, id: u64, target: u64) -> u64 {
+    let index: u64 = input::main::group_of(&world.input, names::local(id));
+    transition geometry::valid_grant(world.parent) && id != 0u64 && index < 4u64 && target <= 4u64 {
+        true -> found(world, index, target)
+        _ -> (DENIED)
+    }
+    machine found(world: &mut World, index: u64, target: u64) -> u64 requires index < 4u64 && target <= 4u64 {
+        transition {
+            world.input.groups[index].retiring -> (DENIED)
+            target == 0u64 -> selected(world, index, target)
+            geometry::valid_grant(world.children[target - 1u64].grant) -> selected(world, index, target)
+            _ -> (DENIED)
+        }
+    }
+    machine selected(world: &mut World, index: u64, target: u64) -> u64 requires index < 4u64 {
+        level::select_group(world, index, target);
+        0u64
+    }
+}
+machine done() {}

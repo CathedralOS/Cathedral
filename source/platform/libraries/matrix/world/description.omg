@@ -1,0 +1,129 @@
+module description;
+// Bounded virtual-input hints: advisory control categories and a short label,
+// carried as three wire words. Labels are display text, never identity or
+// authority. Unknown, all zero, stays distinct from an empty device. A
+// description is fixed for the life of its channel; replace the channel to
+// change it. Wire owner: source-rs/platform/contracts/input/description.rs.
+use protocol::main;
+
+public data Description [copy] {
+    // Sixteen label bytes as two little-endian words, zero padded.
+    first: u64;
+    second: u64;
+    controls: u64;
+}
+public machine unknown() -> Description { let described: Description; described }
+public machine is_unknown(described: Description) -> bool {
+    described.first == 0u64 && described.second == 0u64 && described.controls == 0u64
+}
+public machine same(a: Description, b: Description) -> bool {
+    a.first == b.first && a.second == b.second && a.controls == b.controls
+}
+// A description other than unknown: controls within the vocabulary and a
+// label that is non-empty, canonically padded, UTF-8 and free of control
+// characters. Nothing else about the label is interpreted.
+public machine valid(first: u64, second: u64, controls: u64) -> bool {
+    let length: u64 = label_length(first, second, 0u64);
+    transition controls >= 1u64 && controls <= 3u64 && length > 0u64 && length <= 16u64 {
+        true -> (padded(first, second, length) && text(first, second, 0u64, length))
+        _ -> (false)
+    }
+}
+machine byte(first: u64, second: u64, index: u64) -> u64 {
+    transition {
+        index == 0u64 -> (first & 0xffu64)
+        index == 1u64 -> ((first >> 8u64) & 0xffu64)
+        index == 2u64 -> ((first >> 16u64) & 0xffu64)
+        index == 3u64 -> ((first >> 24u64) & 0xffu64)
+        index == 4u64 -> ((first >> 32u64) & 0xffu64)
+        index == 5u64 -> ((first >> 40u64) & 0xffu64)
+        index == 6u64 -> ((first >> 48u64) & 0xffu64)
+        index == 7u64 -> ((first >> 56u64) & 0xffu64)
+        index == 8u64 -> (second & 0xffu64)
+        index == 9u64 -> ((second >> 8u64) & 0xffu64)
+        index == 10u64 -> ((second >> 16u64) & 0xffu64)
+        index == 11u64 -> ((second >> 24u64) & 0xffu64)
+        index == 12u64 -> ((second >> 32u64) & 0xffu64)
+        index == 13u64 -> ((second >> 40u64) & 0xffu64)
+        index == 14u64 -> ((second >> 48u64) & 0xffu64)
+        index == 15u64 -> ((second >> 56u64) & 0xffu64)
+        _ -> (0u64)
+    }
+}
+// Bytes before the first zero.
+machine label_length(first: u64, second: u64, index: u64) -> u64 requires index <= 16u64 {
+    transition index < 16u64 && byte(first, second, index) != 0u64 {
+        true -> label_length(first, second, index + 1u64)
+        _ -> (index)
+    }
+}
+// Every byte from `index` on is zero.
+machine padded(first: u64, second: u64, index: u64) -> bool requires index <= 16u64 {
+    transition index < 16u64 {
+        true -> checked(first, second, index)
+        _ -> (true)
+    }
+    machine checked(first: u64, second: u64, index: u64) -> bool requires index < 16u64 {
+        transition byte(first, second, index) == 0u64 {
+            true -> padded(first, second, index + 1u64)
+            _ -> (false)
+        }
+    }
+}
+// Well-formed UTF-8 without control characters over the first `length` bytes.
+machine text(first: u64, second: u64, index: u64, length: u64) -> bool requires index <= 16u64 && length <= 16u64 {
+    transition index < length && index < 16u64 {
+        true -> lead(first, second, index, length, byte(first, second, index))
+        _ -> (true)
+    }
+    machine lead(first: u64, second: u64, index: u64, length: u64, b: u64) -> bool requires index < 16u64 && length <= 16u64 {
+        transition {
+            b < 0x20u64 || b == 0x7fu64 -> (false)
+            b < 0x80u64 -> text(first, second, index + 1u64, length)
+            b >= 0xc2u64 && b <= 0xdfu64 -> second_byte(first, second, index, length, b, 0x80u64, 0xbfu64, 0u64)
+            b == 0xe0u64 -> second_byte(first, second, index, length, b, 0xa0u64, 0xbfu64, 1u64)
+            b == 0xedu64 -> second_byte(first, second, index, length, b, 0x80u64, 0x9fu64, 1u64)
+            b >= 0xe1u64 && b <= 0xefu64 -> second_byte(first, second, index, length, b, 0x80u64, 0xbfu64, 1u64)
+            b == 0xf0u64 -> second_byte(first, second, index, length, b, 0x90u64, 0xbfu64, 2u64)
+            b >= 0xf1u64 && b <= 0xf3u64 -> second_byte(first, second, index, length, b, 0x80u64, 0xbfu64, 2u64)
+            b == 0xf4u64 -> second_byte(first, second, index, length, b, 0x80u64, 0x8fu64, 2u64)
+            _ -> (false)
+        }
+    }
+    // The second byte must fall in the lead's range; C2 80 to C2 9F are controls.
+    machine second_byte(first: u64, second: u64, index: u64, length: u64, b: u64, low: u64, high: u64, remaining: u64) -> bool
+        requires index < 16u64 && length <= 16u64 {
+        transition index + 1u64 < length {
+            true -> second_checked(first, second, index, length, b, low, high, remaining, byte(first, second, index + 1u64))
+            _ -> (false)
+        }
+    }
+    machine second_checked(first: u64, second: u64, index: u64, length: u64, b: u64, low: u64, high: u64, remaining: u64, next: u64) -> bool
+        requires index < 16u64 && length <= 16u64 {
+        transition next >= low && next <= high && !(b == 0xc2u64 && next <= 0x9fu64) {
+            true -> rest(first, second, index + 2u64, length, remaining)
+            _ -> (false)
+        }
+    }
+    // Remaining continuation bytes, each 80 to BF, then the next character.
+    machine rest(first: u64, second: u64, index: u64, length: u64, remaining: u64) -> bool requires length <= 16u64 {
+        transition {
+            remaining == 0u64 -> resumed(first, second, index, length)
+            remaining >= 1u64 && index < length && index < 16u64 -> continuation(first, second, index, length, remaining, byte(first, second, index))
+            _ -> (false)
+        }
+    }
+    machine continuation(first: u64, second: u64, index: u64, length: u64, remaining: u64, next: u64) -> bool
+        requires index < 16u64 && length <= 16u64 && remaining >= 1u64 {
+        transition next >= 0x80u64 && next <= 0xbfu64 {
+            true -> rest(first, second, index + 1u64, length, remaining - 1u64)
+            _ -> (false)
+        }
+    }
+    machine resumed(first: u64, second: u64, index: u64, length: u64) -> bool requires length <= 16u64 {
+        transition index <= 16u64 {
+            true -> text(first, second, index, length)
+            _ -> (false)
+        }
+    }
+}

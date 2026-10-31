@@ -1,17 +1,23 @@
 module children;
-// One child's local view: its placement, the grant derived from it, and the
-// input queued for it. Only this child's own extent or keys advance its epoch;
-// sibling changes never do. Child-local channel and group names reveal neither
-// ancestor names nor sibling traffic.
+// One child's local view: its placement, the grant derived from it, the input
+// queued for it and what it may observe about that input. Only this child's own
+// extent or keys advance its epoch; sibling changes never do. Child-local
+// channel and group names reveal neither ancestor names nor sibling traffic,
+// and the directory lists only names already routed into this view.
 use protocol::main;
 use names::Name;
 use geometry::Grant;
 use geometry::Rect;
 use events::Queue;
 use surfaces::Surface;
+use description::Description;
 
 public const STREAMS: u64 = 4u64;
 public const GROUPS: u64 = 4u64;
+// Cursor preference per routing slot: none until a pointer arrives, then default or hidden.
+public const NO_CURSOR: u64 = 0u64;
+public const DEFAULT_CURSOR: u64 = 1u64;
+public const HIDDEN_CURSOR: u64 = 2u64;
 public data Child {
     placed: bool;
     rect: Rect;
@@ -36,9 +42,18 @@ public data Child {
     next_input_name: u64;
     group_names: [u64; 4];
     group_sources: [Name; 4];
+    // A group whose retirement boundary this child has yet to consume.
+    group_retired: [bool; 4];
     next_group_name: u64;
     next_event: u64;
     group_last_event: [u64; 4];
+    cursors: [u64; 4];
+    // Membership revision behind directory snapshots; zero once exhausted.
+    directory_revision: u64;
+    // Connection-local ceilings on live bindings; unlimited until the child sets them.
+    input_limited: bool;
+    channel_limit: u64 [0..=4];
+    group_limit: u64 [0..=4];
 }
 public data Pushed [copy] {
     case Delivered;
@@ -48,7 +63,8 @@ public data Pushed [copy] {
 
 // Recompute the grant from the placement and the parent. An unchanged extent and
 // key set keeps the epoch unless forced; any change starts a fresh epoch and
-// discards queued input, bindings and names.
+// discards queued input, bindings, names and the directory. Capacity limits
+// belong to the connection and survive.
 public machine refresh(child: &mut Child, parent: Grant, force: bool) {
     let clipped: Grant = clipped(child, parent);
     transition !force && clipped.width == child.grant.width && clipped.height == child.grant.height
@@ -60,8 +76,10 @@ public machine refresh(child: &mut Child, parent: Grant, force: bool) {
         child.frame_ticket = 0u64;
         child.frame_ready = false;
         clear_queues(child, 0u64);
+        clear_cursors(child, 0u64);
         child.next_stream = 0u64;
         child.next_input_name = 0u64;
+        child.directory_revision = 1u64;
         clear_groups(child, 0u64);
         child.next_group_name = 0u64;
         child.next_event = 0u64;
@@ -94,6 +112,16 @@ machine clear_queues(child: &mut Child, index: u64) requires index <= 4u64 {
         transition { _ -> clear_queues(child, index + 1u64) }
     }
 }
+machine clear_cursors(child: &mut Child, index: u64) requires index <= 4u64 {
+    transition index < 4u64 {
+        true -> cleared(child, index)
+        _ -> done()
+    }
+    machine cleared(child: &mut Child, index: u64) requires index < 4u64 {
+        child.cursors[index] = NO_CURSOR;
+        transition { _ -> clear_cursors(child, index + 1u64) }
+    }
+}
 machine clear_groups(child: &mut Child, index: u64) requires index <= 4u64 {
     transition index < 4u64 {
         true -> cleared(child, index)
@@ -102,6 +130,7 @@ machine clear_groups(child: &mut Child, index: u64) requires index <= 4u64 {
     machine cleared(child: &mut Child, index: u64) requires index < 4u64 {
         child.group_names[index] = 0u64;
         child.group_sources[index] = names::empty();
+        child.group_retired[index] = false;
         child.group_last_event[index] = 0u64;
         transition { _ -> clear_groups(child, index + 1u64) }
     }
@@ -120,6 +149,12 @@ public machine view(child: &Child) -> [u64; 8] {
         words
     }
 }
+public machine channel_capacity(child: &Child) -> u64 {
+    transition child.input_limited { true -> (child.channel_limit) _ -> (STREAMS) }
+}
+public machine group_capacity(child: &Child) -> u64 {
+    transition child.input_limited { true -> (child.group_limit) _ -> (GROUPS) }
+}
 // Preflight before routing changes focus, capture or held state. Bound names
 // still consume capacity while their queues are empty.
 public machine can_push(child: &Child, index: u64 [0..=3], group: u64 [0..=3], name: Name) -> u64 {
@@ -128,17 +163,33 @@ public machine can_push(child: &Child, index: u64 [0..=3], group: u64 [0..=3], n
         _ -> channels(child, group, name)
     }
     machine channels(child: &Child, group: u64 [0..=3], name: Name) -> u64 {
-        transition bound_queues(child, 0u64, 0u64) >= STREAMS || child.next_input_name >= 0xffffffffu64 {
+        transition bound_queues(child, 0u64, 0u64) >= channel_capacity(child) || child.next_input_name >= 0xffffffffu64 {
             true -> (NO_MEMORY)
             _ -> groups(child, group, name)
         }
     }
     machine groups(child: &Child, group: u64 [0..=3], name: Name) -> u64 {
         transition !names::same(child.group_sources[group], name)
-            && (bound_groups(child, 0u64, 0u64) >= GROUPS || child.next_group_name >= 0x7fffu64) {
+            && (bound_groups(child, 0u64, 0u64) >= group_capacity(child) || child.next_group_name >= 0x7fffu64) {
             true -> (NO_MEMORY)
             _ -> (0u64)
         }
+    }
+}
+// The connection's own ceiling on live bindings. BUSY keeps the old limits while
+// retained names, including unread retirement boundaries, exceed the request.
+public machine limit_input(child: &mut Child, channels: u64, groups: u64) -> u64 requires channels <= 4u64 && groups <= 4u64 {
+    let queues: u64 = bound_queues(child, 0u64, 0u64);
+    let bound: u64 = bound_groups(child, 0u64, 0u64);
+    transition queues > channels || bound > groups {
+        true -> (BUSY)
+        _ -> limited(child, channels, groups)
+    }
+    machine limited(child: &mut Child, channels: u64, groups: u64) -> u64 requires channels <= 4u64 && groups <= 4u64 {
+        child.input_limited = true;
+        child.channel_limit = channels;
+        child.group_limit = groups;
+        0u64
     }
 }
 machine bound_queues(child: &Child, index: u64, count: u64) -> u64 requires index <= 4u64 && count <= index {
@@ -166,18 +217,19 @@ machine bound_groups(child: &Child, index: u64, count: u64) -> u64 requires inde
     }
 }
 // Queue one event on the world stream `index` for this child, binding the stream
-// to fresh child-local names on first delivery. An invalid grant swallows input.
+// to fresh child-local names on first delivery. A new binding carries the
+// stream's description and changes the directory. An invalid grant swallows input.
 public machine push(child: &mut Child, index: u64 [0..=3], channel: Name, group: u64 [0..=3], group_name: Name,
-    kind: u64, x: u64, y: u64, value: u64) -> Pushed {
+    described: Description, kind: u64, x: u64, y: u64, value: u64) -> Pushed {
     transition geometry::valid_grant(child.grant) {
-        true -> checked(child, index, channel, group, group_name, kind, x, y, value)
+        true -> checked(child, index, channel, group, group_name, described, kind, x, y, value)
         _ -> (Pushed::Delivered)
     }
     machine checked(child: &mut Child, index: u64 [0..=3], channel: Name, group: u64 [0..=3], group_name: Name,
-        kind: u64, x: u64, y: u64, value: u64) -> Pushed {
+        described: Description, kind: u64, x: u64, y: u64, value: u64) -> Pushed {
         let code: u64 = can_push(child, index, group, group_name);
         transition code == 0u64 && child.next_event < 0xffffffffffffffffu64 {
-            true -> counted(child, index, channel, group, group_name, kind, x, y, value)
+            true -> counted(child, index, channel, group, group_name, described, kind, x, y, value)
             _ -> refused(code)
         }
     }
@@ -185,59 +237,73 @@ public machine push(child: &mut Child, index: u64 [0..=3], channel: Name, group:
         transition code == 0u64 { true -> (Pushed::Refused { code: NO_MEMORY }) _ -> (Pushed::Refused { code: code }) }
     }
     machine counted(child: &mut Child, index: u64 [0..=3], channel: Name, group: u64 [0..=3], group_name: Name,
-        kind: u64, x: u64, y: u64, value: u64) -> Pushed requires child.next_event < 0xffffffffffffffffu64 {
+        described: Description, kind: u64, x: u64, y: u64, value: u64) -> Pushed requires child.next_event < 0xffffffffffffffffu64 {
         child.notify = true;
         child.next_event = child.next_event + 1u64;
         transition names::valid(child.queues[index].source) {
-            true -> deliver(child, index, group, kind, x, y, value)
-            _ -> create(child, index, channel, group, group_name, kind, x, y, value)
+            true -> (deliver(child, index, group, kind, x, y, value))
+            _ -> create(child, index, channel, group, group_name, described, kind, x, y, value)
         }
     }
     machine create(child: &mut Child, index: u64 [0..=3], channel: Name, group: u64 [0..=3], group_name: Name,
-        kind: u64, x: u64, y: u64, value: u64) -> Pushed {
+        described: Description, kind: u64, x: u64, y: u64, value: u64) -> Pushed {
         transition child.next_input_name < 0xffffffffu64 {
-            true -> grouped(child, index, channel, group, group_name, kind, x, y, value)
+            true -> grouped(child, index, channel, group, group_name, described, kind, x, y, value)
             _ -> (Pushed::Refused { code: NO_MEMORY })
         }
     }
     machine grouped(child: &mut Child, index: u64 [0..=3], channel: Name, group: u64 [0..=3], group_name: Name,
-        kind: u64, x: u64, y: u64, value: u64) -> Pushed requires child.next_input_name < 0xffffffffu64 {
+        described: Description, kind: u64, x: u64, y: u64, value: u64) -> Pushed requires child.next_input_name < 0xffffffffu64 {
         transition names::same(child.group_sources[group], group_name) {
-            true -> named(child, index, channel, group, kind, x, y, value)
-            _ -> group_named(child, index, channel, group, group_name, kind, x, y, value)
+            true -> named(child, index, channel, group, described, kind, x, y, value)
+            _ -> group_named(child, index, channel, group, group_name, described, kind, x, y, value)
         }
     }
     machine group_named(child: &mut Child, index: u64 [0..=3], channel: Name, group: u64 [0..=3], group_name: Name,
-        kind: u64, x: u64, y: u64, value: u64) -> Pushed requires child.next_input_name < 0xffffffffu64 {
+        described: Description, kind: u64, x: u64, y: u64, value: u64) -> Pushed requires child.next_input_name < 0xffffffffu64 {
         transition child.next_group_name < 0x7fffu64 {
-            true -> group_bound(child, index, channel, group, group_name, kind, x, y, value)
+            true -> group_bound(child, index, channel, group, group_name, described, kind, x, y, value)
             _ -> (Pushed::Refused { code: NO_MEMORY })
         }
     }
     machine group_bound(child: &mut Child, index: u64 [0..=3], channel: Name, group: u64 [0..=3], group_name: Name,
-        kind: u64, x: u64, y: u64, value: u64) -> Pushed requires child.next_input_name < 0xffffffffu64 && child.next_group_name < 0x7fffu64 {
+        described: Description, kind: u64, x: u64, y: u64, value: u64) -> Pushed
+        requires child.next_input_name < 0xffffffffu64 && child.next_group_name < 0x7fffu64 {
         child.next_group_name = child.next_group_name + 1u64;
         child.group_names[group] = child.next_group_name;
         child.group_sources[group] = group_name;
-        transition { _ -> named(child, index, channel, group, kind, x, y, value) }
+        transition { _ -> named(child, index, channel, group, described, kind, x, y, value) }
     }
     machine named(child: &mut Child, index: u64 [0..=3], channel: Name, group: u64 [0..=3],
-        kind: u64, x: u64, y: u64, value: u64) -> Pushed requires child.next_input_name < 0xffffffffu64 {
+        described: Description, kind: u64, x: u64, y: u64, value: u64) -> Pushed requires child.next_input_name < 0xffffffffu64 {
         child.next_input_name = child.next_input_name + 1u64;
         child.queues[index].channel = child.next_input_name;
         child.queues[index].source = channel;
         child.queues[index].group = child.group_names[group];
-        transition { _ -> deliver(child, index, group, kind, x, y, value) }
+        child.queues[index].described = described;
+        child.queues[index].describe_pending = !description::is_unknown(described);
+        let pushed: Pushed = deliver(child, index, group, kind, x, y, value);
+        directory_changed(child);
+        pushed
     }
-    // Consecutive motion from one group coalesces; an intervening event from
-    // another stream of the same group keeps both positions.
-    machine deliver(child: &mut Child, index: u64 [0..=3], group: u64 [0..=3], kind: u64, x: u64, y: u64, value: u64) -> Pushed {
-        let last: u64 = events::last_order(&child.queues[index]);
-        let coalesce: bool = last != 0u64 && last == child.group_last_event[group];
-        child.group_last_event[group] = child.next_event;
-        let delivered: bool = events::push(&mut child.queues[index], kind, x, y, value, child.next_event, coalesce);
-        transition delivered { true -> (Pushed::Delivered) _ -> (Pushed::Dropped) }
+}
+// Consecutive motion from one group coalesces; an intervening event from another
+// stream of the same group keeps both positions. A pointer's first arrival
+// opens its cursor preference.
+machine deliver(child: &mut Child, index: u64 [0..=3], group: u64 [0..=3], kind: u64, x: u64, y: u64, value: u64) -> Pushed {
+    let last: u64 = events::last_order(&child.queues[index]);
+    let coalesce: bool = last != 0u64 && last == child.group_last_event[group];
+    child.group_last_event[group] = child.next_event;
+    cursor_seen(child, index, kind);
+    let delivered: bool = events::push(&mut child.queues[index], kind, x, y, value, child.next_event, coalesce);
+    transition delivered { true -> (Pushed::Delivered) _ -> (Pushed::Dropped) }
+}
+machine cursor_seen(child: &mut Child, index: u64 [0..=3], kind: u64) {
+    transition kind == POINTER && child.cursors[index] == NO_CURSOR {
+        true -> defaulted(child, index)
+        _ -> done()
     }
+    machine defaulted(child: &mut Child, index: u64 [0..=3]) { child.cursors[index] = DEFAULT_CURSOR; }
 }
 // The supplying stream was interrupted: collapse its queue to one boundary.
 // Cancellation is an ordering barrier for every group.
@@ -247,10 +313,54 @@ public machine cancel_stream(child: &mut Child, index: u64 [0..=3], channel: Nam
         _ -> done()
     }
     machine cancelled(child: &mut Child, index: u64 [0..=3]) requires child.next_event < 0xffffffffffffffffu64 {
+        child.cursors[index] = NO_CURSOR;
         child.next_event = child.next_event + 1u64;
         events::cancel(&mut child.queues[index], child.next_event);
         clear_last_events(child, 0u64);
         child.notify = true;
+    }
+}
+public machine retains_input(child: &Child, index: u64 [0..=3], channel: Name) -> bool {
+    names::same(child.queues[index].source, channel)
+}
+// The supplying stream ended: its queue becomes one RETIRED boundary that stays
+// in the directory until consumed. The name is never reused in this view.
+public machine retire_stream(child: &mut Child, index: u64 [0..=3], channel: Name) {
+    transition names::same(child.queues[index].source, channel) && child.next_event < 0xffffffffffffffffu64 {
+        true -> retiring(child, index)
+        _ -> done()
+    }
+    machine retiring(child: &mut Child, index: u64 [0..=3]) requires child.next_event < 0xffffffffffffffffu64 {
+        child.cursors[index] = NO_CURSOR;
+        child.next_event = child.next_event + 1u64;
+        let changed: bool = !events::retiring(&child.queues[index]);
+        events::retire(&mut child.queues[index], child.next_event);
+        clear_last_events(child, 0u64);
+        child.notify = true;
+        transition changed { true -> directory_changed(child) _ -> done() }
+    }
+}
+// The group ended upstream; its boundary is delivered once its channels drained.
+public machine retire_input_group(child: &mut Child, index: u64 [0..=3], group: Name) {
+    transition names::same(child.group_sources[index], group) {
+        true -> ended(child, index)
+        _ -> done()
+    }
+    machine ended(child: &mut Child, index: u64 [0..=3]) {
+        child.group_retired[index] = true;
+        child.notify = true;
+    }
+}
+public machine retains_input_group(child: &Child, index: u64 [0..=3], group: Name) -> bool {
+    names::same(child.group_sources[index], group) && child.group_retired[index]
+}
+// Membership changed: admission, retirement or a consumed boundary. Exhaustion
+// makes observation unavailable until a new view rather than wrapping.
+public machine directory_changed(child: &mut Child) {
+    child.notify = true;
+    transition child.directory_revision != 0u64 { true -> advanced(child) _ -> done() }
+    machine advanced(child: &mut Child) {
+        child.directory_revision = ((child.directory_revision as u64 in Wrapping) + 1u64) as u64;
     }
 }
 public machine cancel_keys(child: &mut Child, index: u64 [0..=3], channel: Name) {
@@ -275,10 +385,28 @@ machine clear_last_events(child: &mut Child, index: u64) requires index <= 4u64 
         transition { _ -> clear_last_events(child, index + 1u64) }
     }
 }
-// Deliver one event. Only a group's earliest event is eligible, so order holds
-// within a group; round-robin among eligible streams keeps groups independent.
+// Deliver one event. A group's retirement boundary comes first, once its
+// channels drained. Otherwise only a group's earliest event is eligible, so
+// order holds within a group; round-robin among eligible streams keeps groups
+// independent. A consumed RETIRED boundary changes the directory.
 public machine next(child: &mut Child) -> [u64; 8] {
-    transition { _ -> scan(child, 0u64) }
+    let ended: u64 = retired_group(child, 0u64);
+    transition ended < 4u64 {
+        true -> group_ended(child, ended)
+        _ -> scan(child, 0u64)
+    }
+    machine group_ended(child: &mut Child, index: u64) -> [u64; 8] requires index < 4u64 {
+        let group: u64 = child.group_names[index];
+        child.group_retired[index] = false;
+        child.group_names[index] = 0u64;
+        child.group_sources[index] = names::empty();
+        child.group_last_event[index] = 0u64;
+        let mut packet: [u64; 8];
+        packet[1] = child.grant.epoch;
+        packet[2] = GROUP_RETIRED;
+        packet[7] = group;
+        packet
+    }
     machine scan(child: &mut Child, offset: u64) -> [u64; 8] requires offset <= 4u64 {
         transition offset < 4u64 {
             true -> candidate(child, offset, (child.next_stream + offset) % 4u64)
@@ -294,7 +422,15 @@ public machine next(child: &mut Child) -> [u64; 8] {
     }
     machine take(child: &mut Child, index: u64) -> [u64; 8] requires index < 4u64 {
         child.next_stream = (index + 1u64) % 4u64;
-        events::next(&mut child.queues[index], child.grant.epoch)
+        let packet: [u64; 8] = events::next(&mut child.queues[index], child.grant.epoch);
+        transition packet[2] == RETIRED {
+            true -> membership(child, packet)
+            _ -> (packet)
+        }
+    }
+    machine membership(child: &mut Child, packet: [u64; 8]) -> [u64; 8] {
+        directory_changed(child);
+        packet
     }
 }
 machine none(epoch: u64) -> [u64; 8] {
@@ -302,6 +438,19 @@ machine none(epoch: u64) -> [u64; 8] {
     words[1] = epoch;
     words[2] = NONE;
     words
+}
+// First group awaiting its retirement boundary, or 4.
+machine retired_group(child: &Child, index: u64) -> u64 requires index <= 4u64 {
+    transition index < 4u64 {
+        true -> checked(child, index)
+        _ -> (4u64)
+    }
+    machine checked(child: &Child, index: u64) -> u64 requires index < 4u64 {
+        transition child.group_retired[index] {
+            true -> (index)
+            _ -> retired_group(child, index + 1u64)
+        }
+    }
 }
 machine earlier_in_group(child: &Child, index: u64, order: u64, other: u64) -> bool requires index < 4u64 && other <= 4u64 {
     transition other < 4u64 {
@@ -331,6 +480,7 @@ public machine cancel_all(child: &mut Child) {
         transition { _ -> cancelling(child, index + 1u64) }
     }
     machine finished(child: &mut Child) {
+        clear_cursors(child, 0u64);
         clear_last_events(child, 0u64);
         child.notify = true;
     }
@@ -360,10 +510,149 @@ machine more(child: &Child, index: u64) -> u64 requires index <= 4u64 {
         _ -> (0u64)
     }
     machine checked(child: &Child, index: u64) -> u64 requires index < 4u64 {
-        transition events::pending(&child.queues[index]) {
+        transition events::pending(&child.queues[index]) || child.group_retired[index] {
             true -> (MORE)
             _ -> more(child, index + 1u64)
         }
+    }
+}
+// Read admitted bindings in increasing local-name order; name zero ends the
+// snapshot. Reading neither consumes input nor mints names, and a changed
+// revision restarts the whole snapshot rather than mixing two memberships.
+public machine directory(child: &Child, epoch: u64, revision: u64, after: u64) -> [u64; 8] {
+    transition geometry::valid_grant(child.grant) && epoch == child.grant.epoch && after <= 0xffffffffu64
+        && (revision != 0u64 || after == 0u64) {
+        true -> revised(child, epoch, revision, after)
+        _ -> (geometry::error(DENIED))
+    }
+    machine revised(child: &Child, epoch: u64, revision: u64, after: u64) -> [u64; 8] {
+        transition {
+            child.directory_revision == 0u64 -> (geometry::error(NO_MEMORY))
+            revision != 0u64 && revision != child.directory_revision -> (geometry::error(BUSY))
+            _ -> row(child, epoch, smallest_after(child, after, 0u64, 4u64))
+        }
+    }
+    machine row(child: &Child, epoch: u64, index: u64) -> [u64; 8] {
+        transition index < 4u64 {
+            true -> (listed(child, epoch, index))
+            _ -> (finished(child, epoch))
+        }
+    }
+    machine listed(child: &Child, epoch: u64, index: u64) -> [u64; 8] requires index < 4u64 {
+        let mut words: [u64; 8];
+        words[1] = epoch;
+        words[2] = child.directory_revision;
+        words[3] = child.queues[index].channel;
+        words[4] = child.queues[index].group;
+        words[5] = state_of(&child.queues[index]);
+        words[6] = child.grant.keys;
+        words
+    }
+    machine finished(child: &Child, epoch: u64) -> [u64; 8] {
+        let mut words: [u64; 8];
+        words[1] = epoch;
+        words[2] = child.directory_revision;
+        words
+    }
+}
+machine state_of(queue: &Queue) -> u64 {
+    transition events::retiring(queue) { true -> (CHANNEL_RETIRING) _ -> (CHANNEL_LIVE) }
+}
+// The bound queue whose local name is the smallest above `after`, or 4.
+machine smallest_after(child: &Child, after: u64, index: u64, best: u64) -> u64 requires index <= 4u64 && best <= 4u64 {
+    transition index < 4u64 {
+        true -> compared(child, after, index, best)
+        _ -> (best)
+    }
+    machine compared(child: &Child, after: u64, index: u64, best: u64) -> u64 requires index < 4u64 && best <= 4u64 {
+        transition child.queues[index].channel > after {
+            true -> better(child, after, index, best)
+            _ -> smallest_after(child, after, index + 1u64, best)
+        }
+    }
+    machine better(child: &Child, after: u64, index: u64, best: u64) -> u64 requires index < 4u64 && best <= 4u64 {
+        transition best < 4u64 {
+            true -> ranked(child, after, index, best)
+            _ -> smallest_after(child, after, index + 1u64, index)
+        }
+    }
+    machine ranked(child: &Child, after: u64, index: u64, best: u64) -> u64 requires index < 4u64 && best < 4u64 {
+        transition child.queues[index].channel < child.queues[best].channel {
+            true -> smallest_after(child, after, index + 1u64, index)
+            _ -> smallest_after(child, after, index + 1u64, best)
+        }
+    }
+}
+// The bounded immutable description behind one directory row at this revision.
+public machine description_row(child: &Child, epoch: u64, revision: u64, name: u64) -> [u64; 8] {
+    let check: [u64; 8] = directory(child, epoch, revision, 0u64);
+    transition revision != 0u64 && name != 0u64 && name <= 0xffffffffu64 && check[0] == 0u64 {
+        true -> located(child, epoch, revision, name, queue_named(child, name, 0u64))
+        _ -> refused(check, revision, name)
+    }
+    machine refused(check: [u64; 8], revision: u64, name: u64) -> [u64; 8] {
+        transition revision != 0u64 && name != 0u64 && name <= 0xffffffffu64 {
+            true -> (check)
+            _ -> (geometry::error(DENIED))
+        }
+    }
+    machine located(child: &Child, epoch: u64, revision: u64, name: u64, index: u64) -> [u64; 8] {
+        transition index < 4u64 {
+            true -> (described(child, epoch, revision, name, index))
+            _ -> (geometry::error(DENIED))
+        }
+    }
+    machine described(child: &Child, epoch: u64, revision: u64, name: u64, index: u64) -> [u64; 8] requires index < 4u64 {
+        let mut words: [u64; 8];
+        words[1] = epoch;
+        words[2] = revision;
+        words[3] = name;
+        words[4] = child.queues[index].described.first;
+        words[5] = child.queues[index].described.second;
+        words[6] = child.queues[index].described.controls;
+        words
+    }
+}
+// The queue bound to the child-local channel `name`, or 4.
+machine queue_named(child: &Child, name: u64, index: u64) -> u64 requires index <= 4u64 {
+    transition index < 4u64 {
+        true -> compared(child, name, index)
+        _ -> (4u64)
+    }
+    machine compared(child: &Child, name: u64, index: u64) -> u64 requires index < 4u64 {
+        transition child.queues[index].channel == name && child.queues[index].channel != 0u64 {
+            true -> (index)
+            _ -> queue_named(child, name, index + 1u64)
+        }
+    }
+}
+// Accept a preference only for a pointer alias actually delivered to this view.
+public machine cursor_preference(child: &mut Child, epoch: u64, channel: u64, mode: u64) -> [u64; 8] {
+    let index: u64 = queue_named(child, channel, 0u64);
+    transition geometry::valid_grant(child.grant) && epoch == child.grant.epoch && channel != 0u64
+        && mode <= CURSOR_HIDDEN && index < 4u64 {
+        true -> bound(child, mode, index)
+        _ -> (geometry::error(DENIED))
+    }
+    machine bound(child: &mut Child, mode: u64, index: u64) -> [u64; 8] requires index < 4u64 {
+        transition !events::retiring(&child.queues[index]) && child.cursors[index] != NO_CURSOR {
+            true -> preferred(child, mode, index)
+            _ -> (geometry::error(DENIED))
+        }
+    }
+    machine preferred(child: &mut Child, mode: u64, index: u64) -> [u64; 8] requires index < 4u64 {
+        transition mode == CURSOR_HIDDEN {
+            true -> hidden(child, index)
+            _ -> shown(child, index)
+        }
+    }
+    machine hidden(child: &mut Child, index: u64) -> [u64; 8] requires index < 4u64 {
+        child.cursors[index] = HIDDEN_CURSOR;
+        geometry::ok()
+    }
+    machine shown(child: &mut Child, index: u64) -> [u64; 8] requires index < 4u64 {
+        child.cursors[index] = DEFAULT_CURSOR;
+        geometry::ok()
     }
 }
 machine done() {}

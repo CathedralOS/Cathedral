@@ -111,6 +111,28 @@ pub(super) fn check(parent: &mut Parent) {
         assert_ne!(parent.call(poll, Some(2))[4] & wire::NO_FRAMES, 0);
         parent.world.render_demand(true);
         assert_eq!(parent.call(poll, Some(2))[4] & wire::NO_FRAMES, 0);
+        // A channel this parent registers and describes reaches the leaf
+        // described, under the matrix's own names; its retirement and then its
+        // group's drain through the matrix in order, one poll per event.
+        use cathedral_platform_contracts::input::description::{self, Description};
+        let group = parent.world.register_input_group().unwrap();
+        let channel = parent.world.register_input_stream(group).unwrap();
+        let tablet = Description::new(description::POINTER, "Tablet").unwrap();
+        parent.world.describe_input_stream(channel, tablet).unwrap();
+        parent.world.pointer_stream(channel, 120, 410, 0).unwrap();
+        let announced = parent.next(2, views[2][1]);
+        assert_eq!(announced[2], wire::DESCRIBED);
+        assert_eq!(&announced[3..6], &tablet.words());
+        let motion = parent.next(2, views[2][1]);
+        assert_eq!(&motion[2..6], &[wire::POINTER, 20, 30, 0]);
+        assert_eq!(&motion[6..], &announced[6..]);
+        parent.world.retire_input_stream(channel).unwrap();
+        let retired = parent.next(2, views[2][1]);
+        assert_eq!((retired[2], retired[6]), (wire::RETIRED, motion[6]));
+        parent.world.release_input_group(group).unwrap();
+        let ended = parent.next(2, views[2][1]);
+        assert_eq!((ended[2], ended[7]), (wire::GROUP_RETIRED, motion[7]));
+        assert!(parent.world.input_ready());
         // Revoking the leaf erases its surface upstream before anything else.
         assert_eq!(
             parent.call([wire::REVOKE, 2, 0, 0, 0, 0, 0, 0], None),

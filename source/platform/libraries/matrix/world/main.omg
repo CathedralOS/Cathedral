@@ -4,7 +4,8 @@ module main;
 // and `source_command` serve the program that owns this world, and
 // [upstream.omg](upstream.omg) adopts a parent's poll. [level.omg](level.omg)
 // holds the record and its structural rules; [children.omg](children.omg) owns
-// each child's view and queues; [input/](input/main.omg) routes pointer and keys.
+// each child's view and queues; [input/](input/main.omg) routes pointer and keys,
+// registers and retires names, and grants bounded producers.
 // Identity comes from the connection a request arrived on, never from its words.
 // Wire owner: source-rs/platform/libraries/matrix/world/.
 use protocol::main;
@@ -13,20 +14,25 @@ use protocol::matrix;
 use level::World;
 use input::pointer;
 use input::keys;
+use input::producer;
+use input::registration;
+use input::capacity;
 use geometry::Rect;
 
 // A child's request. A changed incarnation on the same slot means a replacement
 // occupant, whose predecessor's grant and queues are discarded first.
 public machine request(world: &mut World, slot: u64, incarnation: u64, words: &[u64; 8]) -> [u64; 8] {
     transition level::identify(world, slot, incarnation) && slot < 4u64 {
-        true -> current(world, slot, words)
+        true -> current(world, slot, incarnation, words)
         _ -> (geometry::error(DENIED))
     }
-    machine current(world: &mut World, slot: u64, words: &[u64; 8]) -> [u64; 8] requires slot < 4u64 {
+    machine current(world: &mut World, slot: u64, incarnation: u64, words: &[u64; 8]) -> [u64; 8] requires slot < 4u64 {
         let valid: bool = geometry::valid_grant(world.children[slot].grant);
         let epoch: u64 = world.children[slot].grant.epoch;
         let ticket: u64 = world.children[slot].frame_ticket;
+        let granted: bool = producer::producer_word(words[0]);
         transition {
+            granted -> producer::request(world, slot, incarnation, words)
             words[0] == MATRIX_VIEW && geometry::zeros_from(words, 1u64) -> (children::view(&world.children[slot]))
             words[0] == MATRIX_POLL && geometry::zeros_from(words, 1u64) && valid -> (children::poll(&mut world.children[slot]))
             words[0] == POLL_TAGGED && words[1] >= 1u64 && words[1] <= 0xffffffffu64 && geometry::zeros_from(words, 2u64) -> tagged(world, slot, valid, words[1])
@@ -34,6 +40,14 @@ public machine request(world: &mut World, slot: u64, incarnation: u64, words: &[
             words[0] == FRAME_DEMAND && geometry::zeros_from(words, 2u64) && valid && words[1] == epoch -> (frame_demand(epoch, ticket))
             words[0] == FRAME_READY && geometry::zeros_from(words, 3u64) && valid && words[1] == epoch && ticket != 0u64 && words[2] == ticket -> frame_ready(world, slot)
             words[0] == SURFACE_INFO && geometry::zeros_from(words, 1u64) && valid -> (surface_info(world, slot))
+            words[0] == CURSOR_PREFERENCE && geometry::zeros_from(words, 4u64) ->
+                (children::cursor_preference(&mut world.children[slot], words[1], words[2], words[3]))
+            words[0] == INPUT_CAPACITY && geometry::zeros_from(words, 4u64) && valid && words[1] == epoch && words[2] <= 4u64 && words[3] <= 4u64 ->
+                limiting(world, slot, epoch, words[2], words[3])
+            words[0] == INPUT_DIRECTORY && geometry::zeros_from(words, 4u64) ->
+                (children::directory(&world.children[slot], words[1], words[2], words[3]))
+            words[0] == INPUT_DESCRIPTION && geometry::zeros_from(words, 4u64) ->
+                (children::description_row(&world.children[slot], words[1], words[2], words[3]))
             _ -> (geometry::error(DENIED))
         }
     }
@@ -54,6 +68,22 @@ public machine request(world: &mut World, slot: u64, incarnation: u64, words: &[
         reply[2] = surfaces::live_count(&world.children[slot], 0u64, 0u64);
         reply
     }
+    // Success echoes the limits; BUSY keeps the old ones.
+    machine limiting(world: &mut World, slot: u64, epoch: u64, channels: u64, groups: u64) -> [u64; 8]
+        requires slot < 4u64 && channels <= 4u64 && groups <= 4u64 {
+        let status: u64 = children::limit_input(&mut world.children[slot], channels, groups);
+        transition status == 0u64 {
+            true -> (limited(epoch, channels, groups))
+            _ -> (geometry::error(status))
+        }
+    }
+    machine limited(epoch: u64, channels: u64, groups: u64) -> [u64; 8] {
+        let mut reply: [u64; 8];
+        reply[1] = epoch;
+        reply[2] = channels;
+        reply[3] = groups;
+        reply
+    }
     // Word zero packs the caller's tag above the status; the payload is POLL's.
     machine tagged(world: &mut World, slot: u64, valid: bool, tag: u64) -> [u64; 8] requires slot < 4u64 && tag <= 0xffffffffu64 {
         transition valid {
@@ -67,10 +97,16 @@ public machine request(world: &mut World, slot: u64, incarnation: u64, words: &[
         tagged
     }
 }
-// Placement and revocation within already supplied authority. Binding, slots and
-// launch policy remain the owner's choices. These words are never accepted from a child.
+// Placement, revocation, input registration and producer grants within already
+// supplied authority. Binding, slots and launch policy remain the owner's
+// choices. These words are never accepted from a child.
 public machine owner_command(world: &mut World, words: &[u64; 8]) -> [u64; 8] {
     transition {
+        words[0] >= INPUT_GROUP_CREATE && words[0] <= INPUT_SELECT -> (registration::owner_command(world, words))
+        words[0] == INPUT_PRODUCER_GRANT && words[6] == 0u64 && words[7] == 0u64 && words[1] < world.slots
+            && words[2] <= 4u64 && words[4] <= 4u64 && words[5] <= 4u64 ->
+            (geometry::error(producer::grant(world, words[1], words[2], words[3], words[4], words[5])))
+        words[0] == INPUT_PRODUCER_REVOKE && geometry::zeros_from(words, 2u64) && words[1] < world.slots -> revoked(world, words[1])
         words[0] == PLACE && words[7] == 0u64 && words[1] < world.slots ->
             (geometry::error(level::place(world, words[1],
                 Rect { x: words[2], y: words[3], width: words[4], height: words[5] }, words[6])))
@@ -78,6 +114,10 @@ public machine owner_command(world: &mut World, words: &[u64; 8]) -> [u64; 8] {
         words[0] == SURFACE_LIMIT && geometry::zeros_from(words, 3u64) && words[1] < world.slots -> (geometry::error(surfaces::limit(world, words[1], words[2])))
         words[0] == HEALTH && geometry::zeros_from(words, 1u64) -> (geometry::ok())
         _ -> (geometry::error(DENIED))
+    }
+    machine revoked(world: &mut World, slot: u64) -> [u64; 8] {
+        producer::revoke(world, slot);
+        geometry::ok()
     }
 }
 // Input may progress during a publication only while the snapshot preserves the
@@ -88,13 +128,14 @@ public machine poll_preserves_view(world: &World, reply: &[u64; 8]) -> bool {
         && world.allowance == geometry::smaller(reply[4] >> SURFACE_BITS, MAX_SURFACES)
 }
 // Input injected by a trusted upstream source, not necessarily hardware, on the
-// single local stream. Coordinates are clamped by this world; no child may call this.
+// single local stream. Coordinates are clamped by this world; no child may call
+// this. Capacity pressure interrupts the stream instead of failing the sample.
 public machine source_command(world: &mut World, words: &[u64; 8]) -> [u64; 8] {
     transition {
         words[0] == POINTER_SOURCE && words[3] <= 7u64 && geometry::zeros_from(words, 4u64) ->
-            (geometry::error(pointer::route(world, names::local(SINGLE_INPUT_STREAM), words[1], words[2], words[3], true)))
+            (geometry::error(capacity::sample(world, SINGLE_INPUT_STREAM, POINTER, words[1], words[2], words[3])))
         words[0] == KEY_SOURCE && geometry::zeros_from(words, 3u64) ->
-            (geometry::error(keys::route(world, names::local(SINGLE_INPUT_STREAM), words[1], words[2])))
+            (geometry::error(capacity::sample(world, SINGLE_INPUT_STREAM, KEY, words[1], words[2], 0u64)))
         _ -> (geometry::error(DENIED))
     }
 }

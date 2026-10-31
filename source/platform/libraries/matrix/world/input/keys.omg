@@ -1,11 +1,13 @@
 module input::keys;
 // Per-stream key transitions. Keys go to the stream's group focus, attenuated by
 // that child's mask. Keys held across a focus switch are suppressed until their
-// release so a new target never sees a release it did not see pressed.
+// release so a new target never sees a release it did not see pressed. The
+// first delivery to a recipient fixes the stream's description.
 use protocol::main;
 use level::World;
 use names::Name;
 use children::Pushed;
+use description::Description;
 use input::main::Admitted;
 
 public machine route(world: &mut World, channel: Name, key: u64, state: u64) -> u64 {
@@ -50,9 +52,13 @@ public machine route(world: &mut World, channel: Name, key: u64, state: u64) -> 
     machine capacity(world: &mut World, channel: Name, key: u64, state: u64, index: u64 [0..=3], bit: u64, group: u64 [0..=3], slot: u64) -> u64 requires slot < 4u64 {
         let code: u64 = children::can_push(&world.children[slot], index, group, world.input.groups[group].id);
         transition code == 0u64 {
-            true -> held(world, channel, key, state, index, bit)
+            true -> locked(world, channel, key, state, index, bit)
             _ -> (code)
         }
+    }
+    machine locked(world: &mut World, channel: Name, key: u64, state: u64, index: u64 [0..=3], bit: u64) -> u64 {
+        world.input.streams[index].describe_locked = true;
+        transition { _ -> held(world, channel, key, state, index, bit) }
     }
     machine held(world: &mut World, channel: Name, key: u64, state: u64, index: u64 [0..=3], bit: u64) -> u64 {
         transition state == RELEASE {
@@ -94,7 +100,8 @@ public machine route(world: &mut World, channel: Name, key: u64, state: u64) -> 
     }
     machine delivered(world: &mut World, channel: Name, key: u64, state: u64, index: u64 [0..=3], group: u64 [0..=3], slot: u64) -> u64 requires slot < 4u64 {
         let group_name: Name = world.input.groups[group].id;
-        let pushed: Pushed = children::push(&mut world.children[slot], index, channel, group, group_name, KEY, key, state, 0u64);
+        let described: Description = world.input.streams[index].described;
+        let pushed: Pushed = children::push(&mut world.children[slot], index, channel, group, group_name, described, KEY, key, state, 0u64);
         transition pushed {
             Pushed::Delivered -> (0u64)
             Pushed::Dropped -> cancelled(world, index)

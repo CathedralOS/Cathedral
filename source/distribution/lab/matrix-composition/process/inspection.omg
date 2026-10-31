@@ -1,9 +1,10 @@
 module inspection;
 // Proof-only owner words, numbered far above the platform's: read the last
-// packet this matrix presented upstream, count the erasures it flushed, and
-// drive the owner side of frame demand and visibility for one slot. The stock
-// matrix reaches the same World operations from its capture and layout policy.
-// This is lab orchestration, not a platform protocol.
+// packet this matrix presented upstream, count the erasures it flushed, drive
+// the owner side of frame demand and visibility for one slot, and resolve the
+// cursor a local stream currently presents. The stock matrix reaches the same
+// World operations from its capture, layout and cursor policy. This is lab
+// orchestration, not a platform protocol.
 use main::State;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
@@ -11,6 +12,11 @@ use runtime::kernel;
 use runtime::connection::main::Frame;
 use world::demand;
 use world::demand::Requested;
+use world::names;
+use world::input::main::stream_of;
+use world::input::cursor;
+use world::input::cursor::Cursor;
+use world::input::cursor::Found;
 
 public const LAST_PRESENTED: u64 = 900u64;
 public const ERASED: u64 = 901u64;
@@ -18,17 +24,37 @@ public const REQUEST_FRAME: u64 = 902u64;
 public const FRAME_READY: u64 = 903u64;
 public const RELEASE_FRAME: u64 = 904u64;
 public const VISIBLE: u64 = 905u64;
+public const CURSOR: u64 = 906u64;
 
 public machine answer(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Kernel blocks; invokes Kernel; {
     transition {
         frame.payload[0] == LAST_PRESENTED -> block reply(gate, context, context.last_presented)
         frame.payload[0] == ERASED -> block counted(gate, context)
+        frame.payload[0] == CURSOR -> block resolved(gate, context, frame.payload[1])
         frame.payload[1] < 3u64 -> block slotted(gate, context, frame, frame.payload[1])
         _ -> block refused(gate, context, kernel::DENIED)
     }
     machine counted(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
         let mut words: [u64; 8];
         words[1] = context.erased;
+        block reply(gate, context, words)
+    }
+    // The cursor behind a local stream name: found, channel, inherited, cycle, mode.
+    machine resolved(gate: &Gate, context: &mut State, channel: u64) -> u64 reaches Kernel {
+        let index: u64 = stream_of(&context.world.input, names::local(channel));
+        let found: Found = cursor::cursor(&context.world, index);
+        transition found {
+            Found::Observed { seen } -> block observed(gate, context, seen)
+            Found::Nothing -> block refused(gate, context, 0u64)
+        }
+    }
+    machine observed(gate: &Gate, context: &mut State, seen: Cursor) -> u64 reaches Kernel {
+        let mut words: [u64; 8];
+        words[1] = 1u64;
+        words[2] = seen.channel;
+        words[3] = flag(seen.inherited);
+        words[4] = seen.cycle;
+        words[5] = seen.mode;
         block reply(gate, context, words)
     }
     machine slotted(gate: &Gate, context: &mut State, frame: Frame, slot: u64 [0..=2]) -> u64 reaches Kernel {

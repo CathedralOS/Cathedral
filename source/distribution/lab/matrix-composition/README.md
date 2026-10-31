@@ -42,8 +42,9 @@ Descend by responsibility:
   recorded, and committed only after the upstream accepts them. Erasures owed
   for retired surfaces are flushed between turns the same way.
 - [inspection.omg](process/inspection.omg): proof-only owner words above 900
-  that read the last presented packet, count flushed erasures, and drive the
-  owner side of frame demand and visibility. Lab orchestration, not a protocol.
+  that read the last presented packet, count flushed erasures, drive the owner
+  side of frame demand and visibility, and resolve the cursor a local stream
+  presents. Lab orchestration, not a protocol.
 
 Run the live IPC proof against the Omega matrix and against the original Rust
 program, which remains the comparison path:
@@ -66,10 +67,14 @@ requests, sibling isolation, stale views, repeated replacement, interrupted
 transfers, failed-admission rollback and whole-subtree reclamation; surface
 allowances and ranges, child-local names, clipped and translated paint, every
 creation and update refusal, the frame-demand handshake, visibility, and the
-erasures a replacement owes; under a parent, coordinate translation, queued key
-edges, withheld keys, shrink, revoke and regrant, old-epoch rejection, and a
-paint that reaches the parent clipped and placed, withdrawn demand reaching the
-leaf, and an erasure that precedes revocation.
+erasures a replacement owes; owner-registered channels and groups, selection,
+the directory and descriptions a recipient sees, retirement that waits for
+every recipient, producer grants by generation, capacity limits and cursor
+preferences; under a parent, coordinate translation, queued key edges, withheld
+keys, shrink, revoke and regrant, old-epoch rejection, a paint that reaches the
+parent clipped and placed, withdrawn demand reaching the leaf, an erasure that
+precedes revocation, and a described channel registered above that reaches the
+leaf described, then retires and drains its group through the matrix.
 
 This proves a matrix program in Omega over the common runtime. Its storage grant
 exercises endpoint custody only; it does not serve a filesystem or distinguish

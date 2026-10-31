@@ -51,9 +51,11 @@ The `omega-matrix` fixture feature switches the owner in [main.rs](main.rs) and
 the peers to the shared v4 protocol, which is the only one the Omega matrix
 speaks; without it they keep copied broker and control payloads for the Rust
 matrix. The two Omega profiles build every fixture entry with that feature. The
-same feature gates the surface checks, which only the Omega matrix serves:
-allowance ranges, names, clipped and translated paint, refusals, the frame
-handshake, visibility and the erasures a replacement owes.
+same feature gates the surface and input-model checks, which only the Omega
+matrix serves: allowance ranges, names, clipped and translated paint, refusals,
+the frame handshake, visibility and the erasures a replacement owes; registered
+channels and groups, selection, the directory, descriptions, retirement,
+producer grants, capacity limits and cursor preferences.
 
 The lab's owner probe envelope routes to a child with the high 32-bit word of
 the opcode (slot + 1); the low word remains its requested operation. This is
@@ -91,6 +93,9 @@ of this parent's eight backed surfaces. The matrix derives three 240x150
 regions. The proof checks translation, queued key edges, withheld keys,
 forbidden child commands, shrink/revoke/regrant and old-epoch rejection; with
 the Omega matrix it also checks a leaf's paint arriving here clipped and placed,
-withdrawn demand reaching the leaf, and an erasure preceding revocation. It repeatedly kills the matrix with its leaves alive and checks
+withdrawn demand reaching the leaf, an erasure preceding revocation, and a
+channel registered and described in this parent reaching the leaf described,
+then retiring and draining its group through the matrix one poll per event.
+It repeatedly kills the matrix with its leaves alive and checks
 resource recovery. The parent finally exits with a live subtree; the root
 supervisor restarts that entire composition using the returned launch loans.

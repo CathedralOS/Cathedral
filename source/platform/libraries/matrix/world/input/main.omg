@@ -1,16 +1,27 @@
 module input::main;
 // Admit supplied stream names and bind them to focus groups. Each stream keeps
-// its own pointer capture and held keys; a group shares one keyboard selection.
-// Names are admitted within authenticated authority; they are not capabilities.
+// its own pointer capture, held keys, description and last position; a group
+// shares one keyboard selection. Names are admitted within authenticated
+// authority; they are not capabilities.
 use protocol::main;
 use names::Name;
+use description::Description;
 
 public data Stream [copy] {
     id: Name;
     group: u64 [0..=3];
     retiring: bool;
+    described: Description;
+    // Set once a recipient holds this stream's name; the description is then fixed.
+    describe_locked: bool;
     // Captured child slot plus one; zero means no capture.
     capture: u64;
+    // Last routed position, so a cursor resolves without new motion.
+    pointed: bool;
+    point_x: u64;
+    point_y: u64;
+    // Advances on every interruption so cursor state can be discarded; zero once exhausted.
+    cursor_cycle: u64;
     buttons: u64;
     blocked: bool;
     held: u64;
@@ -117,6 +128,7 @@ public machine bind(input: &mut Input, id: Name, group: Name) -> Admitted {
         let mut stream: Stream;
         stream.id = id;
         stream.group = group_slot;
+        stream.cursor_cycle = 1u64;
         input.streams[slot] = stream;
         Admitted::Slot { index: slot }
     }
@@ -134,6 +146,78 @@ public machine bind(input: &mut Input, id: Name, group: Name) -> Admitted {
         }
     }
     machine newest(input: &mut Input, value: u64) { input.last_local_group = value; }
+}
+// The routing slot holding stream `id`, or 4.
+public machine stream_of(input: &Input, id: Name) -> u64 { stream_at(input, id, 0u64) }
+machine stream_at(input: &Input, id: Name, index: u64) -> u64 requires index <= 4u64 {
+    transition index < 4u64 {
+        true -> checked(input, id, index)
+        _ -> (4u64)
+    }
+    machine checked(input: &Input, id: Name, index: u64) -> u64 requires index < 4u64 {
+        transition names::same(input.streams[index].id, id) {
+            true -> (index)
+            _ -> stream_at(input, id, index + 1u64)
+        }
+    }
+}
+// The group slot holding group `id`, or 4.
+public machine group_of(input: &Input, id: Name) -> u64 { holding(input, id, 0u64) }
+// First free group slot, or 4.
+public machine free_group_slot(input: &Input) -> u64 { free_group(input, 0u64) }
+// Does any bound stream route through group slot `group`?
+public machine group_in_use(input: &Input, group: u64 [0..=3]) -> bool { using(input, group, 0u64) }
+machine using(input: &Input, group: u64 [0..=3], index: u64) -> bool requires index <= 4u64 {
+    transition index < 4u64 {
+        true -> checked(input, group, index)
+        _ -> (false)
+    }
+    machine checked(input: &Input, group: u64 [0..=3], index: u64) -> bool requires index < 4u64 {
+        transition names::valid(input.streams[index].id) && input.streams[index].group == group {
+            true -> (true)
+            _ -> using(input, group, index + 1u64)
+        }
+    }
+}
+// Counts over the routing table by how a name was supplied.
+public const BOUND: u64 = 0u64;
+public const INHERITED: u64 = 1u64;
+public const LOCAL: u64 = 2u64;
+public const FREE: u64 = 3u64;
+public machine streams_counted(input: &Input, mode: u64) -> u64 { counting_streams(input, mode, 0u64, 0u64) }
+public machine groups_counted(input: &Input, mode: u64) -> u64 { counting_groups(input, mode, 0u64, 0u64) }
+machine name_matches(id: Name, mode: u64) -> bool {
+    let valid: bool = names::valid(id);
+    transition {
+        mode == BOUND -> (valid)
+        mode == INHERITED -> (valid && id.inherited)
+        mode == LOCAL -> (valid && !id.inherited)
+        _ -> (!valid)
+    }
+}
+machine counting_streams(input: &Input, mode: u64, index: u64, count: u64) -> u64 requires index <= 4u64 && count <= index {
+    transition index < 4u64 {
+        true -> checked(input, mode, index, count)
+        _ -> (count)
+    }
+    machine checked(input: &Input, mode: u64, index: u64, count: u64) -> u64 requires index < 4u64 && count <= index {
+        transition name_matches(input.streams[index].id, mode) {
+            true -> counting_streams(input, mode, index + 1u64, count + 1u64)
+            _ -> counting_streams(input, mode, index + 1u64, count)
+        }
+    }
+}
+machine counting_groups(input: &Input, mode: u64, index: u64, count: u64) -> u64 requires index <= 4u64 && count <= index {
+    transition index < 4u64 {
+        true -> checked(input, mode, index, count)
+        _ -> (count)
+    }
+    machine checked(input: &Input, mode: u64, index: u64, count: u64) -> u64 requires index < 4u64 && count <= index {
+        transition name_matches(input.groups[index].id, mode) {
+            true -> counting_groups(input, mode, index + 1u64, count + 1u64)
+            _ -> counting_groups(input, mode, index + 1u64, count)
+        }
+    }
 }
 // First unbound stream slot, or 4 when all are bound.
 machine free_stream(input: &Input, index: u64) -> u64 requires index <= 4u64 {
@@ -236,10 +320,16 @@ machine forget_capture(input: &mut Input, target: u64, index: u64) requires inde
     }
 }
 // Interrupt one stream's delivery without erasing the group's remembered focus.
+// The cursor cycle advances so a renderer discards what it held for this stream.
 public machine cancel(stream: &mut Stream) {
+    stream.pointed = false;
     stream.capture = 0u64;
     stream.suppressed = stream.suppressed | stream.held;
     stream.blocked = stream.blocked || stream.buttons != 0u64;
     stream.buttons = 0u64;
+    transition stream.cursor_cycle != 0u64 { true -> cycled(stream) _ -> done() }
+    machine cycled(stream: &mut Stream) {
+        stream.cursor_cycle = ((stream.cursor_cycle as u64 in Wrapping) + 1u64) as u64;
+    }
 }
 machine done() {}

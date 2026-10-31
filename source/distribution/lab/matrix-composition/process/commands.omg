@@ -56,7 +56,7 @@ machine command(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64
         frame.payload[0] == STOP -> block stop(gate, context, frame)
         frame.payload[0] == SPAWN -> block spawn(gate, context, now, frame)
         frame.payload[0] == POINTER_SOURCE || frame.payload[0] == KEY_SOURCE -> block source(gate, context, frame)
-        frame.payload[0] >= inspection::LAST_PRESENTED && frame.payload[0] <= inspection::VISIBLE -> block inspection::answer(gate, context, frame)
+        frame.payload[0] >= inspection::LAST_PRESENTED && frame.payload[0] <= inspection::CURSOR -> block inspection::answer(gate, context, frame)
         _ -> block arranged(gate, context, frame)
     }
 }
