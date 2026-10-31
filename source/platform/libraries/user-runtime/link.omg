@@ -1,0 +1,31 @@
+module link;
+// Boot-approved provider links: the owner's composition names them by index
+// and the kernel pairs the two sides. Connecting one yields this task's client
+// ends; a still-live accepted link answers BUSY until the other side retires.
+// This grants no lifecycle or device rights. Wire owner:
+// source-rs/platform/libraries/user-runtime/link.rs.
+use kernel::Gate;
+use kernel::Kernel;
+use kernel;
+use ipc::main::Channel;
+use ipc::main::Opened;
+
+public machine at(gate: &Gate, index: u64) -> u64 reaches Kernel invokes Kernel; {
+    Kernel::link_handle(gate, index)
+}
+// The client's send end is the returned bootstrap index, its receive end the next.
+public machine connect(gate: &Gate, link: u64) -> Opened reaches Kernel invokes Kernel; {
+    let first: u64 = Kernel::link_connect(gate, link);
+    transition first < kernel::ERROR_BASE {
+        true -> named(gate, first, first + 1u64)
+        _ -> (Opened::Failed { code: first })
+    }
+    machine named(gate: &Gate, first: u64, second: u64) -> Opened reaches Kernel {
+        let sender: u64 = Kernel::bootstrap(gate, first);
+        let receiver: u64 = Kernel::bootstrap(gate, second);
+        transition sender < kernel::ERROR_BASE && receiver < kernel::ERROR_BASE {
+            true -> (Opened::Ready { channel: Channel { sender: sender, receiver: receiver } })
+            _ -> (Opened::Failed { code: kernel::BAD_HANDLE })
+        }
+    }
+}

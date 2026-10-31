@@ -1,9 +1,9 @@
 module commands;
 // Owner words over the kernel-installed control pair: liveness, the root
 // binding, launch policy for a slot, the children words that stage, run and
-// stop a child, and the World's placement words. Storage and the rest of the
-// stock vocabulary arrive in later slices; until then they are denied, never
-// silently accepted.
+// stop a child, the storage words that grant, revoke and report bindings, and
+// the World's placement words. The rest of the stock vocabulary arrives in
+// later slices; until then it is denied, never silently accepted.
 use protocol::main;
 use protocol::matrix;
 use main::State;
@@ -19,6 +19,7 @@ use world::geometry::zeros_from;
 use world::main::owner_command;
 use source;
 use children;
+use storage;
 
 public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
     transition {
@@ -41,9 +42,11 @@ machine receive(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kerne
 }
 machine command(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel {
     let child_word: bool = children::owner_word(frame.payload[0]);
+    let storage_word: bool = storage::owner_word(frame.payload[0]);
     transition {
         frame.bytes != 64u64 -> block reply(gate, context, error(kernel::DENIED))
         child_word -> block children::owner(gate, context, now, frame)
+        storage_word -> block storage::owner(gate, context, now, frame)
         frame.payload[0] == HEALTH && zeros_from(&frame.payload, 1u64) -> block reply(gate, context, ok())
         frame.payload[0] == BIND && zeros_from(&frame.payload, 4u64) ->
             block bound(gate, context, frame.payload[1], frame.payload[2], frame.payload[3])

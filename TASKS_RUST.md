@@ -143,10 +143,85 @@ Evidence in the main checkout with the saved standalone producer:
   edges), Rust formatting and clippy for the desktop crate with
   `shell,omega-root` pass. No kernel limit changed.
 
-Next: launches from the realm's objects under the stock launch policy, storage
-binding and forwarding, images and the begin/commit presentation batch, loss
-surveys and close, management and launch observation words, nested operation
-under a parent matrix, then the stock policy packages linked directly. Dynamic
+Storage and presentation followed in the step recorded below.
+
+### Stock matrix migration: storage root and presentation
+
+The stock matrix process is now the storage root and presents sealed images
+and batches. The composition's provider links reach it through two new gate
+leaves, `link_handle` and `link_connect`, named in the runtime's `link.omg`;
+each link connects when the first grant or request needs it and reconnects
+on a grant after provider replacement. STORAGE_GRANT binds a child's storage
+connection to a source and scope under the World's new `scopes.omg`, the port
+of the Rust library's storage scopes: a child sees a binding revision, every
+request is authenticated against it and stamped with the owner's scope, a
+request with both scope words taken is folded only after one read-only
+containment check upstream whose success is remembered, and STORAGE_REVOKE,
+STORAGE_BINDING and STORAGE_STATUS forget, report and summarise bindings.
+Each child's storage connection is served from admission on by its own
+listener, and one request is relayed per connection per turn: forwarded over
+the source's link with its sealed attachment, bounded by the hop's deadline
+from the contract's new `storage/scope.omg`, and answered with the provider's
+reply and attachment. A lost or late link retires that source's bindings. The
+contract also names the object operations in `storage/operations.omg`.
+
+Presentation gained the World's `batch.omg`, the port of the Rust library's
+presentation batch: PRESENT_BEGIN opens a revision, paints, erases, cursors
+and sealed images stage once per surface with the image's payload held by
+the matrix, PRESENT_COMMIT publishes them under one compositor transaction
+(MATRIX_BEGIN, each tile's update, MATRIX_COMMIT, or MATRIX_ABORT on the
+first refusal) and commits them in the World, and PRESENT_RECTS does all of
+that for one or two paints decoded and re-encoded by the process's `rects.omg`.
+Outside a batch an image goes straight to the compositor as MATRIX_IMAGE with
+the object behind it. Images stay retained behind their tile until it is
+painted over or erased, so replay has them. A catalogue launch now offers
+interaction and storage, as the Rust host's RUN does, and each turn rings the
+interaction bell of every child the World has a hint for; without that wake
+an installed app parks after its first poll and never sees its input.
+
+`tools/boot-harness-rs/omega_desktop_test.py` now boots an empty database
+with the Omega Background and Colors in the catalogue; the supervisor under
+`omega-root` starts the storage service, runs Colors into an app slot with
+its storage bound to the whole first root and places it over the shifted
+backdrop. The harness sees Colors paint its view, a healthy indicator and
+its checker image through the matrix (so the relay carried STORAGE_INFO,
+LIST, a PUBLISH with its attachment and READ), watches the cursor follow the
+pointer, then clicks Colors and presses Enter and sees the saved colour,
+which is a second PUBLISH through the relay. The background child left the
+proof: a catalogue launch now offers storage, which that program refuses, and
+it returns when the matrix's own startup lifetime admits it.
+
+Evidence in the main checkout with the saved standalone producer:
+
+- Desktop over the Omega root with Colors painting and saving: `build/boot-harness-rs/omega-desktop/20261031T220918843242Z/`.
+- Omega matrix, top level: `build/boot-harness-rs/omega-matrix/20261031T221206399664Z/`;
+  under a real parent: `build/boot-harness-rs/omega-matrix-upstream/20261031T221214154335Z/`;
+  Rust comparison matrix: `build/boot-harness-rs/matrix-composition/20261031T220928281000Z/`.
+- Witnesses after the gate change: primitives `build/omega-user/tests/20261031T220506188445Z/`;
+  connections `build/omega-user/connections/20261031T220512600734Z/`, service
+  `.../20261031T220533760993Z/`, admission `.../20261031T220547687142Z/`;
+  Background `build/omega-user/background-control/20261031T220552583197Z/`;
+  Colors `build/omega-user/colors-control/20261031T220558766216Z/`;
+  Notes `build/omega-user/notes-control/20261031T220716868374Z/`;
+  Chooser `build/omega-user/chooser-control/20261031T220909855645Z/`.
+- Kernel smoke labs of 2026-10-31 22:12 UTC pass; default F5 desktop and cold
+  reopen: `build/boot-harness-rs/desktop/20261031T221717203160Z/`. The same
+  test run last in the sweep, after eleven QEMU boots, stalled once inside the
+  Rust user matrix's startup after its realm read
+  (`build/boot-harness-rs/desktop/20261031T221316019247Z/`); nothing in this
+  slice runs on that path, and the standalone rerun passed.
+- Boundary test (62 calls, 54 table entries), layout (121 Omega / 153 Rust
+  edges), Rust formatting and clippy for the desktop crate with
+  `shell,omega-root` pass. Every native package that consumes the runtime
+  accepted the two link leaves in review. No kernel limit changed.
+
+Next: launches from the realm's objects, which read the program over the
+matrix's own binding and admit it through `image_from_object`, with the
+RESOLVE_PATH own read and the stock launch policy's roles and recipes; then
+the startup realm discovery that admits the picker and background, loss
+surveys and close over the owner-control client, management and launch
+observation words, nested operation under a parent matrix with an upstream
+storage binding, then the stock policy packages linked directly. Dynamic
 launches still cap reserved frames at MAX_ADMISSION_FRAMES, which a nested
 Omega matrix with a declared stack will exceed.
 

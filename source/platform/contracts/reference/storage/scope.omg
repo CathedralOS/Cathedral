@@ -1,0 +1,59 @@
+module storage::scope;
+// What a matrix adds to a child's request on the way to the provider: its
+// own scope in one of the two scope words, and an end-to-end deadline that
+// intermediaries never extend. A child's request word carries its binding
+// revision above SCOPE_BITS and STORAGE_BASE plus the operation below.
+// Wire owner: source-rs/platform/contracts/storage.rs.
+
+public const SCOPE_BITS: u64 = 16u64;
+// The largest binding revision the word can carry above the scope bits.
+public const MAX_REVISION: u64 = 0xffffffffffffu64;
+public machine revision(word: u64) -> u64 { word >> 16u64 }
+public machine operation(word: u64) -> u64 { word & 0xffffu64 }
+
+// Append `scope` unless it is zero or already present. False when both scope
+// words are taken: the caller must prove containment before folding one.
+public machine stamp(words: &mut [u64; 8], scope: u64) -> bool {
+    transition {
+        scope == 0u64 || words[5] == scope || words[6] == scope -> (true)
+        words[5] == 0u64 -> first(words, scope)
+        words[6] == 0u64 -> second(words, scope)
+        _ -> (false)
+    }
+    machine first(words: &mut [u64; 8], scope: u64) -> bool { words[5] = scope; true }
+    machine second(words: &mut [u64; 8], scope: u64) -> bool { words[6] = scope; true }
+}
+// The absolute deadline for one hop: the earlier of the request's own and
+// `now` plus the hop's budget, or zero when neither leaves any time. Zero on
+// the wire means unspecified, so a bound landing exactly there expires one
+// tick earlier.
+public machine deadline(now: u64, requested: u64, budget: u64) -> u64 {
+    transition budget != 0u64 && budget < 0x8000000000000000u64 {
+        true -> remaining(now, requested, budget)
+        _ -> (0u64)
+    }
+    machine remaining(now: u64, requested: u64, budget: u64) -> u64 {
+        let left: u64 = ((requested as u64 in Wrapping) - (now as u64 in Wrapping)) as u64;
+        transition requested == 0u64 {
+            true -> bounded(now, budget)
+            _ -> limited(now, left, budget)
+        }
+    }
+    machine limited(now: u64, left: u64, budget: u64) -> u64 {
+        transition left != 0u64 && left < 0x8000000000000000u64 {
+            true -> bounded(now, smaller(left, budget))
+            _ -> (0u64)
+        }
+    }
+    machine bounded(now: u64, ticks: u64) -> u64 {
+        let result: u64 = ((now as u64 in Wrapping) + (ticks as u64 in Wrapping)) as u64;
+        transition {
+            result == 0u64 -> (0xffffffffffffffffu64)
+            result == now -> (0u64)
+            _ -> (result)
+        }
+    }
+}
+machine smaller(a: u64, b: u64) -> u64 {
+    transition a < b { true -> (a) _ -> (b) }
+}

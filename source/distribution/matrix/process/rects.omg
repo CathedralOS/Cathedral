@@ -1,0 +1,96 @@
+module rects;
+// The compact presentation word: one or two paints published atomically under
+// one revision, in the same revision space as BEGIN and COMMIT. Three header
+// words, then two records of a child-local name, four 16-bit extents and an
+// RGB colour, little-endian across the remaining words; an unused second
+// record is entirely zero. Decoding re-encodes to check ranges, distinct
+// names and zero padding. Wire owner: source-rs/platform/contracts/matrix.rs.
+use protocol::main;
+
+public data Rects [copy] {
+    count: u64;
+    first: [u64; 8];
+    second: [u64; 8];
+}
+public data Record [copy] {
+    valid: bool;
+    name: u64;
+    geometry: u64;
+    colour: u64;
+}
+
+// The paints behind a compact word, or a count of zero for a malformed one.
+public machine decode(words: &[u64; 8]) -> Rects {
+    let first: [u64; 8] = fields(words[1], words[3], words[4], words[5] & 0xffffffffu64);
+    let second: [u64; 8] = fields(words[1], (words[5] >> 32u64) | (((words[6] as u64 in Wrapping) << 32u64) as u64),
+        (words[6] >> 32u64) | (((words[7] as u64 in Wrapping) << 32u64) as u64), words[7] >> 32u64);
+    transition second[2] == 0u64 {
+        true -> checked(words, first, second, 1u64)
+        _ -> checked(words, first, second, 2u64)
+    }
+    machine checked(words: &[u64; 8], first: [u64; 8], second: [u64; 8], count: u64) -> Rects {
+        let encoded: [u64; 8] = encode(words[1], words[2], first, second, count);
+        transition words[0] == PRESENT_RECTS && same(words, &encoded) {
+            true -> (Rects { count: count, first: first, second: second })
+            _ -> (Rects { count: 0u64, first: first, second: second })
+        }
+    }
+}
+machine fields(epoch: u64, name: u64, geometry: u64, colour: u64) -> [u64; 8] {
+    let mut words: [u64; 8];
+    words[0] = MATRIX_PAINT;
+    words[1] = epoch;
+    words[2] = name;
+    words[3] = geometry & 0xffffu64;
+    words[4] = (geometry >> 16u64) & 0xffffu64;
+    words[5] = (geometry >> 32u64) & 0xffffu64;
+    words[6] = geometry >> 48u64;
+    words[7] = colour;
+    words
+}
+machine record(epoch: u64, p: [u64; 8]) -> Record {
+    let bounded: bool = p[3] <= 0xffffu64 && p[4] <= 0xffffu64 && p[5] <= 0xffffu64 && p[6] <= 0xffffu64;
+    let valid: bool = p[0] == MATRIX_PAINT && p[1] == epoch && p[2] != 0u64 && p[7] <= 0xffffffu64 && bounded;
+    let geometry: u64 = p[3] | (((p[4] as u64 in Wrapping) << 16u64) as u64) | (((p[5] as u64 in Wrapping) << 32u64) as u64)
+        | (((p[6] as u64 in Wrapping) << 48u64) as u64);
+    Record { valid: valid, name: p[2], geometry: geometry, colour: p[7] }
+}
+// The compact word for one or two valid paints, or all zeros when they do not fit.
+machine encode(epoch: u64, revision: u64, first: [u64; 8], second: [u64; 8], count: u64) -> [u64; 8] {
+    let one: Record = record(epoch, first);
+    let two: Record = record(epoch, second);
+    let pair: bool = count == 2u64 && two.valid && two.name != one.name;
+    let single: bool = count == 1u64;
+    transition epoch != 0u64 && revision != 0u64 && one.valid && (single || pair) {
+        true -> (packed(epoch, revision, one, two, count))
+        _ -> (zeros())
+    }
+}
+machine packed(epoch: u64, revision: u64, one: Record, two: Record, count: u64) -> [u64; 8] {
+    let name: u64 = second_field(two.name, count);
+    let geometry: u64 = second_field(two.geometry, count);
+    let colour: u64 = second_field(two.colour, count);
+    let mut words: [u64; 8];
+    words[0] = PRESENT_RECTS;
+    words[1] = epoch;
+    words[2] = revision;
+    words[3] = one.name;
+    words[4] = one.geometry;
+    words[5] = one.colour | (((name as u64 in Wrapping) << 32u64) as u64);
+    words[6] = (name >> 32u64) | (((geometry as u64 in Wrapping) << 32u64) as u64);
+    words[7] = (geometry >> 32u64) | (((colour as u64 in Wrapping) << 32u64) as u64);
+    words
+}
+machine second_field(value: u64, count: u64) -> u64 {
+    transition count == 2u64 {
+        true -> (value)
+        _ -> (0u64)
+    }
+}
+machine same(a: &[u64; 8], b: &[u64; 8]) -> bool {
+    a[0] == b[0] && a[1] == b[1] && a[2] == b[2] && a[3] == b[3] && a[4] == b[4] && a[5] == b[5] && a[6] == b[6] && a[7] == b[7]
+}
+machine zeros() -> [u64; 8] {
+    let words: [u64; 8];
+    words
+}

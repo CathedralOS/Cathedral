@@ -9,6 +9,7 @@ module children;
 use protocol::main;
 use protocol::matrix;
 use protocol::services::INTERACTION;
+use protocol::services::STORAGE;
 use main::State;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
@@ -19,6 +20,8 @@ use runtime::time::Tick;
 use runtime::waiting::Set;
 use world::level;
 use world::geometry::zeros_from;
+use storage;
+use presentation;
 use report;
 
 // The per-load admission ceiling every stock child is reserved with.
@@ -73,8 +76,9 @@ public machine owner(gate: &Gate, context: &mut State, now: u64, frame: Frame) -
 // Reserve and admit: the image grant from the owner's catalogue, the staged
 // allowances (physical frames default to the load plus the private pages, or a
 // whole admission allowance per descendant slot), the CPU ceiling and the
-// images the child may run in turn, then the brokered admission. Every failed
-// step leaves no reservation behind.
+// images the child may run in turn, then the brokered admission offering
+// interaction and storage, as the Rust host offers every catalogue program.
+// Every failed step leaves no reservation behind.
 public machine run(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], image: u64, argument: u64, channels: u64,
     descendants: u64, images: u64, cpu: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
     transition !context.slots[slot].live && images < 16384u64 && descendants < 64u64 {
@@ -148,7 +152,7 @@ public machine run(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4]
         let loans: [u64; 14];
         level::disconnected(&mut context.world, slot);
         let status: u64 = block runtime::admission::main::admit(gate, &mut context.slots[slot], launch, argument,
-            &loans, 0u64, INTERACTION, runtime::time::after(now, HANDSHAKE_TICKS), false);
+            &loans, 0u64, INTERACTION | STORAGE, runtime::time::after(now, HANDSHAKE_TICKS), true);
         transition status == 0u64 {
             true -> block controlling(gate, context, now, slot, launch)
             _ -> refused(gate, launch, status)
@@ -166,11 +170,21 @@ public machine run(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4]
         let status: u64 = block runtime::connection::main::connect(gate, &mut context.controls[slot], sender, receiver,
             runtime::time::after(now, HANDSHAKE_TICKS));
         transition status == 0u64 {
+            true -> block storing(gate, context, now, slot, launch)
+            _ -> block uncontrolled(gate, context, slot, launch, status)
+        }
+    }
+    // The child's storage connection is served from admission on, whenever it
+    // chooses to acquire it; the owner binds it with a grant.
+    machine storing(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64) -> u64 reaches Kernel {
+        let status: u64 = storage::listen(context, slot, now);
+        transition status == 0u64 {
             true -> admitted(context, slot, launch)
             _ -> block uncontrolled(gate, context, slot, launch, status)
         }
     }
     machine uncontrolled(gate: &Gate, context: &mut State, slot: u64 [0..=4], launch: u64, status: u64) -> u64 reaches Kernel {
+        block storage::retire(gate, context, slot);
         let exit: Exit = block runtime::admission::main::stop(gate, &mut context.slots[slot]);
         refused(gate, launch, status)
     }
@@ -206,8 +220,8 @@ machine physical_frames(staged: u64, private_pages: u64, descendants: u64) -> u6
         _ -> (subtree)
     }
 }
-// Drop the owner control, stop and collect the child, return its reservation
-// and forget its view.
+// Drop the owner control and the storage listener, stop and collect the
+// child, return its reservation and forget its view and staged batch.
 public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel blocks; invokes Kernel; {
     transition context.slots[slot].live {
         true -> block stopping(gate, context, slot)
@@ -215,6 +229,8 @@ public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reac
     }
     machine stopping(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
         let closed: u64 = block runtime::connection::main::close(gate, &mut context.controls[slot]);
+        block storage::retire(gate, context, slot);
+        block presentation::release_slot(gate, context, slot);
         let exit: Exit = block runtime::admission::main::stop(gate, &mut context.slots[slot]);
         exited(gate, slot, exit);
         let ignored: u64 = runtime::task::main::release(gate, context.reservations[slot]);
@@ -235,6 +251,32 @@ machine exited(gate: &Gate, slot: u64, exit: Exit) reaches Kernel invokes Kernel
         report::child(gate, slot, 2u64, vector);
         report::child(gate, slot, 0x2au64, address);
         report::child(gate, slot, 0x2bu64, instruction);
+    }
+}
+// A child whose view or queues changed since its last poll is woken through
+// its interaction bell, once it holds the wait right; until then the hint
+// stays with the World.
+public machine notify(gate: &Gate, context: &mut State) reaches Kernel invokes Kernel; {
+    wake(gate, context, 0u64);
+    wake(gate, context, 1u64);
+    wake(gate, context, 2u64);
+    wake(gate, context, 3u64);
+    wake(gate, context, 4u64);
+}
+machine wake(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+    transition context.slots[slot].live && context.slots[slot].bell.wait == 0u64 {
+        true -> hinted(gate, context, slot)
+        _ -> done()
+    }
+    machine hinted(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+        let pending: bool = level::take_notification(&mut context.world, slot);
+        transition pending {
+            true -> rung(gate, context, slot)
+            _ -> done()
+        }
+    }
+    machine rung(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+        let status: u64 = Kernel::notify_signal(gate, context.slots[slot].bell.signal);
     }
 }
 public machine watch(context: &State, slot: u64 [0..=4], set: &mut Set) {

@@ -143,31 +143,50 @@ pub(crate) fn run() -> u64 {
     }
 }
 
-/// Keep an admitted Omega root alive without starting storage: run the
-/// catalogue's background into its slot over a sub-rectangle so the boot
-/// harness can see the child's paint beside the backdrop, then park while the
-/// harness drives the display and source paths and reads the scanout.
+/// Keep an admitted Omega root alive: start the storage service as F5 does
+/// behind an interactive screen, run the catalogue's Colors into an app slot
+/// over a sub-rectangle with its storage bound to the whole first root, then
+/// park while the boot harness drives the display, input and storage paths
+/// through the Omega matrix and reads the scanout.
 #[cfg(feature = "shell")]
 fn omega_root(session: &mut admission::Session) -> u64 {
-    cathedral_user_runtime::write(b"Cathedral desktop: Omega root admitted\n").unwrap();
-    const BACKGROUND_SLOT: u64 = 4;
-    const BACKGROUND_IMAGE: u64 = 1;
+    cathedral_user_runtime::write(b"Cathedral desktop: Omega root admitted
+").unwrap();
+    let mut provider = persistence::Provider::begin(0).expect("storage service start");
+    let deadline = time::after(3000).unwrap();
+    while !provider.poll_ready().expect("storage readiness") {
+        assert!(
+            !time::reached(time::now().unwrap(), deadline),
+            "storage service never reported ready"
+        );
+        idle(session);
+    }
+    cathedral_user_runtime::write(b"Cathedral desktop: Omega root storage ready
+").unwrap();
+    const COLORS_SLOT: u64 = 1;
+    const COLORS_IMAGE: u64 = 2;
     for words in [
-        [wire::RUN_PAGES, BACKGROUND_SLOT, 14, 2, 0, 0, 0, 0],
-        [wire::RUN, BACKGROUND_SLOT, BACKGROUND_IMAGE, 0, 2, 0, 0, 0],
-        [wire::SURFACE_LIMIT, BACKGROUND_SLOT, 1, 0, 0, 0, 0, 0],
-        [wire::PLACE, BACKGROUND_SLOT, 200, 150, 400, 300, 0, 0],
+        [wire::RUN_PAGES, COLORS_SLOT, 24, 8, 0, 0, 0, 0],
+        [wire::RUN, COLORS_SLOT, COLORS_IMAGE, 0, 3, 0, 0, 0],
+        [wire::STORAGE_GRANT, COLORS_SLOT, 0, 0, 0, 0, 0, 0],
+        [wire::SURFACE_LIMIT, COLORS_SLOT, 4, 0, 0, 0, 0, 0],
+        [wire::PLACE, COLORS_SLOT, 650, 100, 300, 300, KEYS, 0],
     ] {
         owner(&mut session.matrix, words);
     }
-    cathedral_user_runtime::write(b"Cathedral desktop: Omega root background placed\n").unwrap();
+    cathedral_user_runtime::write(b"Cathedral desktop: Omega root colors placed
+").unwrap();
     loop {
-        match session.matrix.idle(time::after(10).unwrap()) {
-            Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
-            result => panic!(
-                "Omega root idle {result:?}; root {:?}",
-                session.root.wait_until(time::now().unwrap())
-            ),
-        }
+        idle(session);
+    }
+}
+#[cfg(feature = "shell")]
+fn idle(session: &mut admission::Session) {
+    match session.matrix.idle(time::after(10).unwrap()) {
+        Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
+        result => panic!(
+            "Omega root idle {result:?}; root {:?}",
+            session.root.wait_until(time::now().unwrap())
+        ),
     }
 }

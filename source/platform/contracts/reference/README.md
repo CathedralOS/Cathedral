@@ -20,7 +20,10 @@ These experimental values are not a commitment to the final specified input,
 rendering or application bootstrap wire formats.
 
 The storage leaves validate [directory rows](storage/entries.omg) and
-[canonical metadata](storage/metadata.omg). [Timing](storage/timing.omg) mirrors
+[canonical metadata](storage/metadata.omg), name the
+[operations](storage/operations.omg) a delegated child may issue, and carry
+the [scope stamping and hop deadline](storage/scope.omg) a matrix applies on
+the way to the provider. [Timing](storage/timing.omg) mirrors
 the provider/client deadline separation; the actual chooser process fixture
 compares emitted deadlines against the Rust constants. Equal provider/client
 expiry would retire nested links before the root can report a storage failure.

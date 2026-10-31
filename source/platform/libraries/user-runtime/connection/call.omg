@@ -37,6 +37,15 @@ public machine exchange_bytes(gate: &Gate, peer: &mut Peer, clock: u64, words: &
         _ -> (CallReply::Failed { code: status })
     }
 }
+// A sealed source behind a request of `bytes` payload bytes.
+public machine exchange_object_bytes(gate: &Gate, peer: &mut Peer, clock: u64, words: &[u64; 8], object: u64, bytes: u64 [0..=64]) -> CallReply
+    reaches Kernel blocks; invokes Kernel; {
+    let status: u64 = block connection::main::begin_object_bytes(gate, peer, words, object, bytes);
+    transition status == 0u64 {
+        true -> block poll(gate, peer, clock)
+        _ -> (CallReply::Failed { code: status })
+    }
+}
 machine poll(gate: &Gate, peer: &mut Peer, clock: u64) -> CallReply reaches Kernel {
     let tick: Tick = time::read(gate, clock);
     transition tick {

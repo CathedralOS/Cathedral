@@ -1,0 +1,283 @@
+module scopes;
+// Subtree delegation of storage. The owner selects a source and a scope
+// object for a child's storage connection; the child sees only a local
+// binding revision. A whole source belongs to one child at a time; a subtree
+// may be held beside anything, since the provider confines it and the owner
+// holds all of it anyway. The scope is what the matrix stamps on the child's
+// requests; zero passes on everything the matrix holds. When both scope words
+// of a request are already taken, the matrix proves that the innermost lies
+// inside the other restrictions with one read-only check upstream and
+// remembers the successful proof: object parents never move and numbers are
+// never reused, so the proof stays true within the binding that checked it.
+// Wire owner: source-rs/platform/libraries/matrix/world/storage/.
+use protocol::main;
+use protocol::matrix;
+use protocol::storage::scope;
+use protocol::storage::operations;
+
+public const PROOFS: u64 = 4u64;
+public data Binding [copy] {
+    live: bool;
+    incarnation: u64;
+    source: u64;
+    scope: u64;
+    // Confirmed containment checks as scope pairs, the oldest replaced first.
+    proofs: [u64; 8];
+    proven: [bool; 4];
+    next_proof: u64;
+}
+public data Scopes {
+    bindings: [Binding; 5];
+    revisions: [u64; 5];
+}
+public data Bound [copy] {
+    status: u64;
+    source: u64;
+    scope: u64;
+}
+// Bookkeeping for one upstream containment check, confirmed only after that
+// exact check succeeds on the binding's live upstream connection.
+public data Proof [copy] {
+    slot: u64;
+    incarnation: u64;
+    revision: u64;
+    first: u64;
+    second: u64;
+}
+// A local binding reply, a stamped request for the source, or a read-only
+// check that must succeed before the folded request may follow it.
+public data Prepared {
+    case Reply(words: [u64; 8]);
+    case Forward(source: u64, words: [u64; 8]);
+    case Validate(source: u64, check: [u64; 8], words: [u64; 8], proof: Proof);
+    case Refused(code: u64);
+}
+
+public machine grant(scopes: &mut Scopes, slot: u64, incarnation: u64, source: u64, subtree: u64, available: u64) -> u64 {
+    transition slot < 5u64 && incarnation != 0u64 && source < available {
+        true -> free(scopes, slot, incarnation, source, subtree)
+        _ -> (DENIED)
+    }
+    machine free(scopes: &mut Scopes, slot: u64, incarnation: u64, source: u64, subtree: u64) -> u64 requires slot < 5u64 {
+        let held: bool = whole(scopes, source, 0u64);
+        let next: u64 = ((scopes.revisions[slot] as u64 in Wrapping) + 1u64) as u64;
+        transition {
+            scopes.bindings[slot].live || (subtree == 0u64 && held) -> (BUSY)
+            next == 0u64 || next > scope::MAX_REVISION -> (NO_MEMORY)
+            _ -> bound(scopes, slot, incarnation, source, subtree, next)
+        }
+    }
+    machine bound(scopes: &mut Scopes, slot: u64, incarnation: u64, source: u64, subtree: u64, next: u64) -> u64 requires slot < 5u64 {
+        let mut binding: Binding;
+        binding.live = true;
+        binding.incarnation = incarnation;
+        binding.source = source;
+        binding.scope = subtree;
+        scopes.revisions[slot] = next;
+        scopes.bindings[slot] = binding;
+        0u64
+    }
+}
+// Whether any binding holds `source` whole.
+machine whole(scopes: &Scopes, source: u64, index: u64) -> bool requires index <= 5u64 {
+    transition index < 5u64 {
+        true -> compared(scopes, source, index)
+        _ -> (false)
+    }
+    machine compared(scopes: &Scopes, source: u64, index: u64) -> bool requires index < 5u64 {
+        transition scopes.bindings[index].live && scopes.bindings[index].source == source && scopes.bindings[index].scope == 0u64 {
+            true -> (true)
+            _ -> whole(scopes, source, index + 1u64)
+        }
+    }
+}
+// The source and scope bound to this connection.
+public machine binding(scopes: &Scopes, slot: u64, incarnation: u64) -> Bound {
+    transition slot < 5u64 {
+        true -> held(scopes, slot, incarnation)
+        _ -> (refused())
+    }
+    machine held(scopes: &Scopes, slot: u64, incarnation: u64) -> Bound requires slot < 5u64 {
+        transition scopes.bindings[slot].live && scopes.bindings[slot].incarnation == incarnation {
+            true -> (Bound { status: 0u64, source: scopes.bindings[slot].source, scope: scopes.bindings[slot].scope })
+            _ -> (refused())
+        }
+    }
+}
+machine refused() -> Bound { Bound { status: DENIED, source: 0u64, scope: 0u64 } }
+// The binding's revision, or zero when the connection holds none.
+public machine revision_of(scopes: &Scopes, slot: u64, incarnation: u64) -> u64 {
+    let bound: Bound = binding(scopes, slot, incarnation);
+    transition bound.status == 0u64 && slot < 5u64 {
+        true -> current(scopes, slot)
+        _ -> (0u64)
+    }
+    machine current(scopes: &Scopes, slot: u64) -> u64 requires slot < 5u64 { scopes.revisions[slot] }
+}
+public machine authorize(scopes: &Scopes, slot: u64, incarnation: u64, revision: u64) -> Bound {
+    let bound: Bound = binding(scopes, slot, incarnation);
+    let current: u64 = revision_of(scopes, slot, incarnation);
+    transition bound.status == 0u64 && current == revision {
+        true -> (bound)
+        _ -> (refused())
+    }
+}
+// Authenticate the connection and revision before appending this owner's
+// scope. Child-provided stamps only narrow authority; folding a full packet
+// requires a confirmed containment proof under this exact binding. A request
+// for the binding itself is answered here with the revision and the realm the
+// child was granted, or the matrix's own realm under a scope of zero.
+public machine prepare(scopes: &Scopes, slot: u64, incarnation: u64, words: [u64; 8], realm: u64) -> Prepared {
+    let bound: Bound = binding(scopes, slot, incarnation);
+    let info: bool = words[0] == STORAGE_INFO && words[1] == 0u64 && words[2] == 0u64 && words[3] == 0u64
+        && words[4] == 0u64 && words[5] == 0u64 && words[6] == 0u64;
+    transition {
+        bound.status != 0u64 -> (Prepared::Refused { code: DENIED })
+        info -> (Prepared::Reply { words: info_reply(scopes, slot, incarnation, bound.scope, realm) })
+        _ -> authorized(scopes, slot, incarnation, words, bound)
+    }
+    machine authorized(scopes: &Scopes, slot: u64, incarnation: u64, words: [u64; 8], bound: Bound) -> Prepared {
+        let current: u64 = revision_of(scopes, slot, incarnation);
+        let expected: u64 = scope::revision(words[0]);
+        let operation: u64 = scope::operation(words[0]);
+        let lowest: u64 = ((STORAGE_BASE as u64 in Wrapping) + (operations::HEAD as u64 in Wrapping)) as u64;
+        let highest: u64 = ((STORAGE_BASE as u64 in Wrapping) + (operations::LAST as u64 in Wrapping)) as u64;
+        transition current == expected && operation >= lowest && operation <= highest {
+            true -> stamping(scopes, slot, incarnation, words, bound)
+            _ -> (Prepared::Refused { code: DENIED })
+        }
+    }
+    machine stamping(scopes: &Scopes, slot: u64, incarnation: u64, words: [u64; 8], bound: Bound) -> Prepared {
+        let mut stamped: [u64; 8] = words;
+        let fits: bool = scope::stamp(&mut stamped, bound.scope);
+        transition fits && slot < 5u64 {
+            true -> (Prepared::Forward { source: bound.source, words: stamped })
+            _ -> folding(scopes, slot, incarnation, words, bound)
+        }
+    }
+    // Both scope words are taken. Proving the innermost inside both remaining
+    // restrictions makes it their intersection for this request; deletion can
+    // only make the request fail, never broaden authority.
+    machine folding(scopes: &Scopes, slot: u64, incarnation: u64, words: [u64; 8], bound: Bound) -> Prepared {
+        transition slot < 5u64 {
+            true -> folded(scopes, slot, incarnation, words, bound)
+            _ -> (Prepared::Refused { code: DENIED })
+        }
+    }
+    machine folded(scopes: &Scopes, slot: u64, incarnation: u64, words: [u64; 8], bound: Bound) -> Prepared requires slot < 5u64 {
+        let known: bool = proven(&scopes.bindings[slot], words[5], words[6], 0u64);
+        let proof: Proof = Proof { slot: slot, incarnation: incarnation, revision: scopes.revisions[slot], first: words[5], second: words[6] };
+        let mut inner: [u64; 8] = words;
+        inner[6] = 0u64;
+        transition known {
+            true -> (Prepared::Forward { source: bound.source, words: inner })
+            _ -> (Prepared::Validate { source: bound.source, check: check_of(words, bound.scope), words: inner, proof: proof })
+        }
+    }
+}
+machine info_reply(scopes: &Scopes, slot: u64, incarnation: u64, scope: u64, realm: u64) -> [u64; 8] {
+    let mut reply: [u64; 8];
+    reply[1] = revision_of(scopes, slot, incarnation);
+    transition scope == 0u64 {
+        true -> realmed(reply, realm)
+        _ -> realmed(reply, scope)
+    }
+    machine realmed(reply: [u64; 8], realm: u64) -> [u64; 8] {
+        let mut words: [u64; 8] = reply;
+        words[2] = realm;
+        words
+    }
+}
+// HEAD of the innermost scope, restricted by the outer one and this owner's.
+machine check_of(words: [u64; 8], scope: u64) -> [u64; 8] {
+    let mut check: [u64; 8];
+    let head: u64 = ((STORAGE_BASE as u64 in Wrapping) + (operations::HEAD as u64 in Wrapping)) as u64;
+    check[0] = (words[0] & ~0xffffu64) | head;
+    check[1] = words[5];
+    check[5] = words[6];
+    check[6] = scope;
+    check[7] = words[7];
+    check
+}
+machine proven(binding: &Binding, first: u64, second: u64, index: u64) -> bool requires index <= 4u64 {
+    transition index < 4u64 {
+        true -> compared(binding, first, second, index)
+        _ -> (false)
+    }
+    machine compared(binding: &Binding, first: u64, second: u64, index: u64) -> bool requires index < 4u64 {
+        transition binding.proven[index] && binding.proofs[index * 2u64] == first && binding.proofs[index * 2u64 + 1u64] == second {
+            true -> (true)
+            _ -> proven(binding, first, second, index + 1u64)
+        }
+    }
+}
+// Remember a successful check. Only the proof itself is reused, never the
+// operation's result; revocation, regrant and provider retirement discard the
+// binding and its proofs together.
+public machine confirm(scopes: &mut Scopes, proof: Proof) -> u64 {
+    let bound: Bound = authorize(scopes, proof.slot, proof.incarnation, proof.revision);
+    transition bound.status == 0u64 && proof.slot < 5u64 {
+        true -> remembered(scopes, proof.slot, proof)
+        _ -> (DENIED)
+    }
+    machine remembered(scopes: &mut Scopes, slot: u64, proof: Proof) -> u64 requires slot < 5u64 {
+        let known: bool = proven(&scopes.bindings[slot], proof.first, proof.second, 0u64);
+        let next: u64 = scopes.bindings[slot].next_proof;
+        transition {
+            known -> (0u64)
+            next < 4u64 -> stored(scopes, slot, proof, next)
+            _ -> stored(scopes, slot, proof, 0u64)
+        }
+    }
+    machine stored(scopes: &mut Scopes, slot: u64, proof: Proof, next: u64) -> u64 requires slot < 5u64 && next < 4u64 {
+        scopes.bindings[slot].proofs[next * 2u64] = proof.first;
+        scopes.bindings[slot].proofs[next * 2u64 + 1u64] = proof.second;
+        scopes.bindings[slot].proven[next] = true;
+        scopes.bindings[slot].next_proof = (next + 1u64) % 4u64;
+        0u64
+    }
+}
+// A replaced or retired provider invalidates every grant naming that source;
+// other sources' bindings stay usable.
+public machine revoke_source(scopes: &mut Scopes, source: u64) {
+    transition { _ -> dropping(scopes, source, 0u64) }
+    machine dropping(scopes: &mut Scopes, source: u64, index: u64) requires index <= 5u64 {
+        transition index < 5u64 {
+            true -> checked(scopes, source, index)
+            _ -> done()
+        }
+    }
+    machine checked(scopes: &mut Scopes, source: u64, index: u64) requires index < 5u64 {
+        transition scopes.bindings[index].live && scopes.bindings[index].source == source {
+            true -> cleared(scopes, source, index)
+            _ -> dropping(scopes, source, index + 1u64)
+        }
+    }
+    machine cleared(scopes: &mut Scopes, source: u64, index: u64) requires index < 5u64 {
+        let empty: Binding;
+        scopes.bindings[index] = empty;
+        transition { _ -> dropping(scopes, source, index + 1u64) }
+    }
+}
+// Forget one slot's binding; returns its source plus one, or zero.
+public machine revoke(scopes: &mut Scopes, slot: u64) -> u64 {
+    transition slot < 5u64 {
+        true -> revoked(scopes, slot)
+        _ -> (0u64)
+    }
+    machine revoked(scopes: &mut Scopes, slot: u64) -> u64 requires slot < 5u64 {
+        let live: bool = scopes.bindings[slot].live;
+        let source: u64 = scopes.bindings[slot].source;
+        let empty: Binding;
+        scopes.bindings[slot] = empty;
+        transition live {
+            true -> (((source as u64 in Wrapping) + 1u64) as u64)
+            _ -> (0u64)
+        }
+    }
+}
+public machine clear(scopes: &mut Scopes) {
+    let empty: [Binding; 5];
+    scopes.bindings = empty;
+}
+machine done() {}

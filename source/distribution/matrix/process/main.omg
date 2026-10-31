@@ -2,11 +2,13 @@ module main;
 // The stock matrix as a standalone Omega process. At the display root it owns
 // the owner-control connection the desktop supervises it through, the display
 // connection it presents on, the source connection physical input arrives on,
-// the children it funds and admits, and the World that attenuates them. One
-// turn serves the owner, the source and each child, flushes owed erasures,
-// then parks on every live interest. Storage, the stock launch policy and
-// nested operation arrive slice by slice; the Rust host remains the F5 matrix
-// until this program reaches parity.
+// the provider links its storage comes over, the children it funds and admits,
+// and the World that attenuates them. One turn serves the owner, the source,
+// each child's interaction and storage connections, wakes the children the
+// World has hints for, flushes owed erasures, then parks on every live
+// interest. The stock launch policy and nested
+// operation arrive slice by slice; the Rust host remains the F5 matrix until
+// this program reaches parity.
 use runtime::entry::Program;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
@@ -17,12 +19,15 @@ use runtime::admission::main::Admitted;
 use runtime::time::Tick;
 use runtime::waiting::Set;
 use world::level::World;
+use world::batch::Batch;
+use storage::Store;
 use startup;
 use commands;
 use source;
 use slots;
 use children;
 use presentation;
+use storage;
 
 public const CHILDREN: u64 = 5u64;
 // Owner-declared policy for the next launch into a slot.
@@ -41,6 +46,11 @@ public data SlotPolicy [copy] {
     height: u64;
     keys: u64;
 }
+// A sealed image held behind the compositor tile it was last shown on.
+public data Image [copy] {
+    key: u64;
+    object: u64;
+}
 public data State {
     owner: Server;
     source: Server;
@@ -53,6 +63,13 @@ public data State {
     height: u64;
     keys: u64;
     policies: [SlotPolicy; 5];
+    // Each child's staged presentation batch, the sealed images retained
+    // behind compositor tiles, and the compositor transaction revision.
+    batches: [Batch; 5];
+    images: [Image; 16];
+    revision: u64;
+    // Provider links, bindings and each child's storage connection.
+    store: Store;
     // Admitted children, this matrix's client to each one's owner control, the
     // launch each was reserved under, and the allowances staged for the next
     // launch into each slot.
@@ -88,9 +105,11 @@ machine turn(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
     let third: u64 = block slots::step(gate, context, 2u64, now);
     let fourth: u64 = block slots::step(gate, context, 3u64, now);
     let fifth: u64 = block slots::step(gate, context, 4u64, now);
+    let stored: u64 = block storage::step(gate, context, now);
+    children::notify(gate, context);
     let flushed: u64 = block presentation::flush(gate, context);
     transition commanded == 0u64 && sourced == 0u64 && first == 0u64 && second == 0u64 && third == 0u64
-        && fourth == 0u64 && fifth == 0u64 && flushed == 0u64 {
+        && fourth == 0u64 && fifth == 0u64 && stored == 0u64 && flushed == 0u64 {
         true -> block parked(gate, context, now)
         _ -> block cleanup(gate, context, 403u64)
     }
@@ -106,6 +125,7 @@ machine parked(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel
     children::watch(context, 2u64, &mut set);
     children::watch(context, 3u64, &mut set);
     children::watch(context, 4u64, &mut set);
+    storage::watch(context, &mut set);
     let status: u64 = block runtime::waiting::wait(gate, &set);
     transition status < kernel::ERROR_BASE || status == kernel::TIMED_OUT || status == kernel::PEER_CLOSED {
         true -> block serve(gate, context)
@@ -118,6 +138,8 @@ machine cleanup(gate: &Gate, context: &mut State, status: u64) -> u64 reaches Ke
     block children::reclaim(gate, context, 2u64);
     block children::reclaim(gate, context, 3u64);
     block children::reclaim(gate, context, 4u64);
+    block storage::close(gate, context);
+    block presentation::release_images(gate, context, 0u64);
     block runtime::server::main::close(gate, &mut context.source);
     block runtime::server::main::close(gate, &mut context.owner);
     transition context.has_scene {

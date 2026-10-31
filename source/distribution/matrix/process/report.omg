@@ -6,8 +6,15 @@ use runtime::kernel::Kernel;
 
 public machine display_ready(gate: &Gate) reaches Kernel invokes Kernel; {
     let text: [u8; 50] = "Cathedral matrix: shared display connection ready\n";
+    line(gate, &text);
+}
+public machine storage_ready(gate: &Gate) reaches Kernel invokes Kernel; {
+    let text: [u8; 50] = "Cathedral matrix: shared storage connection ready\n";
+    line(gate, &text);
+}
+machine line(gate: &Gate, text: &[u8; 50]) reaches Kernel {
     let mut words: [u64; 8];
-    transition { _ -> pack(gate, &text, &mut words, 0u64) }
+    transition { _ -> pack(gate, text, &mut words, 0u64) }
     machine pack(gate: &Gate, text: &[u8; 50], words: &mut [u64; 8], index: u64) requires index <= 50u64 reaches Kernel {
         transition index < 50u64 {
             true -> byte(gate, text, words, index)

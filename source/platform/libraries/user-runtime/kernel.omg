@@ -67,6 +67,8 @@ public data Gate {
     cpu_assign: addr;
     physical_assign: addr;
     resource_assign: addr;
+    link_handle: addr;
+    link_connect: addr;
 }
 
 public boundary trait Kernel {
@@ -131,4 +133,9 @@ public boundary trait Kernel {
     machine cpu_assign(gate: &Gate, launch: u64, limit: u64) -> u64 reaches;
     machine physical_assign(gate: &Gate, launch: u64, frames: u64) -> u64 reaches;
     machine resource_assign(gate: &Gate, launch: u64, limits: &[u64; 3]) -> u64 reaches;
+    // Boot-approved provider links: the link the composition supplied at an
+    // index, and a client connection over it whose endpoints are the returned
+    // bootstrap index and the next one.
+    machine link_handle(gate: &Gate, index: u64) -> u64 reaches;
+    machine link_connect(gate: &Gate, link: u64) -> u64 reaches;
 }

@@ -89,6 +89,8 @@ exit. It also names funded reservations for children a task admits itself: an
 image grant from the owner's catalogue or a sealed object, a reservation over
 quotas, child slots, the per-load admission ceiling and physical frames, its
 release, and the idle launch's pool, allowed images, CPU and absolute limits.
+[link.omg](link.omg) names the boot-approved provider links the composition
+supplied: the link at an index, and a client connection over it.
 [admission/main.omg](admission/main.omg) sequences one brokered admission:
 allocate the request/reply channels, the optional storage pair and the
 interaction bell, move the two broker endpoints into the child, accept owner

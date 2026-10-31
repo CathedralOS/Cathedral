@@ -100,6 +100,10 @@ linux_x86_64 machine Gate::physical_assign_leaf(gate: &Gate, launch: u64, frames
     satisfies Kernel::physical_assign via ForeignBinding::TableFunction(physical_assign);
 linux_x86_64 machine Gate::resource_assign_leaf(gate: &Gate, launch: u64, limits: &[u64; 3]) -> u64
     satisfies Kernel::resource_assign via ForeignBinding::TableFunction(resource_assign);
+linux_x86_64 machine Gate::link_handle_leaf(gate: &Gate, index: u64) -> u64
+    satisfies Kernel::link_handle via ForeignBinding::TableFunction(link_handle);
+linux_x86_64 machine Gate::link_connect_leaf(gate: &Gate, link: u64) -> u64
+    satisfies Kernel::link_connect via ForeignBinding::TableFunction(link_connect);
 
 public NativeKernel satisfies Kernel {
     Kernel::wait_many = Gate::wait_many_leaf;
@@ -122,6 +126,8 @@ public NativeKernel satisfies Kernel {
     Kernel::cpu_assign = Gate::cpu_assign_leaf;
     Kernel::physical_assign = Gate::physical_assign_leaf;
     Kernel::resource_assign = Gate::resource_assign_leaf;
+    Kernel::link_handle = Gate::link_handle_leaf;
+    Kernel::link_connect = Gate::link_connect_leaf;
     Kernel::object_create = Gate::object_create_leaf;
     Kernel::object_send = Gate::object_send_leaf;
     Kernel::object_receive = Gate::object_receive_leaf;

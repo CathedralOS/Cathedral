@@ -76,6 +76,11 @@ public machine begin_object(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], ob
     reaches Kernel blocks; invokes Kernel; {
     block begin_sized(gate, peer, payload, object, 64u64)
 }
+// A sealed source behind a request shorter than 64 bytes.
+public machine begin_object_bytes(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], object: u64, bytes: u64 [0..=64]) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    block begin_sized(gate, peer, payload, object, bytes)
+}
 machine begin_sized(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], object: u64, bytes: u64 [0..=64]) -> u64 reaches Kernel {
     transition peer.fault != 0u64 {
         true -> (peer.fault)

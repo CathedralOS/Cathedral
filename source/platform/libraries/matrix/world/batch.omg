@@ -1,0 +1,173 @@
+module batch;
+// A connection's one bounded unpublished presentation batch. Entries hold the
+// child's own words and, behind an image, the sealed payload the owner holds
+// for it; the owner releases payloads before this record forgets them, and
+// clearing a batch never touches the previously published scene. Revisions
+// share one space with the compact rectangles word, so a repeated commit of
+// the last published revision is answered without publishing again.
+// Wire owner: source-rs/platform/libraries/matrix/world/presentation/.
+use protocol::main;
+
+public const LIMIT: u64 = 16u64;
+public data Entry [copy] {
+    used: bool;
+    words: [u64; 8];
+    payload: u64;
+}
+public data Batch {
+    incarnation: u64;
+    epoch: u64;
+    last: u64;
+    active: bool;
+    revision: u64;
+    failed: u64;
+    entries: [Entry; 16];
+}
+public data Commit [copy] {
+    case Publish;
+    case Repeat;
+    case Refused(code: u64);
+}
+
+// Rebind to an occupant and epoch; a change forgets the staged entries, whose
+// payloads the owner has already released.
+public machine bind(batch: &mut Batch, incarnation: u64, epoch: u64) {
+    let same: bool = batch.incarnation == incarnation && batch.epoch == epoch;
+    transition same {
+        true -> done()
+        _ -> rebound(batch, incarnation, epoch)
+    }
+    machine rebound(batch: &mut Batch, incarnation: u64, epoch: u64) {
+        reset(batch);
+        batch.incarnation = incarnation;
+        batch.epoch = epoch;
+    }
+}
+// Open a revision: the same open revision is accepted again, another is BUSY,
+// and one not above the last published is refused.
+public machine begin(batch: &mut Batch, revision: u64) -> u64 {
+    transition {
+        batch.active && batch.revision == revision -> (0u64)
+        batch.active -> (BUSY)
+        revision == 0u64 || revision <= batch.last -> (DENIED)
+        _ -> started(batch, revision)
+    }
+    machine started(batch: &mut Batch, revision: u64) -> u64 {
+        batch.active = true;
+        batch.revision = revision;
+        batch.failed = 0u64;
+        0u64
+    }
+}
+// The first refusal inside an open batch is what its commit reports.
+public machine poison(batch: &mut Batch, status: u64) {
+    transition batch.active && batch.failed == 0u64 {
+        true -> poisoned(batch, status)
+        _ -> done()
+    }
+    machine poisoned(batch: &mut Batch, status: u64) { batch.failed = status; }
+}
+// Stage one update under the open revision. A surface may be staged once per
+// batch; a refusal poisons the batch.
+public machine stage(batch: &mut Batch, words: [u64; 8], payload: u64) -> u64 {
+    let status: u64 = staged(batch, words, payload);
+    transition status == 0u64 {
+        true -> (0u64)
+        _ -> failing(batch, status)
+    }
+    machine failing(batch: &mut Batch, status: u64) -> u64 {
+        poison(batch, status);
+        status
+    }
+}
+machine staged(batch: &mut Batch, words: [u64; 8], payload: u64) -> u64 {
+    let duplicate: bool = named(batch, words[2], 0u64);
+    let index: u64 = free(batch, 0u64);
+    transition {
+        !batch.active -> (DENIED)
+        batch.failed != 0u64 -> (batch.failed)
+        duplicate -> (INVALID_ARGUMENT)
+        index < 16u64 -> filled(batch, words, payload, index)
+        _ -> (NO_MEMORY)
+    }
+    machine filled(batch: &mut Batch, words: [u64; 8], payload: u64, index: u64) -> u64 requires index < 16u64 {
+        batch.entries[index].used = true;
+        batch.entries[index].words = words;
+        batch.entries[index].payload = payload;
+        0u64
+    }
+}
+// Whether a staged entry already names this child-local surface.
+machine named(batch: &Batch, name: u64, index: u64) -> bool requires index <= 16u64 {
+    transition index < 16u64 {
+        true -> compared(batch, name, index)
+        _ -> (false)
+    }
+    machine compared(batch: &Batch, name: u64, index: u64) -> bool requires index < 16u64 {
+        transition batch.entries[index].used && batch.entries[index].words[2] == name {
+            true -> (true)
+            _ -> named(batch, name, index + 1u64)
+        }
+    }
+}
+// The first unused entry, or sixteen when the batch is full.
+machine free(batch: &Batch, index: u64) -> u64 requires index <= 16u64 {
+    transition index < 16u64 {
+        true -> checked(batch, index)
+        _ -> (16u64)
+    }
+    machine checked(batch: &Batch, index: u64) -> u64 requires index < 16u64 {
+        transition batch.entries[index].used {
+            true -> free(batch, index + 1u64)
+            _ -> (index)
+        }
+    }
+}
+// Whether a commit of `revision` publishes, repeats the last publication, or
+// is refused: the open revision must match, and a poisoned batch reports its
+// first refusal.
+public machine prepare(batch: &Batch, revision: u64) -> Commit {
+    transition {
+        !batch.active && revision != 0u64 && revision == batch.last -> (Commit::Repeat)
+        !batch.active || batch.revision != revision -> (Commit::Refused { code: DENIED })
+        batch.failed != 0u64 -> (Commit::Refused { code: batch.failed })
+        _ -> (Commit::Publish)
+    }
+}
+// The open revision was published; its payloads now belong to the retained scene.
+public machine committed(batch: &mut Batch, revision: u64) {
+    batch.last = revision;
+    clear(batch);
+}
+public machine abort(batch: &mut Batch, revision: u64) -> u64 {
+    transition batch.active && batch.revision == revision {
+        true -> aborted(batch)
+        _ -> (DENIED)
+    }
+    machine aborted(batch: &mut Batch) -> u64 {
+        clear(batch);
+        0u64
+    }
+}
+// Take the payload behind one entry, leaving the entry without one.
+public machine take_payload(batch: &mut Batch, index: u64 [0..=15]) -> u64 {
+    let payload: u64 = batch.entries[index].payload;
+    batch.entries[index].payload = 0u64;
+    payload
+}
+// Forget the staged entries; the owner released their payloads first.
+public machine clear(batch: &mut Batch) {
+    let empty: [Entry; 16];
+    batch.entries = empty;
+    batch.active = false;
+    batch.revision = 0u64;
+    batch.failed = 0u64;
+}
+// Retire the binding in place, keeping the record where it is.
+public machine reset(batch: &mut Batch) {
+    clear(batch);
+    batch.incarnation = 0u64;
+    batch.epoch = 0u64;
+    batch.last = 0u64;
+}
+machine done() {}

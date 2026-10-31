@@ -1,37 +1,58 @@
 module presentation;
 // A child's surfaces on the root display. Creation validates in the World and
 // names the compositor tile behind the rank; children receive matrix-local
-// names, never tile indices. Paint, erase and cursor updates are clipped and
-// translated by the World, sent to the compositor as that tile's rectangle,
-// and committed only after the compositor accepts them. Erasures owed for
-// retired surfaces are flushed between turns the same way. Images and the
-// begin/commit batch arrive in a later slice.
+// names, never tile indices. Updates are clipped and translated by the World,
+// sent to the compositor as that tile's rectangle, cursor or sealed image, and
+// committed only after the compositor accepts them. Inside a child's
+// begin/commit batch they are staged instead and published together under one
+// compositor transaction; the compact rectangles word is such a batch of one
+// or two paints. Sealed images stay retained behind their tile until the tile
+// is painted over or erased, so the World can replay them. Erasures owed for
+// retired surfaces are flushed between turns the same way.
 use protocol::main;
 use protocol::matrix;
 use protocol::display;
 use main::State;
+use main::Image;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;
 use runtime::connection::main::Frame;
+use world::level;
 use world::surfaces;
 use world::surfaces::Prepared;
 use world::surfaces::Updated;
 use world::surfaces::Retained;
+use world::batch;
+use world::batch::Commit;
+use world::main::request;
+use world::geometry::zeros_from;
+use rects;
+use rects::Rects;
 use scene;
 
+public const IMAGES: u64 = 16u64;
+
 // The rank the owner allotted names the tile; the key is that rank plus one so
-// zero never names a tile.
-public machine create(context: &mut State, slot: u64 [0..=4], incarnation: u64, words: &[u64; 8]) -> [u64; 8] {
-    let prepared: Prepared = surfaces::prepare(&mut context.world, slot, incarnation, words[1], words[2]);
-    transition prepared {
-        Prepared::Rank { upstream } -> keyed(context, slot, words[2], upstream)
-        Prepared::Refused { code } -> (error(code))
+// zero never names a tile. No surface is created inside an open batch.
+public machine create(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, words: &[u64; 8]) -> [u64; 8]
+    reaches Kernel blocks; invokes Kernel; {
+    block prune(gate, context, slot);
+    transition context.batches[slot].active {
+        true -> (poisoned(context, slot, kernel::DENIED))
+        _ -> creating(context, slot, incarnation, words)
+    }
+    machine creating(context: &mut State, slot: u64 [0..=4], incarnation: u64, words: &[u64; 8]) -> [u64; 8] {
+        let prepared: Prepared = surfaces::prepare(&mut context.world, slot, incarnation, words[1], words[2]);
+        transition prepared {
+            Prepared::Rank { upstream } -> keyed(context, slot, words[2], upstream)
+            Prepared::Refused { code } -> (error(code))
+        }
     }
     machine keyed(context: &mut State, slot: u64 [0..=4], rank: u64, upstream: u64) -> [u64; 8] {
         transition rank < 16u64 && upstream < display::MATRIX_TILES {
             true -> named(context, slot, rank, upstream + 1u64)
-            _ -> (error(NO_MEMORY))
+            _ -> (error(kernel::NO_MEMORY))
         }
     }
     machine named(context: &mut State, slot: u64 [0..=4], rank: u64, key: u64) -> [u64; 8] requires rank < 16u64 {
@@ -41,30 +62,477 @@ public machine create(context: &mut State, slot: u64 [0..=4], incarnation: u64, 
         reply
     }
 }
+// A paint, erase or cursor update: staged inside an open batch, otherwise
+// sent and committed. A successful paint or an erase the compositor no longer
+// knows drops the image retained behind that tile.
 public machine update(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame) -> [u64; 8]
     reaches Kernel blocks; invokes Kernel; {
+    block prune(gate, context, slot);
     let preview: Updated = surfaces::update(&mut context.world, slot, incarnation, &frame.payload, false);
     transition preview {
         Updated::Packet { words } -> block publishing(gate, context, slot, incarnation, frame, words)
-        Updated::Refused { code } -> (error(code))
+        Updated::Refused { code } -> (poisoned(context, slot, code))
     }
-    machine publishing(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, packet: [u64; 8]) -> [u64; 8] reaches Kernel {
-        transition packet[0] == SURFACE_IMAGE {
-            true -> (error(DENIED))
+    machine publishing(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, packet: [u64; 8]) -> [u64; 8]
+        reaches Kernel {
+        transition context.batches[slot].active {
+            true -> (staged(context, slot, frame))
             _ -> block sent(gate, context, slot, incarnation, frame, packet)
         }
     }
-    machine sent(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, packet: [u64; 8]) -> [u64; 8] reaches Kernel {
+    machine staged(context: &mut State, slot: u64 [0..=4], frame: Frame) -> [u64; 8] {
+        let status: u64 = batch::stage(&mut context.batches[slot], frame.payload, 0u64);
+        error(status)
+    }
+    machine sent(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, packet: [u64; 8]) -> [u64; 8]
+        reaches Kernel {
         let status: u64 = block scene::command(gate, context, tile(packet));
-        transition status == 0u64 {
-            true -> committed(context, slot, incarnation, frame)
+        let erased: bool = frame.payload[0] == MATRIX_ERASE && (status == kernel::DENIED || status == kernel::BAD_HANDLE);
+        transition {
+            status == 0u64 -> block committed(gate, context, slot, incarnation, frame, packet[2])
+            erased -> block dropped(gate, context, packet[2], status)
             _ -> (error(status))
         }
     }
-    machine committed(context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame) -> [u64; 8] {
+    machine committed(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, key: u64) -> [u64; 8] reaches Kernel {
         let committed: Updated = surfaces::update(&mut context.world, slot, incarnation, &frame.payload, true);
-        let reply: [u64; 8];
-        reply
+        block drop_image(gate, context, key);
+        ok()
+    }
+    machine dropped(gate: &Gate, context: &mut State, key: u64, status: u64) -> [u64; 8] reaches Kernel {
+        block drop_image(gate, context, key);
+        error(status)
+    }
+}
+// A sealed image for a surface: staged with its payload inside an open batch,
+// otherwise sent to the compositor, committed and retained behind its tile.
+// The compositor validates the pixels against the object's size.
+public machine image(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, object: u64) -> [u64; 8]
+    reaches Kernel blocks; invokes Kernel; {
+    block prune(gate, context, slot);
+    let preview: Updated = surfaces::update(&mut context.world, slot, incarnation, &frame.payload, false);
+    transition preview {
+        Updated::Packet { words } -> block imaging(gate, context, slot, incarnation, frame, words, object)
+        Updated::Refused { code } -> block refused(gate, context, slot, code, object)
+    }
+    machine refused(gate: &Gate, context: &mut State, slot: u64 [0..=4], code: u64, object: u64) -> [u64; 8] reaches Kernel {
+        block release(gate, object);
+        poisoned(context, slot, code)
+    }
+    machine imaging(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, packet: [u64; 8], object: u64)
+        -> [u64; 8] reaches Kernel {
+        transition context.batches[slot].active {
+            true -> block staging(gate, context, slot, frame, object)
+            _ -> block sending(gate, context, slot, incarnation, frame, packet, object)
+        }
+    }
+    machine staging(gate: &Gate, context: &mut State, slot: u64 [0..=4], frame: Frame, object: u64) -> [u64; 8] reaches Kernel {
+        let status: u64 = batch::stage(&mut context.batches[slot], frame.payload, object);
+        transition status == 0u64 {
+            true -> (ok())
+            _ -> block releasing(gate, object, status)
+        }
+    }
+    machine sending(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, packet: [u64; 8], object: u64)
+        -> [u64; 8] reaches Kernel {
+        let room: bool = has_room(context, packet[2]);
+        transition room {
+            true -> block shown(gate, context, slot, incarnation, frame, packet, object)
+            _ -> block releasing(gate, object, kernel::NO_MEMORY)
+        }
+    }
+    machine shown(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, packet: [u64; 8], object: u64)
+        -> [u64; 8] reaches Kernel {
+        let status: u64 = block scene::command_object(gate, context, image_words(packet), object);
+        transition status == 0u64 {
+            true -> block retained(gate, context, slot, incarnation, frame, packet[2], object)
+            _ -> block releasing(gate, object, status)
+        }
+    }
+    machine retained(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, key: u64, object: u64) -> [u64; 8]
+        reaches Kernel {
+        let committed: Updated = surfaces::update(&mut context.world, slot, incarnation, &frame.payload, true);
+        block retain(gate, context, key, object);
+        ok()
+    }
+    machine releasing(gate: &Gate, object: u64, status: u64) -> [u64; 8] reaches Kernel {
+        block release(gate, object);
+        error(status)
+    }
+}
+// An image word that arrived without its sealed payload.
+public machine image_missing(context: &mut State, slot: u64 [0..=4]) -> [u64; 8] {
+    poisoned(context, slot, kernel::DENIED)
+}
+// The batch words: BEGIN opens a revision, ABORT forgets it, COMMIT publishes
+// the staged updates under one compositor transaction, and the compact
+// rectangles word does all three for one or two paints. Every word is bound
+// to the connection's current view.
+public machine batch_word(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame) -> [u64; 8]
+    reaches Kernel blocks; invokes Kernel; {
+    let probe: [u64; 8] = view_words();
+    let view: [u64; 8] = request(&mut context.world, slot, incarnation, &probe);
+    block prune(gate, context, slot);
+    let compact: bool = frame.payload[0] == PRESENT_RECTS;
+    let tail: bool = zeros_from(&frame.payload, 3u64);
+    transition view[0] == 0u64 && view[1] == frame.payload[1] && (compact || tail) {
+        true -> block bound(gate, context, slot, incarnation, frame, compact)
+        _ -> (error(kernel::DENIED))
+    }
+    machine bound(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, compact: bool) -> [u64; 8] reaches Kernel {
+        batch::bind(&mut context.batches[slot], incarnation, frame.payload[1]);
+        transition compact {
+            true -> block rectangles(gate, context, slot, incarnation, frame)
+            _ -> block word(gate, context, slot, incarnation, frame)
+        }
+    }
+    machine word(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame) -> [u64; 8] reaches Kernel {
+        transition {
+            frame.payload[0] == PRESENT_BEGIN -> (begun(context, slot, frame.payload[2]))
+            frame.payload[0] == PRESENT_ABORT -> block aborting(gate, context, slot, frame.payload[2])
+            frame.payload[0] == PRESENT_COMMIT -> block committing(gate, context, slot, incarnation, frame.payload[2])
+            _ -> (error(kernel::DENIED))
+        }
+    }
+    machine begun(context: &mut State, slot: u64 [0..=4], revision: u64) -> [u64; 8] {
+        let status: u64 = batch::begin(&mut context.batches[slot], revision);
+        error(status)
+    }
+    machine aborting(gate: &Gate, context: &mut State, slot: u64 [0..=4], revision: u64) -> [u64; 8] reaches Kernel {
+        transition context.batches[slot].active && context.batches[slot].revision == revision {
+            true -> block aborted(gate, context, slot, revision)
+            _ -> (error(kernel::DENIED))
+        }
+    }
+    machine aborted(gate: &Gate, context: &mut State, slot: u64 [0..=4], revision: u64) -> [u64; 8] reaches Kernel {
+        block release_payloads(gate, context, slot, 0u64);
+        let status: u64 = batch::abort(&mut context.batches[slot], revision);
+        error(status)
+    }
+    machine committing(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64) -> [u64; 8] reaches Kernel {
+        let prepared: Commit = batch::prepare(&context.batches[slot], revision);
+        transition prepared {
+            Commit::Publish -> block publish(gate, context, slot, incarnation, revision)
+            Commit::Repeat -> (ok())
+            Commit::Refused { code } -> (error(code))
+        }
+    }
+    // One or two paints under a fresh revision, with nothing staged already;
+    // every paint is validated before any is staged.
+    machine rectangles(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame) -> [u64; 8] reaches Kernel {
+        let decoded: Rects = rects::decode(&frame.payload);
+        let prepared: Commit = batch::prepare(&context.batches[slot], frame.payload[2]);
+        transition decoded.count != 0u64 {
+            true -> block fresh(gate, context, slot, incarnation, frame.payload[2], decoded, prepared)
+            _ -> (error(kernel::INVALID_ARGUMENT))
+        }
+    }
+    machine fresh(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, decoded: Rects, prepared: Commit)
+        -> [u64; 8] reaches Kernel {
+        transition prepared {
+            Commit::Repeat -> (ok())
+            _ -> block idle(gate, context, slot, incarnation, revision, decoded)
+        }
+    }
+    machine idle(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, decoded: Rects) -> [u64; 8] reaches Kernel {
+        transition context.batches[slot].active {
+            true -> (error(kernel::BUSY))
+            _ -> block validated(gate, context, slot, incarnation, revision, decoded)
+        }
+    }
+    machine validated(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, decoded: Rects) -> [u64; 8]
+        reaches Kernel {
+        let first: [u64; 8] = decoded.first;
+        let second: [u64; 8] = decoded.second;
+        let one: Updated = surfaces::update(&mut context.world, slot, incarnation, &first, false);
+        let two: Updated = surfaces::update(&mut context.world, slot, incarnation, &second, false);
+        let first_status: u64 = refusal(one);
+        let second_status: u64 = refusal(two);
+        transition {
+            first_status != 0u64 -> (error(first_status))
+            decoded.count == 2u64 && second_status != 0u64 -> (error(second_status))
+            _ -> block staged_rects(gate, context, slot, incarnation, revision, decoded)
+        }
+    }
+    machine staged_rects(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, decoded: Rects) -> [u64; 8]
+        reaches Kernel {
+        let begun: u64 = batch::begin(&mut context.batches[slot], revision);
+        let first: u64 = batch::stage(&mut context.batches[slot], decoded.first, 0u64);
+        transition begun == 0u64 && first == 0u64 && decoded.count == 2u64 {
+            true -> block second_rect(gate, context, slot, incarnation, revision, decoded)
+            _ -> block rects_staged(gate, context, slot, incarnation, revision, begun | first)
+        }
+    }
+    machine second_rect(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, decoded: Rects) -> [u64; 8]
+        reaches Kernel {
+        let second: u64 = batch::stage(&mut context.batches[slot], decoded.second, 0u64);
+        block rects_staged(gate, context, slot, incarnation, revision, second)
+    }
+    machine rects_staged(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, status: u64) -> [u64; 8]
+        reaches Kernel {
+        transition status == 0u64 {
+            true -> block compact_commit(gate, context, slot, incarnation, revision)
+            _ -> block compact_failed(gate, context, slot, revision, status)
+        }
+    }
+    machine compact_commit(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64) -> [u64; 8] reaches Kernel {
+        let reply: [u64; 8] = block publish(gate, context, slot, incarnation, revision);
+        transition reply[0] == 0u64 {
+            true -> (reply)
+            _ -> block compact_failed(gate, context, slot, revision, reply[0])
+        }
+    }
+    // The self-contained word leaves no staged transaction behind on rejection.
+    machine compact_failed(gate: &Gate, context: &mut State, slot: u64 [0..=4], revision: u64, status: u64) -> [u64; 8] reaches Kernel {
+        block release_payloads(gate, context, slot, 0u64);
+        let aborted: u64 = batch::abort(&mut context.batches[slot], revision);
+        error(status)
+    }
+}
+machine refusal(updated: Updated) -> u64 {
+    transition updated {
+        Updated::Packet { words } -> (0u64)
+        Updated::Refused { code } -> (code)
+    }
+}
+machine view_words() -> [u64; 8] {
+    let mut words: [u64; 8];
+    words[0] = MATRIX_VIEW;
+    words
+}
+// Publish the staged batch: open a compositor transaction under this matrix's
+// next revision, send every entry as its tile's update, then commit; any
+// refusal aborts the transaction and is the answer, leaving the batch open
+// for the child to retry or abort. A published batch commits its updates in
+// the World and retains its images.
+machine publish(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64) -> [u64; 8] reaches Kernel {
+    context.revision = ((context.revision as u64 in Wrapping) + 1u64) as u64;
+    let opening: [u64; 6] = control_words(display::MATRIX_BEGIN, context.revision);
+    let begun: u64 = block scene::command(gate, context, opening);
+    transition begun == 0u64 {
+        true -> block entries(gate, context, slot, incarnation, revision, 0u64, 0u64)
+        _ -> (error(begun))
+    }
+    machine entries(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64, status: u64) -> [u64; 8]
+        reaches Kernel requires index <= 16u64 {
+        transition {
+            status != 0u64 -> block abandoned(gate, context, status)
+            index < 16u64 -> block entry(gate, context, slot, incarnation, revision, index)
+            _ -> block closing(gate, context, slot, incarnation, revision)
+        }
+    }
+    machine entry(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64) -> [u64; 8]
+        reaches Kernel requires index < 16u64 {
+        transition context.batches[slot].entries[index].used {
+            true -> block sending(gate, context, slot, incarnation, revision, index)
+            _ -> block entries(gate, context, slot, incarnation, revision, index + 1u64, 0u64)
+        }
+    }
+    machine sending(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64) -> [u64; 8]
+        reaches Kernel requires index < 16u64 {
+        let words: [u64; 8] = context.batches[slot].entries[index].words;
+        let payload: u64 = context.batches[slot].entries[index].payload;
+        let preview: Updated = surfaces::update(&mut context.world, slot, incarnation, &words, false);
+        transition preview {
+            Updated::Packet { words } -> block sent(gate, context, slot, incarnation, revision, index, words, payload)
+            Updated::Refused { code } -> block entries(gate, context, slot, incarnation, revision, index, code)
+        }
+    }
+    machine sent(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64, packet: [u64; 8], payload: u64)
+        -> [u64; 8] reaches Kernel requires index < 16u64 {
+        let status: u64 = block send_packet(gate, context, packet, payload);
+        transition { _ -> (block entries(gate, context, slot, incarnation, revision, index + 1u64, status)) }
+    }
+    machine abandoned(gate: &Gate, context: &mut State, status: u64) -> [u64; 8] reaches Kernel {
+        let abort: [u64; 6] = control_words(display::MATRIX_ABORT, context.revision);
+        let aborted: u64 = block scene::command(gate, context, abort);
+        error(status)
+    }
+    machine closing(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64) -> [u64; 8] reaches Kernel {
+        let commit: [u64; 6] = control_words(display::MATRIX_COMMIT, context.revision);
+        let status: u64 = block scene::command(gate, context, commit);
+        transition status == 0u64 {
+            true -> block committing(gate, context, slot, incarnation, revision, 0u64)
+            _ -> block abandoned(gate, context, status)
+        }
+    }
+    machine committing(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64) -> [u64; 8]
+        reaches Kernel requires index <= 16u64 {
+        transition index < 16u64 {
+            true -> block commit_entry(gate, context, slot, incarnation, revision, index)
+            _ -> (finished(context, slot, revision))
+        }
+    }
+    machine commit_entry(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64) -> [u64; 8]
+        reaches Kernel requires index < 16u64 {
+        transition context.batches[slot].entries[index].used {
+            true -> block commit_used(gate, context, slot, incarnation, revision, index)
+            _ -> block committing(gate, context, slot, incarnation, revision, index + 1u64)
+        }
+    }
+    machine commit_used(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64) -> [u64; 8]
+        reaches Kernel requires index < 16u64 {
+        let words: [u64; 8] = context.batches[slot].entries[index].words;
+        let payload: u64 = batch::take_payload(&mut context.batches[slot], index);
+        let result: Updated = surfaces::update(&mut context.world, slot, incarnation, &words, true);
+        transition result {
+            Updated::Packet { words } -> block kept(gate, context, slot, incarnation, revision, index, words[2], payload)
+            Updated::Refused { code } -> block unkept(gate, context, slot, incarnation, revision, index, payload)
+        }
+    }
+    machine kept(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64, key: u64, payload: u64)
+        -> [u64; 8] reaches Kernel requires index < 16u64 {
+        transition payload != 0u64 {
+            true -> block retaining(gate, context, slot, incarnation, revision, index, key, payload)
+            _ -> block painted(gate, context, slot, incarnation, revision, index, key)
+        }
+    }
+    machine retaining(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64, key: u64, payload: u64)
+        -> [u64; 8] reaches Kernel requires index < 16u64 {
+        block retain(gate, context, key, payload);
+        transition { _ -> (block committing(gate, context, slot, incarnation, revision, index + 1u64)) }
+    }
+    machine painted(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64, key: u64) -> [u64; 8]
+        reaches Kernel requires index < 16u64 {
+        block drop_image(gate, context, key);
+        transition { _ -> (block committing(gate, context, slot, incarnation, revision, index + 1u64)) }
+    }
+    machine unkept(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64, payload: u64) -> [u64; 8]
+        reaches Kernel requires index < 16u64 {
+        block release(gate, payload);
+        transition { _ -> (block committing(gate, context, slot, incarnation, revision, index + 1u64)) }
+    }
+    machine finished(context: &mut State, slot: u64 [0..=4], revision: u64) -> [u64; 8] {
+        batch::committed(&mut context.batches[slot], revision);
+        ok()
+    }
+}
+machine send_packet(gate: &Gate, context: &mut State, packet: [u64; 8], payload: u64) -> u64 reaches Kernel {
+    transition packet[0] == SURFACE_IMAGE {
+        true -> block scene::command_object(gate, context, image_words(packet), payload)
+        _ -> block scene::command(gate, context, tile(packet))
+    }
+}
+machine control_words(op: u64, revision: u64) -> [u64; 6] {
+    let mut words: [u64; 6];
+    words[0] = op;
+    words[1] = revision;
+    words
+}
+// A batch bound to a departed occupant or an older epoch is forgotten, with
+// the payloads it held.
+machine prune(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+    let incarnation: u64 = context.batches[slot].incarnation;
+    let epoch: u64 = context.batches[slot].epoch;
+    let matches: bool = level::binding_matches(&context.world, slot, incarnation, epoch);
+    transition matches || (incarnation == 0u64 && epoch == 0u64) {
+        true -> done()
+        _ -> block forgotten(gate, context, slot)
+    }
+    machine forgotten(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+        block release_payloads(gate, context, slot, 0u64);
+        batch::reset(&mut context.batches[slot]);
+    }
+}
+machine release_payloads(gate: &Gate, context: &mut State, slot: u64 [0..=4], index: u64) reaches Kernel requires index <= 16u64 {
+    transition index < 16u64 {
+        true -> block releasing(gate, context, slot, index)
+        _ -> done()
+    }
+    machine releasing(gate: &Gate, context: &mut State, slot: u64 [0..=4], index: u64) reaches Kernel requires index < 16u64 {
+        let payload: u64 = batch::take_payload(&mut context.batches[slot], index);
+        block release(gate, payload);
+        transition { _ -> block release_payloads(gate, context, slot, index + 1u64) }
+    }
+}
+// The slot's occupant is gone: its staged batch goes with it.
+public machine release_slot(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel blocks; invokes Kernel; {
+    block release_payloads(gate, context, slot, 0u64);
+    batch::reset(&mut context.batches[slot]);
+}
+machine poisoned(context: &mut State, slot: u64 [0..=4], code: u64) -> [u64; 8] {
+    batch::poison(&mut context.batches[slot], code);
+    error(code)
+}
+// Retained images, one behind each tile that shows one.
+machine image_index(context: &State, key: u64, index: u64) -> u64 requires index <= 16u64 {
+    transition index < 16u64 {
+        true -> compared(context, key, index)
+        _ -> (16u64)
+    }
+    machine compared(context: &State, key: u64, index: u64) -> u64 requires index < 16u64 {
+        transition context.images[index].object != 0u64 && context.images[index].key == key {
+            true -> (index)
+            _ -> image_index(context, key, index + 1u64)
+        }
+    }
+}
+machine free_image(context: &State, index: u64) -> u64 requires index <= 16u64 {
+    transition index < 16u64 {
+        true -> checked(context, index)
+        _ -> (16u64)
+    }
+    machine checked(context: &State, index: u64) -> u64 requires index < 16u64 {
+        transition context.images[index].object == 0u64 {
+            true -> (index)
+            _ -> free_image(context, index + 1u64)
+        }
+    }
+}
+machine has_room(context: &State, key: u64) -> bool {
+    image_index(context, key, 0u64) < 16u64 || free_image(context, 0u64) < 16u64
+}
+// Hold the image behind a tile, releasing the one it replaces.
+machine retain(gate: &Gate, context: &mut State, key: u64, object: u64) reaches Kernel {
+    let existing: u64 = image_index(context, key, 0u64);
+    let empty: u64 = free_image(context, 0u64);
+    transition {
+        existing < 16u64 -> block replaced(gate, context, existing, key, object)
+        empty < 16u64 -> stored(context, empty, key, object)
+        _ -> block release(gate, object)
+    }
+    machine replaced(gate: &Gate, context: &mut State, index: u64, key: u64, object: u64) reaches Kernel requires index < 16u64 {
+        let previous: u64 = context.images[index].object;
+        context.images[index] = Image { key: key, object: object };
+        block release(gate, previous);
+    }
+    machine stored(context: &mut State, index: u64, key: u64, object: u64) requires index < 16u64 {
+        context.images[index] = Image { key: key, object: object };
+    }
+}
+machine drop_image(gate: &Gate, context: &mut State, key: u64) reaches Kernel {
+    let existing: u64 = image_index(context, key, 0u64);
+    transition existing < 16u64 {
+        true -> block cleared(gate, context, existing)
+        _ -> done()
+    }
+    machine cleared(gate: &Gate, context: &mut State, index: u64) reaches Kernel requires index < 16u64 {
+        let previous: u64 = context.images[index].object;
+        let empty: Image;
+        context.images[index] = empty;
+        block release(gate, previous);
+    }
+}
+public machine release_images(gate: &Gate, context: &mut State, index: u64) reaches Kernel blocks; invokes Kernel; requires index <= 16u64 {
+    transition index < 16u64 {
+        true -> block releasing(gate, context, index)
+        _ -> done()
+    }
+    machine releasing(gate: &Gate, context: &mut State, index: u64) reaches Kernel requires index < 16u64 {
+        let previous: u64 = context.images[index].object;
+        let empty: Image;
+        context.images[index] = empty;
+        block release(gate, previous);
+        transition { _ -> block release_images(gate, context, index + 1u64) }
+    }
+}
+machine release(gate: &Gate, handle: u64) reaches Kernel {
+    transition handle != 0u64 {
+        true -> block releasing(gate, handle)
+        _ -> done()
+    }
+    machine releasing(gate: &Gate, handle: u64) reaches Kernel {
+        let ignored: u64 = block Kernel::memory_release(gate, handle);
     }
 }
 // The compositor's six words for a translated packet: tile in the high bits of
@@ -87,6 +555,17 @@ machine tile(packet: [u64; 8]) -> [u64; 6] {
         filled
     }
 }
+machine image_words(packet: [u64; 8]) -> [u64; 6] {
+    let mut words: [u64; 6];
+    let index: u64 = ((packet[2] as u64 in Wrapping) - 1u64) as u64;
+    words[0] = display::MATRIX_IMAGE | (((index as u64 in Wrapping) << 16u64) as u64);
+    words[1] = packet[3];
+    words[2] = packet[4];
+    words[3] = packet[5];
+    words[4] = packet[6];
+    words[5] = packet[7];
+    words
+}
 machine selected(op: u64) -> u64 {
     transition op == SURFACE_CURSOR {
         true -> (display::MATRIX_CURSOR)
@@ -94,7 +573,7 @@ machine selected(op: u64) -> u64 {
     }
 }
 // Erasures owed since the last flush: the compositor may already have removed
-// that tile.
+// that tile, and the image behind it goes either way.
 public machine flush(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks; invokes Kernel; {
     let owed: Retained = surfaces::take_owed(&mut context.world);
     transition owed {
@@ -103,10 +582,14 @@ public machine flush(gate: &Gate, context: &mut State) -> u64 reaches Kernel blo
     }
     machine owed_one(gate: &Gate, context: &mut State, words: [u64; 8]) -> u64 reaches Kernel {
         let status: u64 = block scene::command(gate, context, tile(words));
-        transition status == 0u64 || status == DENIED || status == BAD_HANDLE || status == INVALID_ARGUMENT {
-            true -> block flush(gate, context)
+        transition status == 0u64 || status == kernel::DENIED || status == kernel::BAD_HANDLE || status == kernel::INVALID_ARGUMENT {
+            true -> block erased(gate, context, words[2])
             _ -> (status)
         }
+    }
+    machine erased(gate: &Gate, context: &mut State, key: u64) -> u64 reaches Kernel {
+        block drop_image(gate, context, key);
+        transition { _ -> (block flush(gate, context)) }
     }
 }
 public machine error(code: u64) -> [u64; 8] {
@@ -114,3 +597,8 @@ public machine error(code: u64) -> [u64; 8] {
     words[0] = code;
     words
 }
+machine ok() -> [u64; 8] {
+    let words: [u64; 8];
+    words
+}
+machine done() {}

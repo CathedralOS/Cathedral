@@ -70,6 +70,8 @@ cathedral_kernel_gate:
     .quad cathedral_cpu_assign
     .quad cathedral_physical_assign
     .quad cathedral_resource_assign
+    .quad cathedral_link_handle
+    .quad cathedral_link_connect
 
 .section .text.cathedral_kernel_gate,"ax",@progbits
 cathedral_yield:
@@ -722,6 +724,19 @@ cathedral_resource_assign:
     int 0x80
     mov rsp, rbp
     pop rbp
+    ret
+
+cathedral_link_handle:
+    mov eax, 21                      // LINK_HANDLE
+    xor esi, esi
+    xor edx, edx
+    int 0x80
+    ret
+cathedral_link_connect:
+    mov eax, 22                      // LINK_CONNECT
+    xor esi, esi
+    xor edx, edx
+    int 0x80
     ret
 
 .section .note.GNU-stack,"",@progbits

@@ -66,14 +66,21 @@ from its words. Wire owner: `source-rs/platform/libraries/matrix/world/`.
 - [launches.omg](launches.omg) keeps bounded launch observations: receipts
   local to the endpoint that recorded them, following an exact child handle.
 - [names.omg](names.omg) distinguishes locally admitted from inherited names.
+- [batch.omg](batch.omg) is a connection's one bounded unpublished presentation
+  batch: BEGIN opens a revision, updates stage once per surface with the sealed
+  payload behind an image, COMMIT publishes or repeats the last revision, and a
+  refusal poisons the batch so its commit reports it. The owner releases
+  payloads before the batch forgets them.
+- [scopes.omg](scopes.omg) delegates storage by subtree: the owner binds a
+  child's storage connection to a source and a scope object, the child sees a
+  binding revision, and every request is authenticated and stamped with the
+  owner's scope; a request with both scope words taken is folded only after
+  one read-only containment check upstream, whose success is remembered.
 
 The program chooses placement, slots and lifecycle; the world enforces
 attenuation. It depends only on the reference protocol contracts and performs no
 kernel calls. The [independent matrix](../../../../distribution/lab/matrix-composition/README.md)
 is its first consumer.
 
-Not yet ported from the Rust library: the presentation batch behind
-PRESENT_BEGIN and PRESENT_COMMIT, and the storage scopes that stamp a child's
-storage requests. The stock matrix needs those before it can move onto this
-world. The record is sized for the reference kernel's eight-page process stack;
-a larger stock matrix will need more stack or a sparser record.
+The record is sized for the reference kernel's default eight-page process
+stack; the stock matrix declares a larger one in its native package.
