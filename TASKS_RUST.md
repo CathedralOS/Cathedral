@@ -36,13 +36,36 @@ the Omega program in the root launch and the supervisor built with
 it, checks the supervisor's and drivers' startup lines, moves the pointer over
 QMP and watches the cursor follow it through the Omega matrix.
 
-Two facts for the next slices. The World keeps four child slots for the
-reference kernel's eight-page process stack, while the stock composition uses
-five (chrome, three app instances, background): a stack allowance per launch
-is the engineering answer and is a kernel-level change; reducing the stock
-composition would be an owner decision. The supervisor supplies the source pair
-as this task's receive end then its send end, the opposite order from the
-display pair it connects as a client.
+The stock composition holds five children (chrome, three app instances,
+background), sixteen connections and storage state; none of that fits the
+kernel's default eight-page stack, which the Rust host sidesteps with static
+arenas Omega has no equivalent for. So an image now declares its own stack:
+the kernel's ELF preflight reads PT_GNU_STACK, maps up to 256 pages below the
+fixed stack top (the default stays eight, bottom at USER_STACK), and charges
+them to the task's frames like any other backing. `tools/omega-user/build.py`
+writes the size from a native package's `link.json`; the stock matrix declares
+128 pages. Dynamic launches still cap reserved frames at MAX_ADMISSION_FRAMES,
+so a big-stack program launched from the store needs that cap revisited when
+nested Omega matrices arrive. The Omega World now has five child slots; the
+wider record overflowed the lab matrix's default stack by a few words (a page
+fault just below USER_STACK under the real parent), so that program declares
+24 pages, which is also the live proof that the kernel honours the header. One
+more fact: the supervisor supplies the source pair as this task's receive end
+then its send end, the opposite order from the display pair it connects as a
+client.
+
+Evidence for the declared stacks and the five-slot World:
+
+- Kernel smoke labs: `build/boot-harness-rs/smoke/` run of 2026-10-31 19:33 (PASS: boot,
+  preemption, fault containment, static ELF programs, capability IPC,
+  userspace supervision, deadline/display recovery and memory reclamation).
+- Omega matrix, top level: `build/boot-harness-rs/omega-matrix/20261031T193518729070Z/`;
+  under a real parent: `build/boot-harness-rs/omega-matrix-upstream/20261031T193537238686Z/`.
+- Desktop over the Omega root with its 128-page stack: `build/boot-harness-rs/omega-desktop/20261031T193550778630Z/`.
+- Default F5 desktop on the changed kernel: `build/boot-harness-rs/desktop/20261031T192707358879Z/`;
+  IPC labs `build/boot-harness-rs/channels-test/`; integrated matrix desktop
+  `build/boot-harness-rs/matrix-desktop-test/`; the eight Omega witnesses of
+  19:25 to 19:27; kernel host tests (159) pass.
 
 Evidence in the main checkout with the saved standalone producer:
 

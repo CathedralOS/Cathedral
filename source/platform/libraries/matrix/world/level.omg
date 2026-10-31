@@ -1,5 +1,5 @@
 module level;
-// One level of ownership: a grant received from above, up to four placed
+// One level of ownership: a grant received from above, up to five placed
 // children below, and the input routed between them. The same record serves a
 // root adapter and a nested matrix. Programs choose placement, slots and
 // lifecycle; this record enforces attenuation: no child sees beyond its grant.
@@ -13,18 +13,18 @@ use input::main::Input;
 use input::producer;
 use input::producer::Producer;
 
-public const SLOTS: u64 = 4u64;
+public const SLOTS: u64 = 5u64;
 public data World {
     parent: Grant;
     // Slots this program uses; commands addressing higher slots are denied.
-    slots: u64 [0..=4];
+    slots: u64 [0..=5];
     // Advances on every parent or allowance change; owner-held snapshots compare against it.
     authority: u64;
-    children: [Child; 4];
+    children: [Child; 5];
     input: Input;
     // One bounded input grant per slot, and the generation each slot last issued.
-    producers: [Producer; 4];
-    next_producer: [u64; 4];
+    producers: [Producer; 5];
+    next_producer: [u64; 5];
     // The owner-chosen layout controller: slot plus one (zero means none) and its incarnation.
     controller: u64;
     controller_incarnation: u64;
@@ -43,24 +43,24 @@ public machine identify(world: &mut World, slot: u64, incarnation: u64) -> bool 
         true -> occupant(world, slot, incarnation)
         _ -> (false)
     }
-    machine occupant(world: &mut World, slot: u64, incarnation: u64) -> bool requires slot < 4u64 {
+    machine occupant(world: &mut World, slot: u64, incarnation: u64) -> bool requires slot < 5u64 {
         let previous: u64 = world.children[slot].incarnation;
         transition previous != 0u64 && previous != incarnation {
             true -> replaced(world, slot, incarnation)
             _ -> current(world, slot, incarnation)
         }
     }
-    machine replaced(world: &mut World, slot: u64, incarnation: u64) -> bool requires slot < 4u64 {
+    machine replaced(world: &mut World, slot: u64, incarnation: u64) -> bool requires slot < 5u64 {
         disconnected(world, slot);
         transition { _ -> current(world, slot, incarnation) }
     }
-    machine current(world: &mut World, slot: u64, incarnation: u64) -> bool requires slot < 4u64 {
+    machine current(world: &mut World, slot: u64, incarnation: u64) -> bool requires slot < 5u64 {
         world.children[slot].incarnation = incarnation;
         true
     }
 }
 public machine binding_matches(world: &World, slot: u64, incarnation: u64, epoch: u64) -> bool {
-    transition slot < 4u64 {
+    transition slot < 5u64 {
         true -> (world.children[slot].incarnation == incarnation && geometry::valid_grant(world.children[slot].grant)
             && world.children[slot].grant.epoch == epoch)
         _ -> (false)
@@ -98,13 +98,13 @@ public machine inherit(world: &mut World, grant: Grant) {
             _ -> adopted(world, accepted, replaced)
         }
     }
-    machine unplaced(world: &mut World, accepted: Grant, replaced: bool, index: u64) requires index <= 4u64 {
-        transition index < 4u64 {
+    machine unplaced(world: &mut World, accepted: Grant, replaced: bool, index: u64) requires index <= 5u64 {
+        transition index < 5u64 {
             true -> unplace(world, accepted, replaced, index)
             _ -> adopted(world, accepted, replaced)
         }
     }
-    machine unplace(world: &mut World, accepted: Grant, replaced: bool, index: u64) requires index < 4u64 {
+    machine unplace(world: &mut World, accepted: Grant, replaced: bool, index: u64) requires index < 5u64 {
         surfaces::retire(world, index);
         world.children[index].placed = false;
         world.children[index].surface_limit = 0u64;
@@ -118,12 +118,12 @@ public machine inherit(world: &mut World, grant: Grant) {
 machine accept(grant: Grant) -> Grant {
     transition geometry::valid_grant(grant) { true -> (grant) _ -> (geometry::no_grant()) }
 }
-machine refresh_all(world: &mut World, force: bool, index: u64) requires index <= 4u64 {
-    transition index < 4u64 {
+machine refresh_all(world: &mut World, force: bool, index: u64) requires index <= 5u64 {
+    transition index < 5u64 {
         true -> refreshed(world, force, index)
         _ -> done()
     }
-    machine refreshed(world: &mut World, force: bool, index: u64) requires index < 4u64 {
+    machine refreshed(world: &mut World, force: bool, index: u64) requires index < 5u64 {
         let previous: Grant = world.children[index].grant;
         children::refresh(&mut world.children[index], world.parent, force);
         demand::refresh_child(world, index);
@@ -132,7 +132,7 @@ machine refresh_all(world: &mut World, force: bool, index: u64) requires index <
             _ -> forgotten(world, force, index)
         }
     }
-    machine forgotten(world: &mut World, force: bool, index: u64) requires index < 4u64 {
+    machine forgotten(world: &mut World, force: bool, index: u64) requires index < 5u64 {
         input::main::forget(&mut world.input, index);
         surfaces::retire(world, index);
         transition { _ -> refresh_all(world, force, index + 1u64) }
@@ -146,7 +146,7 @@ public machine place(world: &mut World, slot: u64, rect: Rect, keys: u64) -> u64
         true -> placing(world, slot, rect, keys)
         _ -> (DENIED)
     }
-    machine placing(world: &mut World, slot: u64, rect: Rect, keys: u64) -> u64 requires slot < 4u64 {
+    machine placing(world: &mut World, slot: u64, rect: Rect, keys: u64) -> u64 requires slot < 5u64 {
         let previous: Grant = world.children[slot].grant;
         world.children[slot].placed = true;
         world.children[slot].rect = rect;
@@ -158,7 +158,7 @@ public machine place(world: &mut World, slot: u64, rect: Rect, keys: u64) -> u64
             _ -> forgotten(world, slot)
         }
     }
-    machine forgotten(world: &mut World, slot: u64) -> u64 requires slot < 4u64 {
+    machine forgotten(world: &mut World, slot: u64) -> u64 requires slot < 5u64 {
         producer::revoke(world, slot);
         input::main::forget(&mut world.input, slot);
         surfaces::retire(world, slot);
@@ -170,7 +170,7 @@ public machine revoke(world: &mut World, slot: u64) -> u64 {
         true -> revoking(world, slot)
         _ -> (DENIED)
     }
-    machine revoking(world: &mut World, slot: u64) -> u64 requires slot < 4u64 {
+    machine revoking(world: &mut World, slot: u64) -> u64 requires slot < 5u64 {
         producer::revoke(world, slot);
         release_controller(world, slot);
         input::main::forget(&mut world.input, slot);
@@ -183,7 +183,7 @@ public machine revoke(world: &mut World, slot: u64) -> u64 {
     }
 }
 // A revoked controller loses its authority with its view.
-machine release_controller(world: &mut World, slot: u64) requires slot < 4u64 {
+machine release_controller(world: &mut World, slot: u64) requires slot < 5u64 {
     transition world.controller == slot + 1u64 {
         true -> released(world)
         _ -> done()
@@ -194,31 +194,31 @@ machine release_controller(world: &mut World, slot: u64) requires slot < 4u64 {
     }
 }
 // The occupant left: its grant, queued input, incarnation and capacity limits are gone.
-public machine disconnected(world: &mut World, slot: u64 [0..=3]) {
+public machine disconnected(world: &mut World, slot: u64 [0..=4]) {
     let ignored: u64 = revoke(world, slot);
     world.children[slot].incarnation = 0u64;
     world.children[slot].input_limited = false;
 }
 // Coalesced wake hint; clients re-read only their local view and events.
-public machine take_notification(world: &mut World, slot: u64 [0..=3]) -> bool {
+public machine take_notification(world: &mut World, slot: u64 [0..=4]) -> bool {
     let pending: bool = world.children[slot].notify;
     world.children[slot].notify = false;
     pending
 }
-public machine notify(world: &mut World, slot: u64 [0..=3]) {
+public machine notify(world: &mut World, slot: u64 [0..=4]) {
     world.children[slot].notify = true;
 }
 // The topmost visible child under (x, y): higher surface ranks stack above
 // lower ones, and among equals the later slot. Returns slot plus one, or zero.
 public machine hit_pointer(world: &World, x: u64, y: u64) -> u64 {
     transition { _ -> scan(world, x, y, 0u64, 0u64, 0u64) }
-    machine scan(world: &World, x: u64, y: u64, index: u64, best: u64, best_base: u64) -> u64 requires index <= 4u64 {
-        transition index < world.slots && index < 4u64 {
+    machine scan(world: &World, x: u64, y: u64, index: u64, best: u64, best_base: u64) -> u64 requires index <= 5u64 {
+        transition index < world.slots && index < 5u64 {
             true -> tested(world, x, y, index, best, best_base)
             _ -> (best)
         }
     }
-    machine tested(world: &World, x: u64, y: u64, index: u64, best: u64, best_base: u64) -> u64 requires index < 4u64 {
+    machine tested(world: &World, x: u64, y: u64, index: u64, best: u64, best_base: u64) -> u64 requires index < 5u64 {
         transition contains(&world.children[index], x, y) && (best == 0u64 || world.children[index].surface_base >= best_base) {
             true -> scan(world, x, y, index + 1u64, index + 1u64, world.children[index].surface_base)
             _ -> scan(world, x, y, index + 1u64, best, best_base)
@@ -235,12 +235,12 @@ public machine cancel_stream(world: &mut World, index: u64 [0..=3]) {
     cancel_in_children(world, index, id, 0u64);
     input::main::cancel(&mut world.input.streams[index]);
 }
-machine cancel_in_children(world: &mut World, index: u64 [0..=3], id: names::Name, slot: u64) requires slot <= 4u64 {
-    transition slot < 4u64 {
+machine cancel_in_children(world: &mut World, index: u64 [0..=3], id: names::Name, slot: u64) requires slot <= 5u64 {
+    transition slot < 5u64 {
         true -> cancelled(world, index, id, slot)
         _ -> done()
     }
-    machine cancelled(world: &mut World, index: u64 [0..=3], id: names::Name, slot: u64) requires slot < 4u64 {
+    machine cancelled(world: &mut World, index: u64 [0..=3], id: names::Name, slot: u64) requires slot < 5u64 {
         children::cancel_stream(&mut world.children[slot], index, id);
         transition { _ -> cancel_in_children(world, index, id, slot + 1u64) }
     }
@@ -286,12 +286,12 @@ public machine select_group(world: &mut World, group: u64 [0..=3], target: u64) 
     }
     machine interrupted(world: &mut World, group: u64 [0..=3], target: u64, index: u64) requires index < 4u64 {
         let previous: u64 = world.input.groups[group].focus;
-        transition previous != 0u64 && previous <= 4u64 {
+        transition previous != 0u64 && previous <= 5u64 {
             true -> keys_cancelled(world, group, target, index, previous - 1u64)
             _ -> suppressed(world, group, target, index)
         }
     }
-    machine keys_cancelled(world: &mut World, group: u64 [0..=3], target: u64, index: u64, old: u64) requires index < 4u64 && old < 4u64 {
+    machine keys_cancelled(world: &mut World, group: u64 [0..=3], target: u64, index: u64, old: u64) requires index < 4u64 && old < 5u64 {
         let id: names::Name = world.input.streams[index].id;
         children::cancel_keys(&mut world.children[old], index, id);
         transition { _ -> suppressed(world, group, target, index) }

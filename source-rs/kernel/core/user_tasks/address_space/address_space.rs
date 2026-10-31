@@ -8,15 +8,21 @@ use frames::Tracked;
 pub const USER_CODE: u64 = 0x0000_0080_0000_0000;
 pub const USER_DATA: u64 = USER_CODE + PAGE;
 pub const USER_IMAGE_END: u64 = USER_CODE + 1024 * 1024;
+// The stack ends at a fixed top and grows down toward the image. An image
+// declares how many pages it needs through PT_GNU_STACK; eight is the default
+// and the bottom of that default stack is USER_STACK. The largest stack still
+// leaves eight unmapped pages above the image end.
+pub const DEFAULT_STACK_PAGES: usize = 8;
+pub const MAX_STACK_PAGES: usize = 256;
 pub const USER_STACK: u64 = USER_CODE + 2 * 1024 * 1024;
-pub const USER_STACK_PAGES: usize = 8;
-pub const USER_STACK_TOP: u64 = USER_STACK + USER_STACK_PAGES as u64 * PAGE;
+pub const USER_STACK_TOP: u64 = USER_STACK + DEFAULT_STACK_PAGES as u64 * PAGE;
+const _: () = assert!(USER_STACK_TOP - MAX_STACK_PAGES as u64 * PAGE >= USER_IMAGE_END + 8 * PAGE);
 pub const MAX_IMAGE_PAGES: usize = 240;
-// Image, stack, every private object slot fully mapped and two full reader
-// mappings beside them. A task may own MAX_PRIVATE_REGIONS objects, so a heap
-// spanning several of them must still leave a bulk reply or attachment mappable.
+// Image, the largest stack, every private object slot fully mapped and two full
+// reader mappings beside them. A task may own MAX_PRIVATE_REGIONS objects, so a
+// heap spanning several of them must still leave a bulk reply or attachment mappable.
 const MAX_BACKING: usize = MAX_IMAGE_PAGES
-    + USER_STACK_PAGES
+    + MAX_STACK_PAGES
     + (cathedral_kernel_contracts::memory::MAX_PRIVATE_REGIONS + 2)
         * cathedral_kernel_contracts::memory::MAX_PAGES;
 
@@ -33,6 +39,7 @@ pub struct UserSpace {
     len: usize,
     backing: alloc::vec::Vec<Backing>,
     pages: usize,
+    stack_pages: usize,
 }
 impl UserSpace {
     pub fn root(&self) -> u64 {
@@ -74,7 +81,16 @@ impl UserSpace {
             },
         ];
         // SAFETY: Same caller obligations; raw probes use two fixed disjoint pages.
-        unsafe { Self::from_segments(layout, image, &segments, Contents::Bytes(code), frames) }
+        unsafe {
+            Self::from_segments(
+                layout,
+                image,
+                &segments,
+                DEFAULT_STACK_PAGES,
+                Contents::Bytes(code),
+                frames,
+            )
+        }
     }
 
     /// Build a bounded image from page-disjoint, immutable segment descriptions.
@@ -85,11 +101,12 @@ impl UserSpace {
         layout: &BootLayout,
         image: ImageRange,
         segments: &[UserSegment],
+        stack_pages: usize,
         contents: Contents<'_>,
         frames: &mut impl FrameSource,
     ) -> Result<Self, MemoryError> {
         // SAFETY: Same inactive-root and immutable-source obligations.
-        let mut space = unsafe { Self::begin(layout, image, segments, frames)? };
+        let mut space = unsafe { Self::begin(layout, image, segments, stack_pages, frames)? };
         let mut cursor = LoadCursor::default();
         // SAFETY: Initial boot/fixtures construct synchronously with the same engines.
         let result = unsafe { space.prepare_kernel(frames, usize::MAX) }.and_then(|complete| {
@@ -128,9 +145,14 @@ impl UserSpace {
         layout: &BootLayout,
         image: ImageRange,
         segments: &[UserSegment],
+        stack_pages: usize,
         frames: &mut impl FrameSource,
     ) -> Result<Self, MemoryError> {
-        if image.bytes == 0 || !image.base.is_multiple_of(PAGE) || !valid_segments(segments) {
+        if image.bytes == 0
+            || !image.base.is_multiple_of(PAGE)
+            || !valid_segments(segments)
+            || !(1..=MAX_STACK_PAGES).contains(&stack_pages)
+        {
             return Err(MemoryError::InvalidFrame);
         }
         let end = image
@@ -149,6 +171,7 @@ impl UserSpace {
             len: 0,
             backing: alloc::vec::Vec::new(),
             pages: 0,
+            stack_pages,
         };
         // SAFETY: New frames are exclusively owned and identity-mapped in kernel translation root.
         let result = unsafe { space.build(layout, image.base, end, segments, frames) };

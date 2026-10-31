@@ -3,9 +3,12 @@
 // subset is lab policy: selected CPU, static, page-disjoint readable PT_LOAD segments,
 // no W+X, no interpreter/dynamic/TLS headers, a file-backed executable entry,
 // and the header plus every program header within the first file page, so an
-// image held one frame per page needs no contiguous copy to be checked.
+// image held one frame per page needs no contiguous copy to be checked. One
+// PT_GNU_STACK header may declare the stack size; zero means the default.
 
-use crate::user_tasks::address_space::{Contents, UserSegment, valid_segments};
+use crate::user_tasks::address_space::{
+    Contents, DEFAULT_STACK_PAGES, MAX_STACK_PAGES, UserSegment, valid_segments,
+};
 
 const MAX_FILE: usize = 4 * 1024 * 1024;
 const EMPTY: UserSegment = UserSegment {
@@ -30,6 +33,8 @@ pub enum Error {
 pub struct Image<'a> {
     pub entry: u64,
     pub contents: Contents<'a>,
+    /// Declared by PT_GNU_STACK, else the default; never above the layout's maximum.
+    pub stack_pages: usize,
     segments: [UserSegment; 8],
     count: usize,
 }
@@ -74,6 +79,7 @@ pub fn parse_with<'a>(first_page: &[u8], contents: Contents<'a>) -> Result<Image
     let mut image = Image {
         entry: u64_at(bytes, 24),
         contents,
+        stack_pages: DEFAULT_STACK_PAGES,
         segments: [EMPTY; 8],
         count: 0,
     };
@@ -88,8 +94,15 @@ pub fn parse_with<'a>(first_page: &[u8], contents: Contents<'a>) -> Result<Image
         let align = u64_at(header, 48);
         match kind {
             0 => continue, // PT_NULL has no loading semantics.
-            0x6474_e551 if !stack && flags == 6 && file_size == 0 && memory_size == 0 => {
+            0x6474_e551 if !stack && flags == 6 && file_size == 0 => {
                 stack = true;
+                if memory_size != 0 {
+                    let pages = memory_size.div_ceil(4096);
+                    if pages > MAX_STACK_PAGES as u64 {
+                        return Err(Error::Segments);
+                    }
+                    image.stack_pages = pages as usize;
+                }
                 continue;
             }
             1 => {}

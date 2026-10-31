@@ -171,22 +171,22 @@ public machine retire_index(world: &mut World, index: u64 [0..=3], id: Name) {
     input::main::cancel(&mut world.input.streams[index]);
     retire_in_children(world, index, id, 0u64);
 }
-machine retire_in_children(world: &mut World, index: u64 [0..=3], id: Name, slot: u64) requires slot <= 4u64 {
-    transition slot < 4u64 {
+machine retire_in_children(world: &mut World, index: u64 [0..=3], id: Name, slot: u64) requires slot <= 5u64 {
+    transition slot < 5u64 {
         true -> retired_in(world, index, id, slot)
         _ -> done()
     }
-    machine retired_in(world: &mut World, index: u64 [0..=3], id: Name, slot: u64) requires slot < 4u64 {
+    machine retired_in(world: &mut World, index: u64 [0..=3], id: Name, slot: u64) requires slot < 5u64 {
         children::retire_stream(&mut world.children[slot], index, id);
         transition { _ -> retire_in_children(world, index, id, slot + 1u64) }
     }
 }
-machine retire_group_in_children(world: &mut World, index: u64 [0..=3], id: Name, slot: u64) requires slot <= 4u64 {
-    transition slot < 4u64 {
+machine retire_group_in_children(world: &mut World, index: u64 [0..=3], id: Name, slot: u64) requires slot <= 5u64 {
+    transition slot < 5u64 {
         true -> retired_in(world, index, id, slot)
         _ -> done()
     }
-    machine retired_in(world: &mut World, index: u64 [0..=3], id: Name, slot: u64) requires slot < 4u64 {
+    machine retired_in(world: &mut World, index: u64 [0..=3], id: Name, slot: u64) requires slot < 5u64 {
         children::retire_input_group(&mut world.children[slot], index, id);
         transition { _ -> retire_group_in_children(world, index, id, slot + 1u64) }
     }
@@ -217,12 +217,12 @@ machine reap_streams(world: &mut World, index: u64) requires index <= 4u64 {
         transition { _ -> reap_streams(world, index + 1u64) }
     }
 }
-machine stream_retained(world: &World, index: u64 [0..=3], id: Name, slot: u64) -> bool requires slot <= 4u64 {
-    transition slot < 4u64 {
+machine stream_retained(world: &World, index: u64 [0..=3], id: Name, slot: u64) -> bool requires slot <= 5u64 {
+    transition slot < 5u64 {
         true -> checked(world, index, id, slot)
         _ -> (false)
     }
-    machine checked(world: &World, index: u64 [0..=3], id: Name, slot: u64) -> bool requires slot < 4u64 {
+    machine checked(world: &World, index: u64 [0..=3], id: Name, slot: u64) -> bool requires slot < 5u64 {
         transition children::retains_input(&world.children[slot], index, id) {
             true -> (true)
             _ -> stream_retained(world, index, id, slot + 1u64)
@@ -261,12 +261,12 @@ machine reap_groups(world: &mut World, index: u64) requires index <= 4u64 {
         transition { _ -> reap_groups(world, index + 1u64) }
     }
 }
-machine group_retained(world: &World, index: u64 [0..=3], id: Name, slot: u64) -> bool requires slot <= 4u64 {
-    transition slot < 4u64 {
+machine group_retained(world: &World, index: u64 [0..=3], id: Name, slot: u64) -> bool requires slot <= 5u64 {
+    transition slot < 5u64 {
         true -> checked(world, index, id, slot)
         _ -> (false)
     }
-    machine checked(world: &World, index: u64 [0..=3], id: Name, slot: u64) -> bool requires slot < 4u64 {
+    machine checked(world: &World, index: u64 [0..=3], id: Name, slot: u64) -> bool requires slot < 5u64 {
         transition children::retains_input_group(&world.children[slot], index, id) {
             true -> (true)
             _ -> group_retained(world, index, id, slot + 1u64)
@@ -294,11 +294,11 @@ machine any_retiring(input: &input::main::Input, index: u64) -> bool requires in
 // Move a local group's keyboard selection to child `target` (slot plus one; zero clears).
 public machine select(world: &mut World, id: u64, target: u64) -> u64 {
     let index: u64 = input::main::group_of(&world.input, names::local(id));
-    transition geometry::valid_grant(world.parent) && id != 0u64 && index < 4u64 && target <= 4u64 {
+    transition geometry::valid_grant(world.parent) && id != 0u64 && index < 4u64 && target <= 5u64 {
         true -> found(world, index, target)
         _ -> (DENIED)
     }
-    machine found(world: &mut World, index: u64, target: u64) -> u64 requires index < 4u64 && target <= 4u64 {
+    machine found(world: &mut World, index: u64, target: u64) -> u64 requires index < 4u64 && target <= 5u64 {
         transition {
             world.input.groups[index].retiring -> (DENIED)
             target == 0u64 -> selected(world, index, target)

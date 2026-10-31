@@ -42,7 +42,7 @@ public machine route(world: &mut World, channel: Name, x: u64, y: u64, buttons: 
     machine clamped(world: &mut World, channel: Name, x: u64, y: u64, buttons: u64, select: bool, index: u64 [0..=3]) -> u64 {
         let hit: u64 = level::hit_pointer(world, x, y);
         let target: u64 = captured_or(world, index, hit);
-        transition target != 0u64 && target <= 4u64 {
+        transition target != 0u64 && target <= 5u64 {
             true -> preflight(world, channel, x, y, buttons, select, index, hit, target - 1u64)
             _ -> pressed(world, channel, x, y, buttons, select, index, hit, 0u64)
         }
@@ -53,7 +53,7 @@ public machine route(world: &mut World, channel: Name, x: u64, y: u64, buttons: 
             _ -> (hit)
         }
     }
-    machine preflight(world: &mut World, channel: Name, x: u64, y: u64, buttons: u64, select: bool, index: u64 [0..=3], hit: u64, slot: u64) -> u64 requires slot < 4u64 {
+    machine preflight(world: &mut World, channel: Name, x: u64, y: u64, buttons: u64, select: bool, index: u64 [0..=3], hit: u64, slot: u64) -> u64 requires slot < 5u64 {
         let group: u64 [0..=3] = world.input.streams[index].group;
         let code: u64 = children::can_push(&world.children[slot], index, group, world.input.groups[group].id);
         transition code == 0u64 {
@@ -92,18 +92,18 @@ public machine route(world: &mut World, channel: Name, x: u64, y: u64, buttons: 
         world.input.streams[index].pointed = true;
         world.input.streams[index].point_x = x;
         world.input.streams[index].point_y = y;
-        transition target != 0u64 && target <= 4u64 {
+        transition target != 0u64 && target <= 5u64 {
             true -> delivering(world, channel, x, y, buttons, index, target - 1u64)
             _ -> released(world, buttons, index)
         }
     }
-    machine delivering(world: &mut World, channel: Name, x: u64, y: u64, buttons: u64, index: u64 [0..=3], slot: u64) -> u64 requires slot < 4u64 {
+    machine delivering(world: &mut World, channel: Name, x: u64, y: u64, buttons: u64, index: u64 [0..=3], slot: u64) -> u64 requires slot < 5u64 {
         transition geometry::valid_grant(world.children[slot].grant) {
             true -> translated(world, channel, x, y, buttons, index, slot)
             _ -> released(world, buttons, index)
         }
     }
-    machine translated(world: &mut World, channel: Name, x: u64, y: u64, buttons: u64, index: u64 [0..=3], slot: u64) -> u64 requires slot < 4u64 {
+    machine translated(world: &mut World, channel: Name, x: u64, y: u64, buttons: u64, index: u64 [0..=3], slot: u64) -> u64 requires slot < 5u64 {
         let local_x: u64 = geometry::within(past(x, world.children[slot].rect.x), world.children[slot].grant.width);
         let local_y: u64 = geometry::within(past(y, world.children[slot].rect.y), world.children[slot].grant.height);
         let group: u64 [0..=3] = world.input.streams[index].group;

@@ -29,13 +29,13 @@ public data Producer [copy] {
 // adapters must be bound before dynamic producers are granted.
 public machine grant(world: &mut World, slot: u64, count: u64, rights: u64, inherited_channels: u64, inherited_groups: u64) -> u64 {
     registration::reap(world);
-    transition slot < world.slots && slot < 4u64 && count >= 1u64 && count <= 4u64 && (rights & ~PRODUCER_FOCUS) == 0u64
+    transition slot < world.slots && slot < 5u64 && count >= 1u64 && count <= 4u64 && (rights & ~PRODUCER_FOCUS) == 0u64
         && inherited_channels <= 4u64 && inherited_groups <= 4u64 {
         true -> connected(world, slot, count, rights, inherited_channels, inherited_groups)
         _ -> (DENIED)
     }
     machine connected(world: &mut World, slot: u64, count: u64, rights: u64, inherited_channels: u64, inherited_groups: u64) -> u64
-        requires slot < 4u64 && count <= 4u64 && inherited_channels <= 4u64 && inherited_groups <= 4u64 {
+        requires slot < 5u64 && count <= 4u64 && inherited_channels <= 4u64 && inherited_groups <= 4u64 {
         transition {
             !geometry::valid_grant(world.parent) || !geometry::valid_grant(world.children[slot].grant)
                 || world.children[slot].incarnation == 0u64 -> (DENIED)
@@ -44,7 +44,7 @@ public machine grant(world: &mut World, slot: u64, count: u64, rights: u64, inhe
         }
     }
     machine room(world: &mut World, slot: u64, count: u64, rights: u64, inherited_channels: u64, inherited_groups: u64) -> u64
-        requires slot < 4u64 && count <= 4u64 && inherited_channels <= 4u64 && inherited_groups <= 4u64 {
+        requires slot < 5u64 && count <= 4u64 && inherited_channels <= 4u64 && inherited_groups <= 4u64 {
         let free_streams: u64 = input::main::streams_counted(&world.input, input::main::FREE);
         let free_groups: u64 = input::main::groups_counted(&world.input, input::main::FREE);
         let inherited_bound: u64 = input::main::streams_counted(&world.input, input::main::INHERITED);
@@ -60,14 +60,14 @@ public machine grant(world: &mut World, slot: u64, count: u64, rights: u64, inhe
             _ -> (NO_MEMORY)
         }
     }
-    machine generated(world: &mut World, slot: u64, count: u64, rights: u64, generation: u64) -> u64 requires slot < 4u64 && count <= 4u64 {
+    machine generated(world: &mut World, slot: u64, count: u64, rights: u64, generation: u64) -> u64 requires slot < 5u64 && count <= 4u64 {
         let registered: Registered = registration::register_group(world);
         transition registered {
             Registered::Created { value } -> grouped(world, slot, count, rights, generation, value)
             Registered::Refused { code } -> (code)
         }
     }
-    machine grouped(world: &mut World, slot: u64, count: u64, rights: u64, generation: u64, group: u64) -> u64 requires slot < 4u64 && count <= 4u64 {
+    machine grouped(world: &mut World, slot: u64, count: u64, rights: u64, generation: u64, group: u64) -> u64 requires slot < 5u64 && count <= 4u64 {
         let mut record: Producer;
         record.incarnation = world.children[slot].incarnation;
         record.epoch = world.children[slot].grant.epoch;
@@ -78,13 +78,13 @@ public machine grant(world: &mut World, slot: u64, count: u64, rights: u64, inhe
         world.producers[slot] = record;
         transition { _ -> channel(world, slot, 0u64) }
     }
-    machine channel(world: &mut World, slot: u64, ordinal: u64) -> u64 requires slot < 4u64 && ordinal <= 4u64 {
+    machine channel(world: &mut World, slot: u64, ordinal: u64) -> u64 requires slot < 5u64 && ordinal <= 4u64 {
         transition ordinal < 4u64 && ordinal < world.producers[slot].count {
             true -> registering(world, slot, ordinal)
             _ -> completed(world, slot)
         }
     }
-    machine registering(world: &mut World, slot: u64, ordinal: u64) -> u64 requires slot < 4u64 && ordinal < 4u64 {
+    machine registering(world: &mut World, slot: u64, ordinal: u64) -> u64 requires slot < 5u64 && ordinal < 4u64 {
         let group: u64 = world.producers[slot].group;
         let registered: Registered = registration::register_stream(world, group);
         transition registered {
@@ -92,16 +92,16 @@ public machine grant(world: &mut World, slot: u64, count: u64, rights: u64, inhe
             Registered::Refused { code } -> failed(world, slot, code)
         }
     }
-    machine named(world: &mut World, slot: u64, ordinal: u64, value: u64) -> u64 requires slot < 4u64 && ordinal < 4u64 {
+    machine named(world: &mut World, slot: u64, ordinal: u64, value: u64) -> u64 requires slot < 5u64 && ordinal < 4u64 {
         world.producers[slot].channels[ordinal] = value;
         transition { _ -> channel(world, slot, ordinal + 1u64) }
     }
-    machine completed(world: &mut World, slot: u64) -> u64 requires slot < 4u64 {
+    machine completed(world: &mut World, slot: u64) -> u64 requires slot < 5u64 {
         world.next_producer[slot] = world.producers[slot].generation;
         0u64
     }
     // Capacity was preflighted; a refusal here still leaves nothing half granted.
-    machine failed(world: &mut World, slot: u64, code: u64) -> u64 requires slot < 4u64 {
+    machine failed(world: &mut World, slot: u64, code: u64) -> u64 requires slot < 5u64 {
         revoke(world, slot);
         code
     }
@@ -110,11 +110,11 @@ public machine grant(world: &mut World, slot: u64, count: u64, rights: u64, inhe
 // consume the boundary, so regrant cannot bypass that capacity. The private group
 // ends by itself once its channels drained.
 public machine revoke(world: &mut World, slot: u64) {
-    transition slot < 4u64 && world.producers[slot].generation != 0u64 {
+    transition slot < 5u64 && world.producers[slot].generation != 0u64 {
         true -> revoking(world, slot)
         _ -> done()
     }
-    machine revoking(world: &mut World, slot: u64) requires slot < 4u64 {
+    machine revoking(world: &mut World, slot: u64) requires slot < 5u64 {
         let record: Producer = world.producers[slot];
         let empty: Producer;
         world.producers[slot] = empty;
@@ -145,24 +145,24 @@ machine retire_channels(world: &mut World, record: Producer, ordinal: u64) requi
     }
 }
 public machine revoke_all(world: &mut World) { transition { _ -> revoking(world, 0u64) } }
-machine revoking(world: &mut World, slot: u64) requires slot <= 4u64 {
-    transition slot < 4u64 {
+machine revoking(world: &mut World, slot: u64) requires slot <= 5u64 {
+    transition slot < 5u64 {
         true -> revoked(world, slot)
         _ -> done()
     }
-    machine revoked(world: &mut World, slot: u64) requires slot < 4u64 {
+    machine revoked(world: &mut World, slot: u64) requires slot < 5u64 {
         revoke(world, slot);
         transition { _ -> revoking(world, slot + 1u64) }
     }
 }
 // A grant whose binding no longer matches its child's incarnation and epoch is dead.
 public machine reap(world: &mut World) { transition { _ -> reaping(world, 0u64) } }
-machine reaping(world: &mut World, slot: u64) requires slot <= 4u64 {
-    transition slot < 4u64 {
+machine reaping(world: &mut World, slot: u64) requires slot <= 5u64 {
+    transition slot < 5u64 {
         true -> checked(world, slot)
         _ -> done()
     }
-    machine checked(world: &mut World, slot: u64) requires slot < 4u64 {
+    machine checked(world: &mut World, slot: u64) requires slot < 5u64 {
         let record: Producer = world.producers[slot];
         let matches: bool = level::binding_matches(world, slot, record.incarnation, record.epoch);
         transition record.generation != 0u64 && !matches {
@@ -170,21 +170,21 @@ machine reaping(world: &mut World, slot: u64) requires slot <= 4u64 {
             _ -> reaping(world, slot + 1u64)
         }
     }
-    machine dead(world: &mut World, slot: u64) requires slot < 4u64 {
+    machine dead(world: &mut World, slot: u64) requires slot < 5u64 {
         revoke(world, slot);
         transition { _ -> reaping(world, slot + 1u64) }
     }
 }
 // A granted child's request. INFO reports the generation and permitted input
 // space; every other word names the generation and one of its own ordinals.
-public machine request(world: &mut World, slot: u64 [0..=3], incarnation: u64, words: &[u64; 8]) -> [u64; 8] {
+public machine request(world: &mut World, slot: u64 [0..=4], incarnation: u64, words: &[u64; 8]) -> [u64; 8] {
     registration::reap(world);
     let record: Producer = world.producers[slot];
     transition record.generation != 0u64 && record.incarnation == incarnation {
         true -> authenticated(world, slot, record, words)
         _ -> (geometry::error(DENIED))
     }
-    machine authenticated(world: &mut World, slot: u64 [0..=3], record: Producer, words: &[u64; 8]) -> [u64; 8] {
+    machine authenticated(world: &mut World, slot: u64 [0..=4], record: Producer, words: &[u64; 8]) -> [u64; 8] {
         transition {
             words[0] == PRODUCER_INFO && geometry::zeros_from(words, 1u64) -> (info(world, record))
             words[1] != record.generation -> (geometry::error(DENIED))
@@ -203,7 +203,7 @@ public machine request(world: &mut World, slot: u64 [0..=3], incarnation: u64, w
         reply[6] = record.rights;
         reply
     }
-    machine released(world: &mut World, slot: u64 [0..=3]) -> [u64; 8] {
+    machine released(world: &mut World, slot: u64 [0..=4]) -> [u64; 8] {
         revoke(world, slot);
         geometry::ok()
     }

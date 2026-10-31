@@ -115,7 +115,15 @@ unsafe fn step(
         let (plan, _) = decoded?;
         let start = timing::start();
         // SAFETY: Private root; begin refunds its own partial tree on failure.
-        let created = unsafe { UserSpace::begin(layout, image_range, &plan.segments, frames) };
+        let created = unsafe {
+            UserSpace::begin(
+                layout,
+                image_range,
+                &plan.segments,
+                plan.stack_pages,
+                frames,
+            )
+        };
         session.timing.record(TimedPhase::Root, start);
         let space = created.map_err(Error::Memory)?;
         session.launches[index].draft = Some(Draft {

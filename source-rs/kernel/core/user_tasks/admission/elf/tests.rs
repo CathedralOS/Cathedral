@@ -204,6 +204,41 @@ fn rejects_aliases_wx_invalid_entry_and_excessive_memory() {
 }
 
 #[test]
+fn stack_header_declares_pages_up_to_the_layout_maximum() {
+    use crate::user_tasks::address_space::{DEFAULT_STACK_PAGES, MAX_STACK_PAGES};
+    fn with_stack(file_size: u64, memory_size: u64) -> Vec<u8> {
+        let mut b = fixture();
+        put16(&mut b, 56, 3);
+        put32(&mut b, 176, 0x6474_e551);
+        put32(&mut b, 180, 6);
+        put64(&mut b, 176 + 32, file_size);
+        put64(&mut b, 176 + 40, memory_size);
+        b
+    }
+    assert_eq!(parse(&fixture()).unwrap().stack_pages, DEFAULT_STACK_PAGES);
+    assert_eq!(
+        parse(&with_stack(0, 0)).unwrap().stack_pages,
+        DEFAULT_STACK_PAGES
+    );
+    for (bytes, pages) in [
+        (1, 1),
+        (4096, 1),
+        (4097, 2),
+        (MAX_STACK_PAGES as u64 * 4096, MAX_STACK_PAGES),
+    ] {
+        assert_eq!(parse(&with_stack(0, bytes)).unwrap().stack_pages, pages);
+    }
+    assert!(matches!(
+        parse(&with_stack(0, MAX_STACK_PAGES as u64 * 4096 + 1)),
+        Err(Error::Segments)
+    ));
+    assert!(
+        parse(&with_stack(4096, 4096)).is_err(),
+        "a stack header never has file bytes"
+    );
+}
+
+#[test]
 fn image_limit_counts_rounded_pages_across_segments() {
     let mut b = fixture();
     // One executable page plus the remaining writable image pages.

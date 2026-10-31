@@ -263,7 +263,7 @@ machine free_group(input: &Input, index: u64) -> u64 requires index <= 4u64 {
 }
 // A child lost its grant or left: drop its focus and captures. Held keys become
 // suppressed so their releases are swallowed; a held button blocks until release.
-public machine forget(input: &mut Input, child: u64 [0..=3]) {
+public machine forget(input: &mut Input, child: u64 [0..=4]) {
     forget_focus(input, child + 1u64, 0u64);
     forget_capture(input, child + 1u64, 0u64);
 }

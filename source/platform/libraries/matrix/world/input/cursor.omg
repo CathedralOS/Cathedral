@@ -34,12 +34,12 @@ public machine cursor(world: &World, index: u64) -> Found {
         }
     }
     machine targeted(world: &World, index: u64, target: u64) -> Found requires index < 4u64 {
-        transition target != 0u64 && target <= 4u64 {
+        transition target != 0u64 && target <= 5u64 {
             true -> resolved(world, index, target - 1u64)
             _ -> (found(world, index, CURSOR_DEFAULT))
         }
     }
-    machine resolved(world: &World, index: u64, slot: u64) -> Found requires index < 4u64 && slot < 4u64 {
+    machine resolved(world: &World, index: u64, slot: u64) -> Found requires index < 4u64 && slot < 5u64 {
         transition world.children[slot].cursors[index] == children::HIDDEN_CURSOR {
             true -> (found(world, index, CURSOR_HIDDEN))
             _ -> (found(world, index, CURSOR_DEFAULT))
@@ -59,12 +59,12 @@ machine target(world: &World, index: u64) -> u64 requires index < 4u64 {
         _ -> (level::hit_pointer(world, world.input.streams[index].point_x, world.input.streams[index].point_y))
     }
     machine captured(world: &World, capture: u64) -> u64 {
-        transition capture != 0u64 && capture <= 4u64 {
+        transition capture != 0u64 && capture <= 5u64 {
             true -> held(world, capture)
             _ -> (0u64)
         }
     }
-    machine held(world: &World, capture: u64) -> u64 requires capture >= 1u64 && capture <= 4u64 {
+    machine held(world: &World, capture: u64) -> u64 requires capture >= 1u64 && capture <= 5u64 {
         transition geometry::valid_grant(world.children[capture - 1u64].grant) {
             true -> (capture)
             _ -> (0u64)
@@ -73,11 +73,11 @@ machine target(world: &World, index: u64) -> u64 requires index < 4u64 {
 }
 // Owner lookup for a cursor renderer paired with an admitted producer's ordinal.
 public machine producer_cursor(world: &World, slot: u64, ordinal: u64) -> Found {
-    transition slot < 4u64 && ordinal < 4u64 {
+    transition slot < 5u64 && ordinal < 4u64 {
         true -> granted(world, slot, ordinal)
         _ -> (Found::Nothing)
     }
-    machine granted(world: &World, slot: u64, ordinal: u64) -> Found requires slot < 4u64 && ordinal < 4u64 {
+    machine granted(world: &World, slot: u64, ordinal: u64) -> Found requires slot < 5u64 && ordinal < 4u64 {
         let name: Name = names::local(world.producers[slot].channels[ordinal]);
         let index: u64 = input::main::stream_of(&world.input, name);
         transition world.producers[slot].generation != 0u64 && ordinal < world.producers[slot].count {

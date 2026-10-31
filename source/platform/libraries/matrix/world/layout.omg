@@ -12,7 +12,7 @@ use surfaces;
 
 public data Placement [copy] {
     captured: bool;
-    slot: u64 [0..=3];
+    slot: u64 [0..=4];
     parent: Grant;
     authority: u64;
     rect: Rect;
@@ -22,11 +22,11 @@ public data Placement [copy] {
 }
 // The owner chooses the controller; a child cannot grant this to itself.
 public machine grant(world: &mut World, slot: u64, incarnation: u64) -> u64 {
-    transition slot < world.slots && slot < 4u64 && incarnation != 0u64 {
+    transition slot < world.slots && slot < 5u64 && incarnation != 0u64 {
         true -> granted(world, slot, incarnation)
         _ -> (DENIED)
     }
-    machine granted(world: &mut World, slot: u64, incarnation: u64) -> u64 requires slot < 4u64 {
+    machine granted(world: &mut World, slot: u64, incarnation: u64) -> u64 requires slot < 5u64 {
         world.controller = slot + 1u64;
         world.controller_incarnation = incarnation;
         0u64
@@ -34,19 +34,19 @@ public machine grant(world: &mut World, slot: u64, incarnation: u64) -> u64 {
 }
 public machine allowed(world: &World, slot: u64, incarnation: u64, epoch: u64) -> bool {
     let bound: bool = level::binding_matches(world, slot, incarnation, epoch);
-    slot < 4u64 && geometry::plus(slot, 1u64) == world.controller && world.controller_incarnation == incarnation && bound
+    slot < 5u64 && geometry::plus(slot, 1u64) == world.controller && world.controller_incarnation == incarnation && bound
 }
 // Owner-held snapshot of the controller's current view; nothing when the slot
 // is not the live controller or has no placed, backed view.
 public machine placement(world: &World, slot: u64, incarnation: u64) -> Placement {
-    transition slot < 4u64 && geometry::plus(slot, 1u64) == world.controller && world.controller_incarnation == incarnation
+    transition slot < 5u64 && geometry::plus(slot, 1u64) == world.controller && world.controller_incarnation == incarnation
         && geometry::valid_grant(world.children[slot].grant) && world.children[slot].surface_limit != 0u64
         && world.children[slot].placed {
         true -> (captured(world, slot))
         _ -> (none())
     }
 }
-machine captured(world: &World, slot: u64) -> Placement requires slot < 4u64 {
+machine captured(world: &World, slot: u64) -> Placement requires slot < 5u64 {
     Placement { captured: true, slot: slot, parent: world.parent, authority: world.authority,
         rect: world.children[slot].rect, keys: world.children[slot].keys,
         surfaces: world.children[slot].surface_limit, surface_base: world.children[slot].surface_base }
@@ -81,7 +81,7 @@ public machine restore(world: &mut World, saved: Placement, incarnation: u64, co
 }
 // Apply a whole arrangement at once, validated before any child changes.
 // Revocation is not undone by moving the remaining live views.
-public machine layout(world: &mut World, slot: u64, incarnation: u64, epoch: u64, rects: &[Rect; 4]) -> u64 {
+public machine layout(world: &mut World, slot: u64, incarnation: u64, epoch: u64, rects: &[Rect; 5]) -> u64 {
     let permitted: bool = allowed(world, slot, incarnation, epoch);
     let valid: bool = all_fit(world, rects, 0u64);
     transition {
@@ -89,30 +89,30 @@ public machine layout(world: &mut World, slot: u64, incarnation: u64, epoch: u64
         !valid -> (INVALID_ARGUMENT)
         _ -> applying(world, rects, 0u64)
     }
-    machine applying(world: &mut World, rects: &[Rect; 4], index: u64) -> u64 requires index <= 4u64 {
-        transition index < world.slots && index < 4u64 {
+    machine applying(world: &mut World, rects: &[Rect; 5], index: u64) -> u64 requires index <= 5u64 {
+        transition index < world.slots && index < 5u64 {
             true -> moved(world, rects, index)
             _ -> (0u64)
         }
     }
-    machine moved(world: &mut World, rects: &[Rect; 4], index: u64) -> u64 requires index < 4u64 {
+    machine moved(world: &mut World, rects: &[Rect; 5], index: u64) -> u64 requires index < 5u64 {
         let keys: u64 = world.children[index].keys & world.parent.keys;
         let status: u64 = moving(world, rects[index], index, keys);
         transition { _ -> applying(world, rects, index + 1u64) }
     }
 }
-machine moving(world: &mut World, rect: Rect, index: u64, keys: u64) -> u64 requires index < 4u64 {
+machine moving(world: &mut World, rect: Rect, index: u64, keys: u64) -> u64 requires index < 5u64 {
     transition world.children[index].placed {
         true -> (level::place(world, index, rect, keys))
         _ -> (0u64)
     }
 }
-machine all_fit(world: &World, rects: &[Rect; 4], index: u64) -> bool requires index <= 4u64 {
-    transition index < world.slots && index < 4u64 {
+machine all_fit(world: &World, rects: &[Rect; 5], index: u64) -> bool requires index <= 5u64 {
+    transition index < world.slots && index < 5u64 {
         true -> checked(world, rects, index)
         _ -> (true)
     }
-    machine checked(world: &World, rects: &[Rect; 4], index: u64) -> bool requires index < 4u64 {
+    machine checked(world: &World, rects: &[Rect; 5], index: u64) -> bool requires index < 5u64 {
         transition fits(world, rects[index]) {
             true -> all_fit(world, rects, index + 1u64)
             _ -> (false)

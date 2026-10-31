@@ -7,27 +7,27 @@ use protocol::main;
 public data Delegation [copy] {
     live: bool;
     incarnation: u64;
-    target: u64 [0..=3];
+    target: u64 [0..=4];
     // The last task this manager observed, with the ticket minted for it.
     observed: bool;
     ticket: u64;
     task: u64;
 }
 public data Management {
-    grants: [Delegation; 4];
-    next: [u64; 4];
+    grants: [Delegation; 5];
+    next: [u64; 5];
 }
 public data Target [copy] {
-    case Slot(index: u64 [0..=3]);
+    case Slot(index: u64 [0..=4]);
     case Refused(code: u64);
 }
 // Requires a live manager and a different target, both below `slots`.
 public machine grant(managers: &mut Management, manager: u64, incarnation: u64, target: u64, slots: u64) -> u64 {
-    transition manager < slots && target < slots && manager < 4u64 && target < 4u64 && manager != target && incarnation != 0u64 {
+    transition manager < slots && target < slots && manager < 5u64 && target < 5u64 && manager != target && incarnation != 0u64 {
         true -> granted(managers, manager, incarnation, target)
         _ -> (DENIED)
     }
-    machine granted(managers: &mut Management, manager: u64, incarnation: u64, target: u64) -> u64 requires manager < 4u64 && target < 4u64 {
+    machine granted(managers: &mut Management, manager: u64, incarnation: u64, target: u64) -> u64 requires manager < 5u64 && target < 5u64 {
         let mut delegation: Delegation;
         delegation.live = true;
         delegation.incarnation = incarnation;
@@ -37,11 +37,11 @@ public machine grant(managers: &mut Management, manager: u64, incarnation: u64, 
     }
 }
 public machine revoke(managers: &mut Management, manager: u64) {
-    transition manager < 4u64 {
+    transition manager < 5u64 {
         true -> revoked(managers, manager)
         _ -> done()
     }
-    machine revoked(managers: &mut Management, manager: u64) requires manager < 4u64 {
+    machine revoked(managers: &mut Management, manager: u64) requires manager < 5u64 {
         let empty: Delegation;
         managers.grants[manager] = empty;
     }
@@ -51,37 +51,37 @@ public machine revoke(managers: &mut Management, manager: u64) {
 // manager watching that slot forgets what it observed.
 public machine disconnected(managers: &mut Management, slot: u64) {
     revoke(managers, slot);
-    transition slot < 4u64 {
+    transition slot < 5u64 {
         true -> reset(managers, slot)
         _ -> done()
     }
-    machine reset(managers: &mut Management, slot: u64) requires slot < 4u64 {
+    machine reset(managers: &mut Management, slot: u64) requires slot < 5u64 {
         managers.next[slot] = 0u64;
         forget_target(managers, slot, 0u64);
     }
 }
-machine forget_target(managers: &mut Management, slot: u64, index: u64) requires slot < 4u64 && index <= 4u64 {
-    transition index < 4u64 {
+machine forget_target(managers: &mut Management, slot: u64, index: u64) requires slot < 5u64 && index <= 5u64 {
+    transition index < 5u64 {
         true -> checked(managers, slot, index)
         _ -> done()
     }
-    machine checked(managers: &mut Management, slot: u64, index: u64) requires slot < 4u64 && index < 4u64 {
+    machine checked(managers: &mut Management, slot: u64, index: u64) requires slot < 5u64 && index < 5u64 {
         transition managers.grants[index].live && managers.grants[index].target == slot {
             true -> forgotten(managers, slot, index)
             _ -> forget_target(managers, slot, index + 1u64)
         }
     }
-    machine forgotten(managers: &mut Management, slot: u64, index: u64) requires slot < 4u64 && index < 4u64 {
+    machine forgotten(managers: &mut Management, slot: u64, index: u64) requires slot < 5u64 && index < 5u64 {
         managers.grants[index].observed = false;
         transition { _ -> forget_target(managers, slot, index + 1u64) }
     }
 }
 public machine target(managers: &Management, manager: u64, incarnation: u64) -> Target {
-    transition manager < 4u64 {
+    transition manager < 5u64 {
         true -> checked(managers, manager, incarnation)
         _ -> (Target::Refused { code: DENIED })
     }
-    machine checked(managers: &Management, manager: u64, incarnation: u64) -> Target requires manager < 4u64 {
+    machine checked(managers: &Management, manager: u64, incarnation: u64) -> Target requires manager < 5u64 {
         transition managers.grants[manager].live && managers.grants[manager].incarnation == incarnation {
             true -> (Target::Slot { index: managers.grants[manager].target })
             _ -> (Target::Refused { code: DENIED })
@@ -91,11 +91,11 @@ public machine target(managers: &Management, manager: u64, incarnation: u64) -> 
 // [0, ticket] for the task now in the target slot: a new task gets a new
 // ticket, the same task keeps its ticket, an empty slot clears it.
 public machine query(managers: &mut Management, manager: u64, incarnation: u64, has_task: bool, task: u64) -> [u64; 8] {
-    transition manager < 4u64 && managers.grants[manager].live && managers.grants[manager].incarnation == incarnation {
+    transition manager < 5u64 && managers.grants[manager].live && managers.grants[manager].incarnation == incarnation {
         true -> granted(managers, manager, has_task, task)
         _ -> (error(DENIED))
     }
-    machine granted(managers: &mut Management, manager: u64, has_task: bool, task: u64) -> [u64; 8] requires manager < 4u64 {
+    machine granted(managers: &mut Management, manager: u64, has_task: bool, task: u64) -> [u64; 8] requires manager < 5u64 {
         let serial: u64 = managers.next[manager];
         transition {
             !has_task -> cleared(managers, manager)
@@ -104,11 +104,11 @@ public machine query(managers: &mut Management, manager: u64, incarnation: u64, 
             _ -> (error(NO_MEMORY))
         }
     }
-    machine cleared(managers: &mut Management, manager: u64) -> [u64; 8] requires manager < 4u64 {
+    machine cleared(managers: &mut Management, manager: u64) -> [u64; 8] requires manager < 5u64 {
         managers.grants[manager].observed = false;
         ok()
     }
-    machine minted(managers: &mut Management, manager: u64, task: u64, ticket: u64) -> [u64; 8] requires manager < 4u64 {
+    machine minted(managers: &mut Management, manager: u64, task: u64, ticket: u64) -> [u64; 8] requires manager < 5u64 {
         managers.next[manager] = ticket;
         managers.grants[manager].observed = true;
         managers.grants[manager].ticket = ticket;
@@ -118,14 +118,14 @@ public machine query(managers: &mut Management, manager: u64, incarnation: u64, 
 }
 // The target slot, only for the exact task the ticket was minted for.
 public machine authorize(managers: &Management, manager: u64, incarnation: u64, ticket: u64, has_current: bool, current: u64) -> Target {
-    transition manager < 4u64 && managers.grants[manager].live && managers.grants[manager].incarnation == incarnation
+    transition manager < 5u64 && managers.grants[manager].live && managers.grants[manager].incarnation == incarnation
         && managers.grants[manager].observed && managers.grants[manager].ticket == ticket && has_current
         && managers.grants[manager].task == current {
         true -> (slot_of(managers, manager))
         _ -> (Target::Refused { code: DENIED })
     }
 }
-machine slot_of(managers: &Management, manager: u64) -> Target requires manager < 4u64 {
+machine slot_of(managers: &Management, manager: u64) -> Target requires manager < 5u64 {
     Target::Slot { index: managers.grants[manager].target }
 }
 machine ticketed(ticket: u64) -> [u64; 8] {

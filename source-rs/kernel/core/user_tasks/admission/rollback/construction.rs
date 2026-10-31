@@ -49,7 +49,7 @@ pub(super) unsafe fn physical(
     // Initial synchronous roots do not contribute to these runtime observations.
     // This fixture has 64 image pages plus the stack, each fully initialized and
     // mapped exactly once before completion, regardless of the eight-page grouping.
-    let pages = 64 + crate::user_tasks::address_space::USER_STACK_PAGES;
+    let pages = 64 + crate::user_tasks::address_space::DEFAULT_STACK_PAGES;
     use crate::user_tasks::execution::timing::Phase;
     for phase in [Phase::ImageBacking, Phase::ImagePublish] {
         assert_eq!(f.session.timing.count(phase), pages as u64);

@@ -38,18 +38,18 @@ public machine route(world: &mut World, channel: Name, key: u64, state: u64) -> 
     machine preflight(world: &mut World, channel: Name, key: u64, state: u64, index: u64 [0..=3], bit: u64) -> u64 {
         let group: u64 [0..=3] = world.input.streams[index].group;
         let focus: u64 = world.input.groups[group].focus;
-        transition (world.input.streams[index].suppressed & bit) == 0u64 && focus != 0u64 && focus <= 4u64 {
+        transition (world.input.streams[index].suppressed & bit) == 0u64 && focus != 0u64 && focus <= 5u64 {
             true -> checked(world, channel, key, state, index, bit, group, focus - 1u64)
             _ -> held(world, channel, key, state, index, bit)
         }
     }
-    machine checked(world: &mut World, channel: Name, key: u64, state: u64, index: u64 [0..=3], bit: u64, group: u64 [0..=3], slot: u64) -> u64 requires slot < 4u64 {
+    machine checked(world: &mut World, channel: Name, key: u64, state: u64, index: u64 [0..=3], bit: u64, group: u64 [0..=3], slot: u64) -> u64 requires slot < 5u64 {
         transition (world.children[slot].grant.keys & bit) != 0u64 {
             true -> capacity(world, channel, key, state, index, bit, group, slot)
             _ -> held(world, channel, key, state, index, bit)
         }
     }
-    machine capacity(world: &mut World, channel: Name, key: u64, state: u64, index: u64 [0..=3], bit: u64, group: u64 [0..=3], slot: u64) -> u64 requires slot < 4u64 {
+    machine capacity(world: &mut World, channel: Name, key: u64, state: u64, index: u64 [0..=3], bit: u64, group: u64 [0..=3], slot: u64) -> u64 requires slot < 5u64 {
         let code: u64 = children::can_push(&world.children[slot], index, group, world.input.groups[group].id);
         transition code == 0u64 {
             true -> locked(world, channel, key, state, index, bit)
@@ -87,18 +87,18 @@ public machine route(world: &mut World, channel: Name, key: u64, state: u64) -> 
     machine focused(world: &mut World, channel: Name, key: u64, state: u64, index: u64 [0..=3], bit: u64) -> u64 {
         let group: u64 [0..=3] = world.input.streams[index].group;
         let focus: u64 = world.input.groups[group].focus;
-        transition focus != 0u64 && focus <= 4u64 {
+        transition focus != 0u64 && focus <= 5u64 {
             true -> delivering(world, channel, key, state, index, bit, group, focus - 1u64)
             _ -> (0u64)
         }
     }
-    machine delivering(world: &mut World, channel: Name, key: u64, state: u64, index: u64 [0..=3], bit: u64, group: u64 [0..=3], slot: u64) -> u64 requires slot < 4u64 {
+    machine delivering(world: &mut World, channel: Name, key: u64, state: u64, index: u64 [0..=3], bit: u64, group: u64 [0..=3], slot: u64) -> u64 requires slot < 5u64 {
         transition (world.children[slot].grant.keys & bit) != 0u64 {
             true -> delivered(world, channel, key, state, index, group, slot)
             _ -> (0u64)
         }
     }
-    machine delivered(world: &mut World, channel: Name, key: u64, state: u64, index: u64 [0..=3], group: u64 [0..=3], slot: u64) -> u64 requires slot < 4u64 {
+    machine delivered(world: &mut World, channel: Name, key: u64, state: u64, index: u64 [0..=3], group: u64 [0..=3], slot: u64) -> u64 requires slot < 5u64 {
         let group_name: Name = world.input.groups[group].id;
         let described: Description = world.input.streams[index].described;
         let pushed: Pushed = children::push(&mut world.children[slot], index, channel, group, group_name, described, KEY, key, state, 0u64);

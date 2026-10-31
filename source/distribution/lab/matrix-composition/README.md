@@ -63,8 +63,9 @@ python tools/boot-harness-rs/matrix_composition_test.py
 The Omega profiles select this native package directly and build the Rust
 fixtures with their `omega-matrix` feature, which speaks the shared v4 protocol
 the runtime's server and client use; the Rust comparison matrix keeps copied
-requests. The matrix is funded with seventeen channel reservations at the top
-level and eighteen under a parent: three children's channels and bells, their
+requests. The matrix declares a 24-page stack in
+[native/link.json](native/link.json) for its five-slot World. It is funded with
+seventeen channel reservations at the top level and eighteen under a parent: three children's channels and bells, their
 listeners' bells, the owner bell, the parent client's bell, and two spare for
 the exhaustion probe. The [Rust fixtures](../../../../source-rs/distribution/lab/matrix-composition/README.md)
 describe what the guest proof checks: service transfers, forged and forbidden

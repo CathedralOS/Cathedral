@@ -3,7 +3,7 @@
 Start at [main.omg](main.omg): `request` answers an authenticated child,
 `owner_command` and `source_command` serve the program that owns this world, and
 [upstream.omg](upstream.omg) adopts a parent's poll. A world receives a grant
-from above, places up to four children below it, and routes input between them
+from above, places up to five children below it, and routes input between them
 so that no child sees beyond its grant. The same record serves a root adapter and
 a nested matrix. Identity comes from the connection a request arrived on, never
 from its words. Wire owner: `source-rs/platform/libraries/matrix/world/`.

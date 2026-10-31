@@ -12,33 +12,33 @@ public data Observation [copy] {
     state: u64;
 }
 public data Launches {
-    next: [u64; 4];
-    entries: [Observation; 4];
+    next: [u64; 5];
+    entries: [Observation; 5];
 }
 public data Recorded [copy] {
     case Receipt(value: u64);
     case Refused(code: u64);
 }
 public machine available(ledger: &Launches, slot: u64) -> bool {
-    transition slot < 4u64 {
+    transition slot < 5u64 {
         true -> (ledger.next[slot] != 0xffffffffffffffffu64)
         _ -> (false)
     }
 }
 // The caller's latest successful launch replaces its previous observation.
 public machine record(ledger: &mut Launches, slot: u64, incarnation: u64, child: u64) -> Recorded {
-    transition slot < 4u64 {
+    transition slot < 5u64 {
         true -> checked(ledger, slot, incarnation, child)
         _ -> (Recorded::Refused { code: NO_MEMORY })
     }
-    machine checked(ledger: &mut Launches, slot: u64, incarnation: u64, child: u64) -> Recorded requires slot < 4u64 {
+    machine checked(ledger: &mut Launches, slot: u64, incarnation: u64, child: u64) -> Recorded requires slot < 5u64 {
         let serial: u64 = ledger.next[slot];
         transition serial < 0xffffffffffffffffu64 {
             true -> recorded(ledger, slot, incarnation, child, serial + 1u64)
             _ -> (Recorded::Refused { code: NO_MEMORY })
         }
     }
-    machine recorded(ledger: &mut Launches, slot: u64, incarnation: u64, child: u64, receipt: u64) -> Recorded requires slot < 4u64 {
+    machine recorded(ledger: &mut Launches, slot: u64, incarnation: u64, child: u64, receipt: u64) -> Recorded requires slot < 5u64 {
         ledger.next[slot] = receipt;
         let mut entry: Observation;
         entry.live = true;
@@ -52,13 +52,13 @@ public machine record(ledger: &mut Launches, slot: u64, incarnation: u64, child:
 }
 // [0, state] for the caller's own receipt on its own endpoint incarnation.
 public machine query(ledger: &Launches, slot: u64, incarnation: u64, receipt: u64) -> [u64; 8] {
-    transition slot < 4u64 && ledger.entries[slot].live && ledger.entries[slot].incarnation == incarnation
+    transition slot < 5u64 && ledger.entries[slot].live && ledger.entries[slot].incarnation == incarnation
         && ledger.entries[slot].receipt == receipt {
         true -> (status_of(ledger, slot))
         _ -> (error(DENIED))
     }
 }
-machine status_of(ledger: &Launches, slot: u64) -> [u64; 8] requires slot < 4u64 {
+machine status_of(ledger: &Launches, slot: u64) -> [u64; 8] requires slot < 5u64 {
     let mut words: [u64; 8];
     words[1] = ledger.entries[slot].state;
     words
@@ -69,29 +69,29 @@ public machine finished(ledger: &mut Launches, child: u64, state: u64) -> u64 {
         true -> finding(ledger, child, state, 0u64)
         _ -> (0u64)
     }
-    machine finding(ledger: &mut Launches, child: u64, state: u64, slot: u64) -> u64 requires slot <= 4u64 {
-        transition slot < 4u64 {
+    machine finding(ledger: &mut Launches, child: u64, state: u64, slot: u64) -> u64 requires slot <= 5u64 {
+        transition slot < 5u64 {
             true -> checked(ledger, child, state, slot)
             _ -> (0u64)
         }
     }
-    machine checked(ledger: &mut Launches, child: u64, state: u64, slot: u64) -> u64 requires slot < 4u64 {
+    machine checked(ledger: &mut Launches, child: u64, state: u64, slot: u64) -> u64 requires slot < 5u64 {
         transition ledger.entries[slot].live && ledger.entries[slot].child == child && ledger.entries[slot].state == LAUNCH_RUNNING {
             true -> ended(ledger, state, slot)
             _ -> finding(ledger, child, state, slot + 1u64)
         }
     }
-    machine ended(ledger: &mut Launches, state: u64, slot: u64) -> u64 requires slot < 4u64 {
+    machine ended(ledger: &mut Launches, state: u64, slot: u64) -> u64 requires slot < 5u64 {
         ledger.entries[slot].state = state;
         slot + 1u64
     }
 }
 public machine disconnected(ledger: &mut Launches, slot: u64) {
-    transition slot < 4u64 {
+    transition slot < 5u64 {
         true -> cleared(ledger, slot)
         _ -> done()
     }
-    machine cleared(ledger: &mut Launches, slot: u64) requires slot < 4u64 {
+    machine cleared(ledger: &mut Launches, slot: u64) requires slot < 5u64 {
         let empty: Observation;
         ledger.entries[slot] = empty;
         ledger.next[slot] = 0u64;

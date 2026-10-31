@@ -140,13 +140,13 @@ machine key_cancel(world: &mut World, channel: Name) -> u64 {
         Admitted::Slot { index } -> cancelled(world, channel, index, 0u64)
         Admitted::Failed { code } -> (code)
     }
-    machine cancelled(world: &mut World, channel: Name, index: u64 [0..=3], slot: u64) -> u64 requires slot <= 4u64 {
-        transition slot < 4u64 {
+    machine cancelled(world: &mut World, channel: Name, index: u64 [0..=3], slot: u64) -> u64 requires slot <= 5u64 {
+        transition slot < 5u64 {
             true -> child(world, channel, index, slot)
             _ -> cleared(world, index)
         }
     }
-    machine child(world: &mut World, channel: Name, index: u64 [0..=3], slot: u64) -> u64 requires slot < 4u64 {
+    machine child(world: &mut World, channel: Name, index: u64 [0..=3], slot: u64) -> u64 requires slot < 5u64 {
         children::cancel_keys(&mut world.children[slot], index, channel);
         transition { _ -> cancelled(world, channel, index, slot + 1u64) }
     }

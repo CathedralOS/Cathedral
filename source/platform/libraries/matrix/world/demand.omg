@@ -21,13 +21,13 @@ public machine render_demand(world: &mut World, frames: bool) {
         world.no_frames = !frames;
         transition { _ -> refreshing(world, 0u64) }
     }
-    machine refreshing(world: &mut World, slot: u64) requires slot <= 4u64 {
-        transition slot < 4u64 {
+    machine refreshing(world: &mut World, slot: u64) requires slot <= 5u64 {
+        transition slot < 5u64 {
             true -> refreshed(world, slot)
             _ -> done()
         }
     }
-    machine refreshed(world: &mut World, slot: u64) requires slot < 4u64 {
+    machine refreshed(world: &mut World, slot: u64) requires slot < 5u64 {
         refresh_child(world, slot);
         transition { _ -> refreshing(world, slot + 1u64) }
     }
@@ -35,17 +35,17 @@ public machine render_demand(world: &mut World, frames: bool) {
 // Owner-selected visibility keeps the child's scene, extent, routes and capture;
 // it removes new pointer hits and display demand.
 public machine visible(world: &mut World, slot: u64, visible: bool) -> u64 {
-    transition slot < 4u64 {
+    transition slot < 5u64 {
         true -> checked(world, slot, visible)
         _ -> (DENIED)
     }
-    machine checked(world: &mut World, slot: u64, visible: bool) -> u64 requires slot < 4u64 {
+    machine checked(world: &mut World, slot: u64, visible: bool) -> u64 requires slot < 5u64 {
         transition world.children[slot].hidden == !visible {
             true -> (0u64)
             _ -> changed(world, slot, visible)
         }
     }
-    machine changed(world: &mut World, slot: u64, visible: bool) -> u64 requires slot < 4u64 {
+    machine changed(world: &mut World, slot: u64, visible: bool) -> u64 requires slot < 5u64 {
         world.children[slot].hidden = !visible;
         refresh_child(world, slot);
         0u64
@@ -53,24 +53,24 @@ public machine visible(world: &mut World, slot: u64, visible: bool) -> u64 {
 }
 // Recompute one child's demand from the world's demand, its visibility and
 // any pending frame request; a change wakes the child.
-public machine refresh_child(world: &mut World, slot: u64 [0..=3]) {
+public machine refresh_child(world: &mut World, slot: u64 [0..=4]) {
     let wanted: bool = (!world.no_frames && !world.children[slot].hidden) || world.children[slot].frame_ticket != 0u64;
     transition world.children[slot].no_frames == !wanted {
         true -> done()
         _ -> changed(world, slot, wanted)
     }
-    machine changed(world: &mut World, slot: u64 [0..=3], wanted: bool) {
+    machine changed(world: &mut World, slot: u64 [0..=4], wanted: bool) {
         world.children[slot].no_frames = !wanted;
         world.children[slot].notify = true;
     }
 }
 // Owner-only, after capture admission and funding: one request per source.
 public machine request_frame(world: &mut World, slot: u64, incarnation: u64, epoch: u64) -> Requested {
-    transition level::binding_matches(world, slot, incarnation, epoch) && slot < 4u64 {
+    transition level::binding_matches(world, slot, incarnation, epoch) && slot < 5u64 {
         true -> checked(world, slot)
         _ -> (Requested::Refused { code: DENIED })
     }
-    machine checked(world: &mut World, slot: u64) -> Requested requires slot < 4u64 {
+    machine checked(world: &mut World, slot: u64) -> Requested requires slot < 5u64 {
         let serial: u64 = world.children[slot].frame_serial;
         transition {
             world.children[slot].frame_ticket != 0u64 -> (Requested::Refused { code: BUSY })
@@ -78,7 +78,7 @@ public machine request_frame(world: &mut World, slot: u64, incarnation: u64, epo
             _ -> issued(world, slot, serial)
         }
     }
-    machine issued(world: &mut World, slot: u64, serial: u64) -> Requested requires slot < 4u64 && serial < 0xffffffffffffffffu64 {
+    machine issued(world: &mut World, slot: u64, serial: u64) -> Requested requires slot < 5u64 && serial < 0xffffffffffffffffu64 {
         let ticket: u64 = serial + 1u64;
         world.children[slot].frame_serial = ticket;
         world.children[slot].frame_ticket = ticket;
@@ -89,28 +89,28 @@ public machine request_frame(world: &mut World, slot: u64, incarnation: u64, epo
     }
 }
 public machine frame_ready(world: &World, slot: u64, incarnation: u64, epoch: u64, ticket: u64) -> bool {
-    transition level::binding_matches(world, slot, incarnation, epoch) && slot < 4u64 {
+    transition level::binding_matches(world, slot, incarnation, epoch) && slot < 5u64 {
         true -> checked(world, slot, ticket)
         _ -> (false)
     }
-    machine checked(world: &World, slot: u64, ticket: u64) -> bool requires slot < 4u64 {
+    machine checked(world: &World, slot: u64, ticket: u64) -> bool requires slot < 5u64 {
         world.children[slot].frame_ticket == ticket && world.children[slot].frame_ready
     }
 }
 // Release after capture pins its result, times out, is refused or loses its
 // consumer. A stale release cannot remove a replacement request's demand.
 public machine release_frame(world: &mut World, slot: u64, incarnation: u64, epoch: u64, ticket: u64) -> u64 {
-    transition level::binding_matches(world, slot, incarnation, epoch) && slot < 4u64 {
+    transition level::binding_matches(world, slot, incarnation, epoch) && slot < 5u64 {
         true -> checked(world, slot, ticket)
         _ -> (DENIED)
     }
-    machine checked(world: &mut World, slot: u64, ticket: u64) -> u64 requires slot < 4u64 {
+    machine checked(world: &mut World, slot: u64, ticket: u64) -> u64 requires slot < 5u64 {
         transition world.children[slot].frame_ticket != 0u64 && world.children[slot].frame_ticket == ticket {
             true -> released(world, slot)
             _ -> (DENIED)
         }
     }
-    machine released(world: &mut World, slot: u64) -> u64 requires slot < 4u64 {
+    machine released(world: &mut World, slot: u64) -> u64 requires slot < 5u64 {
         world.children[slot].frame_ticket = 0u64;
         world.children[slot].frame_ready = false;
         refresh_child(world, slot);
@@ -120,11 +120,11 @@ public machine release_frame(world: &mut World, slot: u64, incarnation: u64, epo
 // Optional owner policy, independent of hiding pixels: keep the child's view and
 // grant but cancel its current holds and forget its local routes.
 public machine deactivate_input(world: &mut World, slot: u64) -> u64 {
-    transition slot < 4u64 {
+    transition slot < 5u64 {
         true -> deactivated(world, slot)
         _ -> (DENIED)
     }
-    machine deactivated(world: &mut World, slot: u64) -> u64 requires slot < 4u64 {
+    machine deactivated(world: &mut World, slot: u64) -> u64 requires slot < 5u64 {
         children::cancel_all(&mut world.children[slot]);
         input::main::forget(&mut world.input, slot);
         0u64

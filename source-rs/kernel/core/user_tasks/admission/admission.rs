@@ -97,8 +97,16 @@ unsafe fn load(
     let (plan, contents) = unsafe { image::decode(program)? };
     let entry = plan.entry;
     // SAFETY: Serialized initial admission; same generic page engine as staged loads.
-    let result =
-        unsafe { UserSpace::from_segments(layout, image, &plan.segments, contents, frames) };
+    let result = unsafe {
+        UserSpace::from_segments(
+            layout,
+            image,
+            &plan.segments,
+            plan.stack_pages,
+            contents,
+            frames,
+        )
+    };
     match result {
         Ok(space) => {
             *destination = Some(space);

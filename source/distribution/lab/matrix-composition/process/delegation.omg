@@ -110,7 +110,7 @@ public machine child(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued
         frame.payload[0] == LAUNCH_STATUS && zeros_from(&frame.payload, 2u64) -> block status(gate, context, slot, issued, incarnation, frame.payload[1])
         frame.payload[0] == MANAGED_TASK && zeros_from(&frame.payload, 1u64) -> block managed(gate, context, slot, issued, incarnation)
         frame.payload[0] == TERMINATE_TASK && zeros_from(&frame.payload, 2u64) -> block terminating(gate, context, slot, issued, incarnation, frame.payload[1])
-        frame.payload[0] == LAYOUT_ROW && frame.payload[1] < 4u64 && zeros_from(&frame.payload, 6u64) -> block row(gate, context, slot, issued, frame, frame.payload[1])
+        frame.payload[0] == LAYOUT_ROW && frame.payload[1] < 5u64 && zeros_from(&frame.payload, 6u64) -> block row(gate, context, slot, issued, frame, frame.payload[1])
         frame.payload[0] == LAYOUT_APPLY && zeros_from(&frame.payload, 2u64) -> block applied(gate, context, slot, issued, incarnation, frame.payload[1])
         _ -> block answered(gate, context, slot, issued, error(kernel::DENIED))
     }
@@ -125,7 +125,7 @@ public machine child(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued
             Target::Refused { code } -> block answered(gate, context, slot, issued, error(code))
         }
     }
-    machine queried(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, incarnation: u64, index: u64 [0..=3]) -> u64 reaches Kernel {
+    machine queried(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, incarnation: u64, index: u64 [0..=4]) -> u64 reaches Kernel {
         transition index < 3u64 {
             true -> block observed(gate, context, slot, issued, incarnation, index)
             _ -> block answered(gate, context, slot, issued, error(kernel::DENIED))
@@ -145,7 +145,7 @@ public machine child(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued
             Target::Refused { code } -> block answered(gate, context, slot, issued, error(code))
         }
     }
-    machine authorizing(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, incarnation: u64, ticket: u64, index: u64 [0..=3]) -> u64 reaches Kernel {
+    machine authorizing(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, incarnation: u64, ticket: u64, index: u64 [0..=4]) -> u64 reaches Kernel {
         transition index < 3u64 {
             true -> block confirming(gate, context, slot, issued, incarnation, ticket, index)
             _ -> block answered(gate, context, slot, issued, error(kernel::DENIED))
@@ -160,7 +160,7 @@ public machine child(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued
             Target::Refused { code } -> block answered(gate, context, slot, issued, error(code))
         }
     }
-    machine stopping(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, index: u64 [0..=3]) -> u64 reaches Kernel {
+    machine stopping(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, index: u64 [0..=4]) -> u64 reaches Kernel {
         transition index < 3u64 {
             true -> block stopped(gate, context, slot, issued, index)
             _ -> block answered(gate, context, slot, issued, error(kernel::DENIED))
@@ -171,7 +171,7 @@ public machine child(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued
         block slots::reclaim(gate, context, target);
         block answered(gate, context, slot, issued, ok())
     }
-    machine row(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, frame: Frame, index: u64 [0..=3]) -> u64 reaches Kernel {
+    machine row(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, frame: Frame, index: u64 [0..=4]) -> u64 reaches Kernel {
         context.layout_rows[index] = Rect { x: frame.payload[2], y: frame.payload[3], width: frame.payload[4], height: frame.payload[5] };
         block answered(gate, context, slot, issued, ok())
     }

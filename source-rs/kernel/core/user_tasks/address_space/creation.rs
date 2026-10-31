@@ -10,7 +10,7 @@ impl UserSpace {
         segments: &[UserSegment],
         frames: &mut impl FrameSource,
     ) -> Result<(), MemoryError> {
-        let pages = USER_STACK_PAGES
+        let pages = self.stack_pages
             + segments
                 .iter()
                 .map(|s| s.memory_size.div_ceil(PAGE) as usize)
@@ -74,14 +74,7 @@ impl UserSpace {
         #[cfg(feature = "memory-lab")] mut observe: Option<&mut dyn FnMut(LoadStage, u64)>,
     ) -> Result<bool, MemoryError> {
         assert!(budget.pages != 0 && budget.file_bytes >= PAGE as usize);
-        let stack = UserSegment {
-            address: USER_STACK,
-            file_offset: 0,
-            file_size: 0,
-            memory_size: USER_STACK_PAGES as u64 * PAGE,
-            writable: true,
-            executable: false,
-        };
+        let stack = stack_segment(self.stack_pages);
         let mut source = Tracked {
             frames,
             addresses: &mut self.owned,
@@ -143,6 +136,19 @@ impl UserSpace {
             self.pages += 1;
         }
         Ok(cursor.done(segments.len()))
+    }
+}
+
+/// The stack segment for a declared size: it ends at the fixed top and grows
+/// down toward the image.
+pub(super) fn stack_segment(pages: usize) -> UserSegment {
+    UserSegment {
+        address: USER_STACK_TOP - pages as u64 * PAGE,
+        file_offset: 0,
+        file_size: 0,
+        memory_size: pages as u64 * PAGE,
+        writable: true,
+        executable: false,
     }
 }
 
@@ -231,14 +237,12 @@ mod tests {
                 executable: false,
             },
         ];
-        let stack = UserSegment {
-            address: USER_STACK,
-            file_offset: 0,
-            file_size: 0,
-            memory_size: USER_STACK_PAGES as u64 * PAGE,
-            writable: true,
-            executable: false,
-        };
+        let stack = stack_segment(DEFAULT_STACK_PAGES);
+        assert_eq!(stack.address, USER_STACK);
+        assert_eq!(
+            stack_segment(MAX_STACK_PAGES).address,
+            USER_STACK_TOP - MAX_STACK_PAGES as u64 * PAGE
+        );
         let expected: alloc::vec::Vec<u64> = segments
             .iter()
             .chain(core::iter::once(&stack))
@@ -284,14 +288,7 @@ mod tests {
                 executable: false,
             },
         ];
-        let stack = UserSegment {
-            address: USER_STACK,
-            file_offset: 0,
-            file_size: 0,
-            memory_size: USER_STACK_PAGES as u64 * PAGE,
-            writable: true,
-            executable: false,
-        };
+        let stack = stack_segment(DEFAULT_STACK_PAGES);
         let mut cursor = LoadCursor::default();
         let mut batches = alloc::vec::Vec::new();
         let mut visited = alloc::vec::Vec::new();

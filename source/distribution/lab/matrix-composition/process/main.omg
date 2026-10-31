@@ -47,7 +47,7 @@ public data State {
     managers: Management;
     observations: Launches;
     saved_placement: Placement;
-    layout_rows: [Rect; 4];
+    layout_rows: [Rect; 5];
 }
 public ProgramProvider satisfies Program {
     machine run(gate: &Gate, first: u64, second: u64) -> u64 reaches Kernel blocks; invokes Kernel; {

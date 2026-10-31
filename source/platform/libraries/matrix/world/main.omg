@@ -22,11 +22,11 @@ use geometry::Rect;
 // A child's request. A changed incarnation on the same slot means a replacement
 // occupant, whose predecessor's grant and queues are discarded first.
 public machine request(world: &mut World, slot: u64, incarnation: u64, words: &[u64; 8]) -> [u64; 8] {
-    transition level::identify(world, slot, incarnation) && slot < 4u64 {
+    transition level::identify(world, slot, incarnation) && slot < 5u64 {
         true -> current(world, slot, incarnation, words)
         _ -> (geometry::error(DENIED))
     }
-    machine current(world: &mut World, slot: u64, incarnation: u64, words: &[u64; 8]) -> [u64; 8] requires slot < 4u64 {
+    machine current(world: &mut World, slot: u64, incarnation: u64, words: &[u64; 8]) -> [u64; 8] requires slot < 5u64 {
         let valid: bool = geometry::valid_grant(world.children[slot].grant);
         let epoch: u64 = world.children[slot].grant.epoch;
         let ticket: u64 = world.children[slot].frame_ticket;
@@ -58,11 +58,11 @@ public machine request(world: &mut World, slot: u64, incarnation: u64, words: &[
         reply
     }
     // The source acknowledges its current accepted scene for the pending request.
-    machine frame_ready(world: &mut World, slot: u64) -> [u64; 8] requires slot < 4u64 {
+    machine frame_ready(world: &mut World, slot: u64) -> [u64; 8] requires slot < 5u64 {
         world.children[slot].frame_ready = true;
         geometry::ok()
     }
-    machine surface_info(world: &World, slot: u64) -> [u64; 8] requires slot < 4u64 {
+    machine surface_info(world: &World, slot: u64) -> [u64; 8] requires slot < 5u64 {
         let mut reply: [u64; 8];
         reply[1] = world.children[slot].surface_limit;
         reply[2] = surfaces::live_count(&world.children[slot], 0u64, 0u64);
@@ -70,7 +70,7 @@ public machine request(world: &mut World, slot: u64, incarnation: u64, words: &[
     }
     // Success echoes the limits; BUSY keeps the old ones.
     machine limiting(world: &mut World, slot: u64, epoch: u64, channels: u64, groups: u64) -> [u64; 8]
-        requires slot < 4u64 && channels <= 4u64 && groups <= 4u64 {
+        requires slot < 5u64 && channels <= 4u64 && groups <= 4u64 {
         let status: u64 = children::limit_input(&mut world.children[slot], channels, groups);
         transition status == 0u64 {
             true -> (limited(epoch, channels, groups))
@@ -85,7 +85,7 @@ public machine request(world: &mut World, slot: u64, incarnation: u64, words: &[
         reply
     }
     // Word zero packs the caller's tag above the status; the payload is POLL's.
-    machine tagged(world: &mut World, slot: u64, valid: bool, tag: u64) -> [u64; 8] requires slot < 4u64 && tag <= 0xffffffffu64 {
+    machine tagged(world: &mut World, slot: u64, valid: bool, tag: u64) -> [u64; 8] requires slot < 5u64 && tag <= 0xffffffffu64 {
         transition valid {
             true -> tag_reply(children::poll(&mut world.children[slot]), tag)
             _ -> tag_reply(geometry::error(DENIED), tag)

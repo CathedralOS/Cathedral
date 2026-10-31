@@ -10,6 +10,7 @@ import importlib.util
 import json
 from pathlib import Path
 import shutil
+import struct
 import subprocess
 import sys
 
@@ -39,6 +40,19 @@ def validate(data):
     return elf
 
 
+def declare_stack(image, size):
+    """The image with its one PT_GNU_STACK header's memory size set to `size`."""
+    data = bytearray(image)
+    offset, = struct.unpack_from('<Q', data, 0x20)
+    entry_size, count = struct.unpack_from('<HH', data, 0x36)
+    headers = [offset + index * entry_size for index in range(count)
+               if struct.unpack_from('<I', data, offset + index * entry_size)[0] == 0x6474e551]
+    if len(headers) != 1:
+        raise ValueError('the linked image must carry exactly one PT_GNU_STACK header')
+    struct.pack_into('<Q', data, headers[0] + 40, size)
+    return bytes(data)
+
+
 def prepare(source, compiler=None):
     component, _ = component_build.prepare(source, compiler)
     output = ROOT / 'build/omega-user' / source.resolve().relative_to(ROOT / 'source')
@@ -54,6 +68,17 @@ def prepare(source, compiler=None):
         record = manifest.encode(json.loads(declared_bytes)) if declared_bytes is not None else None
         if record is not None:
             inputs.append(declaration)
+        # The program's own stack need, declared through PT_GNU_STACK; the kernel
+        # maps that many pages below the fixed stack top instead of its default.
+        link = source / 'link.json'
+        stack_pages = None
+        if link.is_file():
+            inputs.append(link)
+            options = json.loads(link.read_text(encoding='utf-8'))
+            pages = options.get('stack_pages')
+            if set(options) != {'stack_pages'} or type(pages) is not int or not 1 <= pages <= 256:
+                raise ValueError('link.json declares stack_pages in 1..256 and nothing else')
+            stack_pages = options['stack_pages']
         hashes = {str(p): hashlib.sha256(p.read_bytes()).hexdigest() for p in inputs}
         if declared_bytes is not None:
             hashes[str(declaration)] = hashlib.sha256(declared_bytes).hexdigest()
@@ -72,6 +97,10 @@ def prepare(source, compiler=None):
         image = output / 'program.pending.elf'
         subprocess.run([linker, '-m', 'elf_x86_64', '-T', str(ABI / 'user.ld'),
                         '--no-undefined', '-o', str(image), *map(str, objects)], check=True)
+        if stack_pages is not None:
+            # The linker script names the PT_GNU_STACK header itself, so the
+            # size goes into that header after linking rather than through -z.
+            image.write_bytes(declare_stack(image.read_bytes(), stack_pages * 4096))
         image_bytes = image.read_bytes()
         elf = validate(image_bytes)
         if record is not None and not any(flags == 4 and files >= len(record)

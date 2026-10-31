@@ -83,6 +83,13 @@ the linker places it first in the read-only load, and packaging verifies that
 position. This requests launch authority from the owner; it grants none itself.
 All four installed standalone apps supply such a record.
 
+An optional `link.json` beside the native consumer declares `stack_pages`, one
+to 256. The build writes that size into the image's PT_GNU_STACK header and the
+kernel maps that many pages below its fixed stack top instead of the default
+eight, charged to the task's frames like any other backing. The standalone
+stock matrix declares 128 for its World and connection records; the installed
+apps keep the default.
+
 The current compiler rejects a raw `int` inside checked user assembly as a
 hidden control transfer. The native leaves use Omega's existing declared
 `TableFunction` boundary instead; this preserves explicit external-contract
