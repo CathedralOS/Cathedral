@@ -7,18 +7,36 @@ use cathedral_user_runtime::{
     task::{Child, Launch, Port},
 };
 
-#[derive(Clone, Copy)]
-struct Peer {
-    pair: Pair,
-    slot: Option<u64>,
+/// The owner's control link; a slot tag in the high word relays through that peer.
+struct Lab {
+    owner: Owner,
+    matrix: Child,
 }
-fn call(peer: Peer, mut words: wire::Packet) -> wire::Packet {
-    if let Some(slot) = peer.slot {
-        words[0] |= (slot + 1) << 32;
+impl Lab {
+    fn call(&mut self, slot: Option<u64>, mut words: wire::Packet) -> wire::Packet {
+        if let Some(slot) = slot {
+            words[0] |= (slot + 1) << 32;
+        }
+        match self.owner.try_call(words) {
+            Ok(reply) => reply,
+            // A dead matrix explains itself through its exit status.
+            Err(error) => panic!(
+                "matrix call {words:?} failed: {error:?}; matrix outcome {:?}",
+                self.matrix.wait_until(time::after(300).unwrap())
+            ),
+        }
     }
-    super::call(peer.pair, words)
+    fn owner(&mut self, words: wire::Packet) -> wire::Packet {
+        self.call(None, words)
+    }
+    fn view(&mut self, slot: u64) -> wire::Packet {
+        self.call(Some(slot), [wire::VIEW, 0, 0, 0, 0, 0, 0, 0])
+    }
+    fn next(&mut self, slot: u64, epoch: u64) -> wire::Packet {
+        self.call(Some(slot), [wire::NEXT, epoch, 0, 0, 0, 0, 0, 0])
+    }
 }
-fn start() -> (Child, Peer) {
+fn start() -> (Child, Lab) {
     let loans = [
         Launch::at(1).unwrap(),
         Launch::at(2).unwrap(),
@@ -28,59 +46,51 @@ fn start() -> (Child, Peer) {
     // Only the matrix owns the children's admission and control authority now.
     assert!(loans[0].spawn(0).is_err());
     assert!(Port::at(1).is_err());
+    let owner = Owner::connect(Port::at(0).unwrap().connect().unwrap());
     (
         child,
-        Peer {
-            pair: Port::at(0).unwrap().connect().unwrap(),
-            slot: None,
+        Lab {
+            owner,
+            matrix: child,
         },
     )
 }
-fn view(peer: Peer) -> wire::Packet {
-    call(peer, [wire::VIEW, 0, 0, 0, 0, 0, 0, 0])
-}
-fn next(peer: Peer, epoch: u64) -> wire::Packet {
-    call(peer, [wire::NEXT, epoch, 0, 0, 0, 0, 0, 0])
-}
 pub fn run() -> u64 {
-    let (matrix, owner) = start();
-    let peers = core::array::from_fn::<_, 3, _>(|i| Peer {
-        pair: owner.pair,
-        slot: Some(i as u64),
-    });
-    let views = peers.map(view);
+    let (matrix, mut lab) = start();
+    let views = [0, 1, 2].map(|slot| lab.view(slot));
     use cathedral_platform_contracts::{imports, services};
-    for peer in peers {
+    for slot in 0..3 {
         for _ in 0..16 {
             assert_eq!(
-                call(peer, services::request(imports::INTERACTION, 1, 1, 0)),
+                lab.call(Some(slot), services::request(imports::INTERACTION, 1, 1, 0)),
                 wire::error(services::TAKEN)
             );
             assert_eq!(
-                call(peer, services::request(imports::STORAGE, 1, 1, 0)),
-                wire::error(if peer.slot == Some(2) {
+                lab.call(Some(slot), services::request(imports::STORAGE, 1, 1, 0)),
+                wire::error(if slot == 2 {
                     services::TAKEN
                 } else {
                     services::UNAVAILABLE
                 })
             );
             assert_eq!(
-                call(peer, services::request(99, 1, 1, 0)),
+                lab.call(Some(slot), services::request(99, 1, 1, 0)),
                 wire::error(services::UNAVAILABLE)
             );
         }
         assert_eq!(
-            call(peer, services::request(imports::INTERACTION, 2, 2, 0)),
+            lab.call(Some(slot), services::request(imports::INTERACTION, 2, 2, 0)),
             wire::error(services::INCOMPATIBLE)
         );
         let mut forged = services::request(imports::INTERACTION, 1, 1, 0);
         forged[6] = 1; // A requested sibling identity cannot select another offer.
-        assert_eq!(call(peer, forged), wire::error(services::INVALID));
+        assert_eq!(lab.call(Some(slot), forged), wire::error(services::INVALID));
     }
-    for (i, peer) in peers.iter().enumerate() {
-        assert_eq!(views[i][0], 0);
-        assert_eq!(&views[i][2..4], &[300, 200]);
-        assert_eq!(&views[i][5..], &[0; 3]); // No owner position or sibling count.
+    for slot in 0..3 {
+        let view = views[slot as usize];
+        assert_eq!(view[0], 0);
+        assert_eq!(&view[2..4], &[300, 200]);
+        assert_eq!(&view[5..], &[0; 3]); // No owner position or sibling count.
         for words in [
             [wire::PLACE, 0, 0, 0, 1, 1, 0, 0],
             [wire::REVOKE, 2, 0, 0, 0, 0, 0, 0],
@@ -88,96 +98,82 @@ pub fn run() -> u64 {
             [wire::READ_PIXEL, 0, 0, 0, 0, 0, 0, 0],
             [wire::VIEW, 2, 0, 0, 0, 0, 0, 0],
         ] {
-            assert_eq!(call(*peer, words), wire::error(abi::DENIED));
+            assert_eq!(lab.call(Some(slot), words), wire::error(abi::DENIED));
         }
         assert_eq!(
-            call(*peer, [u32::MAX as u64, 0, 0, 0, 0, 0, 0, 0]),
+            lab.call(Some(slot), [u32::MAX as u64, 0, 0, 0, 0, 0, 0, 0]),
             wire::error(abi::DENIED)
         );
     }
     assert_eq!(
-        call(owner, [wire::POINTER_SOURCE, 20, 450, 1, 0, 0, 0, 0]),
+        lab.owner([wire::POINTER_SOURCE, 20, 450, 1, 0, 0, 0, 0]),
         [0; 8]
     );
-    assert_eq!(
-        &next(peers[2], views[2][1])[2..6],
-        &[wire::POINTER, 20, 50, 1]
-    );
-    for i in 0..2 {
-        assert_eq!(next(peers[i], views[i][1])[2], wire::NONE);
+    assert_eq!(&lab.next(2, views[2][1])[2..6], &[wire::POINTER, 20, 50, 1]);
+    for slot in 0..2 {
+        assert_eq!(lab.next(slot, views[slot as usize][1])[2], wire::NONE);
     }
     assert_eq!(
-        call(
-            owner,
-            [
-                wire::KEY_SOURCE,
-                input::ENTER as u64,
-                input::PRESS as u64,
-                0,
-                0,
-                0,
-                0,
-                0
-            ]
-        ),
+        lab.owner([
+            wire::KEY_SOURCE,
+            input::ENTER as u64,
+            input::PRESS as u64,
+            0,
+            0,
+            0,
+            0,
+            0
+        ]),
         [0; 8]
     );
-    assert_eq!(next(peers[2], views[2][1])[2], wire::KEY);
-    assert_eq!(call(owner, [wire::REVOKE, 1, 0, 0, 0, 0, 0, 0]), [0; 8]);
-    assert_eq!(view(peers[1]), wire::error(abi::DENIED));
-    assert_eq!(view(peers[0]), views[0]);
-    assert_eq!(view(peers[2]), views[2]);
+    assert_eq!(lab.next(2, views[2][1])[2], wire::KEY);
+    assert_eq!(lab.owner([wire::REVOKE, 1, 0, 0, 0, 0, 0, 0]), [0; 8]);
+    assert_eq!(lab.view(1), wire::error(abi::DENIED));
+    assert_eq!(lab.view(0), views[0]);
+    assert_eq!(lab.view(2), views[2]);
     assert_eq!(
-        call(owner, [wire::PLACE, 1, 0, 200, 300, 200, wire::KEY_MASK, 0]),
+        lab.owner([wire::PLACE, 1, 0, 200, 300, 200, wire::KEY_MASK, 0]),
         [0; 8]
     );
-    let old = view(peers[1])[1];
-    assert_eq!(call(owner, [wire::STOP, 1, 0, 0, 0, 0, 0, 0]), [0; 8]);
-    assert_eq!(call(owner, [wire::SPAWN, 1, 0, 0, 0, 0, 0, 0]), [0; 8]);
-    assert_eq!(view(peers[1]), wire::error(abi::DENIED));
+    let old = lab.view(1)[1];
+    assert_eq!(lab.owner([wire::STOP, 1, 0, 0, 0, 0, 0, 0]), [0; 8]);
+    assert_eq!(lab.owner([wire::SPAWN, 1, 0, 0, 0, 0, 0, 0]), [0; 8]);
+    assert_eq!(lab.view(1), wire::error(abi::DENIED));
     assert_eq!(
-        call(owner, [wire::PLACE, 1, 0, 200, 300, 200, wire::KEY_MASK, 0]),
+        lab.owner([wire::PLACE, 1, 0, 200, 300, 200, wire::KEY_MASK, 0]),
         [0; 8]
     );
-    assert_eq!(next(peers[1], old), wire::error(abi::DENIED));
-    assert_eq!(view(peers[1])[2], 300);
-    assert_eq!(view(peers[0]), views[0]);
-    assert_eq!(view(peers[2]), views[2]);
+    assert_eq!(lab.next(1, old), wire::error(abi::DENIED));
+    assert_eq!(lab.view(1)[2], 300);
+    assert_eq!(lab.view(0), views[0]);
+    assert_eq!(lab.view(2), views[2]);
     // Repeated replacement exercises retained-endpoint teardown and channel reuse.
     for _ in 0..16 {
-        assert_eq!(call(owner, [wire::STOP, 1, 0, 0, 0, 0, 0, 0]), [0; 8]);
-        assert_eq!(call(owner, [wire::SPAWN, 1, 0, 0, 0, 0, 0, 0]), [0; 8]);
-        assert_eq!(view(peers[1]), wire::error(abi::DENIED));
-        assert_eq!(view(peers[0]), views[0]);
-        assert_eq!(view(peers[2]), views[2]);
+        assert_eq!(lab.owner([wire::STOP, 1, 0, 0, 0, 0, 0, 0]), [0; 8]);
+        assert_eq!(lab.owner([wire::SPAWN, 1, 0, 0, 0, 0, 0, 0]), [0; 8]);
+        assert_eq!(lab.view(1), wire::error(abi::DENIED));
+        assert_eq!(lab.view(0), views[0]);
+        assert_eq!(lab.view(2), views[2]);
     }
     // Reclaim fully retained and partially transferred offers repeatedly. A VIEW
     // round trip proves each fixture reached its deliberately interrupted stage.
     for _ in 0..16 {
         for mode in [1, 2] {
-            assert_eq!(call(owner, [wire::STOP, 2, 0, 0, 0, 0, 0, 0]), [0; 8]);
-            assert_eq!(call(owner, [wire::SPAWN, 2, mode, 0, 0, 0, 0, 0]), [0; 8]);
-            assert_eq!(view(peers[2]), wire::error(abi::DENIED));
-            assert_eq!(view(peers[0]), views[0]);
+            assert_eq!(lab.owner([wire::STOP, 2, 0, 0, 0, 0, 0, 0]), [0; 8]);
+            assert_eq!(lab.owner([wire::SPAWN, 2, mode, 0, 0, 0, 0, 0]), [0; 8]);
+            assert_eq!(lab.view(2), wire::error(abi::DENIED));
+            assert_eq!(lab.view(0), views[0]);
         }
     }
     matrix.cancel().unwrap();
     matrix.wait().unwrap();
-    owner.pair.0.close().unwrap();
-    owner.pair.1.close().unwrap();
+    lab.owner.close();
     // Entire subtree death returns all three loans; a new matrix can own them again.
-    let (matrix, owner) = start();
-    assert_eq!(
-        view(Peer {
-            pair: owner.pair,
-            slot: Some(2)
-        })[2],
-        300
-    );
+    let (matrix, mut lab) = start();
+    assert_eq!(lab.view(2)[2], 300);
     matrix.cancel().unwrap();
     matrix.wait().unwrap();
-    owner.pair.0.close().unwrap();
-    owner.pair.1.close().unwrap();
+    lab.owner.close();
     cathedral_user_runtime::write(b"Cathedral alternative matrix: scoped acquisition, interrupted handoffs, rollback and subtree reclamation passed\n").unwrap();
     let (_, idle) = ipc::channel().unwrap();
     let _ = idle.receive(&mut [0; 64]);

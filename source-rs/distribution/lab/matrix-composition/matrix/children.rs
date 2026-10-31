@@ -11,7 +11,6 @@ use cathedral_user_runtime::{
 
 pub struct Children(pub [Option<Admitted>; 3]);
 impl Children {
-    #[cfg(not(feature = "omega"))]
     pub fn start(
         &mut self,
         slot: usize,

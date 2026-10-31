@@ -1,0 +1,95 @@
+module main;
+// A local world: receive a grant from above, place children, route attenuated
+// input. Start here: `request` answers an authenticated child, `owner_command`
+// and `source_command` serve the program that owns this world, and
+// [upstream.omg](upstream.omg) adopts a parent's poll. [level.omg](level.omg)
+// holds the record and its structural rules; [children.omg](children.omg) owns
+// each child's view and queues; [input/](input/main.omg) routes pointer and keys.
+// Identity comes from the connection a request arrived on, never from its words.
+// Wire owner: source-rs/platform/libraries/matrix/world/.
+use protocol::main;
+use protocol::matrix;
+use level::World;
+use input::pointer;
+use input::keys;
+use geometry::Rect;
+
+// A child's request. A changed incarnation on the same slot means a replacement
+// occupant, whose predecessor's grant and queues are discarded first.
+public machine request(world: &mut World, slot: u64, incarnation: u64, words: &[u64; 8]) -> [u64; 8] {
+    transition slot < world.capacity {
+        true -> identified(world, slot, incarnation, words)
+        _ -> (geometry::error(DENIED))
+    }
+    machine identified(world: &mut World, slot: u64, incarnation: u64, words: &[u64; 8]) -> [u64; 8] requires slot < 4u64 {
+        let previous: u64 = world.children[slot].incarnation;
+        transition previous != 0u64 && previous != incarnation {
+            true -> replaced(world, slot, incarnation, words)
+            _ -> current(world, slot, incarnation, words)
+        }
+    }
+    machine replaced(world: &mut World, slot: u64, incarnation: u64, words: &[u64; 8]) -> [u64; 8] requires slot < 4u64 {
+        level::disconnected(world, slot);
+        transition { _ -> current(world, slot, incarnation, words) }
+    }
+    machine current(world: &mut World, slot: u64, incarnation: u64, words: &[u64; 8]) -> [u64; 8] requires slot < 4u64 {
+        world.children[slot].incarnation = incarnation;
+        let valid: bool = geometry::valid_grant(world.children[slot].grant);
+        let epoch: u64 = world.children[slot].grant.epoch;
+        transition {
+            words[0] == MATRIX_VIEW && zeros_from(words, 1u64) -> (children::view(&world.children[slot]))
+            words[0] == MATRIX_POLL && zeros_from(words, 1u64) && valid -> (children::poll(&mut world.children[slot]))
+            words[0] == POLL_TAGGED && words[1] >= 1u64 && words[1] <= 0xffffffffu64 && zeros_from(words, 2u64) -> tagged(world, slot, valid, words[1])
+            words[0] == MATRIX_NEXT && zeros_from(words, 2u64) && valid && words[1] == epoch -> (children::next(&mut world.children[slot]))
+            _ -> (geometry::error(DENIED))
+        }
+    }
+    // Word zero packs the caller's tag above the status; the payload is POLL's.
+    machine tagged(world: &mut World, slot: u64, valid: bool, tag: u64) -> [u64; 8] requires slot < 4u64 && tag <= 0xffffffffu64 {
+        transition valid {
+            true -> tag_reply(children::poll(&mut world.children[slot]), tag)
+            _ -> tag_reply(geometry::error(DENIED), tag)
+        }
+    }
+    machine tag_reply(reply: [u64; 8], tag: u64) -> [u64; 8] requires tag <= 0xffffffffu64 {
+        let mut tagged: [u64; 8] = reply;
+        tagged[0] = (tag << 32u64) | (reply[0] & 0xffffffffu64);
+        tagged
+    }
+}
+// Placement and revocation within already supplied authority. Binding, slots and
+// launch policy remain the owner's choices. These words are never accepted from a child.
+public machine owner_command(world: &mut World, words: &[u64; 8]) -> [u64; 8] {
+    transition {
+        words[0] == PLACE && words[7] == 0u64 && words[1] < world.capacity ->
+            (geometry::error(level::place(world, words[1],
+                Rect { x: words[2], y: words[3], width: words[4], height: words[5] }, words[6])))
+        words[0] == REVOKE && zeros_from(words, 2u64) && words[1] < world.capacity -> (geometry::error(level::revoke(world, words[1])))
+        words[0] == HEALTH && zeros_from(words, 1u64) -> (geometry::ok())
+        _ -> (geometry::error(DENIED))
+    }
+}
+// Input injected by a trusted upstream source, not necessarily hardware, on the
+// single local stream. Coordinates are clamped by this world; no child may call this.
+public machine source_command(world: &mut World, words: &[u64; 8]) -> [u64; 8] {
+    transition {
+        words[0] == POINTER_SOURCE && words[3] <= 7u64 && zeros_from(words, 4u64) ->
+            (geometry::error(pointer::route(world, names::local(SINGLE_INPUT_STREAM), words[1], words[2], words[3], true)))
+        words[0] == KEY_SOURCE && zeros_from(words, 3u64) ->
+            (geometry::error(keys::route(world, names::local(SINGLE_INPUT_STREAM), words[1], words[2])))
+        _ -> (geometry::error(DENIED))
+    }
+}
+// True when every word from `from` to the end is zero.
+public machine zeros_from(words: &[u64; 8], from: u64) -> bool requires from <= 8u64 {
+    transition from < 8u64 {
+        true -> checked(words, from)
+        _ -> (true)
+    }
+    machine checked(words: &[u64; 8], from: u64) -> bool requires from < 8u64 {
+        transition words[from] == 0u64 {
+            true -> zeros_from(words, from + 1u64)
+            _ -> (false)
+        }
+    }
+}

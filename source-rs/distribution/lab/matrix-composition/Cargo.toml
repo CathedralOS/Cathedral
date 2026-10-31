@@ -13,6 +13,7 @@ bench = false
 
 [features]
 upstream-proof = []
+omega-matrix = []
 
 [dependencies]
 cathedral-matrix.workspace = true

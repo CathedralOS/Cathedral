@@ -1,0 +1,75 @@
+module rollback;
+// Sixteen admissions that must fail the same way, leaving channel, page and
+// notification budgets exactly as they were. After the first peer, launch zero
+// is busy. Once all three peers hold their listeners, two channels remain: the
+// bundle's channels succeed and its wake bell cannot be created, so admission
+// must unwind them. That probe waits for the handshakes that charge the bells.
+use main::State;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::admission::main::Admitted;
+use protocol::services::INTERACTION;
+
+public machine deferred(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    transition context.probe_rollback && context.slots[0].listener.ready && context.slots[1].listener.ready && context.slots[2].listener.ready {
+        true -> block exhausted(gate, context, now)
+        _ -> (0u64)
+    }
+    machine exhausted(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+        context.probe_rollback = false;
+        block check(gate, context, now, kernel::NO_MEMORY)
+    }
+}
+public machine check(gate: &Gate, context: &mut State, now: u64, expected: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let mut resources: [u64; 8];
+    let mut notifications: [u64; 8];
+    let first: u64 = Kernel::resource_budget(gate, &mut resources);
+    let second: u64 = Kernel::notification_budget(gate, &mut notifications);
+    transition first == 0u64 && second == 0u64 {
+        true -> block attempt(gate, context, now, expected, resources, notifications, 0u64)
+        _ -> (kernel::IO_ERROR)
+    }
+}
+machine attempt(gate: &Gate, context: &mut State, now: u64, expected: u64, resources: [u64; 8], notifications: [u64; 8], round: u64) -> u64
+    reaches Kernel requires round <= 16u64 {
+    transition round < 16u64 {
+        true -> block attempted(gate, context, now, expected, resources, notifications, round)
+        _ -> (0u64)
+    }
+    machine attempted(gate: &Gate, context: &mut State, now: u64, expected: u64, resources: [u64; 8], notifications: [u64; 8], round: u64) -> u64
+        reaches Kernel requires round < 16u64 {
+        let launch: u64 = runtime::task::main::launch(gate, 0u64);
+        let mut scratch: Admitted;
+        let loans: [u64; 14];
+        let status: u64 = block runtime::admission::main::admit(gate, &mut scratch, launch, 0u64, &loans, 0u64,
+            INTERACTION, runtime::time::after(now, 300u64), false);
+        transition status == expected {
+            true -> block unchanged(gate, context, now, expected, resources, notifications, round)
+            _ -> (kernel::IO_ERROR)
+        }
+    }
+    machine unchanged(gate: &Gate, context: &mut State, now: u64, expected: u64, resources: [u64; 8], notifications: [u64; 8], round: u64) -> u64
+        reaches Kernel requires round < 16u64 {
+        let mut after_resources: [u64; 8];
+        let mut after_notifications: [u64; 8];
+        let first: u64 = Kernel::resource_budget(gate, &mut after_resources);
+        let second: u64 = Kernel::notification_budget(gate, &mut after_notifications);
+        transition first == 0u64 && second == 0u64 && same(resources, after_resources, 0u64) && same(notifications, after_notifications, 0u64) {
+            true -> block attempt(gate, context, now, expected, resources, notifications, round + 1u64)
+            _ -> (kernel::IO_ERROR)
+        }
+    }
+}
+machine same(a: [u64; 8], b: [u64; 8], index: u64) -> bool requires index <= 8u64 {
+    transition index < 8u64 {
+        true -> compared(a, b, index)
+        _ -> (true)
+    }
+    machine compared(a: [u64; 8], b: [u64; 8], index: u64) -> bool requires index < 8u64 {
+        transition a[index] == b[index] {
+            true -> same(a, b, index + 1u64)
+            _ -> (false)
+        }
+    }
+}

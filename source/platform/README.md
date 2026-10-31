@@ -11,11 +11,13 @@ and its separately compiled app provider. [Service imports](contracts/imports/RE
 own declaration decoding, bounded executable discovery and interface matching.
 The Rust host still retains mappings, authenticated connections and grants.
 
-The new [Omega process runtime](libraries/user-runtime/README.md) is the path
-toward removing that host. Its standalone x86-64 witness runs process entry,
-environment discovery, copied IPC, cleanup and deadline parking directly against
-the reference kernel. Shared service transport and the ordinary desktop apps
-have not switched to it yet.
+The [Omega process runtime](libraries/user-runtime/README.md) is the path
+toward removing that host. The installed chooser, Background, Colors and Notes
+run on it, and it now admits child tasks and offers them services. The
+[World](libraries/matrix/world/README.md) supplies a matrix's local authority:
+grants, placement and attenuated input routing, with no kernel calls of its own.
+The [independent Omega matrix](../distribution/lab/matrix-composition/README.md)
+is the first program built from both; the stock matrix still runs its Rust host.
 
 Many hardware packages are staged ports, not running drivers. The
 [port queue](../../TASKS_OMEGA_PORTS.md) records their individual proof and runtime

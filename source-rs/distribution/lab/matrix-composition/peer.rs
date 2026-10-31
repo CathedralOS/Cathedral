@@ -10,6 +10,8 @@ pub fn run(environment: cathedral_user_runtime::task::Environment, mode: u64) ->
     let mut bindings = cathedral_user_runtime::services::Services::load(&environment).unwrap();
     assert_eq!(environment.len(), 2);
     assert!(bindings.is_brokered());
+    #[cfg(feature = "omega-matrix")]
+    bindings.enable_shared().unwrap();
     let before = cathedral_user_runtime::resources::budget().unwrap();
     let notification_before = cathedral_user_runtime::notification::budget().unwrap();
     let parent = (
@@ -38,18 +40,10 @@ pub fn run(environment: cathedral_user_runtime::task::Environment, mode: u64) ->
         if mode == 3 {
             // Die later with one storage endpoint received and its partner still
             // held by the broker. No fake filesystem implementation is involved.
-            parent
-                .0
-                .send(&wire::encode(services::request(
-                    cathedral_platform_contracts::imports::STORAGE,
-                    1,
-                    1,
-                    0,
-                )))
+            let endpoint = bindings
+                .acquire_endpoint_part(cathedral_platform_contracts::imports::STORAGE, 1, 1, 0)
                 .unwrap();
-            let (len, endpoint) = parent.1.receive_with(&mut [0; 64]).unwrap();
-            assert_eq!(len, 64);
-            assert!(endpoint.is_some());
+            assert_ne!(endpoint.raw(), 0);
         } else {
             let storage = if mode == 2 {
                 Some(bindings.storage(1, 1).unwrap())
@@ -83,15 +77,27 @@ pub fn run(environment: cathedral_user_runtime::task::Environment, mode: u64) ->
         expected_notifications
     );
     let control = (Handle::bootstrap(0).unwrap(), Handle::bootstrap(1).unwrap());
+    #[cfg(feature = "omega-matrix")]
+    let mut client = bindings.into_shared_transport().unwrap();
     loop {
         let mut bytes = [0; 64];
         let len = control.0.receive(&mut bytes).unwrap();
         // Relay malformed payloads too, so the real provider checks them.
-        parent.0.send(&bytes[..len]).unwrap();
-        let len = parent
-            .1
-            .receive_until(&mut bytes, time::after(300).unwrap())
-            .unwrap();
-        control.1.send(&bytes[..len]).unwrap();
+        #[cfg(feature = "omega-matrix")]
+        {
+            let (reply, len) = client
+                .call(&bytes[..len], time::after(300).unwrap())
+                .unwrap();
+            control.1.send(&reply[..len]).unwrap();
+        }
+        #[cfg(not(feature = "omega-matrix"))]
+        {
+            parent.0.send(&bytes[..len]).unwrap();
+            let len = parent
+                .1
+                .receive_until(&mut bytes, time::after(300).unwrap())
+                .unwrap();
+            control.1.send(&bytes[..len]).unwrap();
+        }
     }
 }

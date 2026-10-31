@@ -1,0 +1,245 @@
+module input::main;
+// Admit supplied stream names and bind them to focus groups. Each stream keeps
+// its own pointer capture and held keys; a group shares one keyboard selection.
+// Names are admitted within authenticated authority; they are not capabilities.
+use protocol::main;
+use names::Name;
+
+public data Stream [copy] {
+    id: Name;
+    group: u64 [0..=3];
+    retiring: bool;
+    // Captured child slot plus one; zero means no capture.
+    capture: u64;
+    buttons: u64;
+    blocked: bool;
+    held: u64;
+    suppressed: u64;
+}
+public data Group [copy] {
+    id: Name;
+    // Focused child slot plus one; zero means none.
+    focus: u64;
+    retained: bool;
+    retiring: bool;
+}
+public data Input {
+    streams: [Stream; 4];
+    groups: [Group; 4];
+    last_local_stream: u64;
+    last_local_group: u64;
+}
+public data Admitted [copy] {
+    case Slot(index: u64 [0..=3]);
+    case Failed(code: u64);
+}
+
+// A stream named for the first time joins a group of its own name.
+public machine admit(input: &mut Input, id: Name) -> Admitted {
+    transition names::valid(id) {
+        true -> existing(input, id, 0u64)
+        _ -> (Admitted::Failed { code: INVALID_ARGUMENT })
+    }
+    machine existing(input: &mut Input, id: Name, index: u64) -> Admitted requires index <= 4u64 {
+        transition index < 4u64 {
+            true -> compared(input, id, index)
+            _ -> bind(input, id, id)
+        }
+    }
+    machine compared(input: &mut Input, id: Name, index: u64) -> Admitted requires index < 4u64 {
+        transition names::same(input.streams[index].id, id) {
+            true -> found(input, index)
+            _ -> existing(input, id, index + 1u64)
+        }
+    }
+    machine found(input: &Input, index: u64) -> Admitted requires index < 4u64 {
+        transition input.streams[index].retiring {
+            true -> (Admitted::Failed { code: PEER_CLOSED })
+            _ -> (Admitted::Slot { index: index })
+        }
+    }
+}
+// Local admission allocates monotonically, so a stale local name cannot recreate
+// a retired channel. A live stream keeps its group; rebinding elsewhere is BUSY.
+public machine bind(input: &mut Input, id: Name, group: Name) -> Admitted {
+    transition names::valid(id) && names::valid(group) {
+        true -> existing(input, id, group, 0u64)
+        _ -> (Admitted::Failed { code: INVALID_ARGUMENT })
+    }
+    machine existing(input: &mut Input, id: Name, group: Name, index: u64) -> Admitted requires index <= 4u64 {
+        transition index < 4u64 {
+            true -> compared(input, id, group, index)
+            _ -> fresh(input, id, group)
+        }
+    }
+    machine compared(input: &mut Input, id: Name, group: Name, index: u64) -> Admitted requires index < 4u64 {
+        transition names::same(input.streams[index].id, id) {
+            true -> found(input, group, index)
+            _ -> existing(input, id, group, index + 1u64)
+        }
+    }
+    machine found(input: &Input, group: Name, index: u64) -> Admitted requires index < 4u64 {
+        transition {
+            input.streams[index].retiring -> (Admitted::Failed { code: PEER_CLOSED })
+            names::same(input.groups[input.streams[index].group].id, group) -> (Admitted::Slot { index: index })
+            _ -> (Admitted::Failed { code: BUSY })
+        }
+    }
+    machine fresh(input: &mut Input, id: Name, group: Name) -> Admitted {
+        transition !id.inherited && id.value <= input.last_local_stream {
+            true -> (Admitted::Failed { code: PEER_CLOSED })
+            _ -> slotted(input, id, group, free_stream(input, 0u64))
+        }
+    }
+    machine slotted(input: &mut Input, id: Name, group: Name, slot: u64) -> Admitted {
+        transition slot < 4u64 {
+            true -> grouped(input, id, group, slot, group_slot(input, group))
+            _ -> (Admitted::Failed { code: NO_MEMORY })
+        }
+    }
+    machine grouped(input: &mut Input, id: Name, group: Name, slot: u64, group_slot: u64) -> Admitted requires slot < 4u64 {
+        transition group_slot < 4u64 {
+            true -> checked(input, id, group, slot, group_slot)
+            _ -> (Admitted::Failed { code: NO_MEMORY })
+        }
+    }
+    machine checked(input: &mut Input, id: Name, group: Name, slot: u64, group_slot: u64) -> Admitted requires slot < 4u64 && group_slot < 4u64 {
+        transition input.groups[group_slot].retiring {
+            true -> (Admitted::Failed { code: PEER_CLOSED })
+            _ -> bound(input, id, group, slot, group_slot)
+        }
+    }
+    machine bound(input: &mut Input, id: Name, group: Name, slot: u64, group_slot: u64) -> Admitted requires slot < 4u64 && group_slot < 4u64 {
+        input.groups[group_slot].id = group;
+        // Only an explicit upstream retirement ends an inherited route.
+        input.groups[group_slot].retained = input.groups[group_slot].retained || group.inherited;
+        remember(input, id, group);
+        let mut stream: Stream;
+        stream.id = id;
+        stream.group = group_slot;
+        input.streams[slot] = stream;
+        Admitted::Slot { index: slot }
+    }
+    machine remember(input: &mut Input, id: Name, group: Name) {
+        transition !id.inherited { true -> local_stream(input, id, group) _ -> local_group(input, group) }
+    }
+    machine local_stream(input: &mut Input, id: Name, group: Name) {
+        input.last_local_stream = id.value;
+        transition { _ -> local_group(input, group) }
+    }
+    machine local_group(input: &mut Input, group: Name) {
+        transition !group.inherited && group.value > input.last_local_group {
+            true -> newest(input, group.value)
+            _ -> done()
+        }
+    }
+    machine newest(input: &mut Input, value: u64) { input.last_local_group = value; }
+}
+// First unbound stream slot, or 4 when all are bound.
+machine free_stream(input: &Input, index: u64) -> u64 requires index <= 4u64 {
+    transition index < 4u64 {
+        true -> checked(input, index)
+        _ -> (4u64)
+    }
+    machine checked(input: &Input, index: u64) -> u64 requires index < 4u64 {
+        transition names::valid(input.streams[index].id) {
+            true -> free_stream(input, index + 1u64)
+            _ -> (index)
+        }
+    }
+}
+// The slot already holding this group, else the first empty one, else 4.
+machine group_slot(input: &Input, group: Name) -> u64 {
+    let held: u64 = holding(input, group, 0u64);
+    transition held < 4u64 { true -> (held) _ -> (free_group(input, 0u64)) }
+}
+machine holding(input: &Input, group: Name, index: u64) -> u64 requires index <= 4u64 {
+    transition index < 4u64 {
+        true -> checked(input, group, index)
+        _ -> (4u64)
+    }
+    machine checked(input: &Input, group: Name, index: u64) -> u64 requires index < 4u64 {
+        transition names::same(input.groups[index].id, group) {
+            true -> (index)
+            _ -> holding(input, group, index + 1u64)
+        }
+    }
+}
+machine free_group(input: &Input, index: u64) -> u64 requires index <= 4u64 {
+    transition index < 4u64 {
+        true -> checked(input, index)
+        _ -> (4u64)
+    }
+    machine checked(input: &Input, index: u64) -> u64 requires index < 4u64 {
+        transition names::valid(input.groups[index].id) {
+            true -> free_group(input, index + 1u64)
+            _ -> (index)
+        }
+    }
+}
+// A child lost its grant or left: drop its focus and captures. Held keys become
+// suppressed so their releases are swallowed; a held button blocks until release.
+public machine forget(input: &mut Input, child: u64 [0..=3]) {
+    forget_focus(input, child + 1u64, 0u64);
+    forget_capture(input, child + 1u64, 0u64);
+}
+machine forget_focus(input: &mut Input, target: u64, index: u64) requires index <= 4u64 {
+    transition index < 4u64 {
+        true -> checked(input, target, index)
+        _ -> done()
+    }
+    machine checked(input: &mut Input, target: u64, index: u64) requires index < 4u64 {
+        transition input.groups[index].focus == target {
+            true -> cleared(input, target, index)
+            _ -> forget_focus(input, target, index + 1u64)
+        }
+    }
+    machine cleared(input: &mut Input, target: u64, index: u64) requires index < 4u64 {
+        input.groups[index].focus = 0u64;
+        suppress_group(input, index, 0u64);
+        transition { _ -> forget_focus(input, target, index + 1u64) }
+    }
+}
+// Every live stream of the group suppresses what it currently holds.
+public machine suppress_group(input: &mut Input, group: u64 [0..=3], index: u64) requires index <= 4u64 {
+    transition index < 4u64 {
+        true -> checked(input, group, index)
+        _ -> done()
+    }
+    machine checked(input: &mut Input, group: u64 [0..=3], index: u64) requires index < 4u64 {
+        transition input.streams[index].group == group {
+            true -> suppressed(input, group, index)
+            _ -> suppress_group(input, group, index + 1u64)
+        }
+    }
+    machine suppressed(input: &mut Input, group: u64 [0..=3], index: u64) requires index < 4u64 {
+        input.streams[index].suppressed = input.streams[index].suppressed | input.streams[index].held;
+        transition { _ -> suppress_group(input, group, index + 1u64) }
+    }
+}
+machine forget_capture(input: &mut Input, target: u64, index: u64) requires index <= 4u64 {
+    transition index < 4u64 {
+        true -> checked(input, target, index)
+        _ -> done()
+    }
+    machine checked(input: &mut Input, target: u64, index: u64) requires index < 4u64 {
+        transition input.streams[index].capture == target {
+            true -> released(input, target, index)
+            _ -> forget_capture(input, target, index + 1u64)
+        }
+    }
+    machine released(input: &mut Input, target: u64, index: u64) requires index < 4u64 {
+        input.streams[index].capture = 0u64;
+        input.streams[index].blocked = input.streams[index].blocked || input.streams[index].buttons != 0u64;
+        input.streams[index].buttons = 0u64;
+        transition { _ -> forget_capture(input, target, index + 1u64) }
+    }
+}
+// Interrupt one stream's delivery without erasing the group's remembered focus.
+public machine cancel(stream: &mut Stream) {
+    stream.capture = 0u64;
+    stream.suppressed = stream.suppressed | stream.held;
+    stream.blocked = stream.blocked || stream.buttons != 0u64;
+    stream.buttons = 0u64;
+}
+machine done() {}

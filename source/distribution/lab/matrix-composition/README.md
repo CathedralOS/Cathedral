@@ -1,85 +1,67 @@
 # Independent Omega matrix
 
-Start at [matrix/main.omg](matrix/main.omg). [session.omg](matrix/session.omg)
-divides its granted area into three regions, admits children with different supplied
-services and places them. [requests.omg](matrix/requests.omg) chooses owner,
-child, service-acquisition and disconnection handling. No stock desktop,
-launcher, configuration object, taskbar or filesystem is required.
+Start at [process/main.omg](process/main.omg): a standalone Omega process that
+admits three peers from lent launches, gives each a third of its granted area,
+offers them services and routes attenuated input. One turn serves the owner,
+each slot and the relay probe, then parks on every live interest. No stock
+desktop, launcher, configuration object, taskbar or filesystem is involved; the
+program depends only on the [process runtime](../../../platform/libraries/user-runtime/README.md),
+the [World](../../../platform/libraries/matrix/world/README.md) and the
+reference protocol contracts. The [native consumer](native/main.omg) links it
+the same way as the installed apps.
 
-The [native consumer](native/main.omg) packages the same ABI-1 state/step layout
-used by other Omega components. Its **operation vocabulary is private to this
-proof**, in [bridge.omg](matrix/bridge.omg). It is not the common application host
-protocol and has not been blessed as a general matrix-server API.
+Descend by responsibility:
 
-The [Rust adapter](../../../../source-rs/distribution/lab/matrix-composition/matrix/host/host.rs)
-executes requested mechanisms: the platform World for scoped geometry/input,
-runtime admission for endpoints/tasks, and the server for authenticated requests.
-It never recovers a child identity from message words. The retained Request owns
-reply custody; words 10-13 report local caller slot/incarnation, event kind and
-length separately from the eight untrusted message words. Slot 3 means the
-supplied owner endpoint. Omega chooses the grant bits before admission; service
-offers transfer only those preallocated rights. The proof-only relay and rollback
-operations reuse the existing test harness and are explicitly not runtime APIs.
+- [startup.omg](process/startup.omg): accept owner control first, learn the
+  granted area (a fixed 300 by 600 region, or a real parent's poll), admit the
+  three peers from launches zero to two and place them. Slot two alone is offered
+  storage. Mode zero starts a slot's ordinary peer; modes one and two start its
+  interrupted-handoff variants.
+- [commands.omg](process/commands.omg): owner words. A nonzero high word relays
+  the packet through that peer's control link; STOP and SPAWN change slots; source
+  words inject input; everything else is a World owner command. A SPAWN
+  replacement is not placed, so a new occupant never inherits the old view.
+- [slots.omg](process/slots.omg): one slot per turn. Acquisition goes to the
+  runtime's offer; other 64-byte requests are World requests under the listener's
+  incarnation; shorter requests are denied. A retired listener reclaims the slot
+  and drops its view.
+- [probe.omg](process/probe.omg): the proof-only relay. One probe at a time; an
+  expired probe or one to an empty slot ends the program. It is not a runtime or
+  application API.
+- [rollback.omg](process/rollback.omg): sixteen admissions that must fail the
+  same way while channel, page and notification budgets stay exactly as they
+  were. Launch zero is busy after the first peer; once all three listeners hold
+  their bells, two channels remain and the bundle's bell cannot be created.
+- [upstream.omg](process/upstream.omg): with a supplied parent, one synchronous
+  poll before each local decision, adopted through the World's upstream
+  inheritance. The top-level proof has no parent.
 
-`NEXT` cannot discard an unanswered request. Child dispatch uses the retained
-endpoint identity even if an app changes packet metadata. Requests carrying a
-memory object are reported separately after releasing custody; this program
-rejects them. Parent death still invokes the kernel's existing subtree teardown.
-
-Run the same live IPC proof against both implementations:
+Run the live IPC proof against the Omega matrix and against the original Rust
+program, which remains the comparison path:
 
 ```powershell
-python tools/boot-harness-rs/matrix_composition_test.py
 python tools/boot-harness-rs/matrix_composition_test.py --omega
 python tools/boot-harness-rs/matrix_composition_test.py --upstream
-cd source-rs
-cargo test --locked -p cathedral-three-peer-matrix --lib --features omega
+python tools/boot-harness-rs/matrix_composition_test.py
 ```
 
-The Omega profile grants nine private pages for the component's state/packet.
-The original Rust proof remains the comparison path. Six compiled policy tests
-cover startup refusal, caller separation, service-grant choice on replacement,
-malformed requests, disconnection, admission errors and parent refresh without
-losing authenticated request custody. The guest proof checks
-actual service transfers, forged/forbidden requests, sibling isolation, stale
-views, repeated replacement, interrupted transfers, failed-admission rollback
-and whole-subtree reclamation.
+The Omega profiles select this native package directly and build the Rust
+fixtures with their `omega-matrix` feature, which speaks the shared v4 protocol
+the runtime's server and client use; the Rust comparison matrix keeps copied
+requests. The matrix is funded with seventeen channel reservations at the top
+level and eighteen under a parent: three children's channels and bells, their
+listeners' bells, the owner bell, the parent client's bell, and two spare for
+the exhaustion probe. The [Rust fixtures](../../../../source-rs/distribution/lab/matrix-composition/README.md)
+describe what the guest proof checks: service transfers, forged and forbidden
+requests, sibling isolation, stale views, repeated replacement, interrupted
+transfers, failed-admission rollback and whole-subtree reclamation; under a
+parent, coordinate translation, queued key edges, withheld keys, shrink, revoke
+and regrant, and old-epoch rejection.
 
-This proves a matrix program in Omega over existing Rust platform mechanisms.
-Its storage grant exercises endpoint custody only; it does not serve a filesystem
-or distinguish persistent realms. It has a virtual input space, no framebuffer
-and no rendering. The stock F5 matrix still owns its
-Rust supervision and forwarding loop. Its configuration, close/loss, startup and
-[launcher recovery workflow](../../matrix/README.md) execute in Omega. The bridge stays private after this second composition;
-its synchronous upstream exchange is not a reusable desktop service loop.
-
-## Supplied upstream connection
-
-The same program runs under a real Rust fixture parent with `--upstream`.
-[The nested proof](../../../../source-rs/distribution/lab/matrix-composition/nested/nested.rs)
-admits that parent, which lends the Omega matrix its three leaf launch grants.
-The matrix receives only a scoped broker pair in its environment. Startup word
-14 reports whether that binding exists; Omega saves that fact before processing
-untrusted requests. An empty environment selects the original top-level proof.
-An invalid or refused supplied parent never falls back to a synthetic grant.
-
-[host/parent.rs](../../../../source-rs/distribution/lab/matrix-composition/matrix/host/parent.rs)
-acquires the supplied interaction service once and applies atomic POLL snapshots
-through the shared World. INITIALIZE returns the actual epoch, width, height and
-key grant; Omega chooses three equal placements inside it. REFRESH preserves the
-local request and caller metadata. A changed parent epoch invalidates descendant
-placements, including on resize. Explicit placement must establish fresh grants;
-restoring a revoked parent does not resurrect old placements or queued input.
-
-The live fixture checks two coordinate translations, sibling isolation, queued
-press/release ordering, key attenuation, forged owner operations, resize clipping
-after explicit placement, stale epochs and revoke/regrant. It cancels and restarts
-the matrix three times per parent while checking resource counters. The parent
-then returns with the matrix and peers alive; the supervisor starts the complete
-tree again with the returned loans and unchanged charges.
-
-Limits: snapshots are requested before local dispatch, with the existing
-retirement backpressure. This proof does not consume notification wakes or run a
-frame loop, and a slow parent can delay local dispatch. The stock desktop's
-asynchronous parent handling must be preserved when moving a lifecycle branch
-to Omega. Neither rendering latency nor wake-driven input delivery is measured.
+This proves a matrix program in Omega over the common runtime. Its storage grant
+exercises endpoint custody only; it does not serve a filesystem or distinguish
+persistent realms. It has a virtual input space, no framebuffer and no
+rendering. The upstream refresh is synchronous on local requests, so a slow
+parent delays local dispatch; the stock desktop's asynchronous parent handling
+must be preserved when that program moves. The stock F5 matrix still runs its
+Rust host.

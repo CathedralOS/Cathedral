@@ -133,21 +133,24 @@ exact reply tickets and multiplexed parking. Its provider chooses client limits
 and dispatch policy; it imports no stock matrix behavior.
 The independent Rust `distribution/lab/matrix-composition/matrix` program uses
 the shared runtime server and matrix commands for three local peers without any
-stock distribution import. The same proof now also runs an
-[Omega matrix program](../../source/distribution/lab/matrix-composition/README.md)
-over a private lab bridge to those mechanisms. It chooses admission, service
-grants, placement and lifecycle; the bridge retains authenticated request custody.
-The common app host has not acquired matrix-specific operations.
-This verifies that subset over actual IPC; it does
-not yet share the stock program's rendering or asynchronous upstream adapters.
-The Omega proof also accepts a real parent-supplied broker and attenuates its
-view/input to three peers; its private synchronous adapter is a boundary proof,
-not the stock desktop event loop. Child connection
+stock distribution import. The same proof also runs the standalone
+[Omega matrix program](../../source/distribution/lab/matrix-composition/README.md),
+built from the Omega runtime and the Omega
+[World](../../source/platform/libraries/matrix/world/README.md) under
+`platform/libraries/matrix/world/`, which mirrors the Rust library's grants,
+placement, epochs and attenuated input routing for the subset that proof needs.
+It chooses admission, service grants, placement and lifecycle itself and owns its
+connections, child tasks and buffers. The common app host has not acquired
+matrix-specific operations. The Omega proof also accepts a real parent-supplied
+broker and attenuates its view/input to three peers; its synchronous upstream
+refresh is a boundary proof, not the stock desktop event loop. Child connection
 construction, spawn and failure rollback are shared through
 `platform/libraries/user-runtime/matrix/admission/` in Rust and through the
 Omega runtime's `admission/` and `task/` modules; each program retains code,
 budget, placement and recovery policy. The Omega runtime's server can also hand
-a child an endpoint or a wait right in a reply, which is how offers are kept. Scoped service acquisition also lives in
+a child an endpoint or a wait right in a reply, which is how offers are kept.
+Surfaces, producers, the input directory and the other stock-only World features
+have no Omega port yet, so the stock matrix still runs its Rust host. Scoped service acquisition also lives in
 platform contracts/runtime; the stock owner resolves declarations and selects the
 per-child offer. The kernel transfers endpoints without knowing service names.
 

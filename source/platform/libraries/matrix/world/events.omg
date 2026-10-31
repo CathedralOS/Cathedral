@@ -1,0 +1,194 @@
+module events;
+// Bounded FIFO for one supplied input stream inside one child. Sixteen ordinary
+// events plus one reserved boundary slot. Overflow collapses this stream to a
+// CANCEL boundary and cannot disturb another stream. Entries keep their global
+// order number so a child can drain several streams in arrival order per group.
+use protocol::main;
+use names::Name;
+
+public const CAPACITY: u64 = 17u64;
+public data Queue {
+    // Child-local channel name; zero until the first delivery binds this stream.
+    channel: u64;
+    // The supplying stream, as the world names it.
+    source: Name;
+    // Child-local group name.
+    group: u64;
+    kinds: [u64; 17];
+    xs: [u64; 17];
+    ys: [u64; 17];
+    values: [u64; 17];
+    orders: [u64; 17];
+    len: u64 [0..=17];
+}
+public machine pending(queue: &Queue) -> bool { queue.len != 0u64 }
+// Order numbers start at one, so zero means no entry.
+public machine first_order(queue: &Queue) -> u64 {
+    transition queue.len != 0u64 { true -> (queue.orders[0]) _ -> (0u64) }
+}
+public machine last_order(queue: &Queue) -> u64 {
+    transition queue.len != 0u64 { true -> (queue.orders[queue.len - 1u64]) _ -> (0u64) }
+}
+public machine retiring(queue: &Queue) -> bool { queue.len == 1u64 && queue.kinds[0] == RETIRED }
+
+// True when the event was queued; false when the stream overflowed and collapsed.
+public machine push(queue: &mut Queue, kind: u64, x: u64, y: u64, value: u64, order: u64, coalesce: bool) -> bool {
+    transition coalesce && kind == POINTER && queue.len >= 2u64 {
+        true -> coalescing(queue, kind, x, y, value, order)
+        _ -> appending(queue, kind, x, y, value, order)
+    }
+    // Two trailing motions with the same buttons merge into the newest position.
+    machine coalescing(queue: &mut Queue, kind: u64, x: u64, y: u64, value: u64, order: u64) -> bool requires queue.len >= 2u64 {
+        let tail: u64 = queue.len - 1u64;
+        let before: u64 = queue.len - 2u64;
+        transition queue.kinds[tail] == POINTER && queue.kinds[before] == POINTER
+            && queue.values[tail] == value && queue.values[before] == value {
+            true -> merged(queue, tail, x, y, order)
+            _ -> appending(queue, kind, x, y, value, order)
+        }
+    }
+    machine merged(queue: &mut Queue, tail: u64, x: u64, y: u64, order: u64) -> bool requires tail < 17u64 {
+        queue.xs[tail] = x;
+        queue.ys[tail] = y;
+        queue.orders[tail] = order;
+        true
+    }
+    machine appending(queue: &mut Queue, kind: u64, x: u64, y: u64, value: u64, order: u64) -> bool {
+        transition queue.len < 16u64 {
+            true -> append(queue, kind, x, y, value, order)
+            _ -> overflow(queue, order)
+        }
+    }
+    machine append(queue: &mut Queue, kind: u64, x: u64, y: u64, value: u64, order: u64) -> bool requires queue.len < 16u64 {
+        let at: u64 = queue.len;
+        queue.kinds[at] = kind;
+        queue.xs[at] = x;
+        queue.ys[at] = y;
+        queue.values[at] = value;
+        queue.orders[at] = order;
+        queue.len = at + 1u64;
+        true
+    }
+    machine overflow(queue: &mut Queue, order: u64) -> bool {
+        cancel(queue, order);
+        false
+    }
+}
+// Collapse pending input to one CANCEL boundary; a retiring stream keeps RETIRED.
+public machine cancel(queue: &mut Queue, order: u64) {
+    transition queue.channel != 0u64 && !retiring(queue) {
+        true -> boundary(queue, CANCEL, order)
+        _ -> done()
+    }
+}
+public machine retire(queue: &mut Queue, order: u64) {
+    transition queue.channel != 0u64 {
+        true -> boundary(queue, RETIRED, order)
+        _ -> done()
+    }
+}
+machine boundary(queue: &mut Queue, kind: u64, order: u64) {
+    queue.kinds[0] = kind;
+    queue.xs[0] = 0u64;
+    queue.ys[0] = 0u64;
+    queue.values[0] = 0u64;
+    queue.orders[0] = order;
+    queue.len = 1u64;
+}
+// Deliver the oldest entry as a NEXT packet for the given view epoch. A drained
+// RETIRED boundary forgets the whole stream. An empty queue reports NONE.
+public machine next(queue: &mut Queue, epoch: u64) -> [u64; 8] {
+    transition queue.len != 0u64 {
+        true -> popped(queue, epoch)
+        _ -> (empty_packet(epoch))
+    }
+    machine popped(queue: &mut Queue, epoch: u64) -> [u64; 8] requires queue.len >= 1u64 {
+        let mut packet: [u64; 8];
+        packet[1] = epoch;
+        packet[2] = queue.kinds[0];
+        packet[3] = queue.xs[0];
+        packet[4] = queue.ys[0];
+        packet[5] = queue.values[0];
+        packet[6] = queue.channel;
+        packet[7] = queue.group;
+        let remaining: u64 = queue.len - 1u64;
+        shift(queue, 0u64);
+        queue.len = remaining;
+        transition packet[2] == RETIRED {
+            true -> forgotten(queue, packet)
+            _ -> (packet)
+        }
+    }
+    machine forgotten(queue: &mut Queue, packet: [u64; 8]) -> [u64; 8] {
+        let empty: Queue;
+        queue.channel = empty.channel;
+        queue.source = empty.source;
+        queue.group = empty.group;
+        queue.len = 0u64;
+        packet
+    }
+}
+machine empty_packet(epoch: u64) -> [u64; 8] {
+    let mut packet: [u64; 8];
+    packet[1] = epoch;
+    packet[2] = NONE;
+    packet
+}
+// Move entries one place toward the front, from `index` to the last entry.
+machine shift(queue: &mut Queue, index: u64) requires index < 17u64 {
+    transition index + 1u64 < queue.len {
+        true -> moved(queue, index)
+        _ -> done()
+    }
+    machine moved(queue: &mut Queue, index: u64) requires index < 16u64 {
+        queue.kinds[index] = queue.kinds[index + 1u64];
+        queue.xs[index] = queue.xs[index + 1u64];
+        queue.ys[index] = queue.ys[index + 1u64];
+        queue.values[index] = queue.values[index + 1u64];
+        queue.orders[index] = queue.orders[index + 1u64];
+        transition { _ -> shift(queue, index + 1u64) }
+    }
+}
+// Drop queued key events and end with a CANCEL_KEYS boundary; pointer entries stay.
+public machine cancel_keys(queue: &mut Queue, order: u64) {
+    transition queue.channel != 0u64 && !retiring(queue) {
+        true -> compact(queue, 0u64, 0u64, order)
+        _ -> done()
+    }
+    machine compact(queue: &mut Queue, index: u64, keep: u64, order: u64) requires keep <= index && index <= 17u64 {
+        transition index < queue.len {
+            true -> examine(queue, index, keep, order)
+            _ -> ended(queue, keep, order)
+        }
+    }
+    machine examine(queue: &mut Queue, index: u64, keep: u64, order: u64) requires keep <= index && index < 17u64 {
+        transition queue.kinds[index] == KEY || queue.kinds[index] == CANCEL_KEYS {
+            true -> compact(queue, index + 1u64, keep, order)
+            _ -> kept(queue, index, keep, order)
+        }
+    }
+    machine kept(queue: &mut Queue, index: u64, keep: u64, order: u64) requires keep <= index && index < 17u64 {
+        queue.kinds[keep] = queue.kinds[index];
+        queue.xs[keep] = queue.xs[index];
+        queue.ys[keep] = queue.ys[index];
+        queue.values[keep] = queue.values[index];
+        queue.orders[keep] = queue.orders[index];
+        transition { _ -> compact(queue, index + 1u64, keep + 1u64, order) }
+    }
+    // Ordinary entries number at most sixteen, so the boundary always fits.
+    machine ended(queue: &mut Queue, keep: u64, order: u64) requires keep <= 17u64 {
+        transition keep < 17u64 {
+            true -> closed(queue, keep, order)
+            _ -> done()
+        }
+    }
+    machine closed(queue: &mut Queue, keep: u64, order: u64) requires keep < 17u64 {
+        queue.kinds[keep] = CANCEL_KEYS;
+        queue.xs[keep] = 0u64;
+        queue.ys[keep] = 0u64;
+        queue.values[keep] = 0u64;
+        queue.orders[keep] = order;
+        queue.len = keep + 1u64;
+    }
+}
+machine done() {}

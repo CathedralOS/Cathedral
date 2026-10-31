@@ -1,5 +1,8 @@
-use matrix::main;
-use matrix::state;
-machine main() reaches Matrix {
-    let mut s: State; let mut p: [u64; 4096]; let result: u64 = Matrix::step(&mut s, &mut p);
+use runtime::entry::Program;
+use component::main::ProgramProvider;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+machine main() reaches Program + Kernel {
+    let gate: Gate;
+    let result: u64 = block Program::run(&gate, 0u64, 0u64);
 }

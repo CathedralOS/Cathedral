@@ -1,0 +1,212 @@
+module level;
+// One level of ownership: a grant received from above, up to four placed
+// children below, and the input routed between them. The same record serves a
+// root adapter and a nested matrix. Programs choose placement, slots and
+// lifecycle; this record enforces attenuation: no child sees beyond its grant.
+use protocol::main;
+use geometry::Grant;
+use geometry::Rect;
+use children::Child;
+use input::main::Input;
+
+public const SLOTS: u64 = 4u64;
+public data World {
+    parent: Grant;
+    // Slots this program uses; commands addressing higher slots are denied.
+    capacity: u64 [0..=4];
+    // Advances on every parent change; owner-held snapshots compare against it.
+    authority: u64;
+    children: [Child; 4];
+    input: Input;
+}
+
+// Adopt a parent grant. A new epoch invalidates every placement and all input
+// bindings; losing authority cannot be repaired by a later regrant alone.
+public machine inherit(world: &mut World, grant: Grant) {
+    let accepted: Grant = accept(grant);
+    transition geometry::same_grant(world.parent, accepted) {
+        true -> done()
+        _ -> changed(world, accepted)
+    }
+    machine changed(world: &mut World, accepted: Grant) {
+        world.authority = ((world.authority as u64 in Wrapping) + 1u64) as u64;
+        let replaced: bool = world.parent.epoch != accepted.epoch;
+        transition replaced {
+            true -> rebound(world, accepted, replaced)
+            _ -> kept(world, accepted, replaced)
+        }
+    }
+    machine rebound(world: &mut World, accepted: Grant, replaced: bool) {
+        let empty: Input;
+        world.input = empty;
+        transition { _ -> kept(world, accepted, replaced) }
+    }
+    machine kept(world: &mut World, accepted: Grant, replaced: bool) {
+        transition geometry::valid_grant(world.parent) && (replaced || !geometry::valid_grant(accepted)) {
+            true -> unplaced(world, accepted, replaced, 0u64)
+            _ -> adopted(world, accepted, replaced)
+        }
+    }
+    machine unplaced(world: &mut World, accepted: Grant, replaced: bool, index: u64) requires index <= 4u64 {
+        transition index < 4u64 {
+            true -> unplace(world, accepted, replaced, index)
+            _ -> adopted(world, accepted, replaced)
+        }
+    }
+    machine unplace(world: &mut World, accepted: Grant, replaced: bool, index: u64) requires index < 4u64 {
+        world.children[index].placed = false;
+        transition { _ -> unplaced(world, accepted, replaced, index + 1u64) }
+    }
+    machine adopted(world: &mut World, accepted: Grant, replaced: bool) {
+        world.parent = accepted;
+        refresh_all(world, replaced, 0u64);
+    }
+}
+machine accept(grant: Grant) -> Grant {
+    transition geometry::valid_grant(grant) { true -> (grant) _ -> (geometry::no_grant()) }
+}
+machine refresh_all(world: &mut World, force: bool, index: u64) requires index <= 4u64 {
+    transition index < 4u64 {
+        true -> refreshed(world, force, index)
+        _ -> done()
+    }
+    machine refreshed(world: &mut World, force: bool, index: u64) requires index < 4u64 {
+        let previous: Grant = world.children[index].grant;
+        children::refresh(&mut world.children[index], world.parent, force);
+        transition geometry::same_grant(world.children[index].grant, previous) {
+            true -> refresh_all(world, force, index + 1u64)
+            _ -> forgotten(world, force, index)
+        }
+    }
+    machine forgotten(world: &mut World, force: bool, index: u64) requires index < 4u64 {
+        input::main::forget(&mut world.input, index);
+        transition { _ -> refresh_all(world, force, index + 1u64) }
+    }
+}
+// Placement within already supplied authority: keys may only narrow the parent's.
+public machine place(world: &mut World, slot: u64, rect: Rect, keys: u64) -> u64 {
+    transition geometry::valid_grant(world.parent) && geometry::valid_rect(rect)
+        && (keys & ~world.parent.keys) == 0u64 && slot < world.capacity {
+        true -> placing(world, slot, rect, keys)
+        _ -> (DENIED)
+    }
+    machine placing(world: &mut World, slot: u64, rect: Rect, keys: u64) -> u64 requires slot < 4u64 {
+        let previous: Grant = world.children[slot].grant;
+        world.children[slot].placed = true;
+        world.children[slot].rect = rect;
+        world.children[slot].keys = keys;
+        children::refresh(&mut world.children[slot], world.parent, false);
+        transition geometry::same_grant(world.children[slot].grant, previous) {
+            true -> (0u64)
+            _ -> forgotten(world, slot)
+        }
+    }
+    machine forgotten(world: &mut World, slot: u64) -> u64 requires slot < 4u64 {
+        input::main::forget(&mut world.input, slot);
+        0u64
+    }
+}
+public machine revoke(world: &mut World, slot: u64) -> u64 {
+    transition slot < world.capacity {
+        true -> revoking(world, slot)
+        _ -> (DENIED)
+    }
+    machine revoking(world: &mut World, slot: u64) -> u64 requires slot < 4u64 {
+        input::main::forget(&mut world.input, slot);
+        world.children[slot].placed = false;
+        children::refresh(&mut world.children[slot], world.parent, false);
+        0u64
+    }
+}
+// The occupant left: its grant, queued input and incarnation are gone.
+public machine disconnected(world: &mut World, slot: u64 [0..=3]) {
+    let ignored: u64 = revoke(world, slot);
+    world.children[slot].incarnation = 0u64;
+}
+// Coalesced wake hint; clients re-read only their local view and events.
+public machine take_notification(world: &mut World, slot: u64 [0..=3]) -> bool {
+    let pending: bool = world.children[slot].notify;
+    world.children[slot].notify = false;
+    pending
+}
+public machine notify(world: &mut World, slot: u64 [0..=3]) {
+    world.children[slot].notify = true;
+}
+// The topmost placed child under (x, y): later slots stack above earlier ones.
+// Returns slot plus one, or zero when nothing is hit.
+public machine hit_pointer(world: &World, x: u64, y: u64) -> u64 {
+    transition { _ -> scan(world, x, y, 0u64, 0u64) }
+    machine scan(world: &World, x: u64, y: u64, index: u64, best: u64) -> u64 requires index <= 4u64 {
+        transition index < world.capacity && index < 4u64 {
+            true -> tested(world, x, y, index, best)
+            _ -> (best)
+        }
+    }
+    machine tested(world: &World, x: u64, y: u64, index: u64, best: u64) -> u64 requires index < 4u64 {
+        transition contains(&world.children[index], x, y) {
+            true -> scan(world, x, y, index + 1u64, index + 1u64)
+            _ -> scan(world, x, y, index + 1u64, best)
+        }
+    }
+}
+machine contains(child: &Child, x: u64, y: u64) -> bool {
+    child.placed && geometry::valid_grant(child.grant) && x >= child.rect.x && y >= child.rect.y
+        && x - child.rect.x < child.grant.width && y - child.rect.y < child.grant.height
+}
+// Interrupt one routed stream everywhere it was delivered.
+public machine cancel_stream(world: &mut World, index: u64 [0..=3]) {
+    let id: names::Name = world.input.streams[index].id;
+    cancel_in_children(world, index, id, 0u64);
+    input::main::cancel(&mut world.input.streams[index]);
+}
+machine cancel_in_children(world: &mut World, index: u64 [0..=3], id: names::Name, slot: u64) requires slot <= 4u64 {
+    transition slot < 4u64 {
+        true -> cancelled(world, index, id, slot)
+        _ -> done()
+    }
+    machine cancelled(world: &mut World, index: u64 [0..=3], id: names::Name, slot: u64) requires slot < 4u64 {
+        children::cancel_stream(&mut world.children[slot], index, id);
+        transition { _ -> cancel_in_children(world, index, id, slot + 1u64) }
+    }
+}
+// Move a group's keyboard selection. The old target's queued keys are cancelled
+// and keys held at the switch are suppressed until released.
+public machine select_group(world: &mut World, group: u64 [0..=3], target: u64) {
+    transition world.input.groups[group].focus == target {
+        true -> done()
+        _ -> switching(world, group, target, 0u64)
+    }
+    machine switching(world: &mut World, group: u64 [0..=3], target: u64, index: u64) requires index <= 4u64 {
+        transition index < 4u64 {
+            true -> checked(world, group, target, index)
+            _ -> selected(world, group, target)
+        }
+    }
+    machine checked(world: &mut World, group: u64 [0..=3], target: u64, index: u64) requires index < 4u64 {
+        transition names::valid(world.input.streams[index].id) && !world.input.streams[index].retiring
+            && world.input.streams[index].group == group {
+            true -> interrupted(world, group, target, index)
+            _ -> switching(world, group, target, index + 1u64)
+        }
+    }
+    machine interrupted(world: &mut World, group: u64 [0..=3], target: u64, index: u64) requires index < 4u64 {
+        let previous: u64 = world.input.groups[group].focus;
+        transition previous != 0u64 && previous <= 4u64 {
+            true -> keys_cancelled(world, group, target, index, previous - 1u64)
+            _ -> suppressed(world, group, target, index)
+        }
+    }
+    machine keys_cancelled(world: &mut World, group: u64 [0..=3], target: u64, index: u64, old: u64) requires index < 4u64 && old < 4u64 {
+        let id: names::Name = world.input.streams[index].id;
+        children::cancel_keys(&mut world.children[old], index, id);
+        transition { _ -> suppressed(world, group, target, index) }
+    }
+    machine suppressed(world: &mut World, group: u64 [0..=3], target: u64, index: u64) requires index < 4u64 {
+        world.input.streams[index].suppressed = world.input.streams[index].suppressed | world.input.streams[index].held;
+        transition { _ -> switching(world, group, target, index + 1u64) }
+    }
+    machine selected(world: &mut World, group: u64 [0..=3], target: u64) {
+        world.input.groups[group].focus = target;
+    }
+}
+machine done() {}

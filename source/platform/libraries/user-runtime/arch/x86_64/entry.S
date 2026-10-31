@@ -58,6 +58,8 @@ cathedral_kernel_gate:
     .quad cathedral_task_cancel
     .quad cathedral_task_wait
     .quad cathedral_endpoint_send
+    .quad cathedral_resource_budget
+    .quad cathedral_notification_budget
 
 .section .text.cathedral_kernel_gate,"ax",@progbits
 cathedral_yield:
@@ -613,5 +615,23 @@ cathedral_endpoint_send:
     xor edx, edx
     int 0x80
     finish_packet 0
+
+// Own-account budget snapshots: 48 and 32 writable bytes within the 64-byte stage.
+cathedral_resource_budget:
+    stage_buffer
+    mov eax, 43                      // RESOURCE_BUDGET
+    mov rdi, rsp
+    xor esi, esi
+    xor edx, edx
+    int 0x80
+    finish_buffer 1
+cathedral_notification_budget:
+    stage_buffer
+    mov eax, 81                      // NOTIFY_BUDGET
+    mov rdi, rsp
+    xor esi, esi
+    xor edx, edx
+    int 0x80
+    finish_buffer 1
 
 .section .note.GNU-stack,"",@progbits

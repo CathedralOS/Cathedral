@@ -1,1 +1,0 @@
-public data State { phase: u64; slot: u64; parent: u64; width: u64; height: u64; keys: u64; }

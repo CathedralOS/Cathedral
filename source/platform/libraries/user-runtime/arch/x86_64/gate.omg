@@ -76,6 +76,10 @@ linux_x86_64 machine Gate::task_wait_leaf(gate: &Gate, child: u64, record: &mut 
     satisfies Kernel::task_wait via ForeignBinding::TableFunction(task_wait) blocks;
 linux_x86_64 machine Gate::endpoint_send_leaf(gate: &Gate, endpoint: u64, packet: &[u64; 10]) -> u64
     satisfies Kernel::endpoint_send via ForeignBinding::TableFunction(endpoint_send);
+linux_x86_64 machine Gate::resource_budget_leaf(gate: &Gate, record: &mut [u64; 8]) -> u64
+    satisfies Kernel::resource_budget via ForeignBinding::TableFunction(resource_budget);
+linux_x86_64 machine Gate::notification_budget_leaf(gate: &Gate, record: &mut [u64; 8]) -> u64
+    satisfies Kernel::notification_budget via ForeignBinding::TableFunction(notification_budget);
 
 public NativeKernel satisfies Kernel {
     Kernel::wait_many = Gate::wait_many_leaf;
@@ -86,6 +90,8 @@ public NativeKernel satisfies Kernel {
     Kernel::task_cancel = Gate::task_cancel_leaf;
     Kernel::task_wait = Gate::task_wait_leaf;
     Kernel::endpoint_send = Gate::endpoint_send_leaf;
+    Kernel::resource_budget = Gate::resource_budget_leaf;
+    Kernel::notification_budget = Gate::notification_budget_leaf;
     Kernel::object_create = Gate::object_create_leaf;
     Kernel::object_send = Gate::object_send_leaf;
     Kernel::object_receive = Gate::object_receive_leaf;

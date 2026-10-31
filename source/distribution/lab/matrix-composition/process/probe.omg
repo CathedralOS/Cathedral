@@ -1,0 +1,98 @@
+module probe;
+// Proof-only relay: the owner's packet goes to one child's control link and the
+// child's answer comes back under the owner's retained ticket. One probe at a
+// time; a probe that expires ends this proof program, as does one to an empty
+// slot. The high word selects the slot; a low word of all ones sends a short,
+// deliberately malformed message. This is not a runtime or application API.
+use main::State;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::server::main::Ticket;
+use runtime::waiting::Set;
+
+public data Probe {
+    active: bool;
+    ticket: Ticket;
+    slot: u64 [0..=2];
+    deadline: u64;
+}
+public machine start(gate: &Gate, context: &mut State, now: u64, issued: Ticket, words: [u64; 8]) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let target: u64 = words[0] >> 32u64;
+    transition !context.probe.active && target >= 1u64 && target <= 3u64 {
+        true -> addressed(gate, context, now, issued, words, target - 1u64)
+        _ -> (kernel::BUSY)
+    }
+    machine addressed(gate: &Gate, context: &mut State, now: u64, issued: Ticket, words: [u64; 8], slot: u64) -> u64 reaches Kernel requires slot < 3u64 {
+        transition context.slots[slot].live {
+            true -> sending(gate, context, now, issued, words, slot)
+            _ -> (kernel::PEER_CLOSED)
+        }
+    }
+    machine sending(gate: &Gate, context: &mut State, now: u64, issued: Ticket, words: [u64; 8], slot: u64) -> u64 reaches Kernel requires slot < 3u64 {
+        let mut relayed: [u64; 8] = words;
+        relayed[0] = words[0] & 0xffffffffu64;
+        let status: u64 = Kernel::send(gate, context.slots[slot].control.sender, &relayed, length(relayed[0]));
+        transition status < kernel::ERROR_BASE {
+            true -> armed(context, now, issued, slot)
+            _ -> (status)
+        }
+    }
+    machine armed(context: &mut State, now: u64, issued: Ticket, slot: u64) -> u64 requires slot < 3u64 {
+        context.probe.active = true;
+        context.probe.ticket = issued;
+        context.probe.slot = slot;
+        context.probe.deadline = runtime::time::after(now, 300u64);
+        0u64
+    }
+}
+machine length(first: u64) -> u64 {
+    transition first == 0xffffffffu64 { true -> (7u64) _ -> (64u64) }
+}
+public machine progress(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    transition context.probe.active {
+        true -> block live(gate, context, now, context.probe.slot)
+        _ -> (0u64)
+    }
+    machine live(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=2]) -> u64 reaches Kernel {
+        transition context.slots[slot].live {
+            true -> block ready(gate, context, now, slot)
+            _ -> (kernel::PEER_CLOSED)
+        }
+    }
+    machine ready(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=2]) -> u64 reaches Kernel {
+        let mut interests: [u64; 8];
+        interests[1] = context.slots[slot].control.receiver;
+        let status: u64 = block Kernel::wait(gate, &interests, 1u64, now);
+        transition {
+            status == 0u64 -> block answered(gate, context, slot)
+            status == kernel::TIMED_OUT && !runtime::time::reached(now, context.probe.deadline) -> (0u64)
+            status == kernel::TIMED_OUT -> (kernel::TIMED_OUT)
+            _ -> (status)
+        }
+    }
+    machine answered(gate: &Gate, context: &mut State, slot: u64 [0..=2]) -> u64 reaches Kernel {
+        let mut words: [u64; 8];
+        let received: u64 = block Kernel::receive(gate, context.slots[slot].control.receiver, &mut words);
+        transition received == 64u64 {
+            true -> block replied(gate, context, words)
+            _ -> (kernel::IO_ERROR)
+        }
+    }
+    machine replied(gate: &Gate, context: &mut State, words: [u64; 8]) -> u64 reaches Kernel {
+        context.probe.active = false;
+        let issued: Ticket = context.probe.ticket;
+        block runtime::server::main::reply_to(gate, &mut context.owner, issued, &words)
+    }
+}
+public machine watch(context: &State, set: &mut Set) {
+    transition context.probe.active {
+        true -> watched(context, set)
+        _ -> done()
+    }
+    machine watched(context: &State, set: &mut Set) {
+        runtime::waiting::add(set, runtime::waiting::IPC, context.slots[context.probe.slot].control.receiver);
+        runtime::waiting::expire_by(set, context.probe.deadline);
+    }
+}
+machine done() {}

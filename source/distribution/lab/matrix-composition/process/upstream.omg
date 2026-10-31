@@ -1,0 +1,31 @@
+module upstream;
+// With a supplied parent, poll it once before each local decision and adopt the
+// snapshot. The top-level proof has no parent and refreshes nothing. This proof
+// refreshes synchronously on local requests; a slow parent delays local dispatch.
+use protocol::main;
+use main::State;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::services::main::Reply;
+use world::geometry::Grant;
+use world::upstream::inherit_poll;
+
+public machine refresh(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks; invokes Kernel; {
+    transition context.has_parent {
+        true -> block polling(gate, context)
+        _ -> (0u64)
+    }
+    machine polling(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+        let mut words: [u64; 8];
+        words[0] = MATRIX_POLL;
+        let reply: Reply = block runtime::services::main::exchange(gate, &mut context.parent, context.clock, &words);
+        transition reply {
+            Reply::Received { words } -> adopted(context, words)
+            Reply::Failed { code } -> (code)
+        }
+    }
+    machine adopted(context: &mut State, words: [u64; 8]) -> u64 {
+        let grant: Grant = inherit_poll(&mut context.world, &words);
+        0u64
+    }
+}

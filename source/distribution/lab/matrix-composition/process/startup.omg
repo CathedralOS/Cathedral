@@ -1,0 +1,173 @@
+module startup;
+// Learn the granted area, open owner control, admit the three peers and place
+// them. An empty environment means the top-level proof with a fixed grant; a
+// supplied broker pair means a real parent whose poll decides the area.
+// Rollback probes run after the first and the last admission.
+use protocol::main;
+use main::State;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::main::Startup;
+use runtime::main::Environment;
+use runtime::time::Tick;
+use world::level;
+use world::geometry::Grant;
+use world::geometry::Rect;
+use protocol::services::INTERACTION;
+use protocol::services::STORAGE;
+use runtime::server::owner;
+use rollback;
+use upstream;
+
+public machine open(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks; invokes Kernel; {
+    context.clock = Kernel::clock(gate);
+    context.world.capacity = 3u64;
+    let startup: Startup = runtime::main::start(gate);
+    transition startup {
+        Startup::Ready { environment } -> block timed(gate, context, environment)
+        Startup::Failed { code } -> (code)
+        Startup::InvalidEnvironment -> (kernel::INVALID_ARGUMENT)
+    }
+}
+machine timed(gate: &Gate, context: &mut State, environment: Environment) -> u64 reaches Kernel {
+    let tick: Tick = runtime::time::read(gate, context.clock);
+    transition tick {
+        Tick::Read { value } -> block control(gate, context, environment, value)
+        Tick::Failed { code } -> (code)
+    }
+}
+// Accept owner control first. A supplied parent connects it right after admission
+// and only then serves this broker, so the handshake cannot wait behind a poll.
+// Its wake bell is also charged before the rollback probes count what is left.
+machine control(gate: &Gate, context: &mut State, environment: Environment, now: u64) -> u64 reaches Kernel {
+    context.deadline = runtime::time::after(now, 30000u64);
+    let handshake: u64 = runtime::time::after(now, 300u64);
+    let status: u64 = block owner::open(gate, &mut context.owner, handshake);
+    transition status == 0u64 {
+        true -> block area(gate, context, environment, now)
+        _ -> (status)
+    }
+}
+machine area(gate: &Gate, context: &mut State, environment: Environment, now: u64) -> u64 reaches Kernel {
+    transition environment.count {
+        0u64 -> block fixed(gate, context, now)
+        2u64 -> block supplied(gate, context, environment, now)
+        _ -> (kernel::INVALID_ARGUMENT)
+    }
+}
+// The top-level proof owns a virtual 300 by 600 area with the navigation keys.
+machine fixed(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    level::inherit(&mut context.world, Grant { epoch: 1u64, width: 300u64, height: 600u64, keys: KEY_MASK });
+    let grant: Grant = context.world.parent;
+    transition { _ -> block layout(gate, context, now, grant) }
+}
+machine supplied(gate: &Gate, context: &mut State, environment: Environment, now: u64) -> u64 reaches Kernel {
+    context.has_parent = true;
+    let status: u64 = block runtime::services::main::open(gate, &mut context.parent, &environment, runtime::time::after(now, 300u64));
+    transition status == 0u64 {
+        true -> block acquired(gate, context, now)
+        _ -> (status)
+    }
+}
+machine acquired(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    let status: u64 = block runtime::services::main::interaction(gate, &mut context.parent, context.clock, 1u64, 1u64);
+    transition status == 0u64 {
+        true -> block polled(gate, context, now)
+        _ -> (status)
+    }
+}
+machine polled(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    let status: u64 = block upstream::refresh(gate, context);
+    let grant: Grant = context.world.parent;
+    transition status == 0u64 {
+        true -> block layout(gate, context, now, grant)
+        _ -> (status)
+    }
+}
+// Three equal horizontal regions; every peer receives the whole granted key set.
+machine layout(gate: &Gate, context: &mut State, now: u64, grant: Grant) -> u64 reaches Kernel {
+    transition grant.epoch != 0u64 && grant.width > 0u64 && grant.width <= 4096u64 && grant.height >= 3u64 && grant.height <= 4096u64 {
+        true -> block measured(gate, context, now, grant)
+        _ -> (kernel::DENIED)
+    }
+    machine measured(gate: &Gate, context: &mut State, now: u64, grant: Grant) -> u64 reaches Kernel requires grant.height >= 3u64 {
+        context.width = grant.width;
+        context.height = grant.height / 3u64;
+        context.keys = grant.keys;
+        transition { _ -> block admit(gate, context, now, 0u64) }
+    }
+}
+machine admit(gate: &Gate, context: &mut State, now: u64, slot: u64) -> u64 reaches Kernel requires slot <= 3u64 {
+    transition slot < 3u64 {
+        true -> block starting(gate, context, now, slot)
+        _ -> armed(context)
+    }
+    machine armed(context: &mut State) -> u64 {
+        context.probe_rollback = true;
+        0u64
+    }
+    machine starting(gate: &Gate, context: &mut State, now: u64, slot: u64) -> u64 reaches Kernel requires slot < 3u64 {
+        let status: u64 = block start(gate, context, now, slot, 0u64);
+        transition status == 0u64 {
+            true -> block placing(gate, context, now, slot)
+            _ -> (status)
+        }
+    }
+    machine placing(gate: &Gate, context: &mut State, now: u64, slot: u64) -> u64 reaches Kernel requires slot < 3u64 {
+        let status: u64 = place(context, slot);
+        transition { _ -> block admitted(gate, context, now, slot, status) }
+    }
+    machine admitted(gate: &Gate, context: &mut State, now: u64, slot: u64, status: u64) -> u64 reaches Kernel requires slot < 3u64 {
+        transition {
+            status != 0u64 -> (status)
+            slot == 0u64 -> block first(gate, context, now)
+            _ -> block admit(gate, context, now, slot + 1u64)
+        }
+    }
+    machine first(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+        let status: u64 = block rollback::check(gate, context, now, kernel::BUSY);
+        transition status == 0u64 {
+            true -> block admit(gate, context, now, 1u64)
+            _ -> (status)
+        }
+    }
+}
+// Admit the peer for `slot` from the lent launch of the same index. Mode zero
+// starts the slot's ordinary program; modes one and two start its interrupted-
+// handoff variants (arguments three and four). A replacement is not placed:
+// the owner places it, so a new occupant never inherits the old view.
+public machine start(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=2], mode: u64 [0..=2]) -> u64 reaches Kernel blocks; invokes Kernel; {
+    transition context.slots[slot].live {
+        true -> (kernel::BUSY)
+        _ -> block launching(gate, context, now, slot, mode)
+    }
+    machine launching(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=2], mode: u64 [0..=2]) -> u64 reaches Kernel {
+        let launch: u64 = runtime::task::main::launch(gate, slot);
+        transition launch < kernel::ERROR_BASE {
+            true -> block spawned(gate, context, now, slot, launch, argument(slot, mode))
+            _ -> (launch)
+        }
+    }
+    machine spawned(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=2], launch: u64, argument: u64) -> u64 reaches Kernel {
+        let loans: [u64; 14];
+        level::disconnected(&mut context.world, slot);
+        let deadline: u64 = runtime::time::after(now, 300u64);
+        block runtime::admission::main::admit(gate, &mut context.slots[slot], launch, argument,
+            &loans, 0u64, services(slot), deadline, false)
+    }
+}
+// Each slot owns a third of the area, stacked vertically, with the full key set.
+machine place(context: &mut State, slot: u64 [0..=2]) -> u64 {
+    let region: Rect = Rect { x: 0u64, y: ((slot as u64 in Wrapping) * (context.height as u64 in Wrapping)) as u64,
+        width: context.width, height: context.height };
+    let keys: u64 = context.keys;
+    level::place(&mut context.world, slot, region, keys)
+}
+machine argument(slot: u64 [0..=2], mode: u64 [0..=2]) -> u64 {
+    transition mode == 0u64 { true -> (slot) _ -> (mode + 2u64) }
+}
+// Slot two alone is offered storage as well as interaction.
+public machine services(slot: u64) -> u64 {
+    transition slot == 2u64 { true -> (INTERACTION | STORAGE) _ -> (INTERACTION) }
+}

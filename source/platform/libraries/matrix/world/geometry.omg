@@ -1,0 +1,59 @@
+module geometry;
+use protocol::main;
+// Grants and placements. A grant is what a child may see: an epoch that changes
+// whenever its extent or keys change, and a key mask never wider than the parent's.
+
+public data Grant [copy] {
+    epoch: u64;
+    width: u64;
+    height: u64;
+    keys: u64;
+}
+public data Rect [copy] {
+    x: u64;
+    y: u64;
+    width: u64;
+    height: u64;
+}
+public machine valid_grant(grant: Grant) -> bool {
+    grant.epoch != 0u64 && grant.width > 0u64 && grant.height > 0u64
+        && grant.width <= MAX_EXTENT && grant.height <= MAX_EXTENT
+        && (grant.keys & ~VALID_KEY_MASK) == 0u64
+}
+public machine valid_rect(rect: Rect) -> bool {
+    rect.width > 0u64 && rect.height > 0u64 && rect.x < MAX_EXTENT && rect.y < MAX_EXTENT
+        && rect.width <= MAX_EXTENT && rect.height <= MAX_EXTENT
+}
+public machine same_grant(a: Grant, b: Grant) -> bool {
+    a.epoch == b.epoch && a.width == b.width && a.height == b.height && a.keys == b.keys
+}
+public machine no_grant() -> Grant { let grant: Grant; grant }
+// A placement clipped to the parent's extent and keys; the caller assigns the epoch.
+// An offset beyond the parent leaves no extent, so the result is not a valid grant.
+public machine clip(parent: Grant, rect: Rect, keys: u64) -> Grant {
+    let width: u64 = remaining(rect.width, rect.x, parent.width);
+    let height: u64 = remaining(rect.height, rect.y, parent.height);
+    Grant { epoch: 0u64, width: width, height: height, keys: keys & parent.keys }
+}
+machine remaining(extent: u64, offset: u64, limit: u64) -> u64 {
+    transition offset < limit {
+        true -> smaller(extent, limit - offset)
+        _ -> (0u64)
+    }
+}
+public machine smaller(a: u64, b: u64) -> u64 {
+    transition a < b { true -> (a) _ -> (b) }
+}
+// The largest coordinate inside an extent; an empty extent yields zero.
+public machine within(value: u64, extent: u64) -> u64 {
+    transition extent > 0u64 { true -> smaller(value, extent - 1u64) _ -> (0u64) }
+}
+public machine error(code: u64) -> [u64; 8] {
+    let mut words: [u64; 8];
+    words[0] = code;
+    words
+}
+public machine ok() -> [u64; 8] {
+    let words: [u64; 8];
+    words
+}

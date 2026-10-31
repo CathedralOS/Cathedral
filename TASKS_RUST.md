@@ -9,6 +9,55 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
+### Omega World and the standalone independent matrix
+
+`source/platform/libraries/matrix/world/` is the Omega World: grants, placement
+clipping, per-child epochs and queues, stream and group admission, pointer hit
+testing with capture and translation, key attenuation with focus suppression,
+owner and source commands, child requests and upstream poll inheritance. It
+mirrors the Rust library for the subset the independent matrix proof needs,
+depends only on the reference contracts and makes no kernel calls. Surfaces,
+frame demand, producers, the input directory, descriptions, cursor preference,
+capacity limits, owner-registered streams, retirement, the layout controller and
+management grants are not ported; an inherited DESCRIBED, RETIRED or
+GROUP_RETIRED event drops the parent grant until the next poll regrants it.
+
+`source/distribution/lab/matrix-composition/process/` is the independent matrix
+as a standalone Omega process on the common runtime and that World. It owns its
+owner connection, three child listeners, child tasks, the relay probe and the
+upstream refresh. The Rust-hosted bridge, its private operation vocabulary and
+the compiled policy tests are gone; the Rust three-peer matrix remains the
+comparison path. Two more native leaves expose the kernel's own-account resource
+and notification budgets so the matrix can prove failed admissions leave nothing
+behind. The channel-exhaustion probe waits until every child listener holds its
+bell, because the shared handshake charges those bells after startup.
+
+The Rust fixtures gained an `omega-matrix` feature that speaks the shared v4
+protocol to the Omega matrix; the fixture parent connects owner control right
+after admission and the matrix accepts it before opening the parent's broker,
+so neither side waits behind the other. The upstream fixture parent needs six
+channel reservations for its two extra bells.
+
+Evidence in the main checkout with the saved standalone producer:
+
+- Omega matrix, top level: `build/boot-harness-rs/omega-matrix/20261031T064028566130Z/`.
+- Omega matrix under a real parent: `build/boot-harness-rs/omega-matrix-upstream/20261031T064248704139Z/`.
+- Rust comparison matrix: `build/boot-harness-rs/matrix-composition/20261031T064101022470Z/`.
+- Admission witness: `build/omega-user/connections/20261031T064546420310Z/`; primitives: `build/omega-user/tests/20261031T064454717995Z/`;
+  connection suite: `build/omega-user/connections/20261031T064504206055Z/`; service isolation: `build/omega-user/connections/20261031T064528690569Z/`.
+- Background: `build/omega-user/background-control/20261031T064706637697Z/`; Colors: `build/omega-user/colors-control/20261031T064826887405Z/`;
+  Notes: `build/omega-user/notes-control/20261031T064957912598Z/`; Chooser: `build/omega-user/chooser-control/20261031T065225190516Z/`.
+- Default F5 desktop and cold reopen: `build/boot-harness-rs/desktop/20261031T065236047662Z/`.
+- Layout (116 Omega / 153 Rust edges), process-tool, component-tool and
+  layout-tool tests, Rust formatting and clippy for both lab crates in every
+  feature combination pass. The six native packages accepted the two budget
+  leaves in review; the new lab package accepted the complete gate.
+
+Next: port the stock-only World features listed above, starting with surfaces
+and frame demand, then move the stock matrix's host onto the runtime and World
+slice by slice while F5 keeps working. The nested-close timeout recorded below
+remains open.
+
 ### Omega child admission and service offers
 
 The common runtime now owns the child lifecycle a matrix needs. Seven native
@@ -47,11 +96,8 @@ Evidence in the main checkout with the saved standalone producer:
   five native packages accepted the same seven declarations and seven table
   bindings in review; nothing else changed in their locks.
 
-Next: build the standalone Omega lab matrix on this runtime, admitting three
-Rust peers with fixed placement and no input, under a Rust fixture parent that
-lends its loans. World attenuation (geometry, keys, input routing) has no Omega
-port yet and is the remaining large piece before the existing lab proof and then
-the stock host can move. The nested-close timeout recorded below remains open.
+The standalone lab matrix and the World port that followed are recorded above.
+The nested-close timeout recorded below remains open.
 
 ### Omega service runtime: independent clients and retained requests
 

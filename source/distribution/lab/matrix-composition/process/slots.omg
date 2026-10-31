@@ -1,0 +1,96 @@
+module slots;
+// One slot per turn. A retired listener means the peer left: stop and release
+// it and drop its view. Service acquisition goes to the runtime's offer; every
+// other 64-byte request is a world request under the connection's incarnation.
+// Shorter requests are denied. With a parent, each request follows one poll.
+use main::State;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::server::main::Event;
+use runtime::server::main::Ticket;
+use runtime::connection::main::Frame;
+use runtime::task::main::Exit;
+use runtime::waiting::Set;
+use runtime::admission::offer;
+use world::level;
+use world::main::request;
+use protocol::services::ACQUIRE;
+use upstream;
+
+public machine step(gate: &Gate, context: &mut State, slot: u64 [0..=2], now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    transition {
+        !context.slots[slot].live -> (0u64)
+        context.slots[slot].listener.peer.fault != 0u64 -> block departed(gate, context, slot)
+        context.slots[slot].listener.pending != 0u64 -> block held(gate, context, slot, now)
+        _ -> block receive(gate, context, slot, now)
+    }
+}
+machine departed(gate: &Gate, context: &mut State, slot: u64 [0..=2]) -> u64 reaches Kernel {
+    let status: u64 = block upstream::refresh(gate, context);
+    block reclaim(gate, context, slot);
+    status
+}
+machine held(gate: &Gate, context: &mut State, slot: u64 [0..=2], now: u64) -> u64 reaches Kernel {
+    let status: u64 = block runtime::server::main::maintain(gate, &mut context.slots[slot].listener, now);
+    0u64
+}
+machine receive(gate: &Gate, context: &mut State, slot: u64 [0..=2], now: u64) -> u64 reaches Kernel {
+    let event: Event = block runtime::server::main::poll(gate, &mut context.slots[slot].listener, now);
+    transition event {
+        Event::Request { frame } -> block refreshed(gate, context, slot, frame)
+        Event::Pending -> (0u64)
+        Event::Failed { code } -> block departed(gate, context, slot)
+    }
+}
+machine refreshed(gate: &Gate, context: &mut State, slot: u64 [0..=2], frame: Frame) -> u64 reaches Kernel {
+    let status: u64 = block upstream::refresh(gate, context);
+    transition status == 0u64 {
+        true -> block routed(gate, context, slot, frame)
+        _ -> (status)
+    }
+}
+machine routed(gate: &Gate, context: &mut State, slot: u64 [0..=2], frame: Frame) -> u64 reaches Kernel {
+    let issued: Ticket = runtime::server::main::ticket(&context.slots[slot].listener);
+    transition {
+        frame.bytes != 64u64 -> block denied(gate, context, slot, issued)
+        frame.payload[0] == ACQUIRE -> block acquire(gate, context, slot, issued, frame)
+        _ -> block viewed(gate, context, slot, issued, frame)
+    }
+}
+machine denied(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket) -> u64 reaches Kernel {
+    let mut words: [u64; 8];
+    words[0] = kernel::DENIED;
+    let status: u64 = block runtime::server::main::reply_to(gate, &mut context.slots[slot].listener, issued, &words);
+    0u64
+}
+machine acquire(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, frame: Frame) -> u64 reaches Kernel {
+    let status: u64 = block offer::reply(gate, &mut context.slots[slot], issued, &frame.payload);
+    0u64
+}
+// The listener's incarnation identifies this occupant; a replacement in the
+// same slot never inherits the old view or queued input.
+machine viewed(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, frame: Frame) -> u64 reaches Kernel {
+    let incarnation: u64 = context.slots[slot].listener.incarnation;
+    let reply: [u64; 8] = request(&mut context.world, slot, incarnation, &frame.payload);
+    let status: u64 = block runtime::server::main::reply_to(gate, &mut context.slots[slot].listener, issued, &reply);
+    0u64
+}
+// Stop, collect and release the slot, and forget its placement.
+public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=2]) reaches Kernel blocks; invokes Kernel; {
+    transition context.slots[slot].live {
+        true -> block stopping(gate, context, slot)
+        _ -> done()
+    }
+    machine stopping(gate: &Gate, context: &mut State, slot: u64 [0..=2]) reaches Kernel {
+        let exit: Exit = block runtime::admission::main::stop(gate, &mut context.slots[slot]);
+        level::disconnected(&mut context.world, slot);
+    }
+}
+public machine watch(context: &State, slot: u64 [0..=2], set: &mut Set) {
+    transition context.slots[slot].live {
+        true -> runtime::server::main::watch(&context.slots[slot].listener, set)
+        _ -> done()
+    }
+}
+machine done() {}

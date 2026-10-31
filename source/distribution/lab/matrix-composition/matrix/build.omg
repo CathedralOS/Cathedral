@@ -1,6 +1,0 @@
-machine build(builder: &mut Build) {
-    Build::package(builder, "cathedral_three_peer_matrix");
-    Build::depend_as(builder, "protocol", Source::Path { location: "../../../../platform/contracts/reference" });
-    Build::select_provider<Matrix, MatrixProvider>(builder);
-    Build::bind(builder, linux_x86_64::ProgramEntry, component_entry);
-}

@@ -116,7 +116,9 @@ reference kernel's `INT 0x80` leaves. Native buffer leaves stage 64-byte message
 into page-contained scratch; read-only inputs are never written back. Output
 leaves retain the input tail, copy back before returning, and do not retain a
 borrow. The 176-byte spawn record and 40-byte exit record are staged the same
-way. Counts are checked Omega ranges. Allocation, mapping, release, yield,
+way, as are the own-account resource and notification budget snapshots a program
+can compare around an operation that must leave nothing behind. Counts are
+checked Omega ranges. Allocation, mapping, release, yield,
 receive, wait, spawn, cancel and collection declare blocking and their callers
 acknowledge it. Launch, port and child values are kernel tickets scoped to the
 calling task; scalar names alone grant no authority.

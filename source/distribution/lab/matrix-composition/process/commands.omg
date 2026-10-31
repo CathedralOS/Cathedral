@@ -1,0 +1,131 @@
+module commands;
+// Owner commands over the kernel-installed control pair. A nonzero high word
+// relays the packet to that child's control link (a proof-only probe). STOP and
+// SPAWN change slots; source words inject input; everything else is a world
+// command. With a parent, each decision follows one upstream poll.
+use protocol::main;
+use protocol::matrix;
+use main::State;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::server::main::Event;
+use runtime::server::main::Ticket;
+use runtime::connection::main::Frame;
+use runtime::task::main::Exit;
+use world::main::source_command;
+use world::main::owner_command;
+use world::main::zeros_from;
+use startup;
+use slots;
+use probe;
+use upstream;
+
+public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    transition context.owner.pending != 0u64 {
+        true -> block held(gate, context, now)
+        _ -> block receive(gate, context, now)
+    }
+}
+// A relayed probe keeps the owner's request until the child answers.
+machine held(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    let status: u64 = block runtime::server::main::maintain(gate, &mut context.owner, now);
+    transition context.owner.peer.fault == 0u64 { true -> (0u64) _ -> (context.owner.peer.fault) }
+}
+machine receive(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    let event: Event = block runtime::server::main::poll(gate, &mut context.owner, now);
+    transition event {
+        Event::Request { frame } -> block refreshed(gate, context, now, frame)
+        Event::Pending -> (0u64)
+        Event::Failed { code } -> (code)
+    }
+}
+machine refreshed(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel {
+    let status: u64 = block upstream::refresh(gate, context);
+    transition status == 0u64 {
+        true -> block command(gate, context, now, frame)
+        _ -> (status)
+    }
+}
+machine command(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel {
+    let issued: Ticket = runtime::server::main::ticket(&context.owner);
+    transition {
+        frame.bytes != 64u64 -> block reply(gate, context, kernel::DENIED)
+        frame.payload[0] >> 32u64 != 0u64 -> block probing(gate, context, now, issued, frame.payload)
+        frame.payload[0] == STOP -> block stop(gate, context, frame)
+        frame.payload[0] == SPAWN -> block spawn(gate, context, now, frame)
+        frame.payload[0] == POINTER_SOURCE || frame.payload[0] == KEY_SOURCE -> block source(gate, context, frame)
+        _ -> block arranged(gate, context, frame)
+    }
+}
+// A probe that cannot start is answered with its refusal; one that started
+// keeps the owner's request until the child's answer arrives.
+machine probing(gate: &Gate, context: &mut State, now: u64, issued: Ticket, words: [u64; 8]) -> u64 reaches Kernel {
+    let status: u64 = block probe::start(gate, context, now, issued, words);
+    transition status == 0u64 {
+        true -> (0u64)
+        _ -> block reply(gate, context, status)
+    }
+}
+machine source(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Kernel {
+    let reply: [u64; 8] = source_command(&mut context.world, &frame.payload);
+    block answer(gate, context, reply)
+}
+machine arranged(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Kernel {
+    let reply: [u64; 8] = owner_command(&mut context.world, &frame.payload);
+    block answer(gate, context, reply)
+}
+machine stop(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Kernel {
+    let padded: bool = zeros_from(&frame.payload, 2u64);
+    transition padded {
+        true -> block bounded(gate, context, frame)
+        _ -> block reply(gate, context, kernel::DENIED)
+    }
+    machine bounded(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Kernel {
+        transition frame.payload[1] < 3u64 {
+            true -> block stopping(gate, context, frame.payload[1])
+            _ -> block reply(gate, context, kernel::DENIED)
+        }
+    }
+    machine stopping(gate: &Gate, context: &mut State, slot: u64 [0..=2]) -> u64 reaches Kernel {
+        transition context.slots[slot].live {
+            true -> block stopped(gate, context, slot)
+            _ -> block reply(gate, context, kernel::PEER_CLOSED)
+        }
+    }
+    machine stopped(gate: &Gate, context: &mut State, slot: u64 [0..=2]) -> u64 reaches Kernel {
+        block slots::reclaim(gate, context, slot);
+        block reply(gate, context, 0u64)
+    }
+}
+machine spawn(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel {
+    let padded: bool = zeros_from(&frame.payload, 3u64);
+    transition padded {
+        true -> block bounded(gate, context, now, frame)
+        _ -> block reply(gate, context, kernel::DENIED)
+    }
+    machine bounded(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel {
+        transition frame.payload[1] < 3u64 {
+            true -> block moded(gate, context, now, frame, frame.payload[1])
+            _ -> block reply(gate, context, kernel::DENIED)
+        }
+    }
+    machine moded(gate: &Gate, context: &mut State, now: u64, frame: Frame, slot: u64 [0..=2]) -> u64 reaches Kernel {
+        transition frame.payload[2] <= 2u64 {
+            true -> block spawning(gate, context, now, slot, frame.payload[2])
+            _ -> block reply(gate, context, kernel::DENIED)
+        }
+    }
+    machine spawning(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=2], mode: u64 [0..=2]) -> u64 reaches Kernel {
+        let status: u64 = block startup::start(gate, context, now, slot, mode);
+        block reply(gate, context, status)
+    }
+}
+machine answer(gate: &Gate, context: &mut State, words: [u64; 8]) -> u64 reaches Kernel {
+    block runtime::server::main::reply(gate, &mut context.owner, &words)
+}
+machine reply(gate: &Gate, context: &mut State, code: u64) -> u64 reaches Kernel {
+    let mut words: [u64; 8];
+    words[0] = code;
+    block runtime::server::main::reply(gate, &mut context.owner, &words)
+}

@@ -1,0 +1,108 @@
+module input::keys;
+// Per-stream key transitions. Keys go to the stream's group focus, attenuated by
+// that child's mask. Keys held across a focus switch are suppressed until their
+// release so a new target never sees a release it did not see pressed.
+use protocol::main;
+use level::World;
+use names::Name;
+use children::Pushed;
+use input::main::Admitted;
+
+public machine route(world: &mut World, channel: Name, key: u64, state: u64) -> u64 {
+    transition geometry::valid_grant(world.parent) {
+        true -> validated(world, channel, key, state)
+        _ -> (DENIED)
+    }
+    machine validated(world: &mut World, channel: Name, key: u64, state: u64) -> u64 {
+        transition key >= 1u64 && key <= LAST_KEY && key != IDLE && (state == PRESS || state == RELEASE || state == REPEAT) {
+            true -> admitting(world, channel, key, state)
+            _ -> (INVALID_ARGUMENT)
+        }
+    }
+    machine admitting(world: &mut World, channel: Name, key: u64, state: u64) -> u64 requires key >= 1u64 && key <= 52u64 {
+        let admitted: Admitted = input::main::admit(&mut world.input, channel);
+        transition admitted {
+            Admitted::Slot { index } -> stream(world, channel, key, state, index, 1u64 << (key - 1u64))
+            Admitted::Failed { code } -> (code)
+        }
+    }
+    // A release or repeat of a key this stream never pressed is noise.
+    machine stream(world: &mut World, channel: Name, key: u64, state: u64, index: u64 [0..=3], bit: u64) -> u64 {
+        transition state != PRESS && (world.input.streams[index].held & bit) == 0u64 {
+            true -> (0u64)
+            _ -> preflight(world, channel, key, state, index, bit)
+        }
+    }
+    machine preflight(world: &mut World, channel: Name, key: u64, state: u64, index: u64 [0..=3], bit: u64) -> u64 {
+        let group: u64 [0..=3] = world.input.streams[index].group;
+        let focus: u64 = world.input.groups[group].focus;
+        transition (world.input.streams[index].suppressed & bit) == 0u64 && focus != 0u64 && focus <= 4u64 {
+            true -> checked(world, channel, key, state, index, bit, group, focus - 1u64)
+            _ -> held(world, channel, key, state, index, bit)
+        }
+    }
+    machine checked(world: &mut World, channel: Name, key: u64, state: u64, index: u64 [0..=3], bit: u64, group: u64 [0..=3], slot: u64) -> u64 requires slot < 4u64 {
+        transition (world.children[slot].grant.keys & bit) != 0u64 {
+            true -> capacity(world, channel, key, state, index, bit, group, slot)
+            _ -> held(world, channel, key, state, index, bit)
+        }
+    }
+    machine capacity(world: &mut World, channel: Name, key: u64, state: u64, index: u64 [0..=3], bit: u64, group: u64 [0..=3], slot: u64) -> u64 requires slot < 4u64 {
+        let code: u64 = children::can_push(&world.children[slot], index, group, world.input.groups[group].id);
+        transition code == 0u64 {
+            true -> held(world, channel, key, state, index, bit)
+            _ -> (code)
+        }
+    }
+    machine held(world: &mut World, channel: Name, key: u64, state: u64, index: u64 [0..=3], bit: u64) -> u64 {
+        transition state == RELEASE {
+            true -> releasing(world, channel, key, state, index, bit)
+            _ -> pressing(world, channel, key, state, index, bit)
+        }
+    }
+    machine releasing(world: &mut World, channel: Name, key: u64, state: u64, index: u64 [0..=3], bit: u64) -> u64 {
+        world.input.streams[index].held = world.input.streams[index].held & ~bit;
+        transition (world.input.streams[index].suppressed & bit) != 0u64 {
+            true -> unsuppressed(world, index, bit)
+            _ -> focused(world, channel, key, state, index, bit)
+        }
+    }
+    machine unsuppressed(world: &mut World, index: u64 [0..=3], bit: u64) -> u64 {
+        world.input.streams[index].suppressed = world.input.streams[index].suppressed & ~bit;
+        0u64
+    }
+    machine pressing(world: &mut World, channel: Name, key: u64, state: u64, index: u64 [0..=3], bit: u64) -> u64 {
+        world.input.streams[index].held = world.input.streams[index].held | bit;
+        transition (world.input.streams[index].suppressed & bit) != 0u64 {
+            true -> (0u64)
+            _ -> focused(world, channel, key, state, index, bit)
+        }
+    }
+    machine focused(world: &mut World, channel: Name, key: u64, state: u64, index: u64 [0..=3], bit: u64) -> u64 {
+        let group: u64 [0..=3] = world.input.streams[index].group;
+        let focus: u64 = world.input.groups[group].focus;
+        transition focus != 0u64 && focus <= 4u64 {
+            true -> delivering(world, channel, key, state, index, bit, group, focus - 1u64)
+            _ -> (0u64)
+        }
+    }
+    machine delivering(world: &mut World, channel: Name, key: u64, state: u64, index: u64 [0..=3], bit: u64, group: u64 [0..=3], slot: u64) -> u64 requires slot < 4u64 {
+        transition (world.children[slot].grant.keys & bit) != 0u64 {
+            true -> delivered(world, channel, key, state, index, group, slot)
+            _ -> (0u64)
+        }
+    }
+    machine delivered(world: &mut World, channel: Name, key: u64, state: u64, index: u64 [0..=3], group: u64 [0..=3], slot: u64) -> u64 requires slot < 4u64 {
+        let group_name: Name = world.input.groups[group].id;
+        let pushed: Pushed = children::push(&mut world.children[slot], index, channel, group, group_name, KEY, key, state, 0u64);
+        transition pushed {
+            Pushed::Delivered -> (0u64)
+            Pushed::Dropped -> cancelled(world, index)
+            Pushed::Refused { code } -> (code)
+        }
+    }
+    machine cancelled(world: &mut World, index: u64 [0..=3]) -> u64 {
+        level::cancel_stream(world, index);
+        0u64
+    }
+}

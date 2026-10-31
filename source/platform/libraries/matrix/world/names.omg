@@ -1,0 +1,12 @@
+module names;
+// Stream and group names carry their supplying boundary so an inherited name
+// can never collide with a locally admitted one. Names never go on the wire.
+public data Name [copy] {
+    value: u64;
+    inherited: bool;
+}
+public machine local(value: u64) -> Name { Name { value: value, inherited: false } }
+public machine upstream(value: u64) -> Name { Name { value: value, inherited: true } }
+public machine empty() -> Name { let name: Name; name }
+public machine valid(name: Name) -> bool { name.value != 0u64 }
+public machine same(a: Name, b: Name) -> bool { a.value == b.value && a.inherited == b.inherited }

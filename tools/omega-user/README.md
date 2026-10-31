@@ -53,7 +53,8 @@ endpoints, typed endpoint acceptance, bounded immutable object creation/send, an
 reply acceptance/read, private chunk copying and sealing/unmapping, a
 page-contained wait for up to 48 interests, child launch indexing, spawn with a
 staged 176-byte startup record, owner-control connection, cancellation,
-collection of the 40-byte exit record, and endpoint transfer.
+collection of the 40-byte exit record, endpoint transfer, and own-account
+resource and notification budget snapshots.
 The native leaves must preserve the declared buffers,
 range bounds, blocking and calling convention. Accept the inspected rows in the
 generated review document and resume with the same qualified compiler:
@@ -126,5 +127,7 @@ for the exact scenarios. `connection_test.py --admission` runs the standalone
 supervisor that admits Rust peers from lent launches, offers them interaction
 and storage, and reclaims them; see the
 [admission witness](../../source/distribution/lab/user-entry/README.md#child-admission).
-Together these qualify the reusable transport and child lifecycle for a future
-standalone matrix; the installed stock matrix still uses its Rust resource host.
+Together these qualify the reusable transport and child lifecycle that the
+[independent Omega matrix](../../source/distribution/lab/matrix-composition/README.md)
+now runs on; `tools/boot-harness-rs/matrix_composition_test.py --omega` and
+`--upstream` boot it. The installed stock matrix still uses its Rust resource host.

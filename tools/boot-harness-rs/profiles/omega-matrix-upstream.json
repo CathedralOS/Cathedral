@@ -10,7 +10,8 @@
       "entry": "distribution/lab/matrix-composition/main.rs",
       "ipc_channels": 1,
       "features": [
-        "upstream-proof"
+        "upstream-proof",
+        "omega-matrix"
       ]
     },
     "launches": [
@@ -19,43 +20,61 @@
         "clock": true,
         "package": "cathedral-matrix-composition-lab",
         "entry": "distribution/lab/matrix-composition/main.rs",
-        "ipc_channels": 3,
+        "ipc_channels": 6,
+        "private_pages": 2,
+        "shared_pages": 2,
         "features": [
-          "upstream-proof"
+          "upstream-proof",
+          "omega-matrix"
         ],
         "argument": 2
       },
       {
         "target": "x86_64-unknown-none",
         "clock": true,
-        "package": "cathedral-three-peer-matrix",
-        "entry": "distribution/lab/matrix-composition/matrix/main.rs",
-        "ipc_channels": 13,
+        "entry": "distribution/lab/matrix-composition/native/main.omg",
+        "ipc_channels": 18,
+        "private_pages": 6,
+        "shared_pages": 6
+      },
+      {
+        "target": "x86_64-unknown-none",
+        "clock": true,
+        "package": "cathedral-matrix-composition-lab",
+        "entry": "distribution/lab/matrix-composition/main.rs",
+        "argument": 1,
+        "private_pages": 2,
+        "shared_pages": 2,
         "features": [
-          "omega"
-        ],
-        "private_pages": 9
+          "upstream-proof",
+          "omega-matrix"
+        ]
       },
       {
         "target": "x86_64-unknown-none",
         "clock": true,
         "package": "cathedral-matrix-composition-lab",
         "entry": "distribution/lab/matrix-composition/main.rs",
-        "argument": 1
+        "argument": 1,
+        "private_pages": 2,
+        "shared_pages": 2,
+        "features": [
+          "upstream-proof",
+          "omega-matrix"
+        ]
       },
       {
         "target": "x86_64-unknown-none",
         "clock": true,
         "package": "cathedral-matrix-composition-lab",
         "entry": "distribution/lab/matrix-composition/main.rs",
-        "argument": 1
-      },
-      {
-        "target": "x86_64-unknown-none",
-        "clock": true,
-        "package": "cathedral-matrix-composition-lab",
-        "entry": "distribution/lab/matrix-composition/main.rs",
-        "argument": 1
+        "argument": 1,
+        "private_pages": 2,
+        "shared_pages": 2,
+        "features": [
+          "upstream-proof",
+          "omega-matrix"
+        ]
       }
     ],
     "links": []

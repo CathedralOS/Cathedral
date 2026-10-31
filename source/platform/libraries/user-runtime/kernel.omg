@@ -55,6 +55,8 @@ public data Gate {
     task_cancel: addr;
     task_wait: addr;
     endpoint_send: addr;
+    resource_budget: addr;
+    notification_budget: addr;
 }
 
 public boundary trait Kernel {
@@ -101,4 +103,8 @@ public boundary trait Kernel {
     machine task_cancel(gate: &Gate, child: u64) -> u64 reaches blocks;
     machine task_wait(gate: &Gate, child: u64, record: &mut [u64; 8]) -> u64 reaches blocks;
     machine endpoint_send(gate: &Gate, endpoint: u64, packet: &[u64; 10]) -> u64 reaches;
+    // Own account only: limits then usage for private pages, reader pages and
+    // channels; notification reservation, charged objects, handle limit and use.
+    machine resource_budget(gate: &Gate, record: &mut [u64; 8]) -> u64 reaches;
+    machine notification_budget(gate: &Gate, record: &mut [u64; 8]) -> u64 reaches;
 }
