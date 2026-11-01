@@ -24,7 +24,7 @@ impl Fixture {
         if dynamic > 0 {
             launch.assign_slots(dynamic).unwrap();
             launch
-                .assign_memory((dynamic + 1) * abi::MAX_ADMISSION_FRAMES as u64)
+                .assign_memory((dynamic + 1) * abi::ADMISSION_ALLOWANCE_FRAMES as u64)
                 .unwrap();
         }
         let root = launch.spawn_tree(0, &[], &loans).unwrap();

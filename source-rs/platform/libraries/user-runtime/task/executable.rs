@@ -38,7 +38,7 @@ impl Executable {
     ) -> Result<Launch, Error> {
         let physical_frames = child_slots
             .checked_add(1)
-            .and_then(|count| count.checked_mul(abi::MAX_ADMISSION_FRAMES as u64))
+            .and_then(|count| count.checked_mul(abi::ADMISSION_ALLOWANCE_FRAMES as u64))
             .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
         self.reserve_funded(limits, child_slots, admission_frames, physical_frames)
     }

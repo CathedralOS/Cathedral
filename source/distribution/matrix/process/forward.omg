@@ -1,0 +1,227 @@
+module forward;
+// Owner words routed to a child. The first hop above the operation names the
+// slot, as the stock control policy decodes it; the word goes on to that
+// child's owner control with the hop removed, and the child's reply, or the
+// deadline the policy set, answers the owner. One routed word per child is
+// pending at a time; a late reply is drained without an answer, and the slot
+// takes no further routed word until it has been.
+use protocol::main;
+use protocol::matrix;
+use main::State;
+use main::Forward;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::connection::main::Frame;
+use runtime::connection::main::Reply;
+use runtime::server::main::Ticket;
+use runtime::waiting;
+use runtime::waiting::Set;
+use policy::requests::control::wire;
+use policy::requests::control::main::decide;
+use policy::requests::control::operation::Facts;
+use policy::requests::control::operation::Request;
+use policy::requests::control::operation::Operation;
+use policy::requests::control::operation::Decision;
+
+public machine routed(op: u64) -> bool {
+    (op >> 16u64) != 0u64
+}
+public machine owner(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let words: [u64; 8] = frame.payload;
+    let request: Request = wire::decode(&words);
+    let facts: Facts = facts_of(context);
+    let decision: Decision = decide(&facts, request);
+    let operation: Operation = decision.operation;
+    transition operation {
+        Operation::Forward -> block begin(gate, context, now, words, decision.slot, decision.deadline)
+        Operation::Busy -> block reply(gate, context, error(kernel::BUSY))
+        _ -> block reply(gate, context, error(kernel::DENIED))
+    }
+}
+machine begin(gate: &Gate, context: &mut State, now: u64, words: [u64; 8], slot: u64, ticks: u64) -> u64 reaches Kernel {
+    transition slot < 5u64 && ticks < 0x8000000000000000u64 {
+        true -> block occupied_slot(gate, context, now, words, slot, ticks)
+        _ -> block reply(gate, context, error(kernel::DENIED))
+    }
+    machine occupied_slot(gate: &Gate, context: &mut State, now: u64, words: [u64; 8], slot: u64 [0..=4], ticks: u64) -> u64
+        reaches Kernel requires ticks < 0x8000000000000000u64 {
+        transition context.slots[slot].live {
+            true -> block sending(gate, context, now, words, slot, ticks)
+            _ -> block reply(gate, context, error(kernel::PEER_CLOSED))
+        }
+    }
+    // The hop this matrix consumed comes off; deeper hops move down for the child.
+    machine sending(gate: &Gate, context: &mut State, now: u64, words: [u64; 8], slot: u64 [0..=4], ticks: u64) -> u64
+        reaches Kernel requires ticks < 0x8000000000000000u64 {
+        let mut request: [u64; 8] = words;
+        request[0] = (words[0] & 0xffffu64) | ((((words[0] >> 19u64) as u64 in Wrapping) << 16u64) as u64);
+        let status: u64 = block runtime::connection::main::begin(gate, &mut context.controls[slot], &request);
+        transition status == 0u64 {
+            true -> (held(context, slot, runtime::time::after(now, ticks)))
+            _ -> block reply(gate, context, error(status))
+        }
+    }
+    machine held(context: &mut State, slot: u64 [0..=4], until: u64) -> u64 {
+        let issued: Ticket = runtime::server::main::ticket(&context.owner);
+        context.forwards[slot] = Forward { live: true, ticket: issued, deadline: until, late: false };
+        0u64
+    }
+}
+// Each pending word's reply, or its deadline, answers the owner.
+public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    block slot_step(gate, context, 0u64, now);
+    block slot_step(gate, context, 1u64, now);
+    block slot_step(gate, context, 2u64, now);
+    block slot_step(gate, context, 3u64, now);
+    block slot_step(gate, context, 4u64, now);
+    0u64
+}
+machine slot_step(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64) reaches Kernel {
+    transition {
+        !context.forwards[slot].live -> done()
+        !context.slots[slot].live -> block answered(gate, context, slot, error(kernel::PEER_CLOSED))
+        _ -> block receive(gate, context, slot, now)
+    }
+}
+machine receive(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64) reaches Kernel {
+    let reply: Reply = block runtime::connection::main::poll(gate, &mut context.controls[slot], now);
+    transition reply {
+        Reply::Complete { frame, notification } -> block complete(gate, context, slot, frame, notification)
+        Reply::Object { frame, object } -> block stray_object(gate, context, slot, object)
+        Reply::Endpoint { frame, endpoint } -> block stray_endpoint(gate, context, slot, endpoint)
+        Reply::Failed { code } -> block answered(gate, context, slot, error(code))
+        Reply::Pending -> block pending(gate, context, slot, now)
+    }
+}
+machine complete(gate: &Gate, context: &mut State, slot: u64 [0..=4], frame: Frame, notification: u64) reaches Kernel {
+    transition frame.bytes == 64u64 && notification == 0u64 {
+        true -> block answered(gate, context, slot, frame.payload)
+        _ -> block malformed(gate, context, slot, notification)
+    }
+}
+machine malformed(gate: &Gate, context: &mut State, slot: u64 [0..=4], notification: u64) reaches Kernel {
+    let ignored: u64 = Kernel::notify_drop(gate, notification);
+    block answered(gate, context, slot, error(kernel::IO_ERROR));
+}
+machine stray_object(gate: &Gate, context: &mut State, slot: u64 [0..=4], object: u64) reaches Kernel {
+    let ignored: u64 = block Kernel::memory_release(gate, object);
+    block answered(gate, context, slot, error(kernel::IO_ERROR));
+}
+machine stray_endpoint(gate: &Gate, context: &mut State, slot: u64 [0..=4], endpoint: u64) reaches Kernel {
+    let ignored: u64 = Kernel::close(gate, endpoint);
+    block answered(gate, context, slot, error(kernel::IO_ERROR));
+}
+// Past the deadline the owner hears TIMED_OUT; the child's reply is drained
+// when it comes.
+machine pending(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64) reaches Kernel {
+    let due: bool = runtime::time::reached(now, context.forwards[slot].deadline);
+    transition due && !context.forwards[slot].late {
+        true -> block expired(gate, context, slot)
+        _ -> done()
+    }
+}
+machine expired(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+    context.forwards[slot].late = true;
+    block respond(gate, context, slot, error(kernel::TIMED_OUT));
+}
+machine answered(gate: &Gate, context: &mut State, slot: u64 [0..=4], words: [u64; 8]) reaches Kernel {
+    transition context.forwards[slot].late {
+        true -> cleared(context, slot)
+        _ -> block responding(gate, context, slot, words)
+    }
+}
+machine responding(gate: &Gate, context: &mut State, slot: u64 [0..=4], words: [u64; 8]) reaches Kernel {
+    block respond(gate, context, slot, words);
+    cleared(context, slot);
+}
+machine respond(gate: &Gate, context: &mut State, slot: u64 [0..=4], words: [u64; 8]) reaches Kernel {
+    let issued: Ticket = context.forwards[slot].ticket;
+    let payload: [u64; 8] = words;
+    let status: u64 = block runtime::server::main::reply_to(gate, &mut context.owner, issued, &payload);
+}
+machine cleared(context: &mut State, slot: u64 [0..=4]) {
+    let empty: Forward;
+    context.forwards[slot] = empty;
+}
+public machine watch(context: &State, set: &mut Set) {
+    slot_watch(context, 0u64, set);
+    slot_watch(context, 1u64, set);
+    slot_watch(context, 2u64, set);
+    slot_watch(context, 3u64, set);
+    slot_watch(context, 4u64, set);
+}
+machine slot_watch(context: &State, slot: u64 [0..=4], set: &mut Set) {
+    transition context.forwards[slot].live && context.controls[slot].fault == 0u64 && context.controls[slot].receiver != 0u64 {
+        true -> watched(context, slot, set)
+        _ -> done()
+    }
+    machine watched(context: &State, slot: u64 [0..=4], set: &mut Set) {
+        waiting::add(set, waiting::IPC, context.controls[slot].receiver);
+        bell(context, slot, set);
+        transition context.forwards[slot].late {
+            true -> done()
+            _ -> waiting::expire_by(set, context.forwards[slot].deadline)
+        }
+    }
+    machine bell(context: &State, slot: u64 [0..=4], set: &mut Set) {
+        transition context.controls[slot].bell.wait != 0u64 {
+            true -> waiting::add(set, waiting::NOTIFICATION, context.controls[slot].bell.wait)
+            _ -> done()
+        }
+    }
+}
+// Host-authenticated facts for the stock decision: the owner itself asks, no
+// loss survey or launch is in flight, storage relays complete within a turn,
+// and the slots pending a routed word, occupied or standing are counted.
+machine facts_of(context: &State) -> Facts {
+    Facts { owner: true, loss: false, launching: false, storing: false,
+        occupied: occupied_mask(context, 0u64, 0u64), unavailable: 0u64, pending: pending_mask(context, 0u64, 0u64),
+        standing: standing_mask(context, 0u64, 0u64), children: 5u64, images: 0u64, private_pages: 0u64,
+        reader_pages: 0u64, supported_imports: 15u64, surfaces: 0u64, configure_deadline: CONFIGURE_DEADLINE_TICKS }
+}
+machine occupied_mask(context: &State, slot: u64, mask: u64) -> u64 requires slot <= 5u64 {
+    transition slot < 5u64 {
+        true -> counted(context, slot, mask)
+        _ -> (mask)
+    }
+    machine counted(context: &State, slot: u64, mask: u64) -> u64 requires slot < 5u64 {
+        transition context.slots[slot].live {
+            true -> occupied_mask(context, slot + 1u64, mask | (1u64 << slot))
+            _ -> occupied_mask(context, slot + 1u64, mask)
+        }
+    }
+}
+machine standing_mask(context: &State, slot: u64, mask: u64) -> u64 requires slot <= 5u64 {
+    transition slot < 5u64 {
+        true -> counted(context, slot, mask)
+        _ -> (mask)
+    }
+    machine counted(context: &State, slot: u64, mask: u64) -> u64 requires slot < 5u64 {
+        transition context.policies[slot].standing {
+            true -> standing_mask(context, slot + 1u64, mask | (1u64 << slot))
+            _ -> standing_mask(context, slot + 1u64, mask)
+        }
+    }
+}
+machine pending_mask(context: &State, slot: u64, mask: u64) -> u64 requires slot <= 5u64 {
+    transition slot < 5u64 {
+        true -> counted(context, slot, mask)
+        _ -> (mask)
+    }
+    machine counted(context: &State, slot: u64, mask: u64) -> u64 requires slot < 5u64 {
+        transition context.forwards[slot].live {
+            true -> pending_mask(context, slot + 1u64, mask | (1u64 << slot))
+            _ -> pending_mask(context, slot + 1u64, mask)
+        }
+    }
+}
+machine reply(gate: &Gate, context: &mut State, words: [u64; 8]) -> u64 reaches Kernel {
+    block runtime::server::main::reply(gate, &mut context.owner, &words)
+}
+machine error(code: u64) -> [u64; 8] {
+    let mut words: [u64; 8];
+    words[0] = code;
+    words
+}
+machine done() {}

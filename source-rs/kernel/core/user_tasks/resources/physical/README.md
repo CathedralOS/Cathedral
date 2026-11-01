@@ -9,14 +9,14 @@ not a promise based on observing global free memory.
 
 ## Admission and ownership
 
-Bootstrap currently gives each bound account 288 frames plus its private-page
-quota. Each dynamic process slot contributes another 288 frames to the initial
+Bootstrap currently gives each bound account a 288-frame allowance plus its
+private-page quota. Each dynamic process slot contributes another 288 frames to the initial
 process's allowance. Dynamic accounts start unfunded. This is a lab default,
 not a manifest or production memory-sizing decision.
 
 `Executable::reserve_funded(limits, child_slots, admission_frames, physical_frames)`
 atomically subdivides physical funding with process/page/IPC reservations. The
-short `reserve` client requests 288 frames per selected account and descendant
+short `reserve` client requests the 288-frame allowance per selected account and descendant
 slot. The raw `TASK_RESERVE` record is six u64 words: private pages, reader pages,
 channels, descendant slots, per-load frame ceiling, physical frame reservation.
 A load ceiling remains a separate failure bound; it does not create funding.

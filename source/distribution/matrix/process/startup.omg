@@ -3,8 +3,11 @@ module startup;
 // make it the storage root. Four endpoints make the display root: owner
 // control opens first, because the supervisor connects it right after
 // spawning this task; then the display connection; then the source listener,
-// whose driver connects once the owner has bound the extent. Other
-// environment shapes arrive in later slices.
+// whose driver connects once the owner has bound the extent. Two endpoints
+// are a parent matrix's broker pair: owner control opens first here too,
+// since the parent connects it right after admission and only then serves
+// the broker; then the parent's interaction, its storage pair and the first
+// snapshot of the view it grants.
 use main::State;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
@@ -15,6 +18,7 @@ use runtime::time::Tick;
 use runtime::server::owner;
 use scene;
 use storage;
+use upstream;
 use report;
 
 public machine open(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks; invokes Kernel; {
@@ -36,9 +40,17 @@ machine timed(gate: &Gate, context: &mut State, environment: Environment) -> u64
     }
 }
 machine shaped(gate: &Gate, context: &mut State, environment: Environment, now: u64) -> u64 reaches Kernel {
-    transition environment.count == 4u64 {
-        true -> block control(gate, context, environment, now)
+    transition environment.count {
+        4u64 -> block control(gate, context, environment, now)
+        2u64 -> block nested(gate, context, environment, now)
         _ -> (kernel::INVALID_ARGUMENT)
+    }
+}
+machine nested(gate: &Gate, context: &mut State, environment: Environment, now: u64) -> u64 reaches Kernel {
+    let status: u64 = block owner::open(gate, &mut context.owner, runtime::time::after(now, 300u64));
+    transition status == 0u64 {
+        true -> block upstream::open(gate, context, environment, now)
+        _ -> (status)
     }
 }
 machine control(gate: &Gate, context: &mut State, environment: Environment, now: u64) -> u64 reaches Kernel {

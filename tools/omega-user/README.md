@@ -81,7 +81,9 @@ An optional `process.json` beside the native consumer declares `imports`
 [manifest.py](manifest.py) encodes the platform's existing funded import record;
 the linker places it first in the read-only load, and packaging verifies that
 position. This requests launch authority from the owner; it grants none itself.
-All four installed standalone apps supply such a record.
+The four installed standalone apps and the stock matrix supply such a record;
+the matrix declares interaction and storage with the channels and descendants
+a nested instance needs, so a parent's stock policy admits it.
 
 An optional `link.json` beside the native consumer declares `stack_pages`, one
 to 256. The build writes that size into the image's PT_GNU_STACK header and the

@@ -42,7 +42,7 @@ The worker uses 208 loaded pages in release and 233 in the initial size-optimize
 dev build. Both redb and the worker use size optimization and disable debug_assert!
 in dev; explicit assert! checks remain enabled. Worker DWARF is stripped to fit
 the existing ELF-file cap. Admission permits 240 image pages, still within the
-1 MiB virtual window; 288 frames cover image, stack and translation overhead.
+1 MiB virtual window; the 288-frame allowance covers image, stack and translation overhead.
 Unclean recovery hit the former 16 KiB stack guard. User stacks now have 32 KiB
 of backing with the same guard boundary. These are bounded lab limits, not measured
 production requirements or guarantees for arbitrary transactions.

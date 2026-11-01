@@ -23,7 +23,7 @@ public data Facts {
 public data Request [copy] {
     case Unknown;
     case Loss;
-    case Forward(hop: u64, configuration: bool);
+    case Forward(hop: u64, configuration: bool, stored: bool);
     case Configure(canonical: bool);
     case Restore(canonical: bool);
     case Fallback(canonical: bool);

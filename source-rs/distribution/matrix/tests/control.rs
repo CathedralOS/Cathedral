@@ -74,17 +74,17 @@ fn loss_and_imports_share_an_opcode_but_not_a_packet_shape() {
 #[test]
 fn forwarding_preserves_one_pending_request_per_exact_local_hop() {
     for target in 0..5 {
-        for op in [w::STOP, w::CONFIGURE, u16::MAX as u64] {
+        for op in [w::STOP, w::CONFIGURE, w::RUN_OBJECT, u16::MAX as u64] {
             let words = w::route(w::route(packet(op), 2).unwrap(), target).unwrap();
             let d = decide(words, 5, owner());
             assert_eq!(d.operation, O::Forward);
             assert_eq!(d.slot, target);
             assert_eq!(
                 d.deadline,
-                if op == w::CONFIGURE {
-                    w::CONFIGURE_DEADLINE_TICKS
-                } else {
-                    100
+                match op {
+                    w::CONFIGURE => w::CONFIGURE_DEADLINE_TICKS,
+                    w::RUN_OBJECT => w::RUN_OBJECT_DEADLINE_TICKS,
+                    _ => 100,
                 }
             );
             assert_eq!(

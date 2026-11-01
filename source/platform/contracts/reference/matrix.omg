@@ -45,3 +45,8 @@ public const LAUNCH_IMPORTS: u64 = 121u64;
 public const RESTORE_STORAGE: u64 = 123u64;
 public const MANAGEMENT_GRANT: u64 = 125u64;
 public const LAUNCH_IMAGES: u64 = 126u64;
+// Owner deadlines for routed work: startup may read configuration and a
+// program through several storage hops; a stored launch reads one program
+// through up to three and admits it. Owner: source-rs/distribution/matrix/contracts/matrix.rs.
+public const CONFIGURE_DEADLINE_TICKS: u64 = 9700u64;
+public const RUN_OBJECT_DEADLINE_TICKS: u64 = 3800u64;

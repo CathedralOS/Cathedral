@@ -1,14 +1,16 @@
 module presentation;
-// A child's surfaces on the root display. Creation validates in the World and
-// names the compositor tile behind the rank; children receive matrix-local
-// names, never tile indices. Updates are clipped and translated by the World,
-// sent to the compositor as that tile's rectangle, cursor or sealed image, and
-// committed only after the compositor accepts them. Inside a child's
-// begin/commit batch they are staged instead and published together under one
-// compositor transaction; the compact rectangles word is such a batch of one
-// or two paints. Sealed images stay retained behind their tile until the tile
-// is painted over or erased, so the World can replay them. Erasures owed for
-// retired surfaces are flushed between turns the same way.
+// A child's surfaces on the display, or on the parent's view. Creation
+// validates in the World and names the backing behind the rank: the
+// compositor tile at the root, a surface of this matrix's own view created
+// upstream beneath a parent; children receive matrix-local names, never
+// those. Updates are clipped and translated by the World, sent as that
+// backing's rectangle, cursor or sealed image, and committed only after the
+// display or the parent accepts them. Inside a child's begin/commit batch
+// they are staged instead and published together under one transaction; the
+// compact rectangles word is such a batch of one or two paints. Sealed
+// images stay retained behind their backing until it is painted over or
+// erased, so the World can replay them. Erasures owed for retired surfaces
+// are flushed between turns the same way.
 use protocol::main;
 use protocol::matrix;
 use protocol::display;
@@ -30,29 +32,58 @@ use world::geometry::zeros_from;
 use rects;
 use rects::Rects;
 use scene;
+use upstream;
 
 public const IMAGES: u64 = 16u64;
 
-// The rank the owner allotted names the tile; the key is that rank plus one so
-// zero never names a tile. No surface is created inside an open batch.
+// The rank the owner allotted names the backing. At the root that is the
+// compositor tile and the key is the rank plus one, so zero never names a
+// tile; under a parent it is a surface created upstream behind the rank, and
+// the parent's name is the key. No surface is created inside an open batch.
 public machine create(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, words: &[u64; 8]) -> [u64; 8]
     reaches Kernel blocks; invokes Kernel; {
     block prune(gate, context, slot);
     transition context.batches[slot].active {
         true -> (poisoned(context, slot, kernel::DENIED))
-        _ -> creating(context, slot, incarnation, words)
+        _ -> block creating(gate, context, slot, incarnation, words)
     }
-    machine creating(context: &mut State, slot: u64 [0..=4], incarnation: u64, words: &[u64; 8]) -> [u64; 8] {
+    machine creating(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, words: &[u64; 8]) -> [u64; 8] reaches Kernel {
         let prepared: Prepared = surfaces::prepare(&mut context.world, slot, incarnation, words[1], words[2]);
+        let rank: u64 = words[2];
         transition prepared {
-            Prepared::Rank { upstream } -> keyed(context, slot, words[2], upstream)
+            Prepared::Rank { upstream } -> block ranked(gate, context, slot, rank, upstream)
             Prepared::Refused { code } -> (error(code))
         }
     }
-    machine keyed(context: &mut State, slot: u64 [0..=4], rank: u64, upstream: u64) -> [u64; 8] {
-        transition rank < 16u64 && upstream < display::MATRIX_TILES {
-            true -> named(context, slot, rank, upstream + 1u64)
+    machine ranked(gate: &Gate, context: &mut State, slot: u64 [0..=4], rank: u64, backing: u64) -> [u64; 8] reaches Kernel {
+        transition rank < 16u64 {
+            true -> block backed(gate, context, slot, rank, backing)
             _ -> (error(kernel::NO_MEMORY))
+        }
+    }
+    machine backed(gate: &Gate, context: &mut State, slot: u64 [0..=4], rank: u64, backing: u64) -> [u64; 8] reaches Kernel
+        requires rank < 16u64 {
+        transition context.has_parent {
+            true -> block allocating(gate, context, slot, rank, backing)
+            _ -> tiled(context, slot, rank, backing)
+        }
+    }
+    machine tiled(context: &mut State, slot: u64 [0..=4], rank: u64, backing: u64) -> [u64; 8] requires rank < 16u64 {
+        transition backing < display::MATRIX_TILES {
+            true -> named(context, slot, rank, backing + 1u64)
+            _ -> (error(kernel::NO_MEMORY))
+        }
+    }
+    machine allocating(gate: &Gate, context: &mut State, slot: u64 [0..=4], rank: u64, backing: u64) -> [u64; 8] reaches Kernel
+        requires rank < 16u64 {
+        let mut request: [u64; 8];
+        request[0] = SURFACE_CREATE;
+        request[1] = context.world.parent.epoch;
+        request[2] = backing;
+        let reply: [u64; 8] = block upstream::exchange(gate, context, request);
+        transition reply[0] == 0u64 {
+            true -> named(context, slot, rank, reply[1])
+            _ -> (reply)
         }
     }
     machine named(context: &mut State, slot: u64 [0..=4], rank: u64, key: u64) -> [u64; 8] requires rank < 16u64 {
@@ -86,7 +117,7 @@ public machine update(gate: &Gate, context: &mut State, slot: u64 [0..=4], incar
     }
     machine sent(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, packet: [u64; 8]) -> [u64; 8]
         reaches Kernel {
-        let status: u64 = block scene::command(gate, context, tile(packet));
+        let status: u64 = block send_packet(gate, context, packet, 0u64);
         let erased: bool = frame.payload[0] == MATRIX_ERASE && (status == kernel::DENIED || status == kernel::BAD_HANDLE);
         transition {
             status == 0u64 -> block committed(gate, context, slot, incarnation, frame, packet[2])
@@ -143,7 +174,7 @@ public machine image(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarn
     }
     machine shown(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, packet: [u64; 8], object: u64)
         -> [u64; 8] reaches Kernel {
-        let status: u64 = block scene::command_object(gate, context, image_words(packet), object);
+        let status: u64 = block send_packet(gate, context, packet, object);
         transition status == 0u64 {
             true -> block retained(gate, context, slot, incarnation, frame, packet[2], object)
             _ -> block releasing(gate, object, status)
@@ -300,15 +331,14 @@ machine view_words() -> [u64; 8] {
     words[0] = MATRIX_VIEW;
     words
 }
-// Publish the staged batch: open a compositor transaction under this matrix's
-// next revision, send every entry as its tile's update, then commit; any
+// Publish the staged batch: open a transaction under this matrix's next
+// revision, send every entry as its backing's update, then commit; any
 // refusal aborts the transaction and is the answer, leaving the batch open
 // for the child to retry or abort. A published batch commits its updates in
 // the World and retains its images.
 machine publish(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64) -> [u64; 8] reaches Kernel {
     context.revision = ((context.revision as u64 in Wrapping) + 1u64) as u64;
-    let opening: [u64; 6] = control_words(display::MATRIX_BEGIN, context.revision);
-    let begun: u64 = block scene::command(gate, context, opening);
+    let begun: u64 = block transact(gate, context, PRESENT_BEGIN, display::MATRIX_BEGIN);
     transition begun == 0u64 {
         true -> block entries(gate, context, slot, incarnation, revision, 0u64, 0u64)
         _ -> (error(begun))
@@ -344,13 +374,11 @@ machine publish(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation
         transition { _ -> (block entries(gate, context, slot, incarnation, revision, index + 1u64, status)) }
     }
     machine abandoned(gate: &Gate, context: &mut State, status: u64) -> [u64; 8] reaches Kernel {
-        let abort: [u64; 6] = control_words(display::MATRIX_ABORT, context.revision);
-        let aborted: u64 = block scene::command(gate, context, abort);
+        let aborted: u64 = block transact(gate, context, PRESENT_ABORT, display::MATRIX_ABORT);
         error(status)
     }
     machine closing(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64) -> [u64; 8] reaches Kernel {
-        let commit: [u64; 6] = control_words(display::MATRIX_COMMIT, context.revision);
-        let status: u64 = block scene::command(gate, context, commit);
+        let status: u64 = block transact(gate, context, PRESENT_COMMIT, display::MATRIX_COMMIT);
         transition status == 0u64 {
             true -> block committing(gate, context, slot, incarnation, revision, 0u64)
             _ -> block abandoned(gate, context, status)
@@ -407,10 +435,45 @@ machine publish(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation
         ok()
     }
 }
+// One translated packet to the backing: upstream as the parent's own surface
+// word, with the sealed image behind an image word; at the root as the
+// compositor's tile command.
 machine send_packet(gate: &Gate, context: &mut State, packet: [u64; 8], payload: u64) -> u64 reaches Kernel {
-    transition packet[0] == SURFACE_IMAGE {
-        true -> block scene::command_object(gate, context, image_words(packet), payload)
+    transition {
+        context.has_parent -> block forwarded(gate, context, packet, payload)
+        packet[0] == SURFACE_IMAGE -> block scene::command_object(gate, context, image_words(packet), payload)
         _ -> block scene::command(gate, context, tile(packet))
+    }
+    machine forwarded(gate: &Gate, context: &mut State, packet: [u64; 8], payload: u64) -> u64 reaches Kernel {
+        transition payload != 0u64 {
+            true -> block imaged(gate, context, packet, payload)
+            _ -> block plain(gate, context, packet)
+        }
+    }
+    machine imaged(gate: &Gate, context: &mut State, packet: [u64; 8], payload: u64) -> u64 reaches Kernel {
+        let reply: [u64; 8] = block upstream::exchange_object(gate, context, packet, payload);
+        reply[0]
+    }
+    machine plain(gate: &Gate, context: &mut State, packet: [u64; 8]) -> u64 reaches Kernel {
+        let reply: [u64; 8] = block upstream::exchange(gate, context, packet);
+        reply[0]
+    }
+}
+// Open, commit or abort this matrix's transaction: the parent's batch word
+// under this matrix's view and revision, or the compositor's under its revision.
+machine transact(gate: &Gate, context: &mut State, word: u64, command: u64) -> u64 reaches Kernel {
+    let local: [u64; 6] = control_words(command, context.revision);
+    transition context.has_parent {
+        true -> block batched(gate, context, word)
+        _ -> block scene::command(gate, context, local)
+    }
+    machine batched(gate: &Gate, context: &mut State, word: u64) -> u64 reaches Kernel {
+        let mut request: [u64; 8];
+        request[0] = word;
+        request[1] = context.world.parent.epoch;
+        request[2] = context.revision;
+        let reply: [u64; 8] = block upstream::exchange(gate, context, request);
+        reply[0]
     }
 }
 machine control_words(op: u64, revision: u64) -> [u64; 6] {
@@ -572,8 +635,8 @@ machine selected(op: u64) -> u64 {
         _ -> (display::MATRIX_RECT)
     }
 }
-// Erasures owed since the last flush: the compositor may already have removed
-// that tile, and the image behind it goes either way.
+// Erasures owed since the last flush: the display or the parent may already
+// have removed that backing, and the image behind it goes either way.
 public machine flush(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks; invokes Kernel; {
     let owed: Retained = surfaces::take_owed(&mut context.world);
     transition owed {
@@ -581,7 +644,7 @@ public machine flush(gate: &Gate, context: &mut State) -> u64 reaches Kernel blo
         Retained::Nothing -> (0u64)
     }
     machine owed_one(gate: &Gate, context: &mut State, words: [u64; 8]) -> u64 reaches Kernel {
-        let status: u64 = block scene::command(gate, context, tile(words));
+        let status: u64 = block send_packet(gate, context, words, 0u64);
         transition status == 0u64 || status == kernel::DENIED || status == kernel::BAD_HANDLE || status == kernel::INVALID_ARGUMENT {
             true -> block erased(gate, context, words[2])
             _ -> (status)

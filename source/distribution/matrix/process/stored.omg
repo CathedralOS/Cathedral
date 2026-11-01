@@ -150,7 +150,7 @@ public machine launch(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..
         let executable: u64 = runtime::task::main::image_from_object(gate, image, 0u64);
         transition executable < kernel::ERROR_BASE {
             true -> block reserved(gate, context, now, slot, subtree, argument, cpu, image, found, executable,
-                runtime::task::main::reserve(gate, executable, private_pages, reader_pages, channels, descendants, children::ADMISSION_FRAMES, frames))
+                runtime::task::main::reserve(gate, executable, private_pages, reader_pages, channels, descendants, kernel::MAX_ADMISSION_FRAMES, frames))
             _ -> block refused_image(gate, image, executable)
         }
     }

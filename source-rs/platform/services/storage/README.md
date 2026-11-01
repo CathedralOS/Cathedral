@@ -133,8 +133,9 @@ splits funded private pages between the engine/cache and outstanding replies,
 after eight pages of headroom and two transport pages. The heap stays between its
 tested 56-page minimum and two private objects. The eight-owned-object ceiling
 leaves room for the heap, both writers and a reply. The lab's 64-page grant keeps
-the smallest heap; the desktop's 330 pages provide a 160-page
-(640 KiB) heap and enough remaining backing for the reusable UI program. A maximum
+the smallest heap; the desktop's 500 pages provide a 245-page
+(980 KiB) heap and enough remaining backing for one reply carrying the largest
+program the desktop delivers, the 237-page Omega stock matrix. A maximum
 protocol payload still requires sufficient actual provider funding. A reply
 whose pages cannot be allocated is recorded as `bulk-reply-refused` in every
 build, with the page count, the error and the provider's page and frame budgets;

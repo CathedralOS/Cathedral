@@ -318,14 +318,104 @@ Evidence in the main checkout with the saved standalone producer:
   clippy for the desktop crate with `shell,omega-root` pass. No native leaf
   or kernel limit changed.
 
-Next: the desktop mode, where the chrome's launches go to app slots and the
-chrome's app entries, selection, close and layout words are answered; then
-the startup realm discovery that admits the picker and background,
-RESOLVE_PATH, loss surveys and close over the owner-control client,
-management words, nested operation under a parent matrix with an upstream
-storage binding, then the rest of the stock policy. Dynamic launches still
-cap reserved frames at MAX_ADMISSION_FRAMES, which a nested Omega matrix with
-a declared stack will exceed.
+Nested operation followed in the step recorded below.
+
+### Stock matrix migration: nested operation under a parent
+
+The stock matrix process now runs under a parent matrix, Omega or Rust, and
+hosts one in turn. A two-endpoint environment is a parent's broker pair: the
+process opens owner control first, as the parent connects it right after
+admission, then the broker, acquires interaction and the storage pair, and
+takes its first snapshot. Each snapshot is the parent's MATRIX_POLL reply,
+adopted by the World's existing poll inheritance: the view becomes the grant,
+the one input event routes on under the parent's stream and group names, and
+MORE keeps the next turn runnable. The process polls when the parent rings its
+bell, when the last snapshot had more, and before an owner word that needs a
+view none has granted yet, so a placement that races the parent's does not
+fail. Surfaces, paints, erasures, cursors, sealed images and batch words go
+upward on the same connection as the parent's own surface words, in the
+coordinates the World translated them to, with a batch under this matrix's
+revision; at the root the same packets become compositor tile commands, which
+the presentation module now selects by whether a parent exists. Storage under
+a parent is the broker's one connection: the process asks STORAGE_INFO for its
+binding revision and realm before its first relay and after a refusal,
+clearing every child grant when the revision changed, stamps the revision on
+each request it relays or makes for itself, and keeps the children's one
+source as source zero over that link. A nested matrix's children bound with a
+scope of zero see the realm the parent reported.
+
+Owner words routed to a child are relayed too: the stock control policy, now
+linked directly, decodes the first hop into the slot and the deadline, the
+word goes on to the child's owner control with the hop removed, and the
+child's reply, or TIMED_OUT at the deadline with the late reply drained,
+answers the owner while the parent's turn keeps serving the child's own
+requests, since a nested RUN_OBJECT reads its program back through the
+parent. The policy's forward deadline now covers the work the word names: a
+routed RUN_OBJECT waits as long as the supervisor itself waits for one,
+through the new `RUN_OBJECT_DEADLINE_TICKS` contract, where every routed word
+had the hundred ticks of a word answered from what the child holds; the
+compiled control tests cover the new case. The Omega matrix native gained the
+import record the installed apps carry, declaring interaction and storage
+with sixty-four channels and five descendants, so a parent's stock import and
+resource policy admits it; its load is 236 pages against the kernel's 240.
+
+The proof puts the Omega program in the place of the stock realm's user
+template, object three, so the root runs it nested over its own realm as a
+login does, at an inset from every display edge; the supervisor then
+configures it through routed words to run the template's launcher as a strip
+and open an app slot, until startup discovery lets it do so itself. The
+earlier checks run unchanged inside the nested area: the launcher paints its
+tiles, its click launches Colors through the nested matrix, Colors paints and
+follows the cursor through both matrices, and Enter saves through both
+storage relays. The proof's realm holds only the stock six objects: beside
+the realm programs F5 adds for its own proofs, the Omega template's image,
+967 KB against the Rust host's 617 KB, exceeded the storage root's 4 MiB quota.
+The same image is 237 pages in one bulk reply, which the storage service's
+330 private pages could not back beside its heap; the stock composition now
+funds it 500, a 245-page heap and room for that reply, which F5 inherits.
+Admitting it took 236 image pages, the 128-page stack and their tables, past
+the kernel's 288-frame ceiling for a dynamic admission. That one constant had
+two meanings: the most one load may take, and the frames each bound account
+starts with and each dynamic slot is worth, which the kernel reserves from
+real frames at boot, so raising it alone overcommitted the 76 MiB the lab
+machine has. They are two constants now: `MAX_ADMISSION_FRAMES` is 544, the
+largest image and stack the address space allows with 48 pages for tables,
+and `ADMISSION_ALLOWANCE_FRAMES` keeps the 288 that bootstrap, the short
+reservation, the desktop's root funding and the split app's funding estimate
+meant. The Omega process reserves every stock child's load under the ceiling
+and funds it by allowances per descendant slot, as the Rust host does, through
+the runtime's mirrors of both.
+
+Evidence in the main checkout with the saved standalone producer:
+
+- Desktop over the Omega root with the Omega template nested and the launcher
+  launching Colors inside it: `build/boot-harness-rs/omega-desktop/20261101T021844653901Z/`.
+- Omega matrix, top level: `build/boot-harness-rs/omega-matrix/20261101T022046101611Z/`;
+  under a real parent: `build/boot-harness-rs/omega-matrix-upstream/20261101T022053567228Z/`;
+  Rust comparison matrix: `build/boot-harness-rs/matrix-composition/20261101T021857709232Z/`.
+- Witnesses: primitives `build/omega-user/tests/20261101T021700828163Z/`;
+  connections `build/omega-user/connections/20261101T021706422972Z/`, service
+  `.../20261101T021727941749Z/`, admission `.../20261101T021742186554Z/`;
+  Background `build/omega-user/background-control/20261101T021814686807Z/`;
+  Colors `build/omega-user/colors-control/20261101T021820577406Z/`;
+  Notes `build/omega-user/notes-control/20261101T021827144519Z/`;
+  Chooser `build/omega-user/chooser-control/20261101T021835160022Z/`.
+- Kernel smoke labs of 2026-11-01 02:21 UTC pass; default F5 desktop and cold
+  reopen: `build/boot-harness-rs/desktop/20261101T022146687409Z/`.
+- Boundary test, layout (123 Omega / 153 Rust edges), Rust formatting, the
+  stock matrix's compiled control tests and clippy for the desktop crate with
+  `shell,omega-root` pass. No native leaf changed; the kernel's admission
+  ceiling rose as described above.
+
+Next: the startup realm discovery that CONFIGURE asks a nested matrix for,
+with RESOLVE_PATH and the picker, background and launcher it admits itself;
+the desktop mode, where the chrome's launches go to app slots and the chrome's
+app entries, selection, close and layout words are answered; loss surveys and
+close over the owner-control client, management words, the funding and input
+capacity a nested matrix negotiates with its parent, then the rest of the
+stock policy. The Omega matrix native's load has four pages left under the
+kernel's image limit; the next slices will need either a smaller process or a
+higher limit.
 
 ### Omega World: layout control, management and launch observations
 

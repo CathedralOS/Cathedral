@@ -107,11 +107,11 @@ impl Capture {
     fn fund(&self, output: &mut Output) -> Result<(), Error> {
         let budget = cathedral_user_runtime::resources::budget()?;
         let physical = cathedral_user_runtime::resources::physical_budget()?;
-        let owner = (abi::MAX_ADMISSION_FRAMES as u64)
+        let owner = (abi::ADMISSION_ALLOWANCE_FRAMES as u64)
             .checked_add(budget.limits.private_pages)
             .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
         let needed = owner
-            .checked_add(abi::MAX_ADMISSION_FRAMES as u64)
+            .checked_add(abi::ADMISSION_ALLOWANCE_FRAMES as u64)
             .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
         let extra = needed.saturating_sub(physical.reserved);
         if extra == 0 {

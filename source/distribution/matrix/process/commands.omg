@@ -3,8 +3,11 @@ module commands;
 // binding, launch policy for a slot, the children words that stage, run and
 // stop a child, the storage words that grant, revoke and report bindings, the
 // stored words that launch a child from a realm object and offer its services,
-// and the World's placement words. The rest of the stock vocabulary arrives in
-// later slices; until then it is denied, never silently accepted.
+// words routed on to a child's own owner control, and the World's placement
+// words. Under a parent the root binding is the parent's to make and a word
+// that needs this matrix's view takes the parent's snapshot first when none
+// has granted one yet. The rest of the stock vocabulary arrives in later
+// slices; until then it is denied, never silently accepted.
 use protocol::main;
 use protocol::matrix;
 use main::State;
@@ -15,6 +18,7 @@ use runtime::server::main::Event;
 use runtime::connection::main::Frame;
 use world::level;
 use world::surfaces;
+use world::geometry;
 use world::geometry::Grant;
 use world::geometry::zeros_from;
 use world::main::owner_command;
@@ -22,6 +26,8 @@ use source;
 use children;
 use storage;
 use stored;
+use forward;
+use upstream;
 
 public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
     transition {
@@ -43,16 +49,29 @@ machine receive(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kerne
     }
 }
 machine command(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel {
+    let unplaced: bool = context.has_parent && !geometry::valid_grant(context.world.parent);
+    transition unplaced {
+        true -> block refreshed(gate, context, now, frame)
+        _ -> block dispatch(gate, context, now, frame)
+    }
+}
+machine refreshed(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel {
+    let status: u64 = block upstream::refresh(gate, context, now);
+    block dispatch(gate, context, now, frame)
+}
+machine dispatch(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel {
+    let routed: bool = forward::routed(frame.payload[0]);
     let child_word: bool = children::owner_word(frame.payload[0]);
     let storage_word: bool = storage::owner_word(frame.payload[0]);
     let stored_word: bool = stored::owner_word(frame.payload[0]);
     transition {
         frame.bytes != 64u64 -> block reply(gate, context, error(kernel::DENIED))
+        routed -> block forward::owner(gate, context, now, frame)
         child_word -> block children::owner(gate, context, now, frame)
         storage_word -> block storage::owner(gate, context, now, frame)
         stored_word -> block stored::owner(gate, context, now, frame)
         frame.payload[0] == HEALTH && zeros_from(&frame.payload, 1u64) -> block reply(gate, context, ok())
-        frame.payload[0] == BIND && zeros_from(&frame.payload, 4u64) ->
+        frame.payload[0] == BIND && zeros_from(&frame.payload, 4u64) && !context.has_parent ->
             block bound(gate, context, frame.payload[1], frame.payload[2], frame.payload[3])
         frame.payload[0] == LAUNCH_IMAGES || frame.payload[0] == LAUNCH_POLICY || frame.payload[0] == LAUNCH_PLACE ->
             block policy(gate, context, frame)

@@ -53,6 +53,8 @@ pub const LAUNCHER_FALLBACK: u64 = 127;
 
 /// Startup may read configuration and a program through several storage hops.
 pub const CONFIGURE_DEADLINE_TICKS: u64 = 8 * STORAGE_DEADLINE_TICKS + 100;
+/// A stored launch reads one program through up to three storage hops and admits it.
+pub const RUN_OBJECT_DEADLINE_TICKS: u64 = 3 * STORAGE_DEADLINE_TICKS + 200;
 
 // Owner-only routing. Three bits per hop (1..=5 = local child 0..=4); child endpoints
 // reject the entire encoded opcode. No process IDs or global paths are accepted.

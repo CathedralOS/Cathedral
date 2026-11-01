@@ -29,13 +29,14 @@ impl Memory {
         grants: &[wire::Grant],
     ) -> Result<alloc::boxed::Box<Self>, u64> {
         let model = Regions::new(tasks, grants)?;
-        // Bootstrap policy: each bound account starts with 288 frames plus its
-        // private-page quota. Unbound accounts' 288-frame allowances belong to root.
+        // Bootstrap policy: each bound account starts with one admission
+        // allowance of frames plus its private-page quota. Unbound accounts'
+        // allowances belong to root.
         let mut limits = [0; abi::MAX_TASKS];
         for (account, limit) in limits.iter_mut().enumerate().take(tasks - dynamic) {
-            *limit = abi::MAX_ADMISSION_FRAMES + model.limits(account)[0];
+            *limit = abi::ADMISSION_ALLOWANCE_FRAMES + model.limits(account)[0];
         }
-        limits[0] += dynamic * abi::MAX_ADMISSION_FRAMES;
+        limits[0] += dynamic * abi::ADMISSION_ALLOWANCE_FRAMES;
         let funding = crate::user_tasks::resources::physical::Funding::new(limits);
         // Keep the bounded arena off the boot stack: debug builds otherwise copy
         // it through each session preparation/result frame. Allocation is fallible.

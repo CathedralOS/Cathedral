@@ -12,6 +12,14 @@ public machine storage_ready(gate: &Gate) reaches Kernel invokes Kernel; {
     let text: [u8; 50] = "Cathedral matrix: shared storage connection ready\n";
     line(gate, &text);
 }
+public machine parent_interaction_ready(gate: &Gate) reaches Kernel invokes Kernel; {
+    let text: [u8; 50] = "Cathedral matrix: shared parent interaction ready\n";
+    line(gate, &text);
+}
+public machine parent_storage_ready(gate: &Gate) reaches Kernel invokes Kernel; {
+    let text: [u8; 50] = "Cathedral matrix: parent storage connection ready\n";
+    line(gate, &text);
+}
 machine line(gate: &Gate, text: &[u8; 50]) reaches Kernel {
     let mut words: [u64; 8];
     transition { _ -> pack(gate, text, &mut words, 0u64) }

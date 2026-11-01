@@ -25,8 +25,6 @@ use storage;
 use presentation;
 use report;
 
-// The per-load admission ceiling every stock child is reserved with.
-public const ADMISSION_FRAMES: u64 = 256u64;
 // How long a child has to complete each startup handshake, as the Rust host allows.
 public const HANDSHAKE_TICKS: u64 = 300u64;
 public const MAX_IMAGES: u64 = 14u64;
@@ -103,7 +101,7 @@ public machine run(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4]
         context.staged_reader[slot] = 0u64;
         context.staged_frames[slot] = 0u64;
         let launch: u64 = runtime::task::main::reserve(gate, executable, private_pages, reader_pages, channels,
-            descendants, ADMISSION_FRAMES, frames);
+            descendants, kernel::MAX_ADMISSION_FRAMES, frames);
         transition launch < kernel::ERROR_BASE {
             true -> block limited(gate, context, now, slot, launch, argument, images, cpu)
             _ -> (launch)
@@ -220,9 +218,11 @@ machine allow(gate: &Gate, launch: u64, grant: u64) -> u64 reaches Kernel invoke
 }
 // Backing for the load and its private pages, never below one admission
 // allowance per slot the child may fill, unless the owner staged an amount.
+// The load itself is reserved under the kernel's admission ceiling, as the
+// Rust host reserves its children.
 public machine physical_frames(staged: u64, private_pages: u64, descendants: u64) -> u64 requires descendants < 64u64 {
-    let subtree: u64 = (descendants + 1u64) * ADMISSION_FRAMES;
-    let load: u64 = world::geometry::plus(ADMISSION_FRAMES, private_pages);
+    let subtree: u64 = (descendants + 1u64) * kernel::ADMISSION_ALLOWANCE_FRAMES;
+    let load: u64 = world::geometry::plus(kernel::ADMISSION_ALLOWANCE_FRAMES, private_pages);
     transition {
         staged != 0u64 -> (staged)
         load > subtree -> (load)

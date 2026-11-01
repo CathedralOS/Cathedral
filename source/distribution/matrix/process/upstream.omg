@@ -1,0 +1,201 @@
+module upstream;
+// The parent matrix, when one admitted this instance with its broker pair.
+// Its interaction connection carries this matrix's view and the one input
+// event each snapshot holds, which the World adopts and routes on; the same
+// connection carries every surface, image and batch word upward, where the
+// parent clips and translates them as this matrix does for its own children.
+// A snapshot is taken when the parent rings this matrix's bell or the last
+// one had more, and before an owner word that needs a view none has granted
+// yet. The storage pair the broker supplied goes to [storage.omg](storage.omg).
+use protocol::main;
+use protocol::services::STORAGE;
+use main::State;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::main::Environment;
+use runtime::services::main::Reply;
+use runtime::services::endpoints::Part;
+use runtime::connection::main::Frame;
+use runtime::connection::call;
+use runtime::connection::call::CallReply;
+use runtime::waiting;
+use runtime::waiting::Set;
+use world::level;
+use world::geometry;
+use world::geometry::Grant;
+use world::upstream::inherit_poll;
+use world::input::registration;
+use storage;
+use report;
+
+// How long each startup handshake with the parent may take, as the Rust host allows.
+public const HANDSHAKE_TICKS: u64 = 300u64;
+
+// Open the broker, acquire interaction and the storage pair, then take the
+// first snapshot. The parent may not have placed this matrix yet; its view
+// arrives with a later snapshot.
+public machine open(gate: &Gate, context: &mut State, environment: Environment, now: u64) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    context.has_parent = true;
+    let status: u64 = block runtime::services::main::open(gate, &mut context.parent, &environment,
+        runtime::time::after(now, HANDSHAKE_TICKS));
+    transition status == 0u64 {
+        true -> block acquiring(gate, context, now)
+        _ -> (status)
+    }
+    machine acquiring(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+        let status: u64 = block runtime::services::main::interaction(gate, &mut context.parent, context.clock, 1u64, 1u64);
+        transition status == 0u64 {
+            true -> block first_part(gate, context, now)
+            _ -> (status)
+        }
+    }
+    machine first_part(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+        report::parent_interaction_ready(gate);
+        let part: Part = block runtime::services::endpoints::acquire(gate, &mut context.parent, context.clock, STORAGE, 0u64);
+        transition part {
+            Part::Granted { endpoint } -> block second_part(gate, context, now, endpoint)
+            Part::Refused { code } -> (code)
+        }
+    }
+    machine second_part(gate: &Gate, context: &mut State, now: u64, sender: u64) -> u64 reaches Kernel {
+        let part: Part = block runtime::services::endpoints::acquire(gate, &mut context.parent, context.clock, STORAGE, 1u64);
+        transition part {
+            Part::Granted { endpoint } -> block connecting(gate, context, now, sender, endpoint)
+            Part::Refused { code } -> half(gate, sender, code)
+        }
+    }
+    machine half(gate: &Gate, sender: u64, code: u64) -> u64 reaches Kernel {
+        let closed: u64 = Kernel::close(gate, sender);
+        code
+    }
+    machine connecting(gate: &Gate, context: &mut State, now: u64, sender: u64, receiver: u64) -> u64 reaches Kernel {
+        let status: u64 = block storage::connect_upstream(gate, context, now, sender, receiver);
+        transition status == 0u64 {
+            true -> block polled(gate, context, now)
+            _ -> (status)
+        }
+    }
+    machine polled(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+        let status: u64 = block refresh(gate, context, now);
+        0u64
+    }
+}
+// Poll when the parent rang the bell or the last snapshot left more.
+public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    transition context.has_parent {
+        true -> block due(gate, context, now)
+        _ -> (0u64)
+    }
+    machine due(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+        let rung: bool = block woken(gate, context, now);
+        transition rung || context.refresh_due {
+            true -> block refresh(gate, context, now)
+            _ -> (0u64)
+        }
+    }
+}
+// Take the bell's pending signal without waiting for one.
+machine woken(gate: &Gate, context: &mut State, now: u64) -> bool reaches Kernel {
+    transition context.parent.wake != 0u64 {
+        true -> block ringing(gate, context, now)
+        _ -> (false)
+    }
+    machine ringing(gate: &Gate, context: &mut State, now: u64) -> bool reaches Kernel {
+        let status: u64 = block Kernel::notify_wait(gate, context.parent.wake, now, 1u64);
+        status == 0u64
+    }
+}
+// One snapshot: the World adopts the parent's view and routes the one event
+// it carries, once input recipients have drained their retirement
+// boundaries. A failed exchange leaves this matrix without a view until the
+// parent grants one again; it is not this matrix's end.
+public machine refresh(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let ready: bool = registration::ready(&mut context.world);
+    transition {
+        !context.has_parent -> (0u64)
+        ready -> block polling(gate, context)
+        _ -> (owed(context))
+    }
+    machine owed(context: &mut State) -> u64 {
+        context.refresh_due = true;
+        0u64
+    }
+    machine polling(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+        let mut words: [u64; 8];
+        words[0] = MATRIX_POLL;
+        let reply: Reply = block runtime::services::main::exchange(gate, &mut context.parent, context.clock, &words);
+        transition reply {
+            Reply::Received { words } -> adopted(context, words)
+            Reply::Failed { code } -> lost(context)
+        }
+    }
+    machine adopted(context: &mut State, words: [u64; 8]) -> u64 {
+        let snapshot: [u64; 8] = words;
+        let grant: Grant = inherit_poll(&mut context.world, &snapshot);
+        context.refresh_due = geometry::valid_grant(grant) && (snapshot[5] & MORE) != 0u64;
+        0u64
+    }
+    machine lost(context: &mut State) -> u64 {
+        level::inherit(&mut context.world, geometry::no_grant());
+        context.refresh_due = false;
+        0u64
+    }
+}
+// One request to the parent on the interaction connection; a lost
+// connection is the answer.
+public machine exchange(gate: &Gate, context: &mut State, words: [u64; 8]) -> [u64; 8] reaches Kernel blocks; invokes Kernel; {
+    let request: [u64; 8] = words;
+    let reply: Reply = block runtime::services::main::exchange(gate, &mut context.parent, context.clock, &request);
+    answer(reply)
+}
+// The same request carrying a sealed image the parent gains its own right to;
+// this matrix's right stays with it.
+public machine exchange_object(gate: &Gate, context: &mut State, words: [u64; 8], image: u64) -> [u64; 8]
+    reaches Kernel blocks; invokes Kernel; {
+    let request: [u64; 8] = words;
+    let result: CallReply = block call::exchange_object(gate, &mut context.parent.broker, context.clock, &request, image);
+    transition result {
+        CallReply::Received { frame, notification } -> block received(gate, context, frame, notification)
+        CallReply::Object { frame, object } -> block stray_object(gate, context, object)
+        CallReply::Endpoint { frame, endpoint } -> block stray_endpoint(gate, context, endpoint)
+        CallReply::Failed { code } -> (error(code))
+    }
+    machine received(gate: &Gate, context: &mut State, frame: Frame, notification: u64) -> [u64; 8] reaches Kernel {
+        let reply: Reply = block runtime::services::main::received(gate, &mut context.parent, frame, notification);
+        answer(reply)
+    }
+    machine stray_object(gate: &Gate, context: &mut State, object: u64) -> [u64; 8] reaches Kernel {
+        let reply: Reply = block runtime::services::main::unexpected_object(gate, &mut context.parent, object);
+        answer(reply)
+    }
+    machine stray_endpoint(gate: &Gate, context: &mut State, endpoint: u64) -> [u64; 8] reaches Kernel {
+        let reply: Reply = block runtime::services::main::unexpected_endpoint(gate, &mut context.parent, endpoint);
+        answer(reply)
+    }
+}
+machine answer(reply: Reply) -> [u64; 8] {
+    transition reply {
+        Reply::Received { words } -> (words)
+        Reply::Failed { code } -> (error(code))
+    }
+}
+public machine watch(context: &State, set: &mut Set) {
+    transition context.has_parent && context.parent.wake != 0u64 {
+        true -> waiting::add(set, waiting::NOTIFICATION, context.parent.wake)
+        _ -> done()
+    }
+}
+public machine close(gate: &Gate, context: &mut State) reaches Kernel blocks; invokes Kernel; {
+    transition context.has_parent {
+        true -> block runtime::services::main::close(gate, &mut context.parent)
+        _ -> done()
+    }
+}
+machine error(code: u64) -> [u64; 8] {
+    let mut words: [u64; 8];
+    words[0] = code;
+    words
+}
+machine done() {}

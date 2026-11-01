@@ -1,7 +1,8 @@
 module requests::control::wire;
 
 // Recognize canonical loss before the shared LAUNCH_IMPORTS opcode. Routed
-// requests retain their first hop; the host owns the original packet and reply.
+// requests retain their first hop and whether the word configures or launches
+// from storage; the host owns the original packet and reply.
 use requests::control::operation::Request;
 use requests::control::operation::Local;
 use requests::desktop;
@@ -15,9 +16,10 @@ public machine decode(words: &[u64; 8]) -> Request {
         _ -> routed(words)
     }
     machine routed(words: &[u64; 8]) -> Request {
+        let op: u64 = words[0] & 65535u64;
         transition words[0] >> 16u64 != 0u64 {
             true -> (Request::Forward { hop: (words[0] >> 16u64) & 7u64,
-                configuration: (words[0] & 65535u64) == requests::desktop::CONFIGURE })
+                configuration: op == requests::desktop::CONFIGURE, stored: op == RUN_OBJECT })
             _ -> local(words)
         }
     }

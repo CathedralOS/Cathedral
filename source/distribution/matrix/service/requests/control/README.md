@@ -7,7 +7,8 @@ local commands and decisions. A selected slot is a local position, not authority
 
 [wire.omg](wire.omg) decodes the actual Matrix packet: canonical loss takes
 precedence over the shared imports opcode; routed requests retain their first
-hop and configuration classification. [local.omg](local.omg) checks per-operation
+hop and whether they configure or launch from storage, which sets the deadline
+the host waits for the child's answer. [local.omg](local.omg) checks per-operation
 limits, canonical syntax and occupied/standing state. Invalid requests never gain
 authority by being decoded. Pending requests block forwarding only on their own
 hop; unrelated owner work can still reach its fallback during a loss survey.

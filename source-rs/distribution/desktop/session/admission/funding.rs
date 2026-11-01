@@ -15,7 +15,7 @@ pub(super) fn assign(root: Launch) -> Result<(), Error> {
     // their replacements and lends the user matrix a reader budget of its own.
     cathedral_user_runtime::resources::assign(root, limits())?;
     root.assign_slots(capacity)?;
-    root.assign_memory((capacity + 1) * abi::MAX_ADMISSION_FRAMES as u64)?;
+    root.assign_memory((capacity + 1) * abi::ADMISSION_ALLOWANCE_FRAMES as u64)?;
     // The shell loads ordinary programs from storage, but its recovery screen
     // must remain loadable when Login itself is missing or unusable.
     #[cfg(feature = "shell")]

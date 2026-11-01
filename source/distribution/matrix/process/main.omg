@@ -3,17 +3,22 @@ module main;
 // the owner-control connection the desktop supervises it through, the display
 // connection it presents on, the source connection physical input arrives on,
 // the provider links its storage comes over, the children it funds and admits,
-// and the World that attenuates them. One turn serves the owner, the source,
-// each child's interaction and storage connections, wakes the children the
-// World has hints for, flushes owed erasures, then parks on every live
-// interest. The stock launch policy and nested
-// operation arrive slice by slice; the Rust host remains the F5 matrix until
-// this program reaches parity.
+// and the World that attenuates them. Under a parent matrix it owns the same
+// owner control, the parent's broker connection it polls for its view and
+// input and presents through, and the upstream storage connection its realm
+// comes over. One turn takes the parent's snapshot when one is due, serves the
+// owner, relays routed owner words to the children they name, serves the
+// source and each child's interaction and storage connections, wakes the
+// children the World has hints for, flushes owed erasures, then parks on
+// every live interest. The desktop mode and startup discovery arrive slice by
+// slice; the Rust host remains the F5 matrix until this program reaches parity.
 use runtime::entry::Program;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;
 use runtime::server::main::Server;
+use runtime::server::main::Ticket;
+use runtime::services::main::Services;
 use runtime::connection::main::Peer;
 use runtime::admission::main::Admitted;
 use runtime::time::Tick;
@@ -24,6 +29,8 @@ use world::launches::Launches;
 use storage::Store;
 use startup;
 use commands;
+use forward;
+use upstream;
 use source;
 use slots;
 use children;
@@ -31,6 +38,9 @@ use presentation;
 use storage;
 
 public const CHILDREN: u64 = 5u64;
+// How long a turn parks with nothing due, and with a parent's snapshot still owed.
+public const IDLE_TICKS: u64 = 1000u64;
+public const OWED_TICKS: u64 = 10u64;
 // Owner-declared policy for launches into a slot.
 public data SlotPolicy [copy] {
     images: u64;
@@ -57,11 +67,24 @@ public data Image [copy] {
     key: u64;
     object: u64;
 }
+// An owner word relayed to a child's owner control, answered when the child
+// replies; past its deadline the owner heard TIMED_OUT and the reply is drained.
+public data Forward [copy] {
+    live: bool;
+    ticket: Ticket;
+    deadline: u64;
+    late: bool;
+}
 public data State {
     owner: Server;
     source: Server;
     scene: Peer;
     has_scene: bool;
+    // The parent matrix's broker connection, when one admitted this instance,
+    // and whether its last snapshot left more to take.
+    parent: Services;
+    has_parent: bool;
+    refresh_due: bool;
     world: World;
     clock: u64;
     // The bound extent and keys of the root display.
@@ -87,6 +110,8 @@ public data State {
     staged_private: [u64; 5];
     staged_reader: [u64; 5];
     staged_frames: [u64; 5];
+    // Routed owner words pending at each child's owner control.
+    forwards: [Forward; 5];
 }
 public ProgramProvider satisfies Program {
     machine run(gate: &Gate, first: u64, second: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
@@ -106,7 +131,9 @@ machine serve(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
     }
 }
 machine turn(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    let polled: u64 = block upstream::step(gate, context, now);
     let commanded: u64 = block commands::step(gate, context, now);
+    let forwarded: u64 = block forward::step(gate, context, now);
     let sourced: u64 = block source::step(gate, context, now);
     let first: u64 = block slots::step(gate, context, 0u64, now);
     let second: u64 = block slots::step(gate, context, 1u64, now);
@@ -116,18 +143,21 @@ machine turn(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
     let stored: u64 = block storage::step(gate, context, now);
     children::notify(gate, context);
     let flushed: u64 = block presentation::flush(gate, context);
-    transition commanded == 0u64 && sourced == 0u64 && first == 0u64 && second == 0u64 && third == 0u64
-        && fourth == 0u64 && fifth == 0u64 && stored == 0u64 && flushed == 0u64 {
+    transition polled == 0u64 && commanded == 0u64 && forwarded == 0u64 && sourced == 0u64 && first == 0u64 && second == 0u64
+        && third == 0u64 && fourth == 0u64 && fifth == 0u64 && stored == 0u64 && flushed == 0u64 {
         true -> block parked(gate, context, now)
         _ -> block cleanup(gate, context, 403u64)
     }
 }
-// Park on every live interest; the wake interval only bounds the next look.
+// Park on every live interest; the wake interval only bounds the next look,
+// sooner while a parent's snapshot is still owed.
 machine parked(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
     let mut set: Set;
-    runtime::waiting::reset(&mut set, runtime::time::after(now, 1000u64));
+    runtime::waiting::reset(&mut set, runtime::time::after(now, park_ticks(context)));
     runtime::server::main::watch(&context.owner, &mut set);
     runtime::server::main::watch(&context.source, &mut set);
+    upstream::watch(context, &mut set);
+    forward::watch(context, &mut set);
     children::watch(context, 0u64, &mut set);
     children::watch(context, 1u64, &mut set);
     children::watch(context, 2u64, &mut set);
@@ -140,6 +170,12 @@ machine parked(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel
         _ -> block cleanup(gate, context, 404u64)
     }
 }
+machine park_ticks(context: &State) -> u64 {
+    transition context.refresh_due {
+        true -> (OWED_TICKS)
+        _ -> (IDLE_TICKS)
+    }
+}
 machine cleanup(gate: &Gate, context: &mut State, status: u64) -> u64 reaches Kernel {
     block children::reclaim(gate, context, 0u64);
     block children::reclaim(gate, context, 1u64);
@@ -150,6 +186,7 @@ machine cleanup(gate: &Gate, context: &mut State, status: u64) -> u64 reaches Ke
     block presentation::release_images(gate, context, 0u64);
     block runtime::server::main::close(gate, &mut context.source);
     block runtime::server::main::close(gate, &mut context.owner);
+    block upstream::close(gate, context);
     transition context.has_scene {
         true -> block scene_closed(gate, context, status)
         _ -> (status)

@@ -123,7 +123,7 @@
         "clock": true,
         "disk": true,
         "ipc_channels": 3,
-        "private_pages": 330,
+        "private_pages": 500,
         "shared_pages": 67
       }
     ],

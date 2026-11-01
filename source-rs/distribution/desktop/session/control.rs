@@ -47,7 +47,7 @@ pub(crate) fn request(matrix: &mut RootControl, words: wire::Packet) -> wire::Pa
 fn deadline(words: wire::Packet) -> u64 {
     time::after(match words[0] & 0xffff {
         wire::CONFIGURE | wire::RESOLVE_PATH => wire::CONFIGURE_DEADLINE_TICKS + 100,
-        wire::RUN_OBJECT => 3 * wire::STORAGE_DEADLINE_TICKS + 200,
+        wire::RUN_OBJECT => wire::RUN_OBJECT_DEADLINE_TICKS,
         // Storage may own the root's parent stream while a picker starts.
         wire::HEALTH => wire::STORAGE_DEADLINE_TICKS + 200,
         _ => 300,

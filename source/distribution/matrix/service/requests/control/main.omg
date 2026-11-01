@@ -8,6 +8,7 @@ use requests::control::operation::Local;
 use requests::control::operation::Operation;
 use requests::control::operation::Decision;
 use requests::control::local;
+use protocol::matrix;
 
 public machine decide(facts: &Facts, request: Request) -> Decision {
     transition facts.owner && facts.children > 0u64 && facts.children <= 7u64 {
@@ -29,7 +30,7 @@ public machine decide(facts: &Facts, request: Request) -> Decision {
     }
     machine dispatch(facts: &Facts, request: Request) -> Decision {
         transition request {
-            Request::Forward { hop, configuration } -> forward(facts, hop, configuration)
+            Request::Forward { hop, configuration, stored } -> forward(facts, hop, configuration, stored)
             Request::Configure { canonical } -> canonical_operation(canonical, Operation::Configure)
             Request::Restore { canonical } -> canonical_operation(canonical, Operation::Restore)
             Request::Fallback { canonical } -> canonical_operation(canonical, Operation::Fallback)
@@ -39,20 +40,24 @@ public machine decide(facts: &Facts, request: Request) -> Decision {
     }
 }
 
-machine forward(facts: &Facts, hop: u64, configuration: bool) -> Decision {
+machine forward(facts: &Facts, hop: u64, configuration: bool, stored: bool) -> Decision {
     transition hop > 0u64 && hop <= facts.children && hop <= 7u64 {
-        true -> pending(facts, hop - 1u64, configuration)
+        true -> pending(facts, hop - 1u64, configuration, stored)
         _ -> result(Operation::Deny)
     }
-    machine pending(facts: &Facts, slot: u64, configuration: bool) -> Decision requires slot < 7u64 {
+    machine pending(facts: &Facts, slot: u64, configuration: bool, stored: bool) -> Decision requires slot < 7u64 {
         transition (facts.pending & (1u64 << slot)) != 0u64 {
             true -> result(Operation::Busy)
-            _ -> ready(facts, slot, configuration)
+            _ -> ready(facts, slot, configuration, stored)
         }
     }
-    machine ready(facts: &Facts, slot: u64, configuration: bool) -> Decision {
-        transition configuration {
-            true -> issue(slot, facts.configure_deadline)
+    // The deadline covers the work the word names: configuration and a stored
+    // launch read through storage hops; every other routed word is answered
+    // from what the child already holds.
+    machine ready(facts: &Facts, slot: u64, configuration: bool, stored: bool) -> Decision {
+        transition {
+            configuration -> issue(slot, facts.configure_deadline)
+            stored -> issue(slot, RUN_OBJECT_DEADLINE_TICKS)
             _ -> issue(slot, 100u64)
         }
     }

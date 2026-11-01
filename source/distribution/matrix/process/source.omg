@@ -95,7 +95,7 @@ public machine cancel_streams(local: &mut World) {
 // One turn of the source listener: a departed driver leaves the slot idle.
 public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
     transition {
-        context.source.peer.fault != 0u64 -> (0u64)
+        context.source.peer.receiver == 0u64 || context.source.peer.fault != 0u64 -> (0u64)
         context.source.pending != 0u64 -> block held(gate, context, now)
         _ -> block receive(gate, context, now)
     }
