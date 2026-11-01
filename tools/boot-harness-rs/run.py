@@ -28,7 +28,7 @@ WORKSPACE = REPO / "source-rs"
 BUILD = REPO / "build" / "boot-harness-rs"
 # The kernel contract's per-task caps: private pages fund frames; reader pages
 # pin other tasks' objects, and a matrix hub needs several objects' worth.
-PAGE_LIMITS = (("private_pages", 1024), ("shared_pages", 4096))
+PAGE_LIMITS = (("private_pages", 1024), ("shared_pages", 16384))
 # The store's largest object (its MAX_BYTES): an installed program must fit one.
 # The installer refuses a larger one; reporting the margin here shows how close
 # each build sits before that happens.

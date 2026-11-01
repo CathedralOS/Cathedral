@@ -44,6 +44,10 @@ public machine picker_placed(gate: &Gate) reaches Kernel invokes Kernel; {
     let text: [u8; 64] = "Cathedral matrix: scoped picker placed over users\n              ";
     line(gate, &text);
 }
+public machine picker_retired(gate: &Gate) reaches Kernel invokes Kernel; {
+    let text: [u8; 64] = "Cathedral matrix: picker retired; user owns viewport\n           ";
+    line(gate, &text);
+}
 public machine picker_exhausted(gate: &Gate) reaches Kernel invokes Kernel; {
     let text: [u8; 64] = "Cathedral matrix: picker retries spent\n                         ";
     line(gate, &text);
@@ -102,9 +106,10 @@ public machine child(gate: &Gate, slot: u64, kind: u64, value: u64) reaches Kern
         let status: u64 = Kernel::write(gate, words, 60u64);
     }
 }
-// Where a child's admission from an image failed: the slot, then the stage
-// (1 declaration, 2 fit, 3 image grant, 4 reservation, 5 admission, 6
-// binding, 7 funding) and the code in hex.
+// Where a child's admission from an image stands: the slot, then the stage
+// (0 admitted, 1 declaration, 2 fit, 3 image grant, 4 reservation, 5 admission, 6
+// binding, 7 funding, 8 release, 9 surface ranks, 10 placement, 11 activation)
+// and the code in hex.
 public machine launch_stage(gate: &Gate, slot: u64, stage: u64, code: u64) reaches Kernel invokes Kernel; {
     let text: [u8; 25] = "Cathedral matrix: launch ";
     let mut words: [u64; 8];
@@ -128,6 +133,58 @@ public machine launch_stage(gate: &Gate, slot: u64, stage: u64, code: u64) reach
         hex(words, 44u64, code, 0u64);
         put(words, 60u64, 10u64);
         let status: u64 = Kernel::write(gate, words, 61u64);
+    }
+}
+// Funding on the console, in hex: what this matrix asks its owner for, as
+// private pages, reader pages, channels, slots and frames; and why it refused a
+// child's request (1 past the grant's ceiling, 2 not covered upstream, 3 the
+// kernel refused the growth), with the child's slot.
+public machine funding_asked(gate: &Gate, delta: [u64; 5]) reaches Kernel invokes Kernel; {
+    let text: [u8; 24] = "Cathedral matrix: fund  ";
+    let mut words: [u64; 8];
+    transition { _ -> pack(gate, &text, &mut words, 0u64, delta) }
+    machine pack(gate: &Gate, text: &[u8; 24], words: &mut [u64; 8], index: u64, delta: [u64; 5]) requires index <= 23u64 reaches Kernel {
+        transition index < 23u64 {
+            true -> byte(gate, text, words, index, delta)
+            _ -> numbered(gate, words, delta)
+        }
+    }
+    machine byte(gate: &Gate, text: &[u8; 24], words: &mut [u64; 8], index: u64, delta: [u64; 5]) requires index < 23u64 reaches Kernel {
+        words[index / 8u64] = words[index / 8u64] | ((text[index] as u64) << ((index % 8u64) * 8u64));
+        transition { _ -> pack(gate, text, words, index + 1u64, delta) }
+    }
+    machine numbered(gate: &Gate, words: &mut [u64; 8], delta: [u64; 5]) reaches Kernel {
+        short(words, 23u64, delta[0], 0u64);
+        put(words, 27u64, 32u64);
+        short(words, 28u64, delta[1], 0u64);
+        put(words, 32u64, 32u64);
+        short(words, 33u64, delta[2], 0u64);
+        put(words, 37u64, 32u64);
+        short(words, 38u64, delta[3], 0u64);
+        put(words, 42u64, 32u64);
+        short(words, 43u64, delta[4], 0u64);
+        put(words, 47u64, 10u64);
+        let status: u64 = Kernel::write(gate, words, 48u64);
+    }
+}
+public machine funding_refused(gate: &Gate, slot: u64, reason: u64) reaches Kernel invokes Kernel; {
+    let text: [u8; 64] = "Cathedral matrix: fund refused      \n                           ";
+    let mut words: [u64; 8];
+    transition { _ -> pack(gate, &text, &mut words, 0u64, slot, reason) }
+    machine pack(gate: &Gate, text: &[u8; 64], words: &mut [u64; 8], index: u64, slot: u64, reason: u64) requires index <= 37u64 reaches Kernel {
+        transition index < 37u64 {
+            true -> byte(gate, text, words, index, slot, reason)
+            _ -> numbered(gate, words, slot, reason)
+        }
+    }
+    machine byte(gate: &Gate, text: &[u8; 64], words: &mut [u64; 8], index: u64, slot: u64, reason: u64) requires index < 37u64 reaches Kernel {
+        words[index / 8u64] = words[index / 8u64] | ((text[index] as u64) << ((index % 8u64) * 8u64));
+        transition { _ -> pack(gate, text, words, index + 1u64, slot, reason) }
+    }
+    machine numbered(gate: &Gate, words: &mut [u64; 8], slot: u64, reason: u64) reaches Kernel {
+        put(words, 32u64, 48u64 + (slot & 7u64));
+        put(words, 35u64, 48u64 + (reason & 7u64));
+        let status: u64 = Kernel::write(gate, words, 37u64);
     }
 }
 // The matrix's own use in hex: private pages, reader pages and channels, as
@@ -180,6 +237,31 @@ machine short(words: &mut [u64; 8], start: u64, value: u64, digit: u64) requires
     machine placed(words: &mut [u64; 8], start: u64, value: u64, digit: u64, byte: u64) requires start <= 60u64 && digit < 4u64 {
         put(words, start + digit, byte);
         transition { _ -> short(words, start, value, digit + 1u64) }
+    }
+}
+// A storage link this matrix retired, which source and why, in hex: a
+// parent's link (2) cannot be remade, so its loss ends this matrix's storage.
+public machine storage_lost(gate: &Gate, link: u64, code: u64) reaches Kernel invokes Kernel; {
+    let text: [u8; 31] = "Cathedral matrix: storage lost ";
+    let mut words: [u64; 8];
+    transition { _ -> pack(gate, &text, &mut words, 0u64, link, code) }
+    machine pack(gate: &Gate, text: &[u8; 31], words: &mut [u64; 8], index: u64, link: u64, code: u64) requires index <= 31u64 reaches Kernel {
+        transition index < 31u64 {
+            true -> byte(gate, text, words, index, link, code)
+            _ -> numbered(gate, words, link, code)
+        }
+    }
+    machine byte(gate: &Gate, text: &[u8; 31], words: &mut [u64; 8], index: u64, link: u64, code: u64) requires index < 31u64 reaches Kernel {
+        let word: u64 = index / 8u64;
+        words[word] = words[word] | ((text[index] as u64) << ((index % 8u64) * 8u64));
+        transition { _ -> pack(gate, text, words, index + 1u64, link, code) }
+    }
+    machine numbered(gate: &Gate, words: &mut [u64; 8], link: u64, code: u64) reaches Kernel {
+        put(words, 31u64, 48u64 + (link & 7u64));
+        put(words, 32u64, 32u64);
+        hex(words, 33u64, code, 0u64);
+        put(words, 49u64, 10u64);
+        let status: u64 = Kernel::write(gate, words, 50u64);
     }
 }
 // A child's launch this matrix refused, with the code in hex.

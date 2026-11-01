@@ -3,13 +3,17 @@ module slots;
 // left: stop, collect and release it and drop its view. Service acquisition goes
 // to the runtime's offer, surface and batch words to presentation (a sealed
 // attachment is accepted only behind an image word), a launch and its receipt
-// query to the stored launches, a request for more funding to the funding, every other 64-byte request to the World
+// query to the stored launches, a request for more funding to the funding,
+// the chrome's app entries and selection to the workspace, every other 64-byte request to the World
 // under the connection's incarnation; shorter requests are denied.
 use protocol::main;
 use protocol::matrix;
 use protocol::services::ACQUIRE;
 use policy::requests::desktop::LAUNCH;
-use main::State;
+use policy::requests::desktop::APP_ENTRY;
+use policy::requests::desktop::SELECT_APP;
+use policy::requests::desktop::APPLY_LAYOUT;
+use shared::state::State;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;
@@ -19,10 +23,11 @@ use runtime::connection::main::Frame;
 use runtime::admission::offer;
 use world::main::request;
 use world::geometry::zeros_from;
-use children;
-use presentation;
+use lifecycle;
+use connections::presentation;
 use stored;
 use funding;
+use workspace;
 
 public machine step(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
     transition {
@@ -33,7 +38,7 @@ public machine step(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u6
     }
 }
 machine departed(gate: &Gate, context: &mut State, slot: u64 [0..=4]) -> u64 reaches Kernel {
-    block children::reclaim(gate, context, slot);
+    block lifecycle::reclaim(gate, context, slot);
     0u64
 }
 machine held(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64) -> u64 reaches Kernel {
@@ -67,6 +72,9 @@ machine routed(gate: &Gate, context: &mut State, slot: u64 [0..=4], frame: Frame
         frame.payload[0] == LAUNCH -> block launching(gate, context, slot, issued, frame, incarnation, now)
         frame.payload[0] == LAUNCH_STATUS && zeros_from(&frame.payload, 2u64) -> block observing(gate, context, slot, issued, frame, incarnation)
         frame.payload[0] == FUND -> block funding(gate, context, slot, issued, frame, now)
+        frame.payload[0] == APP_ENTRY -> block answered(gate, context, slot, issued, workspace::entry(context, slot, incarnation, frame.payload))
+        frame.payload[0] == SELECT_APP -> block selecting(gate, context, slot, issued, frame, incarnation)
+        frame.payload[0] == APPLY_LAYOUT -> block arranging(gate, context, slot, issued, frame, incarnation)
         _ -> block asked(gate, context, slot, issued, frame, incarnation)
     }
 }
@@ -76,6 +84,14 @@ machine launching(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: T
 }
 machine funding(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket, frame: Frame, now: u64) -> u64 reaches Kernel {
     let reply: [u64; 8] = block funding::fund(gate, context, now, slot, frame.payload);
+    block answered(gate, context, slot, issued, reply)
+}
+machine arranging(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket, frame: Frame, incarnation: u64) -> u64 reaches Kernel {
+    let reply: [u64; 8] = block workspace::apply_layout(gate, context, slot, incarnation, frame.payload);
+    block answered(gate, context, slot, issued, reply)
+}
+machine selecting(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket, frame: Frame, incarnation: u64) -> u64 reaches Kernel {
+    let reply: [u64; 8] = block workspace::select(gate, context, slot, incarnation, frame.payload);
     block answered(gate, context, slot, issued, reply)
 }
 machine observing(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket, frame: Frame, incarnation: u64) -> u64 reaches Kernel {

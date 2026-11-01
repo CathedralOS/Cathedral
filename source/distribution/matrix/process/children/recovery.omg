@@ -3,7 +3,7 @@ module recovery;
 // user or background that failed queues the policy's bounded replay, which
 // the next turn's realm step consumes; a clean exit, an owner's stop and an
 // owner-run login leave nothing to replay.
-use main::State;
+use shared::state::State;
 use runtime::task::main::Exit;
 use policy::children::startup::main::ChildRole;
 use policy::children::startup::main::Context;

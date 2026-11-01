@@ -40,7 +40,7 @@ pub(super) fn limits() -> cathedral_user_runtime::resources::Limits {
             45
         },
         reader_pages: if cfg!(feature = "shell") {
-            4096
+            16384
         } else if cfg!(feature = "notes") {
             153
         } else {

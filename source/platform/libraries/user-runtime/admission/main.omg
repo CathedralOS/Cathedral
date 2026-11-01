@@ -6,6 +6,8 @@ module admission::main;
 // authenticates each of them. Policy such as slots, roles and restarts stays
 // with the provider. Wire owner: source-rs/platform/libraries/user-runtime/matrix/admission/.
 use kernel::Gate;
+use time;
+use time::Tick;
 use kernel::Kernel;
 use kernel;
 use ipc::main::Channel;
@@ -39,22 +41,24 @@ public data Admitted {
 
 // The child starts with `argument` and the lent launches; admission supplies its
 // two broker endpoints. Interaction is required; storage is the only other service.
-// `deadline` bounds the child's service handshake; `objects` admits sealed requests.
+// `window` ticks on `clock`, counted once the child exists, bound its service
+// handshake, so loading a large image does not eat into it; `objects` admits
+// sealed requests.
 public machine admit(gate: &Gate, child: &mut Admitted, launch: u64, argument: u64,
-    loans: &[u64; 14], loan_count: u64 [0..=14], granted: u64, deadline: u64, objects: bool) -> u64
+    loans: &[u64; 14], loan_count: u64 [0..=14], granted: u64, clock: u64, window: u64 [0..=9223372036854775807], objects: bool) -> u64
     reaches Kernel blocks invokes Kernel {
     transition !child.live && child.listener.peer.sender == 0u64 && child.listener.peer.receiver == 0u64
         && (granted == INTERACTION || granted == (INTERACTION | STORAGE)) {
-        true -> block allocate(gate, child, launch, argument, loans, loan_count, granted, deadline, objects)
+        true -> block allocate(gate, child, launch, argument, loans, loan_count, granted, clock, window, objects)
         _ -> (kernel::INVALID_ARGUMENT)
     }
 }
 machine allocate(gate: &Gate, child: &mut Admitted, launch: u64, argument: u64,
-    loans: &[u64; 14], loan_count: u64 [0..=14], granted: u64, deadline: u64, objects: bool) -> u64 reaches Kernel {
+    loans: &[u64; 14], loan_count: u64 [0..=14], granted: u64, clock: u64, window: u64 [0..=9223372036854775807], objects: bool) -> u64 reaches Kernel {
     child.granted = granted;
     let status: u64 = bundle(gate, child, granted);
     transition status == 0u64 {
-        true -> block spawn(gate, child, launch, argument, loans, loan_count, deadline, objects)
+        true -> block spawn(gate, child, launch, argument, loans, loan_count, clock, window, objects)
         _ -> block failed(gate, child, status)
     }
 }
@@ -116,25 +120,33 @@ machine bundle(gate: &Gate, child: &mut Admitted, granted: u64) -> u64 reaches K
     }
 }
 machine spawn(gate: &Gate, child: &mut Admitted, launch: u64, argument: u64,
-    loans: &[u64; 14], loan_count: u64 [0..=14], deadline: u64, objects: bool) -> u64 reaches Kernel {
+    loans: &[u64; 14], loan_count: u64 [0..=14], clock: u64, window: u64 [0..=9223372036854775807], objects: bool) -> u64 reaches Kernel {
     let mut endpoints: [u64; 5];
     endpoints[0] = child.handoff[0];
     endpoints[1] = child.handoff[1];
     let ticket: u64 = block task::main::spawn(gate, launch, argument, &endpoints, 2u64, loans, loan_count);
     transition ticket < kernel::ERROR_BASE {
-        true -> block moved(gate, child, launch, ticket, deadline, objects)
+        true -> block moved(gate, child, launch, ticket, clock, window, objects)
         _ -> block failed(gate, child, ticket)
     }
     // The broker endpoints now belong to the child; only our names are gone.
-    machine moved(gate: &Gate, child: &mut Admitted, launch: u64, ticket: u64, deadline: u64, objects: bool) -> u64 reaches Kernel {
+    machine moved(gate: &Gate, child: &mut Admitted, launch: u64, ticket: u64, clock: u64, window: u64 [0..=9223372036854775807], objects: bool) -> u64 reaches Kernel {
         child.task = ticket;
         child.live = true;
         child.handoff[0] = 0u64;
         child.handoff[1] = 0u64;
         let control: Control = task::main::control(gate, launch);
         transition control {
-            Control::Ready { channel } -> block listen(gate, child, channel, deadline, objects)
+            Control::Ready { channel } -> block timed(gate, child, channel, clock, window, objects)
             Control::Failed { code } -> block undo(gate, child, code)
+        }
+    }
+    machine timed(gate: &Gate, child: &mut Admitted, control: Channel, clock: u64, window: u64 [0..=9223372036854775807], objects: bool) -> u64
+        reaches Kernel {
+        let tick: Tick = time::read(gate, clock);
+        transition tick {
+            Tick::Read { value } -> block listen(gate, child, control, time::after(value, window), objects)
+            Tick::Failed { code } -> block undo(gate, child, code)
         }
     }
     machine listen(gate: &Gate, child: &mut Admitted, control: Channel, deadline: u64, objects: bool) -> u64 reaches Kernel {

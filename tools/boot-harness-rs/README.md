@@ -374,6 +374,8 @@ then runs the whole F5 desktop test over the Omega matrices, which measures
 how far the Omega stock matrix is from replacing the Rust host. Every stock
 matrix in the realm, the nested desktops and their templates included, is the
 Omega program in that composition, so the store shares one image between them.
+`CATHEDRAL_CHECK_FRAMES=1` keeps the frame each passed check of the desktop test
+saw, numbered in order beside the failure's screenshot.
 
 ## Integrated matrix desktop
 

@@ -45,7 +45,7 @@ pub const MAX_PRIVATE_PAGES: usize = 1024;
 /// any one object: it retains every image its subtree shows, holds old and new
 /// during each replacement, and lends the same kind of budget to each nested
 /// matrix below it.
-pub const MAX_READER_PAGES: usize = 4096;
+pub const MAX_READER_PAGES: usize = 16384;
 /// Separate metadata limits: larger page grants must not buy every global slot.
 /// A matrix or the compositor retains one sealed image per surface it shows
 /// and holds its replacement beside it, including images below nested matrices.
@@ -83,7 +83,7 @@ mod tests {
     fn larger_objects_preserve_account_caps_and_mapping_guards() {
         assert_eq!(MAX_PAGES * PAGE_BYTES, 2 * 1024 * 1024);
         assert_eq!(MAX_PRIVATE_PAGES, 1024);
-        assert_eq!(MAX_READER_PAGES, 4096);
+        assert_eq!(MAX_READER_PAGES, 16384);
         assert_eq!(
             address(1) - address(0),
             ((MAX_PAGES + 1) * PAGE_BYTES) as u64

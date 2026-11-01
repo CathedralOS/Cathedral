@@ -155,9 +155,8 @@ public machine start(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=
     machine spawned(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=2], launch: u64, argument: u64) -> u64 reaches Kernel {
         let loans: [u64; 14];
         level::disconnected(&mut context.world, slot);
-        let deadline: u64 = runtime::time::after(now, 300u64);
         block runtime::admission::main::admit(gate, &mut context.slots[slot], launch, argument,
-            &loans, 0u64, services(slot), deadline, false)
+            &loans, 0u64, services(slot), context.clock, 300u64, false)
     }
 }
 // Each slot owns a third of the area, stacked vertically, with the full key set.

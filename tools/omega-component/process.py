@@ -13,7 +13,7 @@ import subprocess
 import sys
 
 COMPILER_MEMORY = 12 * 1024**3
-COMPILER_TIMEOUT = 300
+COMPILER_TIMEOUT = 1200
 
 
 def run(command, **kwargs):

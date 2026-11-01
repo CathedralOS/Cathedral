@@ -7,8 +7,8 @@ module forward;
 // takes no further routed word until it has been.
 use protocol::main;
 use protocol::matrix;
-use main::State;
-use main::Forward;
+use shared::state::State;
+use shared::state::Forward;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;
@@ -45,6 +45,13 @@ machine begin(gate: &Gate, context: &mut State, now: u64, words: [u64; 8], slot:
         _ -> block reply(gate, context, error(kernel::DENIED))
     }
     machine occupied_slot(gate: &Gate, context: &mut State, now: u64, words: [u64; 8], slot: u64 [0..=4], ticks: u64) -> u64
+        reaches Kernel requires ticks < 0x8000000000000000u64 {
+        transition context.slots[slot].live && context.opening[slot] != 0u64 {
+            true -> block reply(gate, context, error(kernel::BUSY))
+            _ -> block live_slot(gate, context, now, words, slot, ticks)
+        }
+    }
+    machine live_slot(gate: &Gate, context: &mut State, now: u64, words: [u64; 8], slot: u64 [0..=4], ticks: u64) -> u64
         reaches Kernel requires ticks < 0x8000000000000000u64 {
         transition context.slots[slot].live {
             true -> block sending(gate, context, now, words, slot, ticks)

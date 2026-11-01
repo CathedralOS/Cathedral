@@ -1,0 +1,186 @@
+module state;
+// What every part of the stock matrix process shares: one State holding the
+// owner, display and source connections, the parent's broker, the World,
+// the storage, each child slot's admission, policy, funding and batch, the
+// workspace's instances and the realm setup's progress.
+use runtime::server::main::Server;
+use runtime::server::main::Ticket;
+use runtime::services::main::Services;
+use runtime::connection::main::Peer;
+use runtime::admission::main::Admitted;
+use world::level::World;
+use policy::children::launch::resources::funding::Funding;
+use policy::children::workspace::catalogue::Catalogue;
+use world::batch::Batch;
+use world::launches::Launches;
+use world::management::Management;
+use world::geometry::Rect;
+use policy::children::startup::main::Startup;
+use policy::children::launch::resources::recipes::Offer;
+use world::scopes::Scopes;
+use policy::children::startup::realm::operations::Setup;
+use policy::children::startup::realm::operations::Command;
+
+public const CHILDREN: u64 = 5u64;
+// Owner-declared policy for launches into a slot.
+public data SlotPolicy [copy] {
+    images: u64;
+    private_pages: u64;
+    reader_pages: u64;
+    channels: u64;
+    descendants: u64;
+    cpu: u64;
+    surfaces: u64;
+    placed: bool;
+    x: u64;
+    y: u64;
+    width: u64;
+    height: u64;
+    keys: u64;
+    // The services a launch into the slot is offered, once the owner set them.
+    imports: u64;
+    imports_set: bool;
+    // Whether LAUNCH_POLICY opened the slot to children's launches.
+    standing: bool;
+}
+// A sealed image held behind the compositor tile it was last shown on.
+public data Image [copy] {
+    key: u64;
+    object: u64;
+}
+// The realm's saved Matrix record as configuration read it, with the bottom
+// bar and workspace validated from its geometry over this matrix's view.
+public data Saved [copy] {
+    valid: bool;
+    launcher: [u64; 4];
+    launcher_pages: u64;
+    app_pages: u64;
+    app_readers: u64;
+    margin: u64;
+    launcher_height: u64;
+    gap: u64;
+    app_surfaces: u64;
+    keys: u64;
+    chrome: Rect;
+    workspace: Rect;
+}
+// An owner word relayed to a child's owner control, answered when the child
+// replies; past its deadline the owner heard TIMED_OUT and the reply is drained.
+public data Forward [copy] {
+    live: bool;
+    ticket: Ticket;
+    deadline: u64;
+    late: bool;
+}
+// One realm job in progress: which job, the policy's setup record for it and,
+// while a job it started runs, the command waiting for that job's result.
+public data Frame {
+    job: u64;
+    setup: Setup;
+    waiting: bool;
+    command: Command;
+}
+public data State {
+    owner: Server;
+    source: Server;
+    scene: Peer;
+    has_scene: bool;
+    // The parent matrix's broker connection, when one admitted this instance,
+    // and whether its last snapshot left more to take.
+    parent: Services;
+    has_parent: bool;
+    refresh_due: bool;
+    world: World;
+    clock: u64;
+    // The bound extent and keys of the root display.
+    width: u64;
+    height: u64;
+    keys: u64;
+    policies: [SlotPolicy; 5];
+    // Each child's staged presentation batch, the sealed images retained
+    // behind compositor tiles, and the compositor transaction revision.
+    batches: [Batch; 5];
+    images: [Image; 64];
+    revision: u64;
+    // Provider links, bindings and each child's storage connection.
+    store: Store;
+    // Each child's receipt for its latest launch.
+    observations: Launches;
+    // Admitted children, this matrix's client to each one's owner control, the
+    // launch each was reserved under, how far each may grow by asking, and the
+    // allowances staged for the next launch into each slot.
+    slots: [Admitted; 5];
+    controls: [Peer; 5];
+    // When each child's owner control must have finished opening; zero once
+    // it has, or when none is opening.
+    opening: [u64; 5];
+    reservations: [u64; 5];
+    // Reservations of ended children the kernel would not take back yet,
+    // retried until it does: it refuses while their frames are still charged.
+    releasing: [u64; 5];
+    funding: [Funding; 5];
+    // The workspace's app instances and the active one.
+    catalogue: Catalogue;
+    staged_private: [u64; 5];
+    staged_reader: [u64; 5];
+    staged_frames: [u64; 5];
+    // Routed owner words pending at each child's owner control.
+    forwards: [Forward; 5];
+    // Realm setup: the startup recovery policy's state, whether the owner now
+    // drives setup, whether a workspace stands and whether this matrix runs
+    // its own login, what discovery and configuration found, the image and
+    // offer a job holds, what the last admission granted and allotted, the
+    // chrome's delegations, the recovery words the owner recorded and the
+    // bindings RESTORE_STORAGE remakes.
+    startup: Startup;
+    // Realm jobs in progress, outermost first, advanced one command per turn;
+    // whether the owner's CONFIGURE waits for its own job's result, or for the
+    // jobs ahead of it, and the reply it waits with.
+    frames: [Frame; 3];
+    frame_count: u64 [0..=3];
+    configure_held: bool;
+    configure_queued: bool;
+    configure_ticket: Ticket;
+    hosted: bool;
+    desktop: bool;
+    login: bool;
+    saved: Saved;
+    config_object: u64;
+    launcher_object: u64;
+    background_object: u64;
+    picker_object: u64;
+    users_object: u64;
+    picker_mode: u64;
+    picker_offer: Offer;
+    image: u64;
+    image_length: u64;
+    last_granted: u64;
+    allotted_surfaces: u64;
+    allotted_descendants: u64;
+    allotted_profiled: bool;
+    managers: Management;
+    fallback_image: u64;
+    fallback_argument: u64;
+    recovery_grants: u64;
+    saved_source: [u64; 5];
+    saved_scope: [u64; 5];
+    saved_bound: [bool; 5];
+}
+// This matrix's storage: the provider links at the root or the upstream
+// connection under a parent, the scopes bound over them and each child's
+// storage listener.
+public data Store {
+    root: bool;
+    handles: [u64; 2];
+    links: [Peer; 3];
+    linked: [bool; 3];
+    failed: u64;
+    scopes: Scopes;
+    listeners: [Server; 5];
+    // Under a parent: whether its storage connection was supplied, and the
+    // binding revision and realm it last reported, once asked.
+    has_upstream: bool;
+    informed: bool;
+    revision: u64;
+    realm: u64;
+}

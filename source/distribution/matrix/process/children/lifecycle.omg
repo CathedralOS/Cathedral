@@ -1,4 +1,4 @@
-module children;
+module lifecycle;
 // Children this matrix funds and admits itself. RUN_PAGES and RUN_MEMORY stage
 // the next launch's allowances for a slot; RUN reserves a launch for an image
 // from the owner's catalogue under those allowances, admits the child through
@@ -10,7 +10,7 @@ use protocol::main;
 use protocol::matrix;
 use protocol::services::INTERACTION;
 use protocol::services::STORAGE;
-use main::State;
+use shared::state::State;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;
@@ -22,10 +22,11 @@ use runtime::waiting::Set;
 use world::level;
 use world::launches;
 use world::geometry::zeros_from;
-use storage;
-use presentation;
+use connections::storage;
+use connections::presentation;
 use recovery;
-use report;
+use shared::report;
+use workspace;
 use policy::children::launch::resources::funding::Funding;
 
 // How long a child has to complete each startup handshake, as the Rust host allows.
@@ -170,17 +171,26 @@ public machine admit_reserved(gate: &Gate, context: &mut State, now: u64, slot: 
         let loans: [u64; 14];
         level::disconnected(&mut context.world, slot);
         let status: u64 = block runtime::admission::main::admit(gate, &mut context.slots[slot], launch, argument,
-            &loans, 0u64, granted, runtime::time::after(now, HANDSHAKE_TICKS), true);
+            &loans, 0u64, granted, context.clock, HANDSHAKE_TICKS, true);
         transition status == 0u64 {
-            true -> block controlling(gate, context, now, slot, launch)
+            true -> block admitted_now(gate, context, slot, launch)
             _ -> refused(gate, launch, status)
         }
     }
-    // The child accepts its owner control as its first act and only then asks
-    // the broker for services, so this matrix connects to that control before
-    // anything else can wait on the child. The connection takes custody of the
-    // kernel-installed pair either way; a slot's previous occupant left its
-    // client closed, so a fresh one stands first.
+    // The owner-control window, like the service handshake's, starts once the child exists.
+    machine admitted_now(gate: &Gate, context: &mut State, slot: u64 [0..=4], launch: u64) -> u64 reaches Kernel {
+        let tick: Tick = runtime::time::read(gate, context.clock);
+        transition tick {
+            Tick::Read { value } -> block controlling(gate, context, value, slot, launch)
+            Tick::Failed { code } -> block uncontrolled(gate, context, slot, launch, code)
+        }
+    }
+    // The child's owner control opens without blocking: a host with
+    // descendants sets up its broker services before it accepts control, so
+    // this matrix sends the hello and keeps serving, and each turn finishes
+    // the handshake once the child answers, within the handshake window. The
+    // connection takes custody of the kernel-installed pair either way; a
+    // slot's previous occupant left its client closed, so a fresh one stands first.
     machine controlling(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64) -> u64 reaches Kernel {
         let sender: u64 = context.slots[slot].control.sender;
         let receiver: u64 = context.slots[slot].control.receiver;
@@ -188,15 +198,14 @@ public machine admit_reserved(gate: &Gate, context: &mut State, now: u64, slot: 
         context.slots[slot].control.receiver = 0u64;
         let fresh: Peer;
         context.controls[slot] = fresh;
-        let status: u64 = block runtime::connection::main::connect(gate, &mut context.controls[slot], sender, receiver,
-            runtime::time::after(now, HANDSHAKE_TICKS));
+        let status: u64 = block runtime::connection::main::connect_start(gate, &mut context.controls[slot], sender, receiver);
         transition status == 0u64 {
             true -> block controlled(gate, context, now, slot, launch)
             _ -> block uncontrolled(gate, context, slot, launch, status)
         }
     }
     machine controlled(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64) -> u64 reaches Kernel {
-        report::child_control_ready(gate);
+        context.opening[slot] = runtime::time::after(now, HANDSHAKE_TICKS);
         block storing(gate, context, now, slot, launch)
     }
     // The child's storage connection is served from admission on, whenever it
@@ -259,6 +268,7 @@ public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reac
         _ -> done()
     }
     machine stopping(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+        context.opening[slot] = 0u64;
         let closed: u64 = block runtime::connection::main::close(gate, &mut context.controls[slot]);
         block storage::retire(gate, context, slot);
         block presentation::release_slot(gate, context, slot);
@@ -268,10 +278,13 @@ public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reac
         recovery::retired(context, slot, exit);
         let observer: u64 = launches::finished(&mut context.observations, task, outcome_of(exit));
         launches::disconnected(&mut context.observations, slot);
-        let ignored: u64 = runtime::task::main::release(gate, context.reservations[slot]);
+        let launch: u64 = context.reservations[slot];
+        retire_reservation(gate, context, slot, launch);
+        sweep_returned(gate);
         context.reservations[slot] = 0u64;
         context.funding[slot] = Funding::Fixed;
         level::disconnected(&mut context.world, slot);
+        block workspace::retired(gate, context, slot);
     }
 }
 // What a requester's receipt reports for the ended child.
@@ -332,8 +345,15 @@ machine wake(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel
 }
 public machine watch(context: &State, slot: u64 [0..=4], set: &mut Set) {
     transition context.slots[slot].live {
-        true -> runtime::server::main::watch(&context.slots[slot].listener, set)
+        true -> watched(context, slot, set)
         _ -> done()
+    }
+    machine watched(context: &State, slot: u64 [0..=4], set: &mut Set) {
+        runtime::server::main::watch(&context.slots[slot].listener, set);
+        transition context.opening[slot] != 0u64 && context.controls[slot].receiver != 0u64 {
+            true -> runtime::waiting::add(set, runtime::waiting::IPC, context.controls[slot].receiver)
+            _ -> done()
+        }
     }
 }
 machine reply(gate: &Gate, context: &mut State, words: [u64; 8]) -> u64 reaches Kernel {
@@ -349,3 +369,125 @@ machine ok() -> [u64; 8] {
     words
 }
 machine done() {}
+// Finish opening each child's owner control once the child answers; a child
+// that never does within the window is taken back down.
+public machine open_controls(gate: &Gate, context: &mut State, now: u64) reaches Kernel blocks; invokes Kernel; {
+    block opening_slot(gate, context, now, 0u64, 1u64);
+    block opening_slot(gate, context, now, 1u64, 1u64);
+    block opening_slot(gate, context, now, 2u64, 1u64);
+    block opening_slot(gate, context, now, 3u64, 1u64);
+    block opening_slot(gate, context, now, 4u64, 1u64);
+}
+// A child just admitted gets a short wait for its answer before this matrix
+// starts longer work in the same turn: an ordinary app accepts its owner
+// control at once and holds that handshake to its own window, which a long
+// scene switch here would otherwise outlast. A host that sets up its
+// services first answers on a later turn.
+public machine open_control(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4]) reaches Kernel blocks; invokes Kernel; {
+    block opening_slot(gate, context, now, slot, FIRST_ANSWER_TICKS);
+}
+// How long a just-admitted child's first answer is waited for.
+const FIRST_ANSWER_TICKS: u64 = 30u64;
+machine opening_slot(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], window: u64) reaches Kernel {
+    let deadline: u64 = context.opening[slot];
+    transition {
+        deadline == 0u64 -> done()
+        !context.slots[slot].live -> forgotten(context, slot)
+        runtime::time::reached(now, deadline) -> block abandoned(gate, context, slot)
+        window < 0x8000000000000000u64 -> block probed(gate, context, now, slot, deadline, window)
+        _ -> done()
+    }
+    machine forgotten(context: &mut State, slot: u64 [0..=4]) {
+        context.opening[slot] = 0u64;
+    }
+    machine probed(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], deadline: u64, window: u64) reaches Kernel
+        requires window < 0x8000000000000000u64 {
+        let status: u64 = block runtime::connection::setup::ready(gate, context.controls[slot].receiver, runtime::time::after(now, window));
+        let answered: bool = status == 0u64;
+        transition answered {
+            true -> block finishing(gate, context, slot, deadline)
+            _ -> done()
+        }
+    }
+    machine finishing(gate: &Gate, context: &mut State, slot: u64 [0..=4], deadline: u64) reaches Kernel {
+        let status: u64 = block runtime::connection::main::connect_resume(gate, &mut context.controls[slot], deadline);
+        context.opening[slot] = 0u64;
+        transition status == 0u64 {
+            true -> report::child_control_ready(gate)
+            _ -> block reclaim(gate, context, slot)
+        }
+    }
+    machine abandoned(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+        context.opening[slot] = 0u64;
+        block reclaim(gate, context, slot);
+    }
+}
+// An ended child's reservation goes back to this matrix. The kernel refuses
+// while the child's frames are still charged, which retained images and its
+// own deferred reclamation keep for a while after the exit; such a
+// reservation waits in `releasing` and is retried each turn and before any
+// funding is reckoned, so what it held is never stranded.
+machine retire_reservation(gate: &Gate, context: &mut State, slot: u64 [0..=4], launch: u64) reaches Kernel {
+    settle_slot(gate, context, slot);
+    let released: u64 = runtime::task::main::release(gate, launch);
+    transition released == kernel::BUSY && launch != 0u64 {
+        true -> parked(context, slot, launch)
+        _ -> unreleased(gate, slot, released)
+    }
+    machine parked(context: &mut State, slot: u64 [0..=4], launch: u64) {
+        context.releasing[slot] = launch;
+    }
+}
+// An ended host's descendant reservations come back to this matrix under
+// fresh local names. Each one the kernel takes back is released; live and
+// static launches refuse and are passed over, as are any still charged.
+public machine sweep_returned(gate: &Gate) reaches Kernel invokes Kernel; {
+    sweeping(gate, 0u64, 0u64);
+}
+machine sweeping(gate: &Gate, index: u64, attempts: u64) reaches Kernel requires index <= RETURNED_LAUNCHES && attempts <= RETURNED_LAUNCHES {
+    let launch: u64 = runtime::task::main::launch(gate, index);
+    transition index < RETURNED_LAUNCHES && attempts < RETURNED_LAUNCHES && launch < kernel::ERROR_BASE {
+        true -> released_at(gate, index, attempts, runtime::task::main::release(gate, launch))
+        _ -> done()
+    }
+    // A released launch's index now names the next one.
+    machine released_at(gate: &Gate, index: u64, attempts: u64, status: u64) reaches Kernel
+        requires index < RETURNED_LAUNCHES && attempts < RETURNED_LAUNCHES {
+        transition status == 0u64 {
+            true -> sweeping(gate, index, attempts + 1u64)
+            _ -> sweeping(gate, index + 1u64, attempts + 1u64)
+        }
+    }
+}
+// More launches than one process can hold.
+const RETURNED_LAUNCHES: u64 = 32u64;
+public machine settle(gate: &Gate, context: &mut State) reaches Kernel invokes Kernel; {
+    settle_slot(gate, context, 0u64);
+    settle_slot(gate, context, 1u64);
+    settle_slot(gate, context, 2u64);
+    settle_slot(gate, context, 3u64);
+    settle_slot(gate, context, 4u64);
+}
+machine settle_slot(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+    transition context.releasing[slot] != 0u64 {
+        true -> settling(gate, context, slot, runtime::task::main::release(gate, context.releasing[slot]))
+        _ -> done()
+    }
+    machine settling(gate: &Gate, context: &mut State, slot: u64 [0..=4], status: u64) reaches Kernel {
+        transition status == kernel::BUSY {
+            true -> done()
+            _ -> released(gate, context, slot, status)
+        }
+    }
+    machine released(gate: &Gate, context: &mut State, slot: u64 [0..=4], status: u64) reaches Kernel {
+        context.releasing[slot] = 0u64;
+        unreleased(gate, slot, status);
+    }
+}
+// Anything else the kernel says about a release goes to the console.
+machine unreleased(gate: &Gate, slot: u64, status: u64) reaches Kernel invokes Kernel; {
+    transition status == 0u64 {
+        true -> done()
+        _ -> report::launch_stage(gate, slot, 8u64, status)
+    }
+}

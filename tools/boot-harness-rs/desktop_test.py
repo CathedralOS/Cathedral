@@ -72,8 +72,13 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
             send([{'type': 'btn', 'data': {'button': 'left', 'down': down}}])
             time.sleep(0.08)
 
+    # CATHEDRAL_CHECK_FRAMES=1 keeps the frame each passed check saw, numbered
+    # in order, so a failure can be traced back through the screens before it.
+    check_frames = os.environ.get('CATHEDRAL_CHECK_FRAMES') == '1'
+    passed_checks = 0
+
     def scan(check, description):
-        nonlocal motion_step
+        nonlocal motion_step, passed_checks
         deadline = time.monotonic() + (120 if nested_desktop or latency or soak else 45)
         while True:
             if pointer_stress:
@@ -91,6 +96,10 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
             width, height, data = pointer_test.read_scanout(stream, output)
             if check(width, data):
                 capture.save_png(output, width, height, data)
+                if check_frames:
+                    passed_checks += 1
+                    label = ''.join(c if c.isalnum() else '-' for c in description)[:48]
+                    capture.save_png(output, width, height, data, f'check-{passed_checks:03}-{label}.png')
                 return
             if time.monotonic() >= deadline:
                 capture.save_png(output, width, height, data)

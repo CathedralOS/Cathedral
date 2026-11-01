@@ -114,7 +114,7 @@
         "argument": 0,
         "ipc_channels": 224,
         "private_pages": 1024,
-        "shared_pages": 4096
+        "shared_pages": 16384
       },
       {
         "package": "cathedral-storage-service",

@@ -11,6 +11,9 @@ rights; releasing a producer never remotely removes an accepted reader.
 
 [connection/main.omg](connection/main.omg) owns a v4 client connection: setup,
 one outstanding request, mailbox/notification reconciliation and final cleanup.
+Setup also opens in two steps for a caller that keeps serving while the peer
+gets round to answering: the hello goes out without waiting, and the handshake
+resumes once the peer's first reply is ready.
 Descend into `setup.omg` for the existing Rust-compatible handshake,
 `mailbox.omg` for sequence/acknowledgement publication, `incoming.omg` for typed
 grant correlation and bounded partial replies, and `custody.omg` for release.
@@ -102,7 +105,9 @@ control, then begin the child's listener on the retained provider ends. Every
 failed phase releases exactly what this task still holds; a child that exists
 when a later phase fails is cancelled and collected first. `stop` cancels,
 collects and releases; `release` alone closes whatever remains. The caller
-chooses the launch, argument, loans, granted services and admission deadline.
+chooses the launch, argument, loans, granted services, and the clock and window
+of the child's service handshake, which start once the child exists, so loading a
+large image does not eat into them.
 Interaction is required and storage is the only other service; input producers
 and capture are not offered here. [admission/offer.omg](admission/offer.omg)
 answers a child's acquisition from the rights preallocated at admission, using

@@ -13,32 +13,42 @@ use time::Tick;
 
 public machine connect(gate: &Gate, peer: &mut Peer, deadline: u64) -> u64
     reaches Kernel blocks invokes Kernel {
+    let status: u64 = block start(gate, peer);
+    transition status == 0u64 {
+        true -> block resume(gate, peer, deadline)
+        _ -> (status)
+    }
+}
+// The client's first step, which never waits: the writer, the bell and the
+// hello. A caller that must keep serving while the peer gets round to
+// answering resumes once the peer's first reply is ready.
+public machine start(gate: &Gate, peer: &mut Peer) -> u64 reaches Kernel blocks invokes Kernel {
     let allocation: Allocation = block memory::main::allocate(gate, 1u64);
     transition allocation {
-        Allocation::Ready { writer } -> block allocated(gate, peer, deadline, writer)
+        Allocation::Ready { writer } -> allocated(gate, peer, writer)
         Allocation::Failed { code } -> (code)
     }
-    machine allocated(gate: &Gate, peer: &mut Peer, deadline: u64, writer: memory::main::Writer) -> u64 reaches Kernel {
+    machine allocated(gate: &Gate, peer: &mut Peer, writer: memory::main::Writer) -> u64 reaches Kernel {
         peer.writer = writer;
         let creation: Creation = notification::main::create(gate);
         transition creation {
-            Creation::Ready { bell } -> block opened(gate, peer, deadline, bell)
+            Creation::Ready { bell } -> opened(gate, peer, bell)
             Creation::Failed { code } -> (code)
         }
     }
 }
-machine opened(gate: &Gate, peer: &mut Peer, deadline: u64, bell: notification::main::Bell) -> u64 reaches Kernel {
+// The rest of the handshake, from the peer's first acknowledgement.
+public machine resume(gate: &Gate, peer: &mut Peer, deadline: u64) -> u64 reaches Kernel blocks invokes Kernel {
+    block writer(gate, peer, deadline)
+}
+machine opened(gate: &Gate, peer: &mut Peer, bell: notification::main::Bell) -> u64 reaches Kernel {
     peer.bell = bell;
     let mut packet: [u64; 8];
     // source-rs/platform/contracts/connection.rs: "cathedral.shared.v4".
     packet[0] = 0x6172646568746163u64;
     packet[1] = 0x6465726168732e6cu64;
     packet[2] = 0x34762eu64;
-    let status: u64 = exact(Kernel::send(gate, peer.sender, &packet, 19u64), 19u64);
-    transition status == 0u64 {
-        true -> block writer(gate, peer, deadline)
-        _ -> (status)
-    }
+    exact(Kernel::send(gate, peer.sender, &packet, 19u64), 19u64)
 }
 machine writer(gate: &Gate, peer: &mut Peer, deadline: u64) -> u64 reaches Kernel {
     let status: u64 = block ack(gate, peer.receiver, deadline);

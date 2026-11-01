@@ -84,12 +84,12 @@ def run(qemu_command, output, timeout, creationflags, ready_marker, verify, *, a
                 process.wait(timeout=5)
 
 
-def save_png(output, width, height, pixels):
+def save_png(output, width, height, pixels, name="display.png"):
     # Lossless screenshot conversion with only the Python standard library.
     def chunk(kind, data):
         return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", binascii.crc32(kind + data))
     rows = b"".join(b"\0" + pixels[row * width * 3:(row + 1) * width * 3] for row in range(height))
     png = b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">2I5B", width, height, 8, 2, 0, 0, 0))
     png += chunk(b"IDAT", zlib.compress(rows)) + chunk(b"IEND", b"")
-    destination = output / "display.png"
+    destination = output / name
     destination.write_bytes(png)

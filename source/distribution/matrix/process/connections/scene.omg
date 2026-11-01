@@ -4,7 +4,7 @@ module scene;
 // updates, sealed images and the begin/commit transaction around a batch.
 use protocol::main;
 use protocol::display;
-use main::State;
+use shared::state::State;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;
