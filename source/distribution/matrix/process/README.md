@@ -76,7 +76,9 @@ The storage, the parent, the display and the routes to children's owner controls
   Inside a child's begin/commit batch they are staged and published together
   under one transaction; the compact rectangles word ([rects.omg](connections/rects.omg))
   is such a batch of one or two paints. Images stay retained behind their
-  backing until it is painted over or erased; owed erasures flush between turns.
+  backing, one per compositor tile, until it is painted over or erased; owed
+  erasures flush between turns. A scene switch and a republish after the
+  geometry changed replay retained surfaces in one transaction.
 - [storage.omg](connections/storage.omg): this matrix's storage. At the root the provider
   links the composition supplied connect when the first grant or request
   needs them; under a parent the broker's storage connection is the one
@@ -160,7 +162,10 @@ The the children this matrix admits, funds, presents and retires.
   one transaction through presentation, then gives the new app the input
   routes and the chrome its management. APP_ENTRY lists the instances and
   SELECT_APP activates one, for the placed chrome only; when an app ends the
-  chrome hears of it and the next instance becomes active.
+  chrome hears of it and the next instance becomes active. APPLY_LAYOUT
+  rearranges the workspace under the stock layout: the World moves every
+  placed child at once, the app slots keep their new places for later
+  launches, and presentation publishes the moved surfaces again.
 
 ### [realm/](realm/build.omg)
 

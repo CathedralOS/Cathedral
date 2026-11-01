@@ -100,7 +100,7 @@ public data State {
     // Each child's staged presentation batch, the sealed images retained
     // behind compositor tiles, and the compositor transaction revision.
     batches: [Batch; 5];
-    images: [Image; 16];
+    images: [Image; 64];
     revision: u64;
     // Provider links, bindings and each child's storage connection.
     store: Store;

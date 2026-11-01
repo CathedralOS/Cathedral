@@ -19,6 +19,15 @@ use policy::children::workspace::catalogue;
 use policy::children::workspace::catalogue::Entry;
 use policy::children::workspace::catalogue::Position;
 use policy::children::workspace::catalogue::Selection;
+use policy::children::configuration::main::prepare;
+use policy::children::configuration::main::Facts;
+use policy::children::configuration::main::Decision;
+use policy::children::configuration::main::Plan;
+use policy::children::configuration::wire::decode;
+use policy::children::configuration::placement::Extent;
+use policy::children::configuration::placement::Rectangle;
+use world::layout;
+use world::geometry::Rect;
 use connections::presentation;
 use connections::forward;
 
@@ -69,6 +78,57 @@ public machine select(gate: &Gate, context: &mut State, slot: u64 [0..=4], incar
     }
 }
 
+// APPLY_LAYOUT [16, epoch, margin, bar height, gap]: the chrome rearranges the
+// workspace. The stock layout plans the chrome, app and background places in
+// this matrix's view; the World moves every placed child at once, the app
+// slots keep their new places for later launches, and the moved surfaces are
+// published again.
+public machine apply_layout(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, words: [u64; 8]) -> [u64; 8]
+    reaches Kernel blocks; invokes Kernel; {
+    let facts: Facts = Facts { authorized: layout::allowed(&context.world, slot, incarnation, words[1]), busy: forward::busy(context),
+        extent: Extent { width: context.world.parent.width, height: context.world.parent.height }, standing: standing(context) };
+    let decision: Decision = prepare(&facts, decode(&words));
+    transition decision {
+        Decision::Ready { plan } -> block arranged(gate, context, slot, incarnation, words[1], plan)
+        Decision::Denied -> (error(kernel::DENIED))
+        Decision::Busy -> (error(kernel::BUSY))
+        Decision::Invalid -> (error(kernel::INVALID_ARGUMENT))
+    }
+    machine arranged(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, epoch: u64, plan: Plan) -> [u64; 8] reaches Kernel {
+        let rects: [Rect; 5] = [rect(plan.chrome), rect(plan.apps[0]), rect(plan.apps[1]), rect(plan.apps[2]), rect(plan.background)];
+        let status: u64 = layout::layout(&mut context.world, slot, incarnation, epoch, &rects);
+        transition status == 0u64 {
+            true -> block moved(gate, context, rects, plan.remember)
+            _ -> (error(status))
+        }
+    }
+    machine moved(gate: &Gate, context: &mut State, rects: [Rect; 5], remember: u64) -> [u64; 8] reaches Kernel {
+        remembered(context, 1u64, rects[1], remember);
+        remembered(context, 2u64, rects[2], remember);
+        remembered(context, 3u64, rects[3], remember);
+        let status: u64 = block presentation::republish(gate, context);
+        error(status)
+    }
+}
+// The app slots whose standing policy places their launches.
+machine standing(context: &State) -> u64 {
+    flag(context.policies[1].placed) * 2u64 + flag(context.policies[2].placed) * 4u64 + flag(context.policies[3].placed) * 8u64
+}
+machine remembered(context: &mut State, slot: u64 [0..=4], place: Rect, remember: u64) {
+    transition ((remember >> slot) & 1u64) == 1u64 {
+        true -> kept(context, slot, place)
+        _ -> done()
+    }
+    machine kept(context: &mut State, slot: u64 [0..=4], place: Rect) {
+        context.policies[slot].x = place.x;
+        context.policies[slot].y = place.y;
+        context.policies[slot].width = place.width;
+        context.policies[slot].height = place.height;
+    }
+}
+machine rect(from: Rectangle) -> Rect {
+    Rect { x: from.x, y: from.y, width: from.width, height: from.height }
+}
 // A launched app joins the catalogue and becomes the active one.
 public machine launched(gate: &Gate, context: &mut State, slot: u64, program: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
     transition context.desktop && slot >= 1u64 && slot <= 3u64 {

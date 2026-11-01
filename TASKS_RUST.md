@@ -712,11 +712,15 @@ Still failing over Omega:
 - A just-admitted child gets up to 30 ticks for its control's first answer
   before the launch's scene switch, so an ordinary app's handshake is not left
   to outlast its own window.
-- The outer Notes beside Split still ends: it painted its base but not its
-  text image, and Notes ends when a presentation is refused while its view
-  stands. The matrix retains one sealed image per tile in a 16-entry store,
-  which the launcher's icons, Split and its two Notes fill; the Rust host keeps
-  one per compositor tile.
+- Split now passes over Omega (`--nested`): its layout, focus, isolated
+  persistence, dirty close, resize and three reclaimed subtrees, across a cold
+  reboot. The outer Notes beside it had ended because the matrix retained one
+  sealed image per tile in a 16-entry store, which the launcher's icons, Split
+  and its two Notes filled; a refused image presentation ends Notes. The store
+  now holds one per compositor tile, 64. The launcher's Settings needed
+  APPLY_LAYOUT: the stock layout plans the chrome, app and background places,
+  the World moves every placed child at once, the app slots keep their new
+  places, and presentation republishes the moved surfaces in one transaction.
 
 Evidence in the main checkout with the patched standalone producer:
 
@@ -740,9 +744,8 @@ Evidence in the main checkout with the patched standalone producer:
 - Boundary test, layout, Rust formatting, the stock matrix's compiled tests
   and clippy for the desktop crate with `shell` pass.
 
-Next: the retained-image store sized to the compositor's tiles, for the outer
-Notes beside Split; the relay failure at the second nested level; then the
-remaining F5 variants
+Next: the relay failure at the second nested level; then the remaining F5
+variants
 (launcher recovery, the asynchronous fixtures, soak), the profile swap and the
 bridge's deletion.
 
