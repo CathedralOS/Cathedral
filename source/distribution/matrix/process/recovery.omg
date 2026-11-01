@@ -1,0 +1,38 @@
+module recovery;
+// What a child's end means to the startup recovery policy: a picker, chosen
+// user or background that failed queues the policy's bounded replay, which
+// the next turn's realm step consumes; a clean exit, an owner's stop and an
+// owner-run login leave nothing to replay.
+use main::State;
+use runtime::task::main::Exit;
+use policy::children::startup::main::ChildRole;
+use policy::children::startup::main::Context;
+use policy::children::startup::main::RetirementEffect;
+use policy::children::startup::main::child_retired;
+
+public const USER_SLOT: u64 = 1u64;
+public const BACKGROUND_SLOT: u64 = 4u64;
+
+public machine retired(context: &mut State, slot: u64 [0..=4], exit: Exit) {
+    let role: ChildRole = role_of(context, slot);
+    let failed: bool = failed_exit(exit);
+    let facts: Context = Context { login: context.login, entered: context.slots[USER_SLOT].live, workspace: context.desktop,
+        owner_recovers: !context.login };
+    let effect: RetirementEffect = child_retired(&mut context.startup, role, failed, &facts);
+}
+machine role_of(context: &State, slot: u64 [0..=4]) -> ChildRole {
+    transition {
+        slot == 0u64 && context.login -> (ChildRole::Picker)
+        slot == USER_SLOT && context.login -> (ChildRole::User)
+        slot == BACKGROUND_SLOT -> (ChildRole::Background)
+        _ -> (ChildRole::Other)
+    }
+}
+machine failed_exit(exit: Exit) -> bool {
+    transition exit {
+        Exit::Returned { status } -> (status != 0u64)
+        Exit::Fault { vector, error, address, instruction } -> (true)
+        Exit::Cancelled -> (false)
+        Exit::Failed { code } -> (true)
+    }
+}

@@ -358,16 +358,14 @@ for profile validation tests. Existing boot connections use a separate fixed are
 `python tools/boot-harness-rs/omega_desktop_test.py` composes the stock desktop
 with the [standalone Omega stock matrix](../../source/distribution/matrix/process/README.md)
 in the root matrix's launch and in place of the stock realm's user template,
-and the supervisor built with `omega-root`, which admits the root exactly as
-F5 does. The supervisor starts the storage service, runs the template nested
-over its own realm at an inset and configures it through routed owner words
-to run the template's launcher as a strip and open an app slot to its
-launches. The proof reads the supervisor's, the services' and the nested
-matrix's startup lines, sees the launcher's tiles inside the nested area,
-clicks the Colors tile so the launcher launches Colors through the nested
-matrix, sees Colors paint its view, indicator and checker image through both
-matrices, moves the pointer over QMP and checks that the compositor's cursor
-follows it, then clicks Colors and presses Enter and sees the saved colour. Logs and a PNG are in `build/boot-harness-rs/omega-desktop/`.
+under the ordinary `shell` supervisor. The proof reads the supervisor's and
+the services' startup lines, creates and enters a user through the picker,
+sees the user's matrix configure itself from its realm and paint its
+launcher's tiles, clicks the Colors tile so the launcher launches Colors into
+the workspace, sees Colors paint its view, indicator and checker image through
+both matrices, moves the pointer over QMP and checks that the compositor's
+cursor follows it, then clicks Colors and presses Enter and sees the saved
+colour. Logs and a PNG are in `build/boot-harness-rs/omega-desktop/`.
 The slices still missing from that program are listed in its README.
 
 ## Integrated matrix desktop

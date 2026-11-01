@@ -407,15 +407,106 @@ Evidence in the main checkout with the saved standalone producer:
   `shell,omega-root` pass. No native leaf changed; the kernel's admission
   ceiling rose as described above.
 
-Next: the startup realm discovery that CONFIGURE asks a nested matrix for,
-with RESOLVE_PATH and the picker, background and launcher it admits itself;
-the desktop mode, where the chrome's launches go to app slots and the chrome's
-app entries, selection, close and layout words are answered; loss surveys and
-close over the owner-control client, management words, the funding and input
-capacity a nested matrix negotiates with its parent, then the rest of the
-stock policy. The Omega matrix native's load has four pages left under the
-kernel's image limit; the next slices will need either a smaller process or a
-higher limit.
+Startup from the realm followed in the step recorded below.
+
+### Stock matrix migration: startup from the realm
+
+The stock matrix process now sets itself up from its realm under the stock
+startup policy, and the F5 shell drives it with the words it sends the Rust
+host. The policy's realm job machine is linked directly: this process drives
+each job with a setup record of its own and executes its commands. A nested
+instance runs discovery once the parent has placed it: it lists its realm for
+a Matrix record, a Login and a Users folder; the record configures a
+workspace, Login beside Users starts a scoped picker, and anything else marks
+the matrix hosted so the owner's words drive it. Names are resolved by listing
+the realm one ENTRIES page at a time over the matrix's own binding and
+comparing each row's 32-byte name, so no attachment of the matrix's own is
+needed; RESOLVE_PATH walks a relative path the same way, a segment at a time.
+
+The configuration job reads and decodes the saved record with the stock
+codec, resolves the launcher it names and the optional Background, validates
+the geometry and keys against the view with the stock placement, admits the
+launcher from the retained image under the launcher offer (refusing one that
+did not take storage), binds it to the whole realm, installs the workspace
+offer and placement as the app slots' standing policy, places the launcher as
+the bottom bar on the allowance's top ranks, starts the background (a missing
+one arms the policy's one retry), flushes, notifies and grants the launcher
+layout, management and recovery authority. The background and picker jobs run
+the same way; the recovery policy is armed from each child's end and
+replayed on later turns. Admission from a retained image is shared by the
+owner's RUN_OBJECT, a child's LAUNCH and the jobs; in a workspace the launcher
+is the chrome for the admission decision, an app takes the desktop's share
+from the resource policy and the ranks it allotted at the lowest free base
+above the background's. The owner words CONFIGURE (idempotent once a
+workspace stands), RESTORE_STORAGE, LAUNCHER_FALLBACK, SAVE_RECOVERY_GRANT,
+SAVE_RECOVERY_POLL and RESOLVE_PATH are answered; the recorded fallback and
+grants await the recovery slice. The native now declares a profile, as the
+Rust template does: 64 channels, 5 descendants, 320 private and 768 reader
+pages and 24 surfaces, which the root fits to its standing offer instead of
+lending the whole of it, so a user's matrix funds its own apps without the
+parent funding the Rust host negotiates and the root keeps the pages its own
+connections charge. The manifest encoder gained the profile record for it.
+A launch from a realm object is funded for the load it really takes: the
+image's pages, the stack its `PT_GNU_STACK` header declares, which the
+platform's image scan now reports beside the record, and 48 frames of page
+tables, never below 256, then its private pages and 256 frames per
+descendant slot. A refused launch reports its stage and code on the console,
+and the matrix reports its own use after each admission and once it is
+configured, which sized the profile: the configured user matrix uses a few
+private pages, about a hundred reader pages and 17 channels of its own.
+The runtime's shared and private copy paths accept the 512-page objects, and
+a World child may hold the whole 64-rank allowance, as the shell's user slot
+does, instead of sixteen ranks. The kernel labs that held several maximal
+objects at once now size them to the per-task private-page cap, which two
+512-page objects already fill.
+
+The supervisor's `omega-root` path is gone: the proof composes the Omega
+program as the root launch and as the stock realm's user template and runs
+the ordinary `shell` build over it. The picker offers a new user, the harness
+creates and enters one, the root admits the user's matrix from the picker's
+launch, the shell retires the picker and routes CONFIGURE to a matrix that
+already configured itself, the launcher stands as the bottom bar, and its
+Colors tile launches Colors into the workspace, where it paints, follows the
+cursor and saves through both matrices. The image is 289 pages now, past the
+one-megabyte object a program had to fit: the kernel's `MAX_PAGES` for one
+object rose to 512, the image window, so one object holds any program the
+kernel admits; the storage service's bulk replies, the runtime's allocations,
+the harness's object limit and the component packager's code budget follow,
+and the stock composition funds the storage service 768 private pages, a
+379-page heap and, within the physical frames that reserves beside its
+image, room for one such reply. The region window those objects map in
+grew past the framebuffer's fixed user address, which moved from 128 to 256
+megabytes above the code base. Chunks are shared within the store, so a
+user's copy of the template costs the root quota only its entries.
+
+Evidence in the main checkout with the saved standalone producer:
+
+- Desktop over the Omega root and user template under the F5 shell:
+  `build/boot-harness-rs/omega-desktop/20261101T051004236516Z/`.
+- Omega matrix, top level: `build/boot-harness-rs/omega-matrix/20261101T051023961762Z/`;
+  under a real parent: `build/boot-harness-rs/omega-matrix-upstream/20261101T051031557172Z/`;
+  Rust comparison matrix: `build/boot-harness-rs/matrix-composition/20261101T051018908569Z/`.
+- Witnesses: primitives `build/omega-user/tests/20261101T050817449869Z/`;
+  connections `build/omega-user/connections/20261101T050823191539Z/`, service
+  `.../20261101T050845110232Z/`, admission `.../20261101T050859520074Z/`;
+  Background `build/omega-user/background-control/20261101T050934212575Z/`;
+  Colors `build/omega-user/colors-control/20261101T050940100299Z/`;
+  Notes `build/omega-user/notes-control/20261101T050946588178Z/`;
+  Chooser `build/omega-user/chooser-control/20261101T050954615823Z/`.
+- Kernel smoke labs of 2026-11-01 05:17 UTC pass; default F5 desktop and cold
+  reopen: `build/boot-harness-rs/desktop/20261101T051113482157Z/`.
+- Boundary test, layout (123 Omega / 153 Rust edges), Rust formatting, the
+  kernel contract, core and object store tests, the stock matrix's compiled
+  tests and clippy for the desktop crate with `shell` pass. The memory
+  allocation leaf's bound rose with the object page limit and was accepted
+  in every standalone native's review.
+
+Next: the chrome's words in a workspace, where app entries, selection, close,
+layout, managed tasks and save availability are answered and activation
+scenes switch the visible app; loss surveys and close over the owner-control
+client; the launcher fallback and save recovery the recorded grants are for;
+the funding and input capacity a nested matrix negotiates with its parent;
+then the rest of the stock policy, the profile swap and the bridge's deletion.
 
 ### Kernel image window widened for the Omega matrix
 

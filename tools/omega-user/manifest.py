@@ -13,14 +13,20 @@ def bounded(value, maximum, name, minimum=0):
 
 
 def encode(value):
-    if not isinstance(value, dict) or set(value) != {'imports', 'channels', 'descendants'}:
-        raise ValueError('process manifest requires imports, channels and descendants')
+    keys = {'imports', 'channels', 'descendants'}
+    if not isinstance(value, dict) or not keys <= set(value) or not set(value) <= keys | {'profile'}:
+        raise ValueError('process manifest requires imports, channels and descendants, with an optional profile')
+    profile = value.get('profile')
+    if profile is not None and (not isinstance(profile, dict)
+                                or set(profile) != {'private_pages', 'reader_pages', 'surfaces'}):
+        raise ValueError('a process profile names private_pages, reader_pages and surfaces')
     imports = value['imports']
     if not isinstance(imports, list) or len(imports) > 4:
         raise ValueError('process manifest supports at most four imports')
     channels = bounded(value['channels'], 65535, 'channels')
     descendants = bounded(value['descendants'], 65535, 'descendants')
-    words = [int.from_bytes(b'CTHIMP03', 'little'), len(imports) | channels << 16 | descendants << 32]
+    magic = b'CTHIMP05' if profile is not None else b'CTHIMP03'
+    words = [int.from_bytes(magic, 'little'), len(imports) | channels << 16 | descendants << 32]
     seen = set()
     for entry in imports:
         if not isinstance(entry, dict) or set(entry) != {'contract', 'minimum', 'maximum', 'required'}:
@@ -33,4 +39,9 @@ def encode(value):
         seen.add(contract)
         words.extend([contract, minimum, maximum, int(entry['required'])])
     words.extend([0] * (18 - len(words)))
-    return struct.pack('<18Q', *words)
+    if profile is None:
+        return struct.pack('<18Q', *words)
+    # The profile record: the pages and surfaces the program needs, which the
+    # owning matrix fits to its offer instead of lending it the whole offer.
+    words.extend(bounded(profile[key], 2**64 - 1, key) for key in ('private_pages', 'reader_pages', 'surfaces'))
+    return struct.pack('<21Q', *words)

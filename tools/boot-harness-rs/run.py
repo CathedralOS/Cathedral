@@ -32,7 +32,7 @@ PAGE_LIMITS = (("private_pages", 1024), ("shared_pages", 4096))
 # The store's largest object (its MAX_BYTES): an installed program must fit one.
 # The installer refuses a larger one; reporting the margin here shows how close
 # each build sits before that happens.
-OBJECT_BYTES = 1024 * 1024
+OBJECT_BYTES = 2 * 1024 * 1024
 
 
 def report_program(trimmed):

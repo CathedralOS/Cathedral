@@ -41,9 +41,11 @@ ELF record discovery starts at [image.omg](image.omg). `begin_image` and
 absent, found or malformed. The caller supplies each requested span exactly;
 terminal scans refuse further replies. The scanner checks the ELF64 header and
 the complete table of at most 16 program headers, inspecting read-only load
-segments for a supported record. Unknown versions, duplicate records, truncated
-ranges and overflow refuse, including bad segments after an earlier match. This
-is declaration discovery, not the kernel's executable validation.
+segments for a supported record and noting the stack size a `PT_GNU_STACK`
+header declares, which a funder reads from the scan beside the record. Unknown
+versions, duplicate records, truncated ranges and overflow refuse, including
+bad segments after an earlier match. This is declaration discovery, not the
+kernel's executable validation.
 
 Record encoding remains in Rust. The ordinary matrix uses this Omega scanner,
 decoder and matcher; its host supplies checked reads from the sealed mapping. Its

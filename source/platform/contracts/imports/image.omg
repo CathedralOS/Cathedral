@@ -1,6 +1,9 @@
-// Discover one import record through bounded reads of a sealed ELF64 image.
-// This is declaration discovery, not kernel executable/load validation.
+// Discover one import record through bounded reads of a sealed ELF64 image,
+// and the stack the program declares beside it. This is declaration
+// discovery, not kernel executable/load validation.
 use record;
+// The program header that declares the stack; its memory size is the stack's bytes.
+const PT_GNU_STACK: u64 = 1685382481u64;
 public const IMAGE_READ: u64 = 1u64;
 public const IMAGE_ABSENT: u64 = 2u64;
 public const IMAGE_FOUND: u64 = 3u64;
@@ -9,10 +12,12 @@ public data ImageRead [copy] { kind: u64; offset: u64; bytes: u64; }
 public data ImageScan {
     phase: u64; length: u64; table: u64; count: u64; index: u64;
     segment: u64; segment_bytes: u64; found: u64; found_bytes: u64;
+    // The stack the image declares, in bytes; zero when it declares none.
+    stack: u64;
 }
 public machine begin_image(length: u64, scan: &mut ImageScan) -> ImageRead {
     scan.phase = 1u64; scan.length = length; scan.table = 0u64; scan.count = 0u64; scan.index = 0u64;
-    scan.segment = 0u64; scan.segment_bytes = 0u64; scan.found = 0u64; scan.found_bytes = 0u64;
+    scan.segment = 0u64; scan.segment_bytes = 0u64; scan.found = 0u64; scan.found_bytes = 0u64; scan.stack = 0u64;
     transition length >= 64u64 { true -> (ImageRead { kind: IMAGE_READ, offset: 0u64, bytes: 64u64 }) _ -> malformed(scan) }
 }
 // Supply exactly the requested bytes from the same immutable image. Unused input
@@ -53,8 +58,18 @@ machine next_header(scan: &mut ImageScan) -> ImageRead {
 machine segment(scan: &mut ImageScan, bytes: &[u8; 64], length: u64) -> ImageRead {
     transition length == 56u64 { true -> kind(scan, bytes) _ -> malformed(scan) }
     machine kind(scan: &mut ImageScan, bytes: &[u8; 64]) -> ImageRead {
-        // PT_LOAD with exactly PF_R. Other segment kinds/flags are irrelevant here.
-        transition image_word(bytes, 0u64) == 17179869185u64 { true -> load(scan, bytes) _ -> consumed(scan) }
+        // PT_LOAD with exactly PF_R holds the record; PT_GNU_STACK sizes the
+        // stack. Other segment kinds/flags are irrelevant here.
+        let header: u64 = image_word(bytes, 0u64);
+        let segment_type: u64 = header & 4294967295u64;
+        transition {
+            header == 17179869185u64 -> load(scan, bytes)
+            segment_type == PT_GNU_STACK -> stack(scan, bytes)
+            _ -> consumed(scan)
+        }
+    }
+    machine stack(scan: &mut ImageScan, bytes: &[u8; 64]) -> ImageRead {
+        scan.stack = image_word(bytes, 40u64); consumed(scan)
     }
     machine load(scan: &mut ImageScan, bytes: &[u8; 64]) -> ImageRead {
         scan.segment = image_word(bytes, 8u64); scan.segment_bytes = image_word(bytes, 32u64);

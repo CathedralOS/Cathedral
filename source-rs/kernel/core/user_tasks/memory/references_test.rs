@@ -13,15 +13,18 @@ pub(super) unsafe fn exercise(
     let mut regions = [0; OBJECTS];
     let mut survivor = 0;
     frames.remaining = usize::MAX;
-    let large_objects = ((wire::MAX_PRIVATE_PAGES - OBJECTS) / wire::MAX_PAGES).min(5);
+    // Large objects are as large as an object may be while two still fit the
+    // account's private pages beside the single-page ones.
+    let large_pages = wire::MAX_PAGES.min((wire::MAX_PRIVATE_PAGES - OBJECTS) / 2);
+    let large_objects = ((wire::MAX_PRIVATE_PAGES - OBJECTS) / large_pages).min(5);
     assert!(large_objects >= 2);
     for (index, region) in regions.iter_mut().enumerate() {
-        // Cross the bitmap word boundary, then retain several maximal objects
+        // Cross the bitmap word boundary, then retain several large objects
         // without increasing the account's unchanged aggregate funding.
         let pages = if index < OBJECTS - large_objects {
             1
         } else {
-            wire::MAX_PAGES
+            large_pages
         };
         // SAFETY: Fixture owns this prepared inactive root and every physical frame.
         let handle = unsafe { allocation::allocate(session, frames, 0, pages) }.unwrap();
@@ -58,7 +61,7 @@ pub(super) unsafe fn exercise(
     }
     assert!(steps >= OBJECTS);
     session.timing.report(output);
-    assert_eq!(frames.allocated(), baseline + wire::MAX_PAGES);
+    assert_eq!(frames.allocated(), baseline + large_pages);
     let region = session.memory.model.access(0, survivor).unwrap();
     assert_eq!(session.memory.model.entries[region].read_refs, 0);
     let address = wire::address(session.memory.model.mapping(0, region));

@@ -144,6 +144,10 @@ machine cleared(context: &mut State, slot: u64 [0..=4]) {
     let empty: Forward;
     context.forwards[slot] = empty;
 }
+// Whether any routed word is in flight.
+public machine busy(context: &State) -> bool {
+    pending_mask(context, 0u64, 0u64) != 0u64
+}
 public machine watch(context: &State, set: &mut Set) {
     slot_watch(context, 0u64, set);
     slot_watch(context, 1u64, set);

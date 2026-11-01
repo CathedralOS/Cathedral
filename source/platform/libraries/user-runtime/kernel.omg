@@ -15,6 +15,11 @@ public const NO_MEMORY: u64 = 0xfffffffffffffff4u64;
 // slot is worth; owner: source-rs/kernel/contracts/user.rs.
 public const MAX_ADMISSION_FRAMES: u64 = 800u64;
 public const ADMISSION_ALLOWANCE_FRAMES: u64 = 288u64;
+// A page, and the stack a program gets when its image declares none and the
+// most it may declare; owner: source-rs/kernel/core/user_tasks/address_space/address_space.rs.
+public const PAGE_BYTES: u64 = 4096u64;
+public const DEFAULT_STACK_PAGES: u64 = 8u64;
+public const MAX_STACK_PAGES: u64 = 256u64;
 public const BAD_HANDLE: u64 = 0xfffffffffffffff7u64;
 public const BAD_EXECUTABLE: u64 = 0xfffffffffffffff8u64;
 // Temporary native boundary, not a matrix service bundle. The table comes from
@@ -88,7 +93,7 @@ public boundary trait Kernel {
     machine clock(gate: &Gate) -> u64 reaches;
     machine clock_read(gate: &Gate, handle: u64, buffer: &mut [u64; 8]) -> u64 reaches;
     machine wait(gate: &Gate, records: &[u64; 8], count: u64 [0..=4], deadline: u64) -> u64 reaches blocks;
-    machine memory_allocate(gate: &Gate, pages: u64 [1..=256]) -> u64 reaches blocks;
+    machine memory_allocate(gate: &Gate, pages: u64 [1..=512]) -> u64 reaches blocks;
     machine memory_share(gate: &Gate, handle: u64) -> u64 reaches blocks;
     machine memory_release(gate: &Gate, handle: u64) -> u64 reaches blocks;
     machine shared_read(gate: &Gate, handle: u64, index: u64, words: &mut [u64; 8], count: u64 [1..=8]) -> u64 reaches blocks;

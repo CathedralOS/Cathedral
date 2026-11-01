@@ -27,7 +27,7 @@ linux_x86_64 machine Gate::clock_read_leaf(gate: &Gate, handle: u64, buffer: &mu
 linux_x86_64 machine Gate::wait_leaf(gate: &Gate, records: &[u64; 8], count: u64 [0..=4], deadline: u64) -> u64
     satisfies Kernel::wait via ForeignBinding::TableFunction(wait) blocks;
 
-linux_x86_64 machine Gate::memory_allocate_leaf(gate: &Gate, pages: u64 [1..=256]) -> u64
+linux_x86_64 machine Gate::memory_allocate_leaf(gate: &Gate, pages: u64 [1..=512]) -> u64
     satisfies Kernel::memory_allocate via ForeignBinding::TableFunction(memory_allocate) blocks;
 linux_x86_64 machine Gate::memory_share_leaf(gate: &Gate, handle: u64) -> u64
     satisfies Kernel::memory_share via ForeignBinding::TableFunction(memory_share) blocks;

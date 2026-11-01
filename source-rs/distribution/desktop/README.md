@@ -73,10 +73,10 @@ replacements for the session and never replenishes that budget on a healthy
 reply. After exhaustion, the launcher can request one explicit save retry. There is no logout UI; recursive whole-user
 LOSS remains a headless proof.
 
-With `omega-root` on top of `shell`, the supervisor admits the root exactly as
-F5 does and then parks on its control link instead of starting storage; the
+The same `shell` build runs over the standalone Omega stock matrix: the
 [Omega stock matrix proof](../../../tools/boot-harness-rs/omega_desktop_test.py)
-builds it that way over the standalone Omega root.
+composes it with that program as the root and as the user template, and the
+shell's login, user entry and recovery words reach it unchanged.
 
 Without the `shell` feature the same package builds the probe desktop in
 [lab/](lab/desktop.rs): the same admission, apps and budgets laid out as a

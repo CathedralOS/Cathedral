@@ -16,7 +16,7 @@ public data Acceptance {
     case Failed(code: u64);
 }
 
-public machine allocate(gate: &Gate, pages: u64 [1..=256]) -> Allocation
+public machine allocate(gate: &Gate, pages: u64 [1..=512]) -> Allocation
     reaches Kernel blocks; invokes Kernel; {
     let handle: u64 = block Kernel::memory_allocate(gate, pages);
     transition handle > 0u64 && handle < 0x8000000000000000u64 {

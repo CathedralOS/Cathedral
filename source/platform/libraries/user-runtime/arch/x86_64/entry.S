@@ -256,7 +256,7 @@ cathedral_memory_release:
     int 0x80
     test rax, rax
     js .Ldone\@
-    cmp rax, 256
+    cmp rax, 512
     ja .Linvalid\@
     shl rax, 9                      // 512 words/page
     mov rcx, r9
@@ -498,7 +498,7 @@ cathedral_private_write:
     int 0x80
     test rax, rax
     js .Lprivate_done
-    cmp rax, 256
+    cmp rax, 512
     ja .Lprivate_invalid
     shl rax, 12
     mov rcx, r9

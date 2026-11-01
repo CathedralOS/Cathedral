@@ -4,11 +4,12 @@ pub(super) unsafe fn exercise(frames: &mut FrameAllocator, layout: &BootLayout, 
     // SAFETY: Fresh inactive fixture owns all roots and physical backing.
     let mut f = unsafe { setup(frames, layout, image) };
     let mut reads = [0; 3];
+    // Each object is as large as three may be within the owner's private pages.
+    let pages = wire::MAX_PAGES.min(wire::MAX_PRIVATE_PAGES / reads.len());
     for (i, read) in reads.iter_mut().enumerate() {
         // SAFETY: Private owner mapping; freeze before giving out any reference.
         let handle =
-            unsafe { allocation::allocate(&mut f.session, &mut f.frames, 0, wire::MAX_PAGES) }
-                .unwrap();
+            unsafe { allocation::allocate(&mut f.session, &mut f.frames, 0, pages) }.unwrap();
         // SAFETY: The inactive owner holds the sole writable alias.
         unsafe { objects::freeze(&mut f.session, 0, handle) }.unwrap();
         let send = f.session.ipc.handle(0, (2 * i) as u64).unwrap();
@@ -67,9 +68,9 @@ pub(super) unsafe fn exercise(frames: &mut FrameAllocator, layout: &BootLayout, 
         assert!(f.session.memory.model.access(0, name).is_ok());
         conserved(&f);
         steps += 1;
-        assert!(steps <= 3 * wire::MAX_PAGES.div_ceil(retirement::FRAME_BATCH));
+        assert!(steps <= 3 * pages.div_ceil(retirement::FRAME_BATCH));
     }
-    assert!(steps > wire::MAX_PAGES.div_ceil(retirement::FRAME_BATCH));
+    assert!(steps > pages.div_ceil(retirement::FRAME_BATCH));
     assert_eq!(f.session.memory.frames(), 1);
     assert!(f.session.memory.model.reads[reads[1]].is_none());
     assert!(f.session.memory.model.reads[reads[2]].is_none());

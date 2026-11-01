@@ -34,8 +34,9 @@
 //! non-reused within a session (including task-slot reuse); raw addresses may be
 //! reused. These are lab semantics, not Cathedral's stable ABI.
 pub const PAGE_BYTES: usize = 4096;
-/// Maximum pages in one object.
-pub const MAX_PAGES: usize = 256;
+/// Maximum pages in one object: the user image window, so one object holds
+/// any program the kernel admits.
+pub const MAX_PAGES: usize = 512;
 // Object geometry does not grant larger task accounts.
 /// A subtree owner may fund several objects and descendant accounts.
 pub const MAX_PRIVATE_PAGES: usize = 1024;
@@ -80,7 +81,7 @@ mod tests {
     use super::*;
     #[test]
     fn larger_objects_preserve_account_caps_and_mapping_guards() {
-        assert_eq!(MAX_PAGES * PAGE_BYTES, 1024 * 1024);
+        assert_eq!(MAX_PAGES * PAGE_BYTES, 2 * 1024 * 1024);
         assert_eq!(MAX_PRIVATE_PAGES, 1024);
         assert_eq!(MAX_READER_PAGES, 4096);
         assert_eq!(

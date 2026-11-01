@@ -1,0 +1,25 @@
+module realm_names;
+// The realm entries the stock startup looks for, as the four little-endian
+// words of a 32-byte metadata name: the saved Matrix configuration, the
+// Login picker, the Users folder and the optional Background.
+public machine matrix() -> [u64; 4] {
+    let mut name: [u64; 4];
+    name[0] = 0x78697274614du64;
+    name
+}
+public machine login() -> [u64; 4] {
+    let mut name: [u64; 4];
+    name[0] = 0x6e69676f4cu64;
+    name
+}
+public machine users() -> [u64; 4] {
+    let mut name: [u64; 4];
+    name[0] = 0x7372657355u64;
+    name
+}
+public machine background() -> [u64; 4] {
+    let mut name: [u64; 4];
+    name[0] = 0x756f72676b636142u64;
+    name[1] = 0x646eu64;
+    name
+}

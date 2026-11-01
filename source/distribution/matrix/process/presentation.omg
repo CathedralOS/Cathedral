@@ -56,26 +56,26 @@ public machine create(gate: &Gate, context: &mut State, slot: u64 [0..=4], incar
         }
     }
     machine ranked(gate: &Gate, context: &mut State, slot: u64 [0..=4], rank: u64, backing: u64) -> [u64; 8] reaches Kernel {
-        transition rank < 16u64 {
+        transition rank < 64u64 {
             true -> block backed(gate, context, slot, rank, backing)
             _ -> (error(kernel::NO_MEMORY))
         }
     }
     machine backed(gate: &Gate, context: &mut State, slot: u64 [0..=4], rank: u64, backing: u64) -> [u64; 8] reaches Kernel
-        requires rank < 16u64 {
+        requires rank < 64u64 {
         transition context.has_parent {
             true -> block allocating(gate, context, slot, rank, backing)
             _ -> tiled(context, slot, rank, backing)
         }
     }
-    machine tiled(context: &mut State, slot: u64 [0..=4], rank: u64, backing: u64) -> [u64; 8] requires rank < 16u64 {
+    machine tiled(context: &mut State, slot: u64 [0..=4], rank: u64, backing: u64) -> [u64; 8] requires rank < 64u64 {
         transition backing < display::MATRIX_TILES {
             true -> named(context, slot, rank, backing + 1u64)
             _ -> (error(kernel::NO_MEMORY))
         }
     }
     machine allocating(gate: &Gate, context: &mut State, slot: u64 [0..=4], rank: u64, backing: u64) -> [u64; 8] reaches Kernel
-        requires rank < 16u64 {
+        requires rank < 64u64 {
         let mut request: [u64; 8];
         request[0] = SURFACE_CREATE;
         request[1] = context.world.parent.epoch;
@@ -86,7 +86,7 @@ public machine create(gate: &Gate, context: &mut State, slot: u64 [0..=4], incar
             _ -> (reply)
         }
     }
-    machine named(context: &mut State, slot: u64 [0..=4], rank: u64, key: u64) -> [u64; 8] requires rank < 16u64 {
+    machine named(context: &mut State, slot: u64 [0..=4], rank: u64, key: u64) -> [u64; 8] requires rank < 64u64 {
         let name: u64 = surfaces::create(&mut context.world, slot, rank, key);
         let mut reply: [u64; 8];
         reply[1] = name;

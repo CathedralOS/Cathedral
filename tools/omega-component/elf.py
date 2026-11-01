@@ -114,7 +114,8 @@ def component(data):
             elf.require(alignment <= 16, 'component data alignment exceeds static adapter contract')
             end = max(end, address + size)
     elf.require(len(exports) == 1, 'one exact requirement export per component')
-    elf.require(end - start <= 1024 * 1024, 'component exceeds adapter code budget')
+    # The kernel's user image window: two megabytes above the code base.
+    elf.require(end - start <= 2 * 1024 * 1024, 'component exceeds adapter code budget')
     # Each initialized section must retain its original relative address.
     for _, address, files, memory, _ in elf.loads:
         elf.require(files == memory, 'component load has implicit initialization')

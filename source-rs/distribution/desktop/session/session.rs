@@ -11,13 +11,8 @@ pub(crate) const KEYS: u64 = if cfg!(feature = "notes") {
 } else {
     wire::KEY_MASK
 };
-/// The backdrop the compositor shows behind every matrix tile. The Omega root
-/// proof shifts it so the background program's own fill stays distinguishable.
-pub(crate) const BACKGROUND: u64 = if cfg!(feature = "omega-root") {
-    0x303030
-} else {
-    0x101827
-};
+/// The backdrop the compositor shows behind every matrix tile.
+pub(crate) const BACKGROUND: u64 = 0x101827;
 pub(crate) fn owner(matrix: &mut RootControl, words: wire::Packet) {
     assert_eq!(call(matrix, words), [0; 8], "owner request {words:?}");
 }
@@ -26,9 +21,6 @@ pub(crate) fn run() -> u64 {
     let Some(mut session) = admission::interactive() else {
         return 1;
     };
-    if cfg!(feature = "omega-root") {
-        return omega_root(&mut session);
-    }
     #[cfg(any(
         feature = "launcher-read-revoke-probe",
         feature = "launcher-read-stop-probe",
@@ -140,94 +132,5 @@ pub(crate) fn run() -> u64 {
                 session.root.wait_until(time::now().unwrap())
             ),
         }
-    }
-}
-
-/// Keep an admitted Omega root alive: start the storage service as F5 does
-/// behind an interactive screen, run the user template, itself the Omega
-/// matrix, nested over its realm at an inset, configure it through routed
-/// owner words to run its launcher as a strip and open an app slot to the
-/// launcher's launches, then park while the boot harness launches Colors
-/// through the launcher and drives the display, input and storage paths
-/// through both matrices.
-#[cfg(feature = "shell")]
-fn omega_root(session: &mut admission::Session) -> u64 {
-    cathedral_user_runtime::write(b"Cathedral desktop: Omega root admitted\n").unwrap();
-    let mut provider = persistence::Provider::begin(0).expect("storage service start");
-    let deadline = time::after(3000).unwrap();
-    while !provider.poll_ready().expect("storage readiness") {
-        assert!(
-            !time::reached(time::now().unwrap(), deadline),
-            "storage service never reported ready"
-        );
-        idle(session);
-    }
-    cathedral_user_runtime::write(b"Cathedral desktop: Omega root storage ready\n").unwrap();
-    // The stock realm: the user template, object three, is the matrix program
-    // over its own realm, with the template's launcher, object four, Notes and
-    // Colors beneath it. The root runs the template nested at an inset, as a
-    // login does, and until startup discovery arrives configures it through
-    // routed owner words: its launcher as a strip over the realm and an app
-    // slot open to the launcher's launches.
-    const TEMPLATE: u64 = 3;
-    const LAUNCHER_OBJECT: u64 = 4;
-    const NESTED_SLOT: u64 = 0;
-    const APP_SLOT: u64 = 1;
-    const INSET: [u64; 2] = [32, 24];
-    let [width, height] = session.extent;
-    let nested = [width - 2 * INSET[0], height - 2 * INSET[1]];
-    for words in [
-        [wire::RUN_PAGES, NESTED_SLOT, 512, 1024, 0, 0, 0, 0],
-        [wire::RUN_OBJECT, NESTED_SLOT, TEMPLATE, TEMPLATE, 0, 64, 4, 0],
-        [wire::SURFACE_LIMIT, NESTED_SLOT, 16, 0, 0, 0, 0, 0],
-        [
-            wire::PLACE,
-            NESTED_SLOT,
-            INSET[0],
-            INSET[1],
-            nested[0],
-            nested[1],
-            KEYS,
-            0,
-        ],
-    ] {
-        owner(&mut session.matrix, words);
-    }
-    cathedral_user_runtime::write(b"Cathedral desktop: Omega nested matrix placed\n").unwrap();
-    for words in [
-        [wire::RUN_PAGES, 0, 64, 4, 0, 0, 0, 0],
-        [
-            wire::RUN_OBJECT,
-            0,
-            LAUNCHER_OBJECT,
-            TEMPLATE,
-            wire::launch_argument(0, LAUNCHER_OBJECT),
-            3,
-            0,
-            0,
-        ],
-        [wire::SURFACE_LIMIT, 0, 8, 0, 0, 0, 0, 0],
-        [wire::PLACE, 0, 0, nested[1] - 96, nested[0], 96, KEYS, 0],
-        [wire::LAUNCH_POLICY, APP_SLOT, 24, 8, 3, 0, 0, 4],
-        [wire::LAUNCH_PLACE, APP_SLOT, 650, 100, 300, 300, KEYS, 0],
-    ] {
-        owner(
-            &mut session.matrix,
-            wire::route(words, NESTED_SLOT as usize).unwrap(),
-        );
-    }
-    cathedral_user_runtime::write(b"Cathedral desktop: Omega nested launcher placed\n").unwrap();
-    loop {
-        idle(session);
-    }
-}
-#[cfg(feature = "shell")]
-fn idle(session: &mut admission::Session) {
-    match session.matrix.idle(time::after(10).unwrap()) {
-        Err(Error(code)) if code == abi::TIMED_OUT as i64 => (),
-        result => panic!(
-            "Omega root idle {result:?}; root {:?}",
-            session.root.wait_until(time::now().unwrap())
-        ),
     }
 }

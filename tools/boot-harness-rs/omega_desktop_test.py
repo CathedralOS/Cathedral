@@ -1,25 +1,27 @@
-"""Boot the desktop supervisor over the standalone Omega stock matrix, nested
-once, and check its display, source, children, presentation and storage paths
-through the real display, input and storage services at both levels.
+"""Boot the stock desktop supervisor over the standalone Omega stock matrix as
+the root and as the user template, and check the login, the user matrix's
+own configuration, and its display, input, children, presentation and
+storage paths through the real display, input and storage services.
 
 The composition is the stock desktop's with the root matrix launch and the
 user template, object three of the stock realm, both replaced by the Omega
-program, and the supervisor built with `omega-root`, which admits the root as
-F5 does, starts storage, runs the template nested over its own realm at an
-inset, as a login does, and configures it through routed owner words to run
-the template's launcher as a strip and open an app slot to the launcher's
-launches, then parks. The proof reads the supervisor's, the services' and the
-nested matrix's startup lines, sees the chooser paint its Colors tile inside
-the nested area, clicks the tile so the chooser launches Colors through the
-nested matrix, sees Colors paint its view, its indicator and its checker image
-through both matrices, moves the pointer over QMP and watches the compositor's
-cursor follow it, then clicks Colors for focus and presses Enter, which saves
-a record through both storage relays and repaints the view in the saved
+program; the supervisor is the ordinary `shell` build, so every word of F5's
+login and user entry reaches the Omega root unchanged. The proof reads the
+supervisor's and the services' startup lines, sees the picker offer a new
+user, creates one and enters it, sees the root admit the user's copy of the
+template nested over its realm and that matrix configure itself from the
+realm's saved record, sees its launcher paint its tiles along the bottom,
+clicks the Colors tile so the launcher launches Colors into the workspace,
+sees Colors paint its view, its indicator and its checker image through both
+matrices, moves the pointer over QMP and watches the compositor's cursor
+follow it, then clicks Colors for focus and presses Enter, which saves a
+record through both storage relays and repaints the view in the saved
 colour."""
 from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -39,34 +41,38 @@ MARKERS = (
     'Cathedral input: shared source connection ready',
     'Cathedral desktop: shared input control ready',
     'Cathedral desktop: bootstrap accepted',
+    'Cathedral desktop: interactive startup ready',
     'Cathedral: object storage ready',
-    'Cathedral desktop: Omega root storage ready',
     'Cathedral matrix: shared storage connection ready',
+    'Cathedral desktop: storage startup accepted',
+    'Cathedral desktop: ready; choose a user',
 )
-# The nested matrix's own lines, once the root has run it.
-NESTED_MARKERS = (
-    'Cathedral desktop: Omega nested matrix placed',
+# The user matrix's own lines once the picker's choice admitted it.
+USER_MARKERS = (
+    'Cathedral desktop: picker stopped; loading user launcher',
     'Cathedral matrix: shared parent interaction ready',
     'Cathedral matrix: parent storage connection ready',
-    'Cathedral desktop: Omega nested launcher placed',
+    'Cathedral matrix: configured from the realm paths',
+    'Cathedral desktop: user matrix furnished',
 )
-# The nested matrix sits at this inset from every edge of the display, and its
-# launcher strip is the bottom 96 rows of that area.
-INSET = (32, 24)
-STRIP = 96
-# Colors is placed at (650, 100) 300x300 inside the nested matrix: its
-# background fills the view, its indicator sits at (30, 40) 40x18 and its
-# checker image at (180, 110) 32x32.
-COLORS = (INSET[0] + 650, INSET[1] + 100)
+# The stock configuration: an 8 px margin, an 80 px launcher bar and an 8 px
+# gap, so the workspace starts at (8, 8) and the bar's tiles sit 16 px below
+# its top edge, 56 px apart.
+MARGIN, BAR, GAP = 8, 80, 8
+APP = (MARGIN, MARGIN)
+# Colors fills the workspace: its indicator sits at (30, 40) 40x18 and its
+# checker image at (180, 110) 32x32 inside its view.
 INITIAL, SAVED = '315ca8', 'd18b35'
 HEALTHY = 'e5e7eb'
 CHECKER = ('ffcc44', '7755dd')
+BACKDROP = '101827'
+TILE_CARD = '202d43'
+FONT = bytes.fromhex((ROOT / 'source-rs/platform/libraries/bitmap-font/font.hex').read_text())
 
 
 def compose(output):
     composition = json.loads((ROOT / 'source-rs/distribution/profile.json').read_text(encoding='utf-8'))
     composition['name'] = 'Cathedral desktop over the Omega stock matrix'
-    composition['startup']['initial']['features'].append('omega-root')
     launches = composition['startup']['launches']
     replaced = 0
     for index, launch in enumerate(launches):
@@ -80,9 +86,9 @@ def compose(output):
     assert replaced == 1, 'the stock composition launches one root matrix'
     # The stock realm as F5 installs it: the user template is object three,
     # with its launcher, object four, Notes and Colors beneath it. The Omega
-    # program takes the template's place, so the root runs it nested over its
-    # realm, it runs the launcher, the launcher launches Colors, and Colors
-    # keeps its record beneath its own object.
+    # program takes the template's place, so a user made from it runs the
+    # Omega matrix over the user's realm, which configures itself from the
+    # Matrix record the installer puts beside the launcher.
     programs = composition['startup']['programs']
     template = programs[2]
     assert template.get('package') == 'cathedral-stock-matrix' and template.get('inside') == 1, 'object three is the user template'
@@ -108,6 +114,27 @@ def changed_pixels(width, before, after):
                     yield x, y
 
 
+def glyphs_match(pixel, left, top, text):
+    """Whether the chooser's white label `text` stands at (left, top)."""
+    for index, character in enumerate(text):
+        for row, bits in enumerate(FONT[(ord(character) - 32) * 7:(ord(character) - 31) * 7]):
+            for column in range(5):
+                lit = pixel(left + index * 12 + column * 2, top + row * 2) == 'ffffff'
+                if lit != bool(bits & (1 << (4 - column))):
+                    return False
+    return True
+
+
+def failed_children(text):
+    """Child exits the Omega matrices reported other than a clean return or a stop."""
+    failures = []
+    for match in re.finditer(r'Cathedral matrix: child (\d) ([0-9a-f]{16}) ([0-9a-f]{16})', text):
+        kind, value = int(match.group(2), 16), int(match.group(3), 16)
+        if kind != 3 and not (kind == 1 and value == 0):
+            failures.append(match.group(0))
+    return failures
+
+
 def check(stream, output, serial):
     def serial_text():
         return (output / 'serial.log').read_text(encoding='utf-8', errors='replace')
@@ -117,14 +144,15 @@ def check(stream, output, serial):
         while marker not in serial_text():
             if time.monotonic() > deadline:
                 raise RuntimeError(f'missing {marker!r}; logs: {output}')
+            failures = failed_children(serial_text())
+            if failures or 'user panic:' in serial_text():
+                raise RuntimeError(f'a program failed while waiting for {marker!r}: {failures}; logs: {output}')
             time.sleep(0.2)
 
     for marker in MARKERS:
-        wait_for(marker, 30)
+        wait_for(marker, 40)
     if 'Cathedral input: absolute pointer ready' not in serial_text():
         raise RuntimeError(f'the input service did not offer an absolute pointer; logs: {output}')
-    for marker in NESTED_MARKERS:
-        wait_for(marker, 30)
 
     def pixels():
         width, height, data = pointer_test.read_scanout(stream, output)
@@ -139,38 +167,19 @@ def check(stream, output, serial):
             if condition(pixel):
                 return width, height, data
             if time.monotonic() > deadline:
-                observed = [pixel(COLORS[0] + 5, COLORS[1] + 10), pixel(COLORS[0] + 35, COLORS[1] + 45),
-                            pixel(COLORS[0] + 184, COLORS[1] + 114), pixel(COLORS[0] + 192, COLORS[1] + 114)]
+                observed = [pixel(APP[0] + 5, APP[1] + 10), pixel(APP[0] + 35, APP[1] + 45),
+                            pixel(APP[0] + 184, APP[1] + 114), pixel(APP[0] + 192, APP[1] + 114)]
                 raise RuntimeError(f'{description}: view/indicator/checker {observed}; logs: {output}')
+            failures = failed_children(serial_text())
+            if failures:
+                raise RuntimeError(f'a program failed during {description!r}: {failures}; logs: {output}')
             time.sleep(0.2)
 
-    # The nested matrix paints nothing itself, so the backdrop shows through
-    # it beside its children, as it does outside the inset.
-    def painted(colour):
-        return lambda pixel: (pixel(COLORS[0] + 5, COLORS[1] + 10) == colour
-                              and pixel(COLORS[0] + 295, COLORS[1] + 295) == colour
-                              and pixel(COLORS[0] + 35, COLORS[1] + 45) == HEALTHY
-                              and pixel(COLORS[0] + 184, COLORS[1] + 114) == CHECKER[0]
-                              and pixel(COLORS[0] + 192, COLORS[1] + 114) == CHECKER[1]
-                              and pixel(100, 100) == '303030' and pixel(620, 460) == '303030'
-                              and pixel(8, 8) == '303030')
-
-    # The launcher lists the template's realm and paints Notes and Colors
-    # tiles in its strip along the bottom of the nested area; the Colors card
-    # colour marks it.
-    width, height, _, _ = pixels()
-    strip_top = height - INSET[1] - STRIP
-    tile = (INSET[0] + 8 + 56 + 2, strip_top + 24 + 2)
-    expect('the chooser did not paint its Colors tile', 30,
-           lambda pixel: pixel(*tile) == '202d43' and pixel(100, 100) == '303030')
-    # Clicking the tile makes the chooser launch Colors through the nested
-    # matrix into the slot the owner opened; Colors then reads its realm (its
-    # own object, empty beneath), creates its record, and paints its view, a
-    # healthy indicator and the checker image over the shifted backdrop.
     def point(x, y):
         capture.command(stream, 'input-send-event', {'events': [
             {'type': 'abs', 'data': {'axis': 'x', 'value': round(x * 32767 / (width - 1))}},
             {'type': 'abs', 'data': {'axis': 'y', 'value': round(y * 32767 / (height - 1))}}]})
+
     def click(x, y):
         point(x, y)
         time.sleep(0.1)
@@ -178,8 +187,55 @@ def check(stream, output, serial):
             capture.command(stream, 'input-send-event', {'events': [
                 {'type': 'btn', 'data': {'button': 'left', 'down': down}}]})
             time.sleep(0.1)
-    click(INSET[0] + 8 + 56 + 24, strip_top + 24 + 24)
-    width, height, before = expect('Colors not launched and painted through the Omega matrix', 30, painted(INITIAL))
+
+    width, height, _, _ = pixels()
+
+    # The picker centres one 128 px tile per user, 152 px apart, and labels
+    # each 76 px below its top edge; a fresh store offers only a new user.
+    def user_tile(index, count):
+        return ((width - (count * 152 - 24)) // 2 + index * 152, (height - 96) // 2)
+
+    def tile_label(index, count, text):
+        left, top = user_tile(index, count)
+        start = left + (128 - len(text) * 12) // 2
+        point(8, 8)
+        expect(f'the picker did not show the {text} tile', 30,
+               lambda pixel: glyphs_match(pixel, start, top + 76, text))
+
+    def click_user_tile(index, count):
+        x, y = user_tile(index, count)
+        click(x + 64, y + 48)
+
+    tile_label(0, 1, 'NEW USER')
+    click_user_tile(0, 1)
+    tile_label(0, 2, 'USER 1')
+    click_user_tile(0, 2)
+    # The picker's choice admits the user's matrix, the Omega program over the
+    # user's realm; the shell retires the picker, routes CONFIGURE to it and
+    # the matrix configures its workspace from the realm's saved record.
+    for marker in USER_MARKERS:
+        wait_for(marker, 60)
+
+    # The launcher stands as the bottom bar and lists the user's realm: the
+    # Colors tile is the second card, 56 px after the Notes tile.
+    bar_top = height - MARGIN - BAR
+    tile = (MARGIN + 8 + 56 + 2, bar_top + 16 + 2)
+    expect('the launcher did not paint its Colors tile', 30,
+           lambda pixel: pixel(*tile) == TILE_CARD and pixel(4, 4) == BACKDROP)
+
+    def painted(colour):
+        return lambda pixel: (pixel(APP[0] + 5, APP[1] + 10) == colour
+                              and pixel(width - MARGIN - 5, height - MARGIN - BAR - GAP - 5) == colour
+                              and pixel(APP[0] + 35, APP[1] + 45) == HEALTHY
+                              and pixel(APP[0] + 184, APP[1] + 114) == CHECKER[0]
+                              and pixel(APP[0] + 192, APP[1] + 114) == CHECKER[1]
+                              and pixel(4, 4) == BACKDROP and pixel(width // 2, height - MARGIN - BAR - 4) == BACKDROP)
+
+    # Clicking the tile makes the launcher launch Colors through the user's
+    # matrix into the workspace; Colors then reads its realm, creates its
+    # record, and paints its view, a healthy indicator and the checker image.
+    click(MARGIN + 8 + 56 + 24, bar_top + 16 + 24)
+    width, height, before = expect('Colors not launched and painted through the user matrix', 40, painted(INITIAL))
     # Colors finishes its first scene a moment after its view fills; the
     # cursor check needs a frame nothing else is still drawing into.
     deadline = time.monotonic() + 10
@@ -199,7 +255,7 @@ def check(stream, output, serial):
         _, _, after = pointer_test.read_scanout(stream, output)
         changed = list(changed_pixels(width, before, after))
         near = [(x, y) for x, y in changed if 0 <= x - target[0] <= 12 and 0 <= y - target[1] <= 16]
-        origin = (INSET[0] + 8 + 56 + 24, strip_top + 24 + 24)
+        origin = (MARGIN + 8 + 56 + 24, bar_top + 16 + 24)
         far = [(x, y) for x, y in changed
                if not (0 <= x - target[0] <= 12 and 0 <= y - target[1] <= 16)
                and not (0 <= x - origin[0] <= 12 and 0 <= y - origin[1] <= 16)]
@@ -208,18 +264,20 @@ def check(stream, output, serial):
         if time.monotonic() > deadline:
             raise RuntimeError(f'cursor did not follow the pointer: {len(near)} near, {far[:8]} far; logs: {output}')
     # Click inside Colors for focus, then Enter saves the toggled record
-    # through the storage relay and repaints the view in the saved colour.
-    click(COLORS[0] + 150, COLORS[1] + 200)
+    # through both storage relays and repaints the view in the saved colour.
+    click(APP[0] + 150, APP[1] + 200)
     for down in (True, False):
         capture.command(stream, 'input-send-event', {'events': [
             {'type': 'key', 'data': {'down': down, 'key': {'type': 'qcode', 'data': 'ret'}}}]})
         time.sleep(0.1)
-    width, height, after = expect('Colors did not save through the Omega matrix', 20, painted(SAVED))
+    width, height, after = expect('Colors did not save through the user matrix', 20, painted(SAVED))
     capture.save_png(output, width, height, after)
     text = serial_text()
-    if 'user panic:' in text or 'initial program stopped' in text or 'Cathedral matrix: child' in text:
-        raise RuntimeError(f'a program failed after admission; logs: {output}')
-    print(f'PASS: Omega stock matrix admitted at the display root and nested over the template realm, with the chooser launching Colors, which paints and saves through both; logs: {output}')
+    failures = failed_children(text)
+    if 'user panic:' in text or 'initial program stopped' in text or failures:
+        raise RuntimeError(f'a program failed after admission: {failures}; logs: {output}')
+    print(f'PASS: Omega stock matrix as the F5 root and user template: a new user entered through the picker, '
+          f'the user matrix configured itself, and its launcher launched Colors, which paints and saves through both; logs: {output}')
 
 
 def main():
@@ -239,7 +297,7 @@ def main():
     command += ['-drive', 'format=raw,file=fat:rw:esp', '-nic', 'none', '-monitor', 'none', '-no-reboot', '-display', 'none']
     command += disk_image.arguments(data)
     flags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
-    capture.run(command, output, 150, flags, ready_marker='Cathedral desktop: Omega root admitted', verify=check)
+    capture.run(command, output, 200, flags, ready_marker='Cathedral desktop: interactive startup ready', verify=check)
 
 
 if __name__ == '__main__':

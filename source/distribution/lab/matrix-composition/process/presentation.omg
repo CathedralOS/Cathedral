@@ -24,19 +24,19 @@ public machine create(gate: &Gate, context: &mut State, slot: u64 [0..=2], incar
         Prepared::Refused { code } -> (error(code))
     }
     machine allocating(gate: &Gate, context: &mut State, slot: u64 [0..=2], rank: u64, upstream: u64) -> [u64; 8] reaches Kernel {
-        transition context.has_parent && rank < 16u64 {
+        transition context.has_parent && rank < 64u64 {
             true -> block forwarded(gate, context, slot, rank, upstream)
             _ -> virtual(context, slot, rank, upstream)
         }
     }
     // The top-level proof has no parent: name the backing after its rank.
     machine virtual(context: &mut State, slot: u64 [0..=2], rank: u64, upstream: u64) -> [u64; 8] {
-        transition rank < 16u64 && upstream < 64u64 {
+        transition rank < 64u64 && upstream < 64u64 {
             true -> named(context, slot, rank, upstream + 1u64)
             _ -> (error(DENIED))
         }
     }
-    machine forwarded(gate: &Gate, context: &mut State, slot: u64 [0..=2], rank: u64, upstream: u64) -> [u64; 8] reaches Kernel requires rank < 16u64 {
+    machine forwarded(gate: &Gate, context: &mut State, slot: u64 [0..=2], rank: u64, upstream: u64) -> [u64; 8] reaches Kernel requires rank < 64u64 {
         let mut request: [u64; 8];
         request[0] = SURFACE_CREATE;
         request[1] = context.world.parent.epoch;
@@ -47,13 +47,13 @@ public machine create(gate: &Gate, context: &mut State, slot: u64 [0..=2], incar
             Reply::Failed { code } -> (error(code))
         }
     }
-    machine accepted(context: &mut State, slot: u64 [0..=2], rank: u64, words: [u64; 8]) -> [u64; 8] requires rank < 16u64 {
+    machine accepted(context: &mut State, slot: u64 [0..=2], rank: u64, words: [u64; 8]) -> [u64; 8] requires rank < 64u64 {
         transition words[0] == 0u64 {
             true -> named(context, slot, rank, words[1])
             _ -> (error(words[0]))
         }
     }
-    machine named(context: &mut State, slot: u64 [0..=2], rank: u64, upstream: u64) -> [u64; 8] requires rank < 16u64 {
+    machine named(context: &mut State, slot: u64 [0..=2], rank: u64, upstream: u64) -> [u64; 8] requires rank < 64u64 {
         let name: u64 = surfaces::create(&mut context.world, slot, rank, upstream);
         let mut reply: [u64; 8];
         reply[1] = name;

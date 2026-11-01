@@ -13,6 +13,7 @@ use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;
 use runtime::memory::object::Object;
+use world::geometry::plus;
 
 // The ordinary launch offer: interaction and storage, never more by default.
 public const ALL: u64 = 3u64;
@@ -30,6 +31,8 @@ public data Declared [copy] {
     private_pages: u64;
     reader_pages: u64;
     surfaces: u64;
+    // The stack the kernel maps for the program, in pages.
+    stack_pages: u64;
 }
 
 // Scan the image for its record, decode it and match it to `offered`.
@@ -45,8 +48,9 @@ machine scanning(gate: &Gate, object: u64, offered: u64, scan: &mut ImageScan, r
     transition {
         read.kind == IMAGE_READ && steps < 64u64 && read.bytes >= 1u64 && read.bytes <= 64u64 && aligned ->
             block reading(gate, object, offered, scan, read.offset, read.bytes, steps)
-        read.kind == IMAGE_ABSENT -> (defaults(offered))
-        read.kind == IMAGE_FOUND && read.bytes >= 1u64 && read.bytes <= 168u64 && aligned -> block found(gate, object, offered, read.offset, read.bytes)
+        read.kind == IMAGE_ABSENT -> (defaults(offered, stack_pages(scan.stack)))
+        read.kind == IMAGE_FOUND && read.bytes >= 1u64 && read.bytes <= 168u64 && aligned ->
+            block found(gate, object, offered, read.offset, read.bytes, stack_pages(scan.stack))
         _ -> (refused(kernel::BAD_EXECUTABLE))
     }
 }
@@ -68,11 +72,12 @@ machine advancing(gate: &Gate, object: u64, offered: u64, scan: &mut ImageScan, 
     transition { _ -> (block scanning(gate, object, offered, scan, next, steps + 1u64)) }
 }
 // The record itself, up to 168 bytes, read eight words at a time.
-machine found(gate: &Gate, object: u64, offered: u64, offset: u64, bytes: u64) -> Declared reaches Kernel requires bytes >= 1u64 && bytes <= 168u64 {
+machine found(gate: &Gate, object: u64, offered: u64, offset: u64, bytes: u64, stack: u64) -> Declared
+    reaches Kernel requires bytes >= 1u64 && bytes <= 168u64 {
     let mut record: [u8; 168];
     let status: u64 = block fill(gate, object, offset / 8u64, &mut record, 0u64, (bytes + 7u64) / 8u64);
     transition status == 0u64 {
-        true -> (decoded(&record, bytes, offered))
+        true -> (decoded(&record, bytes, offered, stack))
         _ -> (refused(status))
     }
 }
@@ -111,35 +116,45 @@ machine fill(gate: &Gate, object: u64, index: u64, record: &mut [u8; 168], at: u
         }
     }
 }
-machine decoded(record: &[u8; 168], bytes: u64, offered: u64) -> Declared {
+machine decoded(record: &[u8; 168], bytes: u64, offered: u64, stack: u64) -> Declared {
     let mut declaration: Declaration;
     let valid: bool = decode(record, bytes, &mut declaration);
     transition valid {
-        true -> (selected(&declaration, offered))
+        true -> (selected(&declaration, offered, stack))
         _ -> (refused(kernel::BAD_EXECUTABLE))
     }
 }
-machine selected(declaration: &Declaration, offered: u64) -> Declared {
+machine selected(declaration: &Declaration, offered: u64, stack: u64) -> Declared {
     let binding: Binding = imports::select(&declaration.entries, declaration.count, declaration.brokered, offered);
     transition binding.status == 0u64 {
         true -> (Declared {
             status: 0u64, brokered: declaration.brokered, mask: binding.mask,
             funded: declaration.funded, channels: declaration.channels, descendants: declaration.descendants,
             profiled: declaration.profiled, private_pages: declaration.private_pages,
-            reader_pages: declaration.reader_pages, surfaces: declaration.surfaces })
+            reader_pages: declaration.reader_pages, surfaces: declaration.surfaces, stack_pages: stack })
         _ -> (refused(code_of(binding.status)))
     }
 }
 // A program without a record is positional and asks for the stock defaults.
-machine defaults(offered: u64) -> Declared {
+machine defaults(offered: u64, stack: u64) -> Declared {
     let mut entries: [Import; 4];
     imports::default_imports(&mut entries);
     let binding: Binding = imports::select(&entries, imports::DEFAULT_IMPORT_COUNT, false, offered);
     transition binding.status == 0u64 {
         true -> (Declared {
             status: 0u64, brokered: false, mask: binding.mask, funded: false, channels: 0u64, descendants: 0u64,
-            profiled: false, private_pages: 0u64, reader_pages: 0u64, surfaces: 0u64 })
+            profiled: false, private_pages: 0u64, reader_pages: 0u64, surfaces: 0u64, stack_pages: stack })
         _ -> (refused(code_of(binding.status)))
+    }
+}
+// The stack the kernel maps for the image, in pages: the default when the
+// image declares none, never above the layout's most.
+machine stack_pages(bytes: u64) -> u64 {
+    let pages: u64 = plus(bytes, kernel::PAGE_BYTES - 1u64) / kernel::PAGE_BYTES;
+    transition {
+        bytes == 0u64 -> (kernel::DEFAULT_STACK_PAGES)
+        bytes > kernel::MAX_STACK_PAGES * kernel::PAGE_BYTES -> (kernel::MAX_STACK_PAGES)
+        _ -> (pages)
     }
 }
 machine code_of(status: u64) -> u64 {

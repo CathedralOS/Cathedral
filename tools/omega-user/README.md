@@ -77,8 +77,10 @@ harness uses `OMEGA_USER_BIN`, or the saved standalone compiler above, for that
 entry. Rust entries retain their normal Cargo build.
 
 An optional `process.json` beside the native consumer declares `imports`
-(`contract`, `minimum`, `maximum`, `required`), `channels` and `descendants`.
-[manifest.py](manifest.py) encodes the platform's existing funded import record;
+(`contract`, `minimum`, `maximum`, `required`), `channels` and `descendants`,
+and optionally a `profile` of `private_pages`, `reader_pages` and `surfaces`,
+which an owning matrix fits to its offer instead of lending the whole offer.
+[manifest.py](manifest.py) encodes the platform's existing funded and profile import records;
 the linker places it first in the read-only load, and packaging verifies that
 position. This requests launch authority from the owner; it grants none itself.
 The four installed standalone apps and the stock matrix supply such a record;

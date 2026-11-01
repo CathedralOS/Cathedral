@@ -15,6 +15,7 @@ use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;
 use runtime::connection::main::Frame;
+use runtime::connection::main::Peer;
 use runtime::task::main::Exit;
 use runtime::time::Tick;
 use runtime::waiting::Set;
@@ -23,10 +24,17 @@ use world::launches;
 use world::geometry::zeros_from;
 use storage;
 use presentation;
+use recovery;
 use report;
 
 // How long a child has to complete each startup handshake, as the Rust host allows.
 public const HANDSHAKE_TICKS: u64 = 300u64;
+// The frames the stock host funds per descendant slot and the least it funds
+// a load: below the kernel's bootstrap allowance per slot, so a funder keeps
+// its own frames beside what it lends.
+public const SLOT_FRAMES: u64 = 256u64;
+// The page tables that map a load, as the kernel's admission ceiling counts them.
+public const TABLE_FRAMES: u64 = 48u64;
 public const MAX_IMAGES: u64 = 14u64;
 
 public machine owner_word(op: u64) -> bool {
@@ -96,7 +104,8 @@ public machine run(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4]
         descendants: u64, images: u64, cpu: u64) -> u64 reaches Kernel requires images < 16384u64 && descendants < 64u64 {
         let private_pages: u64 = context.staged_private[slot];
         let reader_pages: u64 = context.staged_reader[slot];
-        let frames: u64 = physical_frames(context.staged_frames[slot], private_pages, descendants);
+        // An image from the owner's catalogue has no size here; it is funded as one slot's load.
+        let frames: u64 = physical_frames(context.staged_frames[slot], 0u64, 0u64, private_pages, descendants);
         context.staged_private[slot] = 0u64;
         context.staged_reader[slot] = 0u64;
         context.staged_frames[slot] = 0u64;
@@ -168,12 +177,15 @@ public machine admit_reserved(gate: &Gate, context: &mut State, now: u64, slot: 
     // The child accepts its owner control as its first act and only then asks
     // the broker for services, so this matrix connects to that control before
     // anything else can wait on the child. The connection takes custody of the
-    // kernel-installed pair either way.
+    // kernel-installed pair either way; a slot's previous occupant left its
+    // client closed, so a fresh one stands first.
     machine controlling(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64) -> u64 reaches Kernel {
         let sender: u64 = context.slots[slot].control.sender;
         let receiver: u64 = context.slots[slot].control.receiver;
         context.slots[slot].control.sender = 0u64;
         context.slots[slot].control.receiver = 0u64;
+        let fresh: Peer;
+        context.controls[slot] = fresh;
         let status: u64 = block runtime::connection::main::connect(gate, &mut context.controls[slot], sender, receiver,
             runtime::time::after(now, HANDSHAKE_TICKS));
         transition status == 0u64 {
@@ -216,18 +228,22 @@ machine allow(gate: &Gate, launch: u64, grant: u64) -> u64 reaches Kernel invoke
         _ -> (grant)
     }
 }
-// Backing for the load and its private pages, never below one admission
-// allowance per slot the child may fill, unless the owner staged an amount.
-// The load itself is reserved under the kernel's admission ceiling, as the
-// Rust host reserves its children.
-public machine physical_frames(staged: u64, private_pages: u64, descendants: u64) -> u64 requires descendants < 64u64 {
-    let subtree: u64 = (descendants + 1u64) * kernel::ADMISSION_ALLOWANCE_FRAMES;
-    let load: u64 = world::geometry::plus(kernel::ADMISSION_ALLOWANCE_FRAMES, private_pages);
-    transition {
-        staged != 0u64 -> (staged)
-        load > subtree -> (load)
-        _ -> (subtree)
+// Backing for the load and its private pages, then one slot's frames per
+// descendant slot the child may fill, unless the owner staged an amount. The
+// load is the image's pages, the stack it declares and the tables that map
+// them, never below one slot's frames; the kernel reserves the load itself
+// under its admission ceiling.
+public machine physical_frames(staged: u64, image_pages: u64, stack_pages: u64, private_pages: u64, descendants: u64) -> u64
+    requires descendants < 64u64 {
+    let mapped: u64 = world::geometry::plus(world::geometry::plus(image_pages, stack_pages), TABLE_FRAMES);
+    let load: u64 = world::geometry::plus(larger(SLOT_FRAMES, mapped), private_pages);
+    transition staged != 0u64 {
+        true -> (staged)
+        _ -> (world::geometry::plus(load, descendants * SLOT_FRAMES))
     }
+}
+machine larger(a: u64, b: u64) -> u64 {
+    transition a < b { true -> (b) _ -> (a) }
 }
 // Drop the owner control and the storage listener, stop and collect the
 // child, return its reservation and forget its view and staged batch.
@@ -243,6 +259,7 @@ public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reac
         let task: u64 = context.slots[slot].task;
         let exit: Exit = block runtime::admission::main::stop(gate, &mut context.slots[slot]);
         exited(gate, slot, exit);
+        recovery::retired(context, slot, exit);
         let observer: u64 = launches::finished(&mut context.observations, task, outcome_of(exit));
         launches::disconnected(&mut context.observations, slot);
         let ignored: u64 = runtime::task::main::release(gate, context.reservations[slot]);

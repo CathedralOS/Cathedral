@@ -19,12 +19,14 @@ use runtime::kernel::Kernel;
 use runtime::kernel;
 use runtime::connection::main::Frame;
 use world::geometry::zeros_from;
+use world::geometry::plus;
 use policy::children::launch::resources::main::allocate;
 use policy::children::launch::resources::main::Capacity;
 use policy::children::launch::resources::main::Profile;
 use policy::children::launch::resources::main::Declaration;
 use policy::children::launch::resources::main::Admission;
 use policy::children::launch::resources::main::Allocation;
+use policy::children::launch::resources::main::SurfaceRequest;
 use policy::children::launch::admission;
 use policy::children::launch::admission::Facts;
 use policy::children::launch::admission::Decision;
@@ -40,6 +42,7 @@ use world::geometry::Rect;
 use storage;
 use storage::Outcome;
 use children;
+use report;
 use declaration;
 use declaration::Declared;
 
@@ -85,8 +88,8 @@ public machine run(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4]
     context.staged_frames[slot] = 0u64;
     block launch(gate, context, now, slot, object, subtree, argument, channels, descendants, cpu, private_pages, reader_pages, frames, 0u64, offered)
 }
-// Read, declare, fit, reserve, admit and bind: every failed step releases the
-// image reference and anything reserved behind it.
+// Read and admit: the owner's launch reads the program over this matrix's
+// own binding and binds the child to the realm the owner named.
 public machine launch(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], object: u64, subtree: u64, argument: u64,
     channels: u64, descendants: u64, cpu: u64, private_pages: u64, reader_pages: u64, frames: u64, stamp: u64, offered: u64) -> u64
     reaches Kernel blocks; invokes Kernel; {
@@ -99,7 +102,7 @@ public machine launch(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..
         reaches Kernel requires descendants < 64u64 {
         let outcome: Outcome = block storage::read_object(gate, context, now, object, stamp);
         transition outcome.words[0] == 0u64 && outcome.attachment != 0u64 {
-            true -> block declared(gate, context, now, slot, subtree, argument, channels, descendants, cpu, outcome.attachment, outcome.words[4],
+            true -> block admitted_from(gate, context, now, slot, subtree, argument, channels, descendants, cpu, outcome.attachment, outcome.words[4],
                 private_pages, reader_pages, frames, offered)
             _ -> block unread(gate, outcome)
         }
@@ -111,72 +114,112 @@ public machine launch(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..
             _ -> (outcome.words[0])
         }
     }
-    machine declared(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], subtree: u64, argument: u64, channels: u64,
+    // The image is this matrix's to release once the child holds its own reference.
+    machine admitted_from(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], subtree: u64, argument: u64, channels: u64,
         descendants: u64, cpu: u64, image: u64, length: u64, private_pages: u64, reader_pages: u64, frames: u64, offered: u64) -> u64
         reaches Kernel requires descendants < 64u64 {
+        let desktop_app: bool = context.desktop && slot >= 1u64 && slot <= 3u64;
+        let status: u64 = block admit_image(gate, context, now, slot, image, length, subtree, argument, channels, descendants, cpu,
+            private_pages, reader_pages, frames, offered, desktop_app, true);
+        block release(gate, image);
+        status
+    }
+}
+// Admit a child from a sealed image this matrix holds: resolve its
+// declaration, fit it to the allowances with the stock resource policy (an
+// app in a desktop takes the desktop's share), reserve it, admit it, and
+// bind its storage to `subtree` when `bound`. The image stays the caller's
+// to release; the services granted and the surfaces allotted stay readable
+// afterwards. Every failed step releases anything reserved behind it.
+public machine admit_image(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], image: u64, length: u64, subtree: u64, argument: u64,
+    channels: u64, descendants: u64, cpu: u64, private_pages: u64, reader_pages: u64, frames: u64, offered: u64, desktop_app: bool, bound: bool) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    context.last_granted = 0u64;
+    context.allotted_surfaces = 0u64;
+    transition !context.slots[slot].live && descendants < 64u64 && image != 0u64 {
+        true -> block declared(gate, context, now, slot, subtree, argument, channels, descendants, cpu, image, length, private_pages, reader_pages,
+            frames, offered, desktop_app, bound)
+        _ -> (kernel::BUSY)
+    }
+    machine declared(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], subtree: u64, argument: u64, channels: u64,
+        descendants: u64, cpu: u64, image: u64, length: u64, private_pages: u64, reader_pages: u64, frames: u64, offered: u64, desktop_app: bool,
+        bound: bool) -> u64 reaches Kernel requires descendants < 64u64 {
         let found: Declared = block declaration::resolve(gate, image, length, offered);
         transition found.status == 0u64 && found.brokered {
-            true -> block fitted(gate, context, now, slot, subtree, argument, channels, descendants, cpu, image, found, private_pages, reader_pages, frames)
-            _ -> block refused_image(gate, image, refusal(found))
+            true -> block fitted(gate, context, now, slot, subtree, argument, channels, descendants, cpu, image, length, found, private_pages,
+                reader_pages, frames, desktop_app, bound)
+            _ -> (failed_stage(gate, slot, 1u64, refusal(found)))
         }
     }
     // Fit the declaration to the offered allowances, channels and descendants;
     // a requirement beyond them refuses the launch.
     machine fitted(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], subtree: u64, argument: u64, channels: u64,
-        descendants: u64, cpu: u64, image: u64, found: Declared, private_pages: u64, reader_pages: u64, frames: u64) -> u64
-        reaches Kernel requires descendants < 64u64 {
+        descendants: u64, cpu: u64, image: u64, length: u64, found: Declared, private_pages: u64, reader_pages: u64, frames: u64,
+        desktop_app: bool, bound: bool) -> u64 reaches Kernel requires descendants < 64u64 {
         let offered: Capacity = Capacity { private_pages: private_pages, reader_pages: reader_pages, channels: channels, descendants: descendants };
-        let admission: Admission = allocate(&offered, profile_of(found), declaration_of(found), false);
+        let admission: Admission = allocate(&offered, profile_of(found), declaration_of(found), desktop_app);
         transition admission {
-            Admission::Accepted { allocation } -> block sized(gate, context, now, slot, subtree, argument, cpu, image, found, allocation, frames)
-            Admission::Refused -> block refused_image(gate, image, kernel::NO_MEMORY)
+            Admission::Accepted { allocation } -> block sized(gate, context, now, slot, subtree, argument, cpu, image, length, found, allocation,
+                frames, bound)
+            Admission::Refused -> (failed_stage(gate, slot, 2u64, kernel::NO_MEMORY))
         }
     }
     machine sized(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], subtree: u64, argument: u64, cpu: u64, image: u64,
-        found: Declared, allocation: Allocation, frames: u64) -> u64 reaches Kernel {
+        length: u64, found: Declared, allocation: Allocation, frames: u64, bound: bool) -> u64 reaches Kernel {
         let private_pages: u64 = allocation.capacity.private_pages;
         let reader_pages: u64 = allocation.capacity.reader_pages;
         let channels: u64 = allocation.capacity.channels;
         let descendants: u64 = allocation.capacity.descendants;
+        context.allotted_surfaces = surface_count(allocation.surfaces);
         transition descendants < 64u64 {
-            true -> block reserving(gate, context, now, slot, subtree, argument, cpu, image, found, private_pages, reader_pages, channels, descendants, frames)
-            _ -> block refused_image(gate, image, kernel::INVALID_ARGUMENT)
+            true -> block reserving(gate, context, now, slot, subtree, argument, cpu, image, length, found, private_pages, reader_pages, channels,
+                descendants, frames, bound)
+            _ -> (kernel::INVALID_ARGUMENT)
+        }
+    }
+    machine surface_count(request: SurfaceRequest) -> u64 {
+        transition request {
+            SurfaceRequest::Request { count } -> (count)
+            SurfaceRequest::Inherit -> (0u64)
         }
     }
     machine reserving(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], subtree: u64, argument: u64, cpu: u64, image: u64,
-        found: Declared, private_pages: u64, reader_pages: u64, channels: u64, descendants: u64, staged: u64) -> u64
+        length: u64, found: Declared, private_pages: u64, reader_pages: u64, channels: u64, descendants: u64, staged: u64, bound: bool) -> u64
         reaches Kernel requires descendants < 64u64 {
-        let frames: u64 = children::physical_frames(staged, private_pages, descendants);
+        let image_pages: u64 = plus(length, kernel::PAGE_BYTES - 1u64) / kernel::PAGE_BYTES;
+        let frames: u64 = children::physical_frames(staged, image_pages, found.stack_pages, private_pages, descendants);
         let executable: u64 = runtime::task::main::image_from_object(gate, image, 0u64);
         transition executable < kernel::ERROR_BASE {
-            true -> block reserved(gate, context, now, slot, subtree, argument, cpu, image, found, executable,
-                runtime::task::main::reserve(gate, executable, private_pages, reader_pages, channels, descendants, kernel::MAX_ADMISSION_FRAMES, frames))
-            _ -> block refused_image(gate, image, executable)
+            true -> block reserved(gate, context, now, slot, subtree, argument, cpu, found, executable,
+                runtime::task::main::reserve(gate, executable, private_pages, reader_pages, channels, descendants, kernel::MAX_ADMISSION_FRAMES, frames),
+                bound)
+            _ -> (failed_stage(gate, slot, 3u64, executable))
         }
     }
     // A reservation consumes the image grant; a refused one leaves it to release.
-    machine reserved(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], subtree: u64, argument: u64, cpu: u64, image: u64,
-        found: Declared, executable: u64, launch: u64) -> u64 reaches Kernel {
+    machine reserved(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], subtree: u64, argument: u64, cpu: u64,
+        found: Declared, executable: u64, launch: u64, bound: bool) -> u64 reaches Kernel {
         transition launch < kernel::ERROR_BASE {
-            true -> block admitting(gate, context, now, slot, subtree, argument, cpu, image, found, launch)
-            _ -> block unreserved(gate, image, executable, launch)
+            true -> block admitting(gate, context, now, slot, subtree, argument, cpu, found, launch, bound)
+            _ -> (unreserved(gate, slot, executable, launch))
         }
     }
-    machine unreserved(gate: &Gate, image: u64, executable: u64, status: u64) -> u64 reaches Kernel {
+    machine unreserved(gate: &Gate, slot: u64 [0..=4], executable: u64, status: u64) -> u64 reaches Kernel {
         let ignored: u64 = runtime::task::main::image_release(gate, executable);
-        block release(gate, image);
-        status
+        failed_stage(gate, slot, 4u64, status)
     }
     // The kernel keeps its own reference to the code once it is reserved.
-    machine admitting(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], subtree: u64, argument: u64, cpu: u64, image: u64,
-        found: Declared, launch: u64) -> u64 reaches Kernel {
+    machine admitting(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], subtree: u64, argument: u64, cpu: u64,
+        found: Declared, launch: u64, bound: bool) -> u64 reaches Kernel {
         let granted: u64 = found.mask & (INTERACTION | STORAGE);
         let images: u64 = context.policies[slot].images;
         let status: u64 = block children::admit_reserved(gate, context, now, slot, launch, argument, images, cpu, granted);
-        block release(gate, image);
-        transition status == 0u64 && (granted & STORAGE) != 0u64 {
-            true -> block binding(gate, context, now, slot, subtree)
-            _ -> (status)
+        context.last_granted = granted;
+        admitted_budget(gate, status);
+        transition {
+            status != 0u64 -> (failed_stage(gate, slot, 5u64, status))
+            bound && (granted & STORAGE) != 0u64 -> block binding(gate, context, now, slot, subtree)
+            _ -> (0u64)
         }
     }
     // A launched child's storage is bound to the realm the owner named; a
@@ -190,12 +233,18 @@ public machine launch(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..
     }
     machine unbound(gate: &Gate, context: &mut State, slot: u64 [0..=4], status: u64) -> u64 reaches Kernel {
         block children::reclaim(gate, context, slot);
-        status
+        failed_stage(gate, slot, 6u64, status)
     }
-    machine refused_image(gate: &Gate, image: u64, status: u64) -> u64 reaches Kernel {
-        block release(gate, image);
-        status
-    }
+}
+// What the matrix itself uses once a child stands, for the lab to size manifests by.
+machine admitted_budget(gate: &Gate, status: u64) reaches Kernel invokes Kernel; {
+    transition status == 0u64 { true -> report::budget(gate) _ -> idle() }
+}
+machine idle() {}
+// A failed stage goes to the console, where a proof can read where and why.
+machine failed_stage(gate: &Gate, slot: u64, stage: u64, code: u64) -> u64 reaches Kernel invokes Kernel; {
+    report::launch_stage(gate, slot, stage, code);
+    code
 }
 // A child's request for a sibling under the stock admission decision.
 public machine child_launch(gate: &Gate, context: &mut State, now: u64, requester: u64 [0..=4], incarnation: u64, words: [u64; 8]) -> [u64; 8]
@@ -214,8 +263,8 @@ public machine child_launch(gate: &Gate, context: &mut State, now: u64, requeste
         let decision: Decision = admission::admit(&asked, &facts);
         transition decision {
             Decision::Admitted { slot } -> block targeted(gate, context, now, requester, incarnation, object, withhold, bound.scope, slot)
-            Decision::TargetRefused { slot, reason } -> (error(code_of(reason)))
-            Decision::Refused { reason } -> (error(code_of(reason)))
+            Decision::TargetRefused { slot, reason } -> (refused(gate, code_of(reason)))
+            Decision::Refused { reason } -> (refused(gate, code_of(reason)))
         }
     }
     machine targeted(gate: &Gate, context: &mut State, now: u64, requester: u64 [0..=4], incarnation: u64, object: u64, withhold: u64, stamp: u64,
@@ -239,14 +288,15 @@ public machine child_launch(gate: &Gate, context: &mut State, now: u64, requeste
             stamp, offered);
         transition status == 0u64 {
             true -> block placing(gate, context, requester, incarnation, slot)
-            _ -> (error(status))
+            _ -> (refused(gate, status))
         }
     }
-    // Stock sibling stacking: slot zero below slot one; then the owner's placement.
+    // The ranks the policy allotted or the slot's standing count; then the owner's placement.
     machine placing(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4]) -> [u64; 8] reaches Kernel {
-        let count: u64 = context.policies[slot].surfaces;
+        let standing: u64 = context.policies[slot].surfaces;
+        let allotted: u64 = context.allotted_surfaces;
         let allowance: u64 = context.world.allowance;
-        let ranged: u64 = range_for(context, slot, count, allowance);
+        let ranged: u64 = range_for(context, slot, standing, allotted, allowance);
         transition ranged == 0u64 {
             true -> block located(gate, context, requester, incarnation, slot)
             _ -> block unplaced(gate, context, slot, ranged)
@@ -272,7 +322,7 @@ public machine child_launch(gate: &Gate, context: &mut State, now: u64, requeste
     }
     machine unplaced(gate: &Gate, context: &mut State, slot: u64 [0..=4], status: u64) -> [u64; 8] reaches Kernel {
         block children::reclaim(gate, context, slot);
-        error(status)
+        refused(gate, status)
     }
     // The requester's receipt names its latest launch on this connection.
     machine receipt(context: &mut State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4]) -> [u64; 8] {
@@ -290,12 +340,30 @@ public machine child_launch(gate: &Gate, context: &mut State, now: u64, requeste
         words
     }
 }
-machine range_for(context: &mut State, slot: u64 [0..=4], count: u64, allowance: u64) -> u64 {
+// Sibling stacking puts slot zero at the bottom of the allowance and slot one
+// at the top; a desktop app takes the ranks the policy allotted at the lowest
+// free base above the background's.
+machine range_for(context: &mut State, slot: u64 [0..=4], standing: u64, allotted: u64, allowance: u64) -> u64 {
     transition {
-        slot == 0u64 -> (surfaces::range(&mut context.world, slot, 0u64, count))
-        slot == 1u64 && count <= allowance -> (surfaces::range(&mut context.world, slot, allowance - count, count))
+        context.desktop && allotted != 0u64 && allotted <= 16u64 -> lowest(context, slot, allotted, allowance, 1u64)
+        context.desktop -> (kernel::NO_MEMORY)
+        slot == 0u64 -> (surfaces::range(&mut context.world, slot, 0u64, standing))
+        slot == 1u64 && standing <= allowance -> (surfaces::range(&mut context.world, slot, allowance - standing, standing))
         slot == 1u64 -> (kernel::NO_MEMORY)
         _ -> (kernel::DENIED)
+    }
+    machine lowest(context: &mut State, slot: u64 [0..=4], count: u64, allowance: u64, base: u64) -> u64 requires count <= 16u64 && base <= 64u64 {
+        transition base < 64u64 && base + count <= allowance {
+            true -> tried(context, slot, count, allowance, base)
+            _ -> (kernel::NO_MEMORY)
+        }
+    }
+    machine tried(context: &mut State, slot: u64 [0..=4], count: u64, allowance: u64, base: u64) -> u64 requires count <= 16u64 && base < 64u64 {
+        let status: u64 = surfaces::range(&mut context.world, slot, base, count);
+        transition status == 0u64 {
+            true -> (0u64)
+            _ -> lowest(context, slot, count, allowance, base + 1u64)
+        }
     }
 }
 // [LAUNCH_STATUS, receipt] -> [0, state] for the requester's own receipt.
@@ -304,10 +372,11 @@ public machine status(context: &State, requester: u64 [0..=4], incarnation: u64,
 }
 // Host-authenticated facts for the stock decision: this matrix runs one
 // launch at a time and relays storage synchronously, so nothing is busy or
-// storing when a request arrives, and it is not yet a desktop.
+// storing when a request arrives; in a desktop the chrome is the launcher in
+// the first slot, whose live connection the request arrived on.
 machine facts_of(context: &State, requester: u64 [0..=4], bound: bool) -> Facts {
     Facts {
-        busy: false, desktop: false, exact_chrome: false, requester: Requester::Child { slot: requester },
+        busy: false, desktop: context.desktop, exact_chrome: context.desktop && requester == 0u64, requester: Requester::Child { slot: requester },
         occupied_slots: occupied(context, 0u64, 0u64), unavailable_connections: 0u64, storing: false,
         has_receipt: launches::available(&context.observations, requester), has_ticket: true,
         standing_slots: standing(context, 0u64, 0u64), has_storage_binding: bound }
@@ -335,6 +404,11 @@ machine standing(context: &State, slot: u64, mask: u64) -> u64 requires slot <= 
             _ -> standing(context, slot + 1u64, mask)
         }
     }
+}
+// The refusal goes to the console, where a proof can read why.
+machine refused(gate: &Gate, code: u64) -> [u64; 8] reaches Kernel invokes Kernel; {
+    report::launch_refused(gate, code);
+    error(code)
 }
 machine code_of(reason: Refusal) -> u64 {
     transition reason {

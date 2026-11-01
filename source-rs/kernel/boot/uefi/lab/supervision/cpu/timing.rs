@@ -25,7 +25,7 @@ pub(super) fn exercise(memory: &mut PreparedMemory, console: &mut SerialPort) {
                     memory: if yielding >= 2 {
                         &[cathedral_kernel_contracts::memory::Grant {
                             task: 1,
-                            private_pages: 4 * cathedral_kernel_contracts::memory::MAX_PAGES,
+                            private_pages: cathedral_kernel_contracts::memory::MAX_PRIVATE_PAGES,
                             shared_pages: 0,
                         }]
                     } else {

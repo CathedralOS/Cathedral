@@ -33,9 +33,9 @@ public data Child {
     frame_serial: u64;
     frame_ticket: u64;
     frame_ready: bool;
-    surfaces: [Surface; 16];
+    surfaces: [Surface; 64];
     surface_base: u64 [0..=64];
-    surface_limit: u64 [0..=16];
+    surface_limit: u64 [0..=64];
     next_surface: u64;
     queues: [Queue; 4];
     next_stream: u64 [0..=3];

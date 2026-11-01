@@ -1,0 +1,173 @@
+module listing;
+// Names in this matrix's realm, read over its own storage binding: the realm
+// is listed one ENTRIES page at a time and each row's number and 32-byte
+// name are compared with the name wanted, so one listing answers a lookup
+// without an attachment of this matrix's own. The realm is the store's root
+// at the storage root and the object the parent reported beneath one.
+// RESOLVE_PATH walks a relative path one segment at a time the same way.
+use protocol::main;
+use protocol::matrix;
+use protocol::storage::operations;
+use main::State;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::memory::object::Object;
+use storage;
+use storage::Outcome;
+
+// Rows an ENTRIES page holds at most, and the words of one row: number,
+// revision, four of name and four of media type.
+public const ROWS: u64 = 51u64;
+public const ROW_WORDS: u64 = 10u64;
+public const PAGES: u64 = 16u64;
+public const SEGMENTS: u64 = 8u64;
+// The provider's answer for a name nobody carries.
+public const MISSING: u64 = 0xfffffffffffffffeu64;
+
+// The object this matrix's realm is rooted at.
+public machine realm(context: &State) -> u64 {
+    transition context.store.root {
+        true -> (0u64)
+        _ -> (context.store.realm)
+    }
+}
+// The number of the direct child of `parent` named `name`, or zero.
+public machine find(gate: &Gate, context: &mut State, now: u64, parent: u64, name: &[u64; 4]) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    block page(gate, context, now, parent, name, 0u64, 0u64)
+}
+machine page(gate: &Gate, context: &mut State, now: u64, parent: u64, name: &[u64; 4], after: u64, pages: u64) -> u64
+    reaches Kernel requires pages <= PAGES {
+    let mut words: [u64; 8];
+    words[0] = ((STORAGE_BASE as u64 in Wrapping) + (operations::ENTRIES as u64 in Wrapping)) as u64;
+    words[1] = parent;
+    words[3] = after;
+    transition pages < PAGES {
+        true -> block listed(gate, context, now, parent, name, words, pages)
+        _ -> (0u64)
+    }
+    machine listed(gate: &Gate, context: &mut State, now: u64, parent: u64, name: &[u64; 4], words: [u64; 8], pages: u64) -> u64
+        reaches Kernel requires pages < PAGES {
+        let outcome: Outcome = block storage::request(gate, context, now, words);
+        let count: u64 = outcome.words[1];
+        transition outcome.words[0] == 0u64 && count != 0u64 && count <= ROWS && outcome.attachment != 0u64 {
+            true -> block rows(gate, context, now, parent, name, outcome.attachment, outcome.words[2], count, 0u64, pages)
+            _ -> block ended(gate, outcome.attachment)
+        }
+    }
+    // A listing with no page, or no further page: the name is not here.
+    machine ended(gate: &Gate, attachment: u64) -> u64 reaches Kernel {
+        block release(gate, attachment);
+        0u64
+    }
+    machine rows(gate: &Gate, context: &mut State, now: u64, parent: u64, name: &[u64; 4], sheet: u64, last: u64, count: u64, row: u64,
+        pages: u64) -> u64 reaches Kernel requires row <= ROWS && count <= ROWS && pages < PAGES {
+        transition row < count {
+            true -> block row_read(gate, context, now, parent, name, sheet, last, count, row, pages)
+            _ -> block next_page(gate, context, now, parent, name, sheet, last, pages)
+        }
+    }
+    machine row_read(gate: &Gate, context: &mut State, now: u64, parent: u64, name: &[u64; 4], sheet: u64, last: u64, count: u64, row: u64,
+        pages: u64) -> u64 reaches Kernel requires row < ROWS && count <= ROWS && pages < PAGES {
+        let mut words: [u64; 8];
+        let holder: Object = Object { handle: sheet };
+        let status: u64 = block runtime::memory::object::read(gate, &holder, row * ROW_WORDS, &mut words, 6u64);
+        let same: bool = words[2] == name[0] && words[3] == name[1] && words[4] == name[2] && words[5] == name[3];
+        transition {
+            status != 0u64 -> block ended(gate, sheet)
+            same -> block found(gate, sheet, words[0])
+            _ -> block rows(gate, context, now, parent, name, sheet, last, count, row + 1u64, pages)
+        }
+    }
+    machine found(gate: &Gate, sheet: u64, object: u64) -> u64 reaches Kernel {
+        block release(gate, sheet);
+        object
+    }
+    machine next_page(gate: &Gate, context: &mut State, now: u64, parent: u64, name: &[u64; 4], sheet: u64, last: u64, pages: u64) -> u64
+        reaches Kernel requires pages < PAGES {
+        block release(gate, sheet);
+        transition { _ -> (block page(gate, context, now, parent, name, last, pages + 1u64)) }
+    }
+}
+// [RESOLVE_PATH, path bytes in words one to four] -> [0, object]: each
+// segment of the relative path names a child of the one before, from the realm.
+public machine resolve(gate: &Gate, context: &mut State, now: u64, words: &[u64; 8]) -> [u64; 8] reaches Kernel blocks; invokes Kernel; {
+    let mut path: [u8; 32];
+    unpack(words, &mut path, 0u64);
+    let parent: u64 = realm(context);
+    block segment(gate, context, now, &path, 0u64, parent, 0u64)
+}
+machine segment(gate: &Gate, context: &mut State, now: u64, path: &[u8; 32], start: u64, parent: u64, depth: u64) -> [u64; 8]
+    reaches Kernel requires start <= 32u64 && depth <= SEGMENTS {
+    let end: u64 = segment_end(path, start);
+    transition depth < SEGMENTS && start < 32u64 && end > start && end <= 32u64 {
+        true -> block lookup(gate, context, now, path, start, end, parent, depth)
+        _ -> (error(kernel::DENIED))
+    }
+    machine lookup(gate: &Gate, context: &mut State, now: u64, path: &[u8; 32], start: u64, end: u64, parent: u64, depth: u64) -> [u64; 8]
+        reaches Kernel requires start < 32u64 && end > start && end <= 32u64 && depth < SEGMENTS {
+        let mut name: [u64; 4];
+        pack_name(path, start, end, &mut name, start);
+        let object: u64 = block find(gate, context, now, parent, &name);
+        let terminal: bool = end >= 32u64 || path[end] == 0u8;
+        transition {
+            object == 0u64 -> (error(MISSING))
+            terminal -> (resolved(object))
+            _ -> block segment(gate, context, now, path, end + 1u64, object, depth + 1u64)
+        }
+    }
+    machine resolved(object: u64) -> [u64; 8] {
+        let mut reply: [u64; 8];
+        reply[1] = object;
+        reply
+    }
+}
+// The index of the byte that ends the segment starting at `start`: a slash,
+// a zero, or the end of the path.
+machine segment_end(path: &[u8; 32], start: u64) -> u64 requires start <= 32u64 {
+    transition start < 32u64 && path[start] != 0u8 && path[start] != 47u8 {
+        true -> segment_end(path, start + 1u64)
+        _ -> (start)
+    }
+}
+// The segment's bytes as the four little-endian words a metadata name holds.
+machine pack_name(path: &[u8; 32], start: u64, end: u64, name: &mut [u64; 4], index: u64) requires start < 32u64 && end <= 32u64 && index <= 32u64 {
+    transition index < end && index < 32u64 && index >= start && index - start < 32u64 {
+        true -> packed(path, start, end, name, index)
+        _ -> done()
+    }
+    machine packed(path: &[u8; 32], start: u64, end: u64, name: &mut [u64; 4], index: u64)
+        requires start < 32u64 && end <= 32u64 && index < 32u64 && index >= start && index - start < 32u64 {
+        let at: u64 = index - start;
+        let word: u64 = at / 8u64;
+        name[word] = name[word] | ((path[index] as u64) << ((at % 8u64) * 8u64));
+        transition { _ -> pack_name(path, start, end, name, index + 1u64) }
+    }
+}
+// The path bytes out of words one to four.
+machine unpack(words: &[u64; 8], path: &mut [u8; 32], index: u64) requires index <= 32u64 {
+    transition index < 32u64 {
+        true -> byte(words, path, index)
+        _ -> done()
+    }
+    machine byte(words: &[u64; 8], path: &mut [u8; 32], index: u64) requires index < 32u64 {
+        path[index] = ((words[1u64 + index / 8u64] >> ((index % 8u64) * 8u64)) & 255u64) as u8;
+        transition { _ -> unpack(words, path, index + 1u64) }
+    }
+}
+machine release(gate: &Gate, handle: u64) reaches Kernel {
+    transition handle != 0u64 {
+        true -> block releasing(gate, handle)
+        _ -> done()
+    }
+    machine releasing(gate: &Gate, handle: u64) reaches Kernel {
+        let ignored: u64 = block Kernel::memory_release(gate, handle);
+    }
+}
+machine error(code: u64) -> [u64; 8] {
+    let mut words: [u64; 8];
+    words[0] = code;
+    words
+}
+machine done() {}

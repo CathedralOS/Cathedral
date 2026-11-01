@@ -17,7 +17,7 @@ public data Placement [copy] {
     authority: u64;
     rect: Rect;
     keys: u64;
-    surfaces: u64 [0..=16];
+    surfaces: u64 [0..=64];
     surface_base: u64 [0..=64];
 }
 // The owner chooses the controller; a child cannot grant this to itself.

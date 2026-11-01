@@ -12,12 +12,14 @@ profile swaps and the [bridge](../bridge/policy/main.omg) goes. The
 and declares a 128-page stack in [native/link.json](../native/link.json).
 
 Today it is the display and storage root with children it funds itself, and
-it runs nested under a parent matrix as well: the desktop supervisor admits
-the root exactly as it admits the Rust host, the root admits a nested instance
-from a realm object as it admits any program, and each serves the owner, the
-display or the parent, physical input or the parent's snapshots, the provider
-links or the upstream storage connection, and up to five children with their
-interaction and storage connections.
+it runs nested under a parent matrix as well: the F5 desktop supervisor admits
+the root exactly as it admits the Rust host and drives it with the same login
+and user entry words, the root admits a user's matrix from a realm object as
+it admits any program, and that matrix configures its workspace from the
+realm's saved record itself. Each serves the owner, the display or the parent,
+physical input or the parent's snapshots, the provider links or the upstream
+storage connection, and up to five children with their interaction and storage
+connections.
 
 - [startup.omg](startup.omg): read the environment. Four endpoints make the
   display root; owner control opens first, because the supervisor connects it
@@ -36,7 +38,10 @@ interaction and storage connections.
   world's grant, with the compositor's whole tile allowance and the source
   streams bound; under a parent the view is the parent's to grant), the
   LAUNCH_IMAGES, LAUNCH_POLICY and LAUNCH_PLACE policy for a slot, the children,
-  storage and stored words below, words routed to a child, and the World's
+  storage and stored words below, words routed to a child, CONFIGURE, the
+  desktop supervisor's recovery words (a nested matrix's launcher fallback,
+  a slot's save-recovery grant, the recovery poll, RESTORE_STORAGE after
+  provider replacement), RESOLVE_PATH in this matrix's realm, and the World's
   placement words. Everything else is denied, never silently accepted.
 - [forward.omg](forward.omg): owner words routed to a child. The stock
   control policy decodes the first hop above the operation into the slot and
@@ -44,10 +49,36 @@ interaction and storage connections.
   owner control with the hop removed and the child's reply answers the owner.
   One routed word is pending per child; a late reply is drained unanswered
   after the owner heard TIMED_OUT.
+- [realm.omg](realm.omg): realm setup under the stock startup policy, which
+  sequences each job while this process executes its commands with a setup
+  record per job. A nested instance discovers its realm once the parent has
+  placed it: a Matrix record configures a workspace, Login beside Users
+  starts a scoped picker, anything else leaves setup to the owner; the
+  owner's CONFIGURE runs the configuration job directly, idempotent once a
+  workspace stands. Later turns replay a failed picker or background within
+  the policy's budget, which [recovery.omg](recovery.omg) arms from each
+  child's end.
+- [configuration.omg](configuration.omg): the configuration job. The saved
+  record is read and decoded with the stock codec, the launcher it names and
+  the optional Background resolved, the geometry and keys validated against
+  this matrix's view with the stock placement, the launcher admitted from its
+  image under the launcher offer and bound to the whole realm, the app slots
+  given the workspace offer and placement as their standing policy, the
+  launcher placed as the bottom bar on the allowance's top ranks, the
+  background started, the scene flushed and the launcher granted layout,
+  management and recovery authority. [background.omg](background.omg) and
+  [picker.omg](picker.omg) run their jobs the same way: the background with
+  presentation only over the whole view, the picker over the Users folder
+  with the second slot opened to the user it chooses.
+- [listing.omg](listing.omg): names in this matrix's realm, read over its own
+  binding one ENTRIES page at a time and compared row by row with the
+  32-byte name wanted, which is how discovery, configuration and RESOLVE_PATH
+  resolve names without an attachment of this matrix's own;
+  [realm_names.omg](realm_names.omg) holds the names startup looks for.
 - [children.omg](children.omg): RUN_PAGES and RUN_MEMORY stage a slot's next
   allowances; RUN reserves a launch for an image from the owner's catalogue
-  under them (frames default to the load plus the private pages, or one
-  admission allowance per descendant slot), sets the CPU ceiling and the images
+  under them (frames default to the load, never below one slot's 256 frames,
+  plus the private pages and 256 per descendant slot), sets the CPU ceiling and the images
   the child may run in turn, admits it through the runtime's brokered
   admission offering interaction and storage, then connects to the child's
   owner control, which the child accepts as its first act before it asks the
@@ -89,13 +120,16 @@ interaction and storage connections.
   services LAUNCH_IMPORTS offers the slot), fits it to the staged allowances
   with the stock resource policy, reserves it from the sealed image, admits it
   as RUN does and binds its storage to the realm the owner named; a binding
-  that cannot be made takes the child back down. A child's own LAUNCH asks
-  for a sibling: the stock admission decision chooses the slot the owner
-  opened with LAUNCH_POLICY, the program is read under the requester's scope
-  so a launcher launches only what it can see, the child takes the policy's
-  allowances, its object as its realm and the owner's LAUNCH_PLACE placement
-  with the ranks the policy allotted, and the requester receives a receipt it
-  can query with LAUNCH_STATUS until the child ends.
+  that cannot be made takes the child back down. The same admission from a
+  retained image serves the startup jobs. A child's own LAUNCH asks for a
+  sibling, or in a workspace for an app: the stock admission decision chooses
+  the slot the owner opened with LAUNCH_POLICY, or a free app slot for the
+  launcher, the program is read under the requester's scope so a launcher
+  launches only what it can see, the child takes the standing allowances
+  (an app the desktop's share, with the ranks the policy allotted at the
+  lowest free base), its object as its realm and the standing placement, and
+  the requester receives a receipt it can query with LAUNCH_STATUS until the
+  child ends.
 - [source.omg](source.omg): the installed source endpoint. POINTER_SOURCE moves
   the compositor's physical cursor, then routes through the World on the pointer
   stream; KEY_SOURCE routes on the keyboard stream, and RESET cancels both. The
@@ -109,23 +143,23 @@ interaction and storage connections.
 Prove it with `python tools/boot-harness-rs/omega_desktop_test.py`: the stock
 composition with this program in the root matrix's launch and in the place of
 the user template, object three of the stock realm as F5 installs it, and the
-supervisor built with `omega-root`, which admits the root as F5 does, starts
-the storage service, runs the template nested over its own realm at an inset,
-configures it through routed owner words to run the template's launcher as a
-strip and to open an app slot to the launcher's launches with a standing
-policy and a placement, and then parks. The proof reads the supervisor's, the
-services' and the nested matrix's startup lines, sees the launcher paint its
-tiles inside the nested area, clicks the Colors tile so the launcher launches
-Colors through the nested matrix, sees Colors paint its view, a healthy
-indicator and its checker image through both matrices, moves the pointer over
-QMP and watches the compositor's cursor follow it, then clicks Colors for
-focus and presses Enter, which saves a record through both storage relays and
-repaints the view in the saved colour.
+ordinary `shell` supervisor, whose login and user entry words reach the Omega
+root unchanged. The proof reads the supervisor's and the services' startup
+lines, sees the picker offer a new user, creates one and enters it, sees the
+root admit the user's matrix over the user's realm and that matrix configure
+itself from the realm's saved record, sees its launcher paint its tiles along
+the bottom, clicks the Colors tile so the launcher launches Colors into the
+workspace, sees Colors paint its view, a healthy indicator and its checker
+image through both matrices, moves the pointer over QMP and watches the
+compositor's cursor follow it, then clicks Colors for focus and presses
+Enter, which saves a record through both storage relays and repaints the view
+in the saved colour.
 
-Not yet here: the desktop mode with its chrome, app entries, selection and
-layout words, the matrix's realm reads behind RESOLVE_PATH and the startup
-discovery that CONFIGURE asks for, loss surveys and close, management words,
-the funding and input capacity a nested matrix negotiates with its parent,
-and the rest of the stock policy under [service/](../service/README.md), which
-still executes inside the Rust host through the bridge; this process links
-that package directly for what it already uses.
+Not yet here: the chrome's own words in a workspace (app entries, selection,
+close, layout, managed tasks, save availability and retries), loss surveys and
+close over the owner-control client, the launcher fallback and save recovery
+the recorded grants are for, the funding and input capacity a nested matrix
+negotiates with its parent, and the rest of the stock policy under
+[service/](../service/README.md), which still executes inside the Rust host
+through the bridge; this process links that package directly for what it
+already uses.

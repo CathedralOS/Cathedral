@@ -3,11 +3,14 @@ module commands;
 // binding, launch policy for a slot, the children words that stage, run and
 // stop a child, the storage words that grant, revoke and report bindings, the
 // stored words that launch a child from a realm object and offer its services,
-// words routed on to a child's own owner control, and the World's placement
-// words. Under a parent the root binding is the parent's to make and a word
-// that needs this matrix's view takes the parent's snapshot first when none
-// has granted one yet. The rest of the stock vocabulary arrives in later
-// slices; until then it is denied, never silently accepted.
+// words routed on to a child's own owner control, CONFIGURE and the recovery
+// words the desktop supervisor sends (the launcher fallback a nested matrix
+// may be given, a slot's save-recovery grant, the recovery poll, RESTORE_STORAGE
+// after provider replacement), RESOLVE_PATH in this matrix's realm, and the
+// World's placement words. Under a parent the root binding is the parent's to
+// make and a word that needs this matrix's view takes the parent's snapshot
+// first when none has granted one yet. The rest of the stock vocabulary
+// arrives in later slices; until then it is denied, never silently accepted.
 use protocol::main;
 use protocol::matrix;
 use main::State;
@@ -22,12 +25,20 @@ use world::geometry;
 use world::geometry::Grant;
 use world::geometry::zeros_from;
 use world::main::owner_command;
+use policy::requests::desktop::CONFIGURE;
+use policy::requests::desktop::LAUNCHER_FALLBACK;
+use policy::requests::desktop::SAVE_RECOVERY_GRANT;
+use policy::requests::desktop::SAVE_RECOVERY_POLL;
+use world::scopes;
+use world::scopes::Bound;
 use source;
 use children;
 use storage;
 use stored;
 use forward;
 use upstream;
+use realm;
+use listing;
 
 public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
     transition {
@@ -75,8 +86,102 @@ machine dispatch(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u6
             block bound(gate, context, frame.payload[1], frame.payload[2], frame.payload[3])
         frame.payload[0] == LAUNCH_IMAGES || frame.payload[0] == LAUNCH_POLICY || frame.payload[0] == LAUNCH_PLACE ->
             block policy(gate, context, frame)
+        frame.payload[0] == CONFIGURE && zeros_from(&frame.payload, 1u64) -> block configuring(gate, context, now)
+        frame.payload[0] == RESTORE_STORAGE && zeros_from(&frame.payload, 1u64) -> block restoring(gate, context, now, 0u64)
+        frame.payload[0] == LAUNCHER_FALLBACK && zeros_from(&frame.payload, 3u64) -> block fallback(gate, context, frame.payload[1], frame.payload[2])
+        frame.payload[0] == SAVE_RECOVERY_GRANT && zeros_from(&frame.payload, 3u64) ->
+            block recovery_grant(gate, context, frame.payload[1], frame.payload[2])
+        frame.payload[0] == SAVE_RECOVERY_POLL && zeros_from(&frame.payload, 2u64) -> block recovery_poll(gate, context, frame.payload[1])
+        frame.payload[0] == RESOLVE_PATH -> block resolving(gate, context, now, frame)
         _ -> block arranged(gate, context, frame)
     }
+}
+// The configuration job from the realm's saved record; idempotent once a workspace stands.
+machine configuring(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    let status: u64 = block realm::configure(gate, context, now);
+    block reply(gate, context, error(status))
+}
+// Remake every live child's remembered binding after the provider was
+// replaced; one that already stands is kept.
+machine restoring(gate: &Gate, context: &mut State, now: u64, slot: u64) -> u64 reaches Kernel requires slot <= 5u64 {
+    transition slot < 5u64 {
+        true -> block restore_slot(gate, context, now, slot)
+        _ -> block reply(gate, context, ok())
+    }
+    machine restore_slot(gate: &Gate, context: &mut State, now: u64, slot: u64) -> u64 reaches Kernel requires slot < 5u64 {
+        let source: u64 = context.saved_source[slot];
+        let scope: u64 = context.saved_scope[slot];
+        transition context.saved_bound[slot] && context.slots[slot].live {
+            true -> block rebinding(gate, context, now, slot, source, scope)
+            _ -> block restoring(gate, context, now, slot + 1u64)
+        }
+    }
+    machine rebinding(gate: &Gate, context: &mut State, now: u64, slot: u64, source: u64, subtree: u64) -> u64 reaches Kernel requires slot < 5u64 {
+        let status: u64 = block storage::bind(gate, context, now, slot, source, subtree);
+        let held: Bound = scopes::binding(&context.store.scopes, slot, context.store.listeners[slot].incarnation);
+        let same: bool = held.status == 0u64 && held.source == source && held.scope == subtree;
+        transition status == 0u64 || (status == kernel::BUSY && same) {
+            true -> block restoring(gate, context, now, slot + 1u64)
+            _ -> block reply(gate, context, error(status))
+        }
+    }
+}
+// [LAUNCHER_FALLBACK, image plus one or zero, argument]: the catalogue image a
+// failed launcher is replaced by, remembered for recovery.
+machine fallback(gate: &Gate, context: &mut State, image: u64, argument: u64) -> u64 reaches Kernel {
+    transition {
+        image == 0u64 -> block fallback_cleared(gate, context)
+        image <= 14u64 -> block fallback_checked(gate, context, image, argument, runtime::task::main::image_at(gate, image - 1u64))
+        _ -> block reply(gate, context, error(kernel::DENIED))
+    }
+    machine fallback_cleared(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+        context.fallback_image = 0u64;
+        context.fallback_argument = 0u64;
+        block reply(gate, context, ok())
+    }
+    machine fallback_checked(gate: &Gate, context: &mut State, image: u64, argument: u64, grant: u64) -> u64 reaches Kernel {
+        transition grant < kernel::ERROR_BASE {
+            true -> block fallback_kept(gate, context, image, argument)
+            _ -> block reply(gate, context, error(grant))
+        }
+    }
+    machine fallback_kept(gate: &Gate, context: &mut State, image: u64, argument: u64) -> u64 reaches Kernel {
+        context.fallback_image = image;
+        context.fallback_argument = argument;
+        block reply(gate, context, ok())
+    }
+}
+// [SAVE_RECOVERY_GRANT, slot, enabled]: the child in the slot may request the
+// save recovery the owner polls for.
+machine recovery_grant(gate: &Gate, context: &mut State, slot: u64, enabled: u64) -> u64 reaches Kernel {
+    transition slot < 5u64 && enabled <= 1u64 {
+        true -> block recovery_slot(gate, context, slot, enabled)
+        _ -> block reply(gate, context, error(kernel::DENIED))
+    }
+    machine recovery_slot(gate: &Gate, context: &mut State, slot: u64, enabled: u64) -> u64 reaches Kernel requires slot < 5u64 && enabled <= 1u64 {
+        transition {
+            enabled == 1u64 && !context.slots[slot].live -> block reply(gate, context, error(kernel::DENIED))
+            enabled == 1u64 -> block recovery_set(gate, context, context.recovery_grants | (1u64 << slot))
+            _ -> block recovery_set(gate, context, context.recovery_grants & ~(1u64 << slot))
+        }
+    }
+    machine recovery_set(gate: &Gate, context: &mut State, grants: u64) -> u64 reaches Kernel {
+        context.recovery_grants = grants;
+        block reply(gate, context, ok())
+    }
+}
+// [SAVE_RECOVERY_POLL, state] -> [0, requested]: the root reports whether a
+// child asked for save recovery; none can yet.
+machine recovery_poll(gate: &Gate, context: &mut State, state: u64) -> u64 reaches Kernel {
+    transition state <= 2u64 && !context.has_parent {
+        true -> block reply(gate, context, ok())
+        _ -> block reply(gate, context, error(kernel::DENIED))
+    }
+}
+machine resolving(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel {
+    let words: [u64; 8] = frame.payload;
+    let answer: [u64; 8] = block listing::resolve(gate, context, now, &words);
+    block reply(gate, context, answer)
 }
 // The root binding: the display's extent and keys become this world's grant,
 // with the compositor's whole tile allowance behind it and the source streams bound.

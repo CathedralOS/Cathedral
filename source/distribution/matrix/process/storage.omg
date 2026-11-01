@@ -190,6 +190,26 @@ public machine read_object(gate: &Gate, context: &mut State, now: u64, object: u
         _ -> (failed(kernel::DENIED))
     }
 }
+// One request of this matrix's own over its first source with no scope of its
+// own: a listing of its realm.
+public machine request(gate: &Gate, context: &mut State, now: u64, words: [u64; 8]) -> Outcome
+    reaches Kernel blocks; invokes Kernel; {
+    let request: [u64; 8] = words;
+    transition context.store.root || context.store.has_upstream {
+        true -> block exchange(gate, context, now, 0u64, request, 0u64)
+        _ -> (failed(kernel::DENIED))
+    }
+}
+// This matrix's own binding: the store's root at the storage root, or the
+// parent's report, learnt now if it has not been.
+public machine learn(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    transition {
+        context.store.root -> (0u64)
+        context.store.informed -> (0u64)
+        context.store.has_upstream -> block inform(gate, context, now)
+        _ -> (kernel::PEER_CLOSED)
+    }
+}
 // The sources children may be bound to: both provider links at the root, the
 // parent's one connection beneath it.
 machine available(context: &State) -> u64 {
@@ -307,12 +327,18 @@ machine inform(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel
     }
 }
 
-// Serve an admitted child's storage connection from the pair admission retained.
+// Serve an admitted child's storage connection from the pair admission
+// retained. A slot's previous listener was closed; a fresh one keeps only
+// the incarnation count, so no old binding or ticket can match the new child.
 public machine listen(context: &mut State, slot: u64 [0..=4], now: u64) -> u64 {
     let sender: u64 = context.slots[slot].storage.sender;
     let receiver: u64 = context.slots[slot].storage.receiver;
     context.slots[slot].storage.sender = 0u64;
     context.slots[slot].storage.receiver = 0u64;
+    let incarnation: u64 = context.store.listeners[slot].incarnation;
+    let fresh: Server;
+    context.store.listeners[slot] = fresh;
+    context.store.listeners[slot].incarnation = incarnation;
     runtime::server::main::begin(&mut context.store.listeners[slot], sender, receiver, runtime::time::after(now, OPENING_TICKS), true)
 }
 // The child is gone: drop its listener and binding.

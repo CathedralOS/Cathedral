@@ -1,0 +1,208 @@
+module picker;
+// The picker job: count the attempt against the startup recovery budget,
+// read the realm's Login, admit it into the first slot over the Users folder
+// under the stock picker offer, bind its storage to that folder, place it
+// over the whole view, and open the second slot to the user it will choose
+// with the stock user offer and the whole view as its placement.
+use protocol::main;
+use protocol::matrix;
+use main::State;
+use main::SlotPolicy;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use policy::children::startup::realm::operations::Setup;
+use policy::children::startup::realm::operations::Job;
+use policy::children::startup::realm::operations::Command;
+use policy::children::startup::realm::operations::Context;
+use policy::children::startup::realm::operations::Completion;
+use policy::children::startup::realm::operations::Dispatch;
+use policy::children::startup::realm::main::begin;
+use policy::children::startup::realm::main::next;
+use policy::children::startup::realm::main::complete;
+use policy::children::startup::main::PickerMode;
+use policy::children::startup::main::picker_started;
+use policy::children::launch::resources::recipes;
+use policy::children::launch::resources::recipes::Role;
+use policy::children::launch::resources::recipes::Offer;
+use policy::children::launch::resources::recipes::OfferDecision;
+use world::level;
+use world::surfaces;
+use world::geometry::Rect;
+use storage;
+use storage::Outcome;
+use stored;
+use children;
+use realm;
+use report;
+
+public const SLOT: u64 = 0u64;
+public const USER_SLOT: u64 = 1u64;
+// The picker's first argument role: a normal selection, or one after a failed selection.
+public const NORMAL: u64 = 1u64;
+public const SELECTION_FAILED: u64 = 2u64;
+
+public machine run(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let mut setup: Setup;
+    let facts: Context = Context { configured: false, busy: false, discover: false };
+    let started: bool = begin(&mut setup, Job::Picker, &facts);
+    transition started && context.picker_object != 0u64 && context.users_object != 0u64 {
+        true -> block drive(gate, context, now, &mut setup, 0u64)
+        _ -> (kernel::BUSY)
+    }
+}
+machine drive(gate: &Gate, context: &mut State, now: u64, setup: &mut Setup, steps: u64) -> u64 reaches Kernel requires steps <= 16u64 {
+    let dispatch: Dispatch = next(setup);
+    transition dispatch {
+        Dispatch::Issue { command } -> block issued(gate, context, now, setup, command, steps)
+        Dispatch::Wait -> (realm::status_of(setup.outcome))
+    }
+}
+machine issued(gate: &Gate, context: &mut State, now: u64, setup: &mut Setup, command: Command, steps: u64) -> u64
+    reaches Kernel requires steps <= 16u64 {
+    let completion: Completion = block execute(gate, context, now, command);
+    let accepted: bool = complete(setup, completion);
+    let finished: bool = command == Command::Finish;
+    transition {
+        !accepted -> (kernel::IO_ERROR)
+        finished || steps >= 16u64 -> (realm::status_of(setup.outcome))
+        _ -> block drive(gate, context, now, setup, steps + 1u64)
+    }
+}
+machine execute(gate: &Gate, context: &mut State, now: u64, command: Command) -> Completion reaches Kernel {
+    transition command {
+        Command::PreparePicker -> (prepared(context))
+        Command::ReadPicker -> block reading(gate, context, now)
+        Command::ValidatePicker -> (validated(context))
+        Command::AdmitPicker -> block admitting(gate, context, now)
+        Command::BindPicker -> block binding(gate, context, now)
+        Command::PlacePicker -> (placed(context))
+        Command::InstallPicker -> (installed(context))
+        Command::Notify -> (notifying(gate, context))
+        Command::RecordPicker -> (recording(gate))
+        _ -> (realm::completed(command, 0u64))
+    }
+}
+machine prepared(context: &mut State) -> Completion {
+    let mode: PickerMode = picker_started(&mut context.startup);
+    transition mode {
+        PickerMode::Normal -> moded(context, NORMAL)
+        PickerMode::SelectionFailed -> moded(context, SELECTION_FAILED)
+    }
+    machine moded(context: &mut State, mode: u64) -> Completion {
+        context.picker_mode = mode;
+        realm::completed(Command::PreparePicker, 0u64)
+    }
+}
+machine reading(gate: &Gate, context: &mut State, now: u64) -> Completion reaches Kernel {
+    let object: u64 = context.picker_object;
+    let outcome: Outcome = block storage::read_object(gate, context, now, object, 0u64);
+    transition outcome.words[0] == 0u64 && outcome.attachment != 0u64 {
+        true -> (loaded(context, outcome))
+        _ -> block unread(gate, outcome)
+    }
+    machine loaded(context: &mut State, outcome: Outcome) -> Completion {
+        context.image = outcome.attachment;
+        context.image_length = outcome.words[4];
+        realm::completed(Command::ReadPicker, 0u64)
+    }
+    machine unread(gate: &Gate, outcome: Outcome) -> Completion reaches Kernel {
+        block release(gate, outcome.attachment);
+        transition outcome.words[0] == 0u64 {
+            true -> (realm::completed(Command::ReadPicker, kernel::IO_ERROR))
+            _ -> (realm::completed(Command::ReadPicker, outcome.words[0]))
+        }
+    }
+}
+// The picker offer needs the host's backing behind the allowance.
+machine validated(context: &mut State) -> Completion {
+    let decision: OfferDecision = recipes::offer(Role::Picker { backed_surfaces: context.world.allowance });
+    transition decision {
+        OfferDecision::Offered { offer } -> kept(context, offer)
+        OfferDecision::InsufficientBacking -> (realm::completed(Command::ValidatePicker, kernel::NO_MEMORY))
+    }
+    machine kept(context: &mut State, offer: Offer) -> Completion {
+        context.picker_offer = offer;
+        realm::completed(Command::ValidatePicker, 0u64)
+    }
+}
+machine admitting(gate: &Gate, context: &mut State, now: u64) -> Completion reaches Kernel {
+    let offer: Offer = context.picker_offer;
+    let image: u64 = context.image;
+    let length: u64 = context.image_length;
+    let argument: u64 = realm::launch_argument(context.picker_mode, context.picker_object);
+    context.image = 0u64;
+    context.image_length = 0u64;
+    let status: u64 = block stored::admit_image(gate, context, now, SLOT, image, length, 0u64, argument, offer.channels,
+        offer.descendants, offer.cpu, offer.private_pages, offer.reader_pages, 0u64, offer.imports, false, false);
+    block release(gate, image);
+    realm::completed(Command::AdmitPicker, status)
+}
+// The picker sees the users folder and nothing above it.
+machine binding(gate: &Gate, context: &mut State, now: u64) -> Completion reaches Kernel {
+    let users: u64 = context.users_object;
+    let status: u64 = block storage::bind(gate, context, now, SLOT, 0u64, users);
+    transition status == 0u64 {
+        true -> (bound(context, users))
+        _ -> (realm::completed(Command::BindPicker, status))
+    }
+    machine bound(context: &mut State, users: u64) -> Completion {
+        context.saved_source[0] = 0u64;
+        context.saved_scope[0] = users;
+        context.saved_bound[0] = true;
+        realm::completed(Command::BindPicker, 0u64)
+    }
+}
+// The top ranks of the allowance, over the whole view with its keys.
+machine placed(context: &mut State) -> Completion {
+    let allowance: u64 = context.world.allowance;
+    let count: u64 = context.picker_offer.surfaces;
+    transition count <= allowance && count <= 16u64 {
+        true -> ranked(context, allowance - count, count)
+        _ -> (realm::completed(Command::PlacePicker, kernel::NO_MEMORY))
+    }
+    machine ranked(context: &mut State, base: u64, count: u64) -> Completion {
+        let ranged: u64 = surfaces::range(&mut context.world, SLOT, base, count);
+        let whole: Rect = Rect { x: 0u64, y: 0u64, width: context.world.parent.width, height: context.world.parent.height };
+        let keys: u64 = context.world.parent.keys;
+        transition ranged == 0u64 {
+            true -> (realm::completed(Command::PlacePicker, level::place(&mut context.world, SLOT, whole, keys)))
+            _ -> (realm::completed(Command::PlacePicker, ranged))
+        }
+    }
+}
+// The slot the chosen user takes, with the stock user offer over the whole view.
+machine installed(context: &mut State) -> Completion {
+    let decision: OfferDecision = recipes::offer(Role::User { backed_surfaces: context.world.allowance });
+    transition decision {
+        OfferDecision::Offered { offer } -> opened(context, offer)
+        OfferDecision::InsufficientBacking -> (realm::completed(Command::InstallPicker, kernel::NO_MEMORY))
+    }
+    machine opened(context: &mut State, offer: Offer) -> Completion {
+        let policy: SlotPolicy = SlotPolicy { images: 0u64, private_pages: offer.private_pages, reader_pages: offer.reader_pages,
+            channels: offer.channels, descendants: offer.descendants, cpu: offer.cpu, surfaces: offer.surfaces, placed: true,
+            x: 0u64, y: 0u64, width: context.world.parent.width, height: context.world.parent.height, keys: context.world.parent.keys,
+            imports: offer.imports, imports_set: true, standing: true };
+        context.policies[USER_SLOT] = policy;
+        context.login = true;
+        realm::completed(Command::InstallPicker, 0u64)
+    }
+}
+machine notifying(gate: &Gate, context: &mut State) -> Completion reaches Kernel {
+    children::notify(gate, context);
+    realm::completed(Command::Notify, 0u64)
+}
+machine recording(gate: &Gate) -> Completion reaches Kernel {
+    report::picker_placed(gate);
+    realm::completed(Command::RecordPicker, 0u64)
+}
+machine release(gate: &Gate, handle: u64) reaches Kernel {
+    transition handle != 0u64 {
+        true -> block releasing(gate, handle)
+        _ -> done()
+    }
+    machine releasing(gate: &Gate, handle: u64) reaches Kernel {
+        let ignored: u64 = block Kernel::memory_release(gate, handle);
+    }
+}
+machine done() {}

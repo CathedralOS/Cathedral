@@ -1,0 +1,410 @@
+module configuration;
+// The configuration job: read the realm's saved Matrix record and resolve
+// the launcher it names and the optional Background, validate the saved
+// geometry and keys against this matrix's view, admit the launcher from its
+// image, bind its storage to the whole realm, install the workspace's
+// standing policy for the app slots, place the launcher as the bottom bar,
+// start the background, publish, and grant the launcher its chrome authority.
+// A launcher that did not acquire storage, or could not be bound or placed,
+// is taken down again on the policy's rollback path.
+use protocol::main;
+use protocol::matrix;
+use protocol::services::STORAGE;
+use main::State;
+use main::Saved;
+use main::SlotPolicy;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::memory::object::Object;
+use policy::children::startup::realm::operations::Setup;
+use policy::children::startup::realm::operations::Job;
+use policy::children::startup::realm::operations::Command;
+use policy::children::startup::realm::operations::Context;
+use policy::children::startup::realm::operations::Completion;
+use policy::children::startup::realm::operations::Dispatch;
+use policy::children::startup::realm::main::begin;
+use policy::children::startup::realm::main::next;
+use policy::children::startup::realm::main::complete;
+use policy::children::startup::main::background_failed;
+use policy::children::configuration::encoding;
+use policy::children::configuration::placement;
+use policy::children::configuration::placement::Geometry;
+use policy::children::configuration::placement::Extent;
+use policy::children::configuration::placement::Rectangle;
+use policy::children::configuration::placement::Placement;
+use policy::children::launch::resources::recipes;
+use policy::children::launch::resources::recipes::Role;
+use policy::children::launch::resources::recipes::Offer;
+use policy::children::launch::resources::recipes::OfferDecision;
+use world::level;
+use world::surfaces;
+use world::layout;
+use world::management;
+use world::geometry::Rect;
+use storage;
+use storage::Outcome;
+use listing;
+use realm_names;
+use stored;
+use children;
+use presentation;
+use background;
+use realm;
+use report;
+
+public const RECORD_BYTES: u64 = 104u64;
+public const LAUNCHER_SLOT: u64 = 0u64;
+public const FIRST_APP: u64 = 1u64;
+public const LAST_APP: u64 = 3u64;
+
+public machine run(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let mut setup: Setup;
+    let occupied: bool = realm::occupied(context);
+    let facts: Context = Context { configured: context.desktop, busy: occupied, discover: false };
+    let started: bool = begin(&mut setup, Job::Configuration, &facts);
+    transition started {
+        true -> block drive(gate, context, now, &mut setup, 0u64)
+        _ -> (kernel::BUSY)
+    }
+}
+machine drive(gate: &Gate, context: &mut State, now: u64, setup: &mut Setup, steps: u64) -> u64 reaches Kernel requires steps <= 64u64 {
+    let dispatch: Dispatch = next(setup);
+    transition dispatch {
+        Dispatch::Issue { command } -> block issued(gate, context, now, setup, command, steps)
+        Dispatch::Wait -> (realm::status_of(setup.outcome))
+    }
+}
+machine issued(gate: &Gate, context: &mut State, now: u64, setup: &mut Setup, command: Command, steps: u64) -> u64
+    reaches Kernel requires steps <= 64u64 {
+    let completion: Completion = block execute(gate, context, now, command);
+    let accepted: bool = complete(setup, completion);
+    let finished: bool = command == Command::Finish;
+    transition {
+        !accepted -> (kernel::IO_ERROR)
+        finished || steps >= 64u64 -> (realm::status_of(setup.outcome))
+        _ -> block drive(gate, context, now, setup, steps + 1u64)
+    }
+}
+machine execute(gate: &Gate, context: &mut State, now: u64, command: Command) -> Completion reaches Kernel {
+    transition command {
+        Command::Refresh -> block refreshed(gate, context, now)
+        Command::ReadConfiguration -> block reading(gate, context, now)
+        Command::ValidateConfiguration -> (validated(context))
+        Command::AdmitLauncher -> block admitting(gate, context, now)
+        Command::ReleaseImage -> block releasing(gate, context)
+        Command::BindLauncher -> block binding(gate, context, now)
+        Command::InstallWorkspace -> (installed(context))
+        Command::PlaceLauncher -> (placed(context))
+        Command::StartBackground -> block backgrounding(gate, context, now)
+        Command::BackgroundFailed -> (background_refused(context))
+        Command::Flush -> block flushing(gate, context)
+        Command::Notify -> (notifying(gate, context))
+        Command::GrantChrome -> (granting(context))
+        Command::RecordLauncher -> (recording(gate))
+        Command::StopLauncher -> block stopping(gate, context)
+        Command::ClearWorkspace -> (clearing(context))
+        Command::ResetSurfaces -> (resetting(context))
+        _ -> (realm::completed(command, 0u64))
+    }
+}
+machine refreshed(gate: &Gate, context: &mut State, now: u64) -> Completion reaches Kernel {
+    let status: u64 = block upstream_refresh(gate, context, now);
+    realm::completed(Command::Refresh, status)
+}
+machine upstream_refresh(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    transition context.has_parent {
+        true -> block upstream::refresh(gate, context, now)
+        _ -> (0u64)
+    }
+}
+// The saved record: the object discovery found, or the one named Matrix in
+// the realm; then the launcher it names and the Background beside it, and
+// the launcher's image.
+machine reading(gate: &Gate, context: &mut State, now: u64) -> Completion reaches Kernel {
+    let parent: u64 = listing::realm(context);
+    let known: u64 = context.config_object;
+    let matrix_name: [u64; 4] = realm_names::matrix();
+    transition known != 0u64 {
+        true -> block decoding(gate, context, now, known)
+        _ -> block searching(gate, context, now, parent, matrix_name)
+    }
+    machine searching(gate: &Gate, context: &mut State, now: u64, parent: u64, matrix_name: [u64; 4]) -> Completion reaches Kernel {
+        let name: [u64; 4] = matrix_name;
+        let object: u64 = block listing::find(gate, context, now, parent, &name);
+        transition object != 0u64 {
+            true -> block decoding(gate, context, now, object)
+            _ -> (realm::completed(Command::ReadConfiguration, listing::MISSING))
+        }
+    }
+    machine decoding(gate: &Gate, context: &mut State, now: u64, object: u64) -> Completion reaches Kernel {
+        context.config_object = object;
+        let outcome: Outcome = block storage::read_object(gate, context, now, object, 0u64);
+        transition outcome.words[0] == 0u64 && outcome.attachment != 0u64 && outcome.words[4] == RECORD_BYTES {
+            true -> block decoded(gate, context, now, outcome.attachment)
+            _ -> block unread(gate, outcome, Command::ReadConfiguration)
+        }
+    }
+    machine decoded(gate: &Gate, context: &mut State, now: u64, record: u64) -> Completion reaches Kernel {
+        let mut bytes: [u8; 104];
+        let status: u64 = block fill(gate, record, &mut bytes);
+        block release(gate, record);
+        let valid: bool = encoding::normalize(&mut bytes);
+        transition status == 0u64 && valid {
+            true -> block parsed(gate, context, now, &bytes)
+            _ -> (realm::completed(Command::ReadConfiguration, kernel::INVALID_ARGUMENT))
+        }
+    }
+    machine parsed(gate: &Gate, context: &mut State, now: u64, bytes: &[u8; 104]) -> Completion reaches Kernel {
+        let mut saved: Saved;
+        saved.valid = true;
+        saved.launcher[0] = encoding::word(bytes, 8u64);
+        saved.launcher[1] = encoding::word(bytes, 16u64);
+        saved.launcher[2] = encoding::word(bytes, 24u64);
+        saved.launcher[3] = encoding::word(bytes, 32u64);
+        saved.launcher_pages = encoding::word(bytes, 40u64);
+        saved.app_pages = encoding::word(bytes, 48u64);
+        saved.app_readers = encoding::word(bytes, 56u64);
+        saved.margin = encoding::word(bytes, 64u64);
+        saved.launcher_height = encoding::word(bytes, 72u64);
+        saved.gap = encoding::word(bytes, 80u64);
+        saved.app_surfaces = encoding::word(bytes, 88u64);
+        saved.keys = encoding::word(bytes, 96u64);
+        context.saved = saved;
+        let launcher_name: [u64; 4] = saved.launcher;
+        transition { _ -> block naming(gate, context, now, launcher_name) }
+    }
+    machine naming(gate: &Gate, context: &mut State, now: u64, launcher_name: [u64; 4]) -> Completion reaches Kernel {
+        let parent: u64 = listing::realm(context);
+        let name: [u64; 4] = launcher_name;
+        let launcher: u64 = block listing::find(gate, context, now, parent, &name);
+        let background_name: [u64; 4] = realm_names::background();
+        let found: u64 = block listing::find(gate, context, now, parent, &background_name);
+        context.launcher_object = launcher;
+        context.background_object = found;
+        transition launcher != 0u64 {
+            true -> block loading(gate, context, now, launcher)
+            _ -> (realm::completed(Command::ReadConfiguration, listing::MISSING))
+        }
+    }
+    machine loading(gate: &Gate, context: &mut State, now: u64, launcher: u64) -> Completion reaches Kernel {
+        let outcome: Outcome = block storage::read_object(gate, context, now, launcher, 0u64);
+        transition outcome.words[0] == 0u64 && outcome.attachment != 0u64 {
+            true -> (loaded(context, outcome))
+            _ -> block unread(gate, outcome, Command::ReadConfiguration)
+        }
+    }
+    machine loaded(context: &mut State, outcome: Outcome) -> Completion {
+        context.image = outcome.attachment;
+        context.image_length = outcome.words[4];
+        realm::completed(Command::ReadConfiguration, 0u64)
+    }
+}
+// The record's thirteen words, read eight and then five at a time.
+machine fill(gate: &Gate, record: u64, bytes: &mut [u8; 104]) -> u64 reaches Kernel {
+    let holder: Object = Object { handle: record };
+    let mut words: [u64; 8];
+    let first: u64 = block runtime::memory::object::read(gate, &holder, 0u64, &mut words, 8u64);
+    place(&words, bytes, 0u64, 0u64, 64u64);
+    let mut rest: [u64; 8];
+    let second: u64 = block runtime::memory::object::read(gate, &holder, 8u64, &mut rest, 5u64);
+    place(&rest, bytes, 64u64, 0u64, 40u64);
+    transition first == 0u64 && second == 0u64 {
+        true -> (0u64)
+        _ -> (kernel::IO_ERROR)
+    }
+}
+machine place(words: &[u64; 8], bytes: &mut [u8; 104], at: u64, index: u64, count: u64) requires at <= 64u64 && index <= 64u64 && count <= 64u64 {
+    transition index < count && index < 64u64 && at + index < 104u64 {
+        true -> byte(words, bytes, at, index, count)
+        _ -> done()
+    }
+    machine byte(words: &[u64; 8], bytes: &mut [u8; 104], at: u64, index: u64, count: u64)
+        requires at <= 64u64 && index < 64u64 && count <= 64u64 && at + index < 104u64 {
+        bytes[at + index] = ((words[index / 8u64] >> ((index % 8u64) * 8u64)) & 255u64) as u8;
+        transition { _ -> place(words, bytes, at, index + 1u64, count) }
+    }
+}
+machine unread(gate: &Gate, outcome: Outcome, command: Command) -> Completion reaches Kernel {
+    block release(gate, outcome.attachment);
+    transition outcome.words[0] == 0u64 {
+        true -> (realm::completed(command, kernel::IO_ERROR))
+        _ -> (realm::completed(command, outcome.words[0]))
+    }
+}
+// The saved keys may only narrow this matrix's view; the bar and workspace
+// come from the saved geometry over that view's extent.
+machine validated(context: &mut State) -> Completion {
+    let saved: Saved = context.saved;
+    let keys_fit: bool = (saved.keys & ~context.world.parent.keys) == 0u64;
+    let geometry: Geometry = Geometry { margin: saved.margin, bar_height: saved.launcher_height, gap: saved.gap };
+    let extent: Extent = Extent { width: context.world.parent.width, height: context.world.parent.height };
+    let plan: Placement = placement::place(&geometry, &extent);
+    transition plan {
+        Placement::Placed { chrome, workspace } -> rects(context, keys_fit, chrome, workspace)
+        Placement::Invalid -> (realm::completed(Command::ValidateConfiguration, kernel::INVALID_ARGUMENT))
+    }
+    machine rects(context: &mut State, keys_fit: bool, chrome: Rectangle, workspace: Rectangle) -> Completion {
+        context.saved.chrome = Rect { x: chrome.x, y: chrome.y, width: chrome.width, height: chrome.height };
+        context.saved.workspace = Rect { x: workspace.x, y: workspace.y, width: workspace.width, height: workspace.height };
+        transition keys_fit {
+            true -> (realm::completed(Command::ValidateConfiguration, 0u64))
+            _ -> (realm::completed(Command::ValidateConfiguration, kernel::DENIED))
+        }
+    }
+}
+// The launcher from its retained image under the stock launcher offer; one
+// that cannot take storage is refused, and the policy takes it down.
+machine admitting(gate: &Gate, context: &mut State, now: u64) -> Completion reaches Kernel {
+    let decision: OfferDecision = recipes::offer(Role::Launcher { private_pages: context.saved.launcher_pages });
+    transition decision {
+        OfferDecision::Offered { offer } -> block offered(gate, context, now, offer)
+        OfferDecision::InsufficientBacking -> (realm::completed(Command::AdmitLauncher, kernel::NO_MEMORY))
+    }
+    machine offered(gate: &Gate, context: &mut State, now: u64, offer: Offer) -> Completion reaches Kernel {
+        let image: u64 = context.image;
+        let length: u64 = context.image_length;
+        let argument: u64 = realm::launch_argument(0u64, context.launcher_object);
+        let status: u64 = block stored::admit_image(gate, context, now, LAUNCHER_SLOT, image, length, 0u64, argument, offer.channels,
+            offer.descendants, offer.cpu, offer.private_pages, offer.reader_pages, 0u64, offer.imports, false, false);
+        let stored_too: bool = (context.last_granted & STORAGE) != 0u64;
+        transition {
+            status != 0u64 -> (realm::completed(Command::AdmitLauncher, status))
+            stored_too -> (realm::completed(Command::AdmitLauncher, 0u64))
+            _ -> (realm::completed(Command::AdmitLauncher, kernel::DENIED))
+        }
+    }
+}
+machine releasing(gate: &Gate, context: &mut State) -> Completion reaches Kernel {
+    let image: u64 = context.image;
+    context.image = 0u64;
+    context.image_length = 0u64;
+    block release(gate, image);
+    realm::completed(Command::ReleaseImage, 0u64)
+}
+// The launcher sees the whole realm.
+machine binding(gate: &Gate, context: &mut State, now: u64) -> Completion reaches Kernel {
+    let status: u64 = block storage::bind(gate, context, now, LAUNCHER_SLOT, 0u64, 0u64);
+    transition status == 0u64 {
+        true -> (bound(context))
+        _ -> (realm::completed(Command::BindLauncher, status))
+    }
+    machine bound(context: &mut State) -> Completion {
+        context.saved_source[0] = 0u64;
+        context.saved_scope[0] = 0u64;
+        context.saved_bound[0] = true;
+        realm::completed(Command::BindLauncher, 0u64)
+    }
+}
+// The app slots take the workspace offer and placement as their standing policy.
+machine installed(context: &mut State) -> Completion {
+    let saved: Saved = context.saved;
+    let decision: OfferDecision = recipes::offer(Role::Workspace { private_pages: saved.app_pages, reader_pages: saved.app_readers,
+        surfaces: saved.app_surfaces });
+    transition decision {
+        OfferDecision::Offered { offer } -> install(context, saved, offer, FIRST_APP)
+        OfferDecision::InsufficientBacking -> (realm::completed(Command::InstallWorkspace, kernel::NO_MEMORY))
+    }
+    machine install(context: &mut State, saved: Saved, offer: Offer, slot: u64) -> Completion requires slot >= 1u64 && slot <= 4u64 {
+        transition slot <= LAST_APP {
+            true -> standing(context, saved, offer, slot)
+            _ -> workspace(context)
+        }
+    }
+    machine standing(context: &mut State, saved: Saved, offer: Offer, slot: u64) -> Completion requires slot >= 1u64 && slot <= 3u64 {
+        let policy: SlotPolicy = SlotPolicy { images: 0u64, private_pages: offer.private_pages, reader_pages: offer.reader_pages,
+            channels: offer.channels, descendants: offer.descendants, cpu: offer.cpu, surfaces: offer.surfaces, placed: true,
+            x: saved.workspace.x, y: saved.workspace.y, width: saved.workspace.width, height: saved.workspace.height, keys: saved.keys,
+            imports: offer.imports, imports_set: true, standing: true };
+        context.policies[slot] = policy;
+        transition { _ -> install(context, saved, offer, slot + 1u64) }
+    }
+    machine workspace(context: &mut State) -> Completion {
+        context.desktop = true;
+        realm::completed(Command::InstallWorkspace, 0u64)
+    }
+}
+// The launcher's ranks are the top of the allowance; it stands as the bottom bar.
+machine placed(context: &mut State) -> Completion {
+    let allowance: u64 = context.world.allowance;
+    let decision: OfferDecision = recipes::offer(Role::Launcher { private_pages: context.saved.launcher_pages });
+    transition decision {
+        OfferDecision::Offered { offer } -> ranked(context, allowance, offer.surfaces)
+        OfferDecision::InsufficientBacking -> (realm::completed(Command::PlaceLauncher, kernel::NO_MEMORY))
+    }
+    machine ranked(context: &mut State, allowance: u64, count: u64) -> Completion {
+        transition count <= allowance && count <= 16u64 {
+            true -> positioned(context, allowance - count, count)
+            _ -> (realm::completed(Command::PlaceLauncher, kernel::NO_MEMORY))
+        }
+    }
+    machine positioned(context: &mut State, base: u64, count: u64) -> Completion {
+        let ranged: u64 = surfaces::range(&mut context.world, LAUNCHER_SLOT, base, count);
+        let chrome: Rect = context.saved.chrome;
+        let keys: u64 = context.saved.keys;
+        transition ranged == 0u64 {
+            true -> (realm::completed(Command::PlaceLauncher, level::place(&mut context.world, LAUNCHER_SLOT, chrome, keys)))
+            _ -> (realm::completed(Command::PlaceLauncher, ranged))
+        }
+    }
+}
+machine backgrounding(gate: &Gate, context: &mut State, now: u64) -> Completion reaches Kernel {
+    let status: u64 = block background::run(gate, context, now);
+    realm::completed(Command::StartBackground, status)
+}
+machine background_refused(context: &mut State) -> Completion {
+    background_failed(&mut context.startup);
+    realm::completed(Command::BackgroundFailed, 0u64)
+}
+machine flushing(gate: &Gate, context: &mut State) -> Completion reaches Kernel {
+    let status: u64 = block presentation::flush(gate, context);
+    realm::completed(Command::Flush, status)
+}
+machine notifying(gate: &Gate, context: &mut State) -> Completion reaches Kernel {
+    children::notify(gate, context);
+    realm::completed(Command::Notify, 0u64)
+}
+// The launcher may rearrange the workspace and manage the active app, and
+// holds the recovery authority the owner may later confirm.
+machine granting(context: &mut State) -> Completion {
+    let incarnation: u64 = context.slots[LAUNCHER_SLOT].listener.incarnation;
+    let controlled: u64 = layout::grant(&mut context.world, LAUNCHER_SLOT, incarnation);
+    let managed: u64 = management::grant(&mut context.managers, LAUNCHER_SLOT, incarnation, FIRST_APP, 5u64);
+    context.recovery_grants = context.recovery_grants | 1u64;
+    transition controlled == 0u64 && managed == 0u64 {
+        true -> (realm::completed(Command::GrantChrome, 0u64))
+        _ -> (realm::completed(Command::GrantChrome, kernel::DENIED))
+    }
+}
+machine recording(gate: &Gate) -> Completion reaches Kernel {
+    report::configured(gate);
+    report::budget(gate);
+    realm::completed(Command::RecordLauncher, 0u64)
+}
+machine stopping(gate: &Gate, context: &mut State) -> Completion reaches Kernel {
+    block children::reclaim(gate, context, LAUNCHER_SLOT);
+    realm::completed(Command::StopLauncher, 0u64)
+}
+machine clearing(context: &mut State) -> Completion {
+    context.desktop = false;
+    context.policies[1].standing = false;
+    context.policies[1].placed = false;
+    context.policies[2].standing = false;
+    context.policies[2].placed = false;
+    context.policies[3].standing = false;
+    context.policies[3].placed = false;
+    realm::completed(Command::ClearWorkspace, 0u64)
+}
+machine resetting(context: &mut State) -> Completion {
+    realm::completed(Command::ResetSurfaces, surfaces::limit(&mut context.world, FIRST_APP, 0u64))
+}
+machine release(gate: &Gate, handle: u64) reaches Kernel {
+    transition handle != 0u64 {
+        true -> block releasing_handle(gate, handle)
+        _ -> done()
+    }
+    machine releasing_handle(gate: &Gate, handle: u64) reaches Kernel {
+        let ignored: u64 = block Kernel::memory_release(gate, handle);
+    }
+}
+machine done() {}
