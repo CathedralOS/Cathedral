@@ -19,6 +19,7 @@ use runtime::task::main::Exit;
 use runtime::time::Tick;
 use runtime::waiting::Set;
 use world::level;
+use world::launches;
 use world::geometry::zeros_from;
 use storage;
 use presentation;
@@ -239,11 +240,29 @@ public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reac
         let closed: u64 = block runtime::connection::main::close(gate, &mut context.controls[slot]);
         block storage::retire(gate, context, slot);
         block presentation::release_slot(gate, context, slot);
+        let task: u64 = context.slots[slot].task;
         let exit: Exit = block runtime::admission::main::stop(gate, &mut context.slots[slot]);
         exited(gate, slot, exit);
+        let observer: u64 = launches::finished(&mut context.observations, task, outcome_of(exit));
+        launches::disconnected(&mut context.observations, slot);
         let ignored: u64 = runtime::task::main::release(gate, context.reservations[slot]);
         context.reservations[slot] = 0u64;
         level::disconnected(&mut context.world, slot);
+    }
+}
+// What a requester's receipt reports for the ended child.
+machine outcome_of(exit: Exit) -> u64 {
+    transition exit {
+        Exit::Returned { status } -> returned(status)
+        Exit::Fault { vector, error, address, instruction } -> (LAUNCH_FAILED)
+        Exit::Cancelled -> (LAUNCH_STOPPED)
+        Exit::Failed { code } -> (LAUNCH_FAILED)
+    }
+    machine returned(status: u64) -> u64 {
+        transition status == 0u64 {
+            true -> (LAUNCH_EXITED)
+            _ -> (LAUNCH_FAILED)
+        }
     }
 }
 // The exit goes to the console; the Rust host keeps child exits silent, but a

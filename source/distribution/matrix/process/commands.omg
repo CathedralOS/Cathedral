@@ -102,6 +102,7 @@ machine policy(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Ke
         context.policies[slot].descendants = frame.payload[5];
         context.policies[slot].cpu = frame.payload[6];
         context.policies[slot].surfaces = frame.payload[7];
+        context.policies[slot].standing = true;
         block reply(gate, context, ok())
     }
     machine placement(gate: &Gate, context: &mut State, frame: Frame, slot: u64 [0..=4]) -> u64 reaches Kernel {

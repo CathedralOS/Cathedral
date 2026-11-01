@@ -359,13 +359,14 @@ for profile validation tests. Existing boot connections use a separate fixed are
 with the [standalone Omega stock matrix](../../source/distribution/matrix/process/README.md)
 in the root matrix's launch and the supervisor built with `omega-root`, which
 admits the root exactly as F5 does and then parks instead of starting storage.
-The composition's realm holds only the Omega Colors; the supervisor starts
-the storage service and runs Colors from that object into an app slot over a
-sub-rectangle of a shifted backdrop, with the object as its realm. The proof reads the supervisor's
-and the services' startup lines, sees Colors paint its view, indicator and
-checker image, moves the pointer over QMP and checks that the compositor's
-cursor follows it through the Omega matrix, then clicks Colors and presses
-Enter and sees the saved colour. Logs and a PNG are in `build/boot-harness-rs/omega-desktop/`.
+The composition installs the stock realm; the supervisor starts the storage
+service, runs the template's launcher from its realm object as a strip over
+the template's realm and opens an app slot to its launches. The proof reads
+the supervisor's and the services' startup lines, sees the launcher's tiles,
+clicks the Colors tile so the launcher launches Colors through the Omega
+matrix, sees Colors paint its view, indicator and checker image, moves the
+pointer over QMP and checks that the compositor's cursor follows it, then
+clicks Colors and presses Enter and sees the saved colour. Logs and a PNG are in `build/boot-harness-rs/omega-desktop/`.
 The slices still missing from that program are listed in its README.
 
 ## Integrated matrix desktop

@@ -3,15 +3,17 @@ its display, source, children, presentation and storage paths through the
 real display, input and storage services.
 
 The composition is the stock desktop's with the root matrix launch replaced by
-the Omega program, a realm holding only the Omega Colors, and the supervisor
+the Omega program, the stock realm as F5 installs it, and the supervisor
 built with `omega-root`, which admits the root as F5 does, starts storage,
-runs Colors from that realm object into an app slot with the object as its
-realm, and then parks. The proof reads the
-supervisor's and the services' startup lines, sees Colors paint its view, its
-indicator and its checker image through the matrix, moves the pointer over QMP
-and watches the compositor's cursor follow it, then clicks Colors for focus and
-presses Enter, which saves a record through the matrix's storage relay and
-repaints the view in the saved colour."""
+runs the template's launcher from its realm object as a strip over the
+template's realm, opens an app slot to its launches with a standing policy
+and placement, and then parks. The proof reads the supervisor's and the services'
+startup lines, sees the chooser paint its Colors tile, clicks the tile so the
+chooser launches Colors through the matrix, sees Colors paint its view, its
+indicator and its checker image, moves the pointer over QMP and watches the
+compositor's cursor follow it, then clicks Colors for focus and presses Enter,
+which saves a record through the matrix's storage relay and repaints the view
+in the saved colour."""
 from datetime import datetime, timezone
 import json
 import os
@@ -62,12 +64,10 @@ def compose(output):
                                'shared_pages': launch['shared_pages']}
             replaced += 1
     assert replaced == 1, 'the stock composition launches one root matrix'
-    # The realm holds one program, the Omega Colors, as object one of the
-    # first root; the root runs it from there and it keeps its record beneath.
-    composition['startup']['programs'] = [{'package': 'cathedral-colors',
-                                           'entry': 'distribution/applications/colors/native/main.omg',
-                                           'target': 'x86_64-unknown-none', 'display_title': 'COLORS'}]
-    composition['startup']['realm_programs'] = []
+    # The stock realm as F5 installs it: the template's launcher is object
+    # four inside the template's realm, object three, beside Notes and Colors.
+    # The root runs that launcher over the template's realm, the launcher
+    # launches Colors, and Colors keeps its record beneath its own object.
     profile = output / f'omega-desktop-{output.name}.json'
     profile.write_text(json.dumps(composition, indent=2), encoding='utf-8', newline='\n')
     return profile
@@ -99,7 +99,7 @@ def check(stream, output, serial):
         wait_for(marker, 30)
     if 'Cathedral input: absolute pointer ready' not in serial_text():
         raise RuntimeError(f'the input service did not offer an absolute pointer; logs: {output}')
-    wait_for('Cathedral desktop: Omega root colors placed', 20)
+    wait_for('Cathedral desktop: Omega root launcher placed', 20)
 
     def pixels():
         width, height, data = pointer_test.read_scanout(stream, output)
@@ -127,15 +127,41 @@ def check(stream, output, serial):
                               and pixel(COLORS[0] + 192, COLORS[1] + 114) == CHECKER[1]
                               and pixel(100, 100) == '303030' and pixel(620, 460) == '303030')
 
-    # Colors reads its realm (its own object, empty beneath), creates its
-    # record, and paints its view, a healthy indicator and the checker image
-    # over the shifted backdrop.
-    width, height, before = expect('Colors not painted through the Omega matrix', 20, painted(INITIAL))
-    target = (600, 400)
+    # The launcher lists the template's realm and paints Notes and Colors
+    # tiles in its strip along the bottom; the Colors card colour marks it.
+    width, height, _, _ = pixels()
+    tile = (8 + 56 + 2, height - 96 + 24 + 2)
+    expect('the chooser did not paint its Colors tile', 20,
+           lambda pixel: pixel(*tile) == '202d43' and pixel(100, 100) == '303030')
+    # Clicking the tile makes the chooser launch Colors through the matrix
+    # into the slot the owner opened; Colors then reads its realm (its own
+    # object, empty beneath), creates its record, and paints its view, a
+    # healthy indicator and the checker image over the shifted backdrop.
     def point(x, y):
         capture.command(stream, 'input-send-event', {'events': [
             {'type': 'abs', 'data': {'axis': 'x', 'value': round(x * 32767 / (width - 1))}},
             {'type': 'abs', 'data': {'axis': 'y', 'value': round(y * 32767 / (height - 1))}}]})
+    def click(x, y):
+        point(x, y)
+        time.sleep(0.1)
+        for down in (True, False):
+            capture.command(stream, 'input-send-event', {'events': [
+                {'type': 'btn', 'data': {'button': 'left', 'down': down}}]})
+            time.sleep(0.1)
+    click(8 + 56 + 24, height - 96 + 24 + 24)
+    width, height, before = expect('Colors not launched and painted through the Omega matrix', 30, painted(INITIAL))
+    # Colors finishes its first scene a moment after its view fills; the
+    # cursor check needs a frame nothing else is still drawing into.
+    deadline = time.monotonic() + 10
+    while True:
+        time.sleep(0.3)
+        _, _, after = pointer_test.read_scanout(stream, output)
+        if after == before:
+            break
+        before = after
+        if time.monotonic() > deadline:
+            raise RuntimeError(f'the scene never settled after the launch; logs: {output}')
+    target = (600, 400)
     point(*target)
     deadline = time.monotonic() + 10
     while True:
@@ -143,21 +169,17 @@ def check(stream, output, serial):
         _, _, after = pointer_test.read_scanout(stream, output)
         changed = list(changed_pixels(width, before, after))
         near = [(x, y) for x, y in changed if 0 <= x - target[0] <= 12 and 0 <= y - target[1] <= 16]
+        origin = (8 + 56 + 24, height - 96 + 24 + 24)
         far = [(x, y) for x, y in changed
                if not (0 <= x - target[0] <= 12 and 0 <= y - target[1] <= 16)
-               and not (0 <= x - 40 <= 12 and 0 <= y - 40 <= 16)]
+               and not (0 <= x - origin[0] <= 12 and 0 <= y - origin[1] <= 16)]
         if near and not far:
             break
         if time.monotonic() > deadline:
             raise RuntimeError(f'cursor did not follow the pointer: {len(near)} near, {far[:8]} far; logs: {output}')
     # Click inside Colors for focus, then Enter saves the toggled record
     # through the storage relay and repaints the view in the saved colour.
-    point(COLORS[0] + 150, COLORS[1] + 200)
-    time.sleep(0.1)
-    for down in (True, False):
-        capture.command(stream, 'input-send-event', {'events': [
-            {'type': 'btn', 'data': {'button': 'left', 'down': down}}]})
-        time.sleep(0.1)
+    click(COLORS[0] + 150, COLORS[1] + 200)
     for down in (True, False):
         capture.command(stream, 'input-send-event', {'events': [
             {'type': 'key', 'data': {'down': down, 'key': {'type': 'qcode', 'data': 'ret'}}}]})
@@ -167,7 +189,7 @@ def check(stream, output, serial):
     text = serial_text()
     if 'user panic:' in text or 'initial program stopped' in text or 'Cathedral matrix: child' in text:
         raise RuntimeError(f'a program failed after admission; logs: {output}')
-    print(f'PASS: Omega stock matrix admitted at the display root with Colors painting and saving through it; logs: {output}')
+    print(f'PASS: Omega stock matrix admitted at the display root with the chooser launching Colors, which paints and saves through it; logs: {output}')
 
 
 def main():
@@ -178,7 +200,9 @@ def main():
                     '--profile', str(profile), '--release', '--build-only'], cwd=ROOT, check=True)
     shutil.copytree(harness.BUILD / f'{profile.stem}-interactive/esp', output / 'esp')
     data = output / 'guest.raw'
-    database_image.prepare(data, harness.seeded_programs(profile, True))
+    migration = ROOT / 'source-rs/distribution/migrations/readable-labels.txt'
+    database_image.prepare(data, harness.seeded_programs(profile, True), migration, app_close=True,
+                           realm_programs=harness.realm_programs(profile, True))
     qemu = harness.find_qemu()
     command = [qemu, '-machine', 'q35', '-cpu', 'qemu64', '-accel', 'tcg', '-smp', '1', '-m', '128']
     command += harness.firmware_args(qemu, output)

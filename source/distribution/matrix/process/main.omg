@@ -20,6 +20,7 @@ use runtime::time::Tick;
 use runtime::waiting::Set;
 use world::level::World;
 use world::batch::Batch;
+use world::launches::Launches;
 use storage::Store;
 use startup;
 use commands;
@@ -48,6 +49,8 @@ public data SlotPolicy [copy] {
     // The services a launch into the slot is offered, once the owner set them.
     imports: u64;
     imports_set: bool;
+    // Whether LAUNCH_POLICY opened the slot to children's launches.
+    standing: bool;
 }
 // A sealed image held behind the compositor tile it was last shown on.
 public data Image [copy] {
@@ -73,6 +76,8 @@ public data State {
     revision: u64;
     // Provider links, bindings and each child's storage connection.
     store: Store;
+    // Each child's receipt for its latest launch.
+    observations: Launches;
     // Admitted children, this matrix's client to each one's owner control, the
     // launch each was reserved under, and the allowances staged for the next
     // launch into each slot.

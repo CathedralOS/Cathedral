@@ -264,15 +264,68 @@ Evidence in the main checkout with the saved standalone producer:
   clippy for the desktop crate with `shell,omega-root` pass. No native leaf
   or kernel limit changed.
 
-Next: a child's own LAUNCH word, read under the requester's scope with the
-stock admission decision choosing the slot and a receipt recorded for
-LAUNCH_STATUS, proven by the Omega chooser launching Colors; then the startup
-realm discovery that admits the picker and background, RESOLVE_PATH, loss
-surveys and close over the owner-control client, management words, nested
-operation under a parent matrix with an upstream storage binding, then the
-rest of the stock policy. Dynamic launches still cap reserved frames at
-MAX_ADMISSION_FRAMES, which a nested Omega matrix with a declared stack will
-exceed.
+The child's own launch word followed in the step recorded below.
+
+### Stock matrix migration: a child's launch
+
+A child of the stock matrix process can now launch a sibling. LAUNCH goes
+through the stock admission decision, linked directly from the policy
+package: the requester's slot, the occupied slots, which slots the owner
+opened with LAUNCH_POLICY, whether the requester holds a storage binding and
+whether it can take another receipt decide the target or the refusal, in the
+sibling arrangement until the desktop mode arrives. The program is read over
+the matrix's own binding stamped with the requester's scope, so a launcher
+launches only what it can see; the child takes the standing policy's
+allowances, its own object as its realm, the owner's LAUNCH_PLACE placement
+and the ranks the policy allotted, stacked with slot zero below slot one as
+the Rust host stacks siblings. The requester receives a receipt from the
+World's launch observations and queries it with LAUNCH_STATUS; a child's
+exit, fault or stop updates the observation and a departed observer loses
+its receipts. The word itself comes from the stock policy's own wire
+bindings, `requests::desktop`, not the reference contract: adding a bare
+`LAUNCH` to `protocol::matrix` broke F5, because the bridge's session wire
+names its own `LAUNCH` host command with another value and the bridge's
+older compiler let the new export override it.
+
+The proof now installs the stock realm as F5 does, since only that layout
+receives the names and executable types the launcher classifies by. The
+supervisor runs the template's launcher, object four, over the template's
+realm, object three, as a strip along the bottom and opens an app slot with a
+standing policy and placement; the harness sees the launcher paint its tiles,
+clicks the Colors tile, and the launcher's LAUNCH puts Colors into the app
+slot, where the checks of the earlier slices run unchanged: it paints,
+the cursor follows the pointer, and Enter saves. The launcher's desktop words
+(app entries, managed tasks, save availability) are denied as the World
+denies any unknown word, and it carries on with a notice, which the desktop
+slice will replace with answers.
+
+Evidence in the main checkout with the saved standalone producer:
+
+- Desktop over the Omega root with the launcher launching Colors: `build/boot-harness-rs/omega-desktop/20261101T005422629449Z/`.
+- Omega matrix, top level: `build/boot-harness-rs/omega-matrix/20261101T005841068444Z/`;
+  under a real parent: `build/boot-harness-rs/omega-matrix-upstream/20261101T005848108884Z/`;
+  Rust comparison matrix: `build/boot-harness-rs/matrix-composition/20261101T005450951353Z/`.
+- Witnesses: primitives `build/omega-user/tests/20261101T005236119066Z/`;
+  connections `build/omega-user/connections/20261101T005255466385Z/`, service
+  `.../20261101T005324956786Z/`, admission `.../20261101T005341149708Z/`;
+  Background `build/omega-user/background-control/20261101T005347903098Z/`;
+  Colors `build/omega-user/colors-control/20261101T005356526085Z/`;
+  Notes `build/omega-user/notes-control/20261101T005403225881Z/`;
+  Chooser `build/omega-user/chooser-control/20261101T005412204703Z/`.
+- Kernel smoke labs of 2026-11-01 00:59 UTC pass; default F5 desktop and cold
+  reopen: `build/boot-harness-rs/desktop/20261101T005936209398Z/`.
+- Boundary test, layout (123 Omega / 153 Rust edges), Rust formatting and
+  clippy for the desktop crate with `shell,omega-root` pass. No native leaf
+  or kernel limit changed.
+
+Next: the desktop mode, where the chrome's launches go to app slots and the
+chrome's app entries, selection, close and layout words are answered; then
+the startup realm discovery that admits the picker and background,
+RESOLVE_PATH, loss surveys and close over the owner-control client,
+management words, nested operation under a parent matrix with an upstream
+storage binding, then the rest of the stock policy. Dynamic launches still
+cap reserved frames at MAX_ADMISSION_FRAMES, which a nested Omega matrix with
+a declared stack will exceed.
 
 ### Omega World: layout control, management and launch observations
 

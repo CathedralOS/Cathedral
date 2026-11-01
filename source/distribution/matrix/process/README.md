@@ -66,7 +66,13 @@ children with their interaction and storage connections.
   services LAUNCH_IMPORTS offers the slot), fits it to the staged allowances
   with the stock resource policy, reserves it from the sealed image, admits it
   as RUN does and binds its storage to the realm the owner named; a binding
-  that cannot be made takes the child back down.
+  that cannot be made takes the child back down. A child's own LAUNCH asks
+  for a sibling: the stock admission decision chooses the slot the owner
+  opened with LAUNCH_POLICY, the program is read under the requester's scope
+  so a launcher launches only what it can see, the child takes the policy's
+  allowances, its object as its realm and the owner's LAUNCH_PLACE placement
+  with the ranks the policy allotted, and the requester receives a receipt it
+  can query with LAUNCH_STATUS until the child ends.
 - [source.omg](source.omg): the installed source endpoint. POINTER_SOURCE moves
   the compositor's physical cursor, then routes through the World on the pointer
   stream; KEY_SOURCE routes on the keyboard stream, and RESET cancels both. The
@@ -78,20 +84,23 @@ children with their interaction and storage connections.
   retired child's slot and exit in hex.
 
 Prove it with `python tools/boot-harness-rs/omega_desktop_test.py`: the stock
-composition with this program in the root matrix's launch, a realm holding
-only the Omega Colors, and the supervisor built with `omega-root`, which admits
-the root as F5 does, starts the storage service, runs Colors from that realm
-object into an app slot over a sub-rectangle of a shifted backdrop with the
-object as its realm, and then parks. The proof reads the supervisor's and the services' startup lines, sees
-Colors paint its view, a healthy indicator and its checker image through this
-matrix, moves the pointer over QMP and watches the compositor's cursor follow
-it, then clicks Colors for focus and presses Enter, which saves a record
-through the storage relay and repaints the view in the saved colour.
+composition with this program in the root matrix's launch, the stock realm as
+F5 installs it, and the supervisor built with `omega-root`, which admits the
+root as F5 does, starts the storage service, runs the template's launcher
+from its realm object as a strip over the template's realm, opens an app slot
+to its launches with a standing policy and a placement over a shifted
+backdrop, and then parks. The proof reads the supervisor's and the services'
+startup lines, sees the launcher paint its tiles, clicks the Colors tile so
+the launcher launches Colors through this matrix, sees Colors paint its view,
+a healthy indicator and its checker image, moves the pointer over QMP and
+watches the compositor's cursor follow it, then clicks Colors for focus and
+presses Enter, which saves a record through the storage relay and repaints
+the view in the saved colour.
 
-Not yet here: a child's own LAUNCH word with the stock admission decision and
-launch receipts, the matrix's realm reads behind RESOLVE_PATH and startup,
-loss surveys and close, management and launch observation words, nested
-operation under a parent matrix with an upstream storage binding, and the
-rest of the stock policy under [service/](../service/README.md), which still
-executes inside the Rust host through the bridge; this process links that
-package directly for what it already uses.
+Not yet here: the desktop mode with its chrome, app entries, selection and
+layout words, the matrix's realm reads behind RESOLVE_PATH and startup, loss
+surveys and close, management words, nested operation under a parent matrix
+with an upstream storage binding, and the rest of the stock policy under
+[service/](../service/README.md), which still executes inside the Rust host
+through the bridge; this process links that package directly for what it
+already uses.

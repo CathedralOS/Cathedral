@@ -144,14 +144,14 @@ pub(crate) fn run() -> u64 {
 }
 
 /// Keep an admitted Omega root alive: start the storage service as F5 does
-/// behind an interactive screen, run Colors from the realm's first object into
-/// an app slot over a sub-rectangle with that object as its realm, then park
-/// while the boot harness drives the display, input and storage paths through
-/// the Omega matrix and reads the scanout.
+/// behind an interactive screen, run the stock template's launcher from its
+/// realm object as a strip over the template's realm, open an app slot to its
+/// launches with a standing policy and placement, then park while the boot
+/// harness launches Colors through the launcher and drives the display, input
+/// and storage paths through the Omega matrix.
 #[cfg(feature = "shell")]
 fn omega_root(session: &mut admission::Session) -> u64 {
-    cathedral_user_runtime::write(b"Cathedral desktop: Omega root admitted
-").unwrap();
+    cathedral_user_runtime::write(b"Cathedral desktop: Omega root admitted\n").unwrap();
     let mut provider = persistence::Provider::begin(0).expect("storage service start");
     let deadline = time::after(3000).unwrap();
     while !provider.poll_ready().expect("storage readiness") {
@@ -161,20 +161,33 @@ fn omega_root(session: &mut admission::Session) -> u64 {
         );
         idle(session);
     }
-    cathedral_user_runtime::write(b"Cathedral desktop: Omega root storage ready
-").unwrap();
-    const COLORS_SLOT: u64 = 1;
-    const COLORS_OBJECT: u64 = 1;
+    cathedral_user_runtime::write(b"Cathedral desktop: Omega root storage ready\n").unwrap();
+    // The stock realm: the template's launcher is object four inside the
+    // template's realm, object three, beside Notes and Colors.
+    const LAUNCHER_OBJECT: u64 = 4;
+    const TEMPLATE_REALM: u64 = 3;
+    const APP_SLOT: u64 = 1;
+    let [width, height] = session.extent;
     for words in [
-        [wire::RUN_PAGES, COLORS_SLOT, 24, 8, 0, 0, 0, 0],
-        [wire::RUN_OBJECT, COLORS_SLOT, COLORS_OBJECT, COLORS_OBJECT, 0, 3, 0, 0],
-        [wire::SURFACE_LIMIT, COLORS_SLOT, 4, 0, 0, 0, 0, 0],
-        [wire::PLACE, COLORS_SLOT, 650, 100, 300, 300, KEYS, 0],
+        [wire::RUN_PAGES, 0, 64, 4, 0, 0, 0, 0],
+        [
+            wire::RUN_OBJECT,
+            0,
+            LAUNCHER_OBJECT,
+            TEMPLATE_REALM,
+            wire::launch_argument(0, LAUNCHER_OBJECT),
+            3,
+            0,
+            0,
+        ],
+        [wire::SURFACE_LIMIT, 0, 8, 0, 0, 0, 0, 0],
+        [wire::PLACE, 0, 0, height - 96, width, 96, KEYS, 0],
+        [wire::LAUNCH_POLICY, APP_SLOT, 24, 8, 3, 0, 0, 4],
+        [wire::LAUNCH_PLACE, APP_SLOT, 650, 100, 300, 300, KEYS, 0],
     ] {
         owner(&mut session.matrix, words);
     }
-    cathedral_user_runtime::write(b"Cathedral desktop: Omega root colors placed
-").unwrap();
+    cathedral_user_runtime::write(b"Cathedral desktop: Omega root launcher placed\n").unwrap();
     loop {
         idle(session);
     }
