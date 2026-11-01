@@ -599,6 +599,7 @@ machine stray(gate: &Gate, context: &mut State, index: u64 [0..=2], endpoint: u6
 // A lost or late link: forget its client and every binding that named its
 // source. The parent's connection also forgets the binding it reported.
 machine retired(gate: &Gate, context: &mut State, index: u64 [0..=2], code: u64) -> Outcome reaches Kernel {
+    report::storage_lost(gate, index, code);
     let closed: u64 = block runtime::connection::main::close(gate, &mut context.store.links[index]);
     context.store.linked[index] = false;
     transition index == UPSTREAM {

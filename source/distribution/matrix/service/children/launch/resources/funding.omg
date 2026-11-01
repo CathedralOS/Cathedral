@@ -19,14 +19,16 @@ public data Increase [copy] {
 }
 
 // Only a child that may hold descendants grows, up to the stock ceiling or
-// what it was first funded, whichever is more.
+// what it was first funded, whichever is more. A grant counts everything ever
+// funded, so the ceiling bounds a session of nested launches, while the
+// kernel's per-account caps bound what the child holds at once.
 public machine policy(funded: [u64; 5]) -> Funding {
     let mut ceiling: [u64; 5];
-    ceiling[0] = larger(funded[0], 960u64);
-    ceiling[1] = larger(funded[1], 3584u64);
-    ceiling[2] = larger(funded[2], 208u64);
-    ceiling[3] = larger(funded[3], 24u64);
-    ceiling[4] = larger(funded[4], 6400u64);
+    ceiling[0] = larger(funded[0], 7680u64);
+    ceiling[1] = larger(funded[1], 15360u64);
+    ceiling[2] = larger(funded[2], 1664u64);
+    ceiling[3] = larger(funded[3], 192u64);
+    ceiling[4] = larger(funded[4], 51200u64);
     transition funded[3] != 0u64 {
         true -> (Funding::Growable { grant: Grant { funded: funded, ceiling: ceiling } })
         _ -> (Funding::Fixed)
@@ -80,8 +82,12 @@ public machine needed(private_pages: u64, reader_pages: u64, channels: u64, desc
 }
 
 // What the funder must ask its own owner for: the part of `needed` its
-// allowances do not cover. A funder that lends reader pages keeps 256 of its
-// own, so it can still receive code and replacement images.
+// allowances do not cover. A funder that lends reader pages keeps enough of
+// its own to receive the largest object, a program image included, so it
+// can still receive code and replacement images.
+// The largest object a funder must still be able to receive: the kernel's
+// object page limit.
+const RECEIVED_PAGES: u64 = 512u64;
 public machine shortfall(available: [u64; 5], needed: [u64; 5]) -> [u64; 5] {
     let mut wanted: [u64; 5] = needed;
     wanted[1] = plus(needed[1], kept(needed[1]));
@@ -98,7 +104,7 @@ public machine nothing(amounts: [u64; 5]) -> bool {
 }
 
 machine kept(reader_pages: u64) -> u64 {
-    transition reader_pages != 0u64 { true -> (256u64) _ -> (0u64) }
+    transition reader_pages != 0u64 { true -> (RECEIVED_PAGES) _ -> (0u64) }
 }
 machine beyond(wanted: u64, available: u64) -> u64 {
     transition wanted > available { true -> (wanted - available) _ -> (0u64) }

@@ -693,9 +693,21 @@ What that took:
 
 Still failing over Omega:
 
-- The second level of nested desktops: reading the Nested program through
-  three matrices returns PEER_CLOSED
-  (`build/boot-harness-rs/desktop/20261101T181119752895Z/`).
+- Nested desktops now reach their third level over Omega. Three things stood
+  in the way. A funder kept 256 reader pages free for receiving code, enough
+  for a Rust matrix image but not the Omega one; a refused transfer of the
+  image retired the child's storage connection, which the child saw as
+  PEER_CLOSED. The stock funding policy now keeps 512, the largest object.
+  An ended host's descendant reservations come back to its owner under fresh
+  local names, and the Omega matrix never released them, as the Rust host
+  does; it now does, at reclaim and before funding. And a chain of Omega
+  matrices asks for more than the Rust chain did: the kernel's per-account
+  reader cap rises from 4096 to 16384 pages (reader pages pin others' backing,
+  not frames), the root's reader allotment with it, and the stock growth
+  ceilings eightfold in both hosts' policy (7680 private, 15360 reader, 1664
+  channels, 192 slots, 51200 frames), since a grant counts everything ever
+  funded. The run now stops at closing the outer desktop, the loss survey
+  and close over the owner-control client.
 - Split (`--nested`, `--deep`) starts now: a child's owner control opens
   without blocking, as the Rust host's does, so a host with descendants can set
   up its broker services first. The runtime's connection opens in two steps,
@@ -744,8 +756,8 @@ Evidence in the main checkout with the patched standalone producer:
 - Boundary test, layout, Rust formatting, the stock matrix's compiled tests
   and clippy for the desktop crate with `shell` pass.
 
-Next: the relay failure at the second nested level; then the remaining F5
-variants
+Next: the loss survey and close, which closing a nested desktop needs; then
+the remaining F5 variants
 (launcher recovery, the asynchronous fixtures, soak), the profile swap and the
 bridge's deletion.
 

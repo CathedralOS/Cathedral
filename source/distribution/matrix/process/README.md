@@ -121,8 +121,10 @@ The the children this matrix admits, funds, presents and retires.
   back down if it never does; routed owner words wait with BUSY meanwhile.
   The kernel takes a reservation back only
   once the ended child's frames are no longer charged, so a refused release
-  waits and is retried each turn and before any funding is reckoned. Every
-  failed step leaves no reservation behind.
+  waits and is retried each turn and before any funding is reckoned. An
+  ended host's descendant reservations come back under fresh local names and
+  are released too, at reclaim and before funding. Every failed step leaves
+  no reservation behind.
 - [slots.omg](children/slots.omg): one admitted child's listener per turn. Service
   acquisition goes to the runtime's offer, surface and batch words to
   presentation (a sealed attachment is accepted only behind an image word),
@@ -205,8 +207,8 @@ The the State and the console lines every package uses.
 - [report.omg](shared/report.omg): the startup lines the boot harness keys on, in
   the Rust host's words where the two reach the same point, a retired
   child's slot and exit, a failed launch's stage and code, what this matrix
-  asks its owner for and why it refused a child's request, and its own page
-  and channel use, in hex.
+  asks its owner for and why it refused a child's request, a storage link it
+  retired and why, and its own page and channel use, in hex.
 
 Prove it with `python tools/boot-harness-rs/omega_desktop_test.py`: the stock
 composition with this program in the root matrix's launch and in the place of

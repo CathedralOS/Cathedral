@@ -280,6 +280,7 @@ public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reac
         launches::disconnected(&mut context.observations, slot);
         let launch: u64 = context.reservations[slot];
         retire_reservation(gate, context, slot, launch);
+        sweep_returned(gate);
         context.reservations[slot] = 0u64;
         context.funding[slot] = Funding::Fixed;
         level::disconnected(&mut context.world, slot);
@@ -437,6 +438,29 @@ machine retire_reservation(gate: &Gate, context: &mut State, slot: u64 [0..=4], 
         context.releasing[slot] = launch;
     }
 }
+// An ended host's descendant reservations come back to this matrix under
+// fresh local names. Each one the kernel takes back is released; live and
+// static launches refuse and are passed over, as are any still charged.
+public machine sweep_returned(gate: &Gate) reaches Kernel invokes Kernel; {
+    sweeping(gate, 0u64, 0u64);
+}
+machine sweeping(gate: &Gate, index: u64, attempts: u64) reaches Kernel requires index <= RETURNED_LAUNCHES && attempts <= RETURNED_LAUNCHES {
+    let launch: u64 = runtime::task::main::launch(gate, index);
+    transition index < RETURNED_LAUNCHES && attempts < RETURNED_LAUNCHES && launch < kernel::ERROR_BASE {
+        true -> released_at(gate, index, attempts, runtime::task::main::release(gate, launch))
+        _ -> done()
+    }
+    // A released launch's index now names the next one.
+    machine released_at(gate: &Gate, index: u64, attempts: u64, status: u64) reaches Kernel
+        requires index < RETURNED_LAUNCHES && attempts < RETURNED_LAUNCHES {
+        transition status == 0u64 {
+            true -> sweeping(gate, index, attempts + 1u64)
+            _ -> sweeping(gate, index + 1u64, attempts + 1u64)
+        }
+    }
+}
+// More launches than one process can hold.
+const RETURNED_LAUNCHES: u64 = 32u64;
 public machine settle(gate: &Gate, context: &mut State) reaches Kernel invokes Kernel; {
     settle_slot(gate, context, 0u64);
     settle_slot(gate, context, 1u64);

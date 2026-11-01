@@ -27,6 +27,7 @@ use lifecycle;
 // whatever they lack.
 public machine ensure(gate: &Gate, context: &mut State, now: u64, needed: [u64; 5]) -> u64 reaches Kernel blocks; invokes Kernel; {
     lifecycle::settle(gate, context);
+    lifecycle::sweep_returned(gate);
     let spare: Spare = runtime::task::main::spare(gate);
     transition spare {
         Spare::Known { amounts } -> block short(gate, context, now, shortfall(amounts, needed))
