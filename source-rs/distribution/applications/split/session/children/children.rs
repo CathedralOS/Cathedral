@@ -9,11 +9,15 @@ use cathedral_user_runtime::{
     storage::Scope,
     task::{Executable, Launch},
 };
+/// Reader pages each Notes child is admitted with.
+const NOTES_READER_PAGES: u64 = 7;
 pub struct Children {
     pub slots: [Option<Admitted>; 2],
     launches: [Option<Launch>; 2],
     pub uncertain: [bool; 2],
     pub controls: [Option<control::Control>; 2],
+    /// Pages of the Notes image, which a nested copy must be able to read.
+    notes_image_pages: u64,
 }
 impl Children {
     pub fn empty() -> Self {
@@ -22,6 +26,7 @@ impl Children {
             launches: [None, None],
             uncertain: [false; 2],
             controls: [None, None],
+            notes_image_pages: 0,
         }
     }
     pub fn start(
@@ -38,6 +43,7 @@ impl Children {
         let realm = scope.realm();
         let id = scope.lookup(b"Notes").map_err(|c| Error(c as i64))?;
         let (code, granted) = image::read(&mut scope, id)?;
+        self.notes_image_pages = (code.len() / cathedral_kernel_contracts::memory::PAGE_BYTES) as u64;
         drop(scope);
         let mut forwarding = super::storage::Storage::new(client, realm, roots);
         for slot in 0..2 {
@@ -46,7 +52,7 @@ impl Children {
                     // Omega host (9) + old/new text (24) + small retained
                     // decorations and storage publication, all app-charged.
                     private_pages: 42,
-                    reader_pages: 7,
+                    reader_pages: NOTES_READER_PAGES,
                     channels: 3,
                 },
                 0,

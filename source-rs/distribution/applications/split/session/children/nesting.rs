@@ -1,5 +1,7 @@
 //! Persistent private realm and funding for the same matrix one level down.
 use super::*;
+/// Reader pages a nested copy's own service connections hold.
+const CONNECTION_READER_PAGES: u64 = 8;
 impl Children {
     /// Run this same matrix beneath a private copy of its realm. No ambient
     /// executable lookup: the readable realm root is our supplied code object.
@@ -69,7 +71,11 @@ impl Children {
                 // during replacement. The enclosing 168-page grant still funds
                 // its own retained/replacement headers alongside this loan.
                 private_pages: 122,
-                reader_pages: 74,
+                // The Notes image while the copy reads it, its two Notes and
+                // the copy's own service connections.
+                reader_pages: self.notes_image_pages
+                    + 2 * NOTES_READER_PAGES
+                    + CONNECTION_READER_PAGES,
                 channels: 25,
             },
             2,

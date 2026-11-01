@@ -141,7 +141,7 @@ fn unprofiled_apps_are_bounded_but_host_roles_keep_their_offers() {
     assert_eq!(
         nested,
         Allocation {
-            pages: [168, 144],
+            pages: [168, 384],
             channels: 40,
             descendants: 5,
             surfaces: Some(10)
@@ -154,7 +154,7 @@ fn unprofiled_apps_are_bounded_but_host_roles_keep_their_offers() {
         ..offered()
     })
     .unwrap();
-    assert_eq!(refused_descendants.pages, [168, 144]);
+    assert_eq!(refused_descendants.pages, [168, 384]);
     assert_eq!(refused_descendants.descendants, 0);
     for (desktop, app_slot) in [(false, false), (false, true), (true, false)] {
         let result = p::allocate(Facts {
@@ -175,7 +175,7 @@ fn unprofiled_apps_are_bounded_but_host_roles_keep_their_offers() {
             })
             .unwrap();
             assert!(result.pages[0] <= pages[0] && result.pages[1] <= pages[1]);
-            assert!(result.pages[0] <= 168 && result.pages[1] <= 144);
+            assert!(result.pages[0] <= 168 && result.pages[1] <= 384);
         }
     }
 }

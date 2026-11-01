@@ -2,6 +2,15 @@ module children::launch::resources::main;
 
 // Fit a program to its owner's offer before the host allocates any resources.
 // Explicit requirements refuse on excess; only undeclared defaults are capped.
+// What a workspace app gets when it declares no profile. A host with
+// descendants holds its own image, lends a nested copy enough to read its
+// children's images, and passes those images through on their way down; a
+// leaf needs none of that.
+const HOST_PRIVATE_PAGES: u64 = 168u64;
+const HOST_READER_PAGES: u64 = 384u64;
+const LEAF_PAGES: u64 = 128u64;
+const DEFAULT_SURFACES: u64 = 10u64;
+
 public data Capacity [copy] {
     private_pages: u64;
     reader_pages: u64;
@@ -54,8 +63,10 @@ public machine allocate(offered: &Capacity, profile: Profile, declaration: Decla
     machine desktop(offered: &Capacity, declaration: Declaration) -> Admission {
         // Select the host default before capping descendants to the owner's offer.
         transition declares_descendants(declaration) {
-            true -> accept(offered, declaration, minimum(offered.private_pages, 168u64), minimum(offered.reader_pages, 144u64), SurfaceRequest::Request { count: 10u64 })
-            _ -> accept(offered, declaration, minimum(offered.private_pages, 128u64), minimum(offered.reader_pages, 128u64), SurfaceRequest::Request { count: 10u64 })
+            true -> accept(offered, declaration, minimum(offered.private_pages, HOST_PRIVATE_PAGES), minimum(offered.reader_pages, HOST_READER_PAGES),
+                SurfaceRequest::Request { count: DEFAULT_SURFACES })
+            _ -> accept(offered, declaration, minimum(offered.private_pages, LEAF_PAGES), minimum(offered.reader_pages, LEAF_PAGES),
+                SurfaceRequest::Request { count: DEFAULT_SURFACES })
         }
     }
 }

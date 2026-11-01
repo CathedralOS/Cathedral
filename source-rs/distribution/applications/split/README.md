@@ -113,12 +113,12 @@ requests any missing physical backing through its owner's `FUND` protocol. It
 retains a process-load allowance plus its private-page budget for its own work;
 owner refusal leaves the existing applications running and shows CANNOT CAPTURE.
 The inner Split receives
-117 private pages, 69 readers and twenty channel/notification allowances; it has
-no room for AUTO alongside its two Notes. The private grant covers both 41-page
+122 private pages, the reader pages described below and 25 channel/notification
+allowances; it has no room for AUTO alongside its two Notes. The private grant covers both 41-page
 Omega Notes reservations, two 14-page header versions during replacement and
 shared mailbox writers. Each Notes also receives six reader pages and two
 notification allowances. The enclosing desktop's ordinary
-app share is capped at 168 private and 144 reader pages, covering that loan or
+app share is capped at 168 private and 384 reader pages, covering that loan or
 its optional children, mailboxes, masked output and retained/replacement images
 for programs requesting descendant capacity (ordinary leaves retain their 128-page ceiling). Root/user budgets come
 from the current distribution composition
@@ -197,7 +197,8 @@ Capture-generated demand and masks are not implemented by this workflow.
 The manifest requests 43 channel/notification allowances and four descendant slots.
 Each Notes child receives 42 private pages, seven reader pages and three
 notification allowances, including its control mailbox. Nested Split receives
-122 private pages, 74 reader pages and 25 channel/notification allowances. These
+122 private pages, reader pages for the Notes image it must read, its two Notes
+and its own service connections, and 25 channel/notification allowances. These
 are explicit lab grants; the kernel's notification-handle ceiling is unchanged.
 The deep harness requires successful shared-control setup for every admitted
 leaf and nested Split, alongside its visible close/persistence assertions.

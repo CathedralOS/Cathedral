@@ -667,7 +667,9 @@ The F5 variants followed in the step recorded below.
 Over the Omega composition, where every stock matrix in the realm is the
 Omega program, these F5 desktop variants pass across a cold reboot: the
 default test, a relative pointer, undeclared service imports, Split
-(`--nested`) and nested desktops to the third level (`--nested-desktop`).
+(`--nested`), Split inside Split (`--deep`) and nested desktops to the third
+level (`--nested-desktop`). Pointer stress over nested desktops, latency,
+participants and render demand pass as well.
 The nested run covers the protected close of a desktop holding unsaved deep
 work, saved Notes and Colors at depth, repeated subtree reclamation and
 isolation from the outer realm.
@@ -715,6 +717,12 @@ What they needed:
   clean.
 - The storage service has 1024 private pages, the per-task maximum: one
   reply must carry the 341-page Omega matrix image beside its heap.
+- A workspace app that declares descendants but no profile gets 384 reader
+  pages, up from 144, in the stock resource policy both hosts run: it holds
+  its own image, lends a nested copy enough to read the 123-page Omega Notes
+  image, and passes that image through on its way down. Split sizes that loan
+  from the Notes image it read rather than a fixed 74 pages. Before this,
+  `--deep` failed on the Rust host as well.
 - Launch failures after admission report their stage: 9 surface ranks, 10
   placement, 11 activation. The component builder's compiler deadline is
   twenty minutes; a change to the process recompiles in about eleven, a
@@ -726,7 +734,19 @@ Evidence in the main checkout with the patched standalone producer:
   `build/boot-harness-rs/desktop/20261101T223115284938Z/`, relative pointer
   `.../20261101T223212793634Z/`, undeclared imports
   `.../20261101T223341917063Z/`, Split `.../20261101T223415047249Z/`, nested
-  desktops `.../20261101T222020586432Z/`.
+  desktops `.../20261101T222020586432Z/`; pointer stress
+  `.../20261101T223638723220Z/`, latency `.../20261101T224052360264Z/`,
+  participants `.../20261101T224256909847Z/`, render demand
+  `.../20261101T224353392154Z/`. After the host reader default: Split inside
+  Split `.../20261101T231811605523Z/`, and again the default
+  `.../20261101T233016110310Z/`, relative pointer
+  `.../20261101T233113838410Z/`, undeclared imports
+  `.../20261101T233241689697Z/`, Split `.../20261101T233313507873Z/`, nested
+  desktops `.../20261101T233400137385Z/`.
+- On the Rust host with the same policy: Split inside Split
+  `build/boot-harness-rs/desktop/20261101T231559947927Z/`, Split
+  `.../20261101T232818911798Z/`, nested desktops
+  `.../20261101T232858657616Z/`, default `.../20261101T232721937736Z/`.
 - Desktop over the Omega root and user template under the F5 shell:
   `build/boot-harness-rs/omega-desktop/20261101T222904750994Z/`.
 - Omega matrix, top level: `build/boot-harness-rs/omega-matrix/20261101T222929028725Z/`;
@@ -744,10 +764,11 @@ Evidence in the main checkout with the patched standalone producer:
 - Boundary test, layout, Rust formatting, the stock matrix's compiled tests
   and clippy for the desktop crate with `shell` pass.
 
-Next: the remaining F5 variants (`--deep`, latency, soak, pointer stress,
-launcher recovery and the asynchronous and interaction-delay fixtures,
-participants, capture and cursor preferences), the profile swap and the
-bridge's deletion.
+Next: soak, which needs the matrix's reclaimed account; capture and cursor
+preferences; then the fixtures that build the stock matrix with test probes
+(input producer, interaction delay, launcher recovery and the asynchronous
+launch, binding, scene and selection holds), which need Omega probe builds;
+the profile swap and the bridge's deletion.
 
 ### Kernel image window widened for the Omega matrix
 
