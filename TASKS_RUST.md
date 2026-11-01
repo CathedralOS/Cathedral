@@ -664,101 +664,89 @@ The F5 variants followed in the step recorded below.
 
 ### Stock matrix migration: the F5 variants over Omega
 
-Over the Omega composition the F5 desktop test also passes with a relative
-pointer and with undeclared service imports. The nested desktop now runs to
-its first level: the Nested realm program is the Omega matrix running as an
-app in the user's workspace, its own login offers NEW USER, retires its
-picker when the user is chosen, and the user's matrix configures its own
-workspace and taskbar.
+Over the Omega composition, where every stock matrix in the realm is the
+Omega program, these F5 desktop variants pass across a cold reboot: the
+default test, a relative pointer, undeclared service imports, Split
+(`--nested`) and nested desktops to the third level (`--nested-desktop`).
+The nested run covers the protected close of a desktop holding unsaved deep
+work, saved Notes and Colors at depth, repeated subtree reclamation and
+isolation from the outer realm.
 
-What that took:
+What they needed:
 
-- One image now serves as the user template and as a nested desktop, so its
+- One image serves as the user template and as a nested desktop, so its
   declaration fits both offers: 24 channels, 3 descendants, 256 private and
   384 reader pages and 24 surfaces, the stock user offer; funding grows it.
 - An app in a workspace takes the stock surface preference (a host with
   descendants may have the spare ranks), from the preferred count down to its
-  allotment; the old sixteen-rank cap is gone.
-- Under the matrix's own login the user's ranks start at the bottom, below the
-  picker, and the picker's choice retires the picker, as the Rust host does.
+  allotment. Under the matrix's own login the user's ranks start at the
+  bottom, below the picker, and the picker's choice retires the picker.
 - The runtime's admission times the child's handshake from the moment the
   child exists, and the matrix restarts its owner-control window then, so a
-  slow load of a large image does not eat into either.
+  slow load of a large image does not eat into either. A just-admitted child
+  gets up to 30 ticks for its control's first answer before the launch's
+  scene switch.
+- A child's owner control opens without blocking, as the Rust host's does, so
+  a host with descendants can set up its broker services first. The runtime's
+  connection opens in two steps, the hello and the resumed handshake, and
+  routed owner words wait with BUSY until the control has opened.
+- Realm jobs run on a small stack in the State, one command per turn, so the
+  matrix answers its owner and children between them; the owner's CONFIGURE
+  waits with its job, or behind jobs already running.
+- The retained-image store holds one image per compositor tile, 64.
+  APPLY_LAYOUT plans the chrome, app and background places under the stock
+  layout; the World moves every placed child at once and presentation
+  republishes the moved surfaces in one transaction.
+- A funder keeps 512 reader pages free for receiving code, the largest
+  object, since a refused transfer of the Omega matrix image retires the
+  child's storage connection. An ended host's descendant reservations come
+  back under fresh local names and are released at reclaim and before
+  funding. The kernel's per-account reader cap is 16384 pages (reader pages
+  pin others' backing, not frames), the root's reader allotment with it, and
+  the stock growth ceilings in both hosts' policy are 7680 private, 15360
+  reader, 1664 channels, 192 slots and 51200 frames, since a grant counts
+  everything ever funded.
+- The owner's LOSS asks every child at once what stopping it would lose and
+  answers only whether anything might be. CLOSE from the chrome asks the
+  active app the same and stops it only on a clean answer; the chrome's reply
+  waits for it. LOSS shares its word with LAUNCH_IMPORTS: the bare word is
+  LOSS, as in the Rust host, and the matrix decides it before the stored
+  words, which otherwise read it as an imports policy for slot 0 and answered
+  clean.
+- The storage service has 1024 private pages, the per-task maximum: one
+  reply must carry the 341-page Omega matrix image beside its heap.
 - Launch failures after admission report their stage: 9 surface ranks, 10
-  placement, 11 activation.
-- The component builder's compiler deadline is twenty minutes: a change to
-  the process runtime recompiles the whole stock matrix closure, about
-  thirteen minutes; a change to the process alone now takes about eleven,
-  against two and a half before the process was split into packages.
-
-Still failing over Omega:
-
-- Nested desktops now reach their third level over Omega. Three things stood
-  in the way. A funder kept 256 reader pages free for receiving code, enough
-  for a Rust matrix image but not the Omega one; a refused transfer of the
-  image retired the child's storage connection, which the child saw as
-  PEER_CLOSED. The stock funding policy now keeps 512, the largest object.
-  An ended host's descendant reservations come back to its owner under fresh
-  local names, and the Omega matrix never released them, as the Rust host
-  does; it now does, at reclaim and before funding. And a chain of Omega
-  matrices asks for more than the Rust chain did: the kernel's per-account
-  reader cap rises from 4096 to 16384 pages (reader pages pin others' backing,
-  not frames), the root's reader allotment with it, and the stock growth
-  ceilings eightfold in both hosts' policy (7680 private, 15360 reader, 1664
-  channels, 192 slots, 51200 frames), since a grant counts everything ever
-  funded. The run now stops at closing the outer desktop, the loss survey
-  and close over the owner-control client.
-- Split (`--nested`, `--deep`) starts now: a child's owner control opens
-  without blocking, as the Rust host's does, so a host with descendants can set
-  up its broker services first. The runtime's connection opens in two steps,
-  the hello and the resumed handshake, and routed owner words wait with BUSY
-  until the control has opened. Split then runs beside an outer Notes, but the
-  outer Notes ends before Colors launches beside them, apparently on a press
-  in its close button, so its draft does not survive the matrix switch
-  (`build/boot-harness-rs/desktop/20261101T184743785025Z/`).
-- Realm jobs now run on a small stack in the State, one command per turn, so
-  the matrix answers its owner between them: before, a whole configuration ran
-  in one turn and could outlast the shell's 100-tick deadline on a routed word,
-  which failed the desktop proof intermittently. The owner's CONFIGURE waits
-  with its job, or behind jobs already running.
-- A just-admitted child gets up to 30 ticks for its control's first answer
-  before the launch's scene switch, so an ordinary app's handshake is not left
-  to outlast its own window.
-- Split now passes over Omega (`--nested`): its layout, focus, isolated
-  persistence, dirty close, resize and three reclaimed subtrees, across a cold
-  reboot. The outer Notes beside it had ended because the matrix retained one
-  sealed image per tile in a 16-entry store, which the launcher's icons, Split
-  and its two Notes filled; a refused image presentation ends Notes. The store
-  now holds one per compositor tile, 64. The launcher's Settings needed
-  APPLY_LAYOUT: the stock layout plans the chrome, app and background places,
-  the World moves every placed child at once, the app slots keep their new
-  places, and presentation republishes the moved surfaces in one transaction.
+  placement, 11 activation. The component builder's compiler deadline is
+  twenty minutes; a change to the process recompiles in about eleven, a
+  change to the process runtime in about thirteen.
 
 Evidence in the main checkout with the patched standalone producer:
 
+- F5 variants over Omega: default
+  `build/boot-harness-rs/desktop/20261101T223115284938Z/`, relative pointer
+  `.../20261101T223212793634Z/`, undeclared imports
+  `.../20261101T223341917063Z/`, Split `.../20261101T223415047249Z/`, nested
+  desktops `.../20261101T222020586432Z/`.
 - Desktop over the Omega root and user template under the F5 shell:
-  `build/boot-harness-rs/omega-desktop/20261101T181809876365Z/`.
-- Omega matrix, top level: `build/boot-harness-rs/omega-matrix/20261101T182051469283Z/`;
-  under a real parent: `build/boot-harness-rs/omega-matrix-upstream/20261101T182058439575Z/`;
-  Rust comparison matrix: `build/boot-harness-rs/matrix-composition/20261101T181832063318Z/`.
-- Witnesses: primitives `build/omega-user/tests/20261101T181653090783Z/`;
-  connections `build/omega-user/connections/20261101T181658886037Z/`, service
-  `.../20261101T182311824195Z/` (the sweep's first run failed one 12-page image
-  exchange with NO_MEMORY and passed on rerun), admission
-  `.../20261101T181733924726Z/`;
-  Background `build/omega-user/background-control/20261101T181741392904Z/`;
-  Colors `build/omega-user/colors-control/20261101T181748216116Z/`;
-  Notes `build/omega-user/notes-control/20261101T181754235804Z/`;
-  Chooser `build/omega-user/chooser-control/20261101T181801265518Z/`.
-- F5 desktop test over Omega: `build/boot-harness-rs/desktop/20261101T181119626394Z/`.
-- Kernel smoke labs of 2026-11-01 18:21 UTC pass; default F5 desktop and cold
-  reopen on the Rust host: `build/boot-harness-rs/desktop/20261101T182146923475Z/`.
+  `build/boot-harness-rs/omega-desktop/20261101T222904750994Z/`.
+- Omega matrix, top level: `build/boot-harness-rs/omega-matrix/20261101T222929028725Z/`;
+  under a real parent: `build/boot-harness-rs/omega-matrix-upstream/20261101T222936176891Z/`;
+  Rust comparison matrix: `build/boot-harness-rs/matrix-composition/20261101T222924602454Z/`.
+- Witnesses: primitives `build/omega-user/tests/20261101T222754578422Z/`;
+  connections `build/omega-user/connections/20261101T222800920011Z/`, service
+  `.../20261101T222821808684Z/`, admission `.../20261101T222835079306Z/`;
+  Background `build/omega-user/background-control/20261101T222839237008Z/`;
+  Colors `build/omega-user/colors-control/20261101T222844010120Z/`;
+  Notes `build/omega-user/notes-control/20261101T222849592088Z/`;
+  Chooser `build/omega-user/chooser-control/20261101T222856345319Z/`.
+- Kernel smoke labs of 2026-11-01 22:29 UTC pass; default F5 desktop and cold
+  reopen on the Rust host: `build/boot-harness-rs/desktop/20261101T223023907705Z/`.
 - Boundary test, layout, Rust formatting, the stock matrix's compiled tests
   and clippy for the desktop crate with `shell` pass.
 
-Next: the loss survey and close, which closing a nested desktop needs; then
-the remaining F5 variants
-(launcher recovery, the asynchronous fixtures, soak), the profile swap and the
+Next: the remaining F5 variants (`--deep`, latency, soak, pointer stress,
+launcher recovery and the asynchronous and interaction-delay fixtures,
+participants, capture and cursor preferences), the profile swap and the
 bridge's deletion.
 
 ### Kernel image window widened for the Omega matrix

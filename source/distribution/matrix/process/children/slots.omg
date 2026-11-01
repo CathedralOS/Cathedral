@@ -13,6 +13,8 @@ use policy::requests::desktop::LAUNCH;
 use policy::requests::desktop::APP_ENTRY;
 use policy::requests::desktop::SELECT_APP;
 use policy::requests::desktop::APPLY_LAYOUT;
+use policy::requests::desktop::CLOSE;
+use workspace::Closing;
 use shared::state::State;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
@@ -75,6 +77,7 @@ machine routed(gate: &Gate, context: &mut State, slot: u64 [0..=4], frame: Frame
         frame.payload[0] == APP_ENTRY -> block answered(gate, context, slot, issued, workspace::entry(context, slot, incarnation, frame.payload))
         frame.payload[0] == SELECT_APP -> block selecting(gate, context, slot, issued, frame, incarnation)
         frame.payload[0] == APPLY_LAYOUT -> block arranging(gate, context, slot, issued, frame, incarnation)
+        frame.payload[0] == CLOSE -> block closing(gate, context, slot, issued, frame, incarnation, now)
         _ -> block asked(gate, context, slot, issued, frame, incarnation)
     }
 }
@@ -85,6 +88,14 @@ machine launching(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: T
 machine funding(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket, frame: Frame, now: u64) -> u64 reaches Kernel {
     let reply: [u64; 8] = block funding::fund(gate, context, now, slot, frame.payload);
     block answered(gate, context, slot, issued, reply)
+}
+// A held close is answered when the target has said what it would lose.
+machine closing(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket, frame: Frame, incarnation: u64, now: u64) -> u64 reaches Kernel {
+    let closing: Closing = block workspace::close(gate, context, now, slot, incarnation, issued, frame.payload);
+    transition closing {
+        Closing::Held -> (0u64)
+        Closing::Answer { words } -> block answered(gate, context, slot, issued, words)
+    }
 }
 machine arranging(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket, frame: Frame, incarnation: u64) -> u64 reaches Kernel {
     let reply: [u64; 8] = block workspace::apply_layout(gate, context, slot, incarnation, frame.payload);

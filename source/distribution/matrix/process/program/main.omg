@@ -25,7 +25,7 @@ use runtime::waiting::Set;
 use shared::state::State;
 use startup;
 use commands;
-use connections::forward;
+use children::forward;
 use connections::upstream;
 use realm::jobs;
 use connections::source;

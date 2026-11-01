@@ -37,7 +37,7 @@ use policy::children::startup::main::take_picker;
 use policy::children::startup::main::take_background;
 use world::geometry;
 use connections::upstream;
-use connections::forward;
+use children::forward;
 use connections::storage;
 use connections::listing;
 use realm_names;

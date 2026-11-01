@@ -1,10 +1,15 @@
 module forward;
-// Owner words routed to a child. The first hop above the operation names the
-// slot, as the stock control policy decodes it; the word goes on to that
-// child's owner control with the hop removed, and the child's reply, or the
-// deadline the policy set, answers the owner. One routed word per child is
-// pending at a time; a late reply is drained without an answer, and the slot
-// takes no further routed word until it has been.
+// Requests over the children's owner controls, one pending per child.
+// Owner words routed to a child: the first hop above the operation names the
+// slot, as the stock control policy decodes it; the word goes on with the hop
+// removed, and the child's reply, or the deadline the policy set, answers the
+// owner. The owner's LOSS surveys every child under the stock lifecycle
+// policy: each is asked what stopping it would lose, and the survey answers
+// whether anything might be. A sibling's close of a child asks that child the
+// same, and stops it only if it answered that nothing would be lost. Missing,
+// malformed, busy or late answers never count as permission. A late reply is
+// drained without an answer, and the slot takes no further request until it
+// has been.
 use protocol::main;
 use protocol::matrix;
 use shared::state::State;
@@ -23,6 +28,22 @@ use policy::requests::control::operation::Facts;
 use policy::requests::control::operation::Request;
 use policy::requests::control::operation::Operation;
 use policy::requests::control::operation::Decision;
+use policy::children::control::main::LossAnswer;
+use policy::children::control::main::CloseDecision;
+use policy::children::control::main::SurveyConclusion;
+use policy::children::control::main::decide_close;
+use policy::children::control::main::begin_survey;
+use policy::children::control::main::record_query;
+use policy::children::control::main::record_answer;
+use policy::children::control::main::finish_survey;
+use lifecycle;
+
+// What a pending request's answer settles.
+const OWNER_WORD: u64 = 0u64;
+const LOSS_QUESTION: u64 = 1u64;
+const CLOSE_QUESTION: u64 = 2u64;
+// How long a child has to say what stopping it would lose.
+const LOSS_TICKS: u64 = 100u64;
 
 public machine routed(op: u64) -> bool {
     (op >> 16u64) != 0u64
@@ -71,7 +92,9 @@ machine begin(gate: &Gate, context: &mut State, now: u64, words: [u64; 8], slot:
     }
     machine held(context: &mut State, slot: u64 [0..=4], until: u64) -> u64 {
         let issued: Ticket = runtime::server::main::ticket(&context.owner);
-        context.forwards[slot] = Forward { live: true, ticket: issued, deadline: until, late: false };
+        let empty: Ticket;
+        context.forwards[slot] = Forward { live: true, ticket: issued, deadline: until, late: false,
+            purpose: OWNER_WORD, requester: 5u64, request: empty };
         0u64
     }
 }
@@ -130,7 +153,7 @@ machine pending(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64) r
 }
 machine expired(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
     context.forwards[slot].late = true;
-    block respond(gate, context, slot, error(kernel::TIMED_OUT));
+    block settle(gate, context, slot, error(kernel::TIMED_OUT));
 }
 machine answered(gate: &Gate, context: &mut State, slot: u64 [0..=4], words: [u64; 8]) reaches Kernel {
     transition context.forwards[slot].late {
@@ -139,8 +162,156 @@ machine answered(gate: &Gate, context: &mut State, slot: u64 [0..=4], words: [u6
     }
 }
 machine responding(gate: &Gate, context: &mut State, slot: u64 [0..=4], words: [u64; 8]) reaches Kernel {
-    block respond(gate, context, slot, words);
+    let forward: Forward = context.forwards[slot];
     cleared(context, slot);
+    context.forwards[slot].late = false;
+    block settled(gate, context, slot, forward, words);
+}
+// The answer settles what the request was for; a late answer is drained later.
+machine settle(gate: &Gate, context: &mut State, slot: u64 [0..=4], words: [u64; 8]) reaches Kernel {
+    let forward: Forward = context.forwards[slot];
+    block settled(gate, context, slot, forward, words);
+}
+machine settled(gate: &Gate, context: &mut State, slot: u64 [0..=4], forward: Forward, words: [u64; 8]) reaches Kernel {
+    transition {
+        forward.purpose == LOSS_QUESTION -> block surveyed(gate, context, slot, answer_of(words))
+        forward.purpose == CLOSE_QUESTION -> block closed(gate, context, slot, forward, answer_of(words))
+        _ -> block respond_to(gate, context, forward.ticket, words)
+    }
+}
+machine respond_to(gate: &Gate, context: &mut State, issued: Ticket, words: [u64; 8]) reaches Kernel {
+    let payload: [u64; 8] = words;
+    let status: u64 = block runtime::server::main::reply_to(gate, &mut context.owner, issued, &payload);
+}
+// A clean answer is a reply that reports nothing it would lose.
+machine answer_of(words: [u64; 8]) -> LossAnswer {
+    transition words[0] == 0u64 && words[1] == 0u64 {
+        true -> (LossAnswer::NothingToLose)
+        _ -> (LossAnswer::Uncertain)
+    }
+}
+
+// The owner's LOSS: ask every child at once, then answer once all have.
+public machine survey(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let pending: bool = context.startup.picker_pending || context.startup.background_pending;
+    let busy: bool = context.surveying || busy(context) || context.frame_count != 0u64 || pending;
+    let started: bool = begin_survey(busy, &mut context.survey);
+    transition started {
+        true -> block asking(gate, context, now, 0u64)
+        _ -> block reply(gate, context, error(kernel::BUSY))
+    }
+    machine asking(gate: &Gate, context: &mut State, now: u64, slot: u64) -> u64 reaches Kernel requires slot <= 5u64 {
+        transition slot < 5u64 {
+            true -> block one(gate, context, now, slot)
+            _ -> block asked(gate, context)
+        }
+    }
+    machine one(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4]) -> u64 reaches Kernel {
+        transition context.slots[slot].live {
+            true -> block questioned(gate, context, now, slot)
+            _ -> block asking(gate, context, now, slot + 1u64)
+        }
+    }
+    machine questioned(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4]) -> u64 reaches Kernel {
+        let owner: Ticket = runtime::server::main::ticket(&context.owner);
+        let sent: bool = block question(gate, context, now, slot, LOSS_QUESTION, 5u64, owner);
+        let recorded: bool = record_query(&mut context.survey, slot, sent);
+        transition { _ -> block asking(gate, context, now, slot + 1u64) }
+    }
+    machine asked(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+        context.survey_ticket = runtime::server::main::ticket(&context.owner);
+        context.surveying = true;
+        block concluded(gate, context)
+    }
+}
+machine surveyed(gate: &Gate, context: &mut State, slot: u64 [0..=4], answer: LossAnswer) reaches Kernel {
+    let recorded: bool = record_answer(&mut context.survey, slot, answer);
+    let status: u64 = block concluded(gate, context);
+}
+// Only a boolean aggregate crosses the boundary: no child, draft or count.
+machine concluded(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+    let pending: bool = context.startup.picker_pending || context.startup.background_pending;
+    let conclusion: SurveyConclusion = finish_survey(&context.survey, pending);
+    transition {
+        !context.surveying -> (0u64)
+        conclusion == SurveyConclusion::Waiting -> (0u64)
+        conclusion == SurveyConclusion::NothingToLose -> block surveyed_reply(gate, context, 0u64)
+        _ -> block surveyed_reply(gate, context, 1u64)
+    }
+    machine surveyed_reply(gate: &Gate, context: &mut State, uncertain: u64) -> u64 reaches Kernel {
+        context.surveying = false;
+        let issued: Ticket = context.survey_ticket;
+        let mut words: [u64; 8];
+        words[1] = uncertain;
+        block respond_to(gate, context, issued, words);
+        0u64
+    }
+}
+
+// A sibling asks to close `target`: ask it what it would lose; its answer
+// decides, and the requester's reply waits with it. False when the question
+// could not be put, which refuses the close.
+public machine close(gate: &Gate, context: &mut State, now: u64, target: u64 [0..=4], requester: u64, request: Ticket) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    transition {
+        context.surveying || context.forwards[target].live || context.opening[target] != 0u64 -> (kernel::BUSY)
+        !context.slots[target].live -> (kernel::PEER_CLOSED)
+        _ -> block questioning(gate, context, now, target, requester, request)
+    }
+    machine questioning(gate: &Gate, context: &mut State, now: u64, target: u64 [0..=4], requester: u64, request: Ticket) -> u64 reaches Kernel {
+        let sent: bool = block question(gate, context, now, target, CLOSE_QUESTION, requester, request);
+        transition sent {
+            true -> (0u64)
+            _ -> (kernel::BUSY)
+        }
+    }
+}
+// The child goes only if it answered that nothing would be lost.
+machine closed(gate: &Gate, context: &mut State, slot: u64 [0..=4], forward: Forward, answer: LossAnswer) reaches Kernel {
+    let decision: CloseDecision = decide_close(false, answer);
+    transition {
+        decision == CloseDecision::Stop -> block stopping(gate, context, slot, forward)
+        _ -> block reply_requester(gate, context, forward, error(kernel::BUSY))
+    }
+    machine stopping(gate: &Gate, context: &mut State, slot: u64 [0..=4], forward: Forward) reaches Kernel {
+        block lifecycle::reclaim(gate, context, slot);
+        block reply_requester(gate, context, forward, error(0u64))
+    }
+}
+machine reply_requester(gate: &Gate, context: &mut State, forward: Forward, words: [u64; 8]) reaches Kernel {
+    transition forward.requester < 5u64 {
+        true -> block replied(gate, context, forward.requester, forward.request, words)
+        _ -> done()
+    }
+    machine replied(gate: &Gate, context: &mut State, requester: u64 [0..=4], request: Ticket, words: [u64; 8]) reaches Kernel {
+        let payload: [u64; 8] = words;
+        let status: u64 = block runtime::server::main::reply_to(gate, &mut context.slots[requester].listener, request, &payload);
+    }
+}
+// Ask a child's owner control what stopping it would lose.
+machine question(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], purpose: u64, requester: u64, request: Ticket) -> bool
+    reaches Kernel {
+    let mut words: [u64; 8];
+    words[0] = LOSS;
+    let usable: bool = !context.forwards[slot].live && context.opening[slot] == 0u64 && context.controls[slot].fault == 0u64;
+    transition usable {
+        true -> block sending(gate, context, now, slot, purpose, requester, request, words)
+        _ -> (false)
+    }
+    machine sending(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], purpose: u64, requester: u64, request: Ticket,
+        words: [u64; 8]) -> bool reaches Kernel {
+        let status: u64 = block runtime::connection::main::begin(gate, &mut context.controls[slot], &words);
+        transition status == 0u64 {
+            true -> (pending_question(context, now, slot, purpose, requester, request))
+            _ -> (false)
+        }
+    }
+    machine pending_question(context: &mut State, now: u64, slot: u64 [0..=4], purpose: u64, requester: u64, request: Ticket) -> bool {
+        let empty: Ticket;
+        context.forwards[slot] = Forward { live: true, ticket: empty, deadline: runtime::time::after(now, LOSS_TICKS), late: false,
+            purpose: purpose, requester: requester, request: request };
+        true
+    }
 }
 machine respond(gate: &Gate, context: &mut State, slot: u64 [0..=4], words: [u64; 8]) reaches Kernel {
     let issued: Ticket = context.forwards[slot].ticket;

@@ -40,7 +40,8 @@ The the process entry: the turn loop, startup and the owner's words.
   world's grant, with the compositor's whole tile allowance and the source
   streams bound; under a parent the view is the parent's to grant), the
   LAUNCH_IMAGES, LAUNCH_POLICY and LAUNCH_PLACE policy for a slot, the children,
-  storage and stored words below, words routed to a child, CONFIGURE, the
+  storage and stored words below, words routed to a child, LOSS (the bare
+  word; LAUNCH_IMPORTS shares it and always carries a slot), CONFIGURE, the
   desktop supervisor's recovery words (a nested matrix's launcher fallback,
   a slot's save-recovery grant, the recovery poll, RESTORE_STORAGE after
   provider replacement), RESOLVE_PATH in this matrix's realm, and the World's
@@ -48,7 +49,7 @@ The the process entry: the turn loop, startup and the owner's words.
 
 ### [connections/](connections/build.omg)
 
-The storage, the parent, the display and the routes to children's owner controls.
+The storage, the parent and the display.
 
 - [upstream.omg](connections/upstream.omg): the parent matrix. Its interaction connection
   is polled for this matrix's view and the one input event each snapshot
@@ -56,12 +57,6 @@ The storage, the parent, the display and the routes to children's owner controls
   the parent rings this matrix's bell, when the last snapshot had more, and
   before an owner word that needs a view none has granted yet. The same
   connection carries every surface, image and batch word upward.
-- [forward.omg](connections/forward.omg): owner words routed to a child. The stock
-  control policy decodes the first hop above the operation into the slot and
-  sets the deadline the word's work needs; the word goes on to that child's
-  owner control with the hop removed and the child's reply answers the owner.
-  One routed word is pending per child; a late reply is drained unanswered
-  after the owner heard TIMED_OUT.
 - [listing.omg](connections/listing.omg): names in this matrix's realm, read over its own
   binding one ENTRIES page at a time and compared row by row with the
   32-byte name wanted, which is how discovery, configuration and RESOLVE_PATH
@@ -103,7 +98,7 @@ The storage, the parent, the display and the routes to children's owner controls
 
 ### [children/](children/build.omg)
 
-The the children this matrix admits, funds, presents and retires.
+The children this matrix admits, funds, presents and retires.
 
 - [lifecycle.omg](children/lifecycle.omg): RUN_PAGES and RUN_MEMORY stage a slot's next
   allowances; RUN reserves a launch for an image from the owner's catalogue
@@ -125,11 +120,23 @@ The the children this matrix admits, funds, presents and retires.
   ended host's descendant reservations come back under fresh local names and
   are released too, at reclaim and before funding. Every failed step leaves
   no reservation behind.
+- [forward.omg](children/forward.omg): requests over the children's owner
+  controls, one pending per child. For an owner word routed to a child the
+  stock control policy decodes the first hop above the operation into the
+  slot and sets the deadline the word's work needs; the word goes on with the
+  hop removed and the child's reply answers the owner. The owner's LOSS asks
+  every child at once what stopping it would lose and answers, once all have,
+  only whether anything might be. A sibling's close asks its target the same
+  and stops it only on an answer that nothing would be lost; missing,
+  malformed, busy and late answers never count as permission. A late reply is
+  drained unanswered, and the slot takes no further request until it has
+  been.
 - [slots.omg](children/slots.omg): one admitted child's listener per turn. Service
   acquisition goes to the runtime's offer, surface and batch words to
   presentation (a sealed attachment is accepted only behind an image word),
-  LAUNCH and LAUNCH_STATUS to the stored launches, FUND to the funding, every
-  other request to the World under the connection's incarnation.
+  LAUNCH and LAUNCH_STATUS to the stored launches, FUND to the funding, the
+  workspace words and CLOSE to the workspace, every other request to the
+  World under the connection's incarnation.
 - [funding.omg](children/funding.omg): funding under the stock funding policy. Before
   a launch from the realm this matrix makes sure its own allowances cover the
   child and the connections to it, asking its owner with FUND for any
@@ -167,11 +174,14 @@ The the children this matrix admits, funds, presents and retires.
   chrome hears of it and the next instance becomes active. APPLY_LAYOUT
   rearranges the workspace under the stock layout: the World moves every
   placed child at once, the app slots keep their new places for later
-  launches, and presentation publishes the moved surfaces again.
+  launches, and presentation publishes the moved surfaces again. CLOSE from
+  the placed chrome closes the active app; outside a workspace either of the
+  first two children closes the other. The reply waits for the target's
+  answer.
 
 ### [realm/](realm/build.omg)
 
-The setting the matrix up from its realm.
+Setting the matrix up from its realm.
 
 - [jobs.omg](realm/jobs.omg): realm setup under the stock startup policy, which
   sequences each job while this process executes its commands. Jobs run on a

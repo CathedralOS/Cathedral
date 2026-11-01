@@ -18,6 +18,7 @@ use world::geometry::Rect;
 use policy::children::startup::main::Startup;
 use policy::children::launch::resources::recipes::Offer;
 use world::scopes::Scopes;
+use policy::children::control::main::LossSurvey;
 use policy::children::startup::realm::operations::Setup;
 use policy::children::startup::realm::operations::Command;
 
@@ -71,6 +72,12 @@ public data Forward [copy] {
     ticket: Ticket;
     deadline: u64;
     late: bool;
+    // What the child's answer settles: the owner's routed word, this matrix's
+    // loss survey, or a sibling's close of this child; for a close, the
+    // requesting child's slot and the request its answer waits with.
+    purpose: u64;
+    requester: u64;
+    request: Ticket;
 }
 // One realm job in progress: which job, the policy's setup record for it and,
 // while a job it started runs, the command waiting for that job's result.
@@ -126,6 +133,10 @@ public data State {
     staged_frames: [u64; 5];
     // Routed owner words pending at each child's owner control.
     forwards: [Forward; 5];
+    // A loss survey the owner asked for, and the reply it waits with.
+    survey: LossSurvey;
+    surveying: bool;
+    survey_ticket: Ticket;
     // Realm setup: the startup recovery policy's state, whether the owner now
     // drives setup, whether a workspace stands and whether this matrix runs
     // its own login, what discovery and configuration found, the image and

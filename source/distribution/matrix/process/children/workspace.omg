@@ -29,7 +29,7 @@ use policy::children::configuration::placement::Rectangle;
 use world::layout;
 use world::geometry::Rect;
 use connections::presentation;
-use connections::forward;
+use forward;
 
 const CHROME: u64 = 0u64;
 
@@ -128,6 +128,44 @@ machine remembered(context: &mut State, slot: u64 [0..=4], place: Rect, remember
 }
 machine rect(from: Rectangle) -> Rect {
     Rect { x: from.x, y: from.y, width: from.width, height: from.height }
+}
+// What a child's CLOSE gets: an answer now, or one held until the target
+// answers what it would lose.
+public data Closing [copy] {
+    case Held;
+    case Answer(words: [u64; 8]);
+}
+// CLOSE [15]: in a workspace the placed chrome closes the active app;
+// elsewhere either of the first two children closes the other.
+public machine close(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], incarnation: u64, request: runtime::server::main::Ticket,
+    words: [u64; 8]) -> Closing reaches Kernel blocks; invokes Kernel; {
+    let target: u64 = target_of(context, slot, incarnation);
+    transition {
+        !zeros_from(&words, 1u64) || target == DENIED_TARGET -> (Closing::Answer { words: error(kernel::DENIED) })
+        target == NO_TARGET -> (Closing::Answer { words: error(kernel::PEER_CLOSED) })
+        target < 5u64 -> block asking(gate, context, now, target, slot, request)
+        _ -> (Closing::Answer { words: error(kernel::DENIED) })
+    }
+    machine asking(gate: &Gate, context: &mut State, now: u64, target: u64 [0..=4], slot: u64, request: runtime::server::main::Ticket) -> Closing
+        reaches Kernel {
+        let status: u64 = block forward::close(gate, context, now, target, slot, request);
+        transition status == 0u64 {
+            true -> (Closing::Held)
+            _ -> (Closing::Answer { words: error(status) })
+        }
+    }
+}
+const DENIED_TARGET: u64 = 6u64;
+const NO_TARGET: u64 = 7u64;
+machine target_of(context: &State, slot: u64, incarnation: u64) -> u64 {
+    let active: u64 = active(context);
+    transition {
+        context.desktop && chrome(context, slot, incarnation) && active != 0u64 -> (active)
+        context.desktop && chrome(context, slot, incarnation) -> (NO_TARGET)
+        context.desktop -> (DENIED_TARGET)
+        slot < 2u64 -> (1u64 - slot)
+        _ -> (DENIED_TARGET)
+    }
 }
 // A launched app joins the catalogue and becomes the active one.
 public machine launched(gate: &Gate, context: &mut State, slot: u64, program: u64) -> u64 reaches Kernel blocks; invokes Kernel; {

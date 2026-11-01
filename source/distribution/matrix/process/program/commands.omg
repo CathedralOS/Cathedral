@@ -35,7 +35,7 @@ use connections::source;
 use children::lifecycle;
 use connections::storage;
 use children::stored;
-use connections::forward;
+use children::forward;
 use connections::upstream;
 use realm::jobs;
 use connections::listing;
@@ -78,6 +78,8 @@ machine dispatch(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u6
     transition {
         frame.bytes != 64u64 -> block reply(gate, context, error(kernel::DENIED))
         routed -> block forward::owner(gate, context, now, frame)
+        // LOSS shares its word with LAUNCH_IMPORTS; the bare word is LOSS.
+        frame.payload[0] == LOSS && zeros_from(&frame.payload, 1u64) -> block forward::survey(gate, context, now)
         child_word -> block lifecycle::owner(gate, context, now, frame)
         storage_word -> block storage::owner(gate, context, now, frame)
         stored_word -> block stored::owner(gate, context, now, frame)
