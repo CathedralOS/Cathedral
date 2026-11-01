@@ -49,9 +49,13 @@ machine shaped(gate: &Gate, context: &mut State, environment: Environment, now: 
 machine nested(gate: &Gate, context: &mut State, environment: Environment, now: u64) -> u64 reaches Kernel {
     let status: u64 = block owner::open(gate, &mut context.owner, runtime::time::after(now, 300u64));
     transition status == 0u64 {
-        true -> block upstream::open(gate, context, environment, now)
+        true -> block controlled(gate, context, environment, now)
         _ -> (status)
     }
+}
+machine controlled(gate: &Gate, context: &mut State, environment: Environment, now: u64) -> u64 reaches Kernel {
+    report::owner_control_ready(gate);
+    block upstream::open(gate, context, environment, now)
 }
 machine control(gate: &Gate, context: &mut State, environment: Environment, now: u64) -> u64 reaches Kernel {
     let status: u64 = block owner::open(gate, &mut context.owner, runtime::time::after(now, 300u64));

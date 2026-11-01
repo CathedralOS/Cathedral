@@ -17,6 +17,7 @@ matrices, moves the pointer over QMP and watches the compositor's cursor
 follow it, then clicks Colors for focus and presses Enter, which saves a
 record through both storage relays and repaints the view in the saved
 colour."""
+import argparse
 from datetime import datetime, timezone
 import json
 import os
@@ -51,8 +52,8 @@ MARKERS = (
 USER_MARKERS = (
     'Cathedral desktop: picker stopped; loading user launcher',
     'Cathedral matrix: shared parent interaction ready',
-    'Cathedral matrix: parent storage connection ready',
-    'Cathedral matrix: configured from the realm paths',
+    'Cathedral matrix: shared parent storage ready',
+    'Cathedral matrix: configured from realm paths',
     'Cathedral desktop: user matrix furnished',
 )
 # The stock configuration: an 8 px margin, an 80 px launcher bar and an 8 px
@@ -95,9 +96,14 @@ def compose(output):
     programs[2] = {'package': template['package'], 'entry': 'distribution/matrix/native/main.omg',
                    'target': template['target'], 'inside': template['inside'],
                    'display_title': template['display_title']}
-    # The realm programs F5 adds beside the stock six are not run here, and
-    # beside the larger Omega template they would exceed the root's quota.
-    composition['startup']['realm_programs'] = []
+    # Every stock matrix F5 installs in the realm, the nested desktops and
+    # their user templates, is the Omega program too, so the store shares one
+    # image's chunks between them as the swapped distribution will.
+    realm = composition['startup']['realm_programs']
+    for index, entry in enumerate(realm):
+        if entry.get('package') == 'cathedral-stock-matrix':
+            realm[index] = {key: value for key, value in entry.items() if key not in ('features', 'entry')}
+            realm[index]['entry'] = 'distribution/matrix/native/main.omg'
     profile = output / f'omega-desktop-{output.name}.json'
     profile.write_text(json.dumps(composition, indent=2), encoding='utf-8', newline='\n')
     return profile
@@ -281,9 +287,16 @@ def check(stream, output, serial):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--profile-only', action='store_true',
+                        help='write the composition and print its path, for desktop_test.py --profile to measure F5 parity')
+    args = parser.parse_args()
     output = harness.BUILD / 'omega-desktop' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     output.mkdir(parents=True)
     profile = compose(output)
+    if args.profile_only:
+        print(profile)
+        return
     subprocess.run([sys.executable, str(Path(__file__).with_name('run.py')),
                     '--profile', str(profile), '--release', '--build-only'], cwd=ROOT, check=True)
     shutil.copytree(harness.BUILD / f'{profile.stem}-interactive/esp', output / 'esp')

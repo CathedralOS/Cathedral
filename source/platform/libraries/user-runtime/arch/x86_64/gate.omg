@@ -104,6 +104,12 @@ linux_x86_64 machine Gate::link_handle_leaf(gate: &Gate, index: u64) -> u64
     satisfies Kernel::link_handle via ForeignBinding::TableFunction(link_handle);
 linux_x86_64 machine Gate::link_connect_leaf(gate: &Gate, link: u64) -> u64
     satisfies Kernel::link_connect via ForeignBinding::TableFunction(link_connect);
+linux_x86_64 machine Gate::resource_grow_leaf(gate: &Gate, launch: u64, delta: &[u64; 5]) -> u64
+    satisfies Kernel::resource_grow via ForeignBinding::TableFunction(resource_grow);
+linux_x86_64 machine Gate::physical_budget_leaf(gate: &Gate, record: &mut [u64; 8]) -> u64
+    satisfies Kernel::physical_budget via ForeignBinding::TableFunction(physical_budget);
+linux_x86_64 machine Gate::pool_available_leaf(gate: &Gate) -> u64
+    satisfies Kernel::pool_available via ForeignBinding::TableFunction(pool_available);
 
 public NativeKernel satisfies Kernel {
     Kernel::wait_many = Gate::wait_many_leaf;
@@ -128,6 +134,9 @@ public NativeKernel satisfies Kernel {
     Kernel::resource_assign = Gate::resource_assign_leaf;
     Kernel::link_handle = Gate::link_handle_leaf;
     Kernel::link_connect = Gate::link_connect_leaf;
+    Kernel::resource_grow = Gate::resource_grow_leaf;
+    Kernel::physical_budget = Gate::physical_budget_leaf;
+    Kernel::pool_available = Gate::pool_available_leaf;
     Kernel::object_create = Gate::object_create_leaf;
     Kernel::object_send = Gate::object_send_leaf;
     Kernel::object_receive = Gate::object_receive_leaf;

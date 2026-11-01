@@ -89,6 +89,10 @@ exit. It also names funded reservations for children a task admits itself: an
 image grant from the owner's catalogue or a sealed object, a reservation over
 quotas, child slots, the per-load admission ceiling and physical frames, its
 release, and the idle launch's pool, allowed images, CPU and absolute limits.
+A funder grows a launch, idle or live, by five increments all or nothing, and
+reads what it can still lend in the same five amounts: its own private pages,
+reader pages and channels left, its unused process slots and its reserved
+frames not yet charged.
 [link.omg](link.omg) names the boot-approved provider links the composition
 supplied: the link at an index, and a client connection over it.
 [admission/main.omg](admission/main.omg) sequences one brokered admission:

@@ -88,7 +88,16 @@ connections.
 - [slots.omg](slots.omg): one admitted child's listener per turn. Service
   acquisition goes to the runtime's offer, surface and batch words to
   presentation (a sealed attachment is accepted only behind an image word),
-  every other request to the World under the connection's incarnation.
+  LAUNCH and LAUNCH_STATUS to the stored launches, FUND to the funding, every
+  other request to the World under the connection's incarnation.
+- [funding.omg](funding.omg): funding under the stock funding policy. Before
+  a launch from the realm this matrix makes sure its own allowances cover the
+  child and the connections to it, asking its owner with FUND for any
+  shortfall; the root has no one to ask. A child admitted with descendant
+  capacity may ask in turn: within its grant's ceiling this matrix covers the
+  request, asking its owner first if it must, and grows the child's launch in
+  place, asking once more for process slots a retired sibling left out of
+  the child's reach.
 - [presentation.omg](presentation.omg): a child's surfaces on the display, or
   on the parent's view. Creation names the backing behind the owner-allotted
   rank: the compositor tile at the root, a surface of this matrix's own view
@@ -137,8 +146,10 @@ connections.
 - [scene.omg](scene.omg): the shared client to the compositor, speaking its
   six-word frames through the runtime's sized requests, with a sealed image
   behind an image update.
-- [report.omg](report.omg): the startup lines the boot harness keys on, and a
-  retired child's slot and exit in hex.
+- [report.omg](report.omg): the startup lines the boot harness keys on, in
+  the Rust host's words where the two reach the same point, a retired
+  child's slot and exit, a failed launch's stage and code, and this matrix's
+  own page and channel use, in hex.
 
 Prove it with `python tools/boot-harness-rs/omega_desktop_test.py`: the stock
 composition with this program in the root matrix's launch and in the place of
@@ -158,8 +169,8 @@ in the saved colour.
 Not yet here: the chrome's own words in a workspace (app entries, selection,
 close, layout, managed tasks, save availability and retries), loss surveys and
 close over the owner-control client, the launcher fallback and save recovery
-the recorded grants are for, the funding and input capacity a nested matrix
-negotiates with its parent, and the rest of the stock policy under
+the recorded grants are for, the input capacity a nested matrix negotiates
+with its parent, and the rest of the stock policy under
 [service/](../service/README.md), which still executes inside the Rust host
 through the bridge; this process links that package directly for what it
 already uses.

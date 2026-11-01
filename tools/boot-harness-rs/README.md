@@ -368,6 +368,13 @@ cursor follows it, then clicks Colors and presses Enter and sees the saved
 colour. Logs and a PNG are in `build/boot-harness-rs/omega-desktop/`.
 The slices still missing from that program are listed in its README.
 
+`python tools/boot-harness-rs/omega_desktop_test.py --profile-only` writes the
+same composition and prints its path; `desktop_test.py --profile <path>`
+then runs the whole F5 desktop test over the Omega matrices, which measures
+how far the Omega stock matrix is from replacing the Rust host. Every stock
+matrix in the realm, the nested desktops and their templates included, is the
+Omega program in that composition, so the store shares one image between them.
+
 ## Integrated matrix desktop
 
 `python tools/boot-harness-rs/run.py --matrix-desktop-test --release --timeout 120`

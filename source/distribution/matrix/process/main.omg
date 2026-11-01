@@ -28,6 +28,7 @@ use runtime::admission::main::Admitted;
 use runtime::time::Tick;
 use runtime::waiting::Set;
 use world::level::World;
+use policy::children::launch::resources::funding::Funding;
 use world::batch::Batch;
 use world::launches::Launches;
 use world::management::Management;
@@ -127,11 +128,12 @@ public data State {
     // Each child's receipt for its latest launch.
     observations: Launches;
     // Admitted children, this matrix's client to each one's owner control, the
-    // launch each was reserved under, and the allowances staged for the next
-    // launch into each slot.
+    // launch each was reserved under, how far each may grow by asking, and the
+    // allowances staged for the next launch into each slot.
     slots: [Admitted; 5];
     controls: [Peer; 5];
     reservations: [u64; 5];
+    funding: [Funding; 5];
     staged_private: [u64; 5];
     staged_reader: [u64; 5];
     staged_frames: [u64; 5];

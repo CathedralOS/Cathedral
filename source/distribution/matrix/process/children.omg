@@ -26,6 +26,7 @@ use storage;
 use presentation;
 use recovery;
 use report;
+use policy::children::launch::resources::funding::Funding;
 
 // How long a child has to complete each startup handshake, as the Rust host allows.
 public const HANDSHAKE_TICKS: u64 = 300u64;
@@ -111,6 +112,7 @@ public machine run(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4]
         context.staged_frames[slot] = 0u64;
         let launch: u64 = runtime::task::main::reserve(gate, executable, private_pages, reader_pages, channels,
             descendants, kernel::MAX_ADMISSION_FRAMES, frames);
+        context.funding[slot] = policy::children::launch::resources::funding::policy([private_pages, reader_pages, channels, descendants, frames]);
         transition launch < kernel::ERROR_BASE {
             true -> block limited(gate, context, now, slot, launch, argument, images, cpu)
             _ -> (launch)
@@ -189,9 +191,13 @@ public machine admit_reserved(gate: &Gate, context: &mut State, now: u64, slot: 
         let status: u64 = block runtime::connection::main::connect(gate, &mut context.controls[slot], sender, receiver,
             runtime::time::after(now, HANDSHAKE_TICKS));
         transition status == 0u64 {
-            true -> block storing(gate, context, now, slot, launch)
+            true -> block controlled(gate, context, now, slot, launch)
             _ -> block uncontrolled(gate, context, slot, launch, status)
         }
+    }
+    machine controlled(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64) -> u64 reaches Kernel {
+        report::child_control_ready(gate);
+        block storing(gate, context, now, slot, launch)
     }
     // The child's storage connection is served from admission on, whenever it
     // chooses to acquire it; the owner or the launch binds it.
@@ -264,6 +270,7 @@ public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reac
         launches::disconnected(&mut context.observations, slot);
         let ignored: u64 = runtime::task::main::release(gate, context.reservations[slot]);
         context.reservations[slot] = 0u64;
+        context.funding[slot] = Funding::Fixed;
         level::disconnected(&mut context.world, slot);
     }
 }

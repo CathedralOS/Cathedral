@@ -3,7 +3,7 @@ module slots;
 // left: stop, collect and release it and drop its view. Service acquisition goes
 // to the runtime's offer, surface and batch words to presentation (a sealed
 // attachment is accepted only behind an image word), a launch and its receipt
-// query to the stored launches, every other 64-byte request to the World
+// query to the stored launches, a request for more funding to the funding, every other 64-byte request to the World
 // under the connection's incarnation; shorter requests are denied.
 use protocol::main;
 use protocol::matrix;
@@ -22,6 +22,7 @@ use world::geometry::zeros_from;
 use children;
 use presentation;
 use stored;
+use funding;
 
 public machine step(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
     transition {
@@ -65,11 +66,16 @@ machine routed(gate: &Gate, context: &mut State, slot: u64 [0..=4], frame: Frame
         batch -> block presenting(gate, context, slot, issued, frame, incarnation)
         frame.payload[0] == LAUNCH -> block launching(gate, context, slot, issued, frame, incarnation, now)
         frame.payload[0] == LAUNCH_STATUS && zeros_from(&frame.payload, 2u64) -> block observing(gate, context, slot, issued, frame, incarnation)
+        frame.payload[0] == FUND -> block funding(gate, context, slot, issued, frame, now)
         _ -> block asked(gate, context, slot, issued, frame, incarnation)
     }
 }
 machine launching(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket, frame: Frame, incarnation: u64, now: u64) -> u64 reaches Kernel {
     let reply: [u64; 8] = block stored::child_launch(gate, context, now, slot, incarnation, frame.payload);
+    block answered(gate, context, slot, issued, reply)
+}
+machine funding(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket, frame: Frame, now: u64) -> u64 reaches Kernel {
+    let reply: [u64; 8] = block funding::fund(gate, context, now, slot, frame.payload);
     block answered(gate, context, slot, issued, reply)
 }
 machine observing(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket, frame: Frame, incarnation: u64) -> u64 reaches Kernel {

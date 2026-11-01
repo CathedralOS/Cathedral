@@ -168,7 +168,7 @@ impl Parent {
             )?);
             self.storage_upstream = Some(storage::Upstream::connect(storage)?);
             cathedral_user_runtime::write(
-                b"Cathedral matrix: brokered startup and notification input wake ready\n",
+                b"Cathedral matrix: brokered startup and input wake ready\n",
             )?;
         } else if environment.len() == 5 {
             let connections = cathedral_user_runtime::matrix::Connections::load(environment)?;

@@ -72,6 +72,9 @@ cathedral_kernel_gate:
     .quad cathedral_resource_assign
     .quad cathedral_link_handle
     .quad cathedral_link_connect
+    .quad cathedral_resource_grow
+    .quad cathedral_physical_budget
+    .quad cathedral_pool_available
 
 .section .text.cathedral_kernel_gate,"ax",@progbits
 cathedral_yield:
@@ -734,6 +737,40 @@ cathedral_link_handle:
     ret
 cathedral_link_connect:
     mov eax, 22                      // LINK_CONNECT
+    xor esi, esi
+    xor edx, edx
+    int 0x80
+    ret
+
+// Funding a live launch. The five increments are staged in one aligned slot.
+cathedral_resource_grow:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 128
+    and rsp, -64
+    mov r8, rdi
+    mov rdi, rsp
+    mov ecx, 5
+    rep movsq
+    mov eax, 71                      // RESOURCE_GROW
+    mov rdi, r8
+    mov rsi, rsp
+    xor edx, edx
+    int 0x80
+    mov rsp, rbp
+    pop rbp
+    ret
+cathedral_physical_budget:
+    stage_buffer
+    mov eax, 54                      // PHYSICAL_BUDGET
+    mov rdi, rsp
+    xor esi, esi
+    xor edx, edx
+    int 0x80
+    finish_buffer 1
+cathedral_pool_available:
+    mov eax, 51                      // TASK_POOL_AVAILABLE
+    xor edi, edi
     xor esi, esi
     xor edx, edx
     int 0x80
