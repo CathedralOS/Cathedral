@@ -1834,7 +1834,33 @@ app through the Rust host, not native Omega kernel boot or ARM64. Further source
 cleanup should preserve these executable boundaries and investigate large value
 passing before treating the image growth as an acceptable permanent cost.
 
-## Language alignment: defer the blocked nested-machine migration
+## Language alignment: qualified desktop nested-machine closure
+
+The former blocked migration below is historical. The current stock matrix
+bridge, four standalone desktop processes, shared user runtime and selected UI
+library now use nested machines and current callable-header delimiters. The
+57 NativeKernel members forward inline to their original Gate leaves; packet
+codecs, executable bodies and foreign assembly keep their behavior. This is
+only the default desktop closure, not whole-tree language alignment.
+
+Qualification uses optimized Omega source `6310a4b16e2`, executable
+`c55d23b6fea3f07302a3d0b9a89b58e9cc0303f4520be0a649cbb03b77cb85b3`
+and library tree `d09b158d7e790a2eeec02f1abcbd812ddf48822b`.
+All four native UI preparation commands and all four standalone ELF builds
+pass. After preserving upstream admission deadlines, connection setup phases
+and the existing default role selection at integration `c1b6fbb8`, the stock
+`desktop_test.py` and `settings_test.py` both pass, including cold reopen,
+2111-record independent storage verification and an unchanged source disk.
+Source layout passes both profiles (148 Omega / 153 Rust package edges).
+
+Run evidence is retained under `build/nested-migration/pr3-main-integration/`
+and the matching Omega `build/indexed-record/ui-workflow/` records. The prior
+300-second UI checking timeout remains measured workflow debt; this result
+uses the upstream host deadline and does not assert that cold-workflow bound.
+Windows UI execution, translated libraries outside this closure and the full
+Omega NESTED-MACHINE-UNIFICATION acceptance remain open.
+
+### Historical blocked nested-machine probe
 
 Owner clarification, 2026-10-26: replacing `state` with nested `machine` is a
 language migration, not a reason to restate thousands of private contracts.

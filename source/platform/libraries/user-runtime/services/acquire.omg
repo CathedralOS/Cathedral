@@ -12,7 +12,7 @@ use connection::call;
 use connection::call::CallReply;
 
 public machine interaction(gate: &Gate, binding: &mut Services, clock: u64, minimum: u64, maximum: u64) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let words: [u64; 8] = request(INTERACTION, minimum, maximum, 0u64);
     let result: CallReply = block call::exchange(gate, &mut binding.broker, clock, &words);
     transition result {
@@ -27,7 +27,7 @@ machine unexpected_endpoint(gate: &Gate, binding: &mut Services, endpoint: u64) 
     block services::main::close(gate, binding);
     kernel::IO_ERROR
 }
-public machine received(gate: &Gate, binding: &mut Services, frame: Frame, notification: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine received(gate: &Gate, binding: &mut Services, frame: Frame, notification: u64) -> u64 reaches Kernel blocks invokes Kernel {
     transition frame.bytes == 64u64 && frame.payload[2] == 0u64 && frame.payload[3] == 0u64
         && frame.payload[4] == 0u64 && frame.payload[5] == 0u64 && frame.payload[6] == 0u64 && frame.payload[7] == 0u64 {
         true -> block answer(gate, binding, frame.payload[0], frame.payload[1], notification)

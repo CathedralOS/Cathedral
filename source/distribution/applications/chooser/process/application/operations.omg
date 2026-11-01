@@ -13,7 +13,7 @@ use services::control;
 use services::waiting;
 use storage::binding;
 use presentation::images;
-public machine execute(gate: &Gate, context: &mut Context, state: &State, exchange: &mut Exchange, command: Command) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine execute(gate: &Gate, context: &mut Context, state: &State, exchange: &mut Exchange, command: Command) -> u64 reaches Kernel blocks invokes Kernel {
     transition command {
         Command::AcquireInteraction -> block services::services::interaction(gate, context, state)
         Command::AcquireStorage -> block services::services::storage(gate, context, state)

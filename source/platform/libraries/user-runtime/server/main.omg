@@ -61,7 +61,7 @@ public data Event {
     case Failed(code: u64);
 }
 public machine accept(gate: &Gate, listener: &mut Server, sender: u64, receiver: u64, deadline: u64) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let status: u64 = begin(listener, sender, receiver, deadline, false);
     transition status == 0u64 {
         true -> block connect(gate, listener, deadline)
@@ -78,7 +78,7 @@ public machine accept(gate: &Gate, listener: &mut Server, sender: u64, receiver:
 }
 
 public machine poll(gate: &Gate, listener: &mut Server, now: u64) -> Event
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     transition listener.peer.fault != 0u64 {
         true -> (Event::Failed { code: listener.peer.fault })
         _ -> block prepared(gate, listener, now)
@@ -117,17 +117,17 @@ public machine poll(gate: &Gate, listener: &mut Server, now: u64) -> Event
     }
 }
 public machine reply(gate: &Gate, listener: &mut Server, payload: &[u64; 8]) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let issued: Ticket = ticket(listener);
     block reply_to(gate, listener, issued, payload)
 }
 // Delayed providers use the ticket captured at receipt, never a client-supplied ID.
 public machine reply_to(gate: &Gate, listener: &mut Server, issued: Ticket, payload: &[u64; 8]) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     block reply_object_to(gate, listener, issued, payload, 0u64)
 }
 public machine reply_object_to(gate: &Gate, listener: &mut Server, issued: Ticket, payload: &[u64; 8], object: u64) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     transition object == 0u64 {
         true -> block reply_attached(gate, listener, issued, payload, mailbox::NONE, 0u64)
         _ -> block reply_attached(gate, listener, issued, payload, mailbox::OBJECT, object)
@@ -136,13 +136,13 @@ public machine reply_object_to(gate: &Gate, listener: &mut Server, issued: Ticke
 // Move one endpoint to the client. Success invalidates the local name; a failed
 // send keeps it. Publication failure after the handoff retires without replay.
 public machine reply_endpoint_to(gate: &Gate, listener: &mut Server, issued: Ticket, payload: &[u64; 8], endpoint: u64) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     block reply_attached(gate, listener, issued, payload, mailbox::ENDPOINT, endpoint)
 }
 // Delegate a wait right. The source right stays with the caller either way; it
 // decides whether to drop its copy after a successful handoff.
 public machine reply_notification_to(gate: &Gate, listener: &mut Server, issued: Ticket, payload: &[u64; 8], notification: u64) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     block reply_attached(gate, listener, issued, payload, mailbox::NOTIFICATION, notification)
 }
 machine reply_attached(gate: &Gate, listener: &mut Server, issued: Ticket, payload: &[u64; 8], kind: u64 [0..=3], handle: u64) -> u64
@@ -171,7 +171,7 @@ machine reply_attached(gate: &Gate, listener: &mut Server, issued: Ticket, paylo
         }
     }
 }
-public machine close(gate: &Gate, listener: &mut Server) reaches Kernel blocks; invokes Kernel; {
+public machine close(gate: &Gate, listener: &mut Server) reaches Kernel blocks invokes Kernel {
     let ignored: u64 = block retire(gate, listener, kernel::PEER_CLOSED);
 }
 machine retire(gate: &Gate, listener: &mut Server, code: u64) -> u64 reaches Kernel {
@@ -185,7 +185,7 @@ machine retire(gate: &Gate, listener: &mut Server, code: u64) -> u64 reaches Ker
 
 // A service calls this while its application is working on a retained request.
 // A disconnected or pipelining client loses only its own connection and backing.
-public machine maintain(gate: &Gate, listener: &mut Server, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine maintain(gate: &Gate, listener: &mut Server, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
     transition {
         listener.peer.fault != 0u64 -> (listener.peer.fault)
         !listener.ready || listener.pending == 0u64 -> (kernel::BUSY)

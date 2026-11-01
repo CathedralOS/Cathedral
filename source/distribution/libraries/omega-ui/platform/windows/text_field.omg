@@ -42,7 +42,7 @@ public machine new(window: u64) -> WindowsTextField {
     field.drag_anchor = -1;
     field
 }
-public machine refresh(field: &mut WindowsTextField) reaches WindowsUiHost invokes WindowsUiHost; {
+public machine refresh(field: &mut WindowsTextField) reaches WindowsUiHost invokes WindowsUiHost {
     let length: u32 = WindowsUiHost::edit_read(field.window, &mut field.text);
     transition length <= 255u32 {
         true -> captured(field, length as i32)
@@ -61,14 +61,14 @@ public machine refresh(field: &mut WindowsTextField) reaches WindowsUiHost invok
     }
 }
 
-public machine clear(field: &mut WindowsTextField) reaches WindowsUiHost invokes WindowsUiHost; {
+public machine clear(field: &mut WindowsTextField) reaches WindowsUiHost invokes WindowsUiHost {
     let selected: u64 = WindowsUiHost::edit_message(field.window, 177, 0, 65535);
     let cleared: u64 = WindowsUiHost::edit_message(field.window, 771, 0, 0);
     let history: u64 = WindowsUiHost::edit_message(field.window, 205, 0, 0);
     text_field::refresh(field);
 }
 
-public machine key(field: &mut WindowsTextField, key: i32, control: bool, shift: bool) reaches WindowsUiHost invokes WindowsUiHost; {
+public machine key(field: &mut WindowsTextField, key: i32, control: bool, shift: bool) reaches WindowsUiHost invokes WindowsUiHost {
     transition control && key == 65 {
         true -> select_all(field)
         _ -> dispatch(field, key, control, shift)
@@ -94,7 +94,7 @@ public machine key(field: &mut WindowsTextField, key: i32, control: bool, shift:
     }
 }
 
-public machine character(field: &mut WindowsTextField, character: u64) reaches WindowsUiHost invokes WindowsUiHost; {
+public machine character(field: &mut WindowsTextField, character: u64) reaches WindowsUiHost invokes WindowsUiHost {
     // Control characters are already handled by key messages; ordinary WM_CHAR
     // keeps the keyboard layout, Shift/Caps Lock and UTF-16 surrogate pairs.
     transition character >= 32u64 && character <= 65535u64 {
@@ -121,7 +121,7 @@ public machine boundary(field: &WindowsTextField, index: i32) -> bool {
     }
 }
 
-public machine offset(field: &WindowsTextField, fonts: &WindowsUiFonts, logical_width: i32, index: i32) -> i32 reaches WindowsUiHost invokes WindowsUiHost; {
+public machine offset(field: &WindowsTextField, fonts: &WindowsUiFonts, logical_width: i32, index: i32) -> i32 reaches WindowsUiHost invokes WindowsUiHost {
     let start: i32 = field.view_start;
     transition start >= 0 && index >= 0 && index >= start && index <= field.length && index <= 255 && fonts.width > 0 {
         true -> measure(field, fonts, logical_width, start as u64, index as u64)
@@ -137,7 +137,7 @@ public machine offset(field: &WindowsTextField, fonts: &WindowsUiFonts, logical_
     }
 }
 
-public machine prepare(field: &mut WindowsTextField, fonts: &WindowsUiFonts, logical_width: i32, visible_width: i32) reaches WindowsUiHost invokes WindowsUiHost; {
+public machine prepare(field: &mut WindowsTextField, fonts: &WindowsUiFonts, logical_width: i32, visible_width: i32) reaches WindowsUiHost invokes WindowsUiHost {
     field.view_start = clamp_i32(min_i32(field.view_start, field.caret_index), 0, field.length);
     transition { _ -> fit(field, fonts, logical_width, max_i32(visible_width, 0), 0) }
     machine fit(field: &mut WindowsTextField, fonts: &WindowsUiFonts, logical_width: i32, visible_width: i32, attempts: i32) {
@@ -159,7 +159,7 @@ public machine prepare(field: &mut WindowsTextField, fonts: &WindowsUiFonts, log
     }
 }
 
-public machine pointer(field: &mut WindowsTextField, fonts: &WindowsUiFonts, logical_width: i32, bounds: Rect, x: i32, y: i32, pressed: bool, down: bool) -> bool reaches WindowsUiHost invokes WindowsUiHost; {
+public machine pointer(field: &mut WindowsTextField, fonts: &WindowsUiFonts, logical_width: i32, bounds: Rect, x: i32, y: i32, pressed: bool, down: bool) -> bool reaches WindowsUiHost invokes WindowsUiHost {
     let inside: bool = omega_ui::types::rect_contains(&bounds, x, y);
     let target: i32 = sub_i32(x, bounds.x as i32);
     transition down && ((pressed && inside) || field.drag_anchor >= 0) {

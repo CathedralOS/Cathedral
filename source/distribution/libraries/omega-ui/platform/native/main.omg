@@ -178,7 +178,7 @@ machine clear_paint(surface: &mut NativeUiState, index: i32) {
     }
     machine done() {}
 }
-public machine component_entry() reaches UiNativeLayout, UiNativeFrame invokes UiNativeLayout; invokes UiNativeFrame; {
+public machine component_entry() reaches UiNativeLayout, UiNativeFrame invokes UiNativeLayout invokes UiNativeFrame {
     let result: u64 = UiNativeLayout::query(0u64);
     let mut surface: NativeUiState; let mut packet: [i32; 4096];
     let applied: u64 = UiNativeFrame::apply(&mut surface, &mut packet);

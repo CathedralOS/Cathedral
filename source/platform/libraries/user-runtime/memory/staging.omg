@@ -13,7 +13,7 @@ public data Allocation {
     case Failed(code: u64);
 }
 public machine allocate(gate: &Gate, bytes: u64 [1..=1048576]) -> Allocation
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let pages: u64 = (bytes + 4095u64) / 4096u64;
     transition pages >= 1u64 && pages <= 512u64 {
         true -> block create(gate, bytes, pages)
@@ -28,7 +28,7 @@ public machine allocate(gate: &Gate, bytes: u64 [1..=1048576]) -> Allocation
     }
 }
 public machine write(gate: &Gate, buffer: &Buffer, offset: u64, words: &[u64; 1024], bytes: u64 [1..=8192]) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     transition offset <= buffer.bytes && bytes <= buffer.bytes - offset {
         true -> block Kernel::private_write(gate, buffer.handle, offset, words, bytes)
         _ -> (kernel::INVALID_ARGUMENT)
@@ -37,7 +37,7 @@ public machine write(gate: &Gate, buffer: &Buffer, offset: u64, words: &[u64; 10
 // Takes custody on success AND failure. A failed unmap after sealing cannot
 // leave a writable-looking staging value or leak its already frozen allocation.
 public machine seal(gate: &Gate, buffer: &mut Buffer) -> Creation
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let handle: u64 = buffer.handle;
     buffer.handle = 0u64;
     buffer.bytes = 0u64;
@@ -52,7 +52,7 @@ public machine seal(gate: &Gate, buffer: &mut Buffer) -> Creation
     }
 }
 public machine release(gate: &Gate, buffer: &mut Buffer) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let handle: u64 = buffer.handle;
     buffer.handle = 0u64;
     buffer.bytes = 0u64;

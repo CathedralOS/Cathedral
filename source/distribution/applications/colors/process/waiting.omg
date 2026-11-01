@@ -9,7 +9,7 @@ use runtime::kernel;
 use runtime::time::Tick;
 use control;
 
-public machine next(gate: &Gate, context: &mut Context, state: &State) -> Completion reaches Kernel blocks; invokes Kernel; {
+public machine next(gate: &Gate, context: &mut Context, state: &State) -> Completion reaches Kernel blocks invokes Kernel {
     let tick: Tick = runtime::time::read(gate, context.clock);
     transition tick {
         Tick::Read { value } -> block poll(gate, context, state, value)

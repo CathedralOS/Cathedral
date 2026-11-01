@@ -5,7 +5,7 @@ use kernel::Kernel;
 use kernel;
 use server::main::Server;
 public machine receive(gate: &Gate, listener: &mut Server, now: u64) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let mut interests: [u64; 8];
     interests[1] = listener.peer.receiver;
     let status: u64 = block Kernel::wait(gate, &interests, 1u64, now);

@@ -112,64 +112,178 @@ linux_x86_64 machine Gate::pool_available_leaf(gate: &Gate) -> u64
     satisfies Kernel::pool_available via ForeignBinding::TableFunction(pool_available);
 
 public NativeKernel satisfies Kernel {
-    Kernel::wait_many = Gate::wait_many_leaf;
-    Kernel::launch_at = Gate::launch_at_leaf;
-    Kernel::launch_port = Gate::launch_port_leaf;
-    Kernel::task_connect = Gate::task_connect_leaf;
-    Kernel::spawn_tree = Gate::spawn_tree_leaf;
-    Kernel::task_cancel = Gate::task_cancel_leaf;
-    Kernel::task_wait = Gate::task_wait_leaf;
-    Kernel::endpoint_send = Gate::endpoint_send_leaf;
-    Kernel::resource_budget = Gate::resource_budget_leaf;
-    Kernel::notification_budget = Gate::notification_budget_leaf;
-    Kernel::image_at = Gate::image_at_leaf;
-    Kernel::image_from_object = Gate::image_from_object_leaf;
-    Kernel::image_release = Gate::image_release_leaf;
-    Kernel::task_reserve = Gate::task_reserve_leaf;
-    Kernel::task_release = Gate::task_release_leaf;
-    Kernel::pool_assign = Gate::pool_assign_leaf;
-    Kernel::image_allow = Gate::image_allow_leaf;
-    Kernel::cpu_assign = Gate::cpu_assign_leaf;
-    Kernel::physical_assign = Gate::physical_assign_leaf;
-    Kernel::resource_assign = Gate::resource_assign_leaf;
-    Kernel::link_handle = Gate::link_handle_leaf;
-    Kernel::link_connect = Gate::link_connect_leaf;
-    Kernel::resource_grow = Gate::resource_grow_leaf;
-    Kernel::physical_budget = Gate::physical_budget_leaf;
-    Kernel::pool_available = Gate::pool_available_leaf;
-    Kernel::object_create = Gate::object_create_leaf;
-    Kernel::object_send = Gate::object_send_leaf;
-    Kernel::object_receive = Gate::object_receive_leaf;
-    Kernel::object_read = Gate::object_read_leaf;
-    Kernel::private_write = Gate::private_write_leaf;
-    Kernel::object_freeze = Gate::object_freeze_leaf;
-    Kernel::endpoint_receive = Gate::endpoint_receive_leaf;
-    Kernel::bootstrap = Gate::bootstrap_leaf;
-    Kernel::yield_now = Gate::yield_leaf;
-    Kernel::environment = Gate::environment_leaf;
-    Kernel::channel = Gate::channel_leaf;
-    Kernel::send = Gate::send_leaf;
-    Kernel::receive = Gate::receive_leaf;
-    Kernel::close = Gate::close_leaf;
-    Kernel::write = Gate::write_leaf;
-    Kernel::clock = Gate::clock_leaf;
-    Kernel::clock_read = Gate::clock_read_leaf;
-    Kernel::wait = Gate::wait_leaf;
+    machine wait_many(gate: &Gate, records: &[u64; 96], count: u64 [0..=48], deadline: u64) -> u64 blocks {
+        block Gate::wait_many_leaf(gate, records, count, deadline)
+    }
+    machine launch_at(gate: &Gate, index: u64) -> u64 {
+        Gate::launch_at_leaf(gate, index)
+    }
+    machine launch_port(gate: &Gate, launch: u64) -> u64 {
+        Gate::launch_port_leaf(gate, launch)
+    }
+    machine task_connect(gate: &Gate, port: u64) -> u64 {
+        Gate::task_connect_leaf(gate, port)
+    }
+    machine spawn_tree(gate: &Gate, launch: u64, record: &[u64; 22]) -> u64 blocks {
+        block Gate::spawn_tree_leaf(gate, launch, record)
+    }
+    machine task_cancel(gate: &Gate, child: u64) -> u64 blocks {
+        block Gate::task_cancel_leaf(gate, child)
+    }
+    machine task_wait(gate: &Gate, child: u64, record: &mut [u64; 8]) -> u64 blocks {
+        block Gate::task_wait_leaf(gate, child, record)
+    }
+    machine endpoint_send(gate: &Gate, endpoint: u64, packet: &[u64; 10]) -> u64 {
+        Gate::endpoint_send_leaf(gate, endpoint, packet)
+    }
+    machine resource_budget(gate: &Gate, record: &mut [u64; 8]) -> u64 {
+        Gate::resource_budget_leaf(gate, record)
+    }
+    machine notification_budget(gate: &Gate, record: &mut [u64; 8]) -> u64 {
+        Gate::notification_budget_leaf(gate, record)
+    }
+    machine image_at(gate: &Gate, index: u64) -> u64 {
+        Gate::image_at_leaf(gate, index)
+    }
+    machine image_from_object(gate: &Gate, object: u64, role: u64) -> u64 {
+        Gate::image_from_object_leaf(gate, object, role)
+    }
+    machine image_release(gate: &Gate, image: u64) -> u64 {
+        Gate::image_release_leaf(gate, image)
+    }
+    machine task_reserve(gate: &Gate, executable: u64, request: &[u64; 6]) -> u64 {
+        Gate::task_reserve_leaf(gate, executable, request)
+    }
+    machine task_release(gate: &Gate, launch: u64) -> u64 {
+        Gate::task_release_leaf(gate, launch)
+    }
+    machine pool_assign(gate: &Gate, launch: u64, count: u64) -> u64 {
+        Gate::pool_assign_leaf(gate, launch, count)
+    }
+    machine image_allow(gate: &Gate, launch: u64, image: u64) -> u64 {
+        Gate::image_allow_leaf(gate, launch, image)
+    }
+    machine cpu_assign(gate: &Gate, launch: u64, limit: u64) -> u64 {
+        Gate::cpu_assign_leaf(gate, launch, limit)
+    }
+    machine physical_assign(gate: &Gate, launch: u64, frames: u64) -> u64 {
+        Gate::physical_assign_leaf(gate, launch, frames)
+    }
+    machine resource_assign(gate: &Gate, launch: u64, limits: &[u64; 3]) -> u64 {
+        Gate::resource_assign_leaf(gate, launch, limits)
+    }
+    machine link_handle(gate: &Gate, index: u64) -> u64 {
+        Gate::link_handle_leaf(gate, index)
+    }
+    machine link_connect(gate: &Gate, link: u64) -> u64 {
+        Gate::link_connect_leaf(gate, link)
+    }
+    machine resource_grow(gate: &Gate, launch: u64, delta: &[u64; 5]) -> u64 {
+        Gate::resource_grow_leaf(gate, launch, delta)
+    }
+    machine physical_budget(gate: &Gate, record: &mut [u64; 8]) -> u64 {
+        Gate::physical_budget_leaf(gate, record)
+    }
+    machine pool_available(gate: &Gate) -> u64 {
+        Gate::pool_available_leaf(gate)
+    }
+    machine object_create(gate: &Gate, words: &[u64; 2048], bytes: u64 [1..=16384]) -> u64 blocks {
+        block Gate::object_create_leaf(gate, words, bytes)
+    }
+    machine object_send(gate: &Gate, endpoint: u64, packet: &[u64; 10]) -> u64 {
+        Gate::object_send_leaf(gate, endpoint, packet)
+    }
+    machine object_receive(gate: &Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64 blocks {
+        block Gate::object_receive_leaf(gate, endpoint, packet)
+    }
+    machine object_read(gate: &Gate, handle: u64, index: u64, words: &mut [u64; 8], count: u64 [1..=8]) -> u64 blocks {
+        block Gate::object_read_leaf(gate, handle, index, words, count)
+    }
+    machine private_write(gate: &Gate, handle: u64, offset: u64, words: &[u64; 1024], bytes: u64 [1..=8192]) -> u64 blocks {
+        block Gate::private_write_leaf(gate, handle, offset, words, bytes)
+    }
+    machine object_freeze(gate: &Gate, handle: u64) -> u64 blocks {
+        block Gate::object_freeze_leaf(gate, handle)
+    }
+    machine endpoint_receive(gate: &Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64 blocks {
+        block Gate::endpoint_receive_leaf(gate, endpoint, packet)
+    }
+    machine bootstrap(gate: &Gate, index: u64) -> u64 {
+        Gate::bootstrap_leaf(gate, index)
+    }
+    machine yield_now(gate: &Gate) -> u64 blocks {
+        block Gate::yield_leaf(gate)
+    }
+    machine environment(gate: &Gate, buffer: &mut [u64; 8]) -> u64 {
+        Gate::environment_leaf(gate, buffer)
+    }
+    machine channel(gate: &Gate, buffer: &mut [u64; 8]) -> u64 {
+        Gate::channel_leaf(gate, buffer)
+    }
+    machine send(gate: &Gate, handle: u64, buffer: &[u64; 8], bytes: u64 [0..=64]) -> u64 {
+        Gate::send_leaf(gate, handle, buffer, bytes)
+    }
+    machine receive(gate: &Gate, handle: u64, buffer: &mut [u64; 8]) -> u64 blocks {
+        block Gate::receive_leaf(gate, handle, buffer)
+    }
+    machine close(gate: &Gate, handle: u64) -> u64 {
+        Gate::close_leaf(gate, handle)
+    }
+    machine write(gate: &Gate, buffer: &[u64; 8], bytes: u64 [0..=64]) -> u64 {
+        Gate::write_leaf(gate, buffer, bytes)
+    }
+    machine clock(gate: &Gate) -> u64 {
+        Gate::clock_leaf(gate)
+    }
+    machine clock_read(gate: &Gate, handle: u64, buffer: &mut [u64; 8]) -> u64 {
+        Gate::clock_read_leaf(gate, handle, buffer)
+    }
+    machine wait(gate: &Gate, records: &[u64; 8], count: u64 [0..=4], deadline: u64) -> u64 blocks {
+        block Gate::wait_leaf(gate, records, count, deadline)
+    }
 
-    Kernel::memory_allocate = Gate::memory_allocate_leaf;
-    Kernel::memory_share = Gate::memory_share_leaf;
-    Kernel::memory_release = Gate::memory_release_leaf;
-    Kernel::shared_read = Gate::shared_read_leaf;
-    Kernel::shared_write = Gate::shared_write_leaf;
-    Kernel::shared_send = Gate::shared_send_leaf;
-    Kernel::shared_receive = Gate::shared_receive_leaf;
-    Kernel::notify_create = Gate::notify_create_leaf;
-    Kernel::notify_drop = Gate::notify_drop_leaf;
-    Kernel::notify_signal = Gate::notify_signal_leaf;
-    Kernel::notify_wait = Gate::notify_wait_leaf;
-    Kernel::notify_control = Gate::notify_control_leaf;
-    Kernel::notify_send = Gate::notify_send_leaf;
-    Kernel::notify_receive = Gate::notify_receive_leaf;
+    machine memory_allocate(gate: &Gate, pages: u64 [1..=512]) -> u64 blocks {
+        block Gate::memory_allocate_leaf(gate, pages)
+    }
+    machine memory_share(gate: &Gate, handle: u64) -> u64 blocks {
+        block Gate::memory_share_leaf(gate, handle)
+    }
+    machine memory_release(gate: &Gate, handle: u64) -> u64 blocks {
+        block Gate::memory_release_leaf(gate, handle)
+    }
+    machine shared_read(gate: &Gate, handle: u64, index: u64, words: &mut [u64; 8], count: u64 [1..=8]) -> u64 blocks {
+        block Gate::shared_read_leaf(gate, handle, index, words, count)
+    }
+    machine shared_write(gate: &Gate, handle: u64, index: u64, words: &[u64; 8], count: u64 [1..=8]) -> u64 blocks {
+        block Gate::shared_write_leaf(gate, handle, index, words, count)
+    }
+    machine shared_send(gate: &Gate, endpoint: u64, packet: &[u64; 10]) -> u64 {
+        Gate::shared_send_leaf(gate, endpoint, packet)
+    }
+    machine shared_receive(gate: &Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64 blocks {
+        block Gate::shared_receive_leaf(gate, endpoint, packet)
+    }
+    machine notify_create(gate: &Gate, record: &mut [u64; 8]) -> u64 {
+        Gate::notify_create_leaf(gate, record)
+    }
+    machine notify_drop(gate: &Gate, handle: u64) -> u64 {
+        Gate::notify_drop_leaf(gate, handle)
+    }
+    machine notify_signal(gate: &Gate, handle: u64) -> u64 {
+        Gate::notify_signal_leaf(gate, handle)
+    }
+    machine notify_wait(gate: &Gate, handle: u64, deadline: u64, timed: u64 [0..=1]) -> u64 blocks {
+        block Gate::notify_wait_leaf(gate, handle, deadline, timed)
+    }
+    machine notify_control(gate: &Gate, handle: u64, action: u64 [0..=2]) -> u64 {
+        Gate::notify_control_leaf(gate, handle, action)
+    }
+    machine notify_send(gate: &Gate, endpoint: u64, packet: &[u64; 10]) -> u64 {
+        Gate::notify_send_leaf(gate, endpoint, packet)
+    }
+    machine notify_receive(gate: &Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64 blocks {
+        block Gate::notify_receive_leaf(gate, endpoint, packet)
+    }
 }
 
 linux_x86_64 machine Gate::endpoint_receive_leaf(gate: &Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64

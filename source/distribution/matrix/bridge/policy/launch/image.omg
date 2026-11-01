@@ -11,11 +11,11 @@ public machine import_image(p: &mut [u64; 128]) -> u64 {
         true -> begin(p, &mut scan)
         _ -> resume(p, &mut scan)
     }
-    state begin(p: &mut [u64; 128], scan: &mut ImageScan) -> u64 {
+    machine begin(p: &mut [u64; 128], scan: &mut ImageScan) -> u64 {
         let read: ImageRead = begin_image(p[2], scan);
         publish_image(p, scan, read)
     }
-    state resume(p: &mut [u64; 128], scan: &mut ImageScan) -> u64 {
+    machine resume(p: &mut [u64; 128], scan: &mut ImageScan) -> u64 {
         scan.phase = p[32];
         scan.length = p[33];
         scan.table = p[34];
@@ -30,19 +30,19 @@ public machine import_image(p: &mut [u64; 128]) -> u64 {
             _ -> copy(p, scan, &mut bytes, 0u64)
         }
     }
-    state copy(p: &mut [u64; 128], scan: &mut ImageScan, bytes: &mut [u8; 64], i: u64) -> u64 {
+    machine copy(p: &mut [u64; 128], scan: &mut ImageScan, bytes: &mut [u8; 64], i: u64) -> u64 {
         transition i < 64u64 {
             true -> byte(p, scan, bytes, i)
             _ -> advance(p, scan, bytes)
         }
     }
-    state byte(p: &mut [u64; 128], scan: &mut ImageScan, bytes: &mut [u8; 64], i: u64) -> u64 requires i < 64u64 {
+    machine byte(p: &mut [u64; 128], scan: &mut ImageScan, bytes: &mut [u8; 64], i: u64) -> u64 requires i < 64u64 {
         bytes[i] = ((p[16u64 + i / 8u64] >> ((i % 8u64) * 8u64)) & 255u64) as u8;
         transition {
             _ -> copy(p, scan, bytes, i + 1u64)
         }
     }
-    state advance(p: &mut [u64; 128], scan: &mut ImageScan, bytes: &[u8; 64]) -> u64 {
+    machine advance(p: &mut [u64; 128], scan: &mut ImageScan, bytes: &[u8; 64]) -> u64 {
         let read: ImageRead = advance_image(scan, bytes, p[2]);
         publish_image(p, scan, read)
     }

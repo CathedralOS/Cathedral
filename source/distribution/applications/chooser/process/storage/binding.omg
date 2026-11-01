@@ -7,7 +7,7 @@ use runtime::kernel::Kernel;
 use runtime::time::Tick;
 use runtime::storage::main;
 use services::requests;
-public machine bind(gate: &Gate, context: &mut Context, state: &State, exchange: &mut Exchange) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine bind(gate: &Gate, context: &mut Context, state: &State, exchange: &mut Exchange) -> u64 reaches Kernel blocks invokes Kernel {
     let tick: Tick = runtime::time::read(gate, context.clock);
     transition tick {
         Tick::Read { value } -> block request(gate, context, state, exchange, value)

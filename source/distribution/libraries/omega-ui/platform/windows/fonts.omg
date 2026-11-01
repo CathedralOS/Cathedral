@@ -39,7 +39,7 @@ public machine font(font_state: &WindowsUiFonts, weight: i32) -> u64 {
     }
 }
 
-public machine measure(font_state: &WindowsUiFonts, context: &mut UiContext) reaches WindowsUiHost invokes WindowsUiHost; {
+public machine measure(font_state: &WindowsUiFonts, context: &mut UiContext) reaches WindowsUiHost invokes WindowsUiHost {
     transition { _ -> scan(font_state, context, 1) }
     machine scan(font_state: &WindowsUiFonts, context: &mut UiContext, index: i32) {
         transition index > 0 && index < context.node_count && index < 128 { true -> node(font_state, context, index) _ -> done() }
@@ -78,7 +78,7 @@ public machine measure(font_state: &WindowsUiFonts, context: &mut UiContext) rea
     machine done() {}
 }
 
-public machine paint(font_state: &WindowsUiFonts, context: &UiContext) reaches WindowsUiHost invokes WindowsUiHost; {
+public machine paint(font_state: &WindowsUiFonts, context: &UiContext) reaches WindowsUiHost invokes WindowsUiHost {
     transition { _ -> scan(font_state, context, 1) }
     machine scan(font_state: &WindowsUiFonts, context: &UiContext, index: i32) {
         transition index > 0 && index < context.node_count && index < 128 { true -> node(font_state, context, index) _ -> done() }

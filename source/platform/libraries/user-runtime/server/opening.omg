@@ -22,7 +22,7 @@ public machine start(opening: &mut Opening, deadline: u64) {
     opening.deadline = deadline;
 }
 public machine poll(gate: &Gate, peer: &mut Peer, opening: &mut Opening, now: u64) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     transition time::reached(now, opening.deadline) {
         true -> (kernel::TIMED_OUT)
         _ -> block available(gate, peer, opening, now)

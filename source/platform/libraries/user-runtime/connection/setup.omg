@@ -12,7 +12,7 @@ use time;
 use time::Tick;
 
 public machine connect(gate: &Gate, peer: &mut Peer, deadline: u64) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let status: u64 = block start(gate, peer);
     transition status == 0u64 {
         true -> block resume(gate, peer, deadline)
@@ -22,7 +22,7 @@ public machine connect(gate: &Gate, peer: &mut Peer, deadline: u64) -> u64
 // The client's first step, which never waits: the writer, the bell and the
 // hello. A caller that must keep serving while the peer gets round to
 // answering resumes once the peer's first reply is ready.
-public machine start(gate: &Gate, peer: &mut Peer) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine start(gate: &Gate, peer: &mut Peer) -> u64 reaches Kernel blocks invokes Kernel {
     let allocation: Allocation = block memory::main::allocate(gate, 1u64);
     transition allocation {
         Allocation::Ready { writer } -> allocated(gate, peer, writer)
@@ -38,7 +38,7 @@ public machine start(gate: &Gate, peer: &mut Peer) -> u64 reaches Kernel blocks;
     }
 }
 // The rest of the handshake, from the peer's first acknowledgement.
-public machine resume(gate: &Gate, peer: &mut Peer, deadline: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine resume(gate: &Gate, peer: &mut Peer, deadline: u64) -> u64 reaches Kernel blocks invokes Kernel {
     block writer(gate, peer, deadline)
 }
 machine opened(gate: &Gate, peer: &mut Peer, bell: notification::main::Bell) -> u64 reaches Kernel {
@@ -153,7 +153,7 @@ machine commit(gate: &Gate, peer: &mut Peer, deadline: u64) -> u64 reaches Kerne
         _ -> (status)
     }
 }
-public machine ack(gate: &Gate, receiver: u64, deadline: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine ack(gate: &Gate, receiver: u64, deadline: u64) -> u64 reaches Kernel blocks invokes Kernel {
     let status: u64 = block ready(gate, receiver, deadline);
     transition status == 0u64 {
         true -> block received(gate, receiver)
@@ -169,7 +169,7 @@ public machine ack(gate: &Gate, receiver: u64, deadline: u64) -> u64 reaches Ker
     }
 }
 public machine ready(gate: &Gate, receiver: u64, deadline: u64) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let clock: u64 = Kernel::clock(gate);
     let tick: Tick = time::read(gate, clock);
     transition tick {

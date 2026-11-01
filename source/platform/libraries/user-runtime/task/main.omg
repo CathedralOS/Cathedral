@@ -20,14 +20,14 @@ public data Control {
 }
 
 // Index into this task's own and lent launches, in kernel order.
-public machine launch(gate: &Gate, index: u64) -> u64 reaches Kernel invokes Kernel; {
+public machine launch(gate: &Gate, index: u64) -> u64 reaches Kernel invokes Kernel {
     Kernel::launch_at(gate, index)
 }
 // Startup bundle: at most five endpoints move into the child; at most fourteen
 // idle launches are lent until the child's subtree is reclaimed. Entries beyond
 // each count must be zero. Returns the child ticket, or an error with nothing moved.
 public machine spawn(gate: &Gate, launch: u64, argument: u64, endpoints: &[u64; 5], endpoint_count: u64 [0..=5],
-    loans: &[u64; 14], loan_count: u64 [0..=14]) -> u64 reaches Kernel blocks; invokes Kernel; {
+    loans: &[u64; 14], loan_count: u64 [0..=14]) -> u64 reaches Kernel blocks invokes Kernel {
     let mut record: [u64; 22];
     record[0] = argument;
     record[1] = endpoint_count;
@@ -55,7 +55,7 @@ public machine spawn(gate: &Gate, launch: u64, argument: u64, endpoints: &[u64; 
 }
 // The owner-side control pair for this launch's current child: a request sender
 // and a reply receiver. Connecting accepts the kernel-installed pair exactly once.
-public machine control(gate: &Gate, launch: u64) -> Control reaches Kernel invokes Kernel; {
+public machine control(gate: &Gate, launch: u64) -> Control reaches Kernel invokes Kernel {
     let port: u64 = Kernel::launch_port(gate, launch);
     transition port < kernel::ERROR_BASE {
         true -> connect(gate, port)
@@ -78,11 +78,11 @@ public machine control(gate: &Gate, launch: u64) -> Control reaches Kernel invok
     }
 }
 // Stop and reclaim this exact child before returning; its outcome stays collectible.
-public machine cancel(gate: &Gate, child: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine cancel(gate: &Gate, child: u64) -> u64 reaches Kernel blocks invokes Kernel {
     block Kernel::task_cancel(gate, child)
 }
 // Returns only after address-space reclamation and consumes the outcome.
-public machine wait(gate: &Gate, child: u64) -> Exit reaches Kernel blocks; invokes Kernel; {
+public machine wait(gate: &Gate, child: u64) -> Exit reaches Kernel blocks invokes Kernel {
     let mut record: [u64; 8];
     let status: u64 = block Kernel::task_wait(gate, child, &mut record);
     transition status < kernel::ERROR_BASE {
@@ -102,21 +102,21 @@ public machine wait(gate: &Gate, child: u64) -> Exit reaches Kernel blocks; invo
 // Code authority and funded reservations for children this task funds itself.
 // An image grant comes from the owner's catalogue by index, or from a sealed
 // object the task can read, entered with `role` as its first argument.
-public machine image_at(gate: &Gate, index: u64) -> u64 reaches Kernel invokes Kernel; {
+public machine image_at(gate: &Gate, index: u64) -> u64 reaches Kernel invokes Kernel {
     Kernel::image_at(gate, index)
 }
-public machine image_from_object(gate: &Gate, object: u64, role: u64) -> u64 reaches Kernel invokes Kernel; {
+public machine image_from_object(gate: &Gate, object: u64, role: u64) -> u64 reaches Kernel invokes Kernel {
     Kernel::image_from_object(gate, object, role)
 }
 // Drop an unused object image grant; a reservation consumes it instead.
-public machine image_release(gate: &Gate, image: u64) -> u64 reaches Kernel invokes Kernel; {
+public machine image_release(gate: &Gate, image: u64) -> u64 reaches Kernel invokes Kernel {
     Kernel::image_release(gate, image)
 }
 // Reserve a launch for an image: private pages, reader pages, channels, child
 // slots, the per-load admission ceiling and the physical frames behind it all.
 // Returns the launch ticket, or an error with nothing reserved.
 public machine reserve(gate: &Gate, executable: u64, private_pages: u64, reader_pages: u64, channels: u64,
-    slots: u64, admission_frames: u64, physical_frames: u64) -> u64 reaches Kernel invokes Kernel; {
+    slots: u64, admission_frames: u64, physical_frames: u64) -> u64 reaches Kernel invokes Kernel {
     let mut request: [u64; 6];
     request[0] = private_pages;
     request[1] = reader_pages;
@@ -127,16 +127,16 @@ public machine reserve(gate: &Gate, executable: u64, private_pages: u64, reader_
     Kernel::task_reserve(gate, executable, &request)
 }
 // Only idle dynamic launches; fails while retained backing pins their funding.
-public machine release(gate: &Gate, launch: u64) -> u64 reaches Kernel invokes Kernel; {
+public machine release(gate: &Gate, launch: u64) -> u64 reaches Kernel invokes Kernel {
     Kernel::task_release(gate, launch)
 }
-public machine assign_slots(gate: &Gate, launch: u64, count: u64) -> u64 reaches Kernel invokes Kernel; {
+public machine assign_slots(gate: &Gate, launch: u64, count: u64) -> u64 reaches Kernel invokes Kernel {
     Kernel::pool_assign(gate, launch, count)
 }
 // Grow a launch, live or idle, by five increments (private pages, reader
 // pages, channels, descendant slots, physical frames) out of this account's
 // own; all or nothing.
-public machine grow(gate: &Gate, launch: u64, delta: [u64; 5]) -> u64 reaches Kernel invokes Kernel; {
+public machine grow(gate: &Gate, launch: u64, delta: [u64; 5]) -> u64 reaches Kernel invokes Kernel {
     let amounts: [u64; 5] = delta;
     Kernel::resource_grow(gate, launch, &amounts)
 }
@@ -145,7 +145,7 @@ public data Spare [copy] {
     case Known(amounts: [u64; 5]);
     case Failed(code: u64);
 }
-public machine spare(gate: &Gate) -> Spare reaches Kernel invokes Kernel; {
+public machine spare(gate: &Gate) -> Spare reaches Kernel invokes Kernel {
     let mut budget: [u64; 8];
     let mut physical: [u64; 8];
     let budgeted: u64 = Kernel::resource_budget(gate, &mut budget);
@@ -163,19 +163,19 @@ machine left(limit: u64, used: u64) -> u64 {
     transition limit > used { true -> (limit - used) _ -> (0u64) }
 }
 // Stage an executable the child may run from its own catalogue.
-public machine allow_image(gate: &Gate, launch: u64, image: u64) -> u64 reaches Kernel invokes Kernel; {
+public machine allow_image(gate: &Gate, launch: u64, image: u64) -> u64 reaches Kernel invokes Kernel {
     Kernel::image_allow(gate, launch, image)
 }
-public machine assign_cpu(gate: &Gate, launch: u64, limit: u64) -> u64 reaches Kernel invokes Kernel; {
+public machine assign_cpu(gate: &Gate, launch: u64, limit: u64) -> u64 reaches Kernel invokes Kernel {
     Kernel::cpu_assign(gate, launch, limit)
 }
-public machine assign_frames(gate: &Gate, launch: u64, frames: u64) -> u64 reaches Kernel invokes Kernel; {
+public machine assign_frames(gate: &Gate, launch: u64, frames: u64) -> u64 reaches Kernel invokes Kernel {
     Kernel::physical_assign(gate, launch, frames)
 }
 // Absolute child limits: private pages, reader pages, channels. Unused
 // capacity moves between owner and child atomically, never minted.
 public machine assign_limits(gate: &Gate, launch: u64, private_pages: u64, reader_pages: u64, channels: u64) -> u64
-    reaches Kernel invokes Kernel; {
+    reaches Kernel invokes Kernel {
     let mut limits: [u64; 3];
     limits[0] = private_pages;
     limits[1] = reader_pages;

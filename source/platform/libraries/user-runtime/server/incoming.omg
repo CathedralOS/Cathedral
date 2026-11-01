@@ -10,7 +10,7 @@ use server::main::Event;
 use connection::mailbox;
 use time;
 public machine poll(gate: &Gate, listener: &mut Server, now: u64) -> Event
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     transition listener.peer.partial && time::reached(now, listener.peer.partial_deadline) {
         true -> (Event::Failed { code: kernel::TIMED_OUT })
         _ -> block drain(gate, listener, now)

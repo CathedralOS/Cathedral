@@ -20,7 +20,7 @@ use runtime::memory::object::Creation;
 use services::transfer;
 use services::replies;
 
-public machine stage(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, offset: u64, words: u64) reaches Kernel blocks; invokes Kernel; {
+public machine stage(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, offset: u64, words: u64) reaches Kernel blocks invokes Kernel {
     transition offset <= 46080u64 && words > 0u64 && words <= 4080u64 && words * 8u64 <= 46080u64 - offset {
         true -> block prepare(output, gate, context, state, offset, words)
         _ -> services::replies::failed(output, kernel::INVALID_ARGUMENT)
@@ -99,7 +99,7 @@ machine raster(state: &State, words: &mut [u64; 1024], first: u64 [0..=11520], c
         transition { _ -> raster(state, words, first, count, i + 1u64) }
     }
 }
-public machine publish(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, command: &application::application::Request, image: Image) reaches Kernel blocks; invokes Kernel; {
+public machine publish(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, command: &application::application::Request, image: Image) reaches Kernel blocks invokes Kernel {
     transition context.text.handle != 0u64 && context.text_filled == 46080u64 {
         true -> block seal(output, gate, context, state, command, image)
         _ -> services::replies::failed(output, kernel::INVALID_ARGUMENT)
@@ -113,7 +113,7 @@ public machine publish(output: &mut application::application::Work, gate: &Gate,
         }
     }
 }
-public machine decorate(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, command: &application::application::Request, image: Image, decoration: Decoration) reaches Kernel blocks; invokes Kernel; {
+public machine decorate(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, command: &application::application::Request, image: Image, decoration: Decoration) reaches Kernel blocks invokes Kernel {
     let created: Creation = block backing(gate, state, decoration);
     transition created {
         Creation::Ready { object } -> block send(output, gate, context, state, command, image, object.handle)

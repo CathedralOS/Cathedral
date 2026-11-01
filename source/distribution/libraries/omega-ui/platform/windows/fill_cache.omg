@@ -18,7 +18,7 @@ public data WindowsFillCache {
     ready: bool;
     reads: u64 in Saturating;
 }
-public machine init(cache: &mut WindowsFillCache, device: u64) reaches WindowsUiHost invokes WindowsUiHost; {
+public machine init(cache: &mut WindowsFillCache, device: u64) reaches WindowsUiHost invokes WindowsUiHost {
     let mut info: [i32; 11];
     info[0] = 40; info[1] = 3840; info[2] = -24; info[3] = 2097153;
     let mut address: u64;
@@ -37,7 +37,7 @@ public machine init(cache: &mut WindowsFillCache, device: u64) reaches WindowsUi
     machine done() {}
 }
 
-public machine verify(cache: &mut WindowsFillCache, pixels: &mut [i32; 4096]) -> bool reaches WindowsUiHost invokes WindowsUiHost; {
+public machine verify(cache: &mut WindowsFillCache, pixels: &mut [i32; 4096]) -> bool reaches WindowsUiHost invokes WindowsUiHost {
     pixels[4090] = -271828; pixels[4091] = 20; pixels[4092] = 44;
     pixels[4093] = 0; pixels[4094] = 1440; pixels[4095] = 945;
     let slot: i32 = fill_cache::style(cache, pixels, 0x123456);
@@ -50,7 +50,7 @@ public machine verify(cache: &mut WindowsFillCache, pixels: &mut [i32; 4096]) ->
     fill_cache::fill_span(cache, pixels, 0, 44, 20, 0, slot);
     metadata && native && fallback && pixels[20] == 0x654321 && pixels[44] == 7
 }
-public machine close(cache: &mut WindowsFillCache) reaches WindowsUiHost invokes WindowsUiHost; {
+public machine close(cache: &mut WindowsFillCache) reaches WindowsUiHost invokes WindowsUiHost {
     let bitmap: u64 = cache.bitmap;
     cache.bitmap = 0; cache.pixels = 0; cache.ready = false;
     transition bitmap > 0 { true -> release(bitmap) _ -> done() }
@@ -68,7 +68,7 @@ public machine begin_frame(cache: &mut WindowsFillCache) {
     }
     machine done() {}
 }
-public machine style(cache: &mut WindowsFillCache, pixels: &mut [i32; 4096], color: i32) -> i32 reaches WindowsUiHost invokes WindowsUiHost; {
+public machine style(cache: &mut WindowsFillCache, pixels: &mut [i32; 4096], color: i32) -> i32 reaches WindowsUiHost invokes WindowsUiHost {
     transition cache.ready && color >= 0 { true -> scan(cache, pixels, color, 0, -1) _ -> (-1) }
     machine scan(cache: &mut WindowsFillCache, pixels: &mut [i32; 4096], color: i32, index: i32, available: i32) -> i32 {
         transition index >= 0 && index < 24 { true -> entry(cache, pixels, color, index, available) _ -> choose(cache, pixels, color, available) }
@@ -102,7 +102,7 @@ public machine style(cache: &mut WindowsFillCache, pixels: &mut [i32; 4096], col
 }
 
 // The caller intersects the span with the current scanline clip before this copy.
-public machine fill_span(cache: &mut WindowsFillCache, pixels: &mut [i32; 4096], row: i32, left: i32 in Saturating, right: i32 in Saturating, color: i32, slot: i32) reaches WindowsUiHost invokes WindowsUiHost; {
+public machine fill_span(cache: &mut WindowsFillCache, pixels: &mut [i32; 4096], row: i32, left: i32 in Saturating, right: i32 in Saturating, color: i32, slot: i32) reaches WindowsUiHost invokes WindowsUiHost {
     transition color >= 0 && right > left { true -> choose(cache, pixels, row, left, right, color, slot) _ -> done() }
     machine choose(cache: &mut WindowsFillCache, pixels: &mut [i32; 4096], row: i32, left: i32 in Saturating, right: i32 in Saturating, color: i32, slot: i32) {
         transition cache.ready && row >= 0 && left >= 0 && right <= 3840 && slot >= 0 && slot < 24 { true -> validate(cache, pixels, row, left, right, color, slot) _ -> scalar(pixels, row, left, right, color) }

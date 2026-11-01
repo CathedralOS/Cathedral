@@ -15,7 +15,7 @@ use services::waiting;
 use services::control;
 use application::diagnostics;
 
-public machine execute(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, command: &application::application::Request) reaches Kernel blocks; invokes Kernel; {
+public machine execute(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, command: &application::application::Request) reaches Kernel blocks invokes Kernel {
     transition command.command {
         Command::AcquireInteraction -> block interaction(output, gate, context, state)
         Command::AcquireStorage -> block acquire_storage(output, gate, context, state)

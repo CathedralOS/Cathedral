@@ -10,11 +10,11 @@ use kernel;
 use ipc::main::Channel;
 use ipc::main::Opened;
 
-public machine at(gate: &Gate, index: u64) -> u64 reaches Kernel invokes Kernel; {
+public machine at(gate: &Gate, index: u64) -> u64 reaches Kernel invokes Kernel {
     Kernel::link_handle(gate, index)
 }
 // The client's send end is the returned bootstrap index, its receive end the next.
-public machine connect(gate: &Gate, link: u64) -> Opened reaches Kernel invokes Kernel; {
+public machine connect(gate: &Gate, link: u64) -> Opened reaches Kernel invokes Kernel {
     let first: u64 = Kernel::link_connect(gate, link);
     transition first < kernel::ERROR_BASE {
         true -> named(gate, first, first + 1u64)

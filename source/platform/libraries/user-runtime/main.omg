@@ -16,7 +16,7 @@ public data Startup {
     case InvalidEnvironment;
 }
 
-public machine start(gate: &Gate) -> Startup reaches Kernel invokes Kernel; {
+public machine start(gate: &Gate) -> Startup reaches Kernel invokes Kernel {
     let mut record: [u64; 8];
     let status: u64 = Kernel::environment(gate, &mut record);
     transition status == 0u64 {
@@ -42,6 +42,6 @@ machine decode(record: [u64; 8]) -> Startup {
     }
 }
 
-public machine yield_now(gate: &Gate) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine yield_now(gate: &Gate) -> u64 reaches Kernel blocks invokes Kernel {
     block Kernel::yield_now(gate)
 }

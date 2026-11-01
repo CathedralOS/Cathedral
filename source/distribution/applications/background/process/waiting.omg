@@ -10,7 +10,7 @@ use app::model;
 use app::model::Failure;
 use protocol::main;
 
-public machine next(gate: &Gate, context: &mut Context, ticks: u64) -> app::model::Event reaches Kernel blocks; invokes Kernel; {
+public machine next(gate: &Gate, context: &mut Context, ticks: u64) -> app::model::Event reaches Kernel blocks invokes Kernel {
     let tick: Tick = runtime::time::read(gate, context.clock);
     transition tick {
         Tick::Read { value } -> block deadline(gate, context, value, ticks)
@@ -94,7 +94,7 @@ machine recheck(gate: &Gate, context: &mut Context, deadline: u64) -> app::model
         Tick::Failed { code } -> failed(code)
     }
 }
-public machine reply(gate: &Gate, context: &mut Context, accepted: bool) -> app::model::Event reaches Kernel blocks; invokes Kernel; {
+public machine reply(gate: &Gate, context: &mut Context, accepted: bool) -> app::model::Event reaches Kernel blocks invokes Kernel {
     let mut words: [u64; 8];
     transition accepted {
         true -> block send(gate, context, &words)
