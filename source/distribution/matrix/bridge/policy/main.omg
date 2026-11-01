@@ -37,7 +37,7 @@ public machine choose(p: &mut [u64; 128]) -> u64 {
     }
 }
 
-public machine policy_entry() reaches Policy invokes Policy; {
+public machine policy_entry() reaches Policy invokes Policy {
     let mut p: [u64; 128];
     let result: u64 = Policy::decide(&mut p);
 }
