@@ -7,17 +7,17 @@ use cathedral_arch::{
 use frames::Tracked;
 pub const USER_CODE: u64 = 0x0000_0080_0000_0000;
 pub const USER_DATA: u64 = USER_CODE + PAGE;
-pub const USER_IMAGE_END: u64 = USER_CODE + 1024 * 1024;
+pub const USER_IMAGE_END: u64 = USER_CODE + 2 * 1024 * 1024;
 // The stack ends at a fixed top and grows down toward the image. An image
 // declares how many pages it needs through PT_GNU_STACK; eight is the default
 // and the bottom of that default stack is USER_STACK. The largest stack still
 // leaves eight unmapped pages above the image end.
 pub const DEFAULT_STACK_PAGES: usize = 8;
 pub const MAX_STACK_PAGES: usize = 256;
-pub const USER_STACK: u64 = USER_CODE + 2 * 1024 * 1024;
+pub const USER_STACK: u64 = USER_CODE + 3 * 1024 * 1024;
 pub const USER_STACK_TOP: u64 = USER_STACK + DEFAULT_STACK_PAGES as u64 * PAGE;
 const _: () = assert!(USER_STACK_TOP - MAX_STACK_PAGES as u64 * PAGE >= USER_IMAGE_END + 8 * PAGE);
-pub const MAX_IMAGE_PAGES: usize = 240;
+pub const MAX_IMAGE_PAGES: usize = 496;
 // Image, the largest stack, every private object slot fully mapped and two full
 // reader mappings beside them. A task may own MAX_PRIVATE_REGIONS objects, so a
 // heap spanning several of them must still leave a bulk reply or attachment mappable.

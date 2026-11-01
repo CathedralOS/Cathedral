@@ -64,7 +64,7 @@ The lab still has twelve total process accounts, an increasing-index ownership
 DAG and a boot-supplied executable catalogue. It has no filesystem executable
 lookup, arbitrary ELF upload, general executable-capability IPC move, SMP or
 unbounded arena growth. Dynamic pools currently require one initial process.
-Admission has an explicit per-attempt frame ceiling (1..544, the largest image
+Admission has an explicit per-attempt frame ceiling (1..800, the largest image
 and stack the address space allows plus their tables), with complete load
 rollback. A separate [physical reservation](../../resources/physical/README.md) now
 funds image/stack/page-table and runtime buffer costs from real reserved frames.

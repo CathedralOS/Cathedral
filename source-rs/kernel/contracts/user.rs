@@ -149,7 +149,7 @@ pub const TASK_IMAGE_AT: u64 = 50; // local executable grant index, zero, zero
 pub const TASK_POOL_AVAILABLE: u64 = 51; // zero, zero, zero; own unused process reservations
 /// The most frames one dynamic admission may take: the largest image and stack
 /// the address space allows, with 48 for their page tables.
-pub const MAX_ADMISSION_FRAMES: usize = 544;
+pub const MAX_ADMISSION_FRAMES: usize = 800;
 /// The frames each bound account starts with and each dynamic process slot
 /// contributes to the initial process; the short reservation requests this
 /// much per account and descendant. Memory a slot is worth, not a load's bound.

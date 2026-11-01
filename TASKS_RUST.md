@@ -417,6 +417,23 @@ stock policy. The Omega matrix native's load has four pages left under the
 kernel's image limit; the next slices will need either a smaller process or a
 higher limit.
 
+### Kernel image window widened for the Omega matrix
+
+The Omega stock matrix's image had reached 236 of the kernel's 240 image
+pages. The user address space now gives an image 2 MiB: `USER_IMAGE_END`
+moved from one to two megabytes above the code base, the fixed stack top
+from two to three, and `MAX_IMAGE_PAGES` from 240 to 496, with the same eight
+unmapped pages kept between the largest stack and the image end; the region
+base at four megabytes is untouched. `MAX_ADMISSION_FRAMES` follows at 800,
+the largest image and stack with their tables. The desktop lab's README
+records the new figures. Kernel core tests (159) pass; the smoke labs of
+2026-11-01 02:55 UTC, the three lab matrices
+(`build/boot-harness-rs/matrix-composition/20261101T025539673583Z/`,
+`omega-matrix/20261101T025729336674Z/`,
+`omega-matrix-upstream/20261101T025737001164Z/`), the default F5 desktop
+(`build/boot-harness-rs/desktop/20261101T025742095350Z/`) and the Omega desktop
+(`build/boot-harness-rs/omega-desktop/20261101T025018049618Z/`) pass unchanged.
+
 ### Omega World: layout control, management and launch observations
 
 The last World features the stock matrix depends on are in Omega. `layout.omg`
