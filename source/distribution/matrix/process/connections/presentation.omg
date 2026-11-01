@@ -14,8 +14,8 @@ module presentation;
 use protocol::main;
 use protocol::matrix;
 use protocol::display;
-use main::State;
-use main::Image;
+use shared::state::State;
+use shared::state::Image;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;
@@ -457,6 +457,83 @@ machine send_packet(gate: &Gate, context: &mut State, packet: [u64; 8], payload:
     machine plain(gate: &Gate, context: &mut State, packet: [u64; 8]) -> u64 reaches Kernel {
         let reply: [u64; 8] = block upstream::exchange(gate, context, packet);
         reply[0]
+    }
+}
+// An owner visibility change in one transaction: with the World's
+// visibility already set, the previous app's retained surfaces are replayed
+// blank and the next app's shown, committed together or aborted, so the
+// parent or the display never shows both or neither. `previous` zero is none.
+public machine switch(gate: &Gate, context: &mut State, previous: u64, next: u64 [0..=4]) -> u64 reaches Kernel blocks; invokes Kernel; {
+    context.revision = ((context.revision as u64 in Wrapping) + 1u64) as u64;
+    let begun: u64 = block transact(gate, context, PRESENT_BEGIN, display::MATRIX_BEGIN);
+    transition begun == 0u64 {
+        true -> block staging(gate, context, previous, next)
+        _ -> (begun)
+    }
+    machine staging(gate: &Gate, context: &mut State, previous: u64, next: u64 [0..=4]) -> u64 reaches Kernel {
+        let hidden: u64 = block replaying(gate, context, previous);
+        transition hidden == 0u64 {
+            true -> block shown(gate, context, next)
+            _ -> block aborted(gate, context, hidden)
+        }
+    }
+    machine shown(gate: &Gate, context: &mut State, next: u64 [0..=4]) -> u64 reaches Kernel {
+        let staged: u64 = block replay_slot(gate, context, next, 0u64);
+        transition staged == 0u64 {
+            true -> block committing(gate, context)
+            _ -> block aborted(gate, context, staged)
+        }
+    }
+    machine committing(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+        let committed: u64 = block transact(gate, context, PRESENT_COMMIT, display::MATRIX_COMMIT);
+        transition committed == 0u64 {
+            true -> (0u64)
+            _ -> block aborted(gate, context, committed)
+        }
+    }
+    // An abort that fails leaves the backing's state unknown: that is the result.
+    machine aborted(gate: &Gate, context: &mut State, status: u64) -> u64 reaches Kernel {
+        let abort: u64 = block transact(gate, context, PRESENT_ABORT, display::MATRIX_ABORT);
+        transition abort == 0u64 {
+            true -> (status)
+            _ -> (abort)
+        }
+    }
+}
+machine replaying(gate: &Gate, context: &mut State, slot: u64) -> u64 reaches Kernel {
+    transition slot >= 1u64 && slot < 5u64 {
+        true -> block replay_slot(gate, context, slot, 0u64)
+        _ -> (0u64)
+    }
+}
+// Every retained surface of one slot under the World's current geometry and
+// visibility, with the retained image behind an image word.
+machine replay_slot(gate: &Gate, context: &mut State, slot: u64 [0..=4], rank: u64) -> u64 reaches Kernel requires rank <= 64u64 {
+    transition rank < 64u64 {
+        true -> block ranked(gate, context, slot, rank)
+        _ -> (0u64)
+    }
+    machine ranked(gate: &Gate, context: &mut State, slot: u64 [0..=4], rank: u64) -> u64 reaches Kernel requires rank < 64u64 {
+        let retained: Retained = surfaces::replay(&mut context.world, slot, rank);
+        transition retained {
+            Retained::Packet { words } -> block sent(gate, context, slot, rank, words)
+            Retained::Nothing -> block replay_slot(gate, context, slot, rank + 1u64)
+        }
+    }
+    machine sent(gate: &Gate, context: &mut State, slot: u64 [0..=4], rank: u64, words: [u64; 8]) -> u64 reaches Kernel requires rank < 64u64 {
+        let image: u64 = retained_image(context, words);
+        let status: u64 = block send_packet(gate, context, words, image);
+        transition status == 0u64 {
+            true -> block replay_slot(gate, context, slot, rank + 1u64)
+            _ -> (status)
+        }
+    }
+}
+machine retained_image(context: &State, words: [u64; 8]) -> u64 {
+    let index: u64 = image_index(context, words[2], 0u64);
+    transition words[0] == SURFACE_IMAGE && index < 16u64 {
+        true -> (context.images[index].object)
+        _ -> (0u64)
     }
 }
 // Open, commit or abort this matrix's transaction: the parent's batch word

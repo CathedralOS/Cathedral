@@ -1,0 +1,160 @@
+module workspace;
+// The workspace's app instances under the stock catalogue: the three app
+// slots, the one that is active, and the chrome's words over them. A launch
+// into an app slot publishes the instance and activates it; activation hides
+// the other apps, switches the scene in one transaction, then gives the new
+// app the input routes and the chrome its management. When an app ends, the
+// chrome hears of it and the next instance, if any, becomes active. Only the
+// placed chrome of a workspace may list the instances or select one.
+use protocol::main;
+use shared::state::State;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use world::level;
+use world::demand;
+use world::management;
+use world::geometry::zeros_from;
+use policy::children::workspace::catalogue;
+use policy::children::workspace::catalogue::Entry;
+use policy::children::workspace::catalogue::Position;
+use policy::children::workspace::catalogue::Selection;
+use connections::presentation;
+use connections::forward;
+
+const CHROME: u64 = 0u64;
+
+// The active app's slot, or zero.
+public machine active(context: &State) -> u64 {
+    transition context.catalogue.selected {
+        Position::App { slot } -> (slot)
+        Position::None -> (0u64)
+    }
+}
+
+// APP_ENTRY [23, index]: the instance at a catalogue position, as
+// [0, ticket, program, selected]; an empty position is all zeros.
+public machine entry(context: &State, slot: u64 [0..=4], incarnation: u64, words: [u64; 8]) -> [u64; 8] {
+    transition chrome(context, slot, incarnation) && zeros_from(&words, 2u64) {
+        true -> listed(catalogue::entry(&context.catalogue, words[1]))
+        _ -> (error(kernel::DENIED))
+    }
+    machine listed(found: Entry) -> [u64; 8] {
+        transition found {
+            Entry::Present { ticket, program, selected } -> ([0u64, ticket, program, flag(selected), 0u64, 0u64, 0u64, 0u64])
+            Entry::Empty -> (error(0u64))
+            Entry::Outside -> (error(kernel::DENIED))
+        }
+    }
+}
+
+// SELECT_APP [24, ticket]: make the instance with that ticket the active app.
+public machine select(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, words: [u64; 8]) -> [u64; 8]
+    reaches Kernel blocks; invokes Kernel; {
+    transition chrome(context, slot, incarnation) && zeros_from(&words, 2u64) {
+        true -> block chosen(gate, context, catalogue::select(&context.catalogue, words[1], forward::busy(context)))
+        _ -> (error(kernel::DENIED))
+    }
+    machine chosen(gate: &Gate, context: &mut State, selection: Selection) -> [u64; 8] reaches Kernel {
+        transition selection {
+            Selection::Switch { slot } -> block switched(gate, context, slot)
+            Selection::Current { slot } -> (error(0u64))
+            Selection::Busy { slot } -> (error(kernel::BUSY))
+            Selection::Missing -> (error(kernel::DENIED))
+        }
+    }
+    machine switched(gate: &Gate, context: &mut State, slot: u64) -> [u64; 8] reaches Kernel {
+        let status: u64 = block activate(gate, context, slot);
+        error(status)
+    }
+}
+
+// A launched app joins the catalogue and becomes the active one.
+public machine launched(gate: &Gate, context: &mut State, slot: u64, program: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    transition context.desktop && slot >= 1u64 && slot <= 3u64 {
+        true -> block publishing(gate, context, slot, program)
+        _ -> (0u64)
+    }
+    machine publishing(gate: &Gate, context: &mut State, slot: u64, program: u64) -> u64 reaches Kernel {
+        transition catalogue::publish(&mut context.catalogue, slot, program) {
+            true -> block activate(gate, context, slot)
+            _ -> (kernel::NO_MEMORY)
+        }
+    }
+}
+
+// An app's end: it leaves the catalogue, the chrome hears of it, and the next
+// instance becomes active when none is.
+public machine retired(gate: &Gate, context: &mut State, slot: u64) reaches Kernel blocks; invokes Kernel; {
+    transition context.desktop && slot >= 1u64 && slot <= 3u64 {
+        true -> block retiring(gate, context, slot)
+        _ -> done()
+    }
+    machine retiring(gate: &Gate, context: &mut State, slot: u64) reaches Kernel {
+        let removed: bool = catalogue::retire(&mut context.catalogue, slot);
+        level::notify(&mut context.world, CHROME);
+        transition catalogue::fallback(&context.catalogue) {
+            Position::App { slot } -> block following(gate, context, slot)
+            Position::None -> done()
+        }
+    }
+    machine following(gate: &Gate, context: &mut State, slot: u64) reaches Kernel {
+        let status: u64 = block activate(gate, context, slot);
+    }
+}
+
+// Show `slot` alone among the apps. The scene switches first; only once it is
+// committed do input routes and the chrome's management follow, and a refused
+// scene leaves the previous app showing.
+public machine activate(gate: &Gate, context: &mut State, slot: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let previous: u64 = active(context);
+    transition {
+        previous == slot && previous != 0u64 -> (0u64)
+        slot >= 1u64 && slot <= 3u64 -> block switching(gate, context, previous, slot)
+        _ -> (kernel::DENIED)
+    }
+    machine switching(gate: &Gate, context: &mut State, previous: u64, slot: u64 [0..=4]) -> u64 reaches Kernel {
+        shown(context, slot);
+        let status: u64 = block presentation::switch(gate, context, previous, slot);
+        transition status == 0u64 {
+            true -> (committed(context, previous, slot))
+            _ -> (restored(context, previous, status))
+        }
+    }
+}
+machine shown(context: &mut State, slot: u64) {
+    let first: u64 = demand::visible(&mut context.world, 1u64, slot == 1u64);
+    let second: u64 = demand::visible(&mut context.world, 2u64, slot == 2u64);
+    let third: u64 = demand::visible(&mut context.world, 3u64, slot == 3u64);
+}
+machine restored(context: &mut State, previous: u64, status: u64) -> u64 {
+    shown(context, previous);
+    status
+}
+machine committed(context: &mut State, previous: u64, slot: u64 [0..=4]) -> u64 {
+    let quiet: u64 = deactivated(context, previous);
+    let activated: bool = catalogue::activate(&mut context.catalogue, slot);
+    let incarnation: u64 = context.slots[CHROME].listener.incarnation;
+    let managed: u64 = management::grant(&mut context.managers, CHROME, incarnation, slot, 5u64);
+    level::notify(&mut context.world, CHROME);
+    0u64
+}
+// The former app keeps its view and grant, but its holds and routes end.
+machine deactivated(context: &mut State, previous: u64) -> u64 {
+    transition previous != 0u64 {
+        true -> (demand::deactivate_input(&mut context.world, previous))
+        _ -> (0u64)
+    }
+}
+machine chrome(context: &State, slot: u64, incarnation: u64) -> bool {
+    context.desktop && slot == CHROME && context.slots[CHROME].live && context.slots[CHROME].listener.incarnation == incarnation
+}
+machine flag(set: bool) -> u64 {
+    transition set { true -> (1u64) _ -> (0u64) }
+}
+machine error(code: u64) -> [u64; 8] {
+    let mut words: [u64; 8];
+    words[0] = code;
+    words
+}
+machine done() {}

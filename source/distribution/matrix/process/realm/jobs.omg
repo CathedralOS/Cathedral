@@ -1,4 +1,4 @@
-module realm;
+module jobs;
 // Realm setup under the stock startup policy, which sequences each job while
 // this process executes its commands. Discovery takes the parent's snapshot,
 // lists the realm for a Matrix configuration, a Login and a Users folder,
@@ -13,7 +13,7 @@ module realm;
 // [background.omg](background.omg) and [picker.omg](picker.omg) hold theirs.
 use protocol::main;
 use protocol::matrix;
-use main::State;
+use shared::state::State;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;
@@ -32,15 +32,15 @@ use policy::children::startup::main::PickerAction;
 use policy::children::startup::main::take_picker;
 use policy::children::startup::main::take_background;
 use world::geometry;
-use upstream;
-use forward;
-use storage;
-use listing;
+use connections::upstream;
+use connections::forward;
+use connections::storage;
+use connections::listing;
 use realm_names;
 use configuration;
 use background;
 use picker;
-use report;
+use shared::report;
 
 // The most commands one job issues before this process stops driving it.
 public const STEPS: u64 = 64u64;

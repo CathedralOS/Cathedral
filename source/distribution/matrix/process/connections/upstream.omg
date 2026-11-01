@@ -9,7 +9,7 @@ module upstream;
 // yet. The storage pair the broker supplied goes to [storage.omg](storage.omg).
 use protocol::main;
 use protocol::services::STORAGE;
-use main::State;
+use shared::state::State;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;
@@ -27,7 +27,7 @@ use world::geometry::Grant;
 use world::upstream::inherit_poll;
 use world::input::registration;
 use storage;
-use report;
+use shared::report;
 
 // How long each startup handshake with the parent may take, as the Rust host allows.
 public const HANDSHAKE_TICKS: u64 = 300u64;

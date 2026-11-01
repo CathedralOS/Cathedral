@@ -7,7 +7,7 @@ module funding;
 // ceiling this matrix covers the request from its own allowances, asking its
 // owner first if it must, and grows the child's launch in place.
 use protocol::matrix;
-use main::State;
+use shared::state::State;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;
@@ -19,7 +19,7 @@ use policy::children::launch::resources::funding::Increase;
 use policy::children::launch::resources::funding::increased;
 use policy::children::launch::resources::funding::shortfall;
 use policy::children::launch::resources::funding::nothing;
-use upstream;
+use connections::upstream;
 
 // Cover `needed` from this matrix's own allowances, asking its owner for
 // whatever they lack.

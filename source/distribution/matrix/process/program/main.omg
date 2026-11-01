@@ -13,162 +13,30 @@ module main;
 // every live interest. A nested instance also discovers its realm under the
 // stock startup policy once the parent has placed it, configuring a workspace
 // from the realm's saved record or starting a scoped picker, and the owner's
-// CONFIGURE runs that configuration directly. The desktop mode's chrome words
-// arrive next; the Rust host remains the F5 matrix until this program reaches
-// parity.
+// CONFIGURE runs that configuration directly. In a workspace the chrome lists
+// and selects the app instances; the Rust host remains the F5 matrix until
+// this program reaches parity.
 use runtime::entry::Program;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;
-use runtime::server::main::Server;
-use runtime::server::main::Ticket;
-use runtime::services::main::Services;
-use runtime::connection::main::Peer;
-use runtime::admission::main::Admitted;
 use runtime::time::Tick;
 use runtime::waiting::Set;
-use world::level::World;
-use policy::children::launch::resources::funding::Funding;
-use world::batch::Batch;
-use world::launches::Launches;
-use world::management::Management;
-use world::geometry::Rect;
-use policy::children::startup::main::Startup;
-use policy::children::launch::resources::recipes::Offer;
-use storage::Store;
+use shared::state::State;
 use startup;
 use commands;
-use forward;
-use upstream;
-use realm;
-use source;
-use slots;
-use children;
-use presentation;
-use storage;
+use connections::forward;
+use connections::upstream;
+use realm::jobs;
+use connections::source;
+use children::slots;
+use children::lifecycle;
+use connections::presentation;
+use connections::storage;
 
-public const CHILDREN: u64 = 5u64;
 // How long a turn parks with nothing due, and with a parent's snapshot still owed.
 public const IDLE_TICKS: u64 = 1000u64;
 public const OWED_TICKS: u64 = 10u64;
-// Owner-declared policy for launches into a slot.
-public data SlotPolicy [copy] {
-    images: u64;
-    private_pages: u64;
-    reader_pages: u64;
-    channels: u64;
-    descendants: u64;
-    cpu: u64;
-    surfaces: u64;
-    placed: bool;
-    x: u64;
-    y: u64;
-    width: u64;
-    height: u64;
-    keys: u64;
-    // The services a launch into the slot is offered, once the owner set them.
-    imports: u64;
-    imports_set: bool;
-    // Whether LAUNCH_POLICY opened the slot to children's launches.
-    standing: bool;
-}
-// A sealed image held behind the compositor tile it was last shown on.
-public data Image [copy] {
-    key: u64;
-    object: u64;
-}
-// The realm's saved Matrix record as configuration read it, with the bottom
-// bar and workspace validated from its geometry over this matrix's view.
-public data Saved [copy] {
-    valid: bool;
-    launcher: [u64; 4];
-    launcher_pages: u64;
-    app_pages: u64;
-    app_readers: u64;
-    margin: u64;
-    launcher_height: u64;
-    gap: u64;
-    app_surfaces: u64;
-    keys: u64;
-    chrome: Rect;
-    workspace: Rect;
-}
-// An owner word relayed to a child's owner control, answered when the child
-// replies; past its deadline the owner heard TIMED_OUT and the reply is drained.
-public data Forward [copy] {
-    live: bool;
-    ticket: Ticket;
-    deadline: u64;
-    late: bool;
-}
-public data State {
-    owner: Server;
-    source: Server;
-    scene: Peer;
-    has_scene: bool;
-    // The parent matrix's broker connection, when one admitted this instance,
-    // and whether its last snapshot left more to take.
-    parent: Services;
-    has_parent: bool;
-    refresh_due: bool;
-    world: World;
-    clock: u64;
-    // The bound extent and keys of the root display.
-    width: u64;
-    height: u64;
-    keys: u64;
-    policies: [SlotPolicy; 5];
-    // Each child's staged presentation batch, the sealed images retained
-    // behind compositor tiles, and the compositor transaction revision.
-    batches: [Batch; 5];
-    images: [Image; 16];
-    revision: u64;
-    // Provider links, bindings and each child's storage connection.
-    store: Store;
-    // Each child's receipt for its latest launch.
-    observations: Launches;
-    // Admitted children, this matrix's client to each one's owner control, the
-    // launch each was reserved under, how far each may grow by asking, and the
-    // allowances staged for the next launch into each slot.
-    slots: [Admitted; 5];
-    controls: [Peer; 5];
-    reservations: [u64; 5];
-    funding: [Funding; 5];
-    staged_private: [u64; 5];
-    staged_reader: [u64; 5];
-    staged_frames: [u64; 5];
-    // Routed owner words pending at each child's owner control.
-    forwards: [Forward; 5];
-    // Realm setup: the startup recovery policy's state, whether the owner now
-    // drives setup, whether a workspace stands and whether this matrix runs
-    // its own login, what discovery and configuration found, the image and
-    // offer a job holds, what the last admission granted and allotted, the
-    // chrome's delegations, the recovery words the owner recorded and the
-    // bindings RESTORE_STORAGE remakes.
-    startup: Startup;
-    hosted: bool;
-    desktop: bool;
-    login: bool;
-    saved: Saved;
-    config_object: u64;
-    launcher_object: u64;
-    background_object: u64;
-    picker_object: u64;
-    users_object: u64;
-    picker_mode: u64;
-    picker_offer: Offer;
-    image: u64;
-    image_length: u64;
-    last_granted: u64;
-    allotted_surfaces: u64;
-    managers: Management;
-    fallback_image: u64;
-    fallback_argument: u64;
-    recovery_grants: u64;
-    saved_source: [u64; 5];
-    saved_scope: [u64; 5];
-    saved_bound: [bool; 5];
-}
 public ProgramProvider satisfies Program {
     machine run(gate: &Gate, first: u64, second: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
         let mut context: State;
@@ -188,7 +56,7 @@ machine serve(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
 }
 machine turn(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
     let polled: u64 = block upstream::step(gate, context, now);
-    let settled: u64 = block realm::step(gate, context, now);
+    let settled: u64 = block jobs::step(gate, context, now);
     let commanded: u64 = block commands::step(gate, context, now);
     let forwarded: u64 = block forward::step(gate, context, now);
     let sourced: u64 = block source::step(gate, context, now);
@@ -198,7 +66,7 @@ machine turn(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
     let fourth: u64 = block slots::step(gate, context, 3u64, now);
     let fifth: u64 = block slots::step(gate, context, 4u64, now);
     let stored: u64 = block storage::step(gate, context, now);
-    children::notify(gate, context);
+    lifecycle::notify(gate, context);
     let flushed: u64 = block presentation::flush(gate, context);
     transition polled == 0u64 && settled == 0u64 && commanded == 0u64 && forwarded == 0u64 && sourced == 0u64 && first == 0u64
         && second == 0u64 && third == 0u64 && fourth == 0u64 && fifth == 0u64 && stored == 0u64 && flushed == 0u64 {
@@ -215,11 +83,11 @@ machine parked(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel
     runtime::server::main::watch(&context.source, &mut set);
     upstream::watch(context, &mut set);
     forward::watch(context, &mut set);
-    children::watch(context, 0u64, &mut set);
-    children::watch(context, 1u64, &mut set);
-    children::watch(context, 2u64, &mut set);
-    children::watch(context, 3u64, &mut set);
-    children::watch(context, 4u64, &mut set);
+    lifecycle::watch(context, 0u64, &mut set);
+    lifecycle::watch(context, 1u64, &mut set);
+    lifecycle::watch(context, 2u64, &mut set);
+    lifecycle::watch(context, 3u64, &mut set);
+    lifecycle::watch(context, 4u64, &mut set);
     storage::watch(context, &mut set);
     let status: u64 = block runtime::waiting::wait(gate, &set);
     transition status < kernel::ERROR_BASE || status == kernel::TIMED_OUT || status == kernel::PEER_CLOSED {
@@ -234,11 +102,11 @@ machine park_ticks(context: &State) -> u64 {
     }
 }
 machine cleanup(gate: &Gate, context: &mut State, status: u64) -> u64 reaches Kernel {
-    block children::reclaim(gate, context, 0u64);
-    block children::reclaim(gate, context, 1u64);
-    block children::reclaim(gate, context, 2u64);
-    block children::reclaim(gate, context, 3u64);
-    block children::reclaim(gate, context, 4u64);
+    block lifecycle::reclaim(gate, context, 0u64);
+    block lifecycle::reclaim(gate, context, 1u64);
+    block lifecycle::reclaim(gate, context, 2u64);
+    block lifecycle::reclaim(gate, context, 3u64);
+    block lifecycle::reclaim(gate, context, 4u64);
     block storage::close(gate, context);
     block presentation::release_images(gate, context, 0u64);
     block runtime::server::main::close(gate, &mut context.source);

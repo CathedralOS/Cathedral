@@ -1,0 +1,16 @@
+diff --git a/omega-rust/omega/compilation/backend/artifacts/component-description/src/component_description.rs b/omega-rust/omega/compilation/backend/artifacts/component-description/src/component_description.rs
+index de0fc1e137b26..6b04820cd019b 100644
+--- a/omega-rust/omega/compilation/backend/artifacts/component-description/src/component_description.rs
++++ b/omega-rust/omega/compilation/backend/artifacts/component-description/src/component_description.rs
+@@ -68,9 +68,9 @@ macro_rules! wire_tagged {
+ pub const COMPONENT_DESCRIPTION_SCHEMA_V3: u32 = 3;
+ 
+ /// Hard bound on one encoded description, including the embedded artifact.
+-pub(crate) const MAX_COMPONENT_DESCRIPTION_BYTES: usize = 8 * 1024 * 1024;
++pub(crate) const MAX_COMPONENT_DESCRIPTION_BYTES: usize = 64 * 1024 * 1024;
+ /// Hard bound on any single roster inside a description.
+-pub(crate) const MAX_DESCRIPTION_ROSTER: usize = 4096;
++pub(crate) const MAX_DESCRIPTION_ROSTER: usize = 65536;
+ /// Hard bound on one declared or derived identity string.
+ pub(crate) const MAX_IDENTITY_BYTES: usize = 1024;
+ 

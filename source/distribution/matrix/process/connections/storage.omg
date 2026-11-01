@@ -16,7 +16,8 @@ use protocol::main;
 use protocol::matrix;
 use protocol::storage::scope;
 use protocol::storage::operations;
-use main::State;
+use shared::state::State;
+use shared::state::Store;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;
@@ -36,7 +37,7 @@ use world::scopes::Bound;
 use world::scopes::Prepared;
 use world::scopes::Proof;
 use world::geometry::zeros_from;
-use report;
+use shared::report;
 
 public const SOURCES: u64 = 2u64;
 // The link that carries the parent's storage connection; under a parent the
@@ -45,21 +46,6 @@ public const UPSTREAM: u64 = 2u64;
 // A child may acquire storage long after admission; its listener's handshake
 // window is the child's lifetime.
 public const OPENING_TICKS: u64 = 0x3fffffffffffffffu64;
-public data Store {
-    root: bool;
-    handles: [u64; 2];
-    links: [Peer; 3];
-    linked: [bool; 3];
-    failed: u64;
-    scopes: Scopes;
-    listeners: [Server; 5];
-    // Under a parent: whether its storage connection was supplied, and the
-    // binding revision and realm it last reported, once asked.
-    has_upstream: bool;
-    informed: bool;
-    revision: u64;
-    realm: u64;
-}
 // The provider's reply words, with any sealed attachment this matrix now holds.
 public data Outcome [copy] {
     words: [u64; 8];

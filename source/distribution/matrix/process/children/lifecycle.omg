@@ -1,4 +1,4 @@
-module children;
+module lifecycle;
 // Children this matrix funds and admits itself. RUN_PAGES and RUN_MEMORY stage
 // the next launch's allowances for a slot; RUN reserves a launch for an image
 // from the owner's catalogue under those allowances, admits the child through
@@ -10,7 +10,7 @@ use protocol::main;
 use protocol::matrix;
 use protocol::services::INTERACTION;
 use protocol::services::STORAGE;
-use main::State;
+use shared::state::State;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;
@@ -22,10 +22,11 @@ use runtime::waiting::Set;
 use world::level;
 use world::launches;
 use world::geometry::zeros_from;
-use storage;
-use presentation;
+use connections::storage;
+use connections::presentation;
 use recovery;
-use report;
+use shared::report;
+use workspace;
 use policy::children::launch::resources::funding::Funding;
 
 // How long a child has to complete each startup handshake, as the Rust host allows.
@@ -272,6 +273,7 @@ public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reac
         context.reservations[slot] = 0u64;
         context.funding[slot] = Funding::Fixed;
         level::disconnected(&mut context.world, slot);
+        block workspace::retired(gate, context, slot);
     }
 }
 // What a requester's receipt reports for the ended child.

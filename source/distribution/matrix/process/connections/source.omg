@@ -6,7 +6,7 @@ module source;
 // These are this adapter's local names, not global input roles.
 use protocol::main;
 use protocol::matrix;
-use main::State;
+use shared::state::State;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;

@@ -7,8 +7,8 @@ module forward;
 // takes no further routed word until it has been.
 use protocol::main;
 use protocol::matrix;
-use main::State;
-use main::Forward;
+use shared::state::State;
+use shared::state::Forward;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;

@@ -8,7 +8,7 @@ module listing;
 use protocol::main;
 use protocol::matrix;
 use protocol::storage::operations;
-use main::State;
+use shared::state::State;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;

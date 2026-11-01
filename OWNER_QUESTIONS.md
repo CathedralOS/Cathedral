@@ -32,43 +32,6 @@ standard.
 
 ## Open questions
 
-### The stock matrix outgrows one Omega component
-
-**Blocks the stock matrix migration.** The standalone Omega stock matrix is
-one native program, packaged as one independent Omega component. The Omega
-compiler refuses a component whose description, which embeds the compiled
-artifact of the whole program closure, exceeds 8 MiB
-(`MAX_COMPONENT_DESCRIPTION_BYTES` in Omega's component description). The
-matrix as of the funding step is 8,193,855 bytes, 194 KB under the bound. The
-next slice, the chrome's app entries and selection, takes it over; that work
-waits on the `stock-matrix-workspace` branch. Size tracks the number of
-machines in the closure, about 4 KB each over some 2,000 machines across the
-process, the stock policy, the World and the runtime. The Rust host's
-remaining responsibilities would add roughly 1.5 MB more, so trimming code
-cannot make room. The [process README](source/distribution/matrix/process/README.md)
-and the Omega toolchain notes in the [handoff](TASKS_RUST.md) are silent on a
-program-size ceiling.
-
-Choices:
-
-- Raise the bound in the Omega producer Cathedral pins, for example to 32 MiB,
-  and requalify that producer. Nothing in Cathedral's architecture changes;
-  the cost is a larger decode allowance wherever a description is verified.
-- Make descriptions compact in Omega, for instance by interning the repeated
-  nominal type identities, which are about a third of the printable bytes.
-  Same effect as raising the bound, and smaller artifacts, but it is
-  language work with its own review.
-- Split the stock matrix into several processes, for instance storage relay,
-  presentation and child supervision. This changes the architecture purely to
-  fit a tool limit: one trust unit becomes several, and every input, paint and
-  storage hop gains an IPC crossing.
-- Let the packager link more than one independent component into one process
-  image. Tooling work of unknown size, since installation binds each
-  component's imports.
-
-Recommended: raise the bound now so the migration continues, and treat compact
-descriptions as Omega's own follow-up. The matrix stays one process.
-
 ### Exclusive audio and the reserved system channel
 
 **Deferred; does not block shared playback.** The owner ratified the

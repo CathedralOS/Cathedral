@@ -21,10 +21,15 @@ python -m unittest discover -s tools/omega-user -p "test_*.py"
 ```
 
 The standalone producer is source
-`92aec21e421bb10fe28012c521cf34b3813088e5`, release opt-level 3, SHA-256
-`8ec9d529695afcce984dc8228dd561f019937fa8ae1843385f0c6baf2f766b35`.
-Build `cargo build --locked --release -p omega` in an isolated worktree at that
-exact source, following Omega's build-slot instructions. The local
+`92aec21e421bb10fe28012c521cf34b3813088e5` with [producer.patch](producer.patch)
+applied, release opt-level 3, SHA-256
+`bfd27c93d5bb4cc46c2012a7bd0c40b3f3283591d86ae28186974eaf91f5601c`. The patch
+raises the component description bound from 8 MiB to 64 MiB and its roster
+bound from 4096 to 65536 rows: the description embeds the compiled closure, and
+the stock matrix outgrew the old bound. Build `cargo build --locked --release
+-p omega` in an isolated worktree at that exact source with the patch applied,
+following Omega's build-slot instructions. The unpatched producer is kept
+locally at `build/omega-user/compiler-8mib-baseline/`. The local
 `build/omega-user/compiler/omega.exe` is the saved executable with its
 source/hash/build receipt beside it. Qualification and artifact paths are
 recorded in TASKS_RUST.md. This compiler includes upstream checking fixes that
