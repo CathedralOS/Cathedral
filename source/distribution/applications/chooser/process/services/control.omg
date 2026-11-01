@@ -7,7 +7,7 @@ use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::server::main::Event;
 use protocol::main;
-public machine poll(gate: &Gate, context: &mut Context, state: &State, now: u64) reaches Kernel blocks; invokes Kernel; {
+public machine poll(gate: &Gate, context: &mut Context, state: &State, now: u64) reaches Kernel blocks invokes Kernel {
     transition context.owner.peer.fault == 0u64 {
         true -> block receive(gate, context, state, now)
         _ -> done()
@@ -37,7 +37,7 @@ machine answer(gate: &Gate, context: &mut Context, state: &State, bytes: u64, re
         let ignored: u64 = block send(gate, context, reply);
     }
 }
-public machine send(gate: &Gate, context: &mut Context, words: &[u64; 8]) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine send(gate: &Gate, context: &mut Context, words: &[u64; 8]) -> u64 reaches Kernel blocks invokes Kernel {
     let status: u64 = block runtime::server::main::reply(gate, &mut context.owner, words);
     transition status == 0u64 {
         true -> (0u64)

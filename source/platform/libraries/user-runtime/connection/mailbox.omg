@@ -15,23 +15,23 @@ public const OBJECT: u64 = 1u64;
 public const ENDPOINT: u64 = 2u64;
 public const NOTIFICATION: u64 = 3u64;
 public machine send(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], object: u64) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     block send_sized(gate, peer, id, payload, object, 64u64)
 }
 // Frames carry `bytes` of the payload; the display's six-word requests use 48.
 public machine send_sized(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], object: u64, bytes: u64 [0..=64]) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     transition object == 0u64 {
         true -> block send_attached_sized(gate, peer, id, payload, NONE, 0u64, bytes)
         _ -> block send_attached_sized(gate, peer, id, payload, OBJECT, object, bytes)
     }
 }
 public machine send_attached(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], kind: u64 [0..=3], handle: u64) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     block send_attached_sized(gate, peer, id, payload, kind, handle, 64u64)
 }
 public machine send_attached_sized(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], kind: u64 [0..=3], handle: u64, bytes: u64 [0..=64]) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let mut header: [u64; 8];
     let status: u64 = block Kernel::shared_read(gate, peer.reader.handle, 1u64, &mut header, 1u64);
     transition status == 0u64 {
@@ -126,7 +126,7 @@ machine publish(gate: &Gate, peer: &mut Peer) -> u64 reaches Kernel {
 }
 
 public machine receive(gate: &Gate, peer: &mut Peer) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let mut header: [u64; 8];
     let status: u64 = block Kernel::shared_read(gate, peer.reader.handle, 0u64, &mut header, 3u64);
     transition status == 0u64 {

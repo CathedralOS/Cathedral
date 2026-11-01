@@ -26,7 +26,7 @@ machine resume(s: &mut State, p: &mut [u64; 4096]) -> u64 {
     let command: Command = advance(s, &completion);
     commands::encode(command, p)
 }
-public machine component_entry() reaches Colors invokes Colors; {
+public machine component_entry() reaches Colors invokes Colors {
     let mut s: State;
     let mut p: [u64; 4096];
     let result: u64 = Colors::step(&mut s, &mut p);

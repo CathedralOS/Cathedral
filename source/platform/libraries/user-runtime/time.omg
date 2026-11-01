@@ -7,7 +7,7 @@ public data Tick [copy] {
     case Failed(code: u64);
 }
 
-public machine read(gate: &Gate, clock: u64) -> Tick reaches Kernel invokes Kernel; {
+public machine read(gate: &Gate, clock: u64) -> Tick reaches Kernel invokes Kernel {
     let mut record: [u64; 8];
     let status: u64 = Kernel::clock_read(gate, clock, &mut record);
     transition status == 0u64 {
@@ -25,7 +25,7 @@ public machine reached(now: u64, deadline: u64) -> bool {
     elapsed < 0x8000000000000000u64
 }
 
-public machine park_until(gate: &Gate, deadline: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine park_until(gate: &Gate, deadline: u64) -> u64 reaches Kernel blocks invokes Kernel {
     let empty: [u64; 8];
     block Kernel::wait(gate, &empty, 0u64, deadline)
 }

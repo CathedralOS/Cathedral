@@ -9,7 +9,7 @@ use app::operations::Command;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use application::operations;
-public machine run(gate: &Gate, context: &mut Context, argument: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine run(gate: &Gate, context: &mut Context, argument: u64) -> u64 reaches Kernel blocks invokes Kernel {
     let mut state: State;
     let mut exchange: Exchange;
     exchange.argument = argument;

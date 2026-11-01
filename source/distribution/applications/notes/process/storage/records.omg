@@ -17,7 +17,7 @@ use services::exchange;
 use services::replies;
 
 public machine receive(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, command: &application::application::Request,
-    words: &[u64; 8], requested: u64) reaches Kernel blocks; invokes Kernel; {
+    words: &[u64; 8], requested: u64) reaches Kernel blocks invokes Kernel {
     let reply: CallReply = block services::exchange::request(gate, context, state, true, words, 0u64, words[7]);
     transition reply {
         CallReply::Object { frame, object } -> block object(output, gate, context, frame, object, requested)
@@ -80,7 +80,7 @@ machine unpack(record: &mut Record, offset: u64 [0..=243], words: &[u64; 8], i: 
         transition { _ -> unpack(record, offset, words, i + 1u64) }
     }
 }
-public machine backing(gate: &Gate, record: &Record) -> Creation reaches Kernel blocks; invokes Kernel; {
+public machine backing(gate: &Gate, record: &Record) -> Creation reaches Kernel blocks invokes Kernel {
     transition record.length > 0u64 && record.length <= 244u64 {
         true -> block pack(gate, record)
         _ -> (Creation::Failed { code: kernel::INVALID_ARGUMENT })

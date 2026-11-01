@@ -13,7 +13,7 @@ use runtime::connection::call::CallReply;
 use control;
 
 public machine request(gate: &Gate, context: &mut Context, state: &State, storage: bool,
-    words: &[u64; 8], object: u64, deadline: u64) -> CallReply reaches Kernel blocks; invokes Kernel; {
+    words: &[u64; 8], object: u64, deadline: u64) -> CallReply reaches Kernel blocks invokes Kernel {
     context.pending_storage = storage;
     context.pending_deadline = deadline;
     let status: u64 = block begin(gate, context, words, object);

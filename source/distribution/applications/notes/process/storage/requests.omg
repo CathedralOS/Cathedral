@@ -17,7 +17,7 @@ use storage::records;
 use protocol::main;
 use services::replies;
 
-public machine bind(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State) reaches Kernel blocks; invokes Kernel; {
+public machine bind(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State) reaches Kernel blocks invokes Kernel {
     let tick: Tick = runtime::time::read(gate, context.clock);
     transition tick {
         Tick::Read { value } -> block binding(output, gate, context, state, value)
@@ -56,7 +56,7 @@ machine malformed(output: &mut application::application::Work, gate: &Gate, cont
     let ignored: u64 = block runtime::connection::main::close(gate, &mut context.storage.peer);
     services::replies::failed(output, runtime::kernel::IO_ERROR)
 }
-public machine execute(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, command: &application::application::Request) reaches Kernel blocks; invokes Kernel; {
+public machine execute(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, command: &application::application::Request) reaches Kernel blocks invokes Kernel {
     let tick: Tick = runtime::time::read(gate, context.clock);
     transition tick {
         Tick::Read { value } -> block scoped(output, gate, context, state, command, value)

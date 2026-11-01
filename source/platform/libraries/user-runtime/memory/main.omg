@@ -17,7 +17,7 @@ public data Acceptance {
 }
 
 public machine allocate(gate: &Gate, pages: u64 [1..=512]) -> Allocation
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let handle: u64 = block Kernel::memory_allocate(gate, pages);
     transition handle > 0u64 && handle < 0x8000000000000000u64 {
         true -> block share(gate, handle)
@@ -38,22 +38,22 @@ machine failed_share(gate: &Gate, handle: u64, status: u64) -> Allocation reache
 
 public machine write(gate: &Gate, writer: &Writer, index: u64,
     words: &[u64; 8], count: u64 [1..=8]) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     block Kernel::shared_write(gate, writer.handle, index, words, count)
 }
 public machine read(gate: &Gate, reader: &Reader, index: u64,
     words: &mut [u64; 8], count: u64 [1..=8]) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     block Kernel::shared_read(gate, reader.handle, index, words, count)
 }
 public machine release_writer(gate: &Gate, writer: &mut Writer) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let handle: u64 = writer.handle;
     writer.handle = 0u64;
     block Kernel::memory_release(gate, handle)
 }
 public machine release_reader(gate: &Gate, reader: &mut Reader) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let handle: u64 = reader.handle;
     reader.handle = 0u64;
     block Kernel::memory_release(gate, handle)
@@ -62,13 +62,13 @@ public machine release_reader(gate: &Gate, reader: &mut Reader) -> u64
 // Setup packets have no payload. Both producer and readers can forward a view;
 // the receiver gains a fresh local read right, never writable authority.
 public machine delegate(gate: &Gate, handle: u64, endpoint: u64) -> u64
-    reaches Kernel invokes Kernel; {
+    reaches Kernel invokes Kernel {
     let mut packet: [u64; 10];
     packet[1] = handle;
     Kernel::shared_send(gate, endpoint, &packet)
 }
 public machine accept(gate: &Gate, endpoint: u64) -> Acceptance
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let mut packet: [u64; 10];
     let status: u64 = block Kernel::shared_receive(gate, endpoint, &mut packet);
     transition status < 0x8000000000000000u64 {

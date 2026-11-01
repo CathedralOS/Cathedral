@@ -8,7 +8,7 @@ use runtime::kernel;
 use runtime::connection::call::CallReply;
 use runtime::connection::main::Frame;
 use storage::entries;
-public machine accept(gate: &Gate, context: &mut Context, output: &mut Exchange, result: CallReply, limit: u64, after: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine accept(gate: &Gate, context: &mut Context, output: &mut Exchange, result: CallReply, limit: u64, after: u64) -> u64 reaches Kernel blocks invokes Kernel {
     transition result {
         CallReply::Received { frame, notification } -> block plain(gate, context, output, frame, notification, limit)
         CallReply::Object { frame, object } -> block object(gate, context, output, frame, object, limit, after)

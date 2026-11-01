@@ -12,7 +12,7 @@ use app::model;
 use waiting;
 
 public machine request(gate: &Gate, context: &mut Context, words: &[u64; 8]) -> runtime::services::main::Reply
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let status: u64 = block runtime::connection::main::begin(gate, &mut context.services.broker, words);
     transition status == 0u64 {
         true -> block poll(gate, context)

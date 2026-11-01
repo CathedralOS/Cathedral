@@ -14,7 +14,7 @@ use protocol::services::TAKEN;
 use protocol::services::UNAVAILABLE;
 
 public machine reply(gate: &Gate, child: &mut Admitted, issued: Ticket, words: &[u64; 8]) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let selection: Selection = select(child.granted, words);
     transition selection {
         Selection::Right { index } -> block right(gate, child, issued, index)

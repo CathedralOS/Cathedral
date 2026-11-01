@@ -12,7 +12,7 @@ use runtime::services::endpoints::Part;
 use protocol::services::request;
 use exchange;
 
-public machine interaction(gate: &Gate, context: &mut Context, state: &State) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine interaction(gate: &Gate, context: &mut Context, state: &State) -> u64 reaches Kernel blocks invokes Kernel {
     let words: [u64; 8] = request(1u64, 1u64, 1u64, 0u64);
     let reply: CallReply = block exchange::request(gate, context, state, false, &words, 0u64, 0u64);
     transition reply {
@@ -27,7 +27,7 @@ machine invalid_endpoint(gate: &Gate, context: &mut Context, endpoint: u64) -> u
     block runtime::services::main::close(gate, &mut context.services);
     kernel::IO_ERROR
 }
-public machine storage(gate: &Gate, context: &mut Context, state: &State) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine storage(gate: &Gate, context: &mut Context, state: &State) -> u64 reaches Kernel blocks invokes Kernel {
     let first: Part = block part(gate, context, state, 0u64);
     transition first {
         Part::Granted { endpoint } -> block second(gate, context, state, endpoint)

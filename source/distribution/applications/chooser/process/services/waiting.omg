@@ -7,7 +7,7 @@ use runtime::kernel::Kernel;
 use runtime::kernel;
 use runtime::time::Tick;
 use services::control;
-public machine next(gate: &Gate, context: &mut Context, state: &State, refresh: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine next(gate: &Gate, context: &mut Context, state: &State, refresh: u64) -> u64 reaches Kernel blocks invokes Kernel {
     let tick: Tick = runtime::time::read(gate, context.clock);
     transition tick {
         Tick::Read { value } -> block poll(gate, context, state, runtime::time::after(value, duration(refresh)))

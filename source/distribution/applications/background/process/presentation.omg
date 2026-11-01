@@ -11,7 +11,7 @@ use app::model::Failure;
 use protocol::main;
 use protocol::services::request;
 
-public machine poll(gate: &Gate, context: &mut Context) -> Event reaches Kernel blocks; invokes Kernel; {
+public machine poll(gate: &Gate, context: &mut Context) -> Event reaches Kernel blocks invokes Kernel {
     let mut words: [u64; 8]; words[0] = MATRIX_POLL;
     let reply: Reply = block exchange::request(gate, context, &words);
     transition reply {
@@ -25,7 +25,7 @@ machine view(words: [u64; 8]) -> Event {
         _ -> (Event::NoView)
     }
 }
-public machine create(gate: &Gate, context: &mut Context, epoch: u64) -> Event reaches Kernel blocks; invokes Kernel; {
+public machine create(gate: &Gate, context: &mut Context, epoch: u64) -> Event reaches Kernel blocks invokes Kernel {
     let mut words: [u64; 8]; words[0] = SURFACE_CREATE; words[1] = epoch;
     let reply: Reply = block exchange::request(gate, context, &words);
     transition reply {
@@ -39,7 +39,7 @@ machine created(words: [u64; 8]) -> Event {
         _ -> (Event::Failed { failure: Failure::Provider { code: words[0] } })
     }
 }
-public machine paint(gate: &Gate, context: &mut Context, view: View, surface: u64, color: u64) -> Event reaches Kernel blocks; invokes Kernel; {
+public machine paint(gate: &Gate, context: &mut Context, view: View, surface: u64, color: u64) -> Event reaches Kernel blocks invokes Kernel {
     let mut words: [u64; 8];
     words[0] = MATRIX_PAINT; words[1] = view.epoch; words[2] = surface;
     words[5] = view.width; words[6] = view.height; words[7] = color;
@@ -55,7 +55,7 @@ machine painted(code: u64) -> Event {
         _ -> (Event::Failed { failure: Failure::Provider { code: code } })
     }
 }
-public machine probe_storage(gate: &Gate, context: &mut Context) -> Event reaches Kernel blocks; invokes Kernel; {
+public machine probe_storage(gate: &Gate, context: &mut Context) -> Event reaches Kernel blocks invokes Kernel {
     let words: [u64; 8] = request(2u64, 1u64, 1u64, 0u64);
     let reply: Reply = block exchange::request(gate, context, &words);
     transition reply {

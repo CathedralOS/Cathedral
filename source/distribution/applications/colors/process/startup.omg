@@ -9,7 +9,7 @@ use runtime::main::Environment;
 use runtime::time::Tick;
 use runtime::server::owner;
 
-public machine open(gate: &Gate, context: &mut Context) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine open(gate: &Gate, context: &mut Context) -> u64 reaches Kernel blocks invokes Kernel {
     context.clock = Kernel::clock(gate);
     let startup: Startup = runtime::main::start(gate);
     transition startup {

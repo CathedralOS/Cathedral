@@ -5,7 +5,7 @@ use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;
 use protocol::storage::entries;
-public machine receive(gate: &Gate, exchange: &mut Exchange, object: u64, limit: u64, after: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine receive(gate: &Gate, exchange: &mut Exchange, object: u64, limit: u64, after: u64) -> u64 reaches Kernel blocks invokes Kernel {
     transition limit > 0u64 && limit <= 4080u64 && exchange.frame[0] == 0u64
         && exchange.frame[1] > 0u64 && exchange.frame[1] <= 51u64 && exchange.frame[2] > after {
         true -> block extent(gate, exchange, object, limit, after)

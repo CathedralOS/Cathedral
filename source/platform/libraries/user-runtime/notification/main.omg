@@ -23,7 +23,7 @@ public data Outcome [copy] {
     case Failed(code: u64);
 }
 
-public machine create(gate: &Gate) -> Creation reaches Kernel invokes Kernel; {
+public machine create(gate: &Gate) -> Creation reaches Kernel invokes Kernel {
     let mut record: [u64; 8];
     let status: u64 = Kernel::notify_create(gate, &mut record);
     transition status == 0u64 {
@@ -31,11 +31,11 @@ public machine create(gate: &Gate) -> Creation reaches Kernel invokes Kernel; {
         _ -> (Creation::Failed { code: status })
     }
 }
-public machine signal(gate: &Gate, signal: &Signal) -> u64 reaches Kernel invokes Kernel; {
+public machine signal(gate: &Gate, signal: &Signal) -> u64 reaches Kernel invokes Kernel {
     Kernel::notify_signal(gate, signal.handle)
 }
 public machine wait(gate: &Gate, bell: &Bell, deadline: u64, timed: u64 [0..=1]) -> Outcome
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let status: u64 = block Kernel::notify_wait(gate, bell.wait, deadline, timed);
     transition status {
         0u64 -> (Outcome::Signaled)
@@ -46,7 +46,7 @@ public machine wait(gate: &Gate, bell: &Bell, deadline: u64, timed: u64 [0..=1])
         _ -> (Outcome::Failed { code: status })
     }
 }
-public machine close(gate: &Gate, bell: &mut Bell) -> u64 reaches Kernel invokes Kernel; {
+public machine close(gate: &Gate, bell: &mut Bell) -> u64 reaches Kernel invokes Kernel {
     let wait: u64 = bell.wait;
     let signal: u64 = bell.signal;
     let control: u64 = bell.control;
@@ -62,7 +62,7 @@ public machine close(gate: &Gate, bell: &mut Bell) -> u64 reaches Kernel invokes
         _ -> (0xfffffffffffffffbu64)
     }
 }
-public machine release(gate: &Gate, signal: &mut Signal) -> u64 reaches Kernel invokes Kernel; {
+public machine release(gate: &Gate, signal: &mut Signal) -> u64 reaches Kernel invokes Kernel {
     let handle: u64 = signal.handle;
     signal.handle = 0u64;
     Kernel::notify_drop(gate, handle)
@@ -71,7 +71,7 @@ public machine release(gate: &Gate, signal: &mut Signal) -> u64 reaches Kernel i
 // Connection setup uses zero correlation; established request grants use a
 // nonzero request ID. Decoding returns it for the connection to authenticate.
 public machine delegate(gate: &Gate, signal: u64, endpoint: u64, correlation: u64) -> u64
-    reaches Kernel invokes Kernel; {
+    reaches Kernel invokes Kernel {
     let mut packet: [u64; 10];
     packet[0] = 8u64;
     packet[1] = signal;
@@ -79,7 +79,7 @@ public machine delegate(gate: &Gate, signal: u64, endpoint: u64, correlation: u6
     Kernel::notify_send(gate, endpoint, &packet)
 }
 public machine accept(gate: &Gate, endpoint: u64) -> Acceptance
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let mut packet: [u64; 10];
     let status: u64 = block Kernel::notify_receive(gate, endpoint, &mut packet);
     transition status < 0x8000000000000000u64 {

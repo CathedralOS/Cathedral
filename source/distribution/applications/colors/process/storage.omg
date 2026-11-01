@@ -14,7 +14,7 @@ use exchange;
 use transfer;
 use replies;
 
-public machine bind(gate: &Gate, context: &mut Context, state: &State) -> Completion reaches Kernel blocks; invokes Kernel; {
+public machine bind(gate: &Gate, context: &mut Context, state: &State) -> Completion reaches Kernel blocks invokes Kernel {
     let tick: Tick = runtime::time::read(gate, context.clock);
     transition tick {
         Tick::Read { value } -> block binding(gate, context, state, value)
@@ -53,7 +53,7 @@ machine malformed(gate: &Gate, context: &mut Context) -> Completion reaches Kern
     let ignored: u64 = block runtime::connection::main::close(gate, &mut context.storage.peer);
     replies::failed(runtime::kernel::IO_ERROR)
 }
-public machine execute(gate: &Gate, context: &mut Context, state: &State, command: Command) -> Completion reaches Kernel blocks; invokes Kernel; {
+public machine execute(gate: &Gate, context: &mut Context, state: &State, command: Command) -> Completion reaches Kernel blocks invokes Kernel {
     let tick: Tick = runtime::time::read(gate, context.clock);
     transition tick {
         Tick::Read { value } -> block scoped(gate, context, state, command, value)

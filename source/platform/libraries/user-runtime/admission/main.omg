@@ -42,7 +42,7 @@ public data Admitted {
 // `deadline` bounds the child's service handshake; `objects` admits sealed requests.
 public machine admit(gate: &Gate, child: &mut Admitted, launch: u64, argument: u64,
     loans: &[u64; 14], loan_count: u64 [0..=14], granted: u64, deadline: u64, objects: bool) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     transition !child.live && child.listener.peer.sender == 0u64 && child.listener.peer.receiver == 0u64
         && (granted == INTERACTION || granted == (INTERACTION | STORAGE)) {
         true -> block allocate(gate, child, launch, argument, loans, loan_count, granted, deadline, objects)
@@ -164,7 +164,7 @@ machine failed(gate: &Gate, child: &mut Admitted, code: u64) -> u64 reaches Kern
 
 // Stop and collect the child, then release every retained right. A child that
 // already exited keeps its original outcome.
-public machine stop(gate: &Gate, child: &mut Admitted) -> Exit reaches Kernel blocks; invokes Kernel; {
+public machine stop(gate: &Gate, child: &mut Admitted) -> Exit reaches Kernel blocks invokes Kernel {
     transition child.live {
         true -> block cancelling(gate, child)
         _ -> (Exit::Failed { code: kernel::PEER_CLOSED })
@@ -178,7 +178,7 @@ public machine stop(gate: &Gate, child: &mut Admitted) -> Exit reaches Kernel bl
 }
 // Close whatever this task still names. Names already moved to the child fail
 // harmlessly; no release is skipped because an earlier one failed.
-public machine release(gate: &Gate, child: &mut Admitted) reaches Kernel blocks; invokes Kernel; {
+public machine release(gate: &Gate, child: &mut Admitted) reaches Kernel blocks invokes Kernel {
     block server::main::close(gate, &mut child.listener);
     close_endpoint(gate, child.control.sender);
     close_endpoint(gate, child.control.receiver);

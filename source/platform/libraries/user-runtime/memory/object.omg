@@ -12,14 +12,14 @@ public data Creation {
     case Failed(code: u64);
 }
 public machine create(gate: &Gate, words: &[u64; 2048], bytes: u64 [1..=16384]) -> Creation
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let handle: u64 = block Kernel::object_create(gate, words, bytes);
     transition handle != 0u64 && handle < kernel::ERROR_BASE {
         true -> (Creation::Ready { object: Object { handle: handle } })
         _ -> (Creation::Failed { code: handle })
     }
 }
-public machine release(gate: &Gate, object: &mut Object) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine release(gate: &Gate, object: &mut Object) -> u64 reaches Kernel blocks invokes Kernel {
     let handle: u64 = object.handle;
     object.handle = 0u64;
     block Kernel::memory_release(gate, handle)
@@ -28,6 +28,6 @@ public machine release(gate: &Gate, object: &mut Object) -> u64 reaches Kernel b
 // Copy a bounded snapshot from authenticated sealed backing. The output array
 // stays private; no reference into a peer's object escapes this operation.
 public machine read(gate: &Gate, object: &Object, index: u64, words: &mut [u64; 8], count: u64 [1..=8]) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     block Kernel::object_read(gate, object.handle, index, words, count)
 }

@@ -14,7 +14,7 @@ use services::exchange;
 use services::replies;
 use memory::payload;
 use presentation::images;
-public machine storage(gate: &Gate, context: &mut Context, state: &State, output: &mut Exchange) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine storage(gate: &Gate, context: &mut Context, state: &State, output: &mut Exchange) -> u64 reaches Kernel blocks invokes Kernel {
     let tick: Tick = runtime::time::read(gate, context.clock);
     transition tick {
         Tick::Read { value } -> block scoped(gate, context, state, output, value)
@@ -29,7 +29,7 @@ public machine storage(gate: &Gate, context: &mut Context, state: &State, output
         }
     }
 }
-public machine interaction(gate: &Gate, context: &mut Context, state: &State, output: &mut Exchange) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine interaction(gate: &Gate, context: &mut Context, state: &State, output: &mut Exchange) -> u64 reaches Kernel blocks invokes Kernel {
     let words: [u64; 8] = output.frame;
     transition context.services.wake != 0u64 {
         true -> block outgoing(gate, context, state, output, false, &words)
@@ -69,7 +69,7 @@ machine prepared(gate: &Gate, context: &mut Context, state: &State, output: &mut
     }
 }
 public machine call(gate: &Gate, context: &mut Context, state: &State, output: &mut Exchange, storage: bool,
-    words: &[u64; 8], object: u64, limit: u64, after: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    words: &[u64; 8], object: u64, limit: u64, after: u64) -> u64 reaches Kernel blocks invokes Kernel {
     output.payload_bytes = 0u64; output.receive_limit = 0u64;
     let result: CallReply = block services::exchange::request(gate, context, state, storage, words, object, deadline(storage, words));
     let released: u64 = block Kernel::memory_release(gate, object);
