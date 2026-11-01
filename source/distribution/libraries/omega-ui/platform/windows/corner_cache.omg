@@ -43,7 +43,7 @@ public data WindowsCornerCache {
     misses: u64 in Saturating;
 }
 
-public machine init(cache: &mut WindowsCornerCache, device: u64) reaches WindowsUiHost invokes WindowsUiHost; {
+public machine init(cache: &mut WindowsCornerCache, device: u64) reaches WindowsUiHost invokes WindowsUiHost {
     transition !cache.attempted { true -> allocate(cache, device) _ -> done() }
     machine allocate(cache: &mut WindowsCornerCache, device: u64) {
         cache.attempted = true;
@@ -67,7 +67,7 @@ public machine init(cache: &mut WindowsCornerCache, device: u64) reaches Windows
     }
     machine done() {}
 }
-public machine close(cache: &mut WindowsCornerCache) reaches WindowsUiHost invokes WindowsUiHost; {
+public machine close(cache: &mut WindowsCornerCache) reaches WindowsUiHost invokes WindowsUiHost {
     fill_cache::close(&mut cache.fills);
     let bitmap: u64 = cache.bitmap;
     cache.bitmap = 0; cache.pixels = 0; cache.ready = false; cache.attempted = false;
@@ -88,7 +88,7 @@ public machine begin_frame(cache: &mut WindowsCornerCache) {
     machine done() {}
 }
 
-public machine style(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], radius: i32 in Saturating, background: i32, border: i32, has_border: bool) -> i32 reaches WindowsUiHost invokes WindowsUiHost; {
+public machine style(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], radius: i32 in Saturating, background: i32, border: i32, has_border: bool) -> i32 reaches WindowsUiHost invokes WindowsUiHost {
     transition cache.ready && radius > 0 && radius <= 48 { true -> scan(cache, pixels, radius as i32, background, border, has_border, 0, -1) _ -> (-1) }
     machine scan(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], radius: i32, background: i32, border: i32, has_border: bool, index: i32, available: i32) -> i32 requires radius > 0 && radius <= 48 {
         transition index >= 0 && index < 40 { true -> entry(cache, pixels, radius, background, border, has_border, index, available) _ -> choose(cache, pixels, radius, background, border, has_border, available) }
@@ -144,7 +144,7 @@ machine read_row(cache: &mut WindowsCornerCache, slot: i32, row: i32, radius: i3
     machine counted(cache: &mut WindowsCornerCache) -> bool { cache.reads = cache.reads + (1u64 as u64 in Saturating); true }
 }
 
-public machine draw(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], row: i32, rectangle: Rect, radius: i32 in Saturating, background: i32, border: i32, has_border: bool, slot: i32, fill_slot: i32, left: i32 in Saturating, right: i32 in Saturating) reaches WindowsUiHost invokes WindowsUiHost; {
+public machine draw(cache: &mut WindowsCornerCache, pixels: &mut [i32; 4096], row: i32, rectangle: Rect, radius: i32 in Saturating, background: i32, border: i32, has_border: bool, slot: i32, fill_slot: i32, left: i32 in Saturating, right: i32 in Saturating) reaches WindowsUiHost invokes WindowsUiHost {
     let bounded: bool = rectangle.x >= -16384 && rectangle.x <= 16384 && rectangle.y >= -16384 && rectangle.y <= 16384 && rectangle.w >= 0 && rectangle.w <= 16384 && rectangle.h > 0 && rectangle.h <= 16384 && row >= 0 && row < 2160 && radius >= 0 && radius <= 48;
     transition bounded && (radius == 0 || slot >= 0) { true -> cached(cache, pixels, row, rectangle, radius, background, border, has_border, slot, fill_slot, left, right) _ -> scalar(pixels, row, rectangle, radius, background, border, has_border) }
     machine scalar(pixels: &mut [i32; 4096], row: i32, rectangle: Rect, radius: i32 in Saturating, background: i32, border: i32, has_border: bool) {

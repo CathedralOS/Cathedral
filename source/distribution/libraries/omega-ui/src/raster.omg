@@ -840,7 +840,7 @@ public machine draw_char2(pixels: &mut [i32; 4096], band_y: i32, ox: i32 in Satu
 }
 
 public machine draw_str_loop(pixels: &mut [i32; 4096], band_y: i32, x: i32 in Saturating, y: i32 in Saturating, bytes: &[u8], color: i32, sub_aa: i32)
-terminates by bytes -> Slice::Length;
+terminates by bytes -> Slice::Length
 {
     transition bytes.len > 0 {
         true -> emit(pixels, band_y, x, y, bytes[0], bytes[1..], color, sub_aa)

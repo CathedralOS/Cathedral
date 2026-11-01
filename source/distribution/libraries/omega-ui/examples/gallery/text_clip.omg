@@ -7,12 +7,12 @@ module text_clip;
 
 public data GalleryTextClip { region: u64; ready: bool; }
 
-public machine begin(clip: &mut GalleryTextClip) reaches WindowsUiHost invokes WindowsUiHost; {
+public machine begin(clip: &mut GalleryTextClip) reaches WindowsUiHost invokes WindowsUiHost {
     text_clip::close(clip);
     clip.region = WindowsUiHost::create_rectangle_region(0, 0, 0, 0);
     clip.ready = clip.region > 0;
 }
-public machine include(clip: &mut GalleryTextClip, left: i32, top: i32, right: i32, bottom: i32) reaches WindowsUiHost invokes WindowsUiHost; {
+public machine include(clip: &mut GalleryTextClip, left: i32, top: i32, right: i32, bottom: i32) reaches WindowsUiHost invokes WindowsUiHost {
     transition clip.ready && left < right && top < bottom {
         true -> rectangle(clip, left, top, right, bottom)
         _ -> done()
@@ -30,7 +30,7 @@ public machine include(clip: &mut GalleryTextClip, left: i32, top: i32, right: i
     machine failed(clip: &mut GalleryTextClip) { clip.ready = false; }
     machine done() {}
 }
-public machine select(clip: &mut GalleryTextClip, device: u64) -> bool reaches WindowsUiHost invokes WindowsUiHost; {
+public machine select(clip: &mut GalleryTextClip, device: u64) -> bool reaches WindowsUiHost invokes WindowsUiHost {
     transition clip.ready && clip.region > 0 { true -> apply_region(clip, device) _ -> (false) }
     machine apply_region(clip: &mut GalleryTextClip, device: u64) -> bool {
         let region: u64 = clip.region;
@@ -39,7 +39,7 @@ public machine select(clip: &mut GalleryTextClip, device: u64) -> bool reaches W
         clip.ready
     }
 }
-public machine restore(clip: &GalleryTextClip, device: u64, left: i32, top: i32, right: i32, bottom: i32) reaches WindowsUiHost invokes WindowsUiHost; {
+public machine restore(clip: &GalleryTextClip, device: u64, left: i32, top: i32, right: i32, bottom: i32) reaches WindowsUiHost invokes WindowsUiHost {
     transition clip.ready && clip.region > 0 {
         true -> combined(clip, device)
         _ -> rectangle(device, left, top, right, bottom)
@@ -52,7 +52,7 @@ public machine restore(clip: &GalleryTextClip, device: u64, left: i32, top: i32,
         let selected: i32 = WindowsUiHost::intersect_clip_rectangle(device, left, top, right, bottom);
     }
 }
-public machine close(clip: &mut GalleryTextClip) reaches WindowsUiHost invokes WindowsUiHost; {
+public machine close(clip: &mut GalleryTextClip) reaches WindowsUiHost invokes WindowsUiHost {
     let region: u64 = clip.region;
     clip.region = 0; clip.ready = false;
     transition region > 0 { true -> release(region) _ -> done() }

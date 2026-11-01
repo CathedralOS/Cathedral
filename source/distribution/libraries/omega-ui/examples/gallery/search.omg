@@ -70,7 +70,7 @@ public machine matches(search_model: &GallerySearch, title: &[u8]) -> bool {
     }
 }
 
-public machine refresh(search_model: &mut GallerySearch) reaches WindowsUiHost invokes WindowsUiHost; {
+public machine refresh(search_model: &mut GallerySearch) reaches WindowsUiHost invokes WindowsUiHost {
     omega_ui_windows::text_field::refresh(&mut search_model.field);
     search::update_results(search_model);
 }
@@ -101,15 +101,15 @@ public machine update_results(search_model: &mut GallerySearch) {
     machine done() {}
 }
 
-public machine clear(search_model: &mut GallerySearch) reaches WindowsUiHost invokes WindowsUiHost; {
+public machine clear(search_model: &mut GallerySearch) reaches WindowsUiHost invokes WindowsUiHost {
     omega_ui_windows::text_field::clear(&mut search_model.field);
     search::update_results(search_model);
 }
-public machine key(search_model: &mut GallerySearch, key: i32, control: bool, shift: bool) reaches WindowsUiHost invokes WindowsUiHost; {
+public machine key(search_model: &mut GallerySearch, key: i32, control: bool, shift: bool) reaches WindowsUiHost invokes WindowsUiHost {
     omega_ui_windows::text_field::key(&mut search_model.field, key, control, shift);
     search::update_results(search_model);
 }
-public machine character(search_model: &mut GallerySearch, character: u64) reaches WindowsUiHost invokes WindowsUiHost; {
+public machine character(search_model: &mut GallerySearch, character: u64) reaches WindowsUiHost invokes WindowsUiHost {
     omega_ui_windows::text_field::character(&mut search_model.field, character);
     search::update_results(search_model);
 }
