@@ -251,7 +251,7 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     assert stopped in log and ready in log and log.index(stopped) < log.index(ready), log[-2000:]
     assert 'Cathedral matrix: shared parent interaction ready' in log, log[-2000:]
     assert 'Cathedral matrix: shared parent storage ready' in log, log[-2000:]
-    assert 'Cathedral matrix: brokered startup and notification input wake ready' in log, log[-2000:]
+    assert 'Cathedral matrix: brokered startup and input wake ready' in log, log[-2000:]
     assert 'Cathedral desktop: shared storage control established' in log, log[-2000:]
     assert log.count('Cathedral desktop: shared root control ready') == 1, log[-2000:]
     assert log.count('Cathedral desktop: shared bootstrap display ready') == 1, log[-2000:]

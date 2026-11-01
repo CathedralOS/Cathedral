@@ -1,0 +1,115 @@
+module children::launch::resources::funding;
+
+// The stock funding policy, in the order the FUND word carries amounts:
+// private pages, reader pages, channels, descendant slots, physical frames.
+// What one admission needs from the funder's own allowances, and how far a
+// child admitted with descendant capacity may grow by asking. A declaration
+// supplies a child's initial demand, never this permission or its ceiling.
+public data Grant [copy] {
+    funded: [u64; 5];
+    ceiling: [u64; 5];
+}
+public data Funding [copy] {
+    case Fixed;
+    case Growable(grant: Grant);
+}
+public data Increase [copy] {
+    case Granted(grant: Grant);
+    case Refused;
+}
+
+// Only a child that may hold descendants grows, up to the stock ceiling or
+// what it was first funded, whichever is more.
+public machine policy(funded: [u64; 5]) -> Funding {
+    let mut ceiling: [u64; 5];
+    ceiling[0] = larger(funded[0], 960u64);
+    ceiling[1] = larger(funded[1], 3584u64);
+    ceiling[2] = larger(funded[2], 208u64);
+    ceiling[3] = larger(funded[3], 24u64);
+    ceiling[4] = larger(funded[4], 6400u64);
+    transition funded[3] != 0u64 {
+        true -> (Funding::Growable { grant: Grant { funded: funded, ceiling: ceiling } })
+        _ -> (Funding::Fixed)
+    }
+}
+
+// The grant after `delta`, refused when any amount would pass its ceiling.
+public machine increased(grant: Grant, delta: [u64; 5]) -> Increase {
+    transition fits(grant, delta, 0u64) {
+        true -> (Increase::Granted { grant: Grant { funded: added(grant.funded, delta), ceiling: grant.ceiling } })
+        _ -> (Increase::Refused)
+    }
+}
+machine fits(grant: Grant, delta: [u64; 5], index: u64) -> bool requires index <= 5u64 {
+    transition index < 5u64 {
+        true -> within(grant, delta, index)
+        _ -> (true)
+    }
+    machine within(grant: Grant, delta: [u64; 5], index: u64) -> bool requires index < 5u64 {
+        transition grant.funded[index] <= grant.ceiling[index] && delta[index] <= grant.ceiling[index] - grant.funded[index] {
+            true -> fits(grant, delta, index + 1u64)
+            _ -> (false)
+        }
+    }
+}
+machine added(funded: [u64; 5], delta: [u64; 5]) -> [u64; 5] {
+    let mut sum: [u64; 5];
+    sum[0] = plus(funded[0], delta[0]);
+    sum[1] = plus(funded[1], delta[1]);
+    sum[2] = plus(funded[2], delta[2]);
+    sum[3] = plus(funded[3], delta[3]);
+    sum[4] = plus(funded[4], delta[4]);
+    sum
+}
+
+// What admitting a child takes from the funder: the child's own allowances
+// and slots (its own and its descendants'), plus the connections the funder
+// holds to it, which charge the funder's pages and channels: owner control
+// and interaction always, storage and an input producer when granted.
+public machine needed(private_pages: u64, reader_pages: u64, channels: u64, descendants: u64, frames: u64,
+    storage: bool, producer: bool) -> [u64; 5] {
+    let transport: u64 = plus(plus(2u64, flag(storage)), flag(producer));
+    let connections: u64 = plus(plus(3u64, 2u64 * flag(storage)), 2u64 * flag(producer));
+    let mut amounts: [u64; 5];
+    amounts[0] = plus(private_pages, transport);
+    amounts[1] = plus(reader_pages, transport);
+    amounts[2] = plus(plus(channels, connections), transport);
+    amounts[3] = plus(descendants, 1u64);
+    amounts[4] = plus(frames, transport);
+    amounts
+}
+
+// What the funder must ask its own owner for: the part of `needed` its
+// allowances do not cover. A funder that lends reader pages keeps 256 of its
+// own, so it can still receive code and replacement images.
+public machine shortfall(available: [u64; 5], needed: [u64; 5]) -> [u64; 5] {
+    let mut wanted: [u64; 5] = needed;
+    wanted[1] = plus(needed[1], kept(needed[1]));
+    let mut missing: [u64; 5];
+    missing[0] = beyond(wanted[0], available[0]);
+    missing[1] = beyond(wanted[1], available[1]);
+    missing[2] = beyond(wanted[2], available[2]);
+    missing[3] = beyond(wanted[3], available[3]);
+    missing[4] = beyond(wanted[4], available[4]);
+    missing
+}
+public machine nothing(amounts: [u64; 5]) -> bool {
+    amounts[0] == 0u64 && amounts[1] == 0u64 && amounts[2] == 0u64 && amounts[3] == 0u64 && amounts[4] == 0u64
+}
+
+machine kept(reader_pages: u64) -> u64 {
+    transition reader_pages != 0u64 { true -> (256u64) _ -> (0u64) }
+}
+machine beyond(wanted: u64, available: u64) -> u64 {
+    transition wanted > available { true -> (wanted - available) _ -> (0u64) }
+}
+machine flag(set: bool) -> u64 {
+    transition set { true -> (1u64) _ -> (0u64) }
+}
+machine larger(a: u64, b: u64) -> u64 {
+    transition a < b { true -> (b) _ -> (a) }
+}
+// Saturating: an amount past the counter's range can never be granted anyway.
+machine plus(a: u64, b: u64) -> u64 {
+    transition a > 18446744073709551615u64 - b { true -> (18446744073709551615u64) _ -> (a + b) }
+}

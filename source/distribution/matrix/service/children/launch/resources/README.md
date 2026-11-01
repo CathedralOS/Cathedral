@@ -13,6 +13,16 @@ six surfaces before offering the rest to the selected user. The background is
 offered interaction only; it receives no storage offer. CPU zero retains the
 existing inherited-ceiling meaning.
 
+[funding.omg](funding.omg) owns stock funding: what admitting a child takes
+from its funder (the child's allowances and slots plus the owner control,
+interaction, storage and producer connections the funder holds to it), the
+shortfall a funder asks its own owner for, keeping 256 reader pages of its
+own whenever it lends any, and how far a child admitted with descendant
+capacity may grow by asking: up to 960 private pages, 3584 reader pages, 208
+channels, 24 slots and 6400 frames, or what it was first funded if that is
+more. The standalone stock matrix applies it directly; the Rust host still
+applies its own copy.
+
 [main.omg](main.omg) decides what a realm program may request:
 
 - An explicit profile must fit private pages, reader pages and any declared

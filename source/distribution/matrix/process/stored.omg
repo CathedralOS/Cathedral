@@ -43,6 +43,8 @@ use storage;
 use storage::Outcome;
 use children;
 use report;
+use funding;
+use protocol::services::INPUT_PRODUCER;
 use declaration;
 use declaration::Declared;
 
@@ -188,7 +190,21 @@ public machine admit_image(gate: &Gate, context: &mut State, now: u64, slot: u64
         reaches Kernel requires descendants < 64u64 {
         let image_pages: u64 = plus(length, kernel::PAGE_BYTES - 1u64) / kernel::PAGE_BYTES;
         let frames: u64 = children::physical_frames(staged, image_pages, found.stack_pages, private_pages, descendants);
+        let storage: bool = (found.mask & STORAGE) != 0u64;
+        let producer: bool = (found.mask & INPUT_PRODUCER) != 0u64;
+        let status: u64 = block funding::ensure(gate, context, now,
+            policy::children::launch::resources::funding::needed(private_pages, reader_pages, channels, descendants, frames, storage, producer));
+        transition status == 0u64 {
+            true -> block imaging(gate, context, now, slot, subtree, argument, cpu, image, found, private_pages, reader_pages, channels,
+                descendants, frames, bound)
+            _ -> (failed_stage(gate, slot, 7u64, status))
+        }
+    }
+    machine imaging(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], subtree: u64, argument: u64, cpu: u64, image: u64,
+        found: Declared, private_pages: u64, reader_pages: u64, channels: u64, descendants: u64, frames: u64, bound: bool) -> u64
+        reaches Kernel {
         let executable: u64 = runtime::task::main::image_from_object(gate, image, 0u64);
+        context.funding[slot] = policy::children::launch::resources::funding::policy([private_pages, reader_pages, channels, descendants, frames]);
         transition executable < kernel::ERROR_BASE {
             true -> block reserved(gate, context, now, slot, subtree, argument, cpu, found, executable,
                 runtime::task::main::reserve(gate, executable, private_pages, reader_pages, channels, descendants, kernel::MAX_ADMISSION_FRAMES, frames),

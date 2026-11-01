@@ -133,6 +133,35 @@ public machine release(gate: &Gate, launch: u64) -> u64 reaches Kernel invokes K
 public machine assign_slots(gate: &Gate, launch: u64, count: u64) -> u64 reaches Kernel invokes Kernel {
     Kernel::pool_assign(gate, launch, count)
 }
+// Grow a launch, live or idle, by five increments (private pages, reader
+// pages, channels, descendant slots, physical frames) out of this account's
+// own; all or nothing.
+public machine grow(gate: &Gate, launch: u64, delta: [u64; 5]) -> u64 reaches Kernel invokes Kernel {
+    let amounts: [u64; 5] = delta;
+    Kernel::resource_grow(gate, launch, &amounts)
+}
+// What this account can still lend, in the same five amounts.
+public data Spare [copy] {
+    case Known(amounts: [u64; 5]);
+    case Failed(code: u64);
+}
+public machine spare(gate: &Gate) -> Spare reaches Kernel invokes Kernel {
+    let mut budget: [u64; 8];
+    let mut physical: [u64; 8];
+    let budgeted: u64 = Kernel::resource_budget(gate, &mut budget);
+    let measured: u64 = Kernel::physical_budget(gate, &mut physical);
+    let slots: u64 = Kernel::pool_available(gate);
+    transition {
+        budgeted >= 0x8000000000000000u64 -> (Spare::Failed { code: budgeted })
+        measured >= 0x8000000000000000u64 -> (Spare::Failed { code: measured })
+        slots >= 0x8000000000000000u64 -> (Spare::Failed { code: slots })
+        _ -> (Spare::Known { amounts: [left(budget[0], budget[3]), left(budget[1], budget[4]), left(budget[2], budget[5]), slots,
+            left(physical[0], physical[1])] })
+    }
+}
+machine left(limit: u64, used: u64) -> u64 {
+    transition limit > used { true -> (limit - used) _ -> (0u64) }
+}
 // Stage an executable the child may run from its own catalogue.
 public machine allow_image(gate: &Gate, launch: u64, image: u64) -> u64 reaches Kernel invokes Kernel {
     Kernel::image_allow(gate, launch, image)

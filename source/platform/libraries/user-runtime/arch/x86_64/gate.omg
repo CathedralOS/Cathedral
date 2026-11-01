@@ -104,6 +104,12 @@ linux_x86_64 machine Gate::link_handle_leaf(gate: &Gate, index: u64) -> u64
     satisfies Kernel::link_handle via ForeignBinding::TableFunction(link_handle);
 linux_x86_64 machine Gate::link_connect_leaf(gate: &Gate, link: u64) -> u64
     satisfies Kernel::link_connect via ForeignBinding::TableFunction(link_connect);
+linux_x86_64 machine Gate::resource_grow_leaf(gate: &Gate, launch: u64, delta: &[u64; 5]) -> u64
+    satisfies Kernel::resource_grow via ForeignBinding::TableFunction(resource_grow);
+linux_x86_64 machine Gate::physical_budget_leaf(gate: &Gate, record: &mut [u64; 8]) -> u64
+    satisfies Kernel::physical_budget via ForeignBinding::TableFunction(physical_budget);
+linux_x86_64 machine Gate::pool_available_leaf(gate: &Gate) -> u64
+    satisfies Kernel::pool_available via ForeignBinding::TableFunction(pool_available);
 
 public NativeKernel satisfies Kernel {
     machine wait_many(gate: &Gate, records: &[u64; 96], count: u64 [0..=48], deadline: u64) -> u64 blocks {
@@ -171,6 +177,15 @@ public NativeKernel satisfies Kernel {
     }
     machine link_connect(gate: &Gate, link: u64) -> u64 {
         Gate::link_connect_leaf(gate, link)
+    }
+    machine resource_grow(gate: &Gate, launch: u64, delta: &[u64; 5]) -> u64 {
+        Gate::resource_grow_leaf(gate, launch, delta)
+    }
+    machine physical_budget(gate: &Gate, record: &mut [u64; 8]) -> u64 {
+        Gate::physical_budget_leaf(gate, record)
+    }
+    machine pool_available(gate: &Gate) -> u64 {
+        Gate::pool_available_leaf(gate)
     }
     machine object_create(gate: &Gate, words: &[u64; 2048], bytes: u64 [1..=16384]) -> u64 blocks {
         block Gate::object_create_leaf(gate, words, bytes)

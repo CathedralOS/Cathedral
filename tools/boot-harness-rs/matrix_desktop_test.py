@@ -13,7 +13,7 @@ def verify(stream, output, serial, pressure=False):
     assert serial.count("shared child control ready") >= 20, serial
     assert serial.count("Colors probe: shared interaction and storage ready") >= 2, serial
     assert serial.count("Colors probe: notification input wake ready") >= 2, serial
-    assert "brokered startup and notification input wake ready" in serial
+    assert "brokered startup and input wake ready" in serial
     assert serial.count("focus click consumed before source loss") == 1, serial
     assert serial.count("source probe: shared ingress; owner operations denied") == 1, serial
     assert serial.count("source probe: consumed handoff denied") == 1, serial
@@ -125,7 +125,7 @@ def verify_reboot(stream, output, serial):
     assert serial.count("shared child control ready") == 3, serial
     assert serial.count("Colors probe: shared interaction and storage ready") == 2, serial
     assert serial.count("Colors probe: notification input wake ready") == 2, serial
-    assert serial.count("brokered startup and notification input wake ready") == 1, serial
+    assert serial.count("brokered startup and input wake ready") == 1, serial
     for marker in ("shared root control ready", "shared bootstrap display ready"):
         assert serial.count(marker) == 1, (marker, serial)
     if "persisted colors restored after reboot" not in serial or "user panic:" in serial:

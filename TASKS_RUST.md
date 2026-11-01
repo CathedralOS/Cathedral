@@ -501,12 +501,82 @@ Evidence in the main checkout with the saved standalone producer:
   allocation leaf's bound rose with the object page limit and was accepted
   in every standalone native's review.
 
-Next: the chrome's words in a workspace, where app entries, selection, close,
-layout, managed tasks and save availability are answered and activation
-scenes switch the visible app; loss surveys and close over the owner-control
-client; the launcher fallback and save recovery the recorded grants are for;
-the funding and input capacity a nested matrix negotiates with its parent;
-then the rest of the stock policy, the profile swap and the bridge's deletion.
+Funding and the F5 parity measure followed in the step recorded below.
+
+### Stock matrix migration: funding and the F5 parity measure
+
+The F5 desktop test is now the measure of how far the Omega stock matrix is
+from replacing the Rust host. `omega_desktop_test.py --profile-only` writes
+the Omega composition, in which every stock matrix F5 installs in the realm
+(the root, the user template, the nested desktops and their templates) is the
+Omega program, and `desktop_test.py --profile` runs the whole F5 desktop test
+over it. Keeping the realm programs costs the store one Omega image: chunks
+are shared, and the root quota holds them, which it did not while the Rust
+and Omega matrices sat side by side in the realm.
+
+The Omega matrix now prints the Rust host's console lines at the points where
+the two reach the same state: owner control under a parent, each child
+control, the parent's interaction and storage, the brokered startup, the
+realm configuration and the background's admission. Its report module writes
+each line from one 64-byte literal through its newline. The brokered startup
+line was longer than one console write, which the kernel prefixes on every
+call, so it is now "brokered startup and input wake ready" in both hosts and
+their tests.
+
+Funding follows the stock policy, now in Omega beside the resource recipes.
+Before a launch from the realm the matrix makes sure its own allowances cover
+the child and the connections it holds to it, asking its owner with FUND for
+the shortfall and keeping 256 reader pages of its own whenever it lends any;
+the root has no one to ask. A child admitted with descendant capacity may ask
+in turn: within its grant's ceiling (960 private pages, 3584 reader pages, 208
+channels, 24 slots and 6400 frames, or its first funding if more) the matrix
+covers the request, asking its owner first if it must, and grows the child's
+launch in place, asking once more for process slots a retired sibling left
+out of reach. The runtime gained the three kernel calls this takes: growing a
+launch, the physical frame budget and the unused process slots, with a spare
+amount read in FUND's five units; every standalone native accepted the new
+leaves in its review.
+
+Over the Omega matrices the F5 desktop test now creates and enters a user,
+checks the shared controls, the background admitted without storage, and
+launches three Notes, each funded through the user's matrix asking the root,
+types into each and sees the fourth launch refused at capacity with every
+draft kept. It stops where the launcher's app entries switch between the
+instances, the first of the chrome's own words
+(`build/boot-harness-rs/desktop/20261101T064403505464Z/`).
+
+Evidence in the main checkout with the saved standalone producer:
+
+- Desktop over the Omega root and user template under the F5 shell:
+  `build/boot-harness-rs/omega-desktop/20261101T064820674797Z/`.
+- Omega matrix, top level: `build/boot-harness-rs/omega-matrix/20261101T065041266330Z/`;
+  under a real parent: `build/boot-harness-rs/omega-matrix-upstream/20261101T065048244225Z/`;
+  Rust comparison matrix: `build/boot-harness-rs/matrix-composition/20261101T064842001453Z/`.
+- Witnesses: primitives `build/omega-user/tests/20261101T064710749543Z/`;
+  connections `build/omega-user/connections/20261101T064716715019Z/`, service
+  `.../20261101T064737211844Z/`, admission `.../20261101T064750523882Z/`;
+  Background `build/omega-user/background-control/20261101T064754678658Z/`;
+  Colors `build/omega-user/colors-control/20261101T064759569889Z/`;
+  Notes `build/omega-user/notes-control/20261101T064805318335Z/`;
+  Chooser `build/omega-user/chooser-control/20261101T064812186865Z/`.
+- Kernel smoke labs of 2026-11-01 06:51 UTC pass; default F5 desktop and cold
+  reopen on the Rust host: `build/boot-harness-rs/desktop/20261101T065311353011Z/`.
+- Boundary test, layout, Rust formatting, the stock matrix's compiled tests
+  and clippy for the desktop crate with `shell` pass.
+
+The next slice is blocked: with the chrome's words added, the matrix's
+component description passes the Omega compiler's 8 MiB bound. That work,
+with the process split into five packages by responsibility, waits on the
+`stock-matrix-workspace` branch; the owner choice is in
+[OWNER_QUESTIONS.md](OWNER_QUESTIONS.md#the-stock-matrix-outgrows-one-omega-component).
+
+Next, in the order the F5 desktop test reaches them: the chrome's words in a
+workspace, where app entries, selection, close, layout, managed tasks and
+save availability are answered and activation scenes switch the visible app;
+loss surveys and close over the owner-control client; the launcher fallback
+and save recovery the recorded grants are for; the input capacity a nested
+matrix negotiates with its parent; then the rest of the stock policy, the
+profile swap and the bridge's deletion.
 
 ### Kernel image window widened for the Omega matrix
 

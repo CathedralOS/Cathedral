@@ -5,57 +5,73 @@ use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 
 public machine display_ready(gate: &Gate) reaches Kernel invokes Kernel; {
-    let text: [u8; 50] = "Cathedral matrix: shared display connection ready\n";
+    let text: [u8; 64] = "Cathedral matrix: shared display connection ready\n              ";
     line(gate, &text);
 }
 public machine storage_ready(gate: &Gate) reaches Kernel invokes Kernel; {
-    let text: [u8; 50] = "Cathedral matrix: shared storage connection ready\n";
+    let text: [u8; 64] = "Cathedral matrix: shared storage connection ready\n              ";
+    line(gate, &text);
+}
+public machine owner_control_ready(gate: &Gate) reaches Kernel invokes Kernel; {
+    let text: [u8; 64] = "Cathedral matrix: shared owner control ready\n                   ";
     line(gate, &text);
 }
 public machine parent_interaction_ready(gate: &Gate) reaches Kernel invokes Kernel; {
-    let text: [u8; 50] = "Cathedral matrix: shared parent interaction ready\n";
+    let text: [u8; 64] = "Cathedral matrix: shared parent interaction ready\n              ";
     line(gate, &text);
 }
 public machine parent_storage_ready(gate: &Gate) reaches Kernel invokes Kernel; {
-    let text: [u8; 50] = "Cathedral matrix: parent storage connection ready\n";
+    let text: [u8; 64] = "Cathedral matrix: shared parent storage ready\n                  ";
+    line(gate, &text);
+}
+public machine brokered_ready(gate: &Gate) reaches Kernel invokes Kernel; {
+    let text: [u8; 64] = "Cathedral matrix: brokered startup and input wake ready\n        ";
+    line(gate, &text);
+}
+public machine child_control_ready(gate: &Gate) reaches Kernel invokes Kernel; {
+    let text: [u8; 64] = "Cathedral matrix: shared child control ready\n                   ";
     line(gate, &text);
 }
 public machine configured(gate: &Gate) reaches Kernel invokes Kernel; {
-    let text: [u8; 50] = "Cathedral matrix: configured from the realm paths\n";
+    let text: [u8; 64] = "Cathedral matrix: configured from realm paths\n                  ";
     line(gate, &text);
 }
 public machine background_admitted(gate: &Gate) reaches Kernel invokes Kernel; {
-    let text: [u8; 50] = "Cathedral matrix: background admitted, presenting\n";
+    let text: [u8; 64] = "Cathedral matrix: background admitted with presentation only\n   ";
     line(gate, &text);
 }
 public machine picker_placed(gate: &Gate) reaches Kernel invokes Kernel; {
-    let text: [u8; 50] = "Cathedral matrix: scoped picker placed over users\n";
+    let text: [u8; 64] = "Cathedral matrix: scoped picker placed over users\n              ";
     line(gate, &text);
 }
 public machine picker_exhausted(gate: &Gate) reaches Kernel invokes Kernel; {
-    let text: [u8; 50] = "Cathedral matrix: picker retries spent, giving up\n";
+    let text: [u8; 64] = "Cathedral matrix: picker retries spent\n                         ";
     line(gate, &text);
 }
 public machine picker_restored(gate: &Gate) reaches Kernel invokes Kernel; {
-    let text: [u8; 50] = "Cathedral matrix: the local picker restored again\n";
+    let text: [u8; 64] = "Cathedral matrix: local picker restored\n                        ";
     line(gate, &text);
 }
-machine line(gate: &Gate, text: &[u8; 50]) reaches Kernel {
+// Each line is a 64-byte literal written through its first newline in one
+// console write; the spaces after the newline only fill the literal.
+machine line(gate: &Gate, text: &[u8; 64]) reaches Kernel {
     let mut words: [u64; 8];
     transition { _ -> pack(gate, text, &mut words, 0u64) }
-    machine pack(gate: &Gate, text: &[u8; 50], words: &mut [u64; 8], index: u64) requires index <= 50u64 reaches Kernel {
-        transition index < 50u64 {
+    machine pack(gate: &Gate, text: &[u8; 64], words: &mut [u64; 8], index: u64) requires index <= 64u64 reaches Kernel {
+        transition index < 64u64 {
             true -> byte(gate, text, words, index)
-            _ -> written(gate, words)
+            _ -> written(gate, words, 64u64)
         }
     }
-    machine byte(gate: &Gate, text: &[u8; 50], words: &mut [u64; 8], index: u64) requires index < 50u64 reaches Kernel {
-        let word: u64 = index / 8u64;
-        words[word] = words[word] | ((text[index] as u64) << ((index % 8u64) * 8u64));
-        transition { _ -> pack(gate, text, words, index + 1u64) }
+    machine byte(gate: &Gate, text: &[u8; 64], words: &mut [u64; 8], index: u64) requires index < 64u64 reaches Kernel {
+        words[index / 8u64] = words[index / 8u64] | ((text[index] as u64) << ((index % 8u64) * 8u64));
+        transition text[index] == 10u8 {
+            true -> written(gate, words, index + 1u64)
+            _ -> pack(gate, text, words, index + 1u64)
+        }
     }
-    machine written(gate: &Gate, words: &[u64; 8]) reaches Kernel {
-        let status: u64 = Kernel::write(gate, words, 50u64);
+    machine written(gate: &Gate, words: &[u64; 8], bytes: u64 [0..=64]) reaches Kernel {
+        let status: u64 = Kernel::write(gate, words, bytes);
     }
 }
 // A child's retirement on the console: its slot, then the exit's variant and
@@ -88,7 +104,7 @@ public machine child(gate: &Gate, slot: u64, kind: u64, value: u64) reaches Kern
 }
 // Where a child's admission from an image failed: the slot, then the stage
 // (1 declaration, 2 fit, 3 image grant, 4 reservation, 5 admission, 6
-// binding) and the code in hex.
+// binding, 7 funding) and the code in hex.
 public machine launch_stage(gate: &Gate, slot: u64, stage: u64, code: u64) reaches Kernel invokes Kernel; {
     let text: [u8; 25] = "Cathedral matrix: launch ";
     let mut words: [u64; 8];

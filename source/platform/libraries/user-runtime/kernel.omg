@@ -11,6 +11,7 @@ public const DENIED: u64 = 0xfffffffffffffff3u64;
 public const BUSY: u64 = 0xfffffffffffffff0u64;
 public const INVALID_ARGUMENT: u64 = 0xffffffffffffffeau64;
 public const NO_MEMORY: u64 = 0xfffffffffffffff4u64;
+public const NO_PROCESS_CAPACITY: u64 = 0xffffffffffffff37u64;
 // The most frames one dynamic admission may take, and the frames each dynamic
 // slot is worth; owner: source-rs/kernel/contracts/user.rs.
 public const MAX_ADMISSION_FRAMES: u64 = 800u64;
@@ -79,6 +80,9 @@ public data Gate {
     resource_assign: addr;
     link_handle: addr;
     link_connect: addr;
+    resource_grow: addr;
+    physical_budget: addr;
+    pool_available: addr;
 }
 
 public boundary trait Kernel {
@@ -148,4 +152,11 @@ public boundary trait Kernel {
     // bootstrap index and the next one.
     machine link_handle(gate: &Gate, index: u64) -> u64 reaches;
     machine link_connect(gate: &Gate, link: u64) -> u64 reaches;
+    // Funding a live launch: conserving growth of an owned launch by five
+    // increments (private pages, reader pages, channels, descendant slots,
+    // physical frames); this account's reserved then charged frames; and the
+    // process slots it holds unused.
+    machine resource_grow(gate: &Gate, launch: u64, delta: &[u64; 5]) -> u64 reaches;
+    machine physical_budget(gate: &Gate, record: &mut [u64; 8]) -> u64 reaches;
+    machine pool_available(gate: &Gate) -> u64 reaches;
 }

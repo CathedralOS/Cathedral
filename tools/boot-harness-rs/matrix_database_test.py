@@ -113,7 +113,7 @@ def run(args):
         assert serial.count('shared storage control established') == expected_providers, serial
         # The recovery peer establishes control before painting, even on cold
         # boot where it is immediately stopped after its startup check.
-        assert serial.count('brokered startup and notification input wake ready') == 1, serial
+        assert serial.count('brokered startup and input wake ready') == 1, serial
         expected_children = 4 if args.recovery else 3
         assert serial.count('shared child control ready') == expected_children, serial
         if not args.notes:
