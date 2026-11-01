@@ -58,6 +58,7 @@ machine turn(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
     let polled: u64 = block upstream::step(gate, context, now);
     let settled: u64 = block jobs::step(gate, context, now);
     let commanded: u64 = block commands::step(gate, context, now);
+    block lifecycle::open_controls(gate, context, now);
     let forwarded: u64 = block forward::step(gate, context, now);
     let sourced: u64 = block source::step(gate, context, now);
     let first: u64 = block slots::step(gate, context, 0u64, now);

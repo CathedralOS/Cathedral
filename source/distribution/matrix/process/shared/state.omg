@@ -101,6 +101,9 @@ public data State {
     // allowances staged for the next launch into each slot.
     slots: [Admitted; 5];
     controls: [Peer; 5];
+    // When each child's owner control must have finished opening; zero once
+    // it has, or when none is opening.
+    opening: [u64; 5];
     reservations: [u64; 5];
     // Reservations of ended children the kernel would not take back yet,
     // retried until it does: it refuses while their frames are still charged.

@@ -106,8 +106,8 @@ public machine child(gate: &Gate, slot: u64, kind: u64, value: u64) reaches Kern
         let status: u64 = Kernel::write(gate, words, 60u64);
     }
 }
-// Where a child's admission from an image failed: the slot, then the stage
-// (1 declaration, 2 fit, 3 image grant, 4 reservation, 5 admission, 6
+// Where a child's admission from an image stands: the slot, then the stage
+// (0 admitted, 1 declaration, 2 fit, 3 image grant, 4 reservation, 5 admission, 6
 // binding, 7 funding, 8 release, 9 surface ranks, 10 placement, 11 activation)
 // and the code in hex.
 public machine launch_stage(gate: &Gate, slot: u64, stage: u64, code: u64) reaches Kernel invokes Kernel; {

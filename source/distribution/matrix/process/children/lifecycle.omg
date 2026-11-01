@@ -185,11 +185,12 @@ public machine admit_reserved(gate: &Gate, context: &mut State, now: u64, slot: 
             Tick::Failed { code } -> block uncontrolled(gate, context, slot, launch, code)
         }
     }
-    // The child accepts its owner control as its first act and only then asks
-    // the broker for services, so this matrix connects to that control before
-    // anything else can wait on the child. The connection takes custody of the
-    // kernel-installed pair either way; a slot's previous occupant left its
-    // client closed, so a fresh one stands first.
+    // The child's owner control opens without blocking: a host with
+    // descendants sets up its broker services before it accepts control, so
+    // this matrix sends the hello and keeps serving, and each turn finishes
+    // the handshake once the child answers, within the handshake window. The
+    // connection takes custody of the kernel-installed pair either way; a
+    // slot's previous occupant left its client closed, so a fresh one stands first.
     machine controlling(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64) -> u64 reaches Kernel {
         let sender: u64 = context.slots[slot].control.sender;
         let receiver: u64 = context.slots[slot].control.receiver;
@@ -197,15 +198,14 @@ public machine admit_reserved(gate: &Gate, context: &mut State, now: u64, slot: 
         context.slots[slot].control.receiver = 0u64;
         let fresh: Peer;
         context.controls[slot] = fresh;
-        let status: u64 = block runtime::connection::main::connect(gate, &mut context.controls[slot], sender, receiver,
-            runtime::time::after(now, HANDSHAKE_TICKS));
+        let status: u64 = block runtime::connection::main::connect_start(gate, &mut context.controls[slot], sender, receiver);
         transition status == 0u64 {
             true -> block controlled(gate, context, now, slot, launch)
             _ -> block uncontrolled(gate, context, slot, launch, status)
         }
     }
     machine controlled(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64) -> u64 reaches Kernel {
-        report::child_control_ready(gate);
+        context.opening[slot] = runtime::time::after(now, HANDSHAKE_TICKS);
         block storing(gate, context, now, slot, launch)
     }
     // The child's storage connection is served from admission on, whenever it
@@ -268,6 +268,7 @@ public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reac
         _ -> done()
     }
     machine stopping(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+        context.opening[slot] = 0u64;
         let closed: u64 = block runtime::connection::main::close(gate, &mut context.controls[slot]);
         block storage::retire(gate, context, slot);
         block presentation::release_slot(gate, context, slot);
@@ -343,8 +344,15 @@ machine wake(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel
 }
 public machine watch(context: &State, slot: u64 [0..=4], set: &mut Set) {
     transition context.slots[slot].live {
-        true -> runtime::server::main::watch(&context.slots[slot].listener, set)
+        true -> watched(context, slot, set)
         _ -> done()
+    }
+    machine watched(context: &State, slot: u64 [0..=4], set: &mut Set) {
+        runtime::server::main::watch(&context.slots[slot].listener, set);
+        transition context.opening[slot] != 0u64 && context.controls[slot].receiver != 0u64 {
+            true -> runtime::waiting::add(set, runtime::waiting::IPC, context.controls[slot].receiver)
+            _ -> done()
+        }
     }
 }
 machine reply(gate: &Gate, context: &mut State, words: [u64; 8]) -> u64 reaches Kernel {
@@ -360,6 +368,46 @@ machine ok() -> [u64; 8] {
     words
 }
 machine done() {}
+// Finish opening each child's owner control once the child answers; a child
+// that never does within the window is taken back down.
+public machine open_controls(gate: &Gate, context: &mut State, now: u64) reaches Kernel blocks; invokes Kernel; {
+    block opening_slot(gate, context, now, 0u64);
+    block opening_slot(gate, context, now, 1u64);
+    block opening_slot(gate, context, now, 2u64);
+    block opening_slot(gate, context, now, 3u64);
+    block opening_slot(gate, context, now, 4u64);
+}
+machine opening_slot(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4]) reaches Kernel {
+    let deadline: u64 = context.opening[slot];
+    transition {
+        deadline == 0u64 -> done()
+        !context.slots[slot].live -> forgotten(context, slot)
+        runtime::time::reached(now, deadline) -> block abandoned(gate, context, slot)
+        _ -> block probed(gate, context, now, slot, deadline)
+    }
+    machine forgotten(context: &mut State, slot: u64 [0..=4]) {
+        context.opening[slot] = 0u64;
+    }
+    machine probed(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], deadline: u64) reaches Kernel {
+        let answered: bool = block runtime::connection::main::answered(gate, &context.controls[slot], now);
+        transition answered {
+            true -> block finishing(gate, context, slot, deadline)
+            _ -> done()
+        }
+    }
+    machine finishing(gate: &Gate, context: &mut State, slot: u64 [0..=4], deadline: u64) reaches Kernel {
+        let status: u64 = block runtime::connection::main::connect_resume(gate, &mut context.controls[slot], deadline);
+        context.opening[slot] = 0u64;
+        transition status == 0u64 {
+            true -> report::child_control_ready(gate)
+            _ -> block reclaim(gate, context, slot)
+        }
+    }
+    machine abandoned(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+        context.opening[slot] = 0u64;
+        block reclaim(gate, context, slot);
+    }
+}
 // An ended child's reservation goes back to this matrix. The kernel refuses
 // while the child's frames are still charged, which retained images and its
 // own deferred reclamation keep for a while after the exit; such a

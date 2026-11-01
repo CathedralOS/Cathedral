@@ -112,7 +112,12 @@ The the children this matrix admits, funds, presents and retires.
   owner control, which the child accepts as its first act before it asks the
   broker for anything. STOP reclaims the subtree and returns the reservation;
   so does a listener that retires, and the exit goes to the console through
-  [report.omg](shared/report.omg). The kernel takes a reservation back only
+  [report.omg](shared/report.omg). A child's owner control opens without
+  blocking: a host with descendants sets up its broker services before it
+  accepts control, so the matrix sends the hello, keeps serving, finishes
+  the handshake on a later turn once the child answers, and takes the child
+  back down if it never does; routed owner words wait with BUSY meanwhile.
+  The kernel takes a reservation back only
   once the ended child's frames are no longer charged, so a refused release
   waits and is retried each turn and before any funding is reckoned. Every
   failed step leaves no reservation behind.

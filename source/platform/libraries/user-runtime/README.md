@@ -11,6 +11,9 @@ rights; releasing a producer never remotely removes an accepted reader.
 
 [connection/main.omg](connection/main.omg) owns a v4 client connection: setup,
 one outstanding request, mailbox/notification reconciliation and final cleanup.
+Setup also opens in two steps for a caller that keeps serving while the peer
+gets round to answering: the hello goes out without waiting, and the handshake
+resumes once the peer's first reply is ready.
 Descend into `setup.omg` for the existing Rust-compatible handshake,
 `mailbox.omg` for sequence/acknowledgement publication, `incoming.omg` for typed
 grant correlation and bounded partial replies, and `custody.omg` for release.

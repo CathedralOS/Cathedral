@@ -696,10 +696,19 @@ Still failing over Omega:
 - The second level of nested desktops: reading the Nested program through
   three matrices returns PEER_CLOSED
   (`build/boot-harness-rs/desktop/20261101T181119752895Z/`).
-- Split (`--nested`, `--deep`): Split sets up its broker services before it
-  accepts its owner control, like any host with descendants, while this matrix
-  blocks on the owner-control handshake; both wait until their deadlines. The
-  owner-control connection has to open asynchronously, as the Rust host's does.
+- Split (`--nested`, `--deep`) starts now: a child's owner control opens
+  without blocking, as the Rust host's does, so a host with descendants can set
+  up its broker services first. The runtime's connection opens in two steps,
+  the hello and the resumed handshake, and routed owner words wait with BUSY
+  until the control has opened. Split then runs beside an outer Notes, but the
+  outer Notes ends before Colors launches beside them, apparently on a press
+  in its close button, so its draft does not survive the matrix switch
+  (`build/boot-harness-rs/desktop/20261101T184743785025Z/`).
+- The matrix runs each realm job, configuration included, to completion in
+  one turn, so a slow run can outlast the shell's deadline on a routed word: one
+  sweep's desktop proof failed that way and passed on rerun. The Rust host runs
+  these jobs without blocking its owner words; the Omega jobs should advance a
+  step per turn.
 
 Evidence in the main checkout with the patched standalone producer:
 
@@ -723,8 +732,8 @@ Evidence in the main checkout with the patched standalone producer:
 - Boundary test, layout, Rust formatting, the stock matrix's compiled tests
   and clippy for the desktop crate with `shell` pass.
 
-Next: the owner-control connection opened asynchronously, which Split needs;
-the relay failure at the second nested level; then the remaining F5 variants
+Next: the outer Notes ending beside Split; the relay failure at the second
+nested level; realm jobs that advance a step per turn; then the remaining F5 variants
 (launcher recovery, the asynchronous fixtures, soak), the profile swap and the
 bridge's deletion.
 

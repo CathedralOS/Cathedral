@@ -9,6 +9,7 @@ use memory::main::Writer;
 use memory::main::Reader;
 use notification::main::Bell;
 use connection::setup;
+use time;
 use connection::mailbox;
 use connection::incoming;
 use connection::custody;
@@ -48,6 +49,32 @@ public data Reply {
     case Failed(code: u64);
 }
 
+// The same connection opened in two steps, for a caller that keeps serving
+// while the peer gets round to answering: `connect_start` takes custody of
+// both endpoints and sends the hello without waiting; once `answered` sees
+// the peer's first reply, `connect_resume` finishes the handshake. A failure
+// in either step closes the connection.
+public machine connect_start(gate: &Gate, peer: &mut Peer, sender: u64, receiver: u64) -> u64
+    reaches Kernel blocks; invokes Kernel; {
+    peer.sender = sender;
+    peer.receiver = receiver;
+    let status: u64 = block setup::start(gate, peer);
+    transition status == 0u64 {
+        true -> (0u64)
+        _ -> block fail(gate, peer, status)
+    }
+}
+public machine answered(gate: &Gate, peer: &Peer, now: u64) -> bool reaches Kernel blocks; invokes Kernel; {
+    let status: u64 = block setup::ready(gate, peer.receiver, time::after(now, 1u64));
+    status == 0u64
+}
+public machine connect_resume(gate: &Gate, peer: &mut Peer, deadline: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    let status: u64 = block setup::resume(gate, peer, deadline);
+    transition status == 0u64 {
+        true -> (0u64)
+        _ -> block fail(gate, peer, status)
+    }
+}
 // Takes custody of both supplied endpoints, including on setup failure. The
 // caller supplies a zero-initialized Peer; it must close before reusing it.
 public machine connect(gate: &Gate, peer: &mut Peer, sender: u64, receiver: u64, deadline: u64) -> u64

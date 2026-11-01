@@ -237,7 +237,7 @@ public machine admit_image(gate: &Gate, context: &mut State, now: u64, slot: u64
         let images: u64 = context.policies[slot].images;
         let status: u64 = block lifecycle::admit_reserved(gate, context, now, slot, launch, argument, images, cpu, granted);
         context.last_granted = granted;
-        admitted_budget(gate, status);
+        admitted_budget(gate, slot, status);
         transition {
             status != 0u64 -> (failed_stage(gate, slot, 5u64, status))
             bound && (granted & STORAGE) != 0u64 -> block binding(gate, context, now, slot, subtree)
@@ -259,8 +259,12 @@ public machine admit_image(gate: &Gate, context: &mut State, now: u64, slot: u64
     }
 }
 // What the matrix itself uses once a child stands, for the lab to size manifests by.
-machine admitted_budget(gate: &Gate, status: u64) reaches Kernel invokes Kernel; {
-    transition status == 0u64 { true -> report::budget(gate) _ -> idle() }
+machine admitted_budget(gate: &Gate, slot: u64, status: u64) reaches Kernel invokes Kernel; {
+    transition status == 0u64 { true -> reported(gate, slot) _ -> idle() }
+    machine reported(gate: &Gate, slot: u64) reaches Kernel {
+        report::launch_stage(gate, slot, 0u64, 0u64);
+        report::budget(gate);
+    }
 }
 machine idle() {}
 // A failed stage goes to the console, where a proof can read where and why.
