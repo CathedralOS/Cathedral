@@ -102,6 +102,9 @@ public data State {
     slots: [Admitted; 5];
     controls: [Peer; 5];
     reservations: [u64; 5];
+    // Reservations of ended children the kernel would not take back yet,
+    // retried until it does: it refuses while their frames are still charged.
+    releasing: [u64; 5];
     funding: [Funding; 5];
     // The workspace's app instances and the active one.
     catalogue: Catalogue;

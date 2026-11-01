@@ -112,7 +112,10 @@ The the children this matrix admits, funds, presents and retires.
   owner control, which the child accepts as its first act before it asks the
   broker for anything. STOP reclaims the subtree and returns the reservation;
   so does a listener that retires, and the exit goes to the console through
-  [report.omg](shared/report.omg). Every failed step leaves no reservation behind.
+  [report.omg](shared/report.omg). The kernel takes a reservation back only
+  once the ended child's frames are no longer charged, so a refused release
+  waits and is retried each turn and before any funding is reckoned. Every
+  failed step leaves no reservation behind.
 - [slots.omg](children/slots.omg): one admitted child's listener per turn. Service
   acquisition goes to the runtime's offer, surface and batch words to
   presentation (a sealed attachment is accepted only behind an image word),
@@ -186,8 +189,9 @@ The the State and the console lines every package uses.
   instances and the realm setup's progress.
 - [report.omg](shared/report.omg): the startup lines the boot harness keys on, in
   the Rust host's words where the two reach the same point, a retired
-  child's slot and exit, a failed launch's stage and code, and this matrix's
-  own page and channel use, in hex.
+  child's slot and exit, a failed launch's stage and code, what this matrix
+  asks its owner for and why it refused a child's request, and its own page
+  and channel use, in hex.
 
 Prove it with `python tools/boot-harness-rs/omega_desktop_test.py`: the stock
 composition with this program in the root matrix's launch and in the place of

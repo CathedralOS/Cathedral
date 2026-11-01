@@ -269,7 +269,8 @@ public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reac
         recovery::retired(context, slot, exit);
         let observer: u64 = launches::finished(&mut context.observations, task, outcome_of(exit));
         launches::disconnected(&mut context.observations, slot);
-        let ignored: u64 = runtime::task::main::release(gate, context.reservations[slot]);
+        let launch: u64 = context.reservations[slot];
+        retire_reservation(gate, context, slot, launch);
         context.reservations[slot] = 0u64;
         context.funding[slot] = Funding::Fixed;
         level::disconnected(&mut context.world, slot);
@@ -351,3 +352,49 @@ machine ok() -> [u64; 8] {
     words
 }
 machine done() {}
+// An ended child's reservation goes back to this matrix. The kernel refuses
+// while the child's frames are still charged, which retained images and its
+// own deferred reclamation keep for a while after the exit; such a
+// reservation waits in `releasing` and is retried each turn and before any
+// funding is reckoned, so what it held is never stranded.
+machine retire_reservation(gate: &Gate, context: &mut State, slot: u64 [0..=4], launch: u64) reaches Kernel {
+    settle_slot(gate, context, slot);
+    let released: u64 = runtime::task::main::release(gate, launch);
+    transition released == kernel::BUSY && launch != 0u64 {
+        true -> parked(context, slot, launch)
+        _ -> unreleased(gate, slot, released)
+    }
+    machine parked(context: &mut State, slot: u64 [0..=4], launch: u64) {
+        context.releasing[slot] = launch;
+    }
+}
+public machine settle(gate: &Gate, context: &mut State) reaches Kernel invokes Kernel; {
+    settle_slot(gate, context, 0u64);
+    settle_slot(gate, context, 1u64);
+    settle_slot(gate, context, 2u64);
+    settle_slot(gate, context, 3u64);
+    settle_slot(gate, context, 4u64);
+}
+machine settle_slot(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+    transition context.releasing[slot] != 0u64 {
+        true -> settling(gate, context, slot, runtime::task::main::release(gate, context.releasing[slot]))
+        _ -> done()
+    }
+    machine settling(gate: &Gate, context: &mut State, slot: u64 [0..=4], status: u64) reaches Kernel {
+        transition status == kernel::BUSY {
+            true -> done()
+            _ -> released(gate, context, slot, status)
+        }
+    }
+    machine released(gate: &Gate, context: &mut State, slot: u64 [0..=4], status: u64) reaches Kernel {
+        context.releasing[slot] = 0u64;
+        unreleased(gate, slot, status);
+    }
+}
+// Anything else the kernel says about a release goes to the console.
+machine unreleased(gate: &Gate, slot: u64, status: u64) reaches Kernel invokes Kernel; {
+    transition status == 0u64 {
+        true -> done()
+        _ -> report::launch_stage(gate, slot, 8u64, status)
+    }
+}

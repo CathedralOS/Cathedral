@@ -68,6 +68,7 @@ machine turn(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
     let stored: u64 = block storage::step(gate, context, now);
     lifecycle::notify(gate, context);
     let flushed: u64 = block presentation::flush(gate, context);
+    lifecycle::settle(gate, context);
     transition polled == 0u64 && settled == 0u64 && commanded == 0u64 && forwarded == 0u64 && sourced == 0u64 && first == 0u64
         && second == 0u64 && third == 0u64 && fourth == 0u64 && fifth == 0u64 && stored == 0u64 && flushed == 0u64 {
         true -> block parked(gate, context, now)

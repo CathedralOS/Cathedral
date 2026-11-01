@@ -20,10 +20,13 @@ use policy::children::launch::resources::funding::increased;
 use policy::children::launch::resources::funding::shortfall;
 use policy::children::launch::resources::funding::nothing;
 use connections::upstream;
+use shared::report;
+use lifecycle;
 
 // Cover `needed` from this matrix's own allowances, asking its owner for
 // whatever they lack.
 public machine ensure(gate: &Gate, context: &mut State, now: u64, needed: [u64; 5]) -> u64 reaches Kernel blocks; invokes Kernel; {
+    lifecycle::settle(gate, context);
     let spare: Spare = runtime::task::main::spare(gate);
     transition spare {
         Spare::Known { amounts } -> block short(gate, context, now, shortfall(amounts, needed))
@@ -43,6 +46,7 @@ public machine request(gate: &Gate, context: &mut State, now: u64, delta: [u64; 
         _ -> (kernel::NO_MEMORY)
     }
     machine asking(gate: &Gate, context: &mut State, delta: [u64; 5]) -> u64 reaches Kernel {
+        report::funding_asked(gate, delta);
         let reply: [u64; 8] = block upstream::exchange(gate, context, [FUND, delta[0], delta[1], delta[2], delta[3], delta[4], 0u64, 0u64]);
         reply[0]
     }
@@ -65,7 +69,7 @@ public machine fund(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4
         reaches Kernel {
         transition increase {
             Increase::Granted { grant } -> block covering(gate, context, now, slot, delta, grant)
-            Increase::Refused -> (error(kernel::NO_MEMORY))
+            Increase::Refused -> (refused(gate, slot, 1u64))
         }
     }
     // A refusal upstream is this child's refusal; a transport failure is not
@@ -74,7 +78,7 @@ public machine fund(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4
         let status: u64 = block ensure(gate, context, now, delta);
         transition {
             status == 0u64 -> block growing(gate, context, now, slot, delta, grant)
-            status == kernel::NO_MEMORY || status == kernel::DENIED -> (error(kernel::NO_MEMORY))
+            status == kernel::NO_MEMORY || status == kernel::DENIED -> (refused(gate, slot, 2u64))
             _ -> (error(status))
         }
     }
@@ -83,7 +87,7 @@ public machine fund(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4
         transition {
             status == 0u64 -> (funded(context, slot, grant))
             status == kernel::NO_PROCESS_CAPACITY && delta[3] != 0u64 -> block slotted(gate, context, now, slot, delta, grant)
-            _ -> (error(kernel::NO_MEMORY))
+            _ -> (refused(gate, slot, 3u64))
         }
     }
     // A retired sibling can leave free process slots below this child's
@@ -103,6 +107,10 @@ public machine fund(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4
             _ -> (error(kernel::NO_MEMORY))
         }
     }
+}
+machine refused(gate: &Gate, slot: u64, reason: u64) -> [u64; 8] reaches Kernel invokes Kernel; {
+    report::funding_refused(gate, slot, reason);
+    error(kernel::NO_MEMORY)
 }
 machine funded(context: &mut State, slot: u64 [0..=4], grant: Grant) -> [u64; 8] {
     context.funding[slot] = Funding::Growable { grant: grant };

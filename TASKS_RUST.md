@@ -619,12 +619,51 @@ Evidence in the main checkout with the patched standalone producer:
 - Boundary test, layout, Rust formatting, the stock matrix's compiled tests
   and clippy for the desktop crate with `shell` pass.
 
-Next, in the order the F5 desktop test reaches them: the funding refusal when
-Colors launches beside a Notes; the rest of the chrome's words (layout,
-managed tasks, save availability and retries); loss surveys and close over the
-owner-control client; the launcher fallback and save recovery the recorded
-grants are for; the input capacity a nested matrix negotiates with its parent;
-then the rest of the stock policy, the profile swap and the bridge's deletion.
+Returned reservations and F5 parity followed in the step recorded below.
+
+### Stock matrix migration: returned reservations and the F5 desktop test
+
+The whole F5 desktop test now passes over the Omega matrices: creating and
+entering a user, the shared controls and the background without storage,
+three Notes with switching, capacity refusal, protected close, the app's own
+close and slot reuse, Colors beside Notes, the user tiles, app tiles, save,
+discard and cancel, a copied user, duplicated notes and saved state after a
+cold reboot (`build/boot-harness-rs/desktop/20261101T164012295648Z/`).
+
+The last refusal came from reservations that never returned. The kernel
+refuses to release an ended child's launch while the child's frames are still
+charged, which the images this matrix retains behind its tiles and the
+kernel's own deferred reclamation keep for a while after the exit. The matrix
+ignored that refusal, so every ended child stranded its whole reservation and
+each later launch asked the owner for more, until the growth ceiling refused
+Colors. A refused release now waits and is retried every turn and before any
+funding is reckoned. The console names what a matrix asks its owner for, why
+it refused a child's request, and any release the kernel refuses for another
+reason.
+
+Evidence in the main checkout with the patched standalone producer:
+
+- Desktop over the Omega root and user template under the F5 shell:
+  `build/boot-harness-rs/omega-desktop/20261101T164305088072Z/`.
+- Omega matrix, top level: `build/boot-harness-rs/omega-matrix/20261101T164337566794Z/`;
+  under a real parent: `build/boot-harness-rs/omega-matrix-upstream/20261101T164346953702Z/`;
+  Rust comparison matrix: `build/boot-harness-rs/matrix-composition/20261101T164331898056Z/`.
+- Witnesses: primitives `build/omega-user/tests/20261101T164147140940Z/`;
+  connections `build/omega-user/connections/20261101T164154264921Z/`, service
+  `.../20261101T164216178011Z/`, admission `.../20261101T164230950516Z/`;
+  Background `build/omega-user/background-control/20261101T164235849037Z/`;
+  Colors `build/omega-user/colors-control/20261101T164241433684Z/`;
+  Notes `build/omega-user/notes-control/20261101T164247769675Z/`;
+  Chooser `build/omega-user/chooser-control/20261101T164255616311Z/`.
+- Kernel smoke labs of 2026-11-01 16:44 UTC pass; default F5 desktop and cold reopen
+  on the Rust host: `build/boot-harness-rs/desktop/20261101T164441942965Z/`.
+- Boundary test, layout, Rust formatting, the stock matrix's compiled tests
+  and clippy for the desktop crate with `shell` pass.
+
+Next: the F5 variants over the Omega composition (nested desktops, launcher
+recovery and the asynchronous launch, binding, scene and selection fixtures),
+which exercise the remaining chrome words, loss surveys, recovery and input
+capacity; then the profile swap and the bridge's deletion.
 
 ### Kernel image window widened for the Omega matrix
 
