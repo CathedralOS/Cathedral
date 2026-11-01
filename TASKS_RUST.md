@@ -564,6 +564,12 @@ Evidence in the main checkout with the saved standalone producer:
 - Boundary test, layout, Rust formatting, the stock matrix's compiled tests
   and clippy for the desktop crate with `shell` pass.
 
+The next slice is blocked: with the chrome's words added, the matrix's
+component description passes the Omega compiler's 8 MiB bound. That work,
+with the process split into five packages by responsibility, waits on the
+`stock-matrix-workspace` branch; the owner choice is in
+[OWNER_QUESTIONS.md](OWNER_QUESTIONS.md#the-stock-matrix-outgrows-one-omega-component).
+
 Next, in the order the F5 desktop test reaches them: the chrome's words in a
 workspace, where app entries, selection, close, layout, managed tasks and
 save availability are answered and activation scenes switch the visible app;
