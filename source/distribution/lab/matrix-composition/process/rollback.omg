@@ -43,7 +43,7 @@ machine attempt(gate: &Gate, context: &mut State, now: u64, expected: u64, resou
         let mut scratch: Admitted;
         let loans: [u64; 14];
         let status: u64 = block runtime::admission::main::admit(gate, &mut scratch, launch, 0u64, &loans, 0u64,
-            INTERACTION, runtime::time::after(now, 300u64), false);
+            INTERACTION, context.clock, 300u64, false);
         transition status == expected {
             true -> block unchanged(gate, context, now, expected, resources, notifications, round)
             _ -> (kernel::IO_ERROR)

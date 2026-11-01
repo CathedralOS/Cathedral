@@ -145,7 +145,10 @@ The the children this matrix admits, funds, presents and retires.
   (an app the desktop's share, with the ranks the policy allotted at the
   lowest free base), its object as its realm and the standing placement, and
   the requester receives a receipt it can query with LAUNCH_STATUS until the
-  child ends.
+  child ends. In a workspace an app takes the stock surface preference over its
+  allotted ranks, the preferred count down to the allotment at the lowest
+  free base below the launcher; under this matrix's own login the picker's
+  choice retires the picker first and the user owns the whole view.
 - [workspace.omg](children/workspace.omg): the workspace's app instances
   under the stock catalogue. A launch into an app slot publishes the instance
   and activates it; activation hides the other apps and switches the scene in

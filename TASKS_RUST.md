@@ -660,10 +660,73 @@ Evidence in the main checkout with the patched standalone producer:
 - Boundary test, layout, Rust formatting, the stock matrix's compiled tests
   and clippy for the desktop crate with `shell` pass.
 
-Next: the F5 variants over the Omega composition (nested desktops, launcher
-recovery and the asynchronous launch, binding, scene and selection fixtures),
-which exercise the remaining chrome words, loss surveys, recovery and input
-capacity; then the profile swap and the bridge's deletion.
+The F5 variants followed in the step recorded below.
+
+### Stock matrix migration: the F5 variants over Omega
+
+Over the Omega composition the F5 desktop test also passes with a relative
+pointer and with undeclared service imports. The nested desktop now runs to
+its first level: the Nested realm program is the Omega matrix running as an
+app in the user's workspace, its own login offers NEW USER, retires its
+picker when the user is chosen, and the user's matrix configures its own
+workspace and taskbar.
+
+What that took:
+
+- One image now serves as the user template and as a nested desktop, so its
+  declaration fits both offers: 24 channels, 3 descendants, 256 private and
+  384 reader pages and 24 surfaces, the stock user offer; funding grows it.
+- An app in a workspace takes the stock surface preference (a host with
+  descendants may have the spare ranks), from the preferred count down to its
+  allotment; the old sixteen-rank cap is gone.
+- Under the matrix's own login the user's ranks start at the bottom, below the
+  picker, and the picker's choice retires the picker, as the Rust host does.
+- The runtime's admission times the child's handshake from the moment the
+  child exists, and the matrix restarts its owner-control window then, so a
+  slow load of a large image does not eat into either.
+- Launch failures after admission report their stage: 9 surface ranks, 10
+  placement, 11 activation.
+- The component builder's compiler deadline is twenty minutes: a change to
+  the process runtime recompiles the whole stock matrix closure, about
+  thirteen minutes; a change to the process alone now takes about eleven,
+  against two and a half before the process was split into packages.
+
+Still failing over Omega:
+
+- The second level of nested desktops: reading the Nested program through
+  three matrices returns PEER_CLOSED
+  (`build/boot-harness-rs/desktop/20261101T181119752895Z/`).
+- Split (`--nested`, `--deep`): Split sets up its broker services before it
+  accepts its owner control, like any host with descendants, while this matrix
+  blocks on the owner-control handshake; both wait until their deadlines. The
+  owner-control connection has to open asynchronously, as the Rust host's does.
+
+Evidence in the main checkout with the patched standalone producer:
+
+- Desktop over the Omega root and user template under the F5 shell:
+  `build/boot-harness-rs/omega-desktop/20261101T181809876365Z/`.
+- Omega matrix, top level: `build/boot-harness-rs/omega-matrix/20261101T182051469283Z/`;
+  under a real parent: `build/boot-harness-rs/omega-matrix-upstream/20261101T182058439575Z/`;
+  Rust comparison matrix: `build/boot-harness-rs/matrix-composition/20261101T181832063318Z/`.
+- Witnesses: primitives `build/omega-user/tests/20261101T181653090783Z/`;
+  connections `build/omega-user/connections/20261101T181658886037Z/`, service
+  `.../20261101T182311824195Z/` (the sweep's first run failed one 12-page image
+  exchange with NO_MEMORY and passed on rerun), admission
+  `.../20261101T181733924726Z/`;
+  Background `build/omega-user/background-control/20261101T181741392904Z/`;
+  Colors `build/omega-user/colors-control/20261101T181748216116Z/`;
+  Notes `build/omega-user/notes-control/20261101T181754235804Z/`;
+  Chooser `build/omega-user/chooser-control/20261101T181801265518Z/`.
+- F5 desktop test over Omega: `build/boot-harness-rs/desktop/20261101T181119626394Z/`.
+- Kernel smoke labs of 2026-11-01 18:21 UTC pass; default F5 desktop and cold
+  reopen on the Rust host: `build/boot-harness-rs/desktop/20261101T182146923475Z/`.
+- Boundary test, layout, Rust formatting, the stock matrix's compiled tests
+  and clippy for the desktop crate with `shell` pass.
+
+Next: the owner-control connection opened asynchronously, which Split needs;
+the relay failure at the second nested level; then the remaining F5 variants
+(launcher recovery, the asynchronous fixtures, soak), the profile swap and the
+bridge's deletion.
 
 ### Kernel image window widened for the Omega matrix
 

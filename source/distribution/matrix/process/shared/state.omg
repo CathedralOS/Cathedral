@@ -135,6 +135,8 @@ public data State {
     image_length: u64;
     last_granted: u64;
     allotted_surfaces: u64;
+    allotted_descendants: u64;
+    allotted_profiled: bool;
     managers: Management;
     fallback_image: u64;
     fallback_argument: u64;

@@ -171,10 +171,18 @@ public machine admit_reserved(gate: &Gate, context: &mut State, now: u64, slot: 
         let loans: [u64; 14];
         level::disconnected(&mut context.world, slot);
         let status: u64 = block runtime::admission::main::admit(gate, &mut context.slots[slot], launch, argument,
-            &loans, 0u64, granted, runtime::time::after(now, HANDSHAKE_TICKS), true);
+            &loans, 0u64, granted, context.clock, HANDSHAKE_TICKS, true);
         transition status == 0u64 {
-            true -> block controlling(gate, context, now, slot, launch)
+            true -> block admitted_now(gate, context, slot, launch)
             _ -> refused(gate, launch, status)
+        }
+    }
+    // The owner-control window, like the service handshake's, starts once the child exists.
+    machine admitted_now(gate: &Gate, context: &mut State, slot: u64 [0..=4], launch: u64) -> u64 reaches Kernel {
+        let tick: Tick = runtime::time::read(gate, context.clock);
+        transition tick {
+            Tick::Read { value } -> block controlling(gate, context, value, slot, launch)
+            Tick::Failed { code } -> block uncontrolled(gate, context, slot, launch, code)
         }
     }
     // The child accepts its owner control as its first act and only then asks

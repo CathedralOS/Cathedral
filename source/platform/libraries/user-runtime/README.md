@@ -102,7 +102,9 @@ control, then begin the child's listener on the retained provider ends. Every
 failed phase releases exactly what this task still holds; a child that exists
 when a later phase fails is cancelled and collected first. `stop` cancels,
 collects and releases; `release` alone closes whatever remains. The caller
-chooses the launch, argument, loans, granted services and admission deadline.
+chooses the launch, argument, loans, granted services, and the clock and window
+of the child's service handshake, which start once the child exists, so loading a
+large image does not eat into them.
 Interaction is required and storage is the only other service; input producers
 and capture are not offered here. [admission/offer.omg](admission/offer.omg)
 answers a child's acquisition from the rights preallocated at admission, using

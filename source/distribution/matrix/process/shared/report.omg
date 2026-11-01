@@ -44,6 +44,10 @@ public machine picker_placed(gate: &Gate) reaches Kernel invokes Kernel; {
     let text: [u8; 64] = "Cathedral matrix: scoped picker placed over users\n              ";
     line(gate, &text);
 }
+public machine picker_retired(gate: &Gate) reaches Kernel invokes Kernel; {
+    let text: [u8; 64] = "Cathedral matrix: picker retired; user owns viewport\n           ";
+    line(gate, &text);
+}
 public machine picker_exhausted(gate: &Gate) reaches Kernel invokes Kernel; {
     let text: [u8; 64] = "Cathedral matrix: picker retries spent\n                         ";
     line(gate, &text);
@@ -104,7 +108,8 @@ public machine child(gate: &Gate, slot: u64, kind: u64, value: u64) reaches Kern
 }
 // Where a child's admission from an image failed: the slot, then the stage
 // (1 declaration, 2 fit, 3 image grant, 4 reservation, 5 admission, 6
-// binding, 7 funding, 8 release) and the code in hex.
+// binding, 7 funding, 8 release, 9 surface ranks, 10 placement, 11 activation)
+// and the code in hex.
 public machine launch_stage(gate: &Gate, slot: u64, stage: u64, code: u64) reaches Kernel invokes Kernel; {
     let text: [u8; 25] = "Cathedral matrix: launch ";
     let mut words: [u64; 8];
