@@ -17,6 +17,7 @@ use shared::state::State;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;
+use runtime::time::Tick;
 use runtime::connection::main::Frame;
 use world::geometry::zeros_from;
 use world::geometry::plus;
@@ -362,6 +363,8 @@ public machine child_launch(gate: &Gate, context: &mut State, now: u64, requeste
     // scene that cannot switch takes the new app back down.
     machine presented(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4], object: u64) -> [u64; 8]
         reaches Kernel {
+        let tick: Tick = runtime::time::read(gate, context.clock);
+        block settled_control(gate, context, slot, tick);
         let status: u64 = block workspace::launched(gate, context, slot, object);
         transition status == 0u64 {
             true -> (receipt(context, requester, incarnation, slot))
@@ -373,6 +376,13 @@ public machine child_launch(gate: &Gate, context: &mut State, now: u64, requeste
         block lifecycle::reclaim(gate, context, slot);
         refused(gate, status)
     }
+        machine settled_control(gate: &Gate, context: &mut State, slot: u64 [0..=4], tick: Tick) reaches Kernel {
+        transition tick {
+            Tick::Read { value } -> block lifecycle::open_control(gate, context, value, slot)
+            Tick::Failed { code } -> done_now()
+        }
+    }
+    machine done_now() {}
     // The requester's receipt names its latest launch on this connection.
     machine receipt(context: &mut State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4]) -> [u64; 8] {
         let child: u64 = context.slots[slot].task;

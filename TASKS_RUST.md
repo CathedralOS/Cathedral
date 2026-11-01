@@ -704,11 +704,19 @@ Still failing over Omega:
   outer Notes ends before Colors launches beside them, apparently on a press
   in its close button, so its draft does not survive the matrix switch
   (`build/boot-harness-rs/desktop/20261101T184743785025Z/`).
-- The matrix runs each realm job, configuration included, to completion in
-  one turn, so a slow run can outlast the shell's deadline on a routed word: one
-  sweep's desktop proof failed that way and passed on rerun. The Rust host runs
-  these jobs without blocking its owner words; the Omega jobs should advance a
-  step per turn.
+- Realm jobs now run on a small stack in the State, one command per turn, so
+  the matrix answers its owner between them: before, a whole configuration ran
+  in one turn and could outlast the shell's 100-tick deadline on a routed word,
+  which failed the desktop proof intermittently. The owner's CONFIGURE waits
+  with its job, or behind jobs already running.
+- A just-admitted child gets up to 30 ticks for its control's first answer
+  before the launch's scene switch, so an ordinary app's handshake is not left
+  to outlast its own window.
+- The outer Notes beside Split still ends: it painted its base but not its
+  text image, and Notes ends when a presentation is refused while its view
+  stands. The matrix retains one sealed image per tile in a 16-entry store,
+  which the launcher's icons, Split and its two Notes fill; the Rust host keeps
+  one per compositor tile.
 
 Evidence in the main checkout with the patched standalone producer:
 
@@ -732,8 +740,9 @@ Evidence in the main checkout with the patched standalone producer:
 - Boundary test, layout, Rust formatting, the stock matrix's compiled tests
   and clippy for the desktop crate with `shell` pass.
 
-Next: the outer Notes ending beside Split; the relay failure at the second
-nested level; realm jobs that advance a step per turn; then the remaining F5 variants
+Next: the retained-image store sized to the compositor's tiles, for the outer
+Notes beside Split; the relay failure at the second nested level; then the
+remaining F5 variants
 (launcher recovery, the asynchronous fixtures, soak), the profile swap and the
 bridge's deletion.
 

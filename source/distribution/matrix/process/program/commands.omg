@@ -97,9 +97,9 @@ machine dispatch(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u6
     }
 }
 // The configuration job from the realm's saved record; idempotent once a workspace stands.
+// The configuration job runs over later turns; its result answers the owner.
 machine configuring(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
-    let status: u64 = block jobs::configure(gate, context, now);
-    block reply(gate, context, error(status))
+    block jobs::configure(gate, context)
 }
 // Remake every live child's remembered binding after the provider was
 // replaced; one that already stands is kept.

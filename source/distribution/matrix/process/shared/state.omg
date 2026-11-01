@@ -18,6 +18,8 @@ use world::geometry::Rect;
 use policy::children::startup::main::Startup;
 use policy::children::launch::resources::recipes::Offer;
 use world::scopes::Scopes;
+use policy::children::startup::realm::operations::Setup;
+use policy::children::startup::realm::operations::Command;
 
 public const CHILDREN: u64 = 5u64;
 // Owner-declared policy for launches into a slot.
@@ -69,6 +71,14 @@ public data Forward [copy] {
     ticket: Ticket;
     deadline: u64;
     late: bool;
+}
+// One realm job in progress: which job, the policy's setup record for it and,
+// while a job it started runs, the command waiting for that job's result.
+public data Frame {
+    job: u64;
+    setup: Setup;
+    waiting: bool;
+    command: Command;
 }
 public data State {
     owner: Server;
@@ -123,6 +133,14 @@ public data State {
     // chrome's delegations, the recovery words the owner recorded and the
     // bindings RESTORE_STORAGE remakes.
     startup: Startup;
+    // Realm jobs in progress, outermost first, advanced one command per turn;
+    // whether the owner's CONFIGURE waits for its own job's result, or for the
+    // jobs ahead of it, and the reply it waits with.
+    frames: [Frame; 3];
+    frame_count: u64 [0..=3];
+    configure_held: bool;
+    configure_queued: bool;
+    configure_ticket: Ticket;
     hosted: bool;
     desktop: bool;
     login: bool;

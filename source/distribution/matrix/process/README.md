@@ -167,12 +167,14 @@ The the children this matrix admits, funds, presents and retires.
 The setting the matrix up from its realm.
 
 - [jobs.omg](realm/jobs.omg): realm setup under the stock startup policy, which
-  sequences each job while this process executes its commands with a setup
-  record per job. A nested instance discovers its realm once the parent has
-  placed it: a Matrix record configures a workspace, Login beside Users
-  starts a scoped picker, anything else leaves setup to the owner; the
-  owner's CONFIGURE runs the configuration job directly, idempotent once a
-  workspace stands. Later turns replay a failed picker or background within
+  sequences each job while this process executes its commands. Jobs run on a
+  small stack in the State, one command per turn, so the matrix keeps
+  answering its owner and children between them; a command that starts
+  another job waits for that job's result. A nested instance discovers its
+  realm once the parent has placed it: a Matrix record configures a
+  workspace, Login beside Users starts a scoped picker, anything else leaves
+  setup to the owner; the owner's CONFIGURE runs the configuration job, its
+  reply waiting with it, idempotent once a workspace stands. Later turns replay a failed picker or background within
   the policy's budget, which [recovery.omg](children/recovery.omg) arms from each
   child's end.
 - [configuration.omg](realm/configuration.omg): the configuration job. The saved
