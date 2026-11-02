@@ -142,8 +142,16 @@ public machine launch_stage(gate: &Gate, slot: u64, stage: u64, code: u64) reach
 // kernel refused the growth), with the child's slot.
 public machine funding_asked(gate: &Gate, delta: [u64; 5]) reaches Kernel invokes Kernel {
     let text: [u8; 24] = "Cathedral matrix: fund  ";
+    funding_vector(gate, &text, delta);
+}
+// The root cannot ask an owner: expose the exact missing dimension on refusal.
+public machine funding_shortfall(gate: &Gate, delta: [u64; 5]) reaches Kernel invokes Kernel {
+    let text: [u8; 24] = "Cathedral matrix: lack  ";
+    funding_vector(gate, &text, delta);
+}
+machine funding_vector(gate: &Gate, text: &[u8; 24], delta: [u64; 5]) reaches Kernel {
     let mut words: [u64; 8];
-    transition { _ -> pack(gate, &text, &mut words, 0u64, delta) }
+    transition { _ -> pack(gate, text, &mut words, 0u64, delta) }
     machine pack(gate: &Gate, text: &[u8; 24], words: &mut [u64; 8], index: u64, delta: [u64; 5]) requires index <= 23u64 reaches Kernel {
         transition index < 23u64 {
             true -> byte(gate, text, words, index, delta)

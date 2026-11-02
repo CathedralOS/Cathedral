@@ -30,6 +30,8 @@ use world::layout;
 use world::geometry::Rect;
 use connections::presentation;
 use forward;
+use selection;
+use connections::presentation::Submission;
 
 const CHROME: u64 = 0u64;
 
@@ -58,23 +60,26 @@ public machine entry(context: &State, slot: u64 [0..=4], incarnation: u64, words
 }
 
 // SELECT_APP [24, ticket]: make the instance with that ticket the active app.
-public machine select(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, words: [u64; 8]) -> [u64; 8]
-    reaches Kernel blocks invokes Kernel {
+public machine select(context: &mut State, slot: u64 [0..=4], incarnation: u64, words: [u64; 8]) -> Submission {
     transition chrome(context, slot, incarnation) && zeros_from(&words, 2u64) {
-        true -> block chosen(gate, context, catalogue::select(&context.catalogue, words[1], forward::busy(context)))
-        _ -> (error(kernel::DENIED))
+        true -> chosen(context, slot, catalogue::select(&context.catalogue, words[1], forward::busy(context)))
+        _ -> (Submission::Answer { words: error(kernel::DENIED) })
     }
-    machine chosen(gate: &Gate, context: &mut State, selection: Selection) -> [u64; 8] reaches Kernel {
-        transition selection {
-            Selection::Switch { slot } -> block switched(gate, context, slot)
-            Selection::Current { slot } -> (error(0u64))
-            Selection::Busy { slot } -> (error(kernel::BUSY))
-            Selection::Missing -> (error(kernel::DENIED))
+    machine chosen(context: &mut State, requester: u64 [0..=4], choice: Selection) -> Submission {
+        transition choice {
+            Selection::Switch { slot } -> started(context, requester, slot)
+            Selection::Current { slot } -> (Submission::Answer { words: error(0u64) })
+            Selection::Busy { slot } -> (Submission::Answer { words: error(kernel::BUSY) })
+            Selection::Missing -> (Submission::Answer { words: error(kernel::DENIED) })
         }
     }
-    machine switched(gate: &Gate, context: &mut State, slot: u64) -> [u64; 8] reaches Kernel {
-        let status: u64 = block activate(gate, context, slot);
-        error(status)
+    machine started(context: &mut State, requester: u64 [0..=4], slot: u64) -> Submission {
+        let previous: u64 = active(context);
+        let status: u64 = selection::begin(context, requester, previous, slot);
+        transition status == 0u64 {
+            true -> (Submission::Pending)
+            _ -> (Submission::Answer { words: error(status) })
+        }
     }
 }
 
@@ -219,6 +224,12 @@ public machine activate(gate: &Gate, context: &mut State, slot: u64) -> u64 reac
             _ -> (restored(context, previous, status))
         }
     }
+}
+// The asynchronous selection has committed its preview. Publish local visibility,
+// input retirement and chrome authority together, before serving more input.
+public machine commit_selection(context: &mut State, previous: u64, slot: u64 [0..=4]) -> u64 {
+    shown(context, slot);
+    committed(context, previous, slot)
 }
 machine shown(context: &mut State, slot: u64) {
     let first: u64 = demand::visible(&mut context.world, 1u64, slot == 1u64);

@@ -45,7 +45,11 @@ public machine ensure(gate: &Gate, context: &mut State, now: u64, needed: [u64; 
 public machine request(gate: &Gate, context: &mut State, now: u64, delta: [u64; 5]) -> u64 reaches Kernel blocks invokes Kernel {
     transition context.has_parent {
         true -> block asking(gate, context, delta)
-        _ -> (kernel::NO_MEMORY)
+        _ -> refused_root(gate, delta)
+    }
+    machine refused_root(gate: &Gate, delta: [u64; 5]) -> u64 reaches Kernel {
+        report::funding_shortfall(gate, delta);
+        kernel::NO_MEMORY
     }
     machine asking(gate: &Gate, context: &mut State, delta: [u64; 5]) -> u64 reaches Kernel {
         report::funding_asked(gate, delta);

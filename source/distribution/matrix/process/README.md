@@ -277,3 +277,12 @@ publications to that display or to the supplied parent; both resume across
 turns. [Maintenance](connections/transfers/maintenance.omg) retains cursor
 updates and owed erasures in the same scene barrier. Hardware input is queued
 independently of cursor drawing. Lifecycle scene replay remains synchronous.
+
+Existing-app selection starts at [children/workspace.omg](children/workspace.omg)
+and resumes through [children/selection.omg](children/selection.omg). It previews
+retained surfaces without changing visibility or input, publishes one transaction
+through the shared backing receiver, then commits local demand and focus. The
+requester's exact ticket and both app bindings survive the wait. A refusal aborts
+the staged scene; invalidation after an accepted commit restores the prior scene
+before releasing the barrier. Launch-time activation, layout, binding and explicit
+refresh still have synchronous callers and remain migration work.

@@ -932,6 +932,95 @@ use the planned native probe provider only where those cannot place the fault.
 Finish the fixture sweep before changing normal F5 to the Omega matrix and
 removing its Rust bridge. No new owner decision blocks this sequence.
 
+### Stock matrix migration: existing-app selection waits
+
+The chrome's SELECT_APP now returns to the event loop while
+[selection.omg](source/distribution/matrix/process/children/selection.omg)
+publishes the switch. It uses the World's existing `preview_replay` to stage
+hidden/visible surfaces without changing local input routes, render demand or
+the catalogue. Only an accepted COMMIT changes those local facts. The old visible
+app remains the pointer target during the wait, and the independent owner and
+parent-poll connections keep progressing. The scene barrier preserves retained
+images and the requester's exact ticket; replies use the existing outbox.
+
+A refused transaction aborts before releasing that barrier. The continuation
+captures both app bindings and the parent epoch. If a queued retirement invalidates
+a switch after its COMMIT was sent, an accepted commit is followed by a transaction
+restoring the previous scene. Failed restoration retires the backing rather than
+claiming that the old scene remains valid. These defensive invalidation paths
+still need deliberate fault injection; owner STOP is still queued behind the
+scene barrier, so the Rust selection stop/late-stop fixtures are not yet migrated.
+
+`python tools/boot-harness-rs/omega_selection_test.py` uses the installed Omega
+user matrix under the Rust test parent. It holds a successful switch and then a
+refused switch, requires HEALTH and parent polls during both waits, checks that
+keys typed against the old visible Notes survive exactly once, switches repeatedly
+without replacing either app, and checks saved text after cold reboot.
+
+Verified on 2026-11-02 with the pinned native producer; the matrix uses 356/496
+load pages and its unchanged 128-page stack:
+
+- Held selection success/refusal, exact input, repeated switches and cold save:
+  `build/boot-harness-rs/desktop/20261102T211513500050Z/`.
+- Full Omega desktop and cold reopen: `.../20261102T211624743601Z/`;
+  nested desktops to depth three, protected close and repeated subtree teardown:
+  `.../20261102T210828724845Z/`.
+- Root display holds/refusal: `.../20261102T211729215616Z/`; parent batch
+  commit holds/refusal: `.../20261102T211926572260Z/`; parent image hold and
+  close during a held save: `.../20261102T212028013601Z/`. Each includes cold reopen.
+- Normal Rust F5 and persistence: `.../20261102T212124094224Z/`.
+  Bootstrap root-death-once, input-death-once and input-death-repeat pass with
+  exact resource recovery: `build/boot-harness-rs/bootstrap/20261102T212218406940Z/`.
+- All 514 Rust host tests, desktop shell target clippy, Rust format, layout
+  (148 Omega / 153 Rust edges), four harness unit tests, Python compilation and
+  diff whitespace checks pass.
+
+The smaller Rust `--matrix-desktop-test` does **not** pass. Both this assignment
+and the original `HEAD` funding implementation reproduce
+`surface-create-refused 1 0 0 NO_MEMORY`, followed by a matrix exit and owner
+PEER_CLOSED assertion. No Omega program participates in that profile. The two
+serial logs are `build/omega-matrix-progress/selection-matrix-{changed,baseline}.serial.log`;
+the baseline comparison restored the changed source afterward. Investigate this
+existing lab failure separately; do not count it as regression coverage passed.
+
+Launch-time activation, automatic fallback after retirement, layout replay,
+binding and explicit refresh retain synchronous paths. Normal F5 still selects
+the Rust host. No kernel or wire protocol changed.
+
+The larger image exposed a desktop funding error at the third nested desktop.
+The root refused funding before admission, rather than crashing. Its new
+`lack` diagnostic names the missing amounts in the same order as FUND:
+private pages, readers, channels, process slots and physical frames. The failing
+run was short **20 physical frames**, with zero shortfall in the other dimensions
+(`build/boot-harness-rs/desktop/20261102T210522321356Z/`).
+The kernel seeds each static account with admission frames plus its private-page
+allowance. The desktop then replaced the root reservation with only
+`(descendant slots + 1) * ADMISSION_ALLOWANCE_FRAMES`, stranding its private-memory
+backing upstairs. `session/admission/funding.rs` now includes the root's existing
+private-page allowance: the shell assigns 8,800 rather than 7,776 frames, from the
+same conserved total. Kernel limits, image/stack limits and logical page/channel
+allowances are unchanged. Bootstrap rollback passes; the smaller matrix lab's
+unchanged baseline failure is recorded above because it shares that assignment.
+
+Selection follow-up: let an authorized owner STOP mark the target for
+retirement while selection is held, retain the STOP reply until cleanup, and
+prove both pre-commit cancellation and post-commit restoration. LOSS must report
+pending work rather than wait behind that scene. The existing Rust selection
+`stop` and `late-stop` fixtures define the missing behavioral coverage.
+
+Next launch slice: `children/stored.omg::launch` waits in
+`connections/storage.omg::read_object`, and admission later waits in `bind`.
+Both use the same synchronous storage exchange as ordinary child storage relays.
+Move that shared exchange into retained per-link work (ticket, original scope,
+deadline and attachment custody), then resume the launch from its result. Avoid
+adding a second receiver or a launch-only storage loop. Launch-time scene
+activation can then reuse the selection transaction with a different completion
+owner; it must not borrow the chrome's SELECT_APP ticket. The failed nested
+launch also showed why login recovery belongs in that work: `stored::child_launch`
+retires the picker before admitting the chosen user, so a funding refusal leaves
+no picker in that viewport. Preserve or restart the chooser on refusal; do not
+rely on a larger budget to make that failure path disappear.
+
 ### Stock matrix migration: root display waits
 
 The Omega root now resumes regular display publication across turns. Its

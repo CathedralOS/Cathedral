@@ -140,8 +140,11 @@ machine arranging(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: T
     block answered(gate, context, slot, issued, reply)
 }
 machine selecting(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket, frame: Frame, incarnation: u64) -> u64 reaches Kernel {
-    let reply: [u64; 8] = block workspace::select(gate, context, slot, incarnation, frame.payload);
-    block answered(gate, context, slot, issued, reply)
+    let result: Submission = workspace::select(context, slot, incarnation, frame.payload);
+    transition result {
+        Submission::Pending -> (0u64)
+        Submission::Answer { words } -> block answered(gate, context, slot, issued, words)
+    }
 }
 machine observing(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket, frame: Frame, incarnation: u64) -> u64 reaches Kernel {
     let reply: [u64; 8] = stored::status(context, slot, incarnation, frame.payload[1]);

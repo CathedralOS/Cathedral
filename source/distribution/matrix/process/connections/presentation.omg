@@ -548,7 +548,7 @@ machine replay_slot(gate: &Gate, context: &mut State, slot: u64 [0..=4], rank: u
         }
     }
 }
-machine retained_image(context: &State, words: [u64; 8]) -> u64 {
+public machine retained_image(context: &State, words: [u64; 8]) -> u64 {
     let index: u64 = image_index(context, words[2], 0u64);
     transition words[0] == SURFACE_IMAGE && index < 64u64 {
         true -> (context.images[index].object)

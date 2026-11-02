@@ -102,6 +102,7 @@ public data State {
     parent: Services;
     parent_work: parent::Pending;
     presentation_work: presentation::Transfer;
+    selection_work: presentation::Switch;
     next_child: u64 [0..=4];
     retire_after_present: [bool; 5];
     scene_owner: presentation::Queued;

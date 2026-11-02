@@ -9,6 +9,7 @@ public data Phase [copy] { case Begin; case Entry; case Commit; case Abort; case
 public data Maintenance [copy] { case None; case Pointer; case Style; case Erase; }
 public data Transfer [copy] {
     maintenance: Maintenance;
+    selection: bool;
     batch: bool;
     compact: bool;
     phase: Phase;
@@ -30,4 +31,17 @@ public data Transfer [copy] {
 public data Queued {
     active: bool;
     frame: Frame;
+}
+
+// A workspace switch previews two retained scenes; local visibility and input
+// remain unchanged until its commit. The scene barrier preserves their backing.
+public data Switch [copy] {
+    previous: u64 [0..=4];
+    next: u64 [0..=4];
+    previous_incarnation: u64;
+    previous_epoch: u64;
+    next_incarnation: u64;
+    next_epoch: u64;
+    rank: u64 [0..=128];
+    restoring: bool;
 }

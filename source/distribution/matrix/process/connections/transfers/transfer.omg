@@ -20,6 +20,12 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
     transition child && !context.presentation_work.active { true -> maintenance::pointer(context) _ -> done() }
 }
 machine advance(gate: &Gate, context: &mut State) reaches Kernel {
+    transition context.presentation_work.selection {
+        true -> done()
+        _ -> block rendering(gate, context)
+    }
+}
+machine rendering(gate: &Gate, context: &mut State) reaches Kernel {
     transition context.presentation_work.maintenance != Maintenance::None {
         true -> block maintenance::step(gate, context)
         _ -> block publication(gate, context)

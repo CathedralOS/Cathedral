@@ -326,6 +326,12 @@ The forwarded batch counterpart is
 while HEALTH/input continue; another F3 refuses it and requires the matching
 abort before the replacement app can publish. Both cold boots check persisted
 Colors state. These keys belong only to the interaction-delay fixture.
+Existing-app switching is covered by
+`python tools/boot-harness-rs/omega_selection_test.py`: the real Omega user
+matrix keeps serving HEALTH and input while its parent holds a switch's commit.
+A refusal preserves both apps and the old scene. Repeated switches and cold
+reopen check exact Notes contents. Owner-stop selection probes remain Rust-only.
+
 The actual root-compositor boundary is exercised by
 `python tools/boot-harness-rs/omega_display_wait_test.py`: images, commits,
 rectangles and pointer updates wait at the compositor while root HEALTH and
