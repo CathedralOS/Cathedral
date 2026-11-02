@@ -4,6 +4,8 @@ module state;
 // the storage, each child slot's admission, policy, funding and batch, the
 // workspace's instances and the realm setup's progress.
 use parent;
+use storage::Exchange;
+use storage::Relay;
 use display;
 use outbox;
 use presentation;
@@ -215,6 +217,8 @@ public data Store {
     failed: u64;
     scopes: Scopes;
     listeners: [Server; 5];
+    exchanges: [Exchange; 3];
+    relays: [Relay; 5];
     // Under a parent: whether its storage connection was supplied, and the
     // binding revision and realm it last reported, once asked.
     has_upstream: bool;

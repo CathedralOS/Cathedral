@@ -162,7 +162,7 @@ impl Host {
         };
         #[cfg(feature = "interaction-delay")]
         let event = if !parent.upstream {
-            match delay.intercept(event, server, world)? {
+            match delay.intercept(event, server, world, parent)? {
                 Some(event) => event,
                 None => return Ok(false),
             }

@@ -1,0 +1,289 @@
+module storage::exchange;
+// One retained exchange per provider link. This is its only reply receiver.
+// Children and local launch/listing work keep their identity and attachment
+// custody until take; cancellation drains accepted work without replaying it.
+use shared::state::State;
+use shared::storage::Exchange;
+use shared::storage::Outcome;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::connection::main::Submission;
+use runtime::connection::main::Reply;
+use runtime::connection::main::Frame;
+use runtime::waiting;
+use runtime::time::Tick;
+use runtime::waiting::Set;
+use protocol::main;
+use protocol::matrix;
+use protocol::storage::scope;
+use world::scopes;
+use world::scopes::Bound;
+use storage::binding;
+
+const INFO_SEND: u64 = 1u64;
+const INFO_WAIT: u64 = 2u64;
+const SEND: u64 = 3u64;
+const RECEIVE: u64 = 4u64;
+const READY: u64 = 5u64;
+public const LOCAL: u64 = 6u64;
+
+public machine link_of(context: &State, source: u64) -> u64 {
+    transition context.store.root { true -> (source) _ -> (2u64) }
+}
+public machine idle(context: &State, index: u64 [0..=2]) -> bool { context.store.exchanges[index].phase == 0u64 }
+public machine ready(context: &State, index: u64 [0..=2], owner: u64) -> bool {
+    context.store.exchanges[index].phase == READY && context.store.exchanges[index].owner == owner
+}
+// The caller retains object, including across binding queries and retries.
+// A successful start reserves this link; a refusal leaves it and object alone.
+public machine start(gate: &Gate, context: &mut State, now: u64, source: u64, request: [u64; 8], object: u64,
+    owner: u64, incarnation: u64, revision: u64, info: bool) -> u64 reaches Kernel blocks invokes Kernel {
+    let index: u64 = link_of(context, source);
+    let deadline: u64 = scope::deadline(now, request[7], STORAGE_DEADLINE_TICKS);
+    transition {
+        source >= 2u64 || index > 2u64 || owner == 0u64 || owner > LOCAL -> (kernel::DENIED)
+        deadline == 0u64 -> (kernel::TIMED_OUT)
+        _ -> block available(gate, context, now, index, request, object, owner, incarnation, revision, info, deadline)
+    }
+    machine available(gate: &Gate, context: &mut State, now: u64, index: u64 [0..=2], request: [u64; 8], object: u64,
+        owner: u64, incarnation: u64, revision: u64, info: bool, deadline: u64) -> u64 reaches Kernel {
+        transition idle(context, index) {
+            true -> block connected(gate, context, now, index, request, object, owner, incarnation, revision, info, deadline)
+            _ -> (kernel::BUSY)
+        }
+    }
+    machine connected(gate: &Gate, context: &mut State, now: u64, index: u64 [0..=2], request: [u64; 8], object: u64,
+        owner: u64, incarnation: u64, revision: u64, info: bool, deadline: u64) -> u64 reaches Kernel {
+        let status: u64 = block binding::client(gate, context, now, index);
+        transition status == 0u64 {
+            true -> block reserved(gate, context, now, index, request, object, owner, incarnation, revision, info, deadline)
+            _ -> (status)
+        }
+    }
+    machine reserved(gate: &Gate, context: &mut State, now: u64, index: u64 [0..=2], request: [u64; 8], object: u64,
+        owner: u64, incarnation: u64, revision: u64, info: bool, deadline: u64) -> u64 reaches Kernel {
+        let mut work: Exchange;
+        work.owner = owner; work.incarnation = incarnation; work.revision = revision;
+        work.deadline = deadline; work.request = request; work.object = object;
+        work.info_only = info; work.previous = context.store.revision;
+        work.phase = initial_phase(index, info || !context.store.informed);
+        context.store.exchanges[index] = work;
+        // Opening a provider link may have waited; never send against its old tick.
+        let tick: Tick = runtime::time::read(gate, context.clock);
+        transition tick {
+            Tick::Read { value } -> block current(gate, context, index, value)
+            Tick::Failed { code } -> block unavailable(gate, context, index, code)
+        }
+    }
+    machine current(gate: &Gate, context: &mut State, index: u64 [0..=2], now: u64) -> u64 reaches Kernel {
+        block step(gate, context, index, now); 0u64
+    }
+    machine unavailable(gate: &Gate, context: &mut State, index: u64 [0..=2], code: u64) -> u64 reaches Kernel {
+        block failure(gate, context, index, code); 0u64
+    }
+}
+machine initial_phase(index: u64, inform: bool) -> u64 {
+    transition index == 2u64 && inform { true -> (INFO_SEND) _ -> (SEND) }
+}
+machine learning(context: &mut State, index: u64 [0..=2]) { context.store.exchanges[index].phase = INFO_SEND; }
+public machine step(gate: &Gate, context: &mut State, index: u64 [0..=2], now: u64) reaches Kernel blocks invokes Kernel {
+    let phase: u64 = context.store.exchanges[index].phase;
+    transition {
+        phase == 0u64 || phase == READY -> done()
+        runtime::time::reached(now, context.store.exchanges[index].deadline) -> block failure(gate, context, index, kernel::TIMED_OUT)
+        phase == INFO_SEND || phase == SEND -> block sending(gate, context, index, now, phase == INFO_SEND)
+        _ -> block receiving(gate, context, index, now)
+    }
+}
+machine sending(gate: &Gate, context: &mut State, index: u64 [0..=2], now: u64, info: bool) reaches Kernel {
+    context.store.exchanges[index].retry_at = runtime::time::after(now, 1u64);
+    transition context.store.exchanges[index].cancelled || (!info && !authorized(context, index)) {
+        true -> finish(context, index, failed(kernel::DENIED))
+        _ -> block encoded(gate, context, index, now, info)
+    }
+}
+// Recheck the captured child grant after any binding query. Learning a new
+// upstream revision revokes local grants; it must not replay a child's write.
+machine authorized(context: &State, index: u64 [0..=2]) -> bool {
+    let owner: u64 = context.store.exchanges[index].owner;
+    transition owner > 0u64 && owner <= 5u64 {
+        true -> child(context, index, owner - 1u64)
+        _ -> (owner == LOCAL)
+    }
+    machine child(context: &State, index: u64 [0..=2], slot: u64 [0..=4]) -> bool {
+        let bound: Bound = scopes::authorize(&context.store.scopes, slot,
+            context.store.exchanges[index].incarnation, context.store.exchanges[index].revision);
+        bound.status == 0u64 && context.store.listeners[slot].incarnation == context.store.exchanges[index].incarnation
+    }
+}
+machine encoded(gate: &Gate, context: &mut State, index: u64 [0..=2], now: u64, info: bool) reaches Kernel {
+    let mut words: [u64; 8] = context.store.exchanges[index].request;
+    let object: u64 = context.store.exchanges[index].object;
+    transition {
+        info -> block query(gate, context, index, now)
+        index == 2u64 -> block upstream(gate, context, index, now, words, object)
+        _ -> block provider(gate, context, index, now, words, object)
+    }
+    machine query(gate: &Gate, context: &mut State, index: u64 [0..=2], now: u64) reaches Kernel {
+        let mut words: [u64; 8]; words[0] = STORAGE_INFO;
+        block submit(gate, context, index, words, 0u64, true);
+    }
+    machine upstream(gate: &Gate, context: &mut State, index: u64 [0..=2], now: u64, request: [u64; 8], object: u64) reaches Kernel {
+        let revision: u64 = context.store.revision;
+        transition revision != 0u64 && revision <= scope::MAX_REVISION {
+            true -> block stamped(gate, context, index, request, object, revision)
+            _ -> finish(context, index, failed(kernel::DENIED))
+        }
+    }
+    machine stamped(gate: &Gate, context: &mut State, index: u64 [0..=2], request: [u64; 8], object: u64, revision: u64)
+        reaches Kernel requires revision <= scope::MAX_REVISION {
+        let mut words: [u64; 8] = request;
+        words[0] = (revision << 16u64) | (request[0] & 0xffffu64);
+        block submit(gate, context, index, words, object, false);
+    }
+    machine provider(gate: &Gate, context: &mut State, index: u64 [0..=2], now: u64, request: [u64; 8], object: u64) reaches Kernel {
+        let mut words: [u64; 8] = request;
+        words[0] = (((request[0] & 0xffffu64) as u64 in Wrapping) - (STORAGE_BASE as u64 in Wrapping)) as u64;
+        block submit(gate, context, index, words, object, false);
+    }
+}
+machine submit(gate: &Gate, context: &mut State, index: u64 [0..=2], request: [u64; 8], object: u64, info: bool) reaches Kernel {
+    let mut words: [u64; 8] = request;
+    words[7] = context.store.exchanges[index].deadline;
+    let submitted: Submission = block runtime::connection::main::submit(gate, &mut context.store.links[index], &words, object);
+    transition submitted {
+        Submission::Submitted { request } -> sent(context, index, request, info)
+        Submission::Backpressure -> done()
+        Submission::Failed { code } -> block failure(gate, context, index, code)
+    }
+    machine sent(context: &mut State, index: u64 [0..=2], request: u64, info: bool) {
+        context.store.exchanges[index].id = request;
+        context.store.exchanges[index].phase = RECEIVE;
+        transition info { true -> information(context, index) _ -> done() }
+    }
+    machine information(context: &mut State, index: u64 [0..=2]) { context.store.exchanges[index].phase = INFO_WAIT; }
+}
+machine receiving(gate: &Gate, context: &mut State, index: u64 [0..=2], now: u64) reaches Kernel {
+    let reply: Reply = block runtime::connection::main::poll(gate, &mut context.store.links[index], now);
+    transition reply {
+        Reply::Pending -> done()
+        Reply::Complete { frame, notification } -> block plain(gate, context, index, now, frame, notification)
+        Reply::Object { frame, object } -> block decoded(gate, context, index, now, frame, object)
+        Reply::Endpoint { frame, endpoint } -> block stray(gate, context, index, endpoint)
+        Reply::Failed { code } -> block failure(gate, context, index, code)
+    }
+}
+machine plain(gate: &Gate, context: &mut State, index: u64 [0..=2], now: u64, frame: Frame, notification: u64) reaches Kernel {
+    transition notification == 0u64 {
+        true -> block decoded(gate, context, index, now, frame, 0u64)
+        _ -> block malformed(gate, context, index, notification)
+    }
+    machine malformed(gate: &Gate, context: &mut State, index: u64 [0..=2], notification: u64) reaches Kernel {
+        let ignored: u64 = Kernel::notify_drop(gate, notification);
+        block failure(gate, context, index, kernel::IO_ERROR);
+    }
+}
+machine decoded(gate: &Gate, context: &mut State, index: u64 [0..=2], now: u64, frame: Frame, object: u64) reaches Kernel {
+    transition frame.bytes == 64u64 && frame.id != 0u64 && frame.id == context.store.exchanges[index].id {
+        true -> block answered(gate, context, index, now, frame.payload, object)
+        _ -> block malformed(gate, context, index, object)
+    }
+    machine malformed(gate: &Gate, context: &mut State, index: u64 [0..=2], object: u64) reaches Kernel {
+        block release(gate, object);
+        block failure(gate, context, index, kernel::IO_ERROR);
+    }
+}
+machine answered(gate: &Gate, context: &mut State, index: u64 [0..=2], now: u64, words: [u64; 8], object: u64) reaches Kernel {
+    transition {
+        context.store.exchanges[index].cancelled -> block discarded(gate, context, index, object)
+        context.store.exchanges[index].phase == INFO_WAIT -> block informed(gate, context, index, now, words, object)
+        index == 2u64 && words[0] == kernel::DENIED && object == 0u64 && !context.store.exchanges[index].retried ->
+            block refreshing(gate, context, index, now)
+        _ -> finish(context, index, Outcome { words: words, attachment: object })
+    }
+    machine discarded(gate: &Gate, context: &mut State, index: u64 [0..=2], object: u64) reaches Kernel {
+        block release(gate, object); finish(context, index, failed(kernel::PEER_CLOSED));
+    }
+    machine refreshing(gate: &Gate, context: &mut State, index: u64 [0..=2], now: u64) reaches Kernel {
+        context.store.exchanges[index].retried = true;
+        context.store.exchanges[index].previous = context.store.revision;
+        learning(context, index);
+        block sending(gate, context, index, now, true);
+    }
+}
+machine informed(gate: &Gate, context: &mut State, index: u64 [0..=2], now: u64, words: [u64; 8], object: u64) reaches Kernel {
+    block release(gate, object);
+    let status: u64 = binding::accept(context, words);
+    transition {
+        status != 0u64 -> finish(context, index, failed(status))
+        context.store.exchanges[index].info_only -> finish(context, index, Outcome { words: words, attachment: 0u64 })
+        context.store.exchanges[index].retried && context.store.revision == context.store.exchanges[index].previous -> finish(context, index, failed(kernel::DENIED))
+        _ -> block informed_send(gate, context, index, now)
+    }
+    machine informed_send(gate: &Gate, context: &mut State, index: u64 [0..=2], now: u64) reaches Kernel {
+        context.store.exchanges[index].phase = SEND;
+        block sending(gate, context, index, now, false);
+    }
+}
+machine stray(gate: &Gate, context: &mut State, index: u64 [0..=2], endpoint: u64) reaches Kernel {
+    let ignored: u64 = Kernel::close(gate, endpoint); block failure(gate, context, index, kernel::IO_ERROR);
+}
+machine failure(gate: &Gate, context: &mut State, index: u64 [0..=2], code: u64) reaches Kernel {
+    let outcome: Outcome = block binding::retired(gate, context, index, code); finish(context, index, outcome);
+}
+machine finish(context: &mut State, index: u64 [0..=2], outcome: Outcome) {
+    context.store.exchanges[index].answer = outcome;
+    context.store.exchanges[index].phase = READY;
+}
+// A failed clock cannot leave a synchronous caller's borrowed object behind.
+public machine abort(gate: &Gate, context: &mut State, index: u64 [0..=2], code: u64) -> Outcome
+    reaches Kernel blocks invokes Kernel {
+    block release(gate, context.store.exchanges[index].answer.attachment);
+    block failure(gate, context, index, code);
+    take(context, index)
+}
+public machine take(context: &mut State, index: u64 [0..=2]) -> Outcome {
+    let outcome: Outcome = context.store.exchanges[index].answer;
+    let empty: Exchange; context.store.exchanges[index] = empty; outcome
+}
+public machine cancel(context: &mut State, index: u64 [0..=2], owner: u64) {
+    transition context.store.exchanges[index].owner == owner { true -> cancelled(context, index) _ -> done() }
+    machine cancelled(context: &mut State, index: u64 [0..=2]) { context.store.exchanges[index].cancelled = true; }
+}
+public machine close(gate: &Gate, context: &mut State, index: u64 [0..=2]) reaches Kernel blocks invokes Kernel {
+    block release(gate, context.store.exchanges[index].answer.attachment);
+    let empty: Exchange; context.store.exchanges[index] = empty;
+}
+public machine release(gate: &Gate, object: u64) reaches Kernel blocks invokes Kernel {
+    transition object != 0u64 { true -> block released(gate, object) _ -> done() }
+    machine released(gate: &Gate, object: u64) reaches Kernel { let ignored: u64 = block Kernel::memory_release(gate, object); }
+}
+public machine watch(context: &State, set: &mut Set, index: u64 [0..=2]) {
+    let phase: u64 = context.store.exchanges[index].phase;
+    transition phase != 0u64 && phase != READY {
+        true -> watched(context, set, index)
+        _ -> done()
+    }
+    machine watched(context: &State, set: &mut Set, index: u64 [0..=2]) {
+        waiting::add(set, waiting::IPC, context.store.links[index].receiver);
+        waiting::add(set, waiting::NOTIFICATION, context.store.links[index].bell.wait);
+        waiting::expire_by(set, context.store.exchanges[index].deadline);
+        retry_watch(context, set, index);
+        transition context.store.links[index].partial {
+            true -> waiting::expire_by(set, context.store.links[index].partial_deadline)
+            _ -> done()
+        }
+    }
+}
+machine retry_watch(context: &State, set: &mut Set, index: u64 [0..=2]) {
+    let phase: u64 = context.store.exchanges[index].phase;
+    transition phase == SEND || phase == INFO_SEND {
+        true -> waiting::expire_by(set, context.store.exchanges[index].retry_at)
+        _ -> done()
+    }
+}
+public machine failed(code: u64) -> Outcome {
+    let mut words: [u64; 8]; words[0] = code; Outcome { words: words, attachment: 0u64 }
+}
+machine done() {}

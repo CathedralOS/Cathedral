@@ -1007,10 +1007,11 @@ replaces the behavior targeted by the Rust selection `stop` and `late-stop`
 fixtures without adding their Cargo delay features to the Omega program.
 
 Next launch slice: `children/stored.omg::launch` waits in
-`connections/storage.omg::read_object`, and admission later waits in `bind`.
-Both use the same synchronous storage exchange as ordinary child storage relays.
-Move that shared exchange into retained per-link work (ticket, original scope,
-deadline and attachment custody), then resume the launch from its result. Avoid
+`connections/storage/storage.omg::read_object`, and admission later waits in `bind`.
+Child storage relays now use the retained exchange described in the storage
+handoff below; these local calls still wait through its temporary synchronous
+adapter. Resume the launch from the same retained result, preserving the ticket,
+original scope, deadline and attachment custody. Avoid
 adding a second receiver or a launch-only storage loop. Launch-time scene
 activation can then reuse the selection transaction with a different completion
 owner; it must not borrow the chrome's SELECT_APP ticket. The failed nested
@@ -1129,10 +1130,70 @@ fixture; the protected-close and held-save scenarios cover ordinary close
 behavior. Normal F5 remains on the Rust matrix until the remaining migration is
 complete. The previously recorded small Rust matrix-lab failure is unchanged.
 
-Next: move shared storage exchanges into retained per-link work, then drive
-launch reads and bindings from continuations. Keep the captured scope, exact
-caller, attachment custody and deadline with each exchange; do not add a second
-receiver or a launch-only transport. Recover the login picker on failed admission.
+The follow-up below moves shared storage exchanges into retained per-link work.
+Local launch reads and bindings remain the next continuation work, including
+recovery of the login picker on failed admission.
+
+### Stock matrix migration: retained storage exchanges
+
+After `9fdab572`, the Omega storage coordinator now descends through
+`connections/storage/storage.omg` into binding lifecycle, one retained exchange
+per source, and per-child request custody. `exchange.omg` is the only receiver;
+child scope checks and publications resume across turns. The captured listener
+incarnation, reply ticket, grant revision, deadline and input attachment survive
+queueing and containment validation. Local grants are checked again before a
+send, including after an upstream binding changes. A newly supplied provider
+channel invalidates the old grants before its handshake, including on failure.
+Storage progress reads a fresh clock after other turn work; a freed link resumes
+queued work before fresh arrivals can seize it. Cancelled work drains before
+its original input is released; a new listener cannot inherit its reply.
+
+`connections/storage/synchronous.omg` is an explicit temporary adapter for
+startup, owner grants, listing and launch. It drains accepted child work without
+admitting new requests, then uses the same exchange. Those callers are not yet
+nonblocking. First provider connection handshakes also still wait.
+
+`omega_storage_test.py` uses a Rust fixture parent (`interaction-delay`, F2):
+hold the actual sealed PUBLISH until the stock Omega child answers HEALTH and
+polls its interaction connection. It must do both before the fixture releases
+storage; the test repeats a save, reuses the app slot and cold-reopens the text.
+No probe capability or fixture code was added to the Omega matrix.
+
+Verification on 2026-11-02, all eight QEMU scenarios including cold reboot:
+
+- Held write: `build/boot-harness-rs/desktop/20261102T231439554413Z/`;
+  held write through another nested desktop: `.../20261102T231529126148Z/`.
+- Full Omega desktop: `.../20261102T231635516050Z/`; three nested desktops,
+  protected close and repeated subtree reclamation: `.../20261102T231737949301Z/`.
+- Split inside Split: `.../20261102T232059348487Z/`; two-hop selection
+  cancellation, late reply drainage and control recovery: `.../20261102T232305946092Z/`.
+- Three-cycle resource soak at depth three: `.../20261102T232434004560Z/`;
+  normal Rust F5: `.../20261102T232717408056Z/`. The soak's root and provider
+  resource floors stay stable, with no reported failures. This is functional and
+  resource-lifetime evidence, not a performance claim.
+- Native review and compilation with the unchanged pinned producer: 367/496
+  load pages (129 free), unchanged 128-page stack. The receipt's input hashes
+  match the worktree. All 514 Rust host tests, stock matrix target clippy with
+  `interaction-delay,trace-storage`, Rust format, Python compilation, layout
+  (148 Omega / 153 Rust edges) and diff whitespace checks pass.
+
+The first held-write proof, before the final clock and queue-order changes,
+passed both boots at `.../20261102T230158637783Z/`. Use the final runs above for
+current evidence. Do not treat these remaining faults as proven by ordinary
+saves: cancellation during a storage hold, regrant while a child is queued,
+provider replacement with a failed handshake, and simultaneous requests over
+both root sources. Normal F5 still uses the Rust matrix; the previously recorded
+small Rust matrix-lab failure was not part of this sweep and remains open.
+
+Next: migrate local launch reads and binding refreshes onto retained work, then
+make failed user admission restore the login picker. Capture the caller ticket,
+requester incarnation/grant, target slot and staged resources before waiting;
+recheck authority before admission and binding, and release late images on
+cancellation. `children/stored.omg::launch` still waits for the image and
+`admit_image` still waits for its binding. Picker/configuration/background
+admission also uses these paths. Keep the same source driver; no second receiver
+or launch-only transport. Listing and first-provider handshakes remain visible
+blocking work in the temporary synchronous adapter and binding module.
 
 ### Stock matrix migration: root display waits
 

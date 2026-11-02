@@ -17,7 +17,7 @@ use runtime::main::Environment;
 use runtime::time::Tick;
 use runtime::server::owner;
 use connections::scene;
-use connections::storage;
+use connections::storage::storage;
 use connections::upstream;
 use shared::report;
 

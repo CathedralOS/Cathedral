@@ -33,7 +33,7 @@ use world::scopes;
 use world::scopes::Bound;
 use connections::source;
 use children::lifecycle;
-use connections::storage;
+use connections::storage::storage;
 use children::stored;
 use children::forward;
 use connections::upstream;

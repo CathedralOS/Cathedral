@@ -1,0 +1,114 @@
+module storage::binding;
+// Discovery, binding revisions and source retirement; transport progress is in exchange.
+use protocol::storage::scope;
+use shared::state::State;
+use shared::storage::Outcome;
+use shared::report;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::ipc::main::Opened;
+use runtime::link;
+use runtime::connection::main::Peer;
+use world::scopes;
+use storage::storage::UPSTREAM;
+public machine relink(gate: &Gate, context: &mut State, now: u64, source: u64 [0..=1]) -> u64 reaches Kernel blocks invokes Kernel {
+    let opened: Opened = link::connect(gate, context.store.handles[source]);
+    transition opened {
+        Opened::Ready { channel } -> block adopting(gate, context, now, source, channel.sender, channel.receiver)
+        Opened::Failed { code } -> (unchanged(context, source, code))
+    }
+    machine unchanged(context: &State, source: u64 [0..=1], code: u64) -> u64 {
+        transition code == kernel::BUSY && context.store.linked[source] {
+            true -> (0u64)
+            _ -> (code)
+        }
+    }
+    machine adopting(gate: &Gate, context: &mut State, now: u64, source: u64 [0..=1], sender: u64, receiver: u64) -> u64 reaches Kernel {
+        // The provider supplied a new channel. Old grants cannot survive even
+        // if that channel's handshake fails before it becomes usable.
+        scopes::revoke_source(&mut context.store.scopes, source);
+        let closed: u64 = block runtime::connection::main::close(gate, &mut context.store.links[source]);
+        let fresh: Peer;
+        context.store.links[source] = fresh;
+        context.store.linked[source] = false;
+        let status: u64 = block runtime::connection::main::connect(gate, &mut context.store.links[source], sender, receiver,
+            runtime::time::after(now, 300u64));
+        transition status == 0u64 {
+            true -> adopted(gate, context, source)
+            _ -> block refused(gate, context, source, status)
+        }
+    }
+    machine refused(gate: &Gate, context: &mut State, source: u64 [0..=1], code: u64) -> u64 reaches Kernel {
+        let outcome: Outcome = block retired(gate, context, source, code);
+        code
+    }
+    machine adopted(gate: &Gate, context: &mut State, source: u64 [0..=1]) -> u64 reaches Kernel {
+        context.store.linked[source] = true;
+        report::storage_ready(gate);
+        0u64
+    }
+}
+public machine client(gate: &Gate, context: &mut State, now: u64, index: u64 [0..=2]) -> u64 reaches Kernel blocks invokes Kernel {
+    transition {
+        context.store.linked[index] -> (0u64)
+        index == 0u64 -> block relink(gate, context, now, 0u64)
+        index == 1u64 -> block relink(gate, context, now, 1u64)
+        _ -> (kernel::PEER_CLOSED)
+    }
+}
+public machine retired(gate: &Gate, context: &mut State, index: u64 [0..=2], code: u64) -> Outcome reaches Kernel blocks invokes Kernel {
+    report::storage_lost(gate, index, code);
+    let closed: u64 = block runtime::connection::main::close(gate, &mut context.store.links[index]);
+    context.store.linked[index] = false;
+    transition index == UPSTREAM {
+        true -> (parent_lost(context, code))
+        _ -> (source_lost(context, index, code))
+    }
+    machine source_lost(context: &mut State, index: u64 [0..=2], code: u64) -> Outcome {
+        context.store.failed = context.store.failed | (1u64 << index);
+        scopes::revoke_source(&mut context.store.scopes, index);
+        failed(code)
+    }
+    machine parent_lost(context: &mut State, code: u64) -> Outcome {
+        context.store.failed = context.store.failed | 1u64;
+        context.store.informed = false;
+        context.store.revision = 0u64;
+        context.store.realm = 0u64;
+        scopes::revoke_source(&mut context.store.scopes, 0u64);
+        failed(code)
+    }
+}
+
+public machine accept(context: &mut State, words: [u64; 8]) -> u64 {
+    let revision: u64 = words[1];
+    transition words[0] == 0u64 && revision != 0u64 && revision <= scope::MAX_REVISION {
+        true -> learned(context, revision, words[2])
+        _ -> unbound(context, words[0])
+    }
+    machine learned(context: &mut State, revision: u64, realm: u64) -> u64 {
+        transition revision == context.store.revision {
+            true -> kept(context, realm)
+            _ -> replaced(context, revision, realm)
+        }
+    }
+    machine replaced(context: &mut State, revision: u64, realm: u64) -> u64 {
+        scopes::clear(&mut context.store.scopes);
+        context.store.revision = revision;
+        kept(context, realm)
+    }
+    machine kept(context: &mut State, realm: u64) -> u64 {
+        context.store.realm = realm;
+        context.store.informed = true;
+        context.store.failed = context.store.failed & ~1u64;
+        0u64
+    }
+    machine unbound(context: &mut State, status: u64) -> u64 {
+        scopes::clear(&mut context.store.scopes);
+        context.store.revision = 0u64;
+        context.store.realm = 0u64;
+        context.store.informed = false;
+        transition status == 0u64 { true -> (kernel::DENIED) _ -> (status) }
+    }
+}
+machine failed(code: u64) -> Outcome { let mut words: [u64; 8]; words[0] = code; Outcome { words: words, attachment: 0u64 } }

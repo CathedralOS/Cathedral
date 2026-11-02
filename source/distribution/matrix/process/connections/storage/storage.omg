@@ -1,0 +1,268 @@
+module storage::storage;
+// Storage authority and lifecycle. Child requests resume in children; exchange
+// is the sole receiver per source. Blocking owner/startup operations temporarily
+// use synchronous, which drives that same exchange rather than reading around it.
+use protocol::main;
+use protocol::matrix;
+use protocol::storage::scope;
+use protocol::storage::operations;
+use shared::state::State;
+use shared::storage::Outcome;
+use shared::report;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::link;
+use runtime::time::Tick;
+use runtime::connection::main::Frame;
+use runtime::server::main::Server;
+use runtime::waiting::Set;
+use world::scopes;
+use world::scopes::Bound;
+use world::geometry::zeros_from;
+use storage::children;
+use storage::exchange;
+use storage::binding;
+use storage::synchronous;
+
+public const SOURCES: u64 = 2u64;
+// The link that carries the parent's storage connection; under a parent the
+// children's one source, source zero, travels over it.
+public const UPSTREAM: u64 = 2u64;
+// A child may acquire storage long after admission; its listener's handshake
+// window is the child's lifetime.
+public const OPENING_TICKS: u64 = 0x3fffffffffffffffu64;
+// Supplied provider links make this instance the storage root; nothing else does.
+public machine discover(gate: &Gate, context: &mut State) reaches Kernel invokes Kernel {
+    let first: u64 = link::at(gate, 0u64);
+    let second: u64 = link::at(gate, 1u64);
+    transition first < kernel::ERROR_BASE && second < kernel::ERROR_BASE {
+        true -> rooted(context, first, second)
+        _ -> done()
+    }
+    machine rooted(context: &mut State, first: u64, second: u64) {
+        context.store.root = true;
+        context.store.handles[0] = first;
+        context.store.handles[1] = second;
+    }
+}
+// The parent's storage connection, acquired from its broker at startup.
+public machine connect_upstream(gate: &Gate, context: &mut State, now: u64, sender: u64, receiver: u64) -> u64
+    reaches Kernel blocks invokes Kernel {
+    let status: u64 = block runtime::connection::main::connect(gate, &mut context.store.links[2], sender, receiver,
+        runtime::time::after(now, 300u64));
+    transition status == 0u64 {
+        true -> connected(gate, context)
+        _ -> (status)
+    }
+    machine connected(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+        context.store.linked[2] = true;
+        context.store.has_upstream = true;
+        report::parent_storage_ready(gate);
+        0u64
+    }
+}
+
+public machine owner_word(op: u64) -> bool {
+    op == STORAGE_GRANT || op == STORAGE_REVOKE || op == STORAGE_STATUS || op == STORAGE_BINDING
+}
+public machine owner(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel blocks invokes Kernel {
+    let reply: [u64; 8] = block decide(gate, context, now, frame);
+    block runtime::server::main::reply(gate, &mut context.owner, &reply)
+}
+// Only the root reports failed sources; a nested matrix's one source is its parent.
+machine decide(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> [u64; 8] reaches Kernel {
+    let status: bool = frame.payload[0] == STORAGE_STATUS && zeros_from(&frame.payload, 1u64);
+    transition {
+        status && context.store.root -> (report_status(context))
+        status -> (error(kernel::DENIED))
+        frame.payload[1] < 5u64 -> block slotted(gate, context, now, frame, frame.payload[1])
+        _ -> (error(kernel::DENIED))
+    }
+    machine slotted(gate: &Gate, context: &mut State, now: u64, frame: Frame, slot: u64 [0..=4]) -> [u64; 8] reaches Kernel {
+        transition {
+            frame.payload[0] == STORAGE_BINDING && zeros_from(&frame.payload, 2u64) -> (bound_reply(context, slot))
+            frame.payload[0] == STORAGE_GRANT && zeros_from(&frame.payload, 4u64) ->
+                block granting(gate, context, now, slot, frame.payload[2], frame.payload[3])
+            frame.payload[0] == STORAGE_REVOKE && zeros_from(&frame.payload, 2u64) -> (revoking(context, slot))
+            _ -> (error(kernel::DENIED))
+        }
+    }
+}
+machine report_status(context: &State) -> [u64; 8] {
+    let mut words: [u64; 8];
+    words[1] = context.store.failed;
+    words
+}
+machine bound_reply(context: &State, slot: u64 [0..=4]) -> [u64; 8] {
+    let bound: Bound = scopes::binding(&context.store.scopes, slot, context.store.listeners[slot].incarnation);
+    transition bound.status == 0u64 {
+        true -> (binding_words(bound))
+        _ -> (error(kernel::DENIED))
+    }
+}
+machine binding_words(bound: Bound) -> [u64; 8] {
+    let mut words: [u64; 8];
+    words[1] = bound.source;
+    words[2] = bound.scope;
+    words
+}
+machine granting(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], source: u64, subtree: u64) -> [u64; 8] reaches Kernel {
+    let status: u64 = block bind(gate, context, now, slot, source, subtree);
+    error(status)
+}
+// Bind a child's live storage connection to a source and scope. The binding
+// also re-establishes the source's link, so one made after provider
+// replacement connects to the fresh incarnation; under a parent it learns
+// this matrix's own binding again.
+public machine bind(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], source: u64, subtree: u64) -> u64
+    reaches Kernel blocks invokes Kernel {
+    let available: u64 = available(context);
+    transition source < available && source < 2u64 {
+        true -> block refreshing(gate, context, now, slot, source, subtree, available)
+        _ -> (kernel::DENIED)
+    }
+    machine refreshing(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], source: u64 [0..=1], subtree: u64, available: u64) -> u64
+        reaches Kernel {
+        let index: u64 = exchange::link_of(context, source);
+        block synchronous::drain(gate, context, index);
+        let status: u64 = block refresh(gate, context, now, source);
+        transition status == 0u64 {
+            true -> (installing(context, slot, source, subtree, available))
+            _ -> (status)
+        }
+    }
+    machine installing(context: &mut State, slot: u64 [0..=4], source: u64 [0..=1], subtree: u64, available: u64) -> u64 {
+        let incarnation: u64 = context.store.listeners[slot].incarnation;
+        let status: u64 = scopes::grant(&mut context.store.scopes, slot, incarnation, source, subtree, available);
+        transition status == 0u64 {
+            true -> healthy(context, source)
+            _ -> (status)
+        }
+    }
+    machine healthy(context: &mut State, source: u64 [0..=1]) -> u64 {
+        context.store.failed = context.store.failed & ~(1u64 << source);
+        0u64
+    }
+}
+// The matrix's own read of a whole object over its first source: the sealed
+// program behind a launch. `stamp` narrows a child's launch to its realm.
+public machine read_object(gate: &Gate, context: &mut State, now: u64, object: u64, stamp: u64) -> Outcome
+    reaches Kernel blocks invokes Kernel {
+    let mut words: [u64; 8];
+    words[0] = ((STORAGE_BASE as u64 in Wrapping) + (operations::BULK as u64 in Wrapping)) as u64;
+    words[1] = object;
+    let fits: bool = scope::stamp(&mut words, stamp);
+    transition fits && (context.store.root || context.store.has_upstream) {
+        true -> block synchronous::request(gate, context, now, 0u64, words, 0u64)
+        _ -> (failed(kernel::DENIED))
+    }
+}
+// One request of this matrix's own over its first source with no scope of its
+// own: a listing of its realm.
+public machine request(gate: &Gate, context: &mut State, now: u64, words: [u64; 8]) -> Outcome
+    reaches Kernel blocks invokes Kernel {
+    let request: [u64; 8] = words;
+    transition context.store.root || context.store.has_upstream {
+        true -> block synchronous::request(gate, context, now, 0u64, request, 0u64)
+        _ -> (failed(kernel::DENIED))
+    }
+}
+// This matrix's own binding: the store's root at the storage root, or the
+// parent's report, learnt now if it has not been.
+public machine learn(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
+    transition {
+        context.store.root -> (0u64)
+        context.store.informed -> (0u64)
+        context.store.has_upstream -> block synchronous::inform(gate, context, now)
+        _ -> (kernel::PEER_CLOSED)
+    }
+}
+// The sources children may be bound to: both provider links at the root, the
+// parent's one connection beneath it.
+machine available(context: &State) -> u64 {
+    transition {
+        context.store.root -> (SOURCES)
+        context.store.has_upstream -> (1u64)
+        _ -> (0u64)
+    }
+}
+// Revocation is local: the stale scope simply stops authorizing.
+machine revoking(context: &mut State, slot: u64 [0..=4]) -> [u64; 8] {
+    let ignored: u64 = scopes::revoke(&mut context.store.scopes, slot);
+    ok()
+}
+// Make the source current: connect or reconnect its link at the root, or
+// learn this matrix's binding from the parent.
+machine refresh(gate: &Gate, context: &mut State, now: u64, source: u64 [0..=1]) -> u64 reaches Kernel {
+    transition context.store.root {
+        true -> block binding::relink(gate, context, now, source)
+        _ -> block synchronous::inform(gate, context, now)
+    }
+}
+// Serve an admitted child's storage connection from the pair admission
+// retained. A slot's previous listener was closed; a fresh one keeps only
+// the incarnation count, so no old binding or ticket can match the new child.
+public machine listen(context: &mut State, slot: u64 [0..=4], now: u64) -> u64 {
+    let sender: u64 = context.slots[slot].storage.sender;
+    let receiver: u64 = context.slots[slot].storage.receiver;
+    context.slots[slot].storage.sender = 0u64;
+    context.slots[slot].storage.receiver = 0u64;
+    let incarnation: u64 = context.store.listeners[slot].incarnation;
+    let fresh: Server;
+    context.store.listeners[slot] = fresh;
+    context.store.listeners[slot].incarnation = incarnation;
+    runtime::server::main::begin(&mut context.store.listeners[slot], sender, receiver, runtime::time::after(now, OPENING_TICKS), true)
+}
+// The child is gone: drop its listener and binding.
+public machine retire(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel blocks invokes Kernel {
+    block children::cancel(gate, context, slot);
+    block runtime::server::main::close(gate, &mut context.store.listeners[slot]);
+    let ignored: u64 = scopes::revoke(&mut context.store.scopes, slot);
+}
+public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
+    let tick: Tick = runtime::time::read(gate, context.clock);
+    transition tick {
+        Tick::Read { value } -> block current(gate, context, value)
+        Tick::Failed { code } -> (code)
+    }
+    machine current(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+        // Receive only into free child slots, then resume the accepted queue.
+        // An arrival cannot grab a link just freed behind an older waiter.
+        block children::receive(gate, context, now);
+        block children::advance(gate, context, now);
+        0u64
+    }
+}
+public machine watch(context: &State, set: &mut Set) {
+    children::watch(context, set);
+    exchange::watch(context, set, 0u64);
+    exchange::watch(context, set, 1u64);
+    exchange::watch(context, set, 2u64);
+}
+public machine close(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
+    block children::close(gate, context);
+    block exchange::close(gate, context, 0u64);
+    block exchange::close(gate, context, 1u64);
+    block exchange::close(gate, context, 2u64);
+    block runtime::server::main::close(gate, &mut context.store.listeners[0]);
+    block runtime::server::main::close(gate, &mut context.store.listeners[1]);
+    block runtime::server::main::close(gate, &mut context.store.listeners[2]);
+    block runtime::server::main::close(gate, &mut context.store.listeners[3]);
+    block runtime::server::main::close(gate, &mut context.store.listeners[4]);
+    let first: u64 = block runtime::connection::main::close(gate, &mut context.store.links[0]);
+    let second: u64 = block runtime::connection::main::close(gate, &mut context.store.links[1]);
+    let parent: u64 = block runtime::connection::main::close(gate, &mut context.store.links[2]);
+}
+machine error(code: u64) -> [u64; 8] {
+    let mut words: [u64; 8];
+    words[0] = code;
+    words
+}
+machine ok() -> [u64; 8] {
+    let words: [u64; 8];
+    words
+}
+machine done() {}
+
+machine failed(code: u64) -> Outcome { Outcome { words: error(code), attachment: 0u64 } }

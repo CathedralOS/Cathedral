@@ -6,7 +6,7 @@ module upstream;
 // parent clips and translates them as this matrix does for its own children.
 // A snapshot is taken when the parent rings this matrix's bell or the last
 // one had more, and before an owner word that needs a view none has granted
-// yet. The storage pair the broker supplied goes to [storage.omg](storage.omg).
+// yet. The storage pair the broker supplied goes to [storage/storage.omg](storage/storage.omg).
 use protocol::main;
 use protocol::services::STORAGE;
 use shared::state::State;
@@ -22,7 +22,7 @@ use world::geometry;
 use world::geometry::Grant;
 use world::upstream::inherit_poll;
 use world::input::registration;
-use storage;
+use storage::storage;
 use parent::connection;
 use parent::calls;
 use runtime::time::Tick;
@@ -70,7 +70,7 @@ public machine open(gate: &Gate, context: &mut State, environment: Environment, 
         code
     }
     machine connecting(gate: &Gate, context: &mut State, now: u64, sender: u64, receiver: u64) -> u64 reaches Kernel {
-        let status: u64 = block storage::connect_upstream(gate, context, now, sender, receiver);
+        let status: u64 = block storage::storage::connect_upstream(gate, context, now, sender, receiver);
         transition status == 0u64 {
             true -> block brokered(gate, context, now)
             _ -> (status)

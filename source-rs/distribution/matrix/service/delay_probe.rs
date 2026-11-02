@@ -18,6 +18,7 @@ use cathedral_platform_contracts::input;
 use cathedral_user_runtime::time;
 #[derive(Default)]
 pub(super) struct Gate {
+    storage: super::storage_probe::Gate,
     armed: u64,
     pending: Option<(Event, u64)>,
     health: Option<(usize, u64, bool)>,
@@ -30,7 +31,7 @@ pub(super) struct Gate {
 }
 impl Gate {
     pub fn deadline(&self) -> Option<u64> {
-        if self.health.is_some() || self.cancellation.is_some() {
+        if self.health.is_some() || self.cancellation.is_some() || self.storage.active() {
             time::after(1).ok()
         } else {
             self.pending.as_ref().map(|p| p.1)
@@ -41,6 +42,9 @@ impl Gate {
         server: &mut Server,
         children: &mut Children,
     ) -> Result<Option<Event>, Error> {
+        if let Some(event) = self.storage.take(server, children)? {
+            return Ok(Some(event));
+        }
         let now = time::now()?;
         if let Some(cancellation) = &mut self.cancellation
             && cancellation.step(server, children, now, self.pending.is_some())?
@@ -112,7 +116,11 @@ impl Gate {
         event: Event,
         server: &mut Server,
         world: &mut World,
+        parent: &Parent,
     ) -> Result<Option<Event>, Error> {
+        let Some(event) = self.storage.intercept(event, server, parent, world)? else {
+            return Ok(None);
+        };
         let request = match &event {
             Event::Request(r) | Event::Memory(r, _) => r,
             _ => return Ok(Some(event)),

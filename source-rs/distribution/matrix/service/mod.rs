@@ -9,5 +9,7 @@ mod delay_probe;
 mod host;
 mod parent;
 mod requests;
+#[cfg(feature = "interaction-delay")]
+mod storage_probe;
 
 include!("service.rs");

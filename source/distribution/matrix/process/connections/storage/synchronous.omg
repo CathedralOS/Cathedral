@@ -1,0 +1,96 @@
+module storage::synchronous;
+// Transitional callers: startup, owner grants, listing and launch still wait.
+// They drive the same retained exchange as child relays, never a second receiver.
+// Drain accepted relays first without admitting more, avoiding BUSY failures or
+// deadlock when a launch shares a source with an app's outstanding file request.
+use shared::state::State;
+use shared::storage::Outcome;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::time::Tick;
+use runtime::waiting;
+use runtime::waiting::Set;
+use storage::exchange;
+use storage::children;
+
+public machine request(gate: &Gate, context: &mut State, now: u64, source: u64, words: [u64; 8], object: u64) -> Outcome
+    reaches Kernel blocks invokes Kernel {
+    block begin(gate, context, source, words, object, false)
+}
+public machine inform(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
+    let words: [u64; 8];
+    let outcome: Outcome = block begin(gate, context, 0u64, words, 0u64, true);
+    block exchange::release(gate, outcome.attachment);
+    outcome.words[0]
+}
+machine begin(gate: &Gate, context: &mut State, source: u64, words: [u64; 8], object: u64, info: bool) -> Outcome reaches Kernel {
+    let index: u64 = exchange::link_of(context, source);
+    transition index <= 2u64 && source < 2u64 {
+        true -> block drained(gate, context, source, index, words, object, info)
+        _ -> (exchange::failed(kernel::DENIED))
+    }
+    machine drained(gate: &Gate, context: &mut State, source: u64, index: u64 [0..=2], words: [u64; 8], object: u64, info: bool) -> Outcome reaches Kernel {
+        block drain(gate, context, index);
+        let tick: Tick = runtime::time::read(gate, context.clock);
+        transition tick {
+            Tick::Read { value } -> block started(gate, context, source, index, words, object, info, value)
+            Tick::Failed { code } -> (exchange::failed(code))
+        }
+    }
+    machine started(gate: &Gate, context: &mut State, source: u64, index: u64 [0..=2], words: [u64; 8], object: u64, info: bool, now: u64) -> Outcome reaches Kernel {
+        let status: u64 = block exchange::start(gate, context, now, source, words, object, exchange::LOCAL, 0u64, 0u64, info);
+        transition status == 0u64 { true -> block await(gate, context, index) _ -> (exchange::failed(status)) }
+    }
+}
+public machine drain(gate: &Gate, context: &mut State, index: u64) reaches Kernel blocks invokes Kernel {
+    transition index <= 2u64 { true -> block bounded_drain(gate, context, index) _ -> done() }
+}
+machine bounded_drain(gate: &Gate, context: &mut State, index: u64 [0..=2]) reaches Kernel {
+    transition exchange::idle(context, index) {
+        true -> done()
+        _ -> block draining(gate, context, index)
+    }
+    machine draining(gate: &Gate, context: &mut State, index: u64 [0..=2]) reaches Kernel {
+        let tick: Tick = runtime::time::read(gate, context.clock);
+        transition tick {
+            Tick::Read { value } -> block progress(gate, context, index, value)
+            Tick::Failed { code } -> done()
+        }
+    }
+    machine progress(gate: &Gate, context: &mut State, index: u64 [0..=2], now: u64) reaches Kernel {
+        block children::advance(gate, context, now);
+        transition exchange::idle(context, index) {
+            true -> done()
+            _ -> block parked(gate, context, index, now)
+        }
+    }
+    machine parked(gate: &Gate, context: &mut State, index: u64 [0..=2], now: u64) reaches Kernel {
+        block pause(gate, context, now);
+        transition { _ -> block drain(gate, context, index) }
+    }
+}
+machine await(gate: &Gate, context: &mut State, index: u64 [0..=2]) -> Outcome reaches Kernel {
+    let tick: Tick = runtime::time::read(gate, context.clock);
+    transition tick {
+        Tick::Read { value } -> block progress(gate, context, index, value)
+        Tick::Failed { code } -> block exchange::abort(gate, context, index, code)
+    }
+    machine progress(gate: &Gate, context: &mut State, index: u64 [0..=2], now: u64) -> Outcome reaches Kernel {
+        block children::advance(gate, context, now);
+        transition exchange::ready(context, index, exchange::LOCAL) {
+            true -> (exchange::take(context, index))
+            _ -> block parked(gate, context, index, now)
+        }
+    }
+    machine parked(gate: &Gate, context: &mut State, index: u64 [0..=2], now: u64) -> Outcome reaches Kernel {
+        block pause(gate, context, now);
+        block await(gate, context, index)
+    }
+}
+machine pause(gate: &Gate, context: &State, now: u64) reaches Kernel {
+    let mut set: Set; waiting::reset(&mut set, runtime::time::after(now, 1u64));
+    exchange::watch(context, &mut set, 0u64); exchange::watch(context, &mut set, 1u64); exchange::watch(context, &mut set, 2u64);
+    let ignored: u64 = block waiting::wait(gate, &set);
+}
+machine done() {}

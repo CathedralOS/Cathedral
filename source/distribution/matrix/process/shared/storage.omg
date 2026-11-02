@@ -1,0 +1,38 @@
+module storage;
+use runtime::server::main::Ticket;
+use world::scopes::Proof;
+public data Outcome [copy] { words: [u64; 8]; attachment: u64; }
+// One exchange owns a provider link until its exact caller consumes the result.
+// Input objects are borrowed from that caller throughout; output rights belong
+// to the exchange until take. A cancelled caller retains its input until drain.
+public data Exchange {
+    phase: u64;
+    owner: u64;
+    incarnation: u64;
+    revision: u64;
+    deadline: u64;
+    retry_at: u64;
+    id: u64;
+    request: [u64; 8];
+    object: u64;
+    answer: Outcome;
+    info_only: bool;
+    retried: bool;
+    previous: u64;
+    cancelled: bool;
+}
+// A child's exact listener ticket and grant survive validation and forwarding.
+// One bounded slot per child; a replacement listener cannot inherit this work.
+public data Relay {
+    phase: u64;
+    ticket: Ticket;
+    incarnation: u64;
+    revision: u64;
+    source: u64;
+    deadline: u64;
+    object: u64;
+    check: [u64; 8];
+    request: [u64; 8];
+    proof: Proof;
+    cancelled: bool;
+}

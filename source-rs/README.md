@@ -341,6 +341,12 @@ forwarded STOP timeout, eventual cancellation without retrying STOP, and a
 subsequent nonzero storage-binding reply over the same route after late replies
 have drained. The nested Notes draft and reused Colors slot survive cold reboot.
 
+`python tools/boot-harness-rs/omega_storage_test.py` holds a real sealed storage
+publication at a Rust fixture parent. The stock Omega child must answer HEALTH
+and poll input before release; repeated saves, slot reuse and cold reopen check
+settlement. F2 is a fixture key in that composition only. Ordinary F5 has no hold.
+Add `--nested` to pass the write through another desktop and its containment checks.
+
 The actual root-compositor boundary is exercised by
 `python tools/boot-harness-rs/omega_display_wait_test.py`: images, commits,
 rectangles and pointer updates wait at the compositor while root HEALTH and

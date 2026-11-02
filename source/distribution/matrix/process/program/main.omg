@@ -37,7 +37,7 @@ use children::lifecycle;
 use connections::presentation;
 use connections::transfers::transfer;
 use connections::transfers::maintenance;
-use connections::storage;
+use connections::storage::storage;
 
 // How long a turn parks with nothing due, and with a parent's snapshot still owed.
 public const IDLE_TICKS: u64 = 1000u64;

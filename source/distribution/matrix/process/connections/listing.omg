@@ -13,8 +13,8 @@ use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;
 use runtime::memory::object::Object;
-use storage;
-use storage::Outcome;
+use storage::storage;
+use shared::storage::Outcome;
 
 // Rows an ENTRIES page holds at most, and the words of one row: number,
 // revision, four of name and four of media type.
@@ -49,7 +49,7 @@ machine page(gate: &Gate, context: &mut State, now: u64, parent: u64, name: &[u6
     }
     machine listed(gate: &Gate, context: &mut State, now: u64, parent: u64, name: &[u64; 4], words: [u64; 8], pages: u64) -> u64
         reaches Kernel requires pages < PAGES {
-        let outcome: Outcome = block storage::request(gate, context, now, words);
+        let outcome: Outcome = block storage::storage::request(gate, context, now, words);
         let count: u64 = outcome.words[1];
         transition outcome.words[0] == 0u64 && count != 0u64 && count <= ROWS && outcome.attachment != 0u64 {
             true -> block rows(gate, context, now, parent, name, outcome.attachment, outcome.words[2], count, 0u64, pages)

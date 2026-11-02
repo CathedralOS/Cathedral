@@ -1,0 +1,241 @@
+module storage::children;
+// Per-child custody: authenticate once, retain the exact ticket and grant,
+// prove containment if needed, then forward. No link has two receivers.
+use shared::state::State;
+use shared::storage::Relay;
+use shared::storage::Outcome;
+use shared::report;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::server::main::Ticket;
+use runtime::server::main::Event;
+use runtime::connection::main::Frame;
+use runtime::waiting;
+use runtime::waiting::Set;
+use world::scopes;
+use world::scopes::Prepared;
+use world::scopes::Bound;
+use protocol::storage::scope;
+use protocol::matrix;
+use storage::exchange;
+
+const CHECK: u64 = 1u64;
+const CHECK_WAIT: u64 = 2u64;
+const FORWARD: u64 = 3u64;
+const FORWARD_WAIT: u64 = 4u64;
+
+// Advance only accepted work. The temporary synchronous callers use this too:
+// they may drain the bounded existing queue, but never admit more into it.
+public machine advance(gate: &Gate, context: &mut State, now: u64) reaches Kernel blocks invokes Kernel {
+    block exchange::step(gate, context, 0u64, now);
+    block exchange::step(gate, context, 1u64, now);
+    block exchange::step(gate, context, 2u64, now);
+    block progress(gate, context, 0u64, now);
+    block progress(gate, context, 1u64, now);
+    block progress(gate, context, 2u64, now);
+    block progress(gate, context, 3u64, now);
+    block progress(gate, context, 4u64, now);
+}
+machine progress(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64) reaches Kernel {
+    let phase: u64 = context.store.relays[slot].phase;
+    let index: u64 = exchange::link_of(context, context.store.relays[slot].source);
+    transition phase != 0u64 && index <= 2u64 {
+        true -> block active(gate, context, slot, index, now, phase)
+        _ -> done()
+    }
+    machine active(gate: &Gate, context: &mut State, slot: u64 [0..=4], index: u64 [0..=2], now: u64, phase: u64) reaches Kernel {
+        transition {
+            phase == CHECK_WAIT || phase == FORWARD_WAIT -> block waiting(gate, context, slot, index, now, phase == CHECK_WAIT)
+            context.store.relays[slot].cancelled -> block finish(gate, context, slot, exchange::failed(kernel::PEER_CLOSED))
+            runtime::time::reached(now, context.store.relays[slot].deadline) -> block finish(gate, context, slot, exchange::failed(kernel::TIMED_OUT))
+            !authorized(context, slot) -> block finish(gate, context, slot, exchange::failed(kernel::DENIED))
+            exchange::idle(context, index) -> block starting(gate, context, slot, now, phase == CHECK)
+            _ -> done()
+        }
+    }
+}
+machine authorized(context: &State, slot: u64 [0..=4]) -> bool {
+    let bound: Bound = scopes::authorize(&context.store.scopes, slot,
+        context.store.relays[slot].incarnation, context.store.relays[slot].revision);
+    bound.status == 0u64 && context.store.listeners[slot].incarnation == context.store.relays[slot].incarnation
+}
+machine starting(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64, check: bool) reaches Kernel {
+    transition check {
+        true -> block submitted(gate, context, slot, now, context.store.relays[slot].check, 0u64, true)
+        _ -> block submitted(gate, context, slot, now, context.store.relays[slot].request, context.store.relays[slot].object, false)
+    }
+}
+machine submitted(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64, request: [u64; 8], object: u64, check: bool) reaches Kernel {
+    let mut words: [u64; 8] = request;
+    words[7] = context.store.relays[slot].deadline;
+    let source: u64 = context.store.relays[slot].source;
+    let incarnation: u64 = context.store.relays[slot].incarnation;
+    let revision: u64 = context.store.relays[slot].revision;
+    let status: u64 = block exchange::start(gate, context, now, source, words, object,
+        slot + 1u64, incarnation, revision, false);
+    transition {
+        status == 0u64 -> started(context, slot, check)
+        status == kernel::BUSY -> done()
+        _ -> block finish(gate, context, slot, exchange::failed(status))
+    }
+    machine started(context: &mut State, slot: u64 [0..=4], check: bool) {
+        context.store.relays[slot].phase = FORWARD_WAIT;
+        transition check { true -> checking(context, slot) _ -> done() }
+    }
+    machine checking(context: &mut State, slot: u64 [0..=4]) { context.store.relays[slot].phase = CHECK_WAIT; }
+}
+machine waiting(gate: &Gate, context: &mut State, slot: u64 [0..=4], index: u64 [0..=2], now: u64, check: bool) reaches Kernel {
+    transition exchange::ready(context, index, slot + 1u64) {
+        true -> block received(gate, context, slot, index, now, check)
+        _ -> done()
+    }
+    machine received(gate: &Gate, context: &mut State, slot: u64 [0..=4], index: u64 [0..=2], now: u64, check: bool) reaches Kernel {
+        let outcome: Outcome = exchange::take(context, index);
+        transition check && outcome.words[0] == 0u64 && !context.store.relays[slot].cancelled {
+            true -> block confirmed(gate, context, slot, now, outcome.attachment)
+            _ -> block finish(gate, context, slot, outcome)
+        }
+    }
+    machine confirmed(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64, attachment: u64) reaches Kernel {
+        block exchange::release(gate, attachment);
+        let status: u64 = scopes::confirm(&mut context.store.scopes, context.store.relays[slot].proof);
+        transition status == 0u64 {
+            true -> block following(gate, context, slot, now)
+            _ -> block finish(gate, context, slot, exchange::failed(status))
+        }
+    }
+    machine following(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64) reaches Kernel {
+        context.store.relays[slot].phase = FORWARD;
+        transition { _ -> block progress(gate, context, slot, now) }
+    }
+}
+machine finish(gate: &Gate, context: &mut State, slot: u64 [0..=4], outcome: Outcome) reaches Kernel {
+    let ticket: Ticket = context.store.relays[slot].ticket;
+    let object: u64 = context.store.relays[slot].object;
+    let cancelled: bool = context.store.relays[slot].cancelled;
+    let empty: Relay; context.store.relays[slot] = empty;
+    transition !cancelled {
+        true -> block answer(gate, context, slot, ticket, outcome, object)
+        _ -> block discarded(gate, outcome.attachment, object)
+    }
+}
+machine answer(gate: &Gate, context: &mut State, slot: u64 [0..=4], ticket: Ticket, outcome: Outcome, unused: u64) reaches Kernel {
+    let words: [u64; 8] = outcome.words;
+    let status: u64 = block runtime::server::main::reply_object_to(gate, &mut context.store.listeners[slot], ticket, &words, outcome.attachment);
+    block discarded(gate, outcome.attachment, unused);
+}
+machine discarded(gate: &Gate, attachment: u64, unused: u64) reaches Kernel {
+    block exchange::release(gate, attachment); block exchange::release(gate, unused);
+}
+public machine receive(gate: &Gate, context: &mut State, now: u64) reaches Kernel blocks invokes Kernel {
+    block slot_receive(gate, context, 0u64, now);
+    block slot_receive(gate, context, 1u64, now);
+    block slot_receive(gate, context, 2u64, now);
+    block slot_receive(gate, context, 3u64, now);
+    block slot_receive(gate, context, 4u64, now);
+}
+machine slot_receive(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64) reaches Kernel {
+    transition {
+        context.store.listeners[slot].peer.receiver == 0u64 || context.store.listeners[slot].peer.fault != 0u64 -> done()
+        context.store.relays[slot].phase != 0u64 || context.store.listeners[slot].pending != 0u64 -> block held(gate, context, slot, now)
+        _ -> block polled(gate, context, slot, now)
+    }
+    machine held(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64) reaches Kernel {
+        let status: u64 = block runtime::server::main::maintain(gate, &mut context.store.listeners[slot], now);
+    }
+    machine polled(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64) reaches Kernel {
+        let event: Event = block runtime::server::main::poll(gate, &mut context.store.listeners[slot], now);
+        transition event {
+            Event::Request { frame } -> block serve(gate, context, slot, now, frame)
+            Event::Pending -> done()
+            Event::Failed { code } -> lost(gate, context, slot, code)
+        }
+    }
+    machine lost(gate: &Gate, context: &mut State, slot: u64 [0..=4], code: u64) reaches Kernel {
+        report::storage_lost(gate, slot + 3u64, code);
+        let ignored: u64 = scopes::revoke(&mut context.store.scopes, slot);
+    }
+}
+machine serve(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64, frame: Frame) reaches Kernel {
+    let mut work: Relay;
+    work.ticket = runtime::server::main::ticket(&context.store.listeners[slot]);
+    work.incarnation = context.store.listeners[slot].incarnation;
+    work.revision = scope::revision(frame.payload[0]);
+    work.object = context.store.listeners[slot].object;
+    context.store.listeners[slot].object = 0u64;
+    context.store.relays[slot] = work;
+    transition frame.bytes == 64u64 {
+        true -> block prepared(gate, context, slot, now, frame.payload)
+        _ -> block finish(gate, context, slot, exchange::failed(kernel::DENIED))
+    }
+}
+machine prepared(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64, request: [u64; 8]) reaches Kernel {
+    let prepared: Prepared = scopes::prepare(&context.store.scopes, slot, context.store.relays[slot].incarnation, request, context.store.realm);
+    transition prepared {
+        Prepared::Reply { words } -> block finish(gate, context, slot, Outcome { words: words, attachment: 0u64 })
+        Prepared::Refused { code } -> block finish(gate, context, slot, exchange::failed(code))
+        Prepared::Forward { source, words } -> queued(context, slot, now, source, words, false)
+        Prepared::Validate { source, check, words, proof } -> validated(context, slot, now, source, check, words, proof)
+    }
+    machine validated(context: &mut State, slot: u64 [0..=4], now: u64, source: u64, check: [u64; 8], words: [u64; 8],
+        proof: world::scopes::Proof) reaches Kernel {
+        context.store.relays[slot].check = check; context.store.relays[slot].proof = proof;
+        queued(context, slot, now, source, words, true);
+    }
+}
+machine queued(context: &mut State, slot: u64 [0..=4], now: u64, source: u64, words: [u64; 8], check: bool) reaches Kernel {
+    context.store.relays[slot].source = source;
+    context.store.relays[slot].request = words;
+    context.store.relays[slot].deadline = scope::deadline(now, words[7], STORAGE_DEADLINE_TICKS);
+    context.store.relays[slot].phase = phase_of(check);
+    // The shared turn resumes queued work after all arrivals are retained.
+    machine phase_of(check: bool) -> u64 { transition check { true -> (CHECK) _ -> (FORWARD) } }
+}
+public machine cancel(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel blocks invokes Kernel {
+    let phase: u64 = context.store.relays[slot].phase;
+    let index: u64 = exchange::link_of(context, context.store.relays[slot].source);
+    transition phase != 0u64 && index <= 2u64 {
+        true -> cancelled(context, slot, index)
+        _ -> done()
+    }
+    machine cancelled(context: &mut State, slot: u64 [0..=4], index: u64 [0..=2]) {
+        context.store.relays[slot].cancelled = true;
+        exchange::cancel(context, index, slot + 1u64);
+    }
+}
+public machine close(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
+    block close_slot(gate, context, 0u64); block close_slot(gate, context, 1u64);
+    block close_slot(gate, context, 2u64); block close_slot(gate, context, 3u64); block close_slot(gate, context, 4u64);
+    machine close_slot(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+        block exchange::release(gate, context.store.relays[slot].object);
+        let empty: Relay; context.store.relays[slot] = empty;
+    }
+}
+public machine watch(context: &State, set: &mut Set) {
+    slot_watch(context, set, 0u64); slot_watch(context, set, 1u64);
+    slot_watch(context, set, 2u64); slot_watch(context, set, 3u64); slot_watch(context, set, 4u64);
+    machine slot_watch(context: &State, set: &mut Set, slot: u64 [0..=4]) {
+        runtime::server::main::watch(&context.store.listeners[slot], set);
+        immediate(context, set, slot);
+        transition context.store.relays[slot].phase != 0u64 {
+            true -> waiting::expire_by(set, context.store.relays[slot].deadline)
+            _ -> done()
+        }
+    }
+}
+machine immediate(context: &State, set: &mut Set, slot: u64 [0..=4]) {
+    let phase: u64 = context.store.relays[slot].phase;
+    let index: u64 = exchange::link_of(context, context.store.relays[slot].source);
+    transition (phase == CHECK || phase == FORWARD) && index <= 2u64 {
+        true -> runnable(context, set, slot, index)
+        _ -> done()
+    }
+    machine runnable(context: &State, set: &mut Set, slot: u64 [0..=4], index: u64 [0..=2]) {
+        transition context.store.relays[slot].cancelled || exchange::idle(context, index) {
+            true -> waiting::expire_by(set, 0u64)
+            _ -> done()
+        }
+    }
+}
+machine done() {}

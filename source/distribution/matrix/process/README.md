@@ -88,7 +88,7 @@ The storage, the parent and the display.
   backing, one per compositor tile, until it is painted over or erased; owed
   erasures flush between turns. A scene switch and a republish after the
   geometry changed replay retained surfaces in one transaction.
-- [storage.omg](connections/storage.omg): this matrix's storage. At the root the provider
+- [storage/storage.omg](connections/storage/storage.omg): this matrix's storage. At the root the provider
   links the composition supplied connect when the first grant or request
   needs them; under a parent the broker's storage connection is the one
   source, over which the parent reports this matrix's binding revision and
@@ -102,6 +102,19 @@ The storage, the parent and the display.
   a launch, take the same path over the first source. A lost or late link
   retires that source's bindings until a grant reconnects it; a parent that
   refuses this matrix's revision is asked for the binding again once.
+  Child requests retain their exact listener ticket, grant and sealed input in
+  [children.omg](connections/storage/children.omg). Each provider link has one
+  [exchange.omg](connections/storage/exchange.omg) receiver shared by child
+  relays and local work. Containment checks, binding queries and ordinary replies
+  resume across turns. A retired child drains its accepted exchange before its
+  input is released; the new listener cannot inherit its reply. Grants are
+  checked again before a queued operation is sent, including after learning a
+  changed upstream binding. Selecting a new provider channel revokes the old
+  source's grants before its handshake, including if that handshake fails.
+  Startup, owner binding, listing and launch still use
+  [synchronous.omg](connections/storage/synchronous.omg); those are the next
+  callers to migrate, and never read replies behind the exchange's back.
+
 - [source.omg](connections/source.omg): the installed source endpoint. POINTER_SOURCE moves
   the compositor's physical cursor, then routes through the World on the pointer
   stream; KEY_SOURCE routes on the keyboard stream, and RESET cancels both. The
