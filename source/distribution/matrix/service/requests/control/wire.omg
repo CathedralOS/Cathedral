@@ -1,6 +1,6 @@
 module requests::control::wire;
 
-// Recognize canonical loss before the shared LAUNCH_IMPORTS opcode. Routed
+// Recognize canonical loss independently of launch policy. Routed
 // requests retain their first hop and whether the word configures or launches
 // from storage; the host owns the original packet and reply.
 use requests::control::operation::Request;

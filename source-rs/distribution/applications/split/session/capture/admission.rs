@@ -1,6 +1,10 @@
 //! Source and crop are owner policy; the consumer cannot choose siblings or masks.
 use super::*;
 use cathedral_user_runtime::{resources::Limits, storage::Scope, task::Executable};
+const CHILD_CHANNELS: u64 = 2;
+// Two IPC pairs, the child's wake, and one server notification per connection.
+const PARENT_CHANNELS: u64 = 7;
+
 impl Capture {
     pub(super) fn admit(
         &mut self,
@@ -52,7 +56,7 @@ impl Capture {
                 // Pixel output remains funded by this provider.
                 private_pages: 2,
                 reader_pages: 34,
-                channels: 2,
+                channels: CHILD_CHANNELS,
             },
             0,
             abi::MAX_ADMISSION_FRAMES as u64,
@@ -101,12 +105,26 @@ impl Capture {
     }
 
     /// The fourth child must not consume this provider's own load and image
-    /// backing. Logical page grants alone do not reserve physical frames.
+    /// backing or transport. Logical page grants do not reserve physical frames,
+    /// and channel funding includes both IPC channels and notifications.
     /// Ask the immediate owner through the ordinary, policy-checked protocol;
     /// refusal leaves admission untouched and the existing desktop running.
     fn fund(&self, output: &mut Output) -> Result<(), Error> {
         let budget = cathedral_user_runtime::resources::budget()?;
         let physical = cathedral_user_runtime::resources::physical_budget()?;
+        let transport = cathedral_user_runtime::ipc::budget()?;
+        // Reserve the child's allowance as well as the parent's live transport.
+        // Wake notifications consume channel funding too.
+        let channels = (transport.charged_channels + CHILD_CHANNELS + PARENT_CHANNELS)
+            .saturating_sub(transport.channel_limit);
+        cathedral_user_runtime::time::storage_sample(
+            "split-capture-funding",
+            &[
+                transport.channel_limit,
+                transport.charged_channels,
+                channels,
+            ],
+        );
         let owner = (abi::ADMISSION_ALLOWANCE_FRAMES as u64)
             .checked_add(budget.limits.private_pages)
             .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
@@ -114,12 +132,12 @@ impl Capture {
             .checked_add(abi::ADMISSION_ALLOWANCE_FRAMES as u64)
             .ok_or(Error(abi::INVALID_ARGUMENT as i64))?;
         let extra = needed.saturating_sub(physical.reserved);
-        if extra == 0 {
+        if extra == 0 && channels == 0 {
             return Ok(());
         }
         let reply = output
             .services
-            .request_interaction([wire::FUND, 0, 0, 0, 0, extra, 0, 0], None)?;
+            .request_interaction([wire::FUND, 0, 0, channels, 0, extra, 0, 0], None)?;
         if reply[0] != 0 {
             return Err(Error(reply[0] as i64));
         }

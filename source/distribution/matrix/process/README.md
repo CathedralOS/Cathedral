@@ -27,7 +27,7 @@ setup and the shared state. The program package is the one the native links.
 
 ### [program/](program/build.omg)
 
-The the process entry: the turn loop, startup and the owner's words.
+The process entry: the turn loop, startup and the owner's words.
 
 - [startup.omg](program/startup.omg): read the environment. Four endpoints make the
   display root; owner control opens first, because the supervisor connects it
@@ -40,8 +40,8 @@ The the process entry: the turn loop, startup and the owner's words.
   world's grant, with the compositor's whole tile allowance and the source
   streams bound; under a parent the view is the parent's to grant), the
   LAUNCH_IMAGES, LAUNCH_POLICY and LAUNCH_PLACE policy for a slot, the children,
-  storage and stored words below, words routed to a child, LOSS (the bare
-  word; LAUNCH_IMPORTS shares it and always carries a slot), CONFIGURE, the
+  storage and stored words below, words routed to a child, LOSS (the canonical
+  bare word, distinct from LAUNCH_IMPORTS), CONFIGURE, the
   desktop supervisor's recovery words (a nested matrix's launcher fallback,
   a slot's save-recovery grant, the recovery poll, RESTORE_STORAGE after
   provider replacement), RESOLVE_PATH in this matrix's realm, and the World's

@@ -415,7 +415,7 @@ pub const STORAGE_BINDING: u64 = 120;
 /// LAUNCH's second payload word is a withholding mask, intersected with this
 /// policy. Callers may remove offers, never add them. Undeclared imports are
 /// not supplied; missing required/version-incompatible imports refuse launch.
-pub const LAUNCH_IMPORTS: u64 = 121;
+pub const LAUNCH_IMPORTS: u64 = 139;
 /// Monotonic ticks a matrix waits for one forwarded storage request before
 /// retiring its provider stream. The current 100-Hz timer makes 1200 ticks
 /// nominally twelve seconds. The larger scoped template can grow the disk extent

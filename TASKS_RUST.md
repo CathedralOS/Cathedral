@@ -746,10 +746,9 @@ What they needed:
 - The owner's LOSS asks every child at once what stopping it would lose and
   answers only whether anything might be. CLOSE from the chrome asks the
   active app the same and stops it only on a clean answer; the chrome's reply
-  waits for it. LOSS shares its word with LAUNCH_IMPORTS: the bare word is
-  LOSS, as in the Rust host, and the matrix decides it before the stored
-  words, which otherwise read it as an imports policy for slot 0 and answered
-  clean.
+  waits for it. The initial fix recognized canonical LOSS before LAUNCH_IMPORTS,
+  which then shared its opcode and otherwise answered the question as an imports
+  policy for slot zero. The follow-up below separates their opcodes entirely.
 - The storage service has 1024 private pages, the per-task maximum: one
   reply must carry the 341-page Omega matrix image beside its heap.
 - A workspace app that declares descendants but no profile gets 384 reader
@@ -812,16 +811,44 @@ Evidence in the main checkout with the patched standalone producer:
 - Boundary test, layout, Rust formatting, the stock matrix's compiled tests
   and clippy for the desktop crate with `shell` pass.
 
-Masked capture (`--capture`) fails on the Rust host too, so it is a regression
-in Split rather than a gap in the Omega matrix: last recorded passing on
-2026-10-24, it now refuses when Split spawns the capture consumer, with
-NO_MEMORY from the kernel's spawn
-(`build/boot-harness-rs/desktop/20261102T011242157792Z/`). Ruled out: Split's
-surface capacity (16) and view, its funding request (granted), its channel,
-handle, private and reader allowances after lending, and guest RAM (256 MiB
-changes nothing). The kernel maps both frame and kernel-heap exhaustion to
-NO_MEMORY at that point; a larger kernel heap stops the user matrix from
-starting at all, which needs understanding first.
+Masked capture's admission failure was transport funding, not address-space
+construction. Temporary stage tracing reached `WakeSource::create` before
+`spawn_tree`: Split had 32 retained transport slots and 26 live charges.
+Reserving the child's two slots left 30; creating its four IPC channels filled
+all 30, so its wake notification failed. Two further server notifications
+would also need backing. The old claim that this error came from kernel spawn,
+and that channel funding had been excluded, was incorrect.
+
+Split now asks its immediate owner for the missing transport headroom before
+admission: two child slots plus seven parent channels/notifications. On this
+fixture the owner grants three slots; repeat capture reuses that funding.
+Physical frame funding remains a separate part of the same request. No kernel
+heap or global capacity increase is needed. The earlier larger-heap startup
+failure remains an uninvestigated observation, not the cause of this refusal.
+The diagnostic Rust-host run passes masked byte inspection, hidden editing,
+close/reopen and cold reboot:
+`build/boot-harness-rs/desktop/20261102T043650581120Z/`. The final Omega matrix
+run also passes these checks and cold reboot after rebuilding both languages'
+contracts: `build/boot-harness-rs/desktop/20261102T044101672906Z/`.
+The final normal-F5 Rust-host capture run also passes after the contract rebuild:
+`build/boot-harness-rs/desktop/20261102T051930688780Z/`.
+The rebuilt Omega nested-desktop run also passes depth three, protected close,
+saved Notes/Colors, repeated subtree reclamation, isolation and cold reopen:
+`build/boot-harness-rs/desktop/20261102T051430347632Z/`.
+
+LOSS remains 121; LAUNCH_IMPORTS is now 139 in both contract languages. Empty
+imports for slot zero no longer encode the canonical loss question. The
+compiled policy regression checks this exact packet, and another test checks
+that all platform/distribution owner command numbers are distinct. This lab
+ABI change requires rebuilding its programs together; no legacy alias exists.
+
+All 514 workspace host tests pass, as do Split's all-feature x86-64 release
+clippy and source-layout checks. The first full host attempt found an old,
+untracked Chooser `bridge/app/omega.lock`: acceptance schema 6 versus the
+pinned producer's schema 7, with no acceptance rows. It was archived at
+`build/matrix-progress/chooser-app-schema6.omega.lock`; the pinned producer
+performed a fresh review and emission successfully. No compiler or tracked
+lock was changed. Logs are in `build/matrix-progress/`.
 
 The remaining fixtures inject delays and failures into the Rust host through
 Cargo features (interaction, recovery, launch, binding, scene and selection
@@ -836,10 +863,27 @@ poll, an image publication, a commit, a launch's read or binding, or a
 selection's scene is held, so those exchanges move off the blocking path into
 staged work across turns, as the realm jobs did.
 
-Next: the capture regression; then the fixtures that build the stock matrix with test probes
-(input producer, interaction delay, launcher recovery and the asynchronous
-launch, binding, scene and selection holds), which need Omega probe builds;
-the profile swap and the bridge's deletion.
+Next, qualify bounded overlapping transport in Omega **before** implementing
+the held-parent fixtures. The Rust matrix's
+`source-rs/distribution/matrix/service/parent/interaction/connection.rs` uses
+`Pipeline<2>` for independent poll and visual requests. Omega's
+`source/platform/libraries/user-runtime/connection/main.omg::Peer` and
+`server/main.omg::Server` currently retain only one unanswered request each.
+Moving calls into a single queue alone would still let a held publication
+block input polling. Preserve the existing single-request helpers; add explicit
+bounded submission/reply correlation and corresponding server custody, then
+prove against a real peer that withholds the first response while answering
+the second. Include wrong/duplicate IDs, partial attachments, closure, and
+late replies. A late reply must never answer a replacement request or child.
+
+Then move the matrix's poll and presentation continuations across turns, with
+an exact child ticket and view/scene generation retained until settlement;
+owner cancellation and replacement must release retained resources without
+publishing into the replacement. Cover launch, binding and selection holds
+through the same production paths. Prefer actual delayed/refused IPC peers;
+use the planned native probe provider only where those cannot place the fault.
+Finish the fixture sweep before changing normal F5 to the Omega matrix and
+removing its Rust bridge. No new owner decision blocks this sequence.
 
 ### Kernel image window widened for the Omega matrix
 

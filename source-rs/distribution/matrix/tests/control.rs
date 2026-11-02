@@ -28,8 +28,8 @@ fn child_control_cannot_be_selected_without_an_authenticated_owner() {
     }
 }
 #[test]
-fn loss_and_imports_share_an_opcode_but_not_a_packet_shape() {
-    assert_eq!(w::LOSS, w::LAUNCH_IMPORTS);
+fn loss_and_empty_imports_for_slot_zero_are_distinct_operations() {
+    assert_ne!(w::LOSS, w::LAUNCH_IMPORTS);
     assert_eq!(decide(packet(w::LOSS), 5, owner()).operation, O::Survey);
     assert_eq!(
         decide(
@@ -43,7 +43,7 @@ fn loss_and_imports_share_an_opcode_but_not_a_packet_shape() {
         .operation,
         O::Survey
     );
-    let words = [w::LAUNCH_IMPORTS, 1, 0, 0, 0, 0, 0, 0];
+    let words = [w::LAUNCH_IMPORTS, 0, 0, 0, 0, 0, 0, 0];
     assert_eq!(decide(words, 5, owner()).operation, O::Imports);
     assert_eq!(
         decide(
@@ -323,6 +323,56 @@ fn every_control_slot_is_bounded_before_it_can_select_host_storage() {
                 .operation,
                 O::Deny
             );
+        }
+    }
+}
+
+#[test]
+fn owner_control_words_do_not_alias_across_platform_and_distribution() {
+    let commands = [
+        ("READ_PIXEL", w::READ_PIXEL),
+        ("BIND", w::BIND),
+        ("PLACE", w::PLACE),
+        ("REVOKE", w::REVOKE),
+        ("POINTER_SOURCE", w::POINTER_SOURCE),
+        ("KEY_SOURCE", w::KEY_SOURCE),
+        ("HEALTH", w::HEALTH),
+        ("INPUT_GROUP_CREATE", w::INPUT_GROUP_CREATE),
+        ("INPUT_GROUP_RELEASE", w::INPUT_GROUP_RELEASE),
+        ("INPUT_CHANNEL_CREATE", w::INPUT_CHANNEL_CREATE),
+        ("INPUT_CHANNEL_RETIRE", w::INPUT_CHANNEL_RETIRE),
+        ("INPUT_POINTER", w::INPUT_POINTER),
+        ("INPUT_KEY", w::INPUT_KEY),
+        ("INPUT_SELECT", w::INPUT_SELECT),
+        ("INPUT_PRODUCER_GRANT", w::INPUT_PRODUCER_GRANT),
+        ("INPUT_PRODUCER_REVOKE", w::INPUT_PRODUCER_REVOKE),
+        ("SPAWN", w::SPAWN),
+        ("STOP", w::STOP),
+        ("LOSS", w::LOSS),
+        ("RUN", w::RUN),
+        ("RUN_MEMORY", w::RUN_MEMORY),
+        ("SURFACE_LIMIT", w::SURFACE_LIMIT),
+        ("STORAGE_GRANT", w::STORAGE_GRANT),
+        ("STORAGE_REVOKE", w::STORAGE_REVOKE),
+        ("STORAGE_STATUS", w::STORAGE_STATUS),
+        ("RUN_PAGES", w::RUN_PAGES),
+        ("RUN_OBJECT", w::RUN_OBJECT),
+        ("LAUNCH_POLICY", w::LAUNCH_POLICY),
+        ("LAUNCH_PLACE", w::LAUNCH_PLACE),
+        ("STORAGE_BINDING", w::STORAGE_BINDING),
+        ("LAUNCH_IMPORTS", w::LAUNCH_IMPORTS),
+        ("RESTORE_STORAGE", w::RESTORE_STORAGE),
+        ("RESOLVE_PATH", w::RESOLVE_PATH),
+        ("MANAGEMENT_GRANT", w::MANAGEMENT_GRANT),
+        ("LAUNCH_IMAGES", w::LAUNCH_IMAGES),
+        ("CONFIGURE", w::CONFIGURE),
+        ("LAUNCHER_FALLBACK", w::LAUNCHER_FALLBACK),
+        ("SAVE_RECOVERY_GRANT", w::SAVE_RECOVERY_GRANT),
+        ("SAVE_RECOVERY_POLL", w::SAVE_RECOVERY_POLL),
+    ];
+    for (index, (name, word)) in commands.iter().enumerate() {
+        for (other, previous) in &commands[..index] {
+            assert_ne!(word, previous, "{name} aliases {other}");
         }
     }
 }
