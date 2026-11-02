@@ -32,6 +32,7 @@ use world::geometry::zeros_from;
 use rects;
 use transfers::forwarded;
 use transfers::transaction;
+use transfers::maintenance;
 use rects::Rects;
 use scene;
 use upstream;
@@ -99,7 +100,12 @@ public machine create(gate: &Gate, context: &mut State, slot: u64 [0..=4], incar
 // A paint, erase or cursor update: staged inside an open batch, otherwise
 // sent and committed. A successful paint or an erase the compositor no longer
 // knows drops the image retained behind that tile.
-public machine update(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame) -> [u64; 8]
+public machine update(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame) -> Submission
+    reaches Kernel blocks invokes Kernel {
+    let words: [u64; 8] = block prepare_update(gate, context, slot, incarnation, frame);
+    transition context.presentation_work.active { true -> (Submission::Pending) _ -> (Submission::Answer { words: words }) }
+}
+machine prepare_update(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame) -> [u64; 8]
     reaches Kernel blocks invokes Kernel {
     block prune(gate, context, slot);
     let preview: Updated = surfaces::update(&mut context.world, slot, incarnation, &frame.payload, false);
@@ -120,22 +126,20 @@ public machine update(gate: &Gate, context: &mut State, slot: u64 [0..=4], incar
     }
     machine sent(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, packet: [u64; 8]) -> [u64; 8]
         reaches Kernel {
-        let status: u64 = block send_packet(gate, context, packet, 0u64);
-        let erased: bool = frame.payload[0] == MATRIX_ERASE && (status == kernel::DENIED || status == kernel::BAD_HANDLE);
-        transition {
-            status == 0u64 -> block committed(gate, context, slot, incarnation, frame, packet[2])
-            erased -> block dropped(gate, context, packet[2], status)
-            _ -> (error(status))
-        }
+        let status: u64 = block forwarded::begin(gate, context, slot, frame, packet, 0u64);
+        error(status)
     }
-    machine committed(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, key: u64) -> [u64; 8] reaches Kernel {
+}
+public machine finish_update(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, key: u64, status: u64)
+    reaches Kernel blocks invokes Kernel {
+    transition {
+        status == 0u64 -> block committed(gate, context, slot, incarnation, frame, key)
+        frame.payload[0] == MATRIX_ERASE && (status == kernel::DENIED || status == kernel::BAD_HANDLE) -> block drop_image(gate, context, key)
+        _ -> done()
+    }
+    machine committed(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, key: u64) reaches Kernel {
         let committed: Updated = surfaces::update(&mut context.world, slot, incarnation, &frame.payload, true);
         block drop_image(gate, context, key);
-        ok()
-    }
-    machine dropped(gate: &Gate, context: &mut State, key: u64, status: u64) -> [u64; 8] reaches Kernel {
-        block drop_image(gate, context, key);
-        error(status)
     }
 }
 // A sealed image for a surface: staged with its payload inside an open batch,
@@ -185,29 +189,12 @@ machine prepare_image(gate: &Gate, context: &mut State, slot: u64 [0..=4], incar
     }
     machine shown(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, packet: [u64; 8], object: u64)
         -> [u64; 8] reaches Kernel {
-        transition context.has_parent {
-            true -> block deferred(gate, context, slot, frame, packet, object)
-            _ -> block immediate(gate, context, slot, incarnation, frame, packet, object)
-        }
+        block deferred(gate, context, slot, frame, packet, object)
     }
     machine deferred(gate: &Gate, context: &mut State, slot: u64 [0..=4], frame: Frame, packet: [u64; 8], object: u64)
         -> [u64; 8] reaches Kernel {
         let status: u64 = block forwarded::begin(gate, context, slot, frame, packet, object);
         error(status)
-    }
-    machine immediate(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, packet: [u64; 8], object: u64)
-        -> [u64; 8] reaches Kernel {
-        let status: u64 = block send_packet(gate, context, packet, object);
-        transition status == 0u64 {
-            true -> block retained(gate, context, slot, incarnation, frame, packet[2], object)
-            _ -> block releasing(gate, object, status)
-        }
-    }
-    machine retained(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, key: u64, object: u64) -> [u64; 8]
-        reaches Kernel {
-        let committed: Updated = surfaces::update(&mut context.world, slot, incarnation, &frame.payload, true);
-        block retain(gate, context, key, object);
-        ok()
     }
     machine releasing(gate: &Gate, object: u64, status: u64) -> [u64; 8] reaches Kernel {
         block release(gate, object);
@@ -262,7 +249,7 @@ machine prepare_batch(gate: &Gate, context: &mut State, slot: u64 [0..=4], incar
         transition {
             frame.payload[0] == PRESENT_BEGIN -> (begun(context, slot, frame.payload[2]))
             frame.payload[0] == PRESENT_ABORT -> block aborting(gate, context, slot, frame.payload[2])
-            frame.payload[0] == PRESENT_COMMIT -> block committing(gate, context, slot, incarnation, frame.payload[2])
+            frame.payload[0] == PRESENT_COMMIT -> committing(gate, context, slot, incarnation, frame.payload[2])
             _ -> (error(kernel::DENIED))
         }
     }
@@ -284,7 +271,7 @@ machine prepare_batch(gate: &Gate, context: &mut State, slot: u64 [0..=4], incar
     machine committing(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64) -> [u64; 8] reaches Kernel {
         let prepared: Commit = batch::prepare(&context.batches[slot], revision);
         transition prepared {
-            Commit::Publish -> block publish(gate, context, slot, incarnation, revision, false)
+            Commit::Publish -> publish(context, slot, incarnation, revision, false)
             Commit::Repeat -> (ok())
             Commit::Refused { code } -> (error(code))
         }
@@ -348,7 +335,7 @@ machine prepare_batch(gate: &Gate, context: &mut State, slot: u64 [0..=4], incar
         }
     }
     machine compact_commit(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64) -> [u64; 8] reaches Kernel {
-        let reply: [u64; 8] = block publish(gate, context, slot, incarnation, revision, true);
+        let reply: [u64; 8] = publish(context, slot, incarnation, revision, true);
         transition reply[0] == 0u64 {
             true -> (reply)
             _ -> block compact_failed(gate, context, slot, revision, reply[0])
@@ -377,65 +364,10 @@ machine view_words() -> [u64; 8] {
 // refusal aborts the transaction and is the answer, leaving the batch open
 // for the child to retry or abort. A published batch commits its updates in
 // the World and retains its images.
-machine publish(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, compact: bool) -> [u64; 8]
+machine publish(context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, compact: bool) -> [u64; 8]
     reaches Kernel {
-    transition context.has_parent {
-        true -> deferred(context, slot, revision, compact)
-        _ -> block publish_blocking(gate, context, slot, incarnation, revision)
-    }
-    machine deferred(context: &mut State, slot: u64 [0..=4], revision: u64, compact: bool) -> [u64; 8] reaches Kernel {
-        let status: u64 = transaction::begin(context, slot, revision, compact);
-        error(status)
-    }
-}
-machine publish_blocking(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64) -> [u64; 8] reaches Kernel {
-    context.revision = ((context.revision as u64 in Wrapping) + 1u64) as u64;
-    let begun: u64 = block transact(gate, context, PRESENT_BEGIN, display::MATRIX_BEGIN);
-    transition begun == 0u64 {
-        true -> block entries(gate, context, slot, incarnation, revision, 0u64, 0u64)
-        _ -> (error(begun))
-    }
-    machine entries(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64, status: u64) -> [u64; 8]
-        reaches Kernel requires index <= 16u64 {
-        transition {
-            status != 0u64 -> block abandoned(gate, context, status)
-            index < 16u64 -> block entry(gate, context, slot, incarnation, revision, index)
-            _ -> block closing(gate, context, slot, incarnation, revision)
-        }
-    }
-    machine entry(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64) -> [u64; 8]
-        reaches Kernel requires index < 16u64 {
-        transition context.batches[slot].entries[index].used {
-            true -> block sending(gate, context, slot, incarnation, revision, index)
-            _ -> block entries(gate, context, slot, incarnation, revision, index + 1u64, 0u64)
-        }
-    }
-    machine sending(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64) -> [u64; 8]
-        reaches Kernel requires index < 16u64 {
-        let words: [u64; 8] = context.batches[slot].entries[index].words;
-        let payload: u64 = context.batches[slot].entries[index].payload;
-        let preview: Updated = surfaces::update(&mut context.world, slot, incarnation, &words, false);
-        transition preview {
-            Updated::Packet { words } -> block sent(gate, context, slot, incarnation, revision, index, words, payload)
-            Updated::Refused { code } -> block entries(gate, context, slot, incarnation, revision, index, code)
-        }
-    }
-    machine sent(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64, packet: [u64; 8], payload: u64)
-        -> [u64; 8] reaches Kernel requires index < 16u64 {
-        let status: u64 = block send_packet(gate, context, packet, payload);
-        transition { _ -> (block entries(gate, context, slot, incarnation, revision, index + 1u64, status)) }
-    }
-    machine abandoned(gate: &Gate, context: &mut State, status: u64) -> [u64; 8] reaches Kernel {
-        let aborted: u64 = block transact(gate, context, PRESENT_ABORT, display::MATRIX_ABORT);
-        error(status)
-    }
-    machine closing(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64) -> [u64; 8] reaches Kernel {
-        let status: u64 = block transact(gate, context, PRESENT_COMMIT, display::MATRIX_COMMIT);
-        transition status == 0u64 {
-            true -> block commit_batch(gate, context, slot, incarnation, revision)
-            _ -> block abandoned(gate, context, status)
-        }
-    }
+    let status: u64 = transaction::begin(context, slot, revision, compact);
+    error(status)
 }
 public machine commit_batch(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64) -> [u64; 8]
     reaches Kernel blocks invokes Kernel {
@@ -727,7 +659,7 @@ machine retain(gate: &Gate, context: &mut State, key: u64, object: u64) reaches 
         context.images[index] = Image { key: key, object: object };
     }
 }
-machine drop_image(gate: &Gate, context: &mut State, key: u64) reaches Kernel {
+public machine drop_image(gate: &Gate, context: &mut State, key: u64) reaches Kernel blocks invokes Kernel {
     let existing: u64 = image_index(context, key, 0u64);
     transition existing < 64u64 {
         true -> block cleared(gate, context, existing)
@@ -764,7 +696,7 @@ public machine release(gate: &Gate, handle: u64) reaches Kernel blocks invokes K
 }
 // The compositor's six words for a translated packet: tile in the high bits of
 // the word, then the rectangle and colour; an erase removes the tile.
-machine tile(packet: [u64; 8]) -> [u64; 6] {
+public machine tile(packet: [u64; 8]) -> [u64; 6] {
     let mut words: [u64; 6];
     let index: u64 = ((packet[2] as u64 in Wrapping) - 1u64) as u64;
     words[0] = selected(packet[0]) | (((index as u64 in Wrapping) << 16u64) as u64);
@@ -782,7 +714,7 @@ machine tile(packet: [u64; 8]) -> [u64; 6] {
         filled
     }
 }
-machine image_words(packet: [u64; 8]) -> [u64; 6] {
+public machine image_words(packet: [u64; 8]) -> [u64; 6] {
     let mut words: [u64; 6];
     let index: u64 = ((packet[2] as u64 in Wrapping) - 1u64) as u64;
     words[0] = display::MATRIX_IMAGE | (((index as u64 in Wrapping) << 16u64) as u64);
@@ -801,13 +733,31 @@ machine selected(op: u64) -> u64 {
 }
 // Erasures owed since the last flush: the display or the parent may already
 // have removed that backing, and the image behind it goes either way.
-public machine flush(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks invokes Kernel {
+public machine flush_turn(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks invokes Kernel {
     transition context.presentation_work.active {
         true -> (0u64)
-        _ -> block idle_flush(gate, context)
+        _ -> idle_flush(gate, context)
     }
 }
 machine idle_flush(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks invokes Kernel {
+    let owed: Retained = surfaces::take_owed(&mut context.world);
+    transition owed {
+        Retained::Packet { words } -> owed_one(context, words)
+        Retained::Nothing -> (0u64)
+    }
+    machine owed_one(context: &mut State, words: [u64; 8]) -> u64 {
+        maintenance::erase(context, words);
+        0u64
+    }
+}
+// Lifecycle callers still drain all erasures before reusing backing ranks.
+public machine flush(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks invokes Kernel {
+    transition context.presentation_work.active {
+        true -> (0u64)
+        _ -> block blocking_flush(gate, context)
+    }
+}
+machine blocking_flush(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks invokes Kernel {
     let owed: Retained = surfaces::take_owed(&mut context.world);
     transition owed {
         Retained::Packet { words } -> block owed_one(gate, context, words)

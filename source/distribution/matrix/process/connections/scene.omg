@@ -1,16 +1,15 @@
 module scene;
-// The root's display connection: one shared client to the compositor, speaking
-// six-word frames. It moves the physical cursor and carries each child's tile
-// updates, sealed images and the begin/commit transaction around a batch.
-use protocol::main;
-use protocol::display;
+// Sole receiver for the root compositor. Regular drawing resumes across turns;
+// lifecycle callers still use the synchronous compatibility exchange below.
 use shared::state::State;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;
-use runtime::connection::call;
-use runtime::connection::call::CallReply;
+use runtime::connection::main::Reply;
 use runtime::connection::main::Frame;
+use runtime::waiting;
+use runtime::waiting::Set;
+use runtime::time::Tick;
 
 public machine connect(gate: &Gate, context: &mut State, sender: u64, receiver: u64, deadline: u64) -> u64
     reaches Kernel blocks invokes Kernel {
@@ -18,48 +17,112 @@ public machine connect(gate: &Gate, context: &mut State, sender: u64, receiver: 
     context.has_scene = status == 0u64;
     status
 }
-// Report the physical pointer's position; the compositor draws its cursor there.
-public machine pointer(gate: &Gate, context: &mut State, x: u64, y: u64) -> u64 reaches Kernel blocks invokes Kernel {
-    let mut words: [u64; 6];
-    words[0] = display::MATRIX_POINTER;
-    words[1] = x;
-    words[2] = y;
-    block command(gate, context, words)
+public machine pointer(context: &mut State, x: u64, y: u64) -> u64 {
+    context.display_work.pointer = true;
+    context.display_work.x = x;
+    context.display_work.y = y;
+    0u64
 }
-// One six-word exchange with the compositor; a lost connection stays lost.
+public machine submit(gate: &Gate, context: &mut State, words: [u64; 6], object: u64) -> u64
+    reaches Kernel blocks invokes Kernel {
+    transition {
+        !context.has_scene -> (kernel::DENIED)
+        context.display_work.request != 0u64 || context.display_work.ready -> (kernel::WOULD_BLOCK)
+        _ -> block sending(gate, context, words, object)
+    }
+    machine sending(gate: &Gate, context: &mut State, words: [u64; 6], object: u64) -> u64 reaches Kernel {
+        let payload: [u64; 8] = [words[0],words[1],words[2],words[3],words[4],words[5],0u64,0u64];
+        let status: u64 = block runtime::connection::main::begin_object_bytes(gate, &mut context.scene, &payload, object, 48u64);
+        transition {
+            status == 0u64 -> submitted(context)
+            context.scene.fault == 0u64 && (status == kernel::BUSY || status == kernel::WOULD_BLOCK) -> (kernel::WOULD_BLOCK)
+            _ -> block failed(gate, context, status)
+        }
+    }
+    machine submitted(context: &mut State) -> u64 { context.display_work.request = context.scene.next_id; 0u64 }
+    machine failed(gate: &Gate, context: &mut State, status: u64) -> u64 reaches Kernel {
+        block close(gate, context);
+        status
+    }
+}
+public machine step(gate: &Gate, context: &mut State, now: u64) reaches Kernel blocks invokes Kernel {
+    transition context.display_work.request != 0u64 {
+        true -> block receiving(gate, context, now)
+        _ -> done()
+    }
+    machine receiving(gate: &Gate, context: &mut State, now: u64) reaches Kernel {
+        let reply: Reply = block runtime::connection::main::poll(gate, &mut context.scene, now);
+        transition reply {
+            Reply::Pending -> done()
+            Reply::Complete { frame, notification } -> block received(gate, context, frame, notification)
+            Reply::Object { frame, object } -> block object(gate, context, object)
+            Reply::Endpoint { frame, endpoint } -> block endpoint(gate, context, endpoint)
+            Reply::Failed { code } -> block failed(gate, context, code)
+        }
+    }
+    machine received(gate: &Gate, context: &mut State, frame: Frame, notification: u64) reaches Kernel {
+        transition frame.id == context.display_work.request && frame.bytes == 48u64 && notification == 0u64 {
+            true -> completed(context, frame.payload[0])
+            _ -> block malformed(gate, context, notification)
+        }
+    }
+    machine malformed(gate: &Gate, context: &mut State, notification: u64) reaches Kernel {
+        let ignored: u64 = Kernel::notify_drop(gate, notification);
+        block failed(gate, context, kernel::IO_ERROR);
+    }
+    machine object(gate: &Gate, context: &mut State, object: u64) reaches Kernel {
+        let ignored: u64 = block Kernel::memory_release(gate, object);
+        block failed(gate, context, kernel::IO_ERROR);
+    }
+    machine endpoint(gate: &Gate, context: &mut State, endpoint: u64) reaches Kernel {
+        let ignored: u64 = Kernel::close(gate, endpoint);
+        block failed(gate, context, kernel::IO_ERROR);
+    }
+    machine failed(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
+        block close(gate, context);
+        completed(context, status);
+    }
+}
+machine completed(context: &mut State, status: u64) {
+    context.display_work.request = 0u64;
+    context.display_work.ready = true;
+    context.display_work.status = status;
+}
+public machine take(context: &mut State) -> u64 { context.display_work.ready = false; context.display_work.status }
+public machine close(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
+    let ignored: u64 = block runtime::connection::main::close(gate, &mut context.scene);
+    context.has_scene = false;
+    context.display_work.request = 0u64;
+}
+public machine watch(context: &State, set: &mut Set) {
+    transition context.display_work.request != 0u64 {
+        true -> watched(context, set)
+        _ -> done()
+    }
+    machine watched(context: &State, set: &mut Set) {
+        waiting::add(set, waiting::IPC, context.scene.receiver);
+        waiting::add(set, waiting::NOTIFICATION, context.scene.bell.wait);
+        transition context.scene.partial { true -> waiting::expire_by(set, context.scene.partial_deadline) _ -> done() }
+    }
+}
 public machine command(gate: &Gate, context: &mut State, words: [u64; 6]) -> u64 reaches Kernel blocks invokes Kernel {
     block command_object(gate, context, words, 0u64)
 }
-// The same exchange carrying a sealed image the compositor gains its own
-// right to; this matrix's right stays with it.
-public machine command_object(gate: &Gate, context: &mut State, words: [u64; 6], object: u64) -> u64 reaches Kernel blocks invokes Kernel {
-    transition context.has_scene {
-        true -> block sending(gate, context, words, object)
-        _ -> (DENIED)
+public machine command_object(gate: &Gate, context: &mut State, words: [u64; 6], object: u64) -> u64
+    reaches Kernel blocks invokes Kernel {
+    let status: u64 = block submit(gate, context, words, object);
+    transition status == 0u64 { true -> block waiting(gate, context) _ -> (status) }
+    machine waiting(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+        let tick: Tick = runtime::time::read(gate, context.clock);
+        transition tick { Tick::Read { value } -> block checked(gate, context, value) _ -> (kernel::IO_ERROR) }
     }
-    machine sending(gate: &Gate, context: &mut State, words: [u64; 6], object: u64) -> u64 reaches Kernel {
-        let mut payload: [u64; 8];
-        payload[0] = words[0];
-        payload[1] = words[1];
-        payload[2] = words[2];
-        payload[3] = words[3];
-        payload[4] = words[4];
-        payload[5] = words[5];
-        let reply: CallReply = block call::exchange_object_bytes(gate, &mut context.scene, context.clock, &payload, object, 48u64);
-        transition reply {
-            CallReply::Received { frame, notification } -> (status_of(frame))
-            CallReply::Failed { code } -> lost(context, code)
-            _ -> lost(context, kernel::IO_ERROR)
-        }
+    machine checked(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+        block step(gate, context, now);
+        transition context.display_work.ready { true -> (take(context)) _ -> block parked(gate, context, now) }
     }
-    machine lost(context: &mut State, code: u64) -> u64 {
-        context.has_scene = false;
-        code
+    machine parked(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+        let ignored: u64 = block runtime::connection::main::wait(gate, &context.scene, runtime::time::after(now, 1u64));
+        block waiting(gate, context)
     }
 }
-machine status_of(frame: Frame) -> u64 {
-    transition frame.bytes == 48u64 {
-        true -> (frame.payload[0])
-        _ -> (IO_ERROR)
-    }
-}
+machine done() {}

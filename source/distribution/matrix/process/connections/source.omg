@@ -1,8 +1,8 @@
 module source;
 // The explicitly installed source endpoint: physical input arrives here as
 // POINTER_SOURCE and KEY_SOURCE words on two local streams in one focus group,
-// described as the pointer and the keyboard. A pointer sample moves the
-// compositor's physical cursor before it is routed; RESET cancels both streams.
+// described as the pointer and the keyboard. Samples enter the input queues
+// independently of cursor drawing; RESET cancels both streams.
 // These are this adapter's local names, not global input roles.
 use protocol::main;
 use protocol::matrix;
@@ -114,31 +114,31 @@ machine receive(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kerne
 }
 machine served(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Kernel {
     let issued: Ticket = runtime::server::main::ticket(&context.source);
-    let answer: [u64; 8] = block dispatch(gate, context, frame);
+    let answer: [u64; 8] = dispatch(context, frame);
     let status: u64 = block runtime::server::main::reply_to(gate, &mut context.source, issued, &answer);
     0u64
 }
 // Samples outside the bound extent and any other word are denied; the driver
 // checks that owner words are refused on this connection before it trusts it.
-machine dispatch(gate: &Gate, context: &mut State, frame: Frame) -> [u64; 8] reaches Kernel {
+machine dispatch(context: &mut State, frame: Frame) -> [u64; 8] {
     transition {
         frame.bytes != 64u64 -> (error(kernel::DENIED))
         frame.payload[0] == POINTER_SOURCE && frame.payload[3] <= 7u64 && zeros_from(&frame.payload, 4u64)
             && frame.payload[1] < context.width && frame.payload[2] < context.height ->
-            block pointed(gate, context, frame.payload[1], frame.payload[2], frame.payload[3])
+            pointed(context, frame.payload[1], frame.payload[2], frame.payload[3])
         frame.payload[0] == KEY_SOURCE && zeros_from(&frame.payload, 3u64) -> (keyed(context, frame.payload[1], frame.payload[2]))
         _ -> (error(kernel::DENIED))
     }
 }
-machine pointed(gate: &Gate, context: &mut State, x: u64, y: u64, buttons: u64) -> [u64; 8] reaches Kernel {
+machine pointed(context: &mut State, x: u64, y: u64, buttons: u64) -> [u64; 8] {
     let bound: u64 = bind_streams(&mut context.world);
     transition bound == 0u64 {
-        true -> block moved(gate, context, x, y, buttons)
+        true -> moved(context, x, y, buttons)
         _ -> (error(bound))
     }
 }
-machine moved(gate: &Gate, context: &mut State, x: u64, y: u64, buttons: u64) -> [u64; 8] reaches Kernel {
-    let status: u64 = block scene::pointer(gate, context, x, y);
+machine moved(context: &mut State, x: u64, y: u64, buttons: u64) -> [u64; 8] {
+    let status: u64 = scene::pointer(context, x, y);
     transition status == 0u64 {
         true -> (sampled(context, POINTER_STREAM, POINTER, x, y, buttons))
         _ -> (error(status))

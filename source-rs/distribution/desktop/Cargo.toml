@@ -12,6 +12,7 @@ test = false
 bench = false
 
 [features]
+display-wait-probe = ["shell"]
 storage-lab = []
 trace-input = ["cathedral-colors?/trace-input"]
 trace-storage = ["cathedral-colors?/trace-storage"]

@@ -42,6 +42,18 @@ pub(crate) fn run() -> u64 {
     #[cfg(feature = "trace-storage")]
     let mut idle_polls = 0u32;
     loop {
+        #[cfg(feature = "display-wait-probe")]
+        if session.user != 0 {
+            // A dedicated test owner keeps the ordinary control link free for
+            // HEALTH; unrelated lifecycle queries must not sit ahead of it.
+            assert_eq!(
+                call(&mut session.matrix, [wire::HEALTH, 0, 0, 0, 0, 0, 0, 0]),
+                [0; 8]
+            );
+            time::storage_sample("root-health", &[]);
+            let _ = session.matrix.idle(time::after(10).unwrap());
+            continue;
+        }
         persistence::startup::progress(&mut session);
         // The chooser launches a user matrix into the workspace slot; the
         // desktop observes only that direct child's realm. The user matrix

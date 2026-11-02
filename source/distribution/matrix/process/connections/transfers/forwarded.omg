@@ -1,5 +1,5 @@
 module transfers::forwarded;
-// A forwarded image: retain custody -> submit once -> keep serving -> settle.
+// One child update or image, at either backing: retain -> submit -> settle.
 // Connection correlation and deferred tickets are ordinary platform runtime
 // operations. This program owns the child's binding and scene serialization.
 use shared::state::State;
@@ -11,11 +11,10 @@ use runtime::kernel;
 use runtime::connection::main::Frame;
 use runtime::server::main::Ticket;
 use runtime::server::deferred;
-use parent::connection;
+use transfers::backing;
+use protocol::main;
 use presentation;
-use upstream;
 use responses;
-use world::level;
 
 public machine begin(gate: &Gate, context: &mut State, slot: u64 [0..=4], frame: Frame, packet: [u64; 8], object: u64) -> u64
     reaches Kernel blocks invokes Kernel {
@@ -65,7 +64,7 @@ machine draining(gate: &Gate, context: &mut State) reaches Kernel {
 machine submit(gate: &Gate, context: &mut State) reaches Kernel {
     let packet: [u64; 8] = context.presentation_work.packet;
     let object: u64 = context.presentation_work.object;
-    let status: u64 = block connection::visual(gate, context, packet, object);
+    let status: u64 = block backing::submit(gate, context, packet, object);
     transition {
         status == 0u64 -> submitted(context)
         status == kernel::WOULD_BLOCK -> done()
@@ -76,14 +75,14 @@ machine submit(gate: &Gate, context: &mut State) reaches Kernel {
 machine waiting(gate: &Gate, context: &mut State) reaches Kernel {
     // Leave a completed reply with this job while the child's previous plain
     // answer is backpressured. Never overwrite that answer or repeat the image.
-    transition context.parent_work.visual_ready && !context.answers[context.presentation_work.slot].active {
+    transition backing::ready(context) && !context.answers[context.presentation_work.slot].active {
         true -> block received(gate, context)
         _ -> done()
     }
     machine received(gate: &Gate, context: &mut State) reaches Kernel {
-        let answer: [u64; 8] = connection::take_visual(context);
+        let status: u64 = backing::take(context);
         transition transfer::current(context) {
-            true -> block finish(gate, context, answer[0])
+            true -> block finish(gate, context, status)
             _ -> block finish(gate, context, kernel::DENIED)
         }
     }
@@ -93,9 +92,14 @@ machine finish(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
     let empty: Transfer;
     context.presentation_work = empty;
     context.next_child = (work.slot + 1u64) % 5u64;
-    block presentation::finish_image(gate, context, work.slot, work.ticket.incarnation, work.frame,
-        work.packet[2], work.object, status);
+    block settled(gate, context, work, status);
     let reply: [u64; 8] = presentation::error(status);
     let sent: u64 = block responses::send(gate, context, work.slot, work.ticket, reply);
+}
+machine settled(gate: &Gate, context: &mut State, work: Transfer, status: u64) reaches Kernel {
+    transition work.frame.payload[0] == SURFACE_IMAGE {
+        true -> block presentation::finish_image(gate, context, work.slot, work.ticket.incarnation, work.frame, work.packet[2], work.object, status)
+        _ -> block presentation::finish_update(gate, context, work.slot, work.ticket.incarnation, work.frame, work.packet[2], status)
+    }
 }
 machine done() {}

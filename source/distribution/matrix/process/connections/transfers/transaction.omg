@@ -16,11 +16,10 @@ use world::surfaces;
 use world::surfaces::Updated;
 use world::level;
 use world::geometry;
-use parent::connection;
+use transfers::backing;
 use transfers::transfer;
 use presentation;
 use responses;
-use upstream;
 
 public machine begin(context: &mut State, slot: u64 [0..=4], revision: u64, compact: bool) -> u64 {
     let ticket: Ticket = runtime::server::main::ticket(&context.slots[slot].listener);
@@ -63,11 +62,11 @@ machine draining(gate: &Gate, context: &mut State) reaches Kernel {
     let status: u64 = block responses::step(gate, context, slot);
 }
 machine receive(gate: &Gate, context: &mut State) reaches Kernel {
-    transition context.parent_work.visual_ready { true -> block received(gate, context) _ -> done() }
+    transition backing::ready(context) { true -> block received(gate, context) _ -> done() }
     machine received(gate: &Gate, context: &mut State) reaches Kernel {
-        let answer: [u64; 8] = connection::take_visual(context);
+        let status: u64 = backing::take(context);
         context.presentation_work.submitted = false;
-        block answered(gate, context, answer[0]);
+        block answered(gate, context, status);
         block next(gate, context);
     }
 }
@@ -160,7 +159,7 @@ machine control(gate: &Gate, context: &mut State, op: u64) reaches Kernel {
     block submit(gate, context, words, 0u64);
 }
 machine submit(gate: &Gate, context: &mut State, words: [u64; 8], object: u64) reaches Kernel {
-    let status: u64 = block connection::visual(gate, context, words, object);
+    let status: u64 = block backing::submit(gate, context, words, object);
     transition {
         status == 0u64 -> submitted(context)
         status == kernel::WOULD_BLOCK -> done()
@@ -169,7 +168,7 @@ machine submit(gate: &Gate, context: &mut State, words: [u64; 8], object: u64) r
     machine submitted(context: &mut State) { context.presentation_work.submitted = true; }
 }
 machine lost(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
-    block upstream::close(gate, context);
+    block backing::close(gate, context);
     level::inherit(&mut context.world, geometry::no_grant());
     completed(context, status);
 }

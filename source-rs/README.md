@@ -326,7 +326,12 @@ The forwarded batch counterpart is
 while HEALTH/input continue; another F3 refuses it and requires the matching
 abort before the replacement app can publish. Both cold boots check persisted
 Colors state. These keys belong only to the interaction-delay fixture.
-Root-display and lifecycle waits remain outside these proofs.
+The actual root-compositor boundary is exercised by
+`python tools/boot-harness-rs/omega_display_wait_test.py`: images, commits,
+rectangles and pointer updates wait at the compositor while root HEALTH and
+hardware input must continue; a refused commit must abort before another app
+renders. Notes text and Colors state survive cold reopen. These probes are compiled only into the
+test's compositor, input adapter and desktop owner. Lifecycle waits remain.
 
 The reverse boundary is
 `python tools/boot-harness-rs/omega_desktop_test.py --rust-user`: an Omega root

@@ -97,8 +97,14 @@ pub fn run(environment: cathedral_user_runtime::task::Environment) -> u64 {
             server.enable_pipeline(index, slot).unwrap();
         }
     }
+    #[cfg(feature = "presentation-delay")]
+    let mut delay = delay_probe::Gate::default();
     loop {
-        match server.next_event() {
+        #[cfg(feature = "presentation-delay")]
+        let next = delay.next(&mut server);
+        #[cfg(not(feature = "presentation-delay"))]
+        let next = server.next_event();
+        match next {
             Ok(Event::Disconnected {
                 client,
                 incarnation,

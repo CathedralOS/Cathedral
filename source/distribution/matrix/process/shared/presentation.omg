@@ -6,7 +6,9 @@ use runtime::server::main::Ticket;
 use runtime::connection::main::Frame;
 
 public data Phase [copy] { case Begin; case Entry; case Commit; case Abort; case Finished; }
+public data Maintenance [copy] { case None; case Pointer; case Style; case Erase; }
 public data Transfer [copy] {
+    maintenance: Maintenance;
     batch: bool;
     compact: bool;
     phase: Phase;

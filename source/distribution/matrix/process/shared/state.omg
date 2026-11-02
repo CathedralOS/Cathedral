@@ -4,6 +4,7 @@ module state;
 // the storage, each child slot's admission, policy, funding and batch, the
 // workspace's instances and the realm setup's progress.
 use parent;
+use display;
 use outbox;
 use presentation;
 use runtime::server::main::Server;
@@ -94,6 +95,7 @@ public data State {
     owner: Server;
     source: Server;
     scene: Peer;
+    display_work: display::Pending;
     has_scene: bool;
     // The parent matrix's broker connection, when one admitted this instance,
     // and whether its last snapshot left more to take.

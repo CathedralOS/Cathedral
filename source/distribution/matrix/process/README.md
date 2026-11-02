@@ -268,5 +268,12 @@ BEGIN, each translated entry and COMMIT, or ABORT after a rejection. The origina
 child ticket, child view, parent epoch and transaction revision survive each wait.
 Input polling, service acquisition, storage and owner HEALTH remain independent.
 Scene mutations and child retirement wait behind publication; failed handshakes
-retain their cleanup request. Root display exchanges, selection, binding and
+retain their cleanup request. Lifecycle scene replay, selection, binding and
 launch still contain synchronous waits. See TASKS_RUST.md for verified scope.
+
+The root display uses [scene.omg](connections/scene.omg) as its sole receiver.
+[The backing selector](connections/transfers/backing.omg) translates child
+publications to that display or to the supplied parent; both resume across
+turns. [Maintenance](connections/transfers/maintenance.omg) retains cursor
+updates and owed erasures in the same scene barrier. Hardware input is queued
+independently of cursor drawing. Lifecycle scene replay remains synchronous.

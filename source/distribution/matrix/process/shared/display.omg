@@ -1,0 +1,11 @@
+module display;
+// One compositor exchange, plus the newest cursor position waiting to be drawn.
+// Input events have their own queues and are never coalesced here.
+public data Pending {
+    request: u64;
+    ready: bool;
+    status: u64;
+    pointer: bool;
+    x: u64;
+    y: u64;
+}

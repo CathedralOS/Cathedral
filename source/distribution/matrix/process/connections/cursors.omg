@@ -16,7 +16,7 @@ use world::geometry;
 use world::input::cursor::Found;
 use world::input::cursor::Cursor;
 use upstream;
-use scene;
+use transfers::maintenance;
 use source;
 
 public machine step(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks invokes Kernel {
@@ -29,7 +29,7 @@ machine idle_step(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks
     transition {
         context.has_parent && geometry::valid_grant(context.world.parent) -> block forwarding(gate, context, 0u64)
         context.has_parent -> (0u64)
-        context.has_scene -> block styling(gate, context, physical(context, 0u64))
+        context.has_scene -> styling(context, physical(context, 0u64))
         _ -> (0u64)
     }
 }
@@ -106,24 +106,13 @@ machine physical(context: &State, index: u64) -> u64 requires index <= 4u64 {
         }
     }
 }
-machine styling(gate: &Gate, context: &mut State, mode: u64) -> u64 reaches Kernel {
+machine styling(context: &mut State, mode: u64) -> u64 {
     transition context.styled && context.style == mode {
         true -> (0u64)
-        _ -> block restyled(gate, context, mode)
+        _ -> restyled(context, mode)
     }
-    machine restyled(gate: &Gate, context: &mut State, mode: u64) -> u64 reaches Kernel {
-        let mut words: [u64; 6];
-        words[0] = display::MATRIX_POINTER_STYLE;
-        words[1] = mode;
-        let status: u64 = block scene::command(gate, context, words);
-        transition status == 0u64 {
-            true -> (set_style(context, mode))
-            _ -> (status)
-        }
+    machine restyled(context: &mut State, mode: u64) -> u64 {
+        maintenance::style(context, mode);
+        0u64
     }
-}
-machine set_style(context: &mut State, mode: u64) -> u64 {
-    context.styled = true;
-    context.style = mode;
-    0u64
 }

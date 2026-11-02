@@ -132,6 +132,8 @@ fn publish(connection: &mut Client, words: wire::Packet) -> Result<(), Error> {
     }
     let (bytes, n) = connection.call_retained(&wire::encode(words))?;
     if wire::decode(&bytes[..n]).is_some_and(|reply| reply[0] == 0) {
+        #[cfg(feature = "display-wait-probe")]
+        time::storage_sample("input-ack", &[words[0], words[1], words[2]]);
         Ok(())
     } else {
         Err(Error(abi::IO_ERROR as i64))

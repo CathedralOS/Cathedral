@@ -33,7 +33,7 @@ use funding;
 use workspace;
 use connections::responses;
 
-// Resume after the last image's sender, so a constantly repainting child
+// Resume after the last publication's sender, so a constantly repainting child
 // cannot always take the scene before its waiting siblings.
 public machine all(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
     block visit(gate, context, now, context.next_child, 0u64)
@@ -81,7 +81,7 @@ machine queued(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64) ->
 machine routed(gate: &Gate, context: &mut State, slot: u64 [0..=4], frame: Frame, now: u64) -> u64 reaches Kernel {
     // Polls and acquisition of already-granted rights are independent of scene
     // publication. In particular, an admitted child must finish its handshake
-    // while an older sibling's image waits. Other requests retain their input.
+    // while an older sibling's publication waits. Other requests retain their input.
     transition context.presentation_work.active && frame.payload[0] != MATRIX_POLL && frame.payload[0] != POLL_TAGGED
         && frame.payload[0] != ACQUIRE {
         true -> queued(context, slot, frame)
@@ -175,8 +175,8 @@ machine creating(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ti
     block answered(gate, context, slot, issued, reply)
 }
 machine updating(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket, frame: Frame, incarnation: u64) -> u64 reaches Kernel {
-    let reply: [u64; 8] = block presentation::update(gate, context, slot, incarnation, frame);
-    block answered(gate, context, slot, issued, reply)
+    let result: Submission = block presentation::update(gate, context, slot, incarnation, frame);
+    transition result { Submission::Pending -> (0u64) Submission::Answer { words } -> block answered(gate, context, slot, issued, words) }
 }
 machine asked(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket, frame: Frame, incarnation: u64) -> u64 reaches Kernel {
     let reply: [u64; 8] = request(&mut context.world, slot, incarnation, &frame.payload);

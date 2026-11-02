@@ -932,6 +932,74 @@ use the planned native probe provider only where those cannot place the fault.
 Finish the fixture sweep before changing normal F5 to the Omega matrix and
 removing its Rust bridge. No new owner decision blocks this sequence.
 
+### Stock matrix migration: root display waits
+
+The Omega root now resumes regular display publication across turns. Its
+[scene connection](source/distribution/matrix/process/connections/scene.omg)
+submits one six-word request and consumes only its correlated reply. Bad frame
+sizes, foreign IDs or unexpected attachments retire the connection; a lost root
+display ends the root process rather than leaving a healthy-looking dead renderer.
+The [backing selector](source/distribution/matrix/process/connections/transfers/backing.omg)
+selects the supplied parent or that root connection, so standalone images,
+ordinary paint/erase/cursor updates and transactional batches use the same child
+continuations at both levels. Sealed payload custody and deferred caller tickets
+last through settlement. Root batch failure sends the matching compositor ABORT.
+
+[Maintenance](source/distribution/matrix/process/connections/transfers/maintenance.omg)
+retains pointer drawing, cursor style and owed erasures through their replies.
+A retirement's erasures drain before another surface can reuse its ranks. The
+explicit lifecycle flush still drains synchronously inside configuration; it
+must not report completion merely because an erase was queued. Hardware samples
+enter the input queues without waiting for cursor drawing. Only the newest
+visual pointer position is coalesced; keyboard/button edges remain input events.
+Pointer drawing gets a turn after a child's completed publication and when the
+scene is idle. The same broad scene barrier still delays scene mutations while
+input, owner HEALTH, granted-service acquisition and storage dispatch proceed.
+
+This does not finish launch, binding, selection or explicit refresh: their scene
+replay and compatibility exchanges remain synchronous. Normal F5 still uses the
+Rust matrix. No kernel, runtime ABI or production protocol change is involved.
+
+`python tools/boot-harness-rs/omega_display_wait_test.py` installs the real stock
+Omega root/user over a test-only Rust compositor. Reserved corner positions arm
+image, commit, rectangle, pointer and refused-commit holds. A dedicated desktop
+test owner asks HEALTH without putting lifecycle queries ahead of it; the input
+adapter records acknowledged hardware samples. The test requires both during
+each hold, checks the old complete Colors scene, exact Notes input, matched
+compositor abort, a replacement app, cursor catch-up to the newest position and
+cold persistence. All three probes are absent from normal F5; no Omega fixture
+implementation substitutes for the installed matrix.
+
+Verified with the pinned producer; matrix image **349 of 496 load pages**,
+with unchanged stack, admission and reader allowances. Each desktop scenario
+includes a cold reopen:
+
+- Root compositor holds, HEALTH/hardware input during each hold, exact text,
+  previous scene preserved, matching abort and cursor catch-up:
+  `build/boot-harness-rs/desktop/20261102T201653860193Z/`.
+- Forwarded batch hold/refusal and replacement render:
+  `build/boot-harness-rs/desktop/20261102T201838834687Z/`.
+- Forwarded image hold, queued input and protected close:
+  `build/boot-harness-rs/desktop/20261102T201952990322Z/`.
+- Three nested desktops, protected close and repeated subtree reclamation:
+  `build/boot-harness-rs/desktop/20261102T202054374244Z/`.
+- Independent participants, regrant and resize revocation:
+  `build/boot-harness-rs/desktop/20261102T202419602714Z/`.
+- Recursive cursor preferences, target death and restoration:
+  `build/boot-harness-rs/desktop/20261102T202522836912Z/`.
+- Repeated three-level teardown, exact saved text and bounded provider heap:
+  `build/boot-harness-rs/desktop/20261102T202626672347Z/`.
+- Normal F5, copied user, duplicated Notes and saved state:
+  `build/boot-harness-rs/desktop/20261102T203110381148Z/`.
+- Rust host tests (514), targeted clippy for all three probe feature sets,
+  formatting, layout (148 Omega / 153 Rust edges), four harness unit tests,
+  Python compilation and diff whitespace checks pass.
+
+Explicit stale-view/child-death faults inside a held image-bearing batch
+remain follow-up work, along with
+lifecycle continuations. Malformed root replies and root-display loss have
+defensive handling but no injected fault proof in this slice.
+
 ### Stock matrix migration: forwarded batch waits
 
 Forwarded presentation batches now retain their progress across turns, alongside
@@ -987,7 +1055,7 @@ a cold reopen:
 
 Still needed after this slice: held transactions
 containing image payloads with explicit view-retirement and child-death faults,
-root-compositor continuations, then selection/binding/launch continuations.
+selection/binding/launch continuations (regular root display waits are covered above).
 The broad scene barrier remains deliberate and is not a claim of full lifecycle
 independence.
 

@@ -1,0 +1,40 @@
+module transfers::backing;
+// Translate the same scene publication to a supplied parent or the root display.
+use shared::state::State;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use protocol::main;
+use protocol::matrix;
+use protocol::display;
+use parent::connection;
+use scene;
+use upstream;
+use presentation;
+
+public machine submit(gate: &Gate, context: &mut State, words: [u64; 8], object: u64) -> u64
+    reaches Kernel blocks invokes Kernel {
+    transition context.has_parent {
+        true -> block connection::visual(gate, context, words, object)
+        _ -> block scene::submit(gate, context, display_words(words), object)
+    }
+}
+machine display_words(words: [u64; 8]) -> [u64; 6] {
+    transition {
+        words[0] == PRESENT_BEGIN -> (control(display::MATRIX_BEGIN, words[2]))
+        words[0] == PRESENT_COMMIT -> (control(display::MATRIX_COMMIT, words[2]))
+        words[0] == PRESENT_ABORT -> (control(display::MATRIX_ABORT, words[2]))
+        words[0] == SURFACE_IMAGE -> (presentation::image_words(words))
+        _ -> (presentation::tile(words))
+    }
+}
+machine control(op: u64, revision: u64) -> [u64; 6] { [op,revision,0u64,0u64,0u64,0u64] }
+public machine ready(context: &State) -> bool {
+    transition context.has_parent { true -> (context.parent_work.visual_ready) _ -> (context.display_work.ready) }
+}
+public machine take(context: &mut State) -> u64 {
+    transition context.has_parent { true -> parent(context) _ -> (scene::take(context)) }
+    machine parent(context: &mut State) -> u64 { let words: [u64; 8] = connection::take_visual(context); words[0] }
+}
+public machine close(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
+    transition context.has_parent { true -> block upstream::close(gate, context) _ -> block scene::close(gate, context) }
+}
