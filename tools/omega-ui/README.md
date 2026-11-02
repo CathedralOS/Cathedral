@@ -15,46 +15,23 @@ script prepares the same native exports automatically; the boot harness contains
 no special preparation rule for the demo. The build uses Cathedral's checked-in distribution source. Its standard library
 is an ordinary immutable Git package dependency, acquired through Omega's normal
 package review; the UI does not keep a private standard-library snapshot.
-The canonical UI source uses explicit machine arguments and Build-owned native
-bindings. Its compiler requirements and current qualification are recorded in
-[the handoff](../../TASKS_RUST.md#canonical-omega-ui-source).
-The earlier `20dcd0409b66` producer and desktop runs below are historical evidence
-for the previous source revision; that compiler cannot compile this migrated UI.
-An arbitrary later compiler revision is not a substitute for a qualified producer.
+The UI source uses nested machines, explicit machine arguments and Build-owned
+native bindings. It builds with the producer qualified for the desktop closure,
+the one the standalone [process runtime](../omega-user/README.md) names; its
+qualification is recorded in [the handoff](../../TASKS_RUST.md). Selection is
+`--compiler`, then `OMEGA_BIN`, then `build/omega-user/compiler/omega.exe` on
+Windows (`omega` elsewhere), then PATH. An arbitrary later compiler revision is
+not a substitute for a qualified producer.
 Python 3 is required by the existing Cathedral build tools. No font runtime or new
 external Cargo dependency is needed. `OMEGA_UI_COMPONENT_DIR` explicitly selects
 already-prepared artifacts instead.
 Review and compilation use the same [bounded compiler process](../omega-component/process.py)
-as application components: 4 GiB and five minutes per invocation. A failed or
-exhausted compiler never publishes a new component receipt.
+as application components. A failed or exhausted compiler never publishes a new
+component receipt.
 
-The Rust F5 profile includes the UI demo. Its existing prepared-component input
-keeps that consumer independent of the compiler used for other desktop packages.
-Keep an existing legacy compiler checkout intact. For the canonical UI compiler,
-run these commands from the Cathedral root. Cargo
-uses the Rust toolchain pinned in the compiler repository:
-
-```text
-git clone https://github.com/CathedralOS/Omega.git build/omega-ui/canonical-compiler
-cd build/omega-ui/canonical-compiler
-git checkout b51ac370b6cecc9d2abd0948d86b01fccfc943eb
-cargo build --locked --release -p omega
-```
-
-Return to Cathedral and prepare the UI with the selected compiler:
-
-```text
-python tools/omega-ui/build.py --compiler build/omega-ui/canonical-compiler/target/release/omega
-```
-
-On Windows the executable is `omega.exe`. Package review may first request
+The Rust F5 profile includes the UI demo. Package review may first request
 ordinary acceptance; inspect the named proposal and resume, then repeat the
 build. Preserve that component directory and its receipt together.
-
-Other desktop packages still contain legacy Omega source. Keep their existing
-`20dcd0409b66` compiler selection. The UI builder now uses the separate
-`canonical-compiler/target/release` home by default, so F5 can prepare both source
-generations without a global compiler override or stale prepared artifacts.
 `OMEGA_UI_COMPONENT_DIR` remains an explicit override for already-prepared UI
 artifacts. The ABI 2 Rust callers stay the same.
 

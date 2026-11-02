@@ -53,7 +53,7 @@ public data Outcome [copy] {
 }
 
 // Supplied provider links make this instance the storage root; nothing else does.
-public machine discover(gate: &Gate, context: &mut State) reaches Kernel invokes Kernel; {
+public machine discover(gate: &Gate, context: &mut State) reaches Kernel invokes Kernel {
     let first: u64 = link::at(gate, 0u64);
     let second: u64 = link::at(gate, 1u64);
     transition first < kernel::ERROR_BASE && second < kernel::ERROR_BASE {
@@ -68,7 +68,7 @@ public machine discover(gate: &Gate, context: &mut State) reaches Kernel invokes
 }
 // The parent's storage connection, acquired from its broker at startup.
 public machine connect_upstream(gate: &Gate, context: &mut State, now: u64, sender: u64, receiver: u64) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let status: u64 = block runtime::connection::main::connect(gate, &mut context.store.links[2], sender, receiver,
         runtime::time::after(now, 300u64));
     transition status == 0u64 {
@@ -86,7 +86,7 @@ public machine connect_upstream(gate: &Gate, context: &mut State, now: u64, send
 public machine owner_word(op: u64) -> bool {
     op == STORAGE_GRANT || op == STORAGE_REVOKE || op == STORAGE_STATUS || op == STORAGE_BINDING
 }
-public machine owner(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine owner(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel blocks invokes Kernel {
     let reply: [u64; 8] = block decide(gate, context, now, frame);
     block runtime::server::main::reply(gate, &mut context.owner, &reply)
 }
@@ -136,7 +136,7 @@ machine granting(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], 
 // replacement connects to the fresh incarnation; under a parent it learns
 // this matrix's own binding again.
 public machine bind(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], source: u64, subtree: u64) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let available: u64 = available(context);
     transition source < available && source < 2u64 {
         true -> block refreshing(gate, context, now, slot, source, subtree, available)
@@ -166,7 +166,7 @@ public machine bind(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4
 // The matrix's own read of a whole object over its first source: the sealed
 // program behind a launch. `stamp` narrows a child's launch to its realm.
 public machine read_object(gate: &Gate, context: &mut State, now: u64, object: u64, stamp: u64) -> Outcome
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let mut words: [u64; 8];
     words[0] = ((STORAGE_BASE as u64 in Wrapping) + (operations::BULK as u64 in Wrapping)) as u64;
     words[1] = object;
@@ -179,7 +179,7 @@ public machine read_object(gate: &Gate, context: &mut State, now: u64, object: u
 // One request of this matrix's own over its first source with no scope of its
 // own: a listing of its realm.
 public machine request(gate: &Gate, context: &mut State, now: u64, words: [u64; 8]) -> Outcome
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let request: [u64; 8] = words;
     transition context.store.root || context.store.has_upstream {
         true -> block exchange(gate, context, now, 0u64, request, 0u64)
@@ -188,7 +188,7 @@ public machine request(gate: &Gate, context: &mut State, now: u64, words: [u64; 
 }
 // This matrix's own binding: the store's root at the storage root, or the
 // parent's report, learnt now if it has not been.
-public machine learn(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine learn(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
     transition {
         context.store.root -> (0u64)
         context.store.informed -> (0u64)
@@ -328,13 +328,13 @@ public machine listen(context: &mut State, slot: u64 [0..=4], now: u64) -> u64 {
     runtime::server::main::begin(&mut context.store.listeners[slot], sender, receiver, runtime::time::after(now, OPENING_TICKS), true)
 }
 // The child is gone: drop its listener and binding.
-public machine retire(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel blocks; invokes Kernel; {
+public machine retire(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel blocks invokes Kernel {
     block runtime::server::main::close(gate, &mut context.store.listeners[slot]);
     let ignored: u64 = scopes::revoke(&mut context.store.scopes, slot);
 }
 // One request per child connection per turn; a failed relay answers the
 // child and never takes the matrix down.
-public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
     block slot_step(gate, context, 0u64, now);
     block slot_step(gate, context, 1u64, now);
     block slot_step(gate, context, 2u64, now);
@@ -628,7 +628,7 @@ public machine watch(context: &State, set: &mut Set) {
     runtime::server::main::watch(&context.store.listeners[3], set);
     runtime::server::main::watch(&context.store.listeners[4], set);
 }
-public machine close(gate: &Gate, context: &mut State) reaches Kernel blocks; invokes Kernel; {
+public machine close(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
     block runtime::server::main::close(gate, &mut context.store.listeners[0]);
     block runtime::server::main::close(gate, &mut context.store.listeners[1]);
     block runtime::server::main::close(gate, &mut context.store.listeners[2]);

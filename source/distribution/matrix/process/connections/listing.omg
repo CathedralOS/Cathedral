@@ -34,7 +34,7 @@ public machine realm(context: &State) -> u64 {
 }
 // The number of the direct child of `parent` named `name`, or zero.
 public machine find(gate: &Gate, context: &mut State, now: u64, parent: u64, name: &[u64; 4]) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     block page(gate, context, now, parent, name, 0u64, 0u64)
 }
 machine page(gate: &Gate, context: &mut State, now: u64, parent: u64, name: &[u64; 4], after: u64, pages: u64) -> u64
@@ -92,7 +92,7 @@ machine page(gate: &Gate, context: &mut State, now: u64, parent: u64, name: &[u6
 }
 // [RESOLVE_PATH, path bytes in words one to four] -> [0, object]: each
 // segment of the relative path names a child of the one before, from the realm.
-public machine resolve(gate: &Gate, context: &mut State, now: u64, words: &[u64; 8]) -> [u64; 8] reaches Kernel blocks; invokes Kernel; {
+public machine resolve(gate: &Gate, context: &mut State, now: u64, words: &[u64; 8]) -> [u64; 8] reaches Kernel blocks invokes Kernel {
     let mut path: [u8; 32];
     unpack(words, &mut path, 0u64);
     let parent: u64 = realm(context);

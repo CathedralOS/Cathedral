@@ -41,7 +41,7 @@ public machine child_word(op: u64) -> bool {
 }
 // Owner words. MANAGEMENT_GRANT names the manager and the target slot plus one;
 // zero revokes. The others name a slot whose current occupant they concern.
-public machine owner(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine owner(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Kernel blocks invokes Kernel {
     transition {
         frame.payload[0] == MANAGEMENT_GRANT && frame.payload[1] < 3u64 && frame.payload[2] <= 3u64 && zeros_from(&frame.payload, 3u64) ->
             block managed(gate, context, frame.payload[1], frame.payload[2])
@@ -105,7 +105,7 @@ public machine owner(gate: &Gate, context: &mut State, frame: Frame) -> u64 reac
 }
 // A child's words under its listener's incarnation.
 public machine child(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ticket, frame: Frame, incarnation: u64) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     transition {
         frame.payload[0] == LAUNCH_STATUS && zeros_from(&frame.payload, 2u64) -> block status(gate, context, slot, issued, incarnation, frame.payload[1])
         frame.payload[0] == MANAGED_TASK && zeros_from(&frame.payload, 1u64) -> block managed(gate, context, slot, issued, incarnation)

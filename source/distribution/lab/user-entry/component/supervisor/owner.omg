@@ -10,7 +10,7 @@ use runtime::kernel::Kernel;
 use runtime::kernel;
 use runtime::server::main::Event;
 use runtime::connection::main::Frame;
-public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
     let event: Event = block runtime::server::main::poll(gate, &mut context.owner, now);
     transition event {
         Event::Request { frame } -> block command(gate, context, now, frame)

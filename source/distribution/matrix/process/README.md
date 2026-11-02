@@ -95,6 +95,11 @@ The storage, the parent and the display.
 - [scene.omg](connections/scene.omg): the shared client to the compositor, speaking its
   six-word frames through the runtime's sized requests, with a sealed image
   behind an image update.
+- [cursors.omg](connections/cursors.omg): pointer presentation preferences the
+  World resolves from the child under each pointer. Under a parent, the
+  preference on an inherited pointer goes up under the parent's view once per
+  change; at the root the physical pointer's preference sets the compositor's
+  pointer style.
 
 ### [children/](children/build.omg)
 
@@ -218,7 +223,9 @@ The the State and the console lines every package uses.
   the Rust host's words where the two reach the same point, a retired
   child's slot and exit, a failed launch's stage and code, what this matrix
   asks its owner for and why it refused a child's request, a storage link it
-  retired and why, and its own page and channel use, in hex.
+  retired and why, its own page and channel use after a launch, and after a
+  reclaim the pages and frames still charged and the launch slots free, in
+  hex.
 
 Prove it with `python tools/boot-harness-rs/omega_desktop_test.py`: the stock
 composition with this program in the root matrix's launch and in the place of

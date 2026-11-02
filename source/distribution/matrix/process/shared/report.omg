@@ -3,56 +3,57 @@ module report;
 // boot harness can key on them.
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
+use runtime::kernel;
 
-public machine display_ready(gate: &Gate) reaches Kernel invokes Kernel; {
+public machine display_ready(gate: &Gate) reaches Kernel invokes Kernel {
     let text: [u8; 64] = "Cathedral matrix: shared display connection ready\n              ";
     line(gate, &text);
 }
-public machine storage_ready(gate: &Gate) reaches Kernel invokes Kernel; {
+public machine storage_ready(gate: &Gate) reaches Kernel invokes Kernel {
     let text: [u8; 64] = "Cathedral matrix: shared storage connection ready\n              ";
     line(gate, &text);
 }
-public machine owner_control_ready(gate: &Gate) reaches Kernel invokes Kernel; {
+public machine owner_control_ready(gate: &Gate) reaches Kernel invokes Kernel {
     let text: [u8; 64] = "Cathedral matrix: shared owner control ready\n                   ";
     line(gate, &text);
 }
-public machine parent_interaction_ready(gate: &Gate) reaches Kernel invokes Kernel; {
+public machine parent_interaction_ready(gate: &Gate) reaches Kernel invokes Kernel {
     let text: [u8; 64] = "Cathedral matrix: shared parent interaction ready\n              ";
     line(gate, &text);
 }
-public machine parent_storage_ready(gate: &Gate) reaches Kernel invokes Kernel; {
+public machine parent_storage_ready(gate: &Gate) reaches Kernel invokes Kernel {
     let text: [u8; 64] = "Cathedral matrix: shared parent storage ready\n                  ";
     line(gate, &text);
 }
-public machine brokered_ready(gate: &Gate) reaches Kernel invokes Kernel; {
+public machine brokered_ready(gate: &Gate) reaches Kernel invokes Kernel {
     let text: [u8; 64] = "Cathedral matrix: brokered startup and input wake ready\n        ";
     line(gate, &text);
 }
-public machine child_control_ready(gate: &Gate) reaches Kernel invokes Kernel; {
+public machine child_control_ready(gate: &Gate) reaches Kernel invokes Kernel {
     let text: [u8; 64] = "Cathedral matrix: shared child control ready\n                   ";
     line(gate, &text);
 }
-public machine configured(gate: &Gate) reaches Kernel invokes Kernel; {
+public machine configured(gate: &Gate) reaches Kernel invokes Kernel {
     let text: [u8; 64] = "Cathedral matrix: configured from realm paths\n                  ";
     line(gate, &text);
 }
-public machine background_admitted(gate: &Gate) reaches Kernel invokes Kernel; {
+public machine background_admitted(gate: &Gate) reaches Kernel invokes Kernel {
     let text: [u8; 64] = "Cathedral matrix: background admitted with presentation only\n   ";
     line(gate, &text);
 }
-public machine picker_placed(gate: &Gate) reaches Kernel invokes Kernel; {
+public machine picker_placed(gate: &Gate) reaches Kernel invokes Kernel {
     let text: [u8; 64] = "Cathedral matrix: scoped picker placed over users\n              ";
     line(gate, &text);
 }
-public machine picker_retired(gate: &Gate) reaches Kernel invokes Kernel; {
+public machine picker_retired(gate: &Gate) reaches Kernel invokes Kernel {
     let text: [u8; 64] = "Cathedral matrix: picker retired; user owns viewport\n           ";
     line(gate, &text);
 }
-public machine picker_exhausted(gate: &Gate) reaches Kernel invokes Kernel; {
+public machine picker_exhausted(gate: &Gate) reaches Kernel invokes Kernel {
     let text: [u8; 64] = "Cathedral matrix: picker retries spent\n                         ";
     line(gate, &text);
 }
-public machine picker_restored(gate: &Gate) reaches Kernel invokes Kernel; {
+public machine picker_restored(gate: &Gate) reaches Kernel invokes Kernel {
     let text: [u8; 64] = "Cathedral matrix: local picker restored\n                        ";
     line(gate, &text);
 }
@@ -81,7 +82,7 @@ machine line(gate: &Gate, text: &[u8; 64]) reaches Kernel {
 // A child's retirement on the console: its slot, then the exit's variant and
 // code in hex (1 returned, 2 fault with 2a address and 2b instruction,
 // 3 cancelled, 4 failed).
-public machine child(gate: &Gate, slot: u64, kind: u64, value: u64) reaches Kernel invokes Kernel; {
+public machine child(gate: &Gate, slot: u64, kind: u64, value: u64) reaches Kernel invokes Kernel {
     let text: [u8; 24] = "Cathedral matrix: child ";
     let mut words: [u64; 8];
     transition { _ -> pack(gate, &text, &mut words, 0u64, slot, kind, value) }
@@ -110,7 +111,7 @@ public machine child(gate: &Gate, slot: u64, kind: u64, value: u64) reaches Kern
 // (0 admitted, 1 declaration, 2 fit, 3 image grant, 4 reservation, 5 admission, 6
 // binding, 7 funding, 8 release, 9 surface ranks, 10 placement, 11 activation)
 // and the code in hex.
-public machine launch_stage(gate: &Gate, slot: u64, stage: u64, code: u64) reaches Kernel invokes Kernel; {
+public machine launch_stage(gate: &Gate, slot: u64, stage: u64, code: u64) reaches Kernel invokes Kernel {
     let text: [u8; 25] = "Cathedral matrix: launch ";
     let mut words: [u64; 8];
     transition { _ -> pack(gate, &text, &mut words, 0u64, slot, stage, code) }
@@ -139,7 +140,7 @@ public machine launch_stage(gate: &Gate, slot: u64, stage: u64, code: u64) reach
 // private pages, reader pages, channels, slots and frames; and why it refused a
 // child's request (1 past the grant's ceiling, 2 not covered upstream, 3 the
 // kernel refused the growth), with the child's slot.
-public machine funding_asked(gate: &Gate, delta: [u64; 5]) reaches Kernel invokes Kernel; {
+public machine funding_asked(gate: &Gate, delta: [u64; 5]) reaches Kernel invokes Kernel {
     let text: [u8; 24] = "Cathedral matrix: fund  ";
     let mut words: [u64; 8];
     transition { _ -> pack(gate, &text, &mut words, 0u64, delta) }
@@ -167,7 +168,7 @@ public machine funding_asked(gate: &Gate, delta: [u64; 5]) reaches Kernel invoke
         let status: u64 = Kernel::write(gate, words, 48u64);
     }
 }
-public machine funding_refused(gate: &Gate, slot: u64, reason: u64) reaches Kernel invokes Kernel; {
+public machine funding_refused(gate: &Gate, slot: u64, reason: u64) reaches Kernel invokes Kernel {
     let text: [u8; 64] = "Cathedral matrix: fund refused      \n                           ";
     let mut words: [u64; 8];
     transition { _ -> pack(gate, &text, &mut words, 0u64, slot, reason) }
@@ -189,7 +190,7 @@ public machine funding_refused(gate: &Gate, slot: u64, reason: u64) reaches Kern
 }
 // The matrix's own use in hex: private pages, reader pages and channels, as
 // the lab sizes a manifest from the console.
-public machine budget(gate: &Gate) reaches Kernel invokes Kernel; {
+public machine budget(gate: &Gate) reaches Kernel invokes Kernel {
     let mut record: [u64; 8];
     let status: u64 = Kernel::resource_budget(gate, &mut record);
     transition status == 0u64 { true -> known(gate, record[3], record[4], record[5]) _ -> done() }
@@ -221,6 +222,51 @@ public machine budget(gate: &Gate) reaches Kernel invokes Kernel; {
         let status: u64 = Kernel::write(gate, words, 40u64);
     }
 }
+// This matrix's account once a child's subtree is gone, in hex: the slot, the
+// private and reader pages and frames still charged, and the launch slots
+// free. A soak compares these across cycles, so a leak shows as drift.
+public machine reclaimed(gate: &Gate, slot: u64) reaches Kernel invokes Kernel {
+    let mut budget: [u64; 8];
+    let mut physical: [u64; 8];
+    let budgeted: u64 = Kernel::resource_budget(gate, &mut budget);
+    let measured: u64 = Kernel::physical_budget(gate, &mut physical);
+    let free: u64 = Kernel::pool_available(gate);
+    transition budgeted == 0u64 && measured == 0u64 && free < kernel::ERROR_BASE {
+        true -> known(gate, slot, budget[3], budget[4], physical[1], free)
+        _ -> done()
+    }
+    machine known(gate: &Gate, slot: u64, pages: u64, readers: u64, frames: u64, free: u64) reaches Kernel {
+        let text: [u8; 28] = "Cathedral matrix: reclaimed ";
+        let mut words: [u64; 8];
+        transition { _ -> pack(gate, &text, &mut words, 0u64, slot, pages, readers, frames, free) }
+    }
+    machine pack(gate: &Gate, text: &[u8; 28], words: &mut [u64; 8], index: u64, slot: u64, pages: u64, readers: u64, frames: u64, free: u64)
+        requires index <= 28u64 reaches Kernel {
+        transition index < 28u64 {
+            true -> byte(gate, text, words, index, slot, pages, readers, frames, free)
+            _ -> numbered(gate, words, slot, pages, readers, frames, free)
+        }
+    }
+    machine byte(gate: &Gate, text: &[u8; 28], words: &mut [u64; 8], index: u64, slot: u64, pages: u64, readers: u64, frames: u64, free: u64)
+        requires index < 28u64 reaches Kernel {
+        let word: u64 = index / 8u64;
+        words[word] = words[word] | ((text[index] as u64) << ((index % 8u64) * 8u64));
+        transition { _ -> pack(gate, text, words, index + 1u64, slot, pages, readers, frames, free) }
+    }
+    machine numbered(gate: &Gate, words: &mut [u64; 8], slot: u64, pages: u64, readers: u64, frames: u64, free: u64) reaches Kernel {
+        put(words, 28u64, 48u64 + (slot & 7u64));
+        put(words, 29u64, 32u64);
+        short(words, 30u64, pages, 0u64);
+        put(words, 34u64, 32u64);
+        short(words, 35u64, readers, 0u64);
+        put(words, 39u64, 32u64);
+        short(words, 40u64, frames, 0u64);
+        put(words, 44u64, 32u64);
+        short(words, 45u64, free, 0u64);
+        put(words, 49u64, 10u64);
+        let status: u64 = Kernel::write(gate, words, 50u64);
+    }
+}
 // Four hex digits of a count below 65536.
 machine short(words: &mut [u64; 8], start: u64, value: u64, digit: u64) requires start <= 60u64 && digit <= 4u64 {
     transition digit < 4u64 {
@@ -241,7 +287,7 @@ machine short(words: &mut [u64; 8], start: u64, value: u64, digit: u64) requires
 }
 // A storage link this matrix retired, which source and why, in hex: a
 // parent's link (2) cannot be remade, so its loss ends this matrix's storage.
-public machine storage_lost(gate: &Gate, link: u64, code: u64) reaches Kernel invokes Kernel; {
+public machine storage_lost(gate: &Gate, link: u64, code: u64) reaches Kernel invokes Kernel {
     let text: [u8; 31] = "Cathedral matrix: storage lost ";
     let mut words: [u64; 8];
     transition { _ -> pack(gate, &text, &mut words, 0u64, link, code) }
@@ -265,7 +311,7 @@ public machine storage_lost(gate: &Gate, link: u64, code: u64) reaches Kernel in
     }
 }
 // A child's launch this matrix refused, with the code in hex.
-public machine launch_refused(gate: &Gate, code: u64) reaches Kernel invokes Kernel; {
+public machine launch_refused(gate: &Gate, code: u64) reaches Kernel invokes Kernel {
     let text: [u8; 33] = "Cathedral matrix: launch refused ";
     let mut words: [u64; 8];
     transition { _ -> pack(gate, &text, &mut words, 0u64, code) }

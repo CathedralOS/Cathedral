@@ -48,7 +48,7 @@ const LOSS_TICKS: u64 = 100u64;
 public machine routed(op: u64) -> bool {
     (op >> 16u64) != 0u64
 }
-public machine owner(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine owner(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel blocks invokes Kernel {
     let words: [u64; 8] = frame.payload;
     let request: Request = wire::decode(&words);
     let facts: Facts = facts_of(context);
@@ -99,7 +99,7 @@ machine begin(gate: &Gate, context: &mut State, now: u64, words: [u64; 8], slot:
     }
 }
 // Each pending word's reply, or its deadline, answers the owner.
-public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
     block slot_step(gate, context, 0u64, now);
     block slot_step(gate, context, 1u64, now);
     block slot_step(gate, context, 2u64, now);
@@ -192,7 +192,7 @@ machine answer_of(words: [u64; 8]) -> LossAnswer {
 }
 
 // The owner's LOSS: ask every child at once, then answer once all have.
-public machine survey(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine survey(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
     let pending: bool = context.startup.picker_pending || context.startup.background_pending;
     let busy: bool = context.surveying || busy(context) || context.frame_count != 0u64 || pending;
     let started: bool = begin_survey(busy, &mut context.survey);
@@ -252,7 +252,7 @@ machine concluded(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
 // decides, and the requester's reply waits with it. False when the question
 // could not be put, which refuses the close.
 public machine close(gate: &Gate, context: &mut State, now: u64, target: u64 [0..=4], requester: u64, request: Ticket) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     transition {
         context.surveying || context.forwards[target].live || context.opening[target] != 0u64 -> (kernel::BUSY)
         !context.slots[target].live -> (kernel::PEER_CLOSED)

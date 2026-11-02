@@ -176,6 +176,20 @@ public data State {
     saved_source: [u64; 5];
     saved_scope: [u64; 5];
     saved_bound: [bool; 5];
+    // The cursor preference last sent up for each inherited pointer, and at
+    // the root the pointer style last set on the compositor.
+    cursors: [Sent; 4];
+    styled: bool;
+    style: u64;
+}
+// A pointer preference the parent has accepted: its view epoch, the stream's
+// cancellation cycle, the parent's channel name and the mode.
+public data Sent [copy] {
+    live: bool;
+    epoch: u64;
+    cycle: u64;
+    channel: u64;
+    mode: u64;
 }
 // This matrix's storage: the provider links at the root or the upstream
 // connection under a parent, the scopes bound over them and each child's

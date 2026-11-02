@@ -28,10 +28,14 @@ COLD_CYCLES = 2
 
 def reclaimed(log):
     """Each matrix's account after it reclaimed a child: pages and frames still
-    charged and launch slots free. The cycle's last sample is the root's teardown."""
-    return [dict(slot=int(slot), private_pages=int(private), reader_pages=int(reader), frames=int(frames), free_slots=int(slots))
-            for slot, private, reader, frames, slots in re.findall(
-                r'STORAGE_TRACE matrix-reclaimed (\d+) (\d+) (\d+) (\d+) (\d+)', log)]
+    charged and launch slots free. The cycle's last sample is the root's teardown.
+    The Rust host traces it in decimal; the Omega matrix reports it in hex."""
+    samples = re.findall(r'STORAGE_TRACE matrix-reclaimed (\d+) (\d+) (\d+) (\d+) (\d+)'
+                         r'|Cathedral matrix: reclaimed ([0-7]) ([0-9a-f]{4}) ([0-9a-f]{4}) ([0-9a-f]{4}) ([0-9a-f]{4})', log)
+    def account(values, base):
+        slot, private, reader, frames, slots = (int(value, base) for value in values)
+        return dict(slot=slot, private_pages=private, reader_pages=reader, frames=frames, free_slots=slots)
+    return [account(sample[:5], 10) if sample[0] else account(sample[5:], 16) for sample in samples]
 
 
 def shell_accounts(log):

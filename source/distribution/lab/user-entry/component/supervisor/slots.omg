@@ -14,7 +14,7 @@ use runtime::task::main::Exit;
 use runtime::waiting::Set;
 use runtime::admission::offer;
 use protocol::services::ACQUIRE;
-public machine step(gate: &Gate, context: &mut State, slot: u64 [0..=1], now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine step(gate: &Gate, context: &mut State, slot: u64 [0..=1], now: u64) -> u64 reaches Kernel blocks invokes Kernel {
     transition {
         !context.slots[slot].live -> (0u64)
         context.slots[slot].listener.peer.fault != 0u64 -> block departed(gate, context, slot)
@@ -87,7 +87,7 @@ machine storage(gate: &Gate, context: &mut State, slot: u64 [0..=1], now: u64) -
     }
 }
 // Stop, collect and release the slot; remember how the child ended.
-public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=1]) reaches Kernel blocks; invokes Kernel; {
+public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=1]) reaches Kernel blocks invokes Kernel {
     transition context.slots[slot].live {
         true -> block stopping(gate, context, slot)
         _ -> done()

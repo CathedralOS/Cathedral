@@ -56,7 +56,7 @@ use declaration::Declared;
 public machine owner_word(op: u64) -> bool {
     op == RUN_OBJECT || op == LAUNCH_IMPORTS
 }
-public machine owner(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine owner(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel blocks invokes Kernel {
     transition frame.payload[1] < 5u64 {
         true -> block slotted(gate, context, now, frame, frame.payload[1])
         _ -> block reply(gate, context, error(kernel::DENIED))
@@ -85,7 +85,7 @@ public machine owner(gate: &Gate, context: &mut State, now: u64, frame: Frame) -
 // The owner's launch: the staged allowances, consumed here, and a read that
 // carries no scope of its own because the owner names the realm to grant.
 public machine run(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], object: u64, subtree: u64, argument: u64,
-    channels: u64, descendants: u64, cpu: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    channels: u64, descendants: u64, cpu: u64) -> u64 reaches Kernel blocks invokes Kernel {
     let private_pages: u64 = context.staged_private[slot];
     let reader_pages: u64 = context.staged_reader[slot];
     let frames: u64 = context.staged_frames[slot];
@@ -99,7 +99,7 @@ public machine run(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4]
 // own binding and binds the child to the realm the owner named.
 public machine launch(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], object: u64, subtree: u64, argument: u64,
     channels: u64, descendants: u64, cpu: u64, private_pages: u64, reader_pages: u64, frames: u64, stamp: u64, offered: u64) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     transition !context.slots[slot].live && descendants < 64u64 && object != 0u64 {
         true -> block reading(gate, context, now, slot, object, subtree, argument, channels, descendants, cpu, private_pages, reader_pages, frames, stamp, offered)
         _ -> (kernel::BUSY)
@@ -140,7 +140,7 @@ public machine launch(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..
 // afterwards. Every failed step releases anything reserved behind it.
 public machine admit_image(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], image: u64, length: u64, subtree: u64, argument: u64,
     channels: u64, descendants: u64, cpu: u64, private_pages: u64, reader_pages: u64, frames: u64, offered: u64, desktop_app: bool, bound: bool) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     context.last_granted = 0u64;
     context.allotted_surfaces = 0u64;
     transition !context.slots[slot].live && descendants < 64u64 && image != 0u64 {
@@ -260,7 +260,7 @@ public machine admit_image(gate: &Gate, context: &mut State, now: u64, slot: u64
     }
 }
 // What the matrix itself uses once a child stands, for the lab to size manifests by.
-machine admitted_budget(gate: &Gate, slot: u64, status: u64) reaches Kernel invokes Kernel; {
+machine admitted_budget(gate: &Gate, slot: u64, status: u64) reaches Kernel invokes Kernel {
     transition status == 0u64 { true -> reported(gate, slot) _ -> idle() }
     machine reported(gate: &Gate, slot: u64) reaches Kernel {
         report::launch_stage(gate, slot, 0u64, 0u64);
@@ -269,13 +269,13 @@ machine admitted_budget(gate: &Gate, slot: u64, status: u64) reaches Kernel invo
 }
 machine idle() {}
 // A failed stage goes to the console, where a proof can read where and why.
-machine failed_stage(gate: &Gate, slot: u64, stage: u64, code: u64) -> u64 reaches Kernel invokes Kernel; {
+machine failed_stage(gate: &Gate, slot: u64, stage: u64, code: u64) -> u64 reaches Kernel invokes Kernel {
     report::launch_stage(gate, slot, stage, code);
     code
 }
 // A child's request for a sibling under the stock admission decision.
 public machine child_launch(gate: &Gate, context: &mut State, now: u64, requester: u64 [0..=4], incarnation: u64, words: [u64; 8]) -> [u64; 8]
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let request: [u64; 8] = words;
     let tail: bool = zeros_from(&request, 3u64);
     transition tail {
@@ -499,7 +499,7 @@ machine standing(context: &State, slot: u64, mask: u64) -> u64 requires slot <= 
     }
 }
 // The refusal goes to the console, where a proof can read why.
-machine refused(gate: &Gate, code: u64) -> [u64; 8] reaches Kernel invokes Kernel; {
+machine refused(gate: &Gate, code: u64) -> [u64; 8] reaches Kernel invokes Kernel {
     report::launch_refused(gate, code);
     error(code)
 }

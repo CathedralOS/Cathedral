@@ -24,7 +24,7 @@ use upstream;
 use inspection;
 use delegation;
 
-public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
     transition context.owner.pending != 0u64 {
         true -> block held(gate, context, now)
         _ -> block receive(gate, context, now)

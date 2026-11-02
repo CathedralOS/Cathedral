@@ -24,7 +24,7 @@ machine resume(s: &mut Session, p: &mut [u64; 4096]) -> u64 {
     let command: Command = advance(s, event);
     codec::encode(command, p)
 }
-public machine component_entry() reaches Background invokes Background; {
+public machine component_entry() reaches Background invokes Background {
     let mut s: Session;
     let mut p: [u64; 4096];
     let result: u64 = Background::step(&mut s, &mut p);

@@ -25,10 +25,10 @@ def prepare(source, compiler=None):
 
 
 def prepare_locked(source, compiler, output):
-    local = ROOT / 'build/omega-ui/compiler/target/release' / ('omega.exe' if os.name == 'nt' else 'omega')
+    local = ROOT / 'build/omega-user/compiler' / ('omega.exe' if os.name == 'nt' else 'omega')
     selected = compiler or os.environ.get('OMEGA_BIN') or (local if local.is_file() else shutil.which('omega'))
     if not selected:
-        raise ValueError('build the supported compiler in tools/omega-ui/README.md#build or set OMEGA_BIN')
+        raise ValueError('build the qualified producer in tools/omega-user/README.md or set OMEGA_BIN')
     compiler = Path(selected).resolve()
     profile = json.loads(subprocess.check_output([str(compiler), '--build-profile'], text=True))
     if profile.get('opt_level') not in ('1', '2', '3', 's', 'z'):

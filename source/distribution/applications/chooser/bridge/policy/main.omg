@@ -32,6 +32,6 @@ public machine decision(p: &mut [u64; 128]) -> u64 {
 machine describe(p: &mut [u64; 128]) -> u64 {
     p[1] = 128u64; p[2] = 6u64; p[3] = 4u64; p[4] = 51u64; 1u64
 }
-public machine component_entry() reaches Chooser invokes Chooser; {
+public machine component_entry() reaches Chooser invokes Chooser {
     let mut p: [u64; 128]; let result: u64 = Chooser::decide(&mut p);
 }

@@ -6,7 +6,7 @@ public machine loaded(p: &mut [u64; 4096], transient: bool) -> u64 {
         true -> temporary(p)
         _ -> durable(p)
     }
-    state temporary(p: &mut [u64; 4096]) -> u64 {
+    machine temporary(p: &mut [u64; 4096]) -> u64 {
         p[16] = 7021785155730956611u64;
         p[17] = 4211821627279548524u64;
         p[18] = 7021797297686410272u64;
@@ -16,7 +16,7 @@ public machine loaded(p: &mut [u64; 4096], transient: bool) -> u64 {
         p[8] = 48u64;
         WRITE
     }
-    state durable(p: &mut [u64; 4096]) -> u64 {
+    machine durable(p: &mut [u64; 4096]) -> u64 {
         p[16] = 7021785155730956611u64;
         p[17] = 4211821627279548524u64;
         p[18] = 8028842149463158304u64;

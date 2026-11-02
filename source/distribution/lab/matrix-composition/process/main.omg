@@ -50,7 +50,7 @@ public data State {
     layout_rows: [Rect; 5];
 }
 public ProgramProvider satisfies Program {
-    machine run(gate: &Gate, first: u64, second: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    machine run(gate: &Gate, first: u64, second: u64) -> u64 reaches Kernel blocks invokes Kernel {
         let mut context: State;
         let status: u64 = block startup::open(gate, &mut context);
         transition status == 0u64 {
@@ -107,7 +107,7 @@ machine cleanup(gate: &Gate, context: &mut State, status: u64) -> u64 reaches Ke
     block runtime::services::main::close(gate, &mut context.parent);
     status
 }
-public machine component_entry() reaches Program + Kernel blocks; invokes Program; invokes Kernel; {
+public machine component_entry() reaches Program + Kernel blocks invokes Program invokes Kernel {
     let gate: Gate;
     let status: u64 = block Program::run(&gate, 0u64, 0u64);
 }

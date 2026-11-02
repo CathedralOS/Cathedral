@@ -29,6 +29,7 @@ use children::forward;
 use connections::upstream;
 use realm::jobs;
 use connections::source;
+use connections::cursors;
 use children::slots;
 use children::lifecycle;
 use connections::presentation;
@@ -38,7 +39,7 @@ use connections::storage;
 public const IDLE_TICKS: u64 = 1000u64;
 public const OWED_TICKS: u64 = 10u64;
 public ProgramProvider satisfies Program {
-    machine run(gate: &Gate, first: u64, second: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    machine run(gate: &Gate, first: u64, second: u64) -> u64 reaches Kernel blocks invokes Kernel {
         let mut context: State;
         let status: u64 = block startup::open(gate, &mut context);
         transition status == 0u64 {
@@ -69,9 +70,10 @@ machine turn(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
     let stored: u64 = block storage::step(gate, context, now);
     lifecycle::notify(gate, context);
     let flushed: u64 = block presentation::flush(gate, context);
+    let pointed: u64 = block cursors::step(gate, context);
     lifecycle::settle(gate, context);
     transition polled == 0u64 && settled == 0u64 && commanded == 0u64 && forwarded == 0u64 && sourced == 0u64 && first == 0u64
-        && second == 0u64 && third == 0u64 && fourth == 0u64 && fifth == 0u64 && stored == 0u64 && flushed == 0u64 {
+        && second == 0u64 && third == 0u64 && fourth == 0u64 && fifth == 0u64 && stored == 0u64 && flushed == 0u64 && pointed == 0u64 {
         true -> block parked(gate, context, now)
         _ -> block cleanup(gate, context, 403u64)
     }
@@ -124,7 +126,7 @@ machine scene_closed(gate: &Gate, context: &mut State, status: u64) -> u64 reach
     let ignored: u64 = block runtime::connection::main::close(gate, &mut context.scene);
     status
 }
-public machine component_entry() reaches Program + Kernel blocks; invokes Program; invokes Kernel; {
+public machine component_entry() reaches Program + Kernel blocks invokes Program invokes Kernel {
     let gate: Gate;
     let status: u64 = block Program::run(&gate, 0u64, 0u64);
 }

@@ -10,7 +10,7 @@ use runtime::ipc::main::Opened;
 
 // One page each of private and reader budget. Sharing must neither copy backing
 // nor refund it early: the accepted reader pins the original funding.
-public machine check(gate: &Gate) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine check(gate: &Gate) -> u64 reaches Kernel blocks invokes Kernel {
     let opened: Opened = runtime::ipc::main::open(gate);
     transition opened {
         Opened::Ready { channel } -> block allocated(gate, channel)

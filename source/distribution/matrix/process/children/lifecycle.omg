@@ -42,7 +42,7 @@ public const MAX_IMAGES: u64 = 14u64;
 public machine owner_word(op: u64) -> bool {
     op == RUN_PAGES || op == RUN_MEMORY || op == RUN || op == STOP
 }
-public machine owner(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine owner(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel blocks invokes Kernel {
     transition frame.payload[1] < 5u64 {
         true -> block slotted(gate, context, now, frame, frame.payload[1])
         _ -> block reply(gate, context, error(kernel::DENIED))
@@ -89,7 +89,7 @@ public machine owner(gate: &Gate, context: &mut State, now: u64, frame: Frame) -
 // interaction and storage, as the Rust host offers every catalogue program.
 // Every failed step leaves no reservation behind.
 public machine run(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], image: u64, argument: u64, channels: u64,
-    descendants: u64, images: u64, cpu: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    descendants: u64, images: u64, cpu: u64) -> u64 reaches Kernel blocks invokes Kernel {
     transition !context.slots[slot].live && images < 16384u64 && descendants < 64u64 {
         true -> block imaged(gate, context, now, slot, image, argument, channels, descendants, images, cpu)
         _ -> (kernel::BUSY)
@@ -129,7 +129,7 @@ public machine run(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4]
 // owner-control client and the storage listener. A refused step returns the
 // reservation.
 public machine admit_reserved(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64, argument: u64, images: u64,
-    cpu: u64, granted: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+    cpu: u64, granted: u64) -> u64 reaches Kernel blocks invokes Kernel {
     let status: u64 = cpu_ceiling(gate, launch, cpu);
     transition status == 0u64 && images < 16384u64 {
         true -> block allowing(gate, context, now, slot, launch, argument, images, 0u64, granted)
@@ -231,13 +231,13 @@ machine refused(gate: &Gate, launch: u64, status: u64) -> u64 reaches Kernel {
     let ignored: u64 = runtime::task::main::release(gate, launch);
     status
 }
-machine cpu_ceiling(gate: &Gate, launch: u64, cpu: u64) -> u64 reaches Kernel invokes Kernel; {
+machine cpu_ceiling(gate: &Gate, launch: u64, cpu: u64) -> u64 reaches Kernel invokes Kernel {
     transition cpu == 0u64 {
         true -> (0u64)
         _ -> (runtime::task::main::assign_cpu(gate, launch, cpu))
     }
 }
-machine allow(gate: &Gate, launch: u64, grant: u64) -> u64 reaches Kernel invokes Kernel; {
+machine allow(gate: &Gate, launch: u64, grant: u64) -> u64 reaches Kernel invokes Kernel {
     transition grant < kernel::ERROR_BASE {
         true -> (runtime::task::main::allow_image(gate, launch, grant))
         _ -> (grant)
@@ -262,7 +262,7 @@ machine larger(a: u64, b: u64) -> u64 {
 }
 // Drop the owner control and the storage listener, stop and collect the
 // child, return its reservation and forget its view and staged batch.
-public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel blocks; invokes Kernel; {
+public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel blocks invokes Kernel {
     transition context.slots[slot].live {
         true -> block stopping(gate, context, slot)
         _ -> done()
@@ -285,6 +285,7 @@ public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reac
         context.funding[slot] = Funding::Fixed;
         level::disconnected(&mut context.world, slot);
         block workspace::retired(gate, context, slot);
+        report::reclaimed(gate, slot);
     }
 }
 // What a requester's receipt reports for the ended child.
@@ -304,7 +305,7 @@ machine outcome_of(exit: Exit) -> u64 {
 }
 // The exit goes to the console; the Rust host keeps child exits silent, but a
 // proof over this program reads them there.
-machine exited(gate: &Gate, slot: u64, exit: Exit) reaches Kernel invokes Kernel; {
+machine exited(gate: &Gate, slot: u64, exit: Exit) reaches Kernel invokes Kernel {
     transition exit {
         Exit::Returned { status } -> report::child(gate, slot, 1u64, status)
         Exit::Fault { vector, error, address, instruction } -> faulted(gate, slot, vector, address, instruction)
@@ -320,7 +321,7 @@ machine exited(gate: &Gate, slot: u64, exit: Exit) reaches Kernel invokes Kernel
 // A child whose view or queues changed since its last poll is woken through
 // its interaction bell, once it holds the wait right; until then the hint
 // stays with the World.
-public machine notify(gate: &Gate, context: &mut State) reaches Kernel invokes Kernel; {
+public machine notify(gate: &Gate, context: &mut State) reaches Kernel invokes Kernel {
     wake(gate, context, 0u64);
     wake(gate, context, 1u64);
     wake(gate, context, 2u64);
@@ -371,7 +372,7 @@ machine ok() -> [u64; 8] {
 machine done() {}
 // Finish opening each child's owner control once the child answers; a child
 // that never does within the window is taken back down.
-public machine open_controls(gate: &Gate, context: &mut State, now: u64) reaches Kernel blocks; invokes Kernel; {
+public machine open_controls(gate: &Gate, context: &mut State, now: u64) reaches Kernel blocks invokes Kernel {
     block opening_slot(gate, context, now, 0u64, 1u64);
     block opening_slot(gate, context, now, 1u64, 1u64);
     block opening_slot(gate, context, now, 2u64, 1u64);
@@ -383,7 +384,7 @@ public machine open_controls(gate: &Gate, context: &mut State, now: u64) reaches
 // control at once and holds that handshake to its own window, which a long
 // scene switch here would otherwise outlast. A host that sets up its
 // services first answers on a later turn.
-public machine open_control(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4]) reaches Kernel blocks; invokes Kernel; {
+public machine open_control(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4]) reaches Kernel blocks invokes Kernel {
     block opening_slot(gate, context, now, slot, FIRST_ANSWER_TICKS);
 }
 // How long a just-admitted child's first answer is waited for.
@@ -441,7 +442,7 @@ machine retire_reservation(gate: &Gate, context: &mut State, slot: u64 [0..=4], 
 // An ended host's descendant reservations come back to this matrix under
 // fresh local names. Each one the kernel takes back is released; live and
 // static launches refuse and are passed over, as are any still charged.
-public machine sweep_returned(gate: &Gate) reaches Kernel invokes Kernel; {
+public machine sweep_returned(gate: &Gate) reaches Kernel invokes Kernel {
     sweeping(gate, 0u64, 0u64);
 }
 machine sweeping(gate: &Gate, index: u64, attempts: u64) reaches Kernel requires index <= RETURNED_LAUNCHES && attempts <= RETURNED_LAUNCHES {
@@ -461,7 +462,7 @@ machine sweeping(gate: &Gate, index: u64, attempts: u64) reaches Kernel requires
 }
 // More launches than one process can hold.
 const RETURNED_LAUNCHES: u64 = 32u64;
-public machine settle(gate: &Gate, context: &mut State) reaches Kernel invokes Kernel; {
+public machine settle(gate: &Gate, context: &mut State) reaches Kernel invokes Kernel {
     settle_slot(gate, context, 0u64);
     settle_slot(gate, context, 1u64);
     settle_slot(gate, context, 2u64);
@@ -485,7 +486,7 @@ machine settle_slot(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches
     }
 }
 // Anything else the kernel says about a release goes to the console.
-machine unreleased(gate: &Gate, slot: u64, status: u64) reaches Kernel invokes Kernel; {
+machine unreleased(gate: &Gate, slot: u64, status: u64) reaches Kernel invokes Kernel {
     transition status == 0u64 {
         true -> done()
         _ -> report::launch_stage(gate, slot, 8u64, status)

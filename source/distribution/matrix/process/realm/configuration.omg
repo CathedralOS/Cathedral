@@ -54,7 +54,7 @@ public const FIRST_APP: u64 = 1u64;
 public const LAST_APP: u64 = 3u64;
 
 // One command of this job, for the job stack in [jobs.omg](jobs.omg).
-public machine execute(gate: &Gate, context: &mut State, now: u64, command: Command) -> Step reaches Kernel blocks; invokes Kernel; {
+public machine execute(gate: &Gate, context: &mut State, now: u64, command: Command) -> Step reaches Kernel blocks invokes Kernel {
     transition command {
         Command::StartBackground -> (Step::Nested { job: jobs::BACKGROUND })
         _ -> block done_with(gate, context, now, command)

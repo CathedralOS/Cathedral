@@ -26,7 +26,7 @@ use delegation;
 use protocol::main;
 use protocol::matrix;
 
-public machine step(gate: &Gate, context: &mut State, slot: u64 [0..=2], now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine step(gate: &Gate, context: &mut State, slot: u64 [0..=2], now: u64) -> u64 reaches Kernel blocks invokes Kernel {
     transition {
         !context.slots[slot].live -> (0u64)
         context.slots[slot].listener.peer.fault != 0u64 -> block departed(gate, context, slot)
@@ -106,7 +106,7 @@ machine answered(gate: &Gate, context: &mut State, slot: u64 [0..=2], issued: Ti
     0u64
 }
 // Stop, collect and release the slot, and forget its placement.
-public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=2]) reaches Kernel blocks; invokes Kernel; {
+public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=2]) reaches Kernel blocks invokes Kernel {
     transition context.slots[slot].live {
         true -> block stopping(gate, context, slot)
         _ -> done()

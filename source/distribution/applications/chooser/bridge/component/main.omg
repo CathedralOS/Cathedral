@@ -27,7 +27,7 @@ machine execute(s: &mut State, p: &mut [u64; 4096]) -> u64 {
     packets::encode(p, &exchange);
     packets::operation(command)
 }
-public machine component_entry() reaches ChooserApp invokes ChooserApp; {
+public machine component_entry() reaches ChooserApp invokes ChooserApp {
     let mut s: State;
     let mut p: [u64; 4096];
     let result: u64 = ChooserApp::step(&mut s, &mut p);

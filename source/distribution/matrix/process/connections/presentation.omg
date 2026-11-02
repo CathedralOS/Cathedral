@@ -41,7 +41,7 @@ public const IMAGES: u64 = 64u64;
 // tile; under a parent it is a surface created upstream behind the rank, and
 // the parent's name is the key. No surface is created inside an open batch.
 public machine create(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, words: &[u64; 8]) -> [u64; 8]
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     block prune(gate, context, slot);
     transition context.batches[slot].active {
         true -> (poisoned(context, slot, kernel::DENIED))
@@ -97,7 +97,7 @@ public machine create(gate: &Gate, context: &mut State, slot: u64 [0..=4], incar
 // sent and committed. A successful paint or an erase the compositor no longer
 // knows drops the image retained behind that tile.
 public machine update(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame) -> [u64; 8]
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     block prune(gate, context, slot);
     let preview: Updated = surfaces::update(&mut context.world, slot, incarnation, &frame.payload, false);
     transition preview {
@@ -139,7 +139,7 @@ public machine update(gate: &Gate, context: &mut State, slot: u64 [0..=4], incar
 // otherwise sent to the compositor, committed and retained behind its tile.
 // The compositor validates the pixels against the object's size.
 public machine image(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, object: u64) -> [u64; 8]
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     block prune(gate, context, slot);
     let preview: Updated = surfaces::update(&mut context.world, slot, incarnation, &frame.payload, false);
     transition preview {
@@ -200,7 +200,7 @@ public machine image_missing(context: &mut State, slot: u64 [0..=4]) -> [u64; 8]
 // rectangles word does all three for one or two paints. Every word is bound
 // to the connection's current view.
 public machine batch_word(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame) -> [u64; 8]
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let probe: [u64; 8] = view_words();
     let view: [u64; 8] = request(&mut context.world, slot, incarnation, &probe);
     block prune(gate, context, slot);
@@ -463,7 +463,7 @@ machine send_packet(gate: &Gate, context: &mut State, packet: [u64; 8], payload:
 // visibility already set, the previous app's retained surfaces are replayed
 // blank and the next app's shown, committed together or aborted, so the
 // parent or the display never shows both or neither. `previous` zero is none.
-public machine switch(gate: &Gate, context: &mut State, previous: u64, next: u64 [0..=4]) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine switch(gate: &Gate, context: &mut State, previous: u64, next: u64 [0..=4]) -> u64 reaches Kernel blocks invokes Kernel {
     context.revision = ((context.revision as u64 in Wrapping) + 1u64) as u64;
     let begun: u64 = block transact(gate, context, PRESENT_BEGIN, display::MATRIX_BEGIN);
     transition begun == 0u64 {
@@ -487,7 +487,7 @@ public machine switch(gate: &Gate, context: &mut State, previous: u64, next: u64
 }
 // After the children's geometry changed: owed erasures first, then every
 // child's retained surfaces under the new placement in one transaction.
-public machine republish(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine republish(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks invokes Kernel {
     let flushed: u64 = block flush(gate, context);
     context.revision = ((context.revision as u64 in Wrapping) + 1u64) as u64;
     let begun: u64 = block transact(gate, context, PRESENT_BEGIN, display::MATRIX_BEGIN);
@@ -610,7 +610,7 @@ machine release_payloads(gate: &Gate, context: &mut State, slot: u64 [0..=4], in
     }
 }
 // The slot's occupant is gone: its staged batch goes with it.
-public machine release_slot(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel blocks; invokes Kernel; {
+public machine release_slot(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel blocks invokes Kernel {
     block release_payloads(gate, context, slot, 0u64);
     batch::reset(&mut context.batches[slot]);
 }
@@ -677,7 +677,7 @@ machine drop_image(gate: &Gate, context: &mut State, key: u64) reaches Kernel {
         block release(gate, previous);
     }
 }
-public machine release_images(gate: &Gate, context: &mut State, index: u64) reaches Kernel blocks; invokes Kernel; requires index <= 64u64 {
+public machine release_images(gate: &Gate, context: &mut State, index: u64) reaches Kernel blocks invokes Kernel requires index <= 64u64 {
     transition index < 64u64 {
         true -> block releasing(gate, context, index)
         _ -> done()
@@ -738,7 +738,7 @@ machine selected(op: u64) -> u64 {
 }
 // Erasures owed since the last flush: the display or the parent may already
 // have removed that backing, and the image behind it goes either way.
-public machine flush(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine flush(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks invokes Kernel {
     let owed: Retained = surfaces::take_owed(&mut context.world);
     transition owed {
         Retained::Packet { words } -> block owed_one(gate, context, words)

@@ -36,7 +36,7 @@ public const HANDSHAKE_TICKS: u64 = 300u64;
 // first snapshot. The parent may not have placed this matrix yet; its view
 // arrives with a later snapshot.
 public machine open(gate: &Gate, context: &mut State, environment: Environment, now: u64) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     context.has_parent = true;
     let status: u64 = block runtime::services::main::open(gate, &mut context.parent, &environment,
         runtime::time::after(now, HANDSHAKE_TICKS));
@@ -87,7 +87,7 @@ public machine open(gate: &Gate, context: &mut State, environment: Environment, 
     }
 }
 // Poll when the parent rang the bell or the last snapshot left more.
-public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
     transition context.has_parent {
         true -> block due(gate, context, now)
         _ -> (0u64)
@@ -115,7 +115,7 @@ machine woken(gate: &Gate, context: &mut State, now: u64) -> bool reaches Kernel
 // it carries, once input recipients have drained their retirement
 // boundaries. A failed exchange leaves this matrix without a view until the
 // parent grants one again; it is not this matrix's end.
-public machine refresh(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine refresh(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
     let ready: bool = registration::ready(&mut context.world);
     transition {
         !context.has_parent -> (0u64)
@@ -149,7 +149,7 @@ public machine refresh(gate: &Gate, context: &mut State, now: u64) -> u64 reache
 }
 // One request to the parent on the interaction connection; a lost
 // connection is the answer.
-public machine exchange(gate: &Gate, context: &mut State, words: [u64; 8]) -> [u64; 8] reaches Kernel blocks; invokes Kernel; {
+public machine exchange(gate: &Gate, context: &mut State, words: [u64; 8]) -> [u64; 8] reaches Kernel blocks invokes Kernel {
     let request: [u64; 8] = words;
     let reply: Reply = block runtime::services::main::exchange(gate, &mut context.parent, context.clock, &request);
     answer(reply)
@@ -157,7 +157,7 @@ public machine exchange(gate: &Gate, context: &mut State, words: [u64; 8]) -> [u
 // The same request carrying a sealed image the parent gains its own right to;
 // this matrix's right stays with it.
 public machine exchange_object(gate: &Gate, context: &mut State, words: [u64; 8], image: u64) -> [u64; 8]
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let request: [u64; 8] = words;
     let result: CallReply = block call::exchange_object(gate, &mut context.parent.broker, context.clock, &request, image);
     transition result {
@@ -191,7 +191,7 @@ public machine watch(context: &State, set: &mut Set) {
         _ -> done()
     }
 }
-public machine close(gate: &Gate, context: &mut State) reaches Kernel blocks; invokes Kernel; {
+public machine close(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
     transition context.has_parent {
         true -> block runtime::services::main::close(gate, &mut context.parent)
         _ -> done()

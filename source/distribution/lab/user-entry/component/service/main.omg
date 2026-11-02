@@ -17,7 +17,7 @@ public data State {
     handled: u64;
     parks: u64;
 }
-public machine check(gate: &Gate) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine check(gate: &Gate) -> u64 reaches Kernel blocks invokes Kernel {
     let mut context: State;
     let status: u64 = block startup::open(gate, &mut context);
     transition status == 0u64 {

@@ -662,6 +662,40 @@ Evidence in the main checkout with the patched standalone producer:
 
 The F5 variants followed in the step recorded below.
 
+### One producer for the desktop closure
+
+The nested-machine migration (#3) was qualified with Omega `6310a4b16e2`. Every
+Omega package in the desktop now builds with that one producer:
+`build/omega-user/compiler/omega.exe` is `6310a4b16e2df3070548e6882f21f8667b93daa2`
+with [the capacity patch](tools/omega-user/producer.patch) rebased onto it,
+SHA-256 `70978409eb15df628a603adb5043e3a6a35287215905d798eae2f0d701c105f4`,
+and the component and UI builders select it by default, as the standalone
+builder already did. The previous producer stays locally at
+`build/omega-user/compiler-92aec21e/`.
+
+The packages #3 did not reach now use the nested-machine form too: the stock
+matrix process, the matrix-composition, user-entry and startup-failure labs,
+and the Background, Chooser and Notes bridges (header delimiters, the build
+target in `select_provider`, and the Notes bridge's nested `state` blocks as
+nested machines). Native `omega.lock` files are local and git-ignored; a lock
+the new producer cannot read is removed and taken through a fresh review.
+
+Evidence: the sweep's witnesses (primitives
+`build/omega-user/tests/20261102T002610494793Z/`, connections
+`build/omega-user/connections/20261102T002616282667Z/`, service
+`.../20261102T002636753097Z/`, admission `.../20261102T002650010697Z/`,
+Background `build/omega-user/background-control/20261102T002653952431Z/`,
+Colors `build/omega-user/colors-control/20261102T002658676489Z/`, Notes
+`build/omega-user/notes-control/20261102T002704205393Z/`, Chooser
+`build/omega-user/chooser-control/20261102T002711088086Z/`), the lab matrices
+(`build/boot-harness-rs/matrix-composition/20261102T003104697716Z/`,
+`omega-matrix/20261102T003109040397Z/`,
+`omega-matrix-upstream/20261102T003115725616Z/`), the stock matrix's compiled
+tests, clippy, layout, smoke, the Omega desktop proof
+(`build/boot-harness-rs/omega-desktop/20261102T010108954805Z/`) and the
+default F5 desktop on the Rust host
+(`build/boot-harness-rs/desktop/20261102T010132208006Z/`).
+
 ### Stock matrix migration: the F5 variants over Omega
 
 Over the Omega composition, where every stock matrix in the realm is the
@@ -669,7 +703,8 @@ Omega program, these F5 desktop variants pass across a cold reboot: the
 default test, a relative pointer, undeclared service imports, Split
 (`--nested`), Split inside Split (`--deep`) and nested desktops to the third
 level (`--nested-desktop`). Pointer stress over nested desktops, latency,
-participants and render demand pass as well.
+participants, render demand, cursor preferences and a soak with storage
+traces pass as well.
 The nested run covers the protected close of a desktop holding unsaved deep
 work, saved Notes and Colors at depth, repeated subtree reclamation and
 isolation from the outer realm.
@@ -723,6 +758,13 @@ What they needed:
   image, and passes that image through on its way down. Split sizes that loan
   from the Notes image it read rather than a fixed 74 pages. Before this,
   `--deep` failed on the Rust host as well.
+- Pointer presentation preferences reach the cursor renderer: under a parent
+  the matrix sends the preference on an inherited pointer up under the
+  parent's view once per change, and at the root it sets the compositor's
+  pointer style from the physical pointer's, as the Rust host does.
+- After each reclaim the matrix reports its account (pages and frames still
+  charged, launch slots free) on the console, which the soak compares across
+  cycles; the soak reads that line beside the Rust host's trace.
 - Launch failures after admission report their stage: 9 surface ranks, 10
   placement, 11 activation. The component builder's compiler deadline is
   twenty minutes; a change to the process recompiles in about eleven, a
@@ -743,6 +785,12 @@ Evidence in the main checkout with the patched standalone producer:
   `.../20261101T233113838410Z/`, undeclared imports
   `.../20261101T233241689697Z/`, Split `.../20261101T233313507873Z/`, nested
   desktops `.../20261101T233400137385Z/`.
+- Under the qualified producer: default
+  `build/boot-harness-rs/desktop/20261102T010228274196Z/`, cursor preferences
+  `.../20261102T010405056218Z/`, nested desktops `.../20261102T010452681639Z/`,
+  Split inside Split `.../20261102T010655685633Z/`, Split
+  `.../20261102T010758157930Z/`, soak with storage traces
+  `.../20261102T010902096490Z/`.
 - On the Rust host with the same policy: Split inside Split
   `build/boot-harness-rs/desktop/20261101T231559947927Z/`, Split
   `.../20261101T232818911798Z/`, nested desktops
@@ -764,8 +812,7 @@ Evidence in the main checkout with the patched standalone producer:
 - Boundary test, layout, Rust formatting, the stock matrix's compiled tests
   and clippy for the desktop crate with `shell` pass.
 
-Next: soak, which needs the matrix's reclaimed account; capture and cursor
-preferences; then the fixtures that build the stock matrix with test probes
+Next: masked capture; then the fixtures that build the stock matrix with test probes
 (input producer, interaction delay, launcher recovery and the asynchronous
 launch, binding, scene and selection holds), which need Omega probe builds;
 the profile swap and the bridge's deletion.

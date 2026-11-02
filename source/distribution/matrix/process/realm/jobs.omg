@@ -62,7 +62,7 @@ public data Step [copy] {
 // owner's CONFIGURE that waited for the jobs ahead of it starts; otherwise a
 // nested instance not yet hosted starts discovery, as pending startup
 // recovery does.
-public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
     let pending: bool = context.startup.picker_pending || context.startup.background_pending;
     let unhosted: bool = context.has_parent && !context.hosted;
     transition {
@@ -82,7 +82,7 @@ public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches K
 }
 // The owner's CONFIGURE: its reply waits with its job over later turns, and
 // behind jobs already running it waits for them first.
-public machine configure(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine configure(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks invokes Kernel {
     context.configure_ticket = runtime::server::main::ticket(&context.owner);
     transition context.frame_count != 0u64 {
         true -> (behind(context))
@@ -280,7 +280,7 @@ machine hosted(context: &mut State) -> Completion {
 // Pending recovery work within the policy's budget, one job per command: a
 // picker to restart, else a background to retry; a turn with a routed word in
 // flight keeps it pending, and what remains runs on a later turn.
-machine recovered(gate: &Gate, context: &mut State) -> Step reaches Kernel invokes Kernel; {
+machine recovered(gate: &Gate, context: &mut State) -> Step reaches Kernel invokes Kernel {
     let blocked: bool = forward::busy(context);
     let action: PickerAction = take_picker(&mut context.startup, blocked);
     transition action {

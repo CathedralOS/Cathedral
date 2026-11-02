@@ -13,13 +13,13 @@ use runtime::connection::call::CallReply;
 use runtime::connection::main::Frame;
 
 public machine connect(gate: &Gate, context: &mut State, sender: u64, receiver: u64, deadline: u64) -> u64
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let status: u64 = block runtime::connection::main::connect(gate, &mut context.scene, sender, receiver, deadline);
     context.has_scene = status == 0u64;
     status
 }
 // Report the physical pointer's position; the compositor draws its cursor there.
-public machine pointer(gate: &Gate, context: &mut State, x: u64, y: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine pointer(gate: &Gate, context: &mut State, x: u64, y: u64) -> u64 reaches Kernel blocks invokes Kernel {
     let mut words: [u64; 6];
     words[0] = display::MATRIX_POINTER;
     words[1] = x;
@@ -27,12 +27,12 @@ public machine pointer(gate: &Gate, context: &mut State, x: u64, y: u64) -> u64 
     block command(gate, context, words)
 }
 // One six-word exchange with the compositor; a lost connection stays lost.
-public machine command(gate: &Gate, context: &mut State, words: [u64; 6]) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine command(gate: &Gate, context: &mut State, words: [u64; 6]) -> u64 reaches Kernel blocks invokes Kernel {
     block command_object(gate, context, words, 0u64)
 }
 // The same exchange carrying a sealed image the compositor gains its own
 // right to; this matrix's right stays with it.
-public machine command_object(gate: &Gate, context: &mut State, words: [u64; 6], object: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine command_object(gate: &Gate, context: &mut State, words: [u64; 6], object: u64) -> u64 reaches Kernel blocks invokes Kernel {
     transition context.has_scene {
         true -> block sending(gate, context, words, object)
         _ -> (DENIED)

@@ -17,7 +17,7 @@ public data Probe {
     slot: u64 [0..=2];
     deadline: u64;
 }
-public machine start(gate: &Gate, context: &mut State, now: u64, issued: Ticket, words: [u64; 8]) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine start(gate: &Gate, context: &mut State, now: u64, issued: Ticket, words: [u64; 8]) -> u64 reaches Kernel blocks invokes Kernel {
     let target: u64 = words[0] >> 32u64;
     transition !context.probe.active && target >= 1u64 && target <= 3u64 {
         true -> addressed(gate, context, now, issued, words, target - 1u64)
@@ -49,7 +49,7 @@ public machine start(gate: &Gate, context: &mut State, now: u64, issued: Ticket,
 machine length(first: u64) -> u64 {
     transition first == 0xffffffffu64 { true -> (7u64) _ -> (64u64) }
 }
-public machine progress(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine progress(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
     transition context.probe.active {
         true -> block live(gate, context, now, context.probe.slot)
         _ -> (0u64)

@@ -4,7 +4,7 @@ use runtime::kernel::Kernel;
 use runtime::time;
 use runtime::time::Tick;
 
-public machine check(gate: &Gate) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine check(gate: &Gate) -> u64 reaches Kernel blocks invokes Kernel {
     let clock: u64 = Kernel::clock(gate);
     transition clock < 0x8000000000000000u64 {
         true -> block read(gate, clock)

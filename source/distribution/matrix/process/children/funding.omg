@@ -25,7 +25,7 @@ use lifecycle;
 
 // Cover `needed` from this matrix's own allowances, asking its owner for
 // whatever they lack.
-public machine ensure(gate: &Gate, context: &mut State, now: u64, needed: [u64; 5]) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine ensure(gate: &Gate, context: &mut State, now: u64, needed: [u64; 5]) -> u64 reaches Kernel blocks invokes Kernel {
     lifecycle::settle(gate, context);
     lifecycle::sweep_returned(gate);
     let spare: Spare = runtime::task::main::spare(gate);
@@ -41,7 +41,7 @@ public machine ensure(gate: &Gate, context: &mut State, now: u64, needed: [u64; 
     }
 }
 // Ask this matrix's owner for `delta`, all or nothing.
-public machine request(gate: &Gate, context: &mut State, now: u64, delta: [u64; 5]) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine request(gate: &Gate, context: &mut State, now: u64, delta: [u64; 5]) -> u64 reaches Kernel blocks invokes Kernel {
     transition context.has_parent {
         true -> block asking(gate, context, delta)
         _ -> (kernel::NO_MEMORY)
@@ -54,7 +54,7 @@ public machine request(gate: &Gate, context: &mut State, now: u64, delta: [u64; 
 }
 
 // A child's FUND: [FUND, five increments, 0, 0].
-public machine fund(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], words: [u64; 8]) -> [u64; 8] reaches Kernel blocks; invokes Kernel; {
+public machine fund(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], words: [u64; 8]) -> [u64; 8] reaches Kernel blocks invokes Kernel {
     let delta: [u64; 5] = [words[1], words[2], words[3], words[4], words[5]];
     transition zeros_from(&words, 6u64) && context.reservations[slot] != 0u64 {
         true -> block granted(gate, context, now, slot, delta, context.funding[slot])
@@ -109,7 +109,7 @@ public machine fund(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4
         }
     }
 }
-machine refused(gate: &Gate, slot: u64, reason: u64) -> [u64; 8] reaches Kernel invokes Kernel; {
+machine refused(gate: &Gate, slot: u64, reason: u64) -> [u64; 8] reaches Kernel invokes Kernel {
     report::funding_refused(gate, slot, reason);
     error(kernel::NO_MEMORY)
 }

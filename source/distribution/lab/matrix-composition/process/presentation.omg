@@ -17,7 +17,7 @@ use world::surfaces::Updated;
 use world::surfaces::Retained;
 
 public machine create(gate: &Gate, context: &mut State, slot: u64 [0..=2], incarnation: u64, words: &[u64; 8]) -> [u64; 8]
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let prepared: Prepared = surfaces::prepare(&mut context.world, slot, incarnation, words[1], words[2]);
     transition prepared {
         Prepared::Rank { upstream } -> block allocating(gate, context, slot, words[2], upstream)
@@ -61,7 +61,7 @@ public machine create(gate: &Gate, context: &mut State, slot: u64 [0..=2], incar
     }
 }
 public machine update(gate: &Gate, context: &mut State, slot: u64 [0..=2], incarnation: u64, frame: Frame) -> [u64; 8]
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let preview: Updated = surfaces::update(&mut context.world, slot, incarnation, &frame.payload, false);
     transition preview {
         Updated::Packet { words } -> block publishing(gate, context, slot, incarnation, frame, words)
@@ -98,7 +98,7 @@ public machine update(gate: &Gate, context: &mut State, slot: u64 [0..=2], incar
 }
 // Erasures owed since the last flush: forwarded to the parent, which may already
 // have retired that backing, or counted at the top level.
-public machine flush(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine flush(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks invokes Kernel {
     let owed: Retained = surfaces::take_owed(&mut context.world);
     transition owed {
         Retained::Packet { words } -> block owed_one(gate, context, words)

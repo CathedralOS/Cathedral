@@ -59,7 +59,7 @@ public machine entry(context: &State, slot: u64 [0..=4], incarnation: u64, words
 
 // SELECT_APP [24, ticket]: make the instance with that ticket the active app.
 public machine select(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, words: [u64; 8]) -> [u64; 8]
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     transition chrome(context, slot, incarnation) && zeros_from(&words, 2u64) {
         true -> block chosen(gate, context, catalogue::select(&context.catalogue, words[1], forward::busy(context)))
         _ -> (error(kernel::DENIED))
@@ -84,7 +84,7 @@ public machine select(gate: &Gate, context: &mut State, slot: u64 [0..=4], incar
 // slots keep their new places for later launches, and the moved surfaces are
 // published again.
 public machine apply_layout(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, words: [u64; 8]) -> [u64; 8]
-    reaches Kernel blocks; invokes Kernel; {
+    reaches Kernel blocks invokes Kernel {
     let facts: Facts = Facts { authorized: layout::allowed(&context.world, slot, incarnation, words[1]), busy: forward::busy(context),
         extent: Extent { width: context.world.parent.width, height: context.world.parent.height }, standing: standing(context) };
     let decision: Decision = prepare(&facts, decode(&words));
@@ -138,7 +138,7 @@ public data Closing [copy] {
 // CLOSE [15]: in a workspace the placed chrome closes the active app;
 // elsewhere either of the first two children closes the other.
 public machine close(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], incarnation: u64, request: runtime::server::main::Ticket,
-    words: [u64; 8]) -> Closing reaches Kernel blocks; invokes Kernel; {
+    words: [u64; 8]) -> Closing reaches Kernel blocks invokes Kernel {
     let target: u64 = target_of(context, slot, incarnation);
     transition {
         !zeros_from(&words, 1u64) || target == DENIED_TARGET -> (Closing::Answer { words: error(kernel::DENIED) })
@@ -168,7 +168,7 @@ machine target_of(context: &State, slot: u64, incarnation: u64) -> u64 {
     }
 }
 // A launched app joins the catalogue and becomes the active one.
-public machine launched(gate: &Gate, context: &mut State, slot: u64, program: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine launched(gate: &Gate, context: &mut State, slot: u64, program: u64) -> u64 reaches Kernel blocks invokes Kernel {
     transition context.desktop && slot >= 1u64 && slot <= 3u64 {
         true -> block publishing(gate, context, slot, program)
         _ -> (0u64)
@@ -183,7 +183,7 @@ public machine launched(gate: &Gate, context: &mut State, slot: u64, program: u6
 
 // An app's end: it leaves the catalogue, the chrome hears of it, and the next
 // instance becomes active when none is.
-public machine retired(gate: &Gate, context: &mut State, slot: u64) reaches Kernel blocks; invokes Kernel; {
+public machine retired(gate: &Gate, context: &mut State, slot: u64) reaches Kernel blocks invokes Kernel {
     transition context.desktop && slot >= 1u64 && slot <= 3u64 {
         true -> block retiring(gate, context, slot)
         _ -> done()
@@ -204,7 +204,7 @@ public machine retired(gate: &Gate, context: &mut State, slot: u64) reaches Kern
 // Show `slot` alone among the apps. The scene switches first; only once it is
 // committed do input routes and the chrome's management follow, and a refused
 // scene leaves the previous app showing.
-public machine activate(gate: &Gate, context: &mut State, slot: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine activate(gate: &Gate, context: &mut State, slot: u64) -> u64 reaches Kernel blocks invokes Kernel {
     let previous: u64 = active(context);
     transition {
         previous == slot && previous != 0u64 -> (0u64)

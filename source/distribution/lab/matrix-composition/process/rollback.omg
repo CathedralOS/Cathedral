@@ -11,7 +11,7 @@ use runtime::kernel;
 use runtime::admission::main::Admitted;
 use protocol::services::INTERACTION;
 
-public machine deferred(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine deferred(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
     transition context.probe_rollback && context.slots[0].listener.ready && context.slots[1].listener.ready && context.slots[2].listener.ready {
         true -> block exhausted(gate, context, now)
         _ -> (0u64)
@@ -21,7 +21,7 @@ public machine deferred(gate: &Gate, context: &mut State, now: u64) -> u64 reach
         block check(gate, context, now, kernel::NO_MEMORY)
     }
 }
-public machine check(gate: &Gate, context: &mut State, now: u64, expected: u64) -> u64 reaches Kernel blocks; invokes Kernel; {
+public machine check(gate: &Gate, context: &mut State, now: u64, expected: u64) -> u64 reaches Kernel blocks invokes Kernel {
     let mut resources: [u64; 8];
     let mut notifications: [u64; 8];
     let first: u64 = Kernel::resource_budget(gate, &mut resources);
