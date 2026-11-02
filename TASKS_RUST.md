@@ -812,7 +812,18 @@ Evidence in the main checkout with the patched standalone producer:
 - Boundary test, layout, Rust formatting, the stock matrix's compiled tests
   and clippy for the desktop crate with `shell` pass.
 
-Next: masked capture; then the fixtures that build the stock matrix with test probes
+Masked capture (`--capture`) fails on the Rust host too, so it is a regression
+in Split rather than a gap in the Omega matrix: last recorded passing on
+2026-10-24, it now refuses when Split spawns the capture consumer, with
+NO_MEMORY from the kernel's spawn
+(`build/boot-harness-rs/desktop/20261102T011242157792Z/`). Ruled out: Split's
+surface capacity (16) and view, its funding request (granted), its channel,
+handle, private and reader allowances after lending, and guest RAM (256 MiB
+changes nothing). The kernel maps both frame and kernel-heap exhaustion to
+NO_MEMORY at that point; a larger kernel heap stops the user matrix from
+starting at all, which needs understanding first.
+
+Next: the capture regression; then the fixtures that build the stock matrix with test probes
 (input producer, interaction delay, launcher recovery and the asynchronous
 launch, binding, scene and selection holds), which need Omega probe builds;
 the profile swap and the bridge's deletion.
