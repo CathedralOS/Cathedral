@@ -1,0 +1,222 @@
+module pipeline::server;
+use pipeline::faults;
+use pipeline::barrier;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::server::main::Server;
+use runtime::server::main::Ticket;
+use runtime::server::main::Event;
+use runtime::time::Tick;
+public data State {
+    listener: Server;
+    mode: u64;
+    barrier: u64;
+    second_id: u64;
+    first: Ticket;
+    clock: u64;
+    deadline: u64;
+    release_after: u64;
+    phase: u64;
+    stopped: bool;
+}
+public machine check(gate: &Gate, mode: u64) -> u64 reaches Kernel blocks invokes Kernel {
+    let mut context: State;
+    context.mode = mode;
+    context.clock = Kernel::clock(gate);
+    let mut env: [u64; 8];
+    let status: u64 = Kernel::environment(gate, &mut env);
+    let tick: Tick = runtime::time::read(gate, context.clock);
+    transition tick {
+        Tick::Read { value } -> block open(gate, &mut context, status, env, value)
+        _ -> (520u64)
+    }
+}
+machine open(gate: &Gate, context: &mut State, status: u64, env: [u64; 8], now: u64) -> u64 reaches Kernel {
+    context.barrier = env[3];
+    transition status == 0u64 && env[0] == 3u64 {
+        true -> block accepting(gate, context, env, now)
+        _ -> (521u64)
+    }
+    machine accepting(gate: &Gate, context: &mut State, env: [u64; 8], now: u64) -> u64 reaches Kernel {
+        context.deadline = runtime::time::after(now, 2000u64);
+        let status: u64 = runtime::server::main::begin(&mut context.listener, env[2], env[1], runtime::time::after(now, 300u64), true);
+        transition status == 0u64 { true -> block run(gate, context) _ -> block close(gate, context, 522u64) }
+    }
+}
+machine run(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+    let tick: Tick = runtime::time::read(gate, context.clock);
+    transition tick {
+        Tick::Read { value } -> block turn(gate, context, value)
+        _ -> block close(gate, context, 523u64)
+    }
+}
+machine turn(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    transition runtime::time::reached(now, context.deadline) {
+        true -> block close(gate, context, 524u64)
+        _ -> block advancing(gate, context, now)
+    }
+    machine advancing(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+        let status: u64 = block step(gate, context, now);
+        transition {
+            status != 0u64 -> block close(gate, context, status)
+            context.stopped -> block close(gate, context, 0u64)
+            _ -> block parked(gate, context, now)
+        }
+    }
+    machine parked(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+        let ignored: u64 = block runtime::time::park_until(gate, runtime::time::after(now, 1u64));
+        block run(gate, context)
+    }
+}
+machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    transition {
+        context.listener.ready && context.barrier != 0u64 && context.mode == 411u64 && !context.listener.peer.has_frame -> block consume_frame(gate, context)
+        context.listener.ready && context.barrier != 0u64 -> block released(gate, context, now)
+        context.phase == 1u64 && context.mode == 403u64 -> block stopped(gate, context)
+        context.phase == 1u64 && context.mode == 405u64 -> block corrupt(gate, context, 999u64)
+        context.phase == 1u64 && context.mode == 409u64 -> incomplete(gate, context)
+        context.phase == 2u64 && context.mode == 407u64 -> block corrupt(gate, context, context.second_id)
+        context.phase == 6u64 -> block closing(gate, context, now)
+        context.phase == 1u64 -> block second(gate, context)
+        context.phase == 2u64 -> block delayed(gate, context, now)
+        context.phase == 3u64 -> block third(gate, context)
+        _ -> block receive(gate, context, now)
+    }
+}
+// Deliberately acknowledge only the frame before receiving its typed grant,
+// a legal cross-channel arrival order. Hold the grant slot until the client
+// proves an attached submission can wait for that slot without retiring.
+machine consume_frame(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+    let status: u64 = block runtime::connection::mailbox::receive(gate, &mut context.listener.peer);
+    transition status == kernel::WOULD_BLOCK { true -> (0u64) _ -> (status) }
+}
+machine released(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    let status: u64 = block barrier::arrived(gate, context.barrier, now);
+    transition {
+        status == kernel::WOULD_BLOCK -> (0u64)
+        status == 0u64 -> opened(gate, context)
+        _ -> (status)
+    }
+    machine opened(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+        barrier::close(gate, context.barrier);
+        context.barrier = 0u64;
+        0u64
+    }
+}
+machine receive(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    let event: Event = block runtime::server::main::poll(gate, &mut context.listener, now);
+    transition event {
+        Event::Pending -> (0u64)
+        Event::Failed { code } -> ended(context, code)
+        Event::Request { frame } -> request(context, frame.payload[0], now)
+    }
+}
+machine request(context: &mut State, op: u64, now: u64) -> u64 {
+    transition {
+        op == 1u64 && context.first.request == 0u64 -> hold(context, now)
+        op == 2u64 && context.listener.held != 0u64 -> phase(context, 1u64)
+        op == 3u64 && context.listener.held != 0u64 -> phase(context, 2u64)
+        _ -> (525u64)
+    }
+    machine hold(context: &mut State, now: u64) -> u64 {
+        context.first = runtime::server::main::ticket(&context.listener);
+        context.release_after = runtime::time::after(now, 150u64);
+        let status: u64 = runtime::server::deferred::hold(&mut context.listener, context.first);
+        transition status == 0u64 && context.listener.held_object != 0u64 && context.listener.object == 0u64 && context.listener.pending == 0u64 {
+            true -> (0u64)
+            _ -> (526u64)
+        }
+    }
+    machine phase(context: &mut State, phase: u64) -> u64 { context.phase = phase; 0u64 }
+}
+machine second(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+    let issued: Ticket = runtime::server::main::ticket(&context.listener);
+    context.second_id = issued.request;
+    let forbidden: u64 = runtime::server::deferred::hold(&mut context.listener, issued);
+    let bogus: Ticket = Ticket { incarnation: 0u64, receiver: issued.receiver, request: issued.request };
+    let mut words: [u64; 8]; words[0] = 2u64;
+    let stale: u64 = block runtime::server::main::reply_to(gate, &mut context.listener, bogus, &words);
+    transition forbidden == kernel::BUSY && stale == kernel::IO_ERROR && context.listener.object != 0u64 {
+        true -> block answering(gate, context, issued, words)
+        _ -> (527u64)
+    }
+    machine answering(gate: &Gate, context: &mut State, issued: Ticket, words: [u64; 8]) -> u64 reaches Kernel {
+        let object: u64 = runtime::server::deferred::object(&context.listener, context.first);
+        let status: u64 = block runtime::server::main::reply_object_to(gate, &mut context.listener, issued, &words, object);
+        context.phase = 0u64;
+        transition status == 0u64 && context.listener.held_object == object && object != 0u64 { true -> (0u64) _ -> (528u64) }
+    }
+}
+machine delayed(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    transition runtime::time::reached(now, context.release_after) {
+        true -> block first(gate, context)
+        _ -> block runtime::server::main::maintain(gate, &mut context.listener, now)
+    }
+}
+// The first reader must remain usable after the second reader was released.
+machine first(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+    let object: u64 = runtime::server::deferred::object(&context.listener, context.first);
+    let mut words: [u64; 8];
+    let status: u64 = block Kernel::object_read(gate, object, 0u64, &mut words, 1u64);
+    transition status == 0u64 && words[0] == 173u64 {
+        true -> block reply_first(gate, context)
+        _ -> (535u64)
+    }
+}
+machine reply_first(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+    let current: Ticket = runtime::server::main::ticket(&context.listener);
+    let mut words: [u64; 8]; words[0] = 1u64;
+    let status: u64 = block runtime::server::main::reply_to(gate, &mut context.listener, context.first, &words);
+    transition status == 0u64 {
+        true -> block duplicate(gate, context, current, words)
+        _ -> (529u64)
+    }
+    machine duplicate(gate: &Gate, context: &mut State, current: Ticket, words: [u64; 8]) -> u64 reaches Kernel {
+        let status: u64 = block runtime::server::main::reply_to(gate, &mut context.listener, context.first, &words);
+        context.phase = 3u64;
+        transition status == kernel::IO_ERROR && context.listener.held == 0u64 && context.listener.held_object == 0u64
+            && runtime::server::deferred::matches(&context.listener, current) { true -> (0u64) _ -> (530u64) }
+    }
+}
+machine third(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+    let mut words: [u64; 8]; words[0] = 3u64;
+    let status: u64 = block runtime::server::main::reply(gate, &mut context.listener, &words);
+    transition {
+        status == kernel::WOULD_BLOCK -> (0u64)
+        status == 0u64 -> answered(context)
+        _ -> (531u64)
+    }
+    machine answered(context: &mut State) -> u64 { context.phase = 4u64; 0u64 }
+}
+machine ended(context: &mut State, code: u64) -> u64 {
+    context.stopped = true;
+    transition (context.phase == 4u64 || context.phase == 6u64) && code == kernel::PEER_CLOSED && context.listener.pending == 0u64
+        && context.listener.held == 0u64 && context.listener.held_object == 0u64 && context.listener.object == 0u64 { true -> (0u64) _ -> (532u64) }
+}
+machine close(gate: &Gate, context: &mut State, status: u64) -> u64 reaches Kernel {
+    block runtime::server::main::close(gate, &mut context.listener);
+    barrier::close(gate, context.barrier);
+    context.barrier = 0u64;
+    status
+}
+
+// Fault injection lives beside the normal provider, never in the runtime.
+machine corrupt(gate: &Gate, context: &mut State, id: u64) -> u64 reaches Kernel {
+    let status: u64 = block faults::wrong_reply(gate, &mut context.listener, id);
+    transition status == 0u64 { true -> waiting(context) _ -> (533u64) }
+}
+machine incomplete(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+    let status: u64 = faults::attachment_only(gate, &context.listener);
+    transition status == 0u64 { true -> waiting(context) _ -> (534u64) }
+}
+machine waiting(context: &mut State) -> u64 { context.phase = 6u64; 0u64 }
+machine closing(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    let status: u64 = block runtime::server::main::maintain(gate, &mut context.listener, now);
+    transition status == 0u64 { true -> (0u64) _ -> ended(context, status) }
+}
+machine stopped(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+    block runtime::server::main::close(gate, &mut context.listener);
+    context.phase = 6u64;
+    ended(context, kernel::PEER_CLOSED)
+}

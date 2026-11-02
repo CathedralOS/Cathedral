@@ -1,0 +1,19 @@
+module pipeline::faults;
+// Deliberately bypass reply tickets to test rejection at the receiving peer.
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::server::main::Server;
+public machine wrong_reply(gate: &Gate, listener: &mut Server, id: u64) -> u64 reaches Kernel blocks invokes Kernel {
+    let mut words: [u64; 8]; words[0] = 2u64;
+    block runtime::connection::mailbox::send(gate, &mut listener.peer, id, &words, 0u64)
+}
+// A valid sealed grant arrives for the second request, but no frame follows.
+// The receiver must expire the partial pair and release that reader too.
+public machine attachment_only(gate: &Gate, listener: &Server) -> u64 reaches Kernel invokes Kernel {
+    let mut packet: [u64; 10];
+    packet[0] = 8u64;
+    packet[1] = listener.held_object;
+    packet[2] = listener.pending;
+    let sent: u64 = Kernel::object_send(gate, listener.peer.sender, &packet);
+    transition sent == 8u64 { true -> (0u64) _ -> (sent) }
+}

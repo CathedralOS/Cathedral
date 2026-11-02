@@ -1,4 +1,4 @@
-"""Exercise Omega v4 client and owner server against the Rust transport."""
+"""Exercise Omega v4 connections against real Rust and Omega peers."""
 import argparse
 from datetime import datetime, timezone
 from pathlib import Path
@@ -14,12 +14,15 @@ def main():
     parser.add_argument('--timeout', type=int, default=90)
     parser.add_argument('--service', action='store_true', help='exercise Omega multi-client acceptance, attachments and isolation')
     parser.add_argument('--admission', action='store_true', help='exercise Omega child admission, service offers and reclamation')
+    parser.add_argument('--pipeline', action='store_true', help='hold an Omega request while another completes on the same connection')
     args = parser.parse_args()
+    if sum((args.service, args.admission, args.pipeline)) > 1:
+        parser.error('choose one transport suite')
     client = prepare(ROOT / 'source/distribution/lab/user-entry/native', args.compiler)
     output = ROOT / 'build/omega-user/connections' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     output.mkdir(parents=True)
     cargo = ROOT / 'build/boot-harness-rs/cargo'
-    features = 'omega-admission' if args.admission else 'omega-service' if args.service else 'omega-peer'
+    features = 'omega-pipeline' if args.pipeline else 'omega-admission' if args.admission else 'omega-service' if args.service else 'omega-peer'
     with (output / 'provider-build.log').open('w', encoding='utf-8') as log:
         subprocess.run(['cargo', 'build', '--locked', '--release', '--package', 'cathedral-channels-lab',
                         '--features', features, '--target', 'x86_64-unknown-none',
@@ -34,6 +37,8 @@ def main():
                        CATHEDRAL_INIT_SHARED_PAGES='16',
                        CATHEDRAL_LAUNCH_0_ELF=str(provider), CATHEDRAL_LAUNCH_0_ARGUMENT='1',
                        CATHEDRAL_LAUNCH_1_ELF=str(client), CATHEDRAL_LAUNCH_1_ARGUMENT='2')
+    if args.pipeline:
+        composition.update(CATHEDRAL_LAUNCH_0_ELF=str(client), CATHEDRAL_LAUNCH_0_ARGUMENT='2')
     for index in range(2):
         composition.update({f'CATHEDRAL_LAUNCH_{index}_CLOCK': '1',
                             f'CATHEDRAL_LAUNCH_{index}_PRIVATE_PAGES': '1',
@@ -45,7 +50,7 @@ def main():
     composition['CATHEDRAL_LAUNCH_1_SHARED_PAGES'] = '5' if args.service else '2'
 
     def verify(stream, directory, text):
-        markers = ('Omega multi-client service PASS\n', 'initial program stopped: Some(Returned(0))') if args.service else (
+        markers = ('Omega overlapping requests PASS\n', 'initial program stopped: Some(Returned(0))') if args.pipeline else ('Omega multi-client service PASS\n', 'initial program stopped: Some(Returned(0))') if args.service else (
                 'Omega shared connection PASS\n', 'Omega owner connection PASS\n',
                 'Omega service acquisition PASS\n',
                 'initial program stopped: Some(Returned(0))')
@@ -53,7 +58,7 @@ def main():
             raise RuntimeError(f'Omega/Rust connection witness failed: {directory / "serial.log"}')
 
     boot(provider, output / 'boot', True, args.timeout, composition=composition, verifier=verify)
-    label = 'Omega multi-client service' if args.service else 'Omega/Rust shared connection'
+    label = 'Omega overlapping requests' if args.pipeline else 'Omega multi-client service' if args.service else 'Omega/Rust shared connection'
     print(f'{label} PASS: {output}', flush=True)
 
 

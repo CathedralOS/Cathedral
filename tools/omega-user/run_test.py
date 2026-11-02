@@ -60,8 +60,10 @@ def boot(image, output, clock, timeout, *, composition=None, verifier=None):
         if ('Omega wait ready\n' in text) != clock:
             raise RuntimeError(f'Clock authority/parking witness failed; see {directory / "serial.log"}')
 
+    # A prefix can be visible before the kernel finishes printing the outcome.
+    # Verify only after the complete successful exit line has arrived.
     capture.run(command, output, timeout, getattr(subprocess, 'CREATE_NO_WINDOW', 0),
-                'initial program stopped:', verifier or verify, allow_initial_exit=True)
+                'initial program stopped: Some(Returned(0))\n', verifier or verify, allow_initial_exit=True)
 
 
 if __name__ == '__main__':

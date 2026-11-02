@@ -9,6 +9,10 @@ use cathedral_user_runtime::{
 };
 
 pub fn run(role: u64, mode: u64, environment: Environment) -> u64 {
+    #[cfg(feature = "omega-pipeline")]
+    if role == 0 {
+        return pipeline::run();
+    }
     if cfg!(feature = "omega-admission") {
         if role == 0 {
             supervisor::run();

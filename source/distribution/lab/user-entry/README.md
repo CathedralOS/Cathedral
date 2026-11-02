@@ -164,3 +164,33 @@ supervisor and full budget checks afterwards:
 The peers use the ordinary Rust service bindings over the shared v4 transport.
 This proves admission, offers and reclamation on the common runtime; it does not
 place children, route input or claim a matrix.
+
+### Overlapping requests
+
+[component/pipeline/main.omg](component/pipeline/main.omg) dispatches two real
+Omega peers. The client sends a sealed input; the provider holds that request
+while answering the second, then accepts a third into the freed slot. The first
+reply arrives after 150 ticks, still correlated to its original request. The
+provider refuses forged connection tickets and duplicate settlement while the
+other request stays live. It reads the first backing again after releasing the
+second request's reader. Both sides enforce a two-request bound. A separate
+fixture channel holds the provider before consuming request one until the
+client has observed mailbox backpressure for its attached second request;
+retry must keep the first request and its backing alive. A second scenario
+acknowledges that first frame while leaving its typed grant queued, forcing
+backpressure at the separate grant slot instead. Both must permit a safe retry.
+
+```powershell
+python tools/omega-user/connection_test.py --pipeline
+```
+
+The same peers inject closure with two requests outstanding, an unknown reply
+ID, a duplicate completed reply ID while two others remain outstanding, and a
+sealed reply grant with no frame. The latter must expire as a partial reply,
+release its reader and retire the whole connection. The Rust launcher compares
+memory, physical-frame, channel and notification accounting after every case,
+then repeats the healthy exchange. Fault construction stays in
+[pipeline/faults.omg](component/pipeline/faults.omg), outside the runtime.
+
+This qualifies transport. The matrix still needs continuations that dispatch
+poll and visual replies by those IDs and retain child/view generations.

@@ -8,6 +8,7 @@ use kernel;
 use connection::main::Peer;
 use connection::main::Reply;
 use connection::mailbox;
+use connection::requests;
 use time;
 
 public machine poll(gate: &Gate, peer: &mut Peer, now: u64) -> Reply
@@ -75,7 +76,7 @@ machine grant(gate: &Gate, peer: &mut Peer, now: u64) -> u64 reaches Kernel {
         peer.grant_kind = kind;
         peer.grant_id = packet[2];
         transition status == 8u64 && packet[0] == 8u64 && packet[1] != 0u64
-            && packet[2] != 0u64 && packet[2] == peer.pending {
+            && requests::contains(&peer.requests, packet[2]) {
             true -> (0u64)
             _ -> (kernel::IO_ERROR)
         }
@@ -101,7 +102,7 @@ machine reconcile(peer: &mut Peer, now: u64, hint: u64, transfer: u64) -> Reply 
     }
 }
 machine identified(peer: &mut Peer, now: u64, hint: u64, transfer: u64) -> Reply {
-    transition peer.pending != 0u64 && peer.frame.id == peer.pending {
+    transition requests::contains(&peer.requests, peer.frame.id) {
         true -> attachment(peer, now, hint, transfer)
         _ -> (Reply::Failed { code: kernel::IO_ERROR })
     }
@@ -139,7 +140,7 @@ machine complete(peer: &mut Peer) -> Reply {
     peer.grant = 0u64;
     peer.grant_kind = 0u64;
     peer.grant_id = 0u64;
-    peer.pending = 0u64;
+    requests::remove(&mut peer.requests, peer.frame.id);
     peer.partial = false;
     peer.has_frame = false;
     transition {

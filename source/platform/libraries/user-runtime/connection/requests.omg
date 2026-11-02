@@ -1,0 +1,33 @@
+module connection::requests;
+// Two bounded outstanding IDs. An empty slot is not a reusable request ID:
+// the connection's monotonic sequence remains the source of every new name.
+public data Window {
+    first: u64;
+    second: u64;
+}
+public machine empty(window: &Window) -> bool { window.first == 0u64 && window.second == 0u64 }
+public machine full(window: &Window) -> bool { window.first != 0u64 && window.second != 0u64 }
+public machine contains(window: &Window, id: u64) -> bool {
+    id != 0u64 && (window.first == id || window.second == id)
+}
+public machine insert(window: &mut Window, id: u64) -> bool {
+    transition {
+        id == 0u64 || contains(window, id) -> (false)
+        window.first == 0u64 -> first(window, id)
+        window.second == 0u64 -> second(window, id)
+        _ -> (false)
+    }
+    machine first(window: &mut Window, id: u64) -> bool { window.first = id; true }
+    machine second(window: &mut Window, id: u64) -> bool { window.second = id; true }
+}
+public machine remove(window: &mut Window, id: u64) {
+    transition {
+        id != 0u64 && window.first == id -> first(window)
+        id != 0u64 && window.second == id -> second(window)
+        _ -> done()
+    }
+    machine first(window: &mut Window) { window.first = 0u64; }
+    machine second(window: &mut Window) { window.second = 0u64; }
+}
+public machine clear(window: &mut Window) { window.first = 0u64; window.second = 0u64; }
+machine done() {}

@@ -1,0 +1,71 @@
+module server::deferred;
+// A provider explicitly moves one current request aside before polling again.
+// Its exact ticket and sealed input remain owned by this server until reply
+// or retirement. There is one deferred slot beside the current request.
+use server::main::Server;
+use server::main::Ticket;
+use kernel::Gate;
+use kernel::Kernel;
+use kernel;
+
+public machine matches(listener: &Server, issued: Ticket) -> bool {
+    listener.peer.fault == 0u64 && issued.request != 0u64
+        && listener.incarnation == issued.incarnation && listener.peer.receiver == issued.receiver
+        && (listener.pending == issued.request || listener.held == issued.request)
+}
+public machine hold(listener: &mut Server, issued: Ticket) -> u64 {
+    transition {
+        !matches(listener, issued) || listener.pending != issued.request -> (kernel::IO_ERROR)
+        listener.held != 0u64 -> (kernel::BUSY)
+        _ -> retained(listener)
+    }
+    machine retained(listener: &mut Server) -> u64 {
+        listener.held = listener.pending;
+        listener.held_object = listener.object;
+        listener.pending = 0u64;
+        listener.object = 0u64;
+        0u64
+    }
+}
+// Borrow the sealed input for this ticket; reply/close still owns its release.
+public machine object(listener: &Server, issued: Ticket) -> u64 {
+    transition {
+        !matches(listener, issued) -> (0u64)
+        listener.pending == issued.request -> (listener.object)
+        _ -> (listener.held_object)
+    }
+}
+public machine settle(gate: &Gate, listener: &mut Server, request: u64) reaches Kernel blocks invokes Kernel {
+    transition {
+        request == 0u64 -> done()
+        listener.pending == request -> block current(gate, listener)
+        listener.held == request -> block held(gate, listener)
+        _ -> done()
+    }
+    machine current(gate: &Gate, listener: &mut Server) reaches Kernel {
+        let object: u64 = listener.object;
+        listener.pending = 0u64;
+        listener.object = 0u64;
+        block release(gate, object);
+    }
+    machine held(gate: &Gate, listener: &mut Server) reaches Kernel {
+        let object: u64 = listener.held_object;
+        listener.held = 0u64;
+        listener.held_object = 0u64;
+        block release(gate, object);
+    }
+}
+public machine clear(gate: &Gate, listener: &mut Server) reaches Kernel blocks invokes Kernel {
+    let current: u64 = listener.pending;
+    let held: u64 = listener.held;
+    block settle(gate, listener, current);
+    block settle(gate, listener, held);
+}
+machine release(gate: &Gate, object: u64) reaches Kernel {
+    transition object != 0u64 {
+        true -> block releasing(gate, object)
+        _ -> done()
+    }
+    machine releasing(gate: &Gate, object: u64) reaches Kernel { let ignored: u64 = block Kernel::memory_release(gate, object); }
+}
+machine done() {}

@@ -1,5 +1,5 @@
 module connection::main;
-// One retained v4 request at a time: acquire setup custody -> publish once ->
+// Retained v4 requests: acquire setup custody -> publish once ->
 // reconcile mailbox/typed grant -> release on failure. Peer bytes never grant
 // authority. Wire peer: source-rs/platform/libraries/user-runtime/connection/.
 use kernel::Gate;
@@ -12,6 +12,7 @@ use connection::setup;
 use time;
 use connection::mailbox;
 use connection::incoming;
+use connection::requests;
 use connection::custody;
 use time;
 
@@ -25,7 +26,7 @@ public data Peer {
     sent: u64;
     received: u64;
     next_id: u64;
-    pending: u64;
+    requests: requests::Window;
     fault: u64;
     frame: Frame;
     has_frame: bool;
@@ -87,6 +88,27 @@ public machine connect(gate: &Gate, peer: &mut Peer, sender: u64, receiver: u64,
         _ -> block fail(gate, peer, status)
     }
 }
+// Explicit overlap: at most two requests may await answers. Backpressure
+// publishes nothing; a submitted request is never replayed because it is late.
+// Reply frame IDs tell the caller which operation completed, in either order.
+public data Submission {
+    case Submitted(request: u64);
+    case Backpressure;
+    case Failed(code: u64);
+}
+public machine submit(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], object: u64) -> Submission
+    reaches Kernel blocks invokes Kernel {
+    block submit_bytes(gate, peer, payload, object, 64u64)
+}
+public machine submit_bytes(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], object: u64, bytes: u64 [0..=64]) -> Submission
+    reaches Kernel blocks invokes Kernel {
+    let status: u64 = block begin_windowed(gate, peer, payload, object, bytes, true);
+    transition {
+        status == 0u64 -> (Submission::Submitted { request: peer.next_id })
+        peer.fault == 0u64 && (status == kernel::BUSY || status == kernel::WOULD_BLOCK) -> (Submission::Backpressure)
+        _ -> (Submission::Failed { code: status })
+    }
+}
 public machine begin(gate: &Gate, peer: &mut Peer, payload: &[u64; 8]) -> u64
     reaches Kernel blocks invokes Kernel {
     block begin_sized(gate, peer, payload, 0u64, 64u64)
@@ -109,12 +131,15 @@ public machine begin_object_bytes(gate: &Gate, peer: &mut Peer, payload: &[u64; 
     block begin_sized(gate, peer, payload, object, bytes)
 }
 machine begin_sized(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], object: u64, bytes: u64 [0..=64]) -> u64 reaches Kernel {
+    block begin_windowed(gate, peer, payload, object, bytes, false)
+}
+machine begin_windowed(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], object: u64, bytes: u64 [0..=64], overlap: bool) -> u64 reaches Kernel {
     transition peer.fault != 0u64 {
         true -> (peer.fault)
-        _ -> block available(gate, peer, payload, object, bytes)
+        _ -> block available(gate, peer, payload, object, bytes, overlap)
     }
-    machine available(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], object: u64, bytes: u64 [0..=64]) -> u64 reaches Kernel {
-        transition peer.pending != 0u64 {
+    machine available(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], object: u64, bytes: u64 [0..=64], overlap: bool) -> u64 reaches Kernel {
+        transition requests::full(&peer.requests) || (!overlap && !requests::empty(&peer.requests)) {
             true -> (kernel::BUSY)
             _ -> block identified(gate, peer, payload, object, bytes)
         }
@@ -133,22 +158,22 @@ machine publish(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], object: u64, b
         true -> block published(gate, peer, id)
         // Backpressure before publication is safe to retry; all other errors
         // retire the connection. Never replay a possibly exposed operation.
-        _ -> block attachment_failed(gate, peer, status, object)
-    }
-}
-machine attachment_failed(gate: &Gate, peer: &mut Peer, code: u64, object: u64) -> u64 reaches Kernel {
-    transition object == 0u64 {
-        true -> block send_failed(gate, peer, code)
-        _ -> block fail(gate, peer, code)
+        _ -> block send_failed(gate, peer, status)
     }
 }
 machine published(gate: &Gate, peer: &mut Peer, id: u64) -> u64 reaches Kernel {
     peer.next_id = id;
-    peer.pending = id;
-    let status: u64 = Kernel::notify_signal(gate, peer.signal);
-    transition status == 0u64 {
-        true -> (0u64)
-        _ -> block fail(gate, peer, status)
+    let inserted: bool = requests::insert(&mut peer.requests, id);
+    transition inserted {
+        true -> block signal(gate, peer)
+        _ -> block fail(gate, peer, kernel::IO_ERROR)
+    }
+    machine signal(gate: &Gate, peer: &mut Peer) -> u64 reaches Kernel {
+        let status: u64 = Kernel::notify_signal(gate, peer.signal);
+        transition status == 0u64 {
+            true -> (0u64)
+            _ -> block fail(gate, peer, status)
+        }
     }
 }
 machine send_failed(gate: &Gate, peer: &mut Peer, status: u64) -> u64 reaches Kernel {

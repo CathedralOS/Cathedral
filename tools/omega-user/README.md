@@ -13,6 +13,7 @@ python tools/omega-user/run_test.py --compiler path/to/new/omega.exe
 python tools/omega-user/connection_test.py --compiler path/to/new/omega.exe
 python tools/omega-user/connection_test.py --service --compiler path/to/new/omega.exe
 python tools/omega-user/connection_test.py --admission --compiler path/to/new/omega.exe
+python tools/omega-user/connection_test.py --pipeline --compiler path/to/new/omega.exe
 python tools/omega-user/background_test.py --compiler path/to/new/omega.exe
 python tools/omega-user/colors_test.py --compiler path/to/new/omega.exe
 python tools/omega-user/notes_test.py --compiler path/to/new/omega.exe

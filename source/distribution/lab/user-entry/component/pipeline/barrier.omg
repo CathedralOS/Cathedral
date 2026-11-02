@@ -1,0 +1,39 @@
+module pipeline::barrier;
+// A separate copied-message fixture channel holds the provider before its first
+// request read. No timing assumption decides whether the mailbox is full.
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+public machine release(gate: &Gate, endpoint: u64) -> u64 reaches Kernel invokes Kernel {
+    let mut words: [u64; 8]; words[0] = 1u64;
+    let sent: u64 = Kernel::send(gate, endpoint, &words, 8u64);
+    close(gate, endpoint);
+    transition sent == 8u64 { true -> (0u64) _ -> (sent) }
+}
+public machine arrived(gate: &Gate, endpoint: u64, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
+    let mut interests: [u64; 8]; interests[1] = endpoint;
+    let ready: u64 = block Kernel::wait(gate, &interests, 1u64, now);
+    transition {
+        ready == 0u64 -> block read(gate, endpoint)
+        ready == kernel::TIMED_OUT -> (kernel::WOULD_BLOCK)
+        _ -> (ready)
+    }
+    machine read(gate: &Gate, endpoint: u64) -> u64 reaches Kernel {
+        let mut words: [u64; 8];
+        let received: u64 = block Kernel::receive(gate, endpoint, &mut words);
+        transition received == 8u64 && words[0] == 1u64 { true -> (0u64) _ -> (kernel::IO_ERROR) }
+    }
+}
+public machine close(gate: &Gate, endpoint: u64) reaches Kernel invokes Kernel {
+    transition endpoint != 0u64 { true -> closed(gate, endpoint) _ -> done() }
+    machine closed(gate: &Gate, endpoint: u64) reaches Kernel { let ignored: u64 = Kernel::close(gate, endpoint); }
+}
+machine done() {}
+
+// A second scenario waits for the first frame's acknowledgement, while its
+// typed grant remains queued. Backpressure must then be from the grant slot.
+public machine consumed(gate: &Gate, peer: &runtime::connection::main::Peer) -> bool reaches Kernel blocks invokes Kernel {
+    let mut words: [u64; 8];
+    let status: u64 = block Kernel::shared_read(gate, peer.reader.handle, 1u64, &mut words, 1u64);
+    status == 0u64 && words[0] == peer.sent
+}

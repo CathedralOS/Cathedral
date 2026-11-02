@@ -1,0 +1,229 @@
+module pipeline::client;
+use pipeline::barrier;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::connection::main::Peer;
+use runtime::connection::main::Submission;
+use runtime::connection::main::Reply;
+use runtime::time::Tick;
+public data State {
+    peer: Peer;
+    mode: u64;
+    stopped: bool;
+    barrier: u64;
+    backpressured: bool;
+    clock: u64;
+    deadline: u64;
+    object: u64;
+    stage: u64;
+    first: u64;
+    second: u64;
+    third: u64;
+    first_done: bool;
+    third_done: bool;
+}
+public machine check(gate: &Gate, mode: u64) -> u64 reaches Kernel blocks invokes Kernel {
+    let mut context: State;
+    context.mode = mode;
+    context.clock = Kernel::clock(gate);
+    let mut env: [u64; 8];
+    let installed: u64 = Kernel::environment(gate, &mut env);
+    let tick: Tick = runtime::time::read(gate, context.clock);
+    transition tick {
+        Tick::Read { value } -> block open(gate, &mut context, installed, env, value)
+        _ -> (500u64)
+    }
+}
+machine open(gate: &Gate, context: &mut State, installed: u64, env: [u64; 8], now: u64) -> u64 reaches Kernel {
+    context.barrier = env[3];
+    transition installed == 0u64 && env[0] == 3u64 {
+        true -> block connecting(gate, context, env, now)
+        _ -> (501u64)
+    }
+    machine connecting(gate: &Gate, context: &mut State, env: [u64; 8], now: u64) -> u64 reaches Kernel {
+        context.deadline = runtime::time::after(now, 2000u64);
+        let status: u64 = block runtime::connection::main::connect(gate, &mut context.peer, env[1], env[2], runtime::time::after(now, 300u64));
+        transition status == 0u64 { true -> block backing(gate, context) _ -> block close(gate, context, 502u64) }
+    }
+}
+machine backing(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+    let mut words: [u64; 2048];
+    words[0] = 173u64;
+    let object: u64 = block Kernel::object_create(gate, &words, 8u64);
+    transition object != 0u64 && object < kernel::ERROR_BASE {
+        true -> block ready(gate, context, object)
+        _ -> block close(gate, context, 503u64)
+    }
+    machine ready(gate: &Gate, context: &mut State, object: u64) -> u64 reaches Kernel {
+        context.object = object;
+        block run(gate, context)
+    }
+}
+machine run(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+    let tick: Tick = runtime::time::read(gate, context.clock);
+    transition tick {
+        Tick::Read { value } -> block turn(gate, context, value)
+        _ -> block close(gate, context, 504u64)
+    }
+}
+machine turn(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    transition runtime::time::reached(now, context.deadline) {
+        true -> block close(gate, context, 505u64)
+        _ -> block advancing(gate, context, now)
+    }
+    machine advancing(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+        let status: u64 = block step(gate, context, now);
+        transition {
+            status != 0u64 -> block close(gate, context, status)
+            context.stopped -> block close(gate, context, 0u64)
+            context.first_done && context.third_done -> block finished(gate, context)
+            _ -> block parked(gate, context, now)
+        }
+    }
+    machine parked(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+        let ignored: u64 = block runtime::time::park_until(gate, runtime::time::after(now, 1u64));
+        block run(gate, context)
+    }
+}
+machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    transition {
+        context.stage == 0u64 -> block send(gate, context, 1u64, context.object)
+        context.stage == 1u64 -> block send(gate, context, 2u64, context.object)
+        context.stage == 2u64 -> block bounded(gate, context)
+        context.stage == 4u64 -> block send(gate, context, 3u64, 0u64)
+        _ -> block receive(gate, context, now)
+    }
+}
+machine send(gate: &Gate, context: &mut State, op: u64, object: u64) -> u64 reaches Kernel {
+    let mut words: [u64; 8]; words[0] = op;
+    let sent: Submission = block runtime::connection::main::submit(gate, &mut context.peer, &words, object);
+    transition sent {
+        Submission::Submitted { request } -> submitted(context, op, request)
+        Submission::Backpressure -> block backpressure(gate, context, op)
+        Submission::Failed { code } -> (506u64)
+    }
+}
+// The provider waits on this separate test channel before consuming request one.
+// Only an attached submission that really hit mailbox backpressure opens it.
+machine backpressure(gate: &Gate, context: &mut State, op: u64) -> u64 reaches Kernel {
+    transition op == 2u64 && context.barrier != 0u64 {
+        true -> block checked(gate, context)
+        _ -> (0u64)
+    }
+    machine checked(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+        transition context.mode == 410u64 {
+            true -> block consumed(gate, context)
+            _ -> released(gate, context)
+        }
+    }
+    machine consumed(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+        let ready: bool = block barrier::consumed(gate, &context.peer);
+        transition ready { true -> released(gate, context) _ -> (0u64) }
+    }
+    machine released(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+        let status: u64 = barrier::release(gate, context.barrier);
+        context.barrier = 0u64;
+        context.backpressured = status == 0u64;
+        status
+    }
+}
+machine submitted(context: &mut State, op: u64, id: u64) -> u64 {
+    transition op {
+        1u64 -> first(context, id)
+        2u64 -> second(context, id)
+        _ -> third(context, id)
+    }
+    machine first(context: &mut State, id: u64) -> u64 { context.first = id; context.stage = 1u64; 0u64 }
+    machine second(context: &mut State, id: u64) -> u64 { context.second = id; context.stage = 2u64; 0u64 }
+    machine third(context: &mut State, id: u64) -> u64 { context.third = id; context.stage = 5u64; 0u64 }
+}
+machine bounded(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+    let mut words: [u64; 8]; words[0] = 99u64;
+    let ordinary: u64 = block runtime::connection::main::begin(gate, &mut context.peer, &words);
+    let extra: Submission = block runtime::connection::main::submit(gate, &mut context.peer, &words, 0u64);
+    transition extra {
+        Submission::Backpressure -> checked(context, ordinary)
+        _ -> (507u64)
+    }
+    machine checked(context: &mut State, ordinary: u64) -> u64 {
+        context.stage = 3u64;
+        transition ordinary == kernel::BUSY && context.backpressured { true -> (0u64) _ -> (508u64) }
+    }
+}
+machine receive(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    let reply: Reply = block runtime::connection::main::poll(gate, &mut context.peer, now);
+    transition reply {
+        Reply::Pending -> (0u64)
+        Reply::Object { frame, object } -> block image(gate, context, frame.id, frame.payload, object)
+        Reply::Complete { frame, notification } -> plain(gate, context, frame.id, frame.payload, notification)
+        Reply::Endpoint { frame, endpoint } -> endpoint(gate, endpoint)
+        Reply::Failed { code } -> failed(context, code)
+    }
+}
+machine image(gate: &Gate, context: &mut State, id: u64, words: [u64; 8], object: u64) -> u64 reaches Kernel {
+    let mut data: [u64; 8];
+    let read: u64 = block Kernel::object_read(gate, object, 0u64, &mut data, 1u64);
+    let released: u64 = block Kernel::memory_release(gate, object);
+    transition context.stage == 3u64 && id == context.second && words[0] == 2u64 && data[0] == 173u64 && read == 0u64 && released == 0u64 {
+        true -> next(context)
+        _ -> (510u64)
+    }
+    machine next(context: &mut State) -> u64 { context.stage = 4u64; 0u64 }
+}
+machine plain(gate: &Gate, context: &mut State, id: u64, words: [u64; 8], notification: u64) -> u64 reaches Kernel {
+    transition notification != 0u64 {
+        true -> drop_notification(gate, notification)
+        _ -> arrived(context, id, words)
+    }
+    machine arrived(context: &mut State, id: u64, words: [u64; 8]) -> u64 {
+        transition {
+            context.stage != 5u64 -> (511u64)
+            id == context.first && words[0] == 1u64 && !context.first_done -> first(context)
+            id == context.third && words[0] == 3u64 && !context.third_done -> third(context)
+            _ -> (512u64)
+        }
+    }
+    machine first(context: &mut State) -> u64 { context.first_done = true; 0u64 }
+    machine third(context: &mut State) -> u64 { context.third_done = true; 0u64 }
+    machine drop_notification(gate: &Gate, notification: u64) -> u64 reaches Kernel { let ignored: u64 = Kernel::notify_drop(gate, notification); 513u64 }
+}
+machine endpoint(gate: &Gate, endpoint: u64) -> u64 reaches Kernel { let ignored: u64 = Kernel::close(gate, endpoint); 514u64 }
+machine finished(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+    transition runtime::connection::requests::empty(&context.peer.requests) && context.first < context.second && context.second < context.third {
+        true -> block close(gate, context, 0u64)
+        _ -> block close(gate, context, 515u64)
+    }
+}
+machine close(gate: &Gate, context: &mut State, status: u64) -> u64 reaches Kernel {
+    let closed: u64 = block runtime::connection::main::close(gate, &mut context.peer);
+    barrier::close(gate, context.barrier);
+    context.barrier = 0u64;
+    transition context.object != 0u64 {
+        true -> block release(gate, context, status)
+        _ -> (status)
+    }
+    machine release(gate: &Gate, context: &mut State, status: u64) -> u64 reaches Kernel { let ignored: u64 = block Kernel::memory_release(gate, context.object); context.object = 0u64; status }
+}
+
+// Failure must retire both outstanding IDs and every partial reply right.
+machine failed(context: &mut State, code: u64) -> u64 {
+    let expected: u64 = failure_code(context.mode);
+    transition {
+        expected == 0u64 -> (509u64)
+        code != expected -> (code)
+        context.peer.fault != code -> (516u64)
+        runtime::connection::requests::empty(&context.peer.requests) -> stopped(context)
+        _ -> (517u64)
+    }
+    machine stopped(context: &mut State) -> u64 { context.stopped = true; 0u64 }
+}
+machine failure_code(mode: u64) -> u64 {
+    transition mode {
+        402u64 -> (kernel::PEER_CLOSED)
+        404u64 -> (kernel::IO_ERROR)
+        406u64 -> (kernel::IO_ERROR)
+        408u64 -> (kernel::TIMED_OUT)
+        _ -> (0u64)
+    }
+}

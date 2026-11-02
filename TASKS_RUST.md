@@ -863,20 +863,54 @@ poll, an image publication, a commit, a launch's read or binding, or a
 selection's scene is held, so those exchanges move off the blocking path into
 staged work across turns, as the realm jobs did.
 
-Next, qualify bounded overlapping transport in Omega **before** implementing
-the held-parent fixtures. The Rust matrix's
-`source-rs/distribution/matrix/service/parent/interaction/connection.rs` uses
-`Pipeline<2>` for independent poll and visual requests. Omega's
-`source/platform/libraries/user-runtime/connection/main.omg::Peer` and
-`server/main.omg::Server` currently retain only one unanswered request each.
-Moving calls into a single queue alone would still let a held publication
-block input polling. Preserve the existing single-request helpers; add explicit
-bounded submission/reply correlation and corresponding server custody, then
-prove against a real peer that withholds the first response while answering
-the second. Include wrong/duplicate IDs, partial attachments, closure, and
-late replies. A late reply must never answer a replacement request or child.
+Bounded overlapping transport is now implemented and qualified in Omega.
+`connection/main.omg::submit` admits at most two outstanding requests and
+returns their exact IDs; the existing `begin` helpers remain single-request.
+The provider explicitly moves one request into `server/deferred.omg` custody
+before accepting another. Replies settle only the matching connection ticket,
+including its sealed input. Closing or retiring a peer clears both requests
+and any partially received right. This uses the existing v4 mailbox protocol;
+there is no kernel change or larger global budget.
 
-Then move the matrix's poll and presentation continuations across turns, with
+`python tools/omega-user/connection_test.py --pipeline` passes with two real
+Omega peers in separate tasks (`build/omega-user/connections/20261102T061257027831Z/`).
+The provider holds request one and its sealed input for 150 ticks, answers two,
+and accepts three before replying to one. It reads the first backing again
+after releasing the second request's reader. Both request bounds, wrong connection tickets,
+duplicate settlement and exact out-of-order correlation are checked. Separate
+fixture-channel barriers force mailbox backpressure and typed-grant-slot
+backpressure without relying on timing. Both preserve the original request
+and permit a retry before any new handoff. Errors after frame writes begin
+remain terminal, so a possibly exposed attachment is never replayed. Four
+additional cases cover closure with two requests outstanding, an unknown reply
+ID, a duplicate completed ID while other requests remain outstanding, and a
+sealed grant whose missing reply frame expires. Memory, physical-frame, channel
+and notification accounting return to baseline after each case; a final healthy
+exchange repeats after the faults. The witness entrance is
+`source/distribution/lab/user-entry/component/pipeline/main.omg`; fault injection
+stays beside it, not in the production runtime.
+
+The existing client/owner, multi-client service and child-admission suites pass
+with this runtime, as do the primitive clock/no-clock boots, all 514 host tests,
+the channel lab's x86-64 release clippy and source-layout checks. The primitive
+runner once checked the exit prefix before QEMU finished printing its successful
+outcome (`build/omega-user/tests/20261102T061121808056Z/no-clock/`); it now waits
+for the whole successful exit line. Both primitive boots then passed at
+`build/omega-user/tests/20261102T061308922908Z/`. Logs for this slice are in
+`build/omega-pipeline-progress/`. Normal F5 also passes user creation, Notes,
+Colors, save/discard/cancel and cold reopen with the rebuilt runtime
+(`build/boot-harness-rs/desktop/20261102T061555362343Z/`). The Omega matrix also
+passes depth-three recursive desktops, protected close, saved Notes/Colors,
+repeated subtree reclamation, isolation and cold reopen
+(`build/boot-harness-rs/desktop/20261102T061915944038Z/`). Its rebuilt image is
+329 of 496 pages; normal F5 still uses the Rust matrix.
+
+This is transport qualification, not matrix-loop parity. The Rust matrix's
+`source-rs/distribution/matrix/service/parent/interaction/connection.rs` already
+uses `Pipeline<2>` for independent poll and visual requests. The Omega matrix
+still makes blocking exchanges, so this alone does not remove desktop stalls.
+
+Next, move the matrix's poll and presentation continuations across turns, with
 an exact child ticket and view/scene generation retained until settlement;
 owner cancellation and replacement must release retained resources without
 publishing into the replacement. Cover launch, binding and selection holds

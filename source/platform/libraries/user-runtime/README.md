@@ -10,7 +10,19 @@ and typed handoff. Both distinguish local custody from the peer's independent
 rights; releasing a producer never remotely removes an accepted reader.
 
 [connection/main.omg](connection/main.omg) owns a v4 client connection: setup,
-one outstanding request, mailbox/notification reconciliation and final cleanup.
+bounded outstanding requests, mailbox/notification reconciliation and final cleanup.
+The existing `begin` helpers permit one unanswered request. Explicit `submit`
+(or `submit_bytes`) permits two, returning an exact request ID, backpressure
+with nothing published, or failure. Replies may complete in either order; the
+caller dispatches by `Frame.id`. A full mailbox is checked before an
+attached submission delegates a reader, leaving the link and source intact for
+a retry. A full typed-grant slot also reports backpressure before handing off
+the right. The server preserves its ticket and backing on either refusal.
+Failures once frame writes start are terminal; a possibly exposed handoff is
+never retried. [requests.omg](connection/requests.omg) owns
+that two-slot ledger. Completing a request frees its slot, never its ID. Do
+not mix the blocking exchange helpers into an overlapping connection: its event
+loop must dispatch all replies. A provider must explicitly support overlap.
 Setup also opens in two steps for a caller that keeps serving while the peer
 gets round to answering: the hello goes out without waiting, and the handshake
 resumes once the peer's first reply is ready.
@@ -68,7 +80,13 @@ limits; the runtime has no global client registry or matrix policy.
   typed grant is sent before the frame that names it. Reuse the **closed Server
   value** for a replacement so its incarnation advances. Do not reset that value
   while old tickets remain live.
-- `Server.object` is borrowed request backing: it stays valid until reply or
+- [deferred.omg](server/deferred.omg) holds one exact request ticket and its
+  sealed input while `poll` accepts another request. `hold` explicitly opts the
+  provider into overlap; it refuses a second held request. The existing reply
+  helpers settle only the ticket they answer, preserving the other request.
+  Borrow held input through `deferred::object`; reply or retirement releases it.
+  While only held work remains, drive `poll` to accept more work or detect closure.
+- `Server.object` is borrowed current-request backing: it stays valid until reply or
   close, and must not be independently released by the application. A reply may
   delegate it; the recipient then owns an independent reader. Publication failure
   after a possible object handoff retires the link without replay.
@@ -79,9 +97,12 @@ limits; the runtime has no global client registry or matrix policy.
 
 A caller starts with a zero-initialized `Server` and explicitly closes it before
 disposal. Protocol failure already closes its retained resources. Requests carry
-up to 64 bytes; replies carry 64 bytes plus at most one attachment. Pipelined
-requests, endpoint or notification attachments on requests, and copied-request
-fallback remain unsupported. [owner.omg](server/owner.omg) selects only
+up to 64 bytes; replies carry 64 bytes plus at most one attachment. There are
+at most two whole requests and one partially paired incoming attachment/frame.
+The wire still uses one acknowledged mailbox per direction, not an unbounded
+queue. Unsolicited extra requests while the provider retains its current request,
+endpoint or notification attachments on requests, and copied-request fallback
+remain unsupported. [owner.omg](server/owner.omg) selects only
 kernel-installed owner endpoints, independently of the app's service
 environment; ordinary owner control continues to accept plain requests only.
 

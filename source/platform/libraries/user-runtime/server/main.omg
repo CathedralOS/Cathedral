@@ -2,10 +2,12 @@ module server::main;
 use waiting;
 use waiting::Set;
 use server::pending;
+use server::deferred;
 use server::opening;
 use server::opening::Opening;
-// Accept one explicit connection -> deliver one request -> reply under its exact
-// ID. The owner adapter supplies installed endpoints; this listener discovers none.
+// Accept an explicit connection -> deliver a request -> reply under its exact
+// ticket. deferred::hold lets a provider retain one request while serving another.
+// The owner supplies installed endpoints; this listener discovers none.
 use kernel::Gate;
 use kernel::Kernel;
 use kernel;
@@ -19,6 +21,8 @@ public data Server {
     peer: Peer;
     last: u64;
     pending: u64;
+    held: u64;
+    held_object: u64;
     incarnation: u64;
     opening: server::opening::Opening;
     ready: bool;
@@ -147,23 +151,20 @@ public machine reply_notification_to(gate: &Gate, listener: &mut Server, issued:
 }
 machine reply_attached(gate: &Gate, listener: &mut Server, issued: Ticket, payload: &[u64; 8], kind: u64 [0..=3], handle: u64) -> u64
     reaches Kernel {
-    transition listener.pending != 0u64 && listener.peer.fault == 0u64
-        && listener.incarnation == issued.incarnation && listener.peer.receiver == issued.receiver
-        && listener.pending == issued.request {
-        true -> block publish(gate, listener, payload, kind, handle)
+    transition deferred::matches(listener, issued) {
+        true -> block publish(gate, listener, issued.request, payload, kind, handle)
         _ -> (kernel::IO_ERROR)
     }
-    machine publish(gate: &Gate, listener: &mut Server, payload: &[u64; 8], kind: u64 [0..=3], handle: u64) -> u64 reaches Kernel {
-        let status: u64 = block mailbox::send_attached(gate, &mut listener.peer, listener.pending, payload, kind, handle);
+    machine publish(gate: &Gate, listener: &mut Server, request: u64, payload: &[u64; 8], kind: u64 [0..=3], handle: u64) -> u64 reaches Kernel {
+        let status: u64 = block mailbox::send_attached(gate, &mut listener.peer, request, payload, kind, handle);
         transition {
-            status == 0u64 -> block published(gate, listener)
-            status == kernel::WOULD_BLOCK && handle == 0u64 -> (status)
+            status == 0u64 -> block published(gate, listener, request)
+            status == kernel::WOULD_BLOCK -> (status)
             _ -> block retire(gate, listener, status)
         }
     }
-    machine published(gate: &Gate, listener: &mut Server) -> u64 reaches Kernel {
-        listener.pending = 0u64;
-        block release_object(gate, listener);
+    machine published(gate: &Gate, listener: &mut Server, request: u64) -> u64 reaches Kernel {
+        block deferred::settle(gate, listener, request);
         let status: u64 = Kernel::notify_signal(gate, listener.peer.signal);
         transition status == 0u64 {
             true -> (0u64)
@@ -175,9 +176,8 @@ public machine close(gate: &Gate, listener: &mut Server) reaches Kernel blocks i
     let ignored: u64 = block retire(gate, listener, kernel::PEER_CLOSED);
 }
 machine retire(gate: &Gate, listener: &mut Server, code: u64) -> u64 reaches Kernel {
-    listener.pending = 0u64;
     listener.ready = false;
-    block release_object(gate, listener);
+    block deferred::clear(gate, listener);
     let ignored: u64 = block connection::main::close(gate, &mut listener.peer);
     listener.peer.fault = code;
     code
@@ -218,14 +218,5 @@ public machine watch(listener: &Server, set: &mut waiting::Set) {
             _ -> done()
         }
     }
-}
-machine release_object(gate: &Gate, listener: &mut Server) reaches Kernel {
-    let object: u64 = listener.object;
-    listener.object = 0u64;
-    transition object != 0u64 {
-        true -> block release(gate, object)
-        _ -> done()
-    }
-    machine release(gate: &Gate, object: u64) reaches Kernel { let ignored: u64 = block Kernel::memory_release(gate, object); }
 }
 machine done() {}
