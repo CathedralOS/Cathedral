@@ -11,9 +11,12 @@ rights; releasing a producer never remotely removes an accepted reader.
 
 [connection/main.omg](connection/main.omg) owns a v4 client connection: setup,
 bounded outstanding requests, mailbox/notification reconciliation and final cleanup.
-The existing `begin` helpers permit one unanswered request. Explicit `submit`
-(or `submit_bytes`) permits two, returning an exact request ID, backpressure
-with nothing published, or failure. Replies may complete in either order; the
+The existing `begin` helpers permit one unanswered request. `connect_pipeline`
+negotiates Rust's existing `cathedral.shared.pipeline.v4` hello; the provider
+must opt in before setup. `submit` (or `submit_bytes`) then permits two,
+returning an exact request ID, backpressure with nothing published, or failure.
+On an ordinary connection `submit` remains bounded to one unanswered request;
+it cannot silently widen what that provider accepted. Replies may complete in either order; the
 caller dispatches by `Frame.id`. A full mailbox is checked before an
 attached submission delegates a reader, leaving the link and source intact for
 a retry. A full typed-grant slot also reports backpressure before handing off
@@ -23,7 +26,7 @@ never retried. [requests.omg](connection/requests.omg) owns
 that two-slot ledger. Completing a request frees its slot, never its ID. Do
 not mix the blocking exchange helpers into an overlapping connection: its event
 loop must dispatch all replies. A provider must explicitly support overlap.
-Setup also opens in two steps for a caller that keeps serving while the peer
+Ordinary setup also opens in two steps for a caller that keeps serving while the peer
 gets round to answering: the hello goes out without waiting, and the handshake
 resumes once the peer's first reply is ready.
 Descend into `setup.omg` for the existing Rust-compatible handshake,
@@ -66,7 +69,9 @@ stores one `Server` per client and chooses its own dispatch order and admission
 limits; the runtime has no global client registry or matrix policy.
 
 - `begin` takes endpoint custody on success and starts setup without waiting for
-  the peer's next message. `poll` advances [opening.omg](server/opening.omg) one
+  the peer's next message. `begin_pipeline`, or `enable_pipeline` immediately
+  after `begin`, allows the explicit pipeline hello. An ordinary hello still
+  selects a single-request connection. `poll` advances [opening.omg](server/opening.omg) one
   available handshake message at a time. Existing `accept` is the synchronous
   convenience over that same state machine.
 - [incoming.omg](server/incoming.omg) joins a mailbox request with its optional
@@ -81,8 +86,8 @@ limits; the runtime has no global client registry or matrix policy.
   value** for a replacement so its incarnation advances. Do not reset that value
   while old tickets remain live.
 - [deferred.omg](server/deferred.omg) holds one exact request ticket and its
-  sealed input while `poll` accepts another request. `hold` explicitly opts the
-  provider into overlap; it refuses a second held request. The existing reply
+  sealed input while `poll` accepts another request. `hold` requires negotiated
+  pipeline mode and refuses a second held request. The existing reply
   helpers settle only the ticket they answer, preserving the other request.
   Borrow held input through `deferred::object`; reply or retirement releases it.
   While only held work remains, drive `poll` to accept more work or detect closure.

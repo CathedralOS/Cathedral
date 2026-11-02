@@ -59,6 +59,19 @@ public machine begin(listener: &mut Server, sender: u64, receiver: u64, deadline
         0u64
     }
 }
+// Opt in before polling the fresh listener. Ordinary clients still negotiate
+// one request; only the explicit pipeline hello enables two-request clients.
+public machine enable_pipeline(listener: &mut Server) -> u64 {
+    transition !listener.ready && listener.last == 0u64 && listener.pending == 0u64 && listener.peer.sender != 0u64 {
+        true -> enabled(listener)
+        _ -> (kernel::BUSY)
+    }
+    machine enabled(listener: &mut Server) -> u64 { listener.peer.pipeline = true; 0u64 }
+}
+public machine begin_pipeline(listener: &mut Server, sender: u64, receiver: u64, deadline: u64, objects: bool) -> u64 {
+    let status: u64 = begin(listener, sender, receiver, deadline, objects);
+    transition status == 0u64 { true -> enable_pipeline(listener) _ -> (status) }
+}
 public data Event {
     case Pending;
     case Request(frame: Frame);

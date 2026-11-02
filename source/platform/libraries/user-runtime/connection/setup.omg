@@ -43,6 +43,17 @@ public machine resume(gate: &Gate, peer: &mut Peer, deadline: u64) -> u64 reache
 }
 machine opened(gate: &Gate, peer: &mut Peer, bell: notification::main::Bell) -> u64 reaches Kernel {
     peer.bell = bell;
+    transition peer.pipeline { true -> pipeline(gate, peer) _ -> ordinary(gate, peer) }
+}
+machine pipeline(gate: &Gate, peer: &mut Peer) -> u64 reaches Kernel {
+    let mut packet: [u64; 8];
+    packet[0] = 0x6172646568746163u64;
+    packet[1] = 0x6465726168732e6cu64;
+    packet[2] = 0x6e696c657069702eu64;
+    packet[3] = 0x34762e65u64;
+    exact(Kernel::send(gate, peer.sender, &packet, 28u64), 28u64)
+}
+machine ordinary(gate: &Gate, peer: &Peer) -> u64 reaches Kernel {
     let mut packet: [u64; 8];
     // source-rs/platform/contracts/connection.rs: "cathedral.shared.v4".
     packet[0] = 0x6172646568746163u64;

@@ -26,6 +26,7 @@ public machine release(gate: &Gate, peer: &mut Peer) reaches Kernel blocks invok
     peer.signal = 0u64;
     peer.grant = 0u64;
     peer.grant_kind = 0u64;
+    peer.pipeline = false;
     connection::requests::clear(&mut peer.requests);
     close_endpoint(gate, sender);
     close_endpoint(gate, receiver);

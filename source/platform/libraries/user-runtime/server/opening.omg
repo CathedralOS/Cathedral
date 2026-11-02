@@ -76,11 +76,21 @@ machine next(opening: &mut Opening) -> u64 {
 machine begin(gate: &Gate, peer: &mut Peer) -> u64 reaches Kernel {
     let mut packet: [u64; 8];
     let status: u64 = block Kernel::receive(gate, peer.receiver, &mut packet);
-    transition status == 19u64 && packet[0] == 0x6172646568746163u64
-        && packet[1] == 0x6465726168732e6cu64 && packet[2] == 0x34762eu64 {
-        true -> block allocate(gate, peer)
+    let ordinary: bool = status == 19u64 && packet[0] == 0x6172646568746163u64
+        && packet[1] == 0x6465726168732e6cu64 && packet[2] == 0x34762eu64;
+    let pipeline: bool = status == 28u64
+        && packet[0] == 0x6172646568746163u64
+        && packet[1] == 0x6465726168732e6cu64
+        && packet[2] == 0x6e696c657069702eu64
+        && packet[3] == 0x34762e65u64;
+    transition ordinary || (peer.pipeline && pipeline) {
+        true -> block accepted(gate, peer, pipeline)
         _ -> (kernel::IO_ERROR)
     }
+}
+machine accepted(gate: &Gate, peer: &mut Peer, pipeline: bool) -> u64 reaches Kernel {
+    peer.pipeline = pipeline;
+    block allocate(gate, peer)
 }
 machine allocate(gate: &Gate, peer: &mut Peer) -> u64 reaches Kernel {
     let result: Allocation = block memory::main::allocate(gate, 1u64);

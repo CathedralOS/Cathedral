@@ -43,7 +43,7 @@ machine open(gate: &Gate, context: &mut State, installed: u64, env: [u64; 8], no
     }
     machine connecting(gate: &Gate, context: &mut State, env: [u64; 8], now: u64) -> u64 reaches Kernel {
         context.deadline = runtime::time::after(now, 2000u64);
-        let status: u64 = block runtime::connection::main::connect(gate, &mut context.peer, env[1], env[2], runtime::time::after(now, 300u64));
+        let status: u64 = block runtime::connection::main::connect_pipeline(gate, &mut context.peer, env[1], env[2], runtime::time::after(now, 300u64));
         transition status == 0u64 { true -> block backing(gate, context) _ -> block close(gate, context, 502u64) }
     }
 }

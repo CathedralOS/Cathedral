@@ -15,6 +15,7 @@ public machine matches(listener: &Server, issued: Ticket) -> bool {
 }
 public machine hold(listener: &mut Server, issued: Ticket) -> u64 {
     transition {
+        !listener.peer.pipeline -> (kernel::DENIED)
         !matches(listener, issued) || listener.pending != issued.request -> (kernel::IO_ERROR)
         listener.held != 0u64 -> (kernel::BUSY)
         _ -> retained(listener)

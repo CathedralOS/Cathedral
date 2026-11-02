@@ -33,6 +33,7 @@ public data Peer {
     grant: u64;
     grant_kind: u64;
     grant_id: u64;
+    pipeline: bool;
     partial: bool;
     partial_deadline: u64;
 }
@@ -88,6 +89,13 @@ public machine connect(gate: &Gate, peer: &mut Peer, sender: u64, receiver: u64,
         _ -> block fail(gate, peer, status)
     }
 }
+// Request the existing v4 pipeline handshake. The provider must explicitly
+// accept it; an ordinary connection does not gain overlap from submit alone.
+public machine connect_pipeline(gate: &Gate, peer: &mut Peer, sender: u64, receiver: u64, deadline: u64) -> u64
+    reaches Kernel blocks invokes Kernel {
+    peer.pipeline = true;
+    block connect(gate, peer, sender, receiver, deadline)
+}
 // Explicit overlap: at most two requests may await answers. Backpressure
 // publishes nothing; a submitted request is never replayed because it is late.
 // Reply frame IDs tell the caller which operation completed, in either order.
@@ -139,7 +147,7 @@ machine begin_windowed(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], object:
         _ -> block available(gate, peer, payload, object, bytes, overlap)
     }
     machine available(gate: &Gate, peer: &mut Peer, payload: &[u64; 8], object: u64, bytes: u64 [0..=64], overlap: bool) -> u64 reaches Kernel {
-        transition requests::full(&peer.requests) || (!overlap && !requests::empty(&peer.requests)) {
+        transition requests::full(&peer.requests) || ((!overlap || !peer.pipeline) && !requests::empty(&peer.requests)) {
             true -> (kernel::BUSY)
             _ -> block identified(gate, peer, payload, object, bytes)
         }

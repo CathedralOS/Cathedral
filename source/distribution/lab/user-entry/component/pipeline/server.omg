@@ -40,7 +40,7 @@ machine open(gate: &Gate, context: &mut State, status: u64, env: [u64; 8], now: 
     }
     machine accepting(gate: &Gate, context: &mut State, env: [u64; 8], now: u64) -> u64 reaches Kernel {
         context.deadline = runtime::time::after(now, 2000u64);
-        let status: u64 = runtime::server::main::begin(&mut context.listener, env[2], env[1], runtime::time::after(now, 300u64), true);
+        let status: u64 = runtime::server::main::begin_pipeline(&mut context.listener, env[2], env[1], runtime::time::after(now, 300u64), true);
         transition status == 0u64 { true -> block run(gate, context) _ -> block close(gate, context, 522u64) }
     }
 }

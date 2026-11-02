@@ -905,6 +905,19 @@ repeated subtree reclamation, isolation and cold reopen
 (`build/boot-harness-rs/desktop/20261102T061915944038Z/`). Its rebuilt image is
 329 of 496 pages; normal F5 still uses the Rust matrix.
 
+Cross-language overlap now uses Rust's existing explicit v4 pipeline hello.
+`connect_pipeline` / `services::open_pipeline` request it; providers use
+`begin_pipeline` or enable it immediately after beginning a fresh listener.
+Ordinary connections remain single-request even through `submit`, and moving
+one request into deferred custody requires negotiated pipeline mode. The first
+matrix integration attempt exposed that the earlier two-Omega-peer witness had
+not negotiated this with Rust's single-request default. The frame protocol and
+resource ceilings are unchanged. The negotiated pipeline witness passes at
+`build/omega-user/connections/20261102T164554894187Z/`; the ordinary client/owner,
+multi-client service and child-admission suites pass at
+`20261102T164709967352Z/`, `20261102T164731782720Z/` and
+`20261102T164745306000Z/` under the same connections directory.
+
 This is transport qualification, not matrix-loop parity. The Rust matrix's
 `source-rs/distribution/matrix/service/parent/interaction/connection.rs` already
 uses `Pipeline<2>` for independent poll and visual requests. The Omega matrix
