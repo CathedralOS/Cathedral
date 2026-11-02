@@ -73,18 +73,22 @@ def exercise(output, click, key, scan, width, height, reboot):
     print('PASS: held Omega selection serves HEALTH/input; old app gets exact keys; refusal preserves both apps; repeated switching and cold save')
 
 
-def cancellation(output, click, key, scan, width, height, reboot, late):
+def cancellation(output, click, key, scan, width, height, reboot, late, nested=False):
     n = Nested(click, key, scan, width, height)
     log = lambda: (output / 'serial.log').read_text(encoding='utf-8', errors='replace')
-    select = lambda index: click(316 + 144 * index, height - 48)
-    n.launch(0, 1)
-    n.color(0, False)
-    n.launch(0, 0)
+    depth = 1 if nested else 0
+    if nested:
+        n.enter(depth, not reboot)
+    x, y, w, h = n.viewport(depth)
+    select = lambda index: click(x + 260 + (56 if depth == 0 else 0) + 144 * index, y + h - 48)
+    n.launch(depth, 1)
+    n.color(depth, False)
+    n.launch(depth, 0)
     base = 'ab' if reboot else ''
-    n.note(0, base + ' ')
-    n.focus_note(0)
+    n.note(depth, base + ' ')
+    n.focus_note(depth)
     key('a')
-    n.note(0, base + 'a ', True)
+    n.note(depth, base + 'a ', True)
     start = len(log())
     key('f3' if late else 'f5')
     scan(lambda _w, _d: 'interaction-delay-armed' in log()[start:], 'selection gate armed')
@@ -92,41 +96,49 @@ def cancellation(output, click, key, scan, width, height, reboot, late):
     scan(lambda _w, _d: 'interaction-delay-held' in log()[start:], 'selection held')
     marker = 'commit-health-during-hold' if late else 'image-health-during-hold'
     scan(lambda _w, _d: marker in log()[start:], 'owner responds during selection')
-    n.note(0, base + 'a ', True)
-    n.focus_note(0)
+    n.note(depth, base + 'a ', True)
+    n.focus_note(depth)
     key('b')
-    key('f6')  # The test parent uses its real owner link for LOSS then STOP.
+    key('f7' if nested else 'f6')  # F7 adds two owner-control hops.
     scan(lambda _w, _d: 'selection-stop-requested' in log()[start:], 'stop pending')
     assert 'interaction-delay-released' not in log()[start:]
-    scan(lambda _w, _d: 'selection-stop-acknowledged' in log()[start:], 'stop settled')
+    settled = 'selection-control-recovered' if nested else 'selection-stop-acknowledged'
+    scan(lambda _w, _d: settled in log()[start:], 'stop settled and control usable')
     events = log()[start:]
     assert events.index('selection-loss-busy') < events.index('selection-stop-requested')
     assert events.index('selection-stop-requested') < events.index('interaction-delay-released')
+    if nested:
+        assert 'selection-loss-busy 2' in events
+        assert events.index('selection-stop-timed-out') < events.index('interaction-delay-released')
+        assert events.count('selection-stop-requested') == 1, 'timeout must not retry STOP'
     assert 'selection cancelled' in events
     assert ('selection restored' in events) == late
-    assert events.index('selection cancelled') < events.index('selection-stop-acknowledged')
-    assert events.index('matrix: reclaimed 1 ') < events.index('selection-stop-acknowledged')
-    n.note(0, base + 'ab ', True)
+    assert events.index('selection cancelled') < events.index(settled)
+    assert events.index('matrix: reclaimed 1 ') < events.index(settled)
+    n.note(depth, base + 'ab ', True)
     # Reuse the stopped slot, then switch back to the same Notes and its draft.
-    n.launch(0, 1)
-    n.color(0, False)
+    n.launch(depth, 1)
+    n.color(depth, False)
     select(1)  # Colors reused slot 1; the same Notes still occupies slot 2.
-    n.note(0, base + 'ab ', True)
+    n.note(depth, base + 'ab ', True)
     assert log().count('note-loaded') == 1
-    n.focus_note(0)
+    n.focus_note(depth)
     key('f1')
-    n.note(0, base + 'ab ')
-    n.app_close(0)
-    n.color(0, False)
-    n.app_close(0)
-    n.background(0)
+    n.note(depth, base + 'ab ')
+    n.app_close(depth)
+    n.color(depth, False)
+    n.app_close(depth)
+    n.background(depth)
+    if nested:
+        n.task_close(0)
+        n.background(0)
     assert not omega_desktop_test.failed_children(log()), log()[-4000:]
-    print(f'PASS: Omega selection cancellation {"late" if late else "before commit"}; LOSS busy, STOP settled, draft and slot reuse survive cold reopen')
+    print(f'PASS: Omega selection cancellation {"through two relays " if nested else ""}{"late" if late else "before commit"}; LOSS busy, STOP settled, draft and slot reuse survive cold reopen')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--cancel', choices=['before', 'late'])
+    parser.add_argument('--cancel', choices=['before', 'late', 'nested'])
     args = parser.parse_args()
-    check = exercise if args.cancel is None else lambda *values: cancellation(*values, late=args.cancel == 'late')
+    check = exercise if args.cancel is None else lambda *values: cancellation(*values, late=args.cancel != 'before', nested=args.cancel == 'nested')
     omega_parent_poll_test.main(user_check=check, label='omega-selection-' + (args.cancel or 'ordinary'))

@@ -101,12 +101,6 @@ machine begin(gate: &Gate, context: &mut State, now: u64, words: [u64; 8], slot:
 }
 // Each pending word's reply, or its deadline, answers the owner.
 public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
-    transition context.presentation_work.active {
-        true -> (0u64)
-        _ -> block idle_step(gate, context, now)
-    }
-}
-machine idle_step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
     block slot_step(gate, context, 0u64, now);
     block slot_step(gate, context, 1u64, now);
     block slot_step(gate, context, 2u64, now);
@@ -117,11 +111,17 @@ machine idle_step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Ker
 machine slot_step(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64) reaches Kernel {
     transition {
         !context.forwards[slot].live -> done()
+        // Relays return an opaque answer to the owner; close/survey answers may
+        // change local children and must wait for their retained scene backing.
+        context.presentation_work.active && context.forwards[slot].purpose != OWNER_WORD -> done()
         !context.slots[slot].live -> block answered(gate, context, slot, error(kernel::PEER_CLOSED))
         _ -> block receive(gate, context, slot, now)
     }
 }
 machine receive(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64) reaches Kernel {
+    // A reply already queued when a scene barrier lifts is not fresh permission.
+    // Settle the expired question first, then drain its response without effects.
+    block pending(gate, context, slot, now);
     let reply: Reply = block runtime::connection::main::poll(gate, &mut context.controls[slot], now);
     transition reply {
         Reply::Complete { frame, notification } -> block complete(gate, context, slot, frame, notification)
@@ -341,6 +341,12 @@ public machine watch(context: &State, set: &mut Set) {
     slot_watch(context, 4u64, set);
 }
 machine slot_watch(context: &State, slot: u64 [0..=4], set: &mut Set) {
+    transition context.presentation_work.active && context.forwards[slot].purpose != OWNER_WORD {
+        true -> done()
+        _ -> available_watch(context, slot, set)
+    }
+}
+machine available_watch(context: &State, slot: u64 [0..=4], set: &mut Set) {
     transition context.forwards[slot].live && context.controls[slot].fault == 0u64 && context.controls[slot].receiver != 0u64 {
         true -> watched(context, slot, set)
         _ -> done()

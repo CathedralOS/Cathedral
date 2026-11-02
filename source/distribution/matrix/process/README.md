@@ -268,7 +268,7 @@ BEGIN, each translated entry and COMMIT, or ABORT after a rejection. The origina
 child ticket, child view, parent epoch and transaction revision survive each wait.
 Input polling, service acquisition, storage and owner HEALTH remain independent.
 Scene mutations and child retirement wait behind publication; failed handshakes
-retain their cleanup request. Lifecycle scene replay, selection, binding and
+retain their cleanup request. Lifecycle scene replay, binding and
 launch still contain synchronous waits. See TASKS_RUST.md for verified scope.
 
 The root display uses [scene.omg](connections/scene.omg) as its sole receiver.
@@ -286,3 +286,18 @@ requester's exact ticket and both app bindings survive the wait. A refusal abort
 the staged scene; invalidation after an accepted commit restores the prior scene
 before releasing the barrier. Launch-time activation, layout, binding and explicit
 refresh still have synchronous callers and remain migration work.
+
+Owner control enters [program/commands.omg](program/commands.omg). A valid STOP
+marks retirement during a pending scene and is acknowledged after the transaction
+settles and the child is reclaimed; LOSS reports BUSY during that wait. Routed
+owner words use [children/forward.omg](children/forward.omg) independently of
+drawing at each intermediate matrix. Their opaque replies and deadlines keep
+progressing while close/survey answers that can change local children wait behind
+the scene barrier. An expired question is settled before reading any queued
+answer; a late clean answer cannot become permission to close.
+
+A forwarded timeout reports an unknown outcome, not cancellation of accepted
+work. The control connection retains that pending exchange until its late reply
+is drained. `omega_selection_test.py --cancel nested` exercises two Omega relays
+under a held commit, observes STOP timing out, then checks eventual cancellation,
+restoration, reclamation and a distinct storage-binding reply over the same route.

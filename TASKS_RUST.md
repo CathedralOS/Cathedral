@@ -1072,17 +1072,67 @@ Normal F5 remains on the Rust matrix pending the remaining migration. The small
 Rust matrix lab's unchanged baseline failure remains recorded above; it was not
 rerun or claimed fixed here.
 
-The cancellation proof uses a direct owner link. A remaining recursive gap is
-visible in `program/commands.omg` and `children/forward.omg::step`: an intermediate
-Omega matrix queues routed owner words and stops receiving forwarded answers
-while it publishes. Next let opaque owner relays and their answers progress on
-the independent control links, while keeping close/survey effects that mutate
-local children behind the scene barrier. Prove LOSS/STOP through two intermediate
-Omega matrices during a held commit; send STOP within the existing forwarding
-deadline rather than extending that contract to accommodate the fixture.
+The next slice below extends the direct-owner proof through intermediate Omega
+matrices. Storage exchanges and launch continuations remain the next substantial
+migration, including login recovery on failed admission.
 
-Then continue shared storage exchanges and launch continuations described above,
-including login recovery on failed admission.
+### Stock matrix migration: owner relays during scene publication
+
+`program/commands.omg` now dispatches routed owner words while it publishes.
+`children/forward.omg` keeps receiving opaque owner replies and enforcing their
+deadlines on the independent control links. Close/survey answers that can change
+local children remain behind the scene barrier; blocked receivers are not added
+to the wait set. Each matrix runs the same implementation at every depth.
+
+Deadline expiry is checked **before** polling the reply, including on the first
+turn after a scene barrier releases. An already queued clean answer observed
+after its deadline is drained, rather than applied as fresh close permission.
+No deadline, resource allowance, kernel mechanism or wire protocol changed.
+
+`python tools/boot-harness-rs/omega_selection_test.py --cancel nested` enters a
+nested user, launches Colors and Notes, and holds the outermost COMMIT while the
+inner matrix selects Colors. F7 asks LOSS and STOP through two intermediate Omega
+matrices. LOSS must return BUSY during the hold. The existing one-second forwarded
+control deadline expires before the five-second render hold ends: the test
+requires TIMED_OUT, never resends STOP, and then observes the accepted operation
+restore the Notes scene and reclaim Colors. A subsequent STORAGE_BINDING request
+for the surviving Notes must return a nonzero scope over the same control chain,
+so a late zero STOP acknowledgement cannot masquerade as its answer. Colors is
+relaunched into the freed slot; the same Notes draft is saved and cold-reopened.
+
+This is an explicit unknown-outcome proof: a timeout does not cancel accepted
+work. It replaces the earlier proposed fixture timing workaround; extending the
+forwarding deadline to fit a deliberately stalled renderer would conceal the
+late-reply behavior. The fault is supplied entirely by the Rust test parent;
+the installed Omega matrices have no fixture flag or probe protocol.
+
+The initial nested proof passed both boots at
+`build/boot-harness-rs/desktop/20261102T215928548672Z/`. Final verification after
+moving expiry ahead of reply polling, on 2026-11-02:
+
+- Two-hop timeout, cancellation and control recovery:
+  `build/boot-harness-rs/desktop/20261102T220750087375Z/`.
+- Direct late cancellation: `.../20261102T222034176273Z/`; parent image hold
+  and close during a held save: `.../20261102T222148548421Z/`.
+- Full Omega desktop: `.../20261102T222306271410Z/`; three nested desktops,
+  protected close and repeated subtree reclamation: `.../20261102T222436433001Z/`.
+- Normal Rust F5: `.../20261102T223205103305Z/`. All six scenarios include
+  cold reboot and persisted state checks. This is functional evidence, not a
+  performance claim; the deeper launches remain slow.
+- Native review and compilation with the unchanged producer: 359/496 load
+  pages, unchanged 128-page stack. All 514 Rust host tests, stock matrix target
+  clippy with `interaction-delay,trace-storage`, Rust format, Python compilation,
+  layout (148 Omega / 153 Rust edges) and diff whitespace checks pass.
+
+A dedicated queued-clean close-answer/barrier fault still needs a deterministic
+fixture; the protected-close and held-save scenarios cover ordinary close
+behavior. Normal F5 remains on the Rust matrix until the remaining migration is
+complete. The previously recorded small Rust matrix-lab failure is unchanged.
+
+Next: move shared storage exchanges into retained per-link work, then drive
+launch reads and bindings from continuations. Keep the captured scope, exact
+caller, attachment custody and deadline with each exchange; do not add a second
+receiver or a launch-only transport. Recover the login picker on failed admission.
 
 ### Stock matrix migration: root display waits
 

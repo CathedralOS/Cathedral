@@ -10,6 +10,7 @@
 //! F3 holds a full COMMIT with the same liveness probe. Pressing F3 again during
 //! that hold refuses the commit, so the client must abort its staged transaction.
 //! F6 during a probed hold asks LOSS, then STOP of the child's Colors slot.
+//! F7 during a probed hold routes those requests through two more matrix levels.
 use super::cancellation_probe::Cancellation;
 use super::children::Children;
 use super::*;
@@ -162,7 +163,7 @@ impl Gate {
             ]
             .contains(&key)
             {
-                if key == input::F6 as u64
+                if (key == input::F6 as u64 || key == input::F7 as u64)
                     && state == input::PRESS as u64
                     && self.probe
                     && self.health.is_none()
@@ -174,6 +175,7 @@ impl Gate {
                         held.client.unwrap(),
                         held.incarnation,
                         *until,
+                        if key == input::F7 as u64 { 2 } else { 0 },
                     ));
                 }
                 if key == input::F3 as u64

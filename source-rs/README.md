@@ -335,6 +335,11 @@ stop the target during an image or commit hold. LOSS must report busy, STOP must
 wait for abort/restoration and reclamation, and the surviving Notes draft and
 reused Colors slot must work across cold reboot. The parent uses F6 during the
 hold to send these ordinary owner requests; the Omega child needs no test mode.
+`--cancel nested` uses F7 during the hold to route LOSS and STOP through two
+intermediate Omega matrices. It requires a timely BUSY answer, the existing
+forwarded STOP timeout, eventual cancellation without retrying STOP, and a
+subsequent nonzero storage-binding reply over the same route after late replies
+have drained. The nested Notes draft and reused Colors slot survive cold reboot.
 
 The actual root-compositor boundary is exercised by
 `python tools/boot-harness-rs/omega_display_wait_test.py`: images, commits,
