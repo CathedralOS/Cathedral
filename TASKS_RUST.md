@@ -823,6 +823,19 @@ changes nothing). The kernel maps both frame and kernel-heap exhaustion to
 NO_MEMORY at that point; a larger kernel heap stops the user matrix from
 starting at all, which needs understanding first.
 
+The remaining fixtures inject delays and failures into the Rust host through
+Cargo features (interaction, recovery, launch, binding, scene and selection
+delays, held commits, refused binds and places, a dropped binding reply, the
+input producer and owner-control failure probes). An Omega program takes no
+features. The plan: one probe capability in the stock matrix process, a
+no-op provider selected by the stock native package, and one small native
+package per probe that selects a delaying or failing provider, which the
+harness names as the entry instead of a feature. What the fixtures check also
+needs work in the matrix itself: input must keep progressing while a parent
+poll, an image publication, a commit, a launch's read or binding, or a
+selection's scene is held, so those exchanges move off the blocking path into
+staged work across turns, as the realm jobs did.
+
 Next: the capture regression; then the fixtures that build the stock matrix with test probes
 (input producer, interaction delay, launcher recovery and the asynchronous
 launch, binding, scene and selection holds), which need Omega probe builds;
