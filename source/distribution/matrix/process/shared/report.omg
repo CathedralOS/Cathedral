@@ -362,3 +362,13 @@ machine hex(words: &mut [u64; 8], start: u64, value: u64, digit: u64) requires s
     }
 }
 machine done() {}
+
+public machine selection_restored(gate: &Gate) reaches Kernel invokes Kernel {
+    let text: [u8; 64] = "Cathedral matrix: selection restored\n                           ";
+    line(gate, &text);
+}
+
+public machine selection_cancelled(gate: &Gate) reaches Kernel invokes Kernel {
+    let text: [u8; 64] = "Cathedral matrix: selection cancelled\n                          ";
+    line(gate, &text);
+}

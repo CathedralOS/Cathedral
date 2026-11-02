@@ -1,5 +1,7 @@
 //! Rust module plumbing. Start reading in `service.rs`.
 
+#[cfg(feature = "interaction-delay")]
+mod cancellation_probe;
 mod children;
 mod deferred;
 #[cfg(feature = "interaction-delay")]

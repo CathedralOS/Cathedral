@@ -330,7 +330,11 @@ Existing-app switching is covered by
 `python tools/boot-harness-rs/omega_selection_test.py`: the real Omega user
 matrix keeps serving HEALTH and input while its parent holds a switch's commit.
 A refusal preserves both apps and the old scene. Repeated switches and cold
-reopen check exact Notes contents. Owner-stop selection probes remain Rust-only.
+reopen check exact Notes contents. Add `--cancel before` or `--cancel late` to
+stop the target during an image or commit hold. LOSS must report busy, STOP must
+wait for abort/restoration and reclamation, and the surviving Notes draft and
+reused Colors slot must work across cold reboot. The parent uses F6 during the
+hold to send these ordinary owner requests; the Omega child needs no test mode.
 
 The actual root-compositor boundary is exercised by
 `python tools/boot-harness-rs/omega_display_wait_test.py`: images, commits,

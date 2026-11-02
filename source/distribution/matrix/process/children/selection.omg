@@ -21,6 +21,7 @@ use connections::transfers::transfer;
 use connections::presentation;
 use connections::responses;
 use workspace;
+use shared::report;
 
 public machine begin(context: &mut State, requester: u64 [0..=4], previous: u64, next: u64) -> u64 {
     transition !context.presentation_work.active && previous < 5u64 && next >= 1u64 && next <= 3u64 {
@@ -86,7 +87,7 @@ machine answered(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
     transition context.presentation_work.phase {
         Phase::Begin -> block begun(gate, context, status)
         Phase::Entry -> entry(context, status)
-        Phase::Commit -> committed(context, status)
+        Phase::Commit -> committed(gate, context, status)
         Phase::Abort -> block aborted(gate, context, status)
         _ -> block lost(gate, context, kernel::IO_ERROR)
     }
@@ -107,14 +108,18 @@ machine answered(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
     machine advanced(context: &mut State) requires context.selection_work.rank < 128u64 {
         context.selection_work.rank = context.selection_work.rank + 1u64;
     }
-    machine committed(context: &mut State, status: u64) {
+    machine committed(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
         transition {
             status != 0u64 -> aborting(context, status)
-            context.selection_work.restoring -> completed(context, kernel::DENIED)
+            context.selection_work.restoring -> restored(gate, context)
             current(context) -> completed(context, 0u64)
             context.world.parent.epoch != context.presentation_work.parent_epoch -> completed(context, kernel::DENIED)
             _ -> restoring(context)
         }
+    }
+    machine restored(gate: &Gate, context: &mut State) reaches Kernel {
+        report::selection_restored(gate);
+        completed(context, kernel::DENIED);
     }
     machine restoring(context: &mut State) {
         context.revision = ((context.revision as u64 in Wrapping) + 1u64) as u64;
@@ -213,6 +218,7 @@ machine completed(context: &mut State, status: u64) { context.presentation_work.
 machine finish(gate: &Gate, context: &mut State) reaches Kernel {
     let work: Transfer = context.presentation_work;
     let change: Switch = context.selection_work;
+    reported(gate, work.status);
     settle_local(context, work.status, change);
     let empty: Transfer;
     let no_change: Switch;
@@ -220,6 +226,9 @@ machine finish(gate: &Gate, context: &mut State) reaches Kernel {
     context.selection_work = no_change;
     context.next_child = (work.slot + 1u64) % 5u64;
     let sent: u64 = block responses::send(gate, context, work.slot, work.ticket, presentation::error(work.status));
+}
+machine reported(gate: &Gate, status: u64) reaches Kernel {
+    transition status == kernel::DENIED { true -> report::selection_cancelled(gate) _ -> done() }
 }
 machine settle_local(context: &mut State, status: u64, change: Switch) {
     transition status == 0u64 { true -> committed(context, change) _ -> done() }

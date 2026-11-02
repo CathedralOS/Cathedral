@@ -948,8 +948,8 @@ captures both app bindings and the parent epoch. If a queued retirement invalida
 a switch after its COMMIT was sent, an accepted commit is followed by a transaction
 restoring the previous scene. Failed restoration retires the backing rather than
 claiming that the old scene remains valid. These defensive invalidation paths
-still need deliberate fault injection; owner STOP is still queued behind the
-scene barrier, so the Rust selection stop/late-stop fixtures are not yet migrated.
+now have owner-cancellation evidence in the follow-up below. Parent-epoch changes
+and failed-restoration retirement still need deliberate fault injection.
 
 `python tools/boot-harness-rs/omega_selection_test.py` uses the installed Omega
 user matrix under the Rust test parent. It holds a successful switch and then a
@@ -1002,11 +1002,9 @@ same conserved total. Kernel limits, image/stack limits and logical page/channel
 allowances are unchanged. Bootstrap rollback passes; the smaller matrix lab's
 unchanged baseline failure is recorded above because it shares that assignment.
 
-Selection follow-up: let an authorized owner STOP mark the target for
-retirement while selection is held, retain the STOP reply until cleanup, and
-prove both pre-commit cancellation and post-commit restoration. LOSS must report
-pending work rather than wait behind that scene. The existing Rust selection
-`stop` and `late-stop` fixtures define the missing behavioral coverage.
+Owner STOP and pending LOSS now have independent Omega coverage below. This
+replaces the behavior targeted by the Rust selection `stop` and `late-stop`
+fixtures without adding their Cargo delay features to the Omega program.
 
 Next launch slice: `children/stored.omg::launch` waits in
 `connections/storage.omg::read_object`, and admission later waits in `bind`.
@@ -1020,6 +1018,71 @@ launch also showed why login recovery belongs in that work: `stored::child_launc
 retires the picker before admitting the chosen user, so a funding refusal leaves
 no picker in that viewport. Preserve or restart the chooser on refusal; do not
 rely on a larger budget to make that failure path disappear.
+
+### Stock matrix migration: owner cancellation during selection
+
+[Owner dispatch](source/distribution/matrix/process/program/commands.omg) now
+accepts a valid STOP during pending scene publication. It marks the existing child
+for retirement while retaining the original owner request. The selection checks
+that retirement before sending further entries; a transaction already committed
+remotely is restored before its barrier releases. The ordinary turn then reclaims
+the child before acknowledging STOP. Malformed or absent-child requests are
+refused immediately. A canonical LOSS question reports BUSY during publication,
+rather than waiting behind the scene or claiming there is nothing to lose.
+
+The ordinary scene barrier still retains image backing. No kernel privilege,
+protocol opcode, or resource allowance was added. Other owner mutations still
+wait behind the scene. Retirement itself and launch-time activation still have
+synchronous work; this is not a claim that all lifecycle operations are nonblocking.
+
+The `interaction-delay` Rust parent can use F6 during an F5 image hold or F3 commit
+hold to ask LOSS and then STOP through the child's actual owner-control IPC.
+Its [cancellation probe](source-rs/distribution/matrix/service/cancellation_probe.rs)
+requires LOSS to answer BUSY before release, and forbids a successful STOP reply
+before release. It is compiled only into the fixture. The Omega child is the
+unchanged installed stock executable, with no fixture feature or probe protocol.
+
+`python tools/boot-harness-rs/omega_selection_test.py --cancel before` and
+`--cancel late` pass both boots. They retain exact Notes input, require the old
+scene to survive, verify cancellation and reclamation precede STOP acknowledgement,
+distinguish abort from a completed restoration, relaunch Colors into the freed
+slot, switch back to the same Notes task, save and cold reopen:
+
+- Before COMMIT: `build/boot-harness-rs/desktop/20261102T213905852615Z/`.
+- COMMIT already sent: `build/boot-harness-rs/desktop/20261102T214018288807Z/`.
+
+The ordinary switching test now checks Omega's reclamation marker as well as
+Rust's, so its no-replacement assertion covers the actual implementation.
+Further verification on 2026-11-02:
+
+- Native package review and compilation pass with the unchanged producer:
+  359/496 load pages, unchanged 128-page stack.
+- Ordinary held-switch success/refusal: `.../20261102T214200770275Z/`;
+  parent image hold and close during save: `.../20261102T214302597956Z/`.
+- Full Omega desktop: `.../20261102T214357106145Z/`; three nested desktops,
+  protected close, repeated subtree teardown and persistence:
+  `.../20261102T214500864488Z/`.
+- Normal Rust F5: `.../20261102T214905359713Z/`. All five regression scenarios
+  and both cancellation cases include cold reboot.
+- All 514 Rust host tests, stock matrix target clippy with
+  `interaction-delay,trace-storage`, Rust format, Python compilation, source
+  layout (148 Omega / 153 Rust edges), and diff whitespace checks pass.
+
+Normal F5 remains on the Rust matrix pending the remaining migration. The small
+Rust matrix lab's unchanged baseline failure remains recorded above; it was not
+rerun or claimed fixed here.
+
+The cancellation proof uses a direct owner link. A remaining recursive gap is
+visible in `program/commands.omg` and `children/forward.omg::step`: an intermediate
+Omega matrix queues routed owner words and stops receiving forwarded answers
+while it publishes. Next let opaque owner relays and their answers progress on
+the independent control links, while keeping close/survey effects that mutate
+local children behind the scene barrier. Prove LOSS/STOP through two intermediate
+Omega matrices during a held commit; send STOP within the existing forwarding
+deadline rather than extending that contract to accommodate the fixture.
+
+Then continue shared storage exchanges and launch continuations described above,
+including login recovery on failed admission.
 
 ### Stock matrix migration: root display waits
 

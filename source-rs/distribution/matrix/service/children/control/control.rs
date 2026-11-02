@@ -250,20 +250,20 @@ impl Children {
 // This proves the stock child serves independent work before that poll releases.
 #[cfg(feature = "interaction-delay")]
 impl Children {
-    pub(in crate::service) fn poll_health_probe(
+    pub(in crate::service) fn poll_control_probe(
         &mut self,
         slot: usize,
-        begin: bool,
+        request: Option<wire::Packet>,
         now: u64,
         until: u64,
     ) -> Result<Option<wire::Packet>, Error> {
         assert!(
             self.pending[slot].is_none(),
-            "health fixture needs an idle owner link"
+            "control fixture needs an idle owner link"
         );
         let child = self.slots[slot].as_mut().expect("held poll's child");
-        if begin {
-            child.control.ask([wire::HEALTH, 0, 0, 0, 0, 0, 0, 0])?;
+        if let Some(request) = request {
+            child.control.ask(request)?;
         }
         child.control.receive(now, until)
     }

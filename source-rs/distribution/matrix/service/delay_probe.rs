@@ -9,6 +9,8 @@
 //! in ordinary F5.
 //! F3 holds a full COMMIT with the same liveness probe. Pressing F3 again during
 //! that hold refuses the commit, so the client must abort its staged transaction.
+//! F6 during a probed hold asks LOSS, then STOP of the child's Colors slot.
+use super::cancellation_probe::Cancellation;
 use super::children::Children;
 use super::*;
 use cathedral_platform_contracts::input;
@@ -23,10 +25,11 @@ pub(super) struct Gate {
     probe: bool,
     reject_commit: bool,
     abort_expected: Option<(usize, u64, u64)>,
+    cancellation: Option<Cancellation>,
 }
 impl Gate {
     pub fn deadline(&self) -> Option<u64> {
-        if self.health.is_some() {
+        if self.health.is_some() || self.cancellation.is_some() {
             time::after(1).ok()
         } else {
             self.pending.as_ref().map(|p| p.1)
@@ -38,6 +41,11 @@ impl Gate {
         children: &mut Children,
     ) -> Result<Option<Event>, Error> {
         let now = time::now()?;
+        if let Some(cancellation) = &mut self.cancellation
+            && cancellation.step(server, children, now, self.pending.is_some())?
+        {
+            self.cancellation = None;
+        }
         if let Some((slot, incarnation, asked)) = self.health {
             assert_eq!(server.incarnation(slot), Some(incarnation));
             let until = self.pending.as_ref().expect("held request").1;
@@ -45,7 +53,8 @@ impl Gate {
                 !time::reached(now, until),
                 "child did not answer HEALTH while its request was held"
             );
-            if let Some(reply) = children.poll_health_probe(slot, !asked, now, until)? {
+            let question = (!asked).then_some([wire::HEALTH, 0, 0, 0, 0, 0, 0, 0]);
+            if let Some(reply) = children.poll_control_probe(slot, question, now, until)? {
                 assert_eq!(reply[0], 0);
                 time::storage_sample(
                     if self.health_kind == wire::PRESENT_COMMIT {
@@ -153,6 +162,20 @@ impl Gate {
             ]
             .contains(&key)
             {
+                if key == input::F6 as u64
+                    && state == input::PRESS as u64
+                    && self.probe
+                    && self.health.is_none()
+                    && self.cancellation.is_none()
+                    && let Some((Event::Request(held) | Event::Memory(held, _), until)) =
+                        &self.pending
+                {
+                    self.cancellation = Some(Cancellation::new(
+                        held.client.unwrap(),
+                        held.incarnation,
+                        *until,
+                    ));
+                }
                 if key == input::F3 as u64
                     && state == input::PRESS as u64
                     && self.pending.is_some()
