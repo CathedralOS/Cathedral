@@ -1,10 +1,19 @@
 module presentation;
-// One forwarded image owns its child's ticket and sealed backing until the
-// parent answers. Scene mutations wait behind it; input polling does not.
+// One scene publication retains its child ticket and view through settlement.
+// Images own a backing here; transactions keep their payloads in the slot batch.
+// Scene mutations wait behind publication; input polling does not.
 use runtime::server::main::Ticket;
 use runtime::connection::main::Frame;
 
-public data Image [copy] {
+public data Phase [copy] { case Begin; case Entry; case Commit; case Abort; case Finished; }
+public data Transfer [copy] {
+    batch: bool;
+    compact: bool;
+    phase: Phase;
+    index: u64 [0..=16];
+    local_revision: u64;
+    upstream_revision: u64;
+    status: u64;
     active: bool;
     submitted: bool;
     slot: u64 [0..=4];
@@ -15,7 +24,7 @@ public data Image [copy] {
     parent_epoch: u64;
 }
 // The listener still owns this request and any attachment. Revisit it only
-// after the current image settles; do not execute it twice or answer BUSY.
+// after the current publication settles; do not execute it twice or answer BUSY.
 public data Queued {
     active: bool;
     frame: Frame;

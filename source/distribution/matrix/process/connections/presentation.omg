@@ -31,12 +31,13 @@ use world::main::request;
 use world::geometry::zeros_from;
 use rects;
 use transfers::forwarded;
+use transfers::transaction;
 use rects::Rects;
 use scene;
 use upstream;
 
 public const IMAGES: u64 = 64u64;
-public data Imaging { case Pending; case Answer(words: [u64; 8]); }
+public data Submission { case Pending; case Answer(words: [u64; 8]); }
 
 // The rank the owner allotted names the backing. At the root that is the
 // compositor tile and the key is the rank plus one, so zero never names a
@@ -140,12 +141,12 @@ public machine update(gate: &Gate, context: &mut State, slot: u64 [0..=4], incar
 // A sealed image for a surface: staged with its payload inside an open batch,
 // otherwise sent to the compositor, committed and retained behind its tile.
 // The compositor validates the pixels against the object's size.
-public machine image(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, object: u64) -> Imaging
+public machine image(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, object: u64) -> Submission
     reaches Kernel blocks invokes Kernel {
     let words: [u64; 8] = block prepare_image(gate, context, slot, incarnation, frame, object);
-    transition context.image_work.active {
-        true -> (Imaging::Pending)
-        _ -> (Imaging::Answer { words: words })
+    transition context.presentation_work.active {
+        true -> (Submission::Pending)
+        _ -> (Submission::Answer { words: words })
     }
 }
 machine prepare_image(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, object: u64) -> [u64; 8]
@@ -234,7 +235,12 @@ public machine image_missing(context: &mut State, slot: u64 [0..=4]) -> [u64; 8]
 // the staged updates under one compositor transaction, and the compact
 // rectangles word does all three for one or two paints. Every word is bound
 // to the connection's current view.
-public machine batch_word(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame) -> [u64; 8]
+public machine batch_word(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame) -> Submission
+    reaches Kernel blocks invokes Kernel {
+    let words: [u64; 8] = block prepare_batch(gate, context, slot, incarnation, frame);
+    transition context.presentation_work.active { true -> (Submission::Pending) _ -> (Submission::Answer { words: words }) }
+}
+machine prepare_batch(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame) -> [u64; 8]
     reaches Kernel blocks invokes Kernel {
     let probe: [u64; 8] = view_words();
     let view: [u64; 8] = request(&mut context.world, slot, incarnation, &probe);
@@ -278,7 +284,7 @@ public machine batch_word(gate: &Gate, context: &mut State, slot: u64 [0..=4], i
     machine committing(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64) -> [u64; 8] reaches Kernel {
         let prepared: Commit = batch::prepare(&context.batches[slot], revision);
         transition prepared {
-            Commit::Publish -> block publish(gate, context, slot, incarnation, revision)
+            Commit::Publish -> block publish(gate, context, slot, incarnation, revision, false)
             Commit::Repeat -> (ok())
             Commit::Refused { code } -> (error(code))
         }
@@ -342,7 +348,7 @@ public machine batch_word(gate: &Gate, context: &mut State, slot: u64 [0..=4], i
         }
     }
     machine compact_commit(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64) -> [u64; 8] reaches Kernel {
-        let reply: [u64; 8] = block publish(gate, context, slot, incarnation, revision);
+        let reply: [u64; 8] = block publish(gate, context, slot, incarnation, revision, true);
         transition reply[0] == 0u64 {
             true -> (reply)
             _ -> block compact_failed(gate, context, slot, revision, reply[0])
@@ -371,7 +377,18 @@ machine view_words() -> [u64; 8] {
 // refusal aborts the transaction and is the answer, leaving the batch open
 // for the child to retry or abort. A published batch commits its updates in
 // the World and retains its images.
-machine publish(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64) -> [u64; 8] reaches Kernel {
+machine publish(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, compact: bool) -> [u64; 8]
+    reaches Kernel {
+    transition context.has_parent {
+        true -> deferred(context, slot, revision, compact)
+        _ -> block publish_blocking(gate, context, slot, incarnation, revision)
+    }
+    machine deferred(context: &mut State, slot: u64 [0..=4], revision: u64, compact: bool) -> [u64; 8] reaches Kernel {
+        let status: u64 = transaction::begin(context, slot, revision, compact);
+        error(status)
+    }
+}
+machine publish_blocking(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64) -> [u64; 8] reaches Kernel {
     context.revision = ((context.revision as u64 in Wrapping) + 1u64) as u64;
     let begun: u64 = block transact(gate, context, PRESENT_BEGIN, display::MATRIX_BEGIN);
     transition begun == 0u64 {
@@ -415,10 +432,14 @@ machine publish(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation
     machine closing(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64) -> [u64; 8] reaches Kernel {
         let status: u64 = block transact(gate, context, PRESENT_COMMIT, display::MATRIX_COMMIT);
         transition status == 0u64 {
-            true -> block committing(gate, context, slot, incarnation, revision, 0u64)
+            true -> block commit_batch(gate, context, slot, incarnation, revision)
             _ -> block abandoned(gate, context, status)
         }
     }
+}
+public machine commit_batch(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64) -> [u64; 8]
+    reaches Kernel blocks invokes Kernel {
+    block committing(gate, context, slot, incarnation, revision, 0u64)
     machine committing(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64) -> [u64; 8]
         reaches Kernel requires index <= 16u64 {
         transition index < 16u64 {
@@ -469,6 +490,13 @@ machine publish(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation
         batch::committed(&mut context.batches[slot], revision);
         ok()
     }
+}
+// A refused compact publication discards its staging without forgetting the
+// last committed revision; retries of that revision must remain idempotent.
+public machine discard_batch(gate: &Gate, context: &mut State, slot: u64 [0..=4], revision: u64)
+    reaches Kernel blocks invokes Kernel {
+    block release_payloads(gate, context, slot, 0u64);
+    let status: u64 = batch::abort(&mut context.batches[slot], revision);
 }
 // One translated packet to the backing: upstream as the parent's own surface
 // word, with the sealed image behind an image word; at the root as the
@@ -774,7 +802,7 @@ machine selected(op: u64) -> u64 {
 // Erasures owed since the last flush: the display or the parent may already
 // have removed that backing, and the image behind it goes either way.
 public machine flush(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks invokes Kernel {
-    transition context.image_work.active {
+    transition context.presentation_work.active {
         true -> (0u64)
         _ -> block idle_flush(gate, context)
     }

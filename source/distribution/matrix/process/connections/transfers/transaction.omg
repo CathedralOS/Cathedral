@@ -1,0 +1,227 @@
+module transfers::transaction;
+// Begin -> translated entries -> commit, or abort on rejection/invalidation.
+// The original batch keeps every sealed payload until the remote transaction
+// settles. A reply advances one phase; it never reruns a published request.
+use shared::state::State;
+use shared::presentation::Transfer;
+use shared::presentation::Phase;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::server::main::Ticket;
+use runtime::server::deferred;
+use protocol::main;
+use protocol::matrix;
+use world::surfaces;
+use world::surfaces::Updated;
+use world::level;
+use world::geometry;
+use parent::connection;
+use transfers::transfer;
+use presentation;
+use responses;
+use upstream;
+
+public machine begin(context: &mut State, slot: u64 [0..=4], revision: u64, compact: bool) -> u64 {
+    let ticket: Ticket = runtime::server::main::ticket(&context.slots[slot].listener);
+    transition context.slots[slot].listener.peer.pipeline {
+        true -> held(context, slot, ticket, revision, compact)
+        _ -> retained(context, slot, ticket, revision, compact)
+    }
+    machine held(context: &mut State, slot: u64 [0..=4], ticket: Ticket, revision: u64, compact: bool) -> u64 {
+        let status: u64 = deferred::hold(&mut context.slots[slot].listener, ticket);
+        transition status == 0u64 { true -> retained(context, slot, ticket, revision, compact) _ -> (status) }
+    }
+    machine retained(context: &mut State, slot: u64 [0..=4], ticket: Ticket, revision: u64, compact: bool) -> u64 {
+        let mut work: Transfer;
+        context.revision = ((context.revision as u64 in Wrapping) + 1u64) as u64;
+        work.active = true;
+        work.batch = true;
+        work.compact = compact;
+        work.phase = Phase::Begin;
+        work.slot = slot;
+        work.ticket = ticket;
+        work.frame.id = ticket.request;
+        work.frame.payload[1] = context.batches[slot].epoch;
+        work.parent_epoch = context.world.parent.epoch;
+        work.local_revision = revision;
+        work.upstream_revision = context.revision;
+        context.presentation_work = work;
+        0u64
+    }
+}
+public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
+    transition {
+        !context.presentation_work.active -> done()
+        context.answers[context.presentation_work.slot].active -> block draining(gate, context)
+        context.presentation_work.submitted -> block receive(gate, context)
+        _ -> block next(gate, context)
+    }
+}
+machine draining(gate: &Gate, context: &mut State) reaches Kernel {
+    let slot: u64 [0..=4] = context.presentation_work.slot;
+    let status: u64 = block responses::step(gate, context, slot);
+}
+machine receive(gate: &Gate, context: &mut State) reaches Kernel {
+    transition context.parent_work.visual_ready { true -> block received(gate, context) _ -> done() }
+    machine received(gate: &Gate, context: &mut State) reaches Kernel {
+        let answer: [u64; 8] = connection::take_visual(context);
+        context.presentation_work.submitted = false;
+        block answered(gate, context, answer[0]);
+        block next(gate, context);
+    }
+}
+machine answered(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
+    transition context.presentation_work.phase {
+        Phase::Begin -> begun(context, status)
+        Phase::Entry -> entry(context, status)
+        Phase::Commit -> committed(context, status)
+        Phase::Abort -> block aborted(gate, context, status)
+        _ -> completed(context, kernel::IO_ERROR)
+    }
+    machine begun(context: &mut State, status: u64) {
+        transition status == 0u64 { true -> entering(context) _ -> completed(context, status) }
+    }
+    machine entering(context: &mut State) { context.presentation_work.phase = Phase::Entry; }
+    machine entry(context: &mut State, status: u64) {
+        transition {
+            status != 0u64 -> aborting(context, status)
+            context.presentation_work.index < 16u64 -> advanced(context)
+            _ -> aborting(context, kernel::IO_ERROR)
+        }
+    }
+    machine advanced(context: &mut State) requires context.presentation_work.index < 16u64 {
+        context.presentation_work.index = context.presentation_work.index + 1u64;
+    }
+    machine committed(context: &mut State, status: u64) {
+        transition status == 0u64 { true -> completed(context, 0u64) _ -> aborting(context, status) }
+    }
+}
+// An abort denial after the parent epoch retired is already fenced by that
+// retirement. Otherwise a failed abort leaves unknown remote state: lose the
+// connection rather than interleave a new transaction with the old one.
+machine aborted(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
+    transition status == 0u64 || context.world.parent.epoch != context.presentation_work.parent_epoch {
+        true -> finished(context)
+        _ -> block lost(gate, context, status)
+    }
+}
+machine next(gate: &Gate, context: &mut State) reaches Kernel {
+    transition {
+        context.presentation_work.phase == Phase::Finished -> block finish(gate, context)
+        context.presentation_work.phase == Phase::Abort -> block control(gate, context, PRESENT_ABORT)
+        !transfer::current(context) -> invalidated(context)
+        context.presentation_work.phase == Phase::Begin -> block control(gate, context, PRESENT_BEGIN)
+        context.presentation_work.phase == Phase::Commit -> block control(gate, context, PRESENT_COMMIT)
+        _ -> block entries(gate, context)
+    }
+}
+machine invalidated(context: &mut State) {
+    transition context.presentation_work.phase == Phase::Begin {
+        true -> completed(context, kernel::DENIED)
+        _ -> aborting(context, kernel::DENIED)
+    }
+}
+machine entries(gate: &Gate, context: &mut State) reaches Kernel {
+    let index: u64 = context.presentation_work.index;
+    transition index < 16u64 {
+        true -> block entry(gate, context, index)
+        _ -> block committing(gate, context)
+    }
+    machine entry(gate: &Gate, context: &mut State, index: u64 [0..=15]) reaches Kernel {
+        let slot: u64 [0..=4] = context.presentation_work.slot;
+        transition context.batches[slot].entries[index].used {
+            true -> block translated(gate, context, slot, index)
+            _ -> block skipped(gate, context, index)
+        }
+    }
+    machine skipped(gate: &Gate, context: &mut State, index: u64 [0..=15]) reaches Kernel {
+        context.presentation_work.index = index + 1u64;
+        transition { _ -> block entries(gate, context) }
+    }
+    machine translated(gate: &Gate, context: &mut State, slot: u64 [0..=4], index: u64 [0..=15]) reaches Kernel {
+        let words: [u64; 8] = context.batches[slot].entries[index].words;
+        let object: u64 = context.batches[slot].entries[index].payload;
+        let incarnation: u64 = context.presentation_work.ticket.incarnation;
+        let result: Updated = surfaces::update(&mut context.world, slot, incarnation, &words, false);
+        transition result {
+            Updated::Packet { words } -> block submit(gate, context, words, object)
+            Updated::Refused { code } -> aborting(context, code)
+        }
+    }
+    machine committing(gate: &Gate, context: &mut State) reaches Kernel {
+        context.presentation_work.phase = Phase::Commit;
+        block control(gate, context, PRESENT_COMMIT);
+    }
+}
+machine control(gate: &Gate, context: &mut State, op: u64) reaches Kernel {
+    let words: [u64; 8] = [op, context.presentation_work.parent_epoch, context.presentation_work.upstream_revision,
+        0u64, 0u64, 0u64, 0u64, 0u64];
+    block submit(gate, context, words, 0u64);
+}
+machine submit(gate: &Gate, context: &mut State, words: [u64; 8], object: u64) reaches Kernel {
+    let status: u64 = block connection::visual(gate, context, words, object);
+    transition {
+        status == 0u64 -> submitted(context)
+        status == kernel::WOULD_BLOCK -> done()
+        _ -> block lost(gate, context, status)
+    }
+    machine submitted(context: &mut State) { context.presentation_work.submitted = true; }
+}
+machine lost(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
+    block upstream::close(gate, context);
+    level::inherit(&mut context.world, geometry::no_grant());
+    completed(context, status);
+}
+machine aborting(context: &mut State, status: u64) {
+    context.presentation_work.status = status;
+    context.presentation_work.phase = Phase::Abort;
+}
+machine completed(context: &mut State, status: u64) { context.presentation_work.status = status; finished(context); }
+machine finished(context: &mut State) { context.presentation_work.phase = Phase::Finished; }
+machine finish(gate: &Gate, context: &mut State) reaches Kernel {
+    let valid: bool = transfer::current(context);
+    transition valid && context.presentation_work.status == 0u64 {
+        true -> block commit(gate, context)
+        _ -> block refused(gate, context, valid)
+    }
+    machine commit(gate: &Gate, context: &mut State) reaches Kernel {
+        let work: Transfer = context.presentation_work;
+        let answer: [u64; 8] = block presentation::commit_batch(gate, context, work.slot, work.ticket.incarnation, work.local_revision);
+        block reply(gate, context, answer[0]);
+    }
+    machine refused(gate: &Gate, context: &mut State, valid: bool) reaches Kernel {
+        transition context.presentation_work.compact || !valid {
+            true -> block discarded(gate, context, valid)
+            _ -> block rejected(gate, context, valid)
+        }
+    }
+    machine discarded(gate: &Gate, context: &mut State, valid: bool) reaches Kernel {
+        let slot: u64 [0..=4] = context.presentation_work.slot;
+        let revision: u64 = context.presentation_work.local_revision;
+        transition valid {
+            true -> block compact_discarded(gate, context, slot, revision)
+            _ -> block stale_discarded(gate, context, slot)
+        }
+    }
+    machine compact_discarded(gate: &Gate, context: &mut State, slot: u64 [0..=4], revision: u64) reaches Kernel {
+        block presentation::discard_batch(gate, context, slot, revision);
+        block rejected(gate, context, true);
+    }
+    machine stale_discarded(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+        block presentation::release_slot(gate, context, slot);
+        block rejected(gate, context, false);
+    }
+    machine rejected(gate: &Gate, context: &mut State, valid: bool) reaches Kernel {
+        transition valid { true -> block reply(gate, context, context.presentation_work.status) _ -> block reply(gate, context, kernel::DENIED) }
+    }
+}
+machine reply(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
+    let work: Transfer = context.presentation_work;
+    let empty: Transfer;
+    context.presentation_work = empty;
+    context.next_child = (work.slot + 1u64) % 5u64;
+    let words: [u64; 8] = presentation::error(status);
+    let sent: u64 = block responses::send(gate, context, work.slot, work.ticket, words);
+}
+machine done() {}

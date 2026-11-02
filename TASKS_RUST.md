@@ -932,6 +932,65 @@ use the planned native probe provider only where those cannot place the fault.
 Finish the fixture sweep before changing normal F5 to the Omega matrix and
 removing its Rust bridge. No new owner decision blocks this sequence.
 
+### Stock matrix migration: forwarded batch waits
+
+Forwarded presentation batches now retain their progress across turns, alongside
+standalone images. [transfer.omg](source/distribution/matrix/process/connections/transfers/transfer.omg)
+selects the active publication; [transaction.omg](source/distribution/matrix/process/connections/transfers/transaction.omg)
+advances BEGIN, each translated entry, and COMMIT, or ABORT on a refusal. The
+same parent receiver routes exact request IDs. Staged image objects stay in the
+child batch until settlement; the original child ticket, incarnation, view and
+parent epoch remain attached to the transaction. Local surface state changes
+only after COMMIT succeeds with the same binding. A compact failure aborts its
+staging without forgetting the previous committed revision; an explicit failed
+batch remains available to its caller for retry or abort. A failed upstream
+abort in a live epoch closes the connection instead of reusing uncertain state.
+
+The existing scene barrier now covers both forms of publication. Input polling,
+HEALTH, granted-service acquisition and storage dispatch continue; scene changes
+and retirement requests retain their places until settlement. No kernel,
+runtime, protocol or allowance changes; these are distribution continuations
+over the existing IPC facilities. Root compositor calls, explicit refresh,
+scene selection, binding and launch still contain synchronous paths. Normal F5
+continues to select the Rust matrix.
+
+`python tools/boot-harness-rs/omega_parent_batch_test.py` uses the actual Omega
+user matrix under the Rust interaction-delay parent. Guest F3 holds a forwarded
+COMMIT; a second F3 during the hold refuses it. HEALTH and a separate input poll
+must arrive before release. The screen must keep the previous complete scene.
+A refused commit must be followed by the matching ABORT; Colors' existing render
+failure policy exits, and a replacement must publish successfully and load the
+completed save. Cold reopen repeats the sequence. These fixture keys do not
+exist in ordinary F5 and do not alter the older F6/F7 delay probes.
+
+Verified with the pinned producer; matrix image **345 of 496 load pages**,
+with unchanged stack, admission and reader allowances. Every scenario includes
+a cold reopen:
+
+- Held commit, independent HEALTH/input, old scene retained, matching abort on refusal and replacement render:
+  `build/boot-harness-rs/desktop/20261102T193001289176Z/`.
+- Held image, exact queued keys and close during a held saved-state repaint:
+  `build/boot-harness-rs/desktop/20261102T193210239119Z/`.
+- Held parent input poll and exact queued input:
+  `build/boot-harness-rs/desktop/20261102T193304905856Z/`.
+- Three recursive Omega desktops, protected close, reclamation and isolation:
+  `build/boot-harness-rs/desktop/20261102T193346971645Z/`.
+- Independent participants, cursor retirement, resize and repeated grants:
+  `build/boot-harness-rs/desktop/20261102T193712857600Z/`.
+- Normal F5 desktop and durable storage oracle:
+  `build/boot-harness-rs/desktop/20261102T193810456004Z/`.
+- Existing Rust interaction-delay sequence through three nested desktops:
+  `build/boot-harness-rs/desktop/20261102T193910500554Z/`.
+- 514 Rust host tests, target clippy with `interaction-delay,trace-storage`,
+  four harness unit tests, formatting, source-layout and diff checks pass.
+  Logs: `build/omega-matrix-progress/batch-*.log`.
+
+Still needed after this slice: held transactions
+containing image payloads with explicit view-retirement and child-death faults,
+root-compositor continuations, then selection/binding/launch continuations.
+The broad scene barrier remains deliberate and is not a claim of full lifecycle
+independence.
+
 ### Stock matrix migration: forwarded image waits
 
 Standalone images forwarded by the Omega matrix now return to the event loop.
@@ -962,10 +1021,10 @@ This is a conservative userspace serialization barrier, not full
 presentation/lifecycle independence. A scene-dependent request already queued on
 an ordinary owner connection can still hold up later requests on that connection.
 Reclamation waits for transfer settlement; this does not keep a dead child's CPU
-execution alive. Root compositor calls, transactional batches, explicit refreshes,
-selection, binding and launch still contain blocking paths. Next, carry transaction
-phases and retirement fences across turns, with held commit, stale-view and
-child-death tests, then remove the broad barrier where operations are independent.
+execution alive. Root compositor calls, explicit refreshes, selection, binding and launch still
+contain blocking paths. Forwarded batches now continue across turns as described
+above. Explicit stale-view and child-death transaction tests, then a narrower
+barrier for independent operations, remain follow-up work.
 No kernel special case, scheduling privilege, protocol addition or capacity increase
 was introduced. These are ordinary runtime IPC and deferred-ticket operations;
 the matrix's child and scene policy remains in the distribution. F5 still defaults

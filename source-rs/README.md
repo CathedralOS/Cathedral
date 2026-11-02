@@ -319,8 +319,15 @@ cold boot. For standalone forwarded images, run
 `python tools/boot-harness-rs/omega_parent_image_test.py`: guest F5 holds an image,
 HEALTH and another input poll must progress before release, and exact Notes
 text must save and survive cold boot. Neither test substitutes fixture code
-inside the Omega child. Root-display, batch-commit and lifecycle waits remain
-outside these two proofs.
+inside the Omega child.
+
+The forwarded batch counterpart is
+`python tools/boot-harness-rs/omega_parent_batch_test.py`: guest F3 holds a commit
+while HEALTH/input continue; another F3 refuses it and requires the matching
+abort before the replacement app can publish. Both cold boots check persisted
+Colors state. These keys belong only to the interaction-delay fixture.
+Root-display and lifecycle waits remain outside these proofs.
+
 The reverse boundary is
 `python tools/boot-harness-rs/omega_desktop_test.py --rust-user`: an Omega root
 with Rust user/nested matrices, using the existing

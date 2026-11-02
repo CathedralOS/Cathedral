@@ -63,7 +63,7 @@ public data Step [copy] {
 // nested instance not yet hosted starts discovery, as pending startup
 // recovery does.
 public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
-    transition context.image_work.active {
+    transition context.presentation_work.active {
         true -> (0u64)
         _ -> block idle_step(gate, context, now)
     }

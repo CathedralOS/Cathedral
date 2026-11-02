@@ -99,9 +99,9 @@ public data State {
     // and whether its last snapshot left more to take.
     parent: Services;
     parent_work: parent::Pending;
-    image_work: presentation::Image;
+    presentation_work: presentation::Transfer;
     next_child: u64 [0..=4];
-    retire_after_image: [bool; 5];
+    retire_after_present: [bool; 5];
     scene_owner: presentation::Queued;
     scene_children: [presentation::Queued; 5];
     answers: [outbox::Answer; 5];

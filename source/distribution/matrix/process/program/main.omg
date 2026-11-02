@@ -33,7 +33,7 @@ use connections::cursors;
 use children::slots;
 use children::lifecycle;
 use connections::presentation;
-use connections::transfers::forwarded;
+use connections::transfers::transfer;
 use connections::storage;
 
 // How long a turn parks with nothing due, and with a parent's snapshot still owed.
@@ -58,7 +58,7 @@ machine serve(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
 }
 machine turn(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
     let polled: u64 = block upstream::step(gate, context, now);
-    block forwarded::step(gate, context);
+    block transfer::step(gate, context);
     block lifecycle::retire_pending(gate, context);
     let settled: u64 = block jobs::step(gate, context, now);
     let commanded: u64 = block commands::step(gate, context, now);
@@ -66,7 +66,7 @@ machine turn(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
     let relayed: u64 = block forward::step(gate, context, now);
     let sourced: u64 = block source::step(gate, context, now);
     let children: u64 = block slots::all(gate, context, now);
-    block forwarded::step(gate, context);
+    block transfer::step(gate, context);
     let stored: u64 = block storage::step(gate, context, now);
     lifecycle::notify(gate, context);
     let flushed: u64 = block presentation::flush(gate, context);
@@ -100,7 +100,8 @@ machine parked(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel
 }
 machine park_ticks(context: &State) -> u64 {
     transition {
-        context.image_work.active -> (OWED_TICKS)
+        context.presentation_work.active && !context.presentation_work.submitted -> (1u64)
+        context.presentation_work.active -> (OWED_TICKS)
         context.scene_owner.active || queued_children(context, 0u64) -> (1u64)
         context.frame_count != 0u64 || context.configure_queued -> (1u64)
         context.refresh_due || context.parent_work.poll_ready -> (OWED_TICKS)
@@ -117,7 +118,7 @@ machine queued_children(context: &State, slot: u64) -> bool requires slot <= 5u6
     }
 }
 machine cleanup(gate: &Gate, context: &mut State, status: u64) -> u64 reaches Kernel {
-    block forwarded::discard(gate, context);
+    block transfer::discard(gate, context);
     block lifecycle::reclaim(gate, context, 0u64);
     block lifecycle::reclaim(gate, context, 1u64);
     block lifecycle::reclaim(gate, context, 2u64);

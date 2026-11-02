@@ -7,6 +7,8 @@
 //! this stronger probe is used by the Omega continuation test. The original F7
 //! fixture also covers the Rust host's synchronous image path. Never present
 //! in ordinary F5.
+//! F3 holds a full COMMIT with the same liveness probe. Pressing F3 again during
+//! that hold refuses the commit, so the client must abort its staged transaction.
 use super::children::Children;
 use super::*;
 use cathedral_platform_contracts::input;
@@ -17,8 +19,10 @@ pub(super) struct Gate {
     pending: Option<(Event, u64)>,
     health: Option<(usize, u64, bool)>,
     health_kind: u64,
-    image_polled: bool,
-    probe_image: bool,
+    polled: bool,
+    probe: bool,
+    reject_commit: bool,
+    abort_expected: Option<(usize, u64, u64)>,
 }
 impl Gate {
     pub fn deadline(&self) -> Option<u64> {
@@ -30,7 +34,7 @@ impl Gate {
     }
     pub fn take(
         &mut self,
-        server: &Server,
+        server: &mut Server,
         children: &mut Children,
     ) -> Result<Option<Event>, Error> {
         let now = time::now()?;
@@ -44,7 +48,9 @@ impl Gate {
             if let Some(reply) = children.poll_health_probe(slot, !asked, now, until)? {
                 assert_eq!(reply[0], 0);
                 time::storage_sample(
-                    if self.health_kind == wire::SURFACE_IMAGE {
+                    if self.health_kind == wire::PRESENT_COMMIT {
+                        "commit-health-during-hold"
+                    } else if self.health_kind == wire::SURFACE_IMAGE {
                         "image-health-during-hold"
                     } else {
                         "poll-health-during-hold"
@@ -71,6 +77,23 @@ impl Gate {
         if request.client.and_then(|c| server.incarnation(c)) != Some(request.incarnation) {
             return Ok(None);
         }
+        if self.reject_commit {
+            let words = wire::decode(&request.bytes[..request.len]).unwrap();
+            match server.reply(request, &wire::encode([abi::DENIED, 0, 0, 0, 0, 0, 0, 0])) {
+                Ok(()) => {
+                    self.abort_expected =
+                        Some((request.client.unwrap(), request.incarnation, words[2]));
+                    self.reject_commit = false;
+                    time::storage_sample("commit-refused", &[]);
+                    return Ok(None);
+                }
+                Err(error) if error.0 == abi::WOULD_BLOCK as i64 => {
+                    self.pending = Some((event, now));
+                    return Ok(None);
+                }
+                Err(error) => return Err(error),
+            }
+        }
         time::storage_sample("interaction-delay-released", &[]);
         Ok(Some(event))
     }
@@ -87,16 +110,31 @@ impl Gate {
         let Some(words) = wire::decode(&request.bytes[..request.len]) else {
             return Ok(Some(event));
         };
-        if !self.image_polled
-            && self.probe_image
-            && self.health_kind == wire::SURFACE_IMAGE
+        if let Some((slot, incarnation, revision)) = self.abort_expected
+            && request.client == Some(slot)
+            && request.incarnation == incarnation
+            && words[0] == wire::PRESENT_ABORT
+            && words[2] == revision
+        {
+            time::storage_sample("commit-abort-received", &[]);
+            self.abort_expected = None;
+        }
+        if !self.polled
+            && self.probe
             && words[0] == wire::POLL
-            && let Some((Event::Memory(image, _), _)) = &self.pending
+            && let Some((Event::Memory(image, _) | Event::Request(image), _)) = &self.pending
             && image.client == request.client
             && image.incarnation == request.incarnation
         {
-            time::storage_sample("image-poll-during-hold", &[]);
-            self.image_polled = true;
+            time::storage_sample(
+                if self.health_kind == wire::PRESENT_COMMIT {
+                    "commit-poll-during-hold"
+                } else {
+                    "image-poll-during-hold"
+                },
+                &[],
+            );
+            self.polled = true;
         }
         if request.client == Some(SOURCE)
             && let [wire::KEY_SOURCE, key, state, 0, 0, 0, 0, 0] = words
@@ -107,6 +145,7 @@ impl Gate {
                 return Ok(Some(event));
             }
             if [
+                input::F3 as u64,
                 input::F5 as u64,
                 input::F8 as u64,
                 input::F7 as u64,
@@ -114,11 +153,22 @@ impl Gate {
             ]
             .contains(&key)
             {
+                if key == input::F3 as u64
+                    && state == input::PRESS as u64
+                    && self.pending.is_some()
+                    && self.health_kind == wire::PRESENT_COMMIT
+                {
+                    self.reject_commit = true;
+                    time::storage_sample("commit-refusal-armed", &[]);
+                }
                 if state == input::PRESS as u64 && self.pending.is_none() {
-                    self.probe_image = key == input::F5 as u64;
-                    self.armed = if key == input::F8 as u64 {
+                    self.probe = key == input::F5 as u64 || key == input::F3 as u64;
+                    self.reject_commit = false;
+                    self.armed = if key == input::F3 as u64 {
+                        wire::PRESENT_COMMIT
+                    } else if key == input::F8 as u64 {
                         wire::POLL_TAGGED
-                    } else if key == input::F7 as u64 || self.probe_image {
+                    } else if key == input::F7 as u64 || key == input::F5 as u64 {
                         wire::SURFACE_IMAGE
                     } else {
                         wire::PRESENT_RECTS
@@ -142,11 +192,11 @@ impl Gate {
             // Plain polls and explicitly selected F5 images also probe the
             // child's independent owner connection before the hold expires.
             time::storage_sample("interaction-delay-held", &[self.armed]);
-            if words[0] == wire::POLL || (words[0] == wire::SURFACE_IMAGE && self.probe_image) {
+            if words[0] == wire::POLL || self.probe {
                 self.health = Some((request.client.unwrap(), request.incarnation, false));
             }
             self.health_kind = words[0];
-            self.image_polled = false;
+            self.polled = false;
             self.armed = 0;
             self.pending = Some((event, time::after(500)?));
             return Ok(None);

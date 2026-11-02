@@ -20,7 +20,7 @@ use scene;
 use source;
 
 public machine step(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks invokes Kernel {
-    transition context.image_work.active {
+    transition context.presentation_work.active {
         true -> (0u64)
         _ -> block idle_step(gate, context)
     }

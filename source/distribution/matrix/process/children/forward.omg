@@ -101,7 +101,7 @@ machine begin(gate: &Gate, context: &mut State, now: u64, words: [u64; 8], slot:
 }
 // Each pending word's reply, or its deadline, answers the owner.
 public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
-    transition context.image_work.active {
+    transition context.presentation_work.active {
         true -> (0u64)
         _ -> block idle_step(gate, context, now)
     }

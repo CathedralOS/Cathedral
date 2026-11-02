@@ -27,7 +27,7 @@ use world::main::request;
 use world::geometry::zeros_from;
 use lifecycle;
 use connections::presentation;
-use connections::presentation::Imaging;
+use connections::presentation::Submission;
 use stored;
 use funding;
 use workspace;
@@ -52,7 +52,7 @@ public machine step(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u6
         !context.slots[slot].live -> (0u64)
         context.slots[slot].listener.peer.fault != 0u64 -> block departed(gate, context, slot)
         context.answers[slot].active -> block responses::step(gate, context, slot)
-        context.scene_children[slot].active && !context.image_work.active -> block queued(gate, context, slot, now)
+        context.scene_children[slot].active && !context.presentation_work.active -> block queued(gate, context, slot, now)
         context.slots[slot].listener.pending != 0u64 -> block held(gate, context, slot, now)
         _ -> block receive(gate, context, slot, now)
     }
@@ -82,7 +82,7 @@ machine routed(gate: &Gate, context: &mut State, slot: u64 [0..=4], frame: Frame
     // Polls and acquisition of already-granted rights are independent of scene
     // publication. In particular, an admitted child must finish its handshake
     // while an older sibling's image waits. Other requests retain their input.
-    transition context.image_work.active && frame.payload[0] != MATRIX_POLL && frame.payload[0] != POLL_TAGGED
+    transition context.presentation_work.active && frame.payload[0] != MATRIX_POLL && frame.payload[0] != POLL_TAGGED
         && frame.payload[0] != ACQUIRE {
         true -> queued(context, slot, frame)
         _ -> block dispatch(gate, context, slot, frame, now)
@@ -152,10 +152,10 @@ machine observing(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: T
 machine imaging(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket, frame: Frame, incarnation: u64) -> u64 reaches Kernel {
     let object: u64 = context.slots[slot].listener.object;
     context.slots[slot].listener.object = 0u64;
-    let result: Imaging = block presentation::image(gate, context, slot, incarnation, frame, object);
+    let result: Submission = block presentation::image(gate, context, slot, incarnation, frame, object);
     transition result {
-        Imaging::Pending -> (0u64)
-        Imaging::Answer { words } -> block answered(gate, context, slot, issued, words)
+        Submission::Pending -> (0u64)
+        Submission::Answer { words } -> block answered(gate, context, slot, issued, words)
     }
 }
 machine unattached(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket) -> u64 reaches Kernel {
@@ -163,8 +163,8 @@ machine unattached(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: 
     block answered(gate, context, slot, issued, reply)
 }
 machine presenting(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket, frame: Frame, incarnation: u64) -> u64 reaches Kernel {
-    let reply: [u64; 8] = block presentation::batch_word(gate, context, slot, incarnation, frame);
-    block answered(gate, context, slot, issued, reply)
+    let result: Submission = block presentation::batch_word(gate, context, slot, incarnation, frame);
+    transition result { Submission::Pending -> (0u64) Submission::Answer { words } -> block answered(gate, context, slot, issued, words) }
 }
 machine acquire(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket, frame: Frame) -> u64 reaches Kernel {
     let status: u64 = block offer::reply(gate, &mut context.slots[slot], issued, &frame.payload);

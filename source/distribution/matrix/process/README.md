@@ -261,11 +261,12 @@ compositor's cursor follow it, then clicks Colors for focus and presses
 Enter, which saves a record through both storage relays and repaints the view
 in the saved colour.
 
-Forwarded standalone images now retain their sealed backing and exact child
-request in [transfers/forwarded.omg](connections/transfers/forwarded.omg). The event loop
-continues parent input polling, child polls and service acquisition, storage and
-owner HEALTH while the image waits. Scene mutations remain ordered behind that transfer; queued requests
-stay owned by their original listeners. A changed child or parent view invalidates
-the local completion. Root display exchanges, batch commits, selection, binding
-and launch calls still have synchronous waits; those are the next continuations,
-not completed parity. See TASKS_RUST.md for the current evidence and limitations.
+Forwarded images and presentation batches resume across turns through
+[transfers/transfer.omg](connections/transfers/transfer.omg). Images retain one
+sealed backing; [transaction.omg](connections/transfers/transaction.omg) advances
+BEGIN, each translated entry and COMMIT, or ABORT after a rejection. The original
+child ticket, child view, parent epoch and transaction revision survive each wait.
+Input polling, service acquisition, storage and owner HEALTH remain independent.
+Scene mutations and child retirement wait behind publication; failed handshakes
+retain their cleanup request. Root display exchanges, selection, binding and
+launch still contain synchronous waits. See TASKS_RUST.md for verified scope.

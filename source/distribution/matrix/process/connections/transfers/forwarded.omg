@@ -3,7 +3,8 @@ module transfers::forwarded;
 // Connection correlation and deferred tickets are ordinary platform runtime
 // operations. This program owns the child's binding and scene serialization.
 use shared::state::State;
-use shared::presentation::Image;
+use shared::presentation::Transfer;
+use transfers::transfer;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;
@@ -36,77 +37,65 @@ public machine begin(gate: &Gate, context: &mut State, slot: u64 [0..=4], frame:
         status
     }
     machine retained(context: &mut State, slot: u64 [0..=4], ticket: Ticket, frame: Frame, packet: [u64; 8], object: u64) -> u64 {
-        context.image_work = Image { active: true, submitted: false, slot: slot, ticket: ticket, frame: frame,
-            packet: packet, object: object, parent_epoch: context.world.parent.epoch };
+        let mut work: Transfer;
+        work.active = true;
+        work.slot = slot;
+        work.ticket = ticket;
+        work.frame = frame;
+        work.packet = packet;
+        work.object = object;
+        work.parent_epoch = context.world.parent.epoch;
+        context.presentation_work = work;
         0u64
     }
 }
 public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
     transition {
-        !context.image_work.active -> done()
-        context.answers[context.image_work.slot].active -> block draining(gate, context)
-        context.image_work.submitted -> block waiting(gate, context)
-        !current(context) -> block finish(gate, context, kernel::DENIED)
+        !context.presentation_work.active -> done()
+        context.answers[context.presentation_work.slot].active -> block draining(gate, context)
+        context.presentation_work.submitted -> block waiting(gate, context)
+        !transfer::current(context) -> block finish(gate, context, kernel::DENIED)
         _ -> block submit(gate, context)
     }
 }
 machine draining(gate: &Gate, context: &mut State) reaches Kernel {
-    let slot: u64 [0..=4] = context.image_work.slot;
+    let slot: u64 [0..=4] = context.presentation_work.slot;
     let status: u64 = block responses::step(gate, context, slot);
 }
 machine submit(gate: &Gate, context: &mut State) reaches Kernel {
-    let packet: [u64; 8] = context.image_work.packet;
-    let object: u64 = context.image_work.object;
+    let packet: [u64; 8] = context.presentation_work.packet;
+    let object: u64 = context.presentation_work.object;
     let status: u64 = block connection::visual(gate, context, packet, object);
     transition {
         status == 0u64 -> submitted(context)
         status == kernel::WOULD_BLOCK -> done()
         _ -> block finish(gate, context, status)
     }
-    machine submitted(context: &mut State) { context.image_work.submitted = true; }
+    machine submitted(context: &mut State) { context.presentation_work.submitted = true; }
 }
 machine waiting(gate: &Gate, context: &mut State) reaches Kernel {
     // Leave a completed reply with this job while the child's previous plain
     // answer is backpressured. Never overwrite that answer or repeat the image.
-    transition context.parent_work.visual_ready && !context.answers[context.image_work.slot].active {
+    transition context.parent_work.visual_ready && !context.answers[context.presentation_work.slot].active {
         true -> block received(gate, context)
         _ -> done()
     }
     machine received(gate: &Gate, context: &mut State) reaches Kernel {
         let answer: [u64; 8] = connection::take_visual(context);
-        transition current(context) {
+        transition transfer::current(context) {
             true -> block finish(gate, context, answer[0])
             _ -> block finish(gate, context, kernel::DENIED)
         }
     }
 }
-machine current(context: &State) -> bool {
-    deferred::matches(&context.slots[context.image_work.slot].listener, context.image_work.ticket)
-        && level::binding_matches(&context.world, context.image_work.slot, context.image_work.ticket.incarnation,
-            context.image_work.frame.payload[1])
-        && context.world.parent.epoch == context.image_work.parent_epoch
-}
 machine finish(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
-    let work: Image = context.image_work;
-    let empty: Image;
-    context.image_work = empty;
+    let work: Transfer = context.presentation_work;
+    let empty: Transfer;
+    context.presentation_work = empty;
     context.next_child = (work.slot + 1u64) % 5u64;
     block presentation::finish_image(gate, context, work.slot, work.ticket.incarnation, work.frame,
         work.packet[2], work.object, status);
     let reply: [u64; 8] = presentation::error(status);
     let sent: u64 = block responses::send(gate, context, work.slot, work.ticket, reply);
-}
-// Process shutdown abandons the connection, never reuses it for a new image.
-public machine discard(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
-    transition context.image_work.active {
-        true -> block abandoned(gate, context)
-        _ -> done()
-    }
-    machine abandoned(gate: &Gate, context: &mut State) reaches Kernel {
-        block upstream::close(gate, context);
-        block presentation::release(gate, context.image_work.object);
-        let empty: Image;
-        context.image_work = empty;
-    }
 }
 machine done() {}
