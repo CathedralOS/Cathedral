@@ -255,7 +255,7 @@ impl Children {
                     channels,
                 },
                 descendants,
-                256,
+                abi::MAX_ADMISSION_FRAMES as u64,
                 requested_frames.unwrap_or(default_frames),
             )
             .inspect_err(|error| {

@@ -425,7 +425,7 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     print('PASS: user tiles, absolute/relative clicks, app tiles, save/discard/cancel and persistent replacement')
 
 
-def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False, nested_desktop=False, trace_input=False, latency=False, pointer_stress=False, interaction_delay=False, nested_depth=3, soak=0, collection_pressure=False, accel='tcg', input_producer=None, participants=False, participant_fault=None, render_demand=False, masked_capture=False, capture_case=None, cursor_preferences=False, cursor_producer=False, launcher_async=None, launch_async=None, binding_async=None, scene_async=None, selection_async=None, control_late=False, control_failure=None, rust_chooser=False, source_profile=None):
+def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False, nested_desktop=False, trace_input=False, latency=False, pointer_stress=False, interaction_delay=False, nested_depth=3, soak=0, collection_pressure=False, accel='tcg', input_producer=None, participants=False, participant_fault=None, render_demand=False, masked_capture=False, capture_case=None, cursor_preferences=False, cursor_producer=False, launcher_async=None, launch_async=None, binding_async=None, scene_async=None, selection_async=None, control_late=False, control_failure=None, rust_chooser=False, source_profile=None, user_check=None):
     output = harness.BUILD / 'desktop' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     output.mkdir(parents=True)
     # Selected composition, with a separate build output so a regression
@@ -555,7 +555,7 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
     command += ['-drive', 'format=raw,file=fat:rw:esp', '-nic', 'none', '-monitor', 'none', '-no-reboot', '-display', 'none']
     command += disk_image.arguments(path)
     flags = subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0
-    user_check = None
+    custom_check = user_check is not None
     if control_failure:
         import control_failure_test
         from functools import partial
@@ -625,6 +625,9 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
         contents = path.read_bytes()
         database_image.prepare(path, programs, migration, app_close=True, realm_programs=harness.realm_programs(profile, True))
         assert contents == path.read_bytes(), 'relaunch must not reformat storage or reinstall unchanged programs'
+    if custom_check:
+        print(f'PASS: custom desktop scenario and cold reopen; artifacts: {output}')
+        return
     if control_failure:
         print(f'PASS: {control_failure} owner-control isolation and cold reopen; artifacts: {output}')
         return

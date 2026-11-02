@@ -102,7 +102,7 @@ machine parked(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel
 machine park_ticks(context: &State) -> u64 {
     transition {
         context.frame_count != 0u64 || context.configure_queued -> (1u64)
-        context.refresh_due -> (OWED_TICKS)
+        context.refresh_due || context.parent_work.poll_ready -> (OWED_TICKS)
         _ -> (IDLE_TICKS)
     }
 }

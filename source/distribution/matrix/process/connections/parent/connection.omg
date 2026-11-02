@@ -1,0 +1,118 @@
+module parent::connection;
+// One receiver dispatches the broker's exact request IDs to the poll and visual
+// callers. Neither caller reads the transport behind the other's back. A reply
+// remains owned by its caller until consumed, even after its transport slot freed.
+use shared::state::State;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::connection::main::Submission;
+use runtime::connection::main::Reply;
+use runtime::connection::main::Frame;
+use protocol::main;
+use runtime::waiting;
+use runtime::waiting::Set;
+
+public machine poll(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks invokes Kernel {
+    transition context.parent_work.poll != 0u64 || context.parent_work.poll_ready {
+        true -> (kernel::BUSY)
+        _ -> block submit(gate, context, [MATRIX_POLL,0u64,0u64,0u64,0u64,0u64,0u64,0u64], 0u64, true)
+    }
+}
+public machine visual(gate: &Gate, context: &mut State, words: [u64; 8], image: u64) -> u64 reaches Kernel blocks invokes Kernel {
+    transition context.parent_work.visual != 0u64 || context.parent_work.visual_ready {
+        true -> (kernel::BUSY)
+        _ -> block submit(gate, context, words, image, false)
+    }
+}
+machine submit(gate: &Gate, context: &mut State, words: [u64; 8], image: u64, polling: bool) -> u64 reaches Kernel {
+    let request: [u64; 8] = words;
+    let result: Submission = block runtime::connection::main::submit(gate, &mut context.parent.broker, &request, image);
+    transition result {
+        Submission::Submitted { request } -> submitted(context, request, polling)
+        Submission::Backpressure -> (kernel::WOULD_BLOCK)
+        Submission::Failed { code } -> failed(context, code)
+    }
+}
+machine submitted(context: &mut State, id: u64, polling: bool) -> u64 {
+    transition polling { true -> polled(context, id) _ -> visual(context, id) }
+    machine polled(context: &mut State, id: u64) -> u64 { context.parent_work.poll = id; context.refresh_due = false; 0u64 }
+    machine visual(context: &mut State, id: u64) -> u64 { context.parent_work.visual = id; 0u64 }
+}
+// At most two replies per turn; all other event-loop work gets its turn too.
+public machine step(gate: &Gate, context: &mut State, now: u64) reaches Kernel blocks invokes Kernel {
+    block receive(gate, context, now);
+    block receive(gate, context, now);
+}
+machine receive(gate: &Gate, context: &mut State, now: u64) reaches Kernel {
+    transition context.parent_work.poll != 0u64 || context.parent_work.visual != 0u64 {
+        true -> block incoming(gate, context, now)
+        _ -> done()
+    }
+}
+machine incoming(gate: &Gate, context: &mut State, now: u64) reaches Kernel {
+    let reply: runtime::connection::main::Reply = block runtime::connection::main::poll(gate, &mut context.parent.broker, now);
+    transition reply {
+        Reply::Pending -> done()
+        Reply::Complete { frame, notification } -> block decoded(gate, context, frame, notification)
+        Reply::Object { frame, object } -> block object(gate, context, object)
+        Reply::Endpoint { frame, endpoint } -> block endpoint(gate, context, endpoint)
+        Reply::Failed { code } -> failure(context, code)
+    }
+}
+machine decoded(gate: &Gate, context: &mut State, frame: Frame, notification: u64) reaches Kernel {
+    transition frame.bytes == 64u64 && notification == 0u64 {
+        true -> block delivered(gate, context, frame.id, frame.payload)
+        _ -> block malformed(gate, context, notification)
+    }
+}
+machine malformed(gate: &Gate, context: &mut State, notification: u64) reaches Kernel {
+    let ignored: u64 = Kernel::notify_drop(gate, notification);
+    block corrupt(gate, context);
+}
+machine delivered(gate: &Gate, context: &mut State, id: u64, words: [u64; 8]) reaches Kernel {
+    transition {
+        id != 0u64 && id == context.parent_work.poll -> polled(context, words)
+        id != 0u64 && id == context.parent_work.visual -> visual(context, words)
+        _ -> block corrupt(gate, context)
+    }
+    machine polled(context: &mut State, words: [u64; 8]) { context.parent_work.poll = 0u64; context.parent_work.poll_ready = true; context.parent_work.snapshot = words; }
+    machine visual(context: &mut State, words: [u64; 8]) { context.parent_work.visual = 0u64; context.parent_work.visual_ready = true; context.parent_work.answer = words; }
+}
+machine corrupt(gate: &Gate, context: &mut State) reaches Kernel {
+    block runtime::services::main::close(gate, &mut context.parent);
+    failure(context, kernel::IO_ERROR);
+}
+machine object(gate: &Gate, context: &mut State, object: u64) reaches Kernel {
+    let reply: runtime::services::main::Reply = block runtime::services::main::unexpected_object(gate, &mut context.parent, object);
+    failure(context, kernel::IO_ERROR);
+}
+machine endpoint(gate: &Gate, context: &mut State, endpoint: u64) reaches Kernel {
+    let reply: runtime::services::main::Reply = block runtime::services::main::unexpected_endpoint(gate, &mut context.parent, endpoint);
+    failure(context, kernel::IO_ERROR);
+}
+machine failed(context: &mut State, code: u64) -> u64 { failure(context, code); code }
+machine failure(context: &mut State, code: u64) {
+    context.parent_work.poll_ready = context.parent_work.poll_ready || context.parent_work.poll != 0u64;
+    context.parent_work.visual_ready = context.parent_work.visual_ready || context.parent_work.visual != 0u64;
+    context.parent_work.poll = 0u64;
+    context.parent_work.visual = 0u64;
+    context.parent_work.snapshot = [code,0u64,0u64,0u64,0u64,0u64,0u64,0u64];
+    context.parent_work.answer = context.parent_work.snapshot;
+}
+public machine take_visual(context: &mut State) -> [u64; 8] {
+    context.parent_work.visual_ready = false;
+    context.parent_work.answer
+}
+public machine watch(context: &State, set: &mut Set) {
+    transition context.parent_work.poll != 0u64 || context.parent_work.visual != 0u64 {
+        true -> watched(context, set)
+        _ -> done()
+    }
+    machine watched(context: &State, set: &mut Set) {
+        waiting::add(set, waiting::IPC, context.parent.broker.receiver);
+        waiting::add(set, waiting::NOTIFICATION, context.parent.broker.bell.wait);
+        transition context.parent.broker.partial { true -> waiting::expire_by(set, context.parent.broker.partial_deadline) _ -> done() }
+    }
+}
+machine done() {}

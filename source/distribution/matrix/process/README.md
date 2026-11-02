@@ -57,6 +57,20 @@ The storage, the parent and the display.
   the parent rings this matrix's bell, when the last snapshot had more, and
   before an owner word that needs a view none has granted yet. The same
   connection carries every surface, image and batch word upward.
+  Regular polling submits once and returns to the turn loop; a completed
+  snapshot waits until input retirement permits adoption. Wakeups that arrive
+  during the outstanding poll are remembered for the next request.
+  [parent/connection.omg](connections/parent/connection.omg) owns the two request
+  IDs and dispatches replies to poll or visual work. Setup explicitly requests
+  the v4 pipeline handshake; child listeners opt in before accepting a hello. It drains at most two
+  replies per turn and contributes the broker's actual wait handles and partial
+  transfer deadline. [parent/calls.omg](connections/parent/calls.omg) keeps the
+  remaining synchronous callers on that same dispatcher, so they cannot consume
+  a poll reply as a visual result. Startup/explicit refreshes and presentation
+  still wait; this is the first loop migration, not complete responsiveness.
+  [omega_parent_poll_test.py](../../../../tools/boot-harness-rs/omega_parent_poll_test.py)
+  holds the stock Omega child's poll at a Rust parent and requires an owner
+  HEALTH reply before release, followed by delivery of the queued key.
 - [listing.omg](connections/listing.omg): names in this matrix's realm, read over its own
   binding one ENTRIES page at a time and compared row by row with the
   32-byte name wanted, which is how discovery, configuration and RESOLVE_PATH
@@ -142,6 +156,11 @@ The children this matrix admits, funds, presents and retires.
   LAUNCH and LAUNCH_STATUS to the stored launches, FUND to the funding, the
   workspace words and CLOSE to the workspace, every other request to the
   World under the connection's incarnation.
+  [responses.omg](children/responses.omg) retains a computed plain answer when
+  the child's reply mailbox is full. Later turns retry that answer, not the
+  operation that produced it. Its connection ticket is checked again, and
+  reclamation clears it before the slot can be reused. This matters now that a
+  child matrix can have a poll and a visual request outstanding together.
 - [funding.omg](children/funding.omg): funding under the stock funding policy. Before
   a launch from the realm this matrix makes sure its own allowances cover the
   child and the connections to it, asking its owner with FUND for any

@@ -311,6 +311,16 @@ reply and requires local child polling during the stall, draft survival, clean
 close (the answer that lands after the storage stall, inside its grace, must
 be accepted, not refused as late) and repeated subtree reclamation. Its
 `interaction-delay` feature is absent from normal F5 builds.
+For the Omega matrix's independent poll boundary, run
+`python tools/boot-harness-rs/omega_parent_poll_test.py`. A Rust parent holds
+the stock Omega user's poll, requires an owner HEALTH reply before releasing
+it, and checks that one queued key arrives once and its saved text survives a
+cold boot. The Omega child has no injected fixture implementation. This is a
+narrower check than the Rust host's image/commit/launch delay variants above.
+The reverse boundary is
+`python tools/boot-harness-rs/omega_desktop_test.py --rust-user`: an Omega root
+with Rust user/nested matrices, using the existing
+`desktop-host` resource declaration, runs the full desktop and cold-reopen test.
 `--release` selects an optimized build. `--memory 256` selects guest RAM in MiB.
 Smoke mode has a 30-second boot deadline, requires ordered serial milestones,
 and checks the QEMU debug-exit status. A panic, missing milestone, reset or hang

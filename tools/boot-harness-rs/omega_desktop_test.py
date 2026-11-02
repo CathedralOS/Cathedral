@@ -71,7 +71,7 @@ TILE_CARD = '202d43'
 FONT = bytes.fromhex((ROOT / 'source-rs/platform/libraries/bitmap-font/font.hex').read_text())
 
 
-def compose(output):
+def compose(output, rust_user=False):
     composition = json.loads((ROOT / 'source-rs/distribution/profile.json').read_text(encoding='utf-8'))
     composition['name'] = 'Cathedral desktop over the Omega stock matrix'
     launches = composition['startup']['launches']
@@ -93,15 +93,20 @@ def compose(output):
     programs = composition['startup']['programs']
     template = programs[2]
     assert template.get('package') == 'cathedral-stock-matrix' and template.get('inside') == 1, 'object three is the user template'
-    programs[2] = {'package': template['package'], 'entry': 'distribution/matrix/native/main.omg',
-                   'target': template['target'], 'inside': template['inside'],
-                   'display_title': template['display_title']}
+    if rust_user:
+        # The unprofiled template asks for the owner's entire large offer.
+        # Use the existing bounded desktop declaration beneath the Omega root.
+        template.setdefault('features', []).append('desktop-host')
+    else:
+        programs[2] = {'package': template['package'], 'entry': 'distribution/matrix/native/main.omg',
+                       'target': template['target'], 'inside': template['inside'],
+                       'display_title': template['display_title']}
     # Every stock matrix F5 installs in the realm, the nested desktops and
     # their user templates, is the Omega program too, so the store shares one
     # image's chunks between them as the swapped distribution will.
     realm = composition['startup']['realm_programs']
     for index, entry in enumerate(realm):
-        if entry.get('package') == 'cathedral-stock-matrix':
+        if not rust_user and entry.get('package') == 'cathedral-stock-matrix':
             realm[index] = {key: value for key, value in entry.items() if key not in ('features', 'entry')}
             realm[index]['entry'] = 'distribution/matrix/native/main.omg'
     profile = output / f'omega-desktop-{output.name}.json'
@@ -290,12 +295,18 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--profile-only', action='store_true',
                         help='write the composition and print its path, for desktop_test.py --profile to measure F5 parity')
+    parser.add_argument('--rust-user', action='store_true',
+                        help='keep the Rust user/nested matrices with their desktop resource declaration; test the reverse IPC boundary')
     args = parser.parse_args()
     output = harness.BUILD / 'omega-desktop' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     output.mkdir(parents=True)
-    profile = compose(output)
+    profile = compose(output, rust_user=args.rust_user)
     if args.profile_only:
         print(profile)
+        return
+    if args.rust_user:
+        import desktop_test
+        desktop_test.run(240, source_profile=profile)
         return
     subprocess.run([sys.executable, str(Path(__file__).with_name('run.py')),
                     '--profile', str(profile), '--release', '--build-only'], cwd=ROOT, check=True)

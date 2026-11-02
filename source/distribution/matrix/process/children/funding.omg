@@ -22,6 +22,7 @@ use policy::children::launch::resources::funding::nothing;
 use connections::upstream;
 use shared::report;
 use lifecycle;
+use transport_funding;
 
 // Cover `needed` from this matrix's own allowances, asking its owner for
 // whatever they lack.
@@ -30,7 +31,7 @@ public machine ensure(gate: &Gate, context: &mut State, now: u64, needed: [u64; 
     lifecycle::sweep_returned(gate);
     let spare: Spare = runtime::task::main::spare(gate);
     transition spare {
-        Spare::Known { amounts } -> block short(gate, context, now, shortfall(amounts, needed))
+        Spare::Known { amounts } -> block short(gate, context, now, shortfall(amounts, transport_funding::owed(context, needed)))
         Spare::Failed { code } -> (code)
     }
     machine short(gate: &Gate, context: &mut State, now: u64, delta: [u64; 5]) -> u64 reaches Kernel {

@@ -3,6 +3,8 @@ module state;
 // owner, display and source connections, the parent's broker, the World,
 // the storage, each child slot's admission, policy, funding and batch, the
 // workspace's instances and the realm setup's progress.
+use parent;
+use outbox;
 use runtime::server::main::Server;
 use runtime::server::main::Ticket;
 use runtime::services::main::Services;
@@ -95,6 +97,8 @@ public data State {
     // The parent matrix's broker connection, when one admitted this instance,
     // and whether its last snapshot left more to take.
     parent: Services;
+    parent_work: parent::Pending;
+    answers: [outbox::Answer; 5];
     has_parent: bool;
     refresh_due: bool;
     world: World;

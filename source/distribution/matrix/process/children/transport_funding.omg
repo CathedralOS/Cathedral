@@ -1,0 +1,55 @@
+module transport_funding;
+// Admission promises the provider halves of its connections before every
+// handshake has allocated them. Preserve those promises when funding another
+// child: current kernel usage alone omits the unopened mailbox and bell.
+use shared::state::State;
+use runtime::connection::main::Peer;
+
+public machine owed(context: &State, needed: [u64; 5]) -> [u64; 5] {
+    let mut amounts: [u64; 5] = needed;
+    peer(&context.owner.peer, &mut amounts);
+    peer(&context.source.peer, &mut amounts);
+    peer(&context.scene, &mut amounts);
+    peer(&context.parent.broker, &mut amounts);
+    peer(&context.store.links[0], &mut amounts);
+    peer(&context.store.links[1], &mut amounts);
+    peer(&context.store.links[2], &mut amounts);
+    children(context, &mut amounts, 0u64);
+    amounts
+}
+machine children(context: &State, amounts: &mut [u64; 5], slot: u64 [0..=5]) {
+    transition slot < 5u64 { true -> child(context, amounts, slot) _ -> done() }
+    machine child(context: &State, amounts: &mut [u64; 5], slot: u64 [0..=4]) {
+        peer(&context.controls[slot], amounts);
+        peer(&context.slots[slot].listener.peer, amounts);
+        peer(&context.store.listeners[slot].peer, amounts);
+        transition { _ -> children(context, amounts, slot + 1u64) }
+    }
+}
+machine peer(connection: &Peer, amounts: &mut [u64; 5]) {
+    transition connection.sender != 0u64 && connection.receiver != 0u64 && connection.fault == 0u64 {
+        true -> writer(connection, amounts)
+        _ -> done()
+    }
+}
+machine writer(connection: &Peer, amounts: &mut [u64; 5]) {
+    transition connection.writer.handle == 0u64 { true -> reserve(connection, amounts) _ -> reader(connection, amounts) }
+    machine reserve(connection: &Peer, amounts: &mut [u64; 5]) {
+        amounts[0] = one_more(amounts[0]);
+        amounts[4] = one_more(amounts[4]);
+        reader(connection, amounts);
+    }
+}
+machine reader(connection: &Peer, amounts: &mut [u64; 5]) {
+    transition connection.reader.handle == 0u64 { true -> reserve(connection, amounts) _ -> bell(connection, amounts) }
+    machine reserve(connection: &Peer, amounts: &mut [u64; 5]) { amounts[1] = one_more(amounts[1]); bell(connection, amounts); }
+}
+machine bell(connection: &Peer, amounts: &mut [u64; 5]) {
+    transition connection.bell.wait == 0u64 { true -> reserve(amounts) _ -> done() }
+    machine reserve(amounts: &mut [u64; 5]) { amounts[2] = one_more(amounts[2]); }
+}
+// Overflow must refuse funding, never make a large obligation look small.
+machine one_more(value: u64) -> u64 {
+    transition value < 0xffffffffffffffffu64 { true -> (value + 1u64) _ -> (value) }
+}
+machine done() {}

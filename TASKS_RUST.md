@@ -932,6 +932,81 @@ use the planned native probe provider only where those cannot place the fault.
 Finish the fixture sweep before changing normal F5 to the Omega matrix and
 removing its Rust bridge. No new owner decision blocks this sequence.
 
+### Stock matrix migration: independent parent polling
+
+Regular Omega parent polling now submits once and returns to the matrix turn.
+[upstream.omg](source/distribution/matrix/process/connections/upstream.omg)
+remembers wakeups during an outstanding request and retains a received snapshot
+until input retirement permits adopting it. The sole
+[parent receiver](source/distribution/matrix/process/connections/parent/connection.omg)
+dispatches exact request IDs to poll or visual work, drains at most two replies
+per turn, and retires malformed replies. Remaining synchronous callers use that
+receiver too, so they cannot consume a poll's answer as their own. Child replies
+that encounter mailbox backpressure stay with their exact ticket in a bounded
+[outbox](source/distribution/matrix/process/children/responses.omg); their
+operation is not repeated.
+
+This is the regular poll boundary, not complete matrix-loop responsiveness.
+Startup and explicit refreshes, visual publication, stored launch, binding and
+selection still contain blocking paths. Normal F5 retains the Rust matrix.
+
+`python tools/boot-harness-rs/omega_parent_poll_test.py` installs the stock
+Omega user matrix beneath a Rust parent with the existing interaction-delay
+fixture. The parent holds its exact poll request and asks HEALTH on the
+independent owner connection; the guest must receive HEALTH before releasing
+the poll. A queued key must arrive once, save and survive cold reboot. The Omega
+matrix itself has no fixture feature or alternate implementation.
+
+Bringing up that mixed composition exposed two real capacity mistakes:
+
+- Rust's dynamic admission still passed a 256-frame per-load ceiling. It now
+  uses the existing kernel `MAX_ADMISSION_FRAMES` (800), which admits the Omega
+  matrix's image and declared stack. This changes no kernel ceiling or funding
+  allowance.
+- The Omega matrix lent physical frames promised to a child's unfinished
+  storage handshake to a subsequent child. Its storage listener then failed
+  `MEMORY_ALLOCATE` at the physical funding charge, and the launcher observed
+  PEER_CLOSED. Before further funding,
+  [transport_funding.omg](source/distribution/matrix/process/children/transport_funding.omg)
+  counts mailbox writers, readers and bells that live connections still need.
+  These are obligations in addition to current kernel usage, not extra authority.
+  Provider failure diagnostics distinguish storage sources 0..2 from child
+  connections 3..7. Temporary kernel and app diagnostics were removed.
+
+Evidence with the pinned producer (matrix image 333 of 496 load pages):
+
+- Held parent poll, real owner HEALTH before release, exactly one queued key
+  (including the following blank cell), save and cold reopen:
+  `build/boot-harness-rs/desktop/20261102T174629697415Z/`.
+- Three recursive Omega desktops, protected close, saved Notes/Colors,
+  repeated subtree reclamation, isolation and cold reopen:
+  `build/boot-harness-rs/desktop/20261102T174715477669Z/`.
+- Independent participants, cursor retirement, resize revocation, repeated
+  grants, sibling survival and saved documents across reboot:
+  `build/boot-harness-rs/desktop/20261102T175019135991Z/`.
+- Reverse boundary, Omega root and Rust user/nested matrices:
+  `build/boot-harness-rs/desktop/20261102T175751625906Z/`. Repeat with
+  `python tools/boot-harness-rs/omega_desktop_test.py --rust-user`.
+  This uses the Rust matrix's existing `desktop-host` resource declaration.
+  The unprofiled template requests the owner's whole large offer and was
+  correctly refused at funding under the larger Omega root
+  (`20261102T175126774483Z/`); no global limit was enlarged to fit it.
+- Normal F5's full desktop, storage oracle and cold reopen:
+  `build/boot-harness-rs/desktop/20261102T175901830706Z/`.
+- 514 Rust host tests, matrix target clippy with `interaction-delay,trace-storage`,
+  four harness unit tests, Python compilation, Rust formatting, layout
+  (148 Omega / 153 Rust edges) and diff checks pass. Logs are under
+  `build/omega-matrix-progress/`.
+
+The first integrated probe also caught a truncated diagnostic marker; its
+shortened `poll-health-during-hold` marker is checked after the guest has
+already enforced the before-release deadline. The ordinary/pipeline transport
+qualification above remains applicable; this slice changes no transport code.
+
+Next: presentation continuations with retained child tickets, view/scene
+identity and resource custody through settlement or cancellation, followed by
+the launch/binding/selection holds. Finish those fixtures before switching F5.
+
 ### Kernel image window widened for the Omega matrix
 
 The Omega stock matrix's image had reached 236 of the kernel's 240 image

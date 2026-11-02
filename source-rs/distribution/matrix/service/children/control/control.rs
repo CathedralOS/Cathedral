@@ -245,3 +245,26 @@ impl Children {
         Ok(retired)
     }
 }
+
+// A fault fixture uses the existing owner link while retaining the child's poll.
+// This proves the stock child serves independent work before that poll releases.
+#[cfg(feature = "interaction-delay")]
+impl Children {
+    pub(in crate::service) fn poll_health_probe(
+        &mut self,
+        slot: usize,
+        begin: bool,
+        now: u64,
+        until: u64,
+    ) -> Result<Option<wire::Packet>, Error> {
+        assert!(
+            self.pending[slot].is_none(),
+            "health fixture needs an idle owner link"
+        );
+        let child = self.slots[slot].as_mut().expect("held poll's child");
+        if begin {
+            child.control.ask([wire::HEALTH, 0, 0, 0, 0, 0, 0, 0])?;
+        }
+        child.control.receive(now, until)
+    }
+}

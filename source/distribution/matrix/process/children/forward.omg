@@ -1,4 +1,5 @@
 module forward;
+use responses;
 // Requests over the children's owner controls, one pending per child.
 // Owner words routed to a child: the first hop above the operation names the
 // slot, as the stock control policy decodes it; the word goes on with the hop
@@ -285,7 +286,7 @@ machine reply_requester(gate: &Gate, context: &mut State, forward: Forward, word
     }
     machine replied(gate: &Gate, context: &mut State, requester: u64 [0..=4], request: Ticket, words: [u64; 8]) reaches Kernel {
         let payload: [u64; 8] = words;
-        let status: u64 = block runtime::server::main::reply_to(gate, &mut context.slots[requester].listener, request, &payload);
+        let status: u64 = block responses::send(gate, context, requester, request, payload);
     }
 }
 // Ask a child's owner control what stopping it would lose.

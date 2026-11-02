@@ -357,10 +357,15 @@ machine receive(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64) r
     transition event {
         Event::Request { frame } -> block serve(gate, context, slot, now, frame)
         Event::Pending -> done()
-        Event::Failed { code } -> lost(context, slot)
+        Event::Failed { code } -> failed(gate, context, slot, code)
     }
 }
 // The child's storage connection retired; its binding goes with it.
+// Diagnostic links 0..2 name providers; 3..7 name child storage connections.
+machine failed(gate: &Gate, context: &mut State, slot: u64 [0..=4], code: u64) reaches Kernel {
+    report::storage_lost(gate, slot + 3u64, code);
+    lost(context, slot);
+}
 machine lost(context: &mut State, slot: u64 [0..=4]) {
     let ignored: u64 = scopes::revoke(&mut context.store.scopes, slot);
 }

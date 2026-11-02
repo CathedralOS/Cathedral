@@ -1,0 +1,5 @@
+module outbox;
+use runtime::server::main::Ticket;
+// One computed plain reply per child. Its authenticated ticket, not just the
+// reusable slot number, owns this output until its mailbox accepts it.
+public data Answer { active: bool; ticket: Ticket; words: [u64; 8]; }

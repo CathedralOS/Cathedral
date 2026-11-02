@@ -179,6 +179,7 @@ public machine admit_reserved(gate: &Gate, context: &mut State, now: u64, slot: 
     }
     // The owner-control window, like the service handshake's, starts once the child exists.
     machine admitted_now(gate: &Gate, context: &mut State, slot: u64 [0..=4], launch: u64) -> u64 reaches Kernel {
+        let enabled: u64 = runtime::server::main::enable_pipeline(&mut context.slots[slot].listener);
         let tick: Tick = runtime::time::read(gate, context.clock);
         transition tick {
             Tick::Read { value } -> block controlling(gate, context, value, slot, launch)
@@ -263,6 +264,7 @@ machine larger(a: u64, b: u64) -> u64 {
 // Drop the owner control and the storage listener, stop and collect the
 // child, return its reservation and forget its view and staged batch.
 public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel blocks invokes Kernel {
+    context.answers[slot].active = false;
     transition context.slots[slot].live {
         true -> block stopping(gate, context, slot)
         _ -> done()

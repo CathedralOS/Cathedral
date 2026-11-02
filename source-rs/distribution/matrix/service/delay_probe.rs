@@ -4,6 +4,7 @@
 //! close to count its storage as busy for two seconds, exchange or none, and
 //! to send that close's LOSS only when the window ends (lifecycle.rs). Never
 //! present in ordinary F5.
+use super::children::Children;
 use super::*;
 use cathedral_platform_contracts::input;
 use cathedral_user_runtime::time;
@@ -11,13 +12,37 @@ use cathedral_user_runtime::time;
 pub(super) struct Gate {
     armed: u64,
     pending: Option<(Event, u64)>,
+    health: Option<(usize, u64, bool)>,
 }
 impl Gate {
     pub fn deadline(&self) -> Option<u64> {
-        self.pending.as_ref().map(|p| p.1)
+        if self.health.is_some() {
+            time::after(1).ok()
+        } else {
+            self.pending.as_ref().map(|p| p.1)
+        }
     }
-    pub fn take(&mut self, server: &Server) -> Result<Option<Event>, Error> {
+    pub fn take(
+        &mut self,
+        server: &Server,
+        children: &mut Children,
+    ) -> Result<Option<Event>, Error> {
         let now = time::now()?;
+        if let Some((slot, incarnation, asked)) = self.health {
+            assert_eq!(server.incarnation(slot), Some(incarnation));
+            let until = self.pending.as_ref().expect("held poll").1;
+            assert!(
+                !time::reached(now, until),
+                "child did not answer HEALTH while its poll was held"
+            );
+            if let Some(reply) = children.poll_health_probe(slot, !asked, now, until)? {
+                assert_eq!(reply[0], 0);
+                time::storage_sample("poll-health-during-hold", &[]);
+                self.health = None;
+            } else {
+                self.health = Some((slot, incarnation, true));
+            }
+        }
         if self
             .pending
             .as_ref()
@@ -75,12 +100,19 @@ impl Gate {
                 return Ok(None);
             }
         }
-        if self.armed != 0 && words[0] == self.armed && request.client.is_some_and(|c| c < CHILDREN)
+        if self.armed != 0
+            && (words[0] == self.armed
+                || (self.armed == wire::POLL_TAGGED && words[0] == wire::POLL))
+            && request.client.is_some_and(|c| c < CHILDREN)
         {
-            // Retain this request without replying: shared transport permits one
-            // correlated response, so an unrelated application tag cannot be
-            // injected as a provisional response to the same request ID.
+            // Retain this exact request without replying. An unrelated tag
+            // cannot serve as a provisional response to the same request ID.
+            // The Omega child's plain poll also probes its independent owner
+            // connection before the hold expires.
             time::storage_sample("interaction-delay-held", &[self.armed]);
+            if words[0] == wire::POLL {
+                self.health = Some((request.client.unwrap(), request.incarnation, false));
+            }
             self.armed = 0;
             self.pending = Some((event, time::after(500)?));
             return Ok(None);

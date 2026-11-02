@@ -30,11 +30,13 @@ use connections::presentation;
 use stored;
 use funding;
 use workspace;
+use responses;
 
 public machine step(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64) -> u64 reaches Kernel blocks invokes Kernel {
     transition {
         !context.slots[slot].live -> (0u64)
         context.slots[slot].listener.peer.fault != 0u64 -> block departed(gate, context, slot)
+        context.answers[slot].active -> block responses::step(gate, context, slot)
         context.slots[slot].listener.pending != 0u64 -> block held(gate, context, slot, now)
         _ -> block receive(gate, context, slot, now)
     }
@@ -142,8 +144,7 @@ machine asked(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticke
     block answered(gate, context, slot, issued, reply)
 }
 machine answered(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket, reply: [u64; 8]) -> u64 reaches Kernel {
-    let status: u64 = block runtime::server::main::reply_to(gate, &mut context.slots[slot].listener, issued, &reply);
-    0u64
+    block responses::send(gate, context, slot, issued, reply)
 }
 machine error(code: u64) -> [u64; 8] {
     let mut words: [u64; 8];

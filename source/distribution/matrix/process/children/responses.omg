@@ -1,0 +1,33 @@
+module responses;
+// Compute a child's answer once. A full outgoing mailbox retains that answer
+// and its exact ticket; later turns publish it without repeating the operation.
+use shared::state::State;
+use runtime::server::main::Ticket;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+public machine send(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket, words: [u64; 8]) -> u64 reaches Kernel blocks invokes Kernel {
+    transition context.answers[slot].active {
+        true -> (kernel::BUSY)
+        _ -> block retained(gate, context, slot, issued, words)
+    }
+    machine retained(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket, words: [u64; 8]) -> u64 reaches Kernel {
+        context.answers[slot].active = true;
+        context.answers[slot].ticket = issued;
+        context.answers[slot].words = words;
+        block step(gate, context, slot)
+    }
+}
+public machine step(gate: &Gate, context: &mut State, slot: u64 [0..=4]) -> u64 reaches Kernel blocks invokes Kernel {
+    let issued: Ticket = context.answers[slot].ticket;
+    transition context.answers[slot].active && runtime::server::deferred::matches(&context.slots[slot].listener, issued) {
+        true -> block publish(gate, context, slot, issued)
+        _ -> forgotten(context, slot)
+    }
+}
+machine publish(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket) -> u64 reaches Kernel {
+    let answer: [u64; 8] = context.answers[slot].words;
+    let status: u64 = block runtime::server::main::reply_to(gate, &mut context.slots[slot].listener, issued, &answer);
+    transition status == kernel::WOULD_BLOCK { true -> (0u64) _ -> forgotten(context, slot) }
+}
+machine forgotten(context: &mut State, slot: u64 [0..=4]) -> u64 { context.answers[slot].active = false; 0u64 }

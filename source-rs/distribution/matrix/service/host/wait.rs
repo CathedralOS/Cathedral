@@ -145,7 +145,9 @@ impl Host {
         #[cfg(not(feature = "interaction-delay"))]
         let queued = deferred.take(parent);
         #[cfg(feature = "interaction-delay")]
-        let queued = delay.take(server)?.or_else(|| deferred.take(parent));
+        let queued = delay
+            .take(server, children)?
+            .or_else(|| deferred.take(parent));
         deferred.pause(server, parent);
         #[cfg(feature = "trace-storage")]
         let from_queue = queued.is_some();
