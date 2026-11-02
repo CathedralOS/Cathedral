@@ -5,6 +5,7 @@ module state;
 // workspace's instances and the realm setup's progress.
 use parent;
 use outbox;
+use presentation;
 use runtime::server::main::Server;
 use runtime::server::main::Ticket;
 use runtime::services::main::Services;
@@ -98,6 +99,11 @@ public data State {
     // and whether its last snapshot left more to take.
     parent: Services;
     parent_work: parent::Pending;
+    image_work: presentation::Image;
+    next_child: u64 [0..=4];
+    retire_after_image: [bool; 5];
+    scene_owner: presentation::Queued;
+    scene_children: [presentation::Queued; 5];
     answers: [outbox::Answer; 5];
     has_parent: bool;
     refresh_due: bool;

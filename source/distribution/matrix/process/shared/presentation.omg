@@ -1,0 +1,22 @@
+module presentation;
+// One forwarded image owns its child's ticket and sealed backing until the
+// parent answers. Scene mutations wait behind it; input polling does not.
+use runtime::server::main::Ticket;
+use runtime::connection::main::Frame;
+
+public data Image [copy] {
+    active: bool;
+    submitted: bool;
+    slot: u64 [0..=4];
+    ticket: Ticket;
+    frame: Frame;
+    packet: [u64; 8];
+    object: u64;
+    parent_epoch: u64;
+}
+// The listener still owns this request and any attachment. Revisit it only
+// after the current image settles; do not execute it twice or answer BUSY.
+public data Queued {
+    active: bool;
+    frame: Frame;
+}

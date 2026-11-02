@@ -2,8 +2,11 @@
 //! seconds while the root keeps dispatching. F4 travels on: the matrix on the
 //! focused chain that receives it from its parent (parent.rs) arms its next
 //! close to count its storage as busy for two seconds, exchange or none, and
-//! to send that close's LOSS only when the window ends (lifecycle.rs). Never
-//! present in ordinary F5.
+//! to send that close's LOSS only when the window ends (lifecycle.rs).
+//! F5 holds an image and additionally requires an independent HEALTH answer;
+//! this stronger probe is used by the Omega continuation test. The original F7
+//! fixture also covers the Rust host's synchronous image path. Never present
+//! in ordinary F5.
 use super::children::Children;
 use super::*;
 use cathedral_platform_contracts::input;
@@ -13,6 +16,9 @@ pub(super) struct Gate {
     armed: u64,
     pending: Option<(Event, u64)>,
     health: Option<(usize, u64, bool)>,
+    health_kind: u64,
+    image_polled: bool,
+    probe_image: bool,
 }
 impl Gate {
     pub fn deadline(&self) -> Option<u64> {
@@ -30,14 +36,21 @@ impl Gate {
         let now = time::now()?;
         if let Some((slot, incarnation, asked)) = self.health {
             assert_eq!(server.incarnation(slot), Some(incarnation));
-            let until = self.pending.as_ref().expect("held poll").1;
+            let until = self.pending.as_ref().expect("held request").1;
             assert!(
                 !time::reached(now, until),
-                "child did not answer HEALTH while its poll was held"
+                "child did not answer HEALTH while its request was held"
             );
             if let Some(reply) = children.poll_health_probe(slot, !asked, now, until)? {
                 assert_eq!(reply[0], 0);
-                time::storage_sample("poll-health-during-hold", &[]);
+                time::storage_sample(
+                    if self.health_kind == wire::SURFACE_IMAGE {
+                        "image-health-during-hold"
+                    } else {
+                        "poll-health-during-hold"
+                    },
+                    &[],
+                );
                 self.health = None;
             } else {
                 self.health = Some((slot, incarnation, true));
@@ -74,6 +87,17 @@ impl Gate {
         let Some(words) = wire::decode(&request.bytes[..request.len]) else {
             return Ok(Some(event));
         };
+        if !self.image_polled
+            && self.probe_image
+            && self.health_kind == wire::SURFACE_IMAGE
+            && words[0] == wire::POLL
+            && let Some((Event::Memory(image, _), _)) = &self.pending
+            && image.client == request.client
+            && image.incarnation == request.incarnation
+        {
+            time::storage_sample("image-poll-during-hold", &[]);
+            self.image_polled = true;
+        }
         if request.client == Some(SOURCE)
             && let [wire::KEY_SOURCE, key, state, 0, 0, 0, 0, 0] = words
         {
@@ -82,11 +106,19 @@ impl Gate {
                 // child, and the matrix that receives it from its parent arms.
                 return Ok(Some(event));
             }
-            if [input::F8 as u64, input::F7 as u64, input::F6 as u64].contains(&key) {
+            if [
+                input::F5 as u64,
+                input::F8 as u64,
+                input::F7 as u64,
+                input::F6 as u64,
+            ]
+            .contains(&key)
+            {
                 if state == input::PRESS as u64 && self.pending.is_none() {
+                    self.probe_image = key == input::F5 as u64;
                     self.armed = if key == input::F8 as u64 {
                         wire::POLL_TAGGED
-                    } else if key == input::F7 as u64 {
+                    } else if key == input::F7 as u64 || self.probe_image {
                         wire::SURFACE_IMAGE
                     } else {
                         wire::PRESENT_RECTS
@@ -107,12 +139,14 @@ impl Gate {
         {
             // Retain this exact request without replying. An unrelated tag
             // cannot serve as a provisional response to the same request ID.
-            // The Omega child's plain poll also probes its independent owner
-            // connection before the hold expires.
+            // Plain polls and explicitly selected F5 images also probe the
+            // child's independent owner connection before the hold expires.
             time::storage_sample("interaction-delay-held", &[self.armed]);
-            if words[0] == wire::POLL {
+            if words[0] == wire::POLL || (words[0] == wire::SURFACE_IMAGE && self.probe_image) {
                 self.health = Some((request.client.unwrap(), request.incarnation, false));
             }
+            self.health_kind = words[0];
+            self.image_polled = false;
             self.armed = 0;
             self.pending = Some((event, time::after(500)?));
             return Ok(None);

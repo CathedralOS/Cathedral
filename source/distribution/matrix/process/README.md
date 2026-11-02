@@ -156,7 +156,7 @@ The children this matrix admits, funds, presents and retires.
   LAUNCH and LAUNCH_STATUS to the stored launches, FUND to the funding, the
   workspace words and CLOSE to the workspace, every other request to the
   World under the connection's incarnation.
-  [responses.omg](children/responses.omg) retains a computed plain answer when
+  [responses.omg](connections/responses.omg) retains a computed plain answer when
   the child's reply mailbox is full. Later turns retry that answer, not the
   operation that produced it. Its connection ticket is checked again, and
   reclamation clears it before the slot can be reused. This matters now that a
@@ -261,11 +261,11 @@ compositor's cursor follow it, then clicks Colors for focus and presses
 Enter, which saves a record through both storage relays and repaints the view
 in the saved colour.
 
-Not yet here: the rest of the chrome's words in a workspace (layout, managed
-tasks, save availability and retries), loss surveys and close over the
-owner-control client, the launcher fallback and save recovery
-the recorded grants are for, the input capacity a nested matrix negotiates
-with its parent, and the rest of the stock policy under
-[service/](../service/README.md), which still executes inside the Rust host
-through the bridge; this process links that package directly for what it
-already uses.
+Forwarded standalone images now retain their sealed backing and exact child
+request in [transfers/forwarded.omg](connections/transfers/forwarded.omg). The event loop
+continues parent input polling, child polls and service acquisition, storage and
+owner HEALTH while the image waits. Scene mutations remain ordered behind that transfer; queued requests
+stay owned by their original listeners. A changed child or parent view invalidates
+the local completion. Root display exchanges, batch commits, selection, binding
+and launch calls still have synchronous waits; those are the next continuations,
+not completed parity. See TASKS_RUST.md for the current evidence and limitations.

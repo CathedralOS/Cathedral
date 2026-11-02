@@ -30,11 +30,13 @@ use world::batch::Commit;
 use world::main::request;
 use world::geometry::zeros_from;
 use rects;
+use transfers::forwarded;
 use rects::Rects;
 use scene;
 use upstream;
 
 public const IMAGES: u64 = 64u64;
+public data Imaging { case Pending; case Answer(words: [u64; 8]); }
 
 // The rank the owner allotted names the backing. At the root that is the
 // compositor tile and the key is the rank plus one, so zero never names a
@@ -138,7 +140,15 @@ public machine update(gate: &Gate, context: &mut State, slot: u64 [0..=4], incar
 // A sealed image for a surface: staged with its payload inside an open batch,
 // otherwise sent to the compositor, committed and retained behind its tile.
 // The compositor validates the pixels against the object's size.
-public machine image(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, object: u64) -> [u64; 8]
+public machine image(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, object: u64) -> Imaging
+    reaches Kernel blocks invokes Kernel {
+    let words: [u64; 8] = block prepare_image(gate, context, slot, incarnation, frame, object);
+    transition context.image_work.active {
+        true -> (Imaging::Pending)
+        _ -> (Imaging::Answer { words: words })
+    }
+}
+machine prepare_image(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, object: u64) -> [u64; 8]
     reaches Kernel blocks invokes Kernel {
     block prune(gate, context, slot);
     let preview: Updated = surfaces::update(&mut context.world, slot, incarnation, &frame.payload, false);
@@ -174,6 +184,18 @@ public machine image(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarn
     }
     machine shown(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, packet: [u64; 8], object: u64)
         -> [u64; 8] reaches Kernel {
+        transition context.has_parent {
+            true -> block deferred(gate, context, slot, frame, packet, object)
+            _ -> block immediate(gate, context, slot, incarnation, frame, packet, object)
+        }
+    }
+    machine deferred(gate: &Gate, context: &mut State, slot: u64 [0..=4], frame: Frame, packet: [u64; 8], object: u64)
+        -> [u64; 8] reaches Kernel {
+        let status: u64 = block forwarded::begin(gate, context, slot, frame, packet, object);
+        error(status)
+    }
+    machine immediate(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, packet: [u64; 8], object: u64)
+        -> [u64; 8] reaches Kernel {
         let status: u64 = block send_packet(gate, context, packet, object);
         transition status == 0u64 {
             true -> block retained(gate, context, slot, incarnation, frame, packet[2], object)
@@ -189,6 +211,19 @@ public machine image(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarn
     machine releasing(gate: &Gate, object: u64, status: u64) -> [u64; 8] reaches Kernel {
         block release(gate, object);
         error(status)
+    }
+}
+// The transfer checked both child and parent epochs before reaching this point.
+public machine finish_image(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame,
+    key: u64, object: u64, status: u64) reaches Kernel blocks invokes Kernel {
+    transition status == 0u64 {
+        true -> block committed(gate, context, slot, incarnation, frame, key, object)
+        _ -> block release(gate, object)
+    }
+    machine committed(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, frame: Frame, key: u64, object: u64)
+        reaches Kernel {
+        let committed: Updated = surfaces::update(&mut context.world, slot, incarnation, &frame.payload, true);
+        block retain(gate, context, key, object);
     }
 }
 // An image word that arrived without its sealed payload.
@@ -690,7 +725,7 @@ public machine release_images(gate: &Gate, context: &mut State, index: u64) reac
         transition { _ -> block release_images(gate, context, index + 1u64) }
     }
 }
-machine release(gate: &Gate, handle: u64) reaches Kernel {
+public machine release(gate: &Gate, handle: u64) reaches Kernel blocks invokes Kernel {
     transition handle != 0u64 {
         true -> block releasing(gate, handle)
         _ -> done()
@@ -739,6 +774,12 @@ machine selected(op: u64) -> u64 {
 // Erasures owed since the last flush: the display or the parent may already
 // have removed that backing, and the image behind it goes either way.
 public machine flush(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks invokes Kernel {
+    transition context.image_work.active {
+        true -> (0u64)
+        _ -> block idle_flush(gate, context)
+    }
+}
+machine idle_flush(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks invokes Kernel {
     let owed: Retained = surfaces::take_owed(&mut context.world);
     transition owed {
         Retained::Packet { words } -> block owed_one(gate, context, words)

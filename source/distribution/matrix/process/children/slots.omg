@@ -27,16 +27,32 @@ use world::main::request;
 use world::geometry::zeros_from;
 use lifecycle;
 use connections::presentation;
+use connections::presentation::Imaging;
 use stored;
 use funding;
 use workspace;
-use responses;
+use connections::responses;
 
+// Resume after the last image's sender, so a constantly repainting child
+// cannot always take the scene before its waiting siblings.
+public machine all(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
+    block visit(gate, context, now, context.next_child, 0u64)
+    machine visit(gate: &Gate, context: &mut State, now: u64, first: u64 [0..=4], rank: u64) -> u64
+        reaches Kernel requires rank <= 5u64 {
+        transition rank < 5u64 { true -> block one(gate, context, now, first, rank) _ -> (0u64) }
+    }
+    machine one(gate: &Gate, context: &mut State, now: u64, first: u64 [0..=4], rank: u64) -> u64
+        reaches Kernel requires rank < 5u64 {
+        let status: u64 = block step(gate, context, (first + rank) % 5u64, now);
+        transition status == 0u64 { true -> block visit(gate, context, now, first, rank + 1u64) _ -> (status) }
+    }
+}
 public machine step(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64) -> u64 reaches Kernel blocks invokes Kernel {
     transition {
         !context.slots[slot].live -> (0u64)
         context.slots[slot].listener.peer.fault != 0u64 -> block departed(gate, context, slot)
         context.answers[slot].active -> block responses::step(gate, context, slot)
+        context.scene_children[slot].active && !context.image_work.active -> block queued(gate, context, slot, now)
         context.slots[slot].listener.pending != 0u64 -> block held(gate, context, slot, now)
         _ -> block receive(gate, context, slot, now)
     }
@@ -57,7 +73,27 @@ machine receive(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64) -
         Event::Failed { code } -> block departed(gate, context, slot)
     }
 }
+machine queued(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64) -> u64 reaches Kernel {
+    let frame: Frame = context.scene_children[slot].frame;
+    context.scene_children[slot].active = false;
+    block routed(gate, context, slot, frame, now)
+}
 machine routed(gate: &Gate, context: &mut State, slot: u64 [0..=4], frame: Frame, now: u64) -> u64 reaches Kernel {
+    // Polls and acquisition of already-granted rights are independent of scene
+    // publication. In particular, an admitted child must finish its handshake
+    // while an older sibling's image waits. Other requests retain their input.
+    transition context.image_work.active && frame.payload[0] != MATRIX_POLL && frame.payload[0] != POLL_TAGGED
+        && frame.payload[0] != ACQUIRE {
+        true -> queued(context, slot, frame)
+        _ -> block dispatch(gate, context, slot, frame, now)
+    }
+    machine queued(context: &mut State, slot: u64 [0..=4], frame: Frame) -> u64 {
+        context.scene_children[slot].active = true;
+        context.scene_children[slot].frame = frame;
+        0u64
+    }
+}
+machine dispatch(gate: &Gate, context: &mut State, slot: u64 [0..=4], frame: Frame, now: u64) -> u64 reaches Kernel {
     let issued: Ticket = runtime::server::main::ticket(&context.slots[slot].listener);
     let incarnation: u64 = context.slots[slot].listener.incarnation;
     let attached: bool = frame.attachment != 0u64;
@@ -116,8 +152,11 @@ machine observing(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: T
 machine imaging(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket, frame: Frame, incarnation: u64) -> u64 reaches Kernel {
     let object: u64 = context.slots[slot].listener.object;
     context.slots[slot].listener.object = 0u64;
-    let reply: [u64; 8] = block presentation::image(gate, context, slot, incarnation, frame, object);
-    block answered(gate, context, slot, issued, reply)
+    let result: Imaging = block presentation::image(gate, context, slot, incarnation, frame, object);
+    transition result {
+        Imaging::Pending -> (0u64)
+        Imaging::Answer { words } -> block answered(gate, context, slot, issued, words)
+    }
 }
 machine unattached(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket) -> u64 reaches Kernel {
     let reply: [u64; 8] = presentation::image_missing(context, slot);

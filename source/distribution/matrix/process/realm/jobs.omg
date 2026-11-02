@@ -63,6 +63,12 @@ public data Step [copy] {
 // nested instance not yet hosted starts discovery, as pending startup
 // recovery does.
 public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
+    transition context.image_work.active {
+        true -> (0u64)
+        _ -> block idle_step(gate, context, now)
+    }
+}
+machine idle_step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
     let pending: bool = context.startup.picker_pending || context.startup.background_pending;
     let unhosted: bool = context.has_parent && !context.hosted;
     transition {

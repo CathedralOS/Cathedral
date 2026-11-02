@@ -263,7 +263,33 @@ machine larger(a: u64, b: u64) -> u64 {
 }
 // Drop the owner control and the storage listener, stop and collect the
 // child, return its reservation and forget its view and staged batch.
+// Handshake failure can request retirement only once. Retain that request while
+// an image fences scene reuse, then drain it before admitting any replacement.
+public machine retire_pending(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
+    transition context.image_work.active { true -> done() _ -> block visit(gate, context, 0u64) }
+    machine visit(gate: &Gate, context: &mut State, slot: u64) reaches Kernel requires slot <= 5u64 {
+        transition slot < 5u64 { true -> block one(gate, context, slot) _ -> done() }
+    }
+    machine one(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+        transition context.retire_after_image[slot] {
+            true -> block retired(gate, context, slot)
+            _ -> block visit(gate, context, slot + 1u64)
+        }
+    }
+    machine retired(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+        block reclaim(gate, context, slot);
+        transition { _ -> block visit(gate, context, slot + 1u64) }
+    }
+}
 public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel blocks invokes Kernel {
+    transition context.image_work.active {
+        true -> queued(context, slot)
+        _ -> block idle_reclaim(gate, context, slot)
+    }
+    machine queued(context: &mut State, slot: u64 [0..=4]) { context.retire_after_image[slot] = true; }
+}
+machine idle_reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel blocks invokes Kernel {
+    context.retire_after_image[slot] = false;
     context.answers[slot].active = false;
     transition context.slots[slot].live {
         true -> block stopping(gate, context, slot)
@@ -273,6 +299,7 @@ public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reac
         context.opening[slot] = 0u64;
         let closed: u64 = block runtime::connection::main::close(gate, &mut context.controls[slot]);
         block storage::retire(gate, context, slot);
+        context.scene_children[slot].active = false;
         block presentation::release_slot(gate, context, slot);
         let task: u64 = context.slots[slot].task;
         let exit: Exit = block runtime::admission::main::stop(gate, &mut context.slots[slot]);

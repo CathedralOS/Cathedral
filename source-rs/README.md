@@ -315,8 +315,12 @@ For the Omega matrix's independent poll boundary, run
 `python tools/boot-harness-rs/omega_parent_poll_test.py`. A Rust parent holds
 the stock Omega user's poll, requires an owner HEALTH reply before releasing
 it, and checks that one queued key arrives once and its saved text survives a
-cold boot. The Omega child has no injected fixture implementation. This is a
-narrower check than the Rust host's image/commit/launch delay variants above.
+cold boot. For standalone forwarded images, run
+`python tools/boot-harness-rs/omega_parent_image_test.py`: guest F5 holds an image,
+HEALTH and another input poll must progress before release, and exact Notes
+text must save and survive cold boot. Neither test substitutes fixture code
+inside the Omega child. Root-display, batch-commit and lifecycle waits remain
+outside these two proofs.
 The reverse boundary is
 `python tools/boot-harness-rs/omega_desktop_test.py --rust-user`: an Omega root
 with Rust user/nested matrices, using the existing

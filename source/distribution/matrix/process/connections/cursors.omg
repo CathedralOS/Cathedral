@@ -20,6 +20,12 @@ use scene;
 use source;
 
 public machine step(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks invokes Kernel {
+    transition context.image_work.active {
+        true -> (0u64)
+        _ -> block idle_step(gate, context)
+    }
+}
+machine idle_step(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks invokes Kernel {
     transition {
         context.has_parent && geometry::valid_grant(context.world.parent) -> block forwarding(gate, context, 0u64)
         context.has_parent -> (0u64)

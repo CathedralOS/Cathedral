@@ -33,6 +33,7 @@ use connections::cursors;
 use children::slots;
 use children::lifecycle;
 use connections::presentation;
+use connections::transfers::forwarded;
 use connections::storage;
 
 // How long a turn parks with nothing due, and with a parent's snapshot still owed.
@@ -57,23 +58,21 @@ machine serve(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
 }
 machine turn(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
     let polled: u64 = block upstream::step(gate, context, now);
+    block forwarded::step(gate, context);
+    block lifecycle::retire_pending(gate, context);
     let settled: u64 = block jobs::step(gate, context, now);
     let commanded: u64 = block commands::step(gate, context, now);
     block lifecycle::open_controls(gate, context, now);
-    let forwarded: u64 = block forward::step(gate, context, now);
+    let relayed: u64 = block forward::step(gate, context, now);
     let sourced: u64 = block source::step(gate, context, now);
-    let first: u64 = block slots::step(gate, context, 0u64, now);
-    let second: u64 = block slots::step(gate, context, 1u64, now);
-    let third: u64 = block slots::step(gate, context, 2u64, now);
-    let fourth: u64 = block slots::step(gate, context, 3u64, now);
-    let fifth: u64 = block slots::step(gate, context, 4u64, now);
+    let children: u64 = block slots::all(gate, context, now);
+    block forwarded::step(gate, context);
     let stored: u64 = block storage::step(gate, context, now);
     lifecycle::notify(gate, context);
     let flushed: u64 = block presentation::flush(gate, context);
     let pointed: u64 = block cursors::step(gate, context);
     lifecycle::settle(gate, context);
-    transition polled == 0u64 && settled == 0u64 && commanded == 0u64 && forwarded == 0u64 && sourced == 0u64 && first == 0u64
-        && second == 0u64 && third == 0u64 && fourth == 0u64 && fifth == 0u64 && stored == 0u64 && flushed == 0u64 && pointed == 0u64 {
+    transition polled == 0u64 && settled == 0u64 && commanded == 0u64 && relayed == 0u64 && sourced == 0u64 && children == 0u64 && stored == 0u64 && flushed == 0u64 && pointed == 0u64 {
         true -> block parked(gate, context, now)
         _ -> block cleanup(gate, context, 403u64)
     }
@@ -101,12 +100,24 @@ machine parked(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel
 }
 machine park_ticks(context: &State) -> u64 {
     transition {
+        context.image_work.active -> (OWED_TICKS)
+        context.scene_owner.active || queued_children(context, 0u64) -> (1u64)
         context.frame_count != 0u64 || context.configure_queued -> (1u64)
         context.refresh_due || context.parent_work.poll_ready -> (OWED_TICKS)
         _ -> (IDLE_TICKS)
     }
 }
+machine queued_children(context: &State, slot: u64) -> bool requires slot <= 5u64 {
+    transition slot < 5u64 {
+        true -> checked(context, slot)
+        _ -> (false)
+    }
+    machine checked(context: &State, slot: u64 [0..=4]) -> bool {
+        transition context.scene_children[slot].active { true -> (true) _ -> queued_children(context, slot + 1u64) }
+    }
+}
 machine cleanup(gate: &Gate, context: &mut State, status: u64) -> u64 reaches Kernel {
+    block forwarded::discard(gate, context);
     block lifecycle::reclaim(gate, context, 0u64);
     block lifecycle::reclaim(gate, context, 1u64);
     block lifecycle::reclaim(gate, context, 2u64);

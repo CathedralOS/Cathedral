@@ -43,6 +43,7 @@ use connections::listing;
 public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
     transition {
         context.owner.peer.fault != 0u64 -> (context.owner.peer.fault)
+        context.scene_owner.active && !context.image_work.active -> block queued(gate, context, now)
         context.owner.pending != 0u64 -> block held(gate, context, now)
         _ -> block receive(gate, context, now)
     }
@@ -59,7 +60,24 @@ machine receive(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kerne
         Event::Failed { code } -> (code)
     }
 }
+machine queued(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    let frame: Frame = context.scene_owner.frame;
+    context.scene_owner.active = false;
+    block command(gate, context, now, frame)
+}
 machine command(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel {
+    transition {
+        frame.payload[0] == HEALTH -> block dispatch(gate, context, now, frame)
+        context.image_work.active -> queued(context, frame)
+        _ -> block placed(gate, context, now, frame)
+    }
+    machine queued(context: &mut State, frame: Frame) -> u64 {
+        context.scene_owner.active = true;
+        context.scene_owner.frame = frame;
+        0u64
+    }
+}
+machine placed(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel {
     let unplaced: bool = context.has_parent && !geometry::valid_grant(context.world.parent);
     transition unplaced {
         true -> block refreshed(gate, context, now, frame)

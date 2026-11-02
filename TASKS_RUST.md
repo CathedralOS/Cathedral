@@ -932,6 +932,78 @@ use the planned native probe provider only where those cannot place the fault.
 Finish the fixture sweep before changing normal F5 to the Omega matrix and
 removing its Rust bridge. No new owner decision blocks this sequence.
 
+### Stock matrix migration: forwarded image waits
+
+Standalone images forwarded by the Omega matrix now return to the event loop.
+[The transfer](source/distribution/matrix/process/connections/transfers/forwarded.omg)
+retains the sealed backing, exact child request ticket, original child view and
+parent epoch. It submits once through the existing parent receiver, waits without
+consuming another caller's reply, and commits local surface state only if that
+binding still matches. A refused or stale completion releases the backing. An
+outgoing reply that encounters backpressure is retained without repeating the
+image operation. Process shutdown closes the upstream connection before forgetting
+the pending transfer. The plain-reply
+[outbox](source/distribution/matrix/process/connections/responses.omg) now lives
+with the connection code, shared by child dispatch and transfer completion.
+
+While the image waits, parent input polls, child plain/tagged polls, acquisition
+of already-granted service rights, owner HEALTH and storage dispatch continue.
+Other child requests and owner commands remain
+with their original listeners until the image settles. Realm jobs, routed control
+completion, reclamation, cursor publication and scene changes wait behind that
+same barrier. Child visitation resumes after the previous image's sender so a
+continually repainting child does not always take the next scene slot. HEALTH
+also no longer requires an initial placement refresh.
+Retirement requests raised during the image wait are retained explicitly and
+drained before further admission; a one-shot handshake failure cannot lose its
+cleanup request merely because reclamation was deferred.
+
+This is a conservative userspace serialization barrier, not full
+presentation/lifecycle independence. A scene-dependent request already queued on
+an ordinary owner connection can still hold up later requests on that connection.
+Reclamation waits for transfer settlement; this does not keep a dead child's CPU
+execution alive. Root compositor calls, transactional batches, explicit refreshes,
+selection, binding and launch still contain blocking paths. Next, carry transaction
+phases and retirement fences across turns, with held commit, stale-view and
+child-death tests, then remove the broad barrier where operations are independent.
+No kernel special case, scheduling privilege, protocol addition or capacity increase
+was introduced. These are ordinary runtime IPC and deferred-ticket operations;
+the matrix's child and scene policy remains in the distribution. F5 still defaults
+to the Rust matrix.
+
+`python tools/boot-harness-rs/omega_parent_image_test.py` installs the real stock
+Omega user matrix beneath a Rust parent with the existing interaction-delay
+fixture. Guest F5 holds an image for five seconds. The parent must receive HEALTH before
+release, and the test separately requires another input poll during that hold.
+Exact Notes text, including its trailing blank cell, checks queued input once.
+A second hold covers the saved-state image while the taskbar requests close;
+the app must be collected and its save must survive cold reopen. No alternate
+Omega fixture code is used.
+The stronger F5 check is separate from the original F7 image gate: the existing
+Rust host blocks HEALTH on that synchronous path, so the older Rust delay suite
+must not silently acquire the Omega migration's new responsiveness requirement.
+
+Verified with the pinned producer, matrix image **341 of 496 load pages**:
+
+- Held image, HEALTH and input poll before release, exact queued keys, taskbar
+  close during a held saved-state image and cold reopen:
+  `build/boot-harness-rs/desktop/20261102T190304667796Z/`.
+- Held-poll regression and cold reopen:
+  `build/boot-harness-rs/desktop/20261102T185856867938Z/`.
+- Three recursive Omega desktops, protected close, repeated subtree collection,
+  isolation and cold reopen: `build/boot-harness-rs/desktop/20261102T185513994613Z/`.
+- Independent participants, cursor retirement, resize revocation, repeated grants,
+  sibling survival and cold reopen:
+  `build/boot-harness-rs/desktop/20261102T184717700578Z/`.
+- Normal F5, its storage oracle and cold reopen:
+  `build/boot-harness-rs/desktop/20261102T183555972691Z/`.
+- Existing Rust `--interaction-delay --nested-desktop --nested-depth 3`,
+  including its original poll/image/commit/storage-close holds and cold reopen:
+  `build/boot-harness-rs/desktop/20261102T190358715507Z/`.
+- 514 Rust host tests, target clippy with `interaction-delay,trace-storage`,
+  four harness unit tests and the source-layout check pass. No runtime or kernel
+  implementation changed. Logs: `build/omega-matrix-progress/image-*.log`.
+
 ### Stock matrix migration: independent parent polling
 
 Regular Omega parent polling now submits once and returns to the matrix turn.
@@ -943,7 +1015,7 @@ dispatches exact request IDs to poll or visual work, drains at most two replies
 per turn, and retires malformed replies. Remaining synchronous callers use that
 receiver too, so they cannot consume a poll's answer as their own. Child replies
 that encounter mailbox backpressure stay with their exact ticket in a bounded
-[outbox](source/distribution/matrix/process/children/responses.omg); their
+[outbox](source/distribution/matrix/process/connections/responses.omg); their
 operation is not repeated.
 
 This is the regular poll boundary, not complete matrix-loop responsiveness.
