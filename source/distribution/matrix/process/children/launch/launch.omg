@@ -29,6 +29,9 @@ use runtime::server::main::Ticket;
 use runtime::server::deferred;
 use connections::presentation::Submission;
 use connections::storage::reads;
+use connections::storage::binding;
+use connections::storage::binding::Prepared;
+use protocol::services::STORAGE;
 use connections::storage::exchange;
 use connections::responses;
 use stored;
@@ -143,6 +146,13 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
         block answered(gate, context, words, false);
     }
     machine admitted(gate: &Gate, context: &mut State, image: Outcome, now: u64) reaches Kernel {
+        let prepared: Prepared = binding::prepare(context);
+        transition prepared.status == 0u64 {
+            true -> block admitting(gate, context, image, now, prepared)
+            _ -> block failed(gate, context, image.attachment, prepared.status)
+        }
+    }
+    machine admitting(gate: &Gate, context: &mut State, image: Outcome, now: u64, prepared: Prepared) reaches Kernel {
         let slot: u64 [0..=4] = context.launch.slot;
         let requester: u64 [0..=4] = context.launch.requester;
         let incarnation: u64 = context.launch.incarnation;
@@ -154,12 +164,33 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
         block retire_picker(gate, context, login);
         let desktop_app: bool = context.desktop && slot != 0u64 && slot != 4u64;
         let status: u64 = block stored::admit_image(gate, context, now, slot, image.attachment, image.words[4], object, 0u64,
-            policy.channels, policy.descendants, policy.cpu, policy.private_pages, policy.reader_pages, 0u64, offered, desktop_app, true);
+            policy.channels, policy.descendants, policy.cpu, policy.private_pages, policy.reader_pages, 0u64, offered, desktop_app, false);
         block exchange::release(gate, image.attachment);
         transition status == 0u64 {
-            true -> block placed(gate, context, requester, incarnation, slot, object, login)
+            true -> block bound(gate, context, requester, incarnation, slot, object, login, prepared)
             _ -> block answered(gate, context, refused(gate, status), login)
         }
+    }
+    // Admission still runs synchronously: no child service is dispatched
+    // between captured authority, picker retirement and this local install.
+    // When admission becomes resumable it must retain/recheck that caller too.
+    machine bound(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4], object: u64,
+        login: bool, prepared: Prepared) reaches Kernel {
+        let status: u64 = install(context, slot, object, prepared);
+        transition status == 0u64 {
+            true -> block placed(gate, context, requester, incarnation, slot, object, login)
+            _ -> block unbound(gate, context, slot, status, login)
+        }
+    }
+    machine install(context: &mut State, slot: u64 [0..=4], object: u64, prepared: Prepared) -> u64 {
+        transition (context.last_granted & STORAGE) != 0u64 {
+            true -> (binding::install(context, slot, object, prepared))
+            _ -> (0u64)
+        }
+    }
+    machine unbound(gate: &Gate, context: &mut State, slot: u64 [0..=4], status: u64, login: bool) reaches Kernel {
+        block lifecycle::reclaim(gate, context, slot);
+        block answered(gate, context, refused(gate, status), login);
     }
     machine placed(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4], object: u64,
         login: bool) reaches Kernel {

@@ -1134,6 +1134,76 @@ The follow-up below moves shared storage exchanges into retained per-link work.
 Local launch reads and bindings remain the next continuation work, including
 recovery of the login picker on failed admission.
 
+### Stock matrix migration: launch binding preparation
+
+After `d3baf3da`, a child's launch refreshes storage authority before reading
+its executable. `storage/reads.omg` starts `exchange.omg::refreshed`: a nested
+matrix resumes STORAGE_INFO and BULK through the same receiver and under the
+original accepted deadline. Learning a different upstream binding invalidates
+the captured child grant before BULK may be sent. At the root the provider
+link is refreshed before the read; a newly supplied provider revokes the old
+grants. Its first handshake remains synchronous.
+
+`children/launch/launch.omg` rechecks its existing caller/policy proof, captures
+`storage/binding.omg::Prepared`, then admits without the old blocking bind.
+Prepared records the source connection, revision, realm and root/nested role.
+Its local installation checks that identity again and grants only the storage
+listener belonging to the admitted child. Failed installation reclaims the
+child; failed login admission still restores its picker. The picker remains
+alive during the query/read. No kernel, wire, stack or allowance change.
+
+Admission is still synchronous and dispatches neither child services nor owner
+commands between the authority check, intentional picker retirement and local
+grant installation. This is an explicit remaining boundary: when admission
+itself resumes across turns, retain/recheck the caller and target identities
+there too. Do not claim the whole launch is nonblocking. Owner grants, startup
+reads, listing, provider handshakes, funding and final scene activation still
+have synchronous callers.
+
+`omega_launch_test.py --binding` holds the binding reply until HEALTH and an
+input poll complete. `--binding --regrant` revokes the launcher's grant during
+that hold, then verifies refusal of the old launch, successful reuse and durable
+saves. These holds live only in the Rust fixture parent. The old matrix ELF
+from `d3baf3da` (SHA-256 `a704f11d50e6aef16721be3ca35cd32b410cc7d8180797982f3004cd155ab3cc`)
+was substituted into every installed matrix image with loadable-byte checks;
+it fails the held-binding liveness check at
+`build/boot-harness-rs/desktop/20261103T015242167607Z/` (log
+`build/omega-matrix-progress/binding-negative-final.log`).
+
+The changed matrix builds with the unchanged pinned producer, 380/496 load
+pages and the same 128-page stack. Native/component receipt inputs match the
+worktree; ELF SHA-256
+`17e942401abf4ac71e14f8c9b135f220895d03a8992b68cf5527986963d54194`.
+Final QEMU evidence, including cold reopen, under
+`build/boot-harness-rs/desktop/`:
+
+| Scenario | Artifact |
+| --- | --- |
+| Held binding, independent control/input, save and reuse | `20261103T015313743101Z/` |
+| Revoke/regrant during the held binding | `20261103T015353540465Z/` |
+| Revoke/regrant during the executable read | `20261103T015434438066Z/` |
+| Failed login restores its picker | `20261103T015511607884Z/` |
+| Full Omega desktop | `20261103T015555067907Z/` |
+| Three fresh and two cold depth-three soak cycles | `20261103T015701772971Z/` |
+| Selection cancellation through two relays | `20261103T015952935247Z/` |
+| Normal F5 desktop | `20261103T020146579794Z/` |
+| Undeclared optional storage, independent sibling binding | `20261103T020323422542Z/` |
+
+All 514 Rust host tests, target clippy with `interaction-delay,trace-storage`
+and warnings denied, Rust formatting, Python compilation, layout (148 Omega /
+153 Rust edges) and whitespace checks pass. The soak returns to the same root
+floor every cycle (8 private / 138 reader pages, 605 frames, 15 free slots) and
+provider floor (509 pages / 844 frames), with no failure markers. Notes launch
+was 2.09-3.88 s and close 1.27-2.31 s in that sample; these remain host-observed
+upper bounds. Final verification logs are `build/omega-matrix-progress/binding-`
+`held`, `revoke`, `read-revoke`, `invalid`, `desktop`, `soak`, `cancel`,
+`rust-desktop`, `no-storage`, `host`, `clippy`, `fmt` and `layout` `.log` files.
+
+Next: retained launch scene activation, then funding/admission and remaining
+owner/startup waits. Keep the saved caller/child generations and source receiver
+ownership through each transition. The earlier small Rust matrix-lab failure
+remains open; normal F5 continues to select the Rust matrix.
+
 ### Stock matrix migration: reply-space wake-ups
 
 After `0a0ec64e`, tracing the intermittent deep launch/close stalls exposed a

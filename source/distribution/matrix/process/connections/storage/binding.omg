@@ -112,3 +112,46 @@ public machine accept(context: &mut State, words: [u64; 8]) -> u64 {
     }
 }
 machine failed(code: u64) -> Outcome { let mut words: [u64; 8]; words[0] = code; Outcome { words: words, attachment: 0u64 } }
+
+// An executable was read through this refreshed source. Capture its identity
+// before retiring a login picker. Installing its child's grant does no IPC;
+// replacement or retirement of the source cannot inherit this preparation.
+public data Prepared [copy] {
+    status: u64;
+    index: u64 [0..=2];
+    receiver: u64;
+    revision: u64;
+    realm: u64;
+    root: bool;
+}
+public machine prepare(context: &State) -> Prepared {
+    transition context.store.root { true -> captured(context, 0u64) _ -> captured(context, UPSTREAM) }
+    machine captured(context: &State, index: u64 [0..=2]) -> Prepared {
+        let mut grant: Prepared;
+        grant.status = kernel::DENIED;
+        grant.index = index; grant.receiver = context.store.links[index].receiver;
+        grant.revision = context.store.revision; grant.realm = context.store.realm; grant.root = context.store.root;
+        transition context.store.linked[index] && context.store.links[index].fault == 0u64 && grant.receiver != 0u64
+            && (context.store.root || (context.store.has_upstream && context.store.informed && grant.revision != 0u64)) {
+            true -> accepted(grant)
+            _ -> (grant)
+        }
+    }
+    machine accepted(grant: Prepared) -> Prepared { let mut ready: Prepared = grant; ready.status = 0u64; ready }
+}
+public machine install(context: &mut State, slot: u64 [0..=4], subtree: u64, prepared: Prepared) -> u64 {
+    let current: Prepared = prepare(context);
+    transition prepared.status == 0u64 && current.status == 0u64 && context.slots[slot].live
+        && current.index == prepared.index && current.receiver == prepared.receiver
+        && current.revision == prepared.revision && current.realm == prepared.realm && current.root == prepared.root {
+        true -> installed(context, slot, subtree)
+        _ -> (kernel::DENIED)
+    }
+    machine installed(context: &mut State, slot: u64 [0..=4], subtree: u64) -> u64 {
+        let available: u64 = sources(context);
+        let status: u64 = scopes::grant(&mut context.store.scopes, slot, context.store.listeners[slot].incarnation, 0u64, subtree, available);
+        transition status == 0u64 { true -> healthy(context) _ -> (status) }
+    }
+    machine healthy(context: &mut State) -> u64 { context.store.failed = context.store.failed & ~1u64; 0u64 }
+    machine sources(context: &State) -> u64 { transition context.store.root { true -> (2u64) _ -> (1u64) } }
+}

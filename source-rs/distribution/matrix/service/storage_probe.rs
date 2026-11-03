@@ -1,5 +1,6 @@
 //! F2 arms PUBLISH; pressing it twice arms BULK, three times returns a bad
 //! executable after BULK, four times revokes and regrants the launcher scope.
+//! Five presses hold the binding refresh; six revoke/regrant during it.
 //! Each hold waits until the child answers HEALTH and polls
 //! its interaction connection. The exact sealed input stays in the retained Event.
 //! This is a Rust fixture parent, never a probe in the shipped Omega program.
@@ -111,7 +112,7 @@ impl Gate {
             let event = self.pending.take().expect("held storage request");
             if self.invalid_image {
                 let Event::Request(request) = event else {
-                    panic!("BULK has no input attachment");
+                    panic!("read/binding query has no input attachment");
                 };
                 let words = wire::decode(&request.bytes[..request.len]).unwrap();
                 let mut page = cathedral_user_runtime::memory::Private::allocate(1)?;
@@ -149,13 +150,15 @@ impl Gate {
             && key == input::F2 as u64
         {
             if state == input::PRESS as u64 && !self.active() {
-                self.mode = self.mode % 4 + 1;
+                self.mode = self.mode % 6 + 1;
                 time::storage_sample(
                     match self.mode {
                         1 => "storage-delay-armed",
                         2 => "storage-read-armed",
                         3 => "storage-invalid-armed",
-                        _ => "storage-regrant-armed",
+                        4 => "storage-regrant-armed",
+                        5 => "storage-binding-armed",
+                        _ => "storage-binding-regrant-armed",
                     },
                     &[],
                 );
@@ -173,12 +176,11 @@ impl Gate {
         }
         if self.mode != 0
             && (words[0] & 0xffff)
-                == wire::STORAGE_BASE
-                    + if self.mode == 1 {
-                        storage::PUBLISH
-                    } else {
-                        storage::BULK
-                    }
+                == match self.mode {
+                    1 => wire::STORAGE_BASE + storage::PUBLISH,
+                    5 | 6 => wire::STORAGE_INFO,
+                    _ => wire::STORAGE_BASE + storage::BULK,
+                }
             && request.client.is_some_and(|c| parent.storage_stream(c))
         {
             if self.mode == 1 {
@@ -189,9 +191,16 @@ impl Gate {
             } else {
                 assert!(
                     matches!(&event, Event::Request(_)),
-                    "BULK has no input attachment"
+                    "read/binding query has no input attachment"
                 );
-                time::storage_sample("storage-read-held", &[words[1]]);
+                time::storage_sample(
+                    if self.mode >= 5 {
+                        "storage-binding-held"
+                    } else {
+                        "storage-read-held"
+                    },
+                    &[words[1]],
+                );
             }
             self.child = parent.storage_slot(request.client.unwrap());
             self.incarnation = server.incarnation(self.child).expect("live child");
@@ -200,7 +209,7 @@ impl Gate {
             self.healthy = false;
             self.polled = false;
             self.invalid_image = self.mode == 3;
-            self.regrant = if self.mode == 4 { 1 } else { 0 };
+            self.regrant = if matches!(self.mode, 4 | 6) { 1 } else { 0 };
             self.mode = 0;
             self.pending = Some(event);
             world.notify(self.child);

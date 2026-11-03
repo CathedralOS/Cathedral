@@ -69,7 +69,7 @@ public machine step(gate: &Gate, context: &mut State, now: u64) reaches Kernel b
         let words: [u64; 8] = context.store.read.words;
         let incarnation: u64 = context.store.read.incarnation;
         let revision: u64 = context.store.read.revision;
-        let status: u64 = block exchange::start(gate, context, now, 0u64, words, 0u64, owner, incarnation, revision, false);
+        let status: u64 = block exchange::refreshed(gate, context, now, 0u64, words, owner, incarnation, revision);
         transition status == 0u64 { true -> waiting(context) _ -> refused(context, status) }
     }
     machine waiting(context: &mut State) { context.store.read.phase = 2u64; }

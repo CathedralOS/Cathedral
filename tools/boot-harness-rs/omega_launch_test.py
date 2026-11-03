@@ -1,6 +1,6 @@
-"""Hold an executable read while the real Omega matrix services control and input.
+"""Hold launch storage work while the real Omega matrix services control and input.
 
-The Rust fixture alone injects the hold. An invalid executable additionally
+The Rust fixture alone holds an executable read or its binding refresh. An invalid executable additionally
 checks that a nested login restores its picker after failed admission.
 """
 import argparse
@@ -12,7 +12,7 @@ import omega_parent_poll_test
 from nested_desktop_test import Nested
 
 
-def exercise(output, click, key, scan, width, height, reboot, invalid=False, regrant=False):
+def exercise(output, click, key, scan, width, height, reboot, invalid=False, regrant=False, binding=False):
     n = Nested(click, key, scan, width, height)
     log = lambda: (output / 'serial.log').read_text(encoding='utf-8', errors='replace')
     if invalid:
@@ -27,25 +27,21 @@ def exercise(output, click, key, scan, width, height, reboot, invalid=False, reg
         left = x + (w - 280) // 2
         n.label(left + 28, top + 76, 'USER 1')
     start = len(log())
-    key('f2')
-    scan(lambda _w, _d: 'storage-delay-armed' in log()[start:], 'write hold armed')
-    key('f2')
-    scan(lambda _w, _d: 'storage-read-armed' in log()[start:], 'executable hold armed')
-    if invalid or regrant:
+    markers = ['storage-delay-armed', 'storage-read-armed', 'storage-invalid-armed',
+               'storage-regrant-armed', 'storage-binding-armed', 'storage-binding-regrant-armed']
+    count = (6 if regrant else 5) if binding else 4 if regrant else 3 if invalid else 2
+    for marker in markers[:count]:
         key('f2')
-        scan(lambda _w, _d: 'storage-invalid-armed' in log()[start:], 'invalid executable armed')
-    if regrant:
-        key('f2')
-        scan(lambda _w, _d: 'storage-regrant-armed' in log()[start:], 'regrant hold armed')
+        scan(lambda _w, _d, marker=marker: marker in log()[start:], marker)
     if invalid:
         click(left + 64, top + 48)
     else:
         n.launch(0, 0)
-    scan(lambda _w, _d: 'storage-delay-released' in log()[start:], 'read released after independent work')
+    scan(lambda _w, _d: 'storage-delay-released' in log()[start:], 'storage operation released after independent work')
     events = log()[start:]
     for marker in ('storage-health-during-hold', 'storage-poll-during-hold'):
         assert events.index('storage-delay-held') < events.index(marker) < events.index('storage-delay-released')
-    assert events.count('storage-read-held') == 1
+    assert events.count('storage-binding-held' if binding else 'storage-read-held') == 1
     if regrant:
         scan(lambda _w, _d: 'storage-grant-restored' in log()[start:], 'launcher grant restored')
         scan(lambda _w, _d: 'Cathedral matrix: launch refused' in log()[start:], 'old launch refused')
@@ -83,7 +79,7 @@ def exercise(output, click, key, scan, width, height, reboot, invalid=False, reg
         n.app_close(0)
         n.background(0)
     assert not omega_desktop_test.failed_children(log()), log()[-4000:]
-    print('PASS: executable read yielded; ' + ('admission recovery' if invalid else
+    print('PASS: ' + ('binding refresh' if binding else 'executable read') + ' yielded; ' + ('admission recovery' if invalid else
           'regrant refused old launch, new launch saved and cold reopened' if regrant else
           'save, slot reuse and cold reopen'))
 
@@ -93,5 +89,8 @@ if __name__ == '__main__':
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--invalid', action='store_true', help='return a malformed executable to a nested login')
     group.add_argument('--regrant', action='store_true', help='revoke the launch scope during its read, then grant it anew')
+    parser.add_argument('--binding', action='store_true', help='hold the launch binding query instead of the executable read')
     args = parser.parse_args()
-    omega_parent_poll_test.main(user_check=partial(exercise, invalid=args.invalid, regrant=args.regrant), label='omega-launch')
+    if args.binding and args.invalid:
+        parser.error('--binding does not supply an invalid executable')
+    omega_parent_poll_test.main(user_check=partial(exercise, invalid=args.invalid, regrant=args.regrant, binding=args.binding), label='omega-launch')

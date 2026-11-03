@@ -355,7 +355,11 @@ its picker is restored, then selects the same user successfully. Only the Rust
 fixture supplies these failures: F2 once arms a write, twice a read, three times
 an invalid image, four times a revoke/regrant during the held read.
 `--regrant` checks that the old launch is refused and a new one works after the
-grant is restored. No test mode is added to the Omega process. Storage binding
+grant is restored. `--binding` holds the binding refresh that now precedes the
+executable read; combine it with `--regrant` to revoke during that query. The
+fixture arms those two cases with five or six F2 presses. The refreshed source
+is checked before admission and its prepared grant is installed locally. No
+test mode is added to the Omega process. Owner grants, first provider handshakes
 and final launch scene activation still have synchronous waits.
 
 The actual root-compositor boundary is exercised by

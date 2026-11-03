@@ -41,35 +41,46 @@ public machine ready(context: &State, index: u64 [0..=2], owner: u64) -> bool {
 // A successful start reserves this link; a refusal leaves it and object alone.
 public machine start(gate: &Gate, context: &mut State, now: u64, source: u64, request: [u64; 8], object: u64,
     owner: u64, incarnation: u64, revision: u64, info: bool) -> u64 reaches Kernel blocks invokes Kernel {
+    block begin(gate, context, now, source, request, object, owner, incarnation, revision, info, false)
+}
+// Launch reads refresh authority before reading the image, under the same
+// accepted deadline and receiver. A changed binding invalidates the caller's
+// captured grant before SEND, rather than granting a child after stale admission.
+public machine refreshed(gate: &Gate, context: &mut State, now: u64, source: u64, request: [u64; 8],
+    owner: u64, incarnation: u64, revision: u64) -> u64 reaches Kernel blocks invokes Kernel {
+    block begin(gate, context, now, source, request, 0u64, owner, incarnation, revision, false, true)
+}
+machine begin(gate: &Gate, context: &mut State, now: u64, source: u64, request: [u64; 8], object: u64,
+    owner: u64, incarnation: u64, revision: u64, info: bool, fresh: bool) -> u64 reaches Kernel {
     let index: u64 = link_of(context, source);
     let deadline: u64 = scope::deadline(now, request[7], STORAGE_DEADLINE_TICKS);
     transition {
         source >= 2u64 || index > 2u64 || owner == 0u64 || owner > READ + 4u64 -> (kernel::DENIED)
         deadline == 0u64 -> (kernel::TIMED_OUT)
-        _ -> block available(gate, context, now, index, request, object, owner, incarnation, revision, info, deadline)
+        _ -> block available(gate, context, now, index, request, object, owner, incarnation, revision, info, deadline, fresh)
     }
     machine available(gate: &Gate, context: &mut State, now: u64, index: u64 [0..=2], request: [u64; 8], object: u64,
-        owner: u64, incarnation: u64, revision: u64, info: bool, deadline: u64) -> u64 reaches Kernel {
+        owner: u64, incarnation: u64, revision: u64, info: bool, deadline: u64, fresh: bool) -> u64 reaches Kernel {
         transition idle(context, index) {
-            true -> block connected(gate, context, now, index, request, object, owner, incarnation, revision, info, deadline)
+            true -> block connected(gate, context, now, index, request, object, owner, incarnation, revision, info, deadline, fresh)
             _ -> (kernel::BUSY)
         }
     }
     machine connected(gate: &Gate, context: &mut State, now: u64, index: u64 [0..=2], request: [u64; 8], object: u64,
-        owner: u64, incarnation: u64, revision: u64, info: bool, deadline: u64) -> u64 reaches Kernel {
-        let status: u64 = block binding::client(gate, context, now, index);
+        owner: u64, incarnation: u64, revision: u64, info: bool, deadline: u64, fresh: bool) -> u64 reaches Kernel {
+        let status: u64 = block source_ready(gate, context, now, index, fresh);
         transition status == 0u64 {
-            true -> block reserved(gate, context, now, index, request, object, owner, incarnation, revision, info, deadline)
+            true -> block reserved(gate, context, now, index, request, object, owner, incarnation, revision, info, deadline, fresh)
             _ -> (status)
         }
     }
     machine reserved(gate: &Gate, context: &mut State, now: u64, index: u64 [0..=2], request: [u64; 8], object: u64,
-        owner: u64, incarnation: u64, revision: u64, info: bool, deadline: u64) -> u64 reaches Kernel {
+        owner: u64, incarnation: u64, revision: u64, info: bool, deadline: u64, fresh: bool) -> u64 reaches Kernel {
         let mut work: Exchange;
         work.owner = owner; work.incarnation = incarnation; work.revision = revision;
         work.deadline = deadline; work.request = request; work.object = object;
         work.info_only = info; work.previous = context.store.revision;
-        work.phase = initial_phase(index, info || !context.store.informed);
+        work.phase = initial_phase(index, fresh || info || !context.store.informed);
         context.store.exchanges[index] = work;
         // Opening a provider link may have waited; never send against its old tick.
         let tick: Tick = runtime::time::read(gate, context.clock);
@@ -83,6 +94,14 @@ public machine start(gate: &Gate, context: &mut State, now: u64, source: u64, re
     }
     machine unavailable(gate: &Gate, context: &mut State, index: u64 [0..=2], code: u64) -> u64 reaches Kernel {
         block failure(gate, context, index, code); 0u64
+    }
+}
+// Root provider replacement can still require the transitional first-link
+// handshake; the ordinary nested binding query advances through INFO_SEND/WAIT.
+machine source_ready(gate: &Gate, context: &mut State, now: u64, index: u64 [0..=2], fresh: bool) -> u64 reaches Kernel {
+    transition fresh && context.store.root && index < 2u64 {
+        true -> block binding::relink(gate, context, now, index)
+        _ -> block binding::client(gate, context, now, index)
     }
 }
 machine initial_phase(index: u64, inform: bool) -> u64 {
