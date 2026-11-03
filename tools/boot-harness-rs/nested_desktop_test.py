@@ -39,8 +39,9 @@ class Nested:
         self.click(x+40+56*index, y+h-48)
 
     def task_close(self, depth, index=0):
+        # The stock outer realm has five launch tiles; nested realms have three.
         x,y,w,h = self.viewport(depth)
-        self.click(x+376+(56 if depth == 0 else 0)+144*index, y+h-48)
+        self.click(x+376+(56 if depth == 0 else -56)+144*index, y+h-48)
 
     def app_close(self, depth):
         x,y,w,h = self.viewport(depth)

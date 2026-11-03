@@ -52,8 +52,9 @@ def exercise(output, click, key, scan, width, height, reboot, invalid=False, reg
         n.launch(0, 0)
     if invalid:
         scan(lambda _w, _d: 'storage-invalid-image' in log()[start:], 'invalid executable returned')
-        # Wait for the original picker to retire and its replacement to stand.
-        scan(lambda _w, _d: 'local picker restored' in log()[start:], 'replacement picker restored')
+        # Resource planning rejects this image before retiring the picker.
+        scan(lambda _w, _d: 'Cathedral matrix: launch refused' in log()[start:], 'invalid launch refused')
+        assert 'local picker restored' not in log()[start:], log()[start:]
         n.label(left + 28, top + 76, 'USER 1')
         click(left + 64, top + 48)
         n.desktop(1)
@@ -79,7 +80,7 @@ def exercise(output, click, key, scan, width, height, reboot, invalid=False, reg
         n.app_close(0)
         n.background(0)
     assert not omega_desktop_test.failed_children(log()), log()[-4000:]
-    print('PASS: ' + ('binding refresh' if binding else 'executable read') + ' yielded; ' + ('admission recovery' if invalid else
+    print('PASS: ' + ('binding refresh' if binding else 'executable read') + ' yielded; ' + ('invalid image leaves the picker usable' if invalid else
           'regrant refused old launch, new launch saved and cold reopened' if regrant else
           'save, slot reuse and cold reopen'))
 

@@ -4,6 +4,8 @@ module state;
 // the storage, each child slot's admission, policy, funding and batch, the
 // workspace's instances and the realm setup's progress.
 use parent;
+use admission;
+use funding;
 use storage::Exchange;
 use storage::Relay;
 use storage::Read;
@@ -52,10 +54,13 @@ public data SlotPolicy [copy] {
     standing: bool;
 }
 // A child launch owns its target through image read, admission and activation.
-// Phase 1 reads, 2 admits synchronously, 3 awaits the shared scene transaction.
+// Phase 1 reads, 4 funds with the sealed image retained, 2 admits synchronously,
+// and 3 awaits the shared scene transaction.
 // Policies and both connection identities are captured before yielding.
 public data Launch {
     phase: u64;
+    image: u64;
+    plan: admission::Plan;
     requester: u64 [0..=4];
     incarnation: u64;
     storage_incarnation: u64;
@@ -122,6 +127,7 @@ public data State {
     // and whether its last snapshot left more to take.
     parent: Services;
     parent_work: parent::Pending;
+    funding_work: [funding::Work; 6];
     presentation_work: presentation::Transfer;
     selection_work: presentation::Switch;
     next_child: u64 [0..=4];

@@ -127,8 +127,11 @@ machine launching(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: T
     }
 }
 machine funding(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket, frame: Frame, now: u64) -> u64 reaches Kernel {
-    let reply: [u64; 8] = block funding::fund(gate, context, now, slot, frame.payload);
-    block answered(gate, context, slot, issued, reply)
+    let result: Submission = funding::fund(context, slot, frame.payload);
+    transition result {
+        Submission::Pending -> (0u64)
+        Submission::Answer { words } -> block answered(gate, context, slot, issued, words)
+    }
 }
 // A held close is answered when the target has said what it would lose.
 machine closing(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket, frame: Frame, incarnation: u64, now: u64) -> u64 reaches Kernel {

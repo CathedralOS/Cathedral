@@ -28,7 +28,7 @@ public machine begin(context: &mut State, slot: u64 [0..=4], revision: u64, comp
         _ -> retained(context, slot, ticket, revision, compact)
     }
     machine held(context: &mut State, slot: u64 [0..=4], ticket: Ticket, revision: u64, compact: bool) -> u64 {
-        let status: u64 = deferred::hold(&mut context.slots[slot].listener, ticket);
+        let status: u64 = responses::retain(context, slot, ticket);
         transition status == 0u64 { true -> retained(context, slot, ticket, revision, compact) _ -> (status) }
     }
     machine retained(context: &mut State, slot: u64 [0..=4], ticket: Ticket, revision: u64, compact: bool) -> u64 {

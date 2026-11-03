@@ -9,7 +9,7 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Current executable handoff: [launch scene activation](#stock-matrix-migration-launch-scene-activation).
+Current executable handoff: [launch funding](#stock-matrix-migration-launch-funding).
 That entry records the latest verified image and next work; earlier migration
 entries below are historical milestones.
 
@@ -1137,6 +1137,103 @@ complete. The previously recorded small Rust matrix-lab failure is unchanged.
 The follow-up below moves shared storage exchanges into retained per-link work.
 Local launch reads and bindings remain the next continuation work, including
 recovery of the login picker on failed admission.
+
+### Stock matrix migration: launch funding
+
+This slice separates executable planning, funding and admission. A child's
+LAUNCH retains its sealed image and the plan from
+`children/launch/resources.omg`, returns to the event loop while funding waits,
+then rechecks the caller, storage grant, policy and target before admitting it.
+The login picker stays alive during both the read and funding. The four-byte
+invalid-image fixture now fails planning before picker retirement;
+`omega_launch_test.py --invalid` checks the original picker remains usable and
+can launch the same user. It no longer exercises post-retirement recovery.
+
+`children/funding.omg` retains one FUND per child plus one local admission.
+Each child request carries its exact reply ticket and reservation; a retired
+requester cannot grow a replacement child. An accepted parent request drains
+even after cancellation. Any upstream grant remains this matrix's allowance;
+it does not authorize a cancelled launch. The parent connection correlates poll,
+visual and funding replies separately, sharing the existing two-request window.
+Owner/setup admission still has a synchronous funding wrapper over that receiver.
+
+The nested test found a second interaction: a held FUND occupied the listener's
+deferred slot, and forwarding a simultaneous image treated BUSY as a fatal error.
+`connections/responses.omg::retain` now keeps that second request current when
+the deferred slot is occupied. Both exact tickets and their attachments remain
+owned, with backpressure until a reply settles. Funding, launch, selection and
+publication use the same helper. No extra IPC slots, kernel mechanism, wire
+change, stack increase or resource allowance increase.
+
+`omega_funding_test.py` holds a real parent FUND in the Rust fixture and requires
+HEALTH, input polling and an actual edited Notes frame before release. It saves
+and cold-reopens the exact draft. `--refuse` denies the grant; `--regrant` revokes
+and restores launcher authority while funding waits. Both refuse the old launch
+and then reuse its slot successfully. `--nested` holds the grant beyond
+intermediate Omega matrices, checking child forwarding as well as local waits.
+The test-only `funding-delay` Cargo feature cycles the three F2 modes; no Omega
+probe or production gate is added. The nested close helper now accounts for its
+three launch tiles, rather than the outer realm's five.
+
+The baseline `c293848c` ELF, SHA-256
+`a8b3c4e84e67bf50922cf93f4029d52ce270bb9365ca5761304f758cb30b87f2`,
+fails the new fixture because it cannot answer HEALTH during FUND:
+`build/boot-harness-rs/desktop/20261103T025802721218Z/`,
+`build/omega-matrix-progress/funding-negative.log`.
+
+The unchanged pinned producer builds the new image at 383/496 load pages,
+with the existing 128-page stack. Component and native receipts match all
+180 and 9 inputs respectively. ELF SHA-256:
+`af0ec699336413119059bf7c881a5771c8524073a7109b3562dc7bfc3f7d4b1d`.
+
+All fourteen standard QEMU scenarios pass, each including cold reopen.
+Evidence under `build/boot-harness-rs/desktop/`:
+
+| Scenario | Artifact |
+| --- | --- |
+| Held funding, input and actual Notes rendering | `20261103T031911078667Z/` |
+| Funding refusal and successful retry | `20261103T031958764970Z/` |
+| Launcher authority revoke/regrant during funding | `20261103T032050256529Z/` |
+| Funding forwarded through intermediate Omega matrices | `20261103T031807193797Z/` |
+| Invalid executable preserves the login picker | `20261103T032141797960Z/` |
+| Launch binding revoke/regrant | `20261103T032231617097Z/` |
+| Launch scene refusal, reclamation and reuse | `20261103T032310385152Z/` |
+| Late STOP during launch activation | `20261103T032411945356Z/` |
+| Existing-app selection and refusal | `20261103T032514608356Z/` |
+| Display holds and refused commit | `20261103T032615922408Z/` |
+| Full Omega desktop and host storage oracle | `20261103T032752969703Z/` |
+| Three fresh and two cold depth-three soak cycles | `20261103T034136002702Z/` |
+| Undeclared optional storage, independent sibling binding | `20261103T034510882988Z/` |
+| Normal F5 desktop | `20261103T034601795643Z/` |
+
+All 514 Rust host tests pass, as do stock matrix target clippy with
+`funding-delay,trace-storage` and `interaction-delay,trace-storage`, Rust format,
+Python compilation, layout (148 Omega / 153 Rust package edges) and whitespace
+checks. Logs are `build/omega-matrix-progress/funding-*.log`.
+The standard soak returns to the same root floor every cycle (8 private /
+138 reader pages, 608 frames, 15 free slots) and provider floor (509 pages /
+844 frames). The additional root frame matches the image's one-page growth.
+Heap peak was 1,957,288 of 2,076,672 bytes. Notes launch was 3.30-4.14 s and close
+1.67-2.75 s in this run: host-observed upper bounds, not latency guarantees.
+
+An additional `--soak 3 --nested-depth 3 --pointer-stress` run passed three
+fresh cycles and the first cold cycle, then refused the last subtree close
+with "UNSAVED WORK" after Notes had saved and closed. No panic or fault was
+reported. Busy/uncertain LOSS is conservatively refused; the exact refusing
+hop is not yet instrumented, so this stress case remains unresolved. Preserve
+`build/boot-harness-rs/desktop/20261103T032900185090Z/` and
+`build/omega-matrix-progress/funding-soak-pointer-stress.log`. Diagnose that
+close outcome without interpreting BUSY, timeout or a late clean reply as
+permission to stop. This is not a passing stress result.
+
+Next: kernel spawn/brokered admission, owner/startup operations, first provider
+handshakes and retirement fallback still contain synchronous waits. Do not claim
+the whole launch is nonblocking. A deterministic failure after picker retirement
+is still worth retaining when admission itself is made resumable. An observability
+gap also surfaced: the native matrix entry discards Program::run's failure code,
+so cleanup after a failed turn can look like a normal zero-status process exit.
+Normal F5 remains on the Rust matrix until parity. The previously recorded small
+Rust matrix-lab failure remains open and is not covered by this slice.
 
 ### Stock matrix migration: launch scene activation
 

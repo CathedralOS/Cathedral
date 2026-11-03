@@ -1,0 +1,15 @@
+module funding;
+// Five child requests and one local admission. A pending upstream reply belongs
+// to its original work item until drained, even if that requester disappears.
+use runtime::server::main::Ticket;
+use policy::children::launch::resources::funding::Grant;
+public data Phase [copy] { case Idle; case Cover; case Waiting; case Slots; case WaitingSlots; case Finished; }
+public data Work [copy] {
+    phase: Phase;
+    ticket: Ticket;
+    reservation: u64;
+    needed: [u64; 5];
+    grant: Grant;
+    status: u64;
+    cancelled: bool;
+}

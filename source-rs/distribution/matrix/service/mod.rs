@@ -6,6 +6,8 @@ mod children;
 mod deferred;
 #[cfg(feature = "interaction-delay")]
 mod delay_probe;
+#[cfg(feature = "interaction-delay")]
+mod funding_probe;
 mod host;
 mod parent;
 mod requests;

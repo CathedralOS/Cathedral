@@ -1,0 +1,15 @@
+module admission;
+// A checked sealed image's resource plan. Funding may wait without publishing
+// allocations or overwriting another launch's allotted surface values.
+public data Plan [copy] {
+    status: u64;
+    stage: u64;
+    mask: u64;
+    private_pages: u64;
+    reader_pages: u64;
+    channels: u64;
+    descendants: u64 [0..=63];
+    frames: u64;
+    surfaces: u64;
+    profiled: bool;
+}

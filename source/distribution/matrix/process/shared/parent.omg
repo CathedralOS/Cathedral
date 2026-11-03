@@ -1,5 +1,5 @@
 module parent;
-// The parent's broker has two logical callers. A completed snapshot remains
+// The parent's broker has three logical callers. A completed snapshot remains
 // here until the World's input retirement boundary allows it to be adopted.
 public data Pending {
     poll: u64;
@@ -8,4 +8,7 @@ public data Pending {
     visual: u64;
     visual_ready: bool;
     answer: [u64; 8];
+    funding: u64;
+    funding_ready: bool;
+    funding_answer: [u64; 8];
 }

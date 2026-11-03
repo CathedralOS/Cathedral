@@ -351,7 +351,7 @@ Add `--nested` to pass the write through another desktop and its containment che
 behind an app launch. The stock Omega matrix must answer HEALTH and poll input
 before release; Notes then saves, closes and reopens across both boots.
 `--invalid` returns a malformed executable during a nested login, checks that
-its picker is restored, then selects the same user successfully. Only the Rust
+its picker remains usable, then selects the same user successfully. Only the Rust
 fixture supplies these failures: F2 once arms a write, twice a read, three times
 an invalid image, four times a revoke/regrant during the held read.
 `--regrant` checks that the old launch is refused and a new one works after the
@@ -360,7 +360,7 @@ executable read; combine it with `--regrant` to revoke during that query. The
 fixture arms those two cases with five or six F2 presses. The refreshed source
 is checked before admission and its prepared grant is installed locally. No
 test mode is added to the Omega process. Owner grants, first provider handshakes
-and funding/admission still have synchronous waits.
+and kernel spawn/brokered admission still have synchronous waits.
 
 `python tools/boot-harness-rs/omega_launch_scene_test.py` holds the scene commit
 that activates a newly launched app. HEALTH and input polling must continue;
@@ -371,6 +371,16 @@ the old scene must be restored before the new child is reclaimed and STOP is
 acknowledged. Both variants save and verify the draft after cold reboot. The
 same scene transaction handles existing-app selection and new-app activation;
 only the launch owns the receipt and cleanup of the newly admitted child.
+
+`python tools/boot-harness-rs/omega_funding_test.py` holds the parent FUND
+behind a nested-OS launch. The real Omega child must answer HEALTH, poll input
+and visibly update Notes before the reply arrives. `--refuse` denies the grant;
+`--regrant` revokes and restores the launcher's storage authority during the
+wait. Both must refuse the original launch and permit a new one. `--nested`
+places intermediate Omega matrices between the launch and the held grant,
+checking forwarded child funding as well as local admission. Every case saves
+and cold-reopens the exact draft. The Rust parent's `funding-delay` feature
+cycles these three holds with F2; ordinary F5 and the Omega process have no gate.
 
 The actual root-compositor boundary is exercised by
 `python tools/boot-harness-rs/omega_display_wait_test.py`: images, commits,

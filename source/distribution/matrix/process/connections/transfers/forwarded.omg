@@ -25,7 +25,7 @@ public machine begin(gate: &Gate, context: &mut State, slot: u64 [0..=4], frame:
     }
     machine held(gate: &Gate, context: &mut State, slot: u64 [0..=4], ticket: Ticket, frame: Frame, packet: [u64; 8], object: u64)
         -> u64 reaches Kernel {
-        let status: u64 = deferred::hold(&mut context.slots[slot].listener, ticket);
+        let status: u64 = responses::retain(context, slot, ticket);
         transition status == 0u64 {
             true -> retained(context, slot, ticket, frame, packet, object)
             _ -> block refused(gate, object, status)

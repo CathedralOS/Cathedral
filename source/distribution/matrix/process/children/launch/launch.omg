@@ -38,6 +38,9 @@ use stored;
 use policy::children::startup::main::RetirementEffect;
 use launch::placement;
 use launch::authority;
+use launch::resources;
+use shared::admission::Plan;
+use funding;
 
 public machine begin(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarnation: u64,
     words: [u64; 8]) -> Submission reaches Kernel invokes Kernel {
@@ -106,13 +109,14 @@ public machine begin(gate: &Gate, context: &mut State, requester: u64 [0..=4], i
 }
 machine hold(context: &mut State, slot: u64 [0..=4], ticket: Ticket) -> u64 {
     transition context.slots[slot].listener.peer.pipeline {
-        true -> (deferred::hold(&mut context.slots[slot].listener, ticket))
+        true -> (responses::retain(context, slot, ticket))
         _ -> (0u64)
     }
 }
 public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
-    transition context.launch.phase == 1u64 {
-        true -> block progress(gate, context)
+    transition {
+        context.launch.phase == 1u64 -> block progress(gate, context)
+        context.launch.phase == 4u64 -> block funded(gate, context)
         _ -> done()
     }
     machine progress(gate: &Gate, context: &mut State) reaches Kernel {
@@ -137,13 +141,66 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
             !valid -> block failed(gate, context, image.attachment, kernel::DENIED)
             image.words[0] != 0u64 -> block failed(gate, context, image.attachment, image.words[0])
             image.attachment == 0u64 -> block failed(gate, context, 0u64, kernel::IO_ERROR)
-            _ -> block admitted(gate, context, image, now)
+            _ -> block planned(gate, context, image, now)
         }
     }
     machine failed(gate: &Gate, context: &mut State, image: u64, code: u64) reaches Kernel {
         block exchange::release(gate, image);
         let words: [u64; 8] = refused(gate, code);
         block answered(gate, context, words, false);
+    }
+    machine planned(gate: &Gate, context: &mut State, image: Outcome, now: u64) reaches Kernel {
+        let policy: SlotPolicy = context.launch.policy;
+        let capacity: Capacity = Capacity { private_pages: policy.private_pages, reader_pages: policy.reader_pages,
+            channels: policy.channels, descendants: policy.descendants };
+        let desktop: bool = context.desktop && context.launch.slot >= 1u64 && context.launch.slot <= 3u64;
+        let plan: Plan = block resources::prepare(gate, image.attachment, image.words[4], context.launch.offered, capacity, 0u64, desktop);
+        transition plan.status == 0u64 {
+            true -> block request_funding(gate, context, image, plan)
+            _ -> block failed(gate, context, image.attachment, plan.status)
+        }
+    }
+    machine request_funding(gate: &Gate, context: &mut State, image: Outcome, plan: Plan) reaches Kernel {
+        let status: u64 = funding::begin(context, resources::needed(plan));
+        transition status == 0u64 {
+            true -> retained(context, image, plan)
+            _ -> block failed(gate, context, image.attachment, status)
+        }
+    }
+    machine retained(context: &mut State, image: Outcome, plan: Plan) {
+        context.launch.image = image.attachment;
+        context.launch.plan = plan;
+        context.launch.phase = 4u64;
+    }
+    machine funded(gate: &Gate, context: &mut State) reaches Kernel {
+        let valid: bool = authority::valid(context);
+        cancel_funding(context, valid);
+        let requester: u64 [0..=4] = context.launch.requester;
+        let available: bool = funding::ready(context);
+        transition available && !context.presentation_work.active && !context.answers[requester].active {
+            true -> block ready(gate, context, valid)
+            _ -> done()
+        }
+    }
+    machine cancel_funding(context: &mut State, valid: bool) {
+        transition valid { true -> done() _ -> funding::cancel(context) }
+    }
+    machine ready(gate: &Gate, context: &mut State, valid: bool) reaches Kernel {
+        let status: u64 = funding::take(context);
+        let mut image: Outcome; image.attachment = context.launch.image;
+        context.launch.image = 0u64;
+        transition {
+            !valid -> block failed(gate, context, image.attachment, kernel::DENIED)
+            status != 0u64 -> block failed(gate, context, image.attachment, status)
+            _ -> block timed(gate, context, image)
+        }
+    }
+    machine timed(gate: &Gate, context: &mut State, image: Outcome) reaches Kernel {
+        let tick: Tick = runtime::time::read(gate, context.clock);
+        transition tick {
+            Tick::Read { value } -> block admitted(gate, context, image, value)
+            Tick::Failed { code } -> block failed(gate, context, image.attachment, code)
+        }
     }
     machine admitted(gate: &Gate, context: &mut State, image: Outcome, now: u64) reaches Kernel {
         let prepared: Prepared = binding::prepare(context);
@@ -162,9 +219,8 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
         let login: bool = context.login && requester == 0u64 && slot == 1u64;
         context.launch.phase = 2u64;
         block retire_picker(gate, context, login);
-        let desktop_app: bool = context.desktop && slot != 0u64 && slot != 4u64;
-        let status: u64 = block stored::admit_image(gate, context, now, slot, image.attachment, image.words[4], object, 0u64,
-            policy.channels, policy.descendants, policy.cpu, policy.private_pages, policy.reader_pages, 0u64, offered, desktop_app, false);
+        let plan: Plan = context.launch.plan;
+        let status: u64 = block stored::admit_plan(gate, context, now, slot, object, 0u64, policy.cpu, image.attachment, plan, false);
         block exchange::release(gate, image.attachment);
         transition status == 0u64 {
             true -> block bound(gate, context, requester, incarnation, slot, object, login, prepared)
@@ -206,6 +262,11 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
 public machine presented(gate: &Gate, context: &mut State, status: u64) reaches Kernel blocks invokes Kernel {
     let words: [u64; 8] = block placement::finish(gate, context, status);
     block answered(gate, context, words, false);
+}
+// The sealed executable belongs to the launch while its funding reply waits.
+public machine discard(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
+    let image: u64 = context.launch.image; context.launch.image = 0u64;
+    block exchange::release(gate, image);
 }
 machine invalidate(context: &mut State, valid: bool) {
     transition valid { true -> done() _ -> cancelled(context) }

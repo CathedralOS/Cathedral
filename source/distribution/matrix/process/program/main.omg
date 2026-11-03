@@ -35,6 +35,7 @@ use children::slots;
 use children::selection;
 use children::launch::launch;
 use children::lifecycle;
+use children::funding;
 use connections::presentation;
 use connections::transfers::transfer;
 use connections::transfers::maintenance;
@@ -77,6 +78,7 @@ machine turn(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
     block selection::step(gate, context);
     block transfer::step(gate, context);
     let stored: u64 = block storage::step(gate, context, now);
+    block funding::step(gate, context);
     block launch::step(gate, context);
     lifecycle::notify(gate, context);
     let flushed: u64 = block presentation::flush_turn(gate, context);
@@ -116,7 +118,7 @@ machine park_ticks(context: &State) -> u64 {
         context.presentation_work.active && !context.presentation_work.submitted -> (1u64)
         context.presentation_work.active -> (OWED_TICKS)
         context.scene_owner.active || queued_children(context, 0u64) -> (1u64)
-        context.frame_count != 0u64 || context.configure_queued || context.launch.phase != 0u64 -> (1u64)
+        context.frame_count != 0u64 || context.configure_queued || context.launch.phase != 0u64 || funding::pending(context) -> (1u64)
         context.refresh_due || context.parent_work.poll_ready -> (OWED_TICKS)
         _ -> (IDLE_TICKS)
     }
@@ -132,6 +134,7 @@ machine queued_children(context: &State, slot: u64) -> bool requires slot <= 5u6
 }
 machine cleanup(gate: &Gate, context: &mut State, status: u64) -> u64 reaches Kernel {
     block transfer::discard(gate, context);
+    block launch::discard(gate, context);
     block lifecycle::reclaim(gate, context, 0u64);
     block lifecycle::reclaim(gate, context, 1u64);
     block lifecycle::reclaim(gate, context, 2u64);

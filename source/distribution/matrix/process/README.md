@@ -60,14 +60,16 @@ The storage, the parent and the display.
   Regular polling submits once and returns to the turn loop; a completed
   snapshot waits until input retirement permits adoption. Wakeups that arrive
   during the outstanding poll are remembered for the next request.
-  [parent/connection.omg](connections/parent/connection.omg) owns the two request
-  IDs and dispatches replies to poll or visual work. Setup explicitly requests
-  the v4 pipeline handshake; child listeners opt in before accepting a hello. It drains at most two
-  replies per turn and contributes the broker's actual wait handles and partial
+  [parent/connection.omg](connections/parent/connection.omg) owns poll, visual
+  and funding requests and dispatches their exact replies. These three callers
+  share the runtime's existing two-request window; backpressure yields without
+  resubmitting an accepted request. Setup explicitly requests the v4 pipeline
+  handshake; child listeners opt in before accepting a hello. It makes at most
+  three receive attempts per turn and contributes the broker's actual wait handles and partial
   transfer deadline. [parent/calls.omg](connections/parent/calls.omg) keeps the
   remaining synchronous callers on that same dispatcher, so they cannot consume
-  a poll reply as a visual result. Startup/explicit refreshes and presentation
-  still wait; this is the first loop migration, not complete responsiveness.
+  a poll reply as a visual result. Startup and explicit refreshes still wait;
+  regular polling, presentation and launch funding return to the turn loop.
   [omega_parent_poll_test.py](../../../../tools/boot-harness-rs/omega_parent_poll_test.py)
   holds the stock Omega child's poll at a Rust parent and requires an owner
   HEALTH reply before release, followed by delivery of the queued key.
@@ -111,9 +113,10 @@ The storage, the parent and the display.
   checked again before a queued operation is sent, including after learning a
   changed upstream binding. Selecting a new provider channel revokes the old
   source's grants before its handshake, including if that handshake fails.
-  Startup, owner binding, listing and launch still use
-  [synchronous.omg](connections/storage/synchronous.omg); those are the next
-  callers to migrate, and never read replies behind the exchange's back.
+  Startup, owner binding and listing still use
+  [synchronous.omg](connections/storage/synchronous.omg); those callers never
+  read replies behind the exchange's back. Child launches use retained reads
+  and install a prepared binding locally after rechecking authority.
 
 - [source.omg](connections/source.omg): the installed source endpoint. POINTER_SOURCE moves
   the compositor's physical cursor, then routes through the World on the pointer
@@ -172,8 +175,11 @@ The children this matrix admits, funds, presents and retires.
   [responses.omg](connections/responses.omg) retains a computed plain answer when
   the child's reply mailbox is full. Later turns retry that answer, not the
   operation that produced it. Its connection ticket is checked again, and
-  reclamation clears it before the slot can be reused. This matters now that a
-  child matrix can have a poll and a visual request outstanding together.
+  reclamation clears it before the slot can be reused. A child can have two
+  requests outstanding. [responses.omg](connections/responses.omg) retains the
+  first in the deferred slot and keeps a second current if that slot is already
+  occupied. Independent funding and rendering keep both exact tickets, with
+  backpressure instead of treating an occupied slot as a fatal transport error.
 - [funding.omg](children/funding.omg): funding under the stock funding policy. Before
   a launch from the realm this matrix makes sure its own allowances cover the
   child and the connections to it, asking its owner with FUND for any
@@ -181,7 +187,11 @@ The children this matrix admits, funds, presents and retires.
   capacity may ask in turn: within its grant's ceiling this matrix covers the
   request, asking its owner first if it must, and grows the child's launch in
   place, asking once more for process slots a retired sibling left out of
-  the child's reach.
+  the child's reach. Each child request retains its ticket and reservation;
+  local launch funding has its own work item. A retired requester cannot grow
+  a replacement child. Accepted parent replies are drained even after cancellation;
+  any upstream grant remains this matrix's allowance, without authorizing the
+  cancelled launch. Owner/setup admission still uses a synchronous wrapper.
 - [stored.omg](children/stored.omg): owner RUN_OBJECT and admission from a sealed
   image. Resolve the declaration, fit the offered capacity, reserve, admit and
   bind the child's storage; unwind a failed step. Startup jobs and retained
@@ -196,9 +206,12 @@ The children this matrix admits, funds, presents and retires.
   unchanged policy before admission; cancellation releases late reader rights.
   [placement.omg](children/launch/placement.omg) assigns ranks, places and
   activates the child, or reclaims it on failure. Receipt queries name only the
-  requester's launch. The login picker remains alive during the read; admission
-  failure after its retirement queues the existing bounded picker recovery.
-  Binding and final scene activation remain synchronous.
+  requester's launch. [resources.omg](children/launch/resources.omg) resolves
+  the executable into an admission plan. The launch retains the sealed image
+  while funding waits, then rechecks its authority before installing that plan.
+  The login picker remains alive during reads and funding; an invalid image is
+  refused before retirement. Failure after retirement queues bounded picker
+  recovery. Kernel spawn and brokered admission still wait.
 
 - [workspace.omg](children/workspace.omg): the workspace's app instances
   under the stock catalogue. A launch into an app slot publishes the instance
@@ -295,8 +308,9 @@ retained surfaces without changing visibility or input, publishes one transactio
 through the shared backing receiver, then commits local demand and focus. The
 requester's exact ticket and both app bindings survive the wait. A refusal aborts
 the staged scene; invalidation after an accepted commit restores the prior scene
-before releasing the barrier. Launch-time activation, layout, binding and explicit
-refresh still have synchronous callers and remain migration work.
+before releasing the barrier. Launch-time activation shares this transaction;
+its failure reclaims the new child before answering the launch. Owner layout,
+binding and explicit refresh still have synchronous callers.
 
 Owner control enters [program/commands.omg](program/commands.omg). A valid STOP
 marks retirement during a pending scene and is acknowledged after the transaction

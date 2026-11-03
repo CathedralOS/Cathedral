@@ -19,6 +19,7 @@ use cathedral_user_runtime::time;
 #[derive(Default)]
 pub(super) struct Gate {
     storage: super::storage_probe::Gate,
+    funding: super::funding_probe::Gate,
     armed: u64,
     pending: Option<(Event, u64)>,
     health: Option<(usize, u64, bool)>,
@@ -31,7 +32,11 @@ pub(super) struct Gate {
 }
 impl Gate {
     pub fn deadline(&self) -> Option<u64> {
-        if self.health.is_some() || self.cancellation.is_some() || self.storage.active() {
+        if self.health.is_some()
+            || self.cancellation.is_some()
+            || self.storage.active()
+            || self.funding.active()
+        {
             time::after(1).ok()
         } else {
             self.pending.as_ref().map(|p| p.1)
@@ -42,6 +47,9 @@ impl Gate {
         server: &mut Server,
         children: &mut Children,
     ) -> Result<Option<Event>, Error> {
+        if let Some(event) = self.funding.take(server, children)? {
+            return Ok(Some(event));
+        }
         if let Some(event) = self.storage.take(server, children)? {
             return Ok(Some(event));
         }
@@ -118,6 +126,9 @@ impl Gate {
         world: &mut World,
         parent: &Parent,
     ) -> Result<Option<Event>, Error> {
+        let Some(event) = self.funding.intercept(event, server)? else {
+            return Ok(None);
+        };
         let Some(event) = self.storage.intercept(event, server, parent, world)? else {
             return Ok(None);
         };

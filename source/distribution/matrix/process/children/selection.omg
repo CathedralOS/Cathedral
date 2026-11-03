@@ -72,7 +72,7 @@ machine started(context: &mut State, requester: u64 [0..=4], previous: u64 [0..=
 }
 machine hold(context: &mut State, slot: u64 [0..=4], ticket: Ticket) -> u64 {
     transition context.slots[slot].listener.peer.pipeline {
-        true -> (deferred::hold(&mut context.slots[slot].listener, ticket))
+        true -> (responses::retain(context, slot, ticket))
         _ -> (0u64)
     }
 }
