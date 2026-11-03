@@ -11,8 +11,8 @@
 
 This contract defines the narrow authority claim established by Cathedral's
 current boot path after a successful [UEFI boot-services ownership
-transition](../boot/uefi_boot_services.md). It is the first qualified resource
-carried by Cathedral code. It is not yet the complete physical-memory or
+transition](../boot/uefi_boot_services.md). These are the image and initial-storage roots
+carried into the Omega memory lab. It is not yet the complete physical-memory or
 allocator contract.
 
 ## Carrier and qualification
@@ -41,12 +41,16 @@ For the current UEFI bootstrap:
 
 1. A fresh memory-map transaction must select and audit one eligible span.
 2. `ExitBootServices` must succeed using that transaction's key.
-3. The carrier passed to the admitted root provider must use exactly the
-   selected physical base and the exact checked byte length derived from its
-   page count.
-4. Exactly one root is established on the successful current boot route.
-5. The qualified carrier remains live while the machine reports ownership and
-   through every iteration of the owned idle state.
+3. The initial-storage carrier must use exactly the selected physical base
+   and the checked byte length derived from its page count. The image carrier
+   starts at the admitted LoadedImage base and ends at the checked start of
+   the retained private stack and context. Both ranges are validated before exit.
+4. The successful firmware handoff establishes two roots: the checked image
+   prefix and the selected initial-storage extent. The retained private
+   stack/context suffix is excluded from the image root.
+5. The roots and every surviving storage descendant remain owned through the
+   memory lab and its idle state. Later firmware-table and virtual-space grants
+   are separate admitted operations; they are not additional handoff roots.
 
 No failed table admission, map acquisition, descriptor audit, or firmware-exit
 route establishes a root. Reaching a failure park therefore carries no
@@ -59,8 +63,9 @@ and evidence remain. The consumer does not become a general-purpose minter.
 
 ## Claims not yet established
 
-The current `Granted` root is a narrow milestone. It does not yet establish
-Cathedral's future facts for:
+The `Granted` qualification alone establishes none of the following. The
+current memory lab obtains the operations it needs through separate checked
+transformations and admitted providers:
 
 - physical address-space identity;
 - readable, writable, executable, or device-access rights;
@@ -76,14 +81,15 @@ them.
 
 ## Conservation
 
-The current endpoint performs no split or merge. The same qualified carrier is
-threaded into the serial-report path and then back into the owned idle state.
-Each transition consumes and returns the linear claim. No second root or
-detached copy escapes.
+The adapter transfers both roots to the memory lab. The lab splits and
+reunites initial storage, allocates residents and table pages, and temporarily
+maps a checked allocation. Its final idle state retains the image and every
+surviving storage descendant. The source passes these linear claims through
+each continuation; it does not create an extra claim by copying numeric fields.
 
-Future split, merge, mapping, and allocation contracts must preserve content
-and provenance, not only make their numeric lengths add up. This page does not
-yet specify those operations.
+Split, merge, mapping and allocation must preserve content and provenance,
+not only numeric lengths. Those operations have separate Omega contracts;
+this page specifies the initial grants, not their full behavior.
 
 ## Conformance evidence
 

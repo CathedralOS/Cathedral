@@ -4,8 +4,8 @@ use arch::isa::x86_64::memory::walk::X86TableEntryRoute;
 use arch::isa::x86_64::memory::walk::X86TableWalk;
 machine require(value: bool) crashes Trap {
     transition value { true -> done() false -> wrong() }
-    state done() {}
-    state wrong() { crash Trap; }
+    machine done() {}
+    machine wrong() { crash Trap; }
 }
 
 machine check(word: u64, level: u64, kind: u64, expected: u64) crashes Trap {

@@ -132,7 +132,7 @@ public machine x86_validate_bootstrap_four_level_walk_descriptor(
         _ -> reject_four_level_walk_descriptor()
     }
 
-    state accept_four_level_walk_descriptor(
+    machine accept_four_level_walk_descriptor(
         candidate: X86BootstrapFourLevelWalkDescriptor
     ) -> X86BootstrapFourLevelWalkDescriptorCheck {
         X86BootstrapFourLevelWalkDescriptorCheck::NumericallyConsistent {
@@ -140,7 +140,7 @@ public machine x86_validate_bootstrap_four_level_walk_descriptor(
         }
     }
 
-    state reject_four_level_walk_descriptor()
+    machine reject_four_level_walk_descriptor()
         -> X86BootstrapFourLevelWalkDescriptorCheck
     {
         X86BootstrapFourLevelWalkDescriptorCheck::Rejected
@@ -174,7 +174,7 @@ public machine x86_validate_bootstrap_four_level_walk_roles(
         _ -> reject_four_level_walk_roles()
     }
 
-    state validate_four_level_walk_roles(
+    machine validate_four_level_walk_roles(
         descriptor: X86BootstrapFourLevelWalkDescriptor
     ) -> X86BootstrapFourLevelWalkRoleCheck {
         transition descriptor.pml4.entry.entry.present &&
@@ -190,7 +190,7 @@ public machine x86_validate_bootstrap_four_level_walk_roles(
         }
     }
 
-    state accept_four_level_walk_roles(
+    machine accept_four_level_walk_roles(
         descriptor: X86BootstrapFourLevelWalkDescriptor
     ) -> X86BootstrapFourLevelWalkRoleCheck {
         X86BootstrapFourLevelWalkRoleCheck::RoleConsistent {
@@ -198,7 +198,7 @@ public machine x86_validate_bootstrap_four_level_walk_roles(
         }
     }
 
-    state reject_four_level_walk_roles()
+    machine reject_four_level_walk_roles()
         -> X86BootstrapFourLevelWalkRoleCheck
     {
         X86BootstrapFourLevelWalkRoleCheck::Rejected
@@ -242,7 +242,7 @@ public machine x86_validate_bootstrap_four_kilobyte_walk_endpoints(
         _ -> reject_four_kilobyte_walk_endpoints()
     }
 
-    state validate_four_kilobyte_walk_endpoints(
+    machine validate_four_kilobyte_walk_endpoints(
         virtual_page_address: u64,
         physical_frame_address: u64,
         descriptor: X86BootstrapFourLevelWalkDescriptor
@@ -261,7 +261,7 @@ public machine x86_validate_bootstrap_four_kilobyte_walk_endpoints(
         }
     }
 
-    state accept_four_kilobyte_walk_endpoints(
+    machine accept_four_kilobyte_walk_endpoints(
         virtual_page_address: u64,
         physical_frame_address: u64,
         descriptor: X86BootstrapFourLevelWalkDescriptor
@@ -275,7 +275,7 @@ public machine x86_validate_bootstrap_four_kilobyte_walk_endpoints(
         }
     }
 
-    state reject_four_kilobyte_walk_endpoints()
+    machine reject_four_kilobyte_walk_endpoints()
         -> X86BootstrapFourKilobyteWalkEndpointCheck
     {
         X86BootstrapFourKilobyteWalkEndpointCheck::Rejected

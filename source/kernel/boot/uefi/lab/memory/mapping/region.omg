@@ -17,19 +17,19 @@ data MappingRegionPreparation {
     case Rejected(storage: Extent in Granted & Vacant);
 }
 
-machine MappingRegionPlacement::plan(schema: Schema) -> PlacementPlan {
+machine MappingRegionPlacement::plan(schema: Schema) -> AccessPlan {
     let mut entries: [FieldEntry; 64];
-    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 0 } };
     let services: [u64; 32];
-    PlacementPlan {
-        layout: Plan {
-            entries: entries, entry_count: 1, size_fixed: schema.fields[0].size,
-            size_is_dynamic: false, align: 4096,
-        },
-        access: AccessPlan::with(AccessPlan::inaccessible(&schema), schema.fields[0].key,
+    let layout: LayoutPlan = LayoutPlan {
+        entries: entries, entry_count: 1, size_fixed: schema.fields[0].size,
+        size_is_dynamic: false, align: 4096,
+    };
+    AccessPlan::with_reach(
+        AccessPlan::with(AccessPlan::inaccessible(layout), schema.fields[0].key,
             FieldAccess::Stable { read: true, write: true, exposure: Exposure::Exported }),
-        reach: BoundaryReach { services: services, service_count: 0 },
-    }
+        BoundaryReach { services: services, service_count: 0 }
+    )
 }
 
 // Initialize the complete physical region before any virtual alias exists.
@@ -39,11 +39,11 @@ machine prepare_mapping_region(storage: Extent in Granted & Vacant) -> MappingRe
 reaches ResourceProfileSupply
 {
     let words: [u64; MAPPING_WORD_COUNT];
-    transition NativePlacement<MappingRegionPlacement, MappingRegion, BootMemory>::initialize(
+    transition NativeAccess<MappingRegionPlacement, MappingRegion, BootMemory>::initialize(
         storage, MappingRegion { words: words }
     ) {
-        PlacementOutcome::Ready { view } -> (MappingRegionPreparation::Ready { storage: view })
-        PlacementOutcome::Rejected { returned, reason } -> (MappingRegionPreparation::Rejected { storage: returned.source })
+        AccessOutcome::Ready { view } -> (MappingRegionPreparation::Ready { storage: view })
+        AccessOutcome::Rejected { returned, reason } -> (MappingRegionPreparation::Rejected { storage: returned.source })
     }
 }
 
@@ -51,10 +51,10 @@ reaches ResourceProfileSupply
 // Each page's distinct endpoints catch repeated/swapped physical frames;
 // checking just one page or a shared value would not establish the range.
 machine check_mapping_region(storage: &mut Extent in Granted & Resident<MappingRegionPlacement, MappingRegion>) -> bool {
-    let view: &mut Placed<MappingRegionPlacement, MappingRegion> =
-        Placed::view_resident_mut<MappingRegionPlacement, MappingRegion>(storage);
+    let view: &mut Access<MappingRegionPlacement, MappingRegion> =
+        Access::view_resident_mut<MappingRegionPlacement, MappingRegion>(storage);
     transition { _ -> page(view, 0) }
-    state page(view: &Placed<MappingRegionPlacement, MappingRegion>, next: u64) -> bool
+    machine page(view: &Access<MappingRegionPlacement, MappingRegion>, next: u64) -> bool
     requires next <= MAPPING_PAGE_COUNT
     {
         transition next < MAPPING_PAGE_COUNT {
@@ -62,11 +62,11 @@ machine check_mapping_region(storage: &mut Extent in Granted & Resident<MappingR
             _ -> true
         }
     }
-    state observe(view: &Placed<MappingRegionPlacement, MappingRegion>, next: u64) -> bool
+    machine observe(view: &Access<MappingRegionPlacement, MappingRegion>, next: u64) -> bool
     requires next < MAPPING_PAGE_COUNT
     {
-        let first: u64 = placed_read(&view.words[next * 512]);
-        let last: u64 = placed_read(&view.words[next * 512 + 511]);
+        let first: u64 = omega::language::read(&view.words[next * 512]);
+        let last: u64 = omega::language::read(&view.words[next * 512 + 511]);
         transition first == 73 + next && last == 97 + next {
             true -> page(view, next + 1)
             _ -> false

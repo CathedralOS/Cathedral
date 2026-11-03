@@ -45,23 +45,23 @@ HardwareTableProfileProvider satisfies HardwareTableSupply {
     }
 }
 
-machine HardwareTablePlacement::plan(schema: Schema) -> PlacementPlan {
+machine HardwareTablePlacement::plan(schema: Schema) -> AccessPlan {
     let mut fields: [FieldEntry; 64];
-    fields[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
-    fields[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4096 } };
-    fields[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 8192 } };
-    fields[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 12288 } };
-    let first: AccessPlan = AccessPlan::with(AccessPlan::inaccessible(&schema), schema.fields[0].key, HardwareTablePlacement::access());
+    fields[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 0 } };
+    fields[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4096 } };
+    fields[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 8192 } };
+    fields[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12288 } };
+    let layout: LayoutPlan = LayoutPlan {
+        entries: fields, entry_count: 4, size_fixed: 16384, size_is_dynamic: false, align: 4096,
+    };
+    let first: AccessPlan = AccessPlan::with(AccessPlan::inaccessible(layout), schema.fields[0].key, HardwareTablePlacement::access());
     let second: AccessPlan = AccessPlan::with(first, schema.fields[1].key, HardwareTablePlacement::access());
     let third: AccessPlan = AccessPlan::with(second, schema.fields[2].key, HardwareTablePlacement::access());
     let services: [u64; 32];
-    PlacementPlan {
-        layout: Plan {
-            entries: fields, entry_count: 4, size_fixed: 16384, size_is_dynamic: false, align: 4096,
-        },
-        access: AccessPlan::with(third, schema.fields[3].key, HardwareTablePlacement::access()),
-        reach: BoundaryReach { services: services, service_count: 0 },
-    }
+    AccessPlan::with_reach(
+        AccessPlan::with(third, schema.fields[3].key, HardwareTablePlacement::access()),
+        BoundaryReach { services: services, service_count: 0 }
+    )
 }
 
 machine HardwareTablePlacement::access() -> FieldAccess {
@@ -78,11 +78,11 @@ requires storage in Vacant
 ensures storage in Vacant
 reaches ResourceProfileSupply
 {
-    transition Placed::view_extent_mut<HardwareTablePlacement, X86ClonedPageTables, HardwareTableMemory>(storage) {
-        PlacementOutcome::Ready { view } -> write(view, image, 0)
-        PlacementOutcome::Rejected { returned, reason } -> false
+    transition Access::view_extent_mut<HardwareTablePlacement, X86ClonedPageTables, HardwareTableMemory>(storage) {
+        AccessOutcome::Ready { view } -> write(view, image, 0)
+        AccessOutcome::Rejected { returned, reason } -> false
     }
-    state write(view: &mut Placed<HardwareTablePlacement, X86ClonedPageTables>,
+    machine write(view: &mut Access<HardwareTablePlacement, X86ClonedPageTables>,
                 image: &X86ClonedPageTables, next: u64) -> bool
     requires next <= 512
     {
@@ -91,17 +91,17 @@ reaches ResourceProfileSupply
             _ -> verify(view, image, 0, true)
         }
     }
-    state word(view: &mut Placed<HardwareTablePlacement, X86ClonedPageTables>,
+    machine word(view: &mut Access<HardwareTablePlacement, X86ClonedPageTables>,
                image: &X86ClonedPageTables, next: u64) -> bool
     requires next < 512
     {
-        placed_write(&mut view.pml4[next], image.pml4[next]);
-        placed_write(&mut view.pdpt[next], image.pdpt[next]);
-        placed_write(&mut view.pd[next], image.pd[next]);
-        placed_write(&mut view.pt[next], image.pt[next]);
+        omega::language::write(&mut view.pml4[next], image.pml4[next]);
+        omega::language::write(&mut view.pdpt[next], image.pdpt[next]);
+        omega::language::write(&mut view.pd[next], image.pd[next]);
+        omega::language::write(&mut view.pt[next], image.pt[next]);
         transition { _ -> write(view, image, next + 1) }
     }
-    state verify(view: &mut Placed<HardwareTablePlacement, X86ClonedPageTables>,
+    machine verify(view: &mut Access<HardwareTablePlacement, X86ClonedPageTables>,
                  image: &X86ClonedPageTables, next: u64, matched: bool) -> bool
     requires next <= 512
     {
@@ -110,14 +110,14 @@ reaches ResourceProfileSupply
             _ -> matched
         }
     }
-    state compare(view: &mut Placed<HardwareTablePlacement, X86ClonedPageTables>,
+    machine compare(view: &mut Access<HardwareTablePlacement, X86ClonedPageTables>,
                   image: &X86ClonedPageTables, next: u64, matched: bool) -> bool
     requires next < 512
     {
-        let root: u64 = placed_read(&view.pml4[next]);
-        let pointer: u64 = placed_read(&view.pdpt[next]);
-        let directory: u64 = placed_read(&view.pd[next]);
-        let leaf: u64 = placed_read(&view.pt[next]);
+        let root: u64 = omega::language::read(&view.pml4[next]);
+        let pointer: u64 = omega::language::read(&view.pdpt[next]);
+        let directory: u64 = omega::language::read(&view.pd[next]);
+        let leaf: u64 = omega::language::read(&view.pt[next]);
         let same: bool = root == image.pml4[next] && pointer == image.pdpt[next] &&
             directory == image.pd[next] && leaf == image.pt[next];
         transition { _ -> verify(view, image, next + 1, matched && same) }
@@ -139,7 +139,7 @@ reaches ResourceProfileSupply
         true -> slot(inventory, address, index)
         _ -> unavailable()
     }
-    state slot(inventory: &FirmwareTableInventory, address: u64, index: u64)
+    machine slot(inventory: &FirmwareTableInventory, address: u64, index: u64)
         -> X86ObservedTablePage
     requires index < 2048 && addr::Bound == 18446744073709551616
     {
@@ -148,7 +148,7 @@ reaches ResourceProfileSupply
             _ -> unavailable()
         }
     }
-    state backing(storage: &Extent in Granted, address: u64) -> X86ObservedTablePage
+    machine backing(storage: &Extent in Granted, address: u64) -> X86ObservedTablePage
     requires addr::Bound == 18446744073709551616
     {
         transition storage.base as u64 == address && storage.length == 4096 {
@@ -156,7 +156,7 @@ reaches ResourceProfileSupply
             _ -> unavailable()
         }
     }
-    state read(storage: &Extent in Granted, address: u64) -> X86ObservedTablePage {
+    machine read(storage: &Extent in Granted, address: u64) -> X86ObservedTablePage {
         transition PagingHandoff::snapshot<FirmwareMemory>(storage) {
             FirmwareRootSnapshot::Ready { entries } -> (X86ObservedTablePage {
                 available: true, address: address, entries: entries,
@@ -164,7 +164,7 @@ reaches ResourceProfileSupply
             _ -> unavailable()
         }
     }
-    state unavailable() -> X86ObservedTablePage {
+    machine unavailable() -> X86ObservedTablePage {
         let page: X86ObservedTablePage;
         page
     }
@@ -179,7 +179,7 @@ reaches ResourceProfileSupply
         X86TableEntryRoute::Link { address } -> MappingHandoff::observe(inventory, address)
         _ -> unavailable()
     }
-    state unavailable() -> X86ObservedTablePage {
+    machine unavailable() -> X86ObservedTablePage {
         let page: X86ObservedTablePage;
         page
     }
@@ -200,7 +200,7 @@ reaches ResourceProfileSupply
             X86BootstrapVirtualAddressCheck::Canonical { indices } -> observe(inventory, firmware_root, new_root, target, length, indices)
         _ -> MappingCloneResult::Unavailable
     }
-    state observe(inventory: &FirmwareTableInventory, firmware_root: u64,
+    machine observe(inventory: &FirmwareTableInventory, firmware_root: u64,
                   new_root: u64, target: u64, length: u64, indices: X86BootstrapVirtualAddressIndices)
         -> MappingCloneResult
     requires addr::Bound == 18446744073709551616

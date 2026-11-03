@@ -67,31 +67,47 @@ BootVacantStorageProvider satisfies VacantContentTransfer {
     }
 }
 
-// The semantic entry is independent of the firmware ABI. A valid installed
-// caller must transfer both roots; declaring or taking the address of this
-// machine does not mint them. Reporting happens only after the selected bridge
-// has transferred both roots, and idle retains both claims for the OS lifetime.
+// Start with the two roots supplied by the boot bridge and ordinary zeroed
+// local state. This activation owns the context for the kernel's lifetime;
+// selecting the entry neither allocates a context nor grants either root.
+machine Kernel::start(image: Extent in Granted, initial_storage: Extent in Granted)
+requires addr::Bound == 18446744073709551616
+reaches PortIo + MachineControl + VacantContentTransfer + ResourceProfileSupply + AccessLifecycle + ExtentRootProvider + BootVirtualReservation + BootTranslation
+invokes ExtentRootProvider
+invokes VacantContentTransfer
+invokes ResourceProfileSupply
+invokes AccessLifecycle
+invokes BootVirtualReservation
+invokes BootTranslation
+crashes Abort
+{
+    let mut context: KernelState;
+    Kernel::enter(&mut context, image, initial_storage);
+}
+
+// Check the caller-owned context and both transferred roots before reporting
+// entry. The continuation retains the context borrow and root claims while idle.
 machine Kernel::enter(context: &mut KernelState, image: Extent in Granted,
                       initial_storage: Extent in Granted)
 requires addr::Bound == 18446744073709551616
-reaches PortIo + MachineControl + VacantContentTransfer + ResourceProfileSupply + PlacementLifecycle + ExtentRootProvider + BootVirtualReservation + BootTranslation
-invokes ExtentRootProvider;
-invokes VacantContentTransfer;
-invokes ResourceProfileSupply;
-invokes PlacementLifecycle;
-invokes BootVirtualReservation;
-invokes BootTranslation;
+reaches PortIo + MachineControl + VacantContentTransfer + ResourceProfileSupply + AccessLifecycle + ExtentRootProvider + BootVirtualReservation + BootTranslation
+invokes ExtentRootProvider
+invokes VacantContentTransfer
+invokes ResourceProfileSupply
+invokes AccessLifecycle
+invokes BootVirtualReservation
+invokes BootTranslation
 crashes Abort
 {
-    // The installed occurrence receives fresh zero state, not firmware data or
-    // a globally addressable record. Keep its borrow with the retained roots.
+    // Kernel::start supplies its zero-initialized local state. Keep that
+    // activation's borrow with the retained roots throughout the continuation.
     transition !context.entered && context.image_bytes == 0 && context.initial_storage_bytes == 0 &&
         context.initial_storage_base == 0 && context.firmware_root == 0 {
         true -> establish(context, image, initial_storage)
         _ -> retain(context, image, initial_storage)
     }
 
-    state establish(context: &mut KernelState, image: Extent in Granted,
+    machine establish(context: &mut KernelState, image: Extent in Granted,
                     initial_storage: Extent in Granted)
     requires addr::Bound == 18446744073709551616
     {
@@ -102,7 +118,7 @@ crashes Abort
         }
     }
 
-    state check_handoff(context: &mut KernelState, image: Extent in Granted,
+    machine check_handoff(context: &mut KernelState, image: Extent in Granted,
                         initial_storage: Extent in Granted)
     requires addr::Bound == 18446744073709551616
     {
@@ -117,7 +133,7 @@ crashes Abort
         }
     }
 
-    state accept_handoff(context: &mut KernelState, image: Extent in Granted,
+    machine accept_handoff(context: &mut KernelState, image: Extent in Granted,
                          initial_storage: Extent in Granted)
     requires addr::Bound == 18446744073709551616
     {
@@ -131,7 +147,7 @@ crashes Abort
         transition { _ -> handoff_wait(context, image, initial_storage, 1000000) }
     }
 
-    state handoff_wait(context: &mut KernelState, image: Extent in Granted,
+    machine handoff_wait(context: &mut KernelState, image: Extent in Granted,
                        initial_storage: Extent in Granted, remaining: u64)
     requires addr::Bound == 18446744073709551616
     {
@@ -143,7 +159,7 @@ crashes Abort
         }
     }
 
-    state handoff_retry(context: &mut KernelState, image: Extent in Granted,
+    machine handoff_retry(context: &mut KernelState, image: Extent in Granted,
                         initial_storage: Extent in Granted, remaining: u64)
     requires addr::Bound == 18446744073709551616
     {
@@ -153,7 +169,7 @@ crashes Abort
         }
     }
 
-    state handoff_report(context: &mut KernelState, image: Extent in Granted,
+    machine handoff_report(context: &mut KernelState, image: Extent in Granted,
                          initial_storage: Extent in Granted)
     requires addr::Bound == 18446744073709551616
     {
@@ -163,7 +179,7 @@ crashes Abort
 
     // Drain the preceding ownership report before one 16-byte FIFO burst.
     // A missing UART suppresses diagnostics, never ownership or kernel entry.
-    state announce(context: &mut KernelState, image: Extent in Granted, initial_storage: Extent in Granted,
+    machine announce(context: &mut KernelState, image: Extent in Granted, initial_storage: Extent in Granted,
                    remaining: u64)
     requires addr::Bound == 18446744073709551616
     {
@@ -175,7 +191,7 @@ crashes Abort
         }
     }
 
-    state wait(context: &mut KernelState, image: Extent in Granted, initial_storage: Extent in Granted,
+    machine wait(context: &mut KernelState, image: Extent in Granted, initial_storage: Extent in Granted,
                remaining: u64)
     requires addr::Bound == 18446744073709551616
     {
@@ -185,7 +201,7 @@ crashes Abort
         }
     }
 
-    state report(context: &mut KernelState, image: Extent in Granted, initial_storage: Extent in Granted)
+    machine report(context: &mut KernelState, image: Extent in Granted, initial_storage: Extent in Granted)
     requires addr::Bound == 18446744073709551616
     {
         BootMarkers::entered();
@@ -196,7 +212,7 @@ crashes Abort
         }
     }
 
-    state reserve(context: &mut KernelState, image: Extent in Granted,
+    machine reserve(context: &mut KernelState, image: Extent in Granted,
                   storage: Extent in Granted & Vacant)
     requires addr::Bound == 18446744073709551616 && storage.length >= 4096
     {
@@ -217,7 +233,7 @@ crashes Abort
         }
     }
 
-    state memory_wait(context: &mut KernelState, image: Extent in Granted,
+    machine memory_wait(context: &mut KernelState, image: Extent in Granted,
                       parts: VacantExtentParts, remaining: u64)
     requires addr::Bound == 18446744073709551616
     {
@@ -229,7 +245,7 @@ crashes Abort
         }
     }
 
-    state memory_retry(context: &mut KernelState, image: Extent in Granted,
+    machine memory_retry(context: &mut KernelState, image: Extent in Granted,
                        parts: VacantExtentParts, remaining: u64)
     requires addr::Bound == 18446744073709551616
     {
@@ -239,7 +255,7 @@ crashes Abort
         }
     }
 
-    state memory_report(context: &mut KernelState, image: Extent in Granted,
+    machine memory_report(context: &mut KernelState, image: Extent in Granted,
                         parts: VacantExtentParts)
     requires addr::Bound == 18446744073709551616
     {
@@ -247,7 +263,7 @@ crashes Abort
         transition { _ -> exercise_memory(context, image, parts) }
     }
 
-    state exercise_memory(context: &mut KernelState, image: Extent in Granted,
+    machine exercise_memory(context: &mut KernelState, image: Extent in Granted,
                           parts: VacantExtentParts)
     requires addr::Bound == 18446744073709551616
     {
@@ -271,7 +287,7 @@ crashes Abort
         }
     }
 
-    state verified_wait(context: &mut KernelState, image: Extent in Granted,
+    machine verified_wait(context: &mut KernelState, image: Extent in Granted,
                         parts: VacantExtentParts, remaining: u64)
     requires addr::Bound == 18446744073709551616
     {
@@ -283,7 +299,7 @@ crashes Abort
         }
     }
 
-    state verified_retry(context: &mut KernelState, image: Extent in Granted,
+    machine verified_retry(context: &mut KernelState, image: Extent in Granted,
                          parts: VacantExtentParts, remaining: u64)
     requires addr::Bound == 18446744073709551616
     {
@@ -293,7 +309,7 @@ crashes Abort
         }
     }
 
-    state verified_report(context: &mut KernelState, image: Extent in Granted,
+    machine verified_report(context: &mut KernelState, image: Extent in Granted,
                           parts: VacantExtentParts)
     requires addr::Bound == 18446744073709551616
     {
@@ -304,7 +320,7 @@ crashes Abort
         }
     }
 
-    state exercise_pair(context: &mut KernelState, image: Extent in Granted,
+    machine exercise_pair(context: &mut KernelState, image: Extent in Granted,
                         parts: VacantExtentParts)
     requires addr::Bound == 18446744073709551616 && parts.taken.length >= 16
     {
@@ -319,7 +335,7 @@ crashes Abort
         }
     }
 
-    state paired_wait(context: &mut KernelState, image: Extent in Granted,
+    machine paired_wait(context: &mut KernelState, image: Extent in Granted,
                       pair: KernelMemoryPair, rest: Extent in Granted & Vacant,
                       remaining: u64)
     requires addr::Bound == 18446744073709551616
@@ -332,7 +348,7 @@ crashes Abort
         }
     }
 
-    state paired_retry(context: &mut KernelState, image: Extent in Granted,
+    machine paired_retry(context: &mut KernelState, image: Extent in Granted,
                        pair: KernelMemoryPair, rest: Extent in Granted & Vacant,
                        remaining: u64)
     requires addr::Bound == 18446744073709551616
@@ -343,7 +359,7 @@ crashes Abort
         }
     }
 
-    state paired_report(context: &mut KernelState, image: Extent in Granted,
+    machine paired_report(context: &mut KernelState, image: Extent in Granted,
                         pair: KernelMemoryPair, rest: Extent in Granted & Vacant)
     requires addr::Bound == 18446744073709551616
     {
@@ -354,7 +370,7 @@ crashes Abort
         }
     }
 
-    state prepare_page(context: &mut KernelState, image: Extent in Granted,
+    machine prepare_page(context: &mut KernelState, image: Extent in Granted,
                        pair: KernelMemoryPair, rest: Extent in Granted & Vacant)
     requires addr::Bound == 18446744073709551616 && rest.length >= 8199
     {
@@ -370,7 +386,7 @@ crashes Abort
         }
     }
 
-    state page_wait(context: &mut KernelState, image: Extent in Granted,
+    machine page_wait(context: &mut KernelState, image: Extent in Granted,
                     pair: KernelMemoryPair, page: BootPage, remaining: u64)
     requires addr::Bound == 18446744073709551616
     {
@@ -382,7 +398,7 @@ crashes Abort
         }
     }
 
-    state page_retry(context: &mut KernelState, image: Extent in Granted,
+    machine page_retry(context: &mut KernelState, image: Extent in Granted,
                      pair: KernelMemoryPair, page: BootPage, remaining: u64)
     requires addr::Bound == 18446744073709551616
     {
@@ -392,7 +408,7 @@ crashes Abort
         }
     }
 
-    state page_report(context: &mut KernelState, image: Extent in Granted,
+    machine page_report(context: &mut KernelState, image: Extent in Granted,
                       pair: KernelMemoryPair, page: BootPage)
     requires addr::Bound == 18446744073709551616
     {
@@ -403,7 +419,7 @@ crashes Abort
         }
     }
 
-    state prepare_tables(context: &mut KernelState, image: Extent in Granted,
+    machine prepare_tables(context: &mut KernelState, image: Extent in Granted,
                          pair: KernelMemoryPair, page: BootPage)
     requires addr::Bound == 18446744073709551616 && page.reservation.tail.length >= 20479
     {
@@ -419,7 +435,7 @@ crashes Abort
         }
     }
 
-    state build_tables(context: &mut KernelState, image: Extent in Granted,
+    machine build_tables(context: &mut KernelState, image: Extent in Granted,
                        pair: KernelMemoryPair, leading: Extent in Granted & Vacant,
                        padding: Extent in Granted & Vacant,
                        target: Extent in Granted & Resident<KernelPagePlacement, KernelPage>,
@@ -441,7 +457,7 @@ crashes Abort
         }
     }
 
-    state tables_wait(context: &mut KernelState, image: Extent in Granted,
+    machine tables_wait(context: &mut KernelState, image: Extent in Granted,
                       pair: KernelMemoryPair, tables: BootPageTables, remaining: u64)
     requires addr::Bound == 18446744073709551616
     {
@@ -453,7 +469,7 @@ crashes Abort
         }
     }
 
-    state tables_retry(context: &mut KernelState, image: Extent in Granted,
+    machine tables_retry(context: &mut KernelState, image: Extent in Granted,
                        pair: KernelMemoryPair, tables: BootPageTables, remaining: u64)
     requires addr::Bound == 18446744073709551616
     {
@@ -463,7 +479,7 @@ crashes Abort
         }
     }
 
-    state tables_report(context: &mut KernelState, image: Extent in Granted,
+    machine tables_report(context: &mut KernelState, image: Extent in Granted,
                         pair: KernelMemoryPair, tables: BootPageTables)
     requires addr::Bound == 18446744073709551616
     {
@@ -471,7 +487,7 @@ crashes Abort
         transition { _ -> inspect_paging(context, image, pair, tables) }
     }
 
-    state inspect_paging(context: &mut KernelState, image: Extent in Granted,
+    machine inspect_paging(context: &mut KernelState, image: Extent in Granted,
                          pair: KernelMemoryPair, tables: BootPageTables)
     requires addr::Bound == 18446744073709551616
     {
@@ -482,7 +498,7 @@ crashes Abort
         }
     }
 
-    state paging_wait(context: &mut KernelState, image: Extent in Granted,
+    machine paging_wait(context: &mut KernelState, image: Extent in Granted,
                       pair: KernelMemoryPair, tables: BootPageTables, remaining: u64)
     requires addr::Bound == 18446744073709551616
     {
@@ -494,7 +510,7 @@ crashes Abort
         }
     }
 
-    state paging_retry(context: &mut KernelState, image: Extent in Granted,
+    machine paging_retry(context: &mut KernelState, image: Extent in Granted,
                        pair: KernelMemoryPair, tables: BootPageTables, remaining: u64)
     requires addr::Bound == 18446744073709551616
     {
@@ -504,7 +520,7 @@ crashes Abort
         }
     }
 
-    state paging_report(context: &mut KernelState, image: Extent in Granted,
+    machine paging_report(context: &mut KernelState, image: Extent in Granted,
                         pair: KernelMemoryPair, tables: BootPageTables)
     requires addr::Bound == 18446744073709551616
     {
@@ -512,7 +528,7 @@ crashes Abort
         transition { _ -> locate_firmware_root(context, image, pair, tables) }
     }
 
-    state locate_firmware_root(context: &mut KernelState, image: Extent in Granted,
+    machine locate_firmware_root(context: &mut KernelState, image: Extent in Granted,
                                pair: KernelMemoryPair, tables: BootPageTables)
     requires addr::Bound == 18446744073709551616
     {
@@ -536,7 +552,7 @@ crashes Abort
         }
     }
 
-    state root_wait(context: &mut KernelState, image: Extent in Granted,
+    machine root_wait(context: &mut KernelState, image: Extent in Granted,
                     pair: KernelMemoryPair, tables: BootPageTables, remaining: u64)
     requires addr::Bound == 18446744073709551616
     {
@@ -548,7 +564,7 @@ crashes Abort
         }
     }
 
-    state root_retry(context: &mut KernelState, image: Extent in Granted,
+    machine root_retry(context: &mut KernelState, image: Extent in Granted,
                      pair: KernelMemoryPair, tables: BootPageTables, remaining: u64)
     requires addr::Bound == 18446744073709551616
     {
@@ -558,7 +574,7 @@ crashes Abort
         }
     }
 
-    state root_report(context: &mut KernelState, image: Extent in Granted,
+    machine root_report(context: &mut KernelState, image: Extent in Granted,
                       pair: KernelMemoryPair, tables: BootPageTables)
     requires addr::Bound == 18446744073709551616
     {
@@ -566,7 +582,7 @@ crashes Abort
         transition { _ -> admit_firmware_root(context, image, pair, tables) }
     }
 
-    state admit_firmware_root(context: &mut KernelState, image: Extent in Granted,
+    machine admit_firmware_root(context: &mut KernelState, image: Extent in Granted,
                              pair: KernelMemoryPair, tables: BootPageTables)
     requires addr::Bound == 18446744073709551616
     {
@@ -577,7 +593,7 @@ crashes Abort
         }
     }
 
-    state grant_firmware_root(context: &mut KernelState, image: Extent in Granted,
+    machine grant_firmware_root(context: &mut KernelState, image: Extent in Granted,
                              pair: KernelMemoryPair, tables: BootPageTables, root: u64)
     requires addr::Bound == 18446744073709551616 && root != 0 &&
              root % 4096 == 0 && root <= 4503599627366400
@@ -600,7 +616,7 @@ crashes Abort
         }
     }
 
-    state check_firmware_root(context: &mut KernelState, image: Extent in Granted,
+    machine check_firmware_root(context: &mut KernelState, image: Extent in Granted,
                              pair: KernelMemoryPair, tables: BootPageTables,
                              retained_root: Extent in Granted, entries: [u64; 512])
     requires addr::Bound == 18446744073709551616
@@ -612,7 +628,7 @@ crashes Abort
         }
     }
 
-    state root_read_wait(context: &mut KernelState, image: Extent in Granted,
+    machine root_read_wait(context: &mut KernelState, image: Extent in Granted,
                          pair: KernelMemoryPair, tables: BootPageTables,
                          retained_root: Extent in Granted, remaining: u64)
     requires addr::Bound == 18446744073709551616
@@ -625,7 +641,7 @@ crashes Abort
         }
     }
 
-    state root_read_retry(context: &mut KernelState, image: Extent in Granted,
+    machine root_read_retry(context: &mut KernelState, image: Extent in Granted,
                           pair: KernelMemoryPair, tables: BootPageTables,
                           retained_root: Extent in Granted, remaining: u64)
     requires addr::Bound == 18446744073709551616
@@ -636,7 +652,7 @@ crashes Abort
         }
     }
 
-    state root_read_report(context: &mut KernelState, image: Extent in Granted,
+    machine root_read_report(context: &mut KernelState, image: Extent in Granted,
                            pair: KernelMemoryPair, tables: BootPageTables,
                            retained_root: Extent in Granted)
     requires addr::Bound == 18446744073709551616
@@ -645,7 +661,7 @@ crashes Abort
         transition { _ -> collect_firmware_tables(context, image, pair, tables, retained_root) }
     }
 
-    state collect_firmware_tables(context: &mut KernelState, image: Extent in Granted,
+    machine collect_firmware_tables(context: &mut KernelState, image: Extent in Granted,
                                   pair: KernelMemoryPair, tables: BootPageTables,
                                   retained_root: Extent in Granted)
     requires addr::Bound == 18446744073709551616
@@ -664,7 +680,7 @@ crashes Abort
         }
     }
 
-    state closure_wait(context: &mut KernelState, image: Extent in Granted,
+    machine closure_wait(context: &mut KernelState, image: Extent in Granted,
                        pair: KernelMemoryPair, tables: BootPageTables,
                        inventory: FirmwareTableInventory, remaining: u64)
     requires addr::Bound == 18446744073709551616
@@ -677,7 +693,7 @@ crashes Abort
         }
     }
 
-    state closure_retry(context: &mut KernelState, image: Extent in Granted,
+    machine closure_retry(context: &mut KernelState, image: Extent in Granted,
                         pair: KernelMemoryPair, tables: BootPageTables,
                         inventory: FirmwareTableInventory, remaining: u64)
     requires addr::Bound == 18446744073709551616
@@ -688,7 +704,7 @@ crashes Abort
         }
     }
 
-    state closure_report(context: &mut KernelState, image: Extent in Granted,
+    machine closure_report(context: &mut KernelState, image: Extent in Granted,
                          pair: KernelMemoryPair, tables: BootPageTables,
                          inventory: FirmwareTableInventory)
     requires addr::Bound == 18446744073709551616
@@ -697,7 +713,7 @@ crashes Abort
         transition { _ -> mapping(context, image, pair, tables, inventory) }
     }
 
-    state mapping(context: &mut KernelState, image: Extent in Granted,
+    machine mapping(context: &mut KernelState, image: Extent in Granted,
                   pair: KernelMemoryPair, tables: BootPageTables,
                   inventory: FirmwareTableInventory)
     requires addr::Bound == 18446744073709551616
@@ -725,7 +741,7 @@ crashes Abort
         }
     }
 
-    state mapping_retired_wait(context: &mut KernelState, image: Extent in Granted,
+    machine mapping_retired_wait(context: &mut KernelState, image: Extent in Granted,
                                pair: KernelMemoryPair, inventory: FirmwareTableInventory,
                                attempt: MappingAttempt, verified: bool, remaining: u64)
     requires addr::Bound == 18446744073709551616
@@ -738,7 +754,7 @@ crashes Abort
         }
     }
 
-    state mapping_retired_retry(context: &mut KernelState, image: Extent in Granted,
+    machine mapping_retired_retry(context: &mut KernelState, image: Extent in Granted,
                                 pair: KernelMemoryPair, inventory: FirmwareTableInventory,
                                 attempt: MappingAttempt, verified: bool, remaining: u64)
     requires addr::Bound == 18446744073709551616
@@ -749,7 +765,7 @@ crashes Abort
         }
     }
 
-    state mapping_retired_report(context: &mut KernelState, image: Extent in Granted,
+    machine mapping_retired_report(context: &mut KernelState, image: Extent in Granted,
                                  pair: KernelMemoryPair, inventory: FirmwareTableInventory,
                                  attempt: MappingAttempt, verified: bool)
     requires addr::Bound == 18446744073709551616
@@ -758,7 +774,7 @@ crashes Abort
         transition { _ -> mapping_checked(context, image, pair, inventory, attempt, verified) }
     }
 
-    state mapping_checked(context: &mut KernelState, image: Extent in Granted,
+    machine mapping_checked(context: &mut KernelState, image: Extent in Granted,
                           pair: KernelMemoryPair, inventory: FirmwareTableInventory,
                           attempt: MappingAttempt, verified: bool)
     requires addr::Bound == 18446744073709551616
@@ -769,7 +785,7 @@ crashes Abort
         }
     }
 
-    state mapping_wait(context: &mut KernelState, image: Extent in Granted,
+    machine mapping_wait(context: &mut KernelState, image: Extent in Granted,
                        pair: KernelMemoryPair, inventory: FirmwareTableInventory,
                        attempt: MappingAttempt, remaining: u64)
     requires addr::Bound == 18446744073709551616
@@ -782,7 +798,7 @@ crashes Abort
         }
     }
 
-    state mapping_retry(context: &mut KernelState, image: Extent in Granted,
+    machine mapping_retry(context: &mut KernelState, image: Extent in Granted,
                         pair: KernelMemoryPair, inventory: FirmwareTableInventory,
                         attempt: MappingAttempt, remaining: u64)
     requires addr::Bound == 18446744073709551616
@@ -793,7 +809,7 @@ crashes Abort
         }
     }
 
-    state mapping_report(context: &mut KernelState, image: Extent in Granted,
+    machine mapping_report(context: &mut KernelState, image: Extent in Granted,
                          pair: KernelMemoryPair, inventory: FirmwareTableInventory, attempt: MappingAttempt)
     requires addr::Bound == 18446744073709551616
     {
@@ -801,7 +817,7 @@ crashes Abort
         transition { _ -> retain_mapping(context, image, pair, inventory, attempt) }
     }
 
-    state retain_mapping(context: &mut KernelState, image: Extent in Granted,
+    machine retain_mapping(context: &mut KernelState, image: Extent in Granted,
                          pair: KernelMemoryPair, inventory: FirmwareTableInventory, attempt: MappingAttempt)
     requires addr::Bound == 18446744073709551616
     {
@@ -809,7 +825,7 @@ crashes Abort
         transition { _ -> retain_mapping(context, image, pair, inventory, attempt) }
     }
 
-    state retain_firmware_tables(context: &mut KernelState, image: Extent in Granted,
+    machine retain_firmware_tables(context: &mut KernelState, image: Extent in Granted,
                                  pair: KernelMemoryPair, tables: BootPageTables,
                                  inventory: FirmwareTableInventory)
     requires addr::Bound == 18446744073709551616
@@ -818,7 +834,7 @@ crashes Abort
         transition { _ -> retain_firmware_tables(context, image, pair, tables, inventory) }
     }
 
-    state retain_firmware_root(context: &mut KernelState, image: Extent in Granted,
+    machine retain_firmware_root(context: &mut KernelState, image: Extent in Granted,
                                pair: KernelMemoryPair, tables: BootPageTables,
                                retained_root: Extent in Granted)
     requires addr::Bound == 18446744073709551616
@@ -827,7 +843,7 @@ crashes Abort
         transition { _ -> retain_firmware_root(context, image, pair, tables, retained_root) }
     }
 
-    state retain_tables(context: &mut KernelState, image: Extent in Granted,
+    machine retain_tables(context: &mut KernelState, image: Extent in Granted,
                         pair: KernelMemoryPair, tables: BootPageTables)
     requires addr::Bound == 18446744073709551616
     {
@@ -835,7 +851,7 @@ crashes Abort
         transition { _ -> retain_tables(context, image, pair, tables) }
     }
 
-    state retain_page(context: &mut KernelState, image: Extent in Granted,
+    machine retain_page(context: &mut KernelState, image: Extent in Granted,
                       pair: KernelMemoryPair, page: BootPage)
     requires addr::Bound == 18446744073709551616
     {
@@ -843,7 +859,7 @@ crashes Abort
         transition { _ -> retain_page(context, image, pair, page) }
     }
 
-    state retain_pair(context: &mut KernelState, image: Extent in Granted,
+    machine retain_pair(context: &mut KernelState, image: Extent in Granted,
                       pair: KernelMemoryPair, rest: Extent in Granted & Vacant)
     requires addr::Bound == 18446744073709551616
     {
@@ -851,7 +867,7 @@ crashes Abort
         transition { _ -> retain_pair(context, image, pair, rest) }
     }
 
-    state retain_parts(context: &mut KernelState, image: Extent in Granted,
+    machine retain_parts(context: &mut KernelState, image: Extent in Granted,
                        parts: VacantExtentParts)
     requires addr::Bound == 18446744073709551616
     {
@@ -859,7 +875,7 @@ crashes Abort
         transition { _ -> retain_parts(context, image, parts) }
     }
 
-    state retain_vacant(context: &mut KernelState, image: Extent in Granted,
+    machine retain_vacant(context: &mut KernelState, image: Extent in Granted,
                         storage: Extent in Granted & Vacant)
     requires addr::Bound == 18446744073709551616
     {
@@ -867,7 +883,7 @@ crashes Abort
         transition { _ -> retain_vacant(context, image, storage) }
     }
 
-    state retain(context: &mut KernelState, image: Extent in Granted, initial_storage: Extent in Granted)
+    machine retain(context: &mut KernelState, image: Extent in Granted, initial_storage: Extent in Granted)
     requires addr::Bound == 18446744073709551616
     {
         asm { hlt }

@@ -1,7 +1,8 @@
 # Post-handoff memory lab
 
-[main.omg](main.omg) is the explicitly selected `Kernel::enter` experiment. It
-checks fresh context and the copied handoff, partitions/reunites storage,
+[main.omg](main.omg) contains the selected `Kernel::start(image, initial_storage)`
+entry. It owns a zero-initialized local `KernelState` and lends it to
+`Kernel::enter`, which checks the context and copied handoff, partitions/reunites storage,
 exercises resident memory, prepares a page and tables, captures firmware paging,
 then runs and retires a temporary mapping. Every failure keeps the owned roots
 and surviving children in its retained idle state.

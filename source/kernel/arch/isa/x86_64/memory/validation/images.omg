@@ -69,7 +69,7 @@ terminates by remaining;
         _ -> settle_empty_page_table_page(candidate, still_zero)
     }
 
-    state settle_empty_page_table_page(
+    machine settle_empty_page_table_page(
         candidate: X86PageTablePageCandidate,
         zero: bool
     ) -> X86EmptyPageTablePagePolicyCheck {
@@ -79,7 +79,7 @@ terminates by remaining;
         }
     }
 
-    state accept_empty_page_table_page(
+    machine accept_empty_page_table_page(
         candidate: X86PageTablePageCandidate
     ) -> X86EmptyPageTablePagePolicyCheck {
         X86EmptyPageTablePagePolicyCheck::ZeroConsistent {
@@ -87,7 +87,7 @@ terminates by remaining;
         }
     }
 
-    state reject_empty_page_table_page() -> X86EmptyPageTablePagePolicyCheck {
+    machine reject_empty_page_table_page() -> X86EmptyPageTablePagePolicyCheck {
         X86EmptyPageTablePagePolicyCheck::Rejected
     }
 }
@@ -160,14 +160,14 @@ machine x86_bootstrap_single_entry_page_slot_is_consistent(
         _ -> compare_zero_bootstrap_page_entry(entry)
     }
 
-    state compare_selected_bootstrap_page_entry(
+    machine compare_selected_bootstrap_page_entry(
         entry: &X86PageTableEntry,
         expected: &X86PageTableEntry
     ) -> bool {
         x86_page_table_entries_are_equal(entry, expected)
     }
 
-    state compare_zero_bootstrap_page_entry(
+    machine compare_zero_bootstrap_page_entry(
         entry: &X86PageTableEntry
     ) -> bool {
         x86_page_table_entry_is_zero(entry)
@@ -193,7 +193,7 @@ public machine x86_validate_bootstrap_single_entry_page_image(
         _ -> reject_bootstrap_single_entry_page_image()
     }
 
-    state reject_bootstrap_single_entry_page_image()
+    machine reject_bootstrap_single_entry_page_image()
         -> X86BootstrapSingleEntryPageImageCheck
     {
         X86BootstrapSingleEntryPageImageCheck::Rejected
@@ -233,7 +233,7 @@ terminates by remaining;
         )
     }
 
-    state settle_bootstrap_single_entry_page_image(
+    machine settle_bootstrap_single_entry_page_image(
         candidate: X86BootstrapSingleEntryPageImageCandidate,
         consistent: bool
     ) -> X86BootstrapSingleEntryPageImageCheck {
@@ -243,7 +243,7 @@ terminates by remaining;
         }
     }
 
-    state accept_bootstrap_single_entry_page_image(
+    machine accept_bootstrap_single_entry_page_image(
         candidate: X86BootstrapSingleEntryPageImageCandidate
     ) -> X86BootstrapSingleEntryPageImageCheck {
         X86BootstrapSingleEntryPageImageCheck::ImageConsistent {
@@ -251,7 +251,7 @@ terminates by remaining;
         }
     }
 
-    state reject_bootstrap_single_entry_page_image()
+    machine reject_bootstrap_single_entry_page_image()
         -> X86BootstrapSingleEntryPageImageCheck
     {
         X86BootstrapSingleEntryPageImageCheck::Rejected

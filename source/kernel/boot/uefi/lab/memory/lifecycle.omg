@@ -7,50 +7,50 @@ public data KernelWord { value: u64; }
 public data KernelWordPlacement {}
 data KernelMemory {}
 
-// Build selects a closed implementation declaration. This map fixes the
-// kernel's policy/schema pair; the library owns the actual memory operations.
-KernelMemoryPlacement satisfies PlacementLifecycle<KernelWordPlacement, KernelWord> {
+// Initialize and extract kernel words using the memory library. Build selects
+// this implementation for the KernelWordPlacement policy and KernelWord data.
+KernelMemoryPlacement satisfies AccessLifecycle<KernelWordPlacement, KernelWord> {
     machine initialize(
         storage: Extent in Granted & Vacant,
         value: KernelWord
-    ) -> PlacementOutcome<
+    ) -> AccessOutcome<
         Extent in Granted & Resident<KernelWordPlacement, KernelWord>,
-        PlacementReturn<Extent in Granted & Vacant, KernelWord>,
-        PlacementInitializationFailure
+        AccessReturn<Extent in Granted & Vacant, KernelWord>,
+        AccessInitializationFailure
     >
     reaches ResourceProfileSupply
     {
-        NativePlacement<KernelWordPlacement, KernelWord, BootMemory>::initialize(storage, value)
+        NativeAccess<KernelWordPlacement, KernelWord, BootMemory>::initialize(storage, value)
     }
 
     machine move_out(
         storage: Extent in Granted & Resident<KernelWordPlacement, KernelWord>
-    ) -> PlacementExtraction<Extent in Granted & Vacant, KernelWord>
+    ) -> AccessExtraction<Extent in Granted & Vacant, KernelWord>
     reaches ResourceProfileSupply
     {
-        NativePlacement<KernelWordPlacement, KernelWord, BootMemory>::move_out(storage)
+        NativeAccess<KernelWordPlacement, KernelWord, BootMemory>::move_out(storage)
     }
 }
 
-machine KernelWordPlacement::plan(schema: Schema) -> PlacementPlan {
+machine KernelWordPlacement::plan(schema: Schema) -> AccessPlan {
     let mut entries: [FieldEntry; 64];
     entries[0] = FieldEntry {
         key: schema.fields[0].key,
-        placement: FieldPlan::At { offset: 0 },
+        representation: FieldPlan::At { offset: 0 },
+    };
+    let layout: LayoutPlan = LayoutPlan {
+        entries: entries, entry_count: 1, size_fixed: 8,
+        size_is_dynamic: false, align: 8,
     };
     let access: AccessPlan = AccessPlan::with(
-        AccessPlan::inaccessible(&schema), schema.fields[0].key,
+        AccessPlan::inaccessible(layout), schema.fields[0].key,
         FieldAccess::Stable { read: true, write: true, exposure: Exposure::Exported }
     );
     let services: [u64; 32];
-    PlacementPlan {
-        layout: Plan {
-            entries: entries, entry_count: 1, size_fixed: 8,
-            size_is_dynamic: false, align: 8,
-        },
-        access: access,
-        reach: BoundaryReach { services: services, service_count: 0 },
-    }
+    AccessPlan::with_reach(
+        access,
+        BoundaryReach { services: services, service_count: 0 }
+    )
 }
 
 data KernelMemoryObservation {
@@ -71,24 +71,24 @@ data KernelMemoryResult {
 // rejection returns the original vacant allocation and unconsumed value.
 // Neither branch drops the allocation's unused tail.
 machine KernelMemory::exercise(storage: Extent in Granted & Vacant) -> KernelMemoryResult
-reaches ResourceProfileSupply + PlacementLifecycle
+reaches ResourceProfileSupply + AccessLifecycle
 {
-    transition Placed::initialize_owned<KernelWordPlacement, KernelWord>(
+    transition Access::initialize_owned<KernelWordPlacement, KernelWord>(
         storage, KernelWord { value: 17 }
     ) {
-        PlacementOutcome::Ready { view } -> use_resident(view)
-        PlacementOutcome::Rejected { returned, reason } -> rejected(returned)
+        AccessOutcome::Ready { view } -> use_resident(view)
+        AccessOutcome::Rejected { returned, reason } -> rejected(returned)
     }
 
-    state use_resident(
+    machine use_resident(
         storage: Extent in Granted & Resident<KernelWordPlacement, KernelWord>
     ) -> KernelMemoryResult {
         let mut active: Extent in Granted & Resident<KernelWordPlacement, KernelWord> = storage;
         let observation: KernelMemoryObservation = KernelMemory::overwrite(
-            Placed::view_resident_mut<KernelWordPlacement, KernelWord>(&mut active), 29
+            Access::view_resident_mut<KernelWordPlacement, KernelWord>(&mut active), 29
         );
-        let returned: PlacementReturn<Extent in Granted & Vacant, KernelWord> =
-            Placed::move_out_owned<KernelWordPlacement, KernelWord>(active);
+        let returned: AccessReturn<Extent in Granted & Vacant, KernelWord> =
+            Access::move_out_owned<KernelWordPlacement, KernelWord>(active);
         KernelMemoryResult {
             storage: returned.source, initialized: true,
             initial: observation.initial, updated: observation.updated,
@@ -96,8 +96,8 @@ reaches ResourceProfileSupply + PlacementLifecycle
         }
     }
 
-    state rejected(
-        returned: PlacementReturn<Extent in Granted & Vacant, KernelWord>
+    machine rejected(
+        returned: AccessReturn<Extent in Granted & Vacant, KernelWord>
     ) -> KernelMemoryResult {
         KernelMemoryResult {
             storage: returned.source, initialized: false,
@@ -128,11 +128,11 @@ ensures result in Granted & Vacant,
 // Keep the mutation across a helper boundary. The view ends before whole-value
 // extraction; ending this loan alone cannot turn resident content into vacancy.
 machine KernelMemory::overwrite(
-    view: &mut Placed<KernelWordPlacement, KernelWord>, replacement: u64
+    view: &mut Access<KernelWordPlacement, KernelWord>, replacement: u64
 ) -> KernelMemoryObservation {
-    let initial: u64 = placed_read(&view.value);
-    placed_write(&mut view.value, replacement);
-    let updated: u64 = placed_read(&view.value);
+    let initial: u64 = omega::language::read(&view.value);
+    omega::language::write(&mut view.value, replacement);
+    let updated: u64 = omega::language::read(&view.value);
     KernelMemoryObservation { initial: initial, updated: updated }
 }
 
@@ -167,10 +167,10 @@ machine KernelMemory::allocation_exhausted(attempt: &Attempt) -> bool {
 // pass merely by returning the requested scalar lengths.
 machine KernelMemory::exercise_pair(storage: Extent in Granted & Vacant) -> KernelMemoryPair
 requires storage.length >= 16
-reaches ResourceProfileSupply + PlacementLifecycle
+reaches ResourceProfileSupply + AccessLifecycle
 {
     let available: u64 = storage.length;
-    let mut strategy: Bump = Bump { tail: storage, remaining: available };
+    let mut strategy: Bump = Bump::open(storage);
     let first: Extent in Granted & Vacant = allocate(&mut strategy, 8, available);
     let second: Extent in Granted & Vacant = allocate(&mut strategy, 8, available - 8);
     // The original capacity exceeds the residual by sixteen bytes. Observe
@@ -187,41 +187,41 @@ reaches ResourceProfileSupply + PlacementLifecycle
         attempt: attempt, preserved: preserved,
     };
     let tail: Extent in Granted & Vacant = strategy.tail;
-    transition Placed::initialize_owned<KernelWordPlacement, KernelWord>(
+    transition Access::initialize_owned<KernelWordPlacement, KernelWord>(
         first, KernelWord { value: 17 }
     ) {
-        PlacementOutcome::Ready { view } -> initialize_second(view, second, tail, probe)
-        PlacementOutcome::Rejected { returned, reason } -> KernelMemoryPair {
+        AccessOutcome::Ready { view } -> initialize_second(view, second, tail, probe)
+        AccessOutcome::Rejected { returned, reason } -> KernelMemoryPair {
             first: returned.source, second: second, tail: tail, probe: probe, verified: false,
         }
     }
 
-    state initialize_second(
+    machine initialize_second(
         first: Extent in Granted & Resident<KernelWordPlacement, KernelWord>,
         second: Extent in Granted & Vacant, tail: Extent in Granted & Vacant,
         probe: KernelAllocationProbe
     ) -> KernelMemoryPair {
-        transition Placed::initialize_owned<KernelWordPlacement, KernelWord>(
+        transition Access::initialize_owned<KernelWordPlacement, KernelWord>(
             second, KernelWord { value: 41 }
         ) {
-            PlacementOutcome::Ready { view } -> observe(first, view, tail, probe)
-            PlacementOutcome::Rejected { returned, reason } -> reject_second(first, returned, tail, probe)
+            AccessOutcome::Ready { view } -> observe(first, view, tail, probe)
+            AccessOutcome::Rejected { returned, reason } -> reject_second(first, returned, tail, probe)
         }
     }
 
-    state reject_second(
+    machine reject_second(
         first: Extent in Granted & Resident<KernelWordPlacement, KernelWord>,
-        second: PlacementReturn<Extent in Granted & Vacant, KernelWord>,
+        second: AccessReturn<Extent in Granted & Vacant, KernelWord>,
         tail: Extent in Granted & Vacant, probe: KernelAllocationProbe
     ) -> KernelMemoryPair {
-        let returned: PlacementReturn<Extent in Granted & Vacant, KernelWord> =
-            Placed::move_out_owned<KernelWordPlacement, KernelWord>(first);
+        let returned: AccessReturn<Extent in Granted & Vacant, KernelWord> =
+            Access::move_out_owned<KernelWordPlacement, KernelWord>(first);
         KernelMemoryPair {
             first: returned.source, second: second.source, tail: tail, probe: probe, verified: false,
         }
     }
 
-    state observe(
+    machine observe(
         first: Extent in Granted & Resident<KernelWordPlacement, KernelWord>,
         second: Extent in Granted & Resident<KernelWordPlacement, KernelWord>,
         tail: Extent in Granted & Vacant, probe: KernelAllocationProbe
@@ -229,18 +229,18 @@ reaches ResourceProfileSupply + PlacementLifecycle
         let mut first_active: Extent in Granted & Resident<KernelWordPlacement, KernelWord> = first;
         let mut second_active: Extent in Granted & Resident<KernelWordPlacement, KernelWord> = second;
         let first_observation: KernelMemoryObservation = KernelMemory::overwrite(
-            Placed::view_resident_mut<KernelWordPlacement, KernelWord>(&mut first_active), 29
+            Access::view_resident_mut<KernelWordPlacement, KernelWord>(&mut first_active), 29
         );
         let second_observation: KernelMemoryObservation = KernelMemory::overwrite(
-            Placed::view_resident_mut<KernelWordPlacement, KernelWord>(&mut second_active), 73
+            Access::view_resident_mut<KernelWordPlacement, KernelWord>(&mut second_active), 73
         );
         let first_after_second: u64 = KernelMemory::read(
-            Placed::view_resident_mut<KernelWordPlacement, KernelWord>(&mut first_active)
+            Access::view_resident_mut<KernelWordPlacement, KernelWord>(&mut first_active)
         );
-        let first_returned: PlacementReturn<Extent in Granted & Vacant, KernelWord> =
-            Placed::move_out_owned<KernelWordPlacement, KernelWord>(first_active);
-        let second_returned: PlacementReturn<Extent in Granted & Vacant, KernelWord> =
-            Placed::move_out_owned<KernelWordPlacement, KernelWord>(second_active);
+        let first_returned: AccessReturn<Extent in Granted & Vacant, KernelWord> =
+            Access::move_out_owned<KernelWordPlacement, KernelWord>(first_active);
+        let second_returned: AccessReturn<Extent in Granted & Vacant, KernelWord> =
+            Access::move_out_owned<KernelWordPlacement, KernelWord>(second_active);
         let verified: bool = probe.preserved &&
             first_observation.initial == 17 && first_observation.updated == 29 &&
             second_observation.initial == 41 && second_observation.updated == 73 &&
@@ -253,6 +253,6 @@ reaches ResourceProfileSupply + PlacementLifecycle
     }
 }
 
-machine KernelMemory::read(view: &mut Placed<KernelWordPlacement, KernelWord>) -> u64 {
-    placed_read(&view.value)
+machine KernelMemory::read(view: &mut Access<KernelWordPlacement, KernelWord>) -> u64 {
+    omega::language::read(&view.value)
 }

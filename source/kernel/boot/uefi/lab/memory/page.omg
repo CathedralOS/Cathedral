@@ -27,21 +27,21 @@ data BootPage {
     reservation: PageReservation;
 }
 
-machine KernelPagePlacement::plan(schema: Schema) -> PlacementPlan {
+machine KernelPagePlacement::plan(schema: Schema) -> AccessPlan {
     let mut entries: [FieldEntry; 64];
     entries[0] = FieldEntry {
-        key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 },
+        key: schema.fields[0].key, representation: FieldPlan::At { offset: 0 },
     };
     let services: [u64; 32];
-    PlacementPlan {
-        layout: Plan {
-            entries: entries, entry_count: 1, size_fixed: 4096,
-            size_is_dynamic: false, align: 4096,
-        },
-        access: AccessPlan::with(AccessPlan::inaccessible(&schema), schema.fields[0].key,
+    let layout: LayoutPlan = LayoutPlan {
+        entries: entries, entry_count: 1, size_fixed: 4096,
+        size_is_dynamic: false, align: 4096,
+    };
+    AccessPlan::with_reach(
+        AccessPlan::with(AccessPlan::inaccessible(layout), schema.fields[0].key,
             FieldAccess::Stable { read: true, write: true, exposure: Exposure::Exported }),
-        reach: BoundaryReach { services: services, service_count: 0 },
-    }
+        BoundaryReach { services: services, service_count: 0 }
+    )
 }
 
 // Worst-case padding is 4095 bytes. Subtract it before reserving the page;
@@ -59,24 +59,24 @@ reaches ResourceProfileSupply
     let mut words: [u64; 512];
     words[0] = 17;
     words[511] = 73;
-    transition NativePlacement<KernelPagePlacement, KernelPage, BootMemory>::initialize(
+    transition NativeAccess<KernelPagePlacement, KernelPage, BootMemory>::initialize(
         parts.taken, KernelPage { words: words }
     ) {
-        PlacementOutcome::Ready { view } -> verify(prefix.taken, view, parts.rest, geometry)
-        PlacementOutcome::Rejected { returned, reason } -> PageReservation {
+        AccessOutcome::Ready { view } -> verify(prefix.taken, view, parts.rest, geometry)
+        AccessOutcome::Rejected { returned, reason } -> PageReservation {
             padding: prefix.taken, page: PreparedPage::Rejected { storage: returned.source },
             tail: parts.rest, verified: false,
         }
     }
 
-    state verify(
+    machine verify(
         padding: Extent in Granted & Vacant,
         storage: Extent in Granted & Resident<KernelPagePlacement, KernelPage>,
         tail: Extent in Granted & Vacant, geometry: bool
     ) -> PageReservation {
         let mut retained: Extent in Granted & Resident<KernelPagePlacement, KernelPage> = storage;
         let indexed: bool = PageFrame::overwrite(
-            Placed::view_resident_mut<KernelPagePlacement, KernelPage>(&mut retained)
+            Access::view_resident_mut<KernelPagePlacement, KernelPage>(&mut retained)
         );
         // Exercise the same conservative External snapshot needed for the
         // active firmware root while its bytes still have a known oracle.
@@ -91,43 +91,43 @@ reaches ResourceProfileSupply
         let isolated: bool = PageFrame::reject_unstable_supply(
             (&retained) as &Extent in Granted
         );
-        transition NativePlacement<KernelPagePlacement, KernelPage, BootMemory>::move_out(retained) {
-            PlacementExtraction::Moved { storage, value } -> clear(padding, storage, tail, geometry && indexed && copied && isolated, value)
+        transition NativeAccess<KernelPagePlacement, KernelPage, BootMemory>::move_out(retained) {
+            AccessExtraction::Moved { storage, value } -> clear(padding, storage, tail, geometry && indexed && copied && isolated, value)
         }
     }
 
-    state clear(padding: Extent in Granted & Vacant, storage: Extent in Granted & Vacant,
+    machine clear(padding: Extent in Granted & Vacant, storage: Extent in Granted & Vacant,
                 tail: Extent in Granted & Vacant, geometry: bool, observed: KernelPage) -> PageReservation {
         let valid: bool = geometry && PageFrame::check_image(&observed);
         let words: [u64; 512];
-        transition NativePlacement<KernelPagePlacement, KernelPage, BootMemory>::initialize(storage, KernelPage { words: words }) {
-            PlacementOutcome::Ready { view } -> check_cleared(padding, view, tail, valid)
-            PlacementOutcome::Rejected { returned, reason } -> PageReservation {
+        transition NativeAccess<KernelPagePlacement, KernelPage, BootMemory>::initialize(storage, KernelPage { words: words }) {
+            AccessOutcome::Ready { view } -> check_cleared(padding, view, tail, valid)
+            AccessOutcome::Rejected { returned, reason } -> PageReservation {
                 padding: padding, page: PreparedPage::Rejected { storage: returned.source },
                 tail: tail, verified: false,
             }
         }
     }
 
-    state check_cleared(padding: Extent in Granted & Vacant,
+    machine check_cleared(padding: Extent in Granted & Vacant,
                         storage: Extent in Granted & Resident<KernelPagePlacement, KernelPage>,
                         tail: Extent in Granted & Vacant, valid: bool) -> PageReservation {
-        transition NativePlacement<KernelPagePlacement, KernelPage, BootMemory>::move_out(storage) {
-            PlacementExtraction::Moved { storage, value } -> retain(padding, storage, tail, valid, value)
+        transition NativeAccess<KernelPagePlacement, KernelPage, BootMemory>::move_out(storage) {
+            AccessExtraction::Moved { storage, value } -> retain(padding, storage, tail, valid, value)
         }
     }
 
-    state retain(padding: Extent in Granted & Vacant, storage: Extent in Granted & Vacant,
+    machine retain(padding: Extent in Granted & Vacant, storage: Extent in Granted & Vacant,
                  tail: Extent in Granted & Vacant, valid: bool, value: KernelPage) -> PageReservation {
         let cleared: bool = PageFrame::check_zero(&value, 0);
         // Reinstall the exact zero image just read back. Ready retains the
         // complete resident page; extraction never drops the original extent.
-        transition NativePlacement<KernelPagePlacement, KernelPage, BootMemory>::initialize(storage, value) {
-            PlacementOutcome::Ready { view } -> PageReservation {
+        transition NativeAccess<KernelPagePlacement, KernelPage, BootMemory>::initialize(storage, value) {
+            AccessOutcome::Ready { view } -> PageReservation {
                 padding: padding, page: PreparedPage::Ready { storage: view },
                 tail: tail, verified: valid && cleared,
             }
-            PlacementOutcome::Rejected { returned, reason } -> PageReservation {
+            AccessOutcome::Rejected { returned, reason } -> PageReservation {
                 padding: padding, page: PreparedPage::Rejected { storage: returned.source },
                 tail: tail, verified: false,
             }
@@ -138,13 +138,13 @@ reaches ResourceProfileSupply
 machine PageFrame::reject_unstable_supply(storage: &Extent in Granted) -> bool
 reaches ResourceProfileSupply
 {
-    transition Placed::view_extent<KernelPagePlacement, KernelPage, FirmwareMemory>(storage) {
-        PlacementOutcome::Ready { view } -> false
-        PlacementOutcome::Rejected { returned, reason } -> rejected(reason)
+    transition Access::view_extent<KernelPagePlacement, KernelPage, FirmwareMemory>(storage) {
+        AccessOutcome::Ready { view } -> false
+        AccessOutcome::Rejected { returned, reason } -> rejected(reason)
     }
-    state rejected(reason: PlacementInitializationFailure) -> bool {
+    machine rejected(reason: AccessInitializationFailure) -> bool {
         transition reason {
-            PlacementInitializationFailure::IncompatibleSupply -> true
+            AccessInitializationFailure::IncompatibleSupply -> true
             _ -> false
         }
     }
@@ -155,7 +155,7 @@ machine PageFrame::check_snapshot(snapshot: FirmwareRootSnapshot) -> bool {
         FirmwareRootSnapshot::Ready { entries } -> check(entries)
         FirmwareRootSnapshot::Unavailable -> false
     }
-    state check(entries: [u64; 512]) -> bool {
+    machine check(entries: [u64; 512]) -> bool {
         let page: KernelPage = KernelPage { words: entries };
         PageFrame::check_image(&page)
     }
@@ -166,7 +166,7 @@ machine PageFrame::check_image(page: &KernelPage) -> bool {
         true -> interior(page, 1)
         _ -> false
     }
-    state interior(page: &KernelPage, index: u64) -> bool
+    machine interior(page: &KernelPage, index: u64) -> bool
     requires index <= 511
     {
         transition index < 511 {
@@ -174,7 +174,7 @@ machine PageFrame::check_image(page: &KernelPage) -> bool {
             _ -> true
         }
     }
-    state advance(page: &KernelPage, index: u64) -> bool
+    machine advance(page: &KernelPage, index: u64) -> bool
     requires index < 511
     {
         transition page.words[index] == 0 { true -> interior(page, index + 1) _ -> false }
@@ -183,34 +183,34 @@ machine PageFrame::check_image(page: &KernelPage) -> bool {
 
 // Each indexed event borrows the same resident page. Read the first word again
 // after changing the last, then let whole extraction independently observe both.
-machine PageFrame::overwrite(view: &mut Placed<KernelPagePlacement, KernelPage>) -> bool {
-    let first: u64 = placed_read(&view.words[0]);
-    let last: u64 = placed_read(&view.words[511]);
+machine PageFrame::overwrite(view: &mut Access<KernelPagePlacement, KernelPage>) -> bool {
+    let first: u64 = omega::language::read(&view.words[0]);
+    let last: u64 = omega::language::read(&view.words[511]);
     PageFrame::write_word(view, 0, 29);
     PageFrame::write_word(view, 511, 97);
-    let updated_first: u64 = placed_read(&view.words[0]);
-    let updated_last: u64 = placed_read(&view.words[511]);
+    let updated_first: u64 = omega::language::read(&view.words[0]);
+    let updated_last: u64 = omega::language::read(&view.words[511]);
     first == 17 && last == 73 && updated_first == 29 && updated_last == 97
 }
 
 machine PageFrame::write_word(
-    view: &mut Placed<KernelPagePlacement, KernelPage>, index: u64, value: u64
+    view: &mut Access<KernelPagePlacement, KernelPage>, index: u64, value: u64
 )
 requires index < 512
 {
-    placed_write(&mut view.words[index], value);
+    omega::language::write(&mut view.words[index], value);
 }
 
 machine PageFrame::check_zero(page: &KernelPage, index: u64) -> bool
 requires index <= 512
 {
     transition index < 512 { true -> inspect(page, index) _ -> true }
-    state inspect(page: &KernelPage, index: u64) -> bool
+    machine inspect(page: &KernelPage, index: u64) -> bool
     requires index < 512
     {
         transition page.words[index] == 0 { true -> next(page, index + 1) _ -> false }
     }
-    state next(page: &KernelPage, index: u64) -> bool
+    machine next(page: &KernelPage, index: u64) -> bool
     requires index <= 512
     {
         transition index < 512 { true -> inspect(page, index) _ -> true }

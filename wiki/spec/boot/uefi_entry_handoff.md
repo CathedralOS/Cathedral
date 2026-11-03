@@ -171,21 +171,22 @@ different user-visible authority or compatibility semantics.
 
 ## Current implementation boundary
 
-Cathedral selects the source `CathedralBootstrap` implementation of its exact
-`UefiPhysicalEntry` requirement and separately binds `Kernel::enter` to the
-two-root `ProgramStorageEntry` semantic slot. The contract package owns the
-concrete firmware types and calling plans for both signatures. The physical
-adapter validates the table header, greets, and returns an explicit
-`EFI_UNSUPPORTED` before any semantic installation. This is a bounded arrival
-ladder, not an OS-handoff implementation or a claim that the roots exist.
+Cathedral selects `CathedralBootstrap` for `UefiPhysicalEntry` and binds
+`Kernel::start(image, initial_storage)` to the two-root `ProgramStorageEntry`
+slot. The adapter checks the firmware table and LoadedImage geometry, acquires
+and audits the final memory map, and completes `ExitBootServices` before
+establishing either handoff root. It copies the boot record into initial
+storage and transfers both roots through the selected storage-entry provider.
+`Kernel::start` owns ordinary local context and calls `Kernel::enter`.
 
-`Main::run` and its bounded memory-map/`ExitBootServices` path remain ordinary
-checked source pending connection through validated LoadedImage discovery and
-bootstrap stack/storage custody. The current admitted
-`ExtentRootProvider::grant` call over checked geometry is a transitional
-milestone, not the final external-custody contract. Its result does not yet
-establish physical-space identity, RAM backing, access rights, or a complete
-post-exit inventory.
+A [fresh QEMU/OVMF image](../../boot/omega_uefi_qualification.md)
+reached all fifteen ordered markers, including the post-handoff memory and
+mapping checks. The published-compiler repeat also passed. A fresh negative
+image with one wrong readback expectation reached `Mapping retired`, omitted
+`Mapping checked`, and failed the unchanged harness as required. These runs do
+not independently prove every admitted provider premise or qualify real hardware.
+The current `ExtentRootProvider::grant` route remains a transitional admitted
+boundary, not general authority to grant arbitrary caller-constructed geometry.
 
 Implementation may be called complete only when the selected physical entry,
 adapter operations, external or checked-provider premises, semantic carriers,
@@ -197,9 +198,9 @@ replayable evidence chain.
 - Cathedral's current physical declarations are in
   [`source/contracts/uefi`](../../../source/contracts/uefi/uefi.omg).
 - The selected physical adapter is
-  [`physical_entry.omg`](../../../source/kernel/boot/uefi/main.omg),
+  [`main.omg`](../../../source/kernel/boot/uefi/main.omg),
   and the separate semantic continuation is
-  [`kernel_entry.omg`](../../../source/kernel/boot/uefi/lab/memory/main.omg).
+  [`lab/memory/main.omg`](../../../source/kernel/boot/uefi/lab/memory/main.omg).
 - The current post-entry firmware transition is
   [`source/kernel/boot/uefi/firmware/ownership/ownership.omg`](../../../source/kernel/boot/uefi/firmware/ownership/ownership.omg).
 - Omega owns the generic

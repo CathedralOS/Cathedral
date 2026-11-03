@@ -57,7 +57,7 @@ public machine x86_validate_bootstrap_four_page_walk_images(
         _ -> reject_bootstrap_four_page_walk_images()
     }
 
-    state validate_bootstrap_pml4_page_image(
+    machine validate_bootstrap_pml4_page_image(
         endpoints: X86BootstrapFourKilobyteWalkEndpoints,
         pml4: X86BootstrapSingleEntryPageImageCandidate,
         pdpt: X86BootstrapSingleEntryPageImageCandidate,
@@ -80,7 +80,7 @@ public machine x86_validate_bootstrap_four_page_walk_images(
         }
     }
 
-    state validate_bootstrap_pdpt_page_image(
+    machine validate_bootstrap_pdpt_page_image(
         endpoints: X86BootstrapFourKilobyteWalkEndpoints,
         pml4: X86BootstrapSingleEntryPageImageCandidate,
         pdpt: X86BootstrapSingleEntryPageImageCandidate,
@@ -103,7 +103,7 @@ public machine x86_validate_bootstrap_four_page_walk_images(
         }
     }
 
-    state validate_bootstrap_pd_page_image(
+    machine validate_bootstrap_pd_page_image(
         endpoints: X86BootstrapFourKilobyteWalkEndpoints,
         pml4: X86BootstrapSingleEntryPageImageCandidate,
         pdpt: X86BootstrapSingleEntryPageImageCandidate,
@@ -126,7 +126,7 @@ public machine x86_validate_bootstrap_four_page_walk_images(
         }
     }
 
-    state validate_bootstrap_pt_page_image(
+    machine validate_bootstrap_pt_page_image(
         endpoints: X86BootstrapFourKilobyteWalkEndpoints,
         pml4: X86BootstrapSingleEntryPageImageCandidate,
         pdpt: X86BootstrapSingleEntryPageImageCandidate,
@@ -149,7 +149,7 @@ public machine x86_validate_bootstrap_four_page_walk_images(
         }
     }
 
-    state validate_bootstrap_four_page_walk_correspondence(
+    machine validate_bootstrap_four_page_walk_correspondence(
         endpoints: X86BootstrapFourKilobyteWalkEndpoints,
         pml4: X86BootstrapSingleEntryPageImageCandidate,
         pdpt: X86BootstrapSingleEntryPageImageCandidate,
@@ -188,7 +188,7 @@ public machine x86_validate_bootstrap_four_page_walk_images(
         }
     }
 
-    state accept_bootstrap_four_page_walk_images(
+    machine accept_bootstrap_four_page_walk_images(
         endpoints: X86BootstrapFourKilobyteWalkEndpoints,
         pml4: X86BootstrapSingleEntryPageImageCandidate,
         pdpt: X86BootstrapSingleEntryPageImageCandidate,
@@ -206,7 +206,7 @@ public machine x86_validate_bootstrap_four_page_walk_images(
         }
     }
 
-    state reject_bootstrap_four_page_walk_images()
+    machine reject_bootstrap_four_page_walk_images()
         -> X86BootstrapFourPageWalkImageCheck
     {
         X86BootstrapFourPageWalkImageCheck::Rejected

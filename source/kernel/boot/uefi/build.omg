@@ -1,10 +1,11 @@
-// The target's physical ABI selects Cathedral's source-owned adapter. The
-// ProgramEntry slot independently names the two-root semantic continuation.
+// Firmware starts in CathedralBootstrap. After leaving firmware services,
+// Cathedral passes the image and initial allocation to Kernel::start, which
+// owns the local context used by the kernel continuation.
 
 machine build(builder: &mut Build) {
     Build::application(builder, "cathedral");
-    // Reach: the boot hand-off ABI + the kernel's checked Extent provider.
-    // Allocation policy is the ordinary checked alloc package.
+    // Load the firmware interfaces, kernel memory operations and allocator
+    // used to acquire memory and keep it owned after the firmware handoff.
     Build::depend_as(builder, "uefi", Source::Path { location: "../../../contracts/uefi" });
     Build::depend_as(builder, "uefi_memory", Source::Path { location: "../../../contracts/uefi/memory" });
     Build::depend_as(builder, "core", Source::Path { location: "../../core" });
@@ -12,34 +13,34 @@ machine build(builder: &mut Build) {
     Build::depend_as(builder, "memory_map", Source::Path { location: "firmware/memory_map" });
     Build::depend_as(builder, "alloc", Source::Git {
         repository: "https://github.com/CathedralOS/Omega.git",
-        revision: "849161c59ff74176dafc3f8de5ff66148581de22",
+        revision: "c2cfe5f3decef0294ea80527f7a95264e4520ec9",
         selection: PackageSelection::Named { package: "alloc" }
     });
     Build::accept_boundary<ExtentRootProvider>(builder);
-    Build::select_provider<ExtentRootProvider, core::memory::extent::CathedralExtentRootProvider>(builder);
+    Build::select_provider<ExtentRootProvider, core::memory::extent::CathedralExtentRootProvider>(builder, uefi_x86_64);
     Build::accept_boundary<VacantContentTransfer>(builder);
-    Build::select_provider<VacantContentTransfer, BootVacantStorageProvider>(builder);
+    Build::select_provider<VacantContentTransfer, BootVacantStorageProvider>(builder, uefi_x86_64);
     Build::accept_boundary<BootMemorySupply>(builder);
     Build::accept_boundary<FirmwareMemorySupply>(builder);
-    Build::select_provider<BootMemorySupply, BootMemoryProfileProvider>(builder);
-    Build::select_provider<FirmwareMemorySupply, FirmwareMemoryProfileProvider>(builder);
+    Build::select_provider<BootMemorySupply, BootMemoryProfileProvider>(builder, uefi_x86_64);
+    Build::select_provider<FirmwareMemorySupply, FirmwareMemoryProfileProvider>(builder, uefi_x86_64);
     Build::accept_boundary<HardwareTableSupply>(builder);
-    Build::select_provider<HardwareTableSupply, HardwareTableProfileProvider>(builder);
+    Build::select_provider<HardwareTableSupply, HardwareTableProfileProvider>(builder, uefi_x86_64);
     Build::accept_boundary<MappedRegionSupply>(builder);
-    Build::select_provider<MappedRegionSupply, MappedRegionProfileProvider>(builder);
+    Build::select_provider<MappedRegionSupply, MappedRegionProfileProvider>(builder, uefi_x86_64);
     Build::accept_boundary<BootVirtualReservation>(builder);
-    Build::select_provider<BootVirtualReservation, BootstrapVirtualReservationProvider>(builder);
+    Build::select_provider<BootVirtualReservation, BootstrapVirtualReservationProvider>(builder, uefi_x86_64);
     Build::accept_boundary<BootTranslation>(builder);
-    Build::select_provider<BootTranslation, BootstrapTranslationProvider>(builder);
-    Build::select_provider<PlacementLifecycle, KernelMemoryPlacement>(builder);
-    Build::select_provider<ProgramStorageEntry, ProgramStorageEntryNativeProvider>(builder);
-    Build::select_provider<ProgramImage, ProgramImageNativeProvider>(builder);
-    Build::select_provider<uefi::SimpleTextOutput, uefi::UefiTextOutputProvider>(builder);
-    Build::select_provider<uefi::BootServices, uefi::UefiBootServicesProvider>(builder);
-    Build::select_provider<uefi::LoadedImageAccess, uefi::UefiLoadedImageProvider>(builder);
-    Build::select_provider<uefi::UefiPhysicalEntry, CathedralBootstrap>(builder);
-    Build::bind(builder, uefi_x86_64::ProgramEntry, Kernel::enter);
+    Build::select_provider<BootTranslation, BootstrapTranslationProvider>(builder, uefi_x86_64);
+    Build::select_provider<AccessLifecycle<KernelWordPlacement, KernelWord>, KernelMemoryPlacement>(builder, uefi_x86_64);
+    Build::select_provider<ProgramStorageEntry, ProgramStorageEntryNativeProvider>(builder, uefi_x86_64);
+    Build::select_provider<ProgramImage, ProgramImageNativeProvider>(builder, uefi_x86_64);
+    Build::select_provider<uefi::SimpleTextOutput, uefi::UefiTextOutputProvider>(builder, uefi_x86_64);
+    Build::select_provider<uefi::BootServices, uefi::UefiBootServicesProvider>(builder, uefi_x86_64);
+    Build::select_provider<uefi::LoadedImageAccess, uefi::UefiLoadedImageProvider>(builder, uefi_x86_64);
+    Build::select_provider<uefi::UefiPhysicalEntry, CathedralBootstrap>(builder, uefi_x86_64);
+    Build::bind(builder, uefi_x86_64::ProgramEntry, Kernel::start);
 
     builder.subsystem    = Subsystem::EfiApplication;   // import-free PE32+ firmware loads directly
-    builder.freestanding = true;                         // empty host-provider set (no host runtime)
+    builder.freestanding = true;                         // runs without a hosted operating-system runtime
 }

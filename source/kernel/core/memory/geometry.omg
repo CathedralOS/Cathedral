@@ -12,12 +12,12 @@ public data BootGeometry [copy] {
 
 // Match the map walker's representable one-past endpoint policy. Adjacency is
 // valid; an empty root, an overflowing endpoint or any overlap is not.
-public domain BootGeometry::Separated(geometry)
-requires geometry.image_length > 0 && geometry.storage_length > 0 &&
-    embed(geometry.image_base) + embed(geometry.image_length) <= 18446744073709551615 &&
-    embed(geometry.storage_base) + embed(geometry.storage_length) <= 18446744073709551615 &&
-    (embed(geometry.image_base) + embed(geometry.image_length) <= embed(geometry.storage_base) ||
-     embed(geometry.storage_base) + embed(geometry.storage_length) <= embed(geometry.image_base));
+public domain BootGeometry::Separated
+requires self.image_length > 0 && self.storage_length > 0 &&
+    embed(self.image_base) + embed(self.image_length) <= 18446744073709551615 &&
+    embed(self.storage_base) + embed(self.storage_length) <= 18446744073709551615 &&
+    (embed(self.image_base) + embed(self.image_length) <= embed(self.storage_base) ||
+     embed(self.storage_base) + embed(self.storage_length) <= embed(self.image_base));
 
 public data BootGeometryCheck {
     case Rejected;
@@ -32,7 +32,7 @@ public machine BootGeometry::check(geometry: BootGeometry) -> BootGeometryCheck 
         _ -> BootGeometryCheck::Rejected
     }
 
-    state separate(geometry: BootGeometry) -> BootGeometryCheck
+    machine separate(geometry: BootGeometry) -> BootGeometryCheck
     requires geometry.image_length > 0 && geometry.storage_length > 0 &&
         geometry.image_base <= 18446744073709551615 - geometry.image_length &&
         geometry.storage_base <= 18446744073709551615 - geometry.storage_length
@@ -57,14 +57,14 @@ public machine BootGeometry::exclude_image_suffix(mapped: BootGeometry, retained
         BootGeometryCheck::Rejected -> BootGeometryCheck::Rejected
     }
 
-    state locate(mapped: BootGeometry, retained_start: u64) -> BootGeometryCheck {
+    machine locate(mapped: BootGeometry, retained_start: u64) -> BootGeometryCheck {
         transition retained_start > mapped.image_base {
             true -> partition(mapped, retained_start)
             _ -> BootGeometryCheck::Rejected
         }
     }
 
-    state partition(mapped: BootGeometry, retained_start: u64) -> BootGeometryCheck
+    machine partition(mapped: BootGeometry, retained_start: u64) -> BootGeometryCheck
     requires retained_start > mapped.image_base
     {
         let prefix: u64 = retained_start - mapped.image_base;

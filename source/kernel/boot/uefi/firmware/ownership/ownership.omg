@@ -80,7 +80,7 @@ requires addr::Bound == 18446744073709551616
         _    -> idle()
     }
 
-    state validate_boot_services(context: &mut Main, handle: EfiHandle,
+    machine validate_boot_services(context: &mut Main, handle: EfiHandle,
                                  table: &EfiSystemTable)
     requires addr::Bound == 18446744073709551616
     {
@@ -97,14 +97,14 @@ requires addr::Bound == 18446744073709551616
     // Get a fresh map and its inseparable key. This state is also the only
     // retry target after ExitBootServices reports EFI_INVALID_PARAMETER: the
     // old key and every descriptor-derived candidate are discarded together.
-    state refresh_map(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine refresh_map(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                       stale_retry_used: u64)
     requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         transition { _ -> get_map(context, bs, handle, stale_retry_used, 16384) }
     }
 
-    state get_map(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine get_map(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                   stale_retry_used: u64,
                   attempted_capacity: u64)
     requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1 && 16384 <= attempted_capacity && attempted_capacity <= 65536
@@ -150,7 +150,7 @@ requires addr::Bound == 18446744073709551616
     // Only the exact capacity signal may expand the advertised window, and
     // only once. Key, descriptor size/version, and all buffer contents from the
     // failed call are ignored. A requirement above the static ceiling parks.
-    state map_failed(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine map_failed(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                      stale_retry_used: u64,
                      attempted_capacity: u64,
                      status_code: u64, required_size: u64)
@@ -175,7 +175,7 @@ requires addr::Bound == 18446744073709551616
     // edge supplies 0; the loop edge proves <= 65496 (65536 buffer bytes minus
     // the 40-byte descriptor footprint) before advancing. `in Trapping` on the walk
     // arithmetic: hostile out-values trip a trap instead of wrapping.
-    state walk(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine walk(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                stale_retry_used: u64,
                map_size: u64 in Trapping, desc_size: u64 in Trapping, key: MapKey,
                offset: u64 in Trapping, best_start: u64, best_pages: u64,
@@ -195,7 +195,7 @@ requires addr::Bound == 18446744073709551616
         }
     }
 
-    state step(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine step(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                stale_retry_used: u64,
                map_size: u64 in Trapping, desc_size: u64 in Trapping, key: MapKey,
                offset: u64 in Trapping, best_start: u64, best_pages: u64,
@@ -220,7 +220,7 @@ requires addr::Bound == 18446744073709551616
     // backing fact. Page-count bounding makes the following multiplication
     // exact; alignment follows the UEFI page contract but is checked rather
     // than trusted from raw descriptor bytes.
-    state validate_candidate(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine validate_candidate(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                              stale_retry_used: u64,
                              map_size: u64 in Trapping,
                              desc_size: u64 in Trapping, key: MapKey,
@@ -238,7 +238,7 @@ requires addr::Bound == 18446744073709551616
         }
     }
 
-    state validate_candidate_end(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine validate_candidate_end(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                                  stale_retry_used: u64,
                                  map_size: u64 in Trapping,
                                  desc_size: u64 in Trapping, key: MapKey,
@@ -269,7 +269,7 @@ requires addr::Bound == 18446744073709551616
     // that validation, skip only the selected record's own
     // overlap comparison. Every other range must lie wholly to one side of the
     // chosen conventional span. No ordering assumption is made.
-    state prepare_audit(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine prepare_audit(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                         stale_retry_used: u64,
                         map_size: u64 in Trapping,
                         desc_size: u64 in Trapping, key: MapKey,
@@ -286,7 +286,7 @@ requires addr::Bound == 18446744073709551616
                                            best_offset, 0) }
     }
 
-    state audit_descriptor(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine audit_descriptor(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                            stale_retry_used: u64,
                            map_size: u64 in Trapping,
                            desc_size: u64 in Trapping, key: MapKey,
@@ -306,7 +306,7 @@ requires addr::Bound == 18446744073709551616
                                          d.number_of_pages) }
     }
 
-    state audit_geometry(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine audit_geometry(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                          stale_retry_used: u64,
                          map_size: u64 in Trapping,
                          desc_size: u64 in Trapping, key: MapKey,
@@ -339,7 +339,7 @@ requires addr::Bound == 18446744073709551616
         }
     }
 
-    state audit_geometry_end(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine audit_geometry_end(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                              stale_retry_used: u64,
                              map_size: u64 in Trapping,
                              desc_size: u64 in Trapping, key: MapKey,
@@ -371,7 +371,7 @@ requires addr::Bound == 18446744073709551616
 
     // The selected record has now passed the same complete descriptor-geometry
     // validation as every other record; skip only its overlap comparison.
-    state audit_overlap(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine audit_overlap(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                         stale_retry_used: u64,
                         map_size: u64 in Trapping,
                         desc_size: u64 in Trapping, key: MapKey,
@@ -394,7 +394,7 @@ requires addr::Bound == 18446744073709551616
         }
     }
 
-    state audit_classify(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine audit_classify(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                          stale_retry_used: u64,
                          map_size: u64 in Trapping,
                          desc_size: u64 in Trapping, key: MapKey,
@@ -419,7 +419,7 @@ requires addr::Bound == 18446744073709551616
         }
     }
 
-    state audit_left(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine audit_left(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                      stale_retry_used: u64,
                      map_size: u64 in Trapping,
                      desc_size: u64 in Trapping, key: MapKey,
@@ -438,7 +438,7 @@ requires addr::Bound == 18446744073709551616
         }
     }
 
-    state audit_right(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine audit_right(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                       stale_retry_used: u64,
                       map_size: u64 in Trapping,
                       desc_size: u64 in Trapping, key: MapKey,
@@ -456,7 +456,7 @@ requires addr::Bound == 18446744073709551616
         }
     }
 
-    state audit_step(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine audit_step(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                      stale_retry_used: u64,
                      map_size: u64 in Trapping,
                      desc_size: u64 in Trapping, key: MapKey,
@@ -481,7 +481,7 @@ requires addr::Bound == 18446744073709551616
     // This value is numeric evidence only: successful firmware completion and
     // surviving-stack/installation custody still establish the actual roots.
     // A stale key discards this preparation with the map it was derived from.
-    state prepare_entry(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine prepare_entry(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                         stale_retry_used: u64, key: MapKey,
                         best_start: u64, best_pages: u64, length: u64)
     requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
@@ -509,7 +509,7 @@ requires addr::Bound == 18446744073709551616
     // do not grant, discard the old map-derived candidate, and obtain a new map
     // and key before the one permitted retry. Any other firmware error parks
     // unowned.
-    state exit(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine exit(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                stale_retry_used: u64, key: MapKey,
                best_pages: u64, geometry: BootGeometry in core::memory::geometry::BootGeometry::Separated)
     requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
@@ -525,7 +525,7 @@ requires addr::Bound == 18446744073709551616
     // The first stale key gets the spec-required fresh map/exit pair. A second
     // stale rejection parks: hostile or broken firmware cannot keep Cathedral
     // in an unbounded bootstrap loop, and no rejected transaction can grant.
-    state exit_failed(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine exit_failed(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                       stale_retry_used: u64, exit_code: u64)
     requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
@@ -535,11 +535,10 @@ requires addr::Bound == 18446744073709551616
         }
     }
 
-    // We own the machine. Construct inert range geometry from the exact
-    // validated largest-span values, then cross the admitted owner-authored
-    // provider requirement for each root. Reconstructing these fields alone
-    // does not grant authority; the selected calls establish their claims.
-    state own(context: &mut Main, geometry: BootGeometry in core::memory::geometry::BootGeometry::Separated, best_pages: u64)
+    // Firmware has released the checked ranges. Ask the selected root provider
+    // to grant the image prefix and initial allocation before using either.
+    // Their numeric addresses and lengths alone do not establish ownership.
+    machine own(context: &mut Main, geometry: BootGeometry in core::memory::geometry::BootGeometry::Separated, best_pages: u64)
     requires addr::Bound == 18446744073709551616
     {
         let image_geometry: Extent = Extent {
@@ -562,7 +561,7 @@ requires addr::Bound == 18446744073709551616
         }
     }
 
-    state retain_roots(roots: KernelRoots) {
+    machine retain_roots(roots: KernelRoots) {
         asm { hlt }
         transition { _ -> retain_roots(roots) }
     }
@@ -573,7 +572,7 @@ requires addr::Bound == 18446744073709551616
     // Register map = drivers/facts/uart_16550 (COM1 base 0x3F8 = 1016):
     // +1 IER (1017), +2 FCR (1018), +3 LCR (1019), +4 MCR (1020),
     // +5 LSR (1021). 115200 8N1, FIFOs enabled (16-byte) + cleared.
-    state serial_init(roots: KernelRoots, best_pages: u64 in Trapping) {
+    machine serial_init(roots: KernelRoots, best_pages: u64 in Trapping) {
         asm { out 1019, 128 }   // LCR: DLAB on — divisor latch reachable
         asm { out 1016, 1 }     // divisor low  = 1 -> 115200 baud
         asm { out 1017, 0 }     // divisor high = 0
@@ -583,11 +582,10 @@ requires addr::Bound == 18446744073709551616
         transition { _ -> to_mib(roots, best_pages, 0) }
     }
 
-    // Pages -> MiB by repeated subtraction (256 pages = 1 MiB; the runtime
-    // lowering has no division yet). Stop at 100000 MiB because every larger
+    // Count MiB in groups of 256 pages. Stop at 100000 MiB because every larger
     // value shares the honest `99999+ MiB` report. The conversion therefore
     // takes at most 100000 rounds regardless of a hostile-but-valid span size.
-    state to_mib(roots: KernelRoots,
+    machine to_mib(roots: KernelRoots,
                  pages: u64 in Trapping, mib: u64 in Trapping) {
         transition pages >= 256 && mib < 100000 {
             true -> to_mib(roots, pages - 256, mib + 1)
@@ -602,7 +600,7 @@ requires addr::Bound == 18446744073709551616
     // hardware handshake — no firmware ever polls for us again. Each wait has
     // a finite status-read budget; an absent or wedged UART skips reporting
     // and enters the kernel without writing into a busy transmitter.
-    state owned_wait(roots: KernelRoots, mib: u64 in Trapping,
+    machine owned_wait(roots: KernelRoots, mib: u64 in Trapping,
                      remaining_polls: u64 in Trapping) {
         let mut lsr: u8 = 0;
         asm { in lsr, 1021 }
@@ -611,14 +609,14 @@ requires addr::Bound == 18446744073709551616
             _    -> owned_send(roots, mib)
         }
     }
-    state owned_wait_busy(roots: KernelRoots, mib: u64 in Trapping,
+    machine owned_wait_busy(roots: KernelRoots, mib: u64 in Trapping,
                           remaining_polls: u64 in Trapping) {
         transition remaining_polls > 1 {
             true -> owned_wait(roots, mib, remaining_polls - 1)
             _    -> enter_kernel(roots)
         }
     }
-    state owned_send(roots: KernelRoots, mib: u64 in Trapping) {
+    machine owned_send(roots: KernelRoots, mib: u64 in Trapping) {
         asm { out 1016, 79 }    // 'O'
         asm { out 1016, 119 }   // 'w'
         asm { out 1016, 110 }   // 'n'
@@ -628,7 +626,7 @@ requires addr::Bound == 18446744073709551616
         transition { _ -> digits_wait(roots, mib, MAX_UART_STATUS_POLLS) }
     }
 
-    state digits_wait(roots: KernelRoots, mib: u64 in Trapping,
+    machine digits_wait(roots: KernelRoots, mib: u64 in Trapping,
                       remaining_polls: u64 in Trapping) {
         let mut lsr: u8 = 0;
         asm { in lsr, 1021 }
@@ -637,7 +635,7 @@ requires addr::Bound == 18446744073709551616
             _    -> report_size(roots, mib)
         }
     }
-    state digits_wait_busy(roots: KernelRoots, mib: u64 in Trapping,
+    machine digits_wait_busy(roots: KernelRoots, mib: u64 in Trapping,
                            remaining_polls: u64 in Trapping) {
         transition remaining_polls > 1 {
             true -> digits_wait(roots, mib, remaining_polls - 1)
@@ -648,14 +646,14 @@ requires addr::Bound == 18446744073709551616
     // Five digits plus the tail fit in one 16-byte FIFO burst. Larger roots
     // take an explicit lower-bound route instead of wrapping `48 + count` into
     // a non-digit byte.
-    state report_size(roots: KernelRoots, mib: u64 in Trapping) {
+    machine report_size(roots: KernelRoots, mib: u64 in Trapping) {
         transition mib <= 99999 {
             true -> ten_thousands(roots, mib, 0)
             _ -> oversized_mib(roots)
         }
     }
 
-    state oversized_mib(roots: KernelRoots) {
+    machine oversized_mib(roots: KernelRoots) {
         asm { out 1016, 57 }    // '9'
         asm { out 1016, 57 }    // '9'
         asm { out 1016, 57 }    // '9'
@@ -669,7 +667,7 @@ requires addr::Bound == 18446744073709551616
     // how many times it fits, emits its digit, forwards the remainder.
     // `printed` suppresses leading zeros; the ones place always prints. This
     // route receives only values that fit its five decimal places.
-    state ten_thousands(roots: KernelRoots,
+    machine ten_thousands(roots: KernelRoots,
                         rest: u64 in Trapping, count: u64 in Trapping)
     requires count <= 9 && embed(rest) + embed(count) * 10000 <= 99999
     {
@@ -678,14 +676,14 @@ requires addr::Bound == 18446744073709551616
             _    -> ten_thousands_emit(roots, rest, count)
         }
     }
-    state ten_thousands_emit(roots: KernelRoots,
+    machine ten_thousands_emit(roots: KernelRoots,
                              rest: u64 in Trapping, count: u64 in Trapping) {
         transition count == 0 {
             true -> thousands(roots, rest, 0, 0)
             _    -> ten_thousands_digit(roots, rest, 48 + count)
         }
     }
-    state ten_thousands_digit(roots: KernelRoots,
+    machine ten_thousands_digit(roots: KernelRoots,
                               rest: u64 in Trapping, digit: u64 in Trapping)
     requires 48 <= digit && digit <= 57
     {
@@ -694,7 +692,7 @@ requires addr::Bound == 18446744073709551616
         transition { _ -> thousands(roots, rest, 0, 1) }
     }
 
-    state thousands(roots: KernelRoots, rest: u64 in Trapping,
+    machine thousands(roots: KernelRoots, rest: u64 in Trapping,
                     count: u64 in Trapping, printed: u64)
     requires count <= 9 && embed(rest) + embed(count) * 1000 <= 9999
     {
@@ -703,14 +701,14 @@ requires addr::Bound == 18446744073709551616
             _    -> thousands_emit(roots, rest, count, printed)
         }
     }
-    state thousands_emit(roots: KernelRoots, rest: u64 in Trapping,
+    machine thousands_emit(roots: KernelRoots, rest: u64 in Trapping,
                          count: u64 in Trapping, printed: u64) {
         transition count == 0 && printed == 0 {
             true -> hundreds(roots, rest, 0, 0)
             _    -> thousands_digit(roots, rest, 48 + count)
         }
     }
-    state thousands_digit(roots: KernelRoots,
+    machine thousands_digit(roots: KernelRoots,
                           rest: u64 in Trapping, digit: u64 in Trapping)
     requires 48 <= digit && digit <= 57
     {
@@ -719,7 +717,7 @@ requires addr::Bound == 18446744073709551616
         transition { _ -> hundreds(roots, rest, 0, 1) }
     }
 
-    state hundreds(roots: KernelRoots, rest: u64 in Trapping,
+    machine hundreds(roots: KernelRoots, rest: u64 in Trapping,
                    count: u64 in Trapping, printed: u64)
     requires count <= 9 && embed(rest) + embed(count) * 100 <= 999
     {
@@ -728,14 +726,14 @@ requires addr::Bound == 18446744073709551616
             _    -> hundreds_emit(roots, rest, count, printed)
         }
     }
-    state hundreds_emit(roots: KernelRoots, rest: u64 in Trapping,
+    machine hundreds_emit(roots: KernelRoots, rest: u64 in Trapping,
                         count: u64 in Trapping, printed: u64) {
         transition count == 0 && printed == 0 {
             true -> tens(roots, rest, 0, 0)
             _    -> hundreds_digit(roots, rest, 48 + count)
         }
     }
-    state hundreds_digit(roots: KernelRoots,
+    machine hundreds_digit(roots: KernelRoots,
                          rest: u64 in Trapping, digit: u64 in Trapping)
     requires 48 <= digit && digit <= 57
     {
@@ -744,7 +742,7 @@ requires addr::Bound == 18446744073709551616
         transition { _ -> tens(roots, rest, 0, 1) }
     }
 
-    state tens(roots: KernelRoots, rest: u64 in Trapping,
+    machine tens(roots: KernelRoots, rest: u64 in Trapping,
                count: u64 in Trapping, printed: u64)
     requires count <= 9 && embed(rest) + embed(count) * 10 <= 99
     {
@@ -753,14 +751,14 @@ requires addr::Bound == 18446744073709551616
             _    -> tens_emit(roots, rest, count, printed)
         }
     }
-    state tens_emit(roots: KernelRoots, rest: u64 in Trapping,
+    machine tens_emit(roots: KernelRoots, rest: u64 in Trapping,
                     count: u64 in Trapping, printed: u64) {
         transition count == 0 && printed == 0 {
             true -> ones_digit(roots, 48 + rest)
             _    -> tens_digit(roots, rest, 48 + count)
         }
     }
-    state tens_digit(roots: KernelRoots,
+    machine tens_digit(roots: KernelRoots,
                      rest: u64 in Trapping, digit: u64 in Trapping)
     requires 48 <= digit && digit <= 57
     {
@@ -771,7 +769,7 @@ requires addr::Bound == 18446744073709551616
 
     // The ones place always prints — "Owned 0 MiB" is an honest report of a
     // machine with no conventional span, never an empty number.
-    state ones_digit(roots: KernelRoots, digit: u64 in Trapping)
+    machine ones_digit(roots: KernelRoots, digit: u64 in Trapping)
     requires 48 <= digit && digit <= 57
     {
         let byte: u8 = digit as u8;
@@ -779,7 +777,7 @@ requires addr::Bound == 18446744073709551616
         transition { _ -> tail_send(roots) }
     }
 
-    state tail_send(roots: KernelRoots) {
+    machine tail_send(roots: KernelRoots) {
         asm { out 1016, 32 }    // ' '
         asm { out 1016, 77 }    // 'M'
         asm { out 1016, 105 }   // 'i'
@@ -794,14 +792,14 @@ requires addr::Bound == 18446744073709551616
     // loop; the self-re-entry re-halts after any wake. `hlt` is a known-contract
     // asm intrinsic reaching `MachineControl`, discharged by the freestanding
     // boot boundary.
-    state idle() {
+    machine idle() {
         asm { hlt }
         transition { _ -> idle() }
     }
 
     // The selected bridge consumes the existing claims. Build alone chooses
     // the destination; this source does not hardcode a kernel implementation.
-    state enter_kernel(roots: KernelRoots) {
+    machine enter_kernel(roots: KernelRoots) {
         let { image, initial_storage } = roots;
         ProgramStorageEntry::enter(image, initial_storage);
     }
