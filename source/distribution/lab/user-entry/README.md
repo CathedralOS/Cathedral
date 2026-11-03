@@ -179,6 +179,13 @@ client has observed mailbox backpressure for its attached second request;
 retry must keep the first request and its backing alive. A second scenario
 acknowledges that first frame while leaving its typed grant queued, forcing
 backpressure at the separate grant slot instead. Both must permit a safe retry.
+The healthy exchange also holds client consumption until the provider has
+failed to publish its final reply into the full mailbox. A fixture-only word
+outside the wire header releases that hold after draining old notifications.
+The provider then waits only for the reply-consumption notification and checks
+the acknowledgement sequence. No new request or periodic retry can rescue it;
+the unfixed client fails with provider status 536. This tests the wake needed
+by event-driven providers, which the fixture's ordinary tick polling hid.
 
 ```powershell
 python tools/omega-user/connection_test.py --pipeline

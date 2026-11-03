@@ -200,7 +200,21 @@ public machine poll(gate: &Gate, peer: &mut Peer, now: u64) -> Reply
         let reply: Reply = block incoming::poll(gate, peer, now);
         transition reply {
             Reply::Failed { code } -> block retired(gate, peer, code)
+            Reply::Pending -> (reply)
+            _ -> acknowledged(gate, peer, reply)
+        }
+    }
+    // Consumption frees the peer's publication slot even when this client
+    // has no new request to send. A complete final reply remains valid if
+    // the provider has already closed; failure of this wake hint cannot undo it.
+    machine acknowledged(gate: &Gate, peer: &Peer, reply: Reply) -> Reply reaches Kernel {
+        transition peer.pipeline {
+            true -> signalled(gate, peer, reply)
             _ -> (reply)
+        }
+        machine signalled(gate: &Gate, peer: &Peer, reply: Reply) -> Reply reaches Kernel {
+            let ignored: u64 = Kernel::notify_signal(gate, peer.signal);
+            reply
         }
     }
     machine retired(gate: &Gate, peer: &mut Peer, code: u64) -> Reply reaches Kernel {

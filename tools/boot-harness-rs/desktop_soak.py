@@ -66,6 +66,7 @@ def exercise(output, click, key, scan, width, height, reboot, cycles, pointer_st
         offset = serial.stat().st_size
         started = time.monotonic()
         phases = {}
+        edit_steps = {}
 
         def phase(name, action):
             begin = time.monotonic()
@@ -77,14 +78,20 @@ def exercise(output, click, key, scan, width, height, reboot, cycles, pointer_st
         token = f'c{done + cycle}'
 
         def edit():
+            # Separate starting/loading Notes from delivering keys and repainting;
+            # one large edit duration cannot locate an intermittent idle wait.
+            begin = time.monotonic()
             n.launch(nested_depth, 0)
             n.note(nested_depth, saved)
+            edit_steps['launch'] = round(time.monotonic() - begin, 2)
+            begin = time.monotonic()
             n.focus_note(nested_depth)
             for _ in saved:
                 key('backspace')
             for ch in token:
                 key(ch)
             n.note(nested_depth, token, True)
+            edit_steps['input'] = round(time.monotonic() - begin, 2)
 
         def save():
             key('f1')
@@ -111,7 +118,7 @@ def exercise(output, click, key, scan, width, height, reboot, cycles, pointer_st
         accounts = reclaimed(log)
         shell = shell_accounts(log)
         failures = {marker: log.count(marker) for marker in FAILURES if marker in log}
-        record = dict(cycle=cycle, token=token, seconds=elapsed, phases=phases,
+        record = dict(cycle=cycle, token=token, seconds=elapsed, phases=phases, edit_steps=edit_steps,
                       windows=max((int(w) for w in re.findall(r'STORAGE_TRACE collect-pass \d+ \d+ \d+ \d+ (\d+) \d+', log)), default=0),
                       heap_live_end=heaps[-1]['live'] if heaps else None,
                       heap_peak=max((h['peak'] for h in heaps), default=None),
@@ -187,6 +194,8 @@ def report(output):
                   f"provider floor pages {c.get('provider_pages_low')} frames {c.get('provider_frames_low')}; "
                   f"shell floor {c.get('shell_low')}; "
                   f"failures {c['failures'] or 'none'}; {phases}")
+            if c.get('edit_steps'):
+                print('    edit steps: ' + ' '.join(f"{name} {seconds}" for name, seconds in c['edit_steps'].items()))
         times = [c['seconds'] for c in data['cycles']]
         if len(times) >= 4:
             first, last = sum(times[:2]) / 2, sum(times[-2:]) / 2

@@ -99,11 +99,11 @@ machine parked(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel
     upstream::watch(context, &mut set);
     scene::watch(context, &mut set);
     forward::watch(context, &mut set);
-    lifecycle::watch(context, 0u64, &mut set);
-    lifecycle::watch(context, 1u64, &mut set);
-    lifecycle::watch(context, 2u64, &mut set);
-    lifecycle::watch(context, 3u64, &mut set);
-    lifecycle::watch(context, 4u64, &mut set);
+    lifecycle::watch(context, 0u64, &mut set, now);
+    lifecycle::watch(context, 1u64, &mut set, now);
+    lifecycle::watch(context, 2u64, &mut set, now);
+    lifecycle::watch(context, 3u64, &mut set, now);
+    lifecycle::watch(context, 4u64, &mut set, now);
     storage::watch(context, &mut set);
     let status: u64 = block runtime::waiting::wait(gate, &set);
     transition status < kernel::ERROR_BASE || status == kernel::TIMED_OUT || status == kernel::PEER_CLOSED {

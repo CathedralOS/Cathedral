@@ -152,6 +152,18 @@ machine bounded(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
     }
 }
 machine receive(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+    // Do not consume the first plain reply until the provider has actually
+    // filled its reply mailbox and parked for the acknowledgement wake.
+    transition context.mode == 400u64 && context.stage == 5u64 && !context.first_done {
+        true -> block gated(gate, context, now)
+        _ -> block receiving(gate, context, now)
+    }
+    machine gated(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+        let ready: bool = block barrier::reply_blocked(gate, &context.peer);
+        transition ready { true -> block receiving(gate, context, now) _ -> (0u64) }
+    }
+}
+machine receiving(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
     let reply: Reply = block runtime::connection::main::poll(gate, &mut context.peer, now);
     transition reply {
         Reply::Pending -> (0u64)

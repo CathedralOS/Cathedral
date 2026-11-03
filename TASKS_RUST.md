@@ -1134,6 +1134,77 @@ The follow-up below moves shared storage exchanges into retained per-link work.
 Local launch reads and bindings remain the next continuation work, including
 recovery of the login picker on failed admission.
 
+### Stock matrix migration: reply-space wake-ups
+
+After `0a0ec64e`, tracing the intermittent deep launch/close stalls exposed a
+shared Omega runtime omission: consuming a pipelined reply acknowledged its
+mailbox sequence but did not notify the provider. A provider with another
+reply waiting for that slot could sleep until its idle timeout. Rust already
+signals on consumption. Omega's `connection/main.omg::poll` now does the same
+for complete pipelined replies. Pending/failed receives do not signal. The
+notification is best-effort so a valid final reply survives provider closure.
+No kernel special case, wire change, budget increase or shorter idle timeout
+is involved.
+
+The existing two-peer pipeline witness now proves the wake without periodic
+retry hiding its absence. The client holds consumption until the provider has
+actually hit a full reply mailbox. The provider drains old notifications,
+releases the hold through a fixture word outside the frame, then waits only
+for acknowledgement notification and checks the consumed sequence. The client
+has no further request to send. Against the unfixed runtime this fails with
+provider status 536 at `build/omega-user/connections/20261103T010700887916Z/`;
+the same fixture with the runtime fix passes at `20261103T010909182640Z/`,
+including the existing malformed grants, correlation, closure and reuse cases.
+
+The matrix's own wait set also includes local work left after the last
+publication: a child ready to retire, an unsent interaction hint, a reservation
+awaiting release, and an opening control link's deadline. These obligations
+must not wait for unrelated incoming messages. That wait-set correction alone
+did **not** resolve the pauses: the seven-cycle diagnostic soak at
+`build/boot-harness-rs/desktop/20261103T005732273797Z/` still recorded a 12.26 s
+Notes launch and 12.27/12.44 s closes. The soak now records Notes launch and
+input/repaint durations separately; that isolated the long edit pause to launch.
+
+The fixed matrix is 377/496 load pages, still with a 128-page stack. Native
+and component receipt inputs match the worktree; its ELF SHA-256 is
+`a704f11d50e6aef16721be3ca35cd32b410cc7d8180797982f3004cd155ab3cc`.
+The pinned Omega producer is unchanged. Shared-connection, multi-client service
+and child-admission QEMU suites pass at `build/omega-user/connections/`
+`20261103T010932278891Z/`, `20261103T010953070648Z/` and
+`20261103T011006527638Z/`. Eight Omega builder tests, four soak bookkeeping
+tests, layout (148 Omega / 153 Rust edges) and diff whitespace checks pass.
+
+The seven-cycle depth-three soak (five fresh, two cold) passes at
+`build/boot-harness-rs/desktop/20261103T011010109439Z/`. Notes closes took
+1.86-3.47 s; the earlier roughly twelve-second closes did not recur. Launches
+still took 3.34-7.78 s and input/repaint 1.78-2.84 s. Those are host-observed
+upper bounds, not an overall performance win or proof that every long wait is
+fixed. Resource floors remain stable: root 8 private / 138 reader pages,
+602 frames and 15 free slots; provider 509 pages / 844 frames. No failure
+markers were reported and the exact saved text survives cold reboot.
+
+Further QEMU checks pass, all including cold reopen, under
+`build/boot-harness-rs/desktop/`:
+
+| Scenario | Artifact |
+| --- | --- |
+| Full Omega desktop, drafts, switching, protected close and slot reuse | `20261103T012635920518Z/` |
+| Selection cancellation through two relays | `20261103T012817129939Z/` |
+| Failed login restores the picker and permits retry | `20261103T013002186266Z/` |
+| Revoke/regrant during a held executable read | `20261103T013132394611Z/` |
+| Normal F5 desktop, saves and slot reuse | `20261103T013244198549Z/` |
+
+Logs for this sweep are
+`build/omega-matrix-progress/ack-*.log`. The normal profile still selects the
+Rust matrix; this slice does not change that composition.
+
+Next remains binding refresh and final launch placement/activation, preserving
+captured authority and cancellation while the event loop serves other work.
+The child launch read is resumable; admission/binding/activation are not yet
+fully resumable. Owner RUN_OBJECT, startup reads, listing and first provider
+handshakes still wait. Keep one receiver per storage source and ordinary
+userspace IPC. The earlier small Rust matrix-lab failure remains open.
+
 ### Stock matrix migration: child launch reads and picker recovery
 
 After `889468db`, child LAUNCH resumes at `children/launch/launch.omg` instead

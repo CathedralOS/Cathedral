@@ -374,17 +374,39 @@ machine wake(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel
         let status: u64 = Kernel::notify_signal(gate, context.slots[slot].bell.signal);
     }
 }
-public machine watch(context: &State, slot: u64 [0..=4], set: &mut Set) {
+// The last publication in a turn can unblock retirement or create a hint after
+// notify already ran. These local obligations cannot depend on another incoming
+// message. A dead child's reservation also needs retries until collection ends.
+public machine watch(context: &State, slot: u64 [0..=4], set: &mut Set, now: u64) {
+    local_work(context, slot, set, now);
     transition context.slots[slot].live {
         true -> watched(context, slot, set)
         _ -> done()
     }
     machine watched(context: &State, slot: u64 [0..=4], set: &mut Set) {
         runtime::server::main::watch(&context.slots[slot].listener, set);
-        transition context.opening[slot] != 0u64 && context.controls[slot].receiver != 0u64 {
+        transition context.opening[slot] != 0u64 {
+            true -> opening(context, slot, set)
+            _ -> done()
+        }
+    }
+    machine opening(context: &State, slot: u64 [0..=4], set: &mut Set) {
+        runtime::waiting::expire_by(set, context.opening[slot]);
+        transition context.controls[slot].receiver != 0u64 {
             true -> runtime::waiting::add(set, runtime::waiting::IPC, context.controls[slot].receiver)
             _ -> done()
         }
+    }
+}
+machine local_work(context: &State, slot: u64 [0..=4], set: &mut Set, now: u64) {
+    let live: bool = context.slots[slot].live;
+    let departed: bool = live && context.slots[slot].listener.peer.fault != 0u64;
+    let retiring: bool = !context.presentation_work.active && (context.retire_after_present[slot] || departed);
+    let hint: bool = live && context.slots[slot].bell.wait == 0u64 && context.world.children[slot].notify;
+    transition {
+        retiring || hint -> runtime::waiting::expire_by(set, now)
+        context.releasing[slot] != 0u64 -> runtime::waiting::expire_by(set, runtime::time::after(now, 1u64))
+        _ -> done()
     }
 }
 machine reply(gate: &Gate, context: &mut State, words: [u64; 8]) -> u64 reaches Kernel {

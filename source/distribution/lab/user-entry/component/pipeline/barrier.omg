@@ -4,6 +4,7 @@ module pipeline::barrier;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;
+use runtime::time::Tick;
 public machine release(gate: &Gate, endpoint: u64) -> u64 reaches Kernel invokes Kernel {
     let mut words: [u64; 8]; words[0] = 1u64;
     let sent: u64 = Kernel::send(gate, endpoint, &words, 8u64);
@@ -36,4 +37,34 @@ public machine consumed(gate: &Gate, peer: &runtime::connection::main::Peer) -> 
     let mut words: [u64; 8];
     let status: u64 = block Kernel::shared_read(gate, peer.reader.handle, 1u64, &mut words, 1u64);
     status == 0u64 && words[0] == peer.sent
+}
+
+// Fixture-only word outside the v4 frame/header. It coordinates reply
+// backpressure without consuming the reply or sending another request.
+const REPLY_BLOCKED: u64 = 128u64;
+public machine reply_blocked(gate: &Gate, peer: &runtime::connection::main::Peer) -> bool reaches Kernel blocks invokes Kernel {
+    let mut words: [u64; 8];
+    let status: u64 = block Kernel::shared_read(gate, peer.reader.handle, REPLY_BLOCKED, &mut words, 1u64);
+    status == 0u64 && words[0] == 1u64
+}
+public machine reply_wake(gate: &Gate, peer: &runtime::connection::main::Peer, clock: u64) -> u64 reaches Kernel blocks invokes Kernel {
+    let tick: Tick = runtime::time::read(gate, clock);
+    transition tick {
+        Tick::Read { value } -> block armed(gate, peer, value)
+        _ -> (kernel::IO_ERROR)
+    }
+    machine armed(gate: &Gate, peer: &runtime::connection::main::Peer, now: u64) -> u64 reaches Kernel {
+        let drained: u64 = block Kernel::notify_wait(gate, peer.bell.wait, now, 1u64);
+        let words: [u64; 8] = [1u64,0u64,0u64,0u64,0u64,0u64,0u64,0u64];
+        let status: u64 = block Kernel::shared_write(gate, peer.writer.handle, REPLY_BLOCKED, &words, 1u64);
+        transition status == 0u64 {
+            true -> block waiting(gate, peer, now)
+            _ -> (status)
+        }
+    }
+    machine waiting(gate: &Gate, peer: &runtime::connection::main::Peer, now: u64) -> u64 reaches Kernel {
+        let status: u64 = block Kernel::notify_wait(gate, peer.bell.wait, runtime::time::after(now, 100u64), 1u64);
+        let acknowledged: bool = block consumed(gate, peer);
+        transition status == kernel::NOTIFY_SIGNALED && acknowledged { true -> (0u64) _ -> (kernel::TIMED_OUT) }
+    }
 }

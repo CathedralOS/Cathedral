@@ -23,7 +23,11 @@ a retry. A full typed-grant slot also reports backpressure before handing off
 the right. The server preserves its ticket and backing on either refusal.
 Failures once frame writes start are terminal; a possibly exposed handoff is
 never retried. [requests.omg](connection/requests.omg) owns
-that two-slot ledger. Completing a request frees its slot, never its ID. Do
+that two-slot ledger. Completing a request frees its slot, never its ID.
+Consuming a complete pipelined reply also signals the provider: releasing the
+mailbox without a wake can strand its next reply when no new request follows.
+That hint is best-effort; a complete final reply remains valid after peer closure.
+Do
 not mix the blocking exchange helpers into an overlapping connection: its event
 loop must dispatch all replies. A provider must explicitly support overlap.
 Ordinary setup also opens in two steps for a caller that keeps serving while the peer

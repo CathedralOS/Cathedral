@@ -183,11 +183,24 @@ machine third(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
     let mut words: [u64; 8]; words[0] = 3u64;
     let status: u64 = block runtime::server::main::reply(gate, &mut context.listener, &words);
     transition {
-        status == kernel::WOULD_BLOCK -> (0u64)
+        status == kernel::WOULD_BLOCK -> block waiting_for_space(gate, context)
         status == 0u64 -> answered(context)
         _ -> (531u64)
     }
     machine answered(context: &mut State) -> u64 { context.phase = 4u64; 0u64 }
+}
+// The client has issued every request and now waits for our fixture flag.
+// Drain old hints before releasing it. Only consuming this reply can wake us;
+// no periodic retry or new client request may rescue a missing acknowledgement.
+machine waiting_for_space(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+    transition context.mode == 401u64 {
+        true -> block checked(gate, context)
+        _ -> (0u64)
+    }
+    machine checked(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+        let status: u64 = block barrier::reply_wake(gate, &context.listener.peer, context.clock);
+        transition status == 0u64 { true -> (0u64) _ -> (536u64) }
+    }
 }
 machine ended(context: &mut State, code: u64) -> u64 {
     context.stopped = true;
