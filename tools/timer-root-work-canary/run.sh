@@ -1,55 +1,14 @@
 #!/usr/bin/env bash
-# Compile and inspect Cathedral's fixed-work timer wake handoff without
-# installing a root, invoking hardware, or binding a clock provider.
+# Execute the timer wake handoff in both Omega engines.
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-CANARY_ROOT="$REPO_ROOT/tools/timer-root-work-canary"
-OMEGA_REPO="${OMEGA_REPO:-$REPO_ROOT/../Omega}"
-SCRATCH_DIR="$(mktemp -d "${TMPDIR:-/tmp}/cathedral-timer-root-work.XXXXXX")"
-PROJECT_DIR="$SCRATCH_DIR/project"
-BUILD_DIR="$SCRATCH_DIR/artifacts"
-trap 'rm -rf "$SCRATCH_DIR"' EXIT
-
-mkdir -p "$PROJECT_DIR"
-install -m 0644 "$CANARY_ROOT/main.omg" "$PROJECT_DIR/main.omg"
-install -m 0644 "$CANARY_ROOT/build.omg" "$PROJECT_DIR/build.omg"
-ln -s "$REPO_ROOT/source/kernel/core" "$PROJECT_DIR/core"
-CANARY_MAIN="$PROJECT_DIR/main.omg"
-
-run_omega() {
-  if [[ -n "${OMEGA_BIN:-}" && -x "${OMEGA_BIN:-}" ]]; then
-    "$OMEGA_BIN" "$@"
-  elif command -v omega >/dev/null 2>&1; then
-    omega "$@"
-  elif [[ -x "$OMEGA_REPO/target/debug/omega" ]]; then
-    "$OMEGA_REPO/target/debug/omega" "$@"
-  elif command -v cargo >/dev/null 2>&1 && [[ -f "$OMEGA_REPO/Cargo.toml" ]]; then
-    cargo run -q --manifest-path "$OMEGA_REPO/Cargo.toml" -p omega-cli -- "$@"
-  else
-    echo "error: no 'omega' toolchain or sibling Omega workspace" >&2
+CANARY_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+OMEGA_BIN="${OMEGA_BIN:-$(command -v omega || true)}"
+if [[ -z "$OMEGA_BIN" || ! -x "$OMEGA_BIN" ]]; then
+    echo "error: set OMEGA_BIN to an optimized Omega compiler, or install omega on PATH" >&2
     exit 2
-  fi
-}
-
-if ! command -v jq >/dev/null 2>&1; then
-  echo "error: jq is required to validate timer-root work artifacts" >&2
-  exit 2
 fi
 
-run_omega --check --build-dir "$BUILD_DIR" "$CANARY_MAIN"
-
-TYPED="$BUILD_DIR/04_typed_trees.json"
-CONTRACTS="$BUILD_DIR/05_machine_contracts.json"
-ASSERTIONS="$CANARY_ROOT/assert-work.jq"
-
-for artifact in "$TYPED" "$CONTRACTS" "$ASSERTIONS"; do
-  [[ -f "$artifact" ]] || {
-    echo "error: expected compiler artifact is missing: $artifact" >&2
-    exit 1
-  }
-done
-
-jq -s -e -f "$ASSERTIONS" "$TYPED" "$CONTRACTS" >/dev/null
-
-echo "Cathedral timer-root fixed-work handoff canary passed"
+"$OMEGA_BIN" update --project "$CANARY_ROOT"
+"$OMEGA_BIN" run --both "$CANARY_ROOT/main.omg"
+echo "Cathedral timer wake publication and consumption passed"

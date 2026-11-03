@@ -1,29 +1,27 @@
-# Timer-root fixed-work source canary
+# Timer wake publication and consumption
 
-This compile-only harness checks Cathedral's preallocated per-CPU timer-root
-wake state and its bounded producer/consumer handoff. The publication leaf
-first stores one already-captured monotonic time observation, then atomically
-ORs one wake bit with `Publish` ordering. The ordinary-task leaf atomically
-claims and clears that bit with `Receive` ordering, loads the observation only
-after a successful claim, and returns either `Claimed` or `Idle`. Repeated
-arrivals therefore coalesce instead of appending to an unbounded hard-root
-queue. Both machines use a shared receiver, do not allocate, call a scheduler
-or provider, suspend, block, crash, or loop, and publish complete frames over
-only the two atomic fields.
+A timer interrupt records an observation and sets a pending wake bit. Ordinary
+kernel code takes that wake and clears the bit. This test executes those two
+helpers and checks that a wake is consumed once, several pending observations
+collapse to the latest one, and a later wake can be consumed again. Nonzero
+values on either side of the wake state must remain unchanged.
 
-Run:
+Run with an optimized Omega compiler:
 
 ```sh
-tools/timer-root-work-canary/run.sh
+OMEGA_BIN=/path/to/omega tools/timer-root-work-canary/run.sh
 ```
 
-Set `OMEGA_BIN` to test with a specific compiler binary. Otherwise the harness
-uses an installed `omega`, a built sibling `../Omega/target/debug/omega`, or
-builds that sibling with Cargo, in that order.
+The script updates the local package lock and runs the program in both the
+Terminal Psi interpreter and native execution on the host. Both must exit zero.
+It uses an installed `omega` when `OMEGA_BIN` is unset. It does not build a
+compiler implicitly.
 
-These are executable fixed-work leaves, not a live root or timer-service task.
-Clock capture remains a separate provider operation, fan-out remains ordinary
-task work, and the installed-root path cannot yet supply preallocated state as
-an internal claim. The canary therefore does not add a false hardware parameter
-to `InterruptEntry::enter`, install an IDT entry, unmask IRQ0, or enable CPU
-interrupts.
+The producer stores the observation before publishing the bit with `Publish`
+ordering. The consumer claims and clears the bit with `Receive` ordering before
+reading the observation. These operations remain fixed work over preallocated
+atomic fields; the helper does not allocate or call a scheduler.
+
+This is a sequential execution test of the helpers. It does not establish
+interrupt delivery, concurrent interleavings, installed handler state, or safe
+interrupt return. Those require the kernel boot test with real timer arrivals.

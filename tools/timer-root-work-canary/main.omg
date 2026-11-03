@@ -1,9 +1,49 @@
-// Compile-only acceptance root for the fixed-work timer wake publication leaf.
+// Expected exit: 0
+// A published timer wake is consumed once. Publications before consumption
+// coalesce to the latest observation, and unrelated storage remains intact.
+use core::timing::wake::TimerRootWakeState;
+use core::timing::wake::TimerRootWakeClaim;
 
-use core::timer_root_work;
-
-data Main {
+data WakeStorage {
+    before: u64;
+    wake: TimerRootWakeState;
+    after: u64;
 }
 
-machine Main::main(&mut self) {
+machine is_idle(wake: &TimerRootWakeState) -> bool {
+    match TimerRootWakeState::claim_pending(wake) {
+        TimerRootWakeClaim::Idle -> true,
+        TimerRootWakeClaim::Claimed { observed_time } -> false,
+    }
+}
+
+machine has_observation(wake: &TimerRootWakeState, expected: u64) -> bool {
+    match TimerRootWakeState::claim_pending(wake) {
+        TimerRootWakeClaim::Claimed { observed_time } -> observed_time == expected,
+        TimerRootWakeClaim::Idle -> false,
+    }
+}
+
+machine start() crashes Trap {
+    let mut storage: WakeStorage;
+    storage.before = 101;
+    storage.after = 103;
+    let initially_idle: bool = is_idle(&storage.wake);
+    TimerRootWakeState::record_and_publish(&storage.wake, 41);
+    let first: bool = has_observation(&storage.wake, 41);
+    let first_cleared: bool = is_idle(&storage.wake);
+    TimerRootWakeState::record_and_publish(&storage.wake, 73);
+    TimerRootWakeState::record_and_publish(&storage.wake, 97);
+    let latest: bool = has_observation(&storage.wake, 97);
+    let latest_cleared: bool = is_idle(&storage.wake);
+    TimerRootWakeState::record_and_publish(&storage.wake, 113);
+    let next_round: bool = has_observation(&storage.wake, 113);
+    let next_cleared: bool = is_idle(&storage.wake);
+    transition initially_idle && first && first_cleared && latest && latest_cleared
+        && next_round && next_cleared && storage.before == 101 && storage.after == 103 {
+        true -> done()
+        _ -> wrong()
+    }
+    machine done() {}
+    machine wrong() { crash Trap; }
 }
