@@ -137,11 +137,16 @@ def glyphs_match(pixel, left, top, text):
 
 
 def failed_children(text):
-    """Child exits the Omega matrices reported other than a clean return or a stop."""
+    """Unexpected child exits or a matrix failure hidden by its native entry."""
     failures = []
     for match in re.finditer(r'Cathedral matrix: child (\d) ([0-9a-f]{16}) ([0-9a-f]{16})', text):
         kind, value = int(match.group(2), 16), int(match.group(3), 16)
         if kind != 3 and not (kind == 1 and value == 0):
+            failures.append(match.group(0))
+    # Native entry currently discards Program::run's result. Its cleanup
+    # diagnostic must still fail a scenario instead of looking like exit(0).
+    for match in re.finditer(r'Matrix control: [0-9a-f]{16} 7 [0-7] ([0-9a-f]{16})', text):
+        if int(match.group(1), 16) != 0:
             failures.append(match.group(0))
     return failures
 

@@ -178,6 +178,9 @@ public data State {
     survey: LossSurvey;
     surveying: bool;
     survey_ticket: Ticket;
+    // Exact child tasks included in the survey. A changed subtree cannot use
+    // an earlier child's clean answer as permission to stop its replacement.
+    survey_members: [u64; 5];
     // Realm setup: the startup recovery policy's state, whether the owner now
     // drives setup, whether a workspace stands and whether this matrix runs
     // its own login, what discovery and configuration found, the image and

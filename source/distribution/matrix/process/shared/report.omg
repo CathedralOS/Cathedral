@@ -372,3 +372,37 @@ public machine selection_cancelled(gate: &Gate) reaches Kernel invokes Kernel {
     let text: [u8; 64] = "Cathedral matrix: selection cancelled\n                          ";
     line(gate, &text);
 }
+
+// Sparse control diagnostics: local owner endpoint, event, child slot, value.
+// Events: 0 survey refusal (1 selection, 2 frames, 3 survey, 4 forwarding,
+// 5 recovery, 6 launch); 1 LOSS sent; 2 reply status; 3 reply loss word; 4 expiry;
+// 5 aggregate loss; 6 close refusal; 7 process cleanup reason.
+// Endpoint names are local diagnostics, never global process identities.
+public machine control(gate: &Gate, owner: u64, event: u64, slot: u64, value: u64) reaches Kernel invokes Kernel {
+    let text: [u8; 16] = "Matrix control: ";
+    let mut words: [u64; 8];
+    transition { _ -> pack(gate, &text, &mut words, 0u64, owner, event, slot, value) }
+    machine pack(gate: &Gate, text: &[u8; 16], words: &mut [u64; 8], index: u64, owner: u64, event: u64, slot: u64, value: u64)
+        requires index <= 16u64 reaches Kernel {
+        transition index < 16u64 {
+            true -> byte(gate, text, words, index, owner, event, slot, value)
+            _ -> numbered(gate, words, owner, event, slot, value)
+        }
+    }
+    machine byte(gate: &Gate, text: &[u8; 16], words: &mut [u64; 8], index: u64, owner: u64, event: u64, slot: u64, value: u64)
+        requires index < 16u64 reaches Kernel {
+        put(words, index, text[index] as u64);
+        transition { _ -> pack(gate, text, words, index + 1u64, owner, event, slot, value) }
+    }
+    machine numbered(gate: &Gate, words: &mut [u64; 8], owner: u64, event: u64, slot: u64, value: u64) reaches Kernel {
+        hex(words, 16u64, owner, 0u64);
+        put(words, 32u64, 32u64);
+        put(words, 33u64, 48u64 + (event & 7u64));
+        put(words, 34u64, 32u64);
+        put(words, 35u64, 48u64 + (slot & 7u64));
+        put(words, 36u64, 32u64);
+        hex(words, 37u64, value, 0u64);
+        put(words, 53u64, 10u64);
+        let status: u64 = Kernel::write(gate, words, 54u64);
+    }
+}

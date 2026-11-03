@@ -9,7 +9,7 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Current executable handoff: [launch funding](#stock-matrix-migration-launch-funding).
+Current executable handoff: [loss checks during rendering](#stock-matrix-migration-loss-checks-during-rendering).
 That entry records the latest verified image and next work; earlier migration
 entries below are historical milestones.
 
@@ -1137,6 +1137,97 @@ complete. The previously recorded small Rust matrix-lab failure is unchanged.
 The follow-up below moves shared storage exchanges into retained per-link work.
 Local launch reads and bindings remain the next continuation work, including
 recovery of the login picker on failed admission.
+
+### Stock matrix migration: loss checks during rendering
+
+The mouse-stress failure below led to a deterministic reproduction: an ordinary
+image waiting at the parent made the Omega matrix answer LOSS with BUSY, before
+asking any children. The chooser calls any close refusal "UNSAVED WORK", so that
+label did not establish that a draft existed. The instrumented previous behavior
+failed `omega_loss_test.py` at `20261103T040037538015Z/`; diagnostic event 0,
+cause 1 identified the presentation guard. Its ELF is preserved at
+`build/omega-matrix-progress/close-negative/program.elf`, SHA-256
+`fff58b1c1b59997997b587b584c93703f6287299580c9105d7a28db3eec4d8ad`.
+
+`children/forward.omg` now runs read-only loss surveys while ordinary images or
+cursor publications wait. It keeps the exact set of child task handles and
+reports potential loss if that set changes before completion. Selection, launch
+and realm setup remain barriers. Actual close/reclamation still waits behind
+presentation; deadline-before-consumption and late-reply draining are unchanged.
+No BUSY, missing, malformed or late answer becomes permission to close. This is
+a point-in-time loss question, not a freeze of future app activity.
+
+`omega_loss_test.py` holds an image at the Rust parent and checks dirty and clean
+answers before release. It establishes the draft/save before arming the hold,
+then requests a cursor repaint: the first nested test correctly reported clean
+when an older frame was held before the edit arrived, exposing a test race.
+The final test also attempts and refuses a dirty close, then saves, closes and
+cold-reopens the exact text. `--nested` surveys through intermediate Omega
+matrices. The test-only `loss-query-probe` feature changes the parent's F5 probe
+from HEALTH to LOSS; the Omega executable has no fixture mode.
+
+Sparse `Matrix control:` diagnostics record survey refusals, child questions,
+answers, expiry, aggregation, close refusal and process cleanup status. The
+legend is in `shared/report.omg`; endpoint numbers are local diagnostics, not
+process identities. The native entry still discards Program::run's return code,
+but cleanup logs it and the shared Omega failure parser now detects nonzero
+cleanup instead of mistaking it for exit(0).
+
+The unchanged pinned producer builds the matrix at 384/496 load pages, with its
+existing 128-page stack. All 180 component and 9 native receipt inputs match.
+ELF SHA-256:
+`c43d8cf9a623764d766d1ea68611b5c6238471f2016968cdd1c8d138b4f9f079`.
+No kernel, protocol, stack or resource budget changes.
+
+Nine QEMU scenarios pass, each on fresh and cold boots. Artifacts are under
+`build/boot-harness-rs/desktop/`:
+
+| Scenario | Artifact |
+| --- | --- |
+| Dirty and clean LOSS during held images | `20261103T041354223660Z/` |
+| The same survey through nested matrices | `20261103T041451466125Z/` |
+| Selection: LOSS busy, late STOP and slot reuse | `20261103T041602076172Z/` |
+| Selection cancellation through two relays | `20261103T041703930102Z/` |
+| Image hold, input and close during held save | `20261103T041827603507Z/` |
+| Forwarded funding hold and exact saved draft | `20261103T042529465771Z/` |
+| Root display holds and refused commit | `20261103T042638769644Z/` |
+| Normal F5 desktop and storage oracle | `20261103T042816440677Z/` |
+| Three fresh and two cold depth-three soak cycles, without pointer stress | `20261103T043630778037Z/` |
+
+All 514 host tests pass, as do target clippy with `loss-query-probe,trace-storage`,
+Rust formatting, Python compilation, layout (148 Omega / 153 Rust edges) and
+whitespace checks. Logs are `build/omega-matrix-progress/close-*.log`.
+The ordinary soak completed each cycle in 27.61-29.94 s, returning to the same
+root matrix floor (8 private / 138 reader pages, 609 frames, 15 free slots),
+provider floor (509 pages / 844 frames) and supervisor floor (2 private / 2
+reader pages, 127 frames). Provider peak was 1,957,112 / 2,076,672 bytes. These
+are observations under QEMU, not latency guarantees. The new failure parser
+also found no failed child/cleanup reports in all 30 preserved fresh/cold serial
+artifacts from this validation, including the failed stress runs.
+
+The combined `--soak 3 --nested-depth 3 --pointer-stress` is still NOT passing:
+`20261103T041935427607Z/`, `close-stress.log`. The first fresh cycle reached three
+levels, saved Notes and collected it, but the outer subtree close never entered
+the LOSS path (no question, refusal or expiry diagnostic). There was no matrix
+cleanup or child fault. The screenshot shows the nested desktops and an empty
+inner workspace, without an unsaved-work notice. Investigate input/close request
+delivery and queued SELECT_APP/CLOSE before changing loss policy again. A
+quiet-motion diagnostic (`close-motion-diagnostic.py`, `.log`) ran at
+`20261103T042952433923Z/`. Its fresh stressed cycle passed in 95.03 s. The first
+cold cycle did send LOSS: CLOSE and several nested survey questions expired
+at their existing 100-tick deadlines, before a deepest clean aggregate arrived.
+No busy-presentation refusal occurred. Stopping mouse motion for ten seconds
+did not complete the refused close; a new click with motion quiet succeeded.
+The diagnostic intentionally still failed the original attempt. Late answers
+were drained without acting on them, as required. This now gives two distinct
+stress observations: a close that never reached LOSS, and a recursive loss
+survey that exceeded its deadline. Locate the dispatch/scheduling delay before
+claiming a timeout change fixes it; do not accept stale clean answers.
+
+Kernel admission, owner/startup operations, first provider handshakes and
+retirement fallback still contain synchronous waits. Native exit-status
+propagation also remains open. Normal F5 keeps the Rust matrix until parity.
+The previously recorded small Rust matrix-lab failure is unchanged.
 
 ### Stock matrix migration: launch funding
 

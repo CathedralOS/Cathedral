@@ -320,6 +320,12 @@ cold boot. For standalone forwarded images, run
 HEALTH and another input poll must progress before release, and exact Notes
 text must save and survive cold boot. Neither test substitutes fixture code
 inside the Omega child.
+`python tools/boot-harness-rs/omega_loss_test.py` asks LOSS instead of HEALTH
+while an ordinary image is held. Dirty Notes must report potential loss and
+refuse an actual close; after saving, LOSS must report clean before the held
+image is released. `--nested` sends the survey through intermediate Omega
+matrices. Both modes verify the exact saved text after cold boot. Only the
+Rust parent uses the `loss-query-probe` fixture feature.
 
 The forwarded batch counterpart is
 `python tools/boot-harness-rs/omega_parent_batch_test.py`: guest F3 holds a commit

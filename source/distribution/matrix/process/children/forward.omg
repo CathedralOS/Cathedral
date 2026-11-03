@@ -1,5 +1,6 @@
 module forward;
 use connections::responses;
+use shared::report;
 // Requests over the children's owner controls, one pending per child.
 // Owner words routed to a child: the first hop above the operation names the
 // slot, as the stock control policy decodes it; the word goes on with the hop
@@ -111,9 +112,9 @@ public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches K
 machine slot_step(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64) reaches Kernel {
     transition {
         !context.forwards[slot].live -> done()
-        // Relays return an opaque answer to the owner; close/survey answers may
-        // change local children and must wait for their retained scene backing.
-        context.presentation_work.active && context.forwards[slot].purpose != OWNER_WORD -> done()
+        // LOSS only reads child state. Actual reclamation must still wait for
+        // the retained scene backing; an ordinary repaint is no loss barrier.
+        context.presentation_work.active && context.forwards[slot].purpose == CLOSE_QUESTION -> done()
         !context.slots[slot].live -> block answered(gate, context, slot, error(kernel::PEER_CLOSED))
         _ -> block receive(gate, context, slot, now)
     }
@@ -159,6 +160,7 @@ machine pending(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64) r
     }
 }
 machine expired(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+    report::control(gate, context.owner.peer.receiver, 4u64, slot, context.forwards[slot].purpose);
     context.forwards[slot].late = true;
     block settle(gate, context, slot, error(kernel::TIMED_OUT));
 }
@@ -180,10 +182,18 @@ machine settle(gate: &Gate, context: &mut State, slot: u64 [0..=4], words: [u64;
     block settled(gate, context, slot, forward, words);
 }
 machine settled(gate: &Gate, context: &mut State, slot: u64 [0..=4], forward: Forward, words: [u64; 8]) reaches Kernel {
+    loss_reply(gate, context.owner.peer.receiver, slot, forward.purpose, words);
     transition {
         forward.purpose == LOSS_QUESTION -> block surveyed(gate, context, slot, answer_of(words))
         forward.purpose == CLOSE_QUESTION -> block closed(gate, context, slot, forward, answer_of(words))
         _ -> block respond_to(gate, context, forward.ticket, words)
+    }
+}
+machine loss_reply(gate: &Gate, owner: u64, slot: u64, purpose: u64, words: [u64; 8]) reaches Kernel {
+    transition purpose == OWNER_WORD { true -> done() _ -> logged(gate, owner, slot, words) }
+    machine logged(gate: &Gate, owner: u64, slot: u64, words: [u64; 8]) reaches Kernel {
+        report::control(gate, owner, 2u64, slot, words[0]);
+        report::control(gate, owner, 3u64, slot, words[1]);
     }
 }
 machine respond_to(gate: &Gate, context: &mut State, issued: Ticket, words: [u64; 8]) reaches Kernel {
@@ -200,12 +210,15 @@ machine answer_of(words: [u64; 8]) -> LossAnswer {
 
 // The owner's LOSS: ask every child at once, then answer once all have.
 public machine survey(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
-    let pending: bool = context.startup.picker_pending || context.startup.background_pending;
-    let busy: bool = context.surveying || busy(context) || context.frame_count != 0u64 || context.presentation_work.active || pending;
+    let busy: bool = context.surveying || busy(context) || changing(context);
     let started: bool = begin_survey(busy, &mut context.survey);
     transition started {
         true -> block asking(gate, context, now, 0u64)
-        _ -> block reply(gate, context, error(kernel::BUSY))
+        _ -> block refused_survey(gate, context)
+    }
+    machine refused_survey(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+        report::control(gate, context.owner.peer.receiver, 0u64, 5u64, survey_cause(context));
+        block reply(gate, context, error(kernel::BUSY))
     }
     machine asking(gate: &Gate, context: &mut State, now: u64, slot: u64) -> u64 reaches Kernel requires slot <= 5u64 {
         transition slot < 5u64 {
@@ -214,6 +227,7 @@ public machine survey(gate: &Gate, context: &mut State, now: u64) -> u64 reaches
         }
     }
     machine one(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4]) -> u64 reaches Kernel {
+        context.survey_members[slot] = member(context, slot);
         transition context.slots[slot].live {
             true -> block questioned(gate, context, now, slot)
             _ -> block asking(gate, context, now, slot + 1u64)
@@ -231,14 +245,43 @@ public machine survey(gate: &Gate, context: &mut State, now: u64) -> u64 reaches
         block concluded(gate, context)
     }
 }
+// These operations can replace children or their selected scene. Plain
+// images and cursor updates cannot, so they need not serialize a loss survey.
+machine changing(context: &State) -> bool {
+    context.frame_count != 0u64 || context.launch.phase != 0u64
+        || (context.presentation_work.active && context.presentation_work.selection)
+        || context.startup.picker_pending || context.startup.background_pending
+}
+machine member(context: &State, slot: u64 [0..=4]) -> u64 {
+    transition context.slots[slot].live { true -> (context.slots[slot].task) _ -> (0u64) }
+}
+machine same_members(context: &State, slot: u64) -> bool requires slot <= 5u64 {
+    transition slot < 5u64 { true -> same(context, slot) _ -> (true) }
+    machine same(context: &State, slot: u64 [0..=4]) -> bool {
+        transition context.survey_members[slot] == member(context, slot) {
+            true -> same_members(context, slot + 1u64)
+            _ -> (false)
+        }
+    }
+}
+machine survey_cause(context: &State) -> u64 {
+    transition {
+        context.presentation_work.active && context.presentation_work.selection -> (1u64)
+        context.frame_count != 0u64 -> (2u64)
+        context.surveying -> (3u64)
+        busy(context) -> (4u64)
+        context.launch.phase != 0u64 -> (6u64)
+        _ -> (5u64)
+    }
+}
 machine surveyed(gate: &Gate, context: &mut State, slot: u64 [0..=4], answer: LossAnswer) reaches Kernel {
     let recorded: bool = record_answer(&mut context.survey, slot, answer);
     let status: u64 = block concluded(gate, context);
 }
 // Only a boolean aggregate crosses the boundary: no child, draft or count.
 machine concluded(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
-    let pending: bool = context.startup.picker_pending || context.startup.background_pending;
-    let conclusion: SurveyConclusion = finish_survey(&context.survey, pending);
+    let changed: bool = changing(context) || !same_members(context, 0u64);
+    let conclusion: SurveyConclusion = finish_survey(&context.survey, changed);
     transition {
         !context.surveying -> (0u64)
         conclusion == SurveyConclusion::Waiting -> (0u64)
@@ -246,6 +289,7 @@ machine concluded(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
         _ -> block surveyed_reply(gate, context, 1u64)
     }
     machine surveyed_reply(gate: &Gate, context: &mut State, uncertain: u64) -> u64 reaches Kernel {
+        report::control(gate, context.owner.peer.receiver, 5u64, 5u64, uncertain);
         context.surveying = false;
         let issued: Ticket = context.survey_ticket;
         let mut words: [u64; 8];
@@ -278,7 +322,11 @@ machine closed(gate: &Gate, context: &mut State, slot: u64 [0..=4], forward: For
     let decision: CloseDecision = decide_close(false, answer);
     transition {
         decision == CloseDecision::Stop -> block stopping(gate, context, slot, forward)
-        _ -> block reply_requester(gate, context, forward, error(kernel::BUSY))
+        _ -> block refused_close(gate, context, slot, forward)
+    }
+    machine refused_close(gate: &Gate, context: &mut State, slot: u64 [0..=4], forward: Forward) reaches Kernel {
+        report::control(gate, context.owner.peer.receiver, 6u64, slot, kernel::BUSY);
+        block reply_requester(gate, context, forward, error(kernel::BUSY));
     }
     machine stopping(gate: &Gate, context: &mut State, slot: u64 [0..=4], forward: Forward) reaches Kernel {
         block lifecycle::reclaim(gate, context, slot);
@@ -308,6 +356,7 @@ machine question(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], 
     machine sending(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], purpose: u64, requester: u64, request: Ticket,
         words: [u64; 8]) -> bool reaches Kernel {
         let status: u64 = block runtime::connection::main::begin(gate, &mut context.controls[slot], &words);
+        report::control(gate, context.owner.peer.receiver, 1u64, slot, status);
         transition status == 0u64 {
             true -> (pending_question(context, now, slot, purpose, requester, request))
             _ -> (false)
@@ -341,7 +390,7 @@ public machine watch(context: &State, set: &mut Set) {
     slot_watch(context, 4u64, set);
 }
 machine slot_watch(context: &State, slot: u64 [0..=4], set: &mut Set) {
-    transition context.presentation_work.active && context.forwards[slot].purpose != OWNER_WORD {
+    transition context.presentation_work.active && context.forwards[slot].purpose == CLOSE_QUESTION {
         true -> done()
         _ -> available_watch(context, slot, set)
     }

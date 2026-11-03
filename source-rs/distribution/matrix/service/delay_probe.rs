@@ -9,6 +9,8 @@
 //! in ordinary F5.
 //! F3 holds a full COMMIT with the same liveness probe. Pressing F3 again during
 //! that hold refuses the commit, so the client must abort its staged transaction.
+//! With loss-query-probe, F5 asks LOSS instead of HEALTH and records the
+//! reply for the host to check both dirty and saved children during drawing.
 //! F6 during a probed hold asks LOSS, then STOP of the child's Colors slot.
 //! F7 during a probed hold routes those requests through two more matrix levels.
 use super::cancellation_probe::Cancellation;
@@ -64,21 +66,28 @@ impl Gate {
             let until = self.pending.as_ref().expect("held request").1;
             assert!(
                 !time::reached(now, until),
-                "child did not answer HEALTH while its request was held"
+                "child did not answer its owner while its request was held"
             );
-            let question = (!asked).then_some([wire::HEALTH, 0, 0, 0, 0, 0, 0, 0]);
+            let loss =
+                cfg!(feature = "loss-query-probe") && self.health_kind == wire::SURFACE_IMAGE;
+            let op = if loss { wire::LOSS } else { wire::HEALTH };
+            let question = (!asked).then_some([op, 0, 0, 0, 0, 0, 0, 0]);
             if let Some(reply) = children.poll_control_probe(slot, question, now, until)? {
-                assert_eq!(reply[0], 0);
-                time::storage_sample(
-                    if self.health_kind == wire::PRESENT_COMMIT {
-                        "commit-health-during-hold"
-                    } else if self.health_kind == wire::SURFACE_IMAGE {
-                        "image-health-during-hold"
-                    } else {
-                        "poll-health-during-hold"
-                    },
-                    &[],
-                );
+                if loss {
+                    time::storage_sample("image-loss-during-hold", &reply[..2]);
+                } else {
+                    assert_eq!(reply[0], 0);
+                    time::storage_sample(
+                        if self.health_kind == wire::PRESENT_COMMIT {
+                            "commit-health-during-hold"
+                        } else if self.health_kind == wire::SURFACE_IMAGE {
+                            "image-health-during-hold"
+                        } else {
+                            "poll-health-during-hold"
+                        },
+                        &[],
+                    );
+                }
                 self.health = None;
             } else {
                 self.health = Some((slot, incarnation, true));

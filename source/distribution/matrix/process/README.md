@@ -314,11 +314,12 @@ binding and explicit refresh still have synchronous callers.
 
 Owner control enters [program/commands.omg](program/commands.omg). A valid STOP
 marks retirement during a pending scene and is acknowledged after the transaction
-settles and the child is reclaimed; LOSS reports BUSY during that wait. Routed
-owner words use [children/forward.omg](children/forward.omg) independently of
-drawing at each intermediate matrix. Their opaque replies and deadlines keep
-progressing while close/survey answers that can change local children wait behind
-the scene barrier. An expired question is settled before reading any queued
+settles and the child is reclaimed. LOSS reports BUSY during selection, launch
+and realm setup. Ordinary image and cursor publication does not block a read-only
+loss survey: [children/forward.omg](children/forward.omg) asks the current children
+and checks that the same task set remains before reporting clean. Routed owner
+words likewise progress independently of drawing. Actual close/reclamation still
+waits behind the scene barrier. An expired question is settled before reading any queued
 answer; a late clean answer cannot become permission to close.
 
 A forwarded timeout reports an unknown outcome, not cancellation of accepted
