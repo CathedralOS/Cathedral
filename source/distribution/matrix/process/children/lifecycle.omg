@@ -545,10 +545,10 @@ machine unreleased(gate: &Gate, slot: u64, status: u64) reaches Kernel invokes K
     }
 }
 
-// Stopping either the requester or its reserved target cancels a pending read.
+// Stopping either the requester or its target cancels a pending read/activation.
 // During synchronous admission the picker is intentionally retired instead.
 machine cancel_launch(context: &mut State, slot: u64 [0..=4]) {
-    transition context.launch.phase == 1u64 && (context.launch.requester == slot || context.launch.slot == slot) {
+    transition (context.launch.phase == 1u64 || context.launch.phase == 3u64) && (context.launch.requester == slot || context.launch.slot == slot) {
         true -> cancelled(context)
         _ -> done()
     }

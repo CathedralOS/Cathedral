@@ -360,7 +360,17 @@ executable read; combine it with `--regrant` to revoke during that query. The
 fixture arms those two cases with five or six F2 presses. The refreshed source
 is checked before admission and its prepared grant is installed locally. No
 test mode is added to the Omega process. Owner grants, first provider handshakes
-and final launch scene activation still have synchronous waits.
+and funding/admission still have synchronous waits.
+
+`python tools/boot-harness-rs/omega_launch_scene_test.py` holds the scene commit
+that activates a newly launched app. HEALTH and input polling must continue;
+the previous Notes keeps its draft and receives the exact typed keys. Refusing
+the commit must reclaim only the new Colors, after which the same slot can
+launch successfully. `--cancel` instead sends LOSS and STOP during the commit:
+the old scene must be restored before the new child is reclaimed and STOP is
+acknowledged. Both variants save and verify the draft after cold reboot. The
+same scene transaction handles existing-app selection and new-app activation;
+only the launch owns the receipt and cleanup of the newly admitted child.
 
 The actual root-compositor boundary is exercised by
 `python tools/boot-harness-rs/omega_display_wait_test.py`: images, commits,

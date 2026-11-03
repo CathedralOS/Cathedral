@@ -1,5 +1,6 @@
 module selection;
-// Existing-app selection: preview -> remote transaction -> local focus/demand.
+// Workspace activation, for existing apps and new launches: preview -> remote
+// transaction -> local focus/demand. Launch owns its receipt and failed child.
 // The old scene remains the input target while every remote phase is pending.
 // A late cancellation after COMMIT restores the old scene before releasing it.
 use shared::state::State;
@@ -22,6 +23,8 @@ use connections::presentation;
 use connections::responses;
 use workspace;
 use shared::report;
+use launch::launch;
+use launch::authority;
 
 public machine begin(context: &mut State, requester: u64 [0..=4], previous: u64, next: u64) -> u64 {
     transition !context.presentation_work.active && previous < 5u64 && next >= 1u64 && next <= 3u64 {
@@ -31,30 +34,41 @@ public machine begin(context: &mut State, requester: u64 [0..=4], previous: u64,
     machine retained(context: &mut State, requester: u64 [0..=4], previous: u64 [0..=4], next: u64 [0..=4]) -> u64 {
         let ticket: Ticket = runtime::server::main::ticket(&context.slots[requester].listener);
         let status: u64 = hold(context, requester, ticket);
-        transition status == 0u64 { true -> started(context, requester, previous, next, ticket) _ -> (status) }
+        transition status == 0u64 { true -> started(context, requester, previous, next, ticket, false) _ -> (status) }
     }
-    machine started(context: &mut State, requester: u64 [0..=4], previous: u64 [0..=4], next: u64 [0..=4], ticket: Ticket) -> u64 {
-        let mut work: Transfer;
-        let mut change: Switch;
-        context.revision = ((context.revision as u64 in Wrapping) + 1u64) as u64;
-        work.active = true;
-        work.selection = true;
-        work.phase = Phase::Begin;
-        work.slot = requester;
-        work.ticket = ticket;
-        work.frame.payload[1] = context.world.children[requester].grant.epoch;
-        work.parent_epoch = context.world.parent.epoch;
-        work.upstream_revision = context.revision;
-        change.previous = previous;
-        change.next = next;
-        change.previous_incarnation = context.world.children[previous].incarnation;
-        change.previous_epoch = context.world.children[previous].grant.epoch;
-        change.next_incarnation = context.world.children[next].incarnation;
-        change.next_epoch = context.world.children[next].grant.epoch;
-        context.presentation_work = work;
-        context.selection_work = change;
-        0u64
+}
+// LAUNCH already retained this ticket while reading its executable. It keeps
+// ownership until activation settles; do not reserve or reply to it twice.
+public machine begin_launch(context: &mut State) -> u64 {
+    let previous: u64 = workspace::active(context);
+    let next: u64 = context.launch.slot;
+    transition !context.presentation_work.active && previous < 5u64 && next >= 1u64 && next <= 3u64 {
+        true -> started(context, context.launch.requester, previous, next, context.launch.ticket, true)
+        _ -> (kernel::DENIED)
     }
+}
+machine started(context: &mut State, requester: u64 [0..=4], previous: u64 [0..=4], next: u64 [0..=4], ticket: Ticket, launching: bool) -> u64 {
+    let mut work: Transfer;
+    let mut change: Switch;
+    context.revision = ((context.revision as u64 in Wrapping) + 1u64) as u64;
+    work.active = true;
+    work.selection = true;
+    work.phase = Phase::Begin;
+    work.slot = requester;
+    work.ticket = ticket;
+    work.frame.payload[1] = context.world.children[requester].grant.epoch;
+    work.parent_epoch = context.world.parent.epoch;
+    work.upstream_revision = context.revision;
+    change.launch = launching;
+    change.previous = previous;
+    change.next = next;
+    change.previous_incarnation = context.world.children[previous].incarnation;
+    change.previous_epoch = context.world.children[previous].grant.epoch;
+    change.next_incarnation = context.world.children[next].incarnation;
+    change.next_epoch = context.world.children[next].grant.epoch;
+    context.presentation_work = work;
+    context.selection_work = change;
+    0u64
 }
 machine hold(context: &mut State, slot: u64 [0..=4], ticket: Ticket) -> u64 {
     transition context.slots[slot].listener.peer.pipeline {
@@ -150,6 +164,7 @@ machine advance(gate: &Gate, context: &mut State) reaches Kernel {
 machine current(context: &State) -> bool {
     let change: Switch = context.selection_work;
     transfer::current(context)
+        && (!change.launch || authority::presenting(context))
         && !context.retire_after_present[change.next]
         && level::binding_matches(&context.world, change.next, change.next_incarnation, change.next_epoch)
         && (change.previous == 0u64 || (!context.retire_after_present[change.previous]
@@ -225,7 +240,13 @@ machine finish(gate: &Gate, context: &mut State) reaches Kernel {
     context.presentation_work = empty;
     context.selection_work = no_change;
     context.next_child = (work.slot + 1u64) % 5u64;
-    let sent: u64 = block responses::send(gate, context, work.slot, work.ticket, presentation::error(work.status));
+    transition change.launch {
+        true -> block launch::launch::presented(gate, context, work.status)
+        _ -> block reply(gate, context, work)
+    }
+    machine reply(gate: &Gate, context: &mut State, work: Transfer) reaches Kernel {
+        let sent: u64 = block responses::send(gate, context, work.slot, work.ticket, presentation::error(work.status));
+    }
 }
 machine reported(gate: &Gate, status: u64) reaches Kernel {
     transition status == kernel::DENIED { true -> report::selection_cancelled(gate) _ -> done() }

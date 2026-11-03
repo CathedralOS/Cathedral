@@ -9,6 +9,10 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
+Current executable handoff: [launch scene activation](#stock-matrix-migration-launch-scene-activation).
+That entry records the latest verified image and next work; earlier migration
+entries below are historical milestones.
+
 ### Stock matrix migration: the display root in Omega
 
 The stock matrix is leaving its Rust host for a standalone Omega process,
@@ -1133,6 +1137,73 @@ complete. The previously recorded small Rust matrix-lab failure is unchanged.
 The follow-up below moves shared storage exchanges into retained per-link work.
 Local launch reads and bindings remain the next continuation work, including
 recovery of the login picker on failed admission.
+
+### Stock matrix migration: launch scene activation
+
+After `8b52b431`, child launches into a workspace now use the same retained
+transaction as existing-app selection. `children/launch/placement.omg` reserves
+the catalogue entry, identifies the admitted child's actual connection and keeps
+it hidden. `children/selection.omg::begin_launch` retains the launch's existing
+request ticket, previous/next child incarnations and epochs, and parent epoch.
+It resumes BEGIN, entries, COMMIT and any abort/restoration over the event loop.
+The previous app retains visibility and input until the remote commit succeeds.
+
+Activation remains conditional on the original caller's connection, storage
+authorization, policy and cancellation flag as well as the scene identities. Owner STOP and
+child retirement invalidate the transaction while its backing remains retained.
+A late successful COMMIT after cancellation restores the old scene. Settlement
+clears the scene barrier, then returns to `launch.omg::presented`: success records
+the launch receipt; failure reclaims the newly admitted child and removes its
+catalogue entry before replying. Existing-app selection still preserves both
+children on refusal. No kernel/wire change or matrix-specific mechanism.
+
+`omega_launch_scene_test.py` uses the existing Rust parent COMMIT gate, with the
+normal Omega matrix as child. It types into the old Notes while Colors activation
+waits, refuses that launch, then reuses the slot successfully and saves/reopens
+the exact draft. `--cancel` substitutes LOSS and STOP after COMMIT was sent;
+restoration and reclamation must finish before STOP is acknowledged. The baseline
+ELF from `8b52b431`, SHA-256
+`17e942401abf4ac71e14f8c9b135f220895d03a8992b68cf5527986963d54194`,
+fails the new liveness test: it cannot answer HEALTH during the activation hold
+(`build/boot-harness-rs/desktop/20261103T020834946794Z/`,
+`build/omega-matrix-progress/launch-scene-negative.log`).
+
+The unchanged pinned producer builds this matrix at 382/496 load pages, with
+its existing 128-page stack. Native and component receipt inputs match the
+worktree; ELF SHA-256
+`a8b3c4e84e67bf50922cf93f4029d52ce270bb9365ca5761304f758cb30b87f2`.
+Passed evidence under `build/boot-harness-rs/desktop/` (each includes cold reopen):
+
+| Scenario | Artifact |
+| --- | --- |
+| Held launch activation, refusal, reuse, exact draft | `20261103T021946980866Z/` |
+| Late STOP of the new child, restoration before acknowledgment | `20261103T022050444597Z/` |
+| Existing-app selection, refusal preserves both apps | `20261103T022158162052Z/` |
+| Existing-app cancellation through two relays | `20261103T022257182462Z/` |
+| Launch binding revoke/regrant | `20261103T022359579591Z/` |
+| Display-service holds and refused commit | `20261103T022506765978Z/` |
+| Full Omega desktop and host storage oracle | `20261103T022640423054Z/` |
+| Three fresh and two cold depth-three soak cycles | `20261103T022744567286Z/` |
+| Undeclared optional storage, independent sibling binding | `20261103T023031259633Z/` |
+| Normal F5 desktop | `20261103T023108215999Z/` |
+
+The direct root/user Omega composition also passes at
+`build/boot-harness-rs/omega-desktop/20261103T022435326431Z/`.
+All eleven QEMU scenarios and 514 Rust host tests pass, as do Python
+compilation, layout (148 Omega / 153 Rust package edges) and whitespace checks.
+Logs are under `build/omega-matrix-progress/launch-scene-*.log`. The soak returns
+to the same root floor every cycle (8 private / 138 reader pages, 607 frames,
+15 free slots) and provider floor (509 pages / 844 frames); no failure markers.
+The root's two additional frames match the matrix image's two-page growth from
+the prior baseline. Heap peak was 1,954,010 of 2,076,672 bytes. Depth-three Notes
+launch was 2.30-2.89 s and close 1.33-2.03 s; these are host-observed upper bounds,
+not a latency guarantee or a claim that startup is fully responsive.
+
+Next: funding/admission, owner/startup operations, first provider handshakes and
+retirement fallback still contain synchronous waits. Login picker retirement and
+recovery keep their existing path; only workspace app activation enters this
+continuation. Normal F5 still selects the Rust matrix. The earlier small Rust
+matrix-lab failure remains open.
 
 ### Stock matrix migration: launch binding preparation
 

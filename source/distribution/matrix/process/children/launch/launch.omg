@@ -194,9 +194,18 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
     }
     machine placed(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4], object: u64,
         login: bool) reaches Kernel {
-        let words: [u64; 8] = block placement::place(gate, context, requester, incarnation, slot, object);
-        block answered(gate, context, words, login);
+        let result: Submission = block placement::place(gate, context, requester, incarnation, slot, object);
+        transition result {
+            Submission::Answer { words } -> block answered(gate, context, words, login)
+            Submission::Pending -> done()
+        }
     }
+}
+// The shared workspace transaction has committed or restored its old scene.
+// Only now record success, or reclaim the newly admitted child on failure.
+public machine presented(gate: &Gate, context: &mut State, status: u64) reaches Kernel blocks invokes Kernel {
+    let words: [u64; 8] = block placement::finish(gate, context, status);
+    block answered(gate, context, words, false);
 }
 machine invalidate(context: &mut State, valid: bool) {
     transition valid { true -> done() _ -> cancelled(context) }

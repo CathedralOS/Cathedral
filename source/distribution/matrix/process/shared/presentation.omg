@@ -36,6 +36,7 @@ public data Queued {
 // A workspace switch previews two retained scenes; local visibility and input
 // remain unchanged until its commit. The scene barrier preserves their backing.
 public data Switch [copy] {
+    launch: bool;
     previous: u64 [0..=4];
     next: u64 [0..=4];
     previous_incarnation: u64;

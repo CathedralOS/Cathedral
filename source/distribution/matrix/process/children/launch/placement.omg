@@ -19,9 +19,11 @@ use world::geometry::Rect;
 use lifecycle;
 use shared::report;
 use workspace;
+use selection;
+use connections::presentation::Submission;
 
 // The ranks the policy allotted or the slot's standing count; then the owner's placement.
-public machine place(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4], object: u64) -> [u64; 8]
+public machine place(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4], object: u64) -> Submission
     reaches Kernel blocks invokes Kernel {
     let standing: u64 = context.policies[slot].surfaces;
     let allotted: u64 = context.allotted_surfaces;
@@ -29,10 +31,10 @@ public machine place(gate: &Gate, context: &mut State, requester: u64 [0..=4], i
     let ranged: u64 = range_for(context, slot, standing, allotted, allowance);
     transition ranged == 0u64 {
         true -> block located(gate, context, requester, incarnation, slot, object)
-        _ -> block unplaced(gate, context, slot, 9u64, ranged)
+        _ -> block failed(gate, context, slot, 9u64, ranged)
     }
 }
-machine located(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4], object: u64) -> [u64; 8]
+machine located(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4], object: u64) -> Submission
     reaches Kernel {
     let placed: bool = context.policies[slot].placed;
     let rect: Rect = Rect { x: context.policies[slot].x, y: context.policies[slot].y, width: context.policies[slot].width,
@@ -44,23 +46,51 @@ machine located(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarn
     }
 }
 machine positioned(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4], rect: Rect, keys: u64,
-    object: u64) -> [u64; 8] reaches Kernel {
+    object: u64) -> Submission reaches Kernel {
     let status: u64 = level::place(&mut context.world, slot, rect, keys);
     transition status == 0u64 {
         true -> block presented(gate, context, requester, incarnation, slot, object)
-        _ -> block unplaced(gate, context, slot, 10u64, status)
+        _ -> block failed(gate, context, slot, 10u64, status)
     }
 }
 // In a workspace an app joins the catalogue and becomes the active one; a
 // scene that cannot switch takes the new app back down.
-machine presented(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4], object: u64) -> [u64; 8]
+machine presented(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4], object: u64) -> Submission
     reaches Kernel {
     let tick: Tick = runtime::time::read(gate, context.clock);
     block settled_control(gate, context, slot, tick);
-    let status: u64 = block workspace::launched(gate, context, slot, object);
+    transition context.desktop && slot >= 1u64 && slot <= 3u64 {
+        true -> block staged(gate, context, slot, object)
+        _ -> (Submission::Answer { words: receipt(context, requester, incarnation, slot) })
+    }
+}
+machine staged(gate: &Gate, context: &mut State, slot: u64 [0..=4], object: u64) -> Submission reaches Kernel {
+    let status: u64 = workspace::prepare_launch(context, slot, object);
     transition status == 0u64 {
-        true -> (receipt(context, requester, incarnation, slot))
-        _ -> block unplaced(gate, context, slot, 11u64, status)
+        true -> block switching(gate, context, slot)
+        _ -> block failed(gate, context, slot, 11u64, status)
+    }
+}
+machine switching(gate: &Gate, context: &mut State, slot: u64 [0..=4]) -> Submission reaches Kernel {
+    let status: u64 = selection::begin_launch(context);
+    transition status == 0u64 {
+        true -> pending(context)
+        _ -> block failed(gate, context, slot, 11u64, status)
+    }
+    machine pending(context: &mut State) -> Submission {
+        context.launch.phase = 3u64;
+        Submission::Pending
+    }
+}
+machine failed(gate: &Gate, context: &mut State, slot: u64 [0..=4], stage: u64, status: u64) -> Submission reaches Kernel {
+    let words: [u64; 8] = block unplaced(gate, context, slot, stage, status);
+    Submission::Answer { words: words }
+}
+// Called only after the scene barrier releases its backing and identities.
+public machine finish(gate: &Gate, context: &mut State, status: u64) -> [u64; 8] reaches Kernel blocks invokes Kernel {
+    transition status == 0u64 {
+        true -> (receipt(context, context.launch.requester, context.launch.incarnation, context.launch.slot))
+        _ -> block unplaced(gate, context, context.launch.slot, 11u64, status)
     }
 }
 machine unplaced(gate: &Gate, context: &mut State, slot: u64 [0..=4], stage: u64, status: u64) -> [u64; 8] reaches Kernel {
@@ -68,7 +98,7 @@ machine unplaced(gate: &Gate, context: &mut State, slot: u64 [0..=4], stage: u64
     block lifecycle::reclaim(gate, context, slot);
     refused(gate, status)
 }
-    machine settled_control(gate: &Gate, context: &mut State, slot: u64 [0..=4], tick: Tick) reaches Kernel {
+machine settled_control(gate: &Gate, context: &mut State, slot: u64 [0..=4], tick: Tick) reaches Kernel {
     transition tick {
         Tick::Read { value } -> block lifecycle::open_control(gate, context, value, slot)
         Tick::Failed { code } -> done_now()

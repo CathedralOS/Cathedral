@@ -12,10 +12,18 @@ use world::scopes;
 use world::scopes::Bound;
 use declaration;
 public machine valid(context: &State) -> bool {
+    !context.slots[context.launch.slot].live && caller(context)
+}
+// Admission has completed. The scene transaction separately pins the new
+// child's incarnation and epoch; the caller still needs its original grant.
+public machine presenting(context: &State) -> bool {
+    context.launch.phase == 3u64 && caller(context)
+}
+machine caller(context: &State) -> bool {
     let slot: u64 [0..=4] = context.launch.requester;
     let target: u64 [0..=4] = context.launch.slot;
     let bound: Bound = scopes::authorize(&context.store.scopes, slot, context.launch.storage_incarnation, context.launch.revision);
-    !context.launch.cancelled && context.slots[slot].live && !context.slots[target].live
+    !context.launch.cancelled && context.slots[slot].live
         && deferred::matches(&context.slots[slot].listener, context.launch.ticket)
         && context.slots[slot].listener.incarnation == context.launch.incarnation
         && context.store.listeners[slot].incarnation == context.launch.storage_incarnation && bound.status == 0u64

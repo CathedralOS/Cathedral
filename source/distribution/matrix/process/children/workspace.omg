@@ -172,17 +172,18 @@ machine target_of(context: &State, slot: u64, incarnation: u64) -> u64 {
         _ -> (DENIED_TARGET)
     }
 }
-// A launched app joins the catalogue and becomes the active one.
-public machine launched(gate: &Gate, context: &mut State, slot: u64, program: u64) -> u64 reaches Kernel blocks invokes Kernel {
-    transition context.desktop && slot >= 1u64 && slot <= 3u64 {
-        true -> block publishing(gate, context, slot, program)
-        _ -> (0u64)
+// Reserve the new instance's catalogue ticket while keeping it hidden. The
+// scene barrier defers catalogue queries; commit_selection publishes visibility
+// and input only after the remote transaction succeeds. Reclaim removes failures.
+public machine prepare_launch(context: &mut State, slot: u64 [0..=4], program: u64) -> u64 {
+    transition catalogue::publish(&mut context.catalogue, slot, program) {
+        true -> hidden(context, slot)
+        _ -> (kernel::NO_MEMORY)
     }
-    machine publishing(gate: &Gate, context: &mut State, slot: u64, program: u64) -> u64 reaches Kernel {
-        transition catalogue::publish(&mut context.catalogue, slot, program) {
-            true -> block activate(gate, context, slot)
-            _ -> (kernel::NO_MEMORY)
-        }
+    machine hidden(context: &mut State, slot: u64 [0..=4]) -> u64 {
+        // The first poll must not look like a new occupant during activation.
+        let identified: bool = level::identify(&mut context.world, slot, context.slots[slot].listener.incarnation);
+        demand::visible(&mut context.world, slot, false)
     }
 }
 
