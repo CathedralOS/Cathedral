@@ -1,6 +1,8 @@
-// Isolated checked frontier for Cathedral's preallocated timer-root work.
-
-machine build(b: &mut Build) {
-    b.depend("core", path("core"));
-    b.freestanding = true;
+machine build(builder: &mut Build) {
+    Build::application(builder, "cathedral_timer_wake_canary");
+    Build::depend_as(builder, "core", Source::Path { location: "../../source/kernel/core" });
+    Build::bind(builder, macos_arm64::ProgramEntry, start);
+    Build::bind(builder, linux_x86_64::ProgramEntry, start);
+    Build::bind(builder, linux_arm64::ProgramEntry, start);
+    Build::bind(builder, windows_x86_64::ProgramEntry, start);
 }
