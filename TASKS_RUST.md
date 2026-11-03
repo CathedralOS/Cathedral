@@ -9,7 +9,7 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Current executable handoff: [loss checks during rendering](#stock-matrix-migration-loss-checks-during-rendering).
+Current executable handoff: [control latency measurement](#stock-matrix-migration-control-latency-measurement).
 That entry records the latest verified image and next work; earlier migration
 entries below are historical milestones.
 
@@ -1137,6 +1137,75 @@ complete. The previously recorded small Rust matrix-lab failure is unchanged.
 The follow-up below moves shared storage exchanges into retained per-link work.
 Local launch reads and bindings remain the next continuation work, including
 recovery of the login picker on failed admission.
+
+### Stock matrix migration: control latency measurement
+
+The Omega runtime now exposes the existing caller-bound CLOCK_READ trace stamp:
+ticks, monotonic microseconds and that account's charged execution microseconds.
+The ordinary eight-byte clock read remains unchanged. The native Gate appends
+one entry after its existing 57; no kernel ABI, deadline, resource budget or
+close policy changed. The compiler's package review accepted only the new
+`clock_stamp` callable and its table binding for the matrix and four desktop
+apps; all five native/component receipts match their current inputs.
+
+The matrix pairs sparse `Matrix control:` values with `Matrix t:` samples.
+The first field is now its startup microsecond stamp, rather than a local owner
+endpoint. This distinguishes instances in these runs; it is a diagnostic tag,
+not authority or a globally unique process identity. Events 8/9 report
+SELECT_APP/CLOSE dispatch/queueing. The existing survey, answer, expiry and
+cleanup events keep their meanings. `tools/boot-harness-rs/control_timing.py`
+reads one boot's serial log, checks complete pairs and monotonic per-instance
+clocks, and reports recorded send-to-answer and queue-to-dispatch spans.
+
+Charged execution includes this account's other work and kernel work during a
+span. Subtracting it from elapsed time does **not** distinguish IPC waiting from
+scheduler contention, nor measure the children's execution. Samples follow the
+logged operation's call boundary, so they are not hardware delivery timestamps.
+Adjacent reply-status/loss diagnostics expose tracing cost: median 0.428-0.478
+ms across these boots, maximum 12.001 ms. Logging perturbs execution.
+
+The unchanged pinned producer builds the matrix at 385/496 load pages with its
+existing 128-page stack. Its 180 component and 9 native receipt inputs match.
+ELF SHA-256:
+`dfa61dbe72f977e75a1054464255b37e564e1caf66f2d300f7ee95e510a0ae10`.
+Chooser, Notes, Colors and Background also rebuilt against the runtime.
+
+Verified fresh and cold boots, under `build/boot-harness-rs/desktop/`:
+
+| Scenario | Artifact |
+| --- | --- |
+| Dirty/clean LOSS during held images, protected close and exact save | `20261103T051422001725Z/` |
+| The same through nested matrices | `20261103T051522197055Z/` |
+| Normal F5 desktop and storage oracle | `20261103T051629316311Z/` |
+| One fresh and two cold depth-three cycles with pointer stress | `20261103T051719321346Z/` |
+| Original three-fresh/two-cold depth-three pointer-stress workload | `20261103T052148402762Z/` |
+
+All eight stressed cycles passed (58.86-75.95 s each). They returned to the same
+root floor: 8 private / 138 reader pages, 610 frames, 15 free slots; provider
+509 pages / 844 frames; supervisor 2 / 2 / 127. Provider peak was 1,957,272 of
+2,076,672 bytes. No failed child/cleanup reports appeared in the 15 preserved
+serial files. All timed logs parsed without unmatched questions/queued requests;
+no expiry or queued SELECT_APP/CLOSE was observed in these runs. Layout (148
+Omega / 153 Rust edges), Python compilation, parser smoke checks and whitespace
+checks pass. This slice changes no Rust code; the previous 514 host-test pass
+belongs to the prior handoff, not a fresh rerun. Logs: `control-time-*.log` under
+`build/omega-matrix-progress/`.
+
+**The earlier uninstrumented stress failure is not closed.** These changes add
+measurement, and successful traced runs do not establish a scheduling fix. The
+worst successful question span was 991.740 ms, with 105.461 ms charged to its
+matrix and 886.279 ms off CPU. Another cold close took 930.826 ms; its deepest
+matrix waited about 356 ms for Chooser and 330 ms for Background. Both apps
+already service owner control while awaiting broker replies, so do not assume
+those replies are blocked behind a synchronous presentation wait without
+measuring it.
+
+Next: locate the delay at individual parent/child handoffs, including leaf
+control handling and runnable/budget availability, before changing scheduling
+or deadlines. Preserve late-answer drainage and refusal on uncertainty. The
+previously recorded synchronous admission, owner/startup operations, first
+provider handshakes, retirement fallback, native exit-status propagation and
+small Rust matrix-lab failure remain open. Normal F5 retains the Rust matrix.
 
 ### Stock matrix migration: loss checks during rendering
 

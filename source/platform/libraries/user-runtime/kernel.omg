@@ -83,9 +83,13 @@ public data Gate {
     resource_grow: addr;
     physical_budget: addr;
     pool_available: addr;
+    clock_stamp: addr;
 }
 
 public boundary trait Kernel {
+    // Same caller-bound clock grant. Returns ticks, monotonic microseconds and
+    // this account's measured CPU microseconds in buffer[0..3].
+    machine clock_stamp(gate: &Gate, handle: u64, buffer: &mut [u64; 8]) -> u64 reaches;
     machine wait_many(gate: &Gate, records: &[u64; 96], count: u64 [0..=48], deadline: u64) -> u64 reaches blocks;
     machine yield_now(gate: &Gate) -> u64 reaches blocks;
     machine environment(gate: &Gate, buffer: &mut [u64; 8]) -> u64 reaches;

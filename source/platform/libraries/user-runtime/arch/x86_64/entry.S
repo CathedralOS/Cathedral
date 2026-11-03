@@ -75,6 +75,7 @@ cathedral_kernel_gate:
     .quad cathedral_resource_grow
     .quad cathedral_physical_budget
     .quad cathedral_pool_available
+    .quad cathedral_clock_stamp
 
 .section .text.cathedral_kernel_gate,"ax",@progbits
 cathedral_yield:
@@ -183,6 +184,17 @@ cathedral_write:
     xor edx, edx
     int 0x80
     finish_buffer 0
+
+cathedral_clock_stamp:
+    mov r8, rdi
+    mov rdi, rsi
+    stage_buffer
+    mov eax, 12                      // CLOCK_READ: caller-scoped trace stamp
+    mov rdi, r8
+    mov rsi, rsp
+    mov edx, 24
+    int 0x80
+    finish_buffer 1
 
 cathedral_clock_read:
     mov r8, rdi

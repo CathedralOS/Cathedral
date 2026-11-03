@@ -3,7 +3,12 @@
 Start at [main.omg](main.omg): read and validate the process's installed endpoint
 names. [ipc/main.omg](ipc/main.omg) owns ordinary channel creation, bounded copied
 messages, receive results and explicit pair cleanup. [time.omg](time.omg) owns
-tick reads, wrapping deadlines and deadline-only parking.
+tick reads, wrapping deadlines and deadline-only parking. Its separate `stamp`
+read returns ticks, monotonic microseconds and this account's measured CPU time
+through the same caller-bound clock grant; it exposes no other account. The
+ordinary tick read keeps its eight-byte fast path. Elapsed minus CPU includes
+waiting and preemption, while CPU includes any other work the caller did during
+the interval; neither isolates a handler's cost by itself.
 [memory/main.omg](memory/main.omg) owns live shared writers, accepted readers and
 explicit release. [notification/main.omg](notification/main.omg) owns wake rights
 and typed handoff. Both distinguish local custody from the peer's independent

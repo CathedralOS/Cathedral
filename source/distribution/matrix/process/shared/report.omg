@@ -1,4 +1,5 @@
 module report;
+use runtime::time::Stamp;
 // Startup diagnostics on the console, worded as the Rust host's lines so the
 // boot harness can key on them.
 use runtime::kernel::Gate;
@@ -373,12 +374,18 @@ public machine selection_cancelled(gate: &Gate) reaches Kernel invokes Kernel {
     line(gate, &text);
 }
 
-// Sparse control diagnostics: local owner endpoint, event, child slot, value.
+// Sparse control diagnostics: startup stamp, event, child slot, value.
 // Events: 0 survey refusal (1 selection, 2 frames, 3 survey, 4 forwarding,
 // 5 recovery, 6 launch); 1 LOSS sent; 2 reply status; 3 reply loss word; 4 expiry;
 // 5 aggregate loss; 6 close refusal; 7 process cleanup reason.
-// Endpoint names are local diagnostics, never global process identities.
-public machine control(gate: &Gate, owner: u64, event: u64, slot: u64, value: u64) reaches Kernel invokes Kernel {
+// Events 8/9: child request dispatched/queued (value is its opcode).
+// Startup stamps correlate logs in one boot; they are not process authority.
+public machine control(gate: &Gate, clock: u64, owner: u64, event: u64, slot: u64, value: u64) reaches Kernel invokes Kernel {
+    let sample: Stamp = runtime::time::stamp(gate, clock);
+    timed(gate, owner, event, slot, sample);
+    control_value(gate, owner, event, slot, value);
+}
+machine control_value(gate: &Gate, owner: u64, event: u64, slot: u64, value: u64) reaches Kernel {
     let text: [u8; 16] = "Matrix control: ";
     let mut words: [u64; 8];
     transition { _ -> pack(gate, &text, &mut words, 0u64, owner, event, slot, value) }
@@ -397,7 +404,7 @@ public machine control(gate: &Gate, owner: u64, event: u64, slot: u64, value: u6
     machine numbered(gate: &Gate, words: &mut [u64; 8], owner: u64, event: u64, slot: u64, value: u64) reaches Kernel {
         hex(words, 16u64, owner, 0u64);
         put(words, 32u64, 32u64);
-        put(words, 33u64, 48u64 + (event & 7u64));
+        put(words, 33u64, 48u64 + (event % 10u64));
         put(words, 34u64, 32u64);
         put(words, 35u64, 48u64 + (slot & 7u64));
         put(words, 36u64, 32u64);
@@ -405,4 +412,43 @@ public machine control(gate: &Gate, owner: u64, event: u64, slot: u64, value: u6
         put(words, 53u64, 10u64);
         let status: u64 = Kernel::write(gate, words, 54u64);
     }
+}
+
+// Full-width monotonic and caller-CPU microseconds, sampled before either write.
+// Adjacent reply status/loss samples also expose the diagnostic overhead.
+machine timed(gate: &Gate, origin: u64, event: u64, slot: u64, sample: Stamp) reaches Kernel {
+    transition sample {
+        Stamp::Read { ticks, micros, cpu } -> packed(gate, origin, event, slot, micros, cpu)
+        _ -> done()
+    }
+    machine packed(gate: &Gate, origin: u64, event: u64, slot: u64, micros: u64, cpu: u64) reaches Kernel {
+        let text: [u8; 10] = "Matrix t: ";
+        let mut words: [u64; 8];
+        transition { _ -> prefix(gate, &text, &mut words, 0u64, origin, event, slot, micros, cpu) }
+    }
+    machine prefix(gate: &Gate, text: &[u8; 10], words: &mut [u64; 8], index: u64,
+        origin: u64, event: u64, slot: u64, micros: u64, cpu: u64) reaches Kernel requires index <= 10u64 {
+        transition index < 10u64 {
+            true -> byte(gate, text, words, index, origin, event, slot, micros, cpu)
+            _ -> numbered(gate, words, origin, event, slot, micros, cpu)
+        }
+    }
+    machine byte(gate: &Gate, text: &[u8; 10], words: &mut [u64; 8], index: u64,
+        origin: u64, event: u64, slot: u64, micros: u64, cpu: u64) reaches Kernel requires index < 10u64 {
+        put(words, index, text[index] as u64);
+        transition { _ -> prefix(gate, text, words, index + 1u64, origin, event, slot, micros, cpu) }
+    }
+    machine numbered(gate: &Gate, words: &mut [u64; 8], origin: u64, event: u64, slot: u64, micros: u64, cpu: u64) reaches Kernel {
+        hex(words, 10u64, origin, 0u64);
+        put(words, 26u64, 32u64);
+        put(words, 27u64, 48u64 + (event % 10u64));
+        put(words, 28u64, 48u64 + (slot & 7u64));
+        put(words, 29u64, 32u64);
+        hex(words, 30u64, micros, 0u64);
+        put(words, 46u64, 32u64);
+        hex(words, 47u64, cpu, 0u64);
+        put(words, 63u64, 10u64);
+        let status: u64 = Kernel::write(gate, words, 64u64);
+    }
+    machine done() {}
 }

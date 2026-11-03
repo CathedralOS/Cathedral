@@ -29,3 +29,18 @@ public machine park_until(gate: &Gate, deadline: u64) -> u64 reaches Kernel bloc
     let empty: [u64; 8];
     block Kernel::wait(gate, &empty, 0u64, deadline)
 }
+
+// Diagnostic sample from the same clock grant as read(). CPU is this account's
+// execution (including its kernel work), not other tasks or elapsed wait time.
+public data Stamp [copy] {
+    case Read(ticks: u64, micros: u64, cpu: u64);
+    case Failed(code: u64);
+}
+public machine stamp(gate: &Gate, clock: u64) -> Stamp reaches Kernel invokes Kernel {
+    let mut record: [u64; 8];
+    let status: u64 = Kernel::clock_stamp(gate, clock, &mut record);
+    transition status == 0u64 {
+        true -> (Stamp::Read { ticks: record[0], micros: record[1], cpu: record[2] })
+        _ -> (Stamp::Failed { code: status })
+    }
+}

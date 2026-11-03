@@ -1,4 +1,5 @@
 module slots;
+use shared::report;
 // One admitted child's listener per turn. A retired listener means the child
 // left: stop, collect and release it and drop its view. Service acquisition goes
 // to the runtime's offer, surface and batch words to presentation (a sealed
@@ -84,16 +85,18 @@ machine routed(gate: &Gate, context: &mut State, slot: u64 [0..=4], frame: Frame
     // while an older sibling's publication waits. Other requests retain their input.
     transition context.presentation_work.active && frame.payload[0] != MATRIX_POLL && frame.payload[0] != POLL_TAGGED
         && frame.payload[0] != ACQUIRE {
-        true -> queued(context, slot, frame)
+        true -> queued(gate, context, slot, frame)
         _ -> block dispatch(gate, context, slot, frame, now)
     }
-    machine queued(context: &mut State, slot: u64 [0..=4], frame: Frame) -> u64 {
+    machine queued(gate: &Gate, context: &mut State, slot: u64 [0..=4], frame: Frame) -> u64 reaches Kernel {
+        control_request(gate, context, slot, 9u64, frame.payload[0]);
         context.scene_children[slot].active = true;
         context.scene_children[slot].frame = frame;
         0u64
     }
 }
 machine dispatch(gate: &Gate, context: &mut State, slot: u64 [0..=4], frame: Frame, now: u64) -> u64 reaches Kernel {
+    control_request(gate, context, slot, 8u64, frame.payload[0]);
     let issued: Ticket = runtime::server::main::ticket(&context.slots[slot].listener);
     let incarnation: u64 = context.slots[slot].listener.incarnation;
     let attached: bool = frame.attachment != 0u64;
@@ -198,4 +201,12 @@ machine error(code: u64) -> [u64; 8] {
     let mut words: [u64; 8];
     words[0] = code;
     words
+}
+
+machine control_request(gate: &Gate, context: &State, slot: u64, event: u64, op: u64) reaches Kernel {
+    transition op == SELECT_APP || op == CLOSE {
+        true -> report::control(gate, context.clock, context.trace_origin, event, slot, op)
+        _ -> done()
+    }
+    machine done() {}
 }

@@ -327,3 +327,12 @@ work. The control connection retains that pending exchange until its late reply
 is drained. `omega_selection_test.py --cancel nested` exercises two Omega relays
 under a held commit, observes STOP timing out, then checks eventual cancellation,
 restoration, reclamation and a distinct storage-binding reply over the same route.
+
+Sparse control timing pairs each `Matrix control:` value with a `Matrix t:`
+sample of monotonic and account-CPU microseconds. The leading stamp is taken at
+startup to correlate one instance within a boot; it is not a process identity
+or authority token. Events 8/9 record SELECT_APP/CLOSE dispatch and scene queueing.
+Run `python tools/boot-harness-rs/control_timing.py SERIAL_LOG` to inspect question
+and queue intervals. It reports raw elapsed/CPU spans, outstanding requests and
+adjacent diagnostic cost; logging perturbs execution. A span includes this
+matrix's other work, and off-CPU time alone cannot identify what it waited for.

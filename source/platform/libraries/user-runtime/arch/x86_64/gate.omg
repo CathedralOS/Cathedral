@@ -22,6 +22,8 @@ linux_x86_64 machine Gate::write_leaf(gate: &Gate, buffer: &[u64; 8], bytes: u64
     satisfies Kernel::write via ForeignBinding::TableFunction(write);
 linux_x86_64 machine Gate::clock_leaf(gate: &Gate) -> u64
     satisfies Kernel::clock via ForeignBinding::TableFunction(clock);
+linux_x86_64 machine Gate::clock_stamp_leaf(gate: &Gate, handle: u64, buffer: &mut [u64; 8]) -> u64
+    satisfies Kernel::clock_stamp via ForeignBinding::TableFunction(clock_stamp);
 linux_x86_64 machine Gate::clock_read_leaf(gate: &Gate, handle: u64, buffer: &mut [u64; 8]) -> u64
     satisfies Kernel::clock_read via ForeignBinding::TableFunction(clock_read);
 linux_x86_64 machine Gate::wait_leaf(gate: &Gate, records: &[u64; 8], count: u64 [0..=4], deadline: u64) -> u64
@@ -234,6 +236,9 @@ public NativeKernel satisfies Kernel {
     }
     machine clock(gate: &Gate) -> u64 {
         Gate::clock_leaf(gate)
+    }
+    machine clock_stamp(gate: &Gate, handle: u64, buffer: &mut [u64; 8]) -> u64 {
+        Gate::clock_stamp_leaf(gate, handle, buffer)
     }
     machine clock_read(gate: &Gate, handle: u64, buffer: &mut [u64; 8]) -> u64 {
         Gate::clock_read_leaf(gate, handle, buffer)

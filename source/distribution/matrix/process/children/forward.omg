@@ -160,7 +160,7 @@ machine pending(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64) r
     }
 }
 machine expired(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
-    report::control(gate, context.owner.peer.receiver, 4u64, slot, context.forwards[slot].purpose);
+    report::control(gate, context.clock, context.trace_origin, 4u64, slot, context.forwards[slot].purpose);
     context.forwards[slot].late = true;
     block settle(gate, context, slot, error(kernel::TIMED_OUT));
 }
@@ -182,18 +182,18 @@ machine settle(gate: &Gate, context: &mut State, slot: u64 [0..=4], words: [u64;
     block settled(gate, context, slot, forward, words);
 }
 machine settled(gate: &Gate, context: &mut State, slot: u64 [0..=4], forward: Forward, words: [u64; 8]) reaches Kernel {
-    loss_reply(gate, context.owner.peer.receiver, slot, forward.purpose, words);
+    loss_reply(gate, context.clock, context.trace_origin, slot, forward.purpose, words);
     transition {
         forward.purpose == LOSS_QUESTION -> block surveyed(gate, context, slot, answer_of(words))
         forward.purpose == CLOSE_QUESTION -> block closed(gate, context, slot, forward, answer_of(words))
         _ -> block respond_to(gate, context, forward.ticket, words)
     }
 }
-machine loss_reply(gate: &Gate, owner: u64, slot: u64, purpose: u64, words: [u64; 8]) reaches Kernel {
-    transition purpose == OWNER_WORD { true -> done() _ -> logged(gate, owner, slot, words) }
-    machine logged(gate: &Gate, owner: u64, slot: u64, words: [u64; 8]) reaches Kernel {
-        report::control(gate, owner, 2u64, slot, words[0]);
-        report::control(gate, owner, 3u64, slot, words[1]);
+machine loss_reply(gate: &Gate, clock: u64, owner: u64, slot: u64, purpose: u64, words: [u64; 8]) reaches Kernel {
+    transition purpose == OWNER_WORD { true -> done() _ -> logged(gate, clock, owner, slot, words) }
+    machine logged(gate: &Gate, clock: u64, owner: u64, slot: u64, words: [u64; 8]) reaches Kernel {
+        report::control(gate, clock, owner, 2u64, slot, words[0]);
+        report::control(gate, clock, owner, 3u64, slot, words[1]);
     }
 }
 machine respond_to(gate: &Gate, context: &mut State, issued: Ticket, words: [u64; 8]) reaches Kernel {
@@ -217,7 +217,7 @@ public machine survey(gate: &Gate, context: &mut State, now: u64) -> u64 reaches
         _ -> block refused_survey(gate, context)
     }
     machine refused_survey(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
-        report::control(gate, context.owner.peer.receiver, 0u64, 5u64, survey_cause(context));
+        report::control(gate, context.clock, context.trace_origin, 0u64, 5u64, survey_cause(context));
         block reply(gate, context, error(kernel::BUSY))
     }
     machine asking(gate: &Gate, context: &mut State, now: u64, slot: u64) -> u64 reaches Kernel requires slot <= 5u64 {
@@ -289,7 +289,7 @@ machine concluded(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
         _ -> block surveyed_reply(gate, context, 1u64)
     }
     machine surveyed_reply(gate: &Gate, context: &mut State, uncertain: u64) -> u64 reaches Kernel {
-        report::control(gate, context.owner.peer.receiver, 5u64, 5u64, uncertain);
+        report::control(gate, context.clock, context.trace_origin, 5u64, 5u64, uncertain);
         context.surveying = false;
         let issued: Ticket = context.survey_ticket;
         let mut words: [u64; 8];
@@ -325,7 +325,7 @@ machine closed(gate: &Gate, context: &mut State, slot: u64 [0..=4], forward: For
         _ -> block refused_close(gate, context, slot, forward)
     }
     machine refused_close(gate: &Gate, context: &mut State, slot: u64 [0..=4], forward: Forward) reaches Kernel {
-        report::control(gate, context.owner.peer.receiver, 6u64, slot, kernel::BUSY);
+        report::control(gate, context.clock, context.trace_origin, 6u64, slot, kernel::BUSY);
         block reply_requester(gate, context, forward, error(kernel::BUSY));
     }
     machine stopping(gate: &Gate, context: &mut State, slot: u64 [0..=4], forward: Forward) reaches Kernel {
@@ -356,7 +356,7 @@ machine question(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], 
     machine sending(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], purpose: u64, requester: u64, request: Ticket,
         words: [u64; 8]) -> bool reaches Kernel {
         let status: u64 = block runtime::connection::main::begin(gate, &mut context.controls[slot], &words);
-        report::control(gate, context.owner.peer.receiver, 1u64, slot, status);
+        report::control(gate, context.clock, context.trace_origin, 1u64, slot, status);
         transition status == 0u64 {
             true -> (pending_question(context, now, slot, purpose, requester, request))
             _ -> (false)

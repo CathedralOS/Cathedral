@@ -541,6 +541,18 @@ stale reply drainage. Incarnations and slots are local to each matrix, not globa
 process identifiers; do not correlate unrelated matrices by those values alone.
 No close deadline or refusal policy is changed by tracing.
 
+The Omega matrix's sparse control diagnostics also pair each value with a
+`Matrix t:` sample: startup stamp, event/slot, monotonic microseconds and that
+account's charged execution microseconds. Run
+`python tools/boot-harness-rs/control_timing.py SERIAL_LOG` on these logs to
+separate queue-to-dispatch and question-to-answer intervals into elapsed, charged
+execution and off-CPU time. Startup stamps correlate instances within one boot;
+they are not globally unique process identities. Charged time includes other
+work the same account performed during the interval, including kernel work;
+off-CPU time alone does not distinguish IPC waiting from scheduler contention.
+The report also estimates trace cost from consecutive status/loss samples and
+rejects incomplete pairs or regressing clocks. Do not combine separate boots.
+
 Host observations include input spacing, QMP and screenshot polling; they are
 upper bounds, not service CPU benchmarks or latency guarantees. Storage samples
 include provider CPU, nominal 100-Hz ticks, sector/flush/poll counts and nested

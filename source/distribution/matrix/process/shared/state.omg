@@ -139,6 +139,9 @@ public data State {
     refresh_due: bool;
     world: World;
     clock: u64;
+    // Startup clock sample used only to correlate diagnostics within one boot.
+    // Not an identity, authority token or promise of uniqueness.
+    trace_origin: u64;
     // The bound extent and keys of the root display.
     width: u64;
     height: u64;
