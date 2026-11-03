@@ -1,24 +1,18 @@
 module board::pc::timer::root;
 
-use board::pc::timer::pic::Pic8259;
+use board::pc::timer::pic::PicTimerAcknowledgement;
 use isa::x86_64::interrupts::entry::CathedralTimerRoot;
 use omega::language::core::interrupt;
 
-// Cathedral's first selected root provider. Its deliberately tiny body proves
-// the hard-root contract shape: settle the one linear acknowledgement and
-// return through the deriver-owned interrupt exit. Clock capture and the
-// preallocated coalescing wake are later fixed-work leaves.
-pub data LegacyPicTimerRoot {
-}
-
-LegacyPicTimerRootCathedralTimerRoot:
-    LegacyPicTimerRoot satisfies CathedralTimerRoot;
-
-pub machine LegacyPicTimerRoot::enter(
-    acknowledgement: InterruptAcknowledgement in Pending
-)
-    satisfies InterruptEntry::enter
-    reaches PortIo
-{
-    Pic8259::complete_timer_acknowledgement(acknowledgement);
+// A timer arrival owes one acknowledgement to its controller. This handler
+// transfers that obligation to the PIC completion operation, then returns.
+// Recording time and waking ordinary work will extend this bounded body.
+public LegacyPicTimerRoot satisfies CathedralTimerRoot {
+    machine enter(
+        acknowledgement: InterruptAcknowledgement in Pending
+    )
+        reaches PortIo
+    {
+        PicTimerAcknowledgement::complete(acknowledgement);
+    }
 }

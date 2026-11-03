@@ -1,6 +1,6 @@
-// Host-side source canary package. It imports Cathedral core but installs no
-// external root and performs no hardware operation.
-
-machine build(b: &mut Build) {
-    b.depend("core", path("../../source/kernel/core"));
+machine build(builder: &mut Build) {
+    Build::package(builder, "cathedral_timer_entry_canary");
+    Build::depend_as(builder, "arch", Source::Path { location: "../../source/kernel/arch" });
+    Build::select_representation<InterruptAcknowledgement, arch::isa::x86_64::interrupts::entry::CathedralAcknowledgementRepresentation>(builder);
+    builder.freestanding = true;
 }
