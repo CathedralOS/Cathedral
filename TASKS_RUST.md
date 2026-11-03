@@ -1134,6 +1134,82 @@ The follow-up below moves shared storage exchanges into retained per-link work.
 Local launch reads and bindings remain the next continuation work, including
 recovery of the login picker on failed admission.
 
+### Stock matrix migration: child launch reads and picker recovery
+
+After `889468db`, child LAUNCH resumes at `children/launch/launch.omg` instead
+of waiting inside `children/stored.omg`. The request retains its broker ticket,
+caller and storage incarnations, grant revision, target slot and standing
+policy. `authority.omg` checks them again before admitting an image; revocation,
+requester retirement/replacement or changed policy cancels the old request.
+One pending launch reserves its target before a process occupies it. Executable
+launches use the matrix's first source; another source's binding is refused.
+
+`connections/storage/reads.omg` uses the existing per-link exchange receiver,
+with a distinct owner tag and the original child's storage authority. Its
+accepted deadline survives queueing. The synchronous adapter can drain that
+exchange into the retained read result without running admission or consuming
+the launch's image. This prevents a synchronous grant/listing operation from
+deadlocking behind a pending launch. Late image rights are released after
+cancellation; answers use the original deferred ticket and response queue.
+
+The picker remains alive during the executable read. After a successful read,
+admission still retires it to free the user's resources; failure then queues
+the existing bounded startup recovery. `placement.omg` owns ranks, placement,
+activation and their rollback. No kernel mechanism, protocol, capacity or
+stack limit changed. Rust changes are confined to the fault-injection parent.
+
+`omega_launch_test.py` holds the executable read at a Rust fixture parent until
+the real Omega child answers HEALTH and polls input. `--invalid` supplies a bad
+executable to a nested login, requires its picker to recover, then enters the
+same user successfully. `--regrant` revokes the launcher's binding while its
+read waits, restores it after releasing the read, requires the old launch to
+be refused without admission, then launches/saves/reopens successfully. That
+case also exercises a synchronous grant draining the pending internal read.
+The hold has a 30-tick liveness limit; after release, regrant gets two existing
+storage deadlines for the real disk read and binding query. OS deadlines are
+unchanged. The cleanup waits for the inner app's reclamation before asking to
+close its enclosing desktop.
+
+All eleven final QEMU scenarios pass, including cold reboot:
+
+| Scenario | Artifact under `build/boot-harness-rs/desktop/` |
+| --- | --- |
+| Held executable read, save and slot reuse | `20261103T001314629830Z/` |
+| Failed user admission, restored picker and retry | `20261103T001349824612Z/` |
+| Revoke/regrant during the executable read | `20261103T001434409065Z/` |
+| Held write, direct / through a nested desktop | `20261103T001510135393Z/`, `20261103T001546684541Z/` |
+| Full Omega desktop | `20261103T001645217045Z/` |
+| Three nested desktops and repeated subtree reclamation | `20261103T001748002901Z/` |
+| Split inside Split | `20261103T002050710936Z/` |
+| Selection cancellation through two relays | `20261103T002155454916Z/` |
+| Three-cycle depth-three resource soak | `20261103T002918064057Z/` |
+| Normal Rust F5 | `20261103T003303032664Z/` |
+
+Native review and compilation use the unchanged pinned producer. The image is
+376/496 load pages, with the unchanged 128-page stack. Both receipt input maps
+match the worktree; the last whitespace cleanup rebuilt an identical ELF
+(`2baba4077487ac387a5d398335537444fe85bcecf7e1ac3fd76f4aeddef4e456`).
+All 514 Rust host tests, target clippy with `interaction-delay,trace-storage`,
+Rust formatting, Python compilation, layout (148 Omega / 153 Rust edges) and
+diff whitespace checks pass. Logs are `build/omega-matrix-progress/launch-final-*.log`.
+
+The soak returns to stable root/provider resource floors with no reported
+failures. It is not a latency win: three of five measured deep close phases took
+11.7-12.2 seconds; the earlier storage sweep's closes took 1.0-1.8 seconds but
+also had a 13.3-second edit pause. The cause is not isolated. Trace these waits
+alongside the remaining continuations; do not attribute them to host load
+without evidence. Requester death/slot reuse during a held read, policy changes
+and provider replacement still need dedicated fault tests. The earlier small
+Rust matrix-lab failure remains open and was not retested in this slice.
+
+Next: retain binding refreshes and final launch scene activation. Owner
+RUN_OBJECT, startup picker/background/configuration reads, listing and first
+provider handshakes still wait. Do not call the entire launch path nonblocking.
+Binding must retain the admitted child's identity and resources, keep its
+services from answering before the grant is ready, recheck captured authority
+before granting it, and reclaim it on cancellation. Preserve the single source
+receiver and the generic userspace IPC path.
+
 ### Stock matrix migration: retained storage exchanges
 
 After `9fdab572`, the Omega storage coordinator now descends through
@@ -1185,15 +1261,9 @@ provider replacement with a failed handshake, and simultaneous requests over
 both root sources. Normal F5 still uses the Rust matrix; the previously recorded
 small Rust matrix-lab failure was not part of this sweep and remains open.
 
-Next: migrate local launch reads and binding refreshes onto retained work, then
-make failed user admission restore the login picker. Capture the caller ticket,
-requester incarnation/grant, target slot and staged resources before waiting;
-recheck authority before admission and binding, and release late images on
-cancellation. `children/stored.omg::launch` still waits for the image and
-`admit_image` still waits for its binding. Picker/configuration/background
-admission also uses these paths. Keep the same source driver; no second receiver
-or launch-only transport. Listing and first-provider handshakes remain visible
-blocking work in the temporary synchronous adapter and binding module.
+The next handoff above advances child launch reads and picker recovery.
+Owner/startup reads, binding, listing and first-provider handshakes remain
+visible blocking work; use that handoff for the current follow-up scope.
 
 ### Stock matrix migration: root display waits
 

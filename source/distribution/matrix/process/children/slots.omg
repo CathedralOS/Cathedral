@@ -28,7 +28,7 @@ use world::geometry::zeros_from;
 use lifecycle;
 use connections::presentation;
 use connections::presentation::Submission;
-use stored;
+use launch::launch;
 use funding;
 use workspace;
 use connections::responses;
@@ -109,7 +109,7 @@ machine dispatch(gate: &Gate, context: &mut State, slot: u64 [0..=4], frame: Fra
         frame.payload[0] == MATRIX_PAINT || frame.payload[0] == MATRIX_ERASE || frame.payload[0] == SURFACE_CURSOR
             -> block updating(gate, context, slot, issued, frame, incarnation)
         batch -> block presenting(gate, context, slot, issued, frame, incarnation)
-        frame.payload[0] == LAUNCH -> block launching(gate, context, slot, issued, frame, incarnation, now)
+        frame.payload[0] == LAUNCH -> block launching(gate, context, slot, issued, frame, incarnation)
         frame.payload[0] == LAUNCH_STATUS && zeros_from(&frame.payload, 2u64) -> block observing(gate, context, slot, issued, frame, incarnation)
         frame.payload[0] == FUND -> block funding(gate, context, slot, issued, frame, now)
         frame.payload[0] == APP_ENTRY -> block answered(gate, context, slot, issued, workspace::entry(context, slot, incarnation, frame.payload))
@@ -119,9 +119,12 @@ machine dispatch(gate: &Gate, context: &mut State, slot: u64 [0..=4], frame: Fra
         _ -> block asked(gate, context, slot, issued, frame, incarnation)
     }
 }
-machine launching(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket, frame: Frame, incarnation: u64, now: u64) -> u64 reaches Kernel {
-    let reply: [u64; 8] = block stored::child_launch(gate, context, now, slot, incarnation, frame.payload);
-    block answered(gate, context, slot, issued, reply)
+machine launching(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket, frame: Frame, incarnation: u64) -> u64 reaches Kernel {
+    let result: Submission = launch::launch::begin(gate, context, slot, incarnation, frame.payload);
+    transition result {
+        Submission::Pending -> (0u64)
+        Submission::Answer { words } -> block answered(gate, context, slot, issued, words)
+    }
 }
 machine funding(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket, frame: Frame, now: u64) -> u64 reaches Kernel {
     let reply: [u64; 8] = block funding::fund(gate, context, now, slot, frame.payload);
@@ -147,7 +150,7 @@ machine selecting(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: T
     }
 }
 machine observing(gate: &Gate, context: &mut State, slot: u64 [0..=4], issued: Ticket, frame: Frame, incarnation: u64) -> u64 reaches Kernel {
-    let reply: [u64; 8] = stored::status(context, slot, incarnation, frame.payload[1]);
+    let reply: [u64; 8] = launch::launch::status(context, slot, incarnation, frame.payload[1]);
     block answered(gate, context, slot, issued, reply)
 }
 // The listener holds the sealed attachment until the reply; presentation

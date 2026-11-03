@@ -1,7 +1,7 @@
 module storage::synchronous;
-// Transitional callers: startup, owner grants, listing and launch still wait.
+// Transitional callers: startup, owner grants, listing and launch binding wait.
 // They drive the same retained exchange as child relays, never a second receiver.
-// Drain accepted relays first without admitting more, avoiding BUSY failures or
+// Drain accepted relays and scoped internal reads without admitting more, avoiding BUSY failures or
 // deadlock when a launch shares a source with an app's outstanding file request.
 use shared::state::State;
 use shared::storage::Outcome;
@@ -13,6 +13,7 @@ use runtime::waiting;
 use runtime::waiting::Set;
 use storage::exchange;
 use storage::children;
+use storage::reads;
 
 public machine request(gate: &Gate, context: &mut State, now: u64, source: u64, words: [u64; 8], object: u64) -> Outcome
     reaches Kernel blocks invokes Kernel {
@@ -60,6 +61,7 @@ machine bounded_drain(gate: &Gate, context: &mut State, index: u64 [0..=2]) reac
     }
     machine progress(gate: &Gate, context: &mut State, index: u64 [0..=2], now: u64) reaches Kernel {
         block children::advance(gate, context, now);
+        block reads::step(gate, context, now);
         transition exchange::idle(context, index) {
             true -> done()
             _ -> block parked(gate, context, index, now)
@@ -78,6 +80,7 @@ machine await(gate: &Gate, context: &mut State, index: u64 [0..=2]) -> Outcome r
     }
     machine progress(gate: &Gate, context: &mut State, index: u64 [0..=2], now: u64) -> Outcome reaches Kernel {
         block children::advance(gate, context, now);
+        block reads::step(gate, context, now);
         transition exchange::ready(context, index, exchange::LOCAL) {
             true -> (exchange::take(context, index))
             _ -> block parked(gate, context, index, now)

@@ -1,0 +1,80 @@
+module launch::authority;
+// The caller's live broker and storage grant, and the owner's unchanged policy,
+// must still authorize this exact launch after its read. Slot admission counts
+// a pending launch as busy even though no process occupies the target yet.
+use shared::state::State;
+use shared::state::SlotPolicy;
+use runtime::server::deferred;
+use policy::children::launch::admission::Facts;
+use policy::children::launch::roles::Requester;
+use world::launches;
+use world::scopes;
+use world::scopes::Bound;
+use declaration;
+public machine valid(context: &State) -> bool {
+    let slot: u64 [0..=4] = context.launch.requester;
+    let target: u64 [0..=4] = context.launch.slot;
+    let bound: Bound = scopes::authorize(&context.store.scopes, slot, context.launch.storage_incarnation, context.launch.revision);
+    !context.launch.cancelled && context.slots[slot].live && !context.slots[target].live
+        && deferred::matches(&context.slots[slot].listener, context.launch.ticket)
+        && context.slots[slot].listener.incarnation == context.launch.incarnation
+        && context.store.listeners[slot].incarnation == context.launch.storage_incarnation && bound.status == 0u64
+        && context.login == context.launch.login && context.desktop == context.launch.desktop
+        && unchanged(context.policies[target], context.launch.policy)
+}
+machine unchanged(left: SlotPolicy, right: SlotPolicy) -> bool {
+    left.images == right.images
+        && left.private_pages == right.private_pages
+        && left.reader_pages == right.reader_pages
+        && left.channels == right.channels
+        && left.descendants == right.descendants
+        && left.cpu == right.cpu
+        && left.surfaces == right.surfaces
+        && left.placed == right.placed
+        && left.x == right.x
+        && left.y == right.y
+        && left.width == right.width
+        && left.height == right.height
+        && left.keys == right.keys
+        && left.imports == right.imports
+        && left.imports_set == right.imports_set
+        && left.standing == right.standing
+}
+// Admission sees the reserved launch as busy before the target is live.
+public machine facts(context: &State, requester: u64 [0..=4], bound: bool) -> Facts {
+    Facts {
+        busy: context.launch.phase != 0u64 || context.frame_count != 0u64, desktop: context.desktop, exact_chrome: context.desktop && requester == 0u64, requester: Requester::Child { slot: requester },
+        occupied_slots: occupied(context, 0u64, 0u64), unavailable_connections: 0u64, storing: false,
+        has_receipt: launches::available(&context.observations, requester), has_ticket: true,
+        standing_slots: standing(context, 0u64, 0u64), has_storage_binding: bound }
+}
+machine occupied(context: &State, slot: u64, mask: u64) -> u64 requires slot <= 5u64 {
+    transition slot < 5u64 {
+        true -> counted(context, slot, mask)
+        _ -> (mask)
+    }
+    machine counted(context: &State, slot: u64, mask: u64) -> u64 requires slot < 5u64 {
+        transition context.slots[slot].live {
+            true -> occupied(context, slot + 1u64, mask | (1u64 << slot))
+            _ -> occupied(context, slot + 1u64, mask)
+        }
+    }
+}
+machine standing(context: &State, slot: u64, mask: u64) -> u64 requires slot <= 5u64 {
+    transition slot < 5u64 {
+        true -> counted(context, slot, mask)
+        _ -> (mask)
+    }
+    machine counted(context: &State, slot: u64, mask: u64) -> u64 requires slot < 5u64 {
+        transition context.policies[slot].standing {
+            true -> standing(context, slot + 1u64, mask | (1u64 << slot))
+            _ -> standing(context, slot + 1u64, mask)
+        }
+    }
+}
+public machine offered(context: &State, slot: u64 [0..=4]) -> u64 {
+    transition context.policies[slot].imports_set {
+        true -> (context.policies[slot].imports)
+        _ -> (declaration::ALL)
+    }
+}

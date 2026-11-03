@@ -36,3 +36,16 @@ public data Relay {
     proof: Proof;
     cancelled: bool;
 }
+
+// A scoped read initiated by this process on behalf of a child. The exchange
+// can finish even while a transitional synchronous caller drains its link;
+// the reader right waits here until the launch continuation takes it.
+public data Read {
+    phase: u64;
+    requester: u64 [0..=4];
+    incarnation: u64;
+    revision: u64;
+    words: [u64; 8];
+    answer: Outcome;
+    cancelled: bool;
+}

@@ -1,0 +1,222 @@
+module launch::launch;
+// A child asks -> reserve its request and policy -> read the scoped image over
+// later turns -> recheck authority -> admit and place. The picker stays alive
+// during the read; if admission fails after retiring it, startup restores it.
+use protocol::main;
+use protocol::matrix;
+use shared::state::State;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::time::Tick;
+use world::geometry::zeros_from;
+use policy::children::launch::resources::main::Capacity;
+use policy::children::launch::admission;
+use policy::children::launch::admission::Facts;
+use policy::children::launch::admission::Decision;
+use policy::children::launch::admission::Refusal;
+use world::surfaces;
+use world::launches;
+use world::scopes;
+use world::scopes::Bound;
+use shared::storage::Outcome;
+use lifecycle;
+use shared::report;
+
+use shared::state::Launch;
+use shared::state::SlotPolicy;
+use runtime::server::main::Ticket;
+use runtime::server::deferred;
+use connections::presentation::Submission;
+use connections::storage::reads;
+use connections::storage::exchange;
+use connections::responses;
+use stored;
+use policy::children::startup::main::RetirementEffect;
+use launch::placement;
+use launch::authority;
+
+public machine begin(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarnation: u64,
+    words: [u64; 8]) -> Submission reaches Kernel invokes Kernel {
+    // Earlier owner/setup work may have waited. Accept against a fresh clock,
+    // then retain that deadline; queueing must never extend it.
+    let tick: Tick = runtime::time::read(gate, context.clock);
+    transition tick {
+        Tick::Read { value } -> current(gate, context, value, requester, incarnation, words)
+        Tick::Failed { code } -> (Submission::Answer { words: error(code) })
+    }
+    machine current(gate: &Gate, context: &mut State, now: u64, requester: u64 [0..=4], incarnation: u64,
+        words: [u64; 8]) -> Submission reaches Kernel {
+        transition zeros_from(&words, 3u64) {
+            true -> deciding(gate, context, now, requester, incarnation, words[1], words[2])
+            _ -> (Submission::Answer { words: error(kernel::DENIED) })
+        }
+    }
+    machine deciding(gate: &Gate, context: &mut State, now: u64, requester: u64 [0..=4], incarnation: u64,
+        object: u64, withhold: u64) -> Submission reaches Kernel {
+        let bound: Bound = scopes::binding(&context.store.scopes, requester, context.store.listeners[requester].incarnation);
+        let asked: admission::Request = admission::Request { program_present: object != 0u64, withheld_imports: withhold, supported_imports: 15u64 };
+        // Executables and their new realms belong to this matrix's first source.
+        let facts: Facts = authority::facts(context, requester, bound.status == 0u64 && bound.source == 0u64);
+        let decision: Decision = admission::admit(&asked, &facts);
+        transition decision {
+            Decision::Admitted { slot } -> targeted(context, now, requester, incarnation, object, withhold, bound.scope, slot)
+            Decision::TargetRefused { slot, reason } -> (Submission::Answer { words: refused(gate, code_of(reason)) })
+            Decision::Refused { reason } -> (Submission::Answer { words: refused(gate, code_of(reason)) })
+        }
+    }
+    machine targeted(context: &mut State, now: u64, requester: u64 [0..=4], incarnation: u64, object: u64, withhold: u64,
+        stamp: u64, slot: u64) -> Submission {
+        transition slot < 5u64 {
+            true -> retained(context, now, requester, incarnation, object, withhold, stamp, slot)
+            _ -> (Submission::Answer { words: error(kernel::DENIED) })
+        }
+    }
+    machine retained(context: &mut State, now: u64, requester: u64 [0..=4], incarnation: u64, object: u64, withhold: u64,
+        stamp: u64, slot: u64 [0..=4]) -> Submission {
+        let ticket: Ticket = runtime::server::main::ticket(&context.slots[requester].listener);
+        let status: u64 = hold(context, requester, ticket);
+        transition status == 0u64 {
+            true -> reading(context, now, requester, incarnation, object, withhold, stamp, slot, ticket)
+            _ -> (Submission::Answer { words: error(status) })
+        }
+    }
+    machine reading(context: &mut State, now: u64, requester: u64 [0..=4], incarnation: u64, object: u64, withhold: u64,
+        stamp: u64, slot: u64 [0..=4], ticket: Ticket) -> Submission {
+        let status: u64 = reads::begin(context, now, requester, object, stamp);
+        transition status == 0u64 {
+            true -> started(context, requester, incarnation, object, withhold, slot, ticket)
+            _ -> (Submission::Answer { words: error(status) })
+        }
+    }
+    machine started(context: &mut State, requester: u64 [0..=4], incarnation: u64, object: u64, withhold: u64,
+        slot: u64 [0..=4], ticket: Ticket) -> Submission {
+        let mut work: Launch;
+        work.phase = 1u64; work.requester = requester; work.incarnation = incarnation; work.ticket = ticket;
+        work.storage_incarnation = context.store.listeners[requester].incarnation;
+        work.revision = context.store.scopes.revisions[requester];
+        work.slot = slot; work.object = object; work.offered = authority::offered(context, slot) & ~withhold;
+        work.policy = context.policies[slot]; work.login = context.login; work.desktop = context.desktop;
+        context.launch = work;
+        Submission::Pending
+    }
+}
+machine hold(context: &mut State, slot: u64 [0..=4], ticket: Ticket) -> u64 {
+    transition context.slots[slot].listener.peer.pipeline {
+        true -> (deferred::hold(&mut context.slots[slot].listener, ticket))
+        _ -> (0u64)
+    }
+}
+public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
+    transition context.launch.phase == 1u64 {
+        true -> block progress(gate, context)
+        _ -> done()
+    }
+    machine progress(gate: &Gate, context: &mut State) reaches Kernel {
+        let valid: bool = authority::valid(context);
+        invalidate(context, valid);
+        let requester: u64 [0..=4] = context.launch.requester;
+        transition reads::ready(context) && !context.presentation_work.active && !context.answers[requester].active {
+            true -> block current(gate, context, valid)
+            _ -> done()
+        }
+    }
+    machine current(gate: &Gate, context: &mut State, valid: bool) reaches Kernel {
+        let tick: Tick = runtime::time::read(gate, context.clock);
+        let image: Outcome = reads::take(context);
+        transition tick {
+            Tick::Read { value } -> block checked(gate, context, valid, image, value)
+            Tick::Failed { code } -> block failed(gate, context, image.attachment, code)
+        }
+    }
+    machine checked(gate: &Gate, context: &mut State, valid: bool, image: Outcome, now: u64) reaches Kernel {
+        transition {
+            !valid -> block failed(gate, context, image.attachment, kernel::DENIED)
+            image.words[0] != 0u64 -> block failed(gate, context, image.attachment, image.words[0])
+            image.attachment == 0u64 -> block failed(gate, context, 0u64, kernel::IO_ERROR)
+            _ -> block admitted(gate, context, image, now)
+        }
+    }
+    machine failed(gate: &Gate, context: &mut State, image: u64, code: u64) reaches Kernel {
+        block exchange::release(gate, image);
+        let words: [u64; 8] = refused(gate, code);
+        block answered(gate, context, words, false);
+    }
+    machine admitted(gate: &Gate, context: &mut State, image: Outcome, now: u64) reaches Kernel {
+        let slot: u64 [0..=4] = context.launch.slot;
+        let requester: u64 [0..=4] = context.launch.requester;
+        let incarnation: u64 = context.launch.incarnation;
+        let object: u64 = context.launch.object;
+        let offered: u64 = context.launch.offered;
+        let policy: SlotPolicy = context.launch.policy;
+        let login: bool = context.login && requester == 0u64 && slot == 1u64;
+        context.launch.phase = 2u64;
+        block retire_picker(gate, context, login);
+        let desktop_app: bool = context.desktop && slot != 0u64 && slot != 4u64;
+        let status: u64 = block stored::admit_image(gate, context, now, slot, image.attachment, image.words[4], object, 0u64,
+            policy.channels, policy.descendants, policy.cpu, policy.private_pages, policy.reader_pages, 0u64, offered, desktop_app, true);
+        block exchange::release(gate, image.attachment);
+        transition status == 0u64 {
+            true -> block placed(gate, context, requester, incarnation, slot, object, login)
+            _ -> block answered(gate, context, refused(gate, status), login)
+        }
+    }
+    machine placed(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4], object: u64,
+        login: bool) reaches Kernel {
+        let words: [u64; 8] = block placement::place(gate, context, requester, incarnation, slot, object);
+        block answered(gate, context, words, login);
+    }
+}
+machine invalidate(context: &mut State, valid: bool) {
+    transition valid { true -> done() _ -> cancelled(context) }
+    machine cancelled(context: &mut State) { context.launch.cancelled = true; reads::cancel(context); }
+}
+machine retire_picker(gate: &Gate, context: &mut State, login: bool) reaches Kernel {
+    transition login { true -> block selected(gate, context) _ -> done() }
+    machine selected(gate: &Gate, context: &mut State) reaches Kernel {
+        block lifecycle::reclaim(gate, context, 0u64);
+        context.policies[1].surfaces = context.world.allowance;
+        report::picker_retired(gate);
+    }
+}
+machine answered(gate: &Gate, context: &mut State, words: [u64; 8], login: bool) reaches Kernel {
+    let slot: u64 [0..=4] = context.launch.requester;
+    let ticket: Ticket = context.launch.ticket;
+    recover(context, login && words[0] != 0u64);
+    let empty: Launch; context.launch = empty;
+    let ignored: u64 = block responses::send(gate, context, slot, ticket, words);
+}
+machine recover(context: &mut State, failed: bool) {
+    transition failed { true -> selected(context) _ -> done() }
+    machine selected(context: &mut State) {
+        let effect: RetirementEffect = policy::children::startup::main::selection_failed(&mut context.startup, false);
+    }
+}
+// [LAUNCH_STATUS, receipt] -> [0, state] for the requester's own receipt.
+public machine status(context: &State, requester: u64 [0..=4], incarnation: u64, receipt: u64) -> [u64; 8] {
+    launches::query(&context.observations, requester, incarnation, receipt)
+}
+// The refusal goes to the console, where a proof can read why.
+machine refused(gate: &Gate, code: u64) -> [u64; 8] reaches Kernel invokes Kernel {
+    report::launch_refused(gate, code);
+    error(code)
+}
+machine code_of(reason: Refusal) -> u64 {
+    transition reason {
+        Refusal::Busy -> (kernel::BUSY)
+        Refusal::Denied -> (kernel::DENIED)
+        Refusal::Capacity -> (kernel::NO_MEMORY)
+        Refusal::InvalidArguments -> (kernel::INVALID_ARGUMENT)
+        Refusal::AppPositionsFull -> (kernel::NO_MEMORY)
+    }
+}
+machine error(code: u64) -> [u64; 8] {
+    let mut words: [u64; 8];
+    words[0] = code;
+    words
+}
+machine ok() -> [u64; 8] {
+    let words: [u64; 8];
+    words
+}
+machine done() {}

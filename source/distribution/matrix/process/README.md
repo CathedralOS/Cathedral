@@ -182,26 +182,24 @@ The children this matrix admits, funds, presents and retires.
   request, asking its owner first if it must, and grows the child's launch in
   place, asking once more for process slots a retired sibling left out of
   the child's reach.
-- [stored.omg](children/stored.omg): children from objects in the realm. RUN_OBJECT
-  reads the program over the matrix's own binding, resolves its declaration
-  through [declaration.omg](children/declaration.omg) (the platform's bounded image
-  scan, the decoded record and the stock import selection against the
-  services LAUNCH_IMPORTS offers the slot), fits it to the staged allowances
-  with the stock resource policy, reserves it from the sealed image, admits it
-  as RUN does and binds its storage to the realm the owner named; a binding
-  that cannot be made takes the child back down. The same admission from a
-  retained image serves the startup jobs. A child's own LAUNCH asks for a
-  sibling, or in a workspace for an app: the stock admission decision chooses
-  the slot the owner opened with LAUNCH_POLICY, or a free app slot for the
-  launcher, the program is read under the requester's scope so a launcher
-  launches only what it can see, the child takes the standing allowances
-  (an app the desktop's share, with the ranks the policy allotted at the
-  lowest free base), its object as its realm and the standing placement, and
-  the requester receives a receipt it can query with LAUNCH_STATUS until the
-  child ends. In a workspace an app takes the stock surface preference over its
-  allotted ranks, the preferred count down to the allotment at the lowest
-  free base below the launcher; under this matrix's own login the picker's
-  choice retires the picker first and the user owns the whole view.
+- [stored.omg](children/stored.omg): owner RUN_OBJECT and admission from a sealed
+  image. Resolve the declaration, fit the offered capacity, reserve, admit and
+  bind the child's storage; unwind a failed step. Startup jobs and retained
+  child launches share this admission path. Owner reads and binding still wait.
+- [launch/launch.omg](children/launch/launch.omg): a child's LAUNCH reserves its
+  exact reply ticket, caller and storage incarnations, grant revision, target
+  and standing policy before yielding for the executable. The scoped read uses
+  [reads.omg](connections/storage/reads.omg) over the same source exchange as
+  app storage. Its result can finish inside a transitional synchronous drain,
+  freeing the transport while custody stays with the launch continuation.
+  [authority.omg](children/launch/authority.omg) rechecks the caller, grant and
+  unchanged policy before admission; cancellation releases late reader rights.
+  [placement.omg](children/launch/placement.omg) assigns ranks, places and
+  activates the child, or reclaims it on failure. Receipt queries name only the
+  requester's launch. The login picker remains alive during the read; admission
+  failure after its retirement queues the existing bounded picker recovery.
+  Binding and final scene activation remain synchronous.
+
 - [workspace.omg](children/workspace.omg): the workspace's app instances
   under the stock catalogue. A launch into an app slot publishes the instance
   and activates it; activation hides the other apps and switches the scene in

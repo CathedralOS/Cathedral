@@ -33,6 +33,7 @@ use connections::scene;
 use connections::cursors;
 use children::slots;
 use children::selection;
+use children::launch::launch;
 use children::lifecycle;
 use connections::presentation;
 use connections::transfers::transfer;
@@ -76,6 +77,7 @@ machine turn(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
     block selection::step(gate, context);
     block transfer::step(gate, context);
     let stored: u64 = block storage::step(gate, context, now);
+    block launch::step(gate, context);
     lifecycle::notify(gate, context);
     let flushed: u64 = block presentation::flush_turn(gate, context);
     let pointed: u64 = block cursors::step(gate, context);
@@ -114,7 +116,7 @@ machine park_ticks(context: &State) -> u64 {
         context.presentation_work.active && !context.presentation_work.submitted -> (1u64)
         context.presentation_work.active -> (OWED_TICKS)
         context.scene_owner.active || queued_children(context, 0u64) -> (1u64)
-        context.frame_count != 0u64 || context.configure_queued -> (1u64)
+        context.frame_count != 0u64 || context.configure_queued || context.launch.phase != 0u64 -> (1u64)
         context.refresh_due || context.parent_work.poll_ready -> (OWED_TICKS)
         _ -> (IDLE_TICKS)
     }

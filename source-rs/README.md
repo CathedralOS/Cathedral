@@ -347,6 +347,17 @@ and poll input before release; repeated saves, slot reuse and cold reopen check
 settlement. F2 is a fixture key in that composition only. Ordinary F5 has no hold.
 Add `--nested` to pass the write through another desktop and its containment checks.
 
+`python tools/boot-harness-rs/omega_launch_test.py` holds the executable read
+behind an app launch. The stock Omega matrix must answer HEALTH and poll input
+before release; Notes then saves, closes and reopens across both boots.
+`--invalid` returns a malformed executable during a nested login, checks that
+its picker is restored, then selects the same user successfully. Only the Rust
+fixture supplies these failures: F2 once arms a write, twice a read, three times
+an invalid image, four times a revoke/regrant during the held read.
+`--regrant` checks that the old launch is refused and a new one works after the
+grant is restored. No test mode is added to the Omega process. Storage binding
+and final launch scene activation still have synchronous waits.
+
 The actual root-compositor boundary is exercised by
 `python tools/boot-harness-rs/omega_display_wait_test.py`: images, commits,
 rectangles and pointer updates wait at the compositor while root HEALTH and

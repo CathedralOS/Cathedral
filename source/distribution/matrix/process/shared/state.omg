@@ -6,6 +6,7 @@ module state;
 use parent;
 use storage::Exchange;
 use storage::Relay;
+use storage::Read;
 use display;
 use outbox;
 use presentation;
@@ -49,6 +50,23 @@ public data SlotPolicy [copy] {
     imports_set: bool;
     // Whether LAUNCH_POLICY opened the slot to children's launches.
     standing: bool;
+}
+// A child launch owns its target while the sealed executable is being read.
+// Policies and both connection identities are captured before yielding.
+public data Launch {
+    phase: u64;
+    requester: u64 [0..=4];
+    incarnation: u64;
+    storage_incarnation: u64;
+    revision: u64;
+    ticket: Ticket;
+    slot: u64 [0..=4];
+    object: u64;
+    offered: u64;
+    policy: SlotPolicy;
+    login: bool;
+    desktop: bool;
+    cancelled: bool;
 }
 // A sealed image held behind the compositor tile it was last shown on.
 public data Image [copy] {
@@ -126,6 +144,7 @@ public data State {
     revision: u64;
     // Provider links, bindings and each child's storage connection.
     store: Store;
+    launch: Launch;
     // Each child's receipt for its latest launch.
     observations: Launches;
     // Admitted children, this matrix's client to each one's owner control, the
@@ -219,6 +238,7 @@ public data Store {
     listeners: [Server; 5];
     exchanges: [Exchange; 3];
     relays: [Relay; 5];
+    read: Read;
     // Under a parent: whether its storage connection was supplied, and the
     // binding revision and realm it last reported, once asked.
     has_upstream: bool;

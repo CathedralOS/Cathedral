@@ -1,0 +1,114 @@
+module storage::reads;
+// Scoped internal reads share the exchange receiver with child relays. Taking
+// the transport result into this record frees the link without running admission
+// inside another caller's synchronous drain. No input attachment is borrowed.
+use shared::state::State;
+use shared::storage::Read;
+use shared::storage::Outcome;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::waiting;
+use runtime::waiting::Set;
+use protocol::main;
+use protocol::matrix;
+use protocol::storage::operations;
+use protocol::storage::scope;
+use storage::exchange;
+
+public machine begin(context: &mut State, now: u64, requester: u64 [0..=4], object: u64, stamp: u64) -> u64 {
+    transition context.store.read.phase == 0u64 {
+        true -> scoped(context, now, requester, object, stamp)
+        _ -> (kernel::BUSY)
+    }
+    machine scoped(context: &mut State, now: u64, requester: u64 [0..=4], object: u64, stamp: u64) -> u64 {
+        let mut work: Read;
+        work.words[0] = ((STORAGE_BASE as u64 in Wrapping) + (operations::BULK as u64 in Wrapping)) as u64;
+        work.words[1] = object;
+        work.words[7] = scope::deadline(now, 0u64, STORAGE_DEADLINE_TICKS);
+        let fits: bool = scope::stamp(&mut work.words, stamp);
+        transition fits && work.words[7] != 0u64 {
+            true -> queued(context, requester, work)
+            _ -> (kernel::DENIED)
+        }
+    }
+    machine queued(context: &mut State, requester: u64 [0..=4], work: Read) -> u64 {
+        let mut pending: Read = work;
+        pending.phase = 1u64; pending.requester = requester;
+        pending.incarnation = context.store.listeners[requester].incarnation;
+        pending.revision = context.store.scopes.revisions[requester];
+        context.store.read = pending;
+        0u64
+    }
+}
+public machine ready(context: &State) -> bool { context.store.read.phase == 3u64 }
+public machine take(context: &mut State) -> Outcome {
+    let answer: Outcome = context.store.read.answer;
+    let empty: Read; context.store.read = empty;
+    answer
+}
+public machine step(gate: &Gate, context: &mut State, now: u64) reaches Kernel blocks invokes Kernel {
+    let index: u64 = exchange::link_of(context, 0u64);
+    transition context.store.read.phase != 0u64 && index <= 2u64 {
+        true -> block progress(gate, context, now, index)
+        _ -> done()
+    }
+    machine progress(gate: &Gate, context: &mut State, now: u64, index: u64 [0..=2]) reaches Kernel {
+        let owner: u64 = exchange::READ + context.store.read.requester;
+        transition {
+            context.store.read.phase == 3u64 -> done()
+            context.store.read.phase == 2u64 && exchange::ready(context, index, owner) -> completed(context, index)
+            context.store.read.phase == 2u64 -> done()
+            context.store.read.cancelled -> refused(context, kernel::DENIED)
+            runtime::time::reached(now, context.store.read.words[7]) -> refused(context, kernel::TIMED_OUT)
+            exchange::idle(context, index) -> block started(gate, context, now, owner)
+            _ -> done()
+        }
+    }
+    machine started(gate: &Gate, context: &mut State, now: u64, owner: u64) reaches Kernel {
+        let words: [u64; 8] = context.store.read.words;
+        let incarnation: u64 = context.store.read.incarnation;
+        let revision: u64 = context.store.read.revision;
+        let status: u64 = block exchange::start(gate, context, now, 0u64, words, 0u64, owner, incarnation, revision, false);
+        transition status == 0u64 { true -> waiting(context) _ -> refused(context, status) }
+    }
+    machine waiting(context: &mut State) { context.store.read.phase = 2u64; }
+    machine completed(context: &mut State, index: u64 [0..=2]) {
+        let answer: Outcome = exchange::take(context, index);
+        context.store.read.answer = answer;
+        context.store.read.phase = 3u64;
+    }
+    machine refused(context: &mut State, code: u64) {
+        context.store.read.answer = exchange::failed(code); context.store.read.phase = 3u64;
+    }
+}
+public machine cancel(context: &mut State) {
+    context.store.read.cancelled = true;
+    let index: u64 = exchange::link_of(context, 0u64);
+    let owner: u64 = exchange::READ + context.store.read.requester;
+    transition context.store.read.phase == 2u64 && index <= 2u64 {
+        true -> exchange::cancel(context, index, owner)
+        _ -> done()
+    }
+}
+public machine watch(context: &State, set: &mut Set) {
+    let index: u64 = exchange::link_of(context, 0u64);
+    transition context.store.read.phase != 0u64 && index <= 2u64 {
+        true -> watched(context, set, index)
+        _ -> done()
+    }
+    machine watched(context: &State, set: &mut Set, index: u64 [0..=2]) {
+        let owner: u64 = exchange::READ + context.store.read.requester;
+        transition {
+            exchange::ready(context, index, owner) -> waiting::expire_by(set, 0u64)
+            context.store.read.phase == 1u64 && (exchange::idle(context, index) || context.store.read.cancelled) -> waiting::expire_by(set, 0u64)
+            context.store.read.phase == 1u64 -> waiting::expire_by(set, context.store.read.words[7])
+            _ -> done()
+        }
+    }
+}
+public machine close(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
+    block exchange::release(gate, context.store.read.answer.attachment);
+    let empty: Read; context.store.read = empty;
+}
+machine done() {}
