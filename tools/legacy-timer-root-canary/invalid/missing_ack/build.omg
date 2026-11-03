@@ -1,0 +1,6 @@
+machine build(builder: &mut Build) {
+    Build::package(builder, "cathedral_timer_missing_ack");
+    Build::depend_as(builder, "arch", Source::Path { location: "../../../../source/kernel/arch" });
+    Build::select_representation<InterruptAcknowledgement, arch::isa::x86_64::interrupts::entry::CathedralAcknowledgementRepresentation>(builder);
+    builder.freestanding = true;
+}

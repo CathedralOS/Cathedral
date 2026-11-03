@@ -1,38 +1,31 @@
-# Legacy timer-root source canary
+# PIC timer handler checks
 
-This host-side canary compiles Cathedral's first maskable x86 interrupt-root
-schema and checks the compiler artifacts that later installation must consume.
-It pins the core `InterruptEntry::enter` requirement, exact linear
-`InterruptAcknowledgement::Pending` admission, Cathedral's maskable-IRQ stack
-class, masked preemption, deriver-owned interrupt return, and the selected
-non-suspending/non-blocking `PortIo` provider body. It also uses Omega's generic
-`inspect-terminal --machine LegacyPicTimerRoot::enter` surface to verify the
-actual checked hard-root closure: root claim transfer to `Pic8259`, exact
-`PortWrite(0x20, 0x20)` authority, acknowledgement boundary settlement, and
-value-less normal return. The same surface independently verifies terminal Psi,
-recomputes and validates the current fixed-fuel certificate, and pins this
-closure's exact five-unit ceiling. Claim identities are interpreted in their
-owning terminal machine rather than as closure-global ordinals. The closure
-cardinality is pinned as well as its ordering, so an extra machine, port write,
-settlement, terminator, or fixed-fuel row fails the canary instead of hiding
-behind the required rows.
+A timer interrupt must tell its controller when it has finished. This canary
+checks Cathedral’s real PIC handler: it passes its one-time acknowledgement to
+the PIC completion operation, which writes the end-of-interrupt command to the
+master controller. Callers that forget the acknowledgement or consume it twice
+must fail checking for that specific reason.
 
-Run:
+Run with an optimized Omega compiler:
 
 ```sh
-tools/legacy-timer-root-canary/run.sh
+OMEGA_BIN=/path/to/omega tools/legacy-timer-root-canary/run.sh
 ```
 
-Set `OMEGA_BIN` to test with a specific compiler binary. Otherwise the harness
-uses an installed `omega`, a built sibling `../Omega/target/debug/omega`, or
-builds that sibling with Cargo, in that order.
+The script lowers an ordinary caller of the handler using `inspect-terminal`
+for `uefi_x86_64`. It follows calls from that entry and checks the three-machine
+chain, linear argument transfers, one port write, port/value constants `0x20`,
+and the absence of extra services or control flow. It then checks the two
+invalid callers and their acknowledgement diagnostics. Logs stay in `build/`.
+The script uses an installed `omega` when `OMEGA_BIN` is unset.
 
-The canary installs no IDT, executes no `lidt`, unmasks no IRQ, enables no CPU
-interrupts, and does not boot QEMU. Those steps remain ordered after table and
-stack materialization. It does not claim WCSU: Omega's canonical terminal
-installation record now seals emitter-derived per-function and per-call stack
-facts and can reproduce the internal artifact bound after decode, but this
-source-root path does not yet emit that record or account for the interrupt
-entry adapter. The general root ledger can now bind a nonzero decoded demand to
-exact installed bytes and entry, compose it with the selected provider, and
-retain its terminal origin in the installed-root report.
+The Build file explicitly selects the acknowledgement’s storage representation.
+That fixes its size and alignment; it does not construct an acknowledgement or
+grant installation authority. The source calling policy requests masked entry
+on Cathedral’s IRQ stack class and a generated interrupt return.
+
+This is checking and Terminal lowering evidence. It does not execute port I/O,
+emit or install an interrupt adapter, provision a stack, publish an IDT, or
+prove repeated hardware returns. Those remain the kernel boot acceptance. The
+old compiler JSON and fixed-fuel assertions are removed; this test makes no
+replacement claim about those reports.

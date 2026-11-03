@@ -1,9 +1,8 @@
-// Compile-only acceptance root for source/core/legacy_timer_root.omg.
+// Compile-only: lower the real PIC handler without executing privileged instructions.
+use arch::isa::x86_64::interrupts::entry::CathedralAcknowledgementRepresentation;
+use omega::language::core::interrupt;
+use arch::board::pc::timer::root::LegacyPicTimerRoot;
 
-use core::legacy_timer_root;
-
-data Main {
-}
-
-machine Main::main(&mut self) {
+machine timer_entry(acknowledgement: InterruptAcknowledgement in Pending) reaches PortIo {
+    LegacyPicTimerRoot::enter(acknowledgement);
 }

@@ -1,5 +1,10 @@
 // Concrete ISA and board mechanisms. Boot selects the implemented target.
 machine build(builder: &mut Build) {
     Build::package(builder, "cathedral_arch");
+    Build::depend_as(builder, "std", Source::Git {
+        repository: "https://github.com/CathedralOS/Omega.git",
+        revision: "c2cfe5f3decef0294ea80527f7a95264e4520ec9",
+        selection: PackageSelection::Named { package: "omega_language_std" }
+    });
     Build::depend_as(builder, "facts", Source::Path { location: "../../platform/drivers/facts" });
 }
