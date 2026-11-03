@@ -15,6 +15,7 @@ domain Extent::BootVirtualDestination established by BootVirtualReservation::res
 
 boundary trait BootVirtualReservation {
     machine reserve(storage: Extent in Granted) -> Extent in Granted
+    reaches
     requires addr::Bound == 18446744073709551616
     ensures result in Granted & BootVirtualDestination,
         Granted::content(old(&storage)) == Granted::content(&result);
@@ -108,7 +109,7 @@ crashes Abort
             true -> install(mapping, control3)
             _ -> wrong()
         }
-        state install(mapping: &mut BootMapping, previous: u64) -> bool
+        machine install(mapping: &mut BootMapping, previous: u64) -> bool
         requires addr::Bound == 18446744073709551616
         {
             let root: u64 = mapping.tables.base as u64;
@@ -122,7 +123,7 @@ crashes Abort
                 _ -> wrong()
             }
         }
-        state probe(mapping: &mut BootMapping, previous: u64) -> bool {
+        machine probe(mapping: &mut BootMapping, previous: u64) -> bool {
             // This private helper's only admitted invocation is below the
             // successful installation above. Its view dies on return, even
             // when a post-install geometry/readback check fails.
@@ -135,7 +136,7 @@ crashes Abort
                 _ -> wrong()
             }
         }
-        state wrong() -> bool { crash Abort; }
+        machine wrong() -> bool { crash Abort; }
 }
 
 public data MappedRegionMemory {}
@@ -168,18 +169,18 @@ MappedRegionProfileProvider satisfies MappedRegionSupply {
     }
 }
 
-machine MappedRegionPlacement::plan(schema: Schema) -> PlacementPlan {
+machine MappedRegionPlacement::plan(schema: Schema) -> AccessPlan {
     let mut fields: [FieldEntry; 64];
-    fields[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
+    fields[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 0 } };
     let services: [u64; 32];
-    PlacementPlan {
-        layout: Plan {
-            entries: fields, entry_count: 1, size_fixed: schema.fields[0].size, size_is_dynamic: false, align: 4096,
-        },
-        access: AccessPlan::with(AccessPlan::inaccessible(&schema), schema.fields[0].key,
+    let layout: LayoutPlan = LayoutPlan {
+        entries: fields, entry_count: 1, size_fixed: schema.fields[0].size, size_is_dynamic: false, align: 4096,
+    };
+    AccessPlan::with_reach(
+        AccessPlan::with(AccessPlan::inaccessible(layout), schema.fields[0].key,
             FieldAccess::External { read: ExternalRead::Read, write: true, exposure: Exposure::Exported }),
-        reach: BoundaryReach { services: services, service_count: 0 },
-    }
+        BoundaryReach { services: services, service_count: 0 }
+    )
 }
 
 data MappingAccess {}
@@ -191,13 +192,13 @@ requires destination in BootVirtualDestination
 ensures destination in BootVirtualDestination
 reaches ResourceProfileSupply
 {
-    transition Placed::view_extent_mut<MappedRegionPlacement, MappingRegion, MappedRegionMemory>(
+    transition Access::view_extent_mut<MappedRegionPlacement, MappingRegion, MappedRegionMemory>(
         destination
     ) {
-        PlacementOutcome::Ready { view } -> page(view, 0)
-        PlacementOutcome::Rejected { returned, reason } -> false
+        AccessOutcome::Ready { view } -> page(view, 0)
+        AccessOutcome::Rejected { returned, reason } -> false
     }
-    state page(view: &mut Placed<MappedRegionPlacement, MappingRegion>, next: u64) -> bool
+    machine page(view: &mut Access<MappedRegionPlacement, MappingRegion>, next: u64) -> bool
     requires next <= MAPPING_PAGE_COUNT
     {
         transition next < MAPPING_PAGE_COUNT {
@@ -205,23 +206,23 @@ reaches ResourceProfileSupply
             _ -> true
         }
     }
-    state observe(view: &mut Placed<MappedRegionPlacement, MappingRegion>, next: u64) -> bool
+    machine observe(view: &mut Access<MappedRegionPlacement, MappingRegion>, next: u64) -> bool
     requires next < MAPPING_PAGE_COUNT
     {
-        let first: u64 = placed_read(&view.words[next * 512]);
-        let last: u64 = placed_read(&view.words[next * 512 + 511]);
+        let first: u64 = omega::language::read(&view.words[next * 512]);
+        let last: u64 = omega::language::read(&view.words[next * 512 + 511]);
         transition first == 0 && last == 0 {
             true -> write(view, next)
             _ -> false
         }
     }
-    state write(view: &mut Placed<MappedRegionPlacement, MappingRegion>, next: u64) -> bool
+    machine write(view: &mut Access<MappedRegionPlacement, MappingRegion>, next: u64) -> bool
     requires next < MAPPING_PAGE_COUNT
     {
-        placed_write(&mut view.words[next * 512], 73 + next);
-        placed_write(&mut view.words[next * 512 + 511], 97 + next);
-        let first: u64 = placed_read(&view.words[next * 512]);
-        let last: u64 = placed_read(&view.words[next * 512 + 511]);
+        omega::language::write(&mut view.words[next * 512], 73 + next);
+        omega::language::write(&mut view.words[next * 512 + 511], 97 + next);
+        let first: u64 = omega::language::read(&view.words[next * 512]);
+        let last: u64 = omega::language::read(&view.words[next * 512 + 511]);
         transition first == 73 + next && last == 97 + next {
             true -> page(view, next + 1)
             _ -> false

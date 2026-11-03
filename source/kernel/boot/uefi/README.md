@@ -1,5 +1,13 @@
 # Omega boot frontier
 
+A freshly compiled Omega image passed all fifteen ordered QEMU/OVMF serial
+checks, through `Mapping checked`. It acquired the final memory map, completed
+`ExitBootServices`, entered the Omega memory lab with both roots retained, and
+checked a temporary mapping before restoring the original CR3. The
+[boot qualification](../../../../wiki/boot/omega_uefi_qualification.md) records the exact image and compiler.
+This is a bounded memory lab, not the normal F5 desktop kernel or a real-hardware
+result. The qualification record describes the controls and verification limits.
+
 Start at [main.omg](main.omg), the selected physical firmware arrival. It
 validates the table and enters [firmware discovery](firmware/firmware.omg), then
 [ownership](firmware/ownership/ownership.omg) for the final map/exit/grant
@@ -9,20 +17,25 @@ transaction. [handoff](handoff/handoff.omg) owns the copied boot record; the
 The semantic continuation is currently the [memory lab](lab/memory/main.omg),
 not a normal task-starting kernel. Its [mapping entrance](lab/memory/mapping/mapping.omg)
 descends into clone/program/activate/retire checks. The build selects that
-continuation explicitly. Current compiler compatibility failures are recorded
-in [the native-boot handoff](../../../../TASKS_RUST.md#native-omega-boot-qualification-after-the-structure-pass); the historical proof notes below
-are not a claim that the current compiler boots this tree.
+continuation through `Kernel::start`, which owns ordinary local kernel state.
+Ordinary package review and the first fresh-image boot have passed.
+The [native-boot note](../../../../TASKS_RUST.md#native-omega-boot-qualification-after-the-structure-pass)
+records the tested boot path and its limits. Older observations below retain their
+original compiler and source identities.
 
 This directory contains Cathedral's boot source and a bounded physical-entry
 ladder. `build.omg` selects `CathedralBootstrap` for firmware arrival and binds
-the target's semantic slot to `Kernel::enter(context, image, initial_storage)`.
+the target's semantic slot to `Kernel::start(image, initial_storage)`. The entry
+creates a zero-initialized local `KernelState` and explicitly lends it to
+`Kernel::enter(context, image, initial_storage)`.
 `main.omg` validates the incoming table header and invokes the checked
 sequence in `firmware/firmware.omg`. That sequence greets, discovers LoadedImage geometry, and enters
 the map/exit/report implementation in `firmware/ownership/ownership.omg`. After successful
 ExitBootServices it grants both retained roots, writes the final-map handoff
 packet into initial storage, and calls `ProgramStorageEntry`.
 The explicitly selected native provider transfers them to the exact
-Build-selected `Kernel::enter`, which checks its fresh context, copies and checks
+Build-selected `Kernel::start`. Its ordinary call to `Kernel::enter` checks the
+local context, copies and checks
 the handoff packet, records root lengths and reports arrival. It then admits vacancy for the fresh initial-storage
 root, partitions 4096 bytes, splits and reunites that prefix at zero, half, and
 full length, exercises resident memory on the reconstructed extent, then issues
@@ -40,9 +53,8 @@ line, `Boot map ready`, `Kernel entered`, `Memory split`, `Memory checked`, `Mem
 QEMU/OVMF using Omega `9e04918b1d1`. The current source requires Omega's exact address-model
 typing, representation-recast effect tracking and occurrence-local state-prefix
 checking, in addition to the canonical `ProgramStorageEntryNativeProvider`,
-activation-local entry-context provisioning and private entry stack. A clean
-compiler with these repairs freshly compiled and booted this source;
-this was not a replay of an older image. The memory step additionally
+ordinary local context in `Kernel::start` and the private entry stack. The
+current fresh-image result is recorded separately in [qualification.md](../../../../wiki/boot/omega_uefi_qualification.md). The memory step additionally
 requires preserved result-membership contracts through provider settlement and
 linear returns. The ownership report occurs only after successful ExitBootServices;
 the kernel markers come from the selected continuation, not the firmware adapter.
@@ -58,10 +70,11 @@ entry bridges and the target reserve. The foreign leaves retain their default
 The active stack remains retained storage and is excluded from the image
 extent supplied to `Kernel::enter`.
 
-The generated checked caller owns a zero-initialized `KernelState` on that
-private stack and lends its ordinary mutable reference at the declared argument
-position. The kernel refuses to report entry if its entered flag or either
-initial root-length field is nonzero.
+`Kernel::start` owns a zero-initialized local `KernelState` on that private
+stack and passes its mutable reference explicitly to `Kernel::enter`. The
+installed entry contract supplies only the image and initial-storage roots;
+Build selection does not allocate the context. The kernel refuses to report
+entry if its entered flag or either initial root-length field is nonzero.
 Context backing is included in the call-closure demand and remains inside the
 retained suffix, never in either root transferred to the kernel.
 
@@ -104,7 +117,7 @@ A failed build or an old
 
 ## Reproduce
 
-Current replay blocker (2026-10-24): Omega `608f8f583b1` repairs the selected-map
+Historical replay failure (2026-10-24): Omega `608f8f583b1` repairs the selected-map
 carrier correspondence that rejected `page_tables.omg:89`'s `initialize` call.
 The final optimized producer (`opt_level=1`, `nightly-2026-09-04`, SHA256
 `f3473204f17767823c27ac875195dec7bbc687459af44e4506123c017490aee6`)
@@ -115,10 +128,10 @@ qualified variant payloads in `Kernel::enter::admit_firmware_root`, and retainin
 the table grant after `MappingHandoff::program`. No fresh image is produced and
 QEMU is not started. Subsequent Cathedral main `4f163da2` changes the Rust
 desktop and distribution UI library, not these boot sources or harness inputs.
-The successful boot observations below remain historical evidence; they do not
-establish a current-main boot. The next repair is preservation of the exact
-domain evidence through placed-content writes and nested field transport,
-followed by this same fresh-image smoke run. Omega's existing
+The successful boot observations below remain historical evidence. At that
+point the next repair was preservation of the exact domain evidence through
+placed-content writes and nested field transport, followed by a fresh-image smoke.
+The current result and pending checks are in [qualification.md](../../../../wiki/boot/omega_uefi_qualification.md). Omega's existing
 `pass/layouts/extent_view_external_write` fixture independently reproduces the
 lost `Granted` qualification on both the pre-repair and repaired compilers;
 adding an explicit handback guarantee still fails its proof. Neither removing
@@ -257,7 +270,7 @@ the provider's external backing premise independently.
 ## Retained inactive page tables
 
 After `Page ready`, the kernel passes the remaining vacant tail to the
-firmware-neutral `core::page_tables` builder and lends the existing resident
+x86-64 [page-table builder](../../arch/isa/x86_64/memory/memory.omg) and lends the existing resident
 page as the target. Four consecutive aligned pages hold PML4, PDPT, PD and PT
 words. Four Stable array permissions cover their 2048 slots; the builder uses
 the shared hardware-facts codec rather than relying on ordinary record layout.
@@ -389,7 +402,7 @@ addresses.
 ## Closed mapping activation and retirement
 
 After table retention, `lab/memory/mapping/custody.omg` snapshots the firmware path to the
-reserved virtual range and `core::page_table_clone` copies only that path into
+reserved virtual range and `arch::isa::x86_64::memory::clone::X86PageTableClone` copies only that path into
 the four owned table pages. Off-path translations remain intact, including
 image and private-stack mappings. Splitting large leaves preserves their PAT
 encoding. Making a selected parent writable first pushes its previous read-only
@@ -455,16 +468,15 @@ of the boot's trusted boundary; the serial marker does not independently prove
 firmware correctness or every backing assertion.
 
 The `std` and `alloc` dependencies select the same immutable Omega workspace
-revision, `849161c59ff74176dafc3f8de5ff66148581de22`. The former supplies the
+revision, `c2cfe5f3decef0294ea80527f7a95264e4520ec9`. The former supplies the
 firmware calling vocabulary; the latter exports the borrowed `Bump` API.
 One workspace lineage cannot resolve to conflicting source roots. These pins
 supply library source, not a compiler binary, and require no sibling checkout.
 Use a compiler containing the checking repairs described above and separate
 repository-metadata acquisition limits: this pinned repository exceeds 65,536
 entries although the selected std source does not. Selected-package source and
-cache custody limits remain unchanged. A fresh image built from this source
-reached all six markers under QEMU/OVMF after ordinary package review, using
-the companion compiler repairs for native resident initialization and extraction.
+cache custody limits remain unchanged. The six-marker boot above was an earlier
+milestone; the current image reached all fifteen markers after ordinary review.
 
 The local calling policy deliberately remains a normal named implementation;
 it must not collide with std's same-spelled policy. Firmware layouts and OS

@@ -36,7 +36,7 @@ public data EfiHandle [copy] { raw: addr; }
 // The physical UEFI invocation identifies this loaded application, not an
 // arbitrary handle whose numerical bits happen to be nonzero. UEFI installs
 // LoadedImage on that handle before entry. Copying the handle grants no bytes.
-public domain EfiHandle::LoadedApplication(handle)
+public domain EfiHandle::LoadedApplication
 established by UefiPhysicalEntry::enter;
 
 // --- Simple Text Output protocol (con_out) --------------------------------
@@ -61,7 +61,8 @@ public boundary trait SimpleTextOutput {
     machine output_string(
         console: &TextOutputProtocol,
         string: &[u16; 19]
-    ) -> EfiStatus;
+    ) -> EfiStatus
+    reaches;
 }
 
 // The leaf is attached to the layout-owning protocol type. Dispatch reads the
@@ -133,12 +134,12 @@ public boundary trait UefiPhysicalEntry {
     machine enter(handle: EfiHandle in LoadedApplication, table: &EfiSystemTable) -> EfiStatus
     requires addr::Bound == 18446744073709551616
     reaches SimpleTextOutput + LoadedImageAccess + BootServices + ExtentRootProvider + ProgramStorageEntry + ProgramImage + ResourceProfileSupply + PortIo + MachineControl
-    invokes SimpleTextOutput;
-    invokes LoadedImageAccess;
-    invokes BootServices;
-    invokes ExtentRootProvider;
-    invokes ProgramStorageEntry;
-    invokes ProgramImage;
+    invokes SimpleTextOutput
+    invokes LoadedImageAccess
+    invokes BootServices
+    invokes ExtentRootProvider
+    invokes ProgramStorageEntry
+    invokes ProgramImage
     invokes ResourceProfileSupply;
 }
 
@@ -156,7 +157,7 @@ machine plan(
         _ -> reject()
     }
 
-    state select_surface(signature: BoundarySignature) -> BoundaryPlanResult {
+    machine select_surface(signature: BoundarySignature) -> BoundaryPlanResult {
         transition signature.has_result {
             true -> accept_physical(signature, signature.parameters[0],
                                     signature.parameters[1], signature.result)
@@ -168,7 +169,7 @@ machine plan(
         }
     }
 
-    state accept(
+    machine accept(
         signature: BoundarySignature,
         image: u64,
         initial_storage: u64
@@ -179,7 +180,7 @@ machine plan(
         }
     }
 
-    state build(
+    machine build(
         signature: BoundarySignature,
         image: u64,
         initial_storage: u64
@@ -236,7 +237,7 @@ machine plan(
         BoundaryPlanResult::Accepted { plan: output }
     }
 
-    state accept_physical(signature: BoundarySignature, handle: u64,
+    machine accept_physical(signature: BoundarySignature, handle: u64,
                           table: u64, status: u64) -> BoundaryPlanResult {
         transition handle < 256 && table < 256 && status < 256 {
             true -> build_physical(signature, handle, table, status)
@@ -244,7 +245,7 @@ machine plan(
         }
     }
 
-    state build_physical(signature: BoundarySignature, handle: u64,
+    machine build_physical(signature: BoundarySignature, handle: u64,
                          table: u64, status: u64) -> BoundaryPlanResult {
         let mut output: BoundaryEntryPlan;
         output.call.convention = CallingConvention::MicrosoftX64;
@@ -296,7 +297,7 @@ machine plan(
         BoundaryPlanResult::Accepted { plan: output }
     }
 
-    state reject() -> BoundaryPlanResult {
+    machine reject() -> BoundaryPlanResult {
         BoundaryPlanResult::Rejected {
             reason: CallingPolicyRejection {
                 reason: "UefiApplication requires its physical arrival or two-root semantic signature",

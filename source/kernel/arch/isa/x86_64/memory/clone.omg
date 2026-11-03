@@ -54,7 +54,7 @@ requires index < 512 && level >= 2 && level <= 4
         true -> present(parent, level, index, observed)
         _ -> 0
     }
-    state present(parent: u64, level: u64, index: u64, observed: u64) -> u64
+    machine present(parent: u64, level: u64, index: u64, observed: u64) -> u64
     requires index < 512 && level >= 2 && level <= 4
     {
         transition (parent & 128) != 0 {
@@ -62,7 +62,7 @@ requires index < 512 && level >= 2 && level <= 4
             _ -> restrict_write(parent, observed)
         }
     }
-    state large(parent: u64, level: u64, index: u64) -> u64
+    machine large(parent: u64, level: u64, index: u64) -> u64
     requires index < 512 && level >= 2 && level <= 4
     {
         let flags: u64 = parent & ~0x000FFFFFFFFFF000u64;
@@ -74,7 +74,7 @@ requires index < 512 && level >= 2 && level <= 4
                 ((parent & 0x000FFFFFFFE00000) + (index << 12)))
         }
     }
-    state restrict_write(parent: u64, word: u64) -> u64 {
+    machine restrict_write(parent: u64, word: u64) -> u64 {
         transition (parent & 2) != 0 {
             true -> word
             _ -> (word & ~2u64)
@@ -96,7 +96,7 @@ machine X86PageTableClone::copy_child(parent: u64, level: u64,
 requires level >= 2 && level <= 4
 {
     transition { _ -> copy(parent, level, observed, result, 0) }
-    state copy(parent: u64, level: u64, observed: &[u64; 512],
+    machine copy(parent: u64, level: u64, observed: &[u64; 512],
                result: &mut [u64; 512], next: u64)
     requires level >= 2 && level <= 4 && next <= 512
     {
@@ -105,14 +105,14 @@ requires level >= 2 && level <= 4
             _ -> done()
         }
     }
-    state word(parent: u64, level: u64, observed: &[u64; 512],
+    machine word(parent: u64, level: u64, observed: &[u64; 512],
                result: &mut [u64; 512], next: u64)
     requires level >= 2 && level <= 4 && next < 512
     {
         result[next] = X86PageTableClone::child_word(parent, level, next, observed[next]);
         transition { _ -> copy(parent, level, observed, result, next + 1) }
     }
-    state done() {}
+    machine done() {}
 }
 
 machine X86PageTableClone::pointer(parent: u64, address: u64) -> u64 {
@@ -146,7 +146,7 @@ public machine X86PageTableClone::prepare_range(source: &X86PagingPathSnapshot,
         true -> geometry(source, new_root, target, virtual_address, length / 4096)
         _ -> X86PageTableCloneResult::Invalid
     }
-    state geometry(source: &X86PagingPathSnapshot, new_root: u64, target: u64,
+    machine geometry(source: &X86PagingPathSnapshot, new_root: u64, target: u64,
                    virtual_address: u64, pages: u64) -> X86PageTableCloneResult
     requires pages >= 1 && pages <= 512 && target <= 0x000FFFFFFFFFF000
     {
@@ -155,7 +155,7 @@ public machine X86PageTableClone::prepare_range(source: &X86PagingPathSnapshot,
             _ -> X86PageTableCloneResult::Invalid
         }
     }
-    state capacity(source: &X86PagingPathSnapshot, new_root: u64, target: u64,
+    machine capacity(source: &X86PagingPathSnapshot, new_root: u64, target: u64,
                    virtual_address: u64, pages: u64, first: u64) -> X86PageTableCloneResult
     requires pages >= 1 && pages <= 512 && first < 512 && target <= 0x000FFFFFFFFFF000
     {
@@ -164,7 +164,7 @@ public machine X86PageTableClone::prepare_range(source: &X86PagingPathSnapshot,
             _ -> X86PageTableCloneResult::Invalid
         }
     }
-    state clone(source: &X86PagingPathSnapshot, new_root: u64, target: u64,
+    machine clone(source: &X86PagingPathSnapshot, new_root: u64, target: u64,
                 virtual_address: u64, pages: u64, first: u64) -> X86PageTableCloneResult
     requires pages >= 1 && pages <= 512 && first < 512 && target <= 0x000FFFFFFFFFF000
     {
@@ -173,7 +173,7 @@ public machine X86PageTableClone::prepare_range(source: &X86PagingPathSnapshot,
             _ -> X86PageTableCloneResult::Invalid
         }
     }
-    state write(tables: X86ClonedPageTables, slot: u64, remaining: u64,
+    machine write(tables: X86ClonedPageTables, slot: u64, remaining: u64,
                 physical: u64) -> X86PageTableCloneResult
     requires slot < 512 && remaining >= 1 && remaining <= 512 && physical <= 0x000FFFFFFFFFF000
     {
@@ -184,7 +184,7 @@ public machine X86PageTableClone::prepare_range(source: &X86PagingPathSnapshot,
             _ -> (X86PageTableCloneResult::Ready { tables: installed })
         }
     }
-    state advance(tables: X86ClonedPageTables, slot: u64, remaining: u64,
+    machine advance(tables: X86ClonedPageTables, slot: u64, remaining: u64,
                   physical: u64) -> X86PageTableCloneResult
     requires slot < 512 && remaining > 1 && remaining <= 512 && physical <= 0x000FFFFFFFFFF000
     {
@@ -206,7 +206,7 @@ machine X86PageTableClone::clone_path(source: &X86PagingPathSnapshot,
         true -> canonical(source, new_root, virtual_address)
         _ -> X86PageTableCloneResult::Invalid
     }
-    state canonical(source: &X86PagingPathSnapshot, new_root: u64, virtual_address: u64)
+    machine canonical(source: &X86PagingPathSnapshot, new_root: u64, virtual_address: u64)
         -> X86PageTableCloneResult
     requires new_root <= 0x000FFFFFFFFFC000
     {
@@ -215,7 +215,7 @@ machine X86PageTableClone::clone_path(source: &X86PagingPathSnapshot,
             _ -> X86PageTableCloneResult::Invalid
         }
     }
-    state root(source: &X86PagingPathSnapshot, new_root: u64,
+    machine root(source: &X86PagingPathSnapshot, new_root: u64,
                indices: X86BootstrapVirtualAddressIndices) -> X86PageTableCloneResult
     requires new_root <= 0x000FFFFFFFFFC000
     {
@@ -225,7 +225,7 @@ machine X86PageTableClone::clone_path(source: &X86PagingPathSnapshot,
             _ -> X86PageTableCloneResult::Invalid
         }
     }
-    state directory_pointer(source: &X86PagingPathSnapshot, new_root: u64,
+    machine directory_pointer(source: &X86PagingPathSnapshot, new_root: u64,
                             indices: X86BootstrapVirtualAddressIndices, parent: u64)
         -> X86PageTableCloneResult
     requires new_root <= 0x000FFFFFFFFFC000
@@ -240,7 +240,7 @@ machine X86PageTableClone::clone_path(source: &X86PagingPathSnapshot,
             _ -> X86PageTableCloneResult::Invalid
         }
     }
-    state directory(source: &X86PagingPathSnapshot, new_root: u64,
+    machine directory(source: &X86PagingPathSnapshot, new_root: u64,
                     indices: X86BootstrapVirtualAddressIndices, tables: X86ClonedPageTables, parent: u64)
         -> X86PageTableCloneResult
     requires new_root <= 0x000FFFFFFFFFC000
@@ -254,7 +254,7 @@ machine X86PageTableClone::clone_path(source: &X86PagingPathSnapshot,
             _ -> X86PageTableCloneResult::Invalid
         }
     }
-    state leaves(source: &X86PagingPathSnapshot, new_root: u64,
+    machine leaves(source: &X86PagingPathSnapshot, new_root: u64,
                  indices: X86BootstrapVirtualAddressIndices, tables: X86ClonedPageTables, parent: u64)
         -> X86PageTableCloneResult
     requires new_root <= 0x000FFFFFFFFFC000

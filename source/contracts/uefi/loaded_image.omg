@@ -14,13 +14,13 @@ public data EfiGuid [copy] {
     data4: [u8; 8];
 }
 
-public domain EfiGuid::LoadedImageGuid(protocol)
-requires protocol.data1 == 0x5b1b31a1 && protocol.data2 == 0x9562 &&
-         protocol.data3 == 0x11d2 && protocol.data4[0] == 0x8e &&
-         protocol.data4[1] == 0x3f && protocol.data4[2] == 0 &&
-         protocol.data4[3] == 0xa0 && protocol.data4[4] == 0xc9 &&
-         protocol.data4[5] == 0x69 && protocol.data4[6] == 0x72 &&
-         protocol.data4[7] == 0x3b;
+public domain EfiGuid::LoadedImageGuid
+requires self.data1 == 0x5b1b31a1 && self.data2 == 0x9562 &&
+         self.data3 == 0x11d2 && self.data4[0] == 0x8e &&
+         self.data4[1] == 0x3f && self.data4[2] == 0 &&
+         self.data4[3] == 0xa0 && self.data4[4] == 0xc9 &&
+         self.data4[5] == 0x69 && self.data4[6] == 0x72 &&
+         self.data4[7] == 0x3b;
 
 public const LOADED_IMAGE_PROTOCOL_GUID: EfiGuid = EfiGuid {
     data1: 0x5b1b31a1,
@@ -66,6 +66,7 @@ public boundary trait LoadedImageAccess {
         protocol: &EfiGuid,
         output: &mut LoadedImageOutput<'firmware>
     ) -> EfiStatus
+    reaches
     requires protocol in EfiGuid::LoadedImageGuid
     ensures result.code == 0;
 }

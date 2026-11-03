@@ -4,9 +4,11 @@
 >
 > Status: **explainer over a partially implemented path.** The Omega-emitted
 > UEFI image currently validates a bounded firmware memory map, exits Boot
-> Services, obtains one qualified root extent, reports through the 16550 UART,
-> and parks while retaining that root. The later kernel, store, service, and
-> login phases remain intended mechanism. Normative rules for the implemented
+> Services, transfers the image and initial-storage roots to its Omega memory
+> lab, and reaches `Mapping checked` after restoring the original CR3. It then
+> retains the surviving storage while idle. The [qualification record](omega_uefi_qualification.md)
+> records the successful boot, the fresh negative control, and the remaining limits. The normal
+> kernel, store, service, and login phases remain intended mechanism. Normative rules for the implemented
 > transition begin at the [UEFI entry-handoff
 > specification](../spec/boot/uefi_entry_handoff.md) and [UEFI boot-services
 > specification](../spec/boot/uefi_boot_services.md).

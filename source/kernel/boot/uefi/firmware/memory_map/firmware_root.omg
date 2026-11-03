@@ -33,7 +33,7 @@ requires addr::Bound == 18446744073709551616
         _ -> false
     }
 
-    state exclusions(bytes: &[u8; 65536], map_size: u64, descriptor_size: u64,
+    machine exclusions(bytes: &[u8; 65536], map_size: u64, descriptor_size: u64,
                      root: u64, excluded: &BootGeometry) -> bool
     requires addr::Bound == 18446744073709551616 && root <= 0x000FFFFFFFFFF000 &&
         map_size > 0 && map_size <= 65536 && descriptor_size >= 40 && descriptor_size <= map_size
@@ -48,7 +48,7 @@ requires addr::Bound == 18446744073709551616
         }
     }
 
-    state separate(bytes: &[u8; 65536], map_size: u64, descriptor_size: u64,
+    machine separate(bytes: &[u8; 65536], map_size: u64, descriptor_size: u64,
                    root: u64, excluded: BootGeometry in core::memory::geometry::BootGeometry::Separated) -> bool
     requires addr::Bound == 18446744073709551616 && root <= 0x000FFFFFFFFFF000 &&
         map_size > 0 && map_size <= 65536 && descriptor_size >= 40 && descriptor_size <= map_size
@@ -64,7 +64,7 @@ requires addr::Bound == 18446744073709551616
     // Keep the validated descriptor geometry at every loop arrival. In
     // particular, offset + descriptor_size cannot overflow its u64 carrier;
     // a malformed map returns false instead of acquiring a Trap route.
-    state walk(bytes: &[u8; 65536], map_size: u64,
+    machine walk(bytes: &[u8; 65536], map_size: u64,
                descriptor_size: u64, root: u64,
                offset: u64, found: bool) -> bool
     requires addr::Bound == 18446744073709551616 && offset <= 65496 && root <= 0x000FFFFFFFFFF000 &&
@@ -83,7 +83,7 @@ requires addr::Bound == 18446744073709551616
         }
     }
 
-    state compare(bytes: &[u8; 65536], map_size: u64,
+    machine compare(bytes: &[u8; 65536], map_size: u64,
                   descriptor_size: u64, root: u64,
                   offset: u64, found: bool, descriptor: &EfiMemoryDescriptor) -> bool
     requires addr::Bound == 18446744073709551616 && offset <= 65496 && root <= 0x000FFFFFFFFFF000 &&
@@ -98,7 +98,7 @@ requires addr::Bound == 18446744073709551616
         }
     }
 
-    state covering(bytes: &[u8; 65536], map_size: u64,
+    machine covering(bytes: &[u8; 65536], map_size: u64,
                    descriptor_size: u64, root: u64,
                    offset: u64, found: bool,
                    descriptor: &EfiMemoryDescriptor, end: u64) -> bool
@@ -117,7 +117,7 @@ requires addr::Bound == 18446744073709551616
         }
     }
 
-    state advance(bytes: &[u8; 65536], map_size: u64,
+    machine advance(bytes: &[u8; 65536], map_size: u64,
                   descriptor_size: u64, root: u64,
                   offset: u64, found: bool) -> bool
     requires addr::Bound == 18446744073709551616 && offset <= 65496 && root <= 0x000FFFFFFFFFF000 &&

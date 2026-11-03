@@ -54,7 +54,7 @@ data FirmwareRootSnapshot {
 // This only checks an observed snapshot, not a coherent transitive hierarchy.
 machine PagingHandoff::has_present_entry(entries: &[u64; 512]) -> bool {
     transition { _ -> scan(entries, 0, false) }
-    state scan(entries: &[u64; 512], next: u64, found: bool) -> bool
+    machine scan(entries: &[u64; 512], next: u64, found: bool) -> bool
     requires next <= 512
     {
         transition next < 512 {
@@ -62,44 +62,44 @@ machine PagingHandoff::has_present_entry(entries: &[u64; 512]) -> bool {
             _ -> found
         }
     }
-    state inspect(entries: &[u64; 512], next: u64, found: bool) -> bool
+    machine inspect(entries: &[u64; 512], next: u64, found: bool) -> bool
     requires next < 512
     {
         transition { _ -> scan(entries, next + 1, found || (entries[next] & 1) != 0) }
     }
 }
 
-machine FirmwarePageRootPlacement::plan(schema: Schema) -> PlacementPlan {
+machine FirmwarePageRootPlacement::plan(schema: Schema) -> AccessPlan {
     let mut fields: [FieldEntry; 64];
     fields[0] = FieldEntry {
-        key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 },
+        key: schema.fields[0].key, representation: FieldPlan::At { offset: 0 },
     };
     let services: [u64; 32];
-    PlacementPlan {
-        layout: Plan {
-            entries: fields, entry_count: 1, size_fixed: 4096,
-            size_is_dynamic: false, align: 4096,
-        },
-        access: AccessPlan::with(AccessPlan::inaccessible(&schema), schema.fields[0].key,
+    let layout: LayoutPlan = LayoutPlan {
+        entries: fields, entry_count: 1, size_fixed: 4096,
+        size_is_dynamic: false, align: 4096,
+    };
+    AccessPlan::with_reach(
+        AccessPlan::with(AccessPlan::inaccessible(layout), schema.fields[0].key,
             FieldAccess::External {
                 read: ExternalRead::Read, write: false, exposure: Exposure::Exported,
             }),
-        reach: BoundaryReach { services: services, service_count: 0 },
-    }
+        BoundaryReach { services: services, service_count: 0 }
+    )
 }
 
 machine PagingHandoff::snapshot<Role>(root: &Extent in Granted) -> FirmwareRootSnapshot
 reaches ResourceProfileSupply
 {
     let entries: [u64; 512];
-    let opened: PlacementOutcome<&Placed<FirmwarePageRootPlacement, FirmwarePageRoot>, PlacementBorrowReturn, PlacementInitializationFailure> =
-        Placed::view_extent<FirmwarePageRootPlacement, FirmwarePageRoot, Role>(root);
+    let opened: AccessOutcome<&Access<FirmwarePageRootPlacement, FirmwarePageRoot>, AccessBorrowReturn, AccessInitializationFailure> =
+        Access::view_extent<FirmwarePageRootPlacement, FirmwarePageRoot, Role>(root);
     transition opened {
-        PlacementOutcome::Ready { view } -> copy(view, 0, entries)
-        PlacementOutcome::Rejected { returned, reason } -> FirmwareRootSnapshot::Unavailable
+        AccessOutcome::Ready { view } -> copy(view, 0, entries)
+        AccessOutcome::Rejected { returned, reason } -> FirmwareRootSnapshot::Unavailable
     }
 
-    state copy(view: &Placed<FirmwarePageRootPlacement, FirmwarePageRoot>,
+    machine copy(view: &Access<FirmwarePageRootPlacement, FirmwarePageRoot>,
                next: u64, entries: [u64; 512]) -> FirmwareRootSnapshot
     requires next <= 512
     {
@@ -109,12 +109,12 @@ reaches ResourceProfileSupply
         }
     }
 
-    state read(view: &Placed<FirmwarePageRootPlacement, FirmwarePageRoot>,
+    machine read(view: &Access<FirmwarePageRootPlacement, FirmwarePageRoot>,
                next: u64, entries: [u64; 512]) -> FirmwareRootSnapshot
     requires next < 512
     {
         let mut copied: [u64; 512] = entries;
-        copied[next] = placed_read(&view.entries[next]);
+        copied[next] = omega::language::read(&view.entries[next]);
         transition { _ -> copy(view, next + 1, copied) }
     }
 }

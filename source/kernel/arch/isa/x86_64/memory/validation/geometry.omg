@@ -72,7 +72,7 @@ public machine x86_decompose_bootstrap_virtual_address(
         _ -> reject()
     }
 
-    state decompose(address: u64) -> X86BootstrapVirtualAddressCheck {
+    machine decompose(address: u64) -> X86BootstrapVirtualAddressCheck {
         let pml4_index: u64 [0..=511] =
             (address >> 39) & X86_PAGE_TABLE_INDEX_MASK;
         let pdpt_index: u64 [0..=511] =
@@ -94,7 +94,7 @@ public machine x86_decompose_bootstrap_virtual_address(
         }
     }
 
-    state reject() -> X86BootstrapVirtualAddressCheck {
+    machine reject() -> X86BootstrapVirtualAddressCheck {
         X86BootstrapVirtualAddressCheck::Rejected
     }
 }
@@ -131,13 +131,13 @@ public machine x86_validate_bootstrap_virtual_address_indices(
         _ -> reject_virtual_address_indices()
     }
 
-    state accept_virtual_address_indices(
+    machine accept_virtual_address_indices(
         candidate: X86BootstrapVirtualAddressIndices
     ) -> X86BootstrapVirtualAddressCheck {
         X86BootstrapVirtualAddressCheck::Canonical { indices: candidate }
     }
 
-    state reject_virtual_address_indices() -> X86BootstrapVirtualAddressCheck {
+    machine reject_virtual_address_indices() -> X86BootstrapVirtualAddressCheck {
         X86BootstrapVirtualAddressCheck::Rejected
     }
 }
@@ -168,7 +168,7 @@ public machine x86_validate_bootstrap_physical_frame_geometry(
         _ -> reject_frame_geometry()
     }
 
-    state derive_frame_number(
+    machine derive_frame_number(
         address: u64
     ) -> X86BootstrapPhysicalFrameGeometryCheck {
         // The mask makes the result domain explicit; the prior envelope check
@@ -183,7 +183,7 @@ public machine x86_validate_bootstrap_physical_frame_geometry(
         }
     }
 
-    state reject_frame_geometry() -> X86BootstrapPhysicalFrameGeometryCheck {
+    machine reject_frame_geometry() -> X86BootstrapPhysicalFrameGeometryCheck {
         X86BootstrapPhysicalFrameGeometryCheck::Rejected
     }
 }

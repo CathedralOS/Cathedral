@@ -6,13 +6,13 @@ machine build(builder: &mut Build) {
     Build::depend_as(builder, "memory", Source::Path { location: "memory" });
     Build::depend_as(builder, "std", Source::Git {
         repository: "https://github.com/CathedralOS/Omega.git",
-        revision: "849161c59ff74176dafc3f8de5ff66148581de22",
+        revision: "c2cfe5f3decef0294ea80527f7a95264e4520ec9",
         selection: PackageSelection::Named { package: "omega_language_std" }
     });
     // The package's own review resolves the same named providers its consumer
     // selects. Attached external leaves are ABI definitions, not a competing
     // implicit implementation chosen by import order.
-    Build::select_provider<SimpleTextOutput, UefiTextOutputProvider>(builder);
-    Build::select_provider<BootServices, UefiBootServicesProvider>(builder);
-    Build::select_provider<LoadedImageAccess, UefiLoadedImageProvider>(builder);
+    Build::select_provider<SimpleTextOutput, UefiTextOutputProvider>(builder, uefi_x86_64);
+    Build::select_provider<BootServices, UefiBootServicesProvider>(builder, uefi_x86_64);
+    Build::select_provider<LoadedImageAccess, UefiLoadedImageProvider>(builder, uefi_x86_64);
 }

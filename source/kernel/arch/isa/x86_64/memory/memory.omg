@@ -40,25 +40,25 @@ public data PageTableReservation {
     verified: bool;
 }
 
-machine InactivePageTablePlacement::plan(schema: Schema) -> PlacementPlan {
+machine InactivePageTablePlacement::plan(schema: Schema) -> AccessPlan {
     let mut entries: [FieldEntry; 64];
-    entries[0] = FieldEntry { key: schema.fields[0].key, placement: FieldPlan::At { offset: 0 } };
-    entries[1] = FieldEntry { key: schema.fields[1].key, placement: FieldPlan::At { offset: 4096 } };
-    entries[2] = FieldEntry { key: schema.fields[2].key, placement: FieldPlan::At { offset: 8192 } };
-    entries[3] = FieldEntry { key: schema.fields[3].key, placement: FieldPlan::At { offset: 12288 } };
-    let first: AccessPlan = AccessPlan::with(AccessPlan::inaccessible(&schema), schema.fields[0].key,
+    entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 0 } };
+    entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4096 } };
+    entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 8192 } };
+    entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12288 } };
+    let layout: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16384, size_is_dynamic: false, align: 4096 };
+    let first: AccessPlan = AccessPlan::with(AccessPlan::inaccessible(layout), schema.fields[0].key,
         FieldAccess::Stable { read: true, write: true, exposure: Exposure::Exported });
     let second: AccessPlan = AccessPlan::with(first, schema.fields[1].key,
         FieldAccess::Stable { read: true, write: true, exposure: Exposure::Exported });
     let third: AccessPlan = AccessPlan::with(second, schema.fields[2].key,
         FieldAccess::Stable { read: true, write: true, exposure: Exposure::Exported });
     let services: [u64; 32];
-    PlacementPlan {
-        layout: Plan { entries: entries, entry_count: 4, size_fixed: 16384, size_is_dynamic: false, align: 4096 },
-        access: AccessPlan::with(third, schema.fields[3].key,
+    AccessPlan::with_reach(
+        AccessPlan::with(third, schema.fields[3].key,
             FieldAccess::Stable { read: true, write: true, exposure: Exposure::Exported }),
-        reach: BoundaryReach { services: services, service_count: 0 },
-    }
+        BoundaryReach { services: services, service_count: 0 }
+    )
 }
 
 public machine PageTableBuilder::prepare<Role>(
@@ -66,7 +66,7 @@ public machine PageTableBuilder::prepare<Role>(
 ) -> PageTableReservation
 requires storage.length >= 20479 && addr::Bound == 18446744073709551616
 reaches ResourceProfileSupply
-invokes ResourceProfileSupply;
+invokes ResourceProfileSupply
 {
     let padding_length: u64 = (4096 - (storage.base as u64) % 4096) % 4096;
     let prefix: VacantExtentParts = split_vacant_extent(storage, padding_length);
@@ -79,7 +79,7 @@ invokes ResourceProfileSupply;
         _ -> rejected(prefix.taken, parts.taken, parts.rest)
     }
 
-    state decompose(padding: Extent in Granted & Vacant, storage: Extent in Granted & Vacant,
+    machine decompose(padding: Extent in Granted & Vacant, storage: Extent in Granted & Vacant,
                     tail: Extent in Granted & Vacant, base: u64, target: u64, virtual_address: u64)
         -> PageTableReservation
     requires base <= 4503599627354112 && target <= 4503599627366400
@@ -90,21 +90,21 @@ invokes ResourceProfileSupply;
         }
     }
 
-    state initialize(padding: Extent in Granted & Vacant, storage: Extent in Granted & Vacant,
+    machine initialize(padding: Extent in Granted & Vacant, storage: Extent in Granted & Vacant,
                      tail: Extent in Granted & Vacant, base: u64, target: u64,
                      indices: X86BootstrapVirtualAddressIndices) -> PageTableReservation
     requires base <= 4503599627354112 && target <= 4503599627366400
     {
         let words: [u64; 512];
-        transition NativePlacement<InactivePageTablePlacement, InactivePageTables, Role>::initialize(
+        transition NativeAccess<InactivePageTablePlacement, InactivePageTables, Role>::initialize(
             storage, InactivePageTables { pml4: words, pdpt: words, pd: words, pt: words }
         ) {
-            PlacementOutcome::Ready { view } -> populate(padding, view, tail, base, target, indices)
-            PlacementOutcome::Rejected { returned, reason } -> rejected(padding, returned.source, tail)
+            AccessOutcome::Ready { view } -> populate(padding, view, tail, base, target, indices)
+            AccessOutcome::Rejected { returned, reason } -> rejected(padding, returned.source, tail)
         }
     }
 
-    state populate(padding: Extent in Granted & Vacant,
+    machine populate(padding: Extent in Granted & Vacant,
                    storage: Extent in Granted & Resident<InactivePageTablePlacement, InactivePageTables>,
                    tail: Extent in Granted & Vacant, base: u64, target: u64,
                    indices: X86BootstrapVirtualAddressIndices) -> PageTableReservation
@@ -112,7 +112,7 @@ invokes ResourceProfileSupply;
     {
         let mut retained: Extent in Granted & Resident<InactivePageTablePlacement, InactivePageTables> = storage;
         let verified: bool = PageTableBuilder::populate(
-            Placed::view_resident_mut<InactivePageTablePlacement, InactivePageTables>(&mut retained),
+            Access::view_resident_mut<InactivePageTablePlacement, InactivePageTables>(&mut retained),
             base, target, indices
         );
         PageTableReservation {
@@ -121,7 +121,7 @@ invokes ResourceProfileSupply;
         }
     }
 
-    state rejected(padding: Extent in Granted & Vacant, storage: Extent in Granted & Vacant,
+    machine rejected(padding: Extent in Granted & Vacant, storage: Extent in Granted & Vacant,
                    tail: Extent in Granted & Vacant) -> PageTableReservation {
         PageTableReservation {
             padding: padding, tables: PreparedPageTables::Rejected { storage: storage },
@@ -151,18 +151,18 @@ machine PageTableBuilder::step(base: u64, index: u64 [0..=511], word: u64)
     }
 }
 
-machine PageTableBuilder::populate(view: &mut Placed<InactivePageTablePlacement, InactivePageTables>,
+machine PageTableBuilder::populate(view: &mut Access<InactivePageTablePlacement, InactivePageTables>,
                                   base: u64, target: u64, indices: X86BootstrapVirtualAddressIndices) -> bool
 requires base <= 4503599627354112 && target <= 4503599627366400
 {
-    placed_write(&mut view.pml4[indices.pml4_index], PageTableBuilder::entry(base + 4096, false));
-    placed_write(&mut view.pdpt[indices.pdpt_index], PageTableBuilder::entry(base + 8192, false));
-    placed_write(&mut view.pd[indices.pd_index], PageTableBuilder::entry(base + 12288, false));
-    placed_write(&mut view.pt[indices.pt_index], PageTableBuilder::entry(target, true));
-    let pml4: u64 = placed_read(&view.pml4[indices.pml4_index]);
-    let pdpt: u64 = placed_read(&view.pdpt[indices.pdpt_index]);
-    let pd: u64 = placed_read(&view.pd[indices.pd_index]);
-    let pt: u64 = placed_read(&view.pt[indices.pt_index]);
+    omega::language::write(&mut view.pml4[indices.pml4_index], PageTableBuilder::entry(base + 4096, false));
+    omega::language::write(&mut view.pdpt[indices.pdpt_index], PageTableBuilder::entry(base + 8192, false));
+    omega::language::write(&mut view.pd[indices.pd_index], PageTableBuilder::entry(base + 12288, false));
+    omega::language::write(&mut view.pt[indices.pt_index], PageTableBuilder::entry(target, true));
+    let pml4: u64 = omega::language::read(&view.pml4[indices.pml4_index]);
+    let pdpt: u64 = omega::language::read(&view.pdpt[indices.pdpt_index]);
+    let pd: u64 = omega::language::read(&view.pd[indices.pd_index]);
+    let pt: u64 = omega::language::read(&view.pt[indices.pt_index]);
     let empty: bool = PageTableBuilder::check_unused(view, &indices, 0);
     let candidate: X86BootstrapFourKilobyteWalkEndpoints = X86BootstrapFourKilobyteWalkEndpoints {
         virtual_page_address: indices.address, physical_frame_address: target,
@@ -185,19 +185,19 @@ requires base <= 4503599627354112 && target <= 4503599627366400
 
 // Read the actual resident pages, not the pre-placement zero initializer.
 // Checking every unused slot also detects overlap between field placements.
-machine PageTableBuilder::check_unused(view: &Placed<InactivePageTablePlacement, InactivePageTables>,
+machine PageTableBuilder::check_unused(view: &Access<InactivePageTablePlacement, InactivePageTables>,
                                       indices: &X86BootstrapVirtualAddressIndices, index: u64) -> bool
 requires index <= 512
 {
     transition index < 512 { true -> inspect(view, indices, index) _ -> true }
-    state inspect(view: &Placed<InactivePageTablePlacement, InactivePageTables>,
+    machine inspect(view: &Access<InactivePageTablePlacement, InactivePageTables>,
                   indices: &X86BootstrapVirtualAddressIndices, index: u64) -> bool
     requires index < 512
     {
-        let pml4: u64 = placed_read(&view.pml4[index]);
-        let pdpt: u64 = placed_read(&view.pdpt[index]);
-        let pd: u64 = placed_read(&view.pd[index]);
-        let pt: u64 = placed_read(&view.pt[index]);
+        let pml4: u64 = omega::language::read(&view.pml4[index]);
+        let pdpt: u64 = omega::language::read(&view.pdpt[index]);
+        let pd: u64 = omega::language::read(&view.pd[index]);
+        let pt: u64 = omega::language::read(&view.pt[index]);
         transition (index == indices.pml4_index || pml4 == 0) &&
             (index == indices.pdpt_index || pdpt == 0) &&
             (index == indices.pd_index || pd == 0) && (index == indices.pt_index || pt == 0) {
@@ -205,7 +205,7 @@ requires index <= 512
             _ -> false
         }
     }
-    state next(view: &Placed<InactivePageTablePlacement, InactivePageTables>,
+    machine next(view: &Access<InactivePageTablePlacement, InactivePageTables>,
                indices: &X86BootstrapVirtualAddressIndices, index: u64) -> bool
     requires index <= 512
     {

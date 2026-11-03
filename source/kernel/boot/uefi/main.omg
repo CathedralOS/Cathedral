@@ -1,5 +1,7 @@
-// Firmware arrival validates the table, then enters firmware discovery/ownership.
-// build.omg selects the separate memory-lab continuation after handoff.
+// Expected output contains: Mapping checked
+// Check the firmware table before using its services to discover and acquire
+// memory. After firmware exit, execution continues with the kernel memory
+// checks selected by build.omg.
 use firmware::firmware;
 use lab::memory::main;
 
@@ -17,13 +19,13 @@ use omega::language::core::layout;
 public CathedralBootstrap satisfies UefiPhysicalEntry {
     machine enter(handle: EfiHandle in LoadedApplication, table: &EfiSystemTable) -> EfiStatus
     reaches SimpleTextOutput + LoadedImageAccess + BootServices + ExtentRootProvider + ProgramStorageEntry + ProgramImage + ResourceProfileSupply + PortIo + MachineControl
-    invokes SimpleTextOutput;
-    invokes LoadedImageAccess;
-    invokes BootServices;
-    invokes ExtentRootProvider;
-    invokes ProgramStorageEntry;
-    invokes ProgramImage;
-    invokes ResourceProfileSupply;
+    invokes SimpleTextOutput
+    invokes LoadedImageAccess
+    invokes BootServices
+    invokes ExtentRootProvider
+    invokes ProgramStorageEntry
+    invokes ProgramImage
+    invokes ResourceProfileSupply
     requires addr::Bound == 18446744073709551616
     {
         transition table.header.signature == EFI_SYSTEM_TABLE_SIGNATURE &&
@@ -34,7 +36,7 @@ public CathedralBootstrap satisfies UefiPhysicalEntry {
             _ -> (EFI_INVALID_PARAMETER)
         }
 
-        state boot(handle: EfiHandle in LoadedApplication, table: &EfiSystemTable) -> EfiStatus
+        machine boot(handle: EfiHandle in LoadedApplication, table: &EfiSystemTable) -> EfiStatus
         requires addr::Bound == 18446744073709551616
         {
             let mut context: Main;
@@ -42,7 +44,3 @@ public CathedralBootstrap satisfies UefiPhysicalEntry {
         }
     }
 }
-
-// This source path reaches the map/exit/report transaction in the fresh-image
-// smoke, then transfers both roots through ProgramStorageEntry. The compiler
-// retains the private stack separately from the forwarded image prefix.

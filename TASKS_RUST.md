@@ -3592,10 +3592,24 @@ flow; the ordinary Rust-kernel F5 desktop is a separate baseline.
 
 ## Native Omega boot qualification after the structure pass
 
+A fresh Omega UEFI image passed all fifteen ordered QEMU/OVMF checks through
+`Mapping checked`: final memory-map acquisition, `ExitBootServices`, entry with
+the two retained roots, resident-memory checks, and temporary mapping activation
+and restoration. The [qualification record](wiki/boot/omega_uefi_qualification.md)
+retains the exact source, producer and image identities. The repeat with the
+published compiler also passed. A fresh negative image with one deliberately
+wrong readback expectation reached `Mapping retired`, omitted `Mapping checked`,
+and failed the unchanged smoke harness. Its package-review replay defect was
+repaired and published in Omega PR #1660. This qualifies the bounded memory lab,
+not the normal Rust F5 desktop or an Omega scheduler. Do not change the desktop
+compiler for this boot work.
+
+### Historical compiler and acquisition investigations
+
 The desktop used producer `e8bebc16d5883` during this native-kernel investigation;
 its current qualified compiler is recorded at the top of this handoff. Do not
-switch F5's compiler merely to test the native-kernel experiment. The reorganized kernel
-is not yet qualified as a complete native boot.
+switch F5's compiler merely to test the native-kernel experiment. At that point the reorganized kernel
+had not completed native boot qualification.
 
 A fresh isolated compiler at `b8c81bbb8c1f` reproduced the `accept_boundary`
 operand failure with no Cathedral dependencies. Build ran before Product
@@ -3608,14 +3622,12 @@ corpus fixtures pass, including helper identity, untaken acceptance, fabricated
 activation, forged protocol, missing subject and wrong declaration kind.
 Scoped Clippy passes; pinned qualification has no invalidations.
 
-With that candidate, Cathedral passes the earlier lookup and now stops while
+With that candidate, Cathedral passed the earlier lookup and stopped while
 acquiring its pinned `alloc` Git dependency: `source root exceeds identity entry
 limit of 4096`. This does not establish native kernel type checking or boot.
-Next: fix the allocator acquisition/selection boundary, then qualify the retained
-boot contracts before further splitting the large firmware and memory-lab
-coordinators. The separately recorded root-geometry lowering and retired
-interrupt syntax limitations remain open. No grants or acquisition limits were
-weakened, and no desktop compiler path changed.
+The next work then was allocator acquisition and retained boot contracts.
+These findings describe that older producer, not the current boot result.
+No grants or acquisition limits were weakened, and no desktop compiler path changed.
 
 Evidence: `build/omega-component/kernel-provider-{baseline-builtin,baseline-uefi,repair-uefi}.log`
 and `kernel-provider-qualification.json`. The isolated compiler and full evidence
@@ -3636,7 +3648,7 @@ producer. Its separate `target/release/omega.exe` now contains the qualified
 Prior PR #322 evidence remains historical and unchanged.
 The allocator acquisition failure is separate from nested-machine unification.
 
-The acquisition cause is now traced: `BuildSourceAcquisitions::acquire_source`
+The acquisition cause was traced: `BuildSourceAcquisitions::acquire_source`
 calls whole-root `acquire_git` before dispatching `PackageSelection::Named`.
 `workspace_acquisition.rs` then derives every member from that complete capture.
 This charges the repository against the selected library's 4,096-entry limit.
@@ -3652,22 +3664,15 @@ The Git resolver suite passes 52 tests with three existing Windows-specific
 skips; strengthened session tests and scoped Clippy pass. Logs are in that
 worktree's `build/allocator-{resolver-git-tests,session-tests,clippy}.log`.
 
-**The kernel acquisition is still blocked; the application is not connected to
-that resolver yet.** A prototype connection exposed the next invariant: Build
+At that stage kernel acquisition remained blocked because the application had
+not yet connected that resolver. A prototype connection exposed the next invariant: Build
 must execute once, preserving its complete input inventory and negative
 observations. Turning declaration-only bytes into `CapturedLocalSource` and
 rerunning the selected Build after materializing its Product violates that
 contract. That prototype was discarded, without weakening source-join checks.
-Continue at `compilation-inputs/src/source_imports/frontier.rs` and
-`package_compilation.rs` (`validate_unbound_source_join`), together with the
-application's `source_resolution/readiness.rs`. Establish compiler-owned custody
-for staged discovery/Product source before wiring the session into acquisition.
-The existing `executed_git_source` workspace witness requires five activations,
-selected-return reuse, private-access refusal and no unselected Product work.
-Then rerun the actual isolated Cathedral kernel. This needs no new owner choice;
-do not raise limits, reintroduce static manifest parsing or claim a boot result.
-The resolver claim was released after landing; this remaining compiler integration
-is recorded work, not a live background build or a blocker for Omega app migration.
+The subsequent integration had to preserve that single Build execution and
+its complete observations. The current boot result above supersedes this
+acquisition blocker; the earlier PR and archive identities remain historical.
 
 ## Memory budgets and allocator delegation
 

@@ -62,14 +62,14 @@ machine FirmwareTables::retain_child(slot: &mut FirmwareTableSlot, address: u64)
 requires addr::Bound == 18446744073709551616 &&
          address > 0 && address % 4096 == 0 && address <= 0x000FFFFFFFFFF000
 reaches ExtentRootProvider
-invokes ExtentRootProvider;
+invokes ExtentRootProvider
 {
     transition slot {
         FirmwareTableSlot::Empty -> insert(slot, address)
         FirmwareTableSlot::Held { storage } -> false
     }
 
-    state insert(slot: &mut FirmwareTableSlot, address: u64) -> bool
+    machine insert(slot: &mut FirmwareTableSlot, address: u64) -> bool
     requires addr::Bound == 18446744073709551616 &&
              address > 0 && address % 4096 == 0 && address <= 0x000FFFFFFFFFF000 &&
              (slot in FirmwareTableSlot::Empty)
@@ -84,7 +84,7 @@ invokes ExtentRootProvider;
 
 machine FirmwareTables::find(inventory: &FirmwareTableInventory, address: u64) -> u64 {
     transition { _ -> scan(inventory, address, 0) }
-    state scan(inventory: &FirmwareTableInventory, address: u64, next: u64) -> u64
+    machine scan(inventory: &FirmwareTableInventory, address: u64, next: u64) -> u64
     requires next <= 2048
     {
         transition next < inventory.table_count && next < 2048 {
@@ -92,7 +92,7 @@ machine FirmwareTables::find(inventory: &FirmwareTableInventory, address: u64) -
             _ -> 2048
         }
     }
-    state compare(inventory: &FirmwareTableInventory, address: u64, next: u64) -> u64
+    machine compare(inventory: &FirmwareTableInventory, address: u64, next: u64) -> u64
     requires next < 2048
     {
         transition inventory.addresses[next] == address {
@@ -106,8 +106,8 @@ machine FirmwareTables::collect(root: Extent in Granted, information: &BootInfor
                                 excluded: &BootGeometry) -> FirmwareTableInventory
 requires addr::Bound == 18446744073709551616
 reaches ExtentRootProvider + ResourceProfileSupply
-invokes ExtentRootProvider;
-invokes ResourceProfileSupply;
+invokes ExtentRootProvider
+invokes ResourceProfileSupply
 {
     let mut inventory: FirmwareTableInventory = FirmwareTables::begin(root);
     let complete: bool = FirmwareTables::walk(&mut inventory, information, excluded);
@@ -122,12 +122,12 @@ machine FirmwareTables::walk(inventory: &mut FirmwareTableInventory,
                              information: &BootInformation, excluded: &BootGeometry) -> bool
 requires addr::Bound == 18446744073709551616
 reaches ExtentRootProvider + ResourceProfileSupply
-invokes ExtentRootProvider;
-invokes ResourceProfileSupply;
+invokes ExtentRootProvider
+invokes ResourceProfileSupply
 {
     transition { _ -> next_table(inventory, information, excluded, 0) }
 
-    state next_table(inventory: &mut FirmwareTableInventory, information: &BootInformation,
+    machine next_table(inventory: &mut FirmwareTableInventory, information: &BootInformation,
                      excluded: &BootGeometry, queue_index: u64) -> bool
     requires addr::Bound == 18446744073709551616 && queue_index <= 8192
     {
@@ -137,7 +137,7 @@ invokes ResourceProfileSupply;
         }
     }
 
-    state open(inventory: &mut FirmwareTableInventory, information: &BootInformation,
+    machine open(inventory: &mut FirmwareTableInventory, information: &BootInformation,
                excluded: &BootGeometry, queue_index: u64) -> bool
     requires addr::Bound == 18446744073709551616 && queue_index < 8192
     {
@@ -148,7 +148,7 @@ invokes ResourceProfileSupply;
         }
     }
 
-    state snapshot(inventory: &mut FirmwareTableInventory, information: &BootInformation,
+    machine snapshot(inventory: &mut FirmwareTableInventory, information: &BootInformation,
                    excluded: &BootGeometry, queue_index: u64, table_index: u64)
         -> bool
     requires addr::Bound == 18446744073709551616 && queue_index < 8192 && table_index < 2048
@@ -160,7 +160,7 @@ invokes ResourceProfileSupply;
         }
     }
 
-    state scan(inventory: &mut FirmwareTableInventory, information: &BootInformation,
+    machine scan(inventory: &mut FirmwareTableInventory, information: &BootInformation,
                excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64)
         -> bool
     requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index <= 512
@@ -171,7 +171,7 @@ invokes ResourceProfileSupply;
         }
     }
 
-    state inspect(inventory: &mut FirmwareTableInventory, information: &BootInformation,
+    machine inspect(inventory: &mut FirmwareTableInventory, information: &BootInformation,
                   excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64)
         -> bool
     requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512
@@ -185,7 +185,7 @@ invokes ResourceProfileSupply;
         }
     }
 
-    state locate(inventory: &mut FirmwareTableInventory, information: &BootInformation,
+    machine locate(inventory: &mut FirmwareTableInventory, information: &BootInformation,
                  excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64,
                  level: u64, child: u64) -> bool
     requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512
@@ -197,7 +197,7 @@ invokes ResourceProfileSupply;
         }
     }
 
-    state admit(inventory: &mut FirmwareTableInventory, information: &BootInformation,
+    machine admit(inventory: &mut FirmwareTableInventory, information: &BootInformation,
                 excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64,
                 level: u64, child: u64) -> bool
     requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512
@@ -211,7 +211,7 @@ invokes ResourceProfileSupply;
         }
     }
 
-    state retain(inventory: &mut FirmwareTableInventory, information: &BootInformation,
+    machine retain(inventory: &mut FirmwareTableInventory, information: &BootInformation,
                  excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64,
                  level: u64, child: u64) -> bool
     requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512 &&
@@ -225,7 +225,7 @@ invokes ResourceProfileSupply;
         }
     }
 
-    state registered(inventory: &mut FirmwareTableInventory, information: &BootInformation,
+    machine registered(inventory: &mut FirmwareTableInventory, information: &BootInformation,
                      excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64,
                      level: u64, child: u64, table_index: u64) -> bool
     requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512 && table_index < 2048
@@ -235,7 +235,7 @@ invokes ResourceProfileSupply;
         transition { _ -> enqueue(inventory, information, excluded, queue_index, entries, entry_index, level, table_index) }
     }
 
-    state enqueue(inventory: &mut FirmwareTableInventory, information: &BootInformation,
+    machine enqueue(inventory: &mut FirmwareTableInventory, information: &BootInformation,
                   excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64,
                   level: u64, table_index: u64) -> bool
     requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512
@@ -246,7 +246,7 @@ invokes ResourceProfileSupply;
         }
     }
 
-    state remember(inventory: &mut FirmwareTableInventory, information: &BootInformation,
+    machine remember(inventory: &mut FirmwareTableInventory, information: &BootInformation,
                    excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64,
                    level: u64, table_index: u64) -> bool
     requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512 &&
@@ -259,7 +259,7 @@ invokes ResourceProfileSupply;
         }
     }
 
-    state reserve(inventory: &mut FirmwareTableInventory, information: &BootInformation,
+    machine reserve(inventory: &mut FirmwareTableInventory, information: &BootInformation,
                   excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64,
                   level: u64, table_index: u64, bit: u64) -> bool
     requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512 &&
@@ -271,7 +271,7 @@ invokes ResourceProfileSupply;
         }
     }
 
-    state append(inventory: &mut FirmwareTableInventory, information: &BootInformation,
+    machine append(inventory: &mut FirmwareTableInventory, information: &BootInformation,
                  excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64,
                  level: u64, table_index: u64, bit: u64) -> bool
     requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512 &&
@@ -285,7 +285,7 @@ invokes ResourceProfileSupply;
         transition { _ -> scan(inventory, information, excluded, queue_index, entries, entry_index + 1) }
     }
 
-    state finish(inventory: &mut FirmwareTableInventory, traversed: u64) -> bool {
+    machine finish(inventory: &mut FirmwareTableInventory, traversed: u64) -> bool {
         traversed == inventory.queue_count
     }
 }

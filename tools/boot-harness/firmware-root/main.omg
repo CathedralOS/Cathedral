@@ -6,26 +6,26 @@ use memory_map::firmware_root;
 
 machine require(value: bool) crashes Trap {
     transition value { true -> done() false -> wrong() }
-    state done() {}
-    state wrong() { crash Trap; }
+    machine done() {}
+    machine wrong() { crash Trap; }
 }
 
 machine word(bytes: &mut [u8; 65536], offset: u64, value: u64)
 requires offset <= 65528
 {
     transition { _ -> copy(bytes, offset, value, 0) }
-    state copy(bytes: &mut [u8; 65536], offset: u64, value: u64, next: u64)
+    machine copy(bytes: &mut [u8; 65536], offset: u64, value: u64, next: u64)
     requires offset <= 65528 && next <= 8
     {
         transition next < 8 { true -> write(bytes, offset, value, next) _ -> done() }
     }
-    state write(bytes: &mut [u8; 65536], offset: u64, value: u64, next: u64)
+    machine write(bytes: &mut [u8; 65536], offset: u64, value: u64, next: u64)
     requires offset <= 65528 && next < 8
     {
         bytes[offset + next] = ((value >> (next * 8)) & 255) as u8;
         transition { _ -> copy(bytes, offset, value, next + 1) }
     }
-    state done() {}
+    machine done() {}
 }
 
 // The kernel publishes Abort, never Trap. Keep this arbitrary-input caller

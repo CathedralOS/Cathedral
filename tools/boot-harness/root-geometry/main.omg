@@ -43,7 +43,7 @@ machine main() crashes Trap {
         true -> image_partition()
         _ -> wrong()
     }
-    state image_partition() {
+    machine image_partition() {
         let mapped: BootGeometry = BootGeometry { image_base: 4096, image_length: 8192, storage_base: 16384, storage_length: 4096 };
         let middle: bool = partition_matches(mapped, 8192, 4096);
         let first: bool = partition_matches(mapped, 4097, 1);
@@ -60,6 +60,6 @@ machine main() crashes Trap {
             _ -> wrong()
         }
     }
-    state done() {}
-    state wrong() { crash Trap; }
+    machine done() {}
+    machine wrong() { crash Trap; }
 }

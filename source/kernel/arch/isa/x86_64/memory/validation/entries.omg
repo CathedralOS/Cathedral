@@ -50,7 +50,7 @@ public machine x86_compose_bootstrap_address_bound_page_table_entry(
         _ -> reject_address_bound_page_table_entry()
     }
 
-    state compose_address_bound_page_table_entry(
+    machine compose_address_bound_page_table_entry(
         physical_address: u64,
         fields: X86BootstrapPageTableEntryNonAddressFields
     ) -> X86BootstrapAddressBoundPageTableEntryCheck {
@@ -79,7 +79,7 @@ public machine x86_compose_bootstrap_address_bound_page_table_entry(
         }
     }
 
-    state reject_address_bound_page_table_entry()
+    machine reject_address_bound_page_table_entry()
         -> X86BootstrapAddressBoundPageTableEntryCheck
     {
         X86BootstrapAddressBoundPageTableEntryCheck::Rejected
@@ -101,7 +101,7 @@ public machine x86_validate_bootstrap_address_bound_page_table_entry(
         _ -> reject_retained_address_bound_page_table_entry()
     }
 
-    state check_address_bound_frame_number(
+    machine check_address_bound_frame_number(
         candidate: X86BootstrapAddressBoundPageTableEntryCandidate
     ) -> X86BootstrapAddressBoundPageTableEntryCheck {
         let frame_number: u64 [0..=1099511627775] =
@@ -113,7 +113,7 @@ public machine x86_validate_bootstrap_address_bound_page_table_entry(
         }
     }
 
-    state accept_retained_address_bound_page_table_entry(
+    machine accept_retained_address_bound_page_table_entry(
         candidate: X86BootstrapAddressBoundPageTableEntryCandidate
     ) -> X86BootstrapAddressBoundPageTableEntryCheck {
         X86BootstrapAddressBoundPageTableEntryCheck::Composed {
@@ -121,7 +121,7 @@ public machine x86_validate_bootstrap_address_bound_page_table_entry(
         }
     }
 
-    state reject_retained_address_bound_page_table_entry()
+    machine reject_retained_address_bound_page_table_entry()
         -> X86BootstrapAddressBoundPageTableEntryCheck
     {
         X86BootstrapAddressBoundPageTableEntryCheck::Rejected

@@ -78,7 +78,7 @@ crashes Abort
         true -> allocate(tables, destination, inventory, firmware_root, root)
         _ -> (MappingAttempt::Unchanged { tables: tables, destination: destination })
     }
-    state allocate(tables: BootPageTables, destination: Extent in Granted & BootVirtualDestination,
+    machine allocate(tables: BootPageTables, destination: Extent in Granted & BootVirtualDestination,
                    inventory: &FirmwareTableInventory, firmware_root: u64, root: u64) -> MappingAttempt
     requires addr::Bound == 18446744073709551616 && tables.reservation.tail.length >= MAPPING_BYTE_COUNT
     {
@@ -99,7 +99,7 @@ crashes Abort
             })
         }
     }
-    state clone(tables: BootPageTables,
+    machine clone(tables: BootPageTables,
                 source: Extent in Granted & Resident<MappingRegionPlacement, MappingRegion>,
                 destination: Extent in Granted & BootVirtualDestination,
                 inventory: &FirmwareTableInventory, firmware_root: u64, root: u64) -> MappingAttempt
@@ -114,7 +114,7 @@ crashes Abort
             })
         }
     }
-    state extract(tables: BootPageTables,
+    machine extract(tables: BootPageTables,
                   source: Extent in Granted & Resident<MappingRegionPlacement, MappingRegion>,
                   destination: Extent in Granted & BootVirtualDestination,
                   firmware_root: u64, image: X86ClonedPageTables) -> MappingAttempt
@@ -133,18 +133,18 @@ crashes Abort
             })
         }
     }
-    state retire_resident(padding: MappingPadding,
+    machine retire_resident(padding: MappingPadding,
                           source: Extent in Granted & Resident<MappingRegionPlacement, MappingRegion>,
                           destination: Extent in Granted & BootVirtualDestination,
                           tables: Extent in Granted & Resident<InactivePageTablePlacement, InactivePageTables>,
                           firmware_root: u64, image: X86ClonedPageTables) -> MappingAttempt
     requires addr::Bound == 18446744073709551616
     {
-        transition NativePlacement<InactivePageTablePlacement, InactivePageTables, BootMemory>::move_out(tables) {
-            PlacementExtraction::Moved { storage, value } -> program(padding, source, destination, storage, firmware_root, image)
+        transition NativeAccess<InactivePageTablePlacement, InactivePageTables, BootMemory>::move_out(tables) {
+            AccessExtraction::Moved { storage, value } -> program(padding, source, destination, storage, firmware_root, image)
         }
     }
-    state program(padding: MappingPadding,
+    machine program(padding: MappingPadding,
                   source: Extent in Granted & Resident<MappingRegionPlacement, MappingRegion>,
                   destination: Extent in Granted & BootVirtualDestination, tables: Extent in Granted & Vacant,
                   firmware_root: u64, image: X86ClonedPageTables) -> MappingAttempt
@@ -162,7 +162,7 @@ crashes Abort
             _ -> dormant(padding, pending)
         }
     }
-    state activate(padding: MappingPadding, pending: BootMapping) -> MappingAttempt
+    machine activate(padding: MappingPadding, pending: BootMapping) -> MappingAttempt
     requires addr::Bound == 18446744073709551616
     {
         let mut retained: BootMapping = pending;
@@ -170,7 +170,7 @@ crashes Abort
         let physical: bool = check_mapping_region(&mut retained.source);
         MappingAttempt::Retired { padding: padding, mapping: retained, verified: mapped && physical }
     }
-    state dormant(padding: MappingPadding, pending: BootMapping) -> MappingAttempt {
+    machine dormant(padding: MappingPadding, pending: BootMapping) -> MappingAttempt {
         MappingAttempt::Prepared {
             padding: padding,
             mapping: pending,

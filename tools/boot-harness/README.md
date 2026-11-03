@@ -3,7 +3,9 @@
 This host-only tool compiles the Omega boot source and boots that invocation's
 image under QEMU/OVMF. See the [boot frontier](../../source/kernel/boot/uefi/README.md)
 for the required compiler support and remaining kernel work. The Rust lab has its
-own harness and is not evidence that the Omega source works.
+own harness and is not evidence that the Omega source works. The
+[current qualification](../../wiki/boot/omega_uefi_qualification.md) records
+the fresh fifteen-marker result, the passing negative control, and the remaining limits.
 
 ## F5 in VS Code
 
@@ -235,7 +237,8 @@ omega run --both tools/boot-harness/table-clone/main.omg
 
 Both engines must exit 0. For the source-level retirement control, copy the
 authored source tree to an isolated scratch project, change only the final
-mapped-probe expectation in `mapping_activation.omg` from
+mapped-probe expectation in
+`source/kernel/boot/uefi/lab/memory/mapping/activation.omg` from
 `last == 97 + next` to `last == 97 + next + next / 2`, complete ordinary package
 review, then build and boot a fresh image. For the configured three pages,
 the first two expectations stay 97 and 98; only the last changes from 99 to
