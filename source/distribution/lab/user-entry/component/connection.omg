@@ -64,7 +64,13 @@ machine ready(gate: &Gate, peer: &mut Peer, clock: u64, status: u64) -> u64 reac
 machine request(gate: &Gate, peer: &mut Peer, clock: u64, index: u64 [1..=16]) -> u64 reaches Kernel {
     let mut payload: [u64; 8];
     payload[0] = index;
+    // Distinct words cross both native copy boundaries, including the tail.
+    payload[1] = 0x1111222233334444u64;
+    payload[2] = 0x2222333344445555u64;
     payload[3] = 0xabcdef9876543210u64;
+    payload[4] = 0x4444555566667777u64;
+    payload[5] = 0x5555666677778888u64;
+    payload[6] = 0x6666777788889999u64;
     payload[7] = index;
     let tick: Tick = runtime::time::read(gate, clock);
     transition tick {
@@ -116,7 +122,10 @@ machine waited(gate: &Gate, peer: &mut Peer, clock: u64, index: u64 [1..=16], de
 machine received(gate: &Gate, peer: &mut Peer, clock: u64, index: u64 [1..=16], frame: Frame, notification: u64) -> u64 reaches Kernel {
     let rights: bool = release(gate, index, notification);
     transition rights && frame.bytes == 64u64 && frame.payload[0] == index
-        && frame.payload[3] == 0xabcdef9876543210u64 && frame.payload[7] == index {
+        && frame.payload[1] == 0x1111222233334444u64 && frame.payload[2] == 0x2222333344445555u64
+        && frame.payload[3] == 0xabcdef9876543210u64 && frame.payload[4] == 0x4444555566667777u64
+        && frame.payload[5] == 0x5555666677778888u64 && frame.payload[6] == 0x6666777788889999u64
+        && frame.payload[7] == index {
         true -> (block next(gate, peer, clock, index))
         _ -> (block finish(gate, peer, 171u64))
     }

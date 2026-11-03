@@ -104,15 +104,29 @@ fn serve(mode: u64, environment: Environment) -> u64 {
     // SAFETY: This single-entry fixture owns the slot until process exit.
     server.enable_shared(0, unsafe { &mut *shared }).unwrap();
     let rights = Notification::create().unwrap();
-    let mut count = 0;
+    let mut count = 0u64;
     loop {
         match server.next_event().unwrap() {
             Event::Request(request) => {
                 assert!(!request.control);
                 assert_eq!(request.len, 64);
                 count += 1;
-                assert_eq!(request.bytes[0], count);
-                if count % 2 == 0 {
+                let expected = [
+                    count,
+                    0x1111_2222_3333_4444,
+                    0x2222_3333_4444_5555,
+                    0xabcd_ef98_7654_3210,
+                    0x4444_5555_6666_7777,
+                    0x5555_6666_7777_8888,
+                    0x6666_7777_8888_9999,
+                    count,
+                ];
+                // Validate the wire independently: matching bugs in Omega's
+                // encoder and decoder must not make a corrupt echo pass.
+                for (bytes, word) in request.bytes.chunks_exact(8).zip(expected) {
+                    assert_eq!(u64::from_le_bytes(bytes.try_into().unwrap()), word);
+                }
+                if count.is_multiple_of(2) {
                     server
                         .reply_notification(&request, &request.bytes, rights[0])
                         .unwrap();

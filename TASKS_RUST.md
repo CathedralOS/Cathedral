@@ -9,7 +9,7 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Current executable handoff: [control latency measurement](#stock-matrix-migration-control-latency-measurement).
+Current executable handoff: [batched mailbox transfers](#omega-runtime-batched-mailbox-transfers).
 That entry records the latest verified image and next work; earlier migration
 entries below are historical milestones.
 
@@ -1137,6 +1137,78 @@ complete. The previously recorded small Rust matrix-lab failure is unchanged.
 The follow-up below moves shared storage exchanges into retained per-link work.
 Local launch reads and bindings remain the next continuation work, including
 recovery of the login picker on failed admission.
+
+### Omega runtime: batched mailbox transfers
+
+The shared connection mailbox now combines its length and first payload words
+in one bounded write, and reads the sequence/header/first payload words in one
+bounded read. The native adapter still checks the live handle and complete span
+on every operation. Removing one shared write and one shared read saves five
+kernel calls per successfully delivered shared message; an Omega-to-Omega
+request/reply saves ten. This is a static call-count reduction, not a measured
+end-to-end latency claim or a change to the kernel's inline IPC transport.
+
+The wire layout is unchanged. Publication remains the final separate write;
+receive checks the successor sequence, bounded length, nonzero request ID and
+unchanged sequence before acknowledging. Only a successful acknowledgement
+installs the frame. Fixed-size private copies cross the receive steps by
+reference; no shared-memory reference is retained. Typed handoff, backpressure
+and late-reply rules are unchanged. No deadline, resource budget, kernel policy
+or compiler change was needed.
+
+The connection witness now checks all eight payload words, including both
+copy boundaries. The Rust peer independently validates those words before
+echoing them, so matching mistakes in Omega's encoder and decoder cannot hide
+corruption. Current verification:
+
+| Scenario | Artifact under `build/` |
+| --- | --- |
+| Omega/Rust connection, malformed traffic, held replies and grants | `omega-user/connections/20261103T060831979606Z/` |
+| Multi-client service | `omega-user/connections/20261103T060853339633Z/` |
+| Overlapping requests | `omega-user/connections/20261103T060907200552Z/` |
+| Native entry, IPC and parking, with and without clock | `omega-user/tests/20261103T060920316551Z/` |
+| Nested dirty/clean LOSS during held images, protected close, exact cold save | `boot-harness-rs/desktop/20261103T060926378744Z/` |
+| Normal F5, fresh and cold | `boot-harness-rs/desktop/20261103T062152459847Z/` |
+| Three fresh and two cold depth-three cycles with pointer stress | `boot-harness-rs/desktop/20261103T062242382144Z/` |
+
+All those cases pass. The matrix is 384/496 load pages (previously 385), with
+its existing 128-page stack. ELF SHA-256:
+`f3fe94211a435ab338666e6789efd7778721b0b4e1e0cae309a61876269b3ffe`.
+Its 180 component and 9 native receipt inputs match current files, as do all
+four rebuilt desktop apps. The pinned producer is unchanged. The native lab
+accepted only the two existing `clock_stamp` foreign facts already reviewed
+for the desktop, because this was its first rebuild after that runtime addition.
+
+The earlier by-value candidate reproduced the close timeout on its third fresh
+stress cycle (`boot-harness-rs/desktop/20261103T055843544390Z/`): root question
+1,010.574 ms elapsed, 118.302 ms charged execution. Deeper surveys also expired;
+late replies were refused safely, with no child or cleanup failure. This does
+not identify the delay's cause.
+
+The final borrowed-snapshot candidate passed all five stressed cycles in
+49.31-90.08 s each. Root close-question spans were 358.209, 458.386, 612.861,
+498.385 and 437.442 ms. Median elapsed/charged/off-CPU time was
+458.386 / 39.437 / 418.949 ms. These are observations, not an isolated performance
+comparison: timing varies substantially, and tracing perturbs execution. The
+adjacent diagnostic-pair CPU gap had median 0.453 ms and maximum 9.856 ms.
+There were no expiries, queued SELECT_APP/CLOSE requests, unmatched questions or
+failed child/cleanup reports in this sweep's nine preserved desktop serial files
+(the normal F5 host has no Omega matrix samples). Every stressed teardown
+returned to 8 private / 138 reader pages, 609 frames and 15 free slots; provider
+509 pages / 844 frames; supervisor 2 / 2 / 127. Provider peak was 1,957,016 of
+2,076,672 bytes.
+
+Target `omega-peer` clippy with warnings denied, Rust formatting, source layout
+(148 Omega / 153 Rust package edges), and whitespace checks pass. The prior
+514 host-test result is historical, not a fresh rerun. Logs are
+`mailbox-*.log` under `build/omega-matrix-progress/`; `mailbox-value-*.log`
+preserves the by-value candidate's results.
+
+Next: keep locating delay at individual parent/child handoffs and runnable or
+budget availability. Fewer transport calls do not close the earlier intermittent
+stress failure. Synchronous admission, owner/startup operations, first provider
+handshakes, retirement fallback, native exit-status propagation and the small
+Rust matrix-lab failure remain open. Normal F5 retains the Rust matrix.
 
 ### Stock matrix migration: control latency measurement
 

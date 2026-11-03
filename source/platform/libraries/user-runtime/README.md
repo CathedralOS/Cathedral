@@ -41,6 +41,12 @@ resumes once the peer's first reply is ready.
 Descend into `setup.omg` for the existing Rust-compatible handshake,
 `mailbox.omg` for sequence/acknowledgement publication, `incoming.omg` for typed
 grant correlation and bounded partial replies, and `custody.omg` for release.
+The mailbox copies fixed blocks of up to eight words: length and payload are prepared in
+two writes before a separate release publication, while receive copies a fixed
+prefix and tail before rechecking the sequence. This keeps the Rust wire layout
+and removes one checked write and one checked read per message. The current
+x86 adapter validates/maps each access, so those two saved calls remove five
+kernel traps; no address is cached across release or handle reuse.
 Requests carry 64 bytes, or fewer through `begin_bytes` for a peer whose frames
 have another fixed size, such as the display's six words; replies carry up to
 64 bytes and optionally one notification right, transferred endpoint or sealed
