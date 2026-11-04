@@ -3,7 +3,7 @@ from pathlib import Path
 import json,sys,re
 HERE=Path(__file__).resolve().parent
 schema=json.loads((HERE/'schema.json').read_text())
-lines=['// SPDX-License-Identifier: MIT OR Apache-2.0','// Independent literal expectations; evaluate actual translated machine bodies.','module cases;','use facts::x86_descriptors;','use facts::x86_descriptors::TaskStateSegment;','use facts::x86_descriptors::DescriptorTablePointer;','use facts::x86_descriptors::GdtEntry;','use facts::x86_descriptors::TssDescriptorWords;','use facts::x86_descriptors::SelectorErrorCode;','use x86_values::descriptors;','use x86_values::descriptor_bytes;']
+lines=['// SPDX-License-Identifier: MIT OR Apache-2.0','// Independent literal expectations; evaluate actual translated machine bodies.','module cases;','use facts::x86_descriptors;','use facts::x86_descriptors::TaskStateSegment;','use facts::x86_descriptors::DescriptorTablePointer;','use facts::x86_descriptors::GdtEntry;','use facts::x86_descriptors::TssDescriptorWords;','use facts::x86_descriptors::SelectorErrorCode;','use x86_values::descriptors;','use facts::x86_descriptor_bytes;']
 def groups(label,checks):
  names=[]
  for start in range(0,len(checks),12):
@@ -39,9 +39,9 @@ for name,row in schema['records'].items():
    width=int(ty[1:])//8;v=int.from_bytes(bytes(range(offset+1,offset+1+width)),'little');field_values[field]=str(v);expected[offset:offset+width]=v.to_bytes(width,'little')
  fn='bytes_'+name;names.append(fn+'()');lines.append('machine '+fn+'() -> bool {')
  lines.append(f' let value: {name} = {name} {{ '+', '.join(f+': '+v for f,v in field_values.items())+' };')
- lines.append(f' let encoded: [u8; {row["size"]}] = descriptor_bytes::encode_{name}(&value);')
+ lines.append(f' let encoded: [u8; {row["size"]}] = x86_descriptor_bytes::encode_{name}(&value);')
  lines.append(f' let golden: [u8; {row["size"]}] = ['+', '.join(map(str,expected))+'];')
- lines.append(f' let decoded: {name} = descriptor_bytes::decode_{name}(&golden);')
+ lines.append(f' let decoded: {name} = x86_descriptor_bytes::decode_{name}(&golden);')
  tests=[f'encoded[{i}] == {b}' for i,b in enumerate(expected)]
  for field,ty,offset in row['fields']:
   if ty.startswith('['):tests +=[f'decoded.{field}[{i}] == value.{field}[{i}]' for i in range(int(ty.split(';')[1].strip(' ]')))]

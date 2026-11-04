@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Literal little-endian codecs; no casts to pointers or inferred native ABI.
-module descriptor_bytes;
-use facts::x86_descriptors;
+module x86_descriptor_bytes;
+use x86_descriptors;
 
 public machine encode_DescriptorTablePointer(value: &x86_descriptors::DescriptorTablePointer) -> [u8; 10] {
     let mut output: [u8; 10];

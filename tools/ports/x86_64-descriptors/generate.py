@@ -53,7 +53,7 @@ for name,row in records.items():
    plans.append(f'    entries[{entry}] = FieldEntry {{ key: schema.fields[{i}].key, placement: FieldPlan::At {{ offset: {offset} }} }};');entry+=1
  plans+=['    Plan { entries: entries, entry_count: '+str(entry)+', size_fixed: '+str(row['size'])+', size_is_dynamic: false, align: '+str(row['align'])+' }','}','']
 emit(ROOT/'source/platform/drivers/facts/x86_descriptor_layouts.omg','\n'.join(plans))
-code=['// SPDX-License-Identifier: MIT OR Apache-2.0','// Literal little-endian codecs; no casts to pointers or inferred native ABI.','module descriptor_bytes;','use facts::x86_descriptors;','']
+code=['// SPDX-License-Identifier: MIT OR Apache-2.0','// Literal little-endian codecs; no casts to pointers or inferred native ABI.','module x86_descriptor_bytes;','use x86_descriptors;','']
 for name,row in records.items():
  fields=[]
  for field,ty,offset in row['fields']:
@@ -71,6 +71,6 @@ for name,row in records.items():
   expr='['+', '.join(values[f'{field}[{i}]'] for i in range(int(re.search(r'; (\d+)',ty)[1])))+']' if ty.startswith('[') else values[field]
   code.append(f'    let {field}: {ty} = {expr};')
  code+=['    x86_descriptors::'+name+' { '+', '.join(field+': '+field for field,_,_ in row['fields'])+' }','}','']
-emit(ROOT/'source/platform/libraries/x86_64/descriptor_bytes.omg','\n'.join(code))
+emit(ROOT/'source/platform/drivers/facts/x86_descriptor_bytes.omg','\n'.join(code))
 emit(HERE/'schema.json',json.dumps({'revision':PIN,'files':FILES,'constants':constants,'records':records},indent=2)+'\n')
 print(f'{len(constants)} descriptor constants; {len(records)} requested plans and byte-codec pairs')
