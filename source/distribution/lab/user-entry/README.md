@@ -14,6 +14,7 @@ Run from the repository root:
 
 ```powershell
 python tools/omega-user/run_test.py --compiler path/to/new/omega.exe
+python tools/omega-user/run_test.py --matrix --compiler path/to/new/omega.exe
 ```
 
 The runner boots the same Omega ELF twice under the ordinary Rust kernel,
@@ -33,6 +34,18 @@ initial endpoints, one private page and one reader page of allowance. It checks:
 - Without a clock grant, both acquisition and parking are denied.
 - With the grant, a two-tick deadline parks and resumes at or after the deadline.
 - The kernel reports normal exit with status zero.
+
+Two further boots restrict the same program's channel allowance. Zero channels
+must return 102; one channel must close its first allocation and return 109.
+These checks require the kernel's complete, exact exit report, not merely a
+success message printed by the program. `--matrix` also boots the ordinary stock
+matrix with a clock and enough image funding, but no service endpoints. Its
+cleanup and kernel exit must both report INVALID_ARGUMENT (`2^64 - 22`),
+including the upper bits. No application code is patched for these failures.
+
+The packaging consumer's `main` is not the booted entry. The linker names the
+independent component's checked `Program::run` export as `omega_app_step`;
+the native `_start` calls it and passes its result directly to kernel EXIT.
 
 Artifacts and serial logs live in `build/omega-user/tests/<timestamp>/`.
 The guest's proof is actual process execution, not a mocked table callback.

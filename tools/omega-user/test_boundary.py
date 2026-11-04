@@ -28,8 +28,8 @@ class BoundaryTests(unittest.TestCase):
         contract = (ROOT / 'source-rs/kernel/contracts/user.rs').read_text(encoding='utf-8')
         numbers = dict(re.findall(r'pub const (\w+): u64 = (\d+);', contract))
         assembly = (ABI / 'entry.S').read_text(encoding='utf-8')
-        calls = re.findall(r'(?:mov eax, (\d+)|xor eax, eax)\s*// (\w+)\n', assembly)
-        self.assertEqual(len(calls), 65)  # source sites, including the shared-access macro
+        calls = re.findall(r'(?:mov eax, (\d+)|xor eax, eax)\s*// (\w+)[^\n]*\n', assembly)
+        self.assertEqual(len(calls), 66)  # source sites, including the shared-access macro
         for number, name in calls:
             self.assertEqual(int(number or '0'), int(numbers[name]), name)
 
@@ -39,7 +39,8 @@ class BoundaryTests(unittest.TestCase):
         assembly = (ABI / 'entry.S').read_text(encoding='utf-8')
         table = re.findall(r'^    \.quad cathedral_(\w+)$', assembly, re.MULTILINE)
         self.assertEqual(['yield' if field == 'yield_now' else field for field in fields], table)
-        self.assertEqual(len(table), 57)
+        self.assertEqual(len(table), 58)
+        self.assertEqual(table[-1], 'clock_stamp')
 
 
 if __name__ == '__main__':

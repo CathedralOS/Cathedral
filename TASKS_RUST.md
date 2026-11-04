@@ -9,7 +9,7 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Current executable handoff: [batched mailbox transfers](#omega-runtime-batched-mailbox-transfers).
+Current executable handoff: [native exit checks](#native-exit-status-qualification).
 That entry records the latest verified image and next work; earlier migration
 entries below are historical milestones.
 
@@ -1138,6 +1138,53 @@ The follow-up below moves shared storage exchanges into retained per-link work.
 Local launch reads and bindings remain the next continuation work, including
 recovery of the login picker on failed admission.
 
+### Native exit-status qualification
+
+The earlier diagnosis that native entry discards `Program::run`'s result was
+incorrect. `native/main.omg` is the compiler's packaging consumer, not the
+booted ELF entry. `tools/omega-component/build.py` extracts the independent
+component's one checked requirement export. The platform's `_start` calls that
+export as `omega_app_step`, moves RAX to RDI, and invokes kernel EXIT. The
+unmodified entry witness and stock matrix both return their exact failure
+statuses in real QEMU boots. No executable implementation needed changing.
+
+`python tools/omega-user/run_test.py --matrix` now preserves these checks:
+
+- Existing successful entry/IPC/parking boots, with and without a clock.
+- Zero channel allowance: opening fails and returns 102.
+- One channel allowance: the second opening fails, the first channel is closed,
+  and the witness returns 109.
+- Stock matrix with a clock but no service endpoints: cleanup and kernel exit
+  both report INVALID_ARGUMENT, `18446744073709551594`. The complete 64-bit
+  report is required. This isolated initial process receives 512 private pages
+  to fund its image/stack through the existing bootstrap accounting; production
+  matrix allowances are unchanged.
+
+All five boots pass at `build/omega-user/tests/20261104T025311673680Z/`.
+An isolated negative-control ELF changed only the native exit adapter to discard
+the returned code and issue EXIT(0). The zero-channel case then reported zero
+and the unchanged verifier rejected it, as required:
+`build/omega-matrix-progress/exit-negative/20261104T025414855060Z/`.
+No tracked source or normal program artifact was patched for that control.
+
+The eight `tools/omega-user` host tests pass. They initially exposed a stale
+57-entry assertion from the earlier clock-stamp addition: it now checks the
+58-entry table, including `clock_stamp` at the end. The syscall-number check
+also accepts trailing descriptions in assembly comments, so it checks the
+clock-stamp call too (66 source sites). Layout and whitespace checks pass.
+The compiler and program images are unchanged; the matrix remains the 384-page
+image recorded in [batched mailbox transfers](#omega-runtime-batched-mailbox-transfers).
+The desktop/QEMU stress suite and Rust host suites were not rerun for these
+harness/documentation changes; their prior results retain their original scope.
+
+The shared desktop failure parser still checks nonzero cleanup diagnostics, so
+it can flag failure before an owner collects the exit. This qualification proves
+native return propagation on the tested paths; it does not establish that every
+app chooses the right status or every owner reports it correctly. The intermittent
+close latency, remaining synchronous operations and small Rust matrix-lab failure
+remain open. Continue with those actual behavior gaps, not a replacement native
+exit mechanism. Normal F5 retains the Rust matrix.
+
 ### Omega runtime: batched mailbox transfers
 
 The shared connection mailbox now combines its length and first payload words
@@ -1207,7 +1254,7 @@ preserves the by-value candidate's results.
 Next: keep locating delay at individual parent/child handoffs and runnable or
 budget availability. Fewer transport calls do not close the earlier intermittent
 stress failure. Synchronous admission, owner/startup operations, first provider
-handshakes, retirement fallback, native exit-status propagation and the small
+handshakes, retirement fallback and the small
 Rust matrix-lab failure remain open. Normal F5 retains the Rust matrix.
 
 ### Stock matrix migration: control latency measurement
@@ -1276,7 +1323,7 @@ Next: locate the delay at individual parent/child handoffs, including leaf
 control handling and runnable/budget availability, before changing scheduling
 or deadlines. Preserve late-answer drainage and refusal on uncertainty. The
 previously recorded synchronous admission, owner/startup operations, first
-provider handshakes, retirement fallback, native exit-status propagation and
+provider handshakes, retirement fallback and
 small Rust matrix-lab failure remain open. Normal F5 retains the Rust matrix.
 
 ### Stock matrix migration: loss checks during rendering
@@ -1310,9 +1357,9 @@ from HEALTH to LOSS; the Omega executable has no fixture mode.
 Sparse `Matrix control:` diagnostics record survey refusals, child questions,
 answers, expiry, aggregation, close refusal and process cleanup status. The
 legend is in `shared/report.omg`; endpoint numbers are local diagnostics, not
-process identities. The native entry still discards Program::run's return code,
-but cleanup logs it and the shared Omega failure parser now detects nonzero
-cleanup instead of mistaking it for exit(0).
+process identities. The shared Omega failure parser detects nonzero cleanup
+before an owner reports the exit. The original claim that native entry discarded
+the result was incorrect; see [native exit checks](#native-exit-status-qualification).
 
 The unchanged pinned producer builds the matrix at 384/496 load pages, with its
 existing 128-page stack. All 180 component and 9 native receipt inputs match.
@@ -1366,8 +1413,9 @@ survey that exceeded its deadline. Locate the dispatch/scheduling delay before
 claiming a timeout change fixes it; do not accept stale clean answers.
 
 Kernel admission, owner/startup operations, first provider handshakes and
-retirement fallback still contain synchronous waits. Native exit-status
-propagation also remains open. Normal F5 keeps the Rust matrix until parity.
+retirement fallback still contain synchronous waits. The exit-status suspicion
+is corrected in [native exit checks](#native-exit-status-qualification).
+Normal F5 keeps the Rust matrix until parity.
 The previously recorded small Rust matrix-lab failure is unchanged.
 
 ### Stock matrix migration: launch funding
@@ -1461,9 +1509,9 @@ permission to stop. This is not a passing stress result.
 Next: kernel spawn/brokered admission, owner/startup operations, first provider
 handshakes and retirement fallback still contain synchronous waits. Do not claim
 the whole launch is nonblocking. A deterministic failure after picker retirement
-is still worth retaining when admission itself is made resumable. An observability
-gap also surfaced: the native matrix entry discards Program::run's failure code,
-so cleanup after a failed turn can look like a normal zero-status process exit.
+is still worth retaining when admission itself is made resumable. The suspected
+native exit-status loss was later disproved by direct execution; see
+[native exit checks](#native-exit-status-qualification).
 Normal F5 remains on the Rust matrix until parity. The previously recorded small
 Rust matrix-lab failure remains open and is not covered by this slice.
 

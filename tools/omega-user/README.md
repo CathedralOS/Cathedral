@@ -10,6 +10,7 @@ The desktop's compiler and the other agent's checkout need not move.
 ```powershell
 python tools/omega-user/build.py source/distribution/lab/user-entry/native --compiler path/to/new/omega.exe
 python tools/omega-user/run_test.py --compiler path/to/new/omega.exe
+python tools/omega-user/run_test.py --matrix --compiler path/to/new/omega.exe
 python tools/omega-user/connection_test.py --compiler path/to/new/omega.exe
 python tools/omega-user/connection_test.py --service --compiler path/to/new/omega.exe
 python tools/omega-user/connection_test.py --admission --compiler path/to/new/omega.exe
