@@ -1,12 +1,16 @@
 # Omega boot frontier
 
-A freshly compiled Omega image passed all fifteen ordered QEMU/OVMF serial
-checks, through `Mapping checked`. It acquired the final memory map, completed
-`ExitBootServices`, entered the Omega memory lab with both roots retained, and
-checked a temporary mapping before restoring the original CR3. The
+Cathedral's Omega kernel now checks a prerequisite for installing interrupt
+handlers: it loads its own segment table, reads it back, and restores the
+previous table. A freshly compiled QEMU/OVMF image passed all sixteen ordered
+serial checks through `GDT checked`, after leaving firmware services and
+checking its retained memory and temporary mapping. The
 [boot qualification](../../../../wiki/boot/omega_uefi_qualification.md) records the exact image and compiler.
-This is a bounded memory lab, not the normal F5 desktop kernel or a real-hardware
-result. The qualification record describes the controls and verification limits.
+
+The kernel still idles after these checks. Permanent segment and task-state
+tables, interrupt handlers, owned interrupt stacks and timer delivery remain
+unfinished. This is a bounded boot lab; it does not establish the normal F5
+desktop or real-hardware support.
 
 Start at [main.omg](main.omg), the selected physical firmware arrival. It
 validates the table and enters [firmware discovery](firmware/firmware.omg), then
@@ -49,7 +53,7 @@ the initialized page and the remaining tail with the context and image.
 The fresh-image harness requires `Hello from Omega`, a complete `Owned N MiB`
 line, `Boot map ready`, `Kernel entered`, `Memory split`, `Memory checked`, `Memory paired`,
 `Page ready`, `Tables ready`, `CPU checked`, `Root located`, `Root read`,
-`Tables retained`, `Mapping retired`, and `Mapping checked`, in that order. The six-marker baseline reported 35 MiB in
+`Tables retained`, `Mapping retired`, `Mapping checked`, and `GDT checked`, in that order. The six-marker baseline reported 35 MiB in
 QEMU/OVMF using Omega `9e04918b1d1`. The current source requires Omega's exact address-model
 typing, representation-recast effect tracking and occurrence-local state-prefix
 checking, in addition to the canonical `ProgramStorageEntryNativeProvider`,
@@ -103,7 +107,7 @@ The intended acceptance is one freshly compiled `uefi_x86_64` image under
 QEMU/OVMF: `Hello from Omega`, successful firmware exit, `Owned N MiB` over
 COM1, then `Boot map ready`, `Kernel entered`, `Memory split`, `Memory checked`, `Memory paired`,
 `Page ready`, `Tables ready`, `CPU checked`, `Root located`, `Root read`,
-`Tables retained`, `Mapping retired`, and `Mapping checked`
+`Tables retained`, `Mapping retired`, `Mapping checked`, and `GDT checked`
 while retaining image, every initial-storage descendant and accounted surviving
 stack storage. `Memory checked` requires common-root reunion after all three partition sizes,
 initialization/readback of 17, write/readback/extraction of 29, and return of the
@@ -114,6 +118,24 @@ Before placement, a request for the original capacity must return `Exhausted`
 and preserve the residual base, length and count after both allocations.
 A failed build or an old
 `BOOTX64.EFI` cannot satisfy acceptance.
+
+## Segment-table load and restoration
+
+After the mapping check, the kernel calls
+[`SegmentTablePreparation`](../../arch/isa/x86_64/interrupts/segments.omg).
+The selected implementation owns a three-entry table and lends it to one
+helper for the entire operation. That helper saves the current CPU table
+pointer, loads the new table, reads the selected pointer back, and restores
+and verifies the previous pointer before returning. It also checks the bytes
+beside its ten-byte descriptor buffers. Only success permits `GDT checked`.
+The kernel's image and memory roots remain owned across the call and in its
+subsequent idle state.
+
+The check masks ordinary interrupts and restores the previous flags after
+restoring the table. Its admitted boot interval also excludes NMI,
+machine-check and debug-exception delivery; masking ordinary interrupts does
+not establish those premises. No segment register is reloaded, and no TSS or
+interrupt table is installed by this check.
 
 ## Reproduce
 

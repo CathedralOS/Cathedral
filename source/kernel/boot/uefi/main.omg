@@ -1,7 +1,7 @@
-// Expected output contains: Mapping checked
+// Expected output contains: GDT checked
 // Check the firmware table before using its services to discover and acquire
 // memory. After firmware exit, execution continues with the kernel memory
-// checks selected by build.omg.
+// and descriptor-table checks selected by build.omg.
 use firmware::firmware;
 use lab::memory::main;
 

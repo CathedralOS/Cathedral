@@ -1,0 +1,145 @@
+module isa::x86_64::interrupts::segments;
+
+use omega::language::core::assembly;
+
+// Cathedral needs a resident segment table before it can install the task
+// state and interrupt stacks. This first operation checks the descriptor load
+// while keeping the firmware's cached segment registers unchanged. It restores
+// the old table before its local backing can leave scope.
+data BootstrapSegments {}
+
+// Admission is limited to this closed bootstrap check at CPL0 in 64-bit mode.
+// The current stack and table backing stay mapped and pinned; no segment reload,
+// firmware call or callback occurs between load and restore. The boot envelope
+// excludes NMI, machine-check and debug-exception delivery during that interval:
+// no single stepping or hardware breakpoints are active. CLI alone cannot
+// establish these premises. Once Cathedral installs its complete exception floor, its
+// permanent table installation will use that floor's arrival contract instead.
+public boundary trait SegmentTablePreparation {
+    machine check_descriptor_load() -> bool
+    requires addr::Bound == 18446744073709551616
+    reaches MachineControl
+    crashes Abort;
+}
+
+public BootstrapSegmentPreparation satisfies SegmentTablePreparation {
+    machine check_descriptor_load() -> bool
+    requires addr::Bound == 18446744073709551616
+    reaches MachineControl
+    crashes Abort
+    { BootstrapSegments::check_descriptor_load() }
+}
+
+data SegmentTable {
+    before: u64;
+    entries: [u64; 3];
+    after: u64;
+}
+
+// SGDT writes ten hardware bytes. Keeping them as bytes prevents an arbitrary
+// CPU value from being mistaken for an Omega reference or qualified value.
+data DescriptorBuffer {
+    before: u64;
+    bytes: [u8; 10];
+    adjacent: [u8; 6];
+    after: u64;
+}
+
+machine BootstrapSegments::check_descriptor_load() -> bool
+requires addr::Bound == 18446744073709551616
+reaches MachineControl
+crashes Abort
+{
+    let table: SegmentTable = SegmentTable {
+        before: 0x13579BDF2468ACE0,
+        entries: [0, 0x00AF9A000000FFFF, 0x00CF92000000FFFF],
+        after: 0xFEDCBA9876543210,
+    };
+    BootstrapSegments::exercise(&table)
+}
+
+// A single call-scoped borrow pins the owner's backing through load and
+// restoration. Exposing its address alone would not retain that loan.
+machine BootstrapSegments::exercise(table: &SegmentTable) -> bool
+requires addr::Bound == 18446744073709551616
+reaches MachineControl
+crashes Abort
+{
+    let base: u64 = address_of(&table.entries[0]) as u64;
+    let desired: [u8; 10] = descriptor_bytes(23, base);
+    let mut previous: DescriptorBuffer = descriptor_buffer();
+    let mut observed: DescriptorBuffer = descriptor_buffer();
+    let mut restored: DescriptorBuffer = descriptor_buffer();
+    let mut saved_flags: u64 = 0;
+    asm clobbers r10, r15 { pushfq saved_flags }
+    asm { cli }
+    asm clobbers r10 { sgdt &write previous.bytes }
+    asm clobbers r10 { lgdt &desired }
+    asm clobbers r10 { sgdt &write observed.bytes }
+    asm clobbers r10 { lgdt &previous.bytes }
+    asm clobbers r10 { sgdt &write restored.bytes }
+
+    // No normal return is possible unless the CPU again names the original
+    // table. The borrowed table remains live throughout this closed operation.
+    transition same_descriptor(&previous.bytes, &restored.bytes) {
+        true -> checked(table, &desired, &previous, &observed, &restored, saved_flags)
+        _ -> failed()
+    }
+
+    machine checked(table: &SegmentTable, desired: &[u8; 10],
+                    previous: &DescriptorBuffer, observed: &DescriptorBuffer,
+                    restored: &DescriptorBuffer, saved_flags: u64) -> bool
+    reaches MachineControl
+    {
+        let correct: bool = same_descriptor(desired, &observed.bytes)
+            && intact(previous) && intact(observed) && intact(restored)
+            && table.before == 0x13579BDF2468ACE0
+            && table.entries[0] == 0
+            && table.entries[1] == 0x00AF9A000000FFFF
+            && table.entries[2] == 0x00CF92000000FFFF
+            && table.after == 0xFEDCBA9876543210;
+        asm clobbers r10, r15 { popfq saved_flags }
+        correct
+    }
+
+    machine failed() -> bool crashes Abort { crash Abort; }
+}
+
+// Nonzero initial bytes also expose a truncated store when the real high
+// address bytes are zero in the bootstrap memory range.
+machine descriptor_buffer() -> DescriptorBuffer {
+    DescriptorBuffer {
+        before: 0x1122334455667788,
+        bytes: [165, 165, 165, 165, 165, 165, 165, 165, 165, 165],
+        adjacent: [17, 34, 51, 68, 85, 102],
+        after: 0x8877665544332211,
+    }
+}
+
+machine intact(buffer: &DescriptorBuffer) -> bool {
+    buffer.before == 0x1122334455667788 && buffer.after == 0x8877665544332211
+        && buffer.adjacent[0] == 17 && buffer.adjacent[1] == 34
+        && buffer.adjacent[2] == 51 && buffer.adjacent[3] == 68
+        && buffer.adjacent[4] == 85 && buffer.adjacent[5] == 102
+}
+
+// The architectural GDTR encoding is a two-byte limit followed immediately
+// by an eight-byte base, all little endian. These conversions expose an
+// address already belonging to the live table; they grant no memory access.
+machine descriptor_bytes(limit: u16, base: u64) -> [u8; 10] {
+    [
+        (limit & 255) as u8, (limit >> 8) as u8,
+        (base & 255) as u8, ((base >> 8) & 255) as u8,
+        ((base >> 16) & 255) as u8, ((base >> 24) & 255) as u8,
+        ((base >> 32) & 255) as u8, ((base >> 40) & 255) as u8,
+        ((base >> 48) & 255) as u8, (base >> 56) as u8
+    ]
+}
+
+machine same_descriptor(left: &[u8; 10], right: &[u8; 10]) -> bool {
+    left[0] == right[0] && left[1] == right[1]
+        && left[2] == right[2] && left[3] == right[3]
+        && left[4] == right[4] && left[5] == right[5]
+        && left[6] == right[6] && left[7] == right[7]
+        && left[8] == right[8] && left[9] == right[9]
+}

@@ -1,20 +1,105 @@
 # Omega UEFI boot qualification
 
-A freshly compiled Cathedral Omega image passed all fifteen ordered serial
-checks under QEMU/OVMF using a compiler published on Omega main. Firmware supplied
-the final memory map, `ExitBootServices` succeeded, and the adapter transferred
-the loaded image and initial storage to `Kernel::start`. The kernel checked its
-retained memory, wrote and read through a temporary mapping, restored the
-original page tables, and reported `Mapping checked` before entering its idle
-state.
+Cathedral's Omega kernel loaded its own segment table, checked the CPU's
+selection, and restored the previous table after leaving UEFI. A freshly
+compiled image passed all sixteen ordered QEMU/OVMF serial checks through
+`GDT checked`. The earlier firmware-exit, retained-memory and mapping checks
+also passed.
 
-This demonstrates the bounded Omega memory lab. It does not establish the
-normal Rust desktop, permanent replacement page tables, interrupts, scheduling,
-SMP shootdown, a general heap, or real-hardware support. The serial checks observe
-the executed path; they do not independently prove firmware or physical-memory
-assumptions.
+The kernel retains its roots and idles after this operation. Permanent segment
+and task-state tables, installed interrupt handlers and stacks, repeated timer
+delivery and an ordinary-code wake remain unfinished. These observations do
+not establish the normal desktop or real-hardware support.
 
-## Boot with the published compiler
+## Segment-table boot check, 2026-11-04 UTC
+
+Ordinary package update checked all nine packages and published the lock in
+**520.426 seconds**, with no source differences or new capability decisions.
+The subsequent fresh build and boot passed in **392.162 seconds**, including
+30 seconds of guest observation. Compiler timing was **361.970 seconds**;
+these are host workflow durations, not guest boot times.
+
+- Compiler source: `cee7ad87d0034e60fde2b54584bf56f4d12fcc9b`, submitted in
+  [Omega PR #1793](https://github.com/CathedralOS/Omega/pull/1793).
+  Publication and conflict integration were still pending when this run was
+  recorded. The compiled source files match that candidate; its producer
+  manifest retains the original build identity.
+- Compiler SHA-256:
+  `50e0c2053c632504d4fcb35360f8ecc20ef5b5b2cdbd5a7ae3ae7cb5e226d7b2`,
+  verified optimization level `1`.
+- Cathedral base: `7f6c972b477ff37030c236dc2656a8f601d1590b`;
+  executed working diff SHA-256:
+  `82563bbc073b0f6e6585f28c1df85f3e578b856e0933abb44782d86ada0da595`.
+  All captured source, profile, harness and lock inputs remained unchanged
+  during execution. Subsequent documentation edits do not change the executed
+  Omega source or harness; a fresh checkout still performs ordinary package
+  update for its own source identity.
+- Fresh image SHA-256:
+  `be5e6a7f56c0a49fa4d67a7665f1efcf6aceb83f3fbbf2ad059f6a0b62e04f4b`.
+- Serial SHA-256:
+  `f2307463d8e8b587e04cad9591bf029b94044f3a071ec8c66bafa02904ab76b5`.
+- QEMU `11.0.2`; bundled OVMF code SHA-256:
+  `33090cc07675baa5190d9f1e84bf5176b33bcbfa9bacac522961150cdb6dbb2a`.
+  Harness exit: `0`.
+
+The command was:
+
+```text
+python3 tools/boot-harness/run.py \
+  --compiler /Users/zcanann/Documents/projects/Omega/.agents/worktree/provider-demand-check/build/omega-timer-gdt-final \
+  --omega-repo /Users/zcanann/Documents/projects/Omega/.agents/worktree/provider-demand-check \
+  --build-dir build/timer-gdt-boot/final-reviewed/boot --timings --smoke
+```
+
+The new image booted from `run-jigu1xqh/esp/EFI/BOOT/BOOTX64.EFI`.
+Its complete ordered output was:
+
+```text
+Hello from Omega
+Owned 35 MiB
+Boot map ready
+Kernel entered
+Memory split
+Memory checked
+Memory paired
+Page ready
+Tables ready
+CPU checked
+Root located
+Root read
+Tables retained
+Mapping retired
+Mapping checked
+GDT checked
+```
+
+The last marker requires the load, readback, restoration and neighboring-byte
+checks in [segments.omg](../../source/kernel/arch/isa/x86_64/interrupts/segments.omg).
+The table stays borrowed until restoration;
+the kernel's existing roots remain live across the operation. The admitted
+closed interval excludes NMI, machine-check and debug-exception delivery.
+No segment register is reloaded and no interrupt table is installed.
+
+The compiler repair also executed an Omega helper eight times in a separate
+CPU harness. Independent checks observed GDTR restoration, all ten written
+bytes, immediate neighbors, registers, stack and flags. Corrupting an immediate
+neighbor caused that same payload's test to fail. Cathedral's twenty host
+harness tests reject missing, truncated and out-of-order success markers;
+the source-layout check passed.
+
+Raw records remain in this checkout's
+`build/timer-gdt-boot/final-reviewed/result.json`, its adjacent `boot.log` and
+serial output, and `build/timer-gdt-boot/final-update/`. The Omega worktree
+retains `build/timer-gdt-final-producer.json` and the final native CPU records.
+These are local evidence paths, not files promised in a fresh checkout.
+
+Five preexisting timer and entry edits were present in the working tree but
+are not imported or selected by this boot. Their bytes affect package identity,
+so fresh checkouts perform ordinary package update. They do not alter the
+executed GDT path; the retained source review records that dependency check.
+This run keeps its original working-tree and compiler identities.
+
+## Earlier memory-only boot with the published compiler
 
 Ordinary package update checked nine packages, reused their accepted capabilities
 and published the final lock in **461.5036 seconds**. A fresh-image smoke run then

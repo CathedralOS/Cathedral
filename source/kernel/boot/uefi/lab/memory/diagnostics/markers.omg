@@ -234,3 +234,19 @@ public machine BootMarkers::mapping_checked() reaches PortIo {
     asm { out 1016, 13 }
     asm { out 1016, 10 }
 }
+
+public machine BootMarkers::segments_checked() reaches PortIo {
+    asm { out 1016, 71 } // GDT checked
+    asm { out 1016, 68 }
+    asm { out 1016, 84 }
+    asm { out 1016, 32 }
+    asm { out 1016, 99 }
+    asm { out 1016, 104 }
+    asm { out 1016, 101 }
+    asm { out 1016, 99 }
+    asm { out 1016, 107 }
+    asm { out 1016, 101 }
+    asm { out 1016, 100 }
+    asm { out 1016, 13 }
+    asm { out 1016, 10 }
+}
