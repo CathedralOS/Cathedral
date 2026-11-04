@@ -1,15 +1,70 @@
 # Omega UEFI boot qualification
 
-Cathedral's Omega kernel loaded its own segment table, checked the CPU's
-selection, and restored the previous table after leaving UEFI. A freshly
-compiled image passed all sixteen ordered QEMU/OVMF serial checks through
-`GDT checked`. The earlier firmware-exit, retained-memory and mapping checks
-also passed.
+Cathedral's Omega kernel now selects its own table of future interrupt-stack
+addresses and confirms that the CPU accepted it. A freshly compiled image
+passed all seventeen ordered QEMU/OVMF checks through `TSS checked`, including
+the earlier firmware-exit, retained-memory and mapping checks.
 
-The kernel retains its roots and idles after this operation. Permanent segment
-and task-state tables, installed interrupt handlers and stacks, repeated timer
-delivery and an ordinary-code wake remain unfinished. These observations do
-not establish the normal desktop or real-hardware support.
+The table, descriptor, four stack buffers and boot roots remain owned while
+the kernel idles. Segment-selector reload, installed exception/timer handlers,
+handler stack-resource checks, repeated interrupts and an ordinary-code wake
+remain unfinished. This is not a desktop or real-hardware qualification.
+
+## Task-state boot check, 2026-11-04 UTC
+
+The kernel builds the x86 task-state segment (TSS) with the existing typed
+hardware definitions and explicit 104-byte codec. Its four stack addresses and
+GDT descriptor remain inside one retained owner. The selected compiler operation
+checks the actual GDT association and descriptor before executing LTR.
+`TSS checked` requires selector 24, both words of the expected busy descriptor,
+and unchanged GDT neighbors and outer guard words. The whole owner stays
+borrowed in a nonreturning continuation with the existing memory roots.
+
+The admitted single-CPU bootstrap interval excludes NMI, machine checks, debug
+exceptions, firmware calls and other asynchronous entry until a complete
+exception floor is installed. CLI alone does not establish that interval.
+No code/data segment selector is reloaded and no interrupt handler is enabled.
+
+Ordinary update checked all nine packages and published the matching lock in
+**692.170 seconds**, with zero source differences. The fresh build and boot
+passed in **560.160 seconds**, including 30 seconds of guest observation.
+The compiler reported **529.878 seconds** total. These are host workflow
+measurements, not guest boot times. Output reports `Owned 34 MiB` and every
+previous marker in order, followed by `GDT checked` and `TSS checked`.
+
+- Optimized compiler SHA-256:
+  `6f441628ccacd7211c891590aefe4c5537a3db5c812bbbf71bcd41080f229045`,
+  optimization level `1`, with its frozen matching library.
+- The task-register source matches submitted `d429befa992e867bce7a12ebe0dd26e09a060648`,
+  published through [Omega PR #1802](https://github.com/CathedralOS/Omega/pull/1802)
+  on main at `64183c84cb09b9a31f39fdf3cff657e0c8761ae9`.
+  The producer retains its actual earlier build snapshot, including the checked
+  descriptor-helper repair from [PR #1801](https://github.com/CathedralOS/Omega/pull/1801).
+- Cathedral base: `7d5b31fd67ccdc84c8c1e0e76649fd796a6ffe65` plus the recorded
+  task-state boot changes. All captured executable source, harness, profile,
+  accepted lock and compiler inputs remained unchanged during execution.
+- Fresh image SHA-256:
+  `7800fbcc6501c0b1b8ba6f4adcce306952aae01346b5aeca003be22c29f2e5d9`.
+- Serial SHA-256:
+  `4418c9dfe92b22ff7f3938887bb59936ac3685514d3445be2397d9cf63347a34`.
+- QEMU `11.0.2`; OVMF code SHA-256:
+  `33090cc07675baa5190d9f1e84bf5176b33bcbfa9bacac522961150cdb6dbb2a`.
+  Harness exit: `0`.
+
+The normal replay uses the [boot harness](../../tools/boot-harness/README.md)
+with that compiler and `--timings --smoke`. Local raw evidence is retained in
+`build/timer-task-state-integration/boot-v4-r3/`, including `result.json`,
+`boot.log` and `boot/run-89k95nta/serial.log`; the ordinary update record is
+`kernel-update-v4-r1.json` beside it. These local paths are not promised in a
+fresh checkout. Documentation edits after execution change no executed body.
+
+A separate compiler CPU test called the actual Omega operation eight times,
+checking first activation, busy/wrong-table/wrong-task/invalid-selector refusals,
+complete descriptor changes, registers, stack, flags and neighboring storage.
+Corrupting a neighbor made the same compiled payload fail. Those observations
+are retained under Omega `build/task-register-activation/cpu/`; they are ordinary
+calls, not timer interrupts. The boot harness also rejects missing, partial and
+misordered TSS markers. Earlier boot failures below retain their original scope.
 
 ## Segment-table boot check, 2026-11-04 UTC
 

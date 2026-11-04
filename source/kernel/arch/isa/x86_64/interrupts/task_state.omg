@@ -1,0 +1,121 @@
+module isa::x86_64::interrupts::task_state;
+
+use omega::language::core::assembly;
+use omega::language::core::task_register;
+use facts::x86_descriptors::TaskStateSegment;
+use facts::x86_descriptor_bytes;
+
+// The kernel owns this storage for the rest of its bootstrap continuation.
+// Activation runs inside that continuation's whole-owner borrow. No address
+// captured here may outlive that borrow or survive a move of the owner.
+//
+// This closed single-CPU interval runs at CPL0 in long mode with mapped backing.
+// It excludes interrupts, NMI, machine checks, debug exceptions, firmware calls
+// and segment reloads for the entire retained interval, including after this
+// call returns. CLI alone does not establish that envelope. The kernel remains
+// inside it until a complete exception floor is installed. Cached segment
+// registers remain unchanged.
+public boundary trait TaskStatePreparation {
+    machine activate(storage: &mut TaskStateStorage) -> bool
+    requires addr::Bound == 18446744073709551616
+    reaches MachineControl + TaskRegisterControl
+    invokes TaskRegisterControl
+    crashes Abort;
+}
+
+public BootstrapTaskStatePreparation satisfies TaskStatePreparation {
+    machine activate(storage: &mut TaskStateStorage) -> bool
+    requires addr::Bound == 18446744073709551616
+    reaches MachineControl + TaskRegisterControl
+    invokes TaskRegisterControl
+    crashes Abort
+    { activate_task(storage) }
+}
+
+public data TaskStateStorage {
+    before: u64;
+    gdt: [u64; 5];
+    gdt_after: u64;
+    task: TaskStateSegment;
+    task_bytes: [u8; 104];
+    double_fault_stack: [u64; 514];
+    nmi_stack: [u64; 514];
+    machine_check_stack: [u64; 514];
+    irq_stack: [u64; 514];
+    after: u64;
+}
+
+machine activate_task(storage: &mut TaskStateStorage) -> bool
+requires addr::Bound == 18446744073709551616
+reaches MachineControl + TaskRegisterControl
+invokes TaskRegisterControl
+crashes Abort
+{
+    // Keep the four Rust bootstrap stack roles separate. Interrupt delivery
+    // remains disabled; these capacities still need the handler stack analysis.
+    storage.before = 0x13579BDF2468ACE0;
+    storage.after = 0xFEDCBA9876543210;
+    storage.gdt_after = 0xBADC0FFEE0DDF00D;
+    let double_fault_top: u64 = (address_of(&storage.double_fault_stack[512]) as u64) & 0xFFFFFFFFFFFFFFF0;
+    let nmi_top: u64 = (address_of(&storage.nmi_stack[512]) as u64) & 0xFFFFFFFFFFFFFFF0;
+    let machine_check_top: u64 = (address_of(&storage.machine_check_stack[512]) as u64) & 0xFFFFFFFFFFFFFFF0;
+    let irq_top: u64 = (address_of(&storage.irq_stack[512]) as u64) & 0xFFFFFFFFFFFFFFF0;
+    // Preserve Cathedral's typed table and its existing explicit hardware codec.
+    // Both remain owned; changing the typed value later would require a new
+    // encoding before the CPU could consume it.
+    storage.task = TaskStateSegment {
+        reserved_1: 0,
+        privilege_stack_table: [irq_top, 0, 0],
+        reserved_2: 0,
+        interrupt_stack_table: [double_fault_top, nmi_top, machine_check_top, irq_top, 0, 0, 0],
+        reserved_3: 0, reserved_4: 0, iomap_base: 104,
+    };
+    storage.task_bytes = x86_descriptor_bytes::encode_TaskStateSegment(&storage.task);
+    let task_base: u64 = address_of(&storage.task_bytes[0]) as u64;
+    storage.gdt[0] = 0;
+    storage.gdt[1] = 0x00AF9B000000FFFF;
+    storage.gdt[2] = 0x00CF93000000FFFF;
+    storage.gdt[3] = 103 | ((task_base & 0xFFFFFF) << 16)
+        | (0x89u64 << 40) | (((task_base >> 24) & 255) << 56);
+    storage.gdt[4] = task_base >> 32;
+    let table_base: u64 = address_of(&storage.gdt[0]) as u64;
+    let desired: [u8; 10] = gdtr_bytes(39, table_base);
+    asm { cli }
+    asm clobbers r10 { lgdt &desired }
+
+    // The compiler operation checks the current GDTR and this descriptor
+    // against these exact borrowed owners before it can issue LTR.
+    let activated: bool = TaskRegisterControl::activate<5>(
+        &mut storage.gdt, &storage.task_bytes, 24);
+    activated && check_task_state(storage)
+}
+
+machine check_task_state(storage: &TaskStateStorage) -> bool
+requires addr::Bound == 18446744073709551616
+reaches MachineControl + TaskRegisterControl
+invokes TaskRegisterControl
+{
+    let selected: u16 = TaskRegisterControl::selector();
+    let task_base: u64 = address_of(&storage.task_bytes[0]) as u64;
+    let busy_descriptor: u64 = 103 | ((task_base & 0xFFFFFF) << 16)
+        | (0x8Bu64 << 40) | (((task_base >> 24) & 255) << 56);
+    selected == 24
+        && storage.gdt[0] == 0
+        && storage.gdt[1] == 0x00AF9B000000FFFF
+        && storage.gdt[2] == 0x00CF93000000FFFF
+        && storage.gdt[3] == busy_descriptor
+        && storage.gdt[4] == (task_base >> 32)
+        && storage.gdt_after == 0xBADC0FFEE0DDF00D
+        && storage.before == 0x13579BDF2468ACE0
+        && storage.after == 0xFEDCBA9876543210
+}
+
+machine gdtr_bytes(limit: u16, base: u64) -> [u8; 10] {
+    [
+        (limit & 255) as u8, (limit >> 8) as u8,
+        (base & 255) as u8, ((base >> 8) & 255) as u8,
+        ((base >> 16) & 255) as u8, ((base >> 24) & 255) as u8,
+        ((base >> 32) & 255) as u8, ((base >> 40) & 255) as u8,
+        ((base >> 48) & 255) as u8, (base >> 56) as u8
+    ]
+}

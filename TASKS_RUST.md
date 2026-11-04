@@ -3783,18 +3783,20 @@ flow; the ordinary Rust-kernel F5 desktop is a separate baseline.
 
 ## Native Omega boot qualification after the structure pass
 
-A fresh Omega UEFI image passed all sixteen ordered QEMU/OVMF checks through
-`GDT checked`. After firmware exit and the retained-memory checks, the kernel
-loaded its own temporary segment table, read it back, and restored the previous
-table before returning. The [qualification record](wiki/boot/omega_uefi_qualification.md)
-retains the exact compiler, source and image identities, earlier memory checks,
-and the failure controls. The compiler repair is tracked in
-[Omega PR #1793](https://github.com/CathedralOS/Omega/pull/1793).
+A fresh Omega UEFI image passed all seventeen ordered QEMU/OVMF checks through
+`TSS checked`. After firmware exit and the retained-memory checks, the kernel
+selected its owned table of future interrupt-stack addresses and verified the
+CPU's selector and complete descriptor update. The table, four stack buffers
+and earlier boot roots stay owned while the kernel idles. The
+[qualification record](wiki/boot/omega_uefi_qualification.md) retains exact
+compiler, source and image identities and failure controls. The supporting
+compiler operation is published in
+[Omega PR #1802](https://github.com/CathedralOS/Omega/pull/1802).
 
-The kernel retains its roots and idles after this check. Permanent segment and
-task-state tables, installed interrupt handlers and stacks, repeated hardware
-timer delivery and an ordinary-code wake remain unfinished. The Rust F5 desktop
-has its own qualified compiler; this boot work does not change that selection.
+Kernel segment-selector reload, installed exception/timer handlers, handler
+stack-resource checks, repeated hardware timer delivery and an ordinary-code
+wake remain unfinished. The Rust F5 desktop has its own qualified compiler;
+this boot work does not change that selection.
 
 ### Historical compiler and acquisition investigations
 

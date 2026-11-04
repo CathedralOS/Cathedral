@@ -250,3 +250,20 @@ public machine BootMarkers::segments_checked() reaches PortIo {
     asm { out 1016, 13 }
     asm { out 1016, 10 }
 }
+
+public machine BootMarkers::task_state_checked() reaches PortIo {
+    // TSS checked
+    asm { out 1016, 84 }
+    asm { out 1016, 83 }
+    asm { out 1016, 83 }
+    asm { out 1016, 32 }
+    asm { out 1016, 99 }
+    asm { out 1016, 104 }
+    asm { out 1016, 101 }
+    asm { out 1016, 99 }
+    asm { out 1016, 107 }
+    asm { out 1016, 101 }
+    asm { out 1016, 100 }
+    asm { out 1016, 13 }
+    asm { out 1016, 10 }
+}
