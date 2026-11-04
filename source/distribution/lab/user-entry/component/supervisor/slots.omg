@@ -13,13 +13,26 @@ use runtime::connection::main::Frame;
 use runtime::task::main::Exit;
 use runtime::waiting::Set;
 use runtime::admission::offer;
+use runtime::admission::pending::Progress;
 use protocol::services::ACQUIRE;
 public machine step(gate: &Gate, context: &mut State, slot: u64 [0..=1], now: u64) -> u64 reaches Kernel blocks invokes Kernel {
     transition {
+        context.slots[slot].pending != 0u64 -> block admitting(gate, context, slot)
         !context.slots[slot].live -> (0u64)
         context.slots[slot].listener.peer.fault != 0u64 -> block departed(gate, context, slot)
         context.slots[slot].listener.pending != 0u64 -> block held(gate, context, slot, now)
         _ -> block receive(gate, context, slot, now)
+    }
+}
+machine admitting(gate: &Gate, context: &mut State, slot: u64 [0..=1]) -> u64 reaches Kernel {
+    let progress: Progress = block runtime::admission::pending::poll(gate, &mut context.slots[slot], context.clock, 300u64, false);
+    transition progress {
+        Progress::Failed { code } -> failed(context, slot, code)
+        _ -> (0u64)
+    }
+    machine failed(context: &mut State, slot: u64 [0..=1], code: u64) -> u64 {
+        context.exits[slot] = code;
+        0u64
     }
 }
 machine departed(gate: &Gate, context: &mut State, slot: u64 [0..=1]) -> u64 reaches Kernel {
@@ -88,9 +101,14 @@ machine storage(gate: &Gate, context: &mut State, slot: u64 [0..=1], now: u64) -
 }
 // Stop, collect and release the slot; remember how the child ended.
 public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=1]) reaches Kernel blocks invokes Kernel {
-    transition context.slots[slot].live {
-        true -> block stopping(gate, context, slot)
+    transition {
+        context.slots[slot].pending != 0u64 -> block abandon(gate, context, slot)
+        context.slots[slot].live -> block stopping(gate, context, slot)
         _ -> done()
+    }
+    machine abandon(gate: &Gate, context: &mut State, slot: u64 [0..=1]) reaches Kernel {
+        block runtime::admission::main::release(gate, &mut context.slots[slot]);
+        context.exits[slot] = 3u64;
     }
     machine stopping(gate: &Gate, context: &mut State, slot: u64 [0..=1]) reaches Kernel {
         let exit: Exit = block runtime::admission::main::stop(gate, &mut context.slots[slot]);

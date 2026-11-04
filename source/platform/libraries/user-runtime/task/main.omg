@@ -28,6 +28,43 @@ public machine launch(gate: &Gate, index: u64) -> u64 reaches Kernel invokes Ker
 // each count must be zero. Returns the child ticket, or an error with nothing moved.
 public machine spawn(gate: &Gate, launch: u64, argument: u64, endpoints: &[u64; 5], endpoint_count: u64 [0..=5],
     loans: &[u64; 14], loan_count: u64 [0..=14]) -> u64 reaches Kernel blocks invokes Kernel {
+    let record: [u64; 22] = spawn_record(argument, endpoints, endpoint_count, loans, loan_count);
+    block Kernel::spawn_tree(gate, launch, &record)
+}
+
+// Submit the same startup bundle without parking the parent. Until completion,
+// keep endpoint/loan names valid or the kernel may refuse their final transfer.
+// The receipt is owner-scoped and single-use; a failed begin moves nothing.
+public machine begin_spawn(gate: &Gate, launch: u64, argument: u64, endpoints: &[u64; 5], endpoint_count: u64 [0..=5],
+    loans: &[u64; 14], loan_count: u64 [0..=14]) -> u64 reaches Kernel invokes Kernel {
+    let record: [u64; 22] = spawn_record(argument, endpoints, endpoint_count, loans, loan_count);
+    Kernel::spawn_begin(gate, launch, &record)
+}
+
+public data Admission [copy] {
+    case Pending;
+    case Started(ticket: u64);
+    case Failed(code: u64);
+}
+// A cancellation request prevents a still-private child from committing. Keep
+// polling until rollback finishes. If commit already won, Started returns the
+// real child; cancelling/collecting it remains the caller's responsibility.
+public machine poll_spawn(gate: &Gate, receipt: u64, cancel: bool) -> Admission reaches Kernel invokes Kernel {
+    let mut record: [u64; 8];
+    let status: u64 = Kernel::spawn_result(gate, receipt, &mut record, cancel_word(cancel));
+    transition {
+        status == kernel::WOULD_BLOCK -> (Admission::Pending)
+        status != 0u64 -> (Admission::Failed { code: status })
+        record[0] != 0u64 -> (Admission::Failed { code: record[0] })
+        record[1] != 0u64 && record[1] < kernel::ERROR_BASE -> (Admission::Started { ticket: record[1] })
+        _ -> (Admission::Failed { code: kernel::IO_ERROR })
+    }
+}
+machine cancel_word(cancel: bool) -> u64 [0..=1] {
+    transition cancel { true -> (1u64) _ -> (0u64) }
+}
+machine spawn_record(argument: u64, endpoints: &[u64; 5], endpoint_count: u64 [0..=5],
+    loans: &[u64; 14], loan_count: u64 [0..=14]) -> [u64; 22] {
     let mut record: [u64; 22];
     record[0] = argument;
     record[1] = endpoint_count;
@@ -51,7 +88,7 @@ public machine spawn(gate: &Gate, launch: u64, argument: u64, endpoints: &[u64; 
     record[19] = loans[11];
     record[20] = loans[12];
     record[21] = loans[13];
-    block Kernel::spawn_tree(gate, launch, &record)
+    record
 }
 // The owner-side control pair for this launch's current child: a request sender
 // and a reply receiver. Connecting accepts the kernel-installed pair exactly once.

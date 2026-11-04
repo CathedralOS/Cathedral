@@ -20,6 +20,7 @@ pub struct Supervisor {
     owner_alive: bool,
     peer_alive: bool,
     cancellation: bool,
+    admission: Option<admission::Receipt>,
     // Each live lender reserves fresh launch/peer names for reclaiming this budget.
     sponsors: [[u64; 2]; MAX_TASKS],
 }
@@ -50,6 +51,7 @@ impl Supervisor {
             owner_alive: true,
             peer_alive: true,
             cancellation: false,
+            admission: None,
             sponsors: [[0; 2]; MAX_TASKS],
         })
     }
@@ -72,7 +74,7 @@ impl Supervisor {
         if !self.peer_alive {
             return Err(abi::PEER_CLOSED);
         }
-        if self.state != Child::Empty {
+        if !self.idle() {
             return Err(abi::BUSY);
         }
         self.state = Child::Starting(argument);
@@ -86,7 +88,7 @@ impl Supervisor {
         }
     }
     pub fn idle(&self) -> bool {
-        self.state == Child::Empty
+        self.state == Child::Empty && self.admission.is_none()
     }
     /// A queued request may cross boot-stack suspension. Recheck original peer
     /// consent before allocating/publishing; a replacement in its slot cannot
@@ -97,6 +99,9 @@ impl Supervisor {
         }
         if !self.peer_alive {
             return Err(abi::PEER_CLOSED);
+        }
+        if self.admission.as_ref().is_some_and(|receipt| receipt.cancelled) {
+            return Err(abi::REVOKED);
         }
         if self.pending().is_none() {
             return Err(abi::BUSY);
@@ -155,6 +160,7 @@ impl Supervisor {
         }
         if task == self.owner {
             self.owner_alive = false;
+            self.admission = None;
             // No admission may commit after a queued request's owner has died.
             if matches!(self.state, Child::Starting(_)) {
                 self.state = Child::Empty;

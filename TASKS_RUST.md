@@ -9,9 +9,83 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Current executable handoff: [native exit checks](#native-exit-status-qualification).
+Current executable handoff: [asynchronous child admission](#asynchronous-child-admission).
 That entry records the latest verified image and next work; earlier migration
 entries below are historical milestones.
+
+### Asynchronous child admission
+
+The kernel and Omega runtime now separate submitting a child from collecting its
+admission result. The stock matrix still uses blocking spawn: adopting the new
+path in its retained launch operation is the next implementation step. Normal
+F5 continues to use the Rust matrix host.
+
+`TASK_SPAWN_BEGIN` (89) accepts the existing spawn-tree record and returns an
+owner-local receipt. The same bounded construction and rollback worker runs
+under the existing budgets. `TASK_SPAWN_RESULT` (90) polls or requests cancellation;
+completion is `[status, child]`, so an admission failure is distinct from a poll
+that is merely pending. Results survive bad copyout and are consumed once. One
+uncollected receipt prevents reuse/lending of its launch. Completion never writes
+the parent's current syscall result or wakes an unrelated wait. A pending cancel
+prevents publication; an already committed result wins, so the caller receives
+and must stop/collect the actual child if unwanted. Owner death discards receipts
+through ordinary subtree withdrawal. No matrix-specific kernel policy was added.
+
+Follow `source/platform/libraries/user-runtime/task/main.omg` for the raw
+submit/poll interface, then `admission/pending.omg` for brokered startup. The latter
+retains its bundle in `Admitted`, establishes control/listening after publication,
+and starts the handshake deadline then. `release` drains pending construction and
+handles the late-cancel race before closing the bundle. Post-publication failure
+and teardown still use blocking stop/wait. Receipts have no wait-set interest yet;
+the caller polls between service turns and schedules a bounded timer wake.
+The runtime also retains the owner-control pair before reading the handshake
+clock, so a clock failure cannot lose those handles during rollback.
+
+The standalone Omega supervisor exercises this interface alongside the original
+blocking path: nine scenarios now cover repeated paired async launches, immediate stops
+racing publication and parent death after submission, with page, physical and
+notification baselines restored after every scenario. Separate booted-kernel
+fixtures hold construction at known boundaries and exercise actual checked
+copy-in/out, foreign/stale receipts, cancellation, queued endpoint refusal, owner
+and peer death, and completion while the parent is blocked on unrelated work.
+They do not rely on a child taking a minimum time to load.
+
+Verification for this slice:
+
+- Nine-scenario Omega admission witness:
+  `build/omega-user/connections/20261104T034521972157Z/`. Six rounds submit both
+  child slots before collecting either result; all nine scenarios restore their
+  exact resource baselines.
+- Four Omega runtime boots, including exact failure exits:
+  `build/omega-user/tests/20261104T032412607196Z/`.
+- Full x86 smoke and ARM64 portability proof pass, including the new
+  `async receipts, isolated completion and rollback passed` marker. The first
+  x86 smoke run reached those checks but exhausted the harness's 120-second
+  limit later; the unchanged suite completed with `--timeout 300`. The first
+  serial log is preserved in `build/async-admission/smoke-timeout/`.
+- Rust host tests: 519 passed; kernel clippy with `memory-lab`, eight runtime
+  host tests, source layout (148 Omega / 153 Rust edges), and diff checks pass.
+- Multi-client service and overlapping-request witnesses:
+  `build/omega-user/connections/20261104T032914112663Z/` and
+  `build/omega-user/connections/20261104T032928975972Z/`.
+- Normal Rust-host F5 desktop, protected close, durable saves and cold reopen:
+  `build/boot-harness-rs/desktop/20261104T033234560573Z/`.
+- All four installed apps and the stock matrix rebuild with the existing pinned
+  producer (SHA-256 `70978409eb15df628a603adb5043e3a6a35287215905d798eae2f0d701c105f4`).
+  The four app binaries are byte-identical to the normal-F5 run above. The gate
+  appends two entries (60 total); prior offsets are unchanged. The matrix remains
+  384 load pages with its existing stack and budgets.
+- Full desktop over the rebuilt Omega root and user matrix, including three Notes
+  instances, protected close, slot reuse, save and cold reopen:
+  `build/boot-harness-rs/desktop/20261104T040041071006Z/`. This checks compatibility;
+  the stock matrix does not yet call asynchronous spawn.
+
+Next: retain the launch reservation, requester identity and prepared storage
+scope across kernel loading in the stock matrix. Recheck authority before binding
+and placement, drain cancelled submissions, preserve the picker recovery path,
+and only answer success after placement commits. Boot setup and teardown are
+separate remaining waits. The intermittent close latency under pointer stress
+remains unresolved; this slice does not claim to have diagnosed it.
 
 ### Stock matrix migration: the display root in Omega
 

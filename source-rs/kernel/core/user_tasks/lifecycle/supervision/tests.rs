@@ -1,6 +1,96 @@
 use super::*;
 
 #[test]
+fn asynchronous_admission_retains_one_owner_scoped_result_until_consumed() {
+    let mut model = Supervisor::new([1, 2], 0, 0, 3).unwrap();
+    model.request_async(0, 1, 99, 10).unwrap();
+    assert_eq!(model.pending(), Some(99));
+    assert_eq!(model.poll_admission(1, 10, true), Err(abi::BAD_HANDLE));
+    assert_eq!(model.poll_admission(0, 11, true), Err(abi::BAD_HANDLE));
+    assert_eq!(model.admission_ready(), Ok(()));
+    assert_eq!(model.poll_admission(0, 10, false), Ok(None));
+    assert_eq!(model.request(0, 1, 0), Err(abi::BUSY));
+    model.failed();
+    assert!(model.retain_admission(Err(abi::BAD_EXECUTABLE)));
+    assert!(!model.idle());
+    assert_eq!(model.can_lend(0, 1, 1), Err(abi::BUSY));
+    // Failed copyout can retry without losing or changing the outcome.
+    for _ in 0..2 {
+        assert_eq!(
+            model.poll_admission(0, 10, false),
+            Ok(Some(Err(abi::BAD_EXECUTABLE)))
+        );
+    }
+    model.consume_admission();
+    assert!(model.idle());
+    model.request_async(0, 1, 100, 12).unwrap();
+    assert_eq!(model.poll_admission(0, 10, false), Err(abi::BAD_HANDLE));
+    assert_eq!(model.pending(), Some(100));
+}
+
+#[test]
+fn pending_admission_cancellation_prevents_commit_but_waits_for_rollback() {
+    let mut model = Supervisor::new([1, 2], 0, 0, 3).unwrap();
+    model.request_async(0, 1, 99, 10).unwrap();
+    assert_eq!(model.poll_admission(0, 10, true), Ok(None));
+    assert_eq!(model.admission_ready(), Err(abi::REVOKED));
+    assert_eq!(model.poll_admission(0, 10, false), Ok(None));
+    assert!(!model.idle());
+    // Only the boot-stack worker, after releasing all draft backing, finishes.
+    model.failed();
+    assert!(model.retain_admission(Err(abi::REVOKED)));
+    assert_eq!(
+        model.poll_admission(0, 10, false),
+        Ok(Some(Err(abi::REVOKED)))
+    );
+    model.consume_admission();
+    assert!(model.idle());
+}
+
+#[test]
+fn committed_admission_wins_a_late_cancellation_and_keeps_child_authority() {
+    let mut model = Supervisor::new([1, 2], 0, 0, 3).unwrap();
+    model.request_async(0, 1, 99, 10).unwrap();
+    let child = model.started(20);
+    assert!(model.retain_admission(Ok(child)));
+    assert_eq!(model.poll_admission(0, 10, true), Ok(Some(Ok(child))));
+    assert!(!model.cancel_child());
+    model.consume_admission();
+    assert_eq!(model.wait(0, child), Ok(None));
+    assert!(model.request_cancel(0, child).unwrap());
+    assert!(model.cancel_child());
+}
+
+#[test]
+fn owner_death_withdraws_admission_receipts_and_never_revives_them_for_a_lender() {
+    for completed in [false, true] {
+        let mut model = Supervisor::new([1, 2], 0, 0, 3).unwrap();
+        model.lend(1, [20, 21], [30, 31]);
+        model.request_async(1, 20, 99, 40).unwrap();
+        if completed {
+            model.failed();
+            assert!(model.retain_admission(Err(abi::NO_MEMORY)));
+        }
+        model.close(1);
+        assert_eq!(model.pending(), None);
+        assert!(!model.has_receipt(1, 40));
+        model.reclaim();
+        assert_eq!(model.launch(0), Ok(30));
+        assert!(model.idle());
+        assert_eq!(model.poll_admission(0, 40, false), Err(abi::BAD_HANDLE));
+    }
+}
+
+#[test]
+fn blocking_admission_still_completes_the_waiting_syscall() {
+    let mut model = Supervisor::new([1, 2], 0, 0, 3).unwrap();
+    model.request(0, 1, 99).unwrap();
+    let child = model.started(20);
+    assert!(!model.retain_admission(Ok(child)));
+    assert_eq!(model.wait(0, child), Ok(None));
+}
+
+#[test]
 fn queued_admission_rechecks_peer_death_before_any_child_is_published() {
     let mut model = Supervisor::new([1, 2], 0, 1, 2).unwrap();
     assert_eq!(model.admission_ready(), Err(abi::BUSY));

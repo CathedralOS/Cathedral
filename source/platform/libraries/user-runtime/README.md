@@ -149,6 +149,24 @@ collects and releases; `release` alone closes whatever remains. The caller
 chooses the launch, argument, loans, granted services, and the clock and window
 of the child's service handshake, which start once the child exists, so loading a
 large image does not eat into them.
+
+[admission/pending.omg](admission/pending.omg) splits that operation into `begin`
+and `poll`. The provider retains the startup bundle beside an owner-scoped
+kernel receipt and keeps serving other connections between polls. `Ready` means
+the child was published and its listener was installed; a completed submission's
+failure releases its bundle. Loading remains charged to the same parent and child.
+Before `Ready`, use `release` to abandon the submitted work; `stop` takes a live child.
+There is no receipt wait right yet: a service loop must arrange a bounded timer
+wake while a receipt is pending. Cleanup and failure after publication still
+use blocking cancellation/collection; this is not a fully asynchronous teardown.
+
+At the lower level, `task::begin_spawn` and `task::poll_spawn` expose the same
+mechanism without service policy. A completed result is consumed once. A pending
+cancellation waits for private rollback; if publication already won, the result
+still returns the actual child, which the caller must stop/collect if unwanted.
+`admission::release` drains a pending receipt and handles that race before
+dropping its bundle. Owner death withdraws the receipt and the whole subtree.
+
 Interaction is required and storage is the only other service; input producers
 and capture are not offered here. [admission/offer.omg](admission/offer.omg)
 answers a child's acquisition from the rights preallocated at admission, using
