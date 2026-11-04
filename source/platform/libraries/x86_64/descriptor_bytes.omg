@@ -3,7 +3,7 @@
 module descriptor_bytes;
 use facts::x86_descriptors;
 
-pub machine encode_DescriptorTablePointer(value: &x86_descriptors::DescriptorTablePointer) -> [u8; 10] {
+public machine encode_DescriptorTablePointer(value: &x86_descriptors::DescriptorTablePointer) -> [u8; 10] {
     let mut output: [u8; 10];
     output[0] = ((value.limit >> 0) & 255) as u8;
     output[1] = ((value.limit >> 8) & 255) as u8;
@@ -17,13 +17,13 @@ pub machine encode_DescriptorTablePointer(value: &x86_descriptors::DescriptorTab
     output[9] = ((value.base >> 56) & 255) as u8;
     output
 }
-pub machine decode_DescriptorTablePointer(input: &[u8; 10]) -> x86_descriptors::DescriptorTablePointer {
+public machine decode_DescriptorTablePointer(input: &[u8; 10]) -> x86_descriptors::DescriptorTablePointer {
     let limit: u16 = ((input[0] as u16) << 0) | ((input[1] as u16) << 8);
     let base: u64 = ((input[2] as u64) << 0) | ((input[3] as u64) << 8) | ((input[4] as u64) << 16) | ((input[5] as u64) << 24) | ((input[6] as u64) << 32) | ((input[7] as u64) << 40) | ((input[8] as u64) << 48) | ((input[9] as u64) << 56);
     x86_descriptors::DescriptorTablePointer { limit: limit, base: base }
 }
 
-pub machine encode_TaskStateSegment(value: &x86_descriptors::TaskStateSegment) -> [u8; 104] {
+public machine encode_TaskStateSegment(value: &x86_descriptors::TaskStateSegment) -> [u8; 104] {
     let mut output: [u8; 104];
     output[0] = ((value.reserved_1 >> 0) & 255) as u8;
     output[1] = ((value.reserved_1 >> 8) & 255) as u8;
@@ -131,7 +131,7 @@ pub machine encode_TaskStateSegment(value: &x86_descriptors::TaskStateSegment) -
     output[103] = ((value.iomap_base >> 8) & 255) as u8;
     output
 }
-pub machine decode_TaskStateSegment(input: &[u8; 104]) -> x86_descriptors::TaskStateSegment {
+public machine decode_TaskStateSegment(input: &[u8; 104]) -> x86_descriptors::TaskStateSegment {
     let reserved_1: u32 = ((input[0] as u32) << 0) | ((input[1] as u32) << 8) | ((input[2] as u32) << 16) | ((input[3] as u32) << 24);
     let privilege_stack_table: [u64; 3] = [((input[4] as u64) << 0) | ((input[5] as u64) << 8) | ((input[6] as u64) << 16) | ((input[7] as u64) << 24) | ((input[8] as u64) << 32) | ((input[9] as u64) << 40) | ((input[10] as u64) << 48) | ((input[11] as u64) << 56), ((input[12] as u64) << 0) | ((input[13] as u64) << 8) | ((input[14] as u64) << 16) | ((input[15] as u64) << 24) | ((input[16] as u64) << 32) | ((input[17] as u64) << 40) | ((input[18] as u64) << 48) | ((input[19] as u64) << 56), ((input[20] as u64) << 0) | ((input[21] as u64) << 8) | ((input[22] as u64) << 16) | ((input[23] as u64) << 24) | ((input[24] as u64) << 32) | ((input[25] as u64) << 40) | ((input[26] as u64) << 48) | ((input[27] as u64) << 56)];
     let reserved_2: u64 = ((input[28] as u64) << 0) | ((input[29] as u64) << 8) | ((input[30] as u64) << 16) | ((input[31] as u64) << 24) | ((input[32] as u64) << 32) | ((input[33] as u64) << 40) | ((input[34] as u64) << 48) | ((input[35] as u64) << 56);
@@ -142,7 +142,7 @@ pub machine decode_TaskStateSegment(input: &[u8; 104]) -> x86_descriptors::TaskS
     x86_descriptors::TaskStateSegment { reserved_1: reserved_1, privilege_stack_table: privilege_stack_table, reserved_2: reserved_2, interrupt_stack_table: interrupt_stack_table, reserved_3: reserved_3, reserved_4: reserved_4, iomap_base: iomap_base }
 }
 
-pub machine encode_GdtEntry(value: &x86_descriptors::GdtEntry) -> [u8; 8] {
+public machine encode_GdtEntry(value: &x86_descriptors::GdtEntry) -> [u8; 8] {
     let mut output: [u8; 8];
     output[0] = ((value.raw >> 0) & 255) as u8;
     output[1] = ((value.raw >> 8) & 255) as u8;
@@ -154,12 +154,12 @@ pub machine encode_GdtEntry(value: &x86_descriptors::GdtEntry) -> [u8; 8] {
     output[7] = ((value.raw >> 56) & 255) as u8;
     output
 }
-pub machine decode_GdtEntry(input: &[u8; 8]) -> x86_descriptors::GdtEntry {
+public machine decode_GdtEntry(input: &[u8; 8]) -> x86_descriptors::GdtEntry {
     let raw: u64 = ((input[0] as u64) << 0) | ((input[1] as u64) << 8) | ((input[2] as u64) << 16) | ((input[3] as u64) << 24) | ((input[4] as u64) << 32) | ((input[5] as u64) << 40) | ((input[6] as u64) << 48) | ((input[7] as u64) << 56);
     x86_descriptors::GdtEntry { raw: raw }
 }
 
-pub machine encode_TssDescriptorWords(value: &x86_descriptors::TssDescriptorWords) -> [u8; 16] {
+public machine encode_TssDescriptorWords(value: &x86_descriptors::TssDescriptorWords) -> [u8; 16] {
     let mut output: [u8; 16];
     output[0] = ((value.low >> 0) & 255) as u8;
     output[1] = ((value.low >> 8) & 255) as u8;
@@ -179,7 +179,7 @@ pub machine encode_TssDescriptorWords(value: &x86_descriptors::TssDescriptorWord
     output[15] = ((value.high >> 56) & 255) as u8;
     output
 }
-pub machine decode_TssDescriptorWords(input: &[u8; 16]) -> x86_descriptors::TssDescriptorWords {
+public machine decode_TssDescriptorWords(input: &[u8; 16]) -> x86_descriptors::TssDescriptorWords {
     let low: u64 = ((input[0] as u64) << 0) | ((input[1] as u64) << 8) | ((input[2] as u64) << 16) | ((input[3] as u64) << 24) | ((input[4] as u64) << 32) | ((input[5] as u64) << 40) | ((input[6] as u64) << 48) | ((input[7] as u64) << 56);
     let high: u64 = ((input[8] as u64) << 0) | ((input[9] as u64) << 8) | ((input[10] as u64) << 16) | ((input[11] as u64) << 24) | ((input[12] as u64) << 32) | ((input[13] as u64) << 40) | ((input[14] as u64) << 48) | ((input[15] as u64) << 56);
     x86_descriptors::TssDescriptorWords { low: low, high: high }

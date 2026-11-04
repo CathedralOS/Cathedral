@@ -1,0 +1,9 @@
+machine build(builder: &mut Build) {
+    Build::application(builder, "cathedral_tss_codec");
+    Build::depend_as(builder, "x86_values", Source::Path { location: "../../../../source/platform/libraries/x86_64" });
+    Build::depend_as(builder, "facts", Source::Path { location: "../../../../source/platform/drivers/facts" });
+    Build::bind(builder, macos_arm64::ProgramEntry, main);
+    Build::bind(builder, linux_arm64::ProgramEntry, main);
+    Build::bind(builder, linux_x86_64::ProgramEntry, main);
+    Build::bind(builder, windows_x86_64::ProgramEntry, main);
+}

@@ -31,14 +31,14 @@ records={
 'TssDescriptorWords':{'size':16,'align':8,'fields':[('low','u64',0),('high','u64',8)]},
 }
 head=['// SPDX-License-Identifier: MIT OR Apache-2.0','// Modified fixed x86_64 descriptor facts at '+PIN+'.','// See x86_descriptors.PORT.md. Addresses are numeric and convey no backing.','// Copyright 2017 Philipp Oppermann. See the README.md (upstream idt.rs).','module x86_descriptors;','']
-for name,row in records.items():head.append('pub data '+name+' [copy] { '+' '.join(f'{field}: {ty};' for field,ty,_ in row['fields'])+' }')
-head+=['pub data DescriptorFlags [copy] { raw: u64; }','pub data Descriptor [copy] { case UserSegment(low: u64); case SystemSegment(low: u64, high: u64); }','pub data SelectorErrorCode [copy] { raw: u64; }','']
+for name,row in records.items():head.append('public data '+name+' [copy] { '+' '.join(f'{field}: {ty};' for field,ty,_ in row['fields'])+' }')
+head+=['public data DescriptorFlags [copy] { raw: u64; }','public data Descriptor [copy] { case UserSegment(low: u64); case SystemSegment(low: u64, high: u64); }','public data SelectorErrorCode [copy] { raw: u64; }','']
 for c in constants:
  raw=str(c['value'])
  if c['value']>9223372036854775807:
   raw='LARGE_DESCRIPTOR_'+c['name'];head.append(f'const {raw}: u64 = ({c["value"] >> 32} as u64) << 32 | {c["value"] & 4294967295};')
- head.append(f'pub const DESCRIPTOR_{c["name"]}: DescriptorFlags = DescriptorFlags {{ raw: {raw} }};')
-head+=['pub const DESCRIPTOR_TABLE_GDT: u8 = 0;','pub const DESCRIPTOR_TABLE_IDT: u8 = 1;','pub const DESCRIPTOR_TABLE_LDT: u8 = 2;','pub const TSS_SIZE: u16 = 104;','pub const TSS_MIN_LIMIT: u16 = 103;','pub const IO_MAP_MAX_DISTANCE: u16 = 57343;','pub const IO_MAP_MAX_LENGTH: u16 = 8193;','pub const IO_MAP_OK: u8 = 0;','pub const IO_MAP_BEFORE_TSS: u8 = 1;','pub const IO_MAP_TOO_FAR: u8 = 2;','pub const IO_MAP_BAD_TERMINATOR: u8 = 3;','pub const IO_MAP_TOO_LONG: u8 = 4;','pub const IO_MAP_INVALID_BASE: u8 = 5;','']
+ head.append(f'public const DESCRIPTOR_{c["name"]}: DescriptorFlags = DescriptorFlags {{ raw: {raw} }};')
+head+=['public const DESCRIPTOR_TABLE_GDT: u8 = 0;','public const DESCRIPTOR_TABLE_IDT: u8 = 1;','public const DESCRIPTOR_TABLE_LDT: u8 = 2;','public const TSS_SIZE: u16 = 104;','public const TSS_MIN_LIMIT: u16 = 103;','public const IO_MAP_MAX_DISTANCE: u16 = 57343;','public const IO_MAP_MAX_LENGTH: u16 = 8193;','public const IO_MAP_OK: u8 = 0;','public const IO_MAP_BEFORE_TSS: u8 = 1;','public const IO_MAP_TOO_FAR: u8 = 2;','public const IO_MAP_BAD_TERMINATOR: u8 = 3;','public const IO_MAP_TOO_LONG: u8 = 4;','public const IO_MAP_INVALID_BASE: u8 = 5;','']
 emit(ROOT/'source/platform/drivers/facts/x86_descriptors.omg','\n'.join(head))
 plans=['// SPDX-License-Identifier: MIT OR Apache-2.0','// Requested hardware geometry; not an observation or authority grant.','module x86_descriptor_layouts;','use omega::language::core::layout;','']
 for name,row in records.items():
@@ -60,10 +60,10 @@ for name,row in records.items():
   if ty.startswith('['):
    count=int(re.search(r'; (\d+)',ty)[1]);fields +=[(f'{field}[{i}]','u64',offset+i*8) for i in range(count)]
   else:fields.append((field,ty,offset))
- code +=[f'pub machine encode_{name}(value: &x86_descriptors::{name}) -> [u8; {row["size"]}] {{',f'    let mut output: [u8; {row["size"]}];']
+ code +=[f'public machine encode_{name}(value: &x86_descriptors::{name}) -> [u8; {row["size"]}] {{',f'    let mut output: [u8; {row["size"]}];']
  for field,ty,offset in fields:
   for b in range(int(ty[1:])//8):code.append(f'    output[{offset+b}] = ((value.{field} >> {b*8}) & 255) as u8;')
- code+=['    output','}',f'pub machine decode_{name}(input: &[u8; {row["size"]}]) -> x86_descriptors::{name} {{']
+ code+=['    output','}',f'public machine decode_{name}(input: &[u8; {row["size"]}]) -> x86_descriptors::{name} {{']
  values={}
  for field,ty,offset in fields:
   expr=' | '.join(f'((input[{offset+b}] as {ty}) << {b*8})' for b in range(int(ty[1:])//8));values[field]=expr

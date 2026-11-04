@@ -1,0 +1,139 @@
+// Expected: native trap and Terminal trap. Check every encoded TSS byte and every independently decoded field.
+use x86_values::descriptor_bytes;
+use facts::x86_descriptors::TaskStateSegment;
+
+machine bytes_TaskStateSegment() -> bool {
+ let value: TaskStateSegment = TaskStateSegment { reserved_1: 67305985, privilege_stack_table: [4702394921427289928, 5281116304131903312, 5859837686836516696], reserved_2: 2603962535218454045, interrupt_stack_table: [72623859790382856, 651345242494996240, 1230066625199609624, 1808788007904223008, 2387509390608836392, 2966230773313449776, 3544952156018063160], reserved_3: 7233733596855361117, reserved_4: 26213, iomap_base: 26727 };
+ let mut encoded: [u8; 104] = descriptor_bytes::encode_TaskStateSegment(&value);
+ encoded[60] = 33;
+ let golden: [u8; 104] = [1, 2, 3, 4, 72, 71, 70, 69, 68, 67, 66, 65, 80, 79, 78, 77, 76, 75, 74, 73, 88, 87, 86, 85, 84, 83, 82, 81, 29, 30, 31, 32, 33, 34, 35, 36, 8, 7, 6, 5, 4, 3, 2, 1, 16, 15, 14, 13, 12, 11, 10, 9, 24, 23, 22, 21, 20, 19, 18, 17, 32, 31, 30, 29, 28, 27, 26, 25, 40, 39, 38, 37, 36, 35, 34, 33, 48, 47, 46, 45, 44, 43, 42, 41, 56, 55, 54, 53, 52, 51, 50, 49, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104];
+ let decoded: TaskStateSegment = descriptor_bytes::decode_TaskStateSegment(&golden);
+encoded[0] == 1 &&
+encoded[1] == 2 &&
+encoded[2] == 3 &&
+encoded[3] == 4 &&
+encoded[4] == 72 &&
+encoded[5] == 71 &&
+encoded[6] == 70 &&
+encoded[7] == 69 &&
+encoded[8] == 68 &&
+encoded[9] == 67 &&
+encoded[10] == 66 &&
+encoded[11] == 65 &&
+encoded[12] == 80 &&
+encoded[13] == 79 &&
+encoded[14] == 78 &&
+encoded[15] == 77 &&
+encoded[16] == 76 &&
+encoded[17] == 75 &&
+encoded[18] == 74 &&
+encoded[19] == 73 &&
+encoded[20] == 88 &&
+encoded[21] == 87 &&
+encoded[22] == 86 &&
+encoded[23] == 85 &&
+encoded[24] == 84 &&
+encoded[25] == 83 &&
+encoded[26] == 82 &&
+encoded[27] == 81 &&
+encoded[28] == 29 &&
+encoded[29] == 30 &&
+encoded[30] == 31 &&
+encoded[31] == 32 &&
+encoded[32] == 33 &&
+encoded[33] == 34 &&
+encoded[34] == 35 &&
+encoded[35] == 36 &&
+encoded[36] == 8 &&
+encoded[37] == 7 &&
+encoded[38] == 6 &&
+encoded[39] == 5 &&
+encoded[40] == 4 &&
+encoded[41] == 3 &&
+encoded[42] == 2 &&
+encoded[43] == 1 &&
+encoded[44] == 16 &&
+encoded[45] == 15 &&
+encoded[46] == 14 &&
+encoded[47] == 13 &&
+encoded[48] == 12 &&
+encoded[49] == 11 &&
+encoded[50] == 10 &&
+encoded[51] == 9 &&
+encoded[52] == 24 &&
+encoded[53] == 23 &&
+encoded[54] == 22 &&
+encoded[55] == 21 &&
+encoded[56] == 20 &&
+encoded[57] == 19 &&
+encoded[58] == 18 &&
+encoded[59] == 17 &&
+encoded[60] == 32 &&
+encoded[61] == 31 &&
+encoded[62] == 30 &&
+encoded[63] == 29 &&
+encoded[64] == 28 &&
+encoded[65] == 27 &&
+encoded[66] == 26 &&
+encoded[67] == 25 &&
+encoded[68] == 40 &&
+encoded[69] == 39 &&
+encoded[70] == 38 &&
+encoded[71] == 37 &&
+encoded[72] == 36 &&
+encoded[73] == 35 &&
+encoded[74] == 34 &&
+encoded[75] == 33 &&
+encoded[76] == 48 &&
+encoded[77] == 47 &&
+encoded[78] == 46 &&
+encoded[79] == 45 &&
+encoded[80] == 44 &&
+encoded[81] == 43 &&
+encoded[82] == 42 &&
+encoded[83] == 41 &&
+encoded[84] == 56 &&
+encoded[85] == 55 &&
+encoded[86] == 54 &&
+encoded[87] == 53 &&
+encoded[88] == 52 &&
+encoded[89] == 51 &&
+encoded[90] == 50 &&
+encoded[91] == 49 &&
+encoded[92] == 93 &&
+encoded[93] == 94 &&
+encoded[94] == 95 &&
+encoded[95] == 96 &&
+encoded[96] == 97 &&
+encoded[97] == 98 &&
+encoded[98] == 99 &&
+encoded[99] == 100 &&
+encoded[100] == 101 &&
+encoded[101] == 102 &&
+encoded[102] == 103 &&
+encoded[103] == 104 &&
+decoded.reserved_1 == value.reserved_1 &&
+decoded.privilege_stack_table[0] == value.privilege_stack_table[0] &&
+decoded.privilege_stack_table[1] == value.privilege_stack_table[1] &&
+decoded.privilege_stack_table[2] == value.privilege_stack_table[2] &&
+decoded.reserved_2 == value.reserved_2 &&
+decoded.interrupt_stack_table[0] == value.interrupt_stack_table[0] &&
+decoded.interrupt_stack_table[1] == value.interrupt_stack_table[1] &&
+decoded.interrupt_stack_table[2] == value.interrupt_stack_table[2] &&
+decoded.interrupt_stack_table[3] == value.interrupt_stack_table[3] &&
+decoded.interrupt_stack_table[4] == value.interrupt_stack_table[4] &&
+decoded.interrupt_stack_table[5] == value.interrupt_stack_table[5] &&
+decoded.interrupt_stack_table[6] == value.interrupt_stack_table[6] &&
+decoded.reserved_3 == value.reserved_3 &&
+decoded.reserved_4 == value.reserved_4 &&
+decoded.iomap_base == value.iomap_base
+}
+
+machine main() {
+    transition bytes_TaskStateSegment() {
+        true -> done()
+        _ -> wrong()
+    }
+    machine done() {}
+    machine wrong() { crash Trap; }
+}
