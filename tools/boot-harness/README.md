@@ -76,8 +76,8 @@ runs headlessly for at most `--timeout` seconds (default 30), and this run's
 serial log must contain the greeting followed by a complete numeric
 `Owned N MiB` line, then `Boot map ready`, `Kernel entered`, `Memory split`, `Memory checked`,
 `Memory paired`, `Page ready`, `Tables ready`, `CPU checked`, `Root located`, `Root read`,
-`Tables retained`, `Mapping retired`, `Mapping checked`, and `GDT checked`.
-The last marker requires the kernel to load its own temporary segment table,
+`Tables retained`, `Mapping retired`, `Mapping checked`, `GDT checked`, and `TSS checked`.
+The GDT marker requires the kernel to load its own temporary segment table,
 read back its pointer and limit, and restore the previous table before returning.
 It also checks neighboring buffer bytes. The table stays borrowed throughout
 the operation, and the existing memory roots remain owned. This check does not
@@ -85,6 +85,11 @@ reload segment registers or install the task-state and interrupt tables needed
 for timer delivery. Its closed boot interval excludes NMI, machine-check and
 debug-exception delivery; masking ordinary interrupts alone does not establish
 those assumptions.
+The TSS marker additionally requires activation of the kernel's retained
+interrupt-stack table, selector readback, the complete descriptor busy-bit
+update, and unchanged neighboring guards. Its GDT, encoded task state and four
+stack buffers stay borrowed with the boot roots in the idle continuation.
+Segment-selector reload and actual interrupt delivery remain unfinished.
 The boot-map marker requires the kernel to copy the final memory map from the
 explicit initial-storage packet and check its format, byte count, descriptor
 stride, checksum, original storage base and image-prefix correspondence. It

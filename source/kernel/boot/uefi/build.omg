@@ -32,6 +32,10 @@ machine build(builder: &mut Build) {
     Build::select_provider<BootVirtualReservation, BootstrapVirtualReservationProvider>(builder, uefi_x86_64);
     Build::accept_boundary<BootTranslation>(builder);
     Build::select_provider<BootTranslation, BootstrapTranslationProvider>(builder, uefi_x86_64);
+    Build::accept_boundary<TaskRegisterControl>(builder);
+    Build::select_provider<TaskRegisterControl, X86TaskRegisterControl>(builder, uefi_x86_64);
+    Build::accept_boundary<arch::isa::x86_64::interrupts::task_state::TaskStatePreparation>(builder);
+    Build::select_provider<arch::isa::x86_64::interrupts::task_state::TaskStatePreparation, arch::isa::x86_64::interrupts::task_state::BootstrapTaskStatePreparation>(builder, uefi_x86_64);
     Build::accept_boundary<arch::isa::x86_64::interrupts::segments::SegmentTablePreparation>(builder);
     Build::select_provider<arch::isa::x86_64::interrupts::segments::SegmentTablePreparation, arch::isa::x86_64::interrupts::segments::BootstrapSegmentPreparation>(builder, uefi_x86_64);
     Build::select_provider<AccessLifecycle<KernelWordPlacement, KernelWord>, KernelMemoryPlacement>(builder, uefi_x86_64);

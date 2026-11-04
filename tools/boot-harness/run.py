@@ -140,8 +140,12 @@ def check_boot_milestones(output):
     mapping = re.search(rb'(?:^|\n)Mapping checked\r?\n', after_retired)
     if mapping is None:
         raise ValueError('Expected mapped writes and physical readback after mapping retirement.')
-    if re.search(rb'(?:^|\n)GDT checked\r?\n', after_retired[mapping.end():]) is None:
+    after_mapping = after_retired[mapping.end():]
+    segments = re.search(rb'(?:^|\n)GDT checked\r?\n', after_mapping)
+    if segments is None:
         raise ValueError('Expected descriptor-table load, readback and restoration after mapping checked.')
+    if re.search(rb'(?:^|\n)TSS checked\r?\n', after_mapping[segments.end():]) is None:
+        raise ValueError('Expected task-register selection and complete busy descriptor readback after GDT checked.')
 
 
 def main(arguments=None):
@@ -154,7 +158,7 @@ def main(arguments=None):
                         help='run ordinary omega update for dependency review before building')
     parser.add_argument('--build-dir', type=Path, default=ROOT / 'build/boot-harness')
     parser.add_argument('--smoke', action='store_true',
-                        help='require ordered boot milestones through GDT checked')
+                        help='require ordered boot milestones through TSS checked')
     parser.add_argument('--timings', action='store_true',
                         help='print compiler stage durations during the fresh build')
     parser.add_argument('--timeout', type=float, default=30)

@@ -1,16 +1,17 @@
 # Omega boot frontier
 
-Cathedral's Omega kernel now checks a prerequisite for installing interrupt
-handlers: it loads its own segment table, reads it back, and restores the
-previous table. A freshly compiled QEMU/OVMF image passed all sixteen ordered
-serial checks through `GDT checked`, after leaving firmware services and
-checking its retained memory and temporary mapping. The
-[boot qualification](../../../../wiki/boot/omega_uefi_qualification.md) records the exact image and compiler.
+Cathedral's Omega kernel now gives the CPU an owned table of future interrupt
+stack addresses and confirms that the CPU selected it. A freshly compiled
+QEMU/OVMF image passed all seventeen ordered checks through `TSS checked`,
+after leaving firmware services and checking its retained memory and mappings.
+The table is the x86 task-state segment (TSS); the
+[boot qualification](../../../../wiki/boot/omega_uefi_qualification.md) records the exact compiler and image.
 
-The kernel still idles after these checks. Permanent segment and task-state
-tables, interrupt handlers, owned interrupt stacks and timer delivery remain
-unfinished. This is a bounded boot lab; it does not establish the normal F5
-desktop or real-hardware support.
+The kernel keeps the table, its descriptor and four stack buffers alive while
+it idles. Reloading the kernel's segment selectors, installing the exception
+and timer handlers, repeated timer delivery and an ordinary-code wake remain
+unfinished. The stack capacities still need the handlers' resource checks.
+This bounded boot lab does not establish the normal desktop or real-hardware support.
 
 Start at [main.omg](main.omg), the selected physical firmware arrival. It
 validates the table and enters [firmware discovery](firmware/firmware.omg), then
@@ -53,7 +54,8 @@ the initialized page and the remaining tail with the context and image.
 The fresh-image harness requires `Hello from Omega`, a complete `Owned N MiB`
 line, `Boot map ready`, `Kernel entered`, `Memory split`, `Memory checked`, `Memory paired`,
 `Page ready`, `Tables ready`, `CPU checked`, `Root located`, `Root read`,
-`Tables retained`, `Mapping retired`, `Mapping checked`, and `GDT checked`, in that order. The six-marker baseline reported 35 MiB in
+`Tables retained`, `Mapping retired`, `Mapping checked`, `GDT checked`, and
+`TSS checked`, in that order. The six-marker baseline reported 35 MiB in
 QEMU/OVMF using Omega `9e04918b1d1`. The current source requires Omega's exact address-model
 typing, representation-recast effect tracking and occurrence-local state-prefix
 checking, in addition to the canonical `ProgramStorageEntryNativeProvider`,
@@ -107,7 +109,7 @@ The intended acceptance is one freshly compiled `uefi_x86_64` image under
 QEMU/OVMF: `Hello from Omega`, successful firmware exit, `Owned N MiB` over
 COM1, then `Boot map ready`, `Kernel entered`, `Memory split`, `Memory checked`, `Memory paired`,
 `Page ready`, `Tables ready`, `CPU checked`, `Root located`, `Root read`,
-`Tables retained`, `Mapping retired`, `Mapping checked`, and `GDT checked`
+`Tables retained`, `Mapping retired`, `Mapping checked`, `GDT checked`, and `TSS checked`
 while retaining image, every initial-storage descendant and accounted surviving
 stack storage. `Memory checked` requires common-root reunion after all three partition sizes,
 initialization/readback of 17, write/readback/extraction of 29, and return of the
@@ -136,6 +138,22 @@ restoring the table. Its admitted boot interval also excludes NMI,
 machine-check and debug-exception delivery; masking ordinary interrupts does
 not establish those premises. No segment register is reloaded, and no TSS or
 interrupt table is installed by this check.
+
+The following [task-state step](../../arch/isa/x86_64/interrupts/task_state.omg)
+retains a second GDT, a typed TSS and its 104 encoded bytes, and separate
+stack buffers for double fault, NMI, machine check and maskable interrupts.
+It loads that GDT and calls the selected `TaskRegisterControl` implementation.
+That operation verifies the actual loaded table and the supplied TSS descriptor
+before loading the task register. `TSS checked` requires selector 24, the full
+available-to-busy descriptor update, and unchanged neighboring guard words.
+
+The entire owner stays borrowed inside the nonreturning kernel continuation,
+alongside the existing boot roots. This step does not restore the previous task
+register or release its backing. Its closed bootstrap interval excludes
+asynchronous entry until the complete exception floor is installed; masking
+ordinary interrupts alone does not establish that exclusion. No segment selector
+is reloaded and no interrupt handler is made live by this step.
+
 
 ## Reproduce
 
