@@ -136,8 +136,12 @@ def check_boot_milestones(output):
     retired = re.search(rb'(?:^|\n)Mapping retired\r?\n', after_retained)
     if retired is None:
         raise ValueError('Expected completed mapping retirement and original root readback after table retention.')
-    if re.search(rb'(?:^|\n)Mapping checked\r?\n', after_retained[retired.end():]) is None:
+    after_retired = after_retained[retired.end():]
+    mapping = re.search(rb'(?:^|\n)Mapping checked\r?\n', after_retired)
+    if mapping is None:
         raise ValueError('Expected mapped writes and physical readback after mapping retirement.')
+    if re.search(rb'(?:^|\n)GDT checked\r?\n', after_retired[mapping.end():]) is None:
+        raise ValueError('Expected descriptor-table load, readback and restoration after mapping checked.')
 
 
 def main(arguments=None):
@@ -150,7 +154,9 @@ def main(arguments=None):
                         help='run ordinary omega update for dependency review before building')
     parser.add_argument('--build-dir', type=Path, default=ROOT / 'build/boot-harness')
     parser.add_argument('--smoke', action='store_true',
-                        help='require ordered boot milestones through Mapping checked')
+                        help='require ordered boot milestones through GDT checked')
+    parser.add_argument('--timings', action='store_true',
+                        help='print compiler stage durations during the fresh build')
     parser.add_argument('--timeout', type=float, default=30)
     options = parser.parse_args(arguments)
     if options.timeout <= 0:
@@ -163,6 +169,8 @@ def main(arguments=None):
         if options.prepare:
             run_checked(command + ['update', '--project', str(entry.parent), '--target', target],
                         cwd=compiler_directory)
+        if options.timings:
+            command = command + ['--timings']
         directory = create_run_directory(options.build_dir.resolve())
         print(f'Run directory: {directory}', flush=True)
         image = build_image(command, entry, target, directory,

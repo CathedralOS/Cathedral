@@ -1,12 +1,13 @@
 // Post-handoff memory lab. The selected entry validates its copied boot record,
-// exercises conserved storage, then retains all roots while idling. This is not
-// the Rust kernel's normal task startup. Serial byte sequences live in diagnostics.
+// exercises conserved storage and descriptor-table loading, then retains all
+// roots while idling. Serial byte sequences live in diagnostics.
 use lab::memory::diagnostics::markers;
 
 use arch::isa::x86_64::memory::memory::PageTableBuilder;
 use arch::isa::x86_64::memory::memory::PageTableReservation;
 use arch::isa::x86_64::memory::profile::BootstrapPaging;
 use arch::isa::x86_64::memory::profile::BootstrapPagingProfile;
+use arch::isa::x86_64::interrupts::segments::SegmentTablePreparation;
 use core::memory::geometry::BootGeometry;
 use omega::language::core::extent;
 use omega::language::core::assembly;
@@ -72,13 +73,14 @@ BootVacantStorageProvider satisfies VacantContentTransfer {
 // selecting the entry neither allocates a context nor grants either root.
 machine Kernel::start(image: Extent in Granted, initial_storage: Extent in Granted)
 requires addr::Bound == 18446744073709551616
-reaches PortIo + MachineControl + VacantContentTransfer + ResourceProfileSupply + AccessLifecycle + ExtentRootProvider + BootVirtualReservation + BootTranslation
+reaches PortIo + MachineControl + VacantContentTransfer + ResourceProfileSupply + AccessLifecycle + ExtentRootProvider + BootVirtualReservation + BootTranslation + SegmentTablePreparation
 invokes ExtentRootProvider
 invokes VacantContentTransfer
 invokes ResourceProfileSupply
 invokes AccessLifecycle
 invokes BootVirtualReservation
 invokes BootTranslation
+invokes SegmentTablePreparation
 crashes Abort
 {
     let mut context: KernelState;
@@ -90,13 +92,14 @@ crashes Abort
 machine Kernel::enter(context: &mut KernelState, image: Extent in Granted,
                       initial_storage: Extent in Granted)
 requires addr::Bound == 18446744073709551616
-reaches PortIo + MachineControl + VacantContentTransfer + ResourceProfileSupply + AccessLifecycle + ExtentRootProvider + BootVirtualReservation + BootTranslation
+reaches PortIo + MachineControl + VacantContentTransfer + ResourceProfileSupply + AccessLifecycle + ExtentRootProvider + BootVirtualReservation + BootTranslation + SegmentTablePreparation
 invokes ExtentRootProvider
 invokes VacantContentTransfer
 invokes ResourceProfileSupply
 invokes AccessLifecycle
 invokes BootVirtualReservation
 invokes BootTranslation
+invokes SegmentTablePreparation
 crashes Abort
 {
     // Kernel::start supplies its zero-initialized local state. Keep that
@@ -814,8 +817,27 @@ crashes Abort
     requires addr::Bound == 18446744073709551616
     {
         BootMarkers::mapping_checked();
+        let checked: bool = SegmentTablePreparation::check_descriptor_load();
+        transition checked {
+            true -> segments_report(context, image, pair, inventory, attempt)
+            _ -> segments_failed(context, image, pair, inventory, attempt)
+        }
+    }
+
+    machine segments_report(context: &mut KernelState, image: Extent in Granted,
+                            pair: KernelMemoryPair, inventory: FirmwareTableInventory,
+                            attempt: MappingAttempt)
+    requires addr::Bound == 18446744073709551616
+    {
+        BootMarkers::segments_checked();
         transition { _ -> retain_mapping(context, image, pair, inventory, attempt) }
     }
+
+    machine segments_failed(context: &mut KernelState, image: Extent in Granted,
+                            pair: KernelMemoryPair, inventory: FirmwareTableInventory,
+                            attempt: MappingAttempt)
+    crashes Abort
+    { crash Abort; }
 
     machine retain_mapping(context: &mut KernelState, image: Extent in Granted,
                          pair: KernelMemoryPair, inventory: FirmwareTableInventory, attempt: MappingAttempt)

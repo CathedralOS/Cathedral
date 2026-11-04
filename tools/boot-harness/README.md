@@ -5,7 +5,7 @@ image under QEMU/OVMF. See the [boot frontier](../../source/kernel/boot/uefi/REA
 for the required compiler support and remaining kernel work. The Rust lab has its
 own harness and is not evidence that the Omega source works. The
 [current qualification](../../wiki/boot/omega_uefi_qualification.md) records
-the fresh fifteen-marker result, the passing negative control, and the remaining limits.
+the observed boot results, failure controls, and remaining limits.
 
 ## F5 in VS Code
 
@@ -28,7 +28,7 @@ Omega kernel before opening QEMU; a failed build never boots an old image.
 
 QEMU opens a firmware display window. Kernel progress is currently reported
 over serial in the VS Code terminal, from `Hello from Omega` through the
-memory and mapping checks described below. The kernel then idles; there is no
+memory, mapping and segment-table checks described below. The kernel then idles; there is no
 Omega desktop yet. Close the QEMU window to end the run. Use `--smoke` from a
 terminal for the automated, headless milestone check.
 
@@ -46,6 +46,7 @@ Alternatively use `run.sh` or `run.ps1` with the same arguments.
 `--prepare` runs ordinary `omega update` for dependency review; pending
 decisions stop the command. Review them and resume using the compiler's
 instructions. Nothing is automatically accepted.
+Add `--timings` to print compiler stage durations during the fresh image build.
 
 Compiler selection is explicit `--compiler` / `OMEGA_BIN`, then a checkout
 at `--omega-repo` / `OMEGA_REPO` (default sibling `../Omega`), then an
@@ -75,7 +76,15 @@ runs headlessly for at most `--timeout` seconds (default 30), and this run's
 serial log must contain the greeting followed by a complete numeric
 `Owned N MiB` line, then `Boot map ready`, `Kernel entered`, `Memory split`, `Memory checked`,
 `Memory paired`, `Page ready`, `Tables ready`, `CPU checked`, `Root located`, `Root read`,
-`Tables retained`, `Mapping retired`, and `Mapping checked`.
+`Tables retained`, `Mapping retired`, `Mapping checked`, and `GDT checked`.
+The last marker requires the kernel to load its own temporary segment table,
+read back its pointer and limit, and restore the previous table before returning.
+It also checks neighboring buffer bytes. The table stays borrowed throughout
+the operation, and the existing memory roots remain owned. This check does not
+reload segment registers or install the task-state and interrupt tables needed
+for timer delivery. Its closed boot interval excludes NMI, machine-check and
+debug-exception delivery; masking ordinary interrupts alone does not establish
+those assumptions.
 The boot-map marker requires the kernel to copy the final memory map from the
 explicit initial-storage packet and check its format, byte count, descriptor
 stride, checksum, original storage base and image-prefix correspondence. It

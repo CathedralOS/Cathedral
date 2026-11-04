@@ -3783,17 +3783,18 @@ flow; the ordinary Rust-kernel F5 desktop is a separate baseline.
 
 ## Native Omega boot qualification after the structure pass
 
-A fresh Omega UEFI image passed all fifteen ordered QEMU/OVMF checks through
-`Mapping checked`: final memory-map acquisition, `ExitBootServices`, entry with
-the two retained roots, resident-memory checks, and temporary mapping activation
-and restoration. The [qualification record](wiki/boot/omega_uefi_qualification.md)
-retains the exact source, producer and image identities. The repeat with the
-published compiler also passed. A fresh negative image with one deliberately
-wrong readback expectation reached `Mapping retired`, omitted `Mapping checked`,
-and failed the unchanged smoke harness. Its package-review replay defect was
-repaired and published in Omega PR #1660. This qualifies the bounded memory lab,
-not the normal Rust F5 desktop or an Omega scheduler. Do not change the desktop
-compiler for this boot work.
+A fresh Omega UEFI image passed all sixteen ordered QEMU/OVMF checks through
+`GDT checked`. After firmware exit and the retained-memory checks, the kernel
+loaded its own temporary segment table, read it back, and restored the previous
+table before returning. The [qualification record](wiki/boot/omega_uefi_qualification.md)
+retains the exact compiler, source and image identities, earlier memory checks,
+and the failure controls. The compiler repair is tracked in
+[Omega PR #1793](https://github.com/CathedralOS/Omega/pull/1793).
+
+The kernel retains its roots and idles after this check. Permanent segment and
+task-state tables, installed interrupt handlers and stacks, repeated hardware
+timer delivery and an ordinary-code wake remain unfinished. The Rust F5 desktop
+has its own qualified compiler; this boot work does not change that selection.
 
 ### Historical compiler and acquisition investigations
 
