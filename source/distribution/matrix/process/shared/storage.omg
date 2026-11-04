@@ -1,6 +1,15 @@
 module storage;
 use runtime::server::main::Ticket;
 use world::scopes::Proof;
+// Identity of the source that supplied a retained executable. Binding validates it.
+public data Prepared [copy] {
+    status: u64;
+    index: u64 [0..=2];
+    receiver: u64;
+    revision: u64;
+    realm: u64;
+    root: bool;
+}
 public data Outcome [copy] { words: [u64; 8]; attachment: u64; }
 // One exchange owns a provider link until its exact caller consumes the result.
 // Input objects are borrowed from that caller throughout; output rights belong

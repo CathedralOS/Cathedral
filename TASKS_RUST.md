@@ -9,16 +9,85 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Current executable handoff: [asynchronous child admission](#asynchronous-child-admission).
+Current executable handoff: [retained child construction](#retained-child-construction).
 That entry records the latest verified image and next work; earlier migration
 entries below are historical milestones.
 
+### Retained child construction
+
+The stock Omega matrix now submits ordinary child LAUNCH construction and returns
+to its service loop. `children/launch/launch.omg` retains the caller's ticket,
+incarnations, grant revision, policy, resource plan and prepared storage binding
+through that wait. It rechecks authority before observing completion and before
+binding the published child. Placement uses the retained plan, rather than the
+last values left by another admission. Pending targets reject competing launches;
+STOP and cleanup also collect submissions that are not yet live.
+
+`children/construction/construction.omg` owns reservation configuration, submission
+and opening the control/storage listeners; its `configuration.omg` leaf owns CPU
+and executable grants. Lifecycle owns stop/collection and reservation return.
+The login picker stays alive through construction, preserving the original
+request authority. It retires after the replacement exists, before binding and
+placement, without an intervening service turn. Failure after retirement still
+queues picker recovery. No kernel policy distinguishes matrices from other parents.
+
+The producer is unchanged. Checked compilation and native linking pass; the
+matrix is 389 load pages, up from 384, with the same stack and declared budgets.
+Full Omega-root/user desktop verification passes on the final image at
+`build/boot-harness-rs/desktop/20261104T054906480139Z/`: login, three Notes instances,
+independent drafts, switching, capacity refusal, protected close, slot reuse,
+saved Notes/Colors and exact cold-reopen storage (2,471 records).
+
+Startup also received two corrections. Realm setup yields while a child's
+owner/broker connections open, before its next synchronous command. Control
+probes use kernel readiness instead of `setup::ready`: the latter rejected an
+expired one-tick probe without checking its queue. Because the timestamp came
+from the start of the turn, a busy matrix could repeatedly ignore an already
+queued acknowledgement until the overall handshake expired. Kernel readiness
+checks queued replies first; the overall handshake deadline remains fixed.
+STOP during scene publication also queues cancellation of submitted children,
+just as it does for live children.
+
+The depth-three pointer-stress soak at
+`build/boot-harness-rs/desktop/20261104T054045010917Z/` passed startup, launched
+Notes, edited/saved it, and collected its clean exit. It **failed during whole
+subtree teardown**, waiting for `depth 0 closed and collected`: recursive LOSS
+questions timed out and refused the close. No whole cycle or cold soak completed;
+repeated resource recovery is not proven by this run. Depth-three entry was also
+slow (121.98 seconds). This is evidence of the previously recorded control/close
+latency, not a claim that recursive responsiveness is solved.
+
+For the earlier startup diagnosis, see
+`build/boot-harness-rs/desktop/20261104T044712251626Z/` (chooser owner handshake)
+and `20261104T052105200706Z/` (chooser timeout collected as cancellation, then
+background timeout). Diagnostics landed in `4761d2cd` and `7c506a63`; healthy-session
+tests now retain startup failures even when cleanup reports cancellation.
+The soak also records its current phase and preserves partial timing on failure
+without counting the incomplete cycle as passed. Five soak bookkeeping tests,
+three failure-parser tests, the kernel's
+`whole_set_validation_and_ready_before_deadline` test, source layout and diff
+checks pass. The held-binding revoke/regrant regression also passes fresh and
+cold at `build/boot-harness-rs/desktop/20261104T055049922058Z/`: input and owner
+HEALTH progress during the hold, the old launch is refused after authority changes,
+and a fresh launch saves and reopens correctly.
+The call-site audit found no other active short probes through `setup::ready`;
+the unused public `connection::main::answered` helper still has that pattern and
+should be corrected or removed before adoption. Other matrix one-tick waits use
+kernel readiness directly.
+Normal F5 still selects the Rust matrix host.
+
+Remaining: cancellation/teardown and owner/setup admission still wait. Deterministic
+held-construction, requester/policy replacement and cancellation fixtures are still
+needed for this matrix integration; the generic kernel/runtime races are covered
+by the preceding admission witness. The existing intermittent nested-close latency
+under pointer stress is not yet diagnosed.
+
 ### Asynchronous child admission
 
-The kernel and Omega runtime now separate submitting a child from collecting its
-admission result. The stock matrix still uses blocking spawn: adopting the new
-path in its retained launch operation is the next implementation step. Normal
-F5 continues to use the Rust matrix host.
+The kernel and Omega runtime separate submitting a child from collecting its
+admission result. This foundation landed in `57669e0e`; the integration above
+adopts it for ordinary stock-matrix child requests. Normal F5 continues to use
+the Rust matrix host.
 
 `TASK_SPAWN_BEGIN` (89) accepts the existing spawn-tree record and returns an
 owner-local receipt. The same bounded construction and rollback worker runs

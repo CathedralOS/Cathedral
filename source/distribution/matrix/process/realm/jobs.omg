@@ -38,6 +38,7 @@ use policy::children::startup::main::take_background;
 use world::geometry;
 use connections::upstream;
 use children::forward;
+use children::lifecycle;
 use connections::storage::storage;
 use connections::listing;
 use realm_names;
@@ -63,7 +64,10 @@ public data Step [copy] {
 // nested instance not yet hosted starts discovery, as pending startup
 // recovery does.
 public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
-    transition context.presentation_work.active {
+    // A new child accepts owner control, then connects to its supplied broker.
+    // Keep serving those handshakes before the next realm command can wait on
+    // upstream storage or background loading. No deadline is restarted here.
+    transition context.presentation_work.active || lifecycle::starting(context) {
         true -> (0u64)
         _ -> block idle_step(gate, context, now)
     }
