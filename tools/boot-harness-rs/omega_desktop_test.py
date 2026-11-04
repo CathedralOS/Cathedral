@@ -139,6 +139,10 @@ def glyphs_match(pixel, left, top, text):
 def failed_children(text):
     """Unexpected child exits or a matrix's own failure during cleanup."""
     failures = []
+    # An owner may cancel a child after its handshake timed out but before
+    # its failing exit was collected. That cancellation must not hide the
+    # earlier startup failure in a healthy-session test.
+    failures.extend(re.findall(r'Cathedral chooser: (?:owner|broker) handshake failed', text))
     for match in re.finditer(r'Cathedral matrix: child (\d) ([0-9a-f]{16}) ([0-9a-f]{16})', text):
         kind, value = int(match.group(2), 16), int(match.group(3), 16)
         if kind != 3 and not (kind == 1 and value == 0):
