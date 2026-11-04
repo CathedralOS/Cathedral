@@ -53,7 +53,7 @@ the initialized page and the remaining tail with the context and image.
 The fresh-image harness requires `Hello from Omega`, a complete `Owned N MiB`
 line, `Boot map ready`, `Kernel entered`, `Memory split`, `Memory checked`, `Memory paired`,
 `Page ready`, `Tables ready`, `CPU checked`, `Root located`, `Root read`,
-`Tables retained`, `Mapping retired`, `Mapping checked`, `GDT checked`, and
+`Tables retained`, `Mapping retired`, `Mapping checked`, `GDT checked`,
 `TSS checked`, and `Segments ready`, in that order. The six-marker baseline reported 35 MiB in
 QEMU/OVMF using Omega `9e04918b1d1`. The current source requires Omega's exact address-model
 typing, representation-recast effect tracking and occurrence-local state-prefix
