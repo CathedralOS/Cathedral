@@ -3,6 +3,7 @@ module storage::binding;
 use protocol::storage::scope;
 use shared::state::State;
 use shared::storage::Outcome;
+use shared::storage::Prepared;
 use shared::report;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
@@ -116,14 +117,6 @@ machine failed(code: u64) -> Outcome { let mut words: [u64; 8]; words[0] = code;
 // An executable was read through this refreshed source. Capture its identity
 // before retiring a login picker. Installing its child's grant does no IPC;
 // replacement or retirement of the source cannot inherit this preparation.
-public data Prepared [copy] {
-    status: u64;
-    index: u64 [0..=2];
-    receiver: u64;
-    revision: u64;
-    realm: u64;
-    root: bool;
-}
 public machine prepare(context: &State) -> Prepared {
     transition context.store.root { true -> captured(context, 0u64) _ -> captured(context, UPSTREAM) }
     machine captured(context: &State, index: u64 [0..=2]) -> Prepared {

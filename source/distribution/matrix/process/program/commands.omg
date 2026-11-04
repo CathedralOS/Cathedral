@@ -93,7 +93,7 @@ machine stopping(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches 
         _ -> block reply(gate, context, error(kernel::DENIED))
     }
     machine slotted(gate: &Gate, context: &mut State, frame: Frame, slot: u64 [0..=4]) -> u64 reaches Kernel {
-        transition context.slots[slot].live {
+        transition context.slots[slot].live || context.slots[slot].pending != 0u64 {
             true -> retained(context, frame, slot)
             _ -> block reply(gate, context, error(kernel::PEER_CLOSED))
         }

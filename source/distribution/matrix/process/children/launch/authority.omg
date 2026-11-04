@@ -14,6 +14,11 @@ use declaration;
 public machine valid(context: &State) -> bool {
     !context.slots[context.launch.slot].live && caller(context)
 }
+// After observing construction, the target may be live. No service has been
+// dispatched yet; the requester's original authority must still hold.
+public machine constructed(context: &State) -> bool {
+    context.launch.phase == 2u64 && caller(context)
+}
 // Admission has completed. The scene transaction separately pins the new
 // child's incarnation and epoch; the caller still needs its original grant.
 public machine presenting(context: &State) -> bool {

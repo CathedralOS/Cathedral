@@ -239,3 +239,16 @@ pub const NOTIFY_TRY_RECEIVE: u64 = 87; // receive endpoint, writable packet, ze
 // Authenticate a currently mapped, exclusively owned private allocation.
 // Does not pin the mapping or permit writes after sharing, sealing or release.
 pub const MEMORY_PRIVATE_ADDRESS: u64 = 88; // private handle, zero, zero -> local RW address
+
+/// Same input as TASK_SPAWN_TREE, but return an owner-local admission receipt
+/// immediately. No child runs before construction and authority checks commit.
+/// Endpoints/loans are revalidated before commit; the caller may invalidate them
+/// meanwhile, causing admission to fail. One uncollected receipt per launch.
+pub const TASK_SPAWN_BEGIN: u64 = 89;
+/// arg0 receipt, arg1 writable 16-byte [status, child], arg2 cancel (0 or 1).
+/// WOULD_BLOCK means still pending. Success copies and consumes the result;
+/// status is zero with a child ticket, or an admission error with child zero.
+/// Cancellation before commit requests rollback (normally REVOKED); an already
+/// committed result wins and its child remains the caller's to stop/collect.
+/// No clock grant required. Polling never blocks; stale/foreign receipts fail.
+pub const TASK_SPAWN_RESULT: u64 = 90;

@@ -15,7 +15,6 @@ use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;
 use runtime::connection::main::Frame;
-use runtime::connection::main::Peer;
 use runtime::task::main::Exit;
 use runtime::time::Tick;
 use runtime::waiting::Set;
@@ -25,6 +24,7 @@ use world::geometry::zeros_from;
 use connections::storage::storage;
 use connections::presentation;
 use recovery;
+use construction::construction::start_reserved;
 use shared::report;
 use workspace;
 use policy::children::launch::resources::funding::Funding;
@@ -72,7 +72,7 @@ public machine owner(gate: &Gate, context: &mut State, now: u64, frame: Frame) -
         block reply(gate, context, error(status))
     }
     machine stopping(gate: &Gate, context: &mut State, slot: u64 [0..=4]) -> u64 reaches Kernel {
-        transition context.slots[slot].live {
+        transition context.slots[slot].live || context.slots[slot].pending != 0u64 {
             true -> block stopped(gate, context, slot)
             _ -> block reply(gate, context, error(kernel::PEER_CLOSED))
         }
@@ -90,7 +90,8 @@ public machine owner(gate: &Gate, context: &mut State, now: u64, frame: Frame) -
 // Every failed step leaves no reservation behind.
 public machine run(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], image: u64, argument: u64, channels: u64,
     descendants: u64, images: u64, cpu: u64) -> u64 reaches Kernel blocks invokes Kernel {
-    transition !context.slots[slot].live && images < 16384u64 && descendants < 64u64 {
+    transition !context.slots[slot].live && context.slots[slot].pending == 0u64 && images < 16384u64 && descendants < 64u64
+        && !(context.launch.phase != 0u64 && context.launch.slot == slot) {
         true -> block imaged(gate, context, now, slot, image, argument, channels, descendants, images, cpu)
         _ -> (kernel::BUSY)
     }
@@ -121,127 +122,7 @@ public machine run(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4]
     }
     machine limited(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64, argument: u64, images: u64, cpu: u64) -> u64
         reaches Kernel requires images < 16384u64 {
-        block admit_reserved(gate, context, now, slot, launch, argument, images, cpu, INTERACTION | STORAGE)
-    }
-}
-// Admit a reserved launch into a slot: the CPU ceiling, the catalogue images
-// the child may run in turn, the brokered admission offering `granted`, the
-// owner-control client and the storage listener. A refused step returns the
-// reservation.
-public machine admit_reserved(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64, argument: u64, images: u64,
-    cpu: u64, granted: u64) -> u64 reaches Kernel blocks invokes Kernel {
-    let status: u64 = cpu_ceiling(gate, launch, cpu);
-    transition status == 0u64 && images < 16384u64 {
-        true -> block allowing(gate, context, now, slot, launch, argument, images, 0u64, granted)
-        _ -> refused(gate, launch, status)
-    }
-    // Each set bit lends the child the same catalogue executable.
-    machine allowing(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64, argument: u64, images: u64, index: u64,
-        granted: u64) -> u64 reaches Kernel requires index <= 14u64 {
-        transition index < 14u64 {
-            true -> block allowed(gate, context, now, slot, launch, argument, images, index, granted)
-            _ -> block admitting(gate, context, now, slot, launch, argument, granted)
-        }
-    }
-    machine allowed(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64, argument: u64, images: u64, index: u64,
-        granted: u64) -> u64 reaches Kernel requires index < 14u64 {
-        transition ((images >> index) & 1u64) == 1u64 {
-            true -> block lending(gate, context, now, slot, launch, argument, images, index, granted)
-            _ -> block allowing(gate, context, now, slot, launch, argument, images, index + 1u64, granted)
-        }
-    }
-    machine lending(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64, argument: u64, images: u64, index: u64,
-        granted: u64) -> u64 reaches Kernel requires index < 14u64 {
-        let grant: u64 = runtime::task::main::image_at(gate, index);
-        let status: u64 = allow(gate, launch, grant);
-        transition status == 0u64 {
-            true -> block allowing(gate, context, now, slot, launch, argument, images, index + 1u64, granted)
-            _ -> refused(gate, launch, status)
-        }
-    }
-    // The handshake windows start at admission, after the reservation work above.
-    machine admitting(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64, argument: u64, granted: u64) -> u64 reaches Kernel {
-        let tick: Tick = runtime::time::read(gate, context.clock);
-        transition tick {
-            Tick::Read { value } -> block spawning(gate, context, value, slot, launch, argument, granted)
-            Tick::Failed { code } -> refused(gate, launch, code)
-        }
-    }
-    machine spawning(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64, argument: u64, granted: u64) -> u64 reaches Kernel {
-        let loans: [u64; 14];
-        level::disconnected(&mut context.world, slot);
-        let status: u64 = block runtime::admission::main::admit(gate, &mut context.slots[slot], launch, argument,
-            &loans, 0u64, granted, context.clock, HANDSHAKE_TICKS, true);
-        transition status == 0u64 {
-            true -> block admitted_now(gate, context, slot, launch)
-            _ -> refused(gate, launch, status)
-        }
-    }
-    // The owner-control window, like the service handshake's, starts once the child exists.
-    machine admitted_now(gate: &Gate, context: &mut State, slot: u64 [0..=4], launch: u64) -> u64 reaches Kernel {
-        let enabled: u64 = runtime::server::main::enable_pipeline(&mut context.slots[slot].listener);
-        let tick: Tick = runtime::time::read(gate, context.clock);
-        transition tick {
-            Tick::Read { value } -> block controlling(gate, context, value, slot, launch)
-            Tick::Failed { code } -> block uncontrolled(gate, context, slot, launch, code)
-        }
-    }
-    // The child's owner control opens without blocking: a host with
-    // descendants sets up its broker services before it accepts control, so
-    // this matrix sends the hello and keeps serving, and each turn finishes
-    // the handshake once the child answers, within the handshake window. The
-    // connection takes custody of the kernel-installed pair either way; a
-    // slot's previous occupant left its client closed, so a fresh one stands first.
-    machine controlling(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64) -> u64 reaches Kernel {
-        let sender: u64 = context.slots[slot].control.sender;
-        let receiver: u64 = context.slots[slot].control.receiver;
-        context.slots[slot].control.sender = 0u64;
-        context.slots[slot].control.receiver = 0u64;
-        let fresh: Peer;
-        context.controls[slot] = fresh;
-        let status: u64 = block runtime::connection::main::connect_start(gate, &mut context.controls[slot], sender, receiver);
-        transition status == 0u64 {
-            true -> block controlled(gate, context, now, slot, launch)
-            _ -> block uncontrolled(gate, context, slot, launch, status)
-        }
-    }
-    machine controlled(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64) -> u64 reaches Kernel {
-        context.opening[slot] = runtime::time::after(now, HANDSHAKE_TICKS);
-        block storing(gate, context, now, slot, launch)
-    }
-    // The child's storage connection is served from admission on, whenever it
-    // chooses to acquire it; the owner or the launch binds it.
-    machine storing(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], launch: u64) -> u64 reaches Kernel {
-        let status: u64 = storage::listen(context, slot, now);
-        transition status == 0u64 || status == kernel::INVALID_ARGUMENT {
-            true -> admitted(context, slot, launch)
-            _ -> block uncontrolled(gate, context, slot, launch, status)
-        }
-    }
-    machine uncontrolled(gate: &Gate, context: &mut State, slot: u64 [0..=4], launch: u64, status: u64) -> u64 reaches Kernel {
-        block storage::retire(gate, context, slot);
-        let exit: Exit = block runtime::admission::main::stop(gate, &mut context.slots[slot]);
-        refused(gate, launch, status)
-    }
-    machine admitted(context: &mut State, slot: u64 [0..=4], launch: u64) -> u64 {
-        context.reservations[slot] = launch;
-        0u64
-    }
-}
-machine refused(gate: &Gate, launch: u64, status: u64) -> u64 reaches Kernel {
-    let ignored: u64 = runtime::task::main::release(gate, launch);
-    status
-}
-machine cpu_ceiling(gate: &Gate, launch: u64, cpu: u64) -> u64 reaches Kernel invokes Kernel {
-    transition cpu == 0u64 {
-        true -> (0u64)
-        _ -> (runtime::task::main::assign_cpu(gate, launch, cpu))
-    }
-}
-machine allow(gate: &Gate, launch: u64, grant: u64) -> u64 reaches Kernel invokes Kernel {
-    transition grant < kernel::ERROR_BASE {
-        true -> (runtime::task::main::allow_image(gate, launch, grant))
-        _ -> (grant)
+        block start_reserved(gate, context, slot, launch, argument, images, cpu, INTERACTION | STORAGE, false)
     }
 }
 // Backing for the load and its private pages, then one slot's frames per
@@ -294,7 +175,17 @@ machine idle_reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reache
     context.answers[slot].active = false;
     transition context.slots[slot].live {
         true -> block stopping(gate, context, slot)
-        _ -> done()
+        _ -> block unpublished(gate, context, slot)
+    }
+    machine unpublished(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+        block runtime::admission::main::release(gate, &mut context.slots[slot]);
+        let launch: u64 = context.reservations[slot];
+        release_unused(gate, context, slot, launch);
+        context.reservations[slot] = 0u64;
+        context.funding[slot] = Funding::Fixed;
+    }
+    machine release_unused(gate: &Gate, context: &mut State, slot: u64 [0..=4], launch: u64) reaches Kernel {
+        transition launch != 0u64 { true -> retire_reservation(gate, context, slot, launch) _ -> done() }
     }
     machine stopping(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
         context.opening[slot] = 0u64;
@@ -424,6 +315,26 @@ machine ok() -> [u64; 8] {
 machine done() {}
 // Finish opening each child's owner control once the child answers; a child
 // that never does within the window is taken back down.
+// Realm setup must not start another blocking operation while a newly admitted
+// child is waiting for us to finish its owner or broker handshake. Returning to
+// the turn loop advances both; their existing deadlines still bound failure.
+public machine starting(context: &State) -> bool {
+    opening_child(context, 0u64)
+    machine opening_child(context: &State, slot: u64) -> bool requires slot <= 5u64 {
+        transition slot < 5u64 {
+            true -> checked(context, slot)
+            _ -> (false)
+        }
+    }
+    machine checked(context: &State, slot: u64 [0..=4]) -> bool {
+        let opening: bool = context.slots[slot].live && (context.opening[slot] != 0u64
+            || (!context.slots[slot].listener.ready && context.slots[slot].listener.peer.fault == 0u64));
+        transition opening {
+            true -> (true)
+            _ -> opening_child(context, slot + 1u64)
+        }
+    }
+}
 public machine open_controls(gate: &Gate, context: &mut State, now: u64) reaches Kernel blocks invokes Kernel {
     block opening_slot(gate, context, now, 0u64, 1u64);
     block opening_slot(gate, context, now, 1u64, 1u64);
@@ -455,7 +366,15 @@ machine opening_slot(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=
     }
     machine probed(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], deadline: u64, window: u64) reaches Kernel
         requires window < 0x8000000000000000u64 {
-        let status: u64 = block runtime::connection::setup::ready(gate, context.controls[slot].receiver, runtime::time::after(now, window));
+        // `now` belongs to the start of the turn. Other work can spend this
+        // short probe window before we reach it. The kernel checks readiness
+        // before timeout; setup::ready would reject the old deadline without
+        // looking, starving a queued acknowledgement on every busy turn.
+        let mut wait: Set;
+        runtime::waiting::reset(&mut wait, runtime::time::after(now, window));
+        runtime::waiting::expire_by(&mut wait, deadline);
+        runtime::waiting::add(&mut wait, runtime::waiting::IPC, context.controls[slot].receiver);
+        let status: u64 = block runtime::waiting::wait(gate, &wait);
         let answered: bool = status == 0u64;
         transition answered {
             true -> block finishing(gate, context, slot, deadline)
@@ -546,9 +465,9 @@ machine unreleased(gate: &Gate, slot: u64, status: u64) reaches Kernel invokes K
 }
 
 // Stopping either the requester or its target cancels a pending read/activation.
-// During synchronous admission the picker is intentionally retired instead.
+// Picker retirement happens only after construction, without another service turn.
 machine cancel_launch(context: &mut State, slot: u64 [0..=4]) {
-    transition (context.launch.phase == 1u64 || context.launch.phase == 3u64 || context.launch.phase == 4u64) && (context.launch.requester == slot || context.launch.slot == slot) {
+    transition context.launch.phase != 0u64 && (context.launch.requester == slot || context.launch.slot == slot) {
         true -> cancelled(context)
         _ -> done()
     }

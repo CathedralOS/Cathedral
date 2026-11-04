@@ -86,6 +86,7 @@ machine wait(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
     machine parked(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
         let mut set: Set;
         runtime::waiting::reset(&mut set, context.deadline);
+        pending_wake(context, &mut set, now);
         runtime::server::main::watch(&context.owner, &mut set);
         slots::watch(context, 0u64, &mut set);
         slots::watch(context, 1u64, &mut set);
@@ -95,6 +96,13 @@ machine wait(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
             _ -> block cleanup(gate, context, 304u64)
         }
     }
+}
+machine pending_wake(context: &State, set: &mut Set, now: u64) {
+    transition context.slots[0].pending != 0u64 || context.slots[1].pending != 0u64 {
+        true -> runtime::waiting::expire_by(set, runtime::time::after(now, 1u64))
+        _ -> done()
+    }
+    machine done() {}
 }
 machine cleanup(gate: &Gate, context: &mut State, status: u64) -> u64 reaches Kernel {
     block slots::reclaim(gate, context, 0u64);

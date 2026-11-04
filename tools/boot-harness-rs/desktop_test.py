@@ -88,6 +88,16 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
                                           ('y', 4000 + (motion_step * 677) % 24000)]])
             serial = (output / 'serial.log').read_text(errors='replace')
             assert 'CATHEDRAL_RS_PANIC' not in serial and 'initial program stopped' not in serial, serial[-3000:]
+            if (soak or nested_desktop) and user_check is None and not allowed_panics:
+                # These are healthy-session tests. Report an actual child exit
+                # immediately instead of waiting for a taskbar that cannot appear.
+                # Explicit fault fixtures use their own user_check path.
+                from omega_desktop_test import failed_children
+                failures = failed_children(serial.replace('Cathedral Rust lab: ', ''))
+                if failures:
+                    w, h, pixels = pointer_test.read_scanout(stream, output)
+                    capture.save_png(output, w, h, pixels)
+                    raise AssertionError(f'{description}: {failures}; screenshot/logs: {output}')
             if pointer_stress:
                 assert 'matrix-service-exit' not in serial, serial[-5000:]
             for report in serial.replace('Cathedral Rust lab: ', '').split('Cathedral user panic:')[1:]:

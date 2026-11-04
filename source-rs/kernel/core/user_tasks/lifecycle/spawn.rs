@@ -53,8 +53,10 @@ pub(in crate::user_tasks) unsafe fn spawn(
             session.launches[index].initial_count = 0;
             session.launches[index].delegated.fill(0);
             session.launches[index].delegated_count = 0;
-            super::syscalls::complete(session, owner, result);
-            session.scheduler.unblock(owner);
+            if !session.launches[index].model.retain_admission(result) {
+                super::syscalls::complete(session, owner, result);
+                session.scheduler.unblock(owner);
+            }
         }
     }
     session.scheduler.charge_cpu(owner, arch::cpu_time_us());

@@ -671,6 +671,18 @@ initial FP state is clean and I/O privilege is zero.
 | 45-53: executable and process admission | Caller-local executable/launch grants | [Catalogue, funded reservations, code staging and idle CPU limits](kernel/core/user_tasks/admission/pool/README.md) |
 | 54: physical budget | Writable 16-byte destination, 0, 0 | Caller-local reserved and charged physical frames as two LE u64 words |
 | 55: physical assignment | Owned idle launch, requested frame reservation, 0 | Conserving reassignment; BUSY if a live charge would lose funding |
+| 89: begin child admission | Owned launch, 176-byte spawn-tree record, 0 | Fresh owner-local receipt; parent keeps running |
+| 90: collect child admission | Receipt, writable 16-byte result, cancel (0 or 1) | `WOULD_BLOCK`, or 0 after copying `[status, child]` and consuming the receipt |
+
+Asynchronous admission uses the same private construction, funding and final
+authority checks as blocking spawn. Each launch retains at most one uncollected
+receipt; neither a failed result nor a pending request permits reusing or lending
+that launch. Bad copyout leaves the completed result collectible. Cancellation
+before publication requests bounded rollback; an earlier failure remains the
+result. If publication already won, collection returns the real child instead,
+and ordinary child cancellation/wait remain the owner's responsibility. Owner
+death discards its receipts through subtree withdrawal. There is no receipt wait
+interest yet: callers poll between other work, with their own timer wake or yield.
 
 Writes accept at most 256 bytes within one known user page. The kernel validates
 the entire range and copies through its physical backing before calling the

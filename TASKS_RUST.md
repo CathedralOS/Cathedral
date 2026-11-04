@@ -9,9 +9,152 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Current executable handoff: [batched mailbox transfers](#omega-runtime-batched-mailbox-transfers).
+Current executable handoff: [retained child construction](#retained-child-construction).
 That entry records the latest verified image and next work; earlier migration
 entries below are historical milestones.
+
+### Retained child construction
+
+The stock Omega matrix now submits ordinary child LAUNCH construction and returns
+to its service loop. `children/launch/launch.omg` retains the caller's ticket,
+incarnations, grant revision, policy, resource plan and prepared storage binding
+through that wait. It rechecks authority before observing completion and before
+binding the published child. Placement uses the retained plan, rather than the
+last values left by another admission. Pending targets reject competing launches;
+STOP and cleanup also collect submissions that are not yet live.
+
+`children/construction/construction.omg` owns reservation configuration, submission
+and opening the control/storage listeners; its `configuration.omg` leaf owns CPU
+and executable grants. Lifecycle owns stop/collection and reservation return.
+The login picker stays alive through construction, preserving the original
+request authority. It retires after the replacement exists, before binding and
+placement, without an intervening service turn. Failure after retirement still
+queues picker recovery. No kernel policy distinguishes matrices from other parents.
+
+The producer is unchanged. Checked compilation and native linking pass; the
+matrix is 389 load pages, up from 384, with the same stack and declared budgets.
+Full Omega-root/user desktop verification passes on the final image at
+`build/boot-harness-rs/desktop/20261104T054906480139Z/`: login, three Notes instances,
+independent drafts, switching, capacity refusal, protected close, slot reuse,
+saved Notes/Colors and exact cold-reopen storage (2,471 records).
+
+Startup also received two corrections. Realm setup yields while a child's
+owner/broker connections open, before its next synchronous command. Control
+probes use kernel readiness instead of `setup::ready`: the latter rejected an
+expired one-tick probe without checking its queue. Because the timestamp came
+from the start of the turn, a busy matrix could repeatedly ignore an already
+queued acknowledgement until the overall handshake expired. Kernel readiness
+checks queued replies first; the overall handshake deadline remains fixed.
+STOP during scene publication also queues cancellation of submitted children,
+just as it does for live children.
+
+The depth-three pointer-stress soak at
+`build/boot-harness-rs/desktop/20261104T054045010917Z/` passed startup, launched
+Notes, edited/saved it, and collected its clean exit. It **failed during whole
+subtree teardown**, waiting for `depth 0 closed and collected`: recursive LOSS
+questions timed out and refused the close. No whole cycle or cold soak completed;
+repeated resource recovery is not proven by this run. Depth-three entry was also
+slow (121.98 seconds). This is evidence of the previously recorded control/close
+latency, not a claim that recursive responsiveness is solved.
+
+For the earlier startup diagnosis, see
+`build/boot-harness-rs/desktop/20261104T044712251626Z/` (chooser owner handshake)
+and `20261104T052105200706Z/` (chooser timeout collected as cancellation, then
+background timeout). Diagnostics landed in `4761d2cd` and `7c506a63`; healthy-session
+tests now retain startup failures even when cleanup reports cancellation.
+The soak also records its current phase and preserves partial timing on failure
+without counting the incomplete cycle as passed. Five soak bookkeeping tests,
+three failure-parser tests, the kernel's
+`whole_set_validation_and_ready_before_deadline` test, source layout and diff
+checks pass. The held-binding revoke/regrant regression also passes fresh and
+cold at `build/boot-harness-rs/desktop/20261104T055049922058Z/`: input and owner
+HEALTH progress during the hold, the old launch is refused after authority changes,
+and a fresh launch saves and reopens correctly.
+The call-site audit found no other active short probes through `setup::ready`;
+the unused public `connection::main::answered` helper still has that pattern and
+should be corrected or removed before adoption. Other matrix one-tick waits use
+kernel readiness directly.
+Normal F5 still selects the Rust matrix host.
+
+Remaining: cancellation/teardown and owner/setup admission still wait. Deterministic
+held-construction, requester/policy replacement and cancellation fixtures are still
+needed for this matrix integration; the generic kernel/runtime races are covered
+by the preceding admission witness. The existing intermittent nested-close latency
+under pointer stress is not yet diagnosed.
+
+### Asynchronous child admission
+
+The kernel and Omega runtime separate submitting a child from collecting its
+admission result. This foundation landed in `57669e0e`; the integration above
+adopts it for ordinary stock-matrix child requests. Normal F5 continues to use
+the Rust matrix host.
+
+`TASK_SPAWN_BEGIN` (89) accepts the existing spawn-tree record and returns an
+owner-local receipt. The same bounded construction and rollback worker runs
+under the existing budgets. `TASK_SPAWN_RESULT` (90) polls or requests cancellation;
+completion is `[status, child]`, so an admission failure is distinct from a poll
+that is merely pending. Results survive bad copyout and are consumed once. One
+uncollected receipt prevents reuse/lending of its launch. Completion never writes
+the parent's current syscall result or wakes an unrelated wait. A pending cancel
+prevents publication; an already committed result wins, so the caller receives
+and must stop/collect the actual child if unwanted. Owner death discards receipts
+through ordinary subtree withdrawal. No matrix-specific kernel policy was added.
+
+Follow `source/platform/libraries/user-runtime/task/main.omg` for the raw
+submit/poll interface, then `admission/pending.omg` for brokered startup. The latter
+retains its bundle in `Admitted`, establishes control/listening after publication,
+and starts the handshake deadline then. `release` drains pending construction and
+handles the late-cancel race before closing the bundle. Post-publication failure
+and teardown still use blocking stop/wait. Receipts have no wait-set interest yet;
+the caller polls between service turns and schedules a bounded timer wake.
+The runtime also retains the owner-control pair before reading the handshake
+clock, so a clock failure cannot lose those handles during rollback.
+
+The standalone Omega supervisor exercises this interface alongside the original
+blocking path: nine scenarios now cover repeated paired async launches, immediate stops
+racing publication and parent death after submission, with page, physical and
+notification baselines restored after every scenario. Separate booted-kernel
+fixtures hold construction at known boundaries and exercise actual checked
+copy-in/out, foreign/stale receipts, cancellation, queued endpoint refusal, owner
+and peer death, and completion while the parent is blocked on unrelated work.
+They do not rely on a child taking a minimum time to load.
+
+Verification for this slice:
+
+- Nine-scenario Omega admission witness:
+  `build/omega-user/connections/20261104T034521972157Z/`. Six rounds submit both
+  child slots before collecting either result; all nine scenarios restore their
+  exact resource baselines.
+- Four Omega runtime boots, including exact failure exits:
+  `build/omega-user/tests/20261104T032412607196Z/`.
+- Full x86 smoke and ARM64 portability proof pass, including the new
+  `async receipts, isolated completion and rollback passed` marker. The first
+  x86 smoke run reached those checks but exhausted the harness's 120-second
+  limit later; the unchanged suite completed with `--timeout 300`. The first
+  serial log is preserved in `build/async-admission/smoke-timeout/`.
+- Rust host tests: 519 passed; kernel clippy with `memory-lab`, eight runtime
+  host tests, source layout (148 Omega / 153 Rust edges), and diff checks pass.
+- Multi-client service and overlapping-request witnesses:
+  `build/omega-user/connections/20261104T032914112663Z/` and
+  `build/omega-user/connections/20261104T032928975972Z/`.
+- Normal Rust-host F5 desktop, protected close, durable saves and cold reopen:
+  `build/boot-harness-rs/desktop/20261104T033234560573Z/`.
+- All four installed apps and the stock matrix rebuild with the existing pinned
+  producer (SHA-256 `70978409eb15df628a603adb5043e3a6a35287215905d798eae2f0d701c105f4`).
+  The four app binaries are byte-identical to the normal-F5 run above. The gate
+  appends two entries (60 total); prior offsets are unchanged. The matrix remains
+  384 load pages with its existing stack and budgets.
+- Full desktop over the rebuilt Omega root and user matrix, including three Notes
+  instances, protected close, slot reuse, save and cold reopen:
+  `build/boot-harness-rs/desktop/20261104T040041071006Z/`. This checks compatibility;
+  the stock matrix does not yet call asynchronous spawn.
+
+Next: retain the launch reservation, requester identity and prepared storage
+scope across kernel loading in the stock matrix. Recheck authority before binding
+and placement, drain cancelled submissions, preserve the picker recovery path,
+and only answer success after placement commits. Boot setup and teardown are
+separate remaining waits. The intermittent close latency under pointer stress
+remains unresolved; this slice does not claim to have diagnosed it.
 
 ### Stock matrix migration: the display root in Omega
 
@@ -1138,6 +1281,53 @@ The follow-up below moves shared storage exchanges into retained per-link work.
 Local launch reads and bindings remain the next continuation work, including
 recovery of the login picker on failed admission.
 
+### Native exit-status qualification
+
+The earlier diagnosis that native entry discards `Program::run`'s result was
+incorrect. `native/main.omg` is the compiler's packaging consumer, not the
+booted ELF entry. `tools/omega-component/build.py` extracts the independent
+component's one checked requirement export. The platform's `_start` calls that
+export as `omega_app_step`, moves RAX to RDI, and invokes kernel EXIT. The
+unmodified entry witness and stock matrix both return their exact failure
+statuses in real QEMU boots. No executable implementation needed changing.
+
+`python tools/omega-user/run_test.py --matrix` now preserves these checks:
+
+- Existing successful entry/IPC/parking boots, with and without a clock.
+- Zero channel allowance: opening fails and returns 102.
+- One channel allowance: the second opening fails, the first channel is closed,
+  and the witness returns 109.
+- Stock matrix with a clock but no service endpoints: cleanup and kernel exit
+  both report INVALID_ARGUMENT, `18446744073709551594`. The complete 64-bit
+  report is required. This isolated initial process receives 512 private pages
+  to fund its image/stack through the existing bootstrap accounting; production
+  matrix allowances are unchanged.
+
+All five boots pass at `build/omega-user/tests/20261104T025311673680Z/`.
+An isolated negative-control ELF changed only the native exit adapter to discard
+the returned code and issue EXIT(0). The zero-channel case then reported zero
+and the unchanged verifier rejected it, as required:
+`build/omega-matrix-progress/exit-negative/20261104T025414855060Z/`.
+No tracked source or normal program artifact was patched for that control.
+
+The eight `tools/omega-user` host tests pass. They initially exposed a stale
+57-entry assertion from the earlier clock-stamp addition: it now checks the
+58-entry table, including `clock_stamp` at the end. The syscall-number check
+also accepts trailing descriptions in assembly comments, so it checks the
+clock-stamp call too (66 source sites). Layout and whitespace checks pass.
+The compiler and program images are unchanged; the matrix remains the 384-page
+image recorded in [batched mailbox transfers](#omega-runtime-batched-mailbox-transfers).
+The desktop/QEMU stress suite and Rust host suites were not rerun for these
+harness/documentation changes; their prior results retain their original scope.
+
+The shared desktop failure parser still checks nonzero cleanup diagnostics, so
+it can flag failure before an owner collects the exit. This qualification proves
+native return propagation on the tested paths; it does not establish that every
+app chooses the right status or every owner reports it correctly. The intermittent
+close latency, remaining synchronous operations and small Rust matrix-lab failure
+remain open. Continue with those actual behavior gaps, not a replacement native
+exit mechanism. Normal F5 retains the Rust matrix.
+
 ### Omega runtime: batched mailbox transfers
 
 The shared connection mailbox now combines its length and first payload words
@@ -1207,7 +1397,7 @@ preserves the by-value candidate's results.
 Next: keep locating delay at individual parent/child handoffs and runnable or
 budget availability. Fewer transport calls do not close the earlier intermittent
 stress failure. Synchronous admission, owner/startup operations, first provider
-handshakes, retirement fallback, native exit-status propagation and the small
+handshakes, retirement fallback and the small
 Rust matrix-lab failure remain open. Normal F5 retains the Rust matrix.
 
 ### Stock matrix migration: control latency measurement
@@ -1276,7 +1466,7 @@ Next: locate the delay at individual parent/child handoffs, including leaf
 control handling and runnable/budget availability, before changing scheduling
 or deadlines. Preserve late-answer drainage and refusal on uncertainty. The
 previously recorded synchronous admission, owner/startup operations, first
-provider handshakes, retirement fallback, native exit-status propagation and
+provider handshakes, retirement fallback and
 small Rust matrix-lab failure remain open. Normal F5 retains the Rust matrix.
 
 ### Stock matrix migration: loss checks during rendering
@@ -1310,9 +1500,9 @@ from HEALTH to LOSS; the Omega executable has no fixture mode.
 Sparse `Matrix control:` diagnostics record survey refusals, child questions,
 answers, expiry, aggregation, close refusal and process cleanup status. The
 legend is in `shared/report.omg`; endpoint numbers are local diagnostics, not
-process identities. The native entry still discards Program::run's return code,
-but cleanup logs it and the shared Omega failure parser now detects nonzero
-cleanup instead of mistaking it for exit(0).
+process identities. The shared Omega failure parser detects nonzero cleanup
+before an owner reports the exit. The original claim that native entry discarded
+the result was incorrect; see [native exit checks](#native-exit-status-qualification).
 
 The unchanged pinned producer builds the matrix at 384/496 load pages, with its
 existing 128-page stack. All 180 component and 9 native receipt inputs match.
@@ -1366,8 +1556,9 @@ survey that exceeded its deadline. Locate the dispatch/scheduling delay before
 claiming a timeout change fixes it; do not accept stale clean answers.
 
 Kernel admission, owner/startup operations, first provider handshakes and
-retirement fallback still contain synchronous waits. Native exit-status
-propagation also remains open. Normal F5 keeps the Rust matrix until parity.
+retirement fallback still contain synchronous waits. The exit-status suspicion
+is corrected in [native exit checks](#native-exit-status-qualification).
+Normal F5 keeps the Rust matrix until parity.
 The previously recorded small Rust matrix-lab failure is unchanged.
 
 ### Stock matrix migration: launch funding
@@ -1461,9 +1652,9 @@ permission to stop. This is not a passing stress result.
 Next: kernel spawn/brokered admission, owner/startup operations, first provider
 handshakes and retirement fallback still contain synchronous waits. Do not claim
 the whole launch is nonblocking. A deterministic failure after picker retirement
-is still worth retaining when admission itself is made resumable. An observability
-gap also surfaced: the native matrix entry discards Program::run's failure code,
-so cleanup after a failed turn can look like a normal zero-status process exit.
+is still worth retaining when admission itself is made resumable. The suspected
+native exit-status loss was later disproved by direct execution; see
+[native exit checks](#native-exit-status-qualification).
 Normal F5 remains on the Rust matrix until parity. The previously recorded small
 Rust matrix-lab failure remains open and is not covered by this slice.
 

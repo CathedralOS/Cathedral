@@ -29,13 +29,58 @@ machine owner(gate: &Gate, context: &mut Context, environment: Environment, now:
     let status: u64 = block runtime::server::owner::open(gate, &mut context.owner, runtime::time::after(now, 300u64));
     transition status == 0u64 {
         true -> block broker_time(gate, context, environment)
-        _ -> (status)
+        _ -> refused(gate, true, status)
     }
 }
 machine broker_time(gate: &Gate, context: &mut Context, environment: Environment) -> u64 reaches Kernel {
     let tick: Tick = runtime::time::read(gate, context.clock);
     transition tick {
-        Tick::Read { value } -> block runtime::services::main::open(gate, &mut context.services, &environment, runtime::time::after(value, 300u64))
+        Tick::Read { value } -> block broker(gate, context, environment, value)
         Tick::Failed { code } -> (code)
+    }
+}
+machine broker(gate: &Gate, context: &mut Context, environment: Environment, now: u64) -> u64 reaches Kernel {
+    let status: u64 = block runtime::services::main::open(gate, &mut context.services, &environment, runtime::time::after(now, 300u64));
+    transition status == 0u64 {
+        true -> (0u64)
+        _ -> refused(gate, false, status)
+    }
+}
+// Preserve the transport's status while identifying which independent startup
+// connection failed. Emit only on failure so ordinary handshake timing is unchanged.
+machine refused(gate: &Gate, owner: bool, status: u64) -> u64 reaches Kernel {
+    transition owner {
+        true -> owner_failed(gate, status)
+        _ -> broker_failed(gate, status)
+    }
+    machine owner_failed(gate: &Gate, status: u64) -> u64 reaches Kernel {
+        let text: [u8; 64] = "Cathedral chooser: owner handshake failed\n                      ";
+        report(gate, &text, status)
+    }
+    machine broker_failed(gate: &Gate, status: u64) -> u64 reaches Kernel {
+        let text: [u8; 64] = "Cathedral chooser: broker handshake failed\n                     ";
+        report(gate, &text, status)
+    }
+}
+machine report(gate: &Gate, text: &[u8; 64], status: u64) -> u64 reaches Kernel {
+    let mut words: [u64; 8];
+    transition { _ -> pack(gate, text, &mut words, 0u64, status) }
+    machine pack(gate: &Gate, text: &[u8; 64], words: &mut [u64; 8], index: u64, status: u64) -> u64
+        reaches Kernel requires index <= 64u64 {
+        transition index < 64u64 {
+            true -> byte(gate, text, words, index, status)
+            _ -> written(gate, words, 64u64, status)
+        }
+    }
+    machine byte(gate: &Gate, text: &[u8; 64], words: &mut [u64; 8], index: u64 [0..=63], status: u64) -> u64 reaches Kernel {
+        words[index / 8u64] = words[index / 8u64] | ((text[index] as u64) << ((index % 8u64) * 8u64));
+        transition text[index] == 10u8 {
+            true -> written(gate, words, index + 1u64, status)
+            _ -> pack(gate, text, words, index + 1u64, status)
+        }
+    }
+    machine written(gate: &Gate, words: &[u64; 8], bytes: u64 [0..=64], status: u64) -> u64 reaches Kernel {
+        let ignored: u64 = Kernel::write(gate, words, bytes);
+        status
     }
 }

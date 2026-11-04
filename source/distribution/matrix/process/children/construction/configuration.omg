@@ -1,0 +1,37 @@
+module construction::configuration;
+// Finish the bounded CPU and image grants before submitting construction.
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+public machine configure(gate: &Gate, launch: u64, images: u64, cpu: u64) -> u64 reaches Kernel invokes Kernel {
+    transition images < 16384u64 {
+        true -> configured(gate, launch, images, cpu)
+        _ -> (kernel::INVALID_ARGUMENT)
+    }
+    machine configured(gate: &Gate, launch: u64, images: u64, cpu: u64) -> u64 reaches Kernel {
+        let status: u64 = ceiling(gate, launch, cpu);
+        transition status == 0u64 { true -> allowing(gate, launch, images, 0u64) _ -> (status) }
+    }
+}
+machine ceiling(gate: &Gate, launch: u64, cpu: u64) -> u64 reaches Kernel {
+    transition cpu == 0u64 { true -> (0u64) _ -> (runtime::task::main::assign_cpu(gate, launch, cpu)) }
+}
+machine allowing(gate: &Gate, launch: u64, images: u64, index: u64) -> u64 reaches Kernel requires index <= 14u64 {
+    transition index < 14u64 { true -> chosen(gate, launch, images, index) _ -> (0u64) }
+    machine chosen(gate: &Gate, launch: u64, images: u64, index: u64 [0..=13]) -> u64 reaches Kernel {
+        transition ((images >> index) & 1u64) == 1u64 {
+            true -> lending(gate, launch, images, index)
+            _ -> allowing(gate, launch, images, index + 1u64)
+        }
+    }
+    machine lending(gate: &Gate, launch: u64, images: u64, index: u64 [0..=13]) -> u64 reaches Kernel {
+        let grant: u64 = runtime::task::main::image_at(gate, index);
+        transition grant < kernel::ERROR_BASE {
+            true -> lent(gate, launch, images, index, runtime::task::main::allow_image(gate, launch, grant))
+            _ -> (grant)
+        }
+    }
+    machine lent(gate: &Gate, launch: u64, images: u64, index: u64 [0..=13], status: u64) -> u64 reaches Kernel {
+        transition status == 0u64 { true -> allowing(gate, launch, images, index + 1u64) _ -> (status) }
+    }
+}

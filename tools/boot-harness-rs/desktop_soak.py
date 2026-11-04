@@ -57,6 +57,7 @@ def exercise(output, click, key, scan, width, height, reboot, cycles, pointer_st
     n = Nested(click, key, scan, width, height, pointer_stress)
     serial = output / 'serial.log'
     path = output / f'soak-boot-{2 if reboot else 1}.json'
+    progress_path = output / f'soak-progress-boot-{2 if reboot else 1}.json'
     records = []
     # The cold boot continues the fresh boot's numbering and expects its last save.
     done, saved = (cycles_before(output), last_token(output)) if reboot else (0, '')
@@ -70,8 +71,20 @@ def exercise(output, click, key, scan, width, height, reboot, cycles, pointer_st
 
         def phase(name, action):
             begin = time.monotonic()
-            action()
-            phases[name] = round(time.monotonic() - begin, 2)
+            def progress(status):
+                progress_path.write_text(json.dumps(dict(
+                    cycle=cycle, phase=name, status=status, phases=phases,
+                    edit_steps=edit_steps), indent=2))
+            progress('running')
+            print(f'Soak cycle {cycle}: {name} started', flush=True)
+            completed = False
+            try:
+                action()
+                completed = True
+            finally:
+                phases[name] = round(time.monotonic() - begin, 2)
+                progress('complete' if completed else 'failed')
+                print(f'Soak cycle {cycle}: {name} {"complete" if completed else "failed"} after {phases[name]}s', flush=True)
 
         for depth in range(1, nested_depth + 1):
             phase(f'enter-{depth}', lambda depth=depth: n.enter(depth, cycle == 1 and not reboot))

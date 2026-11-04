@@ -1,7 +1,7 @@
 module launch::launch;
 // A child asks -> reserve its request and policy -> read the scoped image over
-// later turns -> recheck authority -> admit and place. The picker stays alive
-// during the read; if admission fails after retiring it, startup restores it.
+// later turns -> submit construction -> recheck authority -> bind and place.
+// The picker stays alive through construction, then retires before placement.
 use protocol::main;
 use protocol::matrix;
 use shared::state::State;
@@ -30,7 +30,9 @@ use runtime::server::deferred;
 use connections::presentation::Submission;
 use connections::storage::reads;
 use connections::storage::binding;
-use connections::storage::binding::Prepared;
+use shared::storage::Prepared;
+use construction::construction::poll_reserved;
+use runtime::admission::pending::Progress;
 use protocol::services::STORAGE;
 use connections::storage::exchange;
 use connections::responses;
@@ -116,6 +118,7 @@ machine hold(context: &mut State, slot: u64 [0..=4], ticket: Ticket) -> u64 {
 public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
     transition {
         context.launch.phase == 1u64 -> block progress(gate, context)
+        context.launch.phase == 2u64 -> block constructing(gate, context)
         context.launch.phase == 4u64 -> block funded(gate, context)
         _ -> done()
     }
@@ -211,25 +214,66 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
     }
     machine admitting(gate: &Gate, context: &mut State, image: Outcome, now: u64, prepared: Prepared) reaches Kernel {
         let slot: u64 [0..=4] = context.launch.slot;
-        let requester: u64 [0..=4] = context.launch.requester;
-        let incarnation: u64 = context.launch.incarnation;
         let object: u64 = context.launch.object;
-        let offered: u64 = context.launch.offered;
         let policy: SlotPolicy = context.launch.policy;
-        let login: bool = context.login && requester == 0u64 && slot == 1u64;
+        context.launch.binding = prepared;
         context.launch.phase = 2u64;
-        block retire_picker(gate, context, login);
         let plan: Plan = context.launch.plan;
-        let status: u64 = block stored::admit_plan(gate, context, now, slot, object, 0u64, policy.cpu, image.attachment, plan, false);
+        let status: u64 = block stored::admit_plan(gate, context, now, slot, object, 0u64, policy.cpu, image.attachment, plan, false, true);
         block exchange::release(gate, image.attachment);
         transition status == 0u64 {
-            true -> block bound(gate, context, requester, incarnation, slot, object, login, prepared)
-            _ -> block answered(gate, context, refused(gate, status), login)
+            true -> done()
+            _ -> block answered(gate, context, refused(gate, status), false)
         }
     }
-    // Admission still runs synchronously: no child service is dispatched
-    // between captured authority, picker retirement and this local install.
-    // When admission becomes resumable it must retain/recheck that caller too.
+    machine constructing(gate: &Gate, context: &mut State) reaches Kernel {
+        // Publication fences slot retirement. The pending bundle has no served
+        // listener, so waiting for that fence cannot expose an unbound child.
+        let valid: bool = authority::constructed(context);
+        invalidate(context, valid);
+        let requester: u64 [0..=4] = context.launch.requester;
+        transition !context.presentation_work.active && !context.answers[requester].active {
+            true -> block construction_turn(gate, context, valid)
+            _ -> done()
+        }
+    }
+    machine construction_turn(gate: &Gate, context: &mut State, valid: bool) reaches Kernel {
+        let slot: u64 [0..=4] = context.launch.slot;
+        transition valid {
+            true -> block observe(gate, context)
+            _ -> block unbound(gate, context, slot, kernel::DENIED, false)
+        }
+    }
+    machine observe(gate: &Gate, context: &mut State) reaches Kernel {
+        let slot: u64 [0..=4] = context.launch.slot;
+        let progress: Progress = block poll_reserved(gate, context, slot);
+        transition progress {
+            Progress::Pending -> done()
+            Progress::Failed { code } -> block answered(gate, context, refused(gate, code), false)
+            Progress::Ready -> block constructed(gate, context)
+        }
+    }
+    machine constructed(gate: &Gate, context: &mut State) reaches Kernel {
+        let slot: u64 [0..=4] = context.launch.slot;
+        transition authority::constructed(context) {
+            true -> block approved(gate, context)
+            _ -> block unbound(gate, context, slot, kernel::DENIED, false)
+        }
+    }
+    machine approved(gate: &Gate, context: &mut State) reaches Kernel {
+        let requester: u64 [0..=4] = context.launch.requester;
+        let incarnation: u64 = context.launch.incarnation;
+        let slot: u64 [0..=4] = context.launch.slot;
+        let object: u64 = context.launch.object;
+        let prepared: Prepared = context.launch.binding;
+        let login: bool = context.login && requester == 0u64 && slot == 1u64;
+        report::launch_stage(gate, slot, 0u64, 0u64);
+        report::budget(gate);
+        // Authority was rechecked while the picker still existed. Retire it,
+        // install the binding and place the child before another service turn.
+        block retire_picker(gate, context, login);
+        block bound(gate, context, requester, incarnation, slot, object, login, prepared);
+    }
     machine bound(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4], object: u64,
         login: bool, prepared: Prepared) reaches Kernel {
         let status: u64 = install(context, slot, object, prepared);
@@ -239,7 +283,7 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
         }
     }
     machine install(context: &mut State, slot: u64 [0..=4], object: u64, prepared: Prepared) -> u64 {
-        transition (context.last_granted & STORAGE) != 0u64 {
+        transition (context.launch.plan.mask & STORAGE) != 0u64 {
             true -> (binding::install(context, slot, object, prepared))
             _ -> (0u64)
         }

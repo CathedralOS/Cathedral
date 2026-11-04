@@ -54,13 +54,14 @@ public data SlotPolicy [copy] {
     standing: bool;
 }
 // A child launch owns its target through image read, admission and activation.
-// Phase 1 reads, 4 funds with the sealed image retained, 2 admits synchronously,
+// Phase 1 reads, 4 funds with the sealed image retained, 2 awaits construction,
 // and 3 awaits the shared scene transaction.
 // Policies and both connection identities are captured before yielding.
 public data Launch {
     phase: u64;
     image: u64;
     plan: admission::Plan;
+    binding: storage::Prepared;
     requester: u64 [0..=4];
     incarnation: u64;
     storage_incarnation: u64;

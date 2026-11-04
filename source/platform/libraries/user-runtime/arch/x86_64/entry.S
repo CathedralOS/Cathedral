@@ -76,6 +76,8 @@ cathedral_kernel_gate:
     .quad cathedral_physical_budget
     .quad cathedral_pool_available
     .quad cathedral_clock_stamp
+    .quad cathedral_spawn_begin
+    .quad cathedral_spawn_result
 
 .section .text.cathedral_kernel_gate,"ax",@progbits
 cathedral_yield:
@@ -605,6 +607,11 @@ cathedral_task_cancel:
 // Stage the borrowed 176-byte spawn record in one 256-byte-aligned slot so the
 // kernel's single-page copy-in never straddles a boundary. Nothing is written back.
 cathedral_spawn_tree:
+    mov eax, 40                      // TASK_SPAWN_TREE
+    jmp cathedral_spawn_record
+cathedral_spawn_begin:
+    mov eax, 89                      // TASK_SPAWN_BEGIN
+cathedral_spawn_record:
     push rbp
     mov rbp, rsp
     sub rsp, 512
@@ -613,7 +620,6 @@ cathedral_spawn_tree:
     mov rdi, rsp
     mov ecx, 22
     rep movsq
-    mov eax, 40                      // TASK_SPAWN_TREE
     mov rdi, r8
     mov rsi, rsp
     xor edx, edx
@@ -621,6 +627,19 @@ cathedral_spawn_tree:
     mov rsp, rbp
     pop rbp
     ret
+
+// Complete result is [status, child]; pending/error leaves the receipt retained.
+cathedral_spawn_result:
+    mov r8, rdi
+    mov r9, rdx
+    mov rdi, rsi
+    stage_buffer
+    mov eax, 90                      // TASK_SPAWN_RESULT
+    mov rdi, r8
+    mov rsi, rsp
+    mov rdx, r9
+    int 0x80
+    finish_buffer 1
 
 // The kernel writes the 40-byte exit record; copy it back into the borrowed array.
 cathedral_task_wait:

@@ -1,6 +1,7 @@
 module supervisor::owner;
 // Owner commands: 1 admit [slot, granted, launch, argument], 2 stop [slot],
-// 3 status, 99 exit. Replies report the admission status or the slot's exit.
+// 3 status, 4 submit admission, 99 exit. Submission replies before collecting
+// construction; ordinary turns then publish its listener or record the failure.
 // Status words: slot liveness, handled echoes, stored storage messages, last
 // exit kinds and whether each slot holds a request. Any owner failure ends the witness.
 use supervisor::main::State;
@@ -27,6 +28,7 @@ machine command(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64
 machine routed(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel {
     transition frame.payload[0] {
         1u64 -> block admit(gate, context, now, frame)
+        4u64 -> block admit(gate, context, now, frame)
         2u64 -> block stop(gate, context, frame)
         3u64 -> block status(gate, context)
         99u64 -> block exit(gate, context)
@@ -39,7 +41,7 @@ machine admit(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 r
         _ -> block reply(gate, context, kernel::INVALID_ARGUMENT, 0u64)
     }
     machine slot(gate: &Gate, context: &mut State, now: u64, frame: Frame, slot: u64 [0..=1]) -> u64 reaches Kernel {
-        transition context.slots[slot].live {
+        transition context.slots[slot].live || context.slots[slot].pending != 0u64 {
             true -> block reply(gate, context, kernel::BUSY, 0u64)
             _ -> block launch(gate, context, now, frame, slot)
         }
@@ -52,11 +54,18 @@ machine admit(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 r
         }
     }
     machine admitted(gate: &Gate, context: &mut State, now: u64, frame: Frame, slot: u64 [0..=1], launch: u64) -> u64 reaches Kernel {
-        let loans: [u64; 14];
-        let status: u64 = block runtime::admission::main::admit(gate, &mut context.slots[slot], launch,
-            frame.payload[4], &loans, 0u64, frame.payload[2], context.clock, 300u64, false);
+        let status: u64 = block submit(gate, context, frame, slot, launch);
         context.exits[slot] = 0u64;
         block reply(gate, context, status, 0u64)
+    }
+    machine submit(gate: &Gate, context: &mut State, frame: Frame, slot: u64 [0..=1], launch: u64) -> u64 reaches Kernel {
+        let loans: [u64; 14];
+        transition frame.payload[0] == 4u64 {
+            true -> block runtime::admission::pending::begin(gate, &mut context.slots[slot], launch,
+                frame.payload[4], &loans, 0u64, frame.payload[2])
+            _ -> block runtime::admission::main::admit(gate, &mut context.slots[slot], launch,
+                frame.payload[4], &loans, 0u64, frame.payload[2], context.clock, 300u64, false)
+        }
     }
 }
 machine stop(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Kernel {
@@ -65,7 +74,7 @@ machine stop(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Kern
         _ -> block reply(gate, context, kernel::INVALID_ARGUMENT, 0u64)
     }
     machine slot(gate: &Gate, context: &mut State, slot: u64 [0..=1]) -> u64 reaches Kernel {
-        transition context.slots[slot].live {
+        transition context.slots[slot].live || context.slots[slot].pending != 0u64 {
             true -> block stopping(gate, context, slot)
             _ -> block reply(gate, context, kernel::PEER_CLOSED, 0u64)
         }

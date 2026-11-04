@@ -14,6 +14,7 @@ Run from the repository root:
 
 ```powershell
 python tools/omega-user/run_test.py --compiler path/to/new/omega.exe
+python tools/omega-user/run_test.py --matrix --compiler path/to/new/omega.exe
 ```
 
 The runner boots the same Omega ELF twice under the ordinary Rust kernel,
@@ -33,6 +34,18 @@ initial endpoints, one private page and one reader page of allowance. It checks:
 - Without a clock grant, both acquisition and parking are denied.
 - With the grant, a two-tick deadline parks and resumes at or after the deadline.
 - The kernel reports normal exit with status zero.
+
+Two further boots restrict the same program's channel allowance. Zero channels
+must return 102; one channel must close its first allocation and return 109.
+These checks require the kernel's complete, exact exit report, not merely a
+success message printed by the program. `--matrix` also boots the ordinary stock
+matrix with a clock and enough image funding, but no service endpoints. Its
+cleanup and kernel exit must both report INVALID_ARGUMENT (`2^64 - 22`),
+including the upper bits. No application code is patched for these failures.
+
+The packaging consumer's `main` is not the booted entry. The linker names the
+independent component's checked `Program::run` export as `omega_app_step`;
+the native `_start` calls it and passes its result directly to kernel EXIT.
 
 Artifacts and serial logs live in `build/omega-user/tests/<timestamp>/`.
 The guest's proof is actual process execution, not a mocked table callback.
@@ -143,7 +156,7 @@ fixture policy, not platform roles.
 The [Rust owner](../../../../source-rs/distribution/lab/channels/omega_peer/supervisor/supervisor.rs)
 is the initial program. It lends launches 1 and 2 to the supervisor at launch 0,
 because the kernel lends a launch only toward a lower task slot, and drives it
-through the kernel-installed control pair. Six scenarios, each with a fresh
+through the kernel-installed control pair. Nine scenarios, each with a fresh
 supervisor and full budget checks afterwards:
 
 - Six echo children admitted into one slot in turn, each exiting by itself, under
@@ -160,6 +173,18 @@ supervisor and full budget checks afterwards:
 - A child checks every refusal code: taken interaction, incompatible range and
   version, invalid bounds and parts, unavailable contracts and reserved words;
   another child finds storage unavailable when it was not granted.
+- Six rounds submit an echo child in each slot, then collect both through
+  ordinary service turns while the owner queries status on its separate connection.
+- Six immediate stop requests race asynchronous publication; both a pending
+  rollback and an already-created child must release the bundle for reuse.
+- Killing the supervisor after asynchronous submission reclaims its child and
+  all channels, notifications and physical backing.
+
+The booted kernel's staged-admission fixture separately holds construction at
+known boundaries. It verifies cancellation and authority withdrawal before
+publication, retained results on bad copyout, and that completing admission
+cannot wake or overwrite a parent's unrelated blocked syscall. The live Omega
+witness does not assume that construction must take a minimum amount of time.
 
 The peers use the ordinary Rust service bindings over the shared v4 transport.
 This proves admission, offers and reclamation on the common runtime; it does not

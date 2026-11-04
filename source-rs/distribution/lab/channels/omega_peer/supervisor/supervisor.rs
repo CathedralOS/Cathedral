@@ -25,7 +25,7 @@ const REFUSALS: u64 = 15;
 const NO_STORAGE: u64 = 16;
 
 pub(super) fn run() {
-    for scenario in 1..=6 {
+    for scenario in 1..=9 {
         let budget = resources::budget().unwrap();
         let physical = resources::physical_budget().unwrap();
         let bells = notification::budget().unwrap();
@@ -54,6 +54,9 @@ impl Owner {
     }
     fn admit(&mut self, slot: u64, granted: u64, launch: u64, argument: u64) -> u64 {
         self.call([1, slot, granted, launch, argument, 0, 0, 0])[0]
+    }
+    fn begin(&mut self, slot: u64, granted: u64, launch: u64, argument: u64) -> u64 {
+        self.call([4, slot, granted, launch, argument, 0, 0, 0])[0]
     }
     fn stop(&mut self, slot: u64) -> [u64; 8] {
         self.call([2, slot, 0, 0, 0, 0, 0, 0])
@@ -91,6 +94,32 @@ fn run_scenario(number: u64) {
         client: Client::connect(pair, time::after(300).unwrap()).unwrap(),
     };
     match number {
+        7 => {
+            for round in 1..=6u64 {
+                assert_eq!(owner.begin(0, imports::INTERACTION, 0, ECHO), 0);
+                assert_eq!(owner.begin(1, imports::INTERACTION, 1, ECHO), 0);
+                let state = owner.observed(|v| {
+                    v[0] == 0 && v[1] == 0 && v[4] == RETURNED && v[5] == RETURNED
+                });
+                assert_eq!(state[2], round * 16);
+            }
+        }
+        8 => {
+            for _ in 0..6 {
+                assert_eq!(owner.begin(0, imports::INTERACTION, 0, IDLE), 0);
+                // Stop may race publication. Both paths must collect the child
+                // and release its bundle before the same slot can be reused.
+                assert_eq!(owner.stop(0)[..2], [0, CANCELLED]);
+                assert_eq!(owner.status()[0], 0);
+            }
+        }
+        9 => {
+            assert_eq!(owner.begin(0, imports::ALL, 0, IDLE), 0);
+            supervisor.cancel().unwrap();
+            assert_eq!(supervisor.wait().unwrap(), Outcome::Cancelled);
+            owner.client.retire();
+            return;
+        }
         1 => {
             // Echo children exit by themselves. The slot must be reclaimed and
             // reusable under a channel reservation that a per-child leak would exhaust.

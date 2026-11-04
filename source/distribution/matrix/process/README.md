@@ -135,6 +135,12 @@ The storage, the parent and the display.
 
 The children this matrix admits, funds, presents and retires.
 
+- [construction/construction.omg](children/construction/construction.omg): configure a reserved
+  launch, submit construction and open its control and storage listeners. Child
+  LAUNCH requests use the runtime's asynchronous receipt; owner/setup calls still
+  wait. [configuration.omg](children/construction/configuration.omg) owns the bounded
+  CPU and catalogue grants. Lifecycle collects cancelled submissions and returns
+  their reservations, including when publication wins the cancellation race.
 - [lifecycle.omg](children/lifecycle.omg): RUN_PAGES and RUN_MEMORY stage a slot's next
   allowances; RUN reserves a launch for an image from the owner's catalogue
   under them (frames default to the load, never below one slot's 256 frames,
@@ -149,6 +155,9 @@ The children this matrix admits, funds, presents and retires.
   accepts control, so the matrix sends the hello, keeps serving, finishes
   the handshake on a later turn once the child answers, and takes the child
   back down if it never does; routed owner words wait with BUSY meanwhile.
+  Short probes use kernel readiness, which observes a queued reply even if
+  earlier work spent the probe window. The overall handshake deadline remains
+  fixed; an expired probe must not hide ready work on every busy turn.
   The kernel takes a reservation back only
   once the ended child's frames are no longer charged, so a refused release
   waits and is retried each turn and before any funding is reckoned. An
@@ -209,9 +218,13 @@ The children this matrix admits, funds, presents and retires.
   requester's launch. [resources.omg](children/launch/resources.omg) resolves
   the executable into an admission plan. The launch retains the sealed image
   while funding waits, then rechecks its authority before installing that plan.
-  The login picker remains alive during reads and funding; an invalid image is
-  refused before retirement. Failure after retirement queues bounded picker
-  recovery. Kernel spawn and brokered admission still wait.
+  Construction then returns to the service loop, with the binding snapshot and
+  resource plan retained beside the request. The caller and policy are rechecked
+  before each observation and after publication; binding and placement use that
+  retained plan before the next child dispatch. The login picker remains alive
+  through loading and retires only after the replacement exists. Failure after
+  retirement queues bounded picker recovery. Cancellation and teardown still
+  drain synchronously; ordinary construction no longer waits.
 
 - [workspace.omg](children/workspace.omg): the workspace's app instances
   under the stock catalogue. A launch into an app slot publishes the instance
@@ -235,7 +248,10 @@ Setting the matrix up from its realm.
   sequences each job while this process executes its commands. Jobs run on a
   small stack in the State, one command per turn, so the matrix keeps
   answering its owner and children between them; a command that starts
-  another job waits for that job's result. A nested instance discovers its
+  another job waits for that job's result. Setup yields while a newly admitted
+  child's owner or broker connection is opening, so a later blocking realm
+  command cannot consume that handshake's deadline. The normal turn loop keeps
+  serving those connections and retires failed children. A nested instance discovers its
   realm once the parent has placed it: a Matrix record configures a
   workspace, Login beside Users starts a scoped picker, anything else leaves
   setup to the owner; the owner's CONFIGURE runs the configuration job, its

@@ -23,6 +23,9 @@ pub(in super::super) fn dispatch(
     if number == abi::TASK_ENVIRONMENT {
         return launch::environment(session, slot, first, second, third);
     }
+    if number == abi::TASK_SPAWN_RESULT {
+        return launch::result(session, slot, first, second, third);
+    }
     if number == abi::YIELD {
         *event = Event::Yield;
         session.tasks[slot].report.yields += 1;
@@ -59,7 +62,7 @@ pub(in super::super) fn dispatch(
         .launches
         .iter()
         .position(|launch| match number {
-            abi::TASK_SPAWN | abi::TASK_SPAWN_WITH | abi::TASK_SPAWN_TREE => {
+            abi::TASK_SPAWN | abi::TASK_SPAWN_WITH | abi::TASK_SPAWN_TREE | abi::TASK_SPAWN_BEGIN => {
                 launch.model.launch(slot) == Ok(first)
             }
             abi::TASK_CONNECT => launch.model.port(slot) == Ok(first),
@@ -68,7 +71,7 @@ pub(in super::super) fn dispatch(
         .ok_or(abi::BAD_HANDLE)?;
     if matches!(
         number,
-        abi::TASK_SPAWN | abi::TASK_SPAWN_WITH | abi::TASK_SPAWN_TREE
+        abi::TASK_SPAWN | abi::TASK_SPAWN_WITH | abi::TASK_SPAWN_TREE | abi::TASK_SPAWN_BEGIN
     ) {
         return launch::request(session, slot, index, call, event);
     }

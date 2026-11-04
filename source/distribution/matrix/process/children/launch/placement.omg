@@ -26,7 +26,7 @@ use connections::presentation::Submission;
 public machine place(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4], object: u64) -> Submission
     reaches Kernel blocks invokes Kernel {
     let standing: u64 = context.policies[slot].surfaces;
-    let allotted: u64 = context.allotted_surfaces;
+    let allotted: u64 = context.launch.plan.surfaces;
     let allowance: u64 = context.world.allowance;
     let ranged: u64 = range_for(context, slot, standing, allotted, allowance);
     transition ranged == 0u64 {
@@ -130,8 +130,8 @@ machine launched(slot: u64, receipt: u64) -> [u64; 8] {
 // its standing count from the bottom, below the picker; elsewhere the owner's
 // standing count holds.
 machine range_for(context: &mut State, slot: u64 [0..=4], standing: u64, allotted: u64, allowance: u64) -> u64 {
-    let demand: Demand = Demand { requested: allotted, ceiling: standing, has_descendants: context.allotted_descendants != 0u64,
-        explicit_profile: context.allotted_profiled, backed: allowance };
+    let demand: Demand = Demand { requested: allotted, ceiling: standing, has_descendants: context.launch.plan.descendants != 0u64,
+        explicit_profile: context.launch.plan.profiled, backed: allowance };
     transition {
         context.desktop && allotted != 0u64 -> preferring(context, slot, allotted, preferred(&demand), allowance)
         context.desktop -> (kernel::NO_MEMORY)

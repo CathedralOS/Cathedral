@@ -3,10 +3,25 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
-from desktop_soak import cycles_before, heap_reports, last_token, reclaimed, shell_accounts
+from unittest.mock import patch
+from desktop_soak import cycles_before, exercise, heap_reports, last_token, reclaimed, shell_accounts
 
 
 class SoakTests(unittest.TestCase):
+    def test_failed_phase_preserves_progress_without_completing_a_cycle(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory)
+            (output / 'serial.log').write_text('')
+            with patch('desktop_soak.Nested') as nested:
+                nested.return_value.enter.side_effect = AssertionError('desktop stalled')
+                with self.assertRaisesRegex(AssertionError, 'desktop stalled'):
+                    exercise(output, None, None, None, 1024, 768, False, 1, nested_depth=1)
+            progress = json.loads((output / 'soak-progress-boot-1.json').read_text())
+            self.assertEqual((progress['cycle'], progress['phase'], progress['status']), (1, 'enter-1', 'failed'))
+            self.assertIn('enter-1', progress['phases'])
+            self.assertEqual(cycles_before(output), 0)
+            self.assertFalse((output / 'soak-boot-1.json').exists())
+
     def test_heap_reports_keep_phase_live_peak_failures_and_capacity(self):
         log = ('Cathedral Rust lab: Cathedral objects heap: recovered live=66720 peak=66796 largest=9432 failures=0 capacity=229376 pages=256 frames=532\n'
                'noise\nCathedral objects heap: committed live=134408 peak=160332 largest=9432 failures=1 capacity=229376 pages=276 frames=552\n'

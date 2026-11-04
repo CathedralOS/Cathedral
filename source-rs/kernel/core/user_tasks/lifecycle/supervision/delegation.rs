@@ -12,7 +12,7 @@ impl Supervisor {
         {
             return Err(abi::DENIED);
         }
-        if self.state != Child::Empty {
+        if !self.idle() {
             return Err(abi::BUSY);
         }
         Ok(())

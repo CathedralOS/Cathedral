@@ -84,6 +84,8 @@ public data Gate {
     physical_budget: addr;
     pool_available: addr;
     clock_stamp: addr;
+    spawn_begin: addr;
+    spawn_result: addr;
 }
 
 public boundary trait Kernel {
@@ -130,6 +132,8 @@ public boundary trait Kernel {
     machine launch_port(gate: &Gate, launch: u64) -> u64 reaches;
     machine task_connect(gate: &Gate, port: u64) -> u64 reaches;
     machine spawn_tree(gate: &Gate, launch: u64, record: &[u64; 22]) -> u64 reaches blocks;
+    machine spawn_begin(gate: &Gate, launch: u64, record: &[u64; 22]) -> u64 reaches;
+    machine spawn_result(gate: &Gate, receipt: u64, record: &mut [u64; 8], cancel: u64 [0..=1]) -> u64 reaches;
     machine task_cancel(gate: &Gate, child: u64) -> u64 reaches blocks;
     machine task_wait(gate: &Gate, child: u64, record: &mut [u64; 8]) -> u64 reaches blocks;
     machine endpoint_send(gate: &Gate, endpoint: u64, packet: &[u64; 10]) -> u64 reaches;

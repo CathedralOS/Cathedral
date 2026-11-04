@@ -45,5 +45,9 @@ pub(in crate::user_tasks) unsafe fn exercise(
             authority::abandoned_object(frames, layout, image, &program, refusing);
         }
         output(b"staged admission: rollback, cancellation and source reclamation passed\n");
+        for outcome in 0..5 {
+            asynchronous::exercise(frames, layout, image, &program, outcome);
+        }
+        output(b"staged admission: async receipts, isolated completion and rollback passed\n");
     }
 }
