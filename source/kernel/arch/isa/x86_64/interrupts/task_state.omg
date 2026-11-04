@@ -10,11 +10,13 @@ use facts::x86_descriptor_bytes;
 // captured here may outlive that borrow or survive a move of the owner.
 //
 // This closed single-CPU interval runs at CPL0 in long mode with mapped backing.
-// It excludes interrupts, NMI, machine checks, debug exceptions, firmware calls
-// and segment reloads for the entire retained interval, including after this
-// call returns. CLI alone does not establish that envelope. The kernel remains
-// inside it until a complete exception floor is installed. Cached segment
-// registers remain unchanged.
+// It excludes interrupts, NMI, machine checks, debug exceptions and firmware
+// calls for the entire retained interval. CLI alone does not establish that
+// envelope. After this call, the kernel may reload code/data selectors through
+// the checked operations on this same retained GDT. Task-state and stack backing
+// must stay mapped and nonmoving; asynchronous entry remains excluded until a
+// complete exception floor is installed. This call itself leaves cached code
+// and data selections unchanged.
 public boundary trait TaskStatePreparation {
     machine activate(storage: &mut TaskStateStorage) -> bool
     requires addr::Bound == 18446744073709551616
@@ -87,10 +89,12 @@ crashes Abort
     // against these exact borrowed owners before it can issue LTR.
     let activated: bool = TaskRegisterControl::activate<5>(
         &mut storage.gdt, &storage.task_bytes, 24);
-    activated && check_task_state(storage)
+    activated && task_state_selected(storage)
 }
 
-machine check_task_state(storage: &TaskStateStorage) -> bool
+// Later bootstrap operations recheck the same retained table and guards after
+// changing CPU selections; an earlier observation cannot stand in for this read.
+public machine task_state_selected(storage: &TaskStateStorage) -> bool
 requires addr::Bound == 18446744073709551616
 reaches MachineControl + TaskRegisterControl
 invokes TaskRegisterControl

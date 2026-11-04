@@ -267,3 +267,23 @@ public machine BootMarkers::task_state_checked() reaches PortIo {
     asm { out 1016, 13 }
     asm { out 1016, 10 }
 }
+
+public machine BootMarkers::selectors_checked() reaches PortIo {
+    // Segments ready
+    asm { out 1016, 83 }
+    asm { out 1016, 101 }
+    asm { out 1016, 103 }
+    asm { out 1016, 109 }
+    asm { out 1016, 101 }
+    asm { out 1016, 110 }
+    asm { out 1016, 116 }
+    asm { out 1016, 115 }
+    asm { out 1016, 32 }
+    asm { out 1016, 114 }
+    asm { out 1016, 101 }
+    asm { out 1016, 97 }
+    asm { out 1016, 100 }
+    asm { out 1016, 121 }
+    asm { out 1016, 13 }
+    asm { out 1016, 10 }
+}

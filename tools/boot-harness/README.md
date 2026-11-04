@@ -76,7 +76,8 @@ runs headlessly for at most `--timeout` seconds (default 30), and this run's
 serial log must contain the greeting followed by a complete numeric
 `Owned N MiB` line, then `Boot map ready`, `Kernel entered`, `Memory split`, `Memory checked`,
 `Memory paired`, `Page ready`, `Tables ready`, `CPU checked`, `Root located`, `Root read`,
-`Tables retained`, `Mapping retired`, `Mapping checked`, `GDT checked`, and `TSS checked`.
+`Tables retained`, `Mapping retired`, `Mapping checked`, `GDT checked`, `TSS checked`,
+and `Segments ready`.
 The GDT marker requires the kernel to load its own temporary segment table,
 read back its pointer and limit, and restore the previous table before returning.
 It also checks neighboring buffer bytes. The table stays borrowed throughout
@@ -89,7 +90,12 @@ The TSS marker additionally requires activation of the kernel's retained
 interrupt-stack table, selector readback, the complete descriptor busy-bit
 update, and unchanged neighboring guards. Its GDT, encoded task state and four
 stack buffers stay borrowed with the boot roots in the idle continuation.
-Segment-selector reload and actual interrupt delivery remain unfinished.
+The selector marker then requires CS 8, DS/ES/SS 16, null FS/GS selectors,
+task selector 24, the complete expected GDT and unchanged guards. Code reload
+precedes data reload; a refusal aborts the boot while retaining all backing.
+The checked operation preserves active FS/GS bases, as verified separately by
+Omega's CPU witness. The table and boot roots remain alive after the marker.
+Installed handlers and actual timer delivery remain unfinished.
 The boot-map marker requires the kernel to copy the final memory map from the
 explicit initial-storage packet and check its format, byte count, descriptor
 stride, checksum, original storage base and image-prefix correspondence. It

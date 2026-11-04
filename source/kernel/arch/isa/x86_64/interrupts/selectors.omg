@@ -1,0 +1,60 @@
+module isa::x86_64::interrupts::selectors;
+
+use omega::language::core::assembly;
+use omega::language::core::code_segment;
+use omega::language::core::data_segment;
+use omega::language::core::task_register;
+use isa::x86_64::interrupts::task_state;
+
+// Replace the firmware's cached segment selections with descriptors in the
+// table this kernel retains. The existing closed bootstrap interval continues
+// through both calls: failure after the code reload does not undo that reload.
+// The compiler owns the code continuation and preserves active FS/GS bases.
+// Code reload refuses enabled CET before changing any selector. A refusal
+// aborts this boot path while the table and existing roots remain retained.
+// Success does not enable interrupts or establish an installed handler.
+public boundary trait KernelSelectorPreparation {
+    machine activate(storage: &mut task_state::TaskStateStorage) -> bool
+    requires addr::Bound == 18446744073709551616
+    reaches MachineControl + CodeSegmentControl + DataSegmentControl + TaskRegisterControl
+    invokes CodeSegmentControl
+    invokes DataSegmentControl
+    invokes TaskRegisterControl;
+}
+
+public BootstrapKernelSelectorPreparation satisfies KernelSelectorPreparation {
+    machine activate(storage: &mut task_state::TaskStateStorage) -> bool
+    requires addr::Bound == 18446744073709551616
+    reaches MachineControl + CodeSegmentControl + DataSegmentControl + TaskRegisterControl
+    invokes CodeSegmentControl
+    invokes DataSegmentControl
+    invokes TaskRegisterControl
+    {
+        let code_selected: bool = CodeSegmentControl::reload<5>(&mut storage.gdt, 8);
+        transition code_selected {
+            true -> select_data(storage)
+            _ -> refused()
+        }
+
+        machine select_data(storage: &mut task_state::TaskStateStorage) -> bool
+        requires addr::Bound == 18446744073709551616
+        {
+            let data_selected: bool = DataSegmentControl::reload<5>(&mut storage.gdt, 16);
+            transition data_selected {
+                true -> verify(storage)
+                _ -> refused()
+            }
+        }
+
+        machine verify(storage: &task_state::TaskStateStorage) -> bool
+        requires addr::Bound == 18446744073709551616
+        {
+            let code: u16 = CodeSegmentControl::selector();
+            let data: DataSelectors = DataSegmentControl::selectors();
+            code == 8 && data.ds == 16 && data.es == 16 && data.ss == 16
+                && data.fs == 0 && data.gs == 0 && task_state::task_state_selected(storage)
+        }
+
+        machine refused() -> bool { false }
+    }
+}

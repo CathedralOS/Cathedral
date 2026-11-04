@@ -32,6 +32,12 @@ machine build(builder: &mut Build) {
     Build::select_provider<BootVirtualReservation, BootstrapVirtualReservationProvider>(builder, uefi_x86_64);
     Build::accept_boundary<BootTranslation>(builder);
     Build::select_provider<BootTranslation, BootstrapTranslationProvider>(builder, uefi_x86_64);
+    Build::accept_boundary<CodeSegmentControl>(builder);
+    Build::select_provider<CodeSegmentControl, X86CodeSegmentControl>(builder, uefi_x86_64);
+    Build::accept_boundary<DataSegmentControl>(builder);
+    Build::select_provider<DataSegmentControl, X86DataSegmentControl>(builder, uefi_x86_64);
+    Build::accept_boundary<arch::isa::x86_64::interrupts::selectors::KernelSelectorPreparation>(builder);
+    Build::select_provider<arch::isa::x86_64::interrupts::selectors::KernelSelectorPreparation, arch::isa::x86_64::interrupts::selectors::BootstrapKernelSelectorPreparation>(builder, uefi_x86_64);
     Build::accept_boundary<TaskRegisterControl>(builder);
     Build::select_provider<TaskRegisterControl, X86TaskRegisterControl>(builder, uefi_x86_64);
     Build::accept_boundary<arch::isa::x86_64::interrupts::task_state::TaskStatePreparation>(builder);
