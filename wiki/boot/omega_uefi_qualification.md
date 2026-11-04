@@ -1,16 +1,77 @@
 # Omega UEFI boot qualification
 
-Cathedral's Omega kernel now selects its own table of future interrupt-stack
-addresses and confirms that the CPU accepted it. A freshly compiled image
-passed all seventeen ordered QEMU/OVMF checks through `TSS checked`, including
-the earlier firmware-exit, retained-memory and mapping checks.
+Cathedral's Omega kernel now uses its own code, data and stack settings after
+leaving firmware. A freshly compiled image passed all eighteen ordered QEMU/OVMF
+checks through `Segments ready`, including the earlier firmware-exit,
+retained-memory and mapping checks.
 
-The table, descriptor, four stack buffers and boot roots remain owned while
-the kernel idles. Segment-selector reload, installed exception/timer handlers,
-handler stack-resource checks, repeated interrupts and an ordinary-code wake
-remain unfinished. This is not a desktop or real-hardware qualification.
+The tables, four future interrupt-stack buffers and boot roots remain owned
+while the kernel idles. Installed exception/timer handlers, their stack-resource
+checks, repeated interrupts and an ordinary-code wake remain unfinished.
+This is not a desktop or real-hardware qualification.
 
-## Task-state boot check, 2026-11-04 UTC
+## Selector boot check, 2026-11-04 UTC
+
+After `TSS checked`, the kernel reloads code and then data/stack selectors from
+its retained GDT. The new marker requires CS 8, DS/ES/SS 16, FS/GS 0, TR 24,
+the complete expected GDT and unchanged guard words. Its whole table/stack owner
+remains borrowed alongside the existing memory roots. The marker does not reread
+all 104 TSS bytes or the FS/GS bases; the separate compiler CPU witness checks
+full-width base preservation.
+
+A refusal aborts while retaining the backing. The two reloads are sequential;
+a later refusal does not undo a completed code reload. Enabled CPU control-flow
+protection (CET) is refused before the code reload changes selectors. The closed
+single-CPU bootstrap conditions still exclude asynchronous/debug entry and
+firmware calls until the complete exception floor is installed.
+
+Ordinary update checked all nine packages in **805.080 seconds**. Independent
+review found that all 246 capability decisions changed only the stored format
+version, 26 to 27; the intentional selector source changes were also audited.
+Normal resume published the matching lock in **602.365 seconds**. A fresh build
+and boot then passed in **695.206 seconds**, including 30 seconds of guest
+observation; the compiler reported **664.947 seconds**. These are host workflow
+measurements, not guest boot times. Output reports `Owned 34 MiB` and all eighteen
+messages in order.
+
+- Optimized compiler SHA-256:
+  `ca5b9db812cb1b4891e457ec1d473f767820572772597fdb1b2ef077802d2c3a`,
+  optimization level `1`, with its frozen matching library.
+- The selector operation is published through
+  [Omega PR #1807](https://github.com/CathedralOS/Omega/pull/1807), main
+  `6ace467e4f78bb55d5d3e6727539e4a47814ec0a`. The boot producer retains its
+  actual earlier source snapshot; it is not relabeled as a build of that merge.
+  The integrated compiler separately passed the same source/CPU controls and
+  emitted byte-identical selector and task-register witness payloads.
+- Cathedral base: `2c287634938b9f004d97932bbc9656a42516ffef` plus the recorded
+  selector changes. Captured source, harness, profile, accepted lock, compiler
+  and library inputs stayed unchanged during the successful run.
+- Fresh image SHA-256:
+  `5dbda23368e327df1552db1a986bd5ecea62ad18cec3950e589e50a91037f31a`.
+- Serial SHA-256:
+  `5300919c99eb9b3d495764d3c48e1a3f48abc80eb4034390703c976a083d71f7`.
+- QEMU `11.0.2`; OVMF code SHA-256:
+  `33090cc07675baa5190d9f1e84bf5176b33bcbfa9bacac522961150cdb6dbb2a`.
+  Harness exit: `0`.
+
+Local raw evidence is under `build/timer-selector-integration/`: the successful
+`boot-v1-r2/result.json`, image and serial log; ordinary update/resume records;
+and the independent source/package reviews. Five older timer/entry prototype
+edits were captured but remain outside this boot's selected import/call closure.
+The first update caught an unqualified namespace use, which was corrected.
+The first fresh build ran out of disk space before an image reached the harness;
+its log and recovered failure record remain separate from the successful retry.
+Normal replay follows the [boot harness guide](../../tools/boot-harness/README.md).
+
+The separate compiler CPU test completed eight calls and checked all selectors,
+full-width FS/GS bases, kernel GS base, stack, registers, flags and neighbors.
+Corrupting a neighboring byte made the same payload fail. QEMU's far-return
+helper omits the code descriptor accessed-bit write; that witness allows only
+that bit to remain unchanged. Cathedral seeds the accessed bits before loading
+the table. No hardware accessed-bit write or timer arrival is claimed by these
+selector tests.
+
+## Earlier task-state boot check, 2026-11-04 UTC
 
 The kernel builds the x86 task-state segment (TSS) with the existing typed
 hardware definitions and explicit 104-byte codec. Its four stack addresses and

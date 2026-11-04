@@ -10,10 +10,13 @@ use arch::isa::x86_64::memory::profile::BootstrapPagingProfile;
 use arch::isa::x86_64::interrupts::segments::SegmentTablePreparation;
 use arch::isa::x86_64::interrupts::task_state::TaskStatePreparation;
 use arch::isa::x86_64::interrupts::task_state::TaskStateStorage;
+use arch::isa::x86_64::interrupts::selectors::KernelSelectorPreparation;
 use core::memory::geometry::BootGeometry;
 use omega::language::core::extent;
 use omega::language::core::assembly;
 use omega::language::core::task_register;
+use omega::language::core::code_segment;
+use omega::language::core::data_segment;
 use omega::language::core::layout;
 use lab::memory::lifecycle;
 use lab::memory::page;
@@ -76,7 +79,7 @@ BootVacantStorageProvider satisfies VacantContentTransfer {
 // selecting the entry neither allocates a context nor grants either root.
 machine Kernel::start(image: Extent in Granted, initial_storage: Extent in Granted)
 requires addr::Bound == 18446744073709551616
-reaches PortIo + MachineControl + VacantContentTransfer + ResourceProfileSupply + AccessLifecycle + ExtentRootProvider + BootVirtualReservation + BootTranslation + SegmentTablePreparation + TaskStatePreparation + TaskRegisterControl
+reaches PortIo + MachineControl + VacantContentTransfer + ResourceProfileSupply + AccessLifecycle + ExtentRootProvider + BootVirtualReservation + BootTranslation + SegmentTablePreparation + TaskStatePreparation + TaskRegisterControl + KernelSelectorPreparation + CodeSegmentControl + DataSegmentControl
 invokes ExtentRootProvider
 invokes VacantContentTransfer
 invokes ResourceProfileSupply
@@ -86,6 +89,9 @@ invokes BootTranslation
 invokes SegmentTablePreparation
 invokes TaskStatePreparation
 invokes TaskRegisterControl
+invokes KernelSelectorPreparation
+invokes CodeSegmentControl
+invokes DataSegmentControl
 crashes Abort
 {
     let mut context: KernelState;
@@ -97,7 +103,7 @@ crashes Abort
 machine Kernel::enter(context: &mut KernelState, image: Extent in Granted,
                       initial_storage: Extent in Granted)
 requires addr::Bound == 18446744073709551616
-reaches PortIo + MachineControl + VacantContentTransfer + ResourceProfileSupply + AccessLifecycle + ExtentRootProvider + BootVirtualReservation + BootTranslation + SegmentTablePreparation + TaskStatePreparation + TaskRegisterControl
+reaches PortIo + MachineControl + VacantContentTransfer + ResourceProfileSupply + AccessLifecycle + ExtentRootProvider + BootVirtualReservation + BootTranslation + SegmentTablePreparation + TaskStatePreparation + TaskRegisterControl + KernelSelectorPreparation + CodeSegmentControl + DataSegmentControl
 invokes ExtentRootProvider
 invokes VacantContentTransfer
 invokes ResourceProfileSupply
@@ -107,6 +113,9 @@ invokes BootTranslation
 invokes SegmentTablePreparation
 invokes TaskStatePreparation
 invokes TaskRegisterControl
+invokes KernelSelectorPreparation
+invokes CodeSegmentControl
+invokes DataSegmentControl
 crashes Abort
 {
     // Kernel::start supplies its zero-initialized local state. Keep that
@@ -886,6 +895,51 @@ crashes Abort
     requires addr::Bound == 18446744073709551616
     {
         BootMarkers::task_state_checked();
+        transition { _ -> activate_selectors(context, image, pair, inventory, attempt, storage) }
+    }
+
+    machine activate_selectors(context: &mut KernelState, image: Extent in Granted,
+                               pair: KernelMemoryPair, inventory: FirmwareTableInventory,
+                               attempt: MappingAttempt, storage: &mut TaskStateStorage)
+    requires addr::Bound == 18446744073709551616
+    {
+        let selected: bool = KernelSelectorPreparation::activate(storage);
+        transition selected {
+            true -> selectors_wait(context, image, pair, inventory, attempt, storage, 1000000)
+            _ -> task_state_failed(context, image, pair, inventory, attempt, storage)
+        }
+    }
+
+    machine selectors_wait(context: &mut KernelState, image: Extent in Granted,
+                           pair: KernelMemoryPair, inventory: FirmwareTableInventory,
+                           attempt: MappingAttempt, storage: &mut TaskStateStorage, remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
+        let mut status: u8 = 0;
+        asm { in status, 1021 }
+        transition (status & 32) != 0 {
+            true -> selectors_report(context, image, pair, inventory, attempt, storage)
+            _ -> selectors_retry(context, image, pair, inventory, attempt, storage, remaining)
+        }
+    }
+
+    machine selectors_retry(context: &mut KernelState, image: Extent in Granted,
+                            pair: KernelMemoryPair, inventory: FirmwareTableInventory,
+                            attempt: MappingAttempt, storage: &mut TaskStateStorage, remaining: u64)
+    requires addr::Bound == 18446744073709551616
+    {
+        transition remaining > 1 {
+            true -> selectors_wait(context, image, pair, inventory, attempt, storage, remaining - 1)
+            _ -> retain_task_state(context, image, pair, inventory, attempt, storage)
+        }
+    }
+
+    machine selectors_report(context: &mut KernelState, image: Extent in Granted,
+                             pair: KernelMemoryPair, inventory: FirmwareTableInventory,
+                             attempt: MappingAttempt, storage: &mut TaskStateStorage)
+    requires addr::Bound == 18446744073709551616
+    {
+        BootMarkers::selectors_checked();
         transition { _ -> retain_task_state(context, image, pair, inventory, attempt, storage) }
     }
 

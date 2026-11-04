@@ -1,17 +1,16 @@
 # Omega boot frontier
 
-Cathedral's Omega kernel now gives the CPU an owned table of future interrupt
-stack addresses and confirms that the CPU selected it. A freshly compiled
-QEMU/OVMF image passed all seventeen ordered checks through `TSS checked`,
-after leaving firmware services and checking its retained memory and mappings.
-The table is the x86 task-state segment (TSS); the
-[boot qualification](../../../../wiki/boot/omega_uefi_qualification.md) records the exact compiler and image.
+Cathedral's Omega kernel now uses its own code, data and stack settings after
+leaving firmware. A fresh QEMU/OVMF image passed all eighteen ordered checks
+through `Segments ready`, including the earlier retained-memory and mapping
+checks. The [boot qualification](../../../../wiki/boot/omega_uefi_qualification.md)
+records the exact compiler and image.
 
-The kernel keeps the table, its descriptor and four stack buffers alive while
-it idles. Reloading the kernel's segment selectors, installing the exception
-and timer handlers, repeated timer delivery and an ordinary-code wake remain
-unfinished. The stack capacities still need the handlers' resource checks.
-This bounded boot lab does not establish the normal desktop or real-hardware support.
+The kernel keeps its tables, four future interrupt-stack buffers and boot roots
+alive while it idles. Installing the exception and timer handlers, checking their
+stack requirements, repeated timer delivery and an ordinary-code wake remain
+unfinished. This bounded boot lab does not establish the normal desktop or
+real-hardware support.
 
 Start at [main.omg](main.omg), the selected physical firmware arrival. It
 validates the table and enters [firmware discovery](firmware/firmware.omg), then
@@ -55,7 +54,7 @@ The fresh-image harness requires `Hello from Omega`, a complete `Owned N MiB`
 line, `Boot map ready`, `Kernel entered`, `Memory split`, `Memory checked`, `Memory paired`,
 `Page ready`, `Tables ready`, `CPU checked`, `Root located`, `Root read`,
 `Tables retained`, `Mapping retired`, `Mapping checked`, `GDT checked`, and
-`TSS checked`, in that order. The six-marker baseline reported 35 MiB in
+`TSS checked`, and `Segments ready`, in that order. The six-marker baseline reported 35 MiB in
 QEMU/OVMF using Omega `9e04918b1d1`. The current source requires Omega's exact address-model
 typing, representation-recast effect tracking and occurrence-local state-prefix
 checking, in addition to the canonical `ProgramStorageEntryNativeProvider`,
@@ -109,8 +108,8 @@ The intended acceptance is one freshly compiled `uefi_x86_64` image under
 QEMU/OVMF: `Hello from Omega`, successful firmware exit, `Owned N MiB` over
 COM1, then `Boot map ready`, `Kernel entered`, `Memory split`, `Memory checked`, `Memory paired`,
 `Page ready`, `Tables ready`, `CPU checked`, `Root located`, `Root read`,
-`Tables retained`, `Mapping retired`, `Mapping checked`, `GDT checked`, and `TSS checked`
-while retaining image, every initial-storage descendant and accounted surviving
+`Tables retained`, `Mapping retired`, `Mapping checked`, `GDT checked`, `TSS checked`,
+and `Segments ready` while retaining image, every initial-storage descendant and accounted surviving
 stack storage. `Memory checked` requires common-root reunion after all three partition sizes,
 initialization/readback of 17, write/readback/extraction of 29, and return of the
 original extent base and length. `Memory paired` additionally requires two live
@@ -153,6 +152,19 @@ register or release its backing. Its closed bootstrap interval excludes
 asynchronous entry until the complete exception floor is installed; masking
 ordinary interrupts alone does not establish that exclusion. No segment selector
 is reloaded and no interrupt handler is made live by this step.
+
+
+The following [selector step](../../arch/isa/x86_64/interrupts/selectors.omg)
+replaces the firmware's cached code and data selections with this retained GDT.
+It reloads code first, then data and stack selectors. `Segments ready` requires
+CS 8, DS/ES/SS 16, null FS/GS selectors, the retained task selector 24, the full
+expected GDT and unchanged guard words. The compiler operation preserves the
+active FS/GS bases; a separate CPU witness checks that preservation.
+
+A refused operation aborts this boot path while retaining its backing. A later
+refusal does not undo a completed code reload. The code operation refuses enabled
+CPU control-flow protection (CET) before changing selectors. The same closed
+bootstrap conditions remain required until the exception floor is installed.
 
 
 ## Reproduce

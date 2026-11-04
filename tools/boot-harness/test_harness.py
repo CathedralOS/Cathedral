@@ -33,8 +33,8 @@ class BootHarnessTests(unittest.TestCase):
             self.assertEqual((first / 'serial.log').read_bytes(), b'first')
 
     def test_smoke_requires_ordered_complete_reports_through_resident_readback(self):
-        boot.check_boot_milestones(b'Hello from Omega\r\nOwned 128 MiB\r\nBoot map ready\r\nKernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\nPage ready\r\nTables ready\r\nCPU checked\r\nRoot located\r\nRoot read\r\nTables retained\r\nMapping retired\r\nMapping checked\r\nGDT checked\r\nTSS checked\r\n')
-        boot.check_boot_milestones(b'Hello from Omega\nOwned 99999+ MiB\nBoot map ready\nKernel entered\r\nMemory split\r\nMemory checked\nMemory paired\nPage ready\nTables ready\nCPU checked\nRoot located\nRoot read\nTables retained\nMapping retired\nMapping checked\nGDT checked\nTSS checked\n')
+        boot.check_boot_milestones(b'Hello from Omega\r\nOwned 128 MiB\r\nBoot map ready\r\nKernel entered\r\nMemory split\r\nMemory checked\r\nMemory paired\r\nPage ready\r\nTables ready\r\nCPU checked\r\nRoot located\r\nRoot read\r\nTables retained\r\nMapping retired\r\nMapping checked\r\nGDT checked\r\nTSS checked\r\nSegments ready\r\n')
+        boot.check_boot_milestones(b'Hello from Omega\nOwned 99999+ MiB\nBoot map ready\nKernel entered\r\nMemory split\r\nMemory checked\nMemory paired\nPage ready\nTables ready\nCPU checked\nRoot located\nRoot read\nTables retained\nMapping retired\nMapping checked\nGDT checked\nTSS checked\nSegments ready\n')
         for output in (b'', b'Hello from Omega\r\n',
                        b'Owned 128 MiB\nHello from Omega\n',
                        b'Hello from Omega\nOwned rubbish MiB\n',
@@ -239,7 +239,7 @@ class BootHarnessTests(unittest.TestCase):
                     boot.check_boot_milestones(prefix + suffix)
         with self.assertRaisesRegex(ValueError, 'descriptor-table load'):
             boot.check_boot_milestones(b'GDT checked\r\n' + prefix)
-        boot.check_boot_milestones(prefix + b'GDT checked\r\nTSS checked\r\n')
+        boot.check_boot_milestones(prefix + b'GDT checked\r\nTSS checked\r\nSegments ready\r\n')
 
 
     def test_task_state_report_requires_complete_ordered_cpu_readback(self):
@@ -255,7 +255,23 @@ class BootHarnessTests(unittest.TestCase):
                     boot.check_boot_milestones(prefix + suffix)
         with self.assertRaisesRegex(ValueError, 'task-register selection'):
             boot.check_boot_milestones(b'TSS checked\r\n' + prefix)
-        boot.check_boot_milestones(prefix + b'TSS checked\r\n')
+        boot.check_boot_milestones(prefix + b'TSS checked\r\nSegments ready\r\n')
+
+
+    def test_selector_report_requires_complete_ordered_readback(self):
+        prefix = (b'Hello from Omega\r\nOwned 128 MiB\r\nBoot map ready\r\n'
+                  b'Kernel entered\r\nMemory split\r\nMemory checked\r\n'
+                  b'Memory paired\r\nPage ready\r\nTables ready\r\n'
+                  b'CPU checked\r\nRoot located\r\nRoot read\r\n'
+                  b'Tables retained\r\nMapping retired\r\nMapping checked\r\n'
+                  b'GDT checked\r\nTSS checked\r\n')
+        for suffix in (b'', b'Segments ready', b'Segments ready\r', b'Not Segments ready\n'):
+            with self.subTest(suffix=suffix):
+                with self.assertRaisesRegex(ValueError, 'kernel code/data selector'):
+                    boot.check_boot_milestones(prefix + suffix)
+        with self.assertRaisesRegex(ValueError, 'kernel code/data selector'):
+            boot.check_boot_milestones(b'Segments ready\r\n' + prefix)
+        boot.check_boot_milestones(prefix + b'Segments ready\r\n')
 
 
 if __name__ == '__main__':
