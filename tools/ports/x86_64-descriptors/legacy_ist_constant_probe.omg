@@ -1,7 +1,7 @@
 // Reproducer: positive fixture with actual imported legacy aggregate constants.
 // SPDX-License-Identifier: MIT OR Apache-2.0
 use x86_values::descriptors;
-use x86_values::descriptor_bytes;
+use facts::x86_descriptor_bytes;
 use facts::x86_descriptors;
 use facts::x86_descriptors::Descriptor;
 use facts::x86_descriptors::TaskStateSegment;

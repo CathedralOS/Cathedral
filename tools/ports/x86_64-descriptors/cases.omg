@@ -8,7 +8,7 @@ use facts::x86_descriptors::GdtEntry;
 use facts::x86_descriptors::TssDescriptorWords;
 use facts::x86_descriptors::SelectorErrorCode;
 use x86_values::descriptors;
-use x86_values::descriptor_bytes;
+use facts::x86_descriptor_bytes;
 machine constants_match_0() -> bool {
 let actual0: u64 = x86_descriptors::DESCRIPTOR_ACCESSED.raw;
 let expected0: u64 = 1099511627776;
@@ -224,9 +224,9 @@ error65535() }
 pub machine error_cases() -> bool { error_cases_0() && error_cases_1() }
 machine bytes_DescriptorTablePointer() -> bool {
  let value: DescriptorTablePointer = DescriptorTablePointer { limit: 513, base: 723118041428460547 };
- let encoded: [u8; 10] = descriptor_bytes::encode_DescriptorTablePointer(&value);
+ let encoded: [u8; 10] = x86_descriptor_bytes::encode_DescriptorTablePointer(&value);
  let golden: [u8; 10] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
- let decoded: DescriptorTablePointer = descriptor_bytes::decode_DescriptorTablePointer(&golden);
+ let decoded: DescriptorTablePointer = x86_descriptor_bytes::decode_DescriptorTablePointer(&golden);
 encoded[0] == 1 &&
 encoded[1] == 2 &&
 encoded[2] == 3 &&
@@ -242,9 +242,9 @@ decoded.base == value.base
 }
 machine bytes_TaskStateSegment() -> bool {
  let value: TaskStateSegment = TaskStateSegment { reserved_1: 67305985, privilege_stack_table: [72623859790382856, 651345242494996240, 1230066625199609624], reserved_2: 2603962535218454045, interrupt_stack_table: [72623859790382856, 651345242494996240, 1230066625199609624, 1808788007904223008, 2387509390608836392, 2966230773313449776, 3544952156018063160], reserved_3: 7233733596855361117, reserved_4: 26213, iomap_base: 26727 };
- let encoded: [u8; 104] = descriptor_bytes::encode_TaskStateSegment(&value);
+ let encoded: [u8; 104] = x86_descriptor_bytes::encode_TaskStateSegment(&value);
  let golden: [u8; 104] = [1, 2, 3, 4, 8, 7, 6, 5, 4, 3, 2, 1, 16, 15, 14, 13, 12, 11, 10, 9, 24, 23, 22, 21, 20, 19, 18, 17, 29, 30, 31, 32, 33, 34, 35, 36, 8, 7, 6, 5, 4, 3, 2, 1, 16, 15, 14, 13, 12, 11, 10, 9, 24, 23, 22, 21, 20, 19, 18, 17, 32, 31, 30, 29, 28, 27, 26, 25, 40, 39, 38, 37, 36, 35, 34, 33, 48, 47, 46, 45, 44, 43, 42, 41, 56, 55, 54, 53, 52, 51, 50, 49, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104];
- let decoded: TaskStateSegment = descriptor_bytes::decode_TaskStateSegment(&golden);
+ let decoded: TaskStateSegment = x86_descriptor_bytes::decode_TaskStateSegment(&golden);
 encoded[0] == 1 &&
 encoded[1] == 2 &&
 encoded[2] == 3 &&
@@ -367,9 +367,9 @@ decoded.iomap_base == value.iomap_base
 }
 machine bytes_GdtEntry() -> bool {
  let value: GdtEntry = GdtEntry { raw: 578437695752307201 };
- let encoded: [u8; 8] = descriptor_bytes::encode_GdtEntry(&value);
+ let encoded: [u8; 8] = x86_descriptor_bytes::encode_GdtEntry(&value);
  let golden: [u8; 8] = [1, 2, 3, 4, 5, 6, 7, 8];
- let decoded: GdtEntry = descriptor_bytes::decode_GdtEntry(&golden);
+ let decoded: GdtEntry = x86_descriptor_bytes::decode_GdtEntry(&golden);
 encoded[0] == 1 &&
 encoded[1] == 2 &&
 encoded[2] == 3 &&
@@ -382,9 +382,9 @@ decoded.raw == value.raw
 }
 machine bytes_TssDescriptorWords() -> bool {
  let value: TssDescriptorWords = TssDescriptorWords { low: 578437695752307201, high: 1157159078456920585 };
- let encoded: [u8; 16] = descriptor_bytes::encode_TssDescriptorWords(&value);
+ let encoded: [u8; 16] = x86_descriptor_bytes::encode_TssDescriptorWords(&value);
  let golden: [u8; 16] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
- let decoded: TssDescriptorWords = descriptor_bytes::decode_TssDescriptorWords(&golden);
+ let decoded: TssDescriptorWords = x86_descriptor_bytes::decode_TssDescriptorWords(&golden);
 encoded[0] == 1 &&
 encoded[1] == 2 &&
 encoded[2] == 3 &&

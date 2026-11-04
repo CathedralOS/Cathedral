@@ -152,7 +152,7 @@ policy integers. Its legacy import surface, fields and constants are preserved.
 New facts are [x86_descriptors.omg](x86_descriptors.omg), requested policies are
 [x86_descriptor_layouts.omg](x86_descriptor_layouts.omg), and pure algorithms are
 [descriptors.omg](../../libraries/x86_64/descriptors.omg) and
-[descriptor_bytes.omg](../../libraries/x86_64/descriptor_bytes.omg). No production
+[x86_descriptor_bytes.omg](x86_descriptor_bytes.omg). No production
 core, competing IDT/PTE record, instruction provider or installed root changes.
 Live GDT/TSS storage, pointer lifetime and CPU loading remain integration work.
 
