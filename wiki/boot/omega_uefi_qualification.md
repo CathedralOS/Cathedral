@@ -21,9 +21,10 @@ these are host workflow durations, not guest boot times.
 
 - Compiler source: `cee7ad87d0034e60fde2b54584bf56f4d12fcc9b`, submitted in
   [Omega PR #1793](https://github.com/CathedralOS/Omega/pull/1793).
-  Publication and conflict integration were still pending when this run was
-  recorded. The compiled source files match that candidate; its producer
-  manifest retains the original build identity.
+  The compiler repair subsequently landed on Omega main at
+  `841c1847f334e54278c4e83df8fba6b9c594baa9`, after focused integration checks
+  and required CI passed. This boot used the earlier candidate above; its
+  producer manifest retains that actual build identity.
 - Compiler SHA-256:
   `50e0c2053c632504d4fcb35360f8ecc20ef5b5b2cdbd5a7ae3ae7cb5e226d7b2`,
   verified optimization level `1`.
