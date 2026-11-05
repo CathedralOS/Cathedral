@@ -46,6 +46,10 @@ The process entry: the turn loop, startup and the owner's words.
   a slot's save-recovery grant, the recovery poll, RESTORE_STORAGE after
   provider replacement), RESOLVE_PATH in this matrix's realm, and the World's
   placement words. Everything else is denied, never silently accepted.
+- [stopping.omg](program/stopping.omg): validate owner STOP, request retirement
+  once, and retain the exact owner ticket until collection and bookkeeping finish.
+  A full reply mailbox keeps that ticket for another turn. This is the same path
+  with or without a pending scene; other connections continue being served.
 
 ### [connections/](connections/build.omg)
 
@@ -150,7 +154,12 @@ The children this matrix admits, funds, presents and retires.
   owner control, which the child accepts as its first act before it asks the
   broker for anything. STOP reclaims the subtree and returns the reservation;
   so does a listener that retires, and the exit goes to the console through
-  [report.omg](shared/report.omg). A child's owner control opens without
+  [report.omg](shared/report.omg). Owner STOP, ordinary close and departed listeners request
+  retirement, then the turn loop visits collection without waiting inside the
+  task syscall. The original task identity stays beside the reserved slot until
+  reporting, resource release and workspace bookkeeping finish. Setup and shutdown
+  callers explicitly drain the same state. Memory release and fallback scene
+  publication still block. A child's owner control opens without
   blocking: a host with descendants sets up its broker services before it
   accepts control, so the matrix sends the hello, keeps serving, finishes
   the handshake on a later turn once the child answers, and takes the child
@@ -174,7 +183,10 @@ The children this matrix admits, funds, presents and retires.
   and stops it only on an answer that nothing would be lost; missing,
   malformed, busy and late answers never count as permission. A late reply is
   drained unanswered, and the slot takes no further request until it has
-  been.
+  been. Once a clean close answer is accepted, its request stays retained until
+  collection finishes. A full requester outbox delays its answer without losing
+  the ticket; the next local wakeup cannot depend on another input event. A
+  replacement listener cannot receive the previous incarnation's close reply.
 - [slots.omg](children/slots.omg): one admitted child's listener per turn. Service
   acquisition goes to the runtime's offer, surface and batch words to
   presentation (a sealed attachment is accepted only behind an image word),
@@ -227,8 +239,10 @@ The children this matrix admits, funds, presents and retires.
   admission retirement poll across turns, retaining the bundle and reservation
   until rollback or collection. A child that won publication is kept out of
   service while draining; a rejected observation preserves custody and ends the
-  matrix rather than claiming successful cleanup. Final bundle release, ordinary
-  close, owner STOP and setup teardown still contain synchronous work.
+  matrix rather than claiming successful cleanup. An independently requested
+  retirement owns collection until it finishes; cancellation cannot consume its
+  outcome. Final bundle release, fallback presentation and setup teardown still
+  contain synchronous work.
   An accepted owner update to the target's launch imports, images, ceilings or
   placement cancels the captured request permanently, including a revoke followed
   by restoration of the same policy. Other targets remain independent.
@@ -339,8 +353,10 @@ its failure reclaims the new child before answering the launch. Owner layout,
 binding and explicit refresh still have synchronous callers.
 
 Owner control enters [program/commands.omg](program/commands.omg). A valid STOP
-marks retirement during a pending scene and is acknowledged after the transaction
-settles and the child is reclaimed. LOSS reports BUSY during selection, launch
+enters [program/stopping.omg](program/stopping.omg), marks retirement and is
+acknowledged after any pending scene settles and the child is reclaimed. Its
+reply ticket remains retained across collection and output backpressure.
+LOSS reports BUSY during selection, launch
 and realm setup. Ordinary image and cursor publication does not block a read-only
 loss survey: [children/forward.omg](children/forward.omg) asks the current children
 and checks that the same task set remains before reporting clean. Routed owner

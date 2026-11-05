@@ -9,13 +9,93 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Current handoff: [retained admission retirement](#retained-admission-retirement).
-Previous desktop handoff: [nonblocking child task primitives](#nonblocking-child-task-primitives),
-following [construction cancellation](#construction-cancellation),
-[control reply timing](#control-reply-timing) and
-[retained child construction](#retained-child-construction).
-That entry records the latest verified image and next work; earlier migration
-entries below are historical milestones.
+Latest verified desktop handoff: [retained ordinary close](#retained-ordinary-close),
+following [retained admission retirement](#retained-admission-retirement) at
+`60f7c694` and [nonblocking child task primitives](#nonblocking-child-task-primitives).
+Earlier migration entries below are historical milestones. Normal F5 still uses
+the Rust matrix; the following verification explicitly selects the Omega matrix.
+
+### Retained ordinary close
+
+Sibling CLOSE now retains its exact request after a clean LOSS answer while the
+matrix's turn loop polls collection. Owner STOP uses the same retirement path,
+with or without a pending scene. Its entrance is `program/stopping.omg`: validate,
+submit once, retain the original ticket, and answer only after collection and
+bookkeeping. Output backpressure retains both kinds of reply for later turns.
+A replacement listener cannot receive the former incarnation's close answer.
+
+Lifecycle withdraws service once, preserves the original task for exit reporting,
+and keeps the slot and reservation unavailable until cleanup finishes. Interaction,
+storage admission, control opening, funding, scene selection and new admission
+respect that boundary. Departed listeners use the same path. Cancelled construction
+waits when lifecycle already owns collection rather than consuming its outcome.
+Rejected observation preserves custody and ends the process through its fatal-turn
+path. Local wakeups cover outstanding collection and replies without requiring
+another input event. Setup/shutdown callers can still explicitly drain this state.
+
+This is not fully nonblocking teardown: final mailbox/image release and workspace
+fallback presentation still block, along with the startup/activation paths below.
+No kernel privilege, allowance, stack size or deadline was increased.
+
+Checked and native builds pass for the stock matrix and construction fixture.
+The final matrix uses **396/496 load pages** with its existing 128-page stack.
+Logs: `build/retained-stop-build.log`, `build/retained-stop-fixture-build.log` and
+`build/retained-stop-checks.log`. The final sequential queue exited zero for all
+eight runtime checks, each including cold reboot:
+
+| Check | Artifact under `build/boot-harness-rs/desktop/` |
+| --- | --- |
+| Full Omega desktop and durable-data oracle | `20261105T055023927413Z/` |
+| Selection STOP before COMMIT | `20261105T055124465943Z/` |
+| Selection STOP after COMMIT | `20261105T055212497233Z/` |
+| Selection STOP through two relays, including timeout and late completion | `20261105T055259982507Z/` |
+| Launch activation rollback and slot reuse | `20261105T055406001461Z/` |
+| Construction STOP, three cycles per boot | `20261105T055503890851Z/` |
+| Construction revoke/restore, three cycles per boot | `20261105T055607855747Z/` |
+| Requester replacement, three cycles per boot | `20261105T055711377151Z/` |
+
+The construction cases returned exactly `(8, 59, 622, 0)` after every cycle.
+Scene fixtures require reclamation before STOP acknowledgment, preserve drafts
+and input during the held transaction, and reuse the stopped slot. The nested
+case does not retry a timed-out STOP and drains its late reply before a distinct
+request. The ignored runner `build/check-retained-stop.py` sequences the existing
+`omega_selection_test.py --cancel before|late|nested`, `omega_launch_scene_test.py
+--cancel` and `omega_construction_test.py --mode stop|regrant|requester --rounds 3`,
+beside the full desktop composed through `omega_desktop_test.compose`.
+
+Before the final owner STOP integration, the close implementation also passed the
+full depth-three nested desktop (`20261105T050437458170Z/`) and ordinary soak
+(`20261105T052600717185Z/`), with three fresh cycles, two cold cycles, exact saved
+text and stable reclaimed accounts. Those are earlier-snapshot evidence, not a
+claim that the final STOP edits reran every variant. The ordinary soak's Python
+harness reached its final PASS; PowerShell returned 1 after treating Cargo's
+ordinary stderr progress as `NativeCommandError`. Final verification runners
+capture stderr inside Python and explicitly return the child exit code.
+
+**Open stress failure:** combined pointer-stress soak failed at
+`20261105T050724776834Z/`. All three fresh cycles passed; cold cycle one refused
+outer close after recursive LOSS timed out, then the scan failed waiting for that
+refused close. No process crash was observed. This matches the previously recorded
+stress failure mode; do not call it fixed or describe this verification as a clean
+sweep. `build/retained-close-control-timing.log` records 53 samples across seven
+matrix tags: timed-out questions took 1.04-1.73 s, mostly off CPU. Three Background
+receipt-to-reply spans took 10, 98 and 271 ms with 2-4 ms account CPU. Tags do not
+establish parent/child membership. Host CPU sampled at 96%; the observations do
+not identify the cause or constitute isolated performance measurements. Never
+accept stale clean replies as a timeout workaround.
+
+Next implementation slice:
+
+- Handshake abandonment in `children/lifecycle.omg` and failed activation in
+  `children/launch/placement.omg` still drain synchronously. Keep a failed launch's
+  exact request until its child is collected, rather than answering immediately
+  after submitting cancellation.
+- Picker retirement during login gates installing the replacement's binding
+  before serving it. Yielding there requires an explicit unserved phase.
+- `children/workspace.omg::retired` still uses a blocking fallback scene switch.
+  Reuse the selection transaction with an explicit internal initiator, without
+  manufacturing a chrome IPC ticket. Final mailbox/image release is a separate
+  remaining kernel wait.
 
 ### Retained admission retirement
 

@@ -137,6 +137,7 @@ public machine receive(gate: &Gate, context: &mut State, now: u64) reaches Kerne
 }
 machine slot_receive(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64) reaches Kernel {
     transition {
+        context.retire_after_present[slot] -> done()
         context.store.listeners[slot].peer.receiver == 0u64 || context.store.listeners[slot].peer.fault != 0u64 -> done()
         context.store.relays[slot].phase != 0u64 || context.store.listeners[slot].pending != 0u64 -> block held(gate, context, slot, now)
         _ -> block polled(gate, context, slot, now)

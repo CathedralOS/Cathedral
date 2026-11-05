@@ -77,7 +77,7 @@ machine occupied(context: &State, slot: u64, mask: u64) -> u64 requires slot <= 
         _ -> (mask)
     }
     machine counted(context: &State, slot: u64, mask: u64) -> u64 requires slot < 5u64 {
-        transition context.slots[slot].live {
+        transition context.slots[slot].live || context.retire_after_present[slot] {
             true -> occupied(context, slot + 1u64, mask | (1u64 << slot))
             _ -> occupied(context, slot + 1u64, mask)
         }

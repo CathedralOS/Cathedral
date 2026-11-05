@@ -116,6 +116,18 @@ public data Forward [copy] {
     requester: u64;
     request: Ticket;
 }
+// Cleanup captures the original task before the runtime consumes its ticket.
+// Service withdrawal happens once; later turns only poll collection.
+public data Retiring [copy] {
+    started: bool;
+    task: u64;
+}
+// The owner connection keeps its request pending until this exact stop settles.
+public data Stopping [copy] {
+    active: bool;
+    slot: u64 [0..=4];
+    ticket: Ticket;
+}
 // One realm job in progress: which job, the policy's setup record for it and,
 // while a job it started runs, the command waiting for that job's result.
 public data Frame {
@@ -140,6 +152,9 @@ public data State {
     selection_work: presentation::Switch;
     next_child: u64 [0..=4];
     retire_after_present: [bool; 5];
+    retirements: [Retiring; 5];
+    retirement_failure: u64;
+    stopping: Stopping;
     scene_owner: presentation::Queued;
     scene_children: [presentation::Queued; 5];
     answers: [outbox::Answer; 5];

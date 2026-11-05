@@ -1,0 +1,52 @@
+module stopping;
+// Owner STOP submits retirement once, then retains its exact reply until the
+// scene fence, collection and bookkeeping finish. Other connections keep turning.
+use shared::state::State;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::connection::main::Frame;
+use world::geometry::zeros_from;
+use children::lifecycle;
+
+public machine begin(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Kernel blocks invokes Kernel {
+    transition frame.bytes == 64u64 && frame.payload[1] < 5u64 && zeros_from(&frame.payload, 2u64) {
+        true -> block slotted(gate, context, frame.payload[1])
+        _ -> block refused(gate, context, kernel::DENIED)
+    }
+    machine slotted(gate: &Gate, context: &mut State, slot: u64 [0..=4]) -> u64 reaches Kernel {
+        transition context.slots[slot].live || context.slots[slot].pending != 0u64 {
+            true -> retained(context, slot)
+            _ -> block refused(gate, context, kernel::PEER_CLOSED)
+        }
+    }
+    machine retained(context: &mut State, slot: u64 [0..=4]) -> u64 {
+        context.stopping.active = true;
+        context.stopping.slot = slot;
+        context.stopping.ticket = runtime::server::main::ticket(&context.owner);
+        lifecycle::request_retirement(context, slot);
+        0u64
+    }
+}
+public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
+    transition {
+        context.retirement_failure != 0u64 -> (context.retirement_failure)
+        context.retire_after_present[context.stopping.slot] -> block runtime::server::main::maintain(gate, &mut context.owner, now)
+        _ -> block collected(gate, context)
+    }
+    machine collected(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+        let words: [u64; 8];
+        let status: u64 = block runtime::server::main::reply_to(gate, &mut context.owner, context.stopping.ticket, &words);
+        transition {
+            status == kernel::WOULD_BLOCK -> (0u64)
+            status == 0u64 -> settled(context)
+            _ -> (status)
+        }
+    }
+    machine settled(context: &mut State) -> u64 { context.stopping.active = false; 0u64 }
+}
+machine refused(gate: &Gate, context: &mut State, code: u64) -> u64 reaches Kernel {
+    let mut words: [u64; 8];
+    words[0] = code;
+    block runtime::server::main::reply(gate, &mut context.owner, &words)
+}

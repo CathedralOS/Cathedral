@@ -44,6 +44,8 @@ use lifecycle;
 const OWNER_WORD: u64 = 0u64;
 const LOSS_QUESTION: u64 = 1u64;
 const CLOSE_QUESTION: u64 = 2u64;
+// The clean LOSS answer was accepted; the exact requester waits for collection.
+const CLOSE_COLLECT: u64 = 3u64;
 // How long a child has to say what stopping it would lose.
 const LOSS_TICKS: u64 = 100u64;
 
@@ -69,7 +71,7 @@ machine begin(gate: &Gate, context: &mut State, now: u64, words: [u64; 8], slot:
     }
     machine occupied_slot(gate: &Gate, context: &mut State, now: u64, words: [u64; 8], slot: u64 [0..=4], ticks: u64) -> u64
         reaches Kernel requires ticks < 0x8000000000000000u64 {
-        transition context.slots[slot].live && context.opening[slot] != 0u64 {
+        transition context.retire_after_present[slot] || (context.slots[slot].live && context.opening[slot] != 0u64) {
             true -> block reply(gate, context, error(kernel::BUSY))
             _ -> block live_slot(gate, context, now, words, slot, ticks)
         }
@@ -112,6 +114,7 @@ public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches K
 machine slot_step(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64) reaches Kernel {
     transition {
         !context.forwards[slot].live -> done()
+        context.forwards[slot].purpose == CLOSE_COLLECT -> block collected_close(gate, context, slot)
         // LOSS only reads child state. Actual reclamation must still wait for
         // the retained scene backing; an ordinary repaint is no loss barrier.
         context.presentation_work.active && context.forwards[slot].purpose == CLOSE_QUESTION -> done()
@@ -305,7 +308,7 @@ machine concluded(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
 public machine close(gate: &Gate, context: &mut State, now: u64, target: u64 [0..=4], requester: u64, request: Ticket) -> u64
     reaches Kernel blocks invokes Kernel {
     transition {
-        context.surveying || context.forwards[target].live || context.opening[target] != 0u64 -> (kernel::BUSY)
+        context.surveying || context.forwards[target].live || context.opening[target] != 0u64 || context.retire_after_present[target] -> (kernel::BUSY)
         !context.slots[target].live -> (kernel::PEER_CLOSED)
         _ -> block questioning(gate, context, now, target, requester, request)
     }
@@ -321,16 +324,44 @@ public machine close(gate: &Gate, context: &mut State, now: u64, target: u64 [0.
 machine closed(gate: &Gate, context: &mut State, slot: u64 [0..=4], forward: Forward, answer: LossAnswer) reaches Kernel {
     let decision: CloseDecision = decide_close(false, answer);
     transition {
-        decision == CloseDecision::Stop -> block stopping(gate, context, slot, forward)
+        decision == CloseDecision::Stop -> stopping(context, slot, forward)
         _ -> block refused_close(gate, context, slot, forward)
     }
     machine refused_close(gate: &Gate, context: &mut State, slot: u64 [0..=4], forward: Forward) reaches Kernel {
         report::control(gate, context.clock, context.trace_origin, 6u64, slot, kernel::BUSY);
         block reply_requester(gate, context, forward, error(kernel::BUSY));
     }
-    machine stopping(gate: &Gate, context: &mut State, slot: u64 [0..=4], forward: Forward) reaches Kernel {
-        block lifecycle::reclaim(gate, context, slot);
-        block reply_requester(gate, context, forward, error(0u64))
+    machine stopping(context: &mut State, slot: u64 [0..=4], forward: Forward) {
+        lifecycle::request_retirement(context, slot);
+        let mut retained: Forward = forward;
+        retained.live = true;
+        retained.purpose = CLOSE_COLLECT;
+        context.forwards[slot] = retained;
+    }
+}
+machine collected_close(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+    transition context.retire_after_present[slot] || context.retirement_failure != 0u64
+        || !requester_ready(context, context.forwards[slot]) {
+        true -> done()
+        _ -> block replied(gate, context, slot)
+    }
+    machine replied(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+        let forward: Forward = context.forwards[slot];
+        cleared(context, slot);
+        block reply_requester(gate, context, forward, error(0u64));
+    }
+}
+// A pipelined requester may already have another answer in its outbox. Keep
+// this close ticket until responses can take custody; never silently drop it.
+machine requester_ready(context: &State, forward: Forward) -> bool {
+    transition forward.requester < 5u64 {
+        true -> available(context, forward.requester, forward.request)
+        _ -> (true)
+    }
+    machine available(context: &State, requester: u64 [0..=4], request: Ticket) -> bool {
+        // A replacement's outbox cannot keep an obsolete close ticket alive.
+        !runtime::server::deferred::matches(&context.slots[requester].listener, request)
+            || !context.answers[requester].active
     }
 }
 machine reply_requester(gate: &Gate, context: &mut State, forward: Forward, words: [u64; 8]) reaches Kernel {
@@ -382,17 +413,27 @@ machine cleared(context: &mut State, slot: u64 [0..=4]) {
 public machine busy(context: &State) -> bool {
     pending_mask(context, 0u64, 0u64) != 0u64
 }
-public machine watch(context: &State, set: &mut Set) {
-    slot_watch(context, 0u64, set);
-    slot_watch(context, 1u64, set);
-    slot_watch(context, 2u64, set);
-    slot_watch(context, 3u64, set);
-    slot_watch(context, 4u64, set);
+public machine watch(context: &State, set: &mut Set, now: u64) {
+    slot_watch(context, 0u64, set, now);
+    slot_watch(context, 1u64, set, now);
+    slot_watch(context, 2u64, set, now);
+    slot_watch(context, 3u64, set, now);
+    slot_watch(context, 4u64, set, now);
 }
-machine slot_watch(context: &State, slot: u64 [0..=4], set: &mut Set) {
-    transition context.presentation_work.active && context.forwards[slot].purpose == CLOSE_QUESTION {
-        true -> done()
+machine slot_watch(context: &State, slot: u64 [0..=4], set: &mut Set, now: u64) {
+    transition {
+        context.forwards[slot].purpose == CLOSE_COLLECT -> collected_watch(context, slot, set, now)
+        context.presentation_work.active && context.forwards[slot].purpose == CLOSE_QUESTION -> done()
         _ -> available_watch(context, slot, set)
+    }
+}
+machine collected_watch(context: &State, slot: u64 [0..=4], set: &mut Set, now: u64) {
+    // The outbox may have cleared after forward::step this turn. The owed
+    // close answer must not wait for some unrelated future input to wake us.
+    transition context.forwards[slot].live && !context.retire_after_present[slot]
+        && requester_ready(context, context.forwards[slot]) {
+        true -> runtime::waiting::expire_by(set, now)
+        _ -> done()
     }
 }
 machine available_watch(context: &State, slot: u64 [0..=4], set: &mut Set) {

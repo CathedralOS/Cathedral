@@ -40,10 +40,12 @@ use children::forward;
 use connections::upstream;
 use realm::jobs;
 use connections::listing;
+use stopping;
 
 public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
     transition {
         context.owner.peer.fault != 0u64 -> (context.owner.peer.fault)
+        context.stopping.active -> block stopping::step(gate, context, now)
         context.scene_owner.active && !context.presentation_work.active -> block queued(gate, context, now)
         context.owner.pending != 0u64 -> block held(gate, context, now)
         _ -> block receive(gate, context, now)
@@ -64,43 +66,18 @@ machine receive(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kerne
 machine queued(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
     let frame: Frame = context.scene_owner.frame;
     context.scene_owner.active = false;
-    // A queued STOP already marked retirement. The turn reclaims that child
-    // before returning here; acknowledge only after the scene barrier settled.
-    transition frame.payload[0] == STOP {
-        true -> block reply(gate, context, ok())
-        _ -> block command(gate, context, now, frame)
-    }
+    block command(gate, context, now, frame)
 }
 machine command(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel {
     transition {
         frame.payload[0] == HEALTH -> block dispatch(gate, context, now, frame)
         forward::routed(frame.payload[0]) -> block dispatch(gate, context, now, frame)
         frame.payload[0] == LOSS && zeros_from(&frame.payload, 1u64) -> block dispatch(gate, context, now, frame)
-        context.presentation_work.active && frame.payload[0] == STOP -> block stopping(gate, context, frame)
+        frame.payload[0] == STOP -> block stopping::begin(gate, context, frame)
         context.presentation_work.active -> queued(context, frame)
         _ -> block placed(gate, context, now, frame)
     }
     machine queued(context: &mut State, frame: Frame) -> u64 {
-        context.scene_owner.active = true;
-        context.scene_owner.frame = frame;
-        0u64
-    }
-}
-// The owner may invalidate pending scene work, but backing stays retained until
-// the transaction aborts or restores. The original owner request stays pending.
-machine stopping(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Kernel {
-    transition frame.bytes == 64u64 && frame.payload[1] < 5u64 && zeros_from(&frame.payload, 2u64) {
-        true -> block slotted(gate, context, frame, frame.payload[1])
-        _ -> block reply(gate, context, error(kernel::DENIED))
-    }
-    machine slotted(gate: &Gate, context: &mut State, frame: Frame, slot: u64 [0..=4]) -> u64 reaches Kernel {
-        transition context.slots[slot].live || context.slots[slot].pending != 0u64 {
-            true -> retained(context, frame, slot)
-            _ -> block reply(gate, context, error(kernel::PEER_CLOSED))
-        }
-    }
-    machine retained(context: &mut State, frame: Frame, slot: u64 [0..=4]) -> u64 {
-        context.retire_after_present[slot] = true;
         context.scene_owner.active = true;
         context.scene_owner.frame = frame;
         0u64

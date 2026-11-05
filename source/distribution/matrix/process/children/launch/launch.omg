@@ -235,7 +235,11 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
         let valid: bool = authority::constructed(context);
         invalidate(context, valid);
         let requester: u64 [0..=4] = context.launch.requester;
-        transition !context.presentation_work.active && !context.answers[requester].active {
+        // A STOP or departed listener may already own this bundle's collection.
+        // Let that path finish before resolving the cancelled launch; consuming
+        // its outcome here would lose the retirement owner's original exit.
+        let slot: u64 [0..=4] = context.launch.slot;
+        transition !context.retire_after_present[slot] && !context.presentation_work.active && !context.answers[requester].active {
             true -> block construction_turn(gate, context, valid)
             _ -> done()
         }

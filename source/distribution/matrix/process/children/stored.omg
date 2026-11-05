@@ -77,7 +77,7 @@ public machine run(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4]
 public machine launch(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], object: u64, subtree: u64, argument: u64,
     channels: u64, descendants: u64, cpu: u64, private_pages: u64, reader_pages: u64, frames: u64, stamp: u64, offered: u64) -> u64
     reaches Kernel blocks invokes Kernel {
-    transition !context.slots[slot].live && context.slots[slot].pending == 0u64 && descendants < 64u64 && object != 0u64
+    transition !context.retire_after_present[slot] && !context.slots[slot].live && context.slots[slot].pending == 0u64 && descendants < 64u64 && object != 0u64
         && !(context.launch.phase != 0u64 && context.launch.slot == slot) {
         true -> block reading(gate, context, now, slot, object, subtree, argument, channels, descendants, cpu, private_pages, reader_pages, frames, stamp, offered)
         _ -> (kernel::BUSY)
@@ -121,7 +121,7 @@ public machine admit_image(gate: &Gate, context: &mut State, now: u64, slot: u64
     reaches Kernel blocks invokes Kernel {
     context.last_granted = 0u64;
     context.allotted_surfaces = 0u64;
-    transition !context.slots[slot].live && context.slots[slot].pending == 0u64 && descendants < 64u64 && image != 0u64
+    transition !context.retire_after_present[slot] && !context.slots[slot].live && context.slots[slot].pending == 0u64 && descendants < 64u64 && image != 0u64
         && !(context.launch.phase != 0u64 && context.launch.slot == slot) {
         true -> block declared(gate, context, now, slot, subtree, argument, channels, descendants, cpu, image, length, private_pages, reader_pages,
             frames, offered, desktop_app, bound)
@@ -150,7 +150,7 @@ public machine admit_image(gate: &Gate, context: &mut State, now: u64, slot: u64
 // admission, so intervening owner work cannot overwrite its resource choices.
 public machine admit_plan(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], subtree: u64, argument: u64,
     cpu: u64, image: u64, plan: Plan, bound: bool, deferred: bool) -> u64 reaches Kernel blocks invokes Kernel {
-    transition plan.status == 0u64 && !context.slots[slot].live && context.slots[slot].pending == 0u64 && image != 0u64
+    transition plan.status == 0u64 && !context.retire_after_present[slot] && !context.slots[slot].live && context.slots[slot].pending == 0u64 && image != 0u64
         && !(deferred && bound) {
         true -> block prepared(gate, context, now, slot, subtree, argument, cpu, image, plan, bound, deferred)
         _ -> (kernel::DENIED)
