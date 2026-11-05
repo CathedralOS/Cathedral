@@ -13,7 +13,19 @@ import omega_parent_poll_test
 from nested_desktop_test import Nested
 
 
-def exercise(output, click, key, scan, width, height, reboot, mode='health'):
+def exercise(output, click, key, scan, width, height, reboot, mode='health', rounds=1):
+    value = 'a' * rounds if reboot else ''
+    baseline = None
+    for round_index in range(rounds):
+        value, samples = cycle(output, click, key, scan, width, height, reboot, mode, value)
+        if baseline is None:
+            baseline = samples[0]
+        assert all(sample == baseline for sample in samples), (baseline, samples, round_index)
+        print(f'PASS: construction {mode} round {round_index + 1}/{rounds}; '
+              f'reclaimed account {baseline}', flush=True)
+
+
+def cycle(output, click, key, scan, width, height, reboot, mode, value):
     n = Nested(click, key, scan, width, height)
     log = lambda: (output / 'serial.log').read_text(encoding='utf-8', errors='replace')
     def drive_input(offset):
@@ -66,7 +78,6 @@ def exercise(output, click, key, scan, width, height, reboot, mode='health'):
         # The same target must work after cancellation, including for a fresh requester.
         n.background(0)
         n.launch(0, 0)
-    value = 'a' if reboot else ''
     n.note(0, value + ' ')
     n.focus_note(0)
     key('b' if reboot else 'a')
@@ -74,6 +85,7 @@ def exercise(output, click, key, scan, width, height, reboot, mode='health'):
     n.note(0, value + ' ', dirty=True)
     key('f1')
     n.note(0, value + ' ')
+    closing = len(log())
     n.app_close(0)
     n.background(0)
     n.launch(0, 0)
@@ -81,13 +93,25 @@ def exercise(output, click, key, scan, width, height, reboot, mode='health'):
     n.app_close(0)
     n.background(0)
     assert not omega_desktop_test.failed_children(log()), log()[-4000:]
-    print(f'PASS: construction {mode}; owner/input progress, slot reuse, save and cold reopen')
+    # Sample only the two completed Notes closes, excluding cancellation and
+    # requester teardown. Compare identical points across repeated cycles; this
+    # does not claim all asynchronous reservation returns have settled.
+    def accounts():
+        return [tuple(int(word, 16) for word in match) for match in re.findall(
+            r'Cathedral matrix: reclaimed 1 ([0-9a-f]{4}) ([0-9a-f]{4}) ([0-9a-f]{4}) ([0-9a-f]{4})',
+            log()[closing:])]
+    scan(lambda _w, _d: len(accounts()) >= 2, 'both Notes accounts reclaimed')
+    samples = accounts()
+    assert len(samples) == 2, samples
+    return value, samples
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--mode', choices=('health', 'stop', 'regrant', 'requester'), default='health')
+    parser.add_argument('--rounds', type=int, choices=range(1, 9), default=1,
+                        help='repeat construction and two Notes closes per boot (default: 1)')
     args = parser.parse_args()
-    omega_parent_poll_test.main(user_check=partial(exercise, mode=args.mode),
+    omega_parent_poll_test.main(user_check=partial(exercise, mode=args.mode, rounds=args.rounds),
                                label='omega-construction', fixture_features=['construction-probe'],
                                matrix_entry='distribution/lab/matrix-construction/native/main.omg')

@@ -380,6 +380,9 @@ slot, followed by save and cold reopen. The kernel may publish behind the
 observation window; this test does not select its pre/post-publication race.
 The [lab composition](../source/distribution/lab/matrix-construction/README.md)
 adds no kernel test hook. The normal matrix entry uses a zero window.
+Add `--rounds 4` to repeat each case four times per boot, compare both completed
+Notes-close resource samples in every round, and verify the accumulated saved
+text after cold boot.
 
 `python tools/boot-harness-rs/omega_launch_scene_test.py` holds the scene commit
 that activates a newly launched app. HEALTH and input polling must continue;

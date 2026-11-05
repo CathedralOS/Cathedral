@@ -79,8 +79,42 @@ budget was changed. The Rust probe is organized under `service/construction_prob
 with a named entrance, a replacement-command leaf and plumbing-only `mod.rs`.
 The shipped Omega images are unchanged by this follow-up.
 
-Next: repeated exact resource recovery, then the generic retained
-cancellation/teardown path and remaining synchronous owner/setup operations.
+The construction harness now accepts `--rounds 4` (one to eight rounds).
+Each round repeats the observation/owner-input check, cancellation or release,
+then a successful launch, save, close and reopen/close. It compares both Notes
+reclamation samples against the first close of that boot. This catches resource
+growth across repeated cancellation and reuse; it does not measure every provider
+or wait for every asynchronous reservation return to settle. Saved text accumulates
+across rounds and must survive the cold boot exactly.
+
+All four modes pass four rounds per boot (fresh and cold): 32 construction cycles,
+including 24 cancellations, and 64 completed Notes-close samples. Every sampled
+account is 8 private / 59 reader pages, 617 charged frames and zero free launch
+slots. The final text is `aaaabbbb`; cold startup first checks `aaaa`. Artifacts:
+
+- `requester`: `build/boot-harness-rs/desktop/20261105T025622940809Z/`.
+- `regrant`: `build/boot-harness-rs/desktop/20261105T025753328260Z/`.
+- `stop`: `build/boot-harness-rs/desktop/20261105T025919387969Z/`.
+- `health`: `build/boot-harness-rs/desktop/20261105T030048838762Z/`.
+
+The Omega binaries remain unchanged at 391 matrix load pages. This follow-up
+changes only the host workload and documentation. Python syntax, source layout
+and diff checks pass; the earlier native/host checks remain scoped to their
+recorded implementation revisions.
+
+Next: the generic retained cancellation/teardown path and remaining synchronous
+owner/setup operations. There is a kernel API prerequisite: `TASK_CANCEL` parks
+its caller until reclamation. `lifecycle/reclamation.rs` currently infers a blocked
+cancel waiter from the supervisor's cancellation flag. A nonblocking cancellation
+request must distinguish requesting retirement from registering that waiter, or
+later cleanup could overwrite an unrelated syscall result and spuriously wake the
+owner. The same exact child ticket should remain collectible; outcome polling
+must preserve it while pending and consume it only after successful copyout.
+This belongs to general parent/child task mechanisms, not matrix-specific policy.
+Then Omega admission can retain pending/committed cleanup across service turns,
+keeping its bundle until rollback or child collection finishes. The existing
+blocking APIs can remain wrappers for callers that want them.
+
 The earlier intermittent nested-close timeout remains unresolved; keep the
 control timing probes below for recurrence. These cases do not establish
 nonblocking cancellation.

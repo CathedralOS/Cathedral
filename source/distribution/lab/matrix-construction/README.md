@@ -50,3 +50,12 @@ The Rust fixture entrance is
 [construction_probe.rs](../../../../source-rs/distribution/matrix/service/construction_probe/construction_probe.rs).
 Its [replacement leaf](../../../../source-rs/distribution/matrix/service/construction_probe/replacement.rs)
 owns only the ordinary control-command sequence; `mod.rs` is plumbing.
+
+Use `--rounds 4` with any mode to repeat the observation, owner/input overlap,
+cancellation or release, successful launch, save and two Notes closes four times
+per boot. Each close samples private pages, reader pages, charged frames and free
+launch slots from the existing matrix reclamation report. The samples must match
+the first close of that boot exactly, across all rounds. Notes accumulates one
+character per round and must retain the complete fresh-boot text on cold reopen.
+These are comparisons at the same reclamation point, not a claim that every
+asynchronous reservation return has settled or that all provider memory is measured.
