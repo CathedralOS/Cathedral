@@ -18,9 +18,10 @@ Run from the repository root:
 python tools/boot-harness-rs/omega_construction_test.py --mode health
 python tools/boot-harness-rs/omega_construction_test.py --mode stop
 python tools/boot-harness-rs/omega_construction_test.py --mode regrant
+python tools/boot-harness-rs/omega_construction_test.py --mode requester
 ```
 
-All three runs generate real input and require two successive parent polls while
+All four runs generate real input and require two successive parent polls while
 construction observation is held. One poll may already be queued; the second
 requires the child to consume its predecessor and request more work. This proves
 input-service progress, not input delivery to the not-yet-admitted application.
@@ -34,3 +35,18 @@ The fixture [process entry](process/main.omg) calls the stock matrix's
 is a small leaf in the existing children package. The normal entry passes zero,
 so it neither reads a probe clock nor waits. This adds no kernel test policy,
 service capability or change to the common program entry contract.
+
+The requester case stops slot zero (the launcher) while its child construction
+is held. The owner then resolves `Desktop` in that matrix's own realm and uses
+RUN_PAGES, RUN_OBJECT, SURFACE_LIMIT and PLACE to install a fresh requester in
+slot zero. It uses the stock template's 96 private pages and bottom-bar geometry.
+This is explicit owner orchestration, not automatic launcher recovery. The old
+launch must be refused before replacement completes; the new launcher must issue
+a fresh successful request into the same app slot, then save and cold-reopen Notes.
+This exercises requester retirement during construction and orderly same-slot
+replacement, not arbitrary reordering of old replies after replacement.
+
+The Rust fixture entrance is
+[construction_probe.rs](../../../../source-rs/distribution/matrix/service/construction_probe/construction_probe.rs).
+Its [replacement leaf](../../../../source-rs/distribution/matrix/service/construction_probe/replacement.rs)
+owns only the ordinary control-command sequence; `mod.rs` is plumbing.

@@ -138,7 +138,7 @@ impl Gate {
         world: &mut World,
         parent: &Parent,
     ) -> Result<Option<Event>, Error> {
-        let Some(event) = self.construction.intercept(event, server)? else {
+        let Some(event) = self.construction.intercept(event, server, world)? else {
             return Ok(None);
         };
         let Some(event) = self.funding.intercept(event, server)? else {

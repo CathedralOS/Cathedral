@@ -373,8 +373,10 @@ first provider handshakes and cancellation cleanup still have synchronous waits.
 lab entry around the stock Omega matrix with a one-second construction-observation
 window. HEALTH and two successive input polls must complete before release.
 `--mode stop` cancels the pending target; `--mode regrant` revokes and restores its
-exact launch-import policy. Both require refusal of the old launch and reuse of
-the slot, followed by save and cold reopen. The kernel may publish behind the
+exact launch-import policy. `--mode requester` stops the requesting launcher
+and explicitly installs a new one through ordinary owner commands. All three
+cancellation cases require refusal of the old launch and reuse of the target
+slot, followed by save and cold reopen. The kernel may publish behind the
 observation window; this test does not select its pre/post-publication race.
 The [lab composition](../source/distribution/lab/matrix-construction/README.md)
 adds no kernel test hook. The normal matrix entry uses a zero window.

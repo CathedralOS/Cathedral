@@ -1,6 +1,7 @@
-//! Owner-side probes for the Omega construction observation window. Only active
-//! with construction-probe: F8 asks HEALTH, F7 additionally stops pending slot 1,
-//! and F6 revokes then restores slot 1's imports. No kernel test hook is used.
+// Owner-side probes for the Omega construction observation window. Only active
+// with construction-probe: F8 asks HEALTH, F7 additionally stops pending slot 1,
+// F6 revokes/restores imports; F5 stops and replaces the requesting launcher.
+// No kernel test hook is used.
 use super::children::Children;
 use super::*;
 use cathedral_platform_contracts::{imports, input};
@@ -17,12 +18,18 @@ struct Probe {
     asked: bool,
     polls: u8,
     until: u64,
+    replacement: Option<replacement::Replacement>,
 }
 impl Gate {
     pub fn active(&self) -> bool {
         self.pending.is_some()
     }
-    pub fn intercept(&mut self, event: Event, server: &mut Server) -> Result<Option<Event>, Error> {
+    pub fn intercept(
+        &mut self,
+        event: Event,
+        server: &mut Server,
+        world: &mut World,
+    ) -> Result<Option<Event>, Error> {
         if !cfg!(feature = "construction-probe") {
             return Ok(Some(event));
         }
@@ -54,7 +61,13 @@ impl Gate {
         }
         if request.client == Some(SOURCE)
             && let [wire::KEY_SOURCE, key, state, 0, 0, 0, 0, 0] = words
-            && [input::F8 as u64, input::F7 as u64, input::F6 as u64].contains(&key)
+            && [
+                input::F8 as u64,
+                input::F7 as u64,
+                input::F6 as u64,
+                input::F5 as u64,
+            ]
+            .contains(&key)
         {
             if state == input::PRESS as u64 {
                 assert!(self.pending.is_none(), "overlapping construction probes");
@@ -62,11 +75,22 @@ impl Gate {
                     0
                 } else if key == input::F7 as u64 {
                     1
-                } else {
+                } else if key == input::F6 as u64 {
                     2
+                } else {
+                    3
                 };
+                let incarnation = server.incarnation(1).expect("user matrix present");
+                let replacement = (mode == 3).then(|| {
+                    replacement::Replacement::new(world.request(
+                        1,
+                        incarnation,
+                        [wire::VIEW, 0, 0, 0, 0, 0, 0, 0],
+                    ))
+                });
                 self.pending = Some(Probe {
-                    incarnation: server.incarnation(1).expect("user matrix present"),
+                    incarnation,
+                    replacement,
                     mode,
                     stage: 0,
                     asked: false,
@@ -92,6 +116,11 @@ impl Gate {
         );
         if probe.stage == 3 {
             if probe.polls == 2 {
+                if let Some(replacement) = &mut probe.replacement
+                    && !replacement.step(children, now, probe.until)?
+                {
+                    return Ok(());
+                }
                 time::storage_sample("admission-probe-complete", &[]);
                 self.pending = None;
             }
@@ -103,6 +132,7 @@ impl Gate {
         }
         let words = match probe.stage {
             0 => [wire::HEALTH, 0, 0, 0, 0, 0, 0, 0],
+            1 if probe.mode == 3 => [wire::STOP, 0, 0, 0, 0, 0, 0, 0],
             1 if probe.mode == 1 => [wire::STOP, 1, 0, 0, 0, 0, 0, 0],
             1 => [wire::LAUNCH_IMPORTS, 1, 0, 0, 0, 0, 0, 0],
             _ => [wire::LAUNCH_IMPORTS, 1, imports::ALL, 0, 0, 0, 0, 0],
@@ -116,13 +146,19 @@ impl Gate {
             match probe.stage {
                 0 => "admission-health",
                 1 if probe.mode == 1 => "admission-stopped",
+                1 if probe.mode == 3 => "admission-requester-stopped",
                 1 => "admission-policy-revoked",
                 _ => "admission-policy-restored",
             },
             &[],
         );
+        if probe.stage == 1 && probe.mode == 3 {
+            // The liveness/cancellation overlap has been checked. Reinstallation
+            // uses the ordinary stored-launch deadline, without extending it.
+            probe.until = time::after(wire::RUN_OBJECT_DEADLINE_TICKS)?;
+        }
         probe.stage = match (probe.stage, probe.mode) {
-            (0, 0) | (1, 1) | (2, _) => 3,
+            (0, 0) | (1, 1 | 3) | (2, _) => 3,
             _ => probe.stage + 1,
         };
         probe.asked = false;

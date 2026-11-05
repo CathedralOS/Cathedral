@@ -61,8 +61,25 @@ close, slot reuse, Notes/Colors saves and exact cold-reopen storage (2,479 recor
 Neither boot contains a construction-probe marker. The production entry has no
 observation pause. Normal F5 remains the Rust matrix host.
 
-Next: requester replacement during
-construction, repeated exact resource recovery, then the generic retained
+Requester retirement/replacement is also covered by
+`omega_construction_test.py --mode requester`, passing fresh and cold at
+`build/boot-harness-rs/desktop/20261105T024920816321Z/`. STOP targets the launcher
+while its requested Notes construction is held. The old request is refused;
+ordinary owner commands resolve and reinstall Desktop in the same requester slot.
+The replacement launches Notes into the same target, saves, closes and reopens it.
+Both Notes closes in both boots report 8 private / 59 reader pages and 617 frames.
+These are immediate reclamation samples, not a repeated cancellation soak or
+proof that every asynchronous reservation return has settled. Replacement follows
+old-request refusal; this does not inject reordered replies after replacement.
+
+The first requester run at `20261105T024619279361Z/` gave the replacement an obsolete
+48-page allowance. It could launch Notes, then exited while repainting its bar.
+The fixture now uses the same 96 private pages as the installer; no production
+budget was changed. The Rust probe is organized under `service/construction_probe/`,
+with a named entrance, a replacement-command leaf and plumbing-only `mod.rs`.
+The shipped Omega images are unchanged by this follow-up.
+
+Next: repeated exact resource recovery, then the generic retained
 cancellation/teardown path and remaining synchronous owner/setup operations.
 The earlier intermittent nested-close timeout remains unresolved; keep the
 control timing probes below for recurrence. These cases do not establish

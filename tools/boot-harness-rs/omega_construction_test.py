@@ -36,7 +36,7 @@ def exercise(output, click, key, scan, width, height, reboot, mode='health'):
     held = 'Matrix admission probe: held'
     released = 'Matrix admission probe: released'
     scan(lambda _w, _d: held in events(), 'construction observation held')
-    key({'health': 'f8', 'stop': 'f7', 'regrant': 'f6'}[mode])
+    key({'health': 'f8', 'stop': 'f7', 'regrant': 'f6', 'requester': 'f5'}[mode])
     scan(lambda _w, _d: 'admission-health' in events(), 'owner HEALTH during construction')
     drive_input(start)
     for marker in ('admission-health', 'admission-input-polled'):
@@ -47,7 +47,8 @@ def exercise(output, click, key, scan, width, height, reboot, mode='health'):
     if mode == 'health':
         scan(lambda _w, _d: released in events(), 'construction observation released')
     if mode != 'health':
-        marker = 'admission-stopped' if mode == 'stop' else 'admission-policy-restored'
+        marker = {'stop': 'admission-stopped', 'regrant': 'admission-policy-restored',
+                  'requester': 'admission-requester-stopped'}[mode]
         scan(lambda _w, _d: marker in events(), marker)
         scan(lambda _w, _d: 'Cathedral matrix: launch refused' in events(), 'old launch refused')
         text = events()
@@ -56,7 +57,13 @@ def exercise(output, click, key, scan, width, height, reboot, mode='health'):
         assert not re.search(r'Cathedral matrix: launch 1 ', text), text
         if mode == 'regrant':
             assert text.index('admission-policy-revoked') < text.index('admission-policy-restored'), text
-        # The same target and requester must work after the cancelled request.
+        if mode == 'requester':
+            scan(lambda _w, _d: 'admission-requester-replaced' in events(), 'requester replaced')
+            scan(lambda w, d: n.pixel(w, d, 32, height - 56) == bytes.fromhex('d6e5ef'),
+                 'replacement launcher painted')
+            assert events().index('Cathedral matrix: launch refused') < events().index('admission-requester-replaced'), events()
+            assert re.search(r'Cathedral matrix: child 0 0000000000000003 0000000000000000', events()), events()
+        # The same target must work after cancellation, including for a fresh requester.
         n.background(0)
         n.launch(0, 0)
     value = 'a' if reboot else ''
@@ -79,7 +86,7 @@ def exercise(output, click, key, scan, width, height, reboot, mode='health'):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--mode', choices=('health', 'stop', 'regrant'), default='health')
+    parser.add_argument('--mode', choices=('health', 'stop', 'regrant', 'requester'), default='health')
     args = parser.parse_args()
     omega_parent_poll_test.main(user_check=partial(exercise, mode=args.mode),
                                label='omega-construction', fixture_features=['construction-probe'],
