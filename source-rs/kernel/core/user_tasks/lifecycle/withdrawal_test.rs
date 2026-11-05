@@ -24,7 +24,7 @@ pub unsafe fn exercise(
 ) {
     let baseline = frames.allocated();
     // SAFETY: Fresh inactive roots and production admission/loan commits.
-    let (mut session, mut frames) = unsafe { prepare(frames, layout, image, output) };
+    let (mut session, mut frames, _) = unsafe { prepare(frames, layout, image, output, false) };
     let [send, receive] = session.ipc.create(1).unwrap();
     receive_on(&mut session, 1, receive);
     for child in 2..TASKS {
@@ -120,12 +120,13 @@ pub unsafe fn exercise(
     output(b"subtree withdrawal: one retry batch after all descendant authority was removed\n");
 }
 
-unsafe fn prepare<'a>(
+pub(super) unsafe fn prepare<'a>(
     frames: &'a mut FrameAllocator,
     layout: &arch::BootLayout,
     image: arch::ImageRange,
     output: fn(&[u8]) -> bool,
-) -> (alloc::boxed::Box<Session>, Frames<'a>) {
+    capture_ticket: bool,
+) -> (alloc::boxed::Box<Session>, Frames<'a>, u64) {
     let program = Program {
         executable: Executable::Probe(&[0xcc]),
         arguments: [0, 0],
@@ -174,12 +175,21 @@ unsafe fn prepare<'a>(
         }
         session.launches[branch].delegated_count = count;
     }
+    let mut ticket = 0;
     for index in 0..LAUNCHES {
+        let receipt = if index == 0 && capture_ticket {
+            session.names.mint(0).unwrap()
+        } else {
+            0
+        };
         let model = &mut session.launches[index].model;
         let owner = model.owner;
-        model
-            .request(owner, model.launch(owner).unwrap(), 0)
-            .unwrap();
+        let grant = model.launch(owner).unwrap();
+        if receipt != 0 {
+            model.request_async(owner, grant, 0, receipt).unwrap();
+        } else {
+            model.request(owner, grant, 0).unwrap();
+        }
         let mut steps = 0;
         while session.launches[index].model.pending().is_some() {
             session.deferred.remove(Work::Admission, index);
@@ -189,6 +199,15 @@ unsafe fn prepare<'a>(
             assert!(steps < 512);
         }
         assert!(session.tasks[index + 2].space.is_some());
+        if receipt != 0 {
+            let model = &mut session.launches[index].model;
+            ticket = model
+                .poll_admission(owner, receipt, false)
+                .unwrap()
+                .unwrap()
+                .unwrap();
+            model.consume_admission();
+        }
     }
     for (index, launch) in session.launches.iter().enumerate() {
         assert_eq!(
@@ -200,7 +219,7 @@ unsafe fn prepare<'a>(
             }
         );
     }
-    (session, frames)
+    (session, frames, ticket)
 }
 
 fn receive_on(session: &mut Session, slot: usize, handle: u64) {

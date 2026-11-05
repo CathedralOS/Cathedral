@@ -689,6 +689,8 @@ initial FP state is clean and I/O privilege is zero.
 | 55: physical assignment | Owned idle launch, requested frame reservation, 0 | Conserving reassignment; BUSY if a live charge would lose funding |
 | 89: begin child admission | Owned launch, 176-byte spawn-tree record, 0 | Fresh owner-local receipt; parent keeps running |
 | 90: collect child admission | Receipt, writable 16-byte result, cancel (0 or 1) | `WOULD_BLOCK`, or 0 after copying `[status, child]` and consuming the receipt |
+| 91: begin child cancellation | Child ticket, zero, zero | 0 after requesting retirement; does not wait for physical cleanup |
+| 92: try child wait | Child ticket, writable exit record, 40 bytes | `WOULD_BLOCK`, or 0 after copying and consuming the reclaimed outcome |
 
 Asynchronous admission uses the same private construction, funding and final
 authority checks as blocking spawn. Each launch retains at most one uncollected
@@ -981,6 +983,16 @@ incarnation. It returns after boot-context reclamation and endpoint teardown.
 Blocked receivers observe `PEER_CLOSED`; the supervisor can collect `Cancelled`
 and launch a replacement with fresh grants. Repeated cancellation before collection
 is harmless, and cancelling an already-reaped child preserves its original outcome.
+`Child::cancel_begin` submits the same retirement without blocking. It does not
+register a completion waiter. Authority withdrawal runs before the next userspace
+entry; backing reclamation continues in bounded boot-context visits. The owner
+can service other connections meanwhile. `Child::try_wait` needs no clock grant:
+`None` leaves the ticket and destination unchanged, `Some(outcome)` consumes the
+outcome after reclamation. Bad copyout leaves the outcome available to retry.
+Only a blocking cancellation request is woken by completion; submitting one must
+not complete another IPC or overwrite its result. `cancel` and `wait` retain their
+blocking behavior.
+
 After collection the ticket is stale. Cancellation is abrupt task destruction,
 not Omega cooperative cancellation, an IPC rollback or proof that prior work had
 no effects. General service resource budgets remain absent.

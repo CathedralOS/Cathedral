@@ -18,6 +18,7 @@ public data State {
     owner: Server;
     slots: [Admitted; 2];
     exits: [u64; 2];
+    stopping: [bool; 2];
     clock: u64;
     deadline: u64;
     stopped: bool;
@@ -98,7 +99,8 @@ machine wait(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
     }
 }
 machine pending_wake(context: &State, set: &mut Set, now: u64) {
-    transition context.slots[0].pending != 0u64 || context.slots[1].pending != 0u64 {
+    transition context.slots[0].pending != 0u64 || context.slots[1].pending != 0u64
+        || context.stopping[0] || context.stopping[1] {
         true -> runtime::waiting::expire_by(set, runtime::time::after(now, 1u64))
         _ -> done()
     }

@@ -1,6 +1,6 @@
 module supervisor::owner;
 // Owner commands: 1 admit [slot, granted, launch, argument], 2 stop [slot],
-// 3 status, 4 submit admission, 99 exit. Submission replies before collecting
+// 3 status, 4 submit admission, 5 submit stop, 99 exit. Submission replies before collecting
 // construction; ordinary turns then publish its listener or record the failure.
 // Status words: slot liveness, handled echoes, stored storage messages, last
 // exit kinds and whether each slot holds a request. Any owner failure ends the witness.
@@ -30,6 +30,7 @@ machine routed(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 
         1u64 -> block admit(gate, context, now, frame)
         4u64 -> block admit(gate, context, now, frame)
         2u64 -> block stop(gate, context, frame)
+        5u64 -> block begin_stop(gate, context, frame)
         3u64 -> block status(gate, context)
         99u64 -> block exit(gate, context)
         _ -> block reply(gate, context, kernel::INVALID_ARGUMENT, 0u64)
@@ -106,4 +107,24 @@ machine reply(gate: &Gate, context: &mut State, first: u64, second: u64) -> u64 
     words[0] = first;
     words[1] = second;
     block runtime::server::main::reply(gate, &mut context.owner, &words)
+}
+
+// The submission reply does not promise completed teardown. Ordinary turns poll
+// the exact child ticket while the owner connection remains serviceable.
+machine begin_stop(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Kernel {
+    transition frame.payload[1] < 2u64 {
+        true -> block slot(gate, context, frame.payload[1])
+        _ -> block reply(gate, context, kernel::INVALID_ARGUMENT, 0u64)
+    }
+    machine slot(gate: &Gate, context: &mut State, slot: u64 [0..=1]) -> u64 reaches Kernel {
+        transition context.slots[slot].live && !context.stopping[slot] {
+            true -> block submit(gate, context, slot)
+            _ -> block reply(gate, context, kernel::BUSY, 0u64)
+        }
+    }
+    machine submit(gate: &Gate, context: &mut State, slot: u64 [0..=1]) -> u64 reaches Kernel {
+        let status: u64 = runtime::task::main::cancel_begin(gate, context.slots[slot].task);
+        context.stopping[slot] = status == 0u64;
+        block reply(gate, context, status, 0u64)
+    }
 }

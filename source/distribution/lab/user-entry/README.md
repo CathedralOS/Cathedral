@@ -186,6 +186,15 @@ publication, retained results on bad copyout, and that completing admission
 cannot wake or overwrite a parent's unrelated blocked syscall. The live Omega
 witness does not assume that construction must take a minimum amount of time.
 
+The owner can also submit stop with command 5. The Omega supervisor retains a
+stopping flag, polls the child's exact ticket once per ordinary service turn,
+and releases its listener/bundle only after collection. It continues answering
+owner requests. Six cycles stop a child with a held request, then reuse its slot
+for an echo child. This exercises the native nonblocking task bindings without
+assuming cleanup must take long enough for a particular message overlap. The
+kernel smoke fixture holds the owner in an unrelated IPC wait through real
+subtree reclamation and verifies no premature wake or syscall-result overwrite.
+
 The peers use the ordinary Rust service bindings over the shared v4 transport.
 This proves admission, offers and reclamation on the common runtime; it does not
 place children, route input or claim a matrix.

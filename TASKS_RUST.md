@@ -9,11 +9,76 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Current executable handoff: [construction cancellation](#construction-cancellation),
-following [control reply timing](#control-reply-timing) and
+Current executable handoff: [nonblocking child task primitives](#nonblocking-child-task-primitives),
+following [construction cancellation](#construction-cancellation),
+[control reply timing](#control-reply-timing) and
 [retained child construction](#retained-child-construction).
 That entry records the latest verified image and next work; earlier migration
 entries below are historical milestones.
+
+### Nonblocking child task primitives
+
+The shared kernel task API now separates cancellation submission from collection:
+`TASK_CANCEL_BEGIN` (91) requests retirement of the owner's exact child and
+`TASK_TRY_WAIT` (92) polls its reclaimed outcome. Neither registers a wait nor
+requires a clock grant. Pending observation leaves the ticket and destination
+unchanged; successful copyout consumes the outcome. Reserved cancellation words,
+foreign/stale tickets and bad destinations fail. Existing blocking cancellation
+and wait operations keep their behavior.
+
+Blocking cancel waiters are now registered by the syscall that actually parks,
+not inferred later from a child's cancellation flag. This matters when a parent
+submits cancellation and then blocks on unrelated IPC: reclamation must not wake
+that IPC or overwrite its saved syscall result. Withdrawal still precedes the
+next userspace entry; physical cleanup continues in bounded boot-context visits.
+No matrix-specific kernel scheduling or authority was added.
+
+The Omega runtime exposes `task::main::cancel_begin` and `try_wait`, the latter
+returning `Completion::{Pending, Ready, Failed}`. Its native table appends two
+entries, retaining the existing prefix. The Rust runtime has matching methods.
+The standalone Omega supervisor accepts a submitted stop and polls collection
+on ordinary turns while still handling its owner. Six cycles cancel a child with
+a held request and reuse its slot for a successful echo child. Those cycles do
+not assume a minimum cleanup duration; deterministic overlap is tested in kernel.
+
+Verification:
+
+- Host `cargo test --locked`: `build/cancel-api-host-tests.log`.
+- x86-64 smoke: `build/cancel-api-smoke.log`.
+- ARM64 portability: `build/cancel-api-arm64.log`.
+- Both CPU runs execute the new inactive-root fixture through actual subtree
+  withdrawal/reclamation and checked copies: repeated submission, pending poll,
+  unrelated IPC preservation, blocking-after-submit compatibility, bad copyout,
+  exact cancelled outcome, consumed-ticket refusal and allocator recovery.
+- The ten-scenario Omega admission suite passes at
+  `build/omega-user/connections/20261105T031457447851Z/`, including six submitted
+  stop/reuse cycles and exact parent resource refunds after every scenario.
+- Core (memory-lab) and Rust user-runtime target clippy, the three native ABI
+  boundary tests, Python/source-layout and diff checks pass.
+- The full fresh/cold desktop workflow with Omega root and user matrices passes
+  at `build/boot-harness-rs/desktop/20261105T033829528434Z/`: login, three Notes
+  instances, independent drafts, protected close, slot reuse, Notes/Colors saves
+  and exact durable reopen. The rebuilt matrix remains at 391/496 load pages.
+- Normal F5's Rust-host desktop passes the same fresh/cold workflow at
+  `build/boot-harness-rs/desktop/20261105T034018273917Z/`, with the rebuilt Omega
+  applications. Logs: `build/cancel-api-omega-desktop.log` and
+  `build/cancel-api-rust-desktop.log`.
+
+The new native capabilities were reviewed as exactly four added rows: callable
+and external supply for `task_cancel_begin` and `task_try_wait`. No compiler,
+stack, resource allowance or deadline changes are required.
+
+Next: use these primitives in Omega's retained admission cancellation and stock
+matrix teardown. `admission::stop`, `pending::drain`, and the stock matrix still
+use blocking cancellation/collection. Keep listener/bundle custody until rollback
+or the committed child's collection completes, and service unrelated requests
+between those turns. Remaining synchronous owner/setup operations follow that.
+Keep the distinction explicit: collecting the task outcome can now be polled,
+but `server::close` still releases sealed requests and shared mailbox backing
+through blocking memory operations. Returning to the loop between task polls
+does not make that final bundle release nonblocking.
+Normal F5 still uses the Rust matrix host. The earlier nested-close timeout is
+still unexplained; this API addition does not claim to fix it.
 
 ### Construction cancellation
 
@@ -102,18 +167,10 @@ changes only the host workload and documentation. Python syntax, source layout
 and diff checks pass; the earlier native/host checks remain scoped to their
 recorded implementation revisions.
 
-Next: the generic retained cancellation/teardown path and remaining synchronous
-owner/setup operations. There is a kernel API prerequisite: `TASK_CANCEL` parks
-its caller until reclamation. `lifecycle/reclamation.rs` currently infers a blocked
-cancel waiter from the supervisor's cancellation flag. A nonblocking cancellation
-request must distinguish requesting retirement from registering that waiter, or
-later cleanup could overwrite an unrelated syscall result and spuriously wake the
-owner. The same exact child ticket should remain collectible; outcome polling
-must preserve it while pending and consume it only after successful copyout.
-This belongs to general parent/child task mechanisms, not matrix-specific policy.
-Then Omega admission can retain pending/committed cleanup across service turns,
-keeping its bundle until rollback or child collection finishes. The existing
-blocking APIs can remain wrappers for callers that want them.
+The task-API prerequisite identified here is now implemented in
+[nonblocking child task primitives](#nonblocking-child-task-primitives).
+Retained Omega admission cancellation/teardown and remaining synchronous
+owner/setup operations are still the next integration work.
 
 The earlier intermittent nested-close timeout remains unresolved; keep the
 control timing probes below for recurrence. These cases do not establish

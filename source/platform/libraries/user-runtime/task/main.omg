@@ -123,16 +123,8 @@ public machine wait(gate: &Gate, child: u64) -> Exit reaches Kernel blocks invok
     let mut record: [u64; 8];
     let status: u64 = block Kernel::task_wait(gate, child, &mut record);
     transition status < kernel::ERROR_BASE {
-        true -> decode(record)
+        true -> decode_exit(record)
         _ -> (Exit::Failed { code: status })
-    }
-    machine decode(record: [u64; 8]) -> Exit {
-        transition record[0] {
-            0u64 -> (Exit::Returned { status: record[1] })
-            1u64 -> (Exit::Fault { vector: record[1], error: record[2], address: record[3], instruction: record[4] })
-            2u64 -> (Exit::Cancelled)
-            _ -> (Exit::Failed { code: kernel::IO_ERROR })
-        }
     }
 }
 
@@ -218,4 +210,32 @@ public machine assign_limits(gate: &Gate, launch: u64, private_pages: u64, reade
     limits[1] = reader_pages;
     limits[2] = channels;
     Kernel::resource_assign(gate, launch, &limits)
+}
+
+// Polling never registers a wait and requires no clock capability. A successful
+// observation consumes this exact ticket; errors leave any outcome collectible.
+public data Completion [copy] {
+    case Pending;
+    case Ready(outcome: Exit);
+    case Failed(code: u64);
+}
+public machine cancel_begin(gate: &Gate, child: u64) -> u64 reaches Kernel invokes Kernel {
+    Kernel::task_cancel_begin(gate, child)
+}
+public machine try_wait(gate: &Gate, child: u64) -> Completion reaches Kernel invokes Kernel {
+    let mut record: [u64; 8];
+    let status: u64 = Kernel::task_try_wait(gate, child, &mut record);
+    transition {
+        status == 0u64 -> (Completion::Ready { outcome: decode_exit(record) })
+        status == kernel::WOULD_BLOCK -> (Completion::Pending)
+        _ -> (Completion::Failed { code: status })
+    }
+}
+machine decode_exit(record: [u64; 8]) -> Exit {
+    transition record[0] {
+        0u64 -> (Exit::Returned { status: record[1] })
+        1u64 -> (Exit::Fault { vector: record[1], error: record[2], address: record[3], instruction: record[4] })
+        2u64 -> (Exit::Cancelled)
+        _ -> (Exit::Failed { code: kernel::IO_ERROR })
+    }
 }

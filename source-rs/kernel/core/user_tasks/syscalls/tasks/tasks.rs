@@ -62,9 +62,10 @@ pub(in super::super) fn dispatch(
         .launches
         .iter()
         .position(|launch| match number {
-            abi::TASK_SPAWN | abi::TASK_SPAWN_WITH | abi::TASK_SPAWN_TREE | abi::TASK_SPAWN_BEGIN => {
-                launch.model.launch(slot) == Ok(first)
-            }
+            abi::TASK_SPAWN
+            | abi::TASK_SPAWN_WITH
+            | abi::TASK_SPAWN_TREE
+            | abi::TASK_SPAWN_BEGIN => launch.model.launch(slot) == Ok(first),
             abi::TASK_CONNECT => launch.model.port(slot) == Ok(first),
             _ => launch.model.wait(slot, first).is_ok(),
         })
@@ -82,21 +83,27 @@ pub(in super::super) fn dispatch(
             model.connect(slot, first)?;
             Ok(session.ipc.accept_child(launch.endpoint_base, slot))
         }
-        abi::TASK_CANCEL => {
+        abi::TASK_CANCEL | abi::TASK_CANCEL_BEGIN => {
+            if number == abi::TASK_CANCEL_BEGIN && (second != 0 || third != 0) {
+                return Err(abi::INVALID_ARGUMENT);
+            }
             if model.request_cancel(slot, first)? {
                 session
                     .deferred
                     .insert(crate::user_tasks::execution::deferred::Work::Cancel, index);
-                *event = Event::Block;
+                if number == abi::TASK_CANCEL {
+                    session.cancel_waiters |= 1 << slot;
+                    *event = Event::Block;
+                }
             }
-            Ok(0) // Boot reclaims a live child before completing this call.
+            Ok(0) // Only TASK_CANCEL waits for reclamation before returning.
         }
-        abi::TASK_WAIT | abi::TASK_WAIT_UNTIL => {
+        abi::TASK_WAIT | abi::TASK_WAIT_UNTIL | abi::TASK_TRY_WAIT => {
             model.wait(slot, first)?;
             if number == abi::TASK_WAIT_UNTIL {
                 session.clock.handle(slot)?;
             }
-            if number == abi::TASK_WAIT && third != abi::EXIT_BYTES as u64 {
+            if number != abi::TASK_WAIT_UNTIL && third != abi::EXIT_BYTES as u64 {
                 return Err(abi::INVALID_ARGUMENT);
             }
             if !session.tasks[slot]
@@ -121,6 +128,9 @@ pub(in super::super) fn dispatch(
                 },
             };
             if !finish_wait(session, slot, wait, now)? {
+                if number == abi::TASK_TRY_WAIT {
+                    return Err(abi::WOULD_BLOCK);
+                }
                 session.tasks[slot].wait = Some(wait);
                 session.waits.register(
                     slot,

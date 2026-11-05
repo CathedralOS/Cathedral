@@ -1,7 +1,8 @@
 // A Rust owner drives the standalone Omega supervisor through its kernel-installed
 // control pair; Rust peers are the children it admits from lent launches.
 // Owner words: 1 admit [slot, granted, launch, argument], 2 stop [slot], 3 status,
-// 99 exit. Status: slot liveness, echoes handled, storage messages, exit kinds, held requests.
+// 4 submit admission, 5 submit stop, 99 exit.
+// Status: slot liveness, echoes handled, storage messages, exit kinds, held requests.
 use cathedral_kernel_contracts::user as abi;
 use cathedral_platform_contracts::{imports, matrix, services};
 use cathedral_user_runtime::{
@@ -25,7 +26,7 @@ const REFUSALS: u64 = 15;
 const NO_STORAGE: u64 = 16;
 
 pub(super) fn run() {
-    for scenario in 1..=9 {
+    for scenario in 1..=10 {
         let budget = resources::budget().unwrap();
         let physical = resources::physical_budget().unwrap();
         let bells = notification::budget().unwrap();
@@ -83,10 +84,7 @@ impl Owner {
 fn run_scenario(number: u64) {
     // Loans only flow to lower launch slots: the supervisor is launch 0, peers 1 and 2.
     let loans = [1, 2].map(|index| Launch::at(index).unwrap());
-    let supervisor = Launch::at(0)
-        .unwrap()
-        .spawn_tree(300, &[], &loans)
-        .unwrap();
+    let supervisor = Launch::at(0).unwrap().spawn_tree(300, &[], &loans).unwrap();
     // Lent launches are unusable here until the supervisor's subtree is reclaimed.
     assert!(loans[0].spawn(0).is_err());
     let pair = Port::at(0).unwrap().connect().unwrap();
@@ -94,13 +92,25 @@ fn run_scenario(number: u64) {
         client: Client::connect(pair, time::after(300).unwrap()).unwrap(),
     };
     match number {
+        10 => {
+            for round in 1..=6u64 {
+                assert_eq!(owner.admit(0, imports::INTERACTION, 0, HOLD_IDLE), 0);
+                owner.observed(|v| v[6] == 1);
+                assert_eq!(owner.call([5, 0, 0, 0, 0, 0, 0, 0])[0], 0);
+                // These are ordinary owner requests between submission and final
+                // observation. Timing is not assumed: cleanup may already finish.
+                owner.observed(|v| v[0] == 0 && v[4] == CANCELLED);
+                assert_eq!(owner.admit(0, imports::INTERACTION, 0, ECHO), 0);
+                let state = owner.observed(|v| v[0] == 0 && v[4] == RETURNED);
+                assert_eq!(state[2], round * 8);
+            }
+        }
         7 => {
             for round in 1..=6u64 {
                 assert_eq!(owner.begin(0, imports::INTERACTION, 0, ECHO), 0);
                 assert_eq!(owner.begin(1, imports::INTERACTION, 1, ECHO), 0);
-                let state = owner.observed(|v| {
-                    v[0] == 0 && v[1] == 0 && v[4] == RETURNED && v[5] == RETURNED
-                });
+                let state = owner
+                    .observed(|v| v[0] == 0 && v[1] == 0 && v[4] == RETURNED && v[5] == RETURNED);
                 assert_eq!(state[2], round * 16);
             }
         }
@@ -172,8 +182,14 @@ fn run_scenario(number: u64) {
                 owner.admit(0, imports::INTERACTION | imports::CAPTURE, 0, ECHO),
                 abi::INVALID_ARGUMENT
             );
-            assert_eq!(owner.admit(0, imports::INTERACTION, 5, ECHO), abi::BAD_HANDLE);
-            assert_eq!(owner.admit(2, imports::INTERACTION, 0, ECHO), abi::INVALID_ARGUMENT);
+            assert_eq!(
+                owner.admit(0, imports::INTERACTION, 5, ECHO),
+                abi::BAD_HANDLE
+            );
+            assert_eq!(
+                owner.admit(2, imports::INTERACTION, 0, ECHO),
+                abi::INVALID_ARGUMENT
+            );
             assert_eq!(owner.admit(0, imports::INTERACTION, 0, IDLE), 0);
             assert_eq!(owner.admit(0, imports::INTERACTION, 1, IDLE), abi::BUSY);
             // Launch 0 is in use by slot 0: the kernel refuses and slot 1 stays empty.
@@ -226,7 +242,8 @@ pub(super) fn child(mode: u64, environment: Environment) -> u64 {
                         Ok(()) => break,
                         Err(Error(code)) if code == abi::WOULD_BLOCK as i64 => {
                             assert!(!time::reached(time::now().unwrap(), deadline));
-                            let _ = cathedral_user_runtime::event::wait(&[], time::after(1).unwrap());
+                            let _ =
+                                cathedral_user_runtime::event::wait(&[], time::after(1).unwrap());
                         }
                         Err(error) => panic!("storage send: {error:?}"),
                     }
@@ -248,12 +265,24 @@ pub(super) fn child(mode: u64, environment: Environment) -> u64 {
         REFUSALS => {
             let taken = [services::TAKEN, 0, 0, 0, 0, 0, 0, 0];
             assert_eq!(
-                request(&mut bindings, services::request(imports::INTERACTION, 1, 1, 0)),
+                request(
+                    &mut bindings,
+                    services::request(imports::INTERACTION, 1, 1, 0)
+                ),
                 taken
             );
             for (words, code) in [
                 (
-                    [services::ACQUIRE, services::VERSION, imports::INTERACTION, 2, 2, 0, 0, 0],
+                    [
+                        services::ACQUIRE,
+                        services::VERSION,
+                        imports::INTERACTION,
+                        2,
+                        2,
+                        0,
+                        0,
+                        0,
+                    ],
                     services::INCOMPATIBLE,
                 ),
                 (
@@ -261,7 +290,16 @@ pub(super) fn child(mode: u64, environment: Environment) -> u64 {
                     services::INCOMPATIBLE,
                 ),
                 (
-                    [services::ACQUIRE, services::VERSION, imports::INTERACTION, 0, 1, 0, 0, 0],
+                    [
+                        services::ACQUIRE,
+                        services::VERSION,
+                        imports::INTERACTION,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                    ],
                     services::INVALID,
                 ),
                 (
@@ -273,11 +311,29 @@ pub(super) fn child(mode: u64, environment: Environment) -> u64 {
                     services::UNAVAILABLE,
                 ),
                 (
-                    [services::ACQUIRE, services::VERSION, imports::STORAGE, 1, 1, 2, 0, 0],
+                    [
+                        services::ACQUIRE,
+                        services::VERSION,
+                        imports::STORAGE,
+                        1,
+                        1,
+                        2,
+                        0,
+                        0,
+                    ],
                     services::INVALID,
                 ),
                 (
-                    [services::ACQUIRE, services::VERSION, imports::STORAGE, 1, 1, 0, 9, 0],
+                    [
+                        services::ACQUIRE,
+                        services::VERSION,
+                        imports::STORAGE,
+                        1,
+                        1,
+                        0,
+                        9,
+                        0,
+                    ],
                     services::INVALID,
                 ),
             ] {

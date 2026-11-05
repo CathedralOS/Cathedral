@@ -49,7 +49,9 @@ pub(super) fn syscall(session: &mut Session, slot: usize, now: u64) -> Event {
         | abi::TASK_ENVIRONMENT
         | abi::TASK_SPAWN_TREE
         | abi::TASK_SPAWN_BEGIN
-        | abi::TASK_SPAWN_RESULT => tasks::dispatch(
+        | abi::TASK_SPAWN_RESULT
+        | abi::TASK_CANCEL_BEGIN
+        | abi::TASK_TRY_WAIT => tasks::dispatch(
             session,
             slot,
             (number, first, second, third),

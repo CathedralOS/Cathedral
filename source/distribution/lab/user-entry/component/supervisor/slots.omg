@@ -11,12 +11,14 @@ use runtime::server::main::Event;
 use runtime::server::main::Ticket;
 use runtime::connection::main::Frame;
 use runtime::task::main::Exit;
+use runtime::task::main::Completion;
 use runtime::waiting::Set;
 use runtime::admission::offer;
 use runtime::admission::pending::Progress;
 use protocol::services::ACQUIRE;
 public machine step(gate: &Gate, context: &mut State, slot: u64 [0..=1], now: u64) -> u64 reaches Kernel blocks invokes Kernel {
     transition {
+        context.stopping[slot] -> block collecting(gate, context, slot)
         context.slots[slot].pending != 0u64 -> block admitting(gate, context, slot)
         !context.slots[slot].live -> (0u64)
         context.slots[slot].listener.peer.fault != 0u64 -> block departed(gate, context, slot)
@@ -101,6 +103,7 @@ machine storage(gate: &Gate, context: &mut State, slot: u64 [0..=1], now: u64) -
 }
 // Stop, collect and release the slot; remember how the child ended.
 public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=1]) reaches Kernel blocks invokes Kernel {
+    context.stopping[slot] = false;
     transition {
         context.slots[slot].pending != 0u64 -> block abandon(gate, context, slot)
         context.slots[slot].live -> block stopping(gate, context, slot)
@@ -127,7 +130,7 @@ machine kind(exit: Exit) -> u64 {
     }
 }
 public machine watch(context: &State, slot: u64 [0..=1], set: &mut Set) {
-    transition context.slots[slot].live {
+    transition context.slots[slot].live && !context.stopping[slot] {
         true -> watched(context, slot, set)
         _ -> done()
     }
@@ -143,3 +146,18 @@ public machine flag(live: bool) -> u64 {
     transition live { true -> (1u64) _ -> (0u64) }
 }
 machine done() {}
+
+machine collecting(gate: &Gate, context: &mut State, slot: u64 [0..=1]) -> u64 reaches Kernel {
+    let result: Completion = runtime::task::main::try_wait(gate, context.slots[slot].task);
+    transition result {
+        Completion::Pending -> (0u64)
+        Completion::Failed { code } -> (code)
+        Completion::Ready { outcome } -> block collected(gate, context, slot, outcome)
+    }
+    machine collected(gate: &Gate, context: &mut State, slot: u64 [0..=1], outcome: Exit) -> u64 reaches Kernel {
+        block runtime::admission::main::release(gate, &mut context.slots[slot]);
+        context.stopping[slot] = false;
+        context.exits[slot] = kind(outcome);
+        0u64
+    }
+}

@@ -139,6 +139,14 @@ reader pages and channels left, its unused process slots and its reserved
 frames not yet charged.
 [link.omg](link.omg) names the boot-approved provider links the composition
 supplied: the link at an index, and a client connection over it.
+The task API also offers `cancel_begin` and `try_wait`. The first requests abrupt
+retirement of the exact owned child; the second returns `Pending`, `Ready` with
+its exit outcome, or `Failed`. Neither parks nor needs a clock grant. Poll once
+per service turn and arrange a wake while cleanup remains pending. Keep the
+ticket and backing until collection succeeds. These primitives do not make
+`admission::stop` or `pending::drain` nonblocking; those orchestration paths still
+use the blocking wrappers below.
+
 [admission/main.omg](admission/main.omg) sequences one brokered admission:
 allocate the request/reply channels, the optional storage pair and the
 interaction bell, move the two broker endpoints into the child, accept owner
@@ -194,9 +202,9 @@ leaves retain the input tail, copy back before returning, and do not retain a
 borrow. The 176-byte spawn record and 40-byte exit record are staged the same
 way, as are the own-account resource and notification budget snapshots a program
 can compare around an operation that must leave nothing behind. Counts are
-checked Omega ranges. Allocation, mapping, release, yield,
-receive, wait, spawn, cancel and collection declare blocking and their callers
-acknowledge it. Launch, port and child values are kernel tickets scoped to the
+checked Omega ranges. Operations that can park declare blocking and their callers
+acknowledge it; admission/cancellation submission and outcome polling do not.
+Launch, port and child values are kernel tickets scoped to the
 calling task; scalar names alone grant no authority.
 
 [storage/main.omg](storage/main.omg) retains a child-local binding revision and

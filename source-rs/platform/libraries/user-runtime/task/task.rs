@@ -56,6 +56,19 @@ impl Child {
     pub fn cancel(self) -> Result<(), Error> {
         result(arch::call(abi::TASK_CANCEL, self.0, 0)).map(|_| ())
     }
+    /// Request retirement and return without waiting for physical cleanup.
+    /// Keep this ticket until try_wait/wait collects its outcome.
+    pub fn cancel_begin(self) -> Result<(), Error> {
+        result(arch::call(abi::TASK_CANCEL_BEGIN, self.0, 0)).map(|_| ())
+    }
+    /// None means still live or reclaiming. Success consumes the exact outcome.
+    pub fn try_wait(self) -> Result<Option<Outcome>, Error> {
+        match self.collect(abi::TASK_TRY_WAIT, abi::EXIT_BYTES as u64) {
+            Ok(outcome) => Ok(Some(outcome)),
+            Err(Error(code)) if code == abi::WOULD_BLOCK as i64 => Ok(None),
+            Err(error) => Err(error),
+        }
+    }
     fn collect(self, number: u64, third: u64) -> Result<Outcome, Error> {
         let mut record = Record([0; abi::EXIT_BYTES]);
         result(arch::call3(
