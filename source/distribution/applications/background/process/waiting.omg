@@ -32,12 +32,17 @@ machine poll(gate: &Gate, context: &mut Context, now: u64, deadline: u64) -> app
 machine owner(gate: &Gate, context: &mut Context, now: u64, deadline: u64) -> app::model::Event reaches Kernel {
     let event: runtime::server::main::Event = block runtime::server::main::poll(gate, &mut context.owner, now);
     transition event {
-        Event::Request { frame } -> control(frame.bytes, frame.payload)
+        Event::Request { frame } -> control(gate, context, frame.bytes, frame.payload)
         _ -> block input(gate, context, now, deadline)
     }
 }
-machine control(bytes: u64, words: [u64; 8]) -> app::model::Event {
-    app::model::Event::Control { accepted: accepts(bytes, words) }
+machine control(gate: &Gate, context: &mut Context, bytes: u64, words: [u64; 8]) -> app::model::Event reaches Kernel {
+    app::model::Event::Control { accepted: observe(gate, context, bytes, words) }
+}
+// Both idle and broker-wait paths record receipt at the same boundary.
+public machine observe(gate: &Gate, context: &mut Context, bytes: u64, words: [u64; 8]) -> bool reaches Kernel invokes Kernel {
+    diagnostic::control(gate, context.clock, &mut context.trace, 1u64);
+    accepts(bytes, words)
 }
 // Background has no unsaved work. The same exact owner protocol applies while
 // idle and while presentation is pending; it cannot authorize another app's loss.
@@ -106,12 +111,14 @@ public machine reply(gate: &Gate, context: &mut Context, accepted: bool) -> app:
     }
     machine send(gate: &Gate, context: &mut Context, words: &[u64; 8]) -> app::model::Event reaches Kernel {
         let status: u64 = block runtime::server::main::reply(gate, &mut context.owner, words);
+        diagnostic::control(gate, context.clock, &mut context.trace, reply_phase(status));
         transition status == 0u64 {
             true -> (app::model::Event::Complete)
             _ -> failed(status)
         }
     }
 }
+machine reply_phase(status: u64) -> u64 { transition status == 0u64 { true -> (2u64) _ -> (3u64) } }
 machine failed(code: u64) -> app::model::Event {
     app::model::Event::Failed { failure: Failure::Transport { code: code } }
 }

@@ -3,6 +3,58 @@ use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use app::model::Event;
 use app::model::Failure;
+use runtime::time::Stamp;
+
+// Sparse owner-query timestamps: 0 online, 1 received, 2 reply published,
+// 3 reply failed. The startup microsecond stamp is diagnostic, not authority.
+// Account CPU includes other work; elapsed minus CPU does not identify a wait.
+public data Trace { origin: u64; }
+public machine control(gate: &Gate, clock: u64, trace: &mut Trace, phase: u64) reaches Kernel invokes Kernel {
+    let sample: Stamp = runtime::time::stamp(gate, clock);
+    transition sample {
+        Stamp::Read { ticks, micros, cpu } -> recorded(gate, trace, phase, micros, cpu)
+        _ -> done()
+    }
+    machine recorded(gate: &Gate, trace: &mut Trace, phase: u64, micros: u64, cpu: u64) reaches Kernel {
+        initialize(trace, micros);
+        let mut words: [u64; 8];
+        words[0] = 0x203a6c7463206742u64; // "Bg ctl: "
+        hex(&mut words, 8u64, trace.origin, 0u64);
+        put(&mut words, 24u64, 32u64);
+        put(&mut words, 25u64, 48u64 + (phase % 10u64));
+        put(&mut words, 26u64, 32u64);
+        hex(&mut words, 27u64, micros, 0u64);
+        put(&mut words, 43u64, 32u64);
+        hex(&mut words, 44u64, cpu, 0u64);
+        put(&mut words, 60u64, 10u64);
+        let ignored: u64 = Kernel::write(gate, &words, 61u64);
+    }
+}
+machine initialize(trace: &mut Trace, micros: u64) {
+    transition trace.origin == 0u64 { true -> set(trace, micros) _ -> done() }
+    machine set(trace: &mut Trace, micros: u64) { trace.origin = micros; }
+}
+machine put(words: &mut [u64; 8], index: u64, byte: u64) requires index < 64u64 {
+    words[index / 8u64] = words[index / 8u64] | ((byte & 255u64) << ((index % 8u64) * 8u64));
+}
+machine hex(words: &mut [u64; 8], start: u64, value: u64, digit: u64) requires start <= 48u64 && digit <= 16u64 {
+    transition digit < 16u64 {
+        true -> nibble(words, start, value, digit, (value >> (60u64 - 4u64 * digit)) & 15u64)
+        _ -> done()
+    }
+    machine nibble(words: &mut [u64; 8], start: u64, value: u64, digit: u64, nibble: u64) requires start <= 48u64 && digit < 16u64 {
+        transition {
+            nibble < 10u64 -> placed(words, start, value, digit, 48u64 + nibble)
+            nibble < 16u64 -> placed(words, start, value, digit, 87u64 + nibble)
+            _ -> done()
+        }
+    }
+    machine placed(words: &mut [u64; 8], start: u64, value: u64, digit: u64, byte: u64) requires start <= 48u64 && digit < 16u64 {
+        put(words, start + digit, byte);
+        transition { _ -> hex(words, start, value, digit + 1u64) }
+    }
+}
+machine done() {}
 
 public machine scope(gate: &Gate) -> Event reaches Kernel invokes Kernel {
     let text: [u8; 63] = "Cathedral background: shared interaction ready; storage denied\n";

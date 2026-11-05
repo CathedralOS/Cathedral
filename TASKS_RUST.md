@@ -9,9 +9,48 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Current executable handoff: [retained child construction](#retained-child-construction).
+Current executable handoff: [control reply timing](#control-reply-timing), following
+[retained child construction](#retained-child-construction).
 That entry records the latest verified image and next work; earlier migration
 entries below are historical milestones.
+
+### Control reply timing
+
+Background now records sparse timestamps when it starts, receives an owner query
+and publishes or fails its reply. Both the idle and pending-broker paths use the
+same observation point. `Bg ctl:` carries a startup timestamp, phase, elapsed
+clock and direct account CPU; it contains no new authority or process identity.
+The phases are 0 online, 1 received, 2 reply published and 3 reply failed.
+`tools/boot-harness-rs/control_timing.py` reports these receive-to-reply spans
+alongside the existing matrix timings. It does not infer parent membership from
+the startup tags, or equate off-CPU time with a particular scheduler/IPC cause.
+An unfinished probe is not proof of an unpublished reply: the parent may collect
+the child before its post-publication diagnostic runs. Instrumentation itself
+adds clock/format/write work.
+
+Checked/native Background compilation passes at 46 load pages. The matrix stays
+at 389 pages with the same producer, stack, grants and deadlines. The nested LOSS
+regression passes fresh and cold at
+`build/boot-harness-rs/desktop/20261105T012750712592Z/`: dirty/clean replies while
+an image is held, protected close, save and cold reopen. Background's measured
+receipt-to-publication spans there were 1.172–5.876 ms.
+
+The full Omega root/user depth-three pointer-stress soak at
+`build/boot-harness-rs/desktop/20261105T012908420777Z/` passes one fresh cycle and
+two cold cycles, including exact saved text and repeated subtree teardown. Root
+accounts returned to 8 private / 138 reader pages, 614 frames and 15 free launch
+slots each time. Provider heap stayed within its tested headroom. The first
+cycle's outer LOSS round trip was 551.277 ms; the deepest Background span was
+52.432 ms elapsed / 1.775 ms direct execution. Cold Background spans reached
+30.913 ms. These successful runs **do not explain or fix** the earlier timeout
+recorded below. Five timing-parser tests and the source-layout/diff checks pass.
+
+Next: retain these probes for a recurrence, separating request receipt, reply
+publication and parent collection before changing scheduling or deadlines.
+Deterministic held-construction/cancel/replacement fixtures and the remaining
+synchronous cancellation/setup paths are still open. Normal F5 still uses the
+Rust matrix host. Latest upstream Omega kernel boot work through `d57af8b9` is
+integrated; it is independent of this desktop path.
 
 ### Retained child construction
 

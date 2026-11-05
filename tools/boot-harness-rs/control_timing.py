@@ -24,6 +24,7 @@ class Event:
 
 STAMP = re.compile(r'Matrix t: ([0-9a-f]{16}) ([0-9])([0-7]) ([0-9a-f]{16}) ([0-9a-f]{16})')
 VALUE = re.compile(r'Matrix control: ([0-9a-f]{16}) ([0-9]) ([0-7]) ([0-9a-f]{16})')
+BACKGROUND = re.compile(r'Bg ctl: ([0-9a-f]{16}) ([0-3]) ([0-9a-f]{16}) ([0-9a-f]{16})')
 
 
 def events(text):
@@ -81,6 +82,31 @@ def spans(records):
     return rows, pending
 
 
+def background_spans(text):
+    """Receive-to-reply only; startup tags do not establish matrix membership."""
+    previous, pending, rows = {}, {}, []
+    for match in BACKGROUND.finditer(text):
+        origin, phase, micros, cpu = (int(value, 16) for value in match.groups())
+        before = previous.get(origin, (0, 0))
+        if not origin or not micros or not cpu or micros < before[0] or cpu < before[1]:
+            raise ValueError(f'invalid/nonmonotonic Background stamp for {origin:016x}')
+        previous[origin] = (micros, cpu)
+        if phase == 0:
+            continue
+        if phase == 1:
+            if origin in pending:
+                raise ValueError(f'Background query overlaps for {origin:016x}')
+            pending[origin] = (micros, cpu)
+            continue
+        start = pending.pop(origin, None)
+        if start is None:
+            raise ValueError(f'Background reply lacks receipt for {origin:016x}')
+        wall, charged = micros - start[0], cpu - start[1]
+        rows.append((origin, wall / 1000, charged / 1000,
+                     max(0, wall - charged) / 1000, 'published' if phase == 2 else 'failed'))
+    return rows, pending
+
+
 def report(text):
     records = events(text)
     print('instance-start-us slot elapsed-ms account-CPU-ms off-CPU-ms operation')
@@ -101,6 +127,14 @@ def report(text):
     if costs:
         print(f'Adjacent diagnostic pair CPU gap: median {statistics.median(costs)/1000:.3f} ms; max {max(costs)/1000:.3f} ms')
     print(f'{len(records)} complete samples across {len({e.origin for e in records})} instance tags; tracing perturbs execution.')
+    leaf_rows, leaf_pending = background_spans(text)
+    if leaf_rows:
+        print('Background owner handling: received -> reply (not parent send -> reply)')
+        print('instance-start-us elapsed-ms account-CPU-ms off-CPU-ms result')
+        for origin, wall, cpu, other, label in leaf_rows:
+            print(f'{origin:17d} {wall:10.3f} {cpu:14.3f} {other:10.3f} {label}')
+    for origin, (micros, cpu) in leaf_pending.items():
+        print(f'PENDING Background instance={origin} since-us={micros}')
 
 
 if __name__ == '__main__':

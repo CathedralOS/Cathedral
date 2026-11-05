@@ -9,7 +9,7 @@ use runtime::server::main::Server;
 use startup;
 use application;
 
-public data Context { services: Services; owner: Server; clock: u64; }
+public data Context { services: Services; owner: Server; clock: u64; trace: diagnostic::Trace; }
 public ProgramProvider satisfies Program {
     machine run(gate: &Gate, first: u64, second: u64) -> u64 reaches Kernel blocks invokes Kernel {
         let mut context: Context;
@@ -21,6 +21,7 @@ public ProgramProvider satisfies Program {
     }
 }
 machine started(gate: &Gate, context: &mut Context) -> u64 reaches Kernel {
+    diagnostic::control(gate, context.clock, &mut context.trace, 0u64);
     let status: u64 = block application::run(gate, context);
     transition { _ -> (block finished(gate, context, status)) }
 }
