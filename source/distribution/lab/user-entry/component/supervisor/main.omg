@@ -14,6 +14,7 @@ use runtime::time::Tick;
 use runtime::waiting::Set;
 use supervisor::owner;
 use supervisor::slots;
+use supervisor::retirement;
 public data State {
     owner: Server;
     slots: [Admitted; 2];
@@ -26,6 +27,13 @@ public data State {
     stored: u64;
 }
 public machine check(gate: &Gate) -> u64 reaches Kernel blocks invokes Kernel {
+    let status: u64 = block retirement::check(gate);
+    transition status == 0u64 {
+        true -> block checked(gate)
+        _ -> (status)
+    }
+}
+machine checked(gate: &Gate) -> u64 reaches Kernel {
     let mut context: State;
     let status: u64 = startup(gate, &mut context);
     transition status == 0u64 {

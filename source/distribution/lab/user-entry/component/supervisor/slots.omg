@@ -11,7 +11,9 @@ use runtime::server::main::Event;
 use runtime::server::main::Ticket;
 use runtime::connection::main::Frame;
 use runtime::task::main::Exit;
-use runtime::task::main::Completion;
+use runtime::admission::retirement;
+use runtime::admission::retirement::Retirement;
+use runtime::admission::retirement::Outcome;
 use runtime::waiting::Set;
 use runtime::admission::offer;
 use runtime::admission::pending::Progress;
@@ -147,17 +149,27 @@ public machine flag(live: bool) -> u64 {
 }
 machine done() {}
 
-machine collecting(gate: &Gate, context: &mut State, slot: u64 [0..=1]) -> u64 reaches Kernel {
-    let result: Completion = runtime::task::main::try_wait(gate, context.slots[slot].task);
+public machine collecting(gate: &Gate, context: &mut State, slot: u64 [0..=1]) -> u64 reaches Kernel blocks invokes Kernel {
+    let result: Retirement = retirement::poll(gate, &mut context.slots[slot]);
     transition result {
-        Completion::Pending -> (0u64)
-        Completion::Failed { code } -> (code)
-        Completion::Ready { outcome } -> block collected(gate, context, slot, outcome)
+        Retirement::Pending -> (0u64)
+        Retirement::Failed { code } -> (code)
+        Retirement::Ready { outcome } -> block collected(gate, context, slot, outcome)
     }
-    machine collected(gate: &Gate, context: &mut State, slot: u64 [0..=1], outcome: Exit) -> u64 reaches Kernel {
+    machine collected(gate: &Gate, context: &mut State, slot: u64 [0..=1], outcome: Outcome) -> u64 reaches Kernel {
         block runtime::admission::main::release(gate, &mut context.slots[slot]);
         context.stopping[slot] = false;
-        context.exits[slot] = kind(outcome);
+        context.exits[slot] = stopped_kind(outcome);
         0u64
+    }
+}
+machine stopped_kind(outcome: Outcome) -> u64 {
+    transition outcome {
+        Outcome::Collected { exit } -> kind(exit)
+        Outcome::Aborted { code } -> aborted(code)
+        Outcome::Empty -> (0u64)
+    }
+    machine aborted(code: u64) -> u64 {
+        transition code == kernel::REVOKED { true -> (3u64) _ -> (code) }
     }
 }

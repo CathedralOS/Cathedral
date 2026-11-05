@@ -18,6 +18,8 @@ use server::main::Server;
 use task::main::Control;
 use task::main::Exit;
 use admission::pending::drain;
+use admission::retirement::Retirement;
+use admission::retirement::Outcome;
 use protocol::services::INTERACTION;
 use protocol::services::STORAGE;
 
@@ -178,9 +180,8 @@ public machine finish_admission(gate: &Gate, child: &mut Admitted, launch: u64, 
 }
 // The child exists but a later phase failed: stop it, then release everything.
 machine undo(gate: &Gate, child: &mut Admitted, code: u64) -> u64 reaches Kernel {
-    let cancelled: u64 = block task::main::cancel(gate, child.task);
-    let exit: Exit = block task::main::wait(gate, child.task);
-    block failed(gate, child, code)
+    let exit: Exit = block stop(gate, child);
+    code
 }
 machine failed(gate: &Gate, child: &mut Admitted, code: u64) -> u64 reaches Kernel {
     block release(gate, child);
@@ -195,16 +196,34 @@ public machine stop(gate: &Gate, child: &mut Admitted) -> Exit reaches Kernel bl
         _ -> (Exit::Failed { code: kernel::PEER_CLOSED })
     }
     machine cancelling(gate: &Gate, child: &mut Admitted) -> Exit reaches Kernel {
-        let cancelled: u64 = block task::main::cancel(gate, child.task);
-        let exit: Exit = block task::main::wait(gate, child.task);
+        let result: Retirement = block admission::retirement::wait(gate, child);
+        transition result {
+            Retirement::Ready { outcome } -> block collected(gate, child, outcome)
+            Retirement::Failed { code } -> (Exit::Failed { code: code })
+            Retirement::Pending -> (Exit::Failed { code: kernel::WOULD_BLOCK })
+        }
+    }
+    machine collected(gate: &Gate, child: &mut Admitted, outcome: Outcome) -> Exit reaches Kernel {
         block release(gate, child);
-        exit
+        transition outcome {
+            Outcome::Collected { exit } -> (exit)
+            Outcome::Aborted { code } -> (Exit::Failed { code: code })
+            Outcome::Empty -> (Exit::Failed { code: kernel::PEER_CLOSED })
+        }
     }
 }
 // Close whatever this task still names. Names already moved to the child fail
 // harmlessly; no release is skipped because an earlier one failed.
 public machine release(gate: &Gate, child: &mut Admitted) reaches Kernel blocks invokes Kernel {
     block drain(gate, child);
+    // A rejected receipt observation did not settle construction. Retain the
+    // bundle rather than dropping names that a still-private child may need.
+    transition child.pending == 0u64 && !child.live {
+        true -> block release_bundle(gate, child)
+        _ -> done()
+    }
+}
+machine release_bundle(gate: &Gate, child: &mut Admitted) reaches Kernel {
     block server::main::close(gate, &mut child.listener);
     close_endpoint(gate, child.control.sender);
     close_endpoint(gate, child.control.receiver);

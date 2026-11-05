@@ -223,8 +223,12 @@ The children this matrix admits, funds, presents and retires.
   before each observation and after publication; binding and placement use that
   retained plan before the next child dispatch. The login picker remains alive
   through loading and retires only after the replacement exists. Failure after
-  retirement queues bounded picker recovery. Cancellation and teardown still
-  drain synchronously; ordinary construction no longer waits.
+  retirement queues bounded picker recovery. Revoked construction uses the shared
+  admission retirement poll across turns, retaining the bundle and reservation
+  until rollback or collection. A child that won publication is kept out of
+  service while draining; a rejected observation preserves custody and ends the
+  matrix rather than claiming successful cleanup. Final bundle release, ordinary
+  close, owner STOP and setup teardown still contain synchronous work.
   An accepted owner update to the target's launch imports, images, ceilings or
   placement cancels the captured request permanently, including a revoke followed
   by restoration of the same policy. Other targets remain independent.

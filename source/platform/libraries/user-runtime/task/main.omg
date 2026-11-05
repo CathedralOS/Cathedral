@@ -45,6 +45,8 @@ public data Admission [copy] {
     case Pending;
     case Started(ticket: u64);
     case Failed(code: u64);
+    // The observation itself failed; no terminal receipt was consumed.
+    case Rejected(code: u64);
 }
 // A cancellation request prevents a still-private child from committing. Keep
 // polling until rollback finishes. If commit already won, Started returns the
@@ -54,7 +56,7 @@ public machine poll_spawn(gate: &Gate, receipt: u64, cancel: bool) -> Admission 
     let status: u64 = Kernel::spawn_result(gate, receipt, &mut record, cancel_word(cancel));
     transition {
         status == kernel::WOULD_BLOCK -> (Admission::Pending)
-        status != 0u64 -> (Admission::Failed { code: status })
+        status != 0u64 -> (Admission::Rejected { code: status })
         record[0] != 0u64 -> (Admission::Failed { code: record[0] })
         record[1] != 0u64 && record[1] < kernel::ERROR_BASE -> (Admission::Started { ticket: record[1] })
         _ -> (Admission::Failed { code: kernel::IO_ERROR })

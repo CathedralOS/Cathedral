@@ -9,12 +9,66 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Current executable handoff: [nonblocking child task primitives](#nonblocking-child-task-primitives),
+Current handoff: [retained admission retirement](#retained-admission-retirement).
+Previous desktop handoff: [nonblocking child task primitives](#nonblocking-child-task-primitives),
 following [construction cancellation](#construction-cancellation),
 [control reply timing](#control-reply-timing) and
 [retained child construction](#retained-child-construction).
 That entry records the latest verified image and next work; earlier migration
 entries below are historical milestones.
+
+### Retained admission retirement
+
+Following `529b8dac`, Omega's shared
+`user-runtime/admission/retirement.omg` now polls construction cancellation and
+live-child collection through one custody path. Pending retains the bundle;
+completion distinguishes empty, aborted construction (with its status), and a
+collected child's original exit. If publication won, the real task ticket is
+retained and moved endpoint names are cleared before cancellation. `stop` and
+`pending::drain` use the explicit blocking convenience over that same path.
+
+`task::poll_spawn` distinguishes rejected observation from consumed construction
+failure. Rejected observation keeps the receipt and bundle, including through
+`release`; release also refuses to discard a live child's bundle. The witness
+allocates a real bundle, presents an invalid receipt, proves a retained endpoint
+still sends, then repairs the fixture state and verifies release invalidates it.
+
+The twelve-scenario Omega admission suite passes at
+`build/omega-user/connections/20261105T035917515435Z/`. New repeated cases cover
+submitted stop beside an independent echo child and cancellation before the
+normal admission poll, followed by same-slot reuse. Existing blocking cases also
+pass through the shared retirement implementation. Parent channel, memory,
+physical and notification accounts return exactly after each scenario. These
+runs do not assume a minimum cleanup duration or select the kernel commit race.
+An initial rejected-receipt test wrongly expected zero from a successful send;
+the ABI returns the sent byte count. Correcting that assertion made it pass.
+Target clippy for `cathedral-channels-lab --features omega-admission`, the source
+layout check (152 Omega / 153 Rust package edges), and diff checks also pass.
+
+The stock matrix now uses this poll when construction authority is withdrawn.
+It retains its launch and reservation between visits, suppresses service to a
+child that won publication, and refuses the request only after rollback or
+collection. Rejected observation preserves custody and ends the matrix through
+its ordinary fatal-turn path. Checked/native compilation of the ordinary matrix
+passes at 393/496 load pages, as does the construction-fixture build.
+
+All six desktop checks passed, including cold reopen:
+
+- Full Omega desktop: `build/boot-harness-rs/desktop/20261105T042711979704Z/`.
+- Normal F5 desktop: `build/boot-harness-rs/desktop/20261105T042818745016Z/`.
+- Construction health and STOP: one cycle each, before and after reboot.
+- Construction revoke/restore and requester replacement: three cycles each,
+  before and after reboot, with exact reclaimed accounts `(8, 59, 619, 0)`.
+  Artifacts: `build/boot-harness-rs/desktop/20261105T043034127962Z/` and
+  `build/boot-harness-rs/desktop/20261105T043136434550Z/` respectively.
+
+Build log: `build/retained-retirement-desktop-build.log`; check summary:
+`build/retained-retirement-checks.log`. Final mailbox/bundle release,
+ordinary live-child close, owner STOP and setup failure remain synchronous; do
+not describe this as fully nonblocking teardown. Next is retaining those ordinary
+close operations across service turns without replying or reusing a slot early.
+The ignored helper `build/check-retirement-desktops.py` runs those six checks
+sequentially and writes a separate `build/retained-retirement-*.log` per case.
 
 ### Nonblocking child task primitives
 

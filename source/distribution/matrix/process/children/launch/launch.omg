@@ -33,6 +33,8 @@ use connections::storage::binding;
 use shared::storage::Prepared;
 use construction::construction::poll_reserved;
 use runtime::admission::pending::Progress;
+use runtime::admission::retirement;
+use runtime::admission::retirement::Retirement;
 use protocol::services::STORAGE;
 use connections::storage::exchange;
 use connections::responses;
@@ -242,8 +244,22 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
         let slot: u64 [0..=4] = context.launch.slot;
         transition valid {
             true -> block observe(gate, context)
-            _ -> block unbound(gate, context, slot, kernel::DENIED, false)
+            _ -> block cancelling_construction(gate, context, slot)
         }
+    }
+    machine cancelling_construction(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+        // Keep the launch, bundle and reservation until rollback or collection.
+        // A committed child is never served while this cancelled launch drains.
+        let result: Retirement = retirement::poll(gate, &mut context.slots[slot]);
+        transition result {
+            Retirement::Pending -> done()
+            Retirement::Ready { outcome } -> block unbound(gate, context, slot, kernel::DENIED, false)
+            Retirement::Failed { code } -> retirement_failed(gate, context, code)
+        }
+    }
+    machine retirement_failed(gate: &Gate, context: &mut State, code: u64) reaches Kernel {
+        context.launch.failure = code;
+        report::launch_refused(gate, code);
     }
     machine observe(gate: &Gate, context: &mut State) reaches Kernel {
         let held: bool = defer_construction(gate, context);

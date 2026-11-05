@@ -59,6 +59,9 @@ public data SlotPolicy [copy] {
 // Policies and both connection identities are captured before yielding.
 public data Launch {
     phase: u64;
+    // A rejected cleanup observation preserves custody and ends this process;
+    // it must not be reported as a completed refusal or permit slot reuse.
+    failure: u64;
     // Selected diagnostic provider only; ordinary builds use a zero window.
     probe_started: bool;
     probe_until: u64;

@@ -1,7 +1,7 @@
 // A Rust owner drives the standalone Omega supervisor through its kernel-installed
 // control pair; Rust peers are the children it admits from lent launches.
 // Owner words: 1 admit [slot, granted, launch, argument], 2 stop [slot], 3 status,
-// 4 submit admission, 5 submit stop, 99 exit.
+// 4 submit admission, 5 submit stop, 6 submit-and-cancel, 99 exit.
 // Status: slot liveness, echoes handled, storage messages, exit kinds, held requests.
 use cathedral_kernel_contracts::user as abi;
 use cathedral_platform_contracts::{imports, matrix, services};
@@ -26,7 +26,7 @@ const REFUSALS: u64 = 15;
 const NO_STORAGE: u64 = 16;
 
 pub(super) fn run() {
-    for scenario in 1..=10 {
+    for scenario in 1..=12 {
         let budget = resources::budget().unwrap();
         let physical = resources::physical_budget().unwrap();
         let bells = notification::budget().unwrap();
@@ -89,9 +89,35 @@ fn run_scenario(number: u64) {
     assert!(loans[0].spawn(0).is_err());
     let pair = Port::at(0).unwrap().connect().unwrap();
     let mut owner = Owner {
-        client: Client::connect(pair, time::after(300).unwrap()).unwrap(),
+        client: Client::connect(pair, time::after(300).unwrap()).unwrap_or_else(|error| {
+            let outcome = supervisor.wait_until(time::after(300).unwrap());
+            panic!("Omega supervisor connection failed: {error:?}; outcome: {outcome:?}")
+        }),
     };
     match number {
+        12 => {
+            for round in 1..=6u64 {
+                // The Omega owner handler cancels the submitted receipt before
+                // its ordinary admission poll can turn it into a live listener.
+                assert_eq!(owner.call([6, 0, imports::ALL, 0, IDLE, 0, 0, 0])[0], 0);
+                owner.observed(|v| v[0] == 0 && v[4] == CANCELLED);
+                assert_eq!(owner.admit(0, imports::INTERACTION, 0, ECHO), 0);
+                let state = owner.observed(|v| v[0] == 0 && v[4] == RETURNED);
+                assert_eq!(state[2], round * 8);
+            }
+        }
+        11 => {
+            for round in 1..=6u64 {
+                assert_eq!(owner.begin(0, imports::ALL, 0, IDLE), 0);
+                assert_eq!(owner.call([5, 0, 0, 0, 0, 0, 0, 0])[0], 0);
+                // A separate child and the owner remain serviceable while the
+                // cancelled submission resolves, on either side of publication.
+                assert_eq!(owner.begin(1, imports::INTERACTION, 1, ECHO), 0);
+                let state = owner
+                    .observed(|v| v[0] == 0 && v[4] == CANCELLED && v[1] == 0 && v[5] == RETURNED);
+                assert_eq!(state[2], round * 8);
+            }
+        }
         10 => {
             for round in 1..=6u64 {
                 assert_eq!(owner.admit(0, imports::INTERACTION, 0, HOLD_IDLE), 0);

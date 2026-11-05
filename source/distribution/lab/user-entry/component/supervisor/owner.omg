@@ -1,6 +1,6 @@
 module supervisor::owner;
 // Owner commands: 1 admit [slot, granted, launch, argument], 2 stop [slot],
-// 3 status, 4 submit admission, 5 submit stop, 99 exit. Submission replies before collecting
+// 3 status, 4 submit admission, 5 submit stop, 6 submit-and-cancel, 99 exit. Submission replies before collecting
 // construction; ordinary turns then publish its listener or record the failure.
 // Status words: slot liveness, handled echoes, stored storage messages, last
 // exit kinds and whether each slot holds a request. Any owner failure ends the witness.
@@ -29,6 +29,7 @@ machine routed(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 
     transition frame.payload[0] {
         1u64 -> block admit(gate, context, now, frame)
         4u64 -> block admit(gate, context, now, frame)
+        6u64 -> block admit(gate, context, now, frame)
         2u64 -> block stop(gate, context, frame)
         5u64 -> block begin_stop(gate, context, frame)
         3u64 -> block status(gate, context)
@@ -57,11 +58,21 @@ machine admit(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 r
     machine admitted(gate: &Gate, context: &mut State, now: u64, frame: Frame, slot: u64 [0..=1], launch: u64) -> u64 reaches Kernel {
         let status: u64 = block submit(gate, context, frame, slot, launch);
         context.exits[slot] = 0u64;
+        transition status == 0u64 && frame.payload[0] == 6u64 {
+            true -> block cancel_before_observation(gate, context, slot)
+            _ -> block reply(gate, context, status, 0u64)
+        }
+    }
+    // No ordinary admission poll has consumed this receipt. The generic
+    // retirement path must handle either private rollback or committed custody.
+    machine cancel_before_observation(gate: &Gate, context: &mut State, slot: u64 [0..=1]) -> u64 reaches Kernel {
+        context.stopping[slot] = true;
+        let status: u64 = block slots::collecting(gate, context, slot);
         block reply(gate, context, status, 0u64)
     }
     machine submit(gate: &Gate, context: &mut State, frame: Frame, slot: u64 [0..=1], launch: u64) -> u64 reaches Kernel {
         let loans: [u64; 14];
-        transition frame.payload[0] == 4u64 {
+        transition frame.payload[0] == 4u64 || frame.payload[0] == 6u64 {
             true -> block runtime::admission::pending::begin(gate, &mut context.slots[slot], launch,
                 frame.payload[4], &loans, 0u64, frame.payload[2])
             _ -> block runtime::admission::main::admit(gate, &mut context.slots[slot], launch,
@@ -117,14 +128,13 @@ machine begin_stop(gate: &Gate, context: &mut State, frame: Frame) -> u64 reache
         _ -> block reply(gate, context, kernel::INVALID_ARGUMENT, 0u64)
     }
     machine slot(gate: &Gate, context: &mut State, slot: u64 [0..=1]) -> u64 reaches Kernel {
-        transition context.slots[slot].live && !context.stopping[slot] {
+        transition (context.slots[slot].live || context.slots[slot].pending != 0u64) && !context.stopping[slot] {
             true -> block submit(gate, context, slot)
             _ -> block reply(gate, context, kernel::BUSY, 0u64)
         }
     }
     machine submit(gate: &Gate, context: &mut State, slot: u64 [0..=1]) -> u64 reaches Kernel {
-        let status: u64 = runtime::task::main::cancel_begin(gate, context.slots[slot].task);
-        context.stopping[slot] = status == 0u64;
-        block reply(gate, context, status, 0u64)
+        context.stopping[slot] = true;
+        block reply(gate, context, 0u64, 0u64)
     }
 }

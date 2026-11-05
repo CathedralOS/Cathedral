@@ -1,0 +1,86 @@
+module admission::retirement;
+// One cancellation/collection visit. The caller retains the entire Admitted
+// bundle, stops serving/admitting this slot, and returns to its loop on Pending.
+// Ready means no construction or child remains; release may now close the bundle.
+// Bundle release still contains blocking memory operations. No clock or yield is
+// hidden here, and a rejected observation leaves custody unchanged.
+use kernel::Gate;
+use kernel::Kernel;
+use admission::main::Admitted;
+use task::main::Admission;
+use task::main::Completion;
+use task::main::Exit;
+
+public data Outcome [copy] {
+    case Empty;
+    case Aborted(code: u64);
+    case Collected(exit: Exit);
+}
+public data Retirement [copy] {
+    case Pending;
+    case Ready(outcome: Outcome);
+    case Failed(code: u64);
+}
+public machine poll(gate: &Gate, child: &mut Admitted) -> Retirement reaches Kernel invokes Kernel {
+    transition {
+        child.pending != 0u64 -> construction(gate, child)
+        child.live -> stopping(gate, child)
+        _ -> (Retirement::Ready { outcome: Outcome::Empty })
+    }
+}
+// Explicit blocking compatibility for callers that have no service loop to
+// return to. All custody transitions still belong to the same single visit.
+public machine wait(gate: &Gate, child: &mut Admitted) -> Retirement reaches Kernel blocks invokes Kernel {
+    let result: Retirement = poll(gate, child);
+    transition result {
+        Retirement::Pending -> block later(gate, child)
+        _ -> (result)
+    }
+    machine later(gate: &Gate, child: &mut Admitted) -> Retirement reaches Kernel {
+        let status: u64 = block Kernel::yield_now(gate);
+        transition { _ -> block wait(gate, child) }
+    }
+}
+machine construction(gate: &Gate, child: &mut Admitted) -> Retirement reaches Kernel {
+    let result: Admission = task::main::poll_spawn(gate, child.pending, true);
+    transition result {
+        Admission::Pending -> (Retirement::Pending)
+        Admission::Rejected { code } -> (Retirement::Failed { code: code })
+        Admission::Failed { code } -> aborted(child, code)
+        Admission::Started { ticket } -> committed(gate, child, ticket)
+    }
+    machine aborted(child: &mut Admitted, code: u64) -> Retirement {
+        child.pending = 0u64;
+        Retirement::Ready { outcome: Outcome::Aborted { code: code } }
+    }
+    machine committed(gate: &Gate, child: &mut Admitted, ticket: u64) -> Retirement reaches Kernel {
+        // Publication won. The child owns the moved endpoints even though this
+        // caller never opened its control or installed a service listener.
+        child.pending = 0u64;
+        child.task = ticket;
+        child.live = true;
+        child.handoff[0] = 0u64;
+        child.handoff[1] = 0u64;
+        stopping(gate, child)
+    }
+}
+machine stopping(gate: &Gate, child: &mut Admitted) -> Retirement reaches Kernel {
+    let status: u64 = task::main::cancel_begin(gate, child.task);
+    transition status == 0u64 {
+        true -> collecting(gate, child)
+        _ -> (Retirement::Failed { code: status })
+    }
+}
+machine collecting(gate: &Gate, child: &mut Admitted) -> Retirement reaches Kernel {
+    let result: Completion = task::main::try_wait(gate, child.task);
+    transition result {
+        Completion::Pending -> (Retirement::Pending)
+        Completion::Failed { code } -> (Retirement::Failed { code: code })
+        Completion::Ready { outcome } -> collected(child, outcome)
+    }
+    machine collected(child: &mut Admitted, outcome: Exit) -> Retirement {
+        child.live = false;
+        child.task = 0u64;
+        Retirement::Ready { outcome: Outcome::Collected { exit: outcome } }
+    }
+}
