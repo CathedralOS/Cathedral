@@ -43,6 +43,7 @@ use launch::authority;
 use launch::resources;
 use shared::admission::Plan;
 use funding;
+use construction::observation::defer_construction;
 
 public machine begin(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarnation: u64,
     words: [u64; 8]) -> Submission reaches Kernel invokes Kernel {
@@ -245,6 +246,10 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
         }
     }
     machine observe(gate: &Gate, context: &mut State) reaches Kernel {
+        let held: bool = defer_construction(gate, context);
+        transition held { true -> done() _ -> block observed(gate, context) }
+    }
+    machine observed(gate: &Gate, context: &mut State) reaches Kernel {
         let slot: u64 [0..=4] = context.launch.slot;
         let progress: Progress = block poll_reserved(gate, context, slot);
         transition progress {

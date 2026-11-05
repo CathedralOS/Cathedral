@@ -37,7 +37,7 @@ def exercise(output, click, key, scan, width, height, reboot):
     print('PASS: stock Omega matrix answered HEALTH during held parent poll; queued key retained once')
 
 
-def main(user_check=exercise, label='omega-parent-poll', fixture_features=()):
+def main(user_check=exercise, label='omega-parent-poll', fixture_features=(), matrix_entry=None):
     output = omega_desktop_test.harness.BUILD / label / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     output.mkdir(parents=True)
     profile = omega_desktop_test.compose(output)
@@ -49,6 +49,10 @@ def main(user_check=exercise, label='omega-parent-poll', fixture_features=()):
     for i, launch in enumerate(composition['startup']['launches']):
         if launch.get('entry') == 'distribution/matrix/native/main.omg':
             composition['startup']['launches'][i] = root
+    if matrix_entry is not None:
+        for program in composition['startup']['programs'] + composition['startup']['realm_programs']:
+            if program.get('entry') == 'distribution/matrix/native/main.omg':
+                program['entry'] = matrix_entry
     profile.write_bytes((json.dumps(composition, indent=2) + '\n').encode())
     desktop_test.run(240, trace_storage=True, source_profile=profile, user_check=user_check)
 

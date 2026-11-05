@@ -11,6 +11,16 @@ use world::launches;
 use world::scopes;
 use world::scopes::Bound;
 use declaration;
+// An accepted owner policy update cancels the request that captured its old
+// policy, even if a later update restores the exact same values.
+public machine policy_changed(context: &mut State, slot: u64 [0..=4]) {
+    transition context.launch.phase != 0u64 && context.launch.slot == slot {
+        true -> cancelled(context)
+        _ -> done()
+    }
+    machine cancelled(context: &mut State) { context.launch.cancelled = true; }
+    machine done() {}
+}
 public machine valid(context: &State) -> bool {
     !context.slots[context.launch.slot].live && caller(context)
 }

@@ -20,6 +20,7 @@ use cathedral_platform_contracts::input;
 use cathedral_user_runtime::time;
 #[derive(Default)]
 pub(super) struct Gate {
+    construction: super::construction_probe::Gate,
     storage: super::storage_probe::Gate,
     funding: super::funding_probe::Gate,
     armed: u64,
@@ -34,7 +35,8 @@ pub(super) struct Gate {
 }
 impl Gate {
     pub fn deadline(&self) -> Option<u64> {
-        if self.health.is_some()
+        if self.construction.active()
+            || self.health.is_some()
             || self.cancellation.is_some()
             || self.storage.active()
             || self.funding.active()
@@ -49,6 +51,7 @@ impl Gate {
         server: &mut Server,
         children: &mut Children,
     ) -> Result<Option<Event>, Error> {
+        self.construction.step(server, children)?;
         if let Some(event) = self.funding.take(server, children)? {
             return Ok(Some(event));
         }
@@ -135,6 +138,9 @@ impl Gate {
         world: &mut World,
         parent: &Parent,
     ) -> Result<Option<Event>, Error> {
+        let Some(event) = self.construction.intercept(event, server)? else {
+            return Ok(None);
+        };
         let Some(event) = self.funding.intercept(event, server)? else {
             return Ok(None);
         };

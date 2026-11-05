@@ -225,6 +225,12 @@ The children this matrix admits, funds, presents and retires.
   through loading and retires only after the replacement exists. Failure after
   retirement queues bounded picker recovery. Cancellation and teardown still
   drain synchronously; ordinary construction no longer waits.
+  An accepted owner update to the target's launch imports, images, ceilings or
+  placement cancels the captured request permanently, including a revoke followed
+  by restoration of the same policy. Other targets remain independent.
+  The [construction lab](../../lab/matrix-construction/README.md) holds observation
+  to exercise owner/input progress, STOP and import-policy revoke/restore; normal
+  startup passes a zero window to the same process body.
 
 - [workspace.omg](children/workspace.omg): the workspace's app instances
   under the stock catalogue. A launch into an app slot publishes the instance

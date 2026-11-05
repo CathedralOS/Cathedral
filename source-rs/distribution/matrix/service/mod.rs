@@ -3,6 +3,8 @@
 #[cfg(feature = "interaction-delay")]
 mod cancellation_probe;
 mod children;
+#[cfg(feature = "interaction-delay")]
+mod construction_probe;
 mod deferred;
 #[cfg(feature = "interaction-delay")]
 mod delay_probe;

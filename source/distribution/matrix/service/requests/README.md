@@ -35,10 +35,10 @@ original pending request; choosing an operation does not manufacture a reply.
 Owner child control descends into [control/main.omg](control/main.omg): recognition, loss
 exclusion, routed-hop selection or canonical local operation validation. It
 chooses forwarding deadlines, validates slot/mask/allowance limits supplied by the
-host, and refuses to replace a pending request on the selected hop. The current
-lab gives LOSS and LAUNCH_IMPORTS the same opcode: only the canonical all-zero
-argument packet is a loss survey; malformed imports are never reinterpreted as
-loss. Unrelated owner operations still reach their fallback during a survey.
+host, and refuses to replace a pending request on the selected hop. LOSS (121)
+and LAUNCH_IMPORTS (139) have distinct wire words. Only a canonical all-zero
+argument LOSS packet is a loss survey; an empty import offer, including for slot
+zero, is a policy update. Unrelated owner operations still reach their fallback during a survey.
 The [control host](../../../../../source-rs/distribution/matrix/service/children/control/owner.rs)
 executes the choice, checks actual executable grants, retains the forwarded request
 and mutates only its local records. Host mechanisms still validate live resources;

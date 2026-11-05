@@ -365,8 +365,19 @@ grant is restored. `--binding` holds the binding refresh that now precedes the
 executable read; combine it with `--regrant` to revoke during that query. The
 fixture arms those two cases with five or six F2 presses. The refreshed source
 is checked before admission and its prepared grant is installed locally. No
-test mode is added to the Omega process. Owner grants, first provider handshakes
-and kernel spawn/brokered admission still have synchronous waits.
+test mode is added to the Omega process for these storage holds. Ordinary child
+construction now submits and resumes across service turns. Owner/setup admission,
+first provider handshakes and cancellation cleanup still have synchronous waits.
+
+`python tools/boot-harness-rs/omega_construction_test.py --mode health` selects a
+lab entry around the stock Omega matrix with a one-second construction-observation
+window. HEALTH and two successive input polls must complete before release.
+`--mode stop` cancels the pending target; `--mode regrant` revokes and restores its
+exact launch-import policy. Both require refusal of the old launch and reuse of
+the slot, followed by save and cold reopen. The kernel may publish behind the
+observation window; this test does not select its pre/post-publication race.
+The [lab composition](../source/distribution/lab/matrix-construction/README.md)
+adds no kernel test hook. The normal matrix entry uses a zero window.
 
 `python tools/boot-harness-rs/omega_launch_scene_test.py` holds the scene commit
 that activates a newly launched app. HEALTH and input polling must continue;

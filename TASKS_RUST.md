@@ -9,10 +9,64 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Current executable handoff: [control reply timing](#control-reply-timing), following
+Current executable handoff: [construction cancellation](#construction-cancellation),
+following [control reply timing](#control-reply-timing) and
 [retained child construction](#retained-child-construction).
 That entry records the latest verified image and next work; earlier migration
 entries below are historical milestones.
+
+### Construction cancellation
+
+The new [construction lab](source/distribution/lab/matrix-construction/README.md)
+uses the real Omega stock matrix with a one-second observation window around
+ordinary child construction. Its explicit entry calls the same process body;
+normal startup supplies zero. The hold is a leaf beside construction, not a new
+production package or kernel policy. The generic program entry contract, producer,
+stack, grants and deadlines are unchanged.
+
+A Rust fixture owner sends HEALTH, STOP, or LAUNCH_IMPORTS revoke/restore over its
+existing control connection. Two successive parent polls, driven by real input,
+must complete before release: one poll could already have been queued. This
+proves input-service progress, not delivery to an app that has not been admitted.
+The worker may commit behind the observation hold. The test does not select the
+kernel's pre/post-publication race; the generic admission witness covers that.
+
+The revoke/restore test found that `children/stored.omg` refused all owner words
+while a launch was pending, including launch-import policy changes. Only the
+competing synchronous RUN_OBJECT now takes that BUSY path. Accepted changes to
+the target's imports, image offer, resource ceilings or placement mark the pending
+launch cancelled. Restoring the original policy cannot clear that cancellation.
+Other targets' policy updates do not cancel this request. This changes future
+admission, not service rights already handed to an established child.
+
+Checked/native fixture compilation passes at 391/496 load pages. These final-image
+runs each pass a fresh and cold boot, refusal or activation, same-slot reuse,
+Notes save and exact reopen:
+
+- `--mode health`: `build/boot-harness-rs/desktop/20261105T022731389349Z/`.
+- `--mode stop`: `build/boot-harness-rs/desktop/20261105T022813924285Z/`.
+- `--mode regrant`: `build/boot-harness-rs/desktop/20261105T022623993147Z/`.
+
+Run them with `python tools/boot-harness-rs/omega_construction_test.py` plus the
+mode above. The regrant case primes an explicit ordinary-import policy before
+launching, so restoring it cannot accidentally test a different policy.
+Host `cargo test --locked` passes; its log is `build/omega-construction-host-tests.log`.
+Target clippy passes for normal, interaction-delay and construction-probe builds.
+Python syntax and source-layout checks pass (152 Omega / 153 Rust package edges).
+
+The normal entry also builds at 391/496 pages, up from 389. The full Omega-root/user
+desktop run at `build/boot-harness-rs/desktop/20261105T023458759519Z/` passes login,
+three Notes instances, independent drafts, switching, capacity refusal, protected
+close, slot reuse, Notes/Colors saves and exact cold-reopen storage (2,479 records).
+Neither boot contains a construction-probe marker. The production entry has no
+observation pause. Normal F5 remains the Rust matrix host.
+
+Next: requester replacement during
+construction, repeated exact resource recovery, then the generic retained
+cancellation/teardown path and remaining synchronous owner/setup operations.
+The earlier intermittent nested-close timeout remains unresolved; keep the
+control timing probes below for recurrence. These cases do not establish
+nonblocking cancellation.
 
 ### Control reply timing
 

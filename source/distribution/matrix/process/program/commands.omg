@@ -35,6 +35,7 @@ use connections::source;
 use children::lifecycle;
 use connections::storage::storage;
 use children::stored;
+use children::launch::authority;
 use children::forward;
 use connections::upstream;
 use realm::jobs;
@@ -264,10 +265,12 @@ machine policy(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Ke
         }
     }
     machine images(gate: &Gate, context: &mut State, slot: u64 [0..=4], mask: u64) -> u64 reaches Kernel {
+        authority::policy_changed(context, slot);
         context.policies[slot].images = mask;
         block reply(gate, context, ok())
     }
     machine ceilings(gate: &Gate, context: &mut State, frame: Frame, slot: u64 [0..=4]) -> u64 reaches Kernel {
+        authority::policy_changed(context, slot);
         context.policies[slot].private_pages = frame.payload[2];
         context.policies[slot].reader_pages = frame.payload[3];
         context.policies[slot].channels = frame.payload[4];
@@ -278,6 +281,7 @@ machine policy(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Ke
         block reply(gate, context, ok())
     }
     machine placement(gate: &Gate, context: &mut State, frame: Frame, slot: u64 [0..=4]) -> u64 reaches Kernel {
+        authority::policy_changed(context, slot);
         context.policies[slot].placed = true;
         context.policies[slot].x = frame.payload[2];
         context.policies[slot].y = frame.payload[3];
