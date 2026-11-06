@@ -148,8 +148,9 @@ The children this matrix admits, funds, presents and retires.
 
 - [construction/construction.omg](children/construction/construction.omg): configure a reserved
   launch, submit construction and open its control and storage listeners. Child
-  LAUNCH and owner RUN_OBJECT requests use the runtime's asynchronous receipt;
-  catalogue RUN and setup calls still wait.
+  LAUNCH and owner RUN_OBJECT requests use the runtime's asynchronous receipt
+  and retain refusals through lifecycle retirement; catalogue RUN and setup calls
+  still wait.
   [configuration.omg](children/construction/configuration.omg) owns the bounded
   CPU and catalogue grants. Lifecycle collects cancelled submissions and returns
   their reservations, including when publication wins the cancellation race.
@@ -238,8 +239,8 @@ The children this matrix admits, funds, presents and retires.
   request does not borrow a child's identity or layout authority. Child launches
   and realm setup cannot take its reserved work; other service traffic continues.
   A full reply mailbox retains the result without replaying construction.
-  Shared construction failure cleanup and final resource releases still need
-  their own review for blocking waits.
+  Failed construction retains the same request through lifecycle collection.
+  Final resource-release calls still need review for blocking waits.
 - [launch/launch.omg](children/launch/launch.omg): a child's LAUNCH reserves its
   exact reply ticket, caller and storage incarnations, grant revision, target
   and standing policy before yielding for the executable. The scoped read uses

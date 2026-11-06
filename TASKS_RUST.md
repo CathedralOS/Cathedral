@@ -9,11 +9,12 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Current work: verify retained construction failure cleanup in the stock matrix.
-The shared Omega runtime and its independent admission witness passed. The prior
-owner-launch regression batch is complete, including three construction-requester
-cycles on each of fresh and cold boots. Matrix changes below remain unqualified.
-Latest desktop handoff: [retained owner launches](#retained-owner-launches) at `ebe3526e`,
+Current work: finish the broader regressions for retained construction failure
+cleanup, then revisit the combined nested-desktop pointer-stress/soak close issue.
+Shared-runtime admission and six matrix refusal/retry cycles pass; the remaining
+owner-read, child-launch and Omega root/user desktop checks are still running.
+Latest desktop handoff: [retained construction failure cleanup](#retained-construction-failure-cleanup),
+following [retained owner launches](#retained-owner-launches) at `ebe3526e`,
 following [layout grant invalidation](#layout-grant-invalidation) at `28e6adfd`,
 following [retained layout application](#retained-layout-application) at `6b7deef5`,
 following [retained workspace fallback](#retained-workspace-fallback) at `ff555376`,
@@ -32,7 +33,7 @@ IDs outside main's ancestry, but their content is already squash-merged as
 harness host tests passed during review. Do not merge that branch again based
 only on its unmerged commit IDs; no fresh native boot was run for this check.
 
-### Retained construction failure cleanup (in progress)
+### Retained construction failure cleanup
 
 The previous owner-launch batch finished successfully at `146de1c1`:
 `build/owner-final-construction.log`, artifact
@@ -40,8 +41,8 @@ The previous owner-launch batch finished successfully at `146de1c1`:
 matched the reclaimed account `(8, 59, 642, 0)`; owner-read, ordinary child launch
 and the Omega root/user desktop passed earlier in the same batch.
 
-Shared runtime changes are qualified; stock-matrix changes and its strengthened
-requester fixture are in progress in the main worktree, not yet committed:
+Shared runtime changes are qualified and pushed at `aba8eae2`. The stock-matrix
+cleanup and its strengthened construction-requester scenario also pass:
 
 - Shared runtime publication setup retains the real child and remaining rights
   if control/listener setup fails. `pending::poll` callers must retire and release
@@ -63,20 +64,37 @@ Checked review, native emission and all 13 independent admission scenarios passe
 asserts retained live custody before collection, repeats six failure/reuse cycles,
 and balances private/shared pages, physical frames and notification rights.
 
+The stock-matrix construction composition passed checked review, native emission
+and three requester cycles on each of fresh and cold boots:
+`python tools/boot-harness-rs/omega_construction_test.py --mode requester --rounds 3`.
+Log: `build/cleanup-construction.log`; artifact:
+`build/boot-harness-rs/desktop/20261106T182513363309Z/`. Each cycle proves invalid
+CPU configuration after reservation, successful unused-reservation return before
+the refusal reply, restaging and successful same-slot replacement, then saved
+Notes and two completed closes. All six matched account `(8, 59, 642, 0)`.
+Native image: 416/496 load pages; SHA-256
+`85a82683a6f84cbaeb5e13849cc44c5276a172e117ea1ee3eb40d764e84ba663`.
+
+An initial probe incorrectly looked for a child-exit reclamation log, although no
+child exists at that failure point. It failed at
+`build/boot-harness-rs/desktop/20261106T180344848415Z/`. The replacement diagnostic
+reports only a successful kernel return of an unused reservation; BUSY remains
+tracked and is never reported as success. No kernel hook or deadline increase.
+
 Target clippy passed for the channel lab's omega-admission feature and the
 matrix's interaction-delay/construction-probe/handoff-probe features. Format,
-Python syntax, layout and diff checks passed. The remaining batch is running via
-`python build/check-construction-cleanup.py`: construction requester (three rounds),
-held owner read, ordinary child launch, and Omega root/user desktop. Logs are
-`build/cleanup-{construction,owner,launch,desktop}.log`; do not claim those passes yet.
-
-Preparation used `C:/Projects/Cathedral-construction-cleanup` to preserve the old
-baseline's live build inputs. Its changes were applied to the main worktree after
-that batch completed; that preparation checkout is no longer authoritative.
+Python syntax, layout and diff checks passed. Remaining regressions continue in
+`python build/check-construction-cleanup.py construction owner launch desktop`:
+held owner read, ordinary child launch and Omega root/user desktop. Logs are
+`build/cleanup-{owner,launch,desktop}.log`; do not claim those passes yet.
 Final resource-release calls, catalogue RUN and setup/shutdown paths still have
-blocking work. Do not claim complete nonblocking teardown or full F5 parity.
+blocking work. Memory release is a real deferred kernel operation that parks its
+caller (`source-rs/kernel/core/user_tasks/memory/memory.rs`), not merely an Omega
+annotation. Spreading groups of releases across turns can bound the batch;
+removing the individual syscall wait needs a generic kernel mechanism. Do not
+claim complete nonblocking teardown or full F5 parity.
 
-## Retained owner launches
+### Retained owner launches
 
 Implemented after `cd799ff2`. The new
 `omega_layout_fault_test.py --owner-read` replaces a stopped launcher through the
@@ -129,7 +147,7 @@ Construction-requester replacement also passed three cycles per boot, with
 matching reclaimed accounts; artifact `build/boot-harness-rs/desktop/20261106T173312451499Z/`.
 This completes that regression batch.
 
-Next work is the [retained construction failure cleanup](#retained-construction-failure-cleanup-in-progress)
+Next work is the [retained construction failure cleanup](#retained-construction-failure-cleanup)
 above, including the shared runtime's hidden post-publication collection wait.
 Catalogue RUN, explicit setup/refresh and final release drains also need review
 for blocking waits. Normal F5 continues to select the Rust matrix.

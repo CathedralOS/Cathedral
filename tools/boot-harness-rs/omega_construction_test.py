@@ -71,6 +71,11 @@ def cycle(output, click, key, scan, width, height, reboot, mode, value):
             assert text.index('admission-policy-revoked') < text.index('admission-policy-restored'), text
         if mode == 'requester':
             scan(lambda _w, _d: 'admission-requester-replaced' in events(), 'requester replaced')
+            assert events().count('admission-requester-refused') == 1, events()
+            failed = re.search(r'Cathedral matrix: launch 0 0000000000000005 ffffffffffffffea', events())
+            assert failed, events()
+            reclaimed = events().index('Matrix unused reservation released: 0', failed.end())
+            assert reclaimed < events().index('admission-requester-refused'), events()
             scan(lambda w, d: n.pixel(w, d, 32, height - 56) == bytes.fromhex('d6e5ef'),
                  'replacement launcher painted')
             assert events().index('Cathedral matrix: launch refused') < events().index('admission-requester-replaced'), events()

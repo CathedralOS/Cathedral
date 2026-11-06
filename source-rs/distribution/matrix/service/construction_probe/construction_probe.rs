@@ -90,7 +90,7 @@ impl Gate {
                         1,
                         incarnation,
                         [wire::VIEW, 0, 0, 0, 0, 0, 0, 0],
-                    ))
+                    )).reject_cpu_once()
                 });
                 self.pending = Some(Probe {
                     incarnation,

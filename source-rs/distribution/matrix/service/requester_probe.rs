@@ -7,6 +7,7 @@ use cathedral_user_runtime::time;
 enum Step {
     Resolve,
     Pages,
+    RefusedRun,
     Run,
     Surfaces,
     Place,
@@ -18,6 +19,7 @@ pub(super) struct Replacement {
     asked: bool,
     object: u64,
     view: wire::Packet,
+    reject_cpu: bool,
 }
 impl Replacement {
     pub fn new(view: wire::Packet) -> Self {
@@ -28,7 +30,12 @@ impl Replacement {
             asked: false,
             object: 0,
             view,
+            reject_cpu: false,
         }
+    }
+    pub fn reject_cpu_once(mut self) -> Self {
+        self.reject_cpu = true;
+        self
     }
     pub fn step(&mut self, children: &mut Children, now: u64, until: u64) -> Result<bool, Error> {
         let words = match self.step {
@@ -41,7 +48,7 @@ impl Replacement {
             // the older 48-page configuration value.
             Step::Pages => [wire::RUN_PAGES, 0, 96, 4, 0, 0, 0, 0],
             // Scope zero means the matrix's own realm, as in initial configuration.
-            Step::Run => [
+            Step::RefusedRun | Step::Run => [
                 wire::RUN_OBJECT,
                 0,
                 self.object,
@@ -49,7 +56,11 @@ impl Replacement {
                 self.object << 8,
                 3,
                 0,
-                0,
+                if matches!(self.step, Step::RefusedRun) {
+                    u64::MAX
+                } else {
+                    0
+                },
             ],
             Step::Surfaces => [wire::SURFACE_LIMIT, 0, 8, 0, 0, 0, 0, 0],
             Step::Place => [
@@ -70,7 +81,16 @@ impl Replacement {
         self.asked = false;
         // The former launch must settle before RUN_OBJECT may own another read.
         // Retry only a definite BUSY reply; never repeat accepted or timed-out work.
-        if matches!(self.step, Step::Run) && reply == wire::error(abi::BUSY) {
+        if matches!(self.step, Step::Run | Step::RefusedRun) && reply == wire::error(abi::BUSY) {
+            return Ok(false);
+        }
+        if matches!(self.step, Step::RefusedRun) {
+            assert_eq!(reply, wire::error(abi::INVALID_ARGUMENT));
+            time::storage_sample("admission-requester-refused", &[]);
+            self.reject_cpu = false;
+            // An accepted owner request consumed its staged allowance even on
+            // failure. Restage it, then prove the same slot can run normally.
+            self.step = Step::Pages;
             return Ok(false);
         }
         assert_eq!(
@@ -83,7 +103,9 @@ impl Replacement {
                 self.object = reply[1];
                 Step::Pages
             }
+            Step::Pages if self.reject_cpu => Step::RefusedRun,
             Step::Pages => Step::Run,
+            Step::RefusedRun => unreachable!(),
             Step::Run => Step::Surfaces,
             Step::Surfaces => Step::Place,
             Step::Place => {

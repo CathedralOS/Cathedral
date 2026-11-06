@@ -43,8 +43,16 @@ slot zero. It uses the stock template's 96 private pages and bottom-bar geometry
 This is explicit owner orchestration, not automatic launcher recovery. The old
 launch must be refused before replacement completes; the new launcher must issue
 a fresh successful request into the same app slot, then save and cold-reopen Notes.
-This exercises requester retirement during construction and orderly same-slot
-replacement, not arbitrary reordering of old replies after replacement.
+Before reinstalling, the requester fixture supplies an invalid CPU ceiling to
+RUN_OBJECT. This fails after a real reservation. Its construction-stage refusal
+must precede the kernel-confirmed unused-reservation return, and the owner must
+receive that refusal only after that return. The diagnostic is emitted only for
+a successful return, not a BUSY reservation queued for later retry. The fixture restages its consumed allowance, then succeeds in the
+same slot. Repeated rounds compare the usual resource accounts.
+
+This exercises requester retirement during construction, deferred reservation
+cleanup and orderly same-slot replacement, not arbitrary reordering of old
+replies after replacement.
 
 The Rust fixture entrance is
 [construction_probe.rs](../../../../source-rs/distribution/matrix/service/construction_probe/construction_probe.rs).

@@ -25,7 +25,7 @@ public machine start_reserved(gate: &Gate, context: &mut State, slot: u64 [0..=4
     let status: u64 = configure(gate, launch, images, cpu);
     transition status == 0u64 {
         true -> block starting(gate, context, slot, launch, argument, granted, deferred)
-        _ -> block refused(gate, context, slot, status)
+        _ -> block refused(gate, context, slot, status, deferred)
     }
     machine starting(gate: &Gate, context: &mut State, slot: u64 [0..=4], launch: u64, argument: u64,
         granted: u64, deferred: bool) -> u64 reaches Kernel {
@@ -33,9 +33,9 @@ public machine start_reserved(gate: &Gate, context: &mut State, slot: u64 [0..=4
         let clock: u64 = context.clock;
         let status: u64 = block spawn_bundle(gate, &mut context.slots[slot], launch, argument, granted, clock, deferred);
         transition {
-            status != 0u64 -> block refused(gate, context, slot, status)
+            status != 0u64 -> block refused(gate, context, slot, status, deferred)
             deferred -> (0u64)
-            _ -> block open(gate, context, slot)
+            _ -> block open(gate, context, slot, deferred)
         }
     }
 }
@@ -56,42 +56,51 @@ public machine poll_reserved(gate: &Gate, context: &mut State, slot: u64 [0..=4]
         Progress::Ready -> block opened(gate, context, slot)
     }
     machine failed(gate: &Gate, context: &mut State, slot: u64 [0..=4], code: u64) -> Progress reaches Kernel {
-        let status: u64 = block refused(gate, context, slot, code);
+        let status: u64 = block refused(gate, context, slot, code, true);
         Progress::Failed { code: status }
     }
     machine opened(gate: &Gate, context: &mut State, slot: u64 [0..=4]) -> Progress reaches Kernel {
-        let status: u64 = block open(gate, context, slot);
+        let status: u64 = block open(gate, context, slot, true);
         transition status == 0u64 { true -> (Progress::Ready) _ -> (Progress::Failed { code: status }) }
     }
 }
-machine open(gate: &Gate, context: &mut State, slot: u64 [0..=4]) -> u64 reaches Kernel {
+machine open(gate: &Gate, context: &mut State, slot: u64 [0..=4], deferred: bool) -> u64 reaches Kernel {
     let enabled: u64 = runtime::server::main::enable_pipeline(&mut context.slots[slot].listener);
     let tick: Tick = runtime::time::read(gate, context.clock);
     transition tick {
-        Tick::Read { value } -> block controlling(gate, context, value, slot)
-        Tick::Failed { code } -> block refused(gate, context, slot, code)
+        Tick::Read { value } -> block controlling(gate, context, value, slot, deferred)
+        Tick::Failed { code } -> block refused(gate, context, slot, code, deferred)
     }
     // Opening is a request, not a wait: a nested host can initialize its own
     // services before answering. Lifecycle checks this handshake on later turns.
-    machine controlling(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4]) -> u64 reaches Kernel {
+    machine controlling(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], deferred: bool) -> u64 reaches Kernel {
         let sender: u64 = context.slots[slot].control.sender;
         let receiver: u64 = context.slots[slot].control.receiver;
         context.slots[slot].control.sender = 0u64;
         context.slots[slot].control.receiver = 0u64;
         let fresh: Peer; context.controls[slot] = fresh;
         let status: u64 = block runtime::connection::main::connect_start(gate, &mut context.controls[slot], sender, receiver);
-        transition status == 0u64 { true -> block storing(gate, context, now, slot) _ -> block refused(gate, context, slot, status) }
+        transition status == 0u64 { true -> block storing(gate, context, now, slot, deferred) _ -> block refused(gate, context, slot, status, deferred) }
     }
-    machine storing(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4]) -> u64 reaches Kernel {
+    machine storing(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], deferred: bool) -> u64 reaches Kernel {
         context.opening[slot] = runtime::time::after(now, HANDSHAKE_TICKS);
         let status: u64 = storage::listen(context, slot, now);
         transition status == 0u64 || status == kernel::INVALID_ARGUMENT {
             true -> (0u64)
-            _ -> block refused(gate, context, slot, status)
+            _ -> block refused(gate, context, slot, status, deferred)
         }
     }
 }
-machine refused(gate: &Gate, context: &mut State, slot: u64 [0..=4], status: u64) -> u64 reaches Kernel {
-    block lifecycle::reclaim(gate, context, slot);
-    status
+// Deferred callers retain their request until lifecycle finishes retirement.
+// Setup callers still use the explicit synchronous collection bridge.
+machine refused(gate: &Gate, context: &mut State, slot: u64 [0..=4], status: u64, deferred: bool) -> u64 reaches Kernel {
+    transition deferred { true -> retained(context, slot, status) _ -> block collected(gate, context, slot, status) }
+    machine retained(context: &mut State, slot: u64 [0..=4], status: u64) -> u64 {
+        lifecycle::request_retirement(context, slot);
+        status
+    }
+    machine collected(gate: &Gate, context: &mut State, slot: u64 [0..=4], status: u64) -> u64 reaches Kernel {
+        block lifecycle::reclaim(gate, context, slot);
+        status
+    }
 }

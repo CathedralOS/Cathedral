@@ -263,7 +263,15 @@ machine finish_retirement(gate: &Gate, context: &mut State, slot: u64 [0..=4], o
         context.funding[slot] = Funding::Fixed;
     }
     machine release_unused(gate: &Gate, context: &mut State, slot: u64 [0..=4], launch: u64) reaches Kernel {
-        transition launch != 0u64 { true -> retire_reservation(gate, context, slot, launch) _ -> done() }
+        transition launch != 0u64 {
+            true -> released_unused(gate, slot, retire_reservation(gate, context, slot, launch))
+            _ -> done()
+        }
+    }
+    machine released_unused(gate: &Gate, slot: u64 [0..=4], status: u64) reaches Kernel {
+        // No child exit exists to diagnose an unused reservation. Report only
+        // confirmed return; a BUSY reservation remains tracked for later turns.
+        transition status == 0u64 { true -> report::unused_reservation_released(gate, slot) _ -> done() }
     }
     machine stopped(gate: &Gate, context: &mut State, slot: u64 [0..=4], exit: Exit) reaches Kernel {
         let task: u64 = context.retirements[slot].task;
@@ -272,7 +280,7 @@ machine finish_retirement(gate: &Gate, context: &mut State, slot: u64 [0..=4], o
         let observer: u64 = launches::finished(&mut context.observations, task, outcome_of(exit));
         launches::disconnected(&mut context.observations, slot);
         let launch: u64 = context.reservations[slot];
-        retire_reservation(gate, context, slot, launch);
+        let released: u64 = retire_reservation(gate, context, slot, launch);
         sweep_returned(gate, context);
         context.reservations[slot] = 0u64;
         context.funding[slot] = Funding::Fixed;
@@ -487,15 +495,20 @@ machine opening_slot(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=
 // own deferred reclamation keep for a while after the exit; such a
 // reservation waits in `releasing` and is retried each turn and before any
 // funding is reckoned, so what it held is never stranded.
-machine retire_reservation(gate: &Gate, context: &mut State, slot: u64 [0..=4], launch: u64) reaches Kernel {
+machine retire_reservation(gate: &Gate, context: &mut State, slot: u64 [0..=4], launch: u64) -> u64 reaches Kernel {
     settle_slot(gate, context, slot);
     let released: u64 = runtime::task::main::release(gate, launch);
     transition released == kernel::BUSY && launch != 0u64 {
-        true -> parked(context, slot, launch)
-        _ -> unreleased(gate, slot, released)
+        true -> parked(context, slot, launch, released)
+        _ -> reported(gate, slot, released)
     }
-    machine parked(context: &mut State, slot: u64 [0..=4], launch: u64) {
+    machine parked(context: &mut State, slot: u64 [0..=4], launch: u64, status: u64) -> u64 {
         context.releasing[slot] = launch;
+        status
+    }
+    machine reported(gate: &Gate, slot: u64 [0..=4], status: u64) -> u64 reaches Kernel {
+        unreleased(gate, slot, status);
+        status
     }
 }
 // An ended host's descendant reservations come back to this matrix under

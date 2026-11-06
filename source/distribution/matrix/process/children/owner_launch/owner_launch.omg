@@ -1,8 +1,8 @@
 module owner_launch::owner_launch;
 // RUN_OBJECT captures the owner's request -> reads its own realm -> obtains
 // funding -> constructs -> installs the captured binding -> answers once.
-// The owner supplies placement later. Shared construction failure cleanup
-// and final resource-release drains remain separate blocking-work targets.
+// The owner supplies placement later. Failed construction keeps this request
+// through lifecycle retirement; final resource-release drains remain blocking.
 use shared::state::State;
 use shared::owner_launch::Work;
 use shared::storage::Outcome;

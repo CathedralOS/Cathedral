@@ -228,7 +228,7 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
         block exchange::release(gate, image.attachment);
         transition status == 0u64 {
             true -> done()
-            _ -> block completion::answer(gate, context, refused(gate, status), false)
+            _ -> completion::retire(context, status, false)
         }
     }
     machine constructing(gate: &Gate, context: &mut State) reaches Kernel {
@@ -276,7 +276,7 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
         let progress: Progress = block poll_reserved(gate, context, slot);
         transition progress {
             Progress::Pending -> done()
-            Progress::Failed { code } -> block completion::answer(gate, context, refused(gate, code), false)
+            Progress::Failed { code } -> completion::retire(context, code, false)
             Progress::Ready -> block constructed(gate, context)
         }
     }
