@@ -3,8 +3,8 @@ module lifecycle;
 // the next launch's allowances for a slot; RUN reserves a launch for an image
 // from the owner's catalogue under those allowances, admits the child through
 // the runtime's brokered admission with interaction, and the child's listener
-// serves it from then on. Retirement withdraws service, collects the whole
-// subtree and returns the reservation. program/stopping owns the owner's STOP
+// serves it from then on. Retirement stops and collects the whole subtree,
+// then withdraws its services and returns the reservation. program/stopping owns the owner's STOP
 // reply; stored and launch own admission from realm objects.
 use protocol::main;
 use protocol::matrix;
@@ -135,8 +135,8 @@ public machine physical_frames(staged: u64, image_pages: u64, stack_pages: u64, 
 machine larger(a: u64, b: u64) -> u64 {
     transition a < b { true -> (b) _ -> (a) }
 }
-// Drop the owner control and the storage listener, stop and collect the
-// child, return its reservation and forget its view and staged batch.
+// Stop and collect the subtree before dropping its service connections,
+// then return its reservation and forget its view and staged batch.
 // Retain retirement behind scene publication, then visit each cancellation once
 // per service turn. The slot remains unavailable until final bookkeeping ends.
 public machine retire_pending(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
@@ -194,7 +194,9 @@ machine retirement_turn(gate: &Gate, context: &mut State, slot: u64 [0..=4]) rea
         _ -> block collecting(gate, context, slot)
     }
     machine preparing(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
-        block withdraw(gate, context, slot);
+        // Preserve identity before collection clears Admitted.task. Keep all
+        // connections intact until the kernel has quiesced the whole subtree.
+        context.retirements[slot].task = context.slots[slot].task;
         context.retirements[slot].started = true;
         transition { _ -> block collecting(gate, context, slot) }
     }
@@ -208,6 +210,7 @@ machine retirement_turn(gate: &Gate, context: &mut State, slot: u64 [0..=4]) rea
     }
     machine failed(context: &mut State, code: u64) { context.retirement_failure = code; }
     machine collected(gate: &Gate, context: &mut State, slot: u64 [0..=4], outcome: Outcome) reaches Kernel {
+        block withdraw(gate, context, slot);
         block runtime::admission::main::release(gate, &mut context.slots[slot]);
         context.retirements[slot].collected = true;
         finish_retirement(gate, context, slot, outcome);
@@ -234,16 +237,15 @@ machine retirement_turn(gate: &Gate, context: &mut State, slot: u64 [0..=4]) rea
         }
     }
 }
-// These releases still contain blocking memory operations. This slice removes
-// the wait for task reclamation, not every wait involved in closing a child.
+// Only after collection: closing connections or releasing image backing can
+// park us. A running descendant must never observe this partial withdrawal.
 machine withdraw(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
     context.answers[slot].active = false;
-    transition context.slots[slot].live {
+    transition context.retirements[slot].task != 0u64 {
         true -> block withdrawing(gate, context, slot)
         _ -> done()
     }
     machine withdrawing(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
-        context.retirements[slot].task = context.slots[slot].task;
         context.opening[slot] = 0u64;
         let closed: u64 = block runtime::connection::main::close(gate, &mut context.controls[slot]);
         block storage::retire(gate, context, slot);

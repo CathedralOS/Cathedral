@@ -55,7 +55,7 @@ composer exactly. The ordinary launcher and desktop harness accept
 Other providers and grants are preserved. Smoke, kernel-only and custom profiles
 reject the launcher flag before building. Normal F5 has **not** switched yet.
 
-Qualification completed:
+Initial qualification before the corrections below:
 
 - Six composition/CLI host tests and four existing program-builder tests; Python
   syntax, source-layout and diff checks.
@@ -68,7 +68,9 @@ Qualification completed:
   oracle: `build/boot-harness-rs/desktop/20261106T192343932060Z/`.
   Log `build/f5-omega-default.log`.
 
-The pre-switch sweep exposed regressions; **keep normal F5 on the Rust matrix**.
+The pre-switch sweep exposed the regressions recorded below. They now have
+targeted corrections, but **keep normal F5 on the Rust matrix** until the remaining
+post-fix desktop sweep and nested stress pass.
 Relative pointer and undeclared imports passed fresh/cold at
 `20261106T192446077629Z` and `20261106T192617195391Z` under
 `build/boot-harness-rs/desktop/`. Additional results:
@@ -85,19 +87,19 @@ Relative pointer and undeclared imports passed fresh/cold at
 - Masked capture passed its fresh boot but failed cold teardown; render demand
   also failed teardown. Both show the Rust Notes fixture panicking on
   `Error(-32)` (`PEER_CLOSED`) during Split retirement. This is separate from
-  the layout mismatch. Inspect descendant cancellation/connection shutdown
-  ordering; do not hide the panic or widen timeouts. Logs:
+  the layout mismatch. The ordering correction below now passes both fresh/cold
+  without hiding the panic or widening timeouts. Original logs:
   `build/f5-omega-capture.log`, `build/f5-omega-demand.log`.
 - Cursor preferences passed fresh/cold, including hiding/restoring, independent
   producer, target death and recursive preferences: `20261106T193328001854Z`.
 
 The Rust-host render-demand comparison passes fresh/cold at
 `20261106T193705118672Z` (`build/f5-rust-demand-comparison.log`). Inspection found
-an ordering difference: Omega `children/lifecycle.omg::preparing` calls
+an ordering difference: Omega `children/lifecycle.omg::preparing` called
 `withdraw` (closing control/storage and releasing scene backing) before
-`admission::retirement::poll` submits cancellation. The Rust lifecycle explicitly
-stops/waits before withdrawing services. Next correction: preserve the retiring
-slot and its connections through cancellation/collection, then release them.
+`admission::retirement::poll` submitted cancellation. The Rust lifecycle explicitly
+stops/waits before withdrawing services. The correction below preserves the retiring
+slot and its connections through cancellation/collection, then releases them.
 Kernel withdrawal already stops the full descendant tree before rescheduling.
 Do not change Notes to swallow a panic in order to make this test pass.
 
@@ -107,6 +109,53 @@ the inventory. Logs are `build/f5-omega-*.log`. After these qualify, add
 `--omega-desktop` to the normal F5 and saved-lab launch entries and update current
 run instructions. The separate Omega kernel boot remains a different prototype;
 this desktop uses the Rust kernel, hardware/storage providers and shell supervisor.
+
+### Teardown ordering (qualification)
+
+The local Omega lifecycle correction moves service withdrawal after
+`admission::retirement::poll` returns `Ready`. Retirement captures the task
+identity before the runtime clears `Admitted.task`/`live`, preserves connections
+while cancellation/collection is pending, then closes control/storage, retires
+image custody and releases the admitted bundle. The retiring slot remains
+unavailable throughout. Failed cancellation retains custody rather than partially
+closing a running subtree. Kernel behavior and the Rust Notes fixture are unchanged.
+
+Checked compiler review and native emission pass (`build/f5-omega-retirement-build.log`).
+The first capture run confirmed a second exposure in Rust Split: normal return
+would drop its servers with Notes children still alive. Clean exit now invokes
+the existing process-exit syscall so the kernel stops descendants before resource
+teardown. Explicit child, producer and capture stops cancel/collect before
+withdrawing their services, retaining custody if cancellation fails. Notes' panic
+checks remain unchanged.
+
+Masked capture now passes fresh/cold, including recipient byte inspection,
+hidden input, restore and clean subtree teardown:
+`build/boot-harness-rs/desktop/20261106T200334038830Z/`.
+Render demand also passes fresh/cold (`20261106T200436519117Z`), as do held
+layout cancellation (`20261106T200534603891Z`) and late selection cancellation
+(`20261106T200638686284Z`). Those preserve input service, drafts, accepted
+placement, STOP settlement and slot reuse while cancellation is pending.
+Logs are `build/retirement-order-{capture,demand,layout-cancel,selection-cancel}.log`;
+all four commands exited zero. Run the ordinary desktop variants and nested
+stress before F5 promotion, then the failed-construction lifecycle fixtures.
+The original failures remain recorded; the isolated pre-Split-fix run is in
+`build/retirement-order-capture-before-split.log`.
+
+### Desktop installation capacity
+
+The complete capture composition required 4,197,719 retained bytes, 3,415 beyond
+the old 4 MiB root quota. The installer correctly refused it before publishing
+changes. The bounded lab allowance is now 8 MiB, with a 32 MiB backing volume to
+preserve transaction headroom. Logical quota, individual object bounds and
+provider page funding remain independent; no program was removed to fit.
+Saved 4/8/16 MiB extents grow offline with backup, identity/guard preservation
+and cold record verification. Fresh disks use the same runtime extent.
+
+Host workspace tests, all 23 database-object host tests, all 40 storage-engine
+lab tests, ten image preparation tests, both Split clippy feature sets, formatting
+and source-layout checks pass. Quota-pressure fixture disks scale with the quota;
+collection tests bound convergence by the starting record count and require each
+continuing pass to make progress. Growth coverage includes 16 -> 32 MiB.
 
 ### Presentation batch capacity
 

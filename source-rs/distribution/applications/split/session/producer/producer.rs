@@ -50,14 +50,18 @@ impl Producer {
         world: &mut World,
         server: &mut Server,
     ) -> Result<(), Error> {
+        // Stop execution before withdrawing services or images it can still use.
+        // Keep custody if cancellation or collection is refused.
+        if let Some(child) = self.child.as_ref() {
+            child.task.cancel()?;
+            child.task.wait()?;
+        }
         world.disconnected(SLOT);
         self.point = None;
         self.painted = None;
         server.remove(BROKER);
         server.remove(INPUT);
         if let Some(child) = self.child.take() {
-            child.task.cancel()?;
-            child.task.wait()?;
             child.close_connections()?;
         }
         if let Some(launch) = self.launch.take() {

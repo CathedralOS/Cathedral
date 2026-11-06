@@ -83,6 +83,12 @@ impl Capture {
         world: &mut World,
         server: &mut Server,
     ) -> Result<(), Error> {
+        // Stop execution before withdrawing services or images it can still use.
+        // Keep custody if cancellation or collection is refused.
+        if let Some(child) = self.child.as_ref() {
+            child.task.cancel()?;
+            child.task.wait()?;
+        }
         self.release_frame(world);
         self.lease.revoke();
         self.source = None;
@@ -93,8 +99,6 @@ impl Capture {
         server.remove(BROKER);
         server.remove(ENDPOINT);
         if let Some(child) = self.child.take() {
-            child.task.cancel()?;
-            child.task.wait()?;
             child.close_connections()?;
         }
         if let Some(launch) = self.launch.take() {
