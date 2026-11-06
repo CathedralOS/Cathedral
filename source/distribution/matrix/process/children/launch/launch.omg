@@ -39,7 +39,7 @@ use protocol::services::STORAGE;
 use connections::storage::exchange;
 use connections::responses;
 use stored;
-use policy::children::startup::main::RetirementEffect;
+use launch::completion;
 use launch::placement;
 use launch::authority;
 use launch::resources;
@@ -123,6 +123,7 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
         context.launch.phase == 1u64 -> block progress(gate, context)
         context.launch.phase == 2u64 -> block constructing(gate, context)
         context.launch.phase == 4u64 -> block funded(gate, context)
+        context.launch.phase == completion::PHASE -> block completion::step(gate, context)
         _ -> done()
     }
     machine progress(gate: &Gate, context: &mut State) reaches Kernel {
@@ -153,7 +154,7 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
     machine failed(gate: &Gate, context: &mut State, image: u64, code: u64) reaches Kernel {
         block exchange::release(gate, image);
         let words: [u64; 8] = refused(gate, code);
-        block answered(gate, context, words, false);
+        block completion::answer(gate, context, words, false);
     }
     machine planned(gate: &Gate, context: &mut State, image: Outcome, now: u64) reaches Kernel {
         let policy: SlotPolicy = context.launch.policy;
@@ -226,7 +227,7 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
         block exchange::release(gate, image.attachment);
         transition status == 0u64 {
             true -> done()
-            _ -> block answered(gate, context, refused(gate, status), false)
+            _ -> block completion::answer(gate, context, refused(gate, status), false)
         }
     }
     machine constructing(gate: &Gate, context: &mut State) reaches Kernel {
@@ -248,7 +249,7 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
         let slot: u64 [0..=4] = context.launch.slot;
         transition valid {
             true -> block observe(gate, context)
-            _ -> block cancelling_construction(gate, context, slot)
+            _ -> cancelling_construction(gate, context, slot)
         }
     }
     machine cancelling_construction(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
@@ -257,7 +258,7 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
         let result: Retirement = retirement::poll(gate, &mut context.slots[slot]);
         transition result {
             Retirement::Pending -> done()
-            Retirement::Ready { outcome } -> block unbound(gate, context, slot, kernel::DENIED, false)
+            Retirement::Ready { outcome } -> completion::retire(context, kernel::DENIED, false)
             Retirement::Failed { code } -> retirement_failed(gate, context, code)
         }
     }
@@ -274,7 +275,7 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
         let progress: Progress = block poll_reserved(gate, context, slot);
         transition progress {
             Progress::Pending -> done()
-            Progress::Failed { code } -> block answered(gate, context, refused(gate, code), false)
+            Progress::Failed { code } -> block completion::answer(gate, context, refused(gate, code), false)
             Progress::Ready -> block constructed(gate, context)
         }
     }
@@ -282,7 +283,7 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
         let slot: u64 [0..=4] = context.launch.slot;
         transition authority::constructed(context) {
             true -> block approved(gate, context)
-            _ -> block unbound(gate, context, slot, kernel::DENIED, false)
+            _ -> completion::retire(context, kernel::DENIED, false)
         }
     }
     machine approved(gate: &Gate, context: &mut State) reaches Kernel {
@@ -304,7 +305,7 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
         let status: u64 = install(context, slot, object, prepared);
         transition status == 0u64 {
             true -> block placed(gate, context, requester, incarnation, slot, object, login)
-            _ -> block unbound(gate, context, slot, status, login)
+            _ -> completion::retire(context, status, login)
         }
     }
     machine install(context: &mut State, slot: u64 [0..=4], object: u64, prepared: Prepared) -> u64 {
@@ -313,24 +314,27 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
             _ -> (0u64)
         }
     }
-    machine unbound(gate: &Gate, context: &mut State, slot: u64 [0..=4], status: u64, login: bool) reaches Kernel {
-        block lifecycle::reclaim(gate, context, slot);
-        block answered(gate, context, refused(gate, status), login);
-    }
     machine placed(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4], object: u64,
         login: bool) reaches Kernel {
         let result: Submission = block placement::place(gate, context, requester, incarnation, slot, object);
         transition result {
-            Submission::Answer { words } -> block answered(gate, context, words, login)
+            Submission::Answer { words } -> block placed_answer(gate, context, words, login)
             Submission::Pending -> done()
         }
     }
 }
+// A placement failure queues cleanup; the exact launch request stays retained.
+machine placed_answer(gate: &Gate, context: &mut State, words: [u64; 8], login: bool) reaches Kernel {
+    transition words[0] == 0u64 {
+        true -> block completion::answer(gate, context, words, login)
+        _ -> completion::retire(context, words[0], login)
+    }
+}
 // The shared workspace transaction has committed or restored its old scene.
-// Only now record success, or reclaim the newly admitted child on failure.
+// Only now record success, or retain refusal until the new child is collected.
 public machine presented(gate: &Gate, context: &mut State, status: u64) reaches Kernel blocks invokes Kernel {
-    let words: [u64; 8] = block placement::finish(gate, context, status);
-    block answered(gate, context, words, false);
+    let words: [u64; 8] = placement::finish(gate, context, status);
+    block placed_answer(gate, context, words, false);
 }
 // The sealed executable belongs to the launch while its funding reply waits.
 public machine discard(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
@@ -347,19 +351,6 @@ machine retire_picker(gate: &Gate, context: &mut State, login: bool) reaches Ker
         block lifecycle::reclaim(gate, context, 0u64);
         context.policies[1].surfaces = context.world.allowance;
         report::picker_retired(gate);
-    }
-}
-machine answered(gate: &Gate, context: &mut State, words: [u64; 8], login: bool) reaches Kernel {
-    let slot: u64 [0..=4] = context.launch.requester;
-    let ticket: Ticket = context.launch.ticket;
-    recover(context, login && words[0] != 0u64);
-    let empty: Launch; context.launch = empty;
-    let ignored: u64 = block responses::send(gate, context, slot, ticket, words);
-}
-machine recover(context: &mut State, failed: bool) {
-    transition failed { true -> selected(context) _ -> done() }
-    machine selected(context: &mut State) {
-        let effect: RetirementEffect = policy::children::startup::main::selection_failed(&mut context.startup, false);
     }
 }
 // [LAUNCH_STATUS, receipt] -> [0, state] for the requester's own receipt.

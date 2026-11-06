@@ -171,8 +171,10 @@ The children this matrix admits, funds, presents and retires.
   once the ended child's frames are no longer charged, so a refused release
   waits and is retried each turn and before any funding is reckoned. An
   ended host's descendant reservations come back under fresh local names and
-  are released too, at reclaim and before funding. Every failed step leaves
-  no reservation behind.
+  are released too, at reclaim and before funding. That sweep skips reservations
+  still tracked by a local slot or deferred release: collection can finish in the
+  kernel before the owning cleanup runs again. Each such owner releases its own
+  reservation.
 - [forward.omg](children/forward.omg): requests over the children's owner
   controls, one pending per child. For an owner word routed to a child the
   stock control policy decodes the first hop above the operation into the
@@ -243,6 +245,12 @@ The children this matrix admits, funds, presents and retires.
   retirement owns collection until it finishes; cancellation cannot consume its
   outcome. Final bundle release, fallback presentation and setup teardown still
   contain synchronous work.
+  [launch/completion.omg](children/launch/completion.omg) owns final recovery and
+  replies. Failed placement or activation retains its refusal and caller through
+  child retirement, then answers once bookkeeping ends and the caller's outbox
+  can take custody. A replacement listener never receives that reply. Startup
+  handshake failure likewise queues retirement, and placement cannot publish a
+  child whose handshake already requested cleanup.
   An accepted owner update to the target's launch imports, images, ceilings or
   placement cancels the captured request permanently, including a revoke followed
   by restoration of the same policy. Other targets remain independent.

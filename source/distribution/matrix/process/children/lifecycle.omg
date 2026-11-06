@@ -245,7 +245,7 @@ machine finish_retirement(gate: &Gate, context: &mut State, slot: u64 [0..=4], o
         launches::disconnected(&mut context.observations, slot);
         let launch: u64 = context.reservations[slot];
         retire_reservation(gate, context, slot, launch);
-        sweep_returned(gate);
+        sweep_returned(gate, context);
         context.reservations[slot] = 0u64;
         context.funding[slot] = Funding::Fixed;
         level::disconnected(&mut context.world, slot);
@@ -410,7 +410,7 @@ machine opening_slot(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=
         context.retire_after_present[slot] -> done()
         deadline == 0u64 -> done()
         !context.slots[slot].live -> forgotten(context, slot)
-        runtime::time::reached(now, deadline) -> block abandoned(gate, context, slot)
+        runtime::time::reached(now, deadline) -> abandoned(context, slot)
         window < 0x8000000000000000u64 -> block probed(gate, context, now, slot, deadline, window)
         _ -> done()
     }
@@ -439,12 +439,12 @@ machine opening_slot(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=
         context.opening[slot] = 0u64;
         transition status == 0u64 {
             true -> report::child_control_ready(gate)
-            _ -> block reclaim(gate, context, slot)
+            _ -> request_retirement(context, slot)
         }
     }
-    machine abandoned(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+    machine abandoned(context: &mut State, slot: u64 [0..=4]) {
         context.opening[slot] = 0u64;
-        block reclaim(gate, context, slot);
+        request_retirement(context, slot);
     }
 }
 // An ended child's reservation goes back to this matrix. The kernel refuses
@@ -464,23 +464,43 @@ machine retire_reservation(gate: &Gate, context: &mut State, slot: u64 [0..=4], 
     }
 }
 // An ended host's descendant reservations come back to this matrix under
-// fresh local names. Each one the kernel takes back is released; live and
-// static launches refuse and are passed over, as are any still charged.
-public machine sweep_returned(gate: &Gate) reaches Kernel invokes Kernel {
-    sweeping(gate, 0u64, 0u64);
+// fresh local names. Enumeration also includes our tracked reservations: keep
+// those with their explicit owner, even after the kernel has collected a child.
+// Live/static launches and returned ones still charged are passed over too.
+public machine sweep_returned(gate: &Gate, context: &State) reaches Kernel invokes Kernel {
+    sweeping(gate, context, 0u64, 0u64);
 }
-machine sweeping(gate: &Gate, index: u64, attempts: u64) reaches Kernel requires index <= RETURNED_LAUNCHES && attempts <= RETURNED_LAUNCHES {
+machine sweeping(gate: &Gate, context: &State, index: u64, attempts: u64) reaches Kernel requires index <= RETURNED_LAUNCHES && attempts <= RETURNED_LAUNCHES {
     let launch: u64 = runtime::task::main::launch(gate, index);
     transition index < RETURNED_LAUNCHES && attempts < RETURNED_LAUNCHES && launch < kernel::ERROR_BASE {
-        true -> released_at(gate, index, attempts, runtime::task::main::release(gate, launch))
+        true -> candidate(gate, context, index, attempts, launch)
         _ -> done()
     }
+    machine candidate(gate: &Gate, context: &State, index: u64, attempts: u64, launch: u64) reaches Kernel
+        requires index < RETURNED_LAUNCHES && attempts < RETURNED_LAUNCHES {
+        transition tracked(context, launch, 0u64) {
+            true -> sweeping(gate, context, index + 1u64, attempts + 1u64)
+            _ -> released_at(gate, context, index, attempts, runtime::task::main::release(gate, launch))
+        }
+    }
     // A released launch's index now names the next one.
-    machine released_at(gate: &Gate, index: u64, attempts: u64, status: u64) reaches Kernel
+    machine released_at(gate: &Gate, context: &State, index: u64, attempts: u64, status: u64) reaches Kernel
         requires index < RETURNED_LAUNCHES && attempts < RETURNED_LAUNCHES {
         transition status == 0u64 {
-            true -> sweeping(gate, index, attempts + 1u64)
-            _ -> sweeping(gate, index + 1u64, attempts + 1u64)
+            true -> sweeping(gate, context, index, attempts + 1u64)
+            _ -> sweeping(gate, context, index + 1u64, attempts + 1u64)
+        }
+    }
+}
+machine tracked(context: &State, launch: u64, slot: u64) -> bool requires slot <= 5u64 {
+    transition slot < 5u64 {
+        true -> checked(context, launch, slot)
+        _ -> (false)
+    }
+    machine checked(context: &State, launch: u64, slot: u64 [0..=4]) -> bool {
+        transition context.reservations[slot] == launch || context.releasing[slot] == launch {
+            true -> (true)
+            _ -> tracked(context, launch, slot + 1u64)
         }
     }
 }

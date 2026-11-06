@@ -55,13 +55,16 @@ public data SlotPolicy [copy] {
 }
 // A child launch owns its target through image read, admission and activation.
 // Phase 1 reads, 4 funds with the sealed image retained, 2 awaits construction,
-// and 3 awaits the shared scene transaction.
+// 3 awaits the shared scene transaction, and 5 retains a refusal through cleanup.
 // Policies and both connection identities are captured before yielding.
 public data Launch {
     phase: u64;
     // A rejected cleanup observation preserves custody and ends this process;
     // it must not be reported as a completed refusal or permit slot reuse.
     failure: u64;
+    // The ordinary refusal and picker recovery owed after failed-child cleanup.
+    refusal: u64;
+    recover_picker: bool;
     // Selected diagnostic provider only; ordinary builds use a zero window.
     probe_started: bool;
     probe_until: u64;

@@ -9,11 +9,70 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Latest verified desktop handoff: [retained ordinary close](#retained-ordinary-close),
-following [retained admission retirement](#retained-admission-retirement) at
+Latest verified desktop handoff: [retained failed-launch cleanup](#retained-failed-launch-cleanup),
+following [retained ordinary close](#retained-ordinary-close) at `0bdb41df`,
+[retained admission retirement](#retained-admission-retirement) at
 `60f7c694` and [nonblocking child task primitives](#nonblocking-child-task-primitives).
 Earlier migration entries below are historical milestones. Normal F5 still uses
 the Rust matrix; the following verification explicitly selects the Omega matrix.
+
+### Retained failed-launch cleanup
+
+`children/launch/completion.omg` owns final
+recovery/reply and a retained failure phase. Placement and activation now describe
+failure to launch; they no longer drain the child themselves. Launch requests
+retirement once and keeps its original refusal, caller ticket and picker recovery
+decision until lifecycle finishes. A full requester outbox keeps that failure
+pending; a stale request cannot be held by its replacement's outbox or reply to
+the replacement. Successful completion still uses the same finalizer immediately.
+
+Failed/expired owner-control handshakes also request retirement instead of draining
+inside their probe. Placement checks that flag before publishing the new child or
+issuing its receipt. The existing short startup probes still wait; this change
+removes their failure-cleanup wait, not the probe itself. Picker retirement,
+initial construction/setup error drains, fallback presentation and final
+mailbox/image releases remain synchronous.
+
+Requester replacement exposed a double release: the returned-reservation sweep
+enumerates all owned launches and could release the target's collected-but-still-
+tracked reservation while retiring its requester. The target's retained cleanup
+then reported BAD_HANDLE. The sweep now skips reservations owned by a local slot
+or deferred release, including during funding. Each explicit owner finishes its
+own cleanup. The failing run remains in `build/retained-launch-cleanup-checks.log`
+and its requester log; the fixed run below repeats that scenario first.
+
+Checked/native builds of the stock matrix and construction fixture passed; the
+matrix remains 397/496 load pages with unchanged stack and allowances. Build logs
+are `build/retained-launch-cleanup-build-fixed.log` and
+`build/retained-launch-cleanup-fixed-fixture-build.log`. All seven runtime cases
+in `build/retained-launch-cleanup-fixed-checks.log` passed, including cold reboot.
+Artifacts below are under `build/boot-harness-rs/desktop/`:
+
+- Requester replacement, three rounds per boot: `20261106T021351776687Z/`.
+- Full Omega desktop, independent Notes instances, protected close and durable
+  saved-state oracle: `20261106T021500192161Z/`.
+- Rejected launch activation: `20261106T021600852929Z/`.
+- STOP during launch activation: `20261106T021710263773Z/`.
+- Invalid executable leaves the picker usable: `20261106T021816532844Z/`.
+- Construction STOP, three rounds per boot: `20261106T021907350820Z/`.
+- Construction policy revocation/restoration, three rounds per boot:
+  `20261106T022011678616Z/`.
+
+All three repeated-construction modes returned the measured account
+`(8, 59, 623, 0)` after both Notes closes in each round. Source layout and diff
+checks passed. This is focused verification, not a full F5 fixture sweep; keep
+the known pointer-stress LOSS timeout below open.
+The existing launch-scene test now explicitly requires the reclaimed event before
+the refusal, for both rejected activation and STOP cancellation; presence of both
+events alone would not catch an early reply.
+
+Next boundary: replace the login picker's synchronous retirement with an explicit
+handoff phase. Keep the admitted desktop unserved until binding/placement are
+installed, distinguish the authorized picker handoff from cancellation, and keep
+owner STOP/policy changes effective while retirement waits. Exercise both normal
+login and failed-login recovery. After that, give workspace fallback selection
+an explicit internal initiator in the existing scene transaction; do not invent
+a chrome request ticket for an internally initiated switch.
 
 ### Retained ordinary close
 
