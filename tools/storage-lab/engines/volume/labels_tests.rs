@@ -273,7 +273,7 @@ fn quota_pressure_collects_only_unreachable_history_and_refuses_live_excess_atom
         std::fs::create_dir(&dir).unwrap();
         let path = dir.join("guest.raw");
         // Leave physical scratch space so this fixture isolates the logical quota.
-        let bytes = 16 * 1024 * 1024;
+        let bytes = 4 * cathedral_database_objects::ROOT_QUOTA;
         let image = Arc::new(Image::create(&path, bytes + 8192).unwrap());
         image.write(0, &[0x5a; 4096]).unwrap();
         image.write(bytes + 4096, &[0xa5; 4096]).unwrap();

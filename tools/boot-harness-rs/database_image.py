@@ -13,8 +13,8 @@ import tempfile
 
 # Compacted engine extents need not be powers of two: a later growth doubles
 # their usable pages and adds metadata. Keep transaction space separate from
-# the 4 MiB retained-record quota, including after offline installation.
-VOLUME_BYTES = 16 * 1024 * 1024
+# the 8 MiB retained-record quota, including after offline installation.
+VOLUME_BYTES = 32 * 1024 * 1024
 LEGACY_VOLUME_BYTES = 4 * 1024 * 1024
 OFFSET = 4096
 IMAGE_BYTES = OFFSET + VOLUME_BYTES + 4096
@@ -113,7 +113,7 @@ def prepare(path, programs=(), label_migration=None, app_close=False, realm_prog
     existing = path.exists()
     if existing:
         previous_bytes = path.stat().st_size - OFFSET - 4096
-        if previous_bytes in (LEGACY_VOLUME_BYTES, 8 * 1024 * 1024):
+        if previous_bytes in (LEGACY_VOLUME_BYTES, 8 * 1024 * 1024, 16 * 1024 * 1024):
             # Preserve all records/identity and move the trailing guard. The host
             # locks, backs up and cold-verifies this explicit offline growth.
             executable = oracle()

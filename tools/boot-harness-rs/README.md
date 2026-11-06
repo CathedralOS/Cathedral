@@ -51,12 +51,12 @@ QEMU still enforce their locks when opening the image.
 
 The desktop retains `build/boot-harness-rs/cathedral-storage.raw`. First launch
 builds the host formatter and creates the image; later launches preserve it.
-Existing files are never automatically reformatted. On launch, old 4 MiB or
-8 MiB database extents are backed up and grown offline to 16 MiB, preserving
+Existing files are never automatically reformatted. On launch, old 4, 8 or
+16 MiB database extents are backed up and grown offline to 32 MiB, preserving
 every record, volume identity and outside guard bytes. Compacted engine extents
 are not necessarily powers of two; redb doubles their usable pages and adds
 metadata on growth. The physical extent leaves transaction space for this while
-the independent logical root allowance remains 4 MiB; installed
+the independent logical root allowance is 8 MiB; installed
 code and saved nested snapshots count too.
 The desktop's explicit readable-label migration also updates recognized stock
 launchers inside existing users. Old Notes/Colors gain labels while keeping

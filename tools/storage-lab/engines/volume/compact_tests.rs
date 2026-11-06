@@ -124,8 +124,8 @@ fn full_extent_rebuild_preserves_records_and_failed_edits_leave_input_untouched(
 }
 #[test]
 fn offline_growth_preserves_records_identity_guards_and_backup() {
-    for bytes in [4 * 1024 * 1024, 8 * 1024 * 1024] {
-        check_offline_growth(bytes, 16 * 1024 * 1024);
+    for bytes in [4 * 1024 * 1024, 8 * 1024 * 1024, 16 * 1024 * 1024] {
+        check_offline_growth(bytes, 32 * 1024 * 1024);
     }
 }
 fn check_offline_growth(bytes: u64, grown_bytes: u64) {

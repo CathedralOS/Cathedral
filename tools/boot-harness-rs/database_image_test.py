@@ -40,7 +40,7 @@ class DatabaseImageTests(unittest.TestCase):
             self.assertEqual(sidecar.read_bytes(), b'old receipt')
 
     def test_legacy_extent_grows_even_when_installed_programs_are_unchanged(self):
-        for old_bytes in (database_image.LEGACY_VOLUME_BYTES, 8 * 1024 * 1024):
+        for old_bytes in (database_image.LEGACY_VOLUME_BYTES, 8 * 1024 * 1024, 16 * 1024 * 1024):
             with self.subTest(old_bytes=old_bytes), tempfile.TemporaryDirectory() as directory:
                 path = Path(directory) / 'desktop.raw'
                 path.write_bytes(bytes(database_image.OFFSET + old_bytes + 4096))
