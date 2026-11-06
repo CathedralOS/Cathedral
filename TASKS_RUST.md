@@ -64,13 +64,36 @@ Qualification completed:
   oracle: `build/boot-harness-rs/desktop/20261106T192343932060Z/`.
   Log `build/f5-omega-default.log`.
 
-The ignored `build/check-f5-omega.py` continues sequentially with relative pointer,
-undeclared imports, Split inside Split, masked capture, participants, render
-demand and cursor preferences. Logs `build/f5-omega-*.log`. Do not count pending
-variants as passes. After these qualify, add `--omega-desktop` to the normal F5
-and saved-lab launch entries and update current run instructions. The separate
-Omega kernel boot remains a different prototype; this desktop uses the Rust
-kernel, hardware/storage providers and shell supervisor.
+The pre-switch sweep exposed regressions; **keep normal F5 on the Rust matrix**.
+Relative pointer and undeclared imports passed fresh/cold at
+`20261106T192446077629Z` and `20261106T192617195391Z` under
+`build/boot-harness-rs/desktop/`. Additional results:
+
+- Split inside Split (`--deep`) failed during the first live spacing change:
+  `20261106T192652801180Z`. Both drafts are intact in the screenshot, but the
+  chooser says `SAVED; RESTART` and Split remains at the old placement. The test
+  then correctly fails its assertion at the new coordinates.
+- Participants failed at the same resize boundary (`20261106T193107958354Z`).
+  Code audit found a port mismatch: Omega `world/batch.omg` and its transfer /
+  cleanup loops still have 16 entries, whereas the Rust wire contract permits
+  `MAX_SURFACES` (64). A layout can stage the chooser's eight surfaces plus
+  Split's nine and the background. Correct the bounded Omega capacity and
+  rerun both cases; the refusal code has not yet been instrumented.
+- Masked capture passed its fresh boot but failed cold teardown; render demand
+  also failed teardown. Both show the Rust Notes fixture panicking on
+  `Error(-32)` (`PEER_CLOSED`) during Split retirement. This is separate from
+  the layout mismatch. Inspect descendant cancellation/connection shutdown
+  ordering; do not hide the panic or widen timeouts. Logs:
+  `build/f5-omega-capture.log`, `build/f5-omega-demand.log`.
+- Cursor preferences passed fresh/cold, including hiding/restoring, independent
+  producer, target death and recursive preferences: `20261106T193328001854Z`.
+
+The ignored `build/check-f5-omega.py` runs selected variants sequentially and
+stops at the first failure; subsequent groups were explicitly restarted to finish
+the inventory. Logs are `build/f5-omega-*.log`. After these qualify, add
+`--omega-desktop` to the normal F5 and saved-lab launch entries and update current
+run instructions. The separate Omega kernel boot remains a different prototype;
+this desktop uses the Rust kernel, hardware/storage providers and shell supervisor.
 
 ### Retained presentation cleanup
 
