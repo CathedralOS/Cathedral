@@ -29,6 +29,9 @@ const READY: u64 = 5u64;
 public const LOCAL: u64 = 6u64;
 // Scoped local reads have separate custody from the same child's relays.
 public const READ: u64 = 7u64;
+// An owner-requested launch uses this matrix's authority, with separate custody
+// from both child reads and transitional synchronous LOCAL work.
+public const OWNER_READ: u64 = 12u64;
 
 public machine link_of(context: &State, source: u64) -> u64 {
     transition context.store.root { true -> (source) _ -> (2u64) }
@@ -55,7 +58,7 @@ machine begin(gate: &Gate, context: &mut State, now: u64, source: u64, request: 
     let index: u64 = link_of(context, source);
     let deadline: u64 = scope::deadline(now, request[7], STORAGE_DEADLINE_TICKS);
     transition {
-        source >= 2u64 || index > 2u64 || owner == 0u64 || owner > READ + 4u64 -> (kernel::DENIED)
+        source >= 2u64 || index > 2u64 || owner == 0u64 || owner > OWNER_READ -> (kernel::DENIED)
         deadline == 0u64 -> (kernel::TIMED_OUT)
         _ -> block available(gate, context, now, index, request, object, owner, incarnation, revision, info, deadline, fresh)
     }
@@ -131,7 +134,7 @@ machine authorized(context: &State, index: u64 [0..=2]) -> bool {
     transition {
         owner > 0u64 && owner <= 5u64 -> child(context, index, owner - 1u64)
         owner >= READ && owner <= READ + 4u64 -> child(context, index, owner - READ)
-        _ -> (owner == LOCAL)
+        _ -> (owner == LOCAL || owner == OWNER_READ)
     }
     machine child(context: &State, index: u64 [0..=2], slot: u64 [0..=4]) -> bool {
         let bound: Bound = scopes::authorize(&context.store.scopes, slot,

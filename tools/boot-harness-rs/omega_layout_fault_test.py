@@ -5,7 +5,7 @@ import omega_desktop_test
 from nested_desktop_test import Nested
 
 
-def exercise(output, click, key, scan, width, height, reboot, mode="controller"):
+def exercise(output, click, key, scan, width, height, reboot, mode="controller", owner_read=False):
     n = Nested(click, key, scan, width, height)
     log = lambda: (output / 'serial.log').read_text(encoding='utf-8', errors='replace')
     margin = 24 if reboot else 8
@@ -51,12 +51,25 @@ def exercise(output, click, key, scan, width, height, reboot, mode="controller")
         value += 'd' if reboot else 'c'
     for marker in ('commit-health-during-hold', 'commit-poll-during-hold'):
         scan(lambda _w, _d: marker in events(), marker)
+    if owner_read:
+        # The parent replaces the stopped launcher through RUN_OBJECT. Hold its
+        # executable read, using interaction progress rather than another request
+        # on the owner connection whose launch reply is already pending.
+        for _ in range(7):
+            key('f2')
+        scan(lambda _w, _d: 'storage-owner-read-armed' in events(), 'owner read gate armed')
     key('f1' if mode == 'controller' else 'f8')
     marker = 'selection-stop-requested' if mode == 'controller' else 'layout-view-regranted'
     scan(lambda _w, _d: marker in events(), marker)
     assert 'interaction-delay-released' not in events()
     settled = 'layout-controller-replaced' if mode == 'controller' else 'layout-view-restored'
     scan(lambda _w, _d: settled in events(), settled)
+    if owner_read:
+        held = events().index('storage-delay-held')
+        released = events().index('storage-delay-released')
+        assert events()[held:released].count('storage-poll-during-hold') == 2
+        assert 'storage-health-during-hold' not in events()
+        assert events().count('storage-read-held') == 1
     if mode == 'controller':
         assert events().index('interaction-delay-released') < events().index('selection-stop-acknowledged')
         assert events().index('matrix: reclaimed 0 ') < events().index(settled)
@@ -100,7 +113,10 @@ def exercise(output, click, key, scan, width, height, reboot, mode="controller")
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--mode', choices=('controller', 'ancestor'), default='controller')
+    parser.add_argument('--owner-read', action='store_true', help='hold the replacement launcher executable read')
     args = parser.parse_args()
-    omega_parent_poll_test.main(user_check=lambda *values: exercise(*values, mode=args.mode),
-                               label='omega-layout-' + args.mode,
+    if args.owner_read and args.mode != 'controller':
+        parser.error('--owner-read needs controller replacement')
+    omega_parent_poll_test.main(user_check=lambda *values: exercise(*values, mode=args.mode, owner_read=args.owner_read),
+                               label='omega-layout-' + args.mode + ('-owner-read' if args.owner_read else ''),
                                user_layouts=((8, 80), (24, 80)))

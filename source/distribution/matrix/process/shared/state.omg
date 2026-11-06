@@ -5,6 +5,7 @@ module state;
 // workspace's instances and the realm setup's progress.
 use parent;
 use admission;
+use owner_launch;
 use funding;
 use storage::Exchange;
 use storage::Relay;
@@ -192,6 +193,7 @@ public data State {
     // Provider links, bindings and each child's storage connection.
     store: Store;
     launch: Launch;
+    owner_launch: owner_launch::Work;
     // Each child's receipt for its latest launch.
     observations: Launches;
     // Admitted children, this matrix's client to each one's owner control, the

@@ -371,6 +371,12 @@ allowances and placements. Neither operation restores the old layout-controller
 authority. Both fault cases check the exact surviving Notes draft, later app
 launches and saved settings after cold reopen. F1/F8 during the held COMMIT belong
 only to this parent fixture; the stock Omega child contains no test switch.
+Add `--owner-read` to the controller case to hold the replacement launcher's
+executable read. The fixture waits for two input polls before releasing it;
+one could already have been queued before the launch. It cannot ask HEALTH on
+the same owner connection while that connection awaits RUN_OBJECT. Seven F2
+presses arm this gate. The rest of the scenario checks the surviving Notes draft,
+later launches and cold reopen.
 
 `python tools/boot-harness-rs/omega_launch_test.py` holds the executable read
 behind an app launch. The stock Omega matrix must answer HEALTH and poll input
@@ -385,8 +391,9 @@ executable read; combine it with `--regrant` to revoke during that query. The
 fixture arms those two cases with five or six F2 presses. The refreshed source
 is checked before admission and its prepared grant is installed locally. No
 test mode is added to the Omega process for these storage holds. Ordinary child
-construction now submits and resumes across service turns. Owner/setup admission,
-first provider handshakes and explicit shutdown drains still contain waits.
+construction and owner RUN_OBJECT now submit and resume across service turns.
+Catalogue RUN, setup admission, first provider handshakes, shared construction
+failure cleanup and explicit shutdown drains still contain waits.
 
 `python tools/boot-harness-rs/omega_construction_test.py --mode health` selects a
 lab entry around the stock Omega matrix with a one-second construction-observation

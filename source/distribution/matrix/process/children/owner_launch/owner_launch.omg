@@ -1,0 +1,243 @@
+module owner_launch::owner_launch;
+// RUN_OBJECT captures the owner's request -> reads its own realm -> obtains
+// funding -> constructs -> installs the captured binding -> answers once.
+// The owner supplies placement later. Shared construction failure cleanup
+// and final resource-release drains remain separate blocking-work targets.
+use shared::state::State;
+use shared::owner_launch::Work;
+use shared::storage::Outcome;
+use shared::admission::Plan;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::time::Tick;
+use runtime::connection::main::Frame;
+use runtime::admission::pending::Progress;
+use protocol::main;
+use protocol::matrix;
+use protocol::services::STORAGE;
+use protocol::storage::operations;
+use protocol::storage::scope;
+use policy::children::launch::resources::main::Capacity;
+use connections::storage::exchange;
+use connections::storage::binding;
+use construction::construction::poll_reserved;
+use launch::resources;
+use launch::authority;
+use funding;
+use stored;
+use lifecycle;
+use shared::report;
+
+const READ_START: u64 = 1u64;
+const READ_WAIT: u64 = 2u64;
+const FUNDING: u64 = 3u64;
+const CONSTRUCTION: u64 = 4u64;
+const RETIRING: u64 = 5u64;
+const RESULT: u64 = 6u64;
+
+public machine begin(gate: &Gate, context: &mut State, slot: u64 [0..=4], frame: Frame) -> u64 reaches Kernel invokes Kernel {
+    let tick: Tick = runtime::time::read(gate, context.clock);
+    transition tick {
+        Tick::Read { value } -> accepted(context, slot, frame, value)
+        Tick::Failed { code } -> (code)
+    }
+    machine accepted(context: &mut State, slot: u64 [0..=4], frame: Frame, now: u64) -> u64 {
+        transition context.owner_launch.phase == 0u64 && context.launch.phase == 0u64 && context.frame_count == 0u64 {
+            true -> captured(context, slot, frame, now)
+            _ -> (kernel::BUSY)
+        }
+    }
+    machine captured(context: &mut State, slot: u64 [0..=4], frame: Frame, now: u64) -> u64 {
+        let mut work: Work;
+        work.slot = slot; work.words = frame.payload;
+        work.ticket = runtime::server::main::ticket(&context.owner);
+        work.private_pages = context.staged_private[slot];
+        work.reader_pages = context.staged_reader[slot];
+        work.frames = context.staged_frames[slot];
+        work.offered = authority::offered(context, slot);
+        work.deadline = scope::deadline(now, 0u64, STORAGE_DEADLINE_TICKS);
+        context.staged_private[slot] = 0u64;
+        context.staged_reader[slot] = 0u64;
+        context.staged_frames[slot] = 0u64;
+        transition !context.retire_after_present[slot] && !context.slots[slot].live && context.slots[slot].pending == 0u64
+            && frame.payload[6] < 64u64 && frame.payload[2] != 0u64 {
+            true -> queued(context, work)
+            _ -> (kernel::BUSY)
+        }
+    }
+    machine queued(context: &mut State, work: Work) -> u64 {
+        let mut pending: Work = work;
+        pending.phase = READ_START;
+        context.owner_launch = pending;
+        0u64
+    }
+}
+public machine step(gate: &Gate, context: &mut State, now: u64) reaches Kernel blocks invokes Kernel {
+    // Construction and retirement must not invalidate a pending scene's handles.
+    transition {
+        context.owner_launch.phase == RESULT -> block publish_result(gate, context)
+        context.presentation_work.active -> done()
+        context.owner_launch.phase == READ_START -> block reading(gate, context, now)
+        context.owner_launch.phase == READ_WAIT -> block received(gate, context)
+        context.owner_launch.phase == FUNDING && funding::ready(context) -> block funded(gate, context, now)
+        context.owner_launch.phase == CONSTRUCTION -> block constructing(gate, context)
+        context.owner_launch.phase == RETIRING -> block retired(gate, context)
+        _ -> done()
+    }
+}
+machine reading(gate: &Gate, context: &mut State, now: u64) reaches Kernel {
+    let index: u64 = exchange::link_of(context, 0u64);
+    transition {
+        context.owner_launch.deadline == 0u64 || runtime::time::reached(now, context.owner_launch.deadline) -> block answer(gate, context, kernel::TIMED_OUT)
+        index <= 2u64 -> block available(gate, context, now, index)
+        _ -> block answer(gate, context, kernel::DENIED)
+    }
+    machine available(gate: &Gate, context: &mut State, now: u64, index: u64 [0..=2]) reaches Kernel {
+        transition exchange::idle(context, index) {
+            true -> block started(gate, context, now)
+            _ -> done()
+        }
+    }
+    machine started(gate: &Gate, context: &mut State, now: u64) reaches Kernel {
+        let mut words: [u64; 8];
+        words[0] = ((STORAGE_BASE as u64 in Wrapping) + (operations::BULK as u64 in Wrapping)) as u64;
+        words[1] = context.owner_launch.words[2];
+        words[7] = context.owner_launch.deadline;
+        let status: u64 = block exchange::refreshed(gate, context, now, 0u64, words, exchange::OWNER_READ, 0u64, 0u64);
+        transition status == 0u64 {
+            true -> waiting(context)
+            _ -> block answer(gate, context, status)
+        }
+    }
+    machine waiting(context: &mut State) { context.owner_launch.phase = READ_WAIT; }
+}
+machine received(gate: &Gate, context: &mut State) reaches Kernel {
+    let index: u64 = exchange::link_of(context, 0u64);
+    transition index <= 2u64 { true -> block available(gate, context, index) _ -> done() }
+    machine available(gate: &Gate, context: &mut State, index: u64 [0..=2]) reaches Kernel {
+        transition exchange::ready(context, index, exchange::OWNER_READ) {
+            true -> block taken(gate, context, index)
+            _ -> done()
+        }
+    }
+    machine taken(gate: &Gate, context: &mut State, index: u64 [0..=2]) reaches Kernel {
+        let image: Outcome = exchange::take(context, index);
+        block planned(gate, context, image);
+    }
+}
+machine planned(gate: &Gate, context: &mut State, image: Outcome) reaches Kernel {
+    context.owner_launch.image = image.attachment;
+    transition {
+        image.words[0] != 0u64 -> block answer(gate, context, image.words[0])
+        image.attachment == 0u64 -> block answer(gate, context, kernel::IO_ERROR)
+        _ -> block declared(gate, context, image)
+    }
+    machine declared(gate: &Gate, context: &mut State, image: Outcome) reaches Kernel {
+        let work: Work = context.owner_launch;
+        let capacity: Capacity = Capacity { private_pages: work.private_pages, reader_pages: work.reader_pages,
+            channels: work.words[5], descendants: work.words[6] };
+        let desktop: bool = context.desktop && work.slot >= 1u64 && work.slot <= 3u64;
+        let plan: Plan = block resources::prepare(gate, image.attachment, image.words[4], work.offered, capacity, work.frames, desktop);
+        transition plan.status == 0u64 {
+            true -> block funding_requested(gate, context, plan)
+            _ -> block answer(gate, context, plan.status)
+        }
+    }
+    machine funding_requested(gate: &Gate, context: &mut State, plan: Plan) reaches Kernel {
+        context.owner_launch.plan = plan;
+        context.owner_launch.binding = binding::prepare(context);
+        let status: u64 = funding::begin(context, resources::needed(plan));
+        transition status == 0u64 {
+            true -> retained(context)
+            _ -> block answer(gate, context, status)
+        }
+    }
+    machine retained(context: &mut State) { context.owner_launch.phase = FUNDING; }
+}
+machine funded(gate: &Gate, context: &mut State, now: u64) reaches Kernel {
+    let status: u64 = funding::take(context);
+    transition status == 0u64 {
+        true -> block admitted(gate, context, now)
+        _ -> block answer(gate, context, status)
+    }
+    machine admitted(gate: &Gate, context: &mut State, now: u64) reaches Kernel {
+        let work: Work = context.owner_launch;
+        let status: u64 = block stored::admit_plan(gate, context, now, work.slot, work.words[3], work.words[4], work.words[7],
+            work.image, work.plan, false, true);
+        block exchange::release(gate, work.image);
+        context.owner_launch.image = 0u64;
+        transition status == 0u64 {
+            true -> constructing_next(context)
+            _ -> retiring(context, status)
+        }
+    }
+    machine constructing_next(context: &mut State) { context.owner_launch.phase = CONSTRUCTION; }
+}
+machine constructing(gate: &Gate, context: &mut State) reaches Kernel {
+    let slot: u64 [0..=4] = context.owner_launch.slot;
+    let progress: Progress = block poll_reserved(gate, context, slot);
+    transition progress {
+        Progress::Pending -> done()
+        Progress::Failed { code } -> retiring(context, code)
+        Progress::Ready -> block constructed(gate, context)
+    }
+    machine constructed(gate: &Gate, context: &mut State) reaches Kernel {
+        let work: Work = context.owner_launch;
+        transition (work.plan.mask & STORAGE) != 0u64 {
+            true -> block binding_installed(gate, context, work)
+            _ -> block bound(gate, context, 0u64)
+        }
+    }
+    machine binding_installed(gate: &Gate, context: &mut State, work: Work) reaches Kernel {
+        let status: u64 = binding::install(context, work.slot, work.words[3], work.binding);
+        block bound(gate, context, status);
+    }
+    machine bound(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
+        transition status == 0u64 {
+            true -> block completed(gate, context)
+            _ -> retiring(context, status)
+        }
+    }
+    machine completed(gate: &Gate, context: &mut State) reaches Kernel {
+        report::launch_stage(gate, context.owner_launch.slot, 0u64, 0u64);
+        report::budget(gate);
+        block answer(gate, context, 0u64);
+    }
+}
+machine retiring(context: &mut State, status: u64) {
+    let slot: u64 [0..=4] = context.owner_launch.slot;
+    context.owner_launch.status = status;
+    context.owner_launch.phase = RETIRING;
+    lifecycle::request_retirement(context, slot);
+}
+machine retired(gate: &Gate, context: &mut State) reaches Kernel {
+    let status: u64 = context.owner_launch.status;
+    transition !context.retire_after_present[context.owner_launch.slot] && context.retirement_failure == 0u64 {
+        true -> block answer(gate, context, status)
+        _ -> done()
+    }
+}
+machine answer(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
+    block exchange::release(gate, context.owner_launch.image);
+    context.owner_launch.image = 0u64;
+    context.owner_launch.phase = RESULT;
+    context.owner_launch.status = status;
+    block publish_result(gate, context);
+}
+machine publish_result(gate: &Gate, context: &mut State) reaches Kernel {
+    let ticket: runtime::server::main::Ticket = context.owner_launch.ticket;
+    let mut words: [u64; 8]; words[0] = context.owner_launch.status;
+    let replied: u64 = block runtime::server::main::reply_to(gate, &mut context.owner, ticket, &words);
+    transition {
+        replied == kernel::WOULD_BLOCK -> done()
+        replied == 0u64 -> block discard(gate, context)
+        _ -> failed(context, replied)
+    }
+    machine failed(context: &mut State, status: u64) { context.owner.peer.fault = status; }
+}
+public machine discard(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
+    block exchange::release(gate, context.owner_launch.image);
+    let empty: Work; context.owner_launch = empty;
+}
+machine done() {}

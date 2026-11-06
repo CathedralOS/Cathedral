@@ -76,7 +76,7 @@ machine unchanged(left: SlotPolicy, right: SlotPolicy) -> bool {
 // Admission sees the reserved launch as busy before the target is live.
 public machine facts(context: &State, requester: u64 [0..=4], bound: bool) -> Facts {
     Facts {
-        busy: context.launch.phase != 0u64 || context.frame_count != 0u64, desktop: context.desktop, exact_chrome: context.desktop && requester == 0u64, requester: Requester::Child { slot: requester },
+        busy: context.launch.phase != 0u64 || context.owner_launch.phase != 0u64 || context.frame_count != 0u64, desktop: context.desktop, exact_chrome: context.desktop && requester == 0u64, requester: Requester::Child { slot: requester },
         occupied_slots: occupied(context, 0u64, 0u64), unavailable_connections: 0u64, storing: false,
         has_receipt: launches::available(&context.observations, requester), has_ticket: true,
         standing_slots: standing(context, 0u64, 0u64), has_storage_binding: bound }

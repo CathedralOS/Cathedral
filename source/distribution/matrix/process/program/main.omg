@@ -36,6 +36,7 @@ use children::slots;
 use children::selection;
 use children::arrangement::arrangement;
 use children::launch::launch;
+use children::owner_launch::owner_launch;
 use children::lifecycle;
 use children::funding;
 use connections::presentation;
@@ -91,6 +92,7 @@ machine turn(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
     let stored: u64 = block storage::step(gate, context, now);
     block funding::step(gate, context);
     block launch::step(gate, context);
+    block owner_launch::step(gate, context, now);
     lifecycle::notify(gate, context);
     let flushed: u64 = block presentation::flush_turn(gate, context);
     let pointed: u64 = block cursors::step(gate, context);
@@ -129,7 +131,7 @@ machine park_ticks(context: &State) -> u64 {
         context.presentation_work.active && !context.presentation_work.submitted -> (1u64)
         context.presentation_work.active -> (OWED_TICKS)
         context.stopping.active || context.scene_owner.active || queued_children(context, 0u64) -> (1u64)
-        context.frame_count != 0u64 || context.configure_queued || context.launch.phase != 0u64 || funding::pending(context) -> (1u64)
+        context.frame_count != 0u64 || context.configure_queued || context.launch.phase != 0u64 || context.owner_launch.phase != 0u64 || funding::pending(context) -> (1u64)
         context.refresh_due || context.parent_work.poll_ready -> (OWED_TICKS)
         _ -> (IDLE_TICKS)
     }
@@ -147,6 +149,7 @@ machine cleanup(gate: &Gate, context: &mut State, status: u64) -> u64 reaches Ke
     report::control(gate, context.clock, context.trace_origin, 7u64, 5u64, status);
     block transfer::discard(gate, context);
     block launch::discard(gate, context);
+    block owner_launch::discard(gate, context);
     block lifecycle::reclaim(gate, context, 0u64);
     block lifecycle::reclaim(gate, context, 1u64);
     block lifecycle::reclaim(gate, context, 2u64);

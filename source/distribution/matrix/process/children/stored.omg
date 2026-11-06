@@ -1,8 +1,8 @@
 module stored;
-// Owner launches and admission from a sealed executable. RUN_OBJECT still
-// reads synchronously; child requests resume in launch/launch.omg and then
-// enter admit_image here. Declaration, capacity, reservation and binding each
-// have their own rollback before the placement layer publishes the new child.
+// Owner launches and admission from a sealed executable. RUN_OBJECT resumes
+// in owner_launch/owner_launch.omg; child requests in launch/launch.omg.
+// Both enter admit_plan here; startup uses admit_image. Declaration, capacity,
+// reservation and binding have rollback before placement publishes the child.
 use protocol::main;
 use protocol::matrix;
 use protocol::services::INTERACTION;
@@ -14,19 +14,15 @@ use runtime::kernel;
 use runtime::connection::main::Frame;
 use world::geometry::zeros_from;
 use policy::children::launch::resources::main::Capacity;
-use policy::children::launch::admission;
-use world::surfaces;
-use world::launches;
 use connections::storage::storage;
-use shared::storage::Outcome;
 use lifecycle;
 use construction::construction::start_reserved;
 use shared::report;
 use funding;
-use declaration;
 use shared::admission::Plan;
 use launch::resources;
 use launch::authority;
+use owner_launch::owner_launch::begin;
 
 public machine owner_word(op: u64) -> bool {
     op == RUN_OBJECT || op == LAUNCH_IMPORTS
@@ -54,60 +50,8 @@ public machine owner(gate: &Gate, context: &mut State, now: u64, frame: Frame) -
     }
     // [RUN_OBJECT, slot, object, scope, argument, channels, descendants, cpu]
     machine running(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], frame: Frame) -> u64 reaches Kernel {
-        let status: u64 = block run(gate, context, now, slot, frame.payload[2], frame.payload[3], frame.payload[4],
-            frame.payload[5], frame.payload[6], frame.payload[7]);
-        block reply(gate, context, error(status))
-    }
-}
-// The owner's launch: the staged allowances, consumed here, and a read that
-// carries no scope of its own because the owner names the realm to grant.
-public machine run(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], object: u64, subtree: u64, argument: u64,
-    channels: u64, descendants: u64, cpu: u64) -> u64 reaches Kernel blocks invokes Kernel {
-    let private_pages: u64 = context.staged_private[slot];
-    let reader_pages: u64 = context.staged_reader[slot];
-    let frames: u64 = context.staged_frames[slot];
-    let offered: u64 = offered_imports(context, slot);
-    context.staged_private[slot] = 0u64;
-    context.staged_reader[slot] = 0u64;
-    context.staged_frames[slot] = 0u64;
-    block launch(gate, context, now, slot, object, subtree, argument, channels, descendants, cpu, private_pages, reader_pages, frames, 0u64, offered)
-}
-// Read and admit: the owner's launch reads the program over this matrix's
-// own binding and binds the child to the realm the owner named.
-public machine launch(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], object: u64, subtree: u64, argument: u64,
-    channels: u64, descendants: u64, cpu: u64, private_pages: u64, reader_pages: u64, frames: u64, stamp: u64, offered: u64) -> u64
-    reaches Kernel blocks invokes Kernel {
-    transition !context.retire_after_present[slot] && !context.slots[slot].live && context.slots[slot].pending == 0u64 && descendants < 64u64 && object != 0u64
-        && !(context.launch.phase != 0u64 && context.launch.slot == slot) {
-        true -> block reading(gate, context, now, slot, object, subtree, argument, channels, descendants, cpu, private_pages, reader_pages, frames, stamp, offered)
-        _ -> (kernel::BUSY)
-    }
-    machine reading(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], object: u64, subtree: u64, argument: u64,
-        channels: u64, descendants: u64, cpu: u64, private_pages: u64, reader_pages: u64, frames: u64, stamp: u64, offered: u64) -> u64
-        reaches Kernel requires descendants < 64u64 {
-        let outcome: Outcome = block storage::read_object(gate, context, now, object, stamp);
-        transition outcome.words[0] == 0u64 && outcome.attachment != 0u64 {
-            true -> block admitted_from(gate, context, now, slot, subtree, argument, channels, descendants, cpu, outcome.attachment, outcome.words[4],
-                private_pages, reader_pages, frames, offered)
-            _ -> block unread(gate, outcome)
-        }
-    }
-    machine unread(gate: &Gate, outcome: Outcome) -> u64 reaches Kernel {
-        block release(gate, outcome.attachment);
-        transition outcome.words[0] == 0u64 {
-            true -> (kernel::IO_ERROR)
-            _ -> (outcome.words[0])
-        }
-    }
-    // The image is this matrix's to release once the child holds its own reference.
-    machine admitted_from(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], subtree: u64, argument: u64, channels: u64,
-        descendants: u64, cpu: u64, image: u64, length: u64, private_pages: u64, reader_pages: u64, frames: u64, offered: u64) -> u64
-        reaches Kernel requires descendants < 64u64 {
-        let desktop_app: bool = context.desktop && slot >= 1u64 && slot <= 3u64;
-        let status: u64 = block admit_image(gate, context, now, slot, image, length, subtree, argument, channels, descendants, cpu,
-            private_pages, reader_pages, frames, offered, desktop_app, true);
-        block release(gate, image);
-        status
+        let status: u64 = begin(gate, context, slot, frame);
+        transition status == 0u64 { true -> (0u64) _ -> block reply(gate, context, error(status)) }
     }
 }
 // Admit a child from a sealed image this matrix holds: resolve its
@@ -229,21 +173,6 @@ machine idle() {}
 machine failed_stage(gate: &Gate, slot: u64, stage: u64, code: u64) -> u64 reaches Kernel invokes Kernel {
     report::launch_stage(gate, slot, stage, code);
     code
-}
-machine offered_imports(context: &State, slot: u64 [0..=4]) -> u64 {
-    transition context.policies[slot].imports_set {
-        true -> (context.policies[slot].imports)
-        _ -> (declaration::ALL)
-    }
-}
-machine release(gate: &Gate, handle: u64) reaches Kernel {
-    transition handle != 0u64 {
-        true -> block releasing(gate, handle)
-        _ -> done()
-    }
-    machine releasing(gate: &Gate, handle: u64) reaches Kernel {
-        let ignored: u64 = block Kernel::memory_release(gate, handle);
-    }
 }
 machine reply(gate: &Gate, context: &mut State, words: [u64; 8]) -> u64 reaches Kernel {
     block runtime::server::main::reply(gate, &mut context.owner, &words)

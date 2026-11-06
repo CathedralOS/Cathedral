@@ -148,8 +148,9 @@ The children this matrix admits, funds, presents and retires.
 
 - [construction/construction.omg](children/construction/construction.omg): configure a reserved
   launch, submit construction and open its control and storage listeners. Child
-  LAUNCH requests use the runtime's asynchronous receipt; owner/setup calls still
-  wait. [configuration.omg](children/construction/configuration.omg) owns the bounded
+  LAUNCH and owner RUN_OBJECT requests use the runtime's asynchronous receipt;
+  catalogue RUN and setup calls still wait.
+  [configuration.omg](children/construction/configuration.omg) owns the bounded
   CPU and catalogue grants. Lifecycle collects cancelled submissions and returns
   their reservations, including when publication wins the cancellation race.
 - [lifecycle.omg](children/lifecycle.omg): RUN_PAGES and RUN_MEMORY stage a slot's next
@@ -225,11 +226,20 @@ The children this matrix admits, funds, presents and retires.
   local launch funding has its own work item. A retired requester cannot grow
   a replacement child. Accepted parent replies are drained even after cancellation;
   any upstream grant remains this matrix's allowance, without authorizing the
-  cancelled launch. Owner/setup admission still uses a synchronous wrapper.
+  cancelled launch. Catalogue RUN and setup admission still use a synchronous wrapper.
 - [stored.omg](children/stored.omg): owner RUN_OBJECT and admission from a sealed
   image. Resolve the declaration, fit the offered capacity, reserve, admit and
   bind the child's storage; unwind a failed step. Startup jobs and retained
-  child launches share this admission path. Owner reads and binding still wait.
+  child launches share this admission path. Setup retains a synchronous wrapper.
+- [owner_launch/owner_launch.omg](children/owner_launch/owner_launch.omg): owner
+  RUN_OBJECT captures its exact control ticket and staged allowances once. It
+  reads through this matrix's storage authority, yields through funding and
+  construction, then installs the captured storage binding locally. An owner
+  request does not borrow a child's identity or layout authority. Child launches
+  and realm setup cannot take its reserved work; other service traffic continues.
+  A full reply mailbox retains the result without replaying construction.
+  Shared construction failure cleanup and final resource releases still need
+  their own review for blocking waits.
 - [launch/launch.omg](children/launch/launch.omg): a child's LAUNCH reserves its
   exact reply ticket, caller and storage incarnations, grant revision, target
   and standing policy before yielding for the executable. The scoped read uses

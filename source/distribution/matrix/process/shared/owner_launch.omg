@@ -1,0 +1,21 @@
+module owner_launch;
+use runtime::server::main::Ticket;
+use admission::Plan;
+use storage::Prepared;
+// An owner request retains its own authority and allowances. It is not a
+// request from the launcher occupying slot zero, nor dependent on its view.
+public data Work [copy] {
+    phase: u64;
+    slot: u64 [0..=4];
+    ticket: Ticket;
+    words: [u64; 8];
+    deadline: u64;
+    private_pages: u64;
+    reader_pages: u64;
+    frames: u64;
+    offered: u64;
+    image: u64;
+    plan: Plan;
+    binding: Prepared;
+    status: u64;
+}

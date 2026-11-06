@@ -67,7 +67,7 @@ public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches K
     // A new child accepts owner control, then connects to its supplied broker.
     // Keep serving those handshakes before the next realm command can wait on
     // upstream storage or background loading. No deadline is restarted here.
-    transition context.presentation_work.active || lifecycle::starting(context) {
+    transition context.presentation_work.active || context.owner_launch.phase != 0u64 || lifecycle::starting(context) {
         true -> (0u64)
         _ -> block idle_step(gate, context, now)
     }

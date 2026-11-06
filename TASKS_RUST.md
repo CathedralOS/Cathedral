@@ -9,9 +9,11 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Current work: retain owner-requested launches across service turns. The
-[layout grant invalidation](#layout-grant-invalidation) regression batch is complete.
-Latest desktop handoff: [layout grant invalidation](#layout-grant-invalidation) at `28e6adfd`,
+Current work: finish the [owner-launch regression batch](#retained-owner-launches),
+then review shared construction failure cleanup for blocking waits. The held
+owner-read scenario passes on the final source, including cold reopen.
+Latest desktop handoff: [retained owner launches](#retained-owner-launches),
+following [layout grant invalidation](#layout-grant-invalidation) at `28e6adfd`,
 following [retained layout application](#retained-layout-application) at `6b7deef5`,
 following [retained workspace fallback](#retained-workspace-fallback) at `ff555376`,
 following [retained login handoff](#retained-login-handoff) at `94053ba3`,
@@ -28,6 +30,58 @@ IDs outside main's ancestry, but their content is already squash-merged as
 `tools/boot-harness/` and the boot qualification record is identical. All 22 boot
 harness host tests passed during review. Do not merge that branch again based
 only on its unmerged commit IDs; no fresh native boot was run for this check.
+
+### Retained owner launches
+
+Implemented after `cd799ff2`. The new
+`omega_layout_fault_test.py --owner-read` replaces a stopped launcher through the
+ordinary owner RUN_OBJECT connection while Notes keeps its draft. The Rust parent
+holds that executable read until two interaction polls arrive, explicitly waking
+the child for the second. It cannot concurrently ask HEALTH on the owner link
+already awaiting the launch reply. Ordinary F5 has no such gate.
+
+The original path failed with no poll during the held read:
+`build/owner-launch-before.log`, exit 1, artifacts
+`build/boot-harness-rs/desktop/20261106T163541174390Z/`. The fixture's storage hold
+expired; its prior layout cancellation and launcher collection had completed.
+
+The implementation enters `children/owner_launch/owner_launch.omg` from
+`stored.omg`. It retains the exact owner ticket, argument, subtree and staged
+allowances; executable reading uses distinct exchange custody under this matrix's
+authority. Funding and construction advance on later turns, and binding installs
+the captured source identity locally. The final reply remains pending on mailbox
+backpressure. Child launch admission and realm jobs cannot take its work while
+input and ordinary service handling continue.
+
+The held-read scenario passed fresh and cold in
+`build/boot-harness-rs/desktop/20261106T164958688244Z/`, logged in
+`build/owner-launch-retained-result.log` (exit 0). Both polls precede release;
+replacement, exact draft preservation, later launches and saved settings pass.
+That checked native matrix is still 416/496 load pages, SHA256
+`7163d5ea8f75cd410d08c2d7bf8fa9d44c878858c55c8dcf8f76b1e34969b197`.
+Target clippy with interaction-delay/construction-probe/handoff-probe, Rust
+formatting, Python compilation, source layout and whitespace checks passed.
+
+After that pass, the unused synchronous `stored::run` and `stored::launch`
+wrappers and their helpers were removed. The final source passed checked native
+compilation and the held-read test on fresh and cold boots:
+`build/boot-harness-rs/desktop/20261106T171225480171Z/`,
+`build/owner-final-owner.log` (exit 0). The resulting ELF hash is unchanged from
+the one above. Both boot logs show two polls between hold and release, followed
+by successful launcher replacement.
+
+The broader sequential regression batch is running as
+`python build/check-owner-batch.py owner launch desktop construction`; logs are
+`build/owner-final-{owner,launch,desktop,construction}.log`. It checks the held
+owner read, the ordinary child launch read, the Omega root/user desktop, and three
+construction-requester replacements per boot. Owner finished successfully;
+launch, desktop and construction are still running or queued. Do not start a
+duplicate or count those remaining checks as qualified yet.
+
+Next: shared construction failure cleanup still calls synchronous reclamation;
+retain that failure through cleanup while other requests keep progressing.
+Catalogue RUN, explicit setup/refresh and final release drains also need review
+for blocking waits. Normal F5 continues to select the Rust matrix.
 
 ### Layout grant invalidation
 
@@ -79,10 +133,8 @@ The remaining regression batch passed against `28e6adfd`:
 Logs are `build/omega-layout-{construction,selection,desktop,background,host}-regrant.log`.
 The sequential runner finished successfully; no checks remain running from this batch.
 
-Next: owner `RUN_OBJECT` still enters synchronous `children/stored.omg::run`,
-including its executable read and admission. Reproduce that wait with an existing
-Notes app, then retain the owner request and its staged resources while normal
-input/service work continues. Owner-requested `RUN`, explicit setup/refresh and
+The owner `RUN_OBJECT` wait identified at this checkpoint is addressed by the
+[retained owner-launch path](#retained-owner-launches). Catalogue `RUN`, explicit setup/refresh and
 final resource-release drains also need separate review. The unrelated nested
 LOSS timeout under pointer stress remains open. Normal F5 still selects the Rust
 matrix; these tests do not qualify every remaining F5 variant.
