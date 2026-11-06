@@ -9,9 +9,9 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Current work: finish the regression checks for [layout grant invalidation](#layout-grant-invalidation),
-then retain owner-requested launches across service turns.
-Latest desktop handoff: [layout grant invalidation](#layout-grant-invalidation),
+Current work: retain owner-requested launches across service turns. The
+[layout grant invalidation](#layout-grant-invalidation) regression batch is complete.
+Latest desktop handoff: [layout grant invalidation](#layout-grant-invalidation) at `28e6adfd`,
 following [retained layout application](#retained-layout-application) at `6b7deef5`,
 following [retained workspace fallback](#retained-workspace-fallback) at `ff555376`,
 following [retained login handoff](#retained-login-handoff) at `94053ba3`,
@@ -62,8 +62,22 @@ Background's checked native image is 47/496 load pages, SHA256
 The matrix is unchanged from `6b7deef5`: 416/496 pages with the same ELF hash.
 Fault-test logs are `build/omega-layout-{ancestor,controller}-regrant.log`;
 earlier failed setup and input traces are retained separately under `build/`.
-Construction-requester, selection, ordinary F5, independent Background and full
-host regressions are running; do not count them as qualified yet.
+The remaining regression batch passed against `28e6adfd`:
+
+- Construction-requester replacement, three rounds on each of fresh and cold
+  boots: `build/boot-harness-rs/desktop/20261106T065316098548Z/`. Every reclaim
+  returned the same account `(8, 59, 642, 0)`.
+- Late selection cancellation, fresh and cold:
+  `build/boot-harness-rs/desktop/20261106T162211551236Z/`.
+- Ordinary Rust-host F5 desktop, fresh and cold, including the storage oracle:
+  `build/boot-harness-rs/desktop/20261106T162457652178Z/`.
+- Independent Omega Background control:
+  `build/omega-user/background-control/20261106T162831147484Z/`.
+- Full `cargo test --locked` in `source-rs/`, including compiled Omega behavior
+  tests and doc tests.
+
+Logs are `build/omega-layout-{construction,selection,desktop,background,host}-regrant.log`.
+The sequential runner finished successfully; no checks remain running from this batch.
 
 Next: owner `RUN_OBJECT` still enters synchronous `children/stored.omg::run`,
 including its executable read and admission. Reproduce that wait with an existing
