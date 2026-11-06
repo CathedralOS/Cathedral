@@ -9,10 +9,10 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Current work: finish the broader regressions for retained construction failure
-cleanup, then revisit the combined nested-desktop pointer-stress/soak close issue.
-Shared-runtime admission and six matrix refusal/retry cycles pass; the remaining
-owner-read, child-launch and Omega root/user desktop checks are still running.
+Current work: revisit the combined nested-desktop pointer-stress/soak close issue.
+Retained construction failure cleanup is pushed at `10c17f18`. Shared-runtime
+admission, six matrix refusal/retry cycles, owner-read and child-launch fresh/cold
+checks, and the Omega root/user desktop all pass.
 Latest desktop handoff: [retained construction failure cleanup](#retained-construction-failure-cleanup),
 following [retained owner launches](#retained-owner-launches) at `ebe3526e`,
 following [layout grant invalidation](#layout-grant-invalidation) at `28e6adfd`,
@@ -83,10 +83,19 @@ tracked and is never reported as success. No kernel hook or deadline increase.
 
 Target clippy passed for the channel lab's omega-admission feature and the
 matrix's interaction-delay/construction-probe/handoff-probe features. Format,
-Python syntax, layout and diff checks passed. Remaining regressions continue in
-`python build/check-construction-cleanup.py construction owner launch desktop`:
-held owner read, ordinary child launch and Omega root/user desktop. Logs are
-`build/cleanup-{owner,launch,desktop}.log`; do not claim those passes yet.
+Python syntax, layout and diff checks passed. The remaining regressions finished
+successfully in `python build/check-construction-cleanup.py construction owner launch desktop`:
+
+- Held owner read: fresh and cold boots, artifact
+  `build/boot-harness-rs/desktop/20261106T183439787638Z/`.
+- Ordinary child launch: fresh and cold boots, artifact
+  `build/boot-harness-rs/desktop/20261106T184531875687Z/`.
+- Omega stock matrix as root and user template: fresh boot, picker, new user,
+  configured user matrix and Colors paint/save through both; artifact
+  `build/boot-harness-rs/omega-desktop/20261106T184603866867Z/`.
+
+Logs are `build/cleanup-{owner,launch,desktop}.log`. This does not resolve the
+older combined nested pointer-stress/soak close issue; rerun that separately.
 Final resource-release calls, catalogue RUN and setup/shutdown paths still have
 blocking work. Memory release is a real deferred kernel operation that parks its
 caller (`source-rs/kernel/core/user_tasks/memory/memory.rs`), not merely an Omega
