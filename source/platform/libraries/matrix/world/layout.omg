@@ -9,6 +9,126 @@ use level::World;
 use geometry::Grant;
 use geometry::Rect;
 use surfaces;
+use surfaces::Retained;
+
+// An owner-held proposal. Preparing and previewing it change no grants, routes
+// or retained content. Commit revalidates every captured binding.
+public data Proposal [copy] {
+    parent: Grant;
+    authority: u64;
+    controller: u64 [0..=4];
+    incarnation: u64;
+    epoch: u64;
+    rects: [Rect; 5];
+    before: [Rect; 5];
+    grants: [Grant; 5];
+    occupants: [u64; 5];
+    placed: [bool; 5];
+    changed: u64;
+}
+public data Proposed [copy] { case Ready(proposal: Proposal); case Refused(code: u64); }
+
+public machine prepare(world: &World, slot: u64 [0..=4], incarnation: u64, epoch: u64, rects: &[Rect; 5]) -> Proposed {
+    transition {
+        !allowed(world, slot, incarnation, epoch) -> (Proposed::Refused { code: DENIED })
+        !all_fit(world, rects, 0u64) -> (Proposed::Refused { code: INVALID_ARGUMENT })
+        _ -> prepared(world, slot, incarnation, epoch, rects)
+    }
+    machine prepared(world: &World, slot: u64 [0..=4], incarnation: u64, epoch: u64, rects: &[Rect; 5]) -> Proposed {
+        let mut proposal: Proposal;
+        proposal.parent = world.parent;
+        proposal.authority = world.authority;
+        proposal.controller = slot;
+        proposal.incarnation = incarnation;
+        proposal.epoch = epoch;
+        capture_proposal(world, &mut proposal, rects, 0u64);
+        Proposed::Ready { proposal: proposal }
+    }
+}
+machine capture_proposal(world: &World, proposal: &mut Proposal, rects: &[Rect; 5], index: u64) requires index <= 5u64 {
+    transition index < 5u64 { true -> captured(world, proposal, rects, index) _ -> done() }
+    machine captured(world: &World, proposal: &mut Proposal, rects: &[Rect; 5], index: u64 [0..=4]) {
+        proposal.rects[index] = rects[index];
+        proposal.before[index] = world.children[index].rect;
+        proposal.grants[index] = world.children[index].grant;
+        proposal.occupants[index] = world.children[index].incarnation;
+        proposal.placed[index] = world.children[index].placed;
+        let next: Grant = geometry::clip(world.parent, rects[index], world.children[index].keys);
+        changed(proposal, index, next);
+        transition { _ -> capture_proposal(world, proposal, rects, index + 1u64) }
+    }
+    machine changed(proposal: &mut Proposal, index: u64 [0..=4], next: Grant) {
+        let old: Grant = proposal.grants[index];
+        transition proposal.placed[index] && (next.width != old.width || next.height != old.height || next.keys != old.keys) {
+            true -> marked(proposal, index)
+            _ -> done()
+        }
+    }
+    machine marked(proposal: &mut Proposal, index: u64 [0..=4]) { proposal.changed = proposal.changed | (1u64 << index); }
+}
+public machine current(world: &World, proposal: &Proposal) -> bool {
+    geometry::same_grant(world.parent, proposal.parent) && world.authority == proposal.authority
+        && allowed(world, proposal.controller, proposal.incarnation, proposal.epoch)
+        && bindings_match(world, proposal, 0u64)
+}
+machine bindings_match(world: &World, proposal: &Proposal, index: u64) -> bool requires index <= 5u64 {
+    transition index < 5u64 { true -> compared(world, proposal, index) _ -> (true) }
+    machine compared(world: &World, proposal: &Proposal, index: u64 [0..=4]) -> bool {
+        let before: Rect = proposal.before[index];
+        let now: Rect = world.children[index].rect;
+        let matches: bool = world.children[index].incarnation == proposal.occupants[index]
+            && world.children[index].placed == proposal.placed[index]
+            && geometry::same_grant(world.children[index].grant, proposal.grants[index])
+            && before.x == now.x && before.y == now.y && before.width == now.width && before.height == now.height;
+        transition matches { true -> bindings_match(world, proposal, index + 1u64) _ -> (false) }
+    }
+}
+public machine commit(world: &mut World, proposal: &Proposal) -> u64 {
+    transition current(world, proposal) {
+        true -> (layout(world, proposal.controller, proposal.incarnation, proposal.epoch, &proposal.rects))
+        _ -> (DENIED)
+    }
+}
+// A changed extent retires the old surface names after acceptance. Stage empty
+// draws first so a late cancellation can restore those names. Apps redraw under
+// fresh grants after commit. Offset-only moves retain their names and translate
+// existing content. Restoration always
+// replays the still-authoritative old World.
+public machine preview(world: &World, proposal: &Proposal, slot: u64 [0..=4], rank: u64 [0..=63], restoring: bool) -> Retained {
+    let changed: bool = ((proposal.changed >> slot) & 1u64) != 0u64;
+    transition {
+        restoring -> (surfaces::preview_replay(world, slot, rank, !world.children[slot].hidden))
+        !proposal.placed[slot] -> (Retained::Nothing)
+        changed -> blanked(world, slot, rank)
+        _ -> moved(world, proposal, slot, surfaces::preview_replay(world, slot, rank, !world.children[slot].hidden))
+    }
+    machine blanked(world: &World, slot: u64 [0..=4], rank: u64 [0..=63]) -> Retained {
+        transition world.children[slot].surfaces[rank].live {
+            true -> (Retained::Packet { words: [MATRIX_PAINT,world.parent.epoch,world.children[slot].surfaces[rank].upstream,0u64,0u64,0u64,0u64,0u64] })
+            _ -> (Retained::Nothing)
+        }
+    }
+    machine moved(world: &World, proposal: &Proposal, slot: u64 [0..=4], retained: Retained) -> Retained {
+        transition retained {
+            Retained::Packet { words } -> translated(proposal, slot, words)
+            Retained::Nothing -> (Retained::Nothing)
+        }
+    }
+    machine translated(proposal: &Proposal, slot: u64 [0..=4], words: [u64; 8]) -> Retained {
+        transition words[5] != 0u64 && words[6] != 0u64
+            && words[3] >= proposal.before[slot].x && words[4] >= proposal.before[slot].y {
+            true -> offset(proposal.rects[slot], proposal.before[slot], words)
+            _ -> (Retained::Packet { words: words })
+        }
+    }
+    machine offset(place: Rect, before: Rect, words: [u64; 8]) -> Retained
+        requires words[3] >= before.x && words[4] >= before.y {
+        let mut moved: [u64; 8] = words;
+        moved[3] = geometry::plus(place.x, words[3] - before.x);
+        moved[4] = geometry::plus(place.y, words[4] - before.y);
+        Retained::Packet { words: moved }
+    }
+}
 
 public data Placement [copy] {
     captured: bool;
@@ -124,3 +244,5 @@ machine fits(world: &World, rect: Rect) -> bool {
     geometry::valid_rect(rect) && geometry::plus(rect.x, rect.width) <= world.parent.width
         && geometry::plus(rect.y, rect.height) <= world.parent.height
 }
+
+machine done() {}

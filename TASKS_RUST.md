@@ -9,7 +9,9 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Latest verified desktop handoff: [retained workspace fallback](#retained-workspace-fallback),
+Current work: the remaining fault coverage in [retained layout application](#retained-layout-application).
+Latest verified desktop handoff: [retained layout application](#retained-layout-application),
+following [retained workspace fallback](#retained-workspace-fallback) at `ff555376`,
 following [retained login handoff](#retained-login-handoff) at `94053ba3`,
 following [retained failed-launch cleanup](#retained-failed-launch-cleanup) at `1a0a8db2`,
 following [retained ordinary close](#retained-ordinary-close) at `0bdb41df`,
@@ -24,6 +26,96 @@ IDs outside main's ancestry, but their content is already squash-merged as
 `tools/boot-harness/` and the boot qualification record is identical. All 22 boot
 harness host tests passed during review. Do not merge that branch again based
 only on its unmerged commit IDs; no fresh native boot was run for this check.
+
+### Retained layout application
+
+Implemented after `ff555376`. The local reproducer `build/probe-omega-layout.py`
+ran and failed as intended (`build/omega-layout-before.log`, exit 1). Applying
+real launcher settings reached the parent's held COMMIT, but the Omega matrix
+did not answer HEALTH before the fixture's five-second hold ended. The parent
+failed its liveness assertion. Neither the HEALTH nor poll progress marker was
+printed. The saved frame during the hold was already blank; the test waited for
+the previous Notes view and did not reach its subsequent input/reopen assertions.
+Artifacts: `build/boot-harness-rs/desktop/20261106T044647313351Z/`.
+
+The baseline call path is `children/workspace.omg::apply_layout` -> `layout::layout` ->
+`level::place`, which retires surfaces and changes routes when grants change.
+`connections/presentation.omg::republish` then flushes those erasures before its
+synchronous scene transaction. Merely making its receive loop asynchronous would
+leave the old displayed scene and input geometry already invalidated.
+
+The implementation retains the controller request and previews proposed
+placements without mutating the World. `children/arrangement/arrangement.omg`
+sequences publication and settlement, separately from workspace selection; both
+share the existing transport and scene fence. Changed extents stage empty draws,
+not ERASE: erasing upstream names would prevent a late-COMMIT rollback. Accepted
+geometry uses the existing grant revocation and retained owed-erasure path before
+surface ranks can be reused. Offset-only moves translate retained content.
+
+The checked build passed all 11 packages and native code generation: 416/496
+load pages, unchanged 128-page stack, ELF SHA256
+`6d45dc91ae1a2d0a147efc5c581f14e281dc85ef398b99cb787cbf1e997fada4`.
+Build log: `build/omega-layout-build.log`. Earlier parser/type/tail-check failures
+were corrected; their diagnostic logs remain under `build/omega-layout-*`.
+
+The larger installed image exposed physical storage capacity before layout could
+run. The 8 MiB extent refused redb's 8,425,472-byte growth request. Adding 64 KiB
+allowed user creation and all three layout cases on fresh/cold boots, but failed
+the settings suite after offline compaction: the next growth needed 8,466,432
+bytes. Both failures were reproduced on in-memory copies, with unchanged source
+disks and successful cold reopen after supplying space. Evidence:
+`build/boot-harness-rs/desktop/20261106T053214929112Z/`,
+`build/boot-harness-rs/settings/20261106T054650937635Z/`, and
+`build/omega-layout-settings-capacity-probe.log`. The second failure was a storage
+SAVE FAILED before APPLY_LAYOUT, not an Omega layout acknowledgement failure.
+
+The lab now supplies a 16 MiB physical extent in host and guest, keeping the 4 MiB
+logical retained-record quota, provider memory and all deadlines unchanged.
+Compacted engine sizes are not necessarily powers of two; their next doubling
+needs transaction space beside allocator metadata. Known 4/8 MiB saved disks use
+the existing backed-up offline growth path. The 10 database-image host tests,
+actual offline-growth test for both sizes, storage-service x86-64 clippy and
+`cargo test --locked` in `source-rs/` pass. Both Rust workspaces' formatting,
+Python syntax, diff checks and source-layout (156 Omega / 153 Rust edges) pass.
+The storage lab's existing quota-report formatting was normalized as well.
+
+`omega_layout_test.py --mode complete|refuse|cancel` holds the parent's COMMIT and
+checks owner HEALTH, polling, old input geometry, exact dirty draft, retry and
+later launches at the accepted placement. Each includes cold reopen. Cancellation
+stops a captured sibling while Notes remains alive. `settings_test.py --profile`
+selects the Omega composition for its changed-layout cold-boot and user-isolation
+checks. Dedicated controller-departure and ancestor-invalidation scenarios remain
+required; the passing sibling cancellation does not prove either case. Keep the
+separate pointer-stress LOSS timeout open; it was not requalified here.
+
+Final-extent verification, all passing. Artifacts are beneath
+`build/boot-harness-rs/`:
+
+| Scenario | Artifact |
+| --- | --- |
+| complete | `desktop/20261106T055105648652Z` |
+| refuse | `desktop/20261106T055205698331Z` |
+| cancel | `desktop/20261106T055301287045Z` |
+| settings | `settings/20261106T055412589165Z` |
+| selection | `desktop/20261106T055548155465Z` |
+| selection-late | `desktop/20261106T055653091838Z` |
+| fallback | `desktop/20261106T055746638433Z` |
+| desktop | `desktop/20261106T055844733501Z` |
+| nested | `desktop/20261106T060042357283Z` |
+
+Each layout mode and each desktop regression includes cold reopen; settings
+covers three boots and independent user defaults. Logs are
+`build/omega-layout-<scenario>.log`. The local runner is
+`python build/check-omega-layout.py checks`, then `settings`, then `regressions`.
+Settings takes the newly created completion fixture, avoiding stale executable
+copies. Logs ending `-64k.log` describe the superseded physical extent and are
+not final-extent qualification.
+
+Next: extend the parent fixture to stop the controller while its layout request
+is held, and separately invalidate the ancestor grant. Check stale reply custody,
+old-view retirement, surviving siblings and subsequent valid work. Use ordinary
+owner/service IPC against the stock Omega matrix; do not add special production
+behavior for these tests.
 
 ### Retained workspace fallback
 
@@ -108,24 +200,6 @@ three new cases and four existing selection cases; then `fixtures`, then
 `regressions` for desktop, nesting, handoff STOP and three requester-replacement
 rounds per boot. Stop at the first failure and diagnose it before broadening.
 Keep the separate pointer-stress LOSS timeout open; no deadline or budget bump.
-
-Next live-desktop boundary after this slice: `children/workspace.omg::apply_layout`
-still changes the World and then waits in `connections/presentation.omg::republish`
-for every retained surface. A slow parent can therefore stall the matrix when
-the launcher applies settings. Start with a held-COMMIT settings regression using
-the existing parent probe. Retain the exact controller request, its incarnation
-and authority, and the proposed placements. Preview the new scene while keeping
-the currently displayed placement authoritative for input; publish local geometry
-and standing launch policy after acceptance. Handle refusal, controller departure,
-ancestor changes and late commit explicitly. Give arrangement its own operation
-and reading path, sharing the existing transport and scene fence rather than
-disguising it as an app selection. Verify current apps, later launches and cold
-settings persistence.
-The local draft `build/probe-omega-layout.py` is syntax-checked only and has not
-run. It uses the existing held-COMMIT parent, edits real launcher settings, clicks
-the old displayed placement during the hold, and checks draft retention and
-later launches at the accepted placement. Establish the
-baseline failure, then move the tested reproducer into the harness for that slice.
 
 ### Retained login handoff
 

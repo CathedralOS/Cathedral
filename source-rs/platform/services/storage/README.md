@@ -83,8 +83,10 @@ two scope words name subtrees it must stay inside: before dispatch the
 provider checks that every stamped scope is an ancestor of every object the
 request would touch, refusing an object outside the scope and one that does
 not exist alike, and refusing to replace or delete the scope object itself.
-Objects hold up to 256 KiB, so programs fit; a root has a 4 MiB retained-record
-allowance. The lab volume occupies 8 MiB, including engine transaction headroom.
+Objects hold up to 2 MiB, so programs fit; a root has a 4 MiB retained-record
+allowance. The lab volume occupies 16 MiB, leaving transaction space for redb
+to grow a compacted extent. Engine pages, allocator metadata and the volume
+envelope are separate from the logical retained-record charge.
 The desktop's root matrix holds both links and delegates
 subtrees of them to its children; the [objects lab](../../../distribution/lab/objects/README.md)
 hands them to two bare clients instead.

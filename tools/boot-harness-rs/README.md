@@ -51,10 +51,13 @@ QEMU still enforce their locks when opening the image.
 
 The desktop retains `build/boot-harness-rs/cathedral-storage.raw`. First launch
 builds the host formatter and creates the image; later launches preserve it.
-Existing files are never automatically reformatted. On launch, the old 4 MiB
-database extent is backed up and grown offline to 8 MiB, preserving every record,
-volume identity and outside guard bytes. This leaves transaction space for the
-2 MiB logical root allowance; installed code and saved nested snapshots count too.
+Existing files are never automatically reformatted. On launch, old 4 MiB or
+8 MiB database extents are backed up and grown offline to 16 MiB, preserving
+every record, volume identity and outside guard bytes. Compacted engine extents
+are not necessarily powers of two; redb doubles their usable pages and adds
+metadata on growth. The physical extent leaves transaction space for this while
+the independent logical root allowance remains 4 MiB; installed
+code and saved nested snapshots count too.
 The desktop's explicit readable-label migration also updates recognized stock
 launchers inside existing users. Old Notes/Colors gain labels while keeping
 their code and saved data. Customized/unrecognized programs remain untouched.
@@ -64,7 +67,7 @@ under each recognized stock user by path: a program (built from its package), a
 `folder`, a stock `matrix_config`, or a `copy` of an earlier entry's subtree,
 which the installer enumerates before writing so it may land inside its own
 origin; that is how the nested desktops are prebuilt five levels deep. Every
-build prints each trimmed program's size as a share of the 256 KiB object
+build prints each trimmed program's size as a share of the 2 MiB object
 limit, and a program over it is refused there and again at install, since the
 store would otherwise refuse its head as corrupt on first read.
 Program publication, stock-copy refresh and named additions run on a
@@ -127,6 +130,16 @@ boot, and a newly created user retaining the template defaults. `--recovery`
 instead runs two boots with
 one deliberately lost settings-save acknowledgement and verifies readback before
 retrying. Generated recovery profiles and disks remain inside the artifact directory.
+
+`--profile PATH/profile.json` selects another desktop composition for those same
+settings checks. Use a one-user fixture created with that composition, so existing
+user copies contain the executable under test. For retained Omega layout work,
+`python tools/boot-harness-rs/omega_layout_test.py --mode complete` holds the
+parent's COMMIT while checking owner HEALTH, input, the old displayed placement,
+the exact Notes draft and later launches. `--mode refuse` rejects that commit;
+`--mode cancel` stops a captured sibling during the hold and checks recovery.
+Each mode includes cold reopen; run the settings suite separately to verify a
+changed arrangement persists across reboot.
 
 `--render-race` instead enables test-only Notes gates during surface creation
 and bitmap publication. The driver observes each gate, changes layout through

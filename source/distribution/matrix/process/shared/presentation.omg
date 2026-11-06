@@ -4,12 +4,14 @@ module presentation;
 // Scene mutations wait behind publication; input polling does not.
 use runtime::server::main::Ticket;
 use runtime::connection::main::Frame;
+use world::layout::Proposal;
 
 public data Phase [copy] { case Begin; case Entry; case Commit; case Abort; case Finished; }
 public data Maintenance [copy] { case None; case Pointer; case Style; case Erase; }
+public data SceneOperation [copy] { case Content; case Selection; case Arrangement; }
 public data Transfer [copy] {
     maintenance: Maintenance;
-    selection: bool;
+    operation: SceneOperation;
     batch: bool;
     compact: bool;
     phase: Phase;
@@ -49,5 +51,13 @@ public data Switch [copy] {
     next_incarnation: u64;
     next_epoch: u64;
     rank: u64 [0..=128];
+    restoring: bool;
+}
+// Distribution policy owns the standing app placements. The World proposal
+// captures authority and predicts the scene without applying those placements.
+public data Arrangement [copy] {
+    proposal: Proposal;
+    remember: u64;
+    rank: u64 [0..=320];
     restoring: bool;
 }

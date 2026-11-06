@@ -1,4 +1,5 @@
 module forward;
+use shared::presentation::SceneOperation;
 use connections::responses;
 use shared::report;
 // Requests over the children's owner controls, one pending per child.
@@ -253,7 +254,7 @@ public machine survey(gate: &Gate, context: &mut State, now: u64) -> u64 reaches
 // images and cursor updates cannot, so they need not serialize a loss survey.
 machine changing(context: &State) -> bool {
     context.frame_count != 0u64 || context.launch.phase != 0u64
-        || (context.presentation_work.active && context.presentation_work.selection)
+        || (context.presentation_work.active && context.presentation_work.operation != SceneOperation::Content)
         || context.startup.picker_pending || context.startup.background_pending
 }
 machine member(context: &State, slot: u64 [0..=4]) -> u64 {
@@ -270,7 +271,7 @@ machine same_members(context: &State, slot: u64) -> bool requires slot <= 5u64 {
 }
 machine survey_cause(context: &State) -> u64 {
     transition {
-        context.presentation_work.active && context.presentation_work.selection -> (1u64)
+        context.presentation_work.active && context.presentation_work.operation != SceneOperation::Content -> (1u64)
         context.frame_count != 0u64 -> (2u64)
         context.surveying -> (3u64)
         busy(context) -> (4u64)

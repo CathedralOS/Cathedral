@@ -34,7 +34,8 @@ from its words. Wire owner: `source-rs/platform/libraries/matrix/world/`.
   named surfaces on those ranks, and its paint, image, cursor and erase updates
   are clipped to its view and translated for the parent. Retained updates
   replay under new geometry; retired surfaces owe the parent an erasure. A child
-  keeps at most sixteen ranks so four children fit on a process stack.
+  has a ledger of up to 64 ranks; its owner-granted allowance bounds what it
+  may allocate.
 - [demand.omg](demand.omg) composes render demand: the parent's demand, each
   child's visibility and one pending owner-requested frame decide whether a
   child's poll asks for frames, and the frame handshake runs ticket by ticket.
@@ -59,7 +60,11 @@ from its words. Wire owner: `source-rs/platform/libraries/matrix/world/`.
 - [layout.omg](layout.omg) is the owner-chosen layout controller: one child
   may move every live view under a single validated arrangement, and the
   owner's placement snapshot reissues the controller's captured view, surface
-  range and grant to its replacement. It is never a child-visible capability.
+  range and grant to its replacement. A prepared arrangement captures authority,
+  parent grant and child bindings without changing them; preview translates
+  retained content or stages empty draws, and commit revalidates before applying
+  geometry. The caller owns publication and rollback. These owner-held records
+  are never child-visible capabilities.
 - [management.omg](management.omg) delegates one sibling slot to a manager:
   a query mints a ticket for the exact task there, and only that ticket on
   that connection authorizes its termination.
@@ -82,5 +87,5 @@ attenuation. It depends only on the reference protocol contracts and performs no
 kernel calls. The [independent matrix](../../../../distribution/lab/matrix-composition/README.md)
 is its first consumer.
 
-The record is sized for the reference kernel's default eight-page process
-stack; the stock matrix declares a larger one in its native package.
+Consumers must account for the World record in their stack requirements;
+the stock matrix declares its stack in the native package.

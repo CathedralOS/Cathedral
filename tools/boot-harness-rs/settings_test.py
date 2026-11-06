@@ -211,13 +211,16 @@ def exercise(stream, output, serial, boot, recovery=False, render_race=False):
         scan(lambda d: pixel(d, app_x + 5, margin + 10) in ('315ca8', 'd18b35'), 'future launch follows final layout')
 
 
-def run(source, recovery=False, render_race=False):
+def run(source, recovery=False, render_race=False, source_profile=None):
     here = Path(__file__).resolve().parent
     output = harness.BUILD / 'settings' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     output.mkdir(parents=True)
-    profile = harness.REPO / 'source-rs/distribution/profile.json'
+    profile = source_profile or harness.REPO / 'source-rs/distribution/profile.json'
     esp = harness.BUILD / 'interactive/esp'
     build = [sys.executable, str(here / 'run.py'), '--release', '--build-only']
+    if source_profile is not None and not (recovery or render_race):
+        build += ['--profile', str(profile)]
+        esp = harness.BUILD / (profile.stem + '-interactive/esp')
     if recovery or render_race:
         composition = json.loads(profile.read_text(encoding='utf-8'))
         startup = composition['startup']
@@ -265,8 +268,9 @@ def run(source, recovery=False, render_race=False):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('image', type=Path, help='one-user desktop fixture, opened only through copies')
+    parser.add_argument('--profile', type=Path, help='desktop composition, including an Omega matrix profile')
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('--render-race', action='store_true', help='resize Notes during creation and bitmap publication')
     mode.add_argument('--recovery', action='store_true', help='lose one committed settings-save reply, then reconcile')
     args = parser.parse_args()
-    run(args.image, args.recovery, args.render_race)
+    run(args.image, args.recovery, args.render_race, args.profile)

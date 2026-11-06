@@ -1,0 +1,140 @@
+module arrangement::publication;
+// Publish a proposal or restore the old scene after a late COMMIT cancellation.
+// Empty draws preserve upstream names until local acceptance; releasing names
+// here would make restoration impossible. Transport custody stays in backing.
+use shared::state::State;
+use shared::presentation::Phase;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use protocol::matrix;
+use world::surfaces::Retained;
+use world::layout;
+use world::level;
+use world::geometry;
+use connections::transfers::backing;
+use connections::presentation;
+use arrangement::arrangement;
+
+public machine receive(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
+    transition backing::ready(context) { true -> block received(gate, context) _ -> done() }
+    machine received(gate: &Gate, context: &mut State) reaches Kernel {
+        let status: u64 = backing::take(context);
+        context.presentation_work.submitted = false;
+        block answered(gate, context, status);
+    }
+}
+machine answered(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
+    transition context.presentation_work.phase {
+        Phase::Begin -> block begun(gate, context, status)
+        Phase::Entry -> entry(context, status)
+        Phase::Commit -> committed(gate, context, status)
+        Phase::Abort -> block aborted(gate, context, status)
+        _ -> block lost(gate, context, kernel::IO_ERROR)
+    }
+    machine begun(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
+        transition {
+            status == 0u64 -> entering(context)
+            context.arrangement_work.restoring -> block lost(gate, context, status)
+            _ -> completed(context, status)
+        }
+    }
+    machine entering(context: &mut State) { context.presentation_work.phase = Phase::Entry; }
+    machine entry(context: &mut State, status: u64) {
+        transition status == 0u64 && context.arrangement_work.rank < 320u64 {
+            true -> advanced(context)
+            _ -> aborting(context, status)
+        }
+    }
+    machine advanced(context: &mut State) requires context.arrangement_work.rank < 320u64 {
+        context.arrangement_work.rank = context.arrangement_work.rank + 1u64;
+    }
+    machine committed(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
+        transition {
+            status != 0u64 -> aborting(context, status)
+            context.arrangement_work.restoring -> restored(context)
+            arrangement::arrangement::current(context) -> completed(context, 0u64)
+            context.world.parent.epoch != context.presentation_work.parent_epoch -> completed(context, kernel::DENIED)
+            _ -> restoring(context)
+        }
+    }
+    machine restored(context: &mut State) {
+        completed(context, kernel::DENIED);
+    }
+    machine restoring(context: &mut State) {
+        context.revision = ((context.revision as u64 in Wrapping) + 1u64) as u64;
+        context.presentation_work.upstream_revision = context.revision;
+        context.presentation_work.phase = Phase::Begin;
+        context.arrangement_work.rank = 0u64;
+        context.arrangement_work.restoring = true;
+    }
+}
+machine aborted(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
+    transition {
+        context.world.parent.epoch != context.presentation_work.parent_epoch -> completed(context, kernel::DENIED)
+        status == 0u64 && !context.arrangement_work.restoring -> completed(context, context.presentation_work.status)
+        _ -> block lost(gate, context, kernel::IO_ERROR)
+    }
+}
+public machine invalidated(context: &mut State) {
+    transition context.presentation_work.phase == Phase::Begin {
+        true -> completed(context, kernel::DENIED)
+        _ -> aborting(context, kernel::DENIED)
+    }
+}
+public machine entries(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
+    let rank: u64 = context.arrangement_work.rank;
+    transition rank < 320u64 {
+        true -> block previewed(gate, context, rank)
+        _ -> block committing(gate, context)
+    }
+    machine previewed(gate: &Gate, context: &mut State, rank: u64 [0..=319]) reaches Kernel {
+        let retained: Retained = preview(context, rank);
+        transition retained {
+            Retained::Packet { words } -> block sending(gate, context, words)
+            Retained::Nothing -> block skipped(gate, context, rank)
+        }
+    }
+    machine sending(gate: &Gate, context: &mut State, words: [u64; 8]) reaches Kernel {
+        let object: u64 = presentation::retained_image(context, words);
+        block submit(gate, context, words, object);
+    }
+    machine skipped(gate: &Gate, context: &mut State, rank: u64 [0..=319]) reaches Kernel {
+        context.arrangement_work.rank = rank + 1u64;
+        transition { _ -> block entries(gate, context) }
+    }
+    machine committing(gate: &Gate, context: &mut State) reaches Kernel {
+        context.presentation_work.phase = Phase::Commit;
+        block control(gate, context, PRESENT_COMMIT);
+    }
+}
+machine preview(context: &State, rank: u64 [0..=319]) -> Retained {
+    layout::preview(&context.world, &context.arrangement_work.proposal, rank / 64u64, rank % 64u64, context.arrangement_work.restoring)
+}
+public machine control(gate: &Gate, context: &mut State, op: u64) reaches Kernel blocks invokes Kernel {
+    let words: [u64; 8] = [op,context.presentation_work.parent_epoch,context.presentation_work.upstream_revision,0u64,0u64,0u64,0u64,0u64];
+    block submit(gate, context, words, 0u64);
+}
+machine submit(gate: &Gate, context: &mut State, words: [u64; 8], object: u64) reaches Kernel {
+    let status: u64 = block backing::submit(gate, context, words, object);
+    transition {
+        status == 0u64 -> submitted(context)
+        status == kernel::WOULD_BLOCK -> done()
+        _ -> block lost(gate, context, status)
+    }
+    machine submitted(context: &mut State) { context.presentation_work.submitted = true; }
+}
+machine lost(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
+    block backing::close(gate, context);
+    level::inherit(&mut context.world, geometry::no_grant());
+    completed(context, status);
+}
+machine aborting(context: &mut State, status: u64) { context.presentation_work.status = status; context.presentation_work.phase = Phase::Abort; }
+machine completed(context: &mut State, status: u64) {
+    // A terminal result can also abandon a submitted request on a lost transport.
+    // No reply remains to receive before finishing the arrangement.
+    context.presentation_work.submitted = false;
+    context.presentation_work.status = status;
+    context.presentation_work.phase = Phase::Finished;
+}
+machine done() {}

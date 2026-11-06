@@ -92,8 +92,15 @@ The storage, the parent and the display.
   under one transaction; the compact rectangles word ([rects.omg](connections/rects.omg))
   is such a batch of one or two paints. Images stay retained behind their
   backing, one per compositor tile, until it is painted over or erased; owed
-  erasures flush between turns. A scene switch and a republish after the
-  geometry changed replay retained surfaces in one transaction.
+  erasures flush between turns. Workspace selection and layout application use
+  the same retained transport and scene fence.
+- [arrangement.omg](children/arrangement/arrangement.omg): the stock layout policy
+  proposes placements, then the World captures their live bindings. Publication
+  keeps the old geometry and content authoritative while waiting for the parent.
+  Refusal preserves them; a late accepted cancellation restores the old scene.
+  Settlement installs accepted geometry and standing launch policy, then starts
+  ordinary retained erasures before ranks can be reused. A changed extent
+  invalidates surface names as before; its app redraws under the new grant.
 - [storage/storage.omg](connections/storage/storage.omg): this matrix's storage. At the root the provider
   links the composition supplied connect when the first grant or request
   needs them; under a parent the broker's storage connection is the one

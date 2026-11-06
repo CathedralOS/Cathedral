@@ -8,6 +8,7 @@ use shared::presentation::Transfer;
 use shared::presentation::Switch;
 use shared::presentation::SelectionOrigin;
 use shared::presentation::Phase;
+use shared::presentation::SceneOperation;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;
@@ -69,7 +70,7 @@ machine started(context: &mut State, requester: u64 [0..=4], previous: u64 [0..=
     let mut change: Switch;
     context.revision = ((context.revision as u64 in Wrapping) + 1u64) as u64;
     work.active = true;
-    work.selection = true;
+    work.operation = SceneOperation::Selection;
     work.phase = Phase::Begin;
     work.slot = requester;
     work.ticket = ticket;
@@ -95,7 +96,7 @@ machine hold(context: &mut State, slot: u64 [0..=4], ticket: Ticket) -> u64 {
 }
 public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
     transition {
-        !context.presentation_work.active || !context.presentation_work.selection -> done()
+        !context.presentation_work.active || context.presentation_work.operation != SceneOperation::Selection -> done()
         reply_pending(context) -> block draining(gate, context)
         context.presentation_work.submitted -> block receive(gate, context)
         _ -> block advance(gate, context)
@@ -114,7 +115,7 @@ machine reply_pending(context: &State) -> bool {
 // Setup-error and shutdown callers explicitly drain retirement without the
 // service loop. Pump the same transport and selection, only for their own work.
 public machine drain_retirement(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel blocks invokes Kernel {
-    transition context.presentation_work.active && context.presentation_work.selection {
+    transition context.presentation_work.active && (context.presentation_work.operation == SceneOperation::Selection) {
         true -> block owned(gate, context, slot)
         _ -> done()
     }

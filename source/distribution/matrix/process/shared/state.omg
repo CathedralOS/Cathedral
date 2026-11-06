@@ -163,6 +163,7 @@ public data State {
     funding_work: [funding::Work; 6];
     presentation_work: presentation::Transfer;
     selection_work: presentation::Switch;
+    arrangement_work: presentation::Arrangement;
     next_child: u64 [0..=4];
     retire_after_present: [bool; 5];
     retirements: [Retiring; 5];

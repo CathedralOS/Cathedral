@@ -454,97 +454,12 @@ machine send_packet(gate: &Gate, context: &mut State, packet: [u64; 8], payload:
         reply[0]
     }
 }
-// After the children's geometry changed: owed erasures first, then every
-// child's retained surfaces under the new placement in one transaction.
-public machine republish(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks invokes Kernel {
-    let flushed: u64 = block flush(gate, context);
-    context.revision = ((context.revision as u64 in Wrapping) + 1u64) as u64;
-    let begun: u64 = block transact(gate, context, PRESENT_BEGIN, display::MATRIX_BEGIN);
-    transition begun == 0u64 {
-        true -> block every(gate, context, 0u64)
-        _ -> (begun)
-    }
-    machine every(gate: &Gate, context: &mut State, slot: u64) -> u64 reaches Kernel requires slot <= 5u64 {
-        transition slot < 5u64 {
-            true -> block one(gate, context, slot)
-            _ -> block committing(gate, context)
-        }
-    }
-    machine one(gate: &Gate, context: &mut State, slot: u64 [0..=4]) -> u64 reaches Kernel {
-        let staged: u64 = block replay_slot(gate, context, slot, 0u64);
-        transition staged == 0u64 {
-            true -> block every(gate, context, slot + 1u64)
-            _ -> block aborted(gate, context, staged)
-        }
-    }
-}
-machine committing(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
-    let committed: u64 = block transact(gate, context, PRESENT_COMMIT, display::MATRIX_COMMIT);
-    transition committed == 0u64 {
-        true -> (0u64)
-        _ -> block aborted(gate, context, committed)
-    }
-}
-// An abort that fails leaves the backing's state unknown: that is the result.
-machine aborted(gate: &Gate, context: &mut State, status: u64) -> u64 reaches Kernel {
-    let abort: u64 = block transact(gate, context, PRESENT_ABORT, display::MATRIX_ABORT);
-    transition abort == 0u64 {
-        true -> (status)
-        _ -> (abort)
-    }
-}
-// Every retained surface of one slot under the World's current geometry and
-// visibility, with the retained image behind an image word.
-machine replay_slot(gate: &Gate, context: &mut State, slot: u64 [0..=4], rank: u64) -> u64 reaches Kernel requires rank <= 64u64 {
-    transition rank < 64u64 {
-        true -> block ranked(gate, context, slot, rank)
-        _ -> (0u64)
-    }
-    machine ranked(gate: &Gate, context: &mut State, slot: u64 [0..=4], rank: u64) -> u64 reaches Kernel requires rank < 64u64 {
-        let retained: Retained = surfaces::replay(&mut context.world, slot, rank);
-        transition retained {
-            Retained::Packet { words } -> block sent(gate, context, slot, rank, words)
-            Retained::Nothing -> block replay_slot(gate, context, slot, rank + 1u64)
-        }
-    }
-    machine sent(gate: &Gate, context: &mut State, slot: u64 [0..=4], rank: u64, words: [u64; 8]) -> u64 reaches Kernel requires rank < 64u64 {
-        let image: u64 = retained_image(context, words);
-        let status: u64 = block send_packet(gate, context, words, image);
-        transition status == 0u64 {
-            true -> block replay_slot(gate, context, slot, rank + 1u64)
-            _ -> (status)
-        }
-    }
-}
 public machine retained_image(context: &State, words: [u64; 8]) -> u64 {
     let index: u64 = image_index(context, words[2], 0u64);
     transition words[0] == SURFACE_IMAGE && index < 64u64 {
         true -> (context.images[index].object)
         _ -> (0u64)
     }
-}
-// Open, commit or abort this matrix's transaction: the parent's batch word
-// under this matrix's view and revision, or the compositor's under its revision.
-machine transact(gate: &Gate, context: &mut State, word: u64, command: u64) -> u64 reaches Kernel {
-    let local: [u64; 6] = control_words(command, context.revision);
-    transition context.has_parent {
-        true -> block batched(gate, context, word)
-        _ -> block scene::command(gate, context, local)
-    }
-    machine batched(gate: &Gate, context: &mut State, word: u64) -> u64 reaches Kernel {
-        let mut request: [u64; 8];
-        request[0] = word;
-        request[1] = context.world.parent.epoch;
-        request[2] = context.revision;
-        let reply: [u64; 8] = block upstream::exchange(gate, context, request);
-        reply[0]
-    }
-}
-machine control_words(op: u64, revision: u64) -> [u64; 6] {
-    let mut words: [u64; 6];
-    words[0] = op;
-    words[1] = revision;
-    words
 }
 // A batch bound to a departed occupant or an older epoch is forgotten, with
 // the payloads it held.

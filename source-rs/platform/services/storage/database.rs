@@ -14,7 +14,9 @@ pub fn open() -> cathedral_storage_engine::redb::Database {
     let db = cathedral_storage_engine::open(
         disk,
         4096,
-        8 * 1024 * 1024,
+        // Match the lab image: transaction space beyond the compacted engine.
+        // This does not change the root quota or the provider's page funding.
+        16 * 1024 * 1024,
         cache_bytes(crate::HEAP.stats().capacity),
     )
     .unwrap();

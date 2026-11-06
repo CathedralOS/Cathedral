@@ -12,6 +12,7 @@ use transfers::transaction;
 use transfers::backing;
 use transfers::maintenance;
 use shared::presentation::Maintenance;
+use shared::presentation::SceneOperation;
 use presentation;
 
 public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
@@ -20,7 +21,7 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
     transition child && !context.presentation_work.active { true -> maintenance::pointer(context) _ -> done() }
 }
 machine advance(gate: &Gate, context: &mut State) reaches Kernel {
-    transition context.presentation_work.selection {
+    transition context.presentation_work.operation != SceneOperation::Content {
         true -> done()
         _ -> block rendering(gate, context)
     }
