@@ -6,7 +6,7 @@ use runtime::server::main::Ticket;
 use runtime::connection::main::Frame;
 use world::layout::Proposal;
 
-public data Phase [copy] { case Begin; case Entry; case Commit; case Abort; case Finished; }
+public data Phase [copy] { case Begin; case Entry; case Commit; case Abort; case Finished; case Releasing; }
 public data Maintenance [copy] { case None; case Pointer; case Style; case Erase; }
 public data SceneOperation [copy] { case Content; case Selection; case Arrangement; }
 public data Transfer [copy] {
@@ -16,6 +16,10 @@ public data Transfer [copy] {
     compact: bool;
     phase: Phase;
     index: u64 [0..=16];
+    // Replaced or discarded payloads remain owned until the completion reply.
+    // One continuation step releases at most one; the scene stays fenced.
+    releases: [u64; 16];
+    release_index: u64 [0..=16];
     local_revision: u64;
     upstream_revision: u64;
     status: u64;

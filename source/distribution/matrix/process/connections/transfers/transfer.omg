@@ -9,6 +9,7 @@ use runtime::server::deferred;
 use world::level;
 use transfers::forwarded;
 use transfers::transaction;
+use transfers::retirement;
 use transfers::backing;
 use transfers::maintenance;
 use shared::presentation::Maintenance;
@@ -47,7 +48,8 @@ public machine current(context: &State) -> bool {
         && (context.has_parent || context.has_scene)
 }
 // Shutdown abandons the link, never reuses it for another publication. Batch
-// payloads remain in their slot and are released by ordinary child reclamation.
+// payloads still staged remain in their slot for child reclamation. Detached
+// predecessors/discards belong to the transfer and must be drained here.
 public machine discard(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
     transition context.presentation_work.active {
         true -> block abandoned(gate, context)
@@ -56,6 +58,7 @@ public machine discard(gate: &Gate, context: &mut State) reaches Kernel blocks i
     machine abandoned(gate: &Gate, context: &mut State) reaches Kernel {
         block backing::close(gate, context);
         block presentation::release(gate, context.presentation_work.object);
+        block retirement::drain(gate, context);
         let empty: Transfer;
         context.presentation_work = empty;
     }

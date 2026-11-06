@@ -365,13 +365,20 @@ in the saved colour.
 Forwarded images and presentation batches resume across turns through
 [transfers/transfer.omg](connections/transfers/transfer.omg). Images retain one
 sealed backing; [transaction.omg](connections/transfers/transaction.omg) advances
-BEGIN, each translated entry and COMMIT, or ABORT after a rejection. The original
-child ticket, child view, parent epoch and transaction revision survive each wait.
+BEGIN, each translated entry and COMMIT, or ABORT after a rejection. A successful
+commit changes the local scene without kernel calls, then retains the replaced
+backings in [retirement.omg](connections/transfers/retirement.omg). That cleanup
+releases at most one handle per continuation step; the ticket and scene barrier
+remain held until it finishes. Compact/stale rejection moves its staged payloads
+into the same cleanup. Shutdown drains any remaining detached custody. Individual
+memory-release syscalls still park, and other synchronous release paths remain.
+The original child ticket, child view, parent epoch and transaction revision
+survive each wait.
 Input polling, service acquisition, storage and owner HEALTH remain independent.
 Scene mutations and child retirement wait behind publication; failed handshakes
 retain their cleanup request. Layout, selection, retirement fallback and
-child-requested launches advance through retained work. Owner-requested launches,
-explicit setup/shutdown and some final resource releases still contain waits.
+child-requested and owner-requested launches advance through retained work.
+Explicit setup/shutdown and some final resource releases still contain waits.
 See TASKS_RUST.md for verified scope.
 
 The root display uses [scene.omg](connections/scene.omg) as its sole receiver.

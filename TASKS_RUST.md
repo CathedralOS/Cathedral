@@ -9,15 +9,18 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Current work: bound the remaining matrix presentation cleanup batches across
-loop turns, starting with retained image/payload releases. Each individual
-memory-release syscall still parks its caller; do not hide that behind a wrapper.
+Current work: finish qualification of retained batch-image cleanup, then measure
+remaining deep close latency. Checked review, native emission, held commit and
+held image fresh/cold checks pass; display, late selection cancellation and the
+nested stress soak are running. Each memory-release syscall still parks; this
+change bounds the batch, not the syscall.
 Retained construction failure cleanup is pushed at `10c17f18`. Shared-runtime
 admission, six matrix refusal/retry cycles, owner-read and child-launch fresh/cold
 checks, and the Omega root/user desktop all pass. The combined depth-three
 pointer-stress soak also passes three fresh and two cold cycles; the earlier
 close failure did not reproduce, but deep app closes still take seconds.
-Latest desktop handoff: [retained construction failure cleanup](#retained-construction-failure-cleanup),
+Latest desktop handoff: [retained presentation cleanup](#retained-presentation-cleanup),
+following [retained construction failure cleanup](#retained-construction-failure-cleanup),
 following [retained owner launches](#retained-owner-launches) at `ebe3526e`,
 following [layout grant invalidation](#layout-grant-invalidation) at `28e6adfd`,
 following [retained layout application](#retained-layout-application) at `6b7deef5`,
@@ -36,6 +39,45 @@ IDs outside main's ancestry, but their content is already squash-merged as
 `tools/boot-harness/` and the boot qualification record is identical. All 22 boot
 harness host tests passed during review. Do not merge that branch again based
 only on its unmerged commit IDs; no fresh native boot was run for this check.
+
+### Retained presentation cleanup
+
+Implemented after `c9b0ad4e`: a bounded release list in the existing scene transfer.
+`presentation::commit_batch` changes the local scene and transfers obsolete image
+custody without kernel calls. `connections/transfers/retirement.omg` releases at
+most one backing per continuation step (the event loop calls the transfer step
+three times), preserving the scene barrier and original reply ticket. Rejected
+compact/stale batches detach their payloads into the same list; shutdown drains
+it before clearing the transfer. Epoch invalidation cannot turn cleanup into a
+new commit or a successful stale reply. Plain refused batches remain staged for
+retry, as before.
+
+Checked compiler review and native emission passed, followed by:
+
+- `python tools/boot-harness-rs/omega_parent_batch_test.py`: held COMMIT,
+  responsive HEALTH/input, rejected commit/abort, replacement and saved state on
+  fresh and cold boots. Artifact `build/boot-harness-rs/desktop/20261106T185837407139Z/`;
+  log `build/retained-image-batch.log`.
+- `python tools/boot-harness-rs/omega_parent_image_test.py`: held image, exact
+  input, close during saved repaint and cold reopen. Artifact
+  `build/boot-harness-rs/desktop/20261106T190859540148Z/`;
+  log `build/retained-image-image.log`.
+
+Source-layout and diff checks pass. Root display waits, late selection
+cancellation and the combined depth-three pointer-stress soak remain in progress
+through `python build/check-retained-image.py`; logs are
+`build/retained-image-{display,selection,stress}.log`. No passes claimed for these yet.
+
+Immediate explicit batch abort/prune, lifecycle withdrawal and shutdown still
+have synchronous cleanup. The 64-image release loop is shutdown-only.
+
+Baseline timing audit, before this change: all 60 paired loss questions from
+`20261106T184722314214Z/{boot-1-serial.log,serial.log}` returned success, with no
+unmatched questions. Maximum send/reply intervals were 616.084 ms fresh and
+487.025 ms cold. Those are taskbar/subtree close surveys: the separate slow
+`app_close` stage clicks Notes' own close button, which exits through its app
+input handler. Do not attribute that stage's 4-10 second elapsed time to LOSS,
+or claim a cleanup speedup without measuring the input/exit/scene path.
 
 ### Retained construction failure cleanup
 

@@ -18,6 +18,7 @@ use world::level;
 use world::geometry;
 use transfers::backing;
 use transfers::transfer;
+use transfers::retirement;
 use presentation;
 use responses;
 
@@ -53,6 +54,7 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
     transition {
         !context.presentation_work.active -> done()
         context.answers[context.presentation_work.slot].active -> block draining(gate, context)
+        context.presentation_work.phase == Phase::Releasing -> block releasing(gate, context)
         context.presentation_work.submitted -> block receive(gate, context)
         _ -> block next(gate, context)
     }
@@ -181,38 +183,47 @@ machine finished(context: &mut State) { context.presentation_work.phase = Phase:
 machine finish(gate: &Gate, context: &mut State) reaches Kernel {
     let valid: bool = transfer::current(context);
     transition valid && context.presentation_work.status == 0u64 {
-        true -> block commit(gate, context)
+        true -> commit(context)
         _ -> block refused(gate, context, valid)
     }
-    machine commit(gate: &Gate, context: &mut State) reaches Kernel {
+    machine commit(context: &mut State) {
         let work: Transfer = context.presentation_work;
-        let answer: [u64; 8] = block presentation::commit_batch(gate, context, work.slot, work.ticket.incarnation, work.local_revision);
-        block reply(gate, context, answer[0]);
+        let answer: [u64; 8] = presentation::commit_batch(context, work.slot, work.ticket.incarnation, work.local_revision);
+        retiring(context, answer[0]);
     }
     machine refused(gate: &Gate, context: &mut State, valid: bool) reaches Kernel {
         transition context.presentation_work.compact || !valid {
-            true -> block discarded(gate, context, valid)
+            true -> discarded(context, valid)
             _ -> block rejected(gate, context, valid)
         }
     }
-    machine discarded(gate: &Gate, context: &mut State, valid: bool) reaches Kernel {
+    machine discarded(context: &mut State, valid: bool) {
         let slot: u64 [0..=4] = context.presentation_work.slot;
         let revision: u64 = context.presentation_work.local_revision;
+        retirement::discard_batch(context, slot, revision, !valid);
         transition valid {
-            true -> block compact_discarded(gate, context, slot, revision)
-            _ -> block stale_discarded(gate, context, slot)
+            true -> retiring(context, context.presentation_work.status)
+            _ -> retiring(context, kernel::DENIED)
         }
-    }
-    machine compact_discarded(gate: &Gate, context: &mut State, slot: u64 [0..=4], revision: u64) reaches Kernel {
-        block presentation::discard_batch(gate, context, slot, revision);
-        block rejected(gate, context, true);
-    }
-    machine stale_discarded(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
-        block presentation::release_slot(gate, context, slot);
-        block rejected(gate, context, false);
     }
     machine rejected(gate: &Gate, context: &mut State, valid: bool) reaches Kernel {
         transition valid { true -> block reply(gate, context, context.presentation_work.status) _ -> block reply(gate, context, kernel::DENIED) }
+    }
+}
+// Commit/discard changes local bookkeeping once. Keep the scene barrier and
+// original ticket through retirement; an epoch change cannot revive that ticket.
+machine retiring(context: &mut State, status: u64) {
+    context.presentation_work.status = status;
+    context.presentation_work.phase = Phase::Releasing;
+}
+machine releasing(gate: &Gate, context: &mut State) reaches Kernel {
+    let complete: bool = block retirement::step(gate, context);
+    transition complete { true -> block released(gate, context) _ -> done() }
+    machine released(gate: &Gate, context: &mut State) reaches Kernel {
+        transition transfer::current(context) {
+            true -> block reply(gate, context, context.presentation_work.status)
+            _ -> block reply(gate, context, kernel::DENIED)
+        }
     }
 }
 machine reply(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
