@@ -9,11 +9,12 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Current work: finish qualification of retained batch-image cleanup, then measure
-remaining deep close latency. Checked review, native emission, held commit and
-held image fresh/cold checks pass; display, late selection cancellation and the
-nested stress soak are running. Each memory-release syscall still parks; this
-change bounds the batch, not the syscall.
+Current work: promote the Omega stock matrix onto the normal F5 desktop path,
+sharing the qualified composition with the launcher and checking everyday desktop
+variants before switching the default. Retained batch-image cleanup is pushed at
+`931bfa71`; all its listed regressions now pass. Each memory-release syscall still
+parks; this change bounds the batch, not the syscall. Deep app-close latency
+remains a separate input/exit/scene measurement target.
 Retained construction failure cleanup is pushed at `10c17f18`. Shared-runtime
 admission, six matrix refusal/retry cycles, owner-read and child-launch fresh/cold
 checks, and the Omega root/user desktop all pass. The combined depth-three
@@ -63,10 +64,26 @@ Checked compiler review and native emission passed, followed by:
   `build/boot-harness-rs/desktop/20261106T190859540148Z/`;
   log `build/retained-image-image.log`.
 
-Source-layout and diff checks pass. Root display waits, late selection
-cancellation and the combined depth-three pointer-stress soak remain in progress
-through `python build/check-retained-image.py`; logs are
-`build/retained-image-{display,selection,stress}.log`. No passes claimed for these yet.
+The remaining checks finished successfully through
+`python build/check-retained-image.py`:
+
+- Root display image/commit/rectangle/pointer holds, refusal/abort, hardware
+  input and exact Notes/Colors on fresh/cold boots:
+  `build/boot-harness-rs/desktop/20261106T190959994989Z/`.
+- Late selection cancellation on fresh/cold boots: LOSS busy, STOP settled,
+  restored scene, preserved draft and slot reuse:
+  `build/boot-harness-rs/desktop/20261106T191141273224Z/`.
+- Combined depth-three pointer stress: three fresh and two cold soak cycles,
+  exact saved text and bounded accounts:
+  `build/boot-harness-rs/desktop/20261106T191232189044Z/`.
+  Every cycle returned to root `(8, 138, 646, 15)`, provider floor 509 pages/845
+  frames and shell `[2, 2, 128, 0]`, with no recorded failures. The matrix image
+  is now 420/496 load pages. Observed app closes were 2.38-6.03 seconds and
+  subtree teardown 1.22-1.30 seconds; these are host upper bounds, not a
+  controlled speed comparison or proof of the source of the remaining delay.
+
+Logs: `build/retained-image-{display,selection,stress}.log`. Source-layout and
+diff checks pass. This is the listed scope, not every F5 variant requalified.
 
 Immediate explicit batch abort/prune, lifecycle withdrawal and shutdown still
 have synchronous cleanup. The 64-image release loop is shutdown-only.
