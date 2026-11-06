@@ -722,7 +722,8 @@ if __name__ == '__main__':
     parser.add_argument('--launch-async', choices=('complete', 'revoke', 'stop', 'bind', 'place'), help='ordinary nested launch delay, cancellation and rollback fixture')
     parser.add_argument('--launcher-async', choices=('recover', 'revoke', 'stop'), help='nested ticketed launcher read, input and cancellation fixture')
     parser.add_argument('--rust-chooser', action='store_true', help='exercise the Rust probe picker and launcher on shared service connections')
-    parser.add_argument('--profile', type=Path, help='test an alternative composition before changing normal F5')
+    parser.add_argument('--profile', type=Path, help='test an explicit alternative composition')
+    parser.add_argument('--omega-desktop', action='store_true', help='test the shared Omega matrix composition used by the ordinary launcher')
     parser.add_argument('--timeout', type=float, default=180)
     parser.add_argument('--accel', choices=('tcg', 'whpx'), default='tcg', help='QEMU accelerator: tcg emulates the CPU; whpx runs the guest under the Windows hypervisor, with hardware paging and timing (default: tcg)')
     parser.add_argument('--relative-pointer', action='store_true', help='disable VM port and verify PS/2 fallback')
@@ -747,6 +748,13 @@ if __name__ == '__main__':
     parser.add_argument('--pointer-stress', action='store_true', help='move the pointer continuously while waiting for nested startup and scenes')
     parser.add_argument('--interaction-delay', action='store_true', help='hold upstream polls, images and commits past the old timeout; requires --nested-desktop')
     args = parser.parse_args()
+    if args.omega_desktop:
+        if args.profile:
+            parser.error('--omega-desktop and --profile select different compositions')
+        from desktop_composition import compose
+        selected = harness.BUILD / 'omega-desktop-profiles' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
+        args.profile = compose(selected)
+
     if args.timeout <= 0:
         parser.error('timeout must be positive')
     if args.latency and (args.service_imports or args.nested or args.deep or args.nested_desktop):

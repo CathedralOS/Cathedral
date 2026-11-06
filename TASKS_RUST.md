@@ -41,6 +41,37 @@ IDs outside main's ancestry, but their content is already squash-merged as
 harness host tests passed during review. Do not merge that branch again based
 only on its unmerged commit IDs; no fresh native boot was run for this check.
 
+### Shared Omega desktop launcher (qualification)
+
+`tools/boot-harness-rs/desktop_composition.py` now owns the previously test-local
+Omega composition. `omega_desktop_test.compose` remains its compatibility import
+for fixtures. Both full-Omega and mixed-host outputs matched the previous
+composer exactly. The ordinary launcher and desktop harness accept
+`--omega-desktop`; they share root, user-template and nested stock image selection.
+Other providers and grants are preserved. Smoke, kernel-only and custom profiles
+reject the launcher flag before building. Normal F5 has **not** switched yet.
+
+Qualification completed:
+
+- Six composition/CLI host tests and four existing program-builder tests; Python
+  syntax, source-layout and diff checks.
+- `python tools/boot-harness-rs/run.py --release --build-only --omega-desktop`
+  builds `build/boot-harness-rs/interactive/esp/EFI/BOOT/BOOTX64.EFI` with the Omega
+  root and installed matrix images; log `build/f5-omega-build.log`.
+- `python tools/boot-harness-rs/desktop_test.py --omega-desktop --trace-storage --timeout 240`
+  passes the default desktop and cold reopen, including three independent Notes
+  drafts, switching, capacity refusal, protected close, slot reuse and the storage
+  oracle: `build/boot-harness-rs/desktop/20261106T192343932060Z/`.
+  Log `build/f5-omega-default.log`.
+
+The ignored `build/check-f5-omega.py` continues sequentially with relative pointer,
+undeclared imports, Split inside Split, masked capture, participants, render
+demand and cursor preferences. Logs `build/f5-omega-*.log`. Do not count pending
+variants as passes. After these qualify, add `--omega-desktop` to the normal F5
+and saved-lab launch entries and update current run instructions. The separate
+Omega kernel boot remains a different prototype; this desktop uses the Rust
+kernel, hardware/storage providers and shell supervisor.
+
 ### Retained presentation cleanup
 
 Implemented after `c9b0ad4e`: a bounded release list in the existing scene transfer.

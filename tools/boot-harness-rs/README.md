@@ -263,6 +263,18 @@ checks two receive channels, first-ready precedence, no-consume observations,
 denied clock/rights, peer closure and all-blocked timeout. Existing deadline,
 copyout, late reply, exclusive-device and admission-failure coverage remains.
 
+The standalone Omega stock matrix can be selected with `--omega-desktop`:
+
+```sh
+python tools/boot-harness-rs/run.py --release --window --fresh --omega-desktop
+python tools/boot-harness-rs/desktop_test.py --omega-desktop
+```
+
+The launcher and regressions share [desktop_composition.py](desktop_composition.py).
+It selects Omega for the root, user and nested matrices; the kernel and hardware/
+storage providers remain Rust. F5's default is unchanged while the everyday
+variants are being qualified; see [the handoff](../../TASKS_RUST.md#shared-omega-desktop-launcher-qualification).
+
 ## Retained compositor profile
 
 `python tools/boot-harness-rs/run.py --compositor-test` selects

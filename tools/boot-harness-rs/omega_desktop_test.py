@@ -33,6 +33,8 @@ import database_image
 import disk_image
 import pointer_test
 import run as harness
+# Shared with the ordinary launcher; fixtures still import this established name.
+from desktop_composition import compose
 
 ROOT = harness.REPO
 MARKERS = (
@@ -70,48 +72,6 @@ BACKDROP = '101827'
 TILE_CARD = '202d43'
 FONT = bytes.fromhex((ROOT / 'source-rs/platform/libraries/bitmap-font/font.hex').read_text())
 
-
-def compose(output, rust_user=False):
-    composition = json.loads((ROOT / 'source-rs/distribution/profile.json').read_text(encoding='utf-8'))
-    composition['name'] = 'Cathedral desktop over the Omega stock matrix'
-    launches = composition['startup']['launches']
-    replaced = 0
-    for index, launch in enumerate(launches):
-        if launch.get('package') == 'cathedral-stock-matrix':
-            launches[index] = {'target': launch['target'], 'clock': True,
-                               'entry': 'distribution/matrix/native/main.omg',
-                               'ipc_channels': launch['ipc_channels'],
-                               'private_pages': launch['private_pages'],
-                               'shared_pages': launch['shared_pages']}
-            replaced += 1
-    assert replaced == 1, 'the stock composition launches one root matrix'
-    # The stock realm as F5 installs it: the user template is object three,
-    # with its launcher, object four, Notes and Colors beneath it. The Omega
-    # program takes the template's place, so a user made from it runs the
-    # Omega matrix over the user's realm, which configures itself from the
-    # Matrix record the installer puts beside the launcher.
-    programs = composition['startup']['programs']
-    template = programs[2]
-    assert template.get('package') == 'cathedral-stock-matrix' and template.get('inside') == 1, 'object three is the user template'
-    if rust_user:
-        # The unprofiled template asks for the owner's entire large offer.
-        # Use the existing bounded desktop declaration beneath the Omega root.
-        template.setdefault('features', []).append('desktop-host')
-    else:
-        programs[2] = {'package': template['package'], 'entry': 'distribution/matrix/native/main.omg',
-                       'target': template['target'], 'inside': template['inside'],
-                       'display_title': template['display_title']}
-    # Every stock matrix F5 installs in the realm, the nested desktops and
-    # their user templates, is the Omega program too, so the store shares one
-    # image's chunks between them as the swapped distribution will.
-    realm = composition['startup']['realm_programs']
-    for index, entry in enumerate(realm):
-        if not rust_user and entry.get('package') == 'cathedral-stock-matrix':
-            realm[index] = {key: value for key, value in entry.items() if key not in ('features', 'entry')}
-            realm[index]['entry'] = 'distribution/matrix/native/main.omg'
-    profile = output / f'omega-desktop-{output.name}.json'
-    profile.write_text(json.dumps(composition, indent=2), encoding='utf-8', newline='\n')
-    return profile
 
 
 def changed_pixels(width, before, after):
