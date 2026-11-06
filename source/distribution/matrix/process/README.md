@@ -236,8 +236,15 @@ The children this matrix admits, funds, presents and retires.
   resource plan retained beside the request. The caller and policy are rechecked
   before each observation and after publication; binding and placement use that
   retained plan before the next child dispatch. The login picker remains alive
-  through loading and retires only after the replacement exists. Failure after
-  retirement queues bounded picker recovery. Revoked construction uses the shared
+  through loading and retires only after the replacement exists.
+  [launch/handoff.omg](children/launch/handoff.omg) owns that retirement across
+  turns: the matrix has accepted the selection, and keeps its replacement
+  unserved until binding and placement finish. Intentional picker retirement
+  cannot cancel the accepted selection; STOP of the target and owner policy
+  changes still do. Failure after retirement queues bounded picker recovery.
+  The [handoff lab](../../lab/matrix-handoff/README.md) holds completion to test
+  owner progress, withheld services and cancellation recovery.
+  Revoked construction uses the shared
   admission retirement poll across turns, retaining the bundle and reservation
   until rollback or collection. A child that won publication is kept out of
   service while draining; a rejected observation preserves custody and ends the

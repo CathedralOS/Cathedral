@@ -50,6 +50,7 @@ public machine all(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Ke
 }
 public machine step(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64) -> u64 reaches Kernel blocks invokes Kernel {
     transition {
+        shared::state::unserved(context, slot) -> (0u64)
         context.retire_after_present[slot] -> (0u64)
         context.launch.phase == 2u64 && context.launch.cancelled && context.launch.slot == slot -> (0u64)
         !context.slots[slot].live -> (0u64)

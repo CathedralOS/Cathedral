@@ -137,6 +137,7 @@ public machine receive(gate: &Gate, context: &mut State, now: u64) reaches Kerne
 }
 machine slot_receive(gate: &Gate, context: &mut State, slot: u64 [0..=4], now: u64) reaches Kernel {
     transition {
+        shared::state::unserved(context, slot) -> done()
         context.retire_after_present[slot] -> done()
         context.store.listeners[slot].peer.receiver == 0u64 || context.store.listeners[slot].peer.fault != 0u64 -> done()
         context.store.relays[slot].phase != 0u64 || context.store.listeners[slot].pending != 0u64 -> block held(gate, context, slot, now)
@@ -217,6 +218,12 @@ public machine watch(context: &State, set: &mut Set) {
     slot_watch(context, set, 0u64); slot_watch(context, set, 1u64);
     slot_watch(context, set, 2u64); slot_watch(context, set, 3u64); slot_watch(context, set, 4u64);
     machine slot_watch(context: &State, set: &mut Set, slot: u64 [0..=4]) {
+        transition shared::state::unserved(context, slot) {
+            true -> done()
+            _ -> watched(context, set, slot)
+        }
+    }
+    machine watched(context: &State, set: &mut Set, slot: u64 [0..=4]) {
         runtime::server::main::watch(&context.store.listeners[slot], set);
         immediate(context, set, slot);
         transition context.store.relays[slot].phase != 0u64 {

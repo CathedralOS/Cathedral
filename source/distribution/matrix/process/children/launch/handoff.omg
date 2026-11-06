@@ -1,0 +1,79 @@
+module launch::handoff;
+// The matrix has accepted a login selection. Stop the picker over later turns,
+// keeping the new child unserved until launch installs its binding and placement.
+use shared::state::State;
+use shared::report;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use lifecycle;
+use launch::authority;
+use launch::completion;
+use runtime::time::Tick;
+
+public const PHASE: u64 = 6u64;
+
+// Only called after constructed() validates the original picker and its grants.
+public machine begin(context: &mut State) {
+    context.launch.phase = PHASE;
+    context.launch.handoff = true;
+    context.launch.probe_started = false;
+    context.launch.probe_until = 0u64;
+    lifecycle::request_retirement(context, 0u64);
+}
+public machine advance(gate: &Gate, context: &mut State) -> bool reaches Kernel invokes Kernel {
+    transition {
+        context.retirement_failure != 0u64 -> (false)
+        !authority::handoff_current(context) -> cancelled(context)
+        context.retire_after_present[0] || context.presentation_work.active -> (false)
+        context.slots[0].live || context.slots[0].pending != 0u64 -> cancelled(context)
+        _ -> inspected(gate, context)
+    }
+    machine cancelled(context: &mut State) -> bool {
+        completion::retire(context, kernel::DENIED, true);
+        false
+    }
+    machine inspected(gate: &Gate, context: &mut State) -> bool reaches Kernel {
+        let held: bool = observed(gate, context);
+        transition held { true -> (false) _ -> ready(gate, context) }
+    }
+    machine ready(gate: &Gate, context: &mut State) -> bool reaches Kernel {
+        context.policies[1].surfaces = context.world.allowance;
+        report::picker_retired(gate);
+        true
+    }
+}
+// The explicit lab wrapper can delay observation after picker collection. The
+// ordinary entry selects zero. Cancellation remains ahead of this test window.
+machine observed(gate: &Gate, context: &mut State) -> bool reaches Kernel {
+    transition context.handoff_window == 0u64 {
+        true -> (false)
+        _ -> reading(gate, context)
+    }
+    machine reading(gate: &Gate, context: &mut State) -> bool reaches Kernel {
+        let tick: Tick = runtime::time::read(gate, context.clock);
+        timed(gate, context, tick)
+    }
+    machine timed(gate: &Gate, context: &mut State, tick: Tick) -> bool reaches Kernel {
+        transition tick { Tick::Read { value } -> checked(gate, context, value) _ -> (false) }
+    }
+    machine checked(gate: &Gate, context: &mut State, now: u64) -> bool reaches Kernel {
+        transition {
+            !context.launch.probe_started -> started(gate, context, now)
+            context.launch.probe_until == 0u64 -> (false)
+            runtime::time::reached(now, context.launch.probe_until) -> released(gate, context)
+            _ -> (true)
+        }
+    }
+    machine started(gate: &Gate, context: &mut State, now: u64) -> bool reaches Kernel {
+        context.launch.probe_started = true;
+        context.launch.probe_until = runtime::time::after(now, context.handoff_window);
+        report::handoff_held(gate);
+        true
+    }
+    machine released(gate: &Gate, context: &mut State) -> bool reaches Kernel {
+        context.launch.probe_until = 0u64;
+        report::handoff_released(gate);
+        false
+    }
+}

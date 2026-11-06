@@ -34,6 +34,16 @@ public machine constructed(context: &State) -> bool {
 public machine presenting(context: &State) -> bool {
     context.launch.phase == 3u64 && caller(context)
 }
+// Once this matrix accepts the login selection, the picker is deliberately
+// retired. Its vanished connection no longer revokes that accepted selection;
+// the owner's current target policy and explicit cancellation still govern it.
+public machine handoff_current(context: &State) -> bool {
+    let target: u64 [0..=4] = context.launch.slot;
+    context.launch.handoff && !context.launch.cancelled
+        && context.slots[target].live && !context.retire_after_present[target]
+        && context.login == context.launch.login && context.desktop == context.launch.desktop
+        && unchanged(context.policies[target], context.launch.policy)
+}
 machine caller(context: &State) -> bool {
     let slot: u64 [0..=4] = context.launch.requester;
     let target: u64 [0..=4] = context.launch.slot;

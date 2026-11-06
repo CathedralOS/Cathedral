@@ -71,7 +71,8 @@ machine begin(gate: &Gate, context: &mut State, now: u64, words: [u64; 8], slot:
     }
     machine occupied_slot(gate: &Gate, context: &mut State, now: u64, words: [u64; 8], slot: u64 [0..=4], ticks: u64) -> u64
         reaches Kernel requires ticks < 0x8000000000000000u64 {
-        transition context.retire_after_present[slot] || (context.slots[slot].live && context.opening[slot] != 0u64) {
+        transition shared::state::unserved(context, slot) || context.retire_after_present[slot]
+            || (context.slots[slot].live && context.opening[slot] != 0u64) {
             true -> block reply(gate, context, error(kernel::BUSY))
             _ -> block live_slot(gate, context, now, words, slot, ticks)
         }

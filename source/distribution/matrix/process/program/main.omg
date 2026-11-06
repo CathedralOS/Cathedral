@@ -47,14 +47,15 @@ public const IDLE_TICKS: u64 = 1000u64;
 public const OWED_TICKS: u64 = 10u64;
 public ProgramProvider satisfies Program {
     machine run(gate: &Gate, first: u64, second: u64) -> u64 reaches Kernel blocks invokes Kernel {
-        block start(gate, 0u64)
+        block start(gate, 0u64, 0u64)
     }
 }
 // The lab wrapper may request a short observation window. The ordinary process
 // entry always supplies zero; kernel arguments never enable test behavior.
-public machine start(gate: &Gate, construction_ticks: u64 [0..=100]) -> u64 reaches Kernel blocks invokes Kernel {
+public machine start(gate: &Gate, construction_ticks: u64 [0..=100], handoff_ticks: u64 [0..=100]) -> u64 reaches Kernel blocks invokes Kernel {
     let mut context: State;
     context.construction_window = construction_ticks;
+    context.handoff_window = handoff_ticks;
     let status: u64 = block startup::open(gate, &mut context);
     transition status == 0u64 {
         true -> block serve(gate, &mut context)

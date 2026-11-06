@@ -2,6 +2,8 @@
 // with construction-probe: F8 asks HEALTH, F7 additionally stops pending slot 1,
 // F6 revokes/restores imports; F5 stops and replaces the requesting launcher.
 // No kernel test hook is used.
+// handoff-probe routes the first three modes into the nested login in slot 1;
+// requester replacement remains a construction-only fixture.
 use super::children::Children;
 use super::*;
 use cathedral_platform_contracts::{imports, input};
@@ -68,6 +70,7 @@ impl Gate {
                 input::F5 as u64,
             ]
             .contains(&key)
+            && !(cfg!(feature = "handoff-probe") && key == input::F5 as u64)
         {
             if state == input::PRESS as u64 {
                 assert!(self.pending.is_none(), "overlapping construction probes");
@@ -130,13 +133,16 @@ impl Gate {
         if probe.stage == 1 && probe.polls < 2 {
             return Ok(());
         }
-        let words = match probe.stage {
+        let mut words = match probe.stage {
             0 => [wire::HEALTH, 0, 0, 0, 0, 0, 0, 0],
             1 if probe.mode == 3 => [wire::STOP, 0, 0, 0, 0, 0, 0, 0],
             1 if probe.mode == 1 => [wire::STOP, 1, 0, 0, 0, 0, 0, 0],
             1 => [wire::LAUNCH_IMPORTS, 1, 0, 0, 0, 0, 0, 0],
             _ => [wire::LAUNCH_IMPORTS, 1, imports::ALL, 0, 0, 0, 0, 0],
         };
+        if cfg!(feature = "handoff-probe") {
+            words = wire::route(words, 1).expect("nested login control route");
+        }
         let request = (!probe.asked).then_some(words);
         let reply = children.poll_control_probe(1, request, now, probe.until)?;
         probe.asked = true;

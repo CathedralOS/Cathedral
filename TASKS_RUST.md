@@ -9,12 +9,80 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Latest verified desktop handoff: [retained failed-launch cleanup](#retained-failed-launch-cleanup),
+Next work: workspace fallback selection after closing the active app, described
+under [retained login handoff](#retained-login-handoff).
+Latest verified desktop handoff: [retained login handoff](#retained-login-handoff),
+following [retained failed-launch cleanup](#retained-failed-launch-cleanup) at `1a0a8db2`,
 following [retained ordinary close](#retained-ordinary-close) at `0bdb41df`,
 [retained admission retirement](#retained-admission-retirement) at
 `60f7c694` and [nonblocking child task primitives](#nonblocking-child-task-primitives).
 Earlier migration entries below are historical milestones. Normal F5 still uses
 the Rust matrix; the following verification explicitly selects the Omega matrix.
+
+### Retained login handoff
+
+`children/launch/handoff.omg` retains the accepted
+login selection while lifecycle retires the picker across service turns. The
+matrix owns that selection after validating the original caller; intentionally
+retiring the picker no longer cancels it. STOP of the new desktop and changes to
+its launch policy still cancel it. A replacement picker is not mistaken for the
+retired one. The prepared storage source is revalidated at binding installation.
+
+`shared/state.omg::unserved` keeps the admitted desktop's interaction, storage
+and routed owner requests unavailable until binding/placement succeeds or cleanup
+finishes. Initial owner-control handshakes can progress, but pending child service
+messages do not cause an immediate-wakeup spin. Failure uses the existing retained
+refusal path and restores the picker. No kernel mechanism or deadline changes.
+
+The stock checked/native build passed at 399/496 load pages, with unchanged stack
+and allowances (`build/retained-picker-handoff-build.log`). Host tests passed
+(`build/retained-picker-handoff-host-tests.log`), as did Rust format, Python
+compilation, source-layout and diff checks. Targeted guest clippy passed
+(`build/retained-picker-handoff-clippy.log`). Both fixture checked/native builds
+passed (`build/retained-picker-handoff-fixture-checks-resumed.log`). The new fixture's
+124 native-boundary definitions matched the accepted stock-matrix lock and unchanged
+runtime source; the inspected review passed after preserving its original LF framing
+(`build/handoff-native-review-comparison.txt`, `build/handoff-native-review-resume-lf.log`).
+Final fixture newline normalization rebuilt successfully and produced the exact
+tested ELF (`build/retained-picker-handoff-normalized-build.log`, SHA256 comparison
+in `build/retained-picker-handoff-newlines.json`). Local compiler locks are ignored.
+
+The new `matrix-handoff` Omega lab entry selects a
+100-tick observation hold after picker collection; ordinary entry selects zero.
+`omega_handoff_test.py --mode health|stop|regrant` uses the Rust parent's
+`handoff-probe` feature to route ordinary owner requests through the outer desktop
+to the nested login. It checks control progress, no premature desktop
+configuration, picker recovery, and subsequent Notes save/reopen with cold boot.
+This is an observation hold, not an artificial kernel collection delay.
+
+All seven runtime cases passed, including cold reboot
+(`build/retained-picker-handoff-runtime-checks.log`). Artifacts under
+`build/boot-harness-rs/desktop/`:
+
+- HEALTH during handoff: `20261106T030647714617Z/`.
+- STOP and picker recovery: `20261106T030814444380Z/`.
+- Policy revocation/restoration and picker recovery: `20261106T030930164206Z/`.
+- Normal Omega desktop, independent drafts and durable state: `20261106T031027914155Z/`.
+- Three nested desktops, protected close and repeated subtree reclamation:
+  `20261106T031139195548Z/`.
+- Invalid executable leaves the picker usable: `20261106T031554190529Z/`.
+- Requester replacement during construction, three rounds per boot:
+  `20261106T031649306705Z/`. Each round returned the same measured account
+  `(8, 59, 625, 0)`.
+
+This is focused verification, not a full F5 fixture sweep. Keep the previously
+recorded pointer-stress LOSS timeout open. The local runner is
+`build/check-retained-picker-handoff.py`: `builds` builds both fixtures; `runtime`
+runs all seven cases sequentially after compilation is idle.
+
+Next boundary: `workspace::retired` still waits for the fallback app's scene.
+Use the existing selection transaction with an explicit internal initiator, not
+an invented chrome request. Keep retirement pending through scene settlement so
+close does not complete early, and distinguish an already-collected child from
+one still awaiting its outcome. Preserve child incarnation/scene epoch checks and
+late-COMMIT rollback. Audit synchronous shutdown/setup drains as well: an internal
+continuation must not depend on a service loop those callers are no longer running.
+Initial setup-error drains and final mailbox/image releases still contain waits.
 
 ### Retained failed-launch cleanup
 

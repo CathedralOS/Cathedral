@@ -301,7 +301,8 @@ public machine notify(gate: &Gate, context: &mut State) reaches Kernel invokes K
     wake(gate, context, 4u64);
 }
 machine wake(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
-    transition !context.retire_after_present[slot] && context.slots[slot].live && context.slots[slot].bell.wait == 0u64 {
+    transition !shared::state::unserved(context, slot) && !context.retire_after_present[slot]
+        && context.slots[slot].live && context.slots[slot].bell.wait == 0u64 {
         true -> hinted(gate, context, slot)
         _ -> done()
     }
@@ -326,10 +327,16 @@ public machine watch(context: &State, slot: u64 [0..=4], set: &mut Set, now: u64
         _ -> done()
     }
     machine watched(context: &State, slot: u64 [0..=4], set: &mut Set) {
-        runtime::server::main::watch(&context.slots[slot].listener, set);
+        interaction(context, slot, set);
         transition context.opening[slot] != 0u64 {
             true -> opening(context, slot, set)
             _ -> done()
+        }
+    }
+    machine interaction(context: &State, slot: u64 [0..=4], set: &mut Set) {
+        transition shared::state::unserved(context, slot) {
+            true -> done()
+            _ -> runtime::server::main::watch(&context.slots[slot].listener, set)
         }
     }
     machine opening(context: &State, slot: u64 [0..=4], set: &mut Set) {
@@ -344,7 +351,8 @@ machine local_work(context: &State, slot: u64 [0..=4], set: &mut Set, now: u64) 
     let live: bool = context.slots[slot].live;
     let departed: bool = live && context.slots[slot].listener.peer.fault != 0u64;
     let retiring: bool = !context.presentation_work.active && (context.retire_after_present[slot] || departed);
-    let hint: bool = live && !context.retire_after_present[slot] && context.slots[slot].bell.wait == 0u64 && context.world.children[slot].notify;
+    let hint: bool = live && !shared::state::unserved(context, slot) && !context.retire_after_present[slot]
+        && context.slots[slot].bell.wait == 0u64 && context.world.children[slot].notify;
     transition {
         hint -> runtime::waiting::expire_by(set, now)
         retiring -> runtime::waiting::expire_by(set, runtime::time::after(now, 1u64))
@@ -537,10 +545,11 @@ machine unreleased(gate: &Gate, slot: u64, status: u64) reaches Kernel invokes K
     }
 }
 
-// Stopping either the requester or its target cancels a pending read/activation.
-// Picker retirement happens only after construction, without another service turn.
+// Stopping the target always cancels pending work. A requester also cancels it
+// until this matrix accepts a login handoff and deliberately retires that picker.
 machine cancel_launch(context: &mut State, slot: u64 [0..=4]) {
-    transition context.launch.phase != 0u64 && (context.launch.requester == slot || context.launch.slot == slot) {
+    transition context.launch.phase != 0u64 && (context.launch.slot == slot
+        || (context.launch.requester == slot && !context.launch.handoff)) {
         true -> cancelled(context)
         _ -> done()
     }

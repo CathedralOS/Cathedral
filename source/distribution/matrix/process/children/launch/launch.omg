@@ -20,7 +20,6 @@ use world::launches;
 use world::scopes;
 use world::scopes::Bound;
 use shared::storage::Outcome;
-use lifecycle;
 use shared::report;
 
 use shared::state::Launch;
@@ -40,6 +39,7 @@ use connections::storage::exchange;
 use connections::responses;
 use stored;
 use launch::completion;
+use launch::handoff;
 use launch::placement;
 use launch::authority;
 use launch::resources;
@@ -124,6 +124,7 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
         context.launch.phase == 2u64 -> block constructing(gate, context)
         context.launch.phase == 4u64 -> block funded(gate, context)
         context.launch.phase == completion::PHASE -> block completion::step(gate, context)
+        context.launch.phase == handoff::PHASE -> block handing_off(gate, context)
         _ -> done()
     }
     machine progress(gate: &Gate, context: &mut State) reaches Kernel {
@@ -280,28 +281,30 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
         }
     }
     machine constructed(gate: &Gate, context: &mut State) reaches Kernel {
-        let slot: u64 [0..=4] = context.launch.slot;
         transition authority::constructed(context) {
             true -> block approved(gate, context)
             _ -> completion::retire(context, kernel::DENIED, false)
         }
     }
     machine approved(gate: &Gate, context: &mut State) reaches Kernel {
+        let login: bool = context.login && context.launch.requester == 0u64 && context.launch.slot == 1u64;
+        report::launch_stage(gate, context.launch.slot, 0u64, 0u64);
+        report::budget(gate);
+        transition login {
+            true -> handoff::begin(context)
+            _ -> block bound(gate, context, false)
+        }
+    }
+    machine handing_off(gate: &Gate, context: &mut State) reaches Kernel {
+        let ready: bool = handoff::advance(gate, context);
+        transition ready { true -> block bound(gate, context, true) _ -> done() }
+    }
+    machine bound(gate: &Gate, context: &mut State, login: bool) reaches Kernel {
         let requester: u64 [0..=4] = context.launch.requester;
         let incarnation: u64 = context.launch.incarnation;
         let slot: u64 [0..=4] = context.launch.slot;
         let object: u64 = context.launch.object;
         let prepared: Prepared = context.launch.binding;
-        let login: bool = context.login && requester == 0u64 && slot == 1u64;
-        report::launch_stage(gate, slot, 0u64, 0u64);
-        report::budget(gate);
-        // Authority was rechecked while the picker still existed. Retire it,
-        // install the binding and place the child before another service turn.
-        block retire_picker(gate, context, login);
-        block bound(gate, context, requester, incarnation, slot, object, login, prepared);
-    }
-    machine bound(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4], object: u64,
-        login: bool, prepared: Prepared) reaches Kernel {
         let status: u64 = install(context, slot, object, prepared);
         transition status == 0u64 {
             true -> block placed(gate, context, requester, incarnation, slot, object, login)
@@ -344,14 +347,6 @@ public machine discard(gate: &Gate, context: &mut State) reaches Kernel blocks i
 machine invalidate(context: &mut State, valid: bool) {
     transition valid { true -> done() _ -> cancelled(context) }
     machine cancelled(context: &mut State) { context.launch.cancelled = true; reads::cancel(context); }
-}
-machine retire_picker(gate: &Gate, context: &mut State, login: bool) reaches Kernel {
-    transition login { true -> block selected(gate, context) _ -> done() }
-    machine selected(gate: &Gate, context: &mut State) reaches Kernel {
-        block lifecycle::reclaim(gate, context, 0u64);
-        context.policies[1].surfaces = context.world.allowance;
-        report::picker_retired(gate);
-    }
 }
 // [LAUNCH_STATUS, receipt] -> [0, state] for the requester's own receipt.
 public machine status(context: &State, requester: u64 [0..=4], incarnation: u64, receipt: u64) -> [u64; 8] {

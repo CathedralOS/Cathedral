@@ -55,7 +55,8 @@ public data SlotPolicy [copy] {
 }
 // A child launch owns its target through image read, admission and activation.
 // Phase 1 reads, 4 funds with the sealed image retained, 2 awaits construction,
-// 3 awaits the shared scene transaction, and 5 retains a refusal through cleanup.
+// 3 awaits the shared scene transaction, 5 retains a refusal through cleanup,
+// and 6 waits for the authorized login picker's retirement.
 // Policies and both connection identities are captured before yielding.
 public data Launch {
     phase: u64;
@@ -65,6 +66,9 @@ public data Launch {
     // The ordinary refusal and picker recovery owed after failed-child cleanup.
     refusal: u64;
     recover_picker: bool;
+    // Selection is now owned by this matrix, independently of the picker.
+    // Its new child remains unserved until binding/placement or cleanup finishes.
+    handoff: bool;
     // Selected diagnostic provider only; ordinary builds use a zero window.
     probe_started: bool;
     probe_until: u64;
@@ -83,6 +87,9 @@ public data Launch {
     login: bool;
     desktop: bool;
     cancelled: bool;
+}
+public machine unserved(context: &State, slot: u64 [0..=4]) -> bool {
+    context.launch.handoff && context.launch.slot == slot
 }
 // A sealed image held behind the compositor tile it was last shown on.
 public data Image [copy] {
@@ -141,6 +148,7 @@ public data Frame {
 }
 public data State {
     construction_window: u64 [0..=100];
+    handoff_window: u64 [0..=100];
     owner: Server;
     source: Server;
     scene: Peer;

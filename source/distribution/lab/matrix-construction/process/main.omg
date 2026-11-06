@@ -7,7 +7,7 @@ use component::main::start;
 // replies before this window releases; elapsed host time is not the oracle.
 public ProgramProvider satisfies Program {
     machine run(gate: &Gate, first: u64, second: u64) -> u64 reaches Kernel blocks invokes Kernel {
-        block start(gate, 100u64)
+        block start(gate, 100u64, 0u64)
     }
 }
 public machine component_entry() reaches Program + Kernel blocks invokes Program invokes Kernel {
