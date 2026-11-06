@@ -87,11 +87,11 @@ machine answered(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
     machine entry(context: &mut State, status: u64) {
         transition {
             status != 0u64 -> aborting(context, status)
-            context.presentation_work.index < 16u64 -> advanced(context)
+            context.presentation_work.index < 64u64 -> advanced(context)
             _ -> aborting(context, kernel::IO_ERROR)
         }
     }
-    machine advanced(context: &mut State) requires context.presentation_work.index < 16u64 {
+    machine advanced(context: &mut State) requires context.presentation_work.index < 64u64 {
         context.presentation_work.index = context.presentation_work.index + 1u64;
     }
     machine committed(context: &mut State, status: u64) {
@@ -125,22 +125,22 @@ machine invalidated(context: &mut State) {
 }
 machine entries(gate: &Gate, context: &mut State) reaches Kernel {
     let index: u64 = context.presentation_work.index;
-    transition index < 16u64 {
+    transition index < 64u64 {
         true -> block entry(gate, context, index)
         _ -> block committing(gate, context)
     }
-    machine entry(gate: &Gate, context: &mut State, index: u64 [0..=15]) reaches Kernel {
+    machine entry(gate: &Gate, context: &mut State, index: u64 [0..=63]) reaches Kernel {
         let slot: u64 [0..=4] = context.presentation_work.slot;
         transition context.batches[slot].entries[index].used {
             true -> block translated(gate, context, slot, index)
             _ -> block skipped(gate, context, index)
         }
     }
-    machine skipped(gate: &Gate, context: &mut State, index: u64 [0..=15]) reaches Kernel {
+    machine skipped(gate: &Gate, context: &mut State, index: u64 [0..=63]) reaches Kernel {
         context.presentation_work.index = index + 1u64;
         transition { _ -> block entries(gate, context) }
     }
-    machine translated(gate: &Gate, context: &mut State, slot: u64 [0..=4], index: u64 [0..=15]) reaches Kernel {
+    machine translated(gate: &Gate, context: &mut State, slot: u64 [0..=4], index: u64 [0..=63]) reaches Kernel {
         let words: [u64; 8] = context.batches[slot].entries[index].words;
         let object: u64 = context.batches[slot].entries[index].payload;
         let incarnation: u64 = context.presentation_work.ticket.incarnation;

@@ -15,10 +15,10 @@ public machine discard_batch(context: &mut State, slot: u64 [0..=4], revision: u
         true -> reset(context, slot)
         _ -> abort(context, slot, revision)
     }
-    machine detach(context: &mut State, slot: u64 [0..=4], index: u64 [0..=16]) {
-        transition index < 16u64 { true -> taken(context, slot, index) _ -> done() }
+    machine detach(context: &mut State, slot: u64 [0..=4], index: u64 [0..=64]) {
+        transition index < 64u64 { true -> taken(context, slot, index) _ -> done() }
     }
-    machine taken(context: &mut State, slot: u64 [0..=4], index: u64 [0..=15]) {
+    machine taken(context: &mut State, slot: u64 [0..=4], index: u64 [0..=63]) {
         context.presentation_work.releases[index] = batch::take_payload(&mut context.batches[slot], index);
         transition { _ -> detach(context, slot, index + 1u64) }
     }
@@ -28,25 +28,25 @@ public machine discard_batch(context: &mut State, slot: u64 [0..=4], revision: u
     }
 }
 public machine step(gate: &Gate, context: &mut State) -> bool reaches Kernel blocks invokes Kernel {
-    let index: u64 [0..=16] = next(context, context.presentation_work.release_index);
-    transition index < 16u64 {
+    let index: u64 [0..=64] = next(context, context.presentation_work.release_index);
+    transition index < 64u64 {
         true -> block released(gate, context, index)
         _ -> (true)
     }
-    machine released(gate: &Gate, context: &mut State, index: u64 [0..=15]) -> bool reaches Kernel {
+    machine released(gate: &Gate, context: &mut State, index: u64 [0..=63]) -> bool reaches Kernel {
         let handle: u64 = context.presentation_work.releases[index];
         context.presentation_work.releases[index] = 0u64;
         context.presentation_work.release_index = index + 1u64;
         block presentation::release(gate, handle);
-        next(context, context.presentation_work.release_index) == 16u64
+        next(context, context.presentation_work.release_index) == 64u64
     }
 }
-machine next(context: &State, index: u64 [0..=16]) -> u64 [0..=16] {
-    transition index < 16u64 {
+machine next(context: &State, index: u64 [0..=64]) -> u64 [0..=64] {
+    transition index < 64u64 {
         true -> checked(context, index)
-        _ -> (16u64)
+        _ -> (64u64)
     }
-    machine checked(context: &State, index: u64 [0..=15]) -> u64 [0..=16] {
+    machine checked(context: &State, index: u64 [0..=63]) -> u64 [0..=64] {
         transition context.presentation_work.releases[index] != 0u64 {
             true -> (index)
             _ -> next(context, index + 1u64)

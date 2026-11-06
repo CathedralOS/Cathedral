@@ -11,7 +11,9 @@ supplies a missing mechanism needed by that migration.
 
 Current work: promote the Omega stock matrix onto the normal F5 desktop path,
 sharing the qualified composition with the launcher and checking everyday desktop
-variants before switching the default. Retained batch-image cleanup is pushed at
+variants before switching the default. The capacity mismatch is corrected below;
+next fix the teardown ordering that fails render demand and masked capture.
+Retained batch-image cleanup is pushed at
 `931bfa71`; all its listed regressions now pass. Each memory-release syscall still
 parks; this change bounds the batch, not the syscall. Deep app-close latency
 remains a separate input/exit/scene measurement target.
@@ -20,7 +22,9 @@ admission, six matrix refusal/retry cycles, owner-read and child-launch fresh/co
 checks, and the Omega root/user desktop all pass. The combined depth-three
 pointer-stress soak also passes three fresh and two cold cycles; the earlier
 close failure did not reproduce, but deep app closes still take seconds.
-Latest desktop handoff: [retained presentation cleanup](#retained-presentation-cleanup),
+Latest desktop handoff: [F5 qualification](#shared-omega-desktop-launcher-qualification)
+and [presentation batch capacity](#presentation-batch-capacity), following
+[retained presentation cleanup](#retained-presentation-cleanup),
 following [retained construction failure cleanup](#retained-construction-failure-cleanup),
 following [retained owner launches](#retained-owner-launches) at `ebe3526e`,
 following [layout grant invalidation](#layout-grant-invalidation) at `28e6adfd`,
@@ -75,10 +79,9 @@ Relative pointer and undeclared imports passed fresh/cold at
   then correctly fails its assertion at the new coordinates.
 - Participants failed at the same resize boundary (`20261106T193107958354Z`).
   Code audit found a port mismatch: Omega `world/batch.omg` and its transfer /
-  cleanup loops still have 16 entries, whereas the Rust wire contract permits
+  cleanup loops had 16 entries, whereas the Rust wire contract permits
   `MAX_SURFACES` (64). A layout can stage the chooser's eight surfaces plus
-  Split's nine and the background. Correct the bounded Omega capacity and
-  rerun both cases; the refusal code has not yet been instrumented.
+  Split's nine and the background. Corrected below; both regressions now pass.
 - Masked capture passed its fresh boot but failed cold teardown; render demand
   also failed teardown. Both show the Rust Notes fixture panicking on
   `Error(-32)` (`PEER_CLOSED`) during Split retirement. This is separate from
@@ -88,12 +91,45 @@ Relative pointer and undeclared imports passed fresh/cold at
 - Cursor preferences passed fresh/cold, including hiding/restoring, independent
   producer, target death and recursive preferences: `20261106T193328001854Z`.
 
+The Rust-host render-demand comparison passes fresh/cold at
+`20261106T193705118672Z` (`build/f5-rust-demand-comparison.log`). Inspection found
+an ordering difference: Omega `children/lifecycle.omg::preparing` calls
+`withdraw` (closing control/storage and releasing scene backing) before
+`admission::retirement::poll` submits cancellation. The Rust lifecycle explicitly
+stops/waits before withdrawing services. Next correction: preserve the retiring
+slot and its connections through cancellation/collection, then release them.
+Kernel withdrawal already stops the full descendant tree before rescheduling.
+Do not change Notes to swallow a panic in order to make this test pass.
+
 The ignored `build/check-f5-omega.py` runs selected variants sequentially and
 stops at the first failure; subsequent groups were explicitly restarted to finish
 the inventory. Logs are `build/f5-omega-*.log`. After these qualify, add
 `--omega-desktop` to the normal F5 and saved-lab launch entries and update current
 run instructions. The separate Omega kernel boot remains a different prototype;
 this desktop uses the Rust kernel, hardware/storage providers and shell supervisor.
+
+### Presentation batch capacity
+
+The Omega World and stock matrix now accept a batch covering the existing
+64-surface view allowance, matching the Rust protocol. Staging, forwarding,
+commit custody, abort cleanup and retained releases all use the same capacity.
+The cleanup continuation still releases at most one image per step. No wire
+opcode, kernel budget or test timeout changed.
+
+Checked compiler review and native emission pass. The matrix image is 434/496
+load pages (62 free). Split inside Split now passes fresh/cold, including live
+resize with drafts, nested persistence, refusal and repeated subtree reclaim:
+`build/boot-harness-rs/desktop/20261106T194219864376Z/`.
+This fixes the earlier refusal without changing the test or its expected layout.
+The participant test also passes fresh/cold, including independent input/cursors, resize
+revocation and saved documents: `20261106T194330041023Z`.
+`omega_parent_batch_test.py` passes held COMMIT, responsive HEALTH/input,
+refusal/abort, replacement and durable reopen, fresh/cold:
+`20261106T194506547482Z`. `omega_parent_image_test.py` also passes held image,
+exact input, close during held save and cold reopen: `20261106T194609268927Z`.
+Source-layout and diff checks pass. Logs: `build/f5-omega-capacity-{batch,image}.log`.
+Keep normal F5 on Rust until the separate teardown issue above and remaining
+qualification are resolved.
 
 ### Retained presentation cleanup
 

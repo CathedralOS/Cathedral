@@ -8,7 +8,9 @@ module batch;
 // Wire owner: source-rs/platform/libraries/matrix/world/presentation/.
 use protocol::main;
 
-public const LIMIT: u64 = 16u64;
+// One transaction must cover every surface in a granted view, including a
+// matrix relaying several children. Match the existing Rust wire capacity.
+public const LIMIT: u64 = MAX_SURFACES;
 public data Entry [copy] {
     used: bool;
     words: [u64; 8];
@@ -21,7 +23,7 @@ public data Batch {
     active: bool;
     revision: u64;
     failed: u64;
-    entries: [Entry; 16];
+    entries: [Entry; 64];
 }
 public data Commit [copy] {
     case Publish;
@@ -87,10 +89,10 @@ machine staged(batch: &mut Batch, words: [u64; 8], payload: u64) -> u64 {
         !batch.active -> (DENIED)
         batch.failed != 0u64 -> (batch.failed)
         duplicate -> (INVALID_ARGUMENT)
-        index < 16u64 -> filled(batch, words, payload, index)
+        index < 64u64 -> filled(batch, words, payload, index)
         _ -> (NO_MEMORY)
     }
-    machine filled(batch: &mut Batch, words: [u64; 8], payload: u64, index: u64) -> u64 requires index < 16u64 {
+    machine filled(batch: &mut Batch, words: [u64; 8], payload: u64, index: u64) -> u64 requires index < 64u64 {
         batch.entries[index].used = true;
         batch.entries[index].words = words;
         batch.entries[index].payload = payload;
@@ -98,25 +100,25 @@ machine staged(batch: &mut Batch, words: [u64; 8], payload: u64) -> u64 {
     }
 }
 // Whether a staged entry already names this child-local surface.
-machine named(batch: &Batch, name: u64, index: u64) -> bool requires index <= 16u64 {
-    transition index < 16u64 {
+machine named(batch: &Batch, name: u64, index: u64) -> bool requires index <= 64u64 {
+    transition index < 64u64 {
         true -> compared(batch, name, index)
         _ -> (false)
     }
-    machine compared(batch: &Batch, name: u64, index: u64) -> bool requires index < 16u64 {
+    machine compared(batch: &Batch, name: u64, index: u64) -> bool requires index < 64u64 {
         transition batch.entries[index].used && batch.entries[index].words[2] == name {
             true -> (true)
             _ -> named(batch, name, index + 1u64)
         }
     }
 }
-// The first unused entry, or sixteen when the batch is full.
-machine free(batch: &Batch, index: u64) -> u64 requires index <= 16u64 {
-    transition index < 16u64 {
+// The first unused entry, or LIMIT when the batch is full.
+machine free(batch: &Batch, index: u64) -> u64 requires index <= 64u64 {
+    transition index < 64u64 {
         true -> checked(batch, index)
-        _ -> (16u64)
+        _ -> (64u64)
     }
-    machine checked(batch: &Batch, index: u64) -> u64 requires index < 16u64 {
+    machine checked(batch: &Batch, index: u64) -> u64 requires index < 64u64 {
         transition batch.entries[index].used {
             true -> free(batch, index + 1u64)
             _ -> (index)
@@ -150,14 +152,14 @@ public machine abort(batch: &mut Batch, revision: u64) -> u64 {
     }
 }
 // Take the payload behind one entry, leaving the entry without one.
-public machine take_payload(batch: &mut Batch, index: u64 [0..=15]) -> u64 {
+public machine take_payload(batch: &mut Batch, index: u64 [0..=63]) -> u64 {
     let payload: u64 = batch.entries[index].payload;
     batch.entries[index].payload = 0u64;
     payload
 }
 // Forget the staged entries; the owner released their payloads first.
 public machine clear(batch: &mut Batch) {
-    let empty: [Entry; 16];
+    let empty: [Entry; 64];
     batch.entries = empty;
     batch.active = false;
     batch.revision = 0u64;

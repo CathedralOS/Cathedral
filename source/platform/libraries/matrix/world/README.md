@@ -75,7 +75,9 @@ from its words. Wire owner: `source-rs/platform/libraries/matrix/world/`.
   batch: BEGIN opens a revision, updates stage once per surface with the sealed
   payload behind an image, COMMIT publishes or repeats the last revision, and a
   refusal poisons the batch so its commit reports it. The owner releases
-  payloads before the batch forgets them.
+  payloads before the batch forgets them. Its 64 entries match the wire
+  contract's full view allowance, so relaying a multi-app layout does not hit
+  a smaller per-hop capacity. Transfer and payload retirement use the same bound.
 - [scopes.omg](scopes.omg) delegates storage by subtree: the owner binds a
   child's storage connection to a source and a scope object, the child sees a
   binding revision, and every request is authenticated and stamped with the

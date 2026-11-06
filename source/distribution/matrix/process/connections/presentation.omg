@@ -372,21 +372,21 @@ machine publish(context: &mut State, slot: u64 [0..=4], incarnation: u64, revisi
 public machine commit_batch(context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64) -> [u64; 8] {
     committing(context, slot, incarnation, revision, 0u64)
     machine committing(context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64) -> [u64; 8]
-        requires index <= 16u64 {
-        transition index < 16u64 {
+        requires index <= 64u64 {
+        transition index < 64u64 {
             true -> commit_entry(context, slot, incarnation, revision, index)
             _ -> (finished(context, slot, revision))
         }
     }
     machine commit_entry(context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64) -> [u64; 8]
-        requires index < 16u64 {
+        requires index < 64u64 {
         transition context.batches[slot].entries[index].used {
             true -> commit_used(context, slot, incarnation, revision, index)
             _ -> committing(context, slot, incarnation, revision, index + 1u64)
         }
     }
     machine commit_used(context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64) -> [u64; 8]
-        requires index < 16u64 {
+        requires index < 64u64 {
         let words: [u64; 8] = context.batches[slot].entries[index].words;
         let payload: u64 = batch::take_payload(&mut context.batches[slot], index);
         let result: Updated = surfaces::update(&mut context.world, slot, incarnation, &words, true);
@@ -396,24 +396,24 @@ public machine commit_batch(context: &mut State, slot: u64 [0..=4], incarnation:
         }
     }
     machine kept(context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64, key: u64, payload: u64)
-        -> [u64; 8] requires index < 16u64 {
+        -> [u64; 8] requires index < 64u64 {
         transition payload != 0u64 {
             true -> retaining(context, slot, incarnation, revision, index, key, payload)
             _ -> painted(context, slot, incarnation, revision, index, key)
         }
     }
     machine retaining(context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64, key: u64, payload: u64)
-        -> [u64; 8] requires index < 16u64 {
+        -> [u64; 8] requires index < 64u64 {
         context.presentation_work.releases[index] = replace_image(context, key, payload);
         transition { _ -> (committing(context, slot, incarnation, revision, index + 1u64)) }
     }
     machine painted(context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64, key: u64) -> [u64; 8]
-        requires index < 16u64 {
+        requires index < 64u64 {
         context.presentation_work.releases[index] = take_image(context, key);
         transition { _ -> (committing(context, slot, incarnation, revision, index + 1u64)) }
     }
     machine unkept(context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64, payload: u64) -> [u64; 8]
-        requires index < 16u64 {
+        requires index < 64u64 {
         context.presentation_work.releases[index] = payload;
         transition { _ -> (committing(context, slot, incarnation, revision, index + 1u64)) }
     }
@@ -468,12 +468,12 @@ machine prune(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kerne
         batch::reset(&mut context.batches[slot]);
     }
 }
-machine release_payloads(gate: &Gate, context: &mut State, slot: u64 [0..=4], index: u64) reaches Kernel requires index <= 16u64 {
-    transition index < 16u64 {
+machine release_payloads(gate: &Gate, context: &mut State, slot: u64 [0..=4], index: u64) reaches Kernel requires index <= 64u64 {
+    transition index < 64u64 {
         true -> block releasing(gate, context, slot, index)
         _ -> done()
     }
-    machine releasing(gate: &Gate, context: &mut State, slot: u64 [0..=4], index: u64) reaches Kernel requires index < 16u64 {
+    machine releasing(gate: &Gate, context: &mut State, slot: u64 [0..=4], index: u64) reaches Kernel requires index < 64u64 {
         let payload: u64 = batch::take_payload(&mut context.batches[slot], index);
         block release(gate, payload);
         transition { _ -> block release_payloads(gate, context, slot, index + 1u64) }
