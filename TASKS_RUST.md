@@ -12,7 +12,7 @@ supplies a missing mechanism needed by that migration.
 Current work: finish the [owner-launch regression batch](#retained-owner-launches),
 then review shared construction failure cleanup for blocking waits. The held
 owner-read scenario passes on the final source, including cold reopen.
-Latest desktop handoff: [retained owner launches](#retained-owner-launches),
+Latest desktop handoff: [retained owner launches](#retained-owner-launches) at `ebe3526e`,
 following [layout grant invalidation](#layout-grant-invalidation) at `28e6adfd`,
 following [retained layout application](#retained-layout-application) at `6b7deef5`,
 following [retained workspace fallback](#retained-workspace-fallback) at `ff555376`,
@@ -74,9 +74,14 @@ The broader sequential regression batch is running as
 `python build/check-owner-batch.py owner launch desktop construction`; logs are
 `build/owner-final-{owner,launch,desktop,construction}.log`. It checks the held
 owner read, the ordinary child launch read, the Omega root/user desktop, and three
-construction-requester replacements per boot. Owner finished successfully;
-launch, desktop and construction are still running or queued. Do not start a
-duplicate or count those remaining checks as qualified yet.
+construction-requester replacements per boot. Owner finished successfully. The
+ordinary child-launch read also passed fresh and cold:
+`build/boot-harness-rs/desktop/20261106T172936688460Z/`. The Omega root/user desktop
+passed a fresh boot, including entering a new user and painting/saving Colors
+through both matrices:
+`build/boot-harness-rs/omega-desktop/20261106T173139046637Z/`.
+Construction-requester replacement is still running. Do not start a duplicate or
+count that remaining check as qualified yet.
 
 Next: shared construction failure cleanup still calls synchronous reclamation;
 retain that failure through cleanup while other requests keep progressing.
