@@ -163,12 +163,16 @@ large image does not eat into them.
 [admission/pending.omg](admission/pending.omg) splits that operation into `begin`
 and `poll`. The provider retains the startup bundle beside an owner-scoped
 kernel receipt and keeps serving other connections between polls. `Ready` means
-the child was published and its listener was installed; a completed submission's
-failure releases its bundle. Loading remains charged to the same parent and child.
-Before `Ready`, use `release` to abandon the submitted work; `stop` takes a live child.
-There is no receipt wait right yet: a service loop must arrange a bounded timer
-wake while a receipt is pending. Admission failure after publication still uses
-the blocking cleanup convenience; this is not a fully asynchronous teardown.
+the child was published and its listener was installed. `Failed` may still retain
+a published child or an unconsumed receipt: stop serving that slot, advance
+`retirement::poll` across turns, then release its bundle after `Ready`, before reuse.
+[Publication setup](admission/publication.omg) preserves the real task ticket,
+control and remaining endpoints on failure; it never waits to collect the child.
+A completed pre-publication failure releases its bundle, so retirement then finds
+an empty slot. Loading remains charged to the same parent and child.
+`release` and `stop` remain explicit blocking abandonment conveniences. There is no
+receipt wait right yet: the caller must arrange a bounded timer wake while either
+admission or retirement remains pending.
 
 [admission/retirement.omg](admission/retirement.omg) owns cancellation and collection
 for both submitted construction and live children. `poll` makes one visit without

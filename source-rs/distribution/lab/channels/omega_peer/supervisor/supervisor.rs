@@ -26,7 +26,7 @@ const REFUSALS: u64 = 15;
 const NO_STORAGE: u64 = 16;
 
 pub(super) fn run() {
-    for scenario in 1..=12 {
+    for scenario in 1..=13 {
         let budget = resources::budget().unwrap();
         let physical = resources::physical_budget().unwrap();
         let bells = notification::budget().unwrap();
@@ -95,6 +95,21 @@ fn run_scenario(number: u64) {
         }),
     };
     match number {
+        13 => {
+            for round in 1..=6u64 {
+                // Fail the handshake clock after a real task has been published.
+                // The Omega witness asserts that poll returns with live custody,
+                // then collects across turns while serving this owner and sibling.
+                assert_eq!(owner.call([4, 0, imports::ALL, 0, IDLE, 1, 0, 0])[0], 0);
+                assert_eq!(owner.begin(1, imports::INTERACTION, 1, ECHO), 0);
+                owner.observed(|v| {
+                    v[0] == 0 && v[4] == abi::BAD_HANDLE && v[1] == 0 && v[5] == RETURNED
+                });
+                assert_eq!(owner.admit(0, imports::INTERACTION, 0, ECHO), 0);
+                let state = owner.observed(|v| v[0] == 0 && v[4] == RETURNED);
+                assert_eq!(state[2], round * 16);
+            }
+        }
         12 => {
             for round in 1..=6u64 {
                 // The Omega owner handler cancels the submitted receipt before

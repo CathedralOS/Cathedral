@@ -9,9 +9,10 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Current work: finish the [owner-launch regression batch](#retained-owner-launches),
-then review shared construction failure cleanup for blocking waits. The held
-owner-read scenario passes on the final source, including cold reopen.
+Current work: verify retained construction failure cleanup in the stock matrix.
+The shared Omega runtime and its independent admission witness passed. The prior
+owner-launch regression batch is complete, including three construction-requester
+cycles on each of fresh and cold boots. Matrix changes below remain unqualified.
 Latest desktop handoff: [retained owner launches](#retained-owner-launches) at `ebe3526e`,
 following [layout grant invalidation](#layout-grant-invalidation) at `28e6adfd`,
 following [retained layout application](#retained-layout-application) at `6b7deef5`,
@@ -31,7 +32,51 @@ IDs outside main's ancestry, but their content is already squash-merged as
 harness host tests passed during review. Do not merge that branch again based
 only on its unmerged commit IDs; no fresh native boot was run for this check.
 
-### Retained owner launches
+### Retained construction failure cleanup (in progress)
+
+The previous owner-launch batch finished successfully at `146de1c1`:
+`build/owner-final-construction.log`, artifact
+`build/boot-harness-rs/desktop/20261106T173312451499Z/`. All six requester cycles
+matched the reclaimed account `(8, 59, 642, 0)`; owner-read, ordinary child launch
+and the Omega root/user desktop passed earlier in the same batch.
+
+Shared runtime changes are qualified; stock-matrix changes and its strengthened
+requester fixture are in progress in the main worktree, not yet committed:
+
+- Shared runtime publication setup retains the real child and remaining rights
+  if control/listener setup fails. `pending::poll` callers must retire and release
+  even after `Failed`; synchronous admission retains its collection bridge.
+- Deferred matrix construction requests lifecycle retirement on refusal instead
+  of waiting inside the constructor. Child LAUNCH retains its answer through
+  retirement, as owner RUN_OBJECT already does. Setup stays synchronous.
+- The independent supervisor witness checks a deliberately invalid handshake
+  clock after real publication, then collects across turns, serves a sibling and
+  reuses the slot. Its Rust driver repeats this six times and compares resources.
+- The construction-requester fixture requests an invalid CPU ceiling after a real
+  reservation, requires refusal only after reclamation, restages its allowance
+  and successfully launches in the same slot. No kernel test hook or timeout bump.
+
+Checked review, native emission and all 13 independent admission scenarios passed:
+`python tools/omega-user/connection_test.py --admission`, log
+`build/cleanup-admission.log`, artifact
+`build/omega-user/connections/20261106T180334824169Z/`. The new thirteenth scenario
+asserts retained live custody before collection, repeats six failure/reuse cycles,
+and balances private/shared pages, physical frames and notification rights.
+
+Target clippy passed for the channel lab's omega-admission feature and the
+matrix's interaction-delay/construction-probe/handoff-probe features. Format,
+Python syntax, layout and diff checks passed. The remaining batch is running via
+`python build/check-construction-cleanup.py`: construction requester (three rounds),
+held owner read, ordinary child launch, and Omega root/user desktop. Logs are
+`build/cleanup-{construction,owner,launch,desktop}.log`; do not claim those passes yet.
+
+Preparation used `C:/Projects/Cathedral-construction-cleanup` to preserve the old
+baseline's live build inputs. Its changes were applied to the main worktree after
+that batch completed; that preparation checkout is no longer authoritative.
+Final resource-release calls, catalogue RUN and setup/shutdown paths still have
+blocking work. Do not claim complete nonblocking teardown or full F5 parity.
+
+## Retained owner launches
 
 Implemented after `cd799ff2`. The new
 `omega_layout_fault_test.py --owner-read` replaces a stopped launcher through the
@@ -80,11 +125,12 @@ ordinary child-launch read also passed fresh and cold:
 passed a fresh boot, including entering a new user and painting/saving Colors
 through both matrices:
 `build/boot-harness-rs/omega-desktop/20261106T173139046637Z/`.
-Construction-requester replacement is still running. Do not start a duplicate or
-count that remaining check as qualified yet.
+Construction-requester replacement also passed three cycles per boot, with
+matching reclaimed accounts; artifact `build/boot-harness-rs/desktop/20261106T173312451499Z/`.
+This completes that regression batch.
 
-Next: shared construction failure cleanup still calls synchronous reclamation;
-retain that failure through cleanup while other requests keep progressing.
+Next work is the [retained construction failure cleanup](#retained-construction-failure-cleanup-in-progress)
+above, including the shared runtime's hidden post-publication collection wait.
 Catalogue RUN, explicit setup/refresh and final release drains also need review
 for blocking waits. Normal F5 continues to select the Rust matrix.
 

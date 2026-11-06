@@ -43,7 +43,7 @@ machine admit(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 r
         _ -> block reply(gate, context, kernel::INVALID_ARGUMENT, 0u64)
     }
     machine slot(gate: &Gate, context: &mut State, now: u64, frame: Frame, slot: u64 [0..=1]) -> u64 reaches Kernel {
-        transition context.slots[slot].live || context.slots[slot].pending != 0u64 {
+        transition context.stopping[slot] || context.slots[slot].live || context.slots[slot].pending != 0u64 {
             true -> block reply(gate, context, kernel::BUSY, 0u64)
             _ -> block launch(gate, context, now, frame, slot)
         }
@@ -56,6 +56,9 @@ machine admit(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 r
         }
     }
     machine admitted(gate: &Gate, context: &mut State, now: u64, frame: Frame, slot: u64 [0..=1], launch: u64) -> u64 reaches Kernel {
+        // Fixture word 5 requests a bad handshake clock after real publication.
+        context.invalid_clock[slot] = frame.payload[0] == 4u64 && frame.payload[5] == 1u64;
+        context.admission_failures[slot] = 0u64;
         let status: u64 = block submit(gate, context, frame, slot, launch);
         context.exits[slot] = 0u64;
         transition status == 0u64 && frame.payload[0] == 6u64 {

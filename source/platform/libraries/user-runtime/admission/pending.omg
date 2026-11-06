@@ -4,11 +4,11 @@ module admission::pending;
 // Pending has no wake right yet: poll once per service turn and arrange a bounded
 // timer wake. retirement::poll cancels across turns; drain is its blocking bridge.
 use kernel::Gate;
+use admission::publication::finish;
 use kernel::Kernel;
 use kernel;
 use admission::main::Admitted;
 use admission::main::prepare_bundle;
-use admission::main::finish_admission;
 use admission::main::release;
 use task::main::Admission;
 use admission::retirement::Retirement;
@@ -48,6 +48,8 @@ machine submit(gate: &Gate, child: &mut Admitted, launch: u64, argument: u64,
     }
 }
 
+// Failed can retain a published child or an unconsumed receipt. Retire it across
+// turns and release its bundle before reusing this Admitted value.
 public machine poll(gate: &Gate, child: &mut Admitted, clock: u64, window: u64 [0..=9223372036854775807], objects: bool) -> Progress
     reaches Kernel blocks invokes Kernel {
     transition child.pending != 0u64 {
@@ -59,14 +61,14 @@ machine observe(gate: &Gate, child: &mut Admitted, clock: u64, window: u64 [0..=
     let result: Admission = task::main::poll_spawn(gate, child.pending, false);
     transition result {
         Admission::Pending -> (Progress::Pending)
-        Admission::Started { ticket } -> block finish(gate, child, ticket, clock, window, objects)
+        Admission::Started { ticket } -> published(gate, child, ticket, clock, window, objects)
         Admission::Failed { code } -> block failed(gate, child, code)
         Admission::Rejected { code } -> (Progress::Failed { code: code })
     }
-    machine finish(gate: &Gate, child: &mut Admitted, ticket: u64, clock: u64, window: u64 [0..=9223372036854775807], objects: bool) -> Progress reaches Kernel {
+    machine published(gate: &Gate, child: &mut Admitted, ticket: u64, clock: u64, window: u64 [0..=9223372036854775807], objects: bool) -> Progress reaches Kernel {
         child.pending = 0u64;
         let launch: u64 = child.launch;
-        let status: u64 = block finish_admission(gate, child, launch, ticket, clock, window, objects);
+        let status: u64 = finish(gate, child, launch, ticket, clock, window, objects);
         transition status == 0u64 {
             true -> (Progress::Ready)
             _ -> (Progress::Failed { code: status })

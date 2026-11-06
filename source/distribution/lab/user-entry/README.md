@@ -180,6 +180,14 @@ supervisor and full budget checks afterwards:
 - Killing the supervisor after asynchronous submission reclaims its child and
   all channels, notifications and physical backing.
 
+The thirteenth scenario supplies an invalid handshake clock to asynchronous
+admission after real child publication. The Omega witness requires `Failed` to
+retain the live task ticket and acquired control, with moved broker endpoints
+cleared. It then collects through ordinary turns while an independent sibling
+and owner are served. Six cycles reuse the same slot, and the outer driver
+compares page, physical-frame and notification budgets after the scenario.
+This exercises runtime failure custody without adding a kernel fault hook.
+
 The booted kernel's staged-admission fixture separately holds construction at
 known boundaries. It verifies cancellation and authority withdrawal before
 publication, retained results on bad copyout, and that completing admission

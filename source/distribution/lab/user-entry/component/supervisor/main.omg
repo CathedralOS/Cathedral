@@ -20,6 +20,8 @@ public data State {
     slots: [Admitted; 2];
     exits: [u64; 2];
     stopping: [bool; 2];
+    admission_failures: [u64; 2];
+    invalid_clock: [bool; 2];
     clock: u64;
     deadline: u64;
     stopped: bool;

@@ -29,15 +29,31 @@ public machine step(gate: &Gate, context: &mut State, slot: u64 [0..=1], now: u6
     }
 }
 machine admitting(gate: &Gate, context: &mut State, slot: u64 [0..=1]) -> u64 reaches Kernel {
-    let progress: Progress = block runtime::admission::pending::poll(gate, &mut context.slots[slot], context.clock, 300u64, false);
+    let clock: u64 = admission_clock(context, slot);
+    let progress: Progress = block runtime::admission::pending::poll(gate, &mut context.slots[slot], clock, 300u64, false);
     transition progress {
         Progress::Failed { code } -> failed(context, slot, code)
         _ -> (0u64)
     }
     machine failed(context: &mut State, slot: u64 [0..=1], code: u64) -> u64 {
-        context.exits[slot] = code;
+        // The fault must return before collection, with the real task ticket and
+        // acquired control intact, and no names for the moved broker endpoints.
+        transition !context.invalid_clock[slot] || (code == kernel::BAD_HANDLE
+            && context.slots[slot].live && context.slots[slot].task != 0u64
+            && context.slots[slot].pending == 0u64 && context.slots[slot].control.sender != 0u64
+            && context.slots[slot].handoff[0] == 0u64 && context.slots[slot].handoff[1] == 0u64) {
+            true -> retained(context, slot, code)
+            _ -> (324u64)
+        }
+    }
+    machine retained(context: &mut State, slot: u64 [0..=1], code: u64) -> u64 {
+        context.admission_failures[slot] = code;
+        context.stopping[slot] = true;
         0u64
     }
+}
+machine admission_clock(context: &State, slot: u64 [0..=1]) -> u64 {
+    transition context.invalid_clock[slot] { true -> (0u64) _ -> (context.clock) }
 }
 machine departed(gate: &Gate, context: &mut State, slot: u64 [0..=1]) -> u64 reaches Kernel {
     block reclaim(gate, context, slot);
@@ -159,9 +175,12 @@ public machine collecting(gate: &Gate, context: &mut State, slot: u64 [0..=1]) -
     machine collected(gate: &Gate, context: &mut State, slot: u64 [0..=1], outcome: Outcome) -> u64 reaches Kernel {
         block runtime::admission::main::release(gate, &mut context.slots[slot]);
         context.stopping[slot] = false;
-        context.exits[slot] = stopped_kind(outcome);
+        context.exits[slot] = finished_kind(outcome, context.admission_failures[slot]);
         0u64
     }
+}
+machine finished_kind(outcome: Outcome, failure: u64) -> u64 {
+    transition failure != 0u64 { true -> (failure) _ -> stopped_kind(outcome) }
 }
 machine stopped_kind(outcome: Outcome) -> u64 {
     transition outcome {

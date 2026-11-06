@@ -6,8 +6,7 @@ module admission::main;
 // authenticates each of them. Policy such as slots, roles and restarts stays
 // with the provider. Wire owner: source-rs/platform/libraries/user-runtime/matrix/admission/.
 use kernel::Gate;
-use time;
-use time::Tick;
+use admission::publication::finish;
 use kernel::Kernel;
 use kernel;
 use ipc::main::Channel;
@@ -15,7 +14,6 @@ use ipc::main::Opened;
 use notification::main::Bell;
 use notification::main::Creation;
 use server::main::Server;
-use task::main::Control;
 use task::main::Exit;
 use admission::pending::drain;
 use admission::retirement::Retirement;
@@ -140,43 +138,14 @@ machine spawn(gate: &Gate, child: &mut Admitted, launch: u64, argument: u64,
     endpoints[1] = child.handoff[1];
     let ticket: u64 = block task::main::spawn(gate, launch, argument, &endpoints, 2u64, loans, loan_count);
     transition ticket < kernel::ERROR_BASE {
-        true -> block finish_admission(gate, child, launch, ticket, clock, window, objects)
+        true -> block published(gate, child, launch, ticket, clock, window, objects)
         _ -> block failed(gate, child, ticket)
     }
 }
-// Publication moved the broker ends. Establish control and start the handshake
-// deadline now, after loading, for either admission path.
-public machine finish_admission(gate: &Gate, child: &mut Admitted, launch: u64, ticket: u64, clock: u64, window: u64 [0..=9223372036854775807], objects: bool) -> u64 reaches Kernel blocks invokes Kernel {
-    child.task = ticket;
-    child.live = true;
-    child.handoff[0] = 0u64;
-    child.handoff[1] = 0u64;
-    let control: Control = task::main::control(gate, launch);
-    transition control {
-        Control::Ready { channel } -> block timed(gate, child, channel, clock, window, objects)
-        Control::Failed { code } -> block undo(gate, child, code)
-    }
-    machine timed(gate: &Gate, child: &mut Admitted, control: Channel, clock: u64, window: u64 [0..=9223372036854775807], objects: bool) -> u64
-        reaches Kernel {
-        child.control = control;
-        let tick: Tick = time::read(gate, clock);
-        transition tick {
-            Tick::Read { value } -> block listen(gate, child, time::after(value, window), objects)
-            Tick::Failed { code } -> block undo(gate, child, code)
-        }
-    }
-    machine listen(gate: &Gate, child: &mut Admitted, deadline: u64, objects: bool) -> u64 reaches Kernel {
-        let status: u64 = server::main::begin(&mut child.listener, child.data.sender, child.data.receiver, deadline, objects);
-        transition status == 0u64 {
-            true -> handed(child)
-            _ -> block undo(gate, child, status)
-        }
-    }
-    machine handed(child: &mut Admitted) -> u64 {
-        child.data.sender = 0u64;
-        child.data.receiver = 0u64;
-        0u64
-    }
+machine published(gate: &Gate, child: &mut Admitted, launch: u64, ticket: u64, clock: u64,
+    window: u64 [0..=9223372036854775807], objects: bool) -> u64 reaches Kernel {
+    let status: u64 = finish(gate, child, launch, ticket, clock, window, objects);
+    transition status == 0u64 { true -> (0u64) _ -> block undo(gate, child, status) }
 }
 // The child exists but a later phase failed: stop it, then release everything.
 machine undo(gate: &Gate, child: &mut Admitted, code: u64) -> u64 reaches Kernel {
