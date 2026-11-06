@@ -30,6 +30,7 @@ use recovery;
 use construction::construction::start_reserved;
 use shared::report;
 use workspace;
+use selection;
 use policy::children::launch::resources::funding::Funding;
 
 // How long a child has to complete each startup handshake, as the Rust host allows.
@@ -141,7 +142,13 @@ machine larger(a: u64, b: u64) -> u64 {
 public machine retire_pending(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
     transition context.presentation_work.active { true -> done() _ -> block visit(gate, context, 0u64) }
     machine visit(gate: &Gate, context: &mut State, slot: u64) reaches Kernel requires slot <= 5u64 {
-        transition slot < 5u64 { true -> block one(gate, context, slot) _ -> done() }
+        // An earlier retirement in this pass may have started a fallback scene.
+        // Preserve its backing before visiting another child.
+        transition {
+            context.presentation_work.active -> done()
+            slot < 5u64 -> block one(gate, context, slot)
+            _ -> done()
+        }
     }
     machine one(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
         transition context.retire_after_present[slot] {
@@ -169,6 +176,7 @@ public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reac
 }
 machine drain_retirement(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
     block retirement_turn(gate, context, slot);
+    block selection::drain_retirement(gate, context, slot);
     transition context.retire_after_present[slot] && context.retirement_failure == 0u64 {
         true -> block later(gate, context, slot)
         _ -> done()
@@ -181,6 +189,7 @@ machine drain_retirement(gate: &Gate, context: &mut State, slot: u64 [0..=4]) re
 machine retirement_turn(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
     transition {
         context.retirement_failure != 0u64 -> done()
+        context.retirements[slot].collected -> settled(gate, context, slot)
         !context.retirements[slot].started -> block preparing(gate, context, slot)
         _ -> block collecting(gate, context, slot)
     }
@@ -200,10 +209,29 @@ machine retirement_turn(gate: &Gate, context: &mut State, slot: u64 [0..=4]) rea
     machine failed(context: &mut State, code: u64) { context.retirement_failure = code; }
     machine collected(gate: &Gate, context: &mut State, slot: u64 [0..=4], outcome: Outcome) reaches Kernel {
         block runtime::admission::main::release(gate, &mut context.slots[slot]);
-        block finish_retirement(gate, context, slot, outcome);
+        context.retirements[slot].collected = true;
+        finish_retirement(gate, context, slot, outcome);
+        settled(gate, context, slot);
+    }
+    // A fallback scene still fences the closed slot and its close/STOP replies.
+    // Once it settles, finish without polling the already-consumed task outcome.
+    machine settled(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+        transition context.presentation_work.active {
+            true -> done()
+            _ -> finished(gate, context, slot)
+        }
+    }
+    machine finished(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+        recorded(gate, context, slot);
         let empty: Retiring;
         context.retirements[slot] = empty;
         context.retire_after_present[slot] = false;
+    }
+    machine recorded(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+        transition context.retirements[slot].task != 0u64 {
+            true -> report::reclaimed(gate, slot)
+            _ -> done()
+        }
     }
 }
 // These releases still contain blocking memory operations. This slice removes
@@ -225,7 +253,7 @@ machine withdraw(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Ke
 }
 machine finish_retirement(gate: &Gate, context: &mut State, slot: u64 [0..=4], outcome: Outcome) reaches Kernel {
     transition context.retirements[slot].task != 0u64 {
-        true -> block stopped(gate, context, slot, exit_of(outcome))
+        true -> stopped(gate, context, slot, exit_of(outcome))
         _ -> unpublished(gate, context, slot)
     }
     machine unpublished(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
@@ -249,8 +277,7 @@ machine finish_retirement(gate: &Gate, context: &mut State, slot: u64 [0..=4], o
         context.reservations[slot] = 0u64;
         context.funding[slot] = Funding::Fixed;
         level::disconnected(&mut context.world, slot);
-        block workspace::retired(gate, context, slot);
-        report::reclaimed(gate, slot);
+        workspace::retired(context, slot);
     }
 }
 machine exit_of(outcome: Outcome) -> Exit {

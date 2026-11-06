@@ -347,6 +347,13 @@ forwarded STOP timeout, eventual cancellation without retrying STOP, and a
 subsequent nonzero storage-binding reply over the same route after late replies
 have drained. The nested Notes draft and reused Colors slot survive cold reboot.
 
+`python tools/boot-harness-rs/omega_fallback_test.py --mode complete` closes
+Colors while the parent holds the scene that reveals Notes. HEALTH and input
+must continue, and the closed slot remains reserved until that scene settles.
+Use `--mode refuse` for a rejected replacement scene or `--mode cancel` to stop
+the intended replacement app. Each case checks saved data, slot reuse and cold
+reopen; the surviving Notes draft must remain intact unless explicitly stopped.
+
 `python tools/boot-harness-rs/omega_storage_test.py` holds a real sealed storage
 publication at a Rust fixture parent. The stock Omega child must answer HEALTH
 and poll input before release; repeated saves, slot reuse and cold reopen check
@@ -367,7 +374,7 @@ fixture arms those two cases with five or six F2 presses. The refreshed source
 is checked before admission and its prepared grant is installed locally. No
 test mode is added to the Omega process for these storage holds. Ordinary child
 construction now submits and resumes across service turns. Owner/setup admission,
-first provider handshakes and cancellation cleanup still have synchronous waits.
+first provider handshakes and explicit shutdown drains still contain waits.
 
 `python tools/boot-harness-rs/omega_construction_test.py --mode health` selects a
 lab entry around the stock Omega matrix with a one-second construction-observation

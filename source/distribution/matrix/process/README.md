@@ -158,8 +158,12 @@ The children this matrix admits, funds, presents and retires.
   retirement, then the turn loop visits collection without waiting inside the
   task syscall. The original task identity stays beside the reserved slot until
   reporting, resource release and workspace bookkeeping finish. Setup and shutdown
-  callers explicitly drain the same state. Memory release and fallback scene
-  publication still block. A child's owner control opens without
+  callers explicitly drain the same state and pump its fallback transaction.
+  A consumed outcome is recorded before scene settlement; the slot and close
+  replies remain pending, without collecting that task twice. Each child visit
+  checks the scene fence again, since an earlier retirement can start a fallback.
+  Final memory
+  release still blocks. A child's owner control opens without
   blocking: a host with descendants sets up its broker services before it
   accepts control, so the matrix sends the hello, keeps serving, finishes
   the handshake on a later turn once the child answers, and takes the child
@@ -250,7 +254,7 @@ The children this matrix admits, funds, presents and retires.
   service while draining; a rejected observation preserves custody and ends the
   matrix rather than claiming successful cleanup. An independently requested
   retirement owns collection until it finishes; cancellation cannot consume its
-  outcome. Final bundle release, fallback presentation and setup teardown still
+  outcome. Final bundle release and setup teardown still
   contain synchronous work.
   [launch/completion.omg](children/launch/completion.omg) owns final recovery and
   replies. Failed placement or activation retains its refusal and caller through
@@ -355,7 +359,7 @@ The root display uses [scene.omg](connections/scene.omg) as its sole receiver.
 publications to that display or to the supplied parent; both resume across
 turns. [Maintenance](connections/transfers/maintenance.omg) retains cursor
 updates and owed erasures in the same scene barrier. Hardware input is queued
-independently of cursor drawing. Lifecycle scene replay remains synchronous.
+independently of cursor drawing. Layout-driven scene replay remains synchronous.
 
 Existing-app selection starts at [children/workspace.omg](children/workspace.omg)
 and resumes through [children/selection.omg](children/selection.omg). It previews
@@ -364,8 +368,14 @@ through the shared backing receiver, then commits local demand and focus. The
 requester's exact ticket and both app bindings survive the wait. A refusal aborts
 the staged scene; invalidation after an accepted commit restores the prior scene
 before releasing the barrier. Launch-time activation shares this transaction;
-its failure reclaims the new child before answering the launch. Owner layout,
-binding and explicit refresh still have synchronous callers.
+its failure reclaims the new child before answering the launch. Retirement
+fallback also shares this transaction, with an explicit internal origin naming
+the collected task. It neither borrows a chrome ticket nor replies to one; scene
+settlement releases the retirement fence and its original close/STOP waiter.
+[omega_fallback_test.py](../../../../tools/boot-harness-rs/omega_fallback_test.py)
+holds that scene and checks owner/input progress, refusal, target STOP and slot
+reuse across cold reopen. Owner layout, binding and explicit refresh still have
+synchronous callers.
 
 Owner control enters [program/commands.omg](program/commands.omg). A valid STOP
 enters [program/stopping.omg](program/stopping.omg), marks retirement and is

@@ -9,15 +9,123 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Next work: workspace fallback selection after closing the active app, described
-under [retained login handoff](#retained-login-handoff).
-Latest verified desktop handoff: [retained login handoff](#retained-login-handoff),
+Latest verified desktop handoff: [retained workspace fallback](#retained-workspace-fallback),
+following [retained login handoff](#retained-login-handoff) at `94053ba3`,
 following [retained failed-launch cleanup](#retained-failed-launch-cleanup) at `1a0a8db2`,
 following [retained ordinary close](#retained-ordinary-close) at `0bdb41df`,
 [retained admission retirement](#retained-admission-retirement) at
 `60f7c694` and [nonblocking child task primitives](#nonblocking-child-task-primitives).
 Earlier migration entries below are historical milestones. Normal F5 still uses
 the Rust matrix; the following verification explicitly selects the Omega matrix.
+
+Latest-main reconciliation: `origin/work/omega-segment-selectors` at `ed9f8924` has two commit
+IDs outside main's ancestry, but their content is already squash-merged as
+`d57af8b9` (PR #11). Direct tree comparison of `source/kernel/`,
+`tools/boot-harness/` and the boot qualification record is identical. All 22 boot
+harness host tests passed during review. Do not merge that branch again based
+only on its unmerged commit IDs; no fresh native boot was run for this check.
+
+### Retained workspace fallback
+
+Implemented after `94053ba3`. The new `omega_fallback_test.py` reproduced the
+synchronous fallback wait on that baseline (`build/omega-fallback-before.log`):
+Colors was collected, its fallback COMMIT was held, and the Omega matrix did not
+answer its owner's HEALTH request before the fixture deadline. The root fixture
+then failed its liveness assertion. This is the intended regression, not a pass.
+
+`SelectionOrigin` now distinguishes requester, launch and retirement work. The
+retirement origin names the collected task and its still-reserved local slot;
+it does not borrow a chrome ticket or its outbox. It uses the existing preview,
+remote transaction, cancellation and late-COMMIT rollback, with parent epoch and
+target binding checks. `workspace::retired` starts this continuation instead of
+waiting in `presentation::switch`; the unused synchronous switch is removed.
+
+`Retiring.collected` separates consumed kernel outcomes from final scene
+settlement. The slot and close/STOP replies remain pending until that scene ends;
+later turns cannot collect the same task twice. Explicit setup/shutdown drains
+pump their own selection and its existing transport, so they do not depend on an
+absent service loop. Other final mailbox/image releases still contain waits.
+
+Source layout and diff checks pass. After both cleanup guards described below,
+the stock checked/native build passed at 400/496 load pages
+(`build/omega-fallback-terminal-build.log`), with unchanged stack and allowances.
+The tested stock ELF SHA-256 is
+`e36f097945147c514bbcbb041535a542dc85f8e7390bcce3bbae6f7ee46a2e10`.
+The first checker attempts caught a qualified pattern spelling, obsolete `block`
+acknowledgements on now-nonblocking cleanup calls, and a nested read/mutable borrow
+in the fallback lookup. Those are corrected. Initial completion passed on both
+boots; refusal passed fresh, then its cold run waited for a poll without supplying
+an input event. HEALTH did respond. The test now sends a real left-key event after
+the hold, matching the notification-driven poll contract; it retains both progress
+assertions. Initial evidence remains in `build/omega-fallback-checks-initial.log`
+and `build/omega-fallback-fallback-refuse-initial.log`. With that test correction,
+all seven fallback/selection cases passed, including cold reboot. All seven also
+passed again after both cleanup guards (`build/omega-fallback-checks.log`). The new test has
+`--mode complete|refuse|cancel`: hold fallback COMMIT, require HEALTH and parent
+poll progress, require collection reporting after scene settlement, preserve the
+surviving Notes draft or honor its owner STOP, then save/reopen and reuse slots.
+
+Artifacts under `build/boot-harness-rs/desktop/`:
+
+- Fallback completion: `20261106T041554288140Z/`.
+- Fallback refusal: `20261106T041656528425Z/`.
+- Owner STOP of the fallback app: `20261106T041759813728Z/`.
+- Ordinary selection, held input and refusal: `20261106T041905025827Z/`.
+- Selection cancellation before COMMIT: `20261106T042021886809Z/`.
+- Selection cancellation after COMMIT: `20261106T042120890886Z/`.
+- Cancellation through nested control relays: `20261106T042219731551Z/`.
+
+Review found a cleanup failure-path issue: if the clock fails
+while selection is submitted, `lost` marks it finished without clearing
+`presentation_work.submitted`, so explicit retirement draining can keep waiting
+for a reply on the closed transport. Completion now clears that flag. Review
+also found that one retirement can start a scene during a multi-child pass;
+the next visit now checks the scene fence again before releasing another child's
+backing. These are inspection findings, not reproduced runtime failures.
+The earlier fixture queue was stopped to fix this before publishing; evidence is in
+`build/omega-fallback-fixtures-interrupted.log` and
+`build/omega-fallback-handoff-build-interrupted.log`; the four runtime regressions
+did not run in that interrupted queue. Earlier logs are preserved with a
+`-pre-review.log` suffix.
+
+The revised source stayed frozen through the successful stock, handoff and
+construction builds, the seven focused cases and all four broader regressions.
+Both fixtures also occupy 400 pages. Build results are in
+`build/omega-fallback-fixtures.log`; broader results are in
+`build/omega-fallback-regressions.log`. All four include cold reopen:
+
+- Ordinary Omega desktop and host storage oracle: `20261106T043858773435Z/`.
+- Depth-three nesting and repeated subtree reclamation: `20261106T044005681640Z/`.
+- Owner STOP during login handoff: `20261106T044256053198Z/`.
+- Requester replacement during construction, three rounds on each boot:
+  `20261106T044348719407Z/`; every post-reclaim account was `(8, 59, 626, 0)`.
+
+This is focused verification, not a full F5 variant sweep. No Rust production
+code changed in this slice; its unchanged host/clippy baseline remains recorded
+under the login handoff below. No deadline, stack or resource allowance changed.
+The local queue is `build/check-omega-fallback.py`: run `checks` first for the
+three new cases and four existing selection cases; then `fixtures`, then
+`regressions` for desktop, nesting, handoff STOP and three requester-replacement
+rounds per boot. Stop at the first failure and diagnose it before broadening.
+Keep the separate pointer-stress LOSS timeout open; no deadline or budget bump.
+
+Next live-desktop boundary after this slice: `children/workspace.omg::apply_layout`
+still changes the World and then waits in `connections/presentation.omg::republish`
+for every retained surface. A slow parent can therefore stall the matrix when
+the launcher applies settings. Start with a held-COMMIT settings regression using
+the existing parent probe. Retain the exact controller request, its incarnation
+and authority, and the proposed placements. Preview the new scene while keeping
+the currently displayed placement authoritative for input; publish local geometry
+and standing launch policy after acceptance. Handle refusal, controller departure,
+ancestor changes and late commit explicitly. Give arrangement its own operation
+and reading path, sharing the existing transport and scene fence rather than
+disguising it as an app selection. Verify current apps, later launches and cold
+settings persistence.
+The local draft `build/probe-omega-layout.py` is syntax-checked only and has not
+run. It uses the existing held-COMMIT parent, edits real launcher settings, clicks
+the old displayed placement during the hold, and checks draft retention and
+later launches at the accepted placement. Establish the
+baseline failure, then move the tested reproducer into the harness for that slice.
 
 ### Retained login handoff
 

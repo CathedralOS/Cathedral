@@ -127,9 +127,11 @@ public data Forward [copy] {
     request: Ticket;
 }
 // Cleanup captures the original task before the runtime consumes its ticket.
-// Service withdrawal happens once; later turns only poll collection.
+// Service withdrawal and collection happen once. Scene settlement can then keep
+// the slot unavailable without asking the kernel for its consumed outcome again.
 public data Retiring [copy] {
     started: bool;
+    collected: bool;
     task: u64;
 }
 // The owner connection keeps its request pending until this exact stop settles.
