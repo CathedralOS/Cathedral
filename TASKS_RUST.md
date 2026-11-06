@@ -9,10 +9,14 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Current work: revisit the combined nested-desktop pointer-stress/soak close issue.
+Current work: bound the remaining matrix presentation cleanup batches across
+loop turns, starting with retained image/payload releases. Each individual
+memory-release syscall still parks its caller; do not hide that behind a wrapper.
 Retained construction failure cleanup is pushed at `10c17f18`. Shared-runtime
 admission, six matrix refusal/retry cycles, owner-read and child-launch fresh/cold
-checks, and the Omega root/user desktop all pass.
+checks, and the Omega root/user desktop all pass. The combined depth-three
+pointer-stress soak also passes three fresh and two cold cycles; the earlier
+close failure did not reproduce, but deep app closes still take seconds.
 Latest desktop handoff: [retained construction failure cleanup](#retained-construction-failure-cleanup),
 following [retained owner launches](#retained-owner-launches) at `ebe3526e`,
 following [layout grant invalidation](#layout-grant-invalidation) at `28e6adfd`,
@@ -94,8 +98,24 @@ successfully in `python build/check-construction-cleanup.py construction owner l
   configured user matrix and Colors paint/save through both; artifact
   `build/boot-harness-rs/omega-desktop/20261106T184603866867Z/`.
 
-Logs are `build/cleanup-{owner,launch,desktop}.log`. This does not resolve the
-older combined nested pointer-stress/soak close issue; rerun that separately.
+Logs are `build/cleanup-{owner,launch,desktop}.log`.
+
+The combined nested pointer-stress soak was rerun separately over the Omega
+root/user composition from `omega_desktop_test.compose`, with
+`desktop_test.run(240, trace_storage=True, source_profile=profile, soak=3,
+nested_depth=3, pointer_stress=True)`. All three fresh and two cold cycles passed,
+including exact saved text, nested app close and subtree teardown. Artifact:
+`build/boot-harness-rs/desktop/20261106T184722314214Z/`; log:
+`build/cleanup-nested-stress.log`. The ignored driver is
+`build/check-current-nested-stress.py`.
+Each cycle returned to root account `(8, 138, 642, 15)`, provider floor
+509 private pages/845 frames and shell floor `[2, 2, 128, 0]`, with no recorded
+failures. The older combined close failure did not reproduce; this is not a
+causal diagnosis or a claim that it is fixed. Deep app closes still took
+4.17–9.59 seconds under pointer load, versus 1.16–1.47 seconds for the subsequent
+subtree teardown. Deadlines and standard oracles were unchanged; no extra close
+retry or quiet-motion recovery was added.
+
 Final resource-release calls, catalogue RUN and setup/shutdown paths still have
 blocking work. Memory release is a real deferred kernel operation that parks its
 caller (`source-rs/kernel/core/user_tasks/memory/memory.rs`), not merely an Omega
