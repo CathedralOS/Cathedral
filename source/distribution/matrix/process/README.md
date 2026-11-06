@@ -358,15 +358,21 @@ BEGIN, each translated entry and COMMIT, or ABORT after a rejection. The origina
 child ticket, child view, parent epoch and transaction revision survive each wait.
 Input polling, service acquisition, storage and owner HEALTH remain independent.
 Scene mutations and child retirement wait behind publication; failed handshakes
-retain their cleanup request. Lifecycle scene replay, binding and
-launch still contain synchronous waits. See TASKS_RUST.md for verified scope.
+retain their cleanup request. Layout, selection, retirement fallback and
+child-requested launches advance through retained work. Owner-requested launches,
+explicit setup/shutdown and some final resource releases still contain waits.
+See TASKS_RUST.md for verified scope.
 
 The root display uses [scene.omg](connections/scene.omg) as its sole receiver.
 [The backing selector](connections/transfers/backing.omg) translates child
 publications to that display or to the supplied parent; both resume across
 turns. [Maintenance](connections/transfers/maintenance.omg) retains cursor
 updates and owed erasures in the same scene barrier. Hardware input is queued
-independently of cursor drawing. Layout-driven scene replay remains synchronous.
+independently of cursor drawing. Layout changes enter
+[arrangement.omg](children/arrangement/arrangement.omg): preview the proposed
+placements, publish them, then settle the local grants. The previous geometry
+stays authoritative while publication waits. A refused or invalidated proposal
+cannot silently grant its controller new authority.
 
 Existing-app selection starts at [children/workspace.omg](children/workspace.omg)
 and resumes through [children/selection.omg](children/selection.omg). It previews
@@ -381,7 +387,7 @@ the collected task. It neither borrows a chrome ticket nor replies to one; scene
 settlement releases the retirement fence and its original close/STOP waiter.
 [omega_fallback_test.py](../../../../tools/boot-harness-rs/omega_fallback_test.py)
 holds that scene and checks owner/input progress, refusal, target STOP and slot
-reuse across cold reopen. Owner layout, binding and explicit refresh still have
+reuse across cold reopen. Explicit configuration/refresh drains still have
 synchronous callers.
 
 Owner control enters [program/commands.omg](program/commands.omg). A valid STOP

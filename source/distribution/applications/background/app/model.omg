@@ -9,6 +9,7 @@ public data Phase [copy] {
     case View;
     case Surface;
     case Paint;
+    case Recheck(code: u64);
     case Waiting;
     case Control;
     case Stopped;

@@ -360,6 +360,18 @@ and poll input before release; repeated saves, slot reuse and cold reopen check
 settlement. F2 is a fixture key in that composition only. Ordinary F5 has no hold.
 Add `--nested` to pass the write through another desktop and its containment checks.
 
+`python tools/boot-harness-rs/omega_layout_test.py --mode complete` applies real
+launcher settings while its parent's COMMIT waits. HEALTH and input must keep
+progressing against the old placement; accepted settings then move the apps.
+Use `--mode refuse` for refusal/retry or `--mode cancel` to stop a captured sibling.
+`omega_layout_fault_test.py --mode controller` instead stops the requesting
+launcher during that wait and explicitly installs a replacement. `--mode ancestor`
+replaces the parent's view grant, then explicitly restores child drawing
+allowances and placements. Neither operation restores the old layout-controller
+authority. Both fault cases check the exact surviving Notes draft, later app
+launches and saved settings after cold reopen. F1/F8 during the held COMMIT belong
+only to this parent fixture; the stock Omega child contains no test switch.
+
 `python tools/boot-harness-rs/omega_launch_test.py` holds the executable read
 behind an app launch. The stock Omega matrix must answer HEALTH and poll input
 before release; Notes then saves, closes and reopens across both boots.

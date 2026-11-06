@@ -13,6 +13,8 @@
 //! reply for the host to check both dirty and saved children during drawing.
 //! F6 during a probed hold asks LOSS, then STOP of the child's Colors slot.
 //! F7 during a probed hold routes those requests through two more matrix levels.
+//! F1 during held COMMIT stops and replaces the layout controller; F8 replaces
+//! the ancestor view and then explicitly restores child placements.
 use super::cancellation_probe::Cancellation;
 use super::children::Children;
 use super::*;
@@ -32,12 +34,16 @@ pub(super) struct Gate {
     reject_commit: bool,
     abort_expected: Option<(usize, u64, u64)>,
     cancellation: Option<Cancellation>,
+    controller: Option<super::controller_probe::Controller>,
+    view: Option<super::view_probe::Regrant>,
 }
 impl Gate {
     pub fn deadline(&self) -> Option<u64> {
         if self.construction.active()
             || self.health.is_some()
             || self.cancellation.is_some()
+            || self.controller.is_some()
+            || self.view.is_some()
             || self.storage.active()
             || self.funding.active()
         {
@@ -59,6 +65,16 @@ impl Gate {
             return Ok(Some(event));
         }
         let now = time::now()?;
+        if let Some(view) = &mut self.view
+            && view.step(server, children, now, self.pending.is_some())?
+        {
+            self.view = None;
+        }
+        if let Some(controller) = &mut self.controller
+            && controller.step(server, children, now, self.pending.is_some())?
+        {
+            self.controller = None;
+        }
         if let Some(cancellation) = &mut self.cancellation
             && cancellation.step(server, children, now, self.pending.is_some())?
         {
@@ -183,6 +199,44 @@ impl Gate {
         if request.client == Some(SOURCE)
             && let [wire::KEY_SOURCE, key, state, 0, 0, 0, 0, 0] = words
         {
+            if (key == input::F1 as u64 || key == input::F8 as u64)
+                && self.probe
+                && self.health_kind == wire::PRESENT_COMMIT
+                && let Some((Event::Request(held) | Event::Memory(held, _), until)) = &self.pending
+            {
+                if state == input::PRESS as u64 {
+                    assert!(
+                        self.health.is_none()
+                            && self.cancellation.is_none()
+                            && self.controller.is_none()
+                            && self.view.is_none()
+                    );
+                    let slot = held.client.unwrap();
+                    if key == input::F1 as u64 {
+                        let view = world.request(
+                            slot,
+                            held.incarnation,
+                            [wire::VIEW, 0, 0, 0, 0, 0, 0, 0],
+                        );
+                        self.controller = Some(super::controller_probe::Controller::new(
+                            slot,
+                            held.incarnation,
+                            *until,
+                            view,
+                        ));
+                        time::storage_sample("layout-controller-stop-armed", &[]);
+                    } else {
+                        self.view = Some(super::view_probe::Regrant::new(
+                            world,
+                            slot,
+                            held.incarnation,
+                            *until,
+                        ));
+                    }
+                }
+                server.reply(request, &wire::encode([0; 8]))?;
+                return Ok(None);
+            }
             if key == input::F4 as u64 {
                 // Not the root's to act on: the key travels to the focused
                 // child, and the matrix that receives it from its parent arms.

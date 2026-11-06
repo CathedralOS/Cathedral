@@ -48,7 +48,7 @@ replacement, not arbitrary reordering of old replies after replacement.
 
 The Rust fixture entrance is
 [construction_probe.rs](../../../../source-rs/distribution/matrix/service/construction_probe/construction_probe.rs).
-Its [replacement leaf](../../../../source-rs/distribution/matrix/service/construction_probe/replacement.rs)
+Its [replacement leaf](../../../../source-rs/distribution/matrix/service/requester_probe.rs)
 owns only the ordinary control-command sequence; `mod.rs` is plumbing.
 
 Use `--rounds 4` with any mode to repeat the observation, owner/input overlap,

@@ -1,7 +1,7 @@
 //! Reinstall the standard launch requester through ordinary owner commands.
 //! This is test orchestration, not automatic launcher recovery policy.
-use super::super::*;
-use super::Children;
+use super::children::Children;
+use super::*;
 use cathedral_user_runtime::time;
 
 enum Step {

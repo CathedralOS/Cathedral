@@ -17,6 +17,7 @@ pub(super) struct Cancellation {
     until: u64,
     stage: Stage,
     hops: usize,
+    target: usize,
     next_probe: u64,
     asked: bool,
 }
@@ -28,9 +29,15 @@ impl Cancellation {
             until: held_until.wrapping_add(300),
             stage: Stage::Loss,
             hops,
+            target: 1,
             next_probe: 0,
             asked: false,
         }
+    }
+    pub fn controller(slot: usize, incarnation: u64, held_until: u64) -> Self {
+        let mut probe = Self::new(slot, incarnation, held_until, 0);
+        probe.target = 0;
+        probe
     }
     pub fn step(
         &mut self,
@@ -58,7 +65,7 @@ impl Cancellation {
                 Stage::Stop => {
                     assert!(held, "STOP must start before scene release");
                     time::storage_sample("selection-stop-requested", &[self.hops as u64]);
-                    [wire::STOP, 1, 0, 0, 0, 0, 0, 0]
+                    [wire::STOP, self.target as u64, 0, 0, 0, 0, 0, 0]
                 }
                 // A nonzero binding response cannot be confused with STOP's zero
                 // acknowledgement. Notes still owns slot 2 and its storage scope.

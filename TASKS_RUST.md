@@ -9,8 +9,10 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Current work: the remaining fault coverage in [retained layout application](#retained-layout-application).
-Latest verified desktop handoff: [retained layout application](#retained-layout-application),
+Current work: finish the regression checks for [layout grant invalidation](#layout-grant-invalidation),
+then retain owner-requested launches across service turns.
+Latest desktop handoff: [layout grant invalidation](#layout-grant-invalidation),
+following [retained layout application](#retained-layout-application) at `6b7deef5`,
 following [retained workspace fallback](#retained-workspace-fallback) at `ff555376`,
 following [retained login handoff](#retained-login-handoff) at `94053ba3`,
 following [retained failed-launch cleanup](#retained-failed-launch-cleanup) at `1a0a8db2`,
@@ -26,6 +28,50 @@ IDs outside main's ancestry, but their content is already squash-merged as
 `tools/boot-harness/` and the boot qualification record is identical. All 22 boot
 harness host tests passed during review. Do not merge that branch again based
 only on its unmerged commit IDs; no fresh native boot was run for this check.
+
+### Layout grant invalidation
+
+`omega_layout_fault_test.py --mode controller|ancestor` exercises the stock Omega
+matrix through its ordinary owner/service connections. The Rust test parent holds
+a layout COMMIT. Controller mode asks LOSS/STOP, waits for scene settlement and
+collection, then installs a new launcher in the same slot. Ancestor mode replaces
+the parent view and explicitly restores drawing allowances and child placements.
+Neither restores layout-controller authority. Both check the exact surviving
+Notes draft, fresh input, later launches and the saved settings on cold reopen.
+The replacement helper is shared with the existing construction-requester probe.
+These fixture keys are absent from ordinary F5.
+
+Both new scenarios pass fresh and cold boots:
+
+- Ancestor: `build/boot-harness-rs/desktop/20261106T064943133222Z/`.
+- Controller: `build/boot-harness-rs/desktop/20261106T065121050225Z/`.
+
+The ancestor fixture initially restored placement without drawing allowances,
+and then used the legacy five-key mask rather than the full original grant.
+Those setup errors caused refused drawing and dropped text input. Correcting
+the fixture exposed a real Background bug: it reused a surface handle across
+grant epochs and exited with BAD_HANDLE. The Omega app now creates a fresh
+surface for a new epoch. A refused create/paint rechecks the grant once: a new
+grant starts fresh, no view parks, and refusal under the same grant stays fatal.
+Transport failures still stop without replay. All nine compiled Background tests
+pass, including changes during CREATE/PAINT and missing-view recovery. The new
+ancestor desktop runs contain no failed children.
+
+Background's checked native image is 47/496 load pages, SHA256
+`d3e48a41b05964709a42ecc94889f4dee576345baece0005cc29b8ce997c8408`.
+The matrix is unchanged from `6b7deef5`: 416/496 pages with the same ELF hash.
+Fault-test logs are `build/omega-layout-{ancestor,controller}-regrant.log`;
+earlier failed setup and input traces are retained separately under `build/`.
+Construction-requester, selection, ordinary F5, independent Background and full
+host regressions are running; do not count them as qualified yet.
+
+Next: owner `RUN_OBJECT` still enters synchronous `children/stored.omg::run`,
+including its executable read and admission. Reproduce that wait with an existing
+Notes app, then retain the owner request and its staged resources while normal
+input/service work continues. Owner-requested `RUN`, explicit setup/refresh and
+final resource-release drains also need separate review. The unrelated nested
+LOSS timeout under pointer stress remains open. Normal F5 still selects the Rust
+matrix; these tests do not qualify every remaining F5 variant.
 
 ### Retained layout application
 
@@ -84,8 +130,8 @@ checks owner HEALTH, polling, old input geometry, exact dirty draft, retry and
 later launches at the accepted placement. Each includes cold reopen. Cancellation
 stops a captured sibling while Notes remains alive. `settings_test.py --profile`
 selects the Omega composition for its changed-layout cold-boot and user-isolation
-checks. Dedicated controller-departure and ancestor-invalidation scenarios remain
-required; the passing sibling cancellation does not prove either case. Keep the
+checks. Dedicated controller-departure and ancestor-invalidation scenarios are
+covered in the follow-up above; sibling cancellation alone proves neither. Keep the
 separate pointer-stress LOSS timeout open; it was not requalified here.
 
 Final-extent verification, all passing. Artifacts are beneath
@@ -111,11 +157,8 @@ Settings takes the newly created completion fixture, avoiding stale executable
 copies. Logs ending `-64k.log` describe the superseded physical extent and are
 not final-extent qualification.
 
-Next: extend the parent fixture to stop the controller while its layout request
-is held, and separately invalidate the ancestor grant. Check stale reply custody,
-old-view retirement, surviving siblings and subsequent valid work. Use ordinary
-owner/service IPC against the stock Omega matrix; do not add special production
-behavior for these tests.
+The following slice supplies controller departure and ancestor invalidation
+through ordinary owner/service IPC; see the current handoff above.
 
 ### Retained workspace fallback
 

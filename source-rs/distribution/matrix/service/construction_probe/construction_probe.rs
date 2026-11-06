@@ -5,6 +5,7 @@
 // handoff-probe routes the first three modes into the nested login in slot 1;
 // requester replacement remains a construction-only fixture.
 use super::children::Children;
+use super::requester_probe as replacement;
 use super::*;
 use cathedral_platform_contracts::{imports, input};
 use cathedral_user_runtime::time;

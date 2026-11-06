@@ -28,6 +28,7 @@ machine completed(phase: Phase, p: &[u64; 4096]) -> Event {
         transition phase {
             Phase::FirstView -> view(p)
             Phase::View -> view(p)
+            Phase::Recheck { code } -> view(p)
             Phase::Surface -> surface(p)
             Phase::Paint -> painted(p)
             _ -> (Event::Complete)
