@@ -14,7 +14,7 @@ fn denied_storage_leaves_interaction_usable_and_paints_the_original_view() {
 }
 
 #[test]
-fn unchanged_view_sleeps_and_new_epoch_reuses_the_surface_at_its_new_size() {
+fn unchanged_view_sleeps_and_new_epoch_allocates_a_new_surface() {
     with_app(|peer| {
         peer.through(6);
         for _ in 0..3 {
@@ -26,9 +26,11 @@ fn unchanged_view_sleeps_and_new_epoch_reuses_the_surface_at_its_new_size() {
         peer.reply([0; 8], 0);
         peer.next(5);
         peer.reply([0, 8, 960, 540, 0, 0, 0, 0], 0);
+        assert_eq!(peer.next(5), [wire::SURFACE_CREATE, 8, 0, 0, 0, 0, 0, 0]);
+        peer.reply([0, SURFACE + 1, 0, 0, 0, 0, 0, 0], 0);
         assert_eq!(
             peer.next(5),
-            [wire::PAINT, 8, SURFACE, 0, 0, 960, 540, 0x101827]
+            [wire::PAINT, 8, SURFACE + 1, 0, 0, 960, 540, 0x101827]
         );
         peer.reply([0; 8], 0);
         peer.next(6);
@@ -97,14 +99,51 @@ fn every_transport_failure_stops_without_replaying_work() {
 }
 
 #[test]
-fn surface_and_paint_provider_failures_stop_without_retry() {
+fn surface_and_paint_refusals_under_the_same_grant_stop_without_retry() {
     for step in [4, 5] {
         with_app(|peer| {
             peer.through(step);
             peer.reply([abi::NO_MEMORY, 0, 0, 0, 0, 0, 0, 0], 0);
+            assert_eq!(peer.next(5)[0], wire::POLL);
+            peer.reply(VIEW, 0);
             peer.failed(abi::NO_MEMORY);
         });
     }
+}
+
+#[test]
+fn grant_change_during_surface_or_paint_rebinds_without_reusing_old_handles() {
+    for step in [4, 5] {
+        with_app(|peer| {
+            peer.through(step);
+            peer.reply([abi::BAD_HANDLE, 0, 0, 0, 0, 0, 0, 0], 0);
+            assert_eq!(peer.next(5)[0], wire::POLL);
+            peer.reply([0, 8, 960, 540, 0, 0, 0, 0], 0);
+            assert_eq!(peer.next(5), [wire::SURFACE_CREATE, 8, 0, 0, 0, 0, 0, 0]);
+            peer.reply([0, SURFACE + 1, 0, 0, 0, 0, 0, 0], 0);
+            assert_eq!(
+                peer.next(5),
+                [wire::PAINT, 8, SURFACE + 1, 0, 0, 960, 540, 0x101827]
+            );
+            peer.reply([0; 8], 0);
+            peer.next(6);
+        });
+    }
+}
+
+#[test]
+fn revoked_view_parks_after_a_refused_paint_and_regrants_from_scratch() {
+    with_app(|peer| {
+        peer.through(5);
+        peer.reply([abi::DENIED, 0, 0, 0, 0, 0, 0, 0], 0);
+        assert_eq!(peer.next(5)[0], wire::POLL);
+        peer.reply([abi::DENIED, 0, 0, 0, 0, 0, 0, 0], 0);
+        peer.next(6);
+        peer.reply([0; 8], 0);
+        assert_eq!(peer.next(5)[0], wire::POLL);
+        peer.reply([0, 9, 960, 540, 0, 0, 0, 0], 0);
+        assert_eq!(peer.next(5), [wire::SURFACE_CREATE, 9, 0, 0, 0, 0, 0, 0]);
+    });
 }
 
 #[test]

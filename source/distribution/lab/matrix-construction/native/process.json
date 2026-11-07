@@ -1,0 +1,9 @@
+{
+  "imports": [
+    {"contract": 1, "minimum": 1, "maximum": 1, "required": true},
+    {"contract": 2, "minimum": 1, "maximum": 1, "required": true}
+  ],
+  "channels": 24,
+  "descendants": 3,
+  "profile": {"private_pages": 256, "reader_pages": 384, "surfaces": 24}
+}

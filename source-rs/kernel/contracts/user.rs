@@ -252,3 +252,12 @@ pub const TASK_SPAWN_BEGIN: u64 = 89;
 /// committed result wins and its child remains the caller's to stop/collect.
 /// No clock grant required. Polling never blocks; stale/foreign receipts fail.
 pub const TASK_SPAWN_RESULT: u64 = 90;
+
+/// Request retirement of this owner's exact child without parking the caller.
+/// Child ticket, zero, zero. Repeated requests preserve the collectible outcome.
+/// Withdrawal precedes the next userspace entry; physical cleanup may continue.
+pub const TASK_CANCEL_BEGIN: u64 = 91;
+/// Nonblocking TASK_WAIT: child ticket, writable EXIT_BYTES record, EXIT_BYTES.
+/// WOULD_BLOCK preserves the ticket and destination. Success copies then consumes
+/// the outcome only after reclamation. No clock grant or wait registration.
+pub const TASK_TRY_WAIT: u64 = 92;

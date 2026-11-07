@@ -1,0 +1,40 @@
+module construction::observation;
+// An explicitly configured observation window, never a kernel admission policy.
+// Construction may commit behind the window; authority checks and STOP still
+// run normally, and cancellation must collect any already committed child.
+use shared::state::State;
+use shared::report;
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::time::Tick;
+
+public machine defer_construction(gate: &Gate, context: &mut State) -> bool reaches Kernel invokes Kernel {
+    let ticks: u64 [0..=100] = context.construction_window;
+    transition ticks == 0u64 { true -> (false) _ -> timed(gate, context, ticks) }
+    machine timed(gate: &Gate, context: &mut State, ticks: u64 [0..=100]) -> bool reaches Kernel {
+        let now: Tick = runtime::time::read(gate, context.clock);
+        transition now {
+            Tick::Read { value } -> checked(gate, context, ticks, value)
+            _ -> (false)
+        }
+    }
+    machine checked(gate: &Gate, context: &mut State, ticks: u64 [0..=100], now: u64) -> bool reaches Kernel {
+        transition {
+            !context.launch.probe_started -> started(gate, context, ticks, now)
+            context.launch.probe_until == 0u64 -> (false)
+            runtime::time::reached(now, context.launch.probe_until) -> released(gate, context)
+            _ -> (true)
+        }
+    }
+    machine started(gate: &Gate, context: &mut State, ticks: u64 [0..=100], now: u64) -> bool reaches Kernel {
+        context.launch.probe_started = true;
+        context.launch.probe_until = runtime::time::after(now, ticks);
+        report::construction_held(gate);
+        true
+    }
+    machine released(gate: &Gate, context: &mut State) -> bool reaches Kernel {
+        context.launch.probe_until = 0u64;
+        report::construction_released(gate);
+        false
+    }
+}

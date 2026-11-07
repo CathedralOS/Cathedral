@@ -1,6 +1,8 @@
 //! F2 arms PUBLISH; pressing it twice arms BULK, three times returns a bad
 //! executable after BULK, four times revokes and regrants the launcher scope.
 //! Five presses hold the binding refresh; six revoke/regrant during it.
+//! Seven hold an owner's executable read until two interaction polls arrive.
+//! That owner connection already carries RUN_OBJECT, so it cannot also ask HEALTH.
 //! Each hold waits until the child answers HEALTH and polls
 //! its interaction connection. The exact sealed input stays in the retained Event.
 //! This is a Rust fixture parent, never a probe in the shipped Omega program.
@@ -21,7 +23,8 @@ pub(super) struct Gate {
     until: u64,
     asked: bool,
     healthy: bool,
-    polled: bool,
+    polls: u8,
+    owner_read: bool,
 }
 
 impl Gate {
@@ -67,7 +70,7 @@ impl Gate {
             }
             return Ok(None);
         }
-        if !self.healthy {
+        if !self.healthy && !self.owner_read {
             let question = (!self.asked).then_some([wire::HEALTH, 0, 0, 0, 0, 0, 0, 0]);
             if let Some(reply) =
                 children.poll_control_probe(self.child, question, now, self.until)?
@@ -80,7 +83,7 @@ impl Gate {
                 self.asked = true;
             }
         }
-        if self.healthy && self.polled {
+        if (self.healthy || self.owner_read) && self.polls == self.required_polls() {
             if self.regrant != 0 {
                 let opcode = if self.regrant == 1 {
                     wire::STORAGE_BINDING
@@ -150,7 +153,7 @@ impl Gate {
             && key == input::F2 as u64
         {
             if state == input::PRESS as u64 && !self.active() {
-                self.mode = self.mode % 6 + 1;
+                self.mode = self.mode % 7 + 1;
                 time::storage_sample(
                     match self.mode {
                         1 => "storage-delay-armed",
@@ -158,7 +161,8 @@ impl Gate {
                         3 => "storage-invalid-armed",
                         4 => "storage-regrant-armed",
                         5 => "storage-binding-armed",
-                        _ => "storage-binding-regrant-armed",
+                        6 => "storage-binding-regrant-armed",
+                        _ => "storage-owner-read-armed",
                     },
                     &[],
                 );
@@ -167,12 +171,17 @@ impl Gate {
             return Ok(None);
         }
         if self.active()
-            && !self.polled
+            && self.polls < self.required_polls()
             && request.client == Some(self.child)
             && matches!(words[0], wire::POLL | wire::POLL_TAGGED)
         {
-            self.polled = true;
+            self.polls += 1;
             time::storage_sample("storage-poll-during-hold", &[]);
+            if self.owner_read && self.polls < self.required_polls() {
+                // An idle client polls on wake hints, not on a fixed timer.
+                // Ask for the second observation after seeing the first one.
+                world.notify(self.child);
+            }
         }
         if self.mode != 0
             && (words[0] & 0xffff)
@@ -194,7 +203,7 @@ impl Gate {
                     "read/binding query has no input attachment"
                 );
                 time::storage_sample(
-                    if self.mode >= 5 {
+                    if matches!(self.mode, 5 | 6) {
                         "storage-binding-held"
                     } else {
                         "storage-read-held"
@@ -207,7 +216,8 @@ impl Gate {
             self.until = time::after(30)?;
             self.asked = false;
             self.healthy = false;
-            self.polled = false;
+            self.polls = 0;
+            self.owner_read = self.mode == 7;
             self.invalid_image = self.mode == 3;
             self.regrant = if matches!(self.mode, 4 | 6) { 1 } else { 0 };
             self.mode = 0;
@@ -217,5 +227,10 @@ impl Gate {
             return Ok(None);
         }
         Ok(Some(event))
+    }
+
+    fn required_polls(&self) -> u8 {
+        // One poll could already have been queued before RUN_OBJECT blocked.
+        if self.owner_read { 2 } else { 1 }
     }
 }

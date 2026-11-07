@@ -369,66 +369,58 @@ machine publish(context: &mut State, slot: u64 [0..=4], incarnation: u64, revisi
     let status: u64 = transaction::begin(context, slot, revision, compact);
     error(status)
 }
-public machine commit_batch(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64) -> [u64; 8]
-    reaches Kernel blocks invokes Kernel {
-    block committing(gate, context, slot, incarnation, revision, 0u64)
-    machine committing(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64) -> [u64; 8]
-        reaches Kernel requires index <= 16u64 {
-        transition index < 16u64 {
-            true -> block commit_entry(gate, context, slot, incarnation, revision, index)
+public machine commit_batch(context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64) -> [u64; 8] {
+    committing(context, slot, incarnation, revision, 0u64)
+    machine committing(context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64) -> [u64; 8]
+        requires index <= 64u64 {
+        transition index < 64u64 {
+            true -> commit_entry(context, slot, incarnation, revision, index)
             _ -> (finished(context, slot, revision))
         }
     }
-    machine commit_entry(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64) -> [u64; 8]
-        reaches Kernel requires index < 16u64 {
+    machine commit_entry(context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64) -> [u64; 8]
+        requires index < 64u64 {
         transition context.batches[slot].entries[index].used {
-            true -> block commit_used(gate, context, slot, incarnation, revision, index)
-            _ -> block committing(gate, context, slot, incarnation, revision, index + 1u64)
+            true -> commit_used(context, slot, incarnation, revision, index)
+            _ -> committing(context, slot, incarnation, revision, index + 1u64)
         }
     }
-    machine commit_used(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64) -> [u64; 8]
-        reaches Kernel requires index < 16u64 {
+    machine commit_used(context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64) -> [u64; 8]
+        requires index < 64u64 {
         let words: [u64; 8] = context.batches[slot].entries[index].words;
         let payload: u64 = batch::take_payload(&mut context.batches[slot], index);
         let result: Updated = surfaces::update(&mut context.world, slot, incarnation, &words, true);
         transition result {
-            Updated::Packet { words } -> block kept(gate, context, slot, incarnation, revision, index, words[2], payload)
-            Updated::Refused { code } -> block unkept(gate, context, slot, incarnation, revision, index, payload)
+            Updated::Packet { words } -> kept(context, slot, incarnation, revision, index, words[2], payload)
+            Updated::Refused { code } -> unkept(context, slot, incarnation, revision, index, payload)
         }
     }
-    machine kept(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64, key: u64, payload: u64)
-        -> [u64; 8] reaches Kernel requires index < 16u64 {
+    machine kept(context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64, key: u64, payload: u64)
+        -> [u64; 8] requires index < 64u64 {
         transition payload != 0u64 {
-            true -> block retaining(gate, context, slot, incarnation, revision, index, key, payload)
-            _ -> block painted(gate, context, slot, incarnation, revision, index, key)
+            true -> retaining(context, slot, incarnation, revision, index, key, payload)
+            _ -> painted(context, slot, incarnation, revision, index, key)
         }
     }
-    machine retaining(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64, key: u64, payload: u64)
-        -> [u64; 8] reaches Kernel requires index < 16u64 {
-        block retain(gate, context, key, payload);
-        transition { _ -> (block committing(gate, context, slot, incarnation, revision, index + 1u64)) }
+    machine retaining(context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64, key: u64, payload: u64)
+        -> [u64; 8] requires index < 64u64 {
+        context.presentation_work.releases[index] = replace_image(context, key, payload);
+        transition { _ -> (committing(context, slot, incarnation, revision, index + 1u64)) }
     }
-    machine painted(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64, key: u64) -> [u64; 8]
-        reaches Kernel requires index < 16u64 {
-        block drop_image(gate, context, key);
-        transition { _ -> (block committing(gate, context, slot, incarnation, revision, index + 1u64)) }
+    machine painted(context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64, key: u64) -> [u64; 8]
+        requires index < 64u64 {
+        context.presentation_work.releases[index] = take_image(context, key);
+        transition { _ -> (committing(context, slot, incarnation, revision, index + 1u64)) }
     }
-    machine unkept(gate: &Gate, context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64, payload: u64) -> [u64; 8]
-        reaches Kernel requires index < 16u64 {
-        block release(gate, payload);
-        transition { _ -> (block committing(gate, context, slot, incarnation, revision, index + 1u64)) }
+    machine unkept(context: &mut State, slot: u64 [0..=4], incarnation: u64, revision: u64, index: u64, payload: u64) -> [u64; 8]
+        requires index < 64u64 {
+        context.presentation_work.releases[index] = payload;
+        transition { _ -> (committing(context, slot, incarnation, revision, index + 1u64)) }
     }
     machine finished(context: &mut State, slot: u64 [0..=4], revision: u64) -> [u64; 8] {
         batch::committed(&mut context.batches[slot], revision);
         ok()
     }
-}
-// A refused compact publication discards its staging without forgetting the
-// last committed revision; retries of that revision must remain idempotent.
-public machine discard_batch(gate: &Gate, context: &mut State, slot: u64 [0..=4], revision: u64)
-    reaches Kernel blocks invokes Kernel {
-    block release_payloads(gate, context, slot, 0u64);
-    let status: u64 = batch::abort(&mut context.batches[slot], revision);
 }
 // One translated packet to the backing: upstream as the parent's own surface
 // word, with the sealed image behind an image word; at the root as the
@@ -454,129 +446,12 @@ machine send_packet(gate: &Gate, context: &mut State, packet: [u64; 8], payload:
         reply[0]
     }
 }
-// An owner visibility change in one transaction: with the World's
-// visibility already set, the previous app's retained surfaces are replayed
-// blank and the next app's shown, committed together or aborted, so the
-// parent or the display never shows both or neither. `previous` zero is none.
-public machine switch(gate: &Gate, context: &mut State, previous: u64, next: u64 [0..=4]) -> u64 reaches Kernel blocks invokes Kernel {
-    context.revision = ((context.revision as u64 in Wrapping) + 1u64) as u64;
-    let begun: u64 = block transact(gate, context, PRESENT_BEGIN, display::MATRIX_BEGIN);
-    transition begun == 0u64 {
-        true -> block staging(gate, context, previous, next)
-        _ -> (begun)
-    }
-    machine staging(gate: &Gate, context: &mut State, previous: u64, next: u64 [0..=4]) -> u64 reaches Kernel {
-        let hidden: u64 = block replaying(gate, context, previous);
-        transition hidden == 0u64 {
-            true -> block shown(gate, context, next)
-            _ -> block aborted(gate, context, hidden)
-        }
-    }
-    machine shown(gate: &Gate, context: &mut State, next: u64 [0..=4]) -> u64 reaches Kernel {
-        let staged: u64 = block replay_slot(gate, context, next, 0u64);
-        transition staged == 0u64 {
-            true -> block committing(gate, context)
-            _ -> block aborted(gate, context, staged)
-        }
-    }
-}
-// After the children's geometry changed: owed erasures first, then every
-// child's retained surfaces under the new placement in one transaction.
-public machine republish(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks invokes Kernel {
-    let flushed: u64 = block flush(gate, context);
-    context.revision = ((context.revision as u64 in Wrapping) + 1u64) as u64;
-    let begun: u64 = block transact(gate, context, PRESENT_BEGIN, display::MATRIX_BEGIN);
-    transition begun == 0u64 {
-        true -> block every(gate, context, 0u64)
-        _ -> (begun)
-    }
-    machine every(gate: &Gate, context: &mut State, slot: u64) -> u64 reaches Kernel requires slot <= 5u64 {
-        transition slot < 5u64 {
-            true -> block one(gate, context, slot)
-            _ -> block committing(gate, context)
-        }
-    }
-    machine one(gate: &Gate, context: &mut State, slot: u64 [0..=4]) -> u64 reaches Kernel {
-        let staged: u64 = block replay_slot(gate, context, slot, 0u64);
-        transition staged == 0u64 {
-            true -> block every(gate, context, slot + 1u64)
-            _ -> block aborted(gate, context, staged)
-        }
-    }
-}
-machine committing(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
-    let committed: u64 = block transact(gate, context, PRESENT_COMMIT, display::MATRIX_COMMIT);
-    transition committed == 0u64 {
-        true -> (0u64)
-        _ -> block aborted(gate, context, committed)
-    }
-}
-// An abort that fails leaves the backing's state unknown: that is the result.
-machine aborted(gate: &Gate, context: &mut State, status: u64) -> u64 reaches Kernel {
-    let abort: u64 = block transact(gate, context, PRESENT_ABORT, display::MATRIX_ABORT);
-    transition abort == 0u64 {
-        true -> (status)
-        _ -> (abort)
-    }
-}
-machine replaying(gate: &Gate, context: &mut State, slot: u64) -> u64 reaches Kernel {
-    transition slot >= 1u64 && slot < 5u64 {
-        true -> block replay_slot(gate, context, slot, 0u64)
-        _ -> (0u64)
-    }
-}
-// Every retained surface of one slot under the World's current geometry and
-// visibility, with the retained image behind an image word.
-machine replay_slot(gate: &Gate, context: &mut State, slot: u64 [0..=4], rank: u64) -> u64 reaches Kernel requires rank <= 64u64 {
-    transition rank < 64u64 {
-        true -> block ranked(gate, context, slot, rank)
-        _ -> (0u64)
-    }
-    machine ranked(gate: &Gate, context: &mut State, slot: u64 [0..=4], rank: u64) -> u64 reaches Kernel requires rank < 64u64 {
-        let retained: Retained = surfaces::replay(&mut context.world, slot, rank);
-        transition retained {
-            Retained::Packet { words } -> block sent(gate, context, slot, rank, words)
-            Retained::Nothing -> block replay_slot(gate, context, slot, rank + 1u64)
-        }
-    }
-    machine sent(gate: &Gate, context: &mut State, slot: u64 [0..=4], rank: u64, words: [u64; 8]) -> u64 reaches Kernel requires rank < 64u64 {
-        let image: u64 = retained_image(context, words);
-        let status: u64 = block send_packet(gate, context, words, image);
-        transition status == 0u64 {
-            true -> block replay_slot(gate, context, slot, rank + 1u64)
-            _ -> (status)
-        }
-    }
-}
 public machine retained_image(context: &State, words: [u64; 8]) -> u64 {
     let index: u64 = image_index(context, words[2], 0u64);
     transition words[0] == SURFACE_IMAGE && index < 64u64 {
         true -> (context.images[index].object)
         _ -> (0u64)
     }
-}
-// Open, commit or abort this matrix's transaction: the parent's batch word
-// under this matrix's view and revision, or the compositor's under its revision.
-machine transact(gate: &Gate, context: &mut State, word: u64, command: u64) -> u64 reaches Kernel {
-    let local: [u64; 6] = control_words(command, context.revision);
-    transition context.has_parent {
-        true -> block batched(gate, context, word)
-        _ -> block scene::command(gate, context, local)
-    }
-    machine batched(gate: &Gate, context: &mut State, word: u64) -> u64 reaches Kernel {
-        let mut request: [u64; 8];
-        request[0] = word;
-        request[1] = context.world.parent.epoch;
-        request[2] = context.revision;
-        let reply: [u64; 8] = block upstream::exchange(gate, context, request);
-        reply[0]
-    }
-}
-machine control_words(op: u64, revision: u64) -> [u64; 6] {
-    let mut words: [u64; 6];
-    words[0] = op;
-    words[1] = revision;
-    words
 }
 // A batch bound to a departed occupant or an older epoch is forgotten, with
 // the payloads it held.
@@ -593,12 +468,12 @@ machine prune(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kerne
         batch::reset(&mut context.batches[slot]);
     }
 }
-machine release_payloads(gate: &Gate, context: &mut State, slot: u64 [0..=4], index: u64) reaches Kernel requires index <= 16u64 {
-    transition index < 16u64 {
+machine release_payloads(gate: &Gate, context: &mut State, slot: u64 [0..=4], index: u64) reaches Kernel requires index <= 64u64 {
+    transition index < 64u64 {
         true -> block releasing(gate, context, slot, index)
         _ -> done()
     }
-    machine releasing(gate: &Gate, context: &mut State, slot: u64 [0..=4], index: u64) reaches Kernel requires index < 16u64 {
+    machine releasing(gate: &Gate, context: &mut State, slot: u64 [0..=4], index: u64) reaches Kernel requires index < 64u64 {
         let payload: u64 = batch::take_payload(&mut context.batches[slot], index);
         block release(gate, payload);
         transition { _ -> block release_payloads(gate, context, slot, index + 1u64) }
@@ -641,36 +516,46 @@ machine free_image(context: &State, index: u64) -> u64 requires index <= 64u64 {
 machine has_room(context: &State, key: u64) -> bool {
     image_index(context, key, 0u64) < 64u64 || free_image(context, 0u64) < 64u64
 }
-// Hold the image behind a tile, releasing the one it replaces.
-machine retain(gate: &Gate, context: &mut State, key: u64, object: u64) reaches Kernel {
+// Move a tile's backing without releasing its predecessor. A batch keeps the
+// returned handle in its retained cleanup; single-image callers release it now.
+machine replace_image(context: &mut State, key: u64, object: u64) -> u64 {
     let existing: u64 = image_index(context, key, 0u64);
     let empty: u64 = free_image(context, 0u64);
     transition {
-        existing < 64u64 -> block replaced(gate, context, existing, key, object)
+        existing < 64u64 -> replaced(context, existing, key, object)
         empty < 64u64 -> stored(context, empty, key, object)
-        _ -> block release(gate, object)
+        _ -> (object)
     }
-    machine replaced(gate: &Gate, context: &mut State, index: u64, key: u64, object: u64) reaches Kernel requires index < 64u64 {
+    machine replaced(context: &mut State, index: u64, key: u64, object: u64) -> u64 requires index < 64u64 {
         let previous: u64 = context.images[index].object;
         context.images[index] = Image { key: key, object: object };
-        block release(gate, previous);
+        previous
     }
-    machine stored(context: &mut State, index: u64, key: u64, object: u64) requires index < 64u64 {
+    machine stored(context: &mut State, index: u64, key: u64, object: u64) -> u64 requires index < 64u64 {
         context.images[index] = Image { key: key, object: object };
+        0u64
     }
 }
-public machine drop_image(gate: &Gate, context: &mut State, key: u64) reaches Kernel blocks invokes Kernel {
+machine take_image(context: &mut State, key: u64) -> u64 {
     let existing: u64 = image_index(context, key, 0u64);
     transition existing < 64u64 {
-        true -> block cleared(gate, context, existing)
-        _ -> done()
+        true -> cleared(context, existing)
+        _ -> (0u64)
     }
-    machine cleared(gate: &Gate, context: &mut State, index: u64) reaches Kernel requires index < 64u64 {
+    machine cleared(context: &mut State, index: u64) -> u64 requires index < 64u64 {
         let previous: u64 = context.images[index].object;
         let empty: Image;
         context.images[index] = empty;
-        block release(gate, previous);
+        previous
     }
+}
+machine retain(gate: &Gate, context: &mut State, key: u64, object: u64) reaches Kernel {
+    let previous: u64 = replace_image(context, key, object);
+    block release(gate, previous);
+}
+public machine drop_image(gate: &Gate, context: &mut State, key: u64) reaches Kernel blocks invokes Kernel {
+    let previous: u64 = take_image(context, key);
+    block release(gate, previous);
 }
 public machine release_images(gate: &Gate, context: &mut State, index: u64) reaches Kernel blocks invokes Kernel requires index <= 64u64 {
     transition index < 64u64 {

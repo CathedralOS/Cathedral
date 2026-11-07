@@ -1,0 +1,48 @@
+module supervisor::retirement;
+// A rejected receipt observation must preserve a real allocated bundle. Repair
+// the deliberately invalid fixture receipt, then prove ordinary release closes it.
+use runtime::kernel::Gate;
+use runtime::kernel::Kernel;
+use runtime::kernel;
+use runtime::admission::main::Admitted;
+use runtime::admission::retirement::Retirement;
+use protocol::services::INTERACTION;
+use protocol::services::STORAGE;
+
+public machine check(gate: &Gate) -> u64 reaches Kernel blocks invokes Kernel {
+    let mut child: Admitted;
+    let status: u64 = block runtime::admission::main::prepare_bundle(gate, &mut child, INTERACTION | STORAGE);
+    transition status == 0u64 {
+        true -> block rejected(gate, &mut child)
+        _ -> (320u64)
+    }
+}
+machine rejected(gate: &Gate, child: &mut Admitted) -> u64 reaches Kernel {
+    child.pending = kernel::BAD_HANDLE;
+    let result: Retirement = runtime::admission::retirement::poll(gate, child);
+    transition result {
+        Retirement::Failed { code } -> block retained(gate, child, code)
+        _ -> (321u64)
+    }
+}
+machine retained(gate: &Gate, child: &mut Admitted, code: u64) -> u64 reaches Kernel {
+    let sender: u64 = child.handoff[0];
+    block runtime::admission::main::release(gate, child);
+    let mut packet: [u64; 8];
+    let status: u64 = Kernel::send(gate, sender, &packet, 8u64);
+    transition code == kernel::BAD_HANDLE && child.pending == kernel::BAD_HANDLE
+        && child.handoff[0] == sender && status == 8u64 {
+        true -> block repaired(gate, child, sender)
+        _ -> (322u64)
+    }
+}
+machine repaired(gate: &Gate, child: &mut Admitted, sender: u64) -> u64 reaches Kernel {
+    child.pending = 0u64;
+    block runtime::admission::main::release(gate, child);
+    let mut packet: [u64; 8];
+    let status: u64 = Kernel::send(gate, sender, &packet, 8u64);
+    transition child.handoff[0] == 0u64 && status == kernel::BAD_HANDLE {
+        true -> (0u64)
+        _ -> (323u64)
+    }
+}

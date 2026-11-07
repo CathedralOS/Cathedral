@@ -181,7 +181,4 @@ impl Supervisor {
         self.cancellation = true;
         Ok(true)
     }
-    pub fn cancellation_pending(&self) -> bool {
-        self.cancellation
-    }
 }

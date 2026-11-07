@@ -78,6 +78,8 @@ cathedral_kernel_gate:
     .quad cathedral_clock_stamp
     .quad cathedral_spawn_begin
     .quad cathedral_spawn_result
+    .quad cathedral_task_cancel_begin
+    .quad cathedral_task_try_wait
 
 .section .text.cathedral_kernel_gate,"ax",@progbits
 cathedral_yield:
@@ -808,3 +810,21 @@ cathedral_pool_available:
     ret
 
 .section .note.GNU-stack,"",@progbits
+
+.section .text.cathedral_kernel_gate,"ax",@progbits
+cathedral_task_cancel_begin:
+    mov eax, 91                      // TASK_CANCEL_BEGIN
+    xor esi, esi
+    xor edx, edx
+    int 0x80
+    ret
+cathedral_task_try_wait:
+    mov r8, rdi
+    mov rdi, rsi
+    stage_buffer
+    mov eax, 92                      // TASK_TRY_WAIT
+    mov rdi, r8
+    mov rsi, rsp
+    mov edx, 40
+    int 0x80
+    finish_buffer 1

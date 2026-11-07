@@ -1,15 +1,18 @@
 module selection;
-// Workspace activation, for existing apps and new launches: preview -> remote
-// transaction -> local focus/demand. Launch owns its receipt and failed child.
+// Workspace activation for requests, launches and retirement fallback: preview
+// -> remote transaction -> local focus/demand. Each origin owns its completion.
 // The old scene remains the input target while every remote phase is pending.
 // A late cancellation after COMMIT restores the old scene before releasing it.
 use shared::state::State;
 use shared::presentation::Transfer;
 use shared::presentation::Switch;
+use shared::presentation::SelectionOrigin;
 use shared::presentation::Phase;
+use shared::presentation::SceneOperation;
 use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;
+use runtime::time::Tick;
 use runtime::server::main::Ticket;
 use runtime::server::deferred;
 use protocol::matrix;
@@ -34,7 +37,7 @@ public machine begin(context: &mut State, requester: u64 [0..=4], previous: u64,
     machine retained(context: &mut State, requester: u64 [0..=4], previous: u64 [0..=4], next: u64 [0..=4]) -> u64 {
         let ticket: Ticket = runtime::server::main::ticket(&context.slots[requester].listener);
         let status: u64 = hold(context, requester, ticket);
-        transition status == 0u64 { true -> started(context, requester, previous, next, ticket, false) _ -> (status) }
+        transition status == 0u64 { true -> started(context, requester, previous, next, ticket, SelectionOrigin::Requester) _ -> (status) }
     }
 }
 // LAUNCH already retained this ticket while reading its executable. It keeps
@@ -43,23 +46,38 @@ public machine begin_launch(context: &mut State) -> u64 {
     let previous: u64 = workspace::active(context);
     let next: u64 = context.launch.slot;
     transition !context.presentation_work.active && previous < 5u64 && next >= 1u64 && next <= 3u64 {
-        true -> started(context, context.launch.requester, previous, next, context.launch.ticket, true)
+        true -> started(context, context.launch.requester, previous, next, context.launch.ticket, SelectionOrigin::Launch)
         _ -> (kernel::DENIED)
     }
 }
-machine started(context: &mut State, requester: u64 [0..=4], previous: u64 [0..=4], next: u64 [0..=4], ticket: Ticket, launching: bool) -> u64 {
+// The matrix itself chooses a fallback after collection. There is no requester
+// ticket: the original retiring task identifies the work that must settle.
+public machine begin_retirement(context: &mut State, slot: u64 [0..=4], next: u64) -> u64 {
+    transition !context.presentation_work.active && context.retirements[slot].collected
+        && next >= 1u64 && next <= 3u64 {
+        true -> retained(context, slot, next)
+        _ -> (kernel::DENIED)
+    }
+    machine retained(context: &mut State, slot: u64 [0..=4], next: u64 [0..=4]) -> u64 {
+        let unused: Ticket;
+        let origin: SelectionOrigin = SelectionOrigin::Retirement { slot: slot, task: context.retirements[slot].task };
+        started(context, slot, 0u64, next, unused, origin)
+    }
+}
+machine started(context: &mut State, requester: u64 [0..=4], previous: u64 [0..=4], next: u64 [0..=4], ticket: Ticket,
+    origin: SelectionOrigin) -> u64 {
     let mut work: Transfer;
     let mut change: Switch;
     context.revision = ((context.revision as u64 in Wrapping) + 1u64) as u64;
     work.active = true;
-    work.selection = true;
+    work.operation = SceneOperation::Selection;
     work.phase = Phase::Begin;
     work.slot = requester;
     work.ticket = ticket;
     work.frame.payload[1] = context.world.children[requester].grant.epoch;
     work.parent_epoch = context.world.parent.epoch;
     work.upstream_revision = context.revision;
-    change.launch = launching;
+    change.origin = origin;
     change.previous = previous;
     change.next = next;
     change.previous_incarnation = context.world.children[previous].incarnation;
@@ -78,14 +96,58 @@ machine hold(context: &mut State, slot: u64 [0..=4], ticket: Ticket) -> u64 {
 }
 public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
     transition {
-        !context.presentation_work.active || !context.presentation_work.selection -> done()
-        context.answers[context.presentation_work.slot].active -> block draining(gate, context)
+        !context.presentation_work.active || context.presentation_work.operation != SceneOperation::Selection -> done()
+        reply_pending(context) -> block draining(gate, context)
         context.presentation_work.submitted -> block receive(gate, context)
         _ -> block advance(gate, context)
     }
     machine draining(gate: &Gate, context: &mut State) reaches Kernel {
         let slot: u64 [0..=4] = context.presentation_work.slot;
         let status: u64 = block responses::step(gate, context, slot);
+    }
+}
+machine reply_pending(context: &State) -> bool {
+    transition context.selection_work.origin {
+        SelectionOrigin::Retirement { slot, task } -> (false)
+        _ -> (context.answers[context.presentation_work.slot].active)
+    }
+}
+// Setup-error and shutdown callers explicitly drain retirement without the
+// service loop. Pump the same transport and selection, only for their own work.
+public machine drain_retirement(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel blocks invokes Kernel {
+    transition context.presentation_work.active && (context.presentation_work.operation == SceneOperation::Selection) {
+        true -> block owned(gate, context, slot)
+        _ -> done()
+    }
+    machine owned(gate: &Gate, context: &mut State, retiring: u64 [0..=4]) reaches Kernel {
+        transition context.selection_work.origin {
+            SelectionOrigin::Retirement { slot, task } -> block matched(gate, context, retiring == slot)
+            _ -> done()
+        }
+    }
+    machine matched(gate: &Gate, context: &mut State, owned: bool) reaches Kernel {
+        transition owned { true -> block reading(gate, context) _ -> done() }
+    }
+    machine reading(gate: &Gate, context: &mut State) reaches Kernel {
+        let tick: Tick = runtime::time::read(gate, context.clock);
+        transition tick {
+            Tick::Read { value } -> block pumping(gate, context, value)
+            Tick::Failed { code } -> block failed(gate, context, code)
+        }
+    }
+    machine pumping(gate: &Gate, context: &mut State, now: u64) reaches Kernel {
+        block transport(gate, context, now);
+        block step(gate, context);
+    }
+    machine transport(gate: &Gate, context: &mut State, now: u64) reaches Kernel {
+        transition context.has_parent {
+            true -> block connections::parent::connection::step(gate, context, now)
+            _ -> block connections::scene::step(gate, context, now)
+        }
+    }
+    machine failed(gate: &Gate, context: &mut State, code: u64) reaches Kernel {
+        block lost(gate, context, code);
+        block step(gate, context);
     }
 }
 machine receive(gate: &Gate, context: &mut State) reaches Kernel {
@@ -163,12 +225,21 @@ machine advance(gate: &Gate, context: &mut State) reaches Kernel {
 }
 machine current(context: &State) -> bool {
     let change: Switch = context.selection_work;
-    transfer::current(context)
-        && (!change.launch || authority::presenting(context))
+    origin_current(context, change.origin)
+        && context.world.parent.epoch == context.presentation_work.parent_epoch
+        && (context.has_parent || context.has_scene)
         && !context.retire_after_present[change.next]
         && level::binding_matches(&context.world, change.next, change.next_incarnation, change.next_epoch)
         && (change.previous == 0u64 || (!context.retire_after_present[change.previous]
             && level::binding_matches(&context.world, change.previous, change.previous_incarnation, change.previous_epoch)))
+}
+machine origin_current(context: &State, origin: SelectionOrigin) -> bool {
+    transition origin {
+        SelectionOrigin::Requester -> (transfer::current(context))
+        SelectionOrigin::Launch -> (transfer::current(context) && authority::presenting(context))
+        SelectionOrigin::Retirement { slot, task } -> (context.desktop && context.retire_after_present[slot]
+            && context.retirements[slot].collected && context.retirements[slot].task == task)
+    }
 }
 machine invalidated(context: &mut State) {
     transition context.presentation_work.phase == Phase::Begin {
@@ -229,7 +300,13 @@ machine lost(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
     completed(context, status);
 }
 machine aborting(context: &mut State, status: u64) { context.presentation_work.status = status; context.presentation_work.phase = Phase::Abort; }
-machine completed(context: &mut State, status: u64) { context.presentation_work.status = status; context.presentation_work.phase = Phase::Finished; }
+machine completed(context: &mut State, status: u64) {
+    // A terminal result can also abandon a submitted request on a lost transport.
+    // No reply remains to receive before finishing the selection.
+    context.presentation_work.submitted = false;
+    context.presentation_work.status = status;
+    context.presentation_work.phase = Phase::Finished;
+}
 machine finish(gate: &Gate, context: &mut State) reaches Kernel {
     let work: Transfer = context.presentation_work;
     let change: Switch = context.selection_work;
@@ -240,9 +317,10 @@ machine finish(gate: &Gate, context: &mut State) reaches Kernel {
     context.presentation_work = empty;
     context.selection_work = no_change;
     context.next_child = (work.slot + 1u64) % 5u64;
-    transition change.launch {
-        true -> block launch::launch::presented(gate, context, work.status)
-        _ -> block reply(gate, context, work)
+    transition change.origin {
+        SelectionOrigin::Launch -> block launch::launch::presented(gate, context, work.status)
+        SelectionOrigin::Requester -> block reply(gate, context, work)
+        SelectionOrigin::Retirement { slot, task } -> done()
     }
     machine reply(gate: &Gate, context: &mut State, work: Transfer) reaches Kernel {
         let sent: u64 = block responses::send(gate, context, work.slot, work.ticket, presentation::error(work.status));

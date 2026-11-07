@@ -34,7 +34,9 @@ use connections::scene;
 use connections::cursors;
 use children::slots;
 use children::selection;
+use children::arrangement::arrangement;
 use children::launch::launch;
+use children::owner_launch::owner_launch;
 use children::lifecycle;
 use children::funding;
 use connections::presentation;
@@ -47,12 +49,19 @@ public const IDLE_TICKS: u64 = 1000u64;
 public const OWED_TICKS: u64 = 10u64;
 public ProgramProvider satisfies Program {
     machine run(gate: &Gate, first: u64, second: u64) -> u64 reaches Kernel blocks invokes Kernel {
-        let mut context: State;
-        let status: u64 = block startup::open(gate, &mut context);
-        transition status == 0u64 {
-            true -> block serve(gate, &mut context)
-            _ -> block cleanup(gate, &mut context, status)
-        }
+        block start(gate, 0u64, 0u64)
+    }
+}
+// The lab wrapper may request a short observation window. The ordinary process
+// entry always supplies zero; kernel arguments never enable test behavior.
+public machine start(gate: &Gate, construction_ticks: u64 [0..=100], handoff_ticks: u64 [0..=100]) -> u64 reaches Kernel blocks invokes Kernel {
+    let mut context: State;
+    context.construction_window = construction_ticks;
+    context.handoff_window = handoff_ticks;
+    let status: u64 = block startup::open(gate, &mut context);
+    transition status == 0u64 {
+        true -> block serve(gate, &mut context)
+        _ -> block cleanup(gate, &mut context, status)
     }
 }
 machine serve(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
@@ -66,6 +75,7 @@ machine turn(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
     block scene::step(gate, context, now);
     let polled: u64 = block upstream::step(gate, context, now);
     block selection::step(gate, context);
+    block arrangement::step(gate, context);
     block transfer::step(gate, context);
     block lifecycle::retire_pending(gate, context);
     let retired: u64 = block presentation::flush_turn(gate, context);
@@ -77,17 +87,19 @@ machine turn(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
     let erasures: u64 = block presentation::flush_turn(gate, context);
     let children: u64 = block slots::all(gate, context, now);
     block selection::step(gate, context);
+    block arrangement::step(gate, context);
     block transfer::step(gate, context);
     let stored: u64 = block storage::step(gate, context, now);
     block funding::step(gate, context);
     block launch::step(gate, context);
+    block owner_launch::step(gate, context, now);
     lifecycle::notify(gate, context);
     let flushed: u64 = block presentation::flush_turn(gate, context);
     let pointed: u64 = block cursors::step(gate, context);
     maintenance::pointer(context);
     block transfer::step(gate, context);
     lifecycle::settle(gate, context);
-    transition (context.has_parent || context.has_scene) && polled == 0u64 && settled == 0u64 && commanded == 0u64 && relayed == 0u64 && sourced == 0u64 && children == 0u64 && stored == 0u64 && flushed == 0u64 && pointed == 0u64 {
+    transition (context.has_parent || context.has_scene) && polled == 0u64 && settled == 0u64 && commanded == 0u64 && relayed == 0u64 && sourced == 0u64 && children == 0u64 && stored == 0u64 && context.launch.failure == 0u64 && context.retirement_failure == 0u64 && flushed == 0u64 && pointed == 0u64 {
         true -> block parked(gate, context, now)
         _ -> block cleanup(gate, context, 403u64)
     }
@@ -101,7 +113,7 @@ machine parked(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel
     runtime::server::main::watch(&context.source, &mut set);
     upstream::watch(context, &mut set);
     scene::watch(context, &mut set);
-    forward::watch(context, &mut set);
+    forward::watch(context, &mut set, now);
     lifecycle::watch(context, 0u64, &mut set, now);
     lifecycle::watch(context, 1u64, &mut set, now);
     lifecycle::watch(context, 2u64, &mut set, now);
@@ -118,8 +130,8 @@ machine park_ticks(context: &State) -> u64 {
     transition {
         context.presentation_work.active && !context.presentation_work.submitted -> (1u64)
         context.presentation_work.active -> (OWED_TICKS)
-        context.scene_owner.active || queued_children(context, 0u64) -> (1u64)
-        context.frame_count != 0u64 || context.configure_queued || context.launch.phase != 0u64 || funding::pending(context) -> (1u64)
+        context.stopping.active || context.scene_owner.active || queued_children(context, 0u64) -> (1u64)
+        context.frame_count != 0u64 || context.configure_queued || context.launch.phase != 0u64 || context.owner_launch.phase != 0u64 || funding::pending(context) -> (1u64)
         context.refresh_due || context.parent_work.poll_ready -> (OWED_TICKS)
         _ -> (IDLE_TICKS)
     }
@@ -137,6 +149,7 @@ machine cleanup(gate: &Gate, context: &mut State, status: u64) -> u64 reaches Ke
     report::control(gate, context.clock, context.trace_origin, 7u64, 5u64, status);
     block transfer::discard(gate, context);
     block launch::discard(gate, context);
+    block owner_launch::discard(gate, context);
     block lifecycle::reclaim(gate, context, 0u64);
     block lifecycle::reclaim(gate, context, 1u64);
     block lifecycle::reclaim(gate, context, 2u64);

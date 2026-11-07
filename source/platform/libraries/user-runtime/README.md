@@ -139,13 +139,23 @@ reader pages and channels left, its unused process slots and its reserved
 frames not yet charged.
 [link.omg](link.omg) names the boot-approved provider links the composition
 supplied: the link at an index, and a client connection over it.
+The task API also offers `cancel_begin` and `try_wait`. The first requests abrupt
+retirement of the exact owned child; the second returns `Pending`, `Ready` with
+its exit outcome, or `Failed`. Neither parks nor needs a clock grant. Poll once
+per service turn and arrange a wake while cleanup remains pending. Keep the
+ticket and backing until collection succeeds. These primitives do not make
+`admission::stop` or `pending::drain` nonblocking; those are explicit blocking
+conveniences over the retained retirement path below.
+
 [admission/main.omg](admission/main.omg) sequences one brokered admission:
 allocate the request/reply channels, the optional storage pair and the
 interaction bell, move the two broker endpoints into the child, accept owner
 control, then begin the child's listener on the retained provider ends. Every
 failed phase releases exactly what this task still holds; a child that exists
 when a later phase fails is cancelled and collected first. `stop` cancels,
-collects and releases; `release` alone closes whatever remains. The caller
+collects and releases; `release` drains construction before closing the bundle.
+If construction cannot be observed, or a live child remains, it retains that
+bundle. Stop or collect the child before releasing its provider resources. The caller
 chooses the launch, argument, loans, granted services, and the clock and window
 of the child's service handshake, which start once the child exists, so loading a
 large image does not eat into them.
@@ -153,15 +163,32 @@ large image does not eat into them.
 [admission/pending.omg](admission/pending.omg) splits that operation into `begin`
 and `poll`. The provider retains the startup bundle beside an owner-scoped
 kernel receipt and keeps serving other connections between polls. `Ready` means
-the child was published and its listener was installed; a completed submission's
-failure releases its bundle. Loading remains charged to the same parent and child.
-Before `Ready`, use `release` to abandon the submitted work; `stop` takes a live child.
-There is no receipt wait right yet: a service loop must arrange a bounded timer
-wake while a receipt is pending. Cleanup and failure after publication still
-use blocking cancellation/collection; this is not a fully asynchronous teardown.
+the child was published and its listener was installed. `Failed` may still retain
+a published child or an unconsumed receipt: stop serving that slot, advance
+`retirement::poll` across turns, then release its bundle after `Ready`, before reuse.
+[Publication setup](admission/publication.omg) preserves the real task ticket,
+control and remaining endpoints on failure; it never waits to collect the child.
+A completed pre-publication failure releases its bundle, so retirement then finds
+an empty slot. Loading remains charged to the same parent and child.
+`release` and `stop` remain explicit blocking abandonment conveniences. There is no
+receipt wait right yet: the caller must arrange a bounded timer wake while either
+admission or retirement remains pending.
+
+[admission/retirement.omg](admission/retirement.omg) owns cancellation and collection
+for both submitted construction and live children. `poll` makes one visit without
+parking: `Pending` retains the bundle; `Ready` distinguishes an empty slot, aborted
+construction with its status, and a collected child with its original exit.
+If publication won, it retains the real task ticket and clears the moved endpoint
+names before requesting cancellation. A rejected observation returns `Failed`
+without forgetting custody. The caller must stop serving/admitting that slot and
+arrange another turn while pending; after `Ready`, it may release the bundle.
+`wait` is the explicit blocking convenience used by `stop` and `pending::drain`.
+Closing the final listener and mailbox backing still uses blocking memory calls.
 
 At the lower level, `task::begin_spawn` and `task::poll_spawn` expose the same
-mechanism without service policy. A completed result is consumed once. A pending
+mechanism without service policy. A completed result is consumed once; `Rejected`
+means the observation failed without consuming a result, whereas `Failed` carries
+the consumed construction failure. A pending
 cancellation waits for private rollback; if publication already won, the result
 still returns the actual child, which the caller must stop/collect if unwanted.
 `admission::release` drains a pending receipt and handles that race before
@@ -194,9 +221,9 @@ leaves retain the input tail, copy back before returning, and do not retain a
 borrow. The 176-byte spawn record and 40-byte exit record are staged the same
 way, as are the own-account resource and notification budget snapshots a program
 can compare around an operation that must leave nothing behind. Counts are
-checked Omega ranges. Allocation, mapping, release, yield,
-receive, wait, spawn, cancel and collection declare blocking and their callers
-acknowledge it. Launch, port and child values are kernel tickets scoped to the
+checked Omega ranges. Operations that can park declare blocking and their callers
+acknowledge it; admission/cancellation submission and outcome polling do not.
+Launch, port and child values are kernel tickets scoped to the
 calling task; scalar names alone grant no authority.
 
 [storage/main.omg](storage/main.omg) retains a child-local binding revision and
@@ -235,7 +262,9 @@ In particular, copied IPC is the
 setup/grant mechanism; it must not become a fallback for the desktop's shared
 service protocol. Child admission and service offers are proven by the
 [admission witness](../../../distribution/lab/user-entry/README.md#child-admission);
-no installed program admits children yet, and the matrix still uses its Rust host.
+the standalone Omega stock matrix also uses it to admit installed programs in
+the Omega desktop composition. Normal F5 still selects the Rust matrix host
+while the Omega implementation closes its remaining parity gaps.
 The runtime has only been qualified on x86-64.
 
 The [process witness](../../../distribution/lab/user-entry/README.md) exercises

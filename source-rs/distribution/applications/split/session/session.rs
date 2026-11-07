@@ -165,7 +165,10 @@ pub fn run(mut services: Services) -> Result<(), Error> {
             } else if clean {
                 capture.stop(&mut output, world, &mut server)?;
                 producer.stop(&mut output, world, &mut server)?;
-                return Ok(());
+                // Kernel exit stops the whole descendant tree before tearing
+                // down its services. Returning would drop servers first while
+                // Notes children can still run against them.
+                cathedral_user_runtime::task::exit(0);
             } else {
                 output.header(true)?;
             }

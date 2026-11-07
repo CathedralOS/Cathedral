@@ -46,6 +46,10 @@ The process entry: the turn loop, startup and the owner's words.
   a slot's save-recovery grant, the recovery poll, RESTORE_STORAGE after
   provider replacement), RESOLVE_PATH in this matrix's realm, and the World's
   placement words. Everything else is denied, never silently accepted.
+- [stopping.omg](program/stopping.omg): validate owner STOP, request retirement
+  once, and retain the exact owner ticket until collection and bookkeeping finish.
+  A full reply mailbox keeps that ticket for another turn. This is the same path
+  with or without a pending scene; other connections continue being served.
 
 ### [connections/](connections/build.omg)
 
@@ -88,8 +92,15 @@ The storage, the parent and the display.
   under one transaction; the compact rectangles word ([rects.omg](connections/rects.omg))
   is such a batch of one or two paints. Images stay retained behind their
   backing, one per compositor tile, until it is painted over or erased; owed
-  erasures flush between turns. A scene switch and a republish after the
-  geometry changed replay retained surfaces in one transaction.
+  erasures flush between turns. Workspace selection and layout application use
+  the same retained transport and scene fence.
+- [arrangement.omg](children/arrangement/arrangement.omg): the stock layout policy
+  proposes placements, then the World captures their live bindings. Publication
+  keeps the old geometry and content authoritative while waiting for the parent.
+  Refusal preserves them; a late accepted cancellation restores the old scene.
+  Settlement installs accepted geometry and standing launch policy, then starts
+  ordinary retained erasures before ranks can be reused. A changed extent
+  invalidates surface names as before; its app redraws under the new grant.
 - [storage/storage.omg](connections/storage/storage.omg): this matrix's storage. At the root the provider
   links the composition supplied connect when the first grant or request
   needs them; under a parent the broker's storage connection is the one
@@ -137,8 +148,10 @@ The children this matrix admits, funds, presents and retires.
 
 - [construction/construction.omg](children/construction/construction.omg): configure a reserved
   launch, submit construction and open its control and storage listeners. Child
-  LAUNCH requests use the runtime's asynchronous receipt; owner/setup calls still
-  wait. [configuration.omg](children/construction/configuration.omg) owns the bounded
+  LAUNCH and owner RUN_OBJECT requests use the runtime's asynchronous receipt
+  and retain refusals through lifecycle retirement; catalogue RUN and setup calls
+  still wait.
+  [configuration.omg](children/construction/configuration.omg) owns the bounded
   CPU and catalogue grants. Lifecycle collects cancelled submissions and returns
   their reservations, including when publication wins the cancellation race.
 - [lifecycle.omg](children/lifecycle.omg): RUN_PAGES and RUN_MEMORY stage a slot's next
@@ -150,7 +163,16 @@ The children this matrix admits, funds, presents and retires.
   owner control, which the child accepts as its first act before it asks the
   broker for anything. STOP reclaims the subtree and returns the reservation;
   so does a listener that retires, and the exit goes to the console through
-  [report.omg](shared/report.omg). A child's owner control opens without
+  [report.omg](shared/report.omg). Owner STOP, ordinary close and departed listeners request
+  retirement, then the turn loop visits collection without waiting inside the
+  task syscall. The original task identity stays beside the reserved slot until
+  reporting, resource release and workspace bookkeeping finish. Setup and shutdown
+  callers explicitly drain the same state and pump its fallback transaction.
+  A consumed outcome is recorded before scene settlement; the slot and close
+  replies remain pending, without collecting that task twice. Each child visit
+  checks the scene fence again, since an earlier retirement can start a fallback.
+  Final memory
+  release still blocks. A child's owner control opens without
   blocking: a host with descendants sets up its broker services before it
   accepts control, so the matrix sends the hello, keeps serving, finishes
   the handshake on a later turn once the child answers, and takes the child
@@ -162,8 +184,10 @@ The children this matrix admits, funds, presents and retires.
   once the ended child's frames are no longer charged, so a refused release
   waits and is retried each turn and before any funding is reckoned. An
   ended host's descendant reservations come back under fresh local names and
-  are released too, at reclaim and before funding. Every failed step leaves
-  no reservation behind.
+  are released too, at reclaim and before funding. That sweep skips reservations
+  still tracked by a local slot or deferred release: collection can finish in the
+  kernel before the owning cleanup runs again. Each such owner releases its own
+  reservation.
 - [forward.omg](children/forward.omg): requests over the children's owner
   controls, one pending per child. For an owner word routed to a child the
   stock control policy decodes the first hop above the operation into the
@@ -174,7 +198,10 @@ The children this matrix admits, funds, presents and retires.
   and stops it only on an answer that nothing would be lost; missing,
   malformed, busy and late answers never count as permission. A late reply is
   drained unanswered, and the slot takes no further request until it has
-  been.
+  been. Once a clean close answer is accepted, its request stays retained until
+  collection finishes. A full requester outbox delays its answer without losing
+  the ticket; the next local wakeup cannot depend on another input event. A
+  replacement listener cannot receive the previous incarnation's close reply.
 - [slots.omg](children/slots.omg): one admitted child's listener per turn. Service
   acquisition goes to the runtime's offer, surface and batch words to
   presentation (a sealed attachment is accepted only behind an image word),
@@ -200,11 +227,20 @@ The children this matrix admits, funds, presents and retires.
   local launch funding has its own work item. A retired requester cannot grow
   a replacement child. Accepted parent replies are drained even after cancellation;
   any upstream grant remains this matrix's allowance, without authorizing the
-  cancelled launch. Owner/setup admission still uses a synchronous wrapper.
+  cancelled launch. Catalogue RUN and setup admission still use a synchronous wrapper.
 - [stored.omg](children/stored.omg): owner RUN_OBJECT and admission from a sealed
   image. Resolve the declaration, fit the offered capacity, reserve, admit and
   bind the child's storage; unwind a failed step. Startup jobs and retained
-  child launches share this admission path. Owner reads and binding still wait.
+  child launches share this admission path. Setup retains a synchronous wrapper.
+- [owner_launch/owner_launch.omg](children/owner_launch/owner_launch.omg): owner
+  RUN_OBJECT captures its exact control ticket and staged allowances once. It
+  reads through this matrix's storage authority, yields through funding and
+  construction, then installs the captured storage binding locally. An owner
+  request does not borrow a child's identity or layout authority. Child launches
+  and realm setup cannot take its reserved work; other service traffic continues.
+  A full reply mailbox retains the result without replaying construction.
+  Failed construction retains the same request through lifecycle collection.
+  Final resource-release calls still need review for blocking waits.
 - [launch/launch.omg](children/launch/launch.omg): a child's LAUNCH reserves its
   exact reply ticket, caller and storage incarnations, grant revision, target
   and standing policy before yielding for the executable. The scoped read uses
@@ -222,9 +258,34 @@ The children this matrix admits, funds, presents and retires.
   resource plan retained beside the request. The caller and policy are rechecked
   before each observation and after publication; binding and placement use that
   retained plan before the next child dispatch. The login picker remains alive
-  through loading and retires only after the replacement exists. Failure after
-  retirement queues bounded picker recovery. Cancellation and teardown still
-  drain synchronously; ordinary construction no longer waits.
+  through loading and retires only after the replacement exists.
+  [launch/handoff.omg](children/launch/handoff.omg) owns that retirement across
+  turns: the matrix has accepted the selection, and keeps its replacement
+  unserved until binding and placement finish. Intentional picker retirement
+  cannot cancel the accepted selection; STOP of the target and owner policy
+  changes still do. Failure after retirement queues bounded picker recovery.
+  The [handoff lab](../../lab/matrix-handoff/README.md) holds completion to test
+  owner progress, withheld services and cancellation recovery.
+  Revoked construction uses the shared
+  admission retirement poll across turns, retaining the bundle and reservation
+  until rollback or collection. A child that won publication is kept out of
+  service while draining; a rejected observation preserves custody and ends the
+  matrix rather than claiming successful cleanup. An independently requested
+  retirement owns collection until it finishes; cancellation cannot consume its
+  outcome. Final bundle release and setup teardown still
+  contain synchronous work.
+  [launch/completion.omg](children/launch/completion.omg) owns final recovery and
+  replies. Failed placement or activation retains its refusal and caller through
+  child retirement, then answers once bookkeeping ends and the caller's outbox
+  can take custody. A replacement listener never receives that reply. Startup
+  handshake failure likewise queues retirement, and placement cannot publish a
+  child whose handshake already requested cleanup.
+  An accepted owner update to the target's launch imports, images, ceilings or
+  placement cancels the captured request permanently, including a revoke followed
+  by restoration of the same policy. Other targets remain independent.
+  The [construction lab](../../lab/matrix-construction/README.md) holds observation
+  to exercise owner/input progress, STOP and import-policy revoke/restore; normal
+  startup passes a zero window to the same process body.
 
 - [workspace.omg](children/workspace.omg): the workspace's app instances
   under the stock catalogue. A launch into an app slot publishes the instance
@@ -304,19 +365,32 @@ in the saved colour.
 Forwarded images and presentation batches resume across turns through
 [transfers/transfer.omg](connections/transfers/transfer.omg). Images retain one
 sealed backing; [transaction.omg](connections/transfers/transaction.omg) advances
-BEGIN, each translated entry and COMMIT, or ABORT after a rejection. The original
-child ticket, child view, parent epoch and transaction revision survive each wait.
+BEGIN, each translated entry and COMMIT, or ABORT after a rejection. A successful
+commit changes the local scene without kernel calls, then retains the replaced
+backings in [retirement.omg](connections/transfers/retirement.omg). That cleanup
+releases at most one handle per continuation step; the ticket and scene barrier
+remain held until it finishes. Compact/stale rejection moves its staged payloads
+into the same cleanup. Shutdown drains any remaining detached custody. Individual
+memory-release syscalls still park, and other synchronous release paths remain.
+The original child ticket, child view, parent epoch and transaction revision
+survive each wait.
 Input polling, service acquisition, storage and owner HEALTH remain independent.
 Scene mutations and child retirement wait behind publication; failed handshakes
-retain their cleanup request. Lifecycle scene replay, binding and
-launch still contain synchronous waits. See TASKS_RUST.md for verified scope.
+retain their cleanup request. Layout, selection, retirement fallback and
+child-requested and owner-requested launches advance through retained work.
+Explicit setup/shutdown and some final resource releases still contain waits.
+See TASKS_RUST.md for verified scope.
 
 The root display uses [scene.omg](connections/scene.omg) as its sole receiver.
 [The backing selector](connections/transfers/backing.omg) translates child
 publications to that display or to the supplied parent; both resume across
 turns. [Maintenance](connections/transfers/maintenance.omg) retains cursor
 updates and owed erasures in the same scene barrier. Hardware input is queued
-independently of cursor drawing. Lifecycle scene replay remains synchronous.
+independently of cursor drawing. Layout changes enter
+[arrangement.omg](children/arrangement/arrangement.omg): preview the proposed
+placements, publish them, then settle the local grants. The previous geometry
+stays authoritative while publication waits. A refused or invalidated proposal
+cannot silently grant its controller new authority.
 
 Existing-app selection starts at [children/workspace.omg](children/workspace.omg)
 and resumes through [children/selection.omg](children/selection.omg). It previews
@@ -325,12 +399,20 @@ through the shared backing receiver, then commits local demand and focus. The
 requester's exact ticket and both app bindings survive the wait. A refusal aborts
 the staged scene; invalidation after an accepted commit restores the prior scene
 before releasing the barrier. Launch-time activation shares this transaction;
-its failure reclaims the new child before answering the launch. Owner layout,
-binding and explicit refresh still have synchronous callers.
+its failure reclaims the new child before answering the launch. Retirement
+fallback also shares this transaction, with an explicit internal origin naming
+the collected task. It neither borrows a chrome ticket nor replies to one; scene
+settlement releases the retirement fence and its original close/STOP waiter.
+[omega_fallback_test.py](../../../../tools/boot-harness-rs/omega_fallback_test.py)
+holds that scene and checks owner/input progress, refusal, target STOP and slot
+reuse across cold reopen. Explicit configuration/refresh drains still have
+synchronous callers.
 
 Owner control enters [program/commands.omg](program/commands.omg). A valid STOP
-marks retirement during a pending scene and is acknowledged after the transaction
-settles and the child is reclaimed. LOSS reports BUSY during selection, launch
+enters [program/stopping.omg](program/stopping.omg), marks retirement and is
+acknowledged after any pending scene settles and the child is reclaimed. Its
+reply ticket remains retained across collection and output backpressure.
+LOSS reports BUSY during selection, launch
 and realm setup. Ordinary image and cursor publication does not block a read-only
 loss survey: [children/forward.omg](children/forward.omg) asks the current children
 and checks that the same task set remains before reporting clean. Routed owner

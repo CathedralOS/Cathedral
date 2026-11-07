@@ -49,6 +49,7 @@ def exercise(output, click, key, scan, width, height, reboot, cancel=False):
             scan(lambda _w, _d: 'Cathedral matrix: launch refused' in log()[start:], 'new launch refused')
             events = log()[start:]
             assert 'matrix: reclaimed 1 ' in events
+            assert events.index('matrix: reclaimed 1 ') < events.index('Cathedral matrix: launch refused'), events
             assert 'matrix: reclaimed 2 ' not in events
             if cancel:
                 assert events.index('selection-stop-requested') < events.index(end)

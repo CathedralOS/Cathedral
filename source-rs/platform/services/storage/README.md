@@ -83,15 +83,17 @@ two scope words name subtrees it must stay inside: before dispatch the
 provider checks that every stamped scope is an ancestor of every object the
 request would touch, refusing an object outside the scope and one that does
 not exist alike, and refusing to replace or delete the scope object itself.
-Objects hold up to 256 KiB, so programs fit; a root has a 4 MiB retained-record
-allowance. The lab volume occupies 8 MiB, including engine transaction headroom.
+Objects hold up to 2 MiB, so programs fit; a root has a 8 MiB retained-record
+allowance. The lab volume occupies 32 MiB, leaving transaction space for redb
+to grow a compacted extent. Engine pages, allocator metadata and the volume
+envelope are separate from the logical retained-record charge.
 The desktop's root matrix holds both links and delegates
 subtrees of them to its children; the [objects lab](../../../distribution/lab/objects/README.md)
 hands them to two bare clients instead.
 
 Every write is one engine transaction. Before a publication, metadata update or
 copy (including subtree copy), the provider checks the durable retained-byte
-ledger. Below half the 4 MiB quota it skips collection. At or above that
+ledger. Below half the 8 MiB quota it skips collection. At or above that
 watermark it performs **one** collection pass, removing at most eight records.
 This maintenance trigger stays independent of the maximum object size. Every
 mutation still checks exact quota, including publication/index overhead.

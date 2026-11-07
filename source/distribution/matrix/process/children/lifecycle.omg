@@ -3,9 +3,9 @@ module lifecycle;
 // the next launch's allowances for a slot; RUN reserves a launch for an image
 // from the owner's catalogue under those allowances, admits the child through
 // the runtime's brokered admission with interaction, and the child's listener
-// serves it from then on. STOP reclaims the whole subtree and returns the
-// reservation. Launches from the realm's objects, storage grants and the stock
-// launch policy arrive in later slices.
+// serves it from then on. Retirement stops and collects the whole subtree,
+// then withdraws its services and returns the reservation. program/stopping owns the owner's STOP
+// reply; stored and launch own admission from realm objects.
 use protocol::main;
 use protocol::matrix;
 use protocol::services::INTERACTION;
@@ -16,6 +16,9 @@ use runtime::kernel::Kernel;
 use runtime::kernel;
 use runtime::connection::main::Frame;
 use runtime::task::main::Exit;
+use runtime::admission::retirement::Retirement;
+use runtime::admission::retirement::Outcome;
+use shared::state::Retiring;
 use runtime::time::Tick;
 use runtime::waiting::Set;
 use world::level;
@@ -27,6 +30,7 @@ use recovery;
 use construction::construction::start_reserved;
 use shared::report;
 use workspace;
+use selection;
 use policy::children::launch::resources::funding::Funding;
 
 // How long a child has to complete each startup handshake, as the Rust host allows.
@@ -40,7 +44,7 @@ public const TABLE_FRAMES: u64 = 48u64;
 public const MAX_IMAGES: u64 = 14u64;
 
 public machine owner_word(op: u64) -> bool {
-    op == RUN_PAGES || op == RUN_MEMORY || op == RUN || op == STOP
+    op == RUN_PAGES || op == RUN_MEMORY || op == RUN
 }
 public machine owner(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel blocks invokes Kernel {
     transition frame.payload[1] < 5u64 {
@@ -52,7 +56,6 @@ public machine owner(gate: &Gate, context: &mut State, now: u64, frame: Frame) -
             frame.payload[0] == RUN_PAGES && zeros_from(&frame.payload, 4u64) -> block paged(gate, context, slot, frame.payload[2], frame.payload[3])
             frame.payload[0] == RUN_MEMORY && zeros_from(&frame.payload, 3u64) -> block funded(gate, context, slot, frame.payload[2])
             frame.payload[0] == RUN && frame.payload[5] < 16384u64 && frame.payload[4] < 64u64 -> block running(gate, context, now, slot, frame)
-            frame.payload[0] == STOP && zeros_from(&frame.payload, 2u64) -> block stopping(gate, context, slot)
             _ -> block reply(gate, context, error(kernel::DENIED))
         }
     }
@@ -71,16 +74,6 @@ public machine owner(gate: &Gate, context: &mut State, now: u64, frame: Frame) -
             frame.payload[5], frame.payload[6], frame.payload[7]);
         block reply(gate, context, error(status))
     }
-    machine stopping(gate: &Gate, context: &mut State, slot: u64 [0..=4]) -> u64 reaches Kernel {
-        transition context.slots[slot].live || context.slots[slot].pending != 0u64 {
-            true -> block stopped(gate, context, slot)
-            _ -> block reply(gate, context, error(kernel::PEER_CLOSED))
-        }
-    }
-    machine stopped(gate: &Gate, context: &mut State, slot: u64 [0..=4]) -> u64 reaches Kernel {
-        block reclaim(gate, context, slot);
-        block reply(gate, context, ok())
-    }
 }
 // Reserve and admit: the image grant from the owner's catalogue, the staged
 // allowances (physical frames default to the load plus the private pages, or a
@@ -90,7 +83,7 @@ public machine owner(gate: &Gate, context: &mut State, now: u64, frame: Frame) -
 // Every failed step leaves no reservation behind.
 public machine run(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], image: u64, argument: u64, channels: u64,
     descendants: u64, images: u64, cpu: u64) -> u64 reaches Kernel blocks invokes Kernel {
-    transition !context.slots[slot].live && context.slots[slot].pending == 0u64 && images < 16384u64 && descendants < 64u64
+    transition !context.retire_after_present[slot] && !context.slots[slot].live && context.slots[slot].pending == 0u64 && images < 16384u64 && descendants < 64u64
         && !(context.launch.phase != 0u64 && context.launch.slot == slot) {
         true -> block imaged(gate, context, now, slot, image, argument, channels, descendants, images, cpu)
         _ -> (kernel::BUSY)
@@ -142,14 +135,20 @@ public machine physical_frames(staged: u64, image_pages: u64, stack_pages: u64, 
 machine larger(a: u64, b: u64) -> u64 {
     transition a < b { true -> (b) _ -> (a) }
 }
-// Drop the owner control and the storage listener, stop and collect the
-// child, return its reservation and forget its view and staged batch.
-// Handshake failure can request retirement only once. Retain that request while
-// a publication fences scene reuse, then drain it before admitting any replacement.
+// Stop and collect the subtree before dropping its service connections,
+// then return its reservation and forget its view and staged batch.
+// Retain retirement behind scene publication, then visit each cancellation once
+// per service turn. The slot remains unavailable until final bookkeeping ends.
 public machine retire_pending(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
     transition context.presentation_work.active { true -> done() _ -> block visit(gate, context, 0u64) }
     machine visit(gate: &Gate, context: &mut State, slot: u64) reaches Kernel requires slot <= 5u64 {
-        transition slot < 5u64 { true -> block one(gate, context, slot) _ -> done() }
+        // An earlier retirement in this pass may have started a fallback scene.
+        // Preserve its backing before visiting another child.
+        transition {
+            context.presentation_work.active -> done()
+            slot < 5u64 -> block one(gate, context, slot)
+            _ -> done()
+        }
     }
     machine one(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
         transition context.retire_after_present[slot] {
@@ -158,55 +157,144 @@ public machine retire_pending(gate: &Gate, context: &mut State) reaches Kernel b
         }
     }
     machine retired(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
-        block reclaim(gate, context, slot);
+        block retirement_turn(gate, context, slot);
         transition { _ -> block visit(gate, context, slot + 1u64) }
     }
 }
-public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel blocks invokes Kernel {
+public machine request_retirement(context: &mut State, slot: u64 [0..=4]) {
     cancel_launch(context, slot);
-    transition context.presentation_work.active {
-        true -> queued(context, slot)
-        _ -> block idle_reclaim(gate, context, slot)
-    }
-    machine queued(context: &mut State, slot: u64 [0..=4]) { context.retire_after_present[slot] = true; }
+    context.retire_after_present[slot] = true;
 }
-machine idle_reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel blocks invokes Kernel {
-    context.retire_after_present[slot] = false;
+// Compatibility for setup and shutdown callers which require collection before
+// returning. Ordinary close uses request_retirement and the turn loop instead.
+public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel blocks invokes Kernel {
+    request_retirement(context, slot);
+    transition context.presentation_work.active {
+        true -> done()
+        _ -> block drain_retirement(gate, context, slot)
+    }
+}
+machine drain_retirement(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+    block retirement_turn(gate, context, slot);
+    block selection::drain_retirement(gate, context, slot);
+    transition context.retire_after_present[slot] && context.retirement_failure == 0u64 {
+        true -> block later(gate, context, slot)
+        _ -> done()
+    }
+    machine later(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+        let status: u64 = block Kernel::yield_now(gate);
+        transition { _ -> block drain_retirement(gate, context, slot) }
+    }
+}
+machine retirement_turn(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+    transition {
+        context.retirement_failure != 0u64 -> done()
+        context.retirements[slot].collected -> settled(gate, context, slot)
+        !context.retirements[slot].started -> block preparing(gate, context, slot)
+        _ -> block collecting(gate, context, slot)
+    }
+    machine preparing(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+        // Preserve identity before collection clears Admitted.task. Keep all
+        // connections intact until the kernel has quiesced the whole subtree.
+        context.retirements[slot].task = context.slots[slot].task;
+        context.retirements[slot].started = true;
+        transition { _ -> block collecting(gate, context, slot) }
+    }
+    machine collecting(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+        let result: Retirement = runtime::admission::retirement::poll(gate, &mut context.slots[slot]);
+        transition result {
+            Retirement::Pending -> done()
+            Retirement::Ready { outcome } -> block collected(gate, context, slot, outcome)
+            Retirement::Failed { code } -> failed(context, code)
+        }
+    }
+    machine failed(context: &mut State, code: u64) { context.retirement_failure = code; }
+    machine collected(gate: &Gate, context: &mut State, slot: u64 [0..=4], outcome: Outcome) reaches Kernel {
+        block withdraw(gate, context, slot);
+        block runtime::admission::main::release(gate, &mut context.slots[slot]);
+        context.retirements[slot].collected = true;
+        finish_retirement(gate, context, slot, outcome);
+        settled(gate, context, slot);
+    }
+    // A fallback scene still fences the closed slot and its close/STOP replies.
+    // Once it settles, finish without polling the already-consumed task outcome.
+    machine settled(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+        transition context.presentation_work.active {
+            true -> done()
+            _ -> finished(gate, context, slot)
+        }
+    }
+    machine finished(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+        recorded(gate, context, slot);
+        let empty: Retiring;
+        context.retirements[slot] = empty;
+        context.retire_after_present[slot] = false;
+    }
+    machine recorded(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+        transition context.retirements[slot].task != 0u64 {
+            true -> report::reclaimed(gate, slot)
+            _ -> done()
+        }
+    }
+}
+// Only after collection: closing connections or releasing image backing can
+// park us. A running descendant must never observe this partial withdrawal.
+machine withdraw(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
     context.answers[slot].active = false;
-    transition context.slots[slot].live {
-        true -> block stopping(gate, context, slot)
-        _ -> block unpublished(gate, context, slot)
+    transition context.retirements[slot].task != 0u64 {
+        true -> block withdrawing(gate, context, slot)
+        _ -> done()
+    }
+    machine withdrawing(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+        context.opening[slot] = 0u64;
+        let closed: u64 = block runtime::connection::main::close(gate, &mut context.controls[slot]);
+        block storage::retire(gate, context, slot);
+        context.scene_children[slot].active = false;
+        block presentation::release_slot(gate, context, slot);
+    }
+}
+machine finish_retirement(gate: &Gate, context: &mut State, slot: u64 [0..=4], outcome: Outcome) reaches Kernel {
+    transition context.retirements[slot].task != 0u64 {
+        true -> stopped(gate, context, slot, exit_of(outcome))
+        _ -> unpublished(gate, context, slot)
     }
     machine unpublished(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
-        block runtime::admission::main::release(gate, &mut context.slots[slot]);
         let launch: u64 = context.reservations[slot];
         release_unused(gate, context, slot, launch);
         context.reservations[slot] = 0u64;
         context.funding[slot] = Funding::Fixed;
     }
     machine release_unused(gate: &Gate, context: &mut State, slot: u64 [0..=4], launch: u64) reaches Kernel {
-        transition launch != 0u64 { true -> retire_reservation(gate, context, slot, launch) _ -> done() }
+        transition launch != 0u64 {
+            true -> released_unused(gate, slot, retire_reservation(gate, context, slot, launch))
+            _ -> done()
+        }
     }
-    machine stopping(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
-        context.opening[slot] = 0u64;
-        let closed: u64 = block runtime::connection::main::close(gate, &mut context.controls[slot]);
-        block storage::retire(gate, context, slot);
-        context.scene_children[slot].active = false;
-        block presentation::release_slot(gate, context, slot);
-        let task: u64 = context.slots[slot].task;
-        let exit: Exit = block runtime::admission::main::stop(gate, &mut context.slots[slot]);
+    machine released_unused(gate: &Gate, slot: u64 [0..=4], status: u64) reaches Kernel {
+        // No child exit exists to diagnose an unused reservation. Report only
+        // confirmed return; a BUSY reservation remains tracked for later turns.
+        transition status == 0u64 { true -> report::unused_reservation_released(gate, slot) _ -> done() }
+    }
+    machine stopped(gate: &Gate, context: &mut State, slot: u64 [0..=4], exit: Exit) reaches Kernel {
+        let task: u64 = context.retirements[slot].task;
         exited(gate, slot, exit);
         recovery::retired(context, slot, exit);
         let observer: u64 = launches::finished(&mut context.observations, task, outcome_of(exit));
         launches::disconnected(&mut context.observations, slot);
         let launch: u64 = context.reservations[slot];
-        retire_reservation(gate, context, slot, launch);
-        sweep_returned(gate);
+        let released: u64 = retire_reservation(gate, context, slot, launch);
+        sweep_returned(gate, context);
         context.reservations[slot] = 0u64;
         context.funding[slot] = Funding::Fixed;
         level::disconnected(&mut context.world, slot);
-        block workspace::retired(gate, context, slot);
-        report::reclaimed(gate, slot);
+        workspace::retired(context, slot);
+    }
+}
+machine exit_of(outcome: Outcome) -> Exit {
+    transition outcome {
+        Outcome::Collected { exit } -> (exit)
+        Outcome::Aborted { code } -> (Exit::Failed { code: code })
+        Outcome::Empty -> (Exit::Failed { code: kernel::PEER_CLOSED })
     }
 }
 // What a requester's receipt reports for the ended child.
@@ -250,7 +338,8 @@ public machine notify(gate: &Gate, context: &mut State) reaches Kernel invokes K
     wake(gate, context, 4u64);
 }
 machine wake(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
-    transition context.slots[slot].live && context.slots[slot].bell.wait == 0u64 {
+    transition !shared::state::unserved(context, slot) && !context.retire_after_present[slot]
+        && context.slots[slot].live && context.slots[slot].bell.wait == 0u64 {
         true -> hinted(gate, context, slot)
         _ -> done()
     }
@@ -270,15 +359,21 @@ machine wake(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel
 // message. A dead child's reservation also needs retries until collection ends.
 public machine watch(context: &State, slot: u64 [0..=4], set: &mut Set, now: u64) {
     local_work(context, slot, set, now);
-    transition context.slots[slot].live {
+    transition context.slots[slot].live && !context.retire_after_present[slot] {
         true -> watched(context, slot, set)
         _ -> done()
     }
     machine watched(context: &State, slot: u64 [0..=4], set: &mut Set) {
-        runtime::server::main::watch(&context.slots[slot].listener, set);
+        interaction(context, slot, set);
         transition context.opening[slot] != 0u64 {
             true -> opening(context, slot, set)
             _ -> done()
+        }
+    }
+    machine interaction(context: &State, slot: u64 [0..=4], set: &mut Set) {
+        transition shared::state::unserved(context, slot) {
+            true -> done()
+            _ -> runtime::server::main::watch(&context.slots[slot].listener, set)
         }
     }
     machine opening(context: &State, slot: u64 [0..=4], set: &mut Set) {
@@ -293,9 +388,11 @@ machine local_work(context: &State, slot: u64 [0..=4], set: &mut Set, now: u64) 
     let live: bool = context.slots[slot].live;
     let departed: bool = live && context.slots[slot].listener.peer.fault != 0u64;
     let retiring: bool = !context.presentation_work.active && (context.retire_after_present[slot] || departed);
-    let hint: bool = live && context.slots[slot].bell.wait == 0u64 && context.world.children[slot].notify;
+    let hint: bool = live && !shared::state::unserved(context, slot) && !context.retire_after_present[slot]
+        && context.slots[slot].bell.wait == 0u64 && context.world.children[slot].notify;
     transition {
-        retiring || hint -> runtime::waiting::expire_by(set, now)
+        hint -> runtime::waiting::expire_by(set, now)
+        retiring -> runtime::waiting::expire_by(set, runtime::time::after(now, 1u64))
         context.releasing[slot] != 0u64 -> runtime::waiting::expire_by(set, runtime::time::after(now, 1u64))
         _ -> done()
     }
@@ -355,9 +452,10 @@ const FIRST_ANSWER_TICKS: u64 = 30u64;
 machine opening_slot(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], window: u64) reaches Kernel {
     let deadline: u64 = context.opening[slot];
     transition {
+        context.retire_after_present[slot] -> done()
         deadline == 0u64 -> done()
         !context.slots[slot].live -> forgotten(context, slot)
-        runtime::time::reached(now, deadline) -> block abandoned(gate, context, slot)
+        runtime::time::reached(now, deadline) -> abandoned(context, slot)
         window < 0x8000000000000000u64 -> block probed(gate, context, now, slot, deadline, window)
         _ -> done()
     }
@@ -386,12 +484,12 @@ machine opening_slot(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=
         context.opening[slot] = 0u64;
         transition status == 0u64 {
             true -> report::child_control_ready(gate)
-            _ -> block reclaim(gate, context, slot)
+            _ -> request_retirement(context, slot)
         }
     }
-    machine abandoned(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+    machine abandoned(context: &mut State, slot: u64 [0..=4]) {
         context.opening[slot] = 0u64;
-        block reclaim(gate, context, slot);
+        request_retirement(context, slot);
     }
 }
 // An ended child's reservation goes back to this matrix. The kernel refuses
@@ -399,35 +497,60 @@ machine opening_slot(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=
 // own deferred reclamation keep for a while after the exit; such a
 // reservation waits in `releasing` and is retried each turn and before any
 // funding is reckoned, so what it held is never stranded.
-machine retire_reservation(gate: &Gate, context: &mut State, slot: u64 [0..=4], launch: u64) reaches Kernel {
+machine retire_reservation(gate: &Gate, context: &mut State, slot: u64 [0..=4], launch: u64) -> u64 reaches Kernel {
     settle_slot(gate, context, slot);
     let released: u64 = runtime::task::main::release(gate, launch);
     transition released == kernel::BUSY && launch != 0u64 {
-        true -> parked(context, slot, launch)
-        _ -> unreleased(gate, slot, released)
+        true -> parked(context, slot, launch, released)
+        _ -> reported(gate, slot, released)
     }
-    machine parked(context: &mut State, slot: u64 [0..=4], launch: u64) {
+    machine parked(context: &mut State, slot: u64 [0..=4], launch: u64, status: u64) -> u64 {
         context.releasing[slot] = launch;
+        status
+    }
+    machine reported(gate: &Gate, slot: u64 [0..=4], status: u64) -> u64 reaches Kernel {
+        unreleased(gate, slot, status);
+        status
     }
 }
 // An ended host's descendant reservations come back to this matrix under
-// fresh local names. Each one the kernel takes back is released; live and
-// static launches refuse and are passed over, as are any still charged.
-public machine sweep_returned(gate: &Gate) reaches Kernel invokes Kernel {
-    sweeping(gate, 0u64, 0u64);
+// fresh local names. Enumeration also includes our tracked reservations: keep
+// those with their explicit owner, even after the kernel has collected a child.
+// Live/static launches and returned ones still charged are passed over too.
+public machine sweep_returned(gate: &Gate, context: &State) reaches Kernel invokes Kernel {
+    sweeping(gate, context, 0u64, 0u64);
 }
-machine sweeping(gate: &Gate, index: u64, attempts: u64) reaches Kernel requires index <= RETURNED_LAUNCHES && attempts <= RETURNED_LAUNCHES {
+machine sweeping(gate: &Gate, context: &State, index: u64, attempts: u64) reaches Kernel requires index <= RETURNED_LAUNCHES && attempts <= RETURNED_LAUNCHES {
     let launch: u64 = runtime::task::main::launch(gate, index);
     transition index < RETURNED_LAUNCHES && attempts < RETURNED_LAUNCHES && launch < kernel::ERROR_BASE {
-        true -> released_at(gate, index, attempts, runtime::task::main::release(gate, launch))
+        true -> candidate(gate, context, index, attempts, launch)
         _ -> done()
     }
+    machine candidate(gate: &Gate, context: &State, index: u64, attempts: u64, launch: u64) reaches Kernel
+        requires index < RETURNED_LAUNCHES && attempts < RETURNED_LAUNCHES {
+        transition tracked(context, launch, 0u64) {
+            true -> sweeping(gate, context, index + 1u64, attempts + 1u64)
+            _ -> released_at(gate, context, index, attempts, runtime::task::main::release(gate, launch))
+        }
+    }
     // A released launch's index now names the next one.
-    machine released_at(gate: &Gate, index: u64, attempts: u64, status: u64) reaches Kernel
+    machine released_at(gate: &Gate, context: &State, index: u64, attempts: u64, status: u64) reaches Kernel
         requires index < RETURNED_LAUNCHES && attempts < RETURNED_LAUNCHES {
         transition status == 0u64 {
-            true -> sweeping(gate, index, attempts + 1u64)
-            _ -> sweeping(gate, index + 1u64, attempts + 1u64)
+            true -> sweeping(gate, context, index, attempts + 1u64)
+            _ -> sweeping(gate, context, index + 1u64, attempts + 1u64)
+        }
+    }
+}
+machine tracked(context: &State, launch: u64, slot: u64) -> bool requires slot <= 5u64 {
+    transition slot < 5u64 {
+        true -> checked(context, launch, slot)
+        _ -> (false)
+    }
+    machine checked(context: &State, launch: u64, slot: u64 [0..=4]) -> bool {
+        transition context.reservations[slot] == launch || context.releasing[slot] == launch {
+            true -> (true)
+            _ -> tracked(context, launch, slot + 1u64)
         }
     }
 }
@@ -464,10 +587,11 @@ machine unreleased(gate: &Gate, slot: u64, status: u64) reaches Kernel invokes K
     }
 }
 
-// Stopping either the requester or its target cancels a pending read/activation.
-// Picker retirement happens only after construction, without another service turn.
+// Stopping the target always cancels pending work. A requester also cancels it
+// until this matrix accepts a login handoff and deliberately retires that picker.
 machine cancel_launch(context: &mut State, slot: u64 [0..=4]) {
-    transition context.launch.phase != 0u64 && (context.launch.requester == slot || context.launch.slot == slot) {
+    transition context.launch.phase != 0u64 && (context.launch.slot == slot
+        || (context.launch.requester == slot && !context.launch.handoff)) {
         true -> cancelled(context)
         _ -> done()
     }

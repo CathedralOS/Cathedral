@@ -109,11 +109,14 @@ impl Children {
         Ok(())
     }
     pub fn stop(&mut self, slot: usize, server: &mut Server) -> Result<(), Error> {
+        // Preserve custody and the child's services until execution has stopped.
+        if let Some(child) = self.slots[slot].as_ref() {
+            child.task.cancel()?;
+            child.task.wait()?;
+        }
         if let Some(child) = self.slots[slot].take() {
             server.remove(slot);
             server.remove(slot + 2);
-            child.task.cancel()?;
-            child.task.wait()?;
             self.controls[slot] = None;
             child.close_connections()?;
             self.launches[slot].take().unwrap().release()?;

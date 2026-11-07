@@ -24,6 +24,7 @@ pub(super) struct Task {
 }
 pub(super) struct Session {
     pub(super) timing: super::execution::timing::Timing,
+    // Only callers parked by TASK_CANCEL, not all owners requesting retirement.
     pub(super) cancel_waiters: u32,
     pub(super) deferred: super::execution::deferred::Pending,
     pub(super) child_launch: [Option<usize>; cathedral_kernel_contracts::user::MAX_TASKS],

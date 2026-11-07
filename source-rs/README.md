@@ -347,11 +347,36 @@ forwarded STOP timeout, eventual cancellation without retrying STOP, and a
 subsequent nonzero storage-binding reply over the same route after late replies
 have drained. The nested Notes draft and reused Colors slot survive cold reboot.
 
+`python tools/boot-harness-rs/omega_fallback_test.py --mode complete` closes
+Colors while the parent holds the scene that reveals Notes. HEALTH and input
+must continue, and the closed slot remains reserved until that scene settles.
+Use `--mode refuse` for a rejected replacement scene or `--mode cancel` to stop
+the intended replacement app. Each case checks saved data, slot reuse and cold
+reopen; the surviving Notes draft must remain intact unless explicitly stopped.
+
 `python tools/boot-harness-rs/omega_storage_test.py` holds a real sealed storage
 publication at a Rust fixture parent. The stock Omega child must answer HEALTH
 and poll input before release; repeated saves, slot reuse and cold reopen check
 settlement. F2 is a fixture key in that composition only. Ordinary F5 has no hold.
 Add `--nested` to pass the write through another desktop and its containment checks.
+
+`python tools/boot-harness-rs/omega_layout_test.py --mode complete` applies real
+launcher settings while its parent's COMMIT waits. HEALTH and input must keep
+progressing against the old placement; accepted settings then move the apps.
+Use `--mode refuse` for refusal/retry or `--mode cancel` to stop a captured sibling.
+`omega_layout_fault_test.py --mode controller` instead stops the requesting
+launcher during that wait and explicitly installs a replacement. `--mode ancestor`
+replaces the parent's view grant, then explicitly restores child drawing
+allowances and placements. Neither operation restores the old layout-controller
+authority. Both fault cases check the exact surviving Notes draft, later app
+launches and saved settings after cold reopen. F1/F8 during the held COMMIT belong
+only to this parent fixture; the stock Omega child contains no test switch.
+Add `--owner-read` to the controller case to hold the replacement launcher's
+executable read. The fixture waits for two input polls before releasing it;
+one could already have been queued before the launch. It cannot ask HEALTH on
+the same owner connection while that connection awaits RUN_OBJECT. Seven F2
+presses arm this gate. The rest of the scenario checks the surviving Notes draft,
+later launches and cold reopen.
 
 `python tools/boot-harness-rs/omega_launch_test.py` holds the executable read
 behind an app launch. The stock Omega matrix must answer HEALTH and poll input
@@ -365,8 +390,25 @@ grant is restored. `--binding` holds the binding refresh that now precedes the
 executable read; combine it with `--regrant` to revoke during that query. The
 fixture arms those two cases with five or six F2 presses. The refreshed source
 is checked before admission and its prepared grant is installed locally. No
-test mode is added to the Omega process. Owner grants, first provider handshakes
-and kernel spawn/brokered admission still have synchronous waits.
+test mode is added to the Omega process for these storage holds. Ordinary child
+construction and owner RUN_OBJECT now submit and resume across service turns.
+Catalogue RUN, setup admission, first provider handshakes, shared construction
+failure cleanup and explicit shutdown drains still contain waits.
+
+`python tools/boot-harness-rs/omega_construction_test.py --mode health` selects a
+lab entry around the stock Omega matrix with a one-second construction-observation
+window. HEALTH and two successive input polls must complete before release.
+`--mode stop` cancels the pending target; `--mode regrant` revokes and restores its
+exact launch-import policy. `--mode requester` stops the requesting launcher
+and explicitly installs a new one through ordinary owner commands. All three
+cancellation cases require refusal of the old launch and reuse of the target
+slot, followed by save and cold reopen. The kernel may publish behind the
+observation window; this test does not select its pre/post-publication race.
+The [lab composition](../source/distribution/lab/matrix-construction/README.md)
+adds no kernel test hook. The normal matrix entry uses a zero window.
+Add `--rounds 4` to repeat each case four times per boot, compare both completed
+Notes-close resource samples in every round, and verify the accumulated saved
+text after cold boot.
 
 `python tools/boot-harness-rs/omega_launch_scene_test.py` holds the scene commit
 that activates a newly launched app. HEALTH and input polling must continue;
@@ -673,6 +715,8 @@ initial FP state is clean and I/O privilege is zero.
 | 55: physical assignment | Owned idle launch, requested frame reservation, 0 | Conserving reassignment; BUSY if a live charge would lose funding |
 | 89: begin child admission | Owned launch, 176-byte spawn-tree record, 0 | Fresh owner-local receipt; parent keeps running |
 | 90: collect child admission | Receipt, writable 16-byte result, cancel (0 or 1) | `WOULD_BLOCK`, or 0 after copying `[status, child]` and consuming the receipt |
+| 91: begin child cancellation | Child ticket, zero, zero | 0 after requesting retirement; does not wait for physical cleanup |
+| 92: try child wait | Child ticket, writable exit record, 40 bytes | `WOULD_BLOCK`, or 0 after copying and consuming the reclaimed outcome |
 
 Asynchronous admission uses the same private construction, funding and final
 authority checks as blocking spawn. Each launch retains at most one uncollected
@@ -965,6 +1009,16 @@ incarnation. It returns after boot-context reclamation and endpoint teardown.
 Blocked receivers observe `PEER_CLOSED`; the supervisor can collect `Cancelled`
 and launch a replacement with fresh grants. Repeated cancellation before collection
 is harmless, and cancelling an already-reaped child preserves its original outcome.
+`Child::cancel_begin` submits the same retirement without blocking. It does not
+register a completion waiter. Authority withdrawal runs before the next userspace
+entry; backing reclamation continues in bounded boot-context visits. The owner
+can service other connections meanwhile. `Child::try_wait` needs no clock grant:
+`None` leaves the ticket and destination unchanged, `Some(outcome)` consumes the
+outcome after reclamation. Bad copyout leaves the outcome available to retry.
+Only a blocking cancellation request is woken by completion; submitting one must
+not complete another IPC or overwrite its result. `cancel` and `wait` retain their
+blocking behavior.
+
 After collection the ticket is stale. Cancellation is abrupt task destruction,
 not Omega cooperative cancellation, an IPC rollback or proof that prior work had
 no effects. General service resource budgets remain absent.

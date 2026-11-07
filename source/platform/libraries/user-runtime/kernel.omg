@@ -5,6 +5,7 @@ public const TOO_SMALL: u64 = 0xffffffffffffffa6u64;
 public const IO_ERROR: u64 = 0xfffffffffffffffbu64;
 public const PEER_CLOSED: u64 = 0xffffffffffffffe0u64;
 public const TIMED_OUT: u64 = 0xffffffffffffff92u64;
+public const REVOKED: u64 = 0xffffffffffffff83u64;
 public const NOTIFY_SIGNALED: u64 = 0u64;
 public const NOTIFY_TIMED_OUT: u64 = 1u64;
 public const DENIED: u64 = 0xfffffffffffffff3u64;
@@ -86,6 +87,8 @@ public data Gate {
     clock_stamp: addr;
     spawn_begin: addr;
     spawn_result: addr;
+    task_cancel_begin: addr;
+    task_try_wait: addr;
 }
 
 public boundary trait Kernel {
@@ -134,6 +137,8 @@ public boundary trait Kernel {
     machine spawn_tree(gate: &Gate, launch: u64, record: &[u64; 22]) -> u64 reaches blocks;
     machine spawn_begin(gate: &Gate, launch: u64, record: &[u64; 22]) -> u64 reaches;
     machine spawn_result(gate: &Gate, receipt: u64, record: &mut [u64; 8], cancel: u64 [0..=1]) -> u64 reaches;
+    machine task_cancel_begin(gate: &Gate, child: u64) -> u64 reaches;
+    machine task_try_wait(gate: &Gate, child: u64, record: &mut [u64; 8]) -> u64 reaches;
     machine task_cancel(gate: &Gate, child: u64) -> u64 reaches blocks;
     machine task_wait(gate: &Gate, child: u64, record: &mut [u64; 8]) -> u64 reaches blocks;
     machine endpoint_send(gate: &Gate, endpoint: u64, packet: &[u64; 10]) -> u64 reaches;

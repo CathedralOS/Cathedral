@@ -1,0 +1,46 @@
+module admission::publication;
+// Install the published task's control and listener. A failure preserves custody:
+// the asynchronous caller must collect it; synchronous admission does that itself.
+use admission::main::Admitted;
+use kernel::Gate;
+use kernel::Kernel;
+use ipc::main::Channel;
+use task::main::Control;
+use server::main::begin;
+use time;
+use time::Tick;
+
+// Publication moved the broker ends. Establish control and start the handshake
+// deadline now, after loading, for either admission path.
+public machine finish(gate: &Gate, child: &mut Admitted, launch: u64, ticket: u64, clock: u64, window: u64 [0..=9223372036854775807], objects: bool) -> u64 reaches Kernel invokes Kernel {
+    child.task = ticket;
+    child.live = true;
+    child.handoff[0] = 0u64;
+    child.handoff[1] = 0u64;
+    let control: Control = task::main::control(gate, launch);
+    transition control {
+        Control::Ready { channel } -> timed(gate, child, channel, clock, window, objects)
+        Control::Failed { code } -> (code)
+    }
+    machine timed(gate: &Gate, child: &mut Admitted, control: Channel, clock: u64, window: u64 [0..=9223372036854775807], objects: bool) -> u64
+        reaches Kernel {
+        child.control = control;
+        let tick: Tick = time::read(gate, clock);
+        transition tick {
+            Tick::Read { value } -> listen(child, time::after(value, window), objects)
+            Tick::Failed { code } -> (code)
+        }
+    }
+    machine listen(child: &mut Admitted, deadline: u64, objects: bool) -> u64 {
+        let status: u64 = begin(&mut child.listener, child.data.sender, child.data.receiver, deadline, objects);
+        transition status == 0u64 {
+            true -> handed(child)
+            _ -> (status)
+        }
+    }
+    machine handed(child: &mut Admitted) -> u64 {
+        child.data.sender = 0u64;
+        child.data.receiver = 0u64;
+        0u64
+    }
+}

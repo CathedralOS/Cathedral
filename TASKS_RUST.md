@@ -9,9 +9,1058 @@ outcomes below remain requirements; their order does not override this direction
 Continue Rust work where it enables an Omega migration, fixes a regression, or
 supplies a missing mechanism needed by that migration.
 
-Current executable handoff: [retained child construction](#retained-child-construction).
-That entry records the latest verified image and next work; earlier migration
-entries below are historical milestones.
+Current work: promote the Omega stock matrix onto the normal F5 desktop path,
+sharing the qualified composition with the launcher and checking everyday desktop
+variants before switching the default. The capacity mismatch is corrected below;
+next fix the teardown ordering that fails render demand and masked capture.
+Retained batch-image cleanup is pushed at
+`931bfa71`; all its listed regressions now pass. Each memory-release syscall still
+parks; this change bounds the batch, not the syscall. Deep app-close latency
+remains a separate input/exit/scene measurement target.
+Retained construction failure cleanup is pushed at `10c17f18`. Shared-runtime
+admission, six matrix refusal/retry cycles, owner-read and child-launch fresh/cold
+checks, and the Omega root/user desktop all pass. The combined depth-three
+pointer-stress soak also passes three fresh and two cold cycles; the earlier
+close failure did not reproduce, but deep app closes still take seconds.
+Latest desktop handoff: [F5 qualification](#shared-omega-desktop-launcher-qualification)
+and [presentation batch capacity](#presentation-batch-capacity), following
+[retained presentation cleanup](#retained-presentation-cleanup),
+following [retained construction failure cleanup](#retained-construction-failure-cleanup),
+following [retained owner launches](#retained-owner-launches) at `ebe3526e`,
+following [layout grant invalidation](#layout-grant-invalidation) at `28e6adfd`,
+following [retained layout application](#retained-layout-application) at `6b7deef5`,
+following [retained workspace fallback](#retained-workspace-fallback) at `ff555376`,
+following [retained login handoff](#retained-login-handoff) at `94053ba3`,
+following [retained failed-launch cleanup](#retained-failed-launch-cleanup) at `1a0a8db2`,
+following [retained ordinary close](#retained-ordinary-close) at `0bdb41df`,
+[retained admission retirement](#retained-admission-retirement) at
+`60f7c694` and [nonblocking child task primitives](#nonblocking-child-task-primitives).
+Earlier migration entries below are historical milestones. Normal F5 still uses
+the Rust matrix; the following verification explicitly selects the Omega matrix.
+
+Latest-main reconciliation: `origin/work/omega-segment-selectors` at `ed9f8924` has two commit
+IDs outside main's ancestry, but their content is already squash-merged as
+`d57af8b9` (PR #11). Direct tree comparison of `source/kernel/`,
+`tools/boot-harness/` and the boot qualification record is identical. All 22 boot
+harness host tests passed during review. Do not merge that branch again based
+only on its unmerged commit IDs; no fresh native boot was run for this check.
+
+### Shared Omega desktop launcher (qualification)
+
+`tools/boot-harness-rs/desktop_composition.py` now owns the previously test-local
+Omega composition. `omega_desktop_test.compose` remains its compatibility import
+for fixtures. Both full-Omega and mixed-host outputs matched the previous
+composer exactly. The ordinary launcher and desktop harness accept
+`--omega-desktop`; they share root, user-template and nested stock image selection.
+Other providers and grants are preserved. Smoke, kernel-only and custom profiles
+reject the launcher flag before building. Normal F5 has **not** switched yet.
+
+Initial qualification before the corrections below:
+
+- Six composition/CLI host tests and four existing program-builder tests; Python
+  syntax, source-layout and diff checks.
+- `python tools/boot-harness-rs/run.py --release --build-only --omega-desktop`
+  builds `build/boot-harness-rs/interactive/esp/EFI/BOOT/BOOTX64.EFI` with the Omega
+  root and installed matrix images; log `build/f5-omega-build.log`.
+- `python tools/boot-harness-rs/desktop_test.py --omega-desktop --trace-storage --timeout 240`
+  passes the default desktop and cold reopen, including three independent Notes
+  drafts, switching, capacity refusal, protected close, slot reuse and the storage
+  oracle: `build/boot-harness-rs/desktop/20261106T192343932060Z/`.
+  Log `build/f5-omega-default.log`.
+
+The pre-switch sweep exposed the regressions recorded below. They now have
+targeted corrections, but **keep normal F5 on the Rust matrix** until the remaining
+post-fix desktop sweep and nested stress pass.
+Relative pointer and undeclared imports passed fresh/cold at
+`20261106T192446077629Z` and `20261106T192617195391Z` under
+`build/boot-harness-rs/desktop/`. Additional results:
+
+- Split inside Split (`--deep`) failed during the first live spacing change:
+  `20261106T192652801180Z`. Both drafts are intact in the screenshot, but the
+  chooser says `SAVED; RESTART` and Split remains at the old placement. The test
+  then correctly fails its assertion at the new coordinates.
+- Participants failed at the same resize boundary (`20261106T193107958354Z`).
+  Code audit found a port mismatch: Omega `world/batch.omg` and its transfer /
+  cleanup loops had 16 entries, whereas the Rust wire contract permits
+  `MAX_SURFACES` (64). A layout can stage the chooser's eight surfaces plus
+  Split's nine and the background. Corrected below; both regressions now pass.
+- Masked capture passed its fresh boot but failed cold teardown; render demand
+  also failed teardown. Both show the Rust Notes fixture panicking on
+  `Error(-32)` (`PEER_CLOSED`) during Split retirement. This is separate from
+  the layout mismatch. The ordering correction below now passes both fresh/cold
+  without hiding the panic or widening timeouts. Original logs:
+  `build/f5-omega-capture.log`, `build/f5-omega-demand.log`.
+- Cursor preferences passed fresh/cold, including hiding/restoring, independent
+  producer, target death and recursive preferences: `20261106T193328001854Z`.
+
+The Rust-host render-demand comparison passes fresh/cold at
+`20261106T193705118672Z` (`build/f5-rust-demand-comparison.log`). Inspection found
+an ordering difference: Omega `children/lifecycle.omg::preparing` called
+`withdraw` (closing control/storage and releasing scene backing) before
+`admission::retirement::poll` submitted cancellation. The Rust lifecycle explicitly
+stops/waits before withdrawing services. The correction below preserves the retiring
+slot and its connections through cancellation/collection, then releases them.
+Kernel withdrawal already stops the full descendant tree before rescheduling.
+Do not change Notes to swallow a panic in order to make this test pass.
+
+The ignored `build/check-f5-omega.py` runs selected variants sequentially and
+stops at the first failure; subsequent groups were explicitly restarted to finish
+the inventory. Logs are `build/f5-omega-*.log`. After these qualify, add
+`--omega-desktop` to the normal F5 and saved-lab launch entries and update current
+run instructions. The separate Omega kernel boot remains a different prototype;
+this desktop uses the Rust kernel, hardware/storage providers and shell supervisor.
+
+### Teardown ordering (qualification)
+
+The local Omega lifecycle correction moves service withdrawal after
+`admission::retirement::poll` returns `Ready`. Retirement captures the task
+identity before the runtime clears `Admitted.task`/`live`, preserves connections
+while cancellation/collection is pending, then closes control/storage, retires
+image custody and releases the admitted bundle. The retiring slot remains
+unavailable throughout. Failed cancellation retains custody rather than partially
+closing a running subtree. Kernel behavior and the Rust Notes fixture are unchanged.
+
+Checked compiler review and native emission pass (`build/f5-omega-retirement-build.log`).
+The first capture run confirmed a second exposure in Rust Split: normal return
+would drop its servers with Notes children still alive. Clean exit now invokes
+the existing process-exit syscall so the kernel stops descendants before resource
+teardown. Explicit child, producer and capture stops cancel/collect before
+withdrawing their services, retaining custody if cancellation fails. Notes' panic
+checks remain unchanged.
+
+Masked capture now passes fresh/cold, including recipient byte inspection,
+hidden input, restore and clean subtree teardown:
+`build/boot-harness-rs/desktop/20261106T200334038830Z/`.
+Render demand also passes fresh/cold (`20261106T200436519117Z`), as do held
+layout cancellation (`20261106T200534603891Z`) and late selection cancellation
+(`20261106T200638686284Z`). Those preserve input service, drafts, accepted
+placement, STOP settlement and slot reuse while cancellation is pending.
+Logs are `build/retirement-order-{capture,demand,layout-cancel,selection-cancel}.log`;
+all four commands exited zero. Run the ordinary desktop variants and nested
+stress before F5 promotion, then the failed-construction lifecycle fixtures.
+The original failures remain recorded; the isolated pre-Split-fix run is in
+`build/retirement-order-capture-before-split.log`.
+
+### Desktop installation capacity
+
+The complete capture composition required 4,197,719 retained bytes, 3,415 beyond
+the old 4 MiB root quota. The installer correctly refused it before publishing
+changes. The bounded lab allowance is now 8 MiB, with a 32 MiB backing volume to
+preserve transaction headroom. Logical quota, individual object bounds and
+provider page funding remain independent; no program was removed to fit.
+Saved 4/8/16 MiB extents grow offline with backup, identity/guard preservation
+and cold record verification. Fresh disks use the same runtime extent.
+
+Host workspace tests, all 23 database-object host tests, all 40 storage-engine
+lab tests, ten image preparation tests, both Split clippy feature sets, formatting
+and source-layout checks pass. Quota-pressure fixture disks scale with the quota;
+collection tests bound convergence by the starting record count and require each
+continuing pass to make progress. Growth coverage includes 16 -> 32 MiB.
+
+### Presentation batch capacity
+
+The Omega World and stock matrix now accept a batch covering the existing
+64-surface view allowance, matching the Rust protocol. Staging, forwarding,
+commit custody, abort cleanup and retained releases all use the same capacity.
+The cleanup continuation still releases at most one image per step. No wire
+opcode, kernel budget or test timeout changed.
+
+Checked compiler review and native emission pass. The matrix image is 434/496
+load pages (62 free). Split inside Split now passes fresh/cold, including live
+resize with drafts, nested persistence, refusal and repeated subtree reclaim:
+`build/boot-harness-rs/desktop/20261106T194219864376Z/`.
+This fixes the earlier refusal without changing the test or its expected layout.
+The participant test also passes fresh/cold, including independent input/cursors, resize
+revocation and saved documents: `20261106T194330041023Z`.
+`omega_parent_batch_test.py` passes held COMMIT, responsive HEALTH/input,
+refusal/abort, replacement and durable reopen, fresh/cold:
+`20261106T194506547482Z`. `omega_parent_image_test.py` also passes held image,
+exact input, close during held save and cold reopen: `20261106T194609268927Z`.
+Source-layout and diff checks pass. Logs: `build/f5-omega-capacity-{batch,image}.log`.
+Keep normal F5 on Rust until the separate teardown issue above and remaining
+qualification are resolved.
+
+### Retained presentation cleanup
+
+Implemented after `c9b0ad4e`: a bounded release list in the existing scene transfer.
+`presentation::commit_batch` changes the local scene and transfers obsolete image
+custody without kernel calls. `connections/transfers/retirement.omg` releases at
+most one backing per continuation step (the event loop calls the transfer step
+three times), preserving the scene barrier and original reply ticket. Rejected
+compact/stale batches detach their payloads into the same list; shutdown drains
+it before clearing the transfer. Epoch invalidation cannot turn cleanup into a
+new commit or a successful stale reply. Plain refused batches remain staged for
+retry, as before.
+
+Checked compiler review and native emission passed, followed by:
+
+- `python tools/boot-harness-rs/omega_parent_batch_test.py`: held COMMIT,
+  responsive HEALTH/input, rejected commit/abort, replacement and saved state on
+  fresh and cold boots. Artifact `build/boot-harness-rs/desktop/20261106T185837407139Z/`;
+  log `build/retained-image-batch.log`.
+- `python tools/boot-harness-rs/omega_parent_image_test.py`: held image, exact
+  input, close during saved repaint and cold reopen. Artifact
+  `build/boot-harness-rs/desktop/20261106T190859540148Z/`;
+  log `build/retained-image-image.log`.
+
+The remaining checks finished successfully through
+`python build/check-retained-image.py`:
+
+- Root display image/commit/rectangle/pointer holds, refusal/abort, hardware
+  input and exact Notes/Colors on fresh/cold boots:
+  `build/boot-harness-rs/desktop/20261106T190959994989Z/`.
+- Late selection cancellation on fresh/cold boots: LOSS busy, STOP settled,
+  restored scene, preserved draft and slot reuse:
+  `build/boot-harness-rs/desktop/20261106T191141273224Z/`.
+- Combined depth-three pointer stress: three fresh and two cold soak cycles,
+  exact saved text and bounded accounts:
+  `build/boot-harness-rs/desktop/20261106T191232189044Z/`.
+  Every cycle returned to root `(8, 138, 646, 15)`, provider floor 509 pages/845
+  frames and shell `[2, 2, 128, 0]`, with no recorded failures. The matrix image
+  is now 420/496 load pages. Observed app closes were 2.38-6.03 seconds and
+  subtree teardown 1.22-1.30 seconds; these are host upper bounds, not a
+  controlled speed comparison or proof of the source of the remaining delay.
+
+Logs: `build/retained-image-{display,selection,stress}.log`. Source-layout and
+diff checks pass. This is the listed scope, not every F5 variant requalified.
+
+Immediate explicit batch abort/prune, lifecycle withdrawal and shutdown still
+have synchronous cleanup. The 64-image release loop is shutdown-only.
+
+Baseline timing audit, before this change: all 60 paired loss questions from
+`20261106T184722314214Z/{boot-1-serial.log,serial.log}` returned success, with no
+unmatched questions. Maximum send/reply intervals were 616.084 ms fresh and
+487.025 ms cold. Those are taskbar/subtree close surveys: the separate slow
+`app_close` stage clicks Notes' own close button, which exits through its app
+input handler. Do not attribute that stage's 4-10 second elapsed time to LOSS,
+or claim a cleanup speedup without measuring the input/exit/scene path.
+
+### Retained construction failure cleanup
+
+The previous owner-launch batch finished successfully at `146de1c1`:
+`build/owner-final-construction.log`, artifact
+`build/boot-harness-rs/desktop/20261106T173312451499Z/`. All six requester cycles
+matched the reclaimed account `(8, 59, 642, 0)`; owner-read, ordinary child launch
+and the Omega root/user desktop passed earlier in the same batch.
+
+Shared runtime changes are qualified and pushed at `aba8eae2`. The stock-matrix
+cleanup and its strengthened construction-requester scenario also pass:
+
+- Shared runtime publication setup retains the real child and remaining rights
+  if control/listener setup fails. `pending::poll` callers must retire and release
+  even after `Failed`; synchronous admission retains its collection bridge.
+- Deferred matrix construction requests lifecycle retirement on refusal instead
+  of waiting inside the constructor. Child LAUNCH retains its answer through
+  retirement, as owner RUN_OBJECT already does. Setup stays synchronous.
+- The independent supervisor witness checks a deliberately invalid handshake
+  clock after real publication, then collects across turns, serves a sibling and
+  reuses the slot. Its Rust driver repeats this six times and compares resources.
+- The construction-requester fixture requests an invalid CPU ceiling after a real
+  reservation, requires refusal only after reclamation, restages its allowance
+  and successfully launches in the same slot. No kernel test hook or timeout bump.
+
+Checked review, native emission and all 13 independent admission scenarios passed:
+`python tools/omega-user/connection_test.py --admission`, log
+`build/cleanup-admission.log`, artifact
+`build/omega-user/connections/20261106T180334824169Z/`. The new thirteenth scenario
+asserts retained live custody before collection, repeats six failure/reuse cycles,
+and balances private/shared pages, physical frames and notification rights.
+
+The stock-matrix construction composition passed checked review, native emission
+and three requester cycles on each of fresh and cold boots:
+`python tools/boot-harness-rs/omega_construction_test.py --mode requester --rounds 3`.
+Log: `build/cleanup-construction.log`; artifact:
+`build/boot-harness-rs/desktop/20261106T182513363309Z/`. Each cycle proves invalid
+CPU configuration after reservation, successful unused-reservation return before
+the refusal reply, restaging and successful same-slot replacement, then saved
+Notes and two completed closes. All six matched account `(8, 59, 642, 0)`.
+Native image: 416/496 load pages; SHA-256
+`85a82683a6f84cbaeb5e13849cc44c5276a172e117ea1ee3eb40d764e84ba663`.
+
+An initial probe incorrectly looked for a child-exit reclamation log, although no
+child exists at that failure point. It failed at
+`build/boot-harness-rs/desktop/20261106T180344848415Z/`. The replacement diagnostic
+reports only a successful kernel return of an unused reservation; BUSY remains
+tracked and is never reported as success. No kernel hook or deadline increase.
+
+Target clippy passed for the channel lab's omega-admission feature and the
+matrix's interaction-delay/construction-probe/handoff-probe features. Format,
+Python syntax, layout and diff checks passed. The remaining regressions finished
+successfully in `python build/check-construction-cleanup.py construction owner launch desktop`:
+
+- Held owner read: fresh and cold boots, artifact
+  `build/boot-harness-rs/desktop/20261106T183439787638Z/`.
+- Ordinary child launch: fresh and cold boots, artifact
+  `build/boot-harness-rs/desktop/20261106T184531875687Z/`.
+- Omega stock matrix as root and user template: fresh boot, picker, new user,
+  configured user matrix and Colors paint/save through both; artifact
+  `build/boot-harness-rs/omega-desktop/20261106T184603866867Z/`.
+
+Logs are `build/cleanup-{owner,launch,desktop}.log`.
+
+The combined nested pointer-stress soak was rerun separately over the Omega
+root/user composition from `omega_desktop_test.compose`, with
+`desktop_test.run(240, trace_storage=True, source_profile=profile, soak=3,
+nested_depth=3, pointer_stress=True)`. All three fresh and two cold cycles passed,
+including exact saved text, nested app close and subtree teardown. Artifact:
+`build/boot-harness-rs/desktop/20261106T184722314214Z/`; log:
+`build/cleanup-nested-stress.log`. The ignored driver is
+`build/check-current-nested-stress.py`.
+Each cycle returned to root account `(8, 138, 642, 15)`, provider floor
+509 private pages/845 frames and shell floor `[2, 2, 128, 0]`, with no recorded
+failures. The older combined close failure did not reproduce; this is not a
+causal diagnosis or a claim that it is fixed. Deep app closes still took
+4.17–9.59 seconds under pointer load, versus 1.16–1.47 seconds for the subsequent
+subtree teardown. Deadlines and standard oracles were unchanged; no extra close
+retry or quiet-motion recovery was added.
+
+Final resource-release calls, catalogue RUN and setup/shutdown paths still have
+blocking work. Memory release is a real deferred kernel operation that parks its
+caller (`source-rs/kernel/core/user_tasks/memory/memory.rs`), not merely an Omega
+annotation. Spreading groups of releases across turns can bound the batch;
+removing the individual syscall wait needs a generic kernel mechanism. Do not
+claim complete nonblocking teardown or full F5 parity.
+
+### Retained owner launches
+
+Implemented after `cd799ff2`. The new
+`omega_layout_fault_test.py --owner-read` replaces a stopped launcher through the
+ordinary owner RUN_OBJECT connection while Notes keeps its draft. The Rust parent
+holds that executable read until two interaction polls arrive, explicitly waking
+the child for the second. It cannot concurrently ask HEALTH on the owner link
+already awaiting the launch reply. Ordinary F5 has no such gate.
+
+The original path failed with no poll during the held read:
+`build/owner-launch-before.log`, exit 1, artifacts
+`build/boot-harness-rs/desktop/20261106T163541174390Z/`. The fixture's storage hold
+expired; its prior layout cancellation and launcher collection had completed.
+
+The implementation enters `children/owner_launch/owner_launch.omg` from
+`stored.omg`. It retains the exact owner ticket, argument, subtree and staged
+allowances; executable reading uses distinct exchange custody under this matrix's
+authority. Funding and construction advance on later turns, and binding installs
+the captured source identity locally. The final reply remains pending on mailbox
+backpressure. Child launch admission and realm jobs cannot take its work while
+input and ordinary service handling continue.
+
+The held-read scenario passed fresh and cold in
+`build/boot-harness-rs/desktop/20261106T164958688244Z/`, logged in
+`build/owner-launch-retained-result.log` (exit 0). Both polls precede release;
+replacement, exact draft preservation, later launches and saved settings pass.
+That checked native matrix is still 416/496 load pages, SHA256
+`7163d5ea8f75cd410d08c2d7bf8fa9d44c878858c55c8dcf8f76b1e34969b197`.
+Target clippy with interaction-delay/construction-probe/handoff-probe, Rust
+formatting, Python compilation, source layout and whitespace checks passed.
+
+After that pass, the unused synchronous `stored::run` and `stored::launch`
+wrappers and their helpers were removed. The final source passed checked native
+compilation and the held-read test on fresh and cold boots:
+`build/boot-harness-rs/desktop/20261106T171225480171Z/`,
+`build/owner-final-owner.log` (exit 0). The resulting ELF hash is unchanged from
+the one above. Both boot logs show two polls between hold and release, followed
+by successful launcher replacement.
+
+The broader sequential regression batch is running as
+`python build/check-owner-batch.py owner launch desktop construction`; logs are
+`build/owner-final-{owner,launch,desktop,construction}.log`. It checks the held
+owner read, the ordinary child launch read, the Omega root/user desktop, and three
+construction-requester replacements per boot. Owner finished successfully. The
+ordinary child-launch read also passed fresh and cold:
+`build/boot-harness-rs/desktop/20261106T172936688460Z/`. The Omega root/user desktop
+passed a fresh boot, including entering a new user and painting/saving Colors
+through both matrices:
+`build/boot-harness-rs/omega-desktop/20261106T173139046637Z/`.
+Construction-requester replacement also passed three cycles per boot, with
+matching reclaimed accounts; artifact `build/boot-harness-rs/desktop/20261106T173312451499Z/`.
+This completes that regression batch.
+
+Next work is the [retained construction failure cleanup](#retained-construction-failure-cleanup)
+above, including the shared runtime's hidden post-publication collection wait.
+Catalogue RUN, explicit setup/refresh and final release drains also need review
+for blocking waits. Normal F5 continues to select the Rust matrix.
+
+### Layout grant invalidation
+
+`omega_layout_fault_test.py --mode controller|ancestor` exercises the stock Omega
+matrix through its ordinary owner/service connections. The Rust test parent holds
+a layout COMMIT. Controller mode asks LOSS/STOP, waits for scene settlement and
+collection, then installs a new launcher in the same slot. Ancestor mode replaces
+the parent view and explicitly restores drawing allowances and child placements.
+Neither restores layout-controller authority. Both check the exact surviving
+Notes draft, fresh input, later launches and the saved settings on cold reopen.
+The replacement helper is shared with the existing construction-requester probe.
+These fixture keys are absent from ordinary F5.
+
+Both new scenarios pass fresh and cold boots:
+
+- Ancestor: `build/boot-harness-rs/desktop/20261106T064943133222Z/`.
+- Controller: `build/boot-harness-rs/desktop/20261106T065121050225Z/`.
+
+The ancestor fixture initially restored placement without drawing allowances,
+and then used the legacy five-key mask rather than the full original grant.
+Those setup errors caused refused drawing and dropped text input. Correcting
+the fixture exposed a real Background bug: it reused a surface handle across
+grant epochs and exited with BAD_HANDLE. The Omega app now creates a fresh
+surface for a new epoch. A refused create/paint rechecks the grant once: a new
+grant starts fresh, no view parks, and refusal under the same grant stays fatal.
+Transport failures still stop without replay. All nine compiled Background tests
+pass, including changes during CREATE/PAINT and missing-view recovery. The new
+ancestor desktop runs contain no failed children.
+
+Background's checked native image is 47/496 load pages, SHA256
+`d3e48a41b05964709a42ecc94889f4dee576345baece0005cc29b8ce997c8408`.
+The matrix is unchanged from `6b7deef5`: 416/496 pages with the same ELF hash.
+Fault-test logs are `build/omega-layout-{ancestor,controller}-regrant.log`;
+earlier failed setup and input traces are retained separately under `build/`.
+The remaining regression batch passed against `28e6adfd`:
+
+- Construction-requester replacement, three rounds on each of fresh and cold
+  boots: `build/boot-harness-rs/desktop/20261106T065316098548Z/`. Every reclaim
+  returned the same account `(8, 59, 642, 0)`.
+- Late selection cancellation, fresh and cold:
+  `build/boot-harness-rs/desktop/20261106T162211551236Z/`.
+- Ordinary Rust-host F5 desktop, fresh and cold, including the storage oracle:
+  `build/boot-harness-rs/desktop/20261106T162457652178Z/`.
+- Independent Omega Background control:
+  `build/omega-user/background-control/20261106T162831147484Z/`.
+- Full `cargo test --locked` in `source-rs/`, including compiled Omega behavior
+  tests and doc tests.
+
+Logs are `build/omega-layout-{construction,selection,desktop,background,host}-regrant.log`.
+The sequential runner finished successfully; no checks remain running from this batch.
+
+The owner `RUN_OBJECT` wait identified at this checkpoint is addressed by the
+[retained owner-launch path](#retained-owner-launches). Catalogue `RUN`, explicit setup/refresh and
+final resource-release drains also need separate review. The unrelated nested
+LOSS timeout under pointer stress remains open. Normal F5 still selects the Rust
+matrix; these tests do not qualify every remaining F5 variant.
+
+### Retained layout application
+
+Implemented after `ff555376`. The local reproducer `build/probe-omega-layout.py`
+ran and failed as intended (`build/omega-layout-before.log`, exit 1). Applying
+real launcher settings reached the parent's held COMMIT, but the Omega matrix
+did not answer HEALTH before the fixture's five-second hold ended. The parent
+failed its liveness assertion. Neither the HEALTH nor poll progress marker was
+printed. The saved frame during the hold was already blank; the test waited for
+the previous Notes view and did not reach its subsequent input/reopen assertions.
+Artifacts: `build/boot-harness-rs/desktop/20261106T044647313351Z/`.
+
+The baseline call path is `children/workspace.omg::apply_layout` -> `layout::layout` ->
+`level::place`, which retires surfaces and changes routes when grants change.
+`connections/presentation.omg::republish` then flushes those erasures before its
+synchronous scene transaction. Merely making its receive loop asynchronous would
+leave the old displayed scene and input geometry already invalidated.
+
+The implementation retains the controller request and previews proposed
+placements without mutating the World. `children/arrangement/arrangement.omg`
+sequences publication and settlement, separately from workspace selection; both
+share the existing transport and scene fence. Changed extents stage empty draws,
+not ERASE: erasing upstream names would prevent a late-COMMIT rollback. Accepted
+geometry uses the existing grant revocation and retained owed-erasure path before
+surface ranks can be reused. Offset-only moves translate retained content.
+
+The checked build passed all 11 packages and native code generation: 416/496
+load pages, unchanged 128-page stack, ELF SHA256
+`6d45dc91ae1a2d0a147efc5c581f14e281dc85ef398b99cb787cbf1e997fada4`.
+Build log: `build/omega-layout-build.log`. Earlier parser/type/tail-check failures
+were corrected; their diagnostic logs remain under `build/omega-layout-*`.
+
+The larger installed image exposed physical storage capacity before layout could
+run. The 8 MiB extent refused redb's 8,425,472-byte growth request. Adding 64 KiB
+allowed user creation and all three layout cases on fresh/cold boots, but failed
+the settings suite after offline compaction: the next growth needed 8,466,432
+bytes. Both failures were reproduced on in-memory copies, with unchanged source
+disks and successful cold reopen after supplying space. Evidence:
+`build/boot-harness-rs/desktop/20261106T053214929112Z/`,
+`build/boot-harness-rs/settings/20261106T054650937635Z/`, and
+`build/omega-layout-settings-capacity-probe.log`. The second failure was a storage
+SAVE FAILED before APPLY_LAYOUT, not an Omega layout acknowledgement failure.
+
+The lab now supplies a 16 MiB physical extent in host and guest, keeping the 4 MiB
+logical retained-record quota, provider memory and all deadlines unchanged.
+Compacted engine sizes are not necessarily powers of two; their next doubling
+needs transaction space beside allocator metadata. Known 4/8 MiB saved disks use
+the existing backed-up offline growth path. The 10 database-image host tests,
+actual offline-growth test for both sizes, storage-service x86-64 clippy and
+`cargo test --locked` in `source-rs/` pass. Both Rust workspaces' formatting,
+Python syntax, diff checks and source-layout (156 Omega / 153 Rust edges) pass.
+The storage lab's existing quota-report formatting was normalized as well.
+
+`omega_layout_test.py --mode complete|refuse|cancel` holds the parent's COMMIT and
+checks owner HEALTH, polling, old input geometry, exact dirty draft, retry and
+later launches at the accepted placement. Each includes cold reopen. Cancellation
+stops a captured sibling while Notes remains alive. `settings_test.py --profile`
+selects the Omega composition for its changed-layout cold-boot and user-isolation
+checks. Dedicated controller-departure and ancestor-invalidation scenarios are
+covered in the follow-up above; sibling cancellation alone proves neither. Keep the
+separate pointer-stress LOSS timeout open; it was not requalified here.
+
+Final-extent verification, all passing. Artifacts are beneath
+`build/boot-harness-rs/`:
+
+| Scenario | Artifact |
+| --- | --- |
+| complete | `desktop/20261106T055105648652Z` |
+| refuse | `desktop/20261106T055205698331Z` |
+| cancel | `desktop/20261106T055301287045Z` |
+| settings | `settings/20261106T055412589165Z` |
+| selection | `desktop/20261106T055548155465Z` |
+| selection-late | `desktop/20261106T055653091838Z` |
+| fallback | `desktop/20261106T055746638433Z` |
+| desktop | `desktop/20261106T055844733501Z` |
+| nested | `desktop/20261106T060042357283Z` |
+
+Each layout mode and each desktop regression includes cold reopen; settings
+covers three boots and independent user defaults. Logs are
+`build/omega-layout-<scenario>.log`. The local runner is
+`python build/check-omega-layout.py checks`, then `settings`, then `regressions`.
+Settings takes the newly created completion fixture, avoiding stale executable
+copies. Logs ending `-64k.log` describe the superseded physical extent and are
+not final-extent qualification.
+
+The following slice supplies controller departure and ancestor invalidation
+through ordinary owner/service IPC; see the current handoff above.
+
+### Retained workspace fallback
+
+Implemented after `94053ba3`. The new `omega_fallback_test.py` reproduced the
+synchronous fallback wait on that baseline (`build/omega-fallback-before.log`):
+Colors was collected, its fallback COMMIT was held, and the Omega matrix did not
+answer its owner's HEALTH request before the fixture deadline. The root fixture
+then failed its liveness assertion. This is the intended regression, not a pass.
+
+`SelectionOrigin` now distinguishes requester, launch and retirement work. The
+retirement origin names the collected task and its still-reserved local slot;
+it does not borrow a chrome ticket or its outbox. It uses the existing preview,
+remote transaction, cancellation and late-COMMIT rollback, with parent epoch and
+target binding checks. `workspace::retired` starts this continuation instead of
+waiting in `presentation::switch`; the unused synchronous switch is removed.
+
+`Retiring.collected` separates consumed kernel outcomes from final scene
+settlement. The slot and close/STOP replies remain pending until that scene ends;
+later turns cannot collect the same task twice. Explicit setup/shutdown drains
+pump their own selection and its existing transport, so they do not depend on an
+absent service loop. Other final mailbox/image releases still contain waits.
+
+Source layout and diff checks pass. After both cleanup guards described below,
+the stock checked/native build passed at 400/496 load pages
+(`build/omega-fallback-terminal-build.log`), with unchanged stack and allowances.
+The tested stock ELF SHA-256 is
+`e36f097945147c514bbcbb041535a542dc85f8e7390bcce3bbae6f7ee46a2e10`.
+The first checker attempts caught a qualified pattern spelling, obsolete `block`
+acknowledgements on now-nonblocking cleanup calls, and a nested read/mutable borrow
+in the fallback lookup. Those are corrected. Initial completion passed on both
+boots; refusal passed fresh, then its cold run waited for a poll without supplying
+an input event. HEALTH did respond. The test now sends a real left-key event after
+the hold, matching the notification-driven poll contract; it retains both progress
+assertions. Initial evidence remains in `build/omega-fallback-checks-initial.log`
+and `build/omega-fallback-fallback-refuse-initial.log`. With that test correction,
+all seven fallback/selection cases passed, including cold reboot. All seven also
+passed again after both cleanup guards (`build/omega-fallback-checks.log`). The new test has
+`--mode complete|refuse|cancel`: hold fallback COMMIT, require HEALTH and parent
+poll progress, require collection reporting after scene settlement, preserve the
+surviving Notes draft or honor its owner STOP, then save/reopen and reuse slots.
+
+Artifacts under `build/boot-harness-rs/desktop/`:
+
+- Fallback completion: `20261106T041554288140Z/`.
+- Fallback refusal: `20261106T041656528425Z/`.
+- Owner STOP of the fallback app: `20261106T041759813728Z/`.
+- Ordinary selection, held input and refusal: `20261106T041905025827Z/`.
+- Selection cancellation before COMMIT: `20261106T042021886809Z/`.
+- Selection cancellation after COMMIT: `20261106T042120890886Z/`.
+- Cancellation through nested control relays: `20261106T042219731551Z/`.
+
+Review found a cleanup failure-path issue: if the clock fails
+while selection is submitted, `lost` marks it finished without clearing
+`presentation_work.submitted`, so explicit retirement draining can keep waiting
+for a reply on the closed transport. Completion now clears that flag. Review
+also found that one retirement can start a scene during a multi-child pass;
+the next visit now checks the scene fence again before releasing another child's
+backing. These are inspection findings, not reproduced runtime failures.
+The earlier fixture queue was stopped to fix this before publishing; evidence is in
+`build/omega-fallback-fixtures-interrupted.log` and
+`build/omega-fallback-handoff-build-interrupted.log`; the four runtime regressions
+did not run in that interrupted queue. Earlier logs are preserved with a
+`-pre-review.log` suffix.
+
+The revised source stayed frozen through the successful stock, handoff and
+construction builds, the seven focused cases and all four broader regressions.
+Both fixtures also occupy 400 pages. Build results are in
+`build/omega-fallback-fixtures.log`; broader results are in
+`build/omega-fallback-regressions.log`. All four include cold reopen:
+
+- Ordinary Omega desktop and host storage oracle: `20261106T043858773435Z/`.
+- Depth-three nesting and repeated subtree reclamation: `20261106T044005681640Z/`.
+- Owner STOP during login handoff: `20261106T044256053198Z/`.
+- Requester replacement during construction, three rounds on each boot:
+  `20261106T044348719407Z/`; every post-reclaim account was `(8, 59, 626, 0)`.
+
+This is focused verification, not a full F5 variant sweep. No Rust production
+code changed in this slice; its unchanged host/clippy baseline remains recorded
+under the login handoff below. No deadline, stack or resource allowance changed.
+The local queue is `build/check-omega-fallback.py`: run `checks` first for the
+three new cases and four existing selection cases; then `fixtures`, then
+`regressions` for desktop, nesting, handoff STOP and three requester-replacement
+rounds per boot. Stop at the first failure and diagnose it before broadening.
+Keep the separate pointer-stress LOSS timeout open; no deadline or budget bump.
+
+### Retained login handoff
+
+`children/launch/handoff.omg` retains the accepted
+login selection while lifecycle retires the picker across service turns. The
+matrix owns that selection after validating the original caller; intentionally
+retiring the picker no longer cancels it. STOP of the new desktop and changes to
+its launch policy still cancel it. A replacement picker is not mistaken for the
+retired one. The prepared storage source is revalidated at binding installation.
+
+`shared/state.omg::unserved` keeps the admitted desktop's interaction, storage
+and routed owner requests unavailable until binding/placement succeeds or cleanup
+finishes. Initial owner-control handshakes can progress, but pending child service
+messages do not cause an immediate-wakeup spin. Failure uses the existing retained
+refusal path and restores the picker. No kernel mechanism or deadline changes.
+
+The stock checked/native build passed at 399/496 load pages, with unchanged stack
+and allowances (`build/retained-picker-handoff-build.log`). Host tests passed
+(`build/retained-picker-handoff-host-tests.log`), as did Rust format, Python
+compilation, source-layout and diff checks. Targeted guest clippy passed
+(`build/retained-picker-handoff-clippy.log`). Both fixture checked/native builds
+passed (`build/retained-picker-handoff-fixture-checks-resumed.log`). The new fixture's
+124 native-boundary definitions matched the accepted stock-matrix lock and unchanged
+runtime source; the inspected review passed after preserving its original LF framing
+(`build/handoff-native-review-comparison.txt`, `build/handoff-native-review-resume-lf.log`).
+Final fixture newline normalization rebuilt successfully and produced the exact
+tested ELF (`build/retained-picker-handoff-normalized-build.log`, SHA256 comparison
+in `build/retained-picker-handoff-newlines.json`). Local compiler locks are ignored.
+
+The new `matrix-handoff` Omega lab entry selects a
+100-tick observation hold after picker collection; ordinary entry selects zero.
+`omega_handoff_test.py --mode health|stop|regrant` uses the Rust parent's
+`handoff-probe` feature to route ordinary owner requests through the outer desktop
+to the nested login. It checks control progress, no premature desktop
+configuration, picker recovery, and subsequent Notes save/reopen with cold boot.
+This is an observation hold, not an artificial kernel collection delay.
+
+All seven runtime cases passed, including cold reboot
+(`build/retained-picker-handoff-runtime-checks.log`). Artifacts under
+`build/boot-harness-rs/desktop/`:
+
+- HEALTH during handoff: `20261106T030647714617Z/`.
+- STOP and picker recovery: `20261106T030814444380Z/`.
+- Policy revocation/restoration and picker recovery: `20261106T030930164206Z/`.
+- Normal Omega desktop, independent drafts and durable state: `20261106T031027914155Z/`.
+- Three nested desktops, protected close and repeated subtree reclamation:
+  `20261106T031139195548Z/`.
+- Invalid executable leaves the picker usable: `20261106T031554190529Z/`.
+- Requester replacement during construction, three rounds per boot:
+  `20261106T031649306705Z/`. Each round returned the same measured account
+  `(8, 59, 625, 0)`.
+
+This is focused verification, not a full F5 fixture sweep. Keep the previously
+recorded pointer-stress LOSS timeout open. The local runner is
+`build/check-retained-picker-handoff.py`: `builds` builds both fixtures; `runtime`
+runs all seven cases sequentially after compilation is idle.
+
+Next boundary: `workspace::retired` still waits for the fallback app's scene.
+Use the existing selection transaction with an explicit internal initiator, not
+an invented chrome request. Keep retirement pending through scene settlement so
+close does not complete early, and distinguish an already-collected child from
+one still awaiting its outcome. Preserve child incarnation/scene epoch checks and
+late-COMMIT rollback. Audit synchronous shutdown/setup drains as well: an internal
+continuation must not depend on a service loop those callers are no longer running.
+Initial setup-error drains and final mailbox/image releases still contain waits.
+
+### Retained failed-launch cleanup
+
+`children/launch/completion.omg` owns final
+recovery/reply and a retained failure phase. Placement and activation now describe
+failure to launch; they no longer drain the child themselves. Launch requests
+retirement once and keeps its original refusal, caller ticket and picker recovery
+decision until lifecycle finishes. A full requester outbox keeps that failure
+pending; a stale request cannot be held by its replacement's outbox or reply to
+the replacement. Successful completion still uses the same finalizer immediately.
+
+Failed/expired owner-control handshakes also request retirement instead of draining
+inside their probe. Placement checks that flag before publishing the new child or
+issuing its receipt. The existing short startup probes still wait; this change
+removes their failure-cleanup wait, not the probe itself. Picker retirement,
+initial construction/setup error drains, fallback presentation and final
+mailbox/image releases remain synchronous.
+
+Requester replacement exposed a double release: the returned-reservation sweep
+enumerates all owned launches and could release the target's collected-but-still-
+tracked reservation while retiring its requester. The target's retained cleanup
+then reported BAD_HANDLE. The sweep now skips reservations owned by a local slot
+or deferred release, including during funding. Each explicit owner finishes its
+own cleanup. The failing run remains in `build/retained-launch-cleanup-checks.log`
+and its requester log; the fixed run below repeats that scenario first.
+
+Checked/native builds of the stock matrix and construction fixture passed; the
+matrix remains 397/496 load pages with unchanged stack and allowances. Build logs
+are `build/retained-launch-cleanup-build-fixed.log` and
+`build/retained-launch-cleanup-fixed-fixture-build.log`. All seven runtime cases
+in `build/retained-launch-cleanup-fixed-checks.log` passed, including cold reboot.
+Artifacts below are under `build/boot-harness-rs/desktop/`:
+
+- Requester replacement, three rounds per boot: `20261106T021351776687Z/`.
+- Full Omega desktop, independent Notes instances, protected close and durable
+  saved-state oracle: `20261106T021500192161Z/`.
+- Rejected launch activation: `20261106T021600852929Z/`.
+- STOP during launch activation: `20261106T021710263773Z/`.
+- Invalid executable leaves the picker usable: `20261106T021816532844Z/`.
+- Construction STOP, three rounds per boot: `20261106T021907350820Z/`.
+- Construction policy revocation/restoration, three rounds per boot:
+  `20261106T022011678616Z/`.
+
+All three repeated-construction modes returned the measured account
+`(8, 59, 623, 0)` after both Notes closes in each round. Source layout and diff
+checks passed. This is focused verification, not a full F5 fixture sweep; keep
+the known pointer-stress LOSS timeout below open.
+The existing launch-scene test now explicitly requires the reclaimed event before
+the refusal, for both rejected activation and STOP cancellation; presence of both
+events alone would not catch an early reply.
+
+Next boundary: replace the login picker's synchronous retirement with an explicit
+handoff phase. Keep the admitted desktop unserved until binding/placement are
+installed, distinguish the authorized picker handoff from cancellation, and keep
+owner STOP/policy changes effective while retirement waits. Exercise both normal
+login and failed-login recovery. After that, give workspace fallback selection
+an explicit internal initiator in the existing scene transaction; do not invent
+a chrome request ticket for an internally initiated switch.
+
+### Retained ordinary close
+
+Sibling CLOSE now retains its exact request after a clean LOSS answer while the
+matrix's turn loop polls collection. Owner STOP uses the same retirement path,
+with or without a pending scene. Its entrance is `program/stopping.omg`: validate,
+submit once, retain the original ticket, and answer only after collection and
+bookkeeping. Output backpressure retains both kinds of reply for later turns.
+A replacement listener cannot receive the former incarnation's close answer.
+
+Lifecycle withdraws service once, preserves the original task for exit reporting,
+and keeps the slot and reservation unavailable until cleanup finishes. Interaction,
+storage admission, control opening, funding, scene selection and new admission
+respect that boundary. Departed listeners use the same path. Cancelled construction
+waits when lifecycle already owns collection rather than consuming its outcome.
+Rejected observation preserves custody and ends the process through its fatal-turn
+path. Local wakeups cover outstanding collection and replies without requiring
+another input event. Setup/shutdown callers can still explicitly drain this state.
+
+This is not fully nonblocking teardown: final mailbox/image release and workspace
+fallback presentation still block, along with the startup/activation paths below.
+No kernel privilege, allowance, stack size or deadline was increased.
+
+Checked and native builds pass for the stock matrix and construction fixture.
+The final matrix uses **396/496 load pages** with its existing 128-page stack.
+Logs: `build/retained-stop-build.log`, `build/retained-stop-fixture-build.log` and
+`build/retained-stop-checks.log`. The final sequential queue exited zero for all
+eight runtime checks, each including cold reboot:
+
+| Check | Artifact under `build/boot-harness-rs/desktop/` |
+| --- | --- |
+| Full Omega desktop and durable-data oracle | `20261105T055023927413Z/` |
+| Selection STOP before COMMIT | `20261105T055124465943Z/` |
+| Selection STOP after COMMIT | `20261105T055212497233Z/` |
+| Selection STOP through two relays, including timeout and late completion | `20261105T055259982507Z/` |
+| Launch activation rollback and slot reuse | `20261105T055406001461Z/` |
+| Construction STOP, three cycles per boot | `20261105T055503890851Z/` |
+| Construction revoke/restore, three cycles per boot | `20261105T055607855747Z/` |
+| Requester replacement, three cycles per boot | `20261105T055711377151Z/` |
+
+The construction cases returned exactly `(8, 59, 622, 0)` after every cycle.
+Scene fixtures require reclamation before STOP acknowledgment, preserve drafts
+and input during the held transaction, and reuse the stopped slot. The nested
+case does not retry a timed-out STOP and drains its late reply before a distinct
+request. The ignored runner `build/check-retained-stop.py` sequences the existing
+`omega_selection_test.py --cancel before|late|nested`, `omega_launch_scene_test.py
+--cancel` and `omega_construction_test.py --mode stop|regrant|requester --rounds 3`,
+beside the full desktop composed through `omega_desktop_test.compose`.
+
+Before the final owner STOP integration, the close implementation also passed the
+full depth-three nested desktop (`20261105T050437458170Z/`) and ordinary soak
+(`20261105T052600717185Z/`), with three fresh cycles, two cold cycles, exact saved
+text and stable reclaimed accounts. Those are earlier-snapshot evidence, not a
+claim that the final STOP edits reran every variant. The ordinary soak's Python
+harness reached its final PASS; PowerShell returned 1 after treating Cargo's
+ordinary stderr progress as `NativeCommandError`. Final verification runners
+capture stderr inside Python and explicitly return the child exit code.
+
+**Open stress failure:** combined pointer-stress soak failed at
+`20261105T050724776834Z/`. All three fresh cycles passed; cold cycle one refused
+outer close after recursive LOSS timed out, then the scan failed waiting for that
+refused close. No process crash was observed. This matches the previously recorded
+stress failure mode; do not call it fixed or describe this verification as a clean
+sweep. `build/retained-close-control-timing.log` records 53 samples across seven
+matrix tags: timed-out questions took 1.04-1.73 s, mostly off CPU. Three Background
+receipt-to-reply spans took 10, 98 and 271 ms with 2-4 ms account CPU. Tags do not
+establish parent/child membership. Host CPU sampled at 96%; the observations do
+not identify the cause or constitute isolated performance measurements. Never
+accept stale clean replies as a timeout workaround.
+
+Next implementation slice:
+
+- Handshake abandonment in `children/lifecycle.omg` and failed activation in
+  `children/launch/placement.omg` still drain synchronously. Keep a failed launch's
+  exact request until its child is collected, rather than answering immediately
+  after submitting cancellation.
+- Picker retirement during login gates installing the replacement's binding
+  before serving it. Yielding there requires an explicit unserved phase.
+- `children/workspace.omg::retired` still uses a blocking fallback scene switch.
+  Reuse the selection transaction with an explicit internal initiator, without
+  manufacturing a chrome IPC ticket. Final mailbox/image release is a separate
+  remaining kernel wait.
+
+### Retained admission retirement
+
+Following `529b8dac`, Omega's shared
+`user-runtime/admission/retirement.omg` now polls construction cancellation and
+live-child collection through one custody path. Pending retains the bundle;
+completion distinguishes empty, aborted construction (with its status), and a
+collected child's original exit. If publication won, the real task ticket is
+retained and moved endpoint names are cleared before cancellation. `stop` and
+`pending::drain` use the explicit blocking convenience over that same path.
+
+`task::poll_spawn` distinguishes rejected observation from consumed construction
+failure. Rejected observation keeps the receipt and bundle, including through
+`release`; release also refuses to discard a live child's bundle. The witness
+allocates a real bundle, presents an invalid receipt, proves a retained endpoint
+still sends, then repairs the fixture state and verifies release invalidates it.
+
+The twelve-scenario Omega admission suite passes at
+`build/omega-user/connections/20261105T035917515435Z/`. New repeated cases cover
+submitted stop beside an independent echo child and cancellation before the
+normal admission poll, followed by same-slot reuse. Existing blocking cases also
+pass through the shared retirement implementation. Parent channel, memory,
+physical and notification accounts return exactly after each scenario. These
+runs do not assume a minimum cleanup duration or select the kernel commit race.
+An initial rejected-receipt test wrongly expected zero from a successful send;
+the ABI returns the sent byte count. Correcting that assertion made it pass.
+Target clippy for `cathedral-channels-lab --features omega-admission`, the source
+layout check (152 Omega / 153 Rust package edges), and diff checks also pass.
+
+The stock matrix now uses this poll when construction authority is withdrawn.
+It retains its launch and reservation between visits, suppresses service to a
+child that won publication, and refuses the request only after rollback or
+collection. Rejected observation preserves custody and ends the matrix through
+its ordinary fatal-turn path. Checked/native compilation of the ordinary matrix
+passes at 393/496 load pages, as does the construction-fixture build.
+
+All six desktop checks passed, including cold reopen:
+
+- Full Omega desktop: `build/boot-harness-rs/desktop/20261105T042711979704Z/`.
+- Normal F5 desktop: `build/boot-harness-rs/desktop/20261105T042818745016Z/`.
+- Construction health and STOP: one cycle each, before and after reboot.
+- Construction revoke/restore and requester replacement: three cycles each,
+  before and after reboot, with exact reclaimed accounts `(8, 59, 619, 0)`.
+  Artifacts: `build/boot-harness-rs/desktop/20261105T043034127962Z/` and
+  `build/boot-harness-rs/desktop/20261105T043136434550Z/` respectively.
+
+Build log: `build/retained-retirement-desktop-build.log`; check summary:
+`build/retained-retirement-checks.log`. Final mailbox/bundle release,
+ordinary live-child close, owner STOP and setup failure remain synchronous; do
+not describe this as fully nonblocking teardown. Next is retaining those ordinary
+close operations across service turns without replying or reusing a slot early.
+The ignored helper `build/check-retirement-desktops.py` runs those six checks
+sequentially and writes a separate `build/retained-retirement-*.log` per case.
+
+### Nonblocking child task primitives
+
+The shared kernel task API now separates cancellation submission from collection:
+`TASK_CANCEL_BEGIN` (91) requests retirement of the owner's exact child and
+`TASK_TRY_WAIT` (92) polls its reclaimed outcome. Neither registers a wait nor
+requires a clock grant. Pending observation leaves the ticket and destination
+unchanged; successful copyout consumes the outcome. Reserved cancellation words,
+foreign/stale tickets and bad destinations fail. Existing blocking cancellation
+and wait operations keep their behavior.
+
+Blocking cancel waiters are now registered by the syscall that actually parks,
+not inferred later from a child's cancellation flag. This matters when a parent
+submits cancellation and then blocks on unrelated IPC: reclamation must not wake
+that IPC or overwrite its saved syscall result. Withdrawal still precedes the
+next userspace entry; physical cleanup continues in bounded boot-context visits.
+No matrix-specific kernel scheduling or authority was added.
+
+The Omega runtime exposes `task::main::cancel_begin` and `try_wait`, the latter
+returning `Completion::{Pending, Ready, Failed}`. Its native table appends two
+entries, retaining the existing prefix. The Rust runtime has matching methods.
+The standalone Omega supervisor accepts a submitted stop and polls collection
+on ordinary turns while still handling its owner. Six cycles cancel a child with
+a held request and reuse its slot for a successful echo child. Those cycles do
+not assume a minimum cleanup duration; deterministic overlap is tested in kernel.
+
+Verification:
+
+- Host `cargo test --locked`: `build/cancel-api-host-tests.log`.
+- x86-64 smoke: `build/cancel-api-smoke.log`.
+- ARM64 portability: `build/cancel-api-arm64.log`.
+- Both CPU runs execute the new inactive-root fixture through actual subtree
+  withdrawal/reclamation and checked copies: repeated submission, pending poll,
+  unrelated IPC preservation, blocking-after-submit compatibility, bad copyout,
+  exact cancelled outcome, consumed-ticket refusal and allocator recovery.
+- The ten-scenario Omega admission suite passes at
+  `build/omega-user/connections/20261105T031457447851Z/`, including six submitted
+  stop/reuse cycles and exact parent resource refunds after every scenario.
+- Core (memory-lab) and Rust user-runtime target clippy, the three native ABI
+  boundary tests, Python/source-layout and diff checks pass.
+- The full fresh/cold desktop workflow with Omega root and user matrices passes
+  at `build/boot-harness-rs/desktop/20261105T033829528434Z/`: login, three Notes
+  instances, independent drafts, protected close, slot reuse, Notes/Colors saves
+  and exact durable reopen. The rebuilt matrix remains at 391/496 load pages.
+- Normal F5's Rust-host desktop passes the same fresh/cold workflow at
+  `build/boot-harness-rs/desktop/20261105T034018273917Z/`, with the rebuilt Omega
+  applications. Logs: `build/cancel-api-omega-desktop.log` and
+  `build/cancel-api-rust-desktop.log`.
+
+The new native capabilities were reviewed as exactly four added rows: callable
+and external supply for `task_cancel_begin` and `task_try_wait`. No compiler,
+stack, resource allowance or deadline changes are required.
+
+Next: use these primitives in Omega's retained admission cancellation and stock
+matrix teardown. `admission::stop`, `pending::drain`, and the stock matrix still
+use blocking cancellation/collection. Keep listener/bundle custody until rollback
+or the committed child's collection completes, and service unrelated requests
+between those turns. Remaining synchronous owner/setup operations follow that.
+Keep the distinction explicit: collecting the task outcome can now be polled,
+but `server::close` still releases sealed requests and shared mailbox backing
+through blocking memory operations. Returning to the loop between task polls
+does not make that final bundle release nonblocking.
+Normal F5 still uses the Rust matrix host. The earlier nested-close timeout is
+still unexplained; this API addition does not claim to fix it.
+
+### Construction cancellation
+
+The new [construction lab](source/distribution/lab/matrix-construction/README.md)
+uses the real Omega stock matrix with a one-second observation window around
+ordinary child construction. Its explicit entry calls the same process body;
+normal startup supplies zero. The hold is a leaf beside construction, not a new
+production package or kernel policy. The generic program entry contract, producer,
+stack, grants and deadlines are unchanged.
+
+A Rust fixture owner sends HEALTH, STOP, or LAUNCH_IMPORTS revoke/restore over its
+existing control connection. Two successive parent polls, driven by real input,
+must complete before release: one poll could already have been queued. This
+proves input-service progress, not delivery to an app that has not been admitted.
+The worker may commit behind the observation hold. The test does not select the
+kernel's pre/post-publication race; the generic admission witness covers that.
+
+The revoke/restore test found that `children/stored.omg` refused all owner words
+while a launch was pending, including launch-import policy changes. Only the
+competing synchronous RUN_OBJECT now takes that BUSY path. Accepted changes to
+the target's imports, image offer, resource ceilings or placement mark the pending
+launch cancelled. Restoring the original policy cannot clear that cancellation.
+Other targets' policy updates do not cancel this request. This changes future
+admission, not service rights already handed to an established child.
+
+Checked/native fixture compilation passes at 391/496 load pages. These final-image
+runs each pass a fresh and cold boot, refusal or activation, same-slot reuse,
+Notes save and exact reopen:
+
+- `--mode health`: `build/boot-harness-rs/desktop/20261105T022731389349Z/`.
+- `--mode stop`: `build/boot-harness-rs/desktop/20261105T022813924285Z/`.
+- `--mode regrant`: `build/boot-harness-rs/desktop/20261105T022623993147Z/`.
+
+Run them with `python tools/boot-harness-rs/omega_construction_test.py` plus the
+mode above. The regrant case primes an explicit ordinary-import policy before
+launching, so restoring it cannot accidentally test a different policy.
+Host `cargo test --locked` passes; its log is `build/omega-construction-host-tests.log`.
+Target clippy passes for normal, interaction-delay and construction-probe builds.
+Python syntax and source-layout checks pass (152 Omega / 153 Rust package edges).
+
+The normal entry also builds at 391/496 pages, up from 389. The full Omega-root/user
+desktop run at `build/boot-harness-rs/desktop/20261105T023458759519Z/` passes login,
+three Notes instances, independent drafts, switching, capacity refusal, protected
+close, slot reuse, Notes/Colors saves and exact cold-reopen storage (2,479 records).
+Neither boot contains a construction-probe marker. The production entry has no
+observation pause. Normal F5 remains the Rust matrix host.
+
+Requester retirement/replacement is also covered by
+`omega_construction_test.py --mode requester`, passing fresh and cold at
+`build/boot-harness-rs/desktop/20261105T024920816321Z/`. STOP targets the launcher
+while its requested Notes construction is held. The old request is refused;
+ordinary owner commands resolve and reinstall Desktop in the same requester slot.
+The replacement launches Notes into the same target, saves, closes and reopens it.
+Both Notes closes in both boots report 8 private / 59 reader pages and 617 frames.
+These are immediate reclamation samples, not a repeated cancellation soak or
+proof that every asynchronous reservation return has settled. Replacement follows
+old-request refusal; this does not inject reordered replies after replacement.
+
+The first requester run at `20261105T024619279361Z/` gave the replacement an obsolete
+48-page allowance. It could launch Notes, then exited while repainting its bar.
+The fixture now uses the same 96 private pages as the installer; no production
+budget was changed. The Rust probe is organized under `service/construction_probe/`,
+with a named entrance, a replacement-command leaf and plumbing-only `mod.rs`.
+The shipped Omega images are unchanged by this follow-up.
+
+The construction harness now accepts `--rounds 4` (one to eight rounds).
+Each round repeats the observation/owner-input check, cancellation or release,
+then a successful launch, save, close and reopen/close. It compares both Notes
+reclamation samples against the first close of that boot. This catches resource
+growth across repeated cancellation and reuse; it does not measure every provider
+or wait for every asynchronous reservation return to settle. Saved text accumulates
+across rounds and must survive the cold boot exactly.
+
+All four modes pass four rounds per boot (fresh and cold): 32 construction cycles,
+including 24 cancellations, and 64 completed Notes-close samples. Every sampled
+account is 8 private / 59 reader pages, 617 charged frames and zero free launch
+slots. The final text is `aaaabbbb`; cold startup first checks `aaaa`. Artifacts:
+
+- `requester`: `build/boot-harness-rs/desktop/20261105T025622940809Z/`.
+- `regrant`: `build/boot-harness-rs/desktop/20261105T025753328260Z/`.
+- `stop`: `build/boot-harness-rs/desktop/20261105T025919387969Z/`.
+- `health`: `build/boot-harness-rs/desktop/20261105T030048838762Z/`.
+
+The Omega binaries remain unchanged at 391 matrix load pages. This follow-up
+changes only the host workload and documentation. Python syntax, source layout
+and diff checks pass; the earlier native/host checks remain scoped to their
+recorded implementation revisions.
+
+The task-API prerequisite identified here is now implemented in
+[nonblocking child task primitives](#nonblocking-child-task-primitives).
+Retained Omega admission cancellation/teardown and remaining synchronous
+owner/setup operations are still the next integration work.
+
+The earlier intermittent nested-close timeout remains unresolved; keep the
+control timing probes below for recurrence. These cases do not establish
+nonblocking cancellation.
+
+### Control reply timing
+
+Background now records sparse timestamps when it starts, receives an owner query
+and publishes or fails its reply. Both the idle and pending-broker paths use the
+same observation point. `Bg ctl:` carries a startup timestamp, phase, elapsed
+clock and direct account CPU; it contains no new authority or process identity.
+The phases are 0 online, 1 received, 2 reply published and 3 reply failed.
+`tools/boot-harness-rs/control_timing.py` reports these receive-to-reply spans
+alongside the existing matrix timings. It does not infer parent membership from
+the startup tags, or equate off-CPU time with a particular scheduler/IPC cause.
+An unfinished probe is not proof of an unpublished reply: the parent may collect
+the child before its post-publication diagnostic runs. Instrumentation itself
+adds clock/format/write work.
+
+Checked/native Background compilation passes at 46 load pages. The matrix stays
+at 389 pages with the same producer, stack, grants and deadlines. The nested LOSS
+regression passes fresh and cold at
+`build/boot-harness-rs/desktop/20261105T012750712592Z/`: dirty/clean replies while
+an image is held, protected close, save and cold reopen. Background's measured
+receipt-to-publication spans there were 1.172–5.876 ms.
+
+The full Omega root/user depth-three pointer-stress soak at
+`build/boot-harness-rs/desktop/20261105T012908420777Z/` passes one fresh cycle and
+two cold cycles, including exact saved text and repeated subtree teardown. Root
+accounts returned to 8 private / 138 reader pages, 614 frames and 15 free launch
+slots each time. Provider heap stayed within its tested headroom. The first
+cycle's outer LOSS round trip was 551.277 ms; the deepest Background span was
+52.432 ms elapsed / 1.775 ms direct execution. Cold Background spans reached
+30.913 ms. These successful runs **do not explain or fix** the earlier timeout
+recorded below. Five timing-parser tests and the source-layout/diff checks pass.
+
+Next: retain these probes for a recurrence, separating request receipt, reply
+publication and parent collection before changing scheduling or deadlines.
+Deterministic held-construction/cancel/replacement fixtures and the remaining
+synchronous cancellation/setup paths are still open. Normal F5 still uses the
+Rust matrix host. Latest upstream Omega kernel boot work through `d57af8b9` is
+integrated; it is independent of this desktop path.
 
 ### Retained child construction
 

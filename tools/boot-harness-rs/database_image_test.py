@@ -40,22 +40,24 @@ class DatabaseImageTests(unittest.TestCase):
             self.assertEqual(sidecar.read_bytes(), b'old receipt')
 
     def test_legacy_extent_grows_even_when_installed_programs_are_unchanged(self):
-        with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / 'desktop.raw'
-            path.write_bytes(bytes(database_image.OFFSET + database_image.LEGACY_VOLUME_BYTES + 4096))
-            program = Path(directory) / 'app.elf'
-            program.write_bytes(b'app')
-            import hashlib
-            import json
-            receipt = json.dumps([[0, hashlib.sha256(b'app').hexdigest()]])
-            path.with_name(path.name + '.programs').write_text(receipt)
-            def grow(command, **kwargs):
-                self.assertEqual(command[3], 'grow')
-                path.write_bytes(bytes(database_image.IMAGE_BYTES))
-            with patch.object(database_image, 'oracle', return_value=Path(directory) / 'oracle.exe'), patch.object(database_image.subprocess, 'run', side_effect=grow) as run:
-                database_image.prepare(path, [(0, program)])
-                self.assertEqual(run.call_count, 1)
-            self.assertEqual(path.with_name(path.name + '.programs').read_text(), receipt)
+        for old_bytes in (database_image.LEGACY_VOLUME_BYTES, 8 * 1024 * 1024, 16 * 1024 * 1024):
+            with self.subTest(old_bytes=old_bytes), tempfile.TemporaryDirectory() as directory:
+                path = Path(directory) / 'desktop.raw'
+                path.write_bytes(bytes(database_image.OFFSET + old_bytes + 4096))
+                program = Path(directory) / 'app.elf'
+                program.write_bytes(b'app')
+                import hashlib
+                import json
+                receipt = json.dumps([[0, hashlib.sha256(b'app').hexdigest()]])
+                path.with_name(path.name + '.programs').write_text(receipt)
+                def grow(command, **kwargs):
+                    self.assertEqual(command[3], 'grow')
+                    self.assertEqual(command[6:8], [str(old_bytes), str(database_image.VOLUME_BYTES)])
+                    path.write_bytes(bytes(database_image.IMAGE_BYTES))
+                with patch.object(database_image, 'oracle', return_value=Path(directory) / 'oracle.exe'), patch.object(database_image.subprocess, 'run', side_effect=grow) as run:
+                    database_image.prepare(path, [(0, program)])
+                    self.assertEqual(run.call_count, 1)
+                self.assertEqual(path.with_name(path.name + '.programs').read_text(), receipt)
 
     def test_failed_growth_keeps_original_image_and_receipt(self):
         with tempfile.TemporaryDirectory() as directory:

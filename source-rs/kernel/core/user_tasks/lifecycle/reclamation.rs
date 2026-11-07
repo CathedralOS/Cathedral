@@ -10,9 +10,6 @@ pub(super) fn withdraw(session: &mut Session) {
     while let Some(index) = session.deferred.first(Work::Cancel) {
         let model = &session.launches[index].model;
         let (slot, owner) = (model.child, model.owner);
-        if model.cancellation_pending() {
-            session.cancel_waiters |= 1 << owner;
-        }
         if !model.cancel_child() || session.scheduler.states()[slot] == TaskState::Exited {
             continue;
         }

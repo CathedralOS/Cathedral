@@ -5,6 +5,7 @@ module state;
 // workspace's instances and the realm setup's progress.
 use parent;
 use admission;
+use owner_launch;
 use funding;
 use storage::Exchange;
 use storage::Relay;
@@ -55,10 +56,23 @@ public data SlotPolicy [copy] {
 }
 // A child launch owns its target through image read, admission and activation.
 // Phase 1 reads, 4 funds with the sealed image retained, 2 awaits construction,
-// and 3 awaits the shared scene transaction.
+// 3 awaits the shared scene transaction, 5 retains a refusal through cleanup,
+// and 6 waits for the authorized login picker's retirement.
 // Policies and both connection identities are captured before yielding.
 public data Launch {
     phase: u64;
+    // A rejected cleanup observation preserves custody and ends this process;
+    // it must not be reported as a completed refusal or permit slot reuse.
+    failure: u64;
+    // The ordinary refusal and picker recovery owed after failed-child cleanup.
+    refusal: u64;
+    recover_picker: bool;
+    // Selection is now owned by this matrix, independently of the picker.
+    // Its new child remains unserved until binding/placement or cleanup finishes.
+    handoff: bool;
+    // Selected diagnostic provider only; ordinary builds use a zero window.
+    probe_started: bool;
+    probe_until: u64;
     image: u64;
     plan: admission::Plan;
     binding: storage::Prepared;
@@ -74,6 +88,9 @@ public data Launch {
     login: bool;
     desktop: bool;
     cancelled: bool;
+}
+public machine unserved(context: &State, slot: u64 [0..=4]) -> bool {
+    context.launch.handoff && context.launch.slot == slot
 }
 // A sealed image held behind the compositor tile it was last shown on.
 public data Image [copy] {
@@ -110,6 +127,20 @@ public data Forward [copy] {
     requester: u64;
     request: Ticket;
 }
+// Cleanup captures the original task before the runtime consumes its ticket.
+// Service withdrawal and collection happen once. Scene settlement can then keep
+// the slot unavailable without asking the kernel for its consumed outcome again.
+public data Retiring [copy] {
+    started: bool;
+    collected: bool;
+    task: u64;
+}
+// The owner connection keeps its request pending until this exact stop settles.
+public data Stopping [copy] {
+    active: bool;
+    slot: u64 [0..=4];
+    ticket: Ticket;
+}
 // One realm job in progress: which job, the policy's setup record for it and,
 // while a job it started runs, the command waiting for that job's result.
 public data Frame {
@@ -119,6 +150,8 @@ public data Frame {
     command: Command;
 }
 public data State {
+    construction_window: u64 [0..=100];
+    handoff_window: u64 [0..=100];
     owner: Server;
     source: Server;
     scene: Peer;
@@ -131,8 +164,12 @@ public data State {
     funding_work: [funding::Work; 6];
     presentation_work: presentation::Transfer;
     selection_work: presentation::Switch;
+    arrangement_work: presentation::Arrangement;
     next_child: u64 [0..=4];
     retire_after_present: [bool; 5];
+    retirements: [Retiring; 5];
+    retirement_failure: u64;
+    stopping: Stopping;
     scene_owner: presentation::Queued;
     scene_children: [presentation::Queued; 5];
     answers: [outbox::Answer; 5];
@@ -156,6 +193,7 @@ public data State {
     // Provider links, bindings and each child's storage connection.
     store: Store;
     launch: Launch;
+    owner_launch: owner_launch::Work;
     // Each child's receipt for its latest launch.
     observations: Launches;
     // Admitted children, this matrix's client to each one's owner control, the

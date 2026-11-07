@@ -1,5 +1,7 @@
 //! Rust module plumbing. Start reading in `lifecycle.rs`.
 
+#[cfg(feature = "memory-lab")]
+pub(in crate::user_tasks) mod cancellation_test;
 mod delegation;
 mod grants;
 mod links;

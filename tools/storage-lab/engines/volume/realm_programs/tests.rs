@@ -164,7 +164,7 @@ fn named_addition_collects_old_history_after_staging_and_keeps_current_user_data
         std::env::temp_dir().join(format!("cathedral-realm-quota-{}", std::process::id()));
     std::fs::create_dir(&directory).unwrap();
     let path = directory.join("guest.raw");
-    let bytes = 16 * 1024 * 1024;
+    let bytes = 4 * cathedral_database_objects::ROOT_QUOTA;
     let region = Region::new(Arc::new(Image::create(&path, bytes).unwrap()), 0, bytes).unwrap();
     format(region.clone(), [9; 16]).unwrap();
     let db = open(region).unwrap();

@@ -2,16 +2,16 @@ module admission::pending;
 // Submit/observe child construction without parking the provider's service loop.
 // main owns bundle allocation, control setup and release; task owns the receipt.
 // Pending has no wake right yet: poll once per service turn and arrange a bounded
-// timer wake. Cleanup and post-publication failure still use blocking stop/wait.
+// timer wake. retirement::poll cancels across turns; drain is its blocking bridge.
 use kernel::Gate;
+use admission::publication::finish;
 use kernel::Kernel;
 use kernel;
 use admission::main::Admitted;
 use admission::main::prepare_bundle;
-use admission::main::finish_admission;
 use admission::main::release;
 use task::main::Admission;
-use task::main::Exit;
+use admission::retirement::Retirement;
 
 public data Progress [copy] {
     case Pending;
@@ -48,6 +48,8 @@ machine submit(gate: &Gate, child: &mut Admitted, launch: u64, argument: u64,
     }
 }
 
+// Failed can retain a published child or an unconsumed receipt. Retire it across
+// turns and release its bundle before reusing this Admitted value.
 public machine poll(gate: &Gate, child: &mut Admitted, clock: u64, window: u64 [0..=9223372036854775807], objects: bool) -> Progress
     reaches Kernel blocks invokes Kernel {
     transition child.pending != 0u64 {
@@ -59,13 +61,14 @@ machine observe(gate: &Gate, child: &mut Admitted, clock: u64, window: u64 [0..=
     let result: Admission = task::main::poll_spawn(gate, child.pending, false);
     transition result {
         Admission::Pending -> (Progress::Pending)
-        Admission::Started { ticket } -> block finish(gate, child, ticket, clock, window, objects)
+        Admission::Started { ticket } -> published(gate, child, ticket, clock, window, objects)
         Admission::Failed { code } -> block failed(gate, child, code)
+        Admission::Rejected { code } -> (Progress::Failed { code: code })
     }
-    machine finish(gate: &Gate, child: &mut Admitted, ticket: u64, clock: u64, window: u64 [0..=9223372036854775807], objects: bool) -> Progress reaches Kernel {
+    machine published(gate: &Gate, child: &mut Admitted, ticket: u64, clock: u64, window: u64 [0..=9223372036854775807], objects: bool) -> Progress reaches Kernel {
         child.pending = 0u64;
         let launch: u64 = child.launch;
-        let status: u64 = block finish_admission(gate, child, launch, ticket, clock, window, objects);
+        let status: u64 = finish(gate, child, launch, ticket, clock, window, objects);
         transition status == 0u64 {
             true -> (Progress::Ready)
             _ -> (Progress::Failed { code: status })
@@ -87,23 +90,6 @@ public machine drain(gate: &Gate, child: &mut Admitted) reaches Kernel blocks in
     }
 }
 machine cancel(gate: &Gate, child: &mut Admitted) reaches Kernel {
-    let result: Admission = task::main::poll_spawn(gate, child.pending, true);
-    transition result {
-        Admission::Pending -> block later(gate, child)
-        Admission::Started { ticket } -> block collect(gate, child, ticket)
-        Admission::Failed { code } -> clear(child)
-    }
-    machine later(gate: &Gate, child: &mut Admitted) reaches Kernel {
-        let status: u64 = block Kernel::yield_now(gate);
-        transition { _ -> block cancel(gate, child) }
-    }
-    machine collect(gate: &Gate, child: &mut Admitted, ticket: u64) reaches Kernel {
-        child.handoff[0] = 0u64;
-        child.handoff[1] = 0u64;
-        let status: u64 = block task::main::cancel(gate, ticket);
-        let exit: Exit = block task::main::wait(gate, ticket);
-        clear(child)
-    }
+    let result: Retirement = block admission::retirement::wait(gate, child);
 }
-machine clear(child: &mut Admitted) { child.pending = 0u64; }
 machine done() {}

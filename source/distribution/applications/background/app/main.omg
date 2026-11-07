@@ -10,8 +10,14 @@ use model::Failure;
 
 public machine advance(s: &mut Session, event: Event) -> Command {
     transition event {
-        Event::Failed { failure } -> fail(s, failure)
+        Event::Failed { failure } -> failed(s, failure)
         _ -> resume(s, event)
+    }
+}
+machine failed(s: &mut Session, failure: Failure) -> Command {
+    transition failure {
+        Failure::Provider { code } -> refused(s, code)
+        _ -> fail(s, failure)
     }
 }
 
@@ -25,6 +31,7 @@ machine resume(s: &mut Session, event: Event) -> Command {
         Phase::View -> refresh(s, event)
         Phase::Surface -> created(s, event)
         Phase::Paint -> wait(s)
+        Phase::Recheck { code } -> rechecked(s, code, event)
         Phase::Waiting -> awakened(s, event)
         Phase::Control -> poll(s)
         Phase::Stopped -> (Command::Exit)
@@ -87,14 +94,45 @@ machine present(s: &mut Session) -> Command {
     }
     machine changed(s: &mut Session) -> Command {
         s.painted_epoch = s.view.epoch;
-        transition s.surface == 0u64 {
-            true -> create(s)
-            _ -> paint(s)
-        }
+        // Surface handles belong to the old grant; a new epoch retires them.
+        s.surface = 0u64;
+        create(s)
     }
     machine create(s: &mut Session) -> Command {
         s.phase = Phase::Surface;
         Command::CreateSurface { epoch: s.view.epoch }
+    }
+}
+
+// A grant may change between POLL, CREATE and PAINT. Recheck once, and only
+// resume under a different grant. A refusal under the same grant stays fatal.
+machine refused(s: &mut Session, code: u64) -> Command {
+    transition s.phase {
+        Phase::Surface -> recheck(s, code)
+        Phase::Paint -> recheck(s, code)
+        _ -> fail(s, Failure::Provider { code: code })
+    }
+    machine recheck(s: &mut Session, code: u64) -> Command {
+        s.phase = Phase::Recheck { code: code };
+        Command::Poll
+    }
+}
+machine rechecked(s: &mut Session, code: u64, event: Event) -> Command {
+    transition event {
+        Event::NoView -> hidden(s)
+        Event::View { view } -> observed(s, code, view)
+        _ -> fail(s, Failure::UnexpectedReply)
+    }
+    machine hidden(s: &mut Session) -> Command {
+        s.surface = 0u64;
+        s.painted_epoch = 0u64;
+        wait(s)
+    }
+    machine observed(s: &mut Session, code: u64, view: View) -> Command {
+        transition view.epoch != s.view.epoch {
+            true -> refresh(s, Event::View { view: view })
+            _ -> fail(s, Failure::Provider { code: code })
+        }
     }
 }
 

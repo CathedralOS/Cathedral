@@ -14,10 +14,14 @@ use runtime::time::Tick;
 use runtime::waiting::Set;
 use supervisor::owner;
 use supervisor::slots;
+use supervisor::retirement;
 public data State {
     owner: Server;
     slots: [Admitted; 2];
     exits: [u64; 2];
+    stopping: [bool; 2];
+    admission_failures: [u64; 2];
+    invalid_clock: [bool; 2];
     clock: u64;
     deadline: u64;
     stopped: bool;
@@ -25,6 +29,13 @@ public data State {
     stored: u64;
 }
 public machine check(gate: &Gate) -> u64 reaches Kernel blocks invokes Kernel {
+    let status: u64 = block retirement::check(gate);
+    transition status == 0u64 {
+        true -> block checked(gate)
+        _ -> (status)
+    }
+}
+machine checked(gate: &Gate) -> u64 reaches Kernel {
     let mut context: State;
     let status: u64 = startup(gate, &mut context);
     transition status == 0u64 {
@@ -98,7 +109,8 @@ machine wait(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
     }
 }
 machine pending_wake(context: &State, set: &mut Set, now: u64) {
-    transition context.slots[0].pending != 0u64 || context.slots[1].pending != 0u64 {
+    transition context.slots[0].pending != 0u64 || context.slots[1].pending != 0u64
+        || context.stopping[0] || context.stopping[1] {
         true -> runtime::waiting::expire_by(set, runtime::time::after(now, 1u64))
         _ -> done()
     }

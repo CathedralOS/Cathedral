@@ -135,7 +135,7 @@ machine advance(gate: &Gate, context: &mut State, index: u64 [0..=5]) reaches Ke
 }
 machine cover(gate: &Gate, context: &mut State, index: u64 [0..=5]) reaches Kernel {
     lifecycle::settle(gate, context);
-    lifecycle::sweep_returned(gate);
+    lifecycle::sweep_returned(gate, context);
     let spare: Spare = runtime::task::main::spare(gate);
     transition spare {
         Spare::Known { amounts } -> block short(gate, context, index, shortfall(amounts, transport_funding::owed(context, context.funding_work[index].needed)))

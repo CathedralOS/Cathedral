@@ -27,3 +27,8 @@ commands are documented in [the Rust lab guide](source-rs/README.md). Run
 Record unresolved owner-level semantic or trust choices in
 [OWNER_QUESTIONS.md](OWNER_QUESTIONS.md). Ordinary refactoring and documentation
 corrections do not require new owner decisions.
+
+Commit and push coherent, appropriately verified progress to `main` at sensible
+session checkpoints. Keep any pending or failed verification explicit in the
+handoff; do not leave completed work local merely because a broader sweep is
+still running.

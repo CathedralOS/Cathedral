@@ -3,8 +3,8 @@
 Start at [app/main.omg](app/main.omg): acquire presentation, verify the refused
 storage request, paint a changed grant, then wait for a wake or lifecycle request.
 [model.omg](app/model.omg) names the session, completed operations and requested
-work. The app reuses one surface and paints the current matrix-local dimensions;
-it owns no input keys, storage or descendants.
+work. The app keeps one surface per grant and paints the current matrix-local
+dimensions. It owns no input keys, storage or descendants.
 
 The matrix resolves `Background` in its own realm, so replacing that executable
 changes the backdrop without changing the kernel, compositor or chrome. The
@@ -40,9 +40,12 @@ temporary host pages; this does not add storage or child-launch authority.
 
 The [compiled tests](../../../../source-rs/distribution/applications/background/tests/behavior.rs)
 drive the same export with controlled replies. They check scope refusal, retained
-view data across IPC, surface reuse, strict lifecycle replies and failure without
-replay. The ordinary F5 desktop test checks the real process and its visible fill;
-nested desktop and startup-failure tests exercise recursive placement and recovery.
+view data across IPC, fresh surfaces after grant replacement, strict lifecycle
+replies and failure without replay. A refused create/paint rechecks the grant:
+a changed grant starts fresh, a missing view parks, and refusal under the same
+grant remains a failure. The ordinary F5 desktop test checks the real process
+and its visible fill. Nested desktop and startup-failure tests exercise recursive
+placement and recovery.
 
 [The independent control test](../../../../tools/omega-user/background_test.py)
 holds the real process's broker reply while issuing HEALTH, LOSS and malformed

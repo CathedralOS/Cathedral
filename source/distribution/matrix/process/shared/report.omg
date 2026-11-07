@@ -6,6 +6,29 @@ use runtime::kernel::Gate;
 use runtime::kernel::Kernel;
 use runtime::kernel;
 
+public machine handoff_held(gate: &Gate) reaches Kernel invokes Kernel {
+    let text: [u8; 64] = "Matrix handoff probe: held\n                                     ";
+    line(gate, &text);
+}
+public machine handoff_released(gate: &Gate) reaches Kernel invokes Kernel {
+    let text: [u8; 64] = "Matrix handoff probe: released\n                                 ";
+    line(gate, &text);
+}
+public machine construction_held(gate: &Gate) reaches Kernel invokes Kernel {
+    let text: [u8; 64] = "Matrix admission probe: held\n                                   ";
+    line(gate, &text);
+}
+public machine construction_released(gate: &Gate) reaches Kernel invokes Kernel {
+    let text: [u8; 64] = "Matrix admission probe: released\n                               ";
+    line(gate, &text);
+}
+
+public machine unused_reservation_released(gate: &Gate, slot: u64) reaches Kernel invokes Kernel {
+    let mut text: [u8; 64] = "Matrix unused reservation released: 0\n                          ";
+    text[36u64] = (48u64 + (slot & 7u64)) as u8;
+    line(gate, &text);
+}
+
 public machine display_ready(gate: &Gate) reaches Kernel invokes Kernel {
     let text: [u8; 64] = "Cathedral matrix: shared display connection ready\n              ";
     line(gate, &text);

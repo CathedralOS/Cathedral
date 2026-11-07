@@ -22,6 +22,7 @@ import matrix_desktop_test
 import resource_budgets
 import timing_report
 import program_build
+import desktop_composition
 
 REPO = Path(__file__).resolve().parents[2]
 WORKSPACE = REPO / "source-rs"
@@ -72,6 +73,7 @@ MARKERS = (
     "Cathedral Rust lab: IPC revocation woke blocked receiver and reclaimed all memory",
     "Cathedral Rust lab: IPC backpressure and checked copyout preserved queued message; all memory reclaimed",
     "Cathedral Rust lab: IPC deadlines woke idle sessions; checked copies, late replies, terminal precedence and denied clock access passed",
+    "Cathedral Rust lab: child cancellation: submit/poll, unrelated IPC wait and blocking compatibility passed",
     "Cathedral supervision: 32 shared service incarnations completed",
     "Cathedral Rust lab: userspace supervisor restarted 32 faulted services; live client reconnected with fresh grants",
     "Cathedral Rust lab: supervision parent-exit cancellation and collected return status reclaimed all memory",
@@ -245,6 +247,7 @@ def main():
     parser.add_argument("--pressure", action="store_true", help="Add a pressure peer to the session or matrix desktop")
     parser.add_argument("--kernel-only", action="store_true", help="Build/boot without any platform or distribution executable")
     parser.add_argument("--profile", type=Path, default=WORKSPACE / "distribution/profile.json", help="Host composition profile")
+    parser.add_argument("--omega-desktop", action="store_true", help="Use the standalone Omega stock matrix for the root, users and nested desktops")
     parser.add_argument("--window", action="store_true", help="Show QEMU's display during an ordinary interactive boot")
     parser.add_argument("--fresh", action="store_true", help="Back up the desktop disk and install a freshly seeded lab disk")
     parser.add_argument("--timeout", type=float, default=120, help="Smoke boot timeout in seconds (default: 120; the full suite takes about 40 s on the reference host)")
@@ -260,6 +263,8 @@ def main():
         args.profile = Path(__file__).parent / ("profiles/matrix-storage.json" if args.matrix_storage_test else "profiles/admission.json" if args.admission_test else "profiles/matrix-desktop.json" if args.matrix_desktop_test else "profiles/channels.json" if args.ipc_test else "profiles/matrix.json" if args.matrix_test else "profiles/session.json" if args.session_test else "profiles/pointer.json" if args.pointer_test else "profiles/compositor.json")
     default_profile = (WORKSPACE / "distribution/profile.json").resolve()
     desktop = args.profile.resolve() == default_profile and not (args.smoke or args.kernel_only)
+    if args.omega_desktop and not desktop:
+        parser.error("--omega-desktop requires the default desktop composition")
     if args.fresh and (not desktop or args.build_only):
         parser.error('--fresh requires an ordinary default desktop boot')
     database_desktop = desktop or args.profile.resolve() in [(Path(__file__).parent / f'profiles/{name}.json').resolve() for name in ('matrix-desktop', 'matrix-database-recovery', 'matrix-storage', 'notes', 'notes-recovery')]
@@ -281,6 +286,10 @@ def main():
         parser.error("custom profiles select ordinary startup; smoke uses the standard lab profile")
     composition = ({"target": "x86_64-unknown-uefi", "boot_package": "cathedral-boot-uefi"}
                    if args.kernel_only else json.loads(args.profile.read_text(encoding="utf-8")))
+    if args.omega_desktop:
+        composition = desktop_composition.omega_matrix(composition)
+        args.profile = desktop_composition.write(BUILD / 'desktop-composition', composition)
+        print('Desktop matrix: Omega; kernel and hardware/storage providers: Rust', flush=True)
     if desktop and not args.build_only:
         database_image.require_available(BUILD / "cathedral-storage.raw")
     if args.pressure:
@@ -375,17 +384,17 @@ def main():
     captured = {}
     for name, user in programs.items():
         user_features = list(user.get("features", []))
-        if args.startup_probes and user['package'] == 'cathedral-compositor-lab':
+        if args.startup_probes and user.get('package') == 'cathedral-compositor-lab':
             user_features.append('session-probes')
-        if args.matrix_desktop_test and user["package"] == "cathedral-desktop":
+        if args.matrix_desktop_test and user.get("package") == "cathedral-desktop":
             user_features.append("desktop-probes")
-        if args.matrix_desktop_test and user["package"] == "cathedral-storage-service":
+        if args.matrix_desktop_test and user.get("package") == "cathedral-storage-service":
             user_features.append("recovery-lab")
-        if args.trace_input and program_build.omega_source(user) is None and user["package"] in ("cathedral-stock-matrix", "cathedral-input-service", "cathedral-display-service", "cathedral-desktop", "cathedral-colors", "cathedral-notes", "cathedral-chooser", "cathedral-omega-ui-demo"):
+        if args.trace_input and program_build.omega_source(user) is None and user.get("package") in ("cathedral-stock-matrix", "cathedral-input-service", "cathedral-display-service", "cathedral-desktop", "cathedral-colors", "cathedral-notes", "cathedral-chooser", "cathedral-omega-ui-demo"):
             user_features.append("trace-input")
-        if args.trace_storage and program_build.omega_source(user) is None and user["package"] in ("cathedral-stock-matrix", "cathedral-desktop", "cathedral-storage-service", "cathedral-notes", "cathedral-colors"):
+        if args.trace_storage and program_build.omega_source(user) is None and user.get("package") in ("cathedral-stock-matrix", "cathedral-desktop", "cathedral-storage-service", "cathedral-notes", "cathedral-colors"):
             user_features.append("trace-storage")
-        if args.collection_pressure and user["package"] == "cathedral-storage-service":
+        if args.collection_pressure and user.get("package") == "cathedral-storage-service":
             user_features.append("collection-pressure")
         user_elf = program_build.build(user, args.release, user_features)
         elf_limits.check(user_elf)

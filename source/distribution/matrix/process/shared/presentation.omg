@@ -4,16 +4,22 @@ module presentation;
 // Scene mutations wait behind publication; input polling does not.
 use runtime::server::main::Ticket;
 use runtime::connection::main::Frame;
+use world::layout::Proposal;
 
-public data Phase [copy] { case Begin; case Entry; case Commit; case Abort; case Finished; }
+public data Phase [copy] { case Begin; case Entry; case Commit; case Abort; case Finished; case Releasing; }
 public data Maintenance [copy] { case None; case Pointer; case Style; case Erase; }
+public data SceneOperation [copy] { case Content; case Selection; case Arrangement; }
 public data Transfer [copy] {
     maintenance: Maintenance;
-    selection: bool;
+    operation: SceneOperation;
     batch: bool;
     compact: bool;
     phase: Phase;
-    index: u64 [0..=16];
+    index: u64 [0..=64];
+    // Replaced or discarded payloads remain owned until the completion reply.
+    // One continuation step releases at most one; the scene stays fenced.
+    releases: [u64; 64];
+    release_index: u64 [0..=64];
     local_revision: u64;
     upstream_revision: u64;
     status: u64;
@@ -35,8 +41,13 @@ public data Queued {
 
 // A workspace switch previews two retained scenes; local visibility and input
 // remain unchanged until its commit. The scene barrier preserves their backing.
+public data SelectionOrigin [copy] {
+    case Requester;
+    case Launch;
+    case Retirement(slot: u64 [0..=4], task: u64);
+}
 public data Switch [copy] {
-    launch: bool;
+    origin: SelectionOrigin;
     previous: u64 [0..=4];
     next: u64 [0..=4];
     previous_incarnation: u64;
@@ -44,5 +55,13 @@ public data Switch [copy] {
     next_incarnation: u64;
     next_epoch: u64;
     rank: u64 [0..=128];
+    restoring: bool;
+}
+// Distribution policy owns the standing app placements. The World proposal
+// captures authority and predicts the scene without applying those placements.
+public data Arrangement [copy] {
+    proposal: Proposal;
+    remember: u64;
+    rank: u64 [0..=320];
     restoring: bool;
 }

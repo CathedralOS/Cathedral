@@ -53,10 +53,14 @@ fn content() -> Vec<u8> {
         .collect()
 }
 pub(super) fn collect(store: &Store<'_>, root: u8) {
-    for _ in 0..100 {
-        if !store.collect(root).unwrap().more {
+    // Every continuing pass must retire records; the starting row count bounds
+    // convergence independently of the root quota or per-pass allowance.
+    for _ in 0..=snapshot(store.db).len() {
+        let pass = store.collect(root).unwrap();
+        if !pass.more {
             return;
         }
+        assert!(pass.removed > 0, "collection made no progress");
     }
     panic!("collection failed to converge");
 }

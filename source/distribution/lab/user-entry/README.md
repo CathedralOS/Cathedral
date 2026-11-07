@@ -156,7 +156,7 @@ fixture policy, not platform roles.
 The [Rust owner](../../../../source-rs/distribution/lab/channels/omega_peer/supervisor/supervisor.rs)
 is the initial program. It lends launches 1 and 2 to the supervisor at launch 0,
 because the kernel lends a launch only toward a lower task slot, and drives it
-through the kernel-installed control pair. Nine scenarios, each with a fresh
+through the kernel-installed control pair. Twelve scenarios, each with a fresh
 supervisor and full budget checks afterwards:
 
 - Six echo children admitted into one slot in turn, each exiting by itself, under
@@ -180,11 +180,38 @@ supervisor and full budget checks afterwards:
 - Killing the supervisor after asynchronous submission reclaims its child and
   all channels, notifications and physical backing.
 
+The thirteenth scenario supplies an invalid handshake clock to asynchronous
+admission after real child publication. The Omega witness requires `Failed` to
+retain the live task ticket and acquired control, with moved broker endpoints
+cleared. It then collects through ordinary turns while an independent sibling
+and owner are served. Six cycles reuse the same slot, and the outer driver
+compares page, physical-frame and notification budgets after the scenario.
+This exercises runtime failure custody without adding a kernel fault hook.
+
 The booted kernel's staged-admission fixture separately holds construction at
 known boundaries. It verifies cancellation and authority withdrawal before
 publication, retained results on bad copyout, and that completing admission
 cannot wake or overwrite a parent's unrelated blocked syscall. The live Omega
 witness does not assume that construction must take a minimum amount of time.
+
+The owner can also submit stop with command 5. The Omega supervisor retains a
+stopping flag and calls the shared admission retirement poll once per ordinary
+turn, releasing its listener/bundle only after rollback or collection. It keeps
+answering owner requests. Six cycles stop a child with a held request, then reuse
+its slot for an echo child. Another six race cancellation of submitted construction
+with an independent echo child. Command 6 submits and cancels before the normal
+admission poll, exercising the retained receipt path regardless of whether kernel
+publication already won; six cycles reuse that slot afterwards. These exercise
+the native nonblocking task bindings without
+assuming cleanup must take long enough for a particular message overlap. The
+kernel smoke fixture holds the owner in an unrelated IPC wait through real
+subtree reclamation and verifies no premature wake or syscall-result overwrite.
+
+Before connecting to its owner, [retirement.omg](component/supervisor/retirement.omg)
+allocates a real bundle and deliberately supplies an invalid receipt. Both polling
+and the blocking release convenience must retain it; sending through a retained
+endpoint still works. After repairing the fixture receipt, release invalidates the
+endpoint. This distinguishes rejected observation from completed rollback.
 
 The peers use the ordinary Rust service bindings over the shared v4 transport.
 This proves admission, offers and reclamation on the common runtime; it does not

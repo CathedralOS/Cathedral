@@ -21,7 +21,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 
 
-def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=False, service_imports=None, nested=False, nested_saved=False, deep=False, nested_desktop=False, user_check=None, allowed_panics=(), latency=False, pointer_stress=False, interaction_delay=False, nested_depth=3, soak=0, collection_pressure=False, rust_chooser=False):
+def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=False, service_imports=None, nested=False, nested_saved=False, deep=False, nested_desktop=False, user_check=None, allowed_panics=(), latency=False, pointer_stress=False, interaction_delay=False, nested_depth=3, soak=0, collection_pressure=False, rust_chooser=False, user_layout=(8, 80)):
     assert 'Cathedral: object storage ready' in serial
     assert 'Cathedral input: shared source connection ready' in serial
     assert 'Cathedral matrix: shared display connection ready' in serial
@@ -260,7 +260,8 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     shutil.copyfile(output / 'display.png', output / 'user-picker.png')
     with timings.step('enter-user'):
         click_user_tile(0,total)
-        scan(lambda w,d: rgb(w,d,32,height-56)==bytes.fromhex('d6e5ef'), 'bottom taskbar Notes icon')
+        margin, bar = user_layout
+        scan(lambda w,d: rgb(w,d,margin+24,height-margin-bar//2-8)==bytes.fromhex('d6e5ef'), 'bottom taskbar Notes icon')
     move(2, 2)
     # Check the entire old tile band, not a background pixel between avatars.
     # No picker process/control connection survives into the user workspace.
@@ -435,7 +436,7 @@ def desktop(stream, output, serial, reboot, expected_absolute=True, fill_users=F
     print('PASS: user tiles, absolute/relative clicks, app tiles, save/discard/cancel and persistent replacement')
 
 
-def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False, nested_desktop=False, trace_input=False, latency=False, pointer_stress=False, interaction_delay=False, nested_depth=3, soak=0, collection_pressure=False, accel='tcg', input_producer=None, participants=False, participant_fault=None, render_demand=False, masked_capture=False, capture_case=None, cursor_preferences=False, cursor_producer=False, launcher_async=None, launch_async=None, binding_async=None, scene_async=None, selection_async=None, control_late=False, control_failure=None, rust_chooser=False, source_profile=None, user_check=None):
+def run(timeout, trace_storage=False, relative_pointer=False, service_imports=None, nested=False, deep=False, nested_desktop=False, trace_input=False, latency=False, pointer_stress=False, interaction_delay=False, nested_depth=3, soak=0, collection_pressure=False, accel='tcg', input_producer=None, participants=False, participant_fault=None, render_demand=False, masked_capture=False, capture_case=None, cursor_preferences=False, cursor_producer=False, launcher_async=None, launch_async=None, binding_async=None, scene_async=None, selection_async=None, control_late=False, control_failure=None, rust_chooser=False, source_profile=None, user_check=None, user_layouts=((8, 80), (8, 80))):
     output = harness.BUILD / 'desktop' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
     output.mkdir(parents=True)
     # Selected composition, with a separate build output so a regression
@@ -614,7 +615,7 @@ def run(timeout, trace_storage=False, relative_pointer=False, service_imports=No
         user_check = partial(stored_launch_test.exercise, mode=binding_async, stage='bind')
     for boot in (1, 2):
         capture.run(command, output, timeout, flags, ready_marker='Cathedral desktop: ready; choose a user',
-                    verify=lambda stream, output, serial: desktop(stream, output, serial, boot == 2, not relative_pointer, service_imports=service_imports, nested=nested, nested_saved=boot == 2, deep=deep, nested_desktop=nested_desktop, latency=latency, pointer_stress=pointer_stress, interaction_delay=interaction_delay, nested_depth=nested_depth, soak=soak, collection_pressure=collection_pressure, user_check=user_check, allowed_panics=("deliberate launcher failure",) if launcher_async else (), rust_chooser=rust_chooser))
+                    verify=lambda stream, output, serial: desktop(stream, output, serial, boot == 2, not relative_pointer, service_imports=service_imports, nested=nested, nested_saved=boot == 2, deep=deep, nested_desktop=nested_desktop, latency=latency, pointer_stress=pointer_stress, interaction_delay=interaction_delay, nested_depth=nested_depth, soak=soak, collection_pressure=collection_pressure, user_check=user_check, allowed_panics=("deliberate launcher failure",) if launcher_async else (), rust_chooser=rust_chooser, user_layout=user_layouts[boot - 1]))
         if rust_chooser:
             assert (output / 'serial.log').read_text(errors='replace').count('Cathedral chooser probe: shared interaction and storage ready') >= 2
         if participant_fault or render_demand or masked_capture:
@@ -721,7 +722,8 @@ if __name__ == '__main__':
     parser.add_argument('--launch-async', choices=('complete', 'revoke', 'stop', 'bind', 'place'), help='ordinary nested launch delay, cancellation and rollback fixture')
     parser.add_argument('--launcher-async', choices=('recover', 'revoke', 'stop'), help='nested ticketed launcher read, input and cancellation fixture')
     parser.add_argument('--rust-chooser', action='store_true', help='exercise the Rust probe picker and launcher on shared service connections')
-    parser.add_argument('--profile', type=Path, help='test an alternative composition before changing normal F5')
+    parser.add_argument('--profile', type=Path, help='test an explicit alternative composition')
+    parser.add_argument('--omega-desktop', action='store_true', help='test the shared Omega matrix composition used by the ordinary launcher')
     parser.add_argument('--timeout', type=float, default=180)
     parser.add_argument('--accel', choices=('tcg', 'whpx'), default='tcg', help='QEMU accelerator: tcg emulates the CPU; whpx runs the guest under the Windows hypervisor, with hardware paging and timing (default: tcg)')
     parser.add_argument('--relative-pointer', action='store_true', help='disable VM port and verify PS/2 fallback')
@@ -746,6 +748,13 @@ if __name__ == '__main__':
     parser.add_argument('--pointer-stress', action='store_true', help='move the pointer continuously while waiting for nested startup and scenes')
     parser.add_argument('--interaction-delay', action='store_true', help='hold upstream polls, images and commits past the old timeout; requires --nested-desktop')
     args = parser.parse_args()
+    if args.omega_desktop:
+        if args.profile:
+            parser.error('--omega-desktop and --profile select different compositions')
+        from desktop_composition import compose
+        selected = harness.BUILD / 'omega-desktop-profiles' / datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
+        args.profile = compose(selected)
+
     if args.timeout <= 0:
         parser.error('timeout must be positive')
     if args.latency and (args.service_imports or args.nested or args.deep or args.nested_desktop):

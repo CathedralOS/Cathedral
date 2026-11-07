@@ -34,9 +34,13 @@ machine owner(gate: &Gate, context: &mut Context, now: u64) -> runtime::services
     machine query(gate: &Gate, context: &mut Context, now: u64) -> runtime::services::main::Reply reaches Kernel {
         let event: Event = block runtime::server::main::poll(gate, &mut context.owner, now);
         transition event {
-            Event::Request { frame } -> block answer(gate, context, now, waiting::accepts(frame.bytes, frame.payload))
+            Event::Request { frame } -> block observed(gate, context, now, frame.bytes, frame.payload)
             _ -> block broker(gate, context, now)
         }
+    }
+    machine observed(gate: &Gate, context: &mut Context, now: u64, bytes: u64, words: [u64; 8]) -> runtime::services::main::Reply reaches Kernel {
+        let accepted: bool = waiting::observe(gate, context, bytes, words);
+        transition { _ -> block answer(gate, context, now, accepted) }
     }
     machine answer(gate: &Gate, context: &mut Context, now: u64, accepted: bool) -> runtime::services::main::Reply reaches Kernel {
         let event: app::model::Event = block waiting::reply(gate, context, accepted);
