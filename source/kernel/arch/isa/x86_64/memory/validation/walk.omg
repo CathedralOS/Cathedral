@@ -15,9 +15,10 @@ use facts::x86_page_table_entry;
 // which the detached entry was observed. The address-bound entry records the
 // numeric target encoded by bits 12..51. None of these values proves that the
 // table or target exists, is backed, belongs to Cathedral, or may be read.
-public data X86BootstrapPageTableWalkStep {
+public data X86BootstrapPageTableWalkStep
+requires 0 <= self.index && self.index <= 511 {
     table_address: u64;
-    index: u64 [0..=511];
+    index: u64;
     entry_address: u64;
     entry: X86BootstrapAddressBoundPageTableEntryCandidate;
 }
@@ -47,17 +48,18 @@ public data X86BootstrapFourLevelWalkDescriptorCheck {
 // the already-selected 52-bit physical geometry.
 public machine x86_bootstrap_page_table_walk_step_is_consistent(
     step: &X86BootstrapPageTableWalkStep,
-    expected_index: u64 [0..=511]
-) -> bool {
-    let table_page_offset: u64 [0..=4095] =
+    expected_index: u64
+) -> bool
+requires 0 <= expected_index && expected_index <= 511 {
+    let table_page_offset: u64 =
         step.table_address & X86_PAGE_OFFSET_MASK;
-    let target_page_offset: u64 [0..=4095] =
+    let target_page_offset: u64 =
         step.entry.physical_address & X86_PAGE_OFFSET_MASK;
-    let entry_offset: u64 [0..=4088] = step.index * 8;
+    let entry_offset: u64 = step.index * 8;
     // Alignment makes OR equivalent to addition here while keeping the
     // bounded address composition visibly non-overflowing.
     let expected_entry_address: u64 = step.table_address | entry_offset;
-    let expected_target_frame_number: u64 [0..=1099511627775] =
+    let expected_target_frame_number: u64 =
         (step.entry.physical_address >> X86_PAGE_SHIFT) &
         X86_PAGE_FRAME_NUMBER_MAX;
     table_page_offset == 0 &&
@@ -80,15 +82,15 @@ public machine x86_validate_bootstrap_four_level_walk_descriptor(
 ) -> X86BootstrapFourLevelWalkDescriptorCheck {
     let low_canonical_max: u64 = X86_BOOTSTRAP_LOW_CANONICAL_MAX;
     let high_canonical_min: u64 = X86_BOOTSTRAP_HIGH_CANONICAL_MIN;
-    let pml4_index: u64 [0..=511] =
+    let pml4_index: u64 =
         (candidate.indices.address >> 39) & X86_PAGE_TABLE_INDEX_MASK;
-    let pdpt_index: u64 [0..=511] =
+    let pdpt_index: u64 =
         (candidate.indices.address >> 30) & X86_PAGE_TABLE_INDEX_MASK;
-    let pd_index: u64 [0..=511] =
+    let pd_index: u64 =
         (candidate.indices.address >> 21) & X86_PAGE_TABLE_INDEX_MASK;
-    let pt_index: u64 [0..=511] =
+    let pt_index: u64 =
         (candidate.indices.address >> 12) & X86_PAGE_TABLE_INDEX_MASK;
-    let page_offset: u64 [0..=4095] =
+    let page_offset: u64 =
         candidate.indices.address & X86_PAGE_OFFSET_MASK;
     let pml4_consistent: bool =
         x86_bootstrap_page_table_walk_step_is_consistent(

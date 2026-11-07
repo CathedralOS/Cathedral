@@ -1,6 +1,8 @@
-// Post-handoff memory lab. The selected entry validates its copied boot record,
-// exercises conserved storage and descriptor-table loading, then retains all
-// roots while idling. Serial byte sequences live in diagnostics.
+use bootstrap_interrupts::install::install_bootstrap_interrupts;
+use bootstrap_interrupts::registrar::BootstrapInterruptRegistrar;
+// After firmware exit, validate the copied boot record, exercise owned memory,
+// and load the descriptor tables. The final call runs the timer event loop
+// while this activation keeps its memory owners and task-state storage alive.
 use lab::memory::diagnostics::markers;
 
 use arch::isa::x86_64::memory::memory::PageTableBuilder;
@@ -79,7 +81,7 @@ BootVacantStorageProvider satisfies VacantContentTransfer {
 // selecting the entry neither allocates a context nor grants either root.
 machine Kernel::start(image: Extent in Granted, initial_storage: Extent in Granted)
 requires addr::Bound == 18446744073709551616
-reaches PortIo + MachineControl + VacantContentTransfer + ResourceProfileSupply + AccessLifecycle + ExtentRootProvider + BootVirtualReservation + BootTranslation + SegmentTablePreparation + TaskStatePreparation + TaskRegisterControl + KernelSelectorPreparation + CodeSegmentControl + DataSegmentControl
+reaches PortIo + MachineControl + VacantContentTransfer + ResourceProfileSupply + AccessLifecycle + ExtentRootProvider + BootVirtualReservation + BootTranslation + SegmentTablePreparation + TaskStatePreparation + TaskRegisterControl + KernelSelectorPreparation + CodeSegmentControl + DataSegmentControl + BootstrapInterruptRegistrar
 invokes ExtentRootProvider
 invokes VacantContentTransfer
 invokes ResourceProfileSupply
@@ -92,7 +94,9 @@ invokes TaskRegisterControl
 invokes KernelSelectorPreparation
 invokes CodeSegmentControl
 invokes DataSegmentControl
+invokes BootstrapInterruptRegistrar
 crashes Abort
+crashes Trap
 {
     let mut context: KernelState;
     Kernel::enter(&mut context, image, initial_storage);
@@ -103,7 +107,7 @@ crashes Abort
 machine Kernel::enter(context: &mut KernelState, image: Extent in Granted,
                       initial_storage: Extent in Granted)
 requires addr::Bound == 18446744073709551616
-reaches PortIo + MachineControl + VacantContentTransfer + ResourceProfileSupply + AccessLifecycle + ExtentRootProvider + BootVirtualReservation + BootTranslation + SegmentTablePreparation + TaskStatePreparation + TaskRegisterControl + KernelSelectorPreparation + CodeSegmentControl + DataSegmentControl
+reaches PortIo + MachineControl + VacantContentTransfer + ResourceProfileSupply + AccessLifecycle + ExtentRootProvider + BootVirtualReservation + BootTranslation + SegmentTablePreparation + TaskStatePreparation + TaskRegisterControl + KernelSelectorPreparation + CodeSegmentControl + DataSegmentControl + BootstrapInterruptRegistrar
 invokes ExtentRootProvider
 invokes VacantContentTransfer
 invokes ResourceProfileSupply
@@ -116,7 +120,9 @@ invokes TaskRegisterControl
 invokes KernelSelectorPreparation
 invokes CodeSegmentControl
 invokes DataSegmentControl
+invokes BootstrapInterruptRegistrar
 crashes Abort
+crashes Trap
 {
     // Kernel::start supplies its zero-initialized local state. Keep that
     // activation's borrow with the retained roots throughout the continuation.
@@ -940,7 +946,10 @@ crashes Abort
     requires addr::Bound == 18446744073709551616
     {
         BootMarkers::selectors_checked();
-        transition { _ -> retain_task_state(context, image, pair, inventory, attempt, storage) }
+        // Keep every boot root and the whole TaskStateStorage owner in this
+        // activation while the installed scope runs without returning.
+        install_bootstrap_interrupts(storage);
+        crash Abort;
     }
 
     machine retain_task_state(context: &mut KernelState, image: Extent in Granted,

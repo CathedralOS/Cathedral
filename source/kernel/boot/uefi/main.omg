@@ -1,7 +1,9 @@
-// Expected output contains: Segments ready
+// Expected output contains: Timer wakes 8
+// Required earlier output: Segments ready
 // Check the firmware table before using its services to discover and acquire
 // memory. After firmware exit, execution continues with the kernel memory
-// and descriptor-table checks selected by build.omg.
+// and descriptor-table checks selected by build.omg, then observes eight
+// advancing timer wakes while retaining its memory owners.
 use firmware::firmware;
 use lab::memory::main;
 

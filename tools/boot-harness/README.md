@@ -1,7 +1,8 @@
 # Cathedral Omega boot harness
 
 This host-only tool compiles the Omega boot source and boots that invocation's
-image under QEMU/OVMF. See the [boot frontier](../../source/kernel/boot/uefi/README.md)
+image under QEMU/OVMF. Smoke acceptance requires all eighteen ordered boot
+markers, then exactly eight wake dots and the complete `Timer wakes 8` line. See the [boot frontier](../../source/kernel/boot/uefi/README.md)
 for the required compiler support and remaining kernel work. The Rust lab has its
 own harness and is not evidence that the Omega source works. The
 [current qualification](../../wiki/boot/omega_uefi_qualification.md) records
@@ -28,8 +29,9 @@ Omega kernel before opening QEMU; a failed build never boots an old image.
 
 QEMU opens a firmware display window. Kernel progress is currently reported
 over serial in the VS Code terminal, from `Hello from Omega` through the
-memory, mapping and segment-table checks described below. The kernel then idles; there is no
-Omega desktop yet. Close the QEMU window to end the run. Use `--smoke` from a
+memory, mapping and segment-table checks through `Segments ready`, then
+`........Timer wakes 8`. The installed timer loop stays live; there is no Omega
+desktop yet. Close the QEMU window to end the run. Use `--smoke` from a
 terminal for the automated, headless milestone check.
 
 ## Run
@@ -47,6 +49,15 @@ Alternatively use `run.sh` or `run.ps1` with the same arguments.
 decisions stop the command. Review them and resume using the compiler's
 instructions. Nothing is automatically accepted.
 Add `--timings` to print compiler stage durations during the fresh image build.
+
+The timer installation requires two explicitly reviewed platform conditions.
+Pass their exact records with `--bootstrap-assumptions FILE` and
+`--interrupt-delivery-assumptions FILE`, or set `OMEGA_BOOTSTRAP_ASSUMPTIONS`
+and `OMEGA_INTERRUPT_DELIVERY_ASSUMPTIONS` for F5. The harness forwards them
+only to compilation. Omega checks their program, target, entry and installation;
+records from another compilation cannot authorize this one. Selecting QEMU
+does not create either condition or establish loaded-memory permission. The
+qualification records the conditions used for the controlled boot.
 
 Compiler selection is explicit `--compiler` / `OMEGA_BIN`, then a checkout
 at `--omega-repo` / `OMEGA_REPO` (default sibling `../Omega`), then an
@@ -77,7 +88,10 @@ serial log must contain the greeting followed by a complete numeric
 `Owned N MiB` line, then `Boot map ready`, `Kernel entered`, `Memory split`, `Memory checked`,
 `Memory paired`, `Page ready`, `Tables ready`, `CPU checked`, `Root located`, `Root read`,
 `Tables retained`, `Mapping retired`, `Mapping checked`, `GDT checked`, `TSS checked`,
-and `Segments ready`.
+and `Segments ready`, followed by exactly `........Timer wakes 8` on a complete
+line. Missing or partial dots, a different count or a wake report before the
+startup markers fails. `Timer failed` also refuses the run.
+
 The GDT marker requires the kernel to load its own temporary segment table,
 read back its pointer and limit, and restore the previous table before returning.
 It also checks neighboring buffer bytes. The table stays borrowed throughout
@@ -95,7 +109,18 @@ task selector 24, the complete expected GDT and unchanged guards. Code reload
 precedes data reload; a refusal aborts the boot while retaining all backing.
 The checked operation preserves active FS/GS bases, as verified separately by
 Omega's CPU witness. The table and boot roots remain alive after the marker.
-Installed handlers and actual timer delivery remain unfinished.
+After `Segments ready`, the selected installer publishes all 33 entries: the
+32-vector fatal exception floor and one returning timer handler. Work prepares
+the PIC/PIT, claims separately advancing wake timestamps and emits one dot per
+ordinary-code wake before the eight-wake report. Code, table, task state, all
+four stacks, context and boot roots remain retained. The controlled R13
+qualification also checked eight returns and all guards with a separate frozen
+observer; this normal serial harness does not perform those debugger checks.
+The exact pinned configuration and two reviewed bootstrap/delivery conditions
+are in the qualification record. The final ordinary Git-pin compile remains
+pending; the observed image came from the frozen checked source and matching
+library. The milestone does not establish a scheduler, fatal-delivery execution,
+SMP support or real hardware.
 The boot-map marker requires the kernel to copy the final memory map from the
 explicit initial-storage packet and check its format, byte count, descriptor
 stride, checksum, original storage base and image-prefix correspondence. It
@@ -158,9 +183,9 @@ interrupts disabled. This is a synchronous uniprocessor region transaction
 within one leaf table, not an escaping mapping API or remote-TLB completion
 protocol. Virtual-namespace issuance,
 effective cache compatibility and backing remain explicit provider admissions.
-All storage descendants remain retained. A split-only, single-resident, or
-paired-allocation-only or page-only boot does not satisfy this acceptance. Missing, truncated or
-out-of-order markers fail.
+All storage descendants remain retained. A split-only, single-resident,
+paired-allocation, page-only or selector-only boot does not satisfy this
+acceptance. Missing, truncated or out-of-order markers fail.
 Timeout alone is not success. The check observes those
 milestones; it does not prove firmware correctness or long-term liveness.
 The serial oracle observes the kernel's checks; it does not independently grant

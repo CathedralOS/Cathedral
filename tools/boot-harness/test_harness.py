@@ -113,6 +113,34 @@ class BootHarnessTests(unittest.TestCase):
         self.assertEqual(command, ['/installed/omega'])
         self.assertEqual(directory, boot.ROOT)
 
+    def test_condition_records_reach_compile_without_changing_package_review(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary).resolve()
+            calls = []
+
+            def run_compiler(command, *, cwd=boot.ROOT):
+                calls.append(command)
+                if '--build-dir' in command:
+                    output = Path(command[command.index('--build-dir') + 1])
+                    (output / 'omega-program.exe').write_bytes(b'fresh')
+
+            bootstrap = root / 'bootstrap condition.bin'
+            delivery = root / 'delivery condition.bin'
+            with patch.dict(boot.os.environ, {}, clear=True), \
+                    patch.object(boot, 'run_checked', side_effect=run_compiler):
+                result = boot.main([
+                    '--compiler', str(root / 'omega'), '--prepare', '--build-only',
+                    '--build-dir', str(root / 'output'),
+                    '--bootstrap-assumptions', str(bootstrap),
+                    '--interrupt-delivery-assumptions', str(delivery),
+                ])
+            self.assertEqual(result, 0)
+            self.assertNotIn('--bootstrap-assumptions', calls[0])
+            self.assertNotIn('--interrupt-delivery-assumptions', calls[0])
+            for flag, record in [('--bootstrap-assumptions', bootstrap),
+                                 ('--interrupt-delivery-assumptions', delivery)]:
+                self.assertEqual(calls[1][calls[1].index(flag) + 1], str(record))
+
     def test_single_resident_or_invalid_pair_report_cannot_satisfy_smoke(self):
         prefix = b'Hello from Omega\r\nOwned 128 MiB\r\nBoot map ready\r\nKernel entered\r\nMemory split\r\nMemory checked\r\n'
         for output in (prefix, prefix + b'Memory paired', prefix + b'Memory paired\r',
@@ -272,6 +300,32 @@ class BootHarnessTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'kernel code/data selector'):
             boot.check_boot_milestones(b'Segments ready\r\n' + prefix)
         boot.check_boot_milestones(prefix + b'Segments ready\r\n')
+
+
+    def test_final_smoke_requires_exact_ordered_eight_wake_line(self):
+        prefix = (b'Hello from Omega\r\nOwned 128 MiB\r\nBoot map ready\r\n'
+                  b'Kernel entered\r\nMemory split\r\nMemory checked\r\n'
+                  b'Memory paired\r\nPage ready\r\nTables ready\r\n'
+                  b'CPU checked\r\nRoot located\r\nRoot read\r\n'
+                  b'Tables retained\r\nMapping retired\r\nMapping checked\r\n'
+                  b'GDT checked\r\nTSS checked\r\nSegments ready\r\n')
+        wake = b'........Timer wakes 8\r\n'
+        boot.check_boot_output(prefix + wake)
+        boot.check_boot_output(prefix + wake.replace(b'\r\n', b'\n'))
+        for suffix in (b'', b'........Timer wakes 8', b'........Timer wakes 8\r',
+                       b'.......Timer wakes 8\r\n', b'.........Timer wakes 8\r\n',
+                       b'........Timer wakes 7\r\n', b'........Timer wakes 9\r\n',
+                       b'Timer wakes 8\r\n', b'Not ........Timer wakes 8\r\n',
+                       b'........Timer wakes 80\r\n'):
+            with self.subTest(suffix=suffix):
+                with self.assertRaisesRegex(ValueError, 'exactly eight timer'):
+                    boot.check_boot_output(prefix + suffix)
+        with self.assertRaisesRegex(ValueError, 'exactly eight timer'):
+            boot.check_boot_output(wake + prefix)
+        with self.assertRaisesRegex(ValueError, 'kernel code/data selector'):
+            boot.check_boot_output(prefix.replace(b'Segments ready\r\n', b'') + wake)
+        with self.assertRaisesRegex(ValueError, 'timer failure'):
+            boot.check_boot_output(prefix + b'Timer failed\r\n' + wake)
 
 
 if __name__ == '__main__':

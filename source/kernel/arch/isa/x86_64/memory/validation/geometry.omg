@@ -43,13 +43,18 @@ public machine x86_bootstrap_address_space_profile()
 // Ordinary numeric decomposition under the selected four-level profile. The
 // original address is retained so later mapping policy can bind these indexes
 // to the exact request rather than treating them as a free-standing path.
-public data X86BootstrapVirtualAddressIndices {
+public data X86BootstrapVirtualAddressIndices
+requires 0 <= self.pml4_index && self.pml4_index <= 511 &&
+    0 <= self.pdpt_index && self.pdpt_index <= 511 &&
+    0 <= self.pd_index && self.pd_index <= 511 &&
+    0 <= self.pt_index && self.pt_index <= 511 &&
+    0 <= self.page_offset && self.page_offset <= 4095 {
     address: u64;
-    pml4_index: u64 [0..=511];
-    pdpt_index: u64 [0..=511];
-    pd_index: u64 [0..=511];
-    pt_index: u64 [0..=511];
-    page_offset: u64 [0..=4095];
+    pml4_index: u64;
+    pdpt_index: u64;
+    pd_index: u64;
+    pt_index: u64;
+    page_offset: u64;
 }
 
 public data X86BootstrapVirtualAddressCheck {
@@ -73,15 +78,15 @@ public machine x86_decompose_bootstrap_virtual_address(
     }
 
     machine decompose(address: u64) -> X86BootstrapVirtualAddressCheck {
-        let pml4_index: u64 [0..=511] =
+        let pml4_index: u64 =
             (address >> 39) & X86_PAGE_TABLE_INDEX_MASK;
-        let pdpt_index: u64 [0..=511] =
+        let pdpt_index: u64 =
             (address >> 30) & X86_PAGE_TABLE_INDEX_MASK;
-        let pd_index: u64 [0..=511] =
+        let pd_index: u64 =
             (address >> 21) & X86_PAGE_TABLE_INDEX_MASK;
-        let pt_index: u64 [0..=511] =
+        let pt_index: u64 =
             (address >> 12) & X86_PAGE_TABLE_INDEX_MASK;
-        let page_offset: u64 [0..=4095] = address & X86_PAGE_OFFSET_MASK;
+        let page_offset: u64 = address & X86_PAGE_OFFSET_MASK;
         X86BootstrapVirtualAddressCheck::Canonical {
             indices: X86BootstrapVirtualAddressIndices {
                 address: address,
@@ -108,15 +113,15 @@ public machine x86_validate_bootstrap_virtual_address_indices(
 ) -> X86BootstrapVirtualAddressCheck {
     let low_canonical_max: u64 = X86_BOOTSTRAP_LOW_CANONICAL_MAX;
     let high_canonical_min: u64 = X86_BOOTSTRAP_HIGH_CANONICAL_MIN;
-    let pml4_index: u64 [0..=511] =
+    let pml4_index: u64 =
         (candidate.address >> 39) & X86_PAGE_TABLE_INDEX_MASK;
-    let pdpt_index: u64 [0..=511] =
+    let pdpt_index: u64 =
         (candidate.address >> 30) & X86_PAGE_TABLE_INDEX_MASK;
-    let pd_index: u64 [0..=511] =
+    let pd_index: u64 =
         (candidate.address >> 21) & X86_PAGE_TABLE_INDEX_MASK;
-    let pt_index: u64 [0..=511] =
+    let pt_index: u64 =
         (candidate.address >> 12) & X86_PAGE_TABLE_INDEX_MASK;
-    let page_offset: u64 [0..=4095] = candidate.address & X86_PAGE_OFFSET_MASK;
+    let page_offset: u64 = candidate.address & X86_PAGE_OFFSET_MASK;
     transition (
         candidate.address <= low_canonical_max ||
         candidate.address >= high_canonical_min
@@ -146,9 +151,10 @@ public machine x86_validate_bootstrap_virtual_address_indices(
 // is intentionally not a frame, mapping claim, or provider receipt. The later
 // authority-bearing page-table operation must rebind the same address and PFN
 // while holding the exact physical source and mapping authority.
-public data X86BootstrapPhysicalFrameGeometry {
+public data X86BootstrapPhysicalFrameGeometry
+requires 0 <= self.frame_number && self.frame_number <= 1099511627775 {
     address: u64;
-    frame_number: u64 [0..=1099511627775];
+    frame_number: u64;
 }
 
 public data X86BootstrapPhysicalFrameGeometryCheck {
@@ -161,7 +167,7 @@ public data X86BootstrapPhysicalFrameGeometryCheck {
 public machine x86_validate_bootstrap_physical_frame_geometry(
     address: u64
 ) -> X86BootstrapPhysicalFrameGeometryCheck {
-    let page_offset: u64 [0..=4095] = address & X86_PAGE_OFFSET_MASK;
+    let page_offset: u64 = address & X86_PAGE_OFFSET_MASK;
     transition page_offset == 0 &&
         address <= X86_MAX_ALIGNED_PHYSICAL_FRAME_ADDRESS {
         true -> derive_frame_number(address)
@@ -173,7 +179,7 @@ public machine x86_validate_bootstrap_physical_frame_geometry(
     ) -> X86BootstrapPhysicalFrameGeometryCheck {
         // The mask makes the result domain explicit; the prior envelope check
         // ensures this cannot silently truncate a higher physical-address bit.
-        let frame_number: u64 [0..=1099511627775] =
+        let frame_number: u64 =
             (address >> X86_PAGE_SHIFT) & X86_PAGE_FRAME_NUMBER_MAX;
         X86BootstrapPhysicalFrameGeometryCheck::GeometryConsistent {
             frame: X86BootstrapPhysicalFrameGeometry {

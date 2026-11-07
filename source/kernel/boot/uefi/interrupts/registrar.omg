@@ -1,0 +1,278 @@
+module registrar;
+use std::calling;
+use omega::language::core::layout;
+use omega::language::core::static_interrupt;
+use table::BootstrapIdt;
+use table::GateSlot32;
+use table::table_policy;
+use table::BootstrapInterruptTableValidator;
+use context::BootstrapInterruptContext;
+use entries::fatal::FatalVector00;
+use entries::fatal::FatalVector01;
+use entries::fatal::FatalVector02;
+use entries::fatal::FatalVector03;
+use entries::fatal::FatalVector04;
+use entries::fatal::FatalVector05;
+use entries::fatal::FatalVector06;
+use entries::fatal::FatalVector07;
+use entries::fatal::FatalVector08;
+use entries::fatal::FatalVector09;
+use entries::fatal::FatalVector10;
+use entries::fatal::FatalVector11;
+use entries::fatal::FatalVector12;
+use entries::fatal::FatalVector13;
+use entries::fatal::FatalVector14;
+use entries::fatal::FatalVector15;
+use entries::fatal::FatalVector16;
+use entries::fatal::FatalVector17;
+use entries::fatal::FatalVector18;
+use entries::fatal::FatalVector19;
+use entries::fatal::FatalVector20;
+use entries::fatal::FatalVector21;
+use entries::fatal::FatalVector22;
+use entries::fatal::FatalVector23;
+use entries::fatal::FatalVector24;
+use entries::fatal::FatalVector25;
+use entries::fatal::FatalVector26;
+use entries::fatal::FatalVector27;
+use entries::fatal::FatalVector28;
+use entries::fatal::FatalVector29;
+use entries::fatal::FatalVector30;
+use entries::fatal::FatalVector31;
+use arrivals::ProfileArrivalFrames;
+use arrivals::complete_arrivals;
+use timer::TimerEventLoop;
+use arch::isa::x86_64::interrupts::entry::CathedralTimerRoot;
+use arch::isa::x86_64::interrupts::task_state::TaskStateStorage;
+use arch::board::pc::timer::pic::PicTimerAcknowledgement;
+
+public boundary trait BootstrapInterruptRegistrar: Calling<BootstrapInterruptRegistrarCalling> {
+    machine install<machine Fatal00, machine Fatal01, machine Fatal02, machine Fatal03, machine Fatal04, machine Fatal05, machine Fatal06, machine Fatal07, machine Fatal08, machine Fatal09, machine Fatal10, machine Fatal11, machine Fatal12, machine Fatal13, machine Fatal14, machine Fatal15, machine Fatal16, machine Fatal17, machine Fatal18, machine Fatal19, machine Fatal20, machine Fatal21, machine Fatal22, machine Fatal23, machine Fatal24, machine Fatal25, machine Fatal26, machine Fatal27, machine Fatal28, machine Fatal29, machine Fatal30, machine Fatal31, machine Timer>(
+        table: &mut BootstrapIdt, storage: &mut TaskStateStorage,
+        context: &BootstrapInterruptContext, profile: &ProfileArrivalFrames
+    ) -> bool
+    requires machine Fatal00 satisfies FatalVector00::enter;
+    requires machine Fatal01 satisfies FatalVector01::enter;
+    requires machine Fatal02 satisfies FatalVector02::enter;
+    requires machine Fatal03 satisfies FatalVector03::enter;
+    requires machine Fatal04 satisfies FatalVector04::enter;
+    requires machine Fatal05 satisfies FatalVector05::enter;
+    requires machine Fatal06 satisfies FatalVector06::enter;
+    requires machine Fatal07 satisfies FatalVector07::enter;
+    requires machine Fatal08 satisfies FatalVector08::enter;
+    requires machine Fatal09 satisfies FatalVector09::enter;
+    requires machine Fatal10 satisfies FatalVector10::enter;
+    requires machine Fatal11 satisfies FatalVector11::enter;
+    requires machine Fatal12 satisfies FatalVector12::enter;
+    requires machine Fatal13 satisfies FatalVector13::enter;
+    requires machine Fatal14 satisfies FatalVector14::enter;
+    requires machine Fatal15 satisfies FatalVector15::enter;
+    requires machine Fatal16 satisfies FatalVector16::enter;
+    requires machine Fatal17 satisfies FatalVector17::enter;
+    requires machine Fatal18 satisfies FatalVector18::enter;
+    requires machine Fatal19 satisfies FatalVector19::enter;
+    requires machine Fatal20 satisfies FatalVector20::enter;
+    requires machine Fatal21 satisfies FatalVector21::enter;
+    requires machine Fatal22 satisfies FatalVector22::enter;
+    requires machine Fatal23 satisfies FatalVector23::enter;
+    requires machine Fatal24 satisfies FatalVector24::enter;
+    requires machine Fatal25 satisfies FatalVector25::enter;
+    requires machine Fatal26 satisfies FatalVector26::enter;
+    requires machine Fatal27 satisfies FatalVector27::enter;
+    requires machine Fatal28 satisfies FatalVector28::enter;
+    requires machine Fatal29 satisfies FatalVector29::enter;
+    requires machine Fatal30 satisfies FatalVector30::enter;
+    requires machine Fatal31 satisfies FatalVector31::enter;
+    requires machine Timer satisfies CathedralTimerRoot::enter;
+    reaches MachineControl + PortIo
+    invokes StaticInterruptTableValidation invokes StaticInterruptWork
+    crashes Trap
+    ensures result == false;
+}
+
+public CheckedBootstrapInterruptRegistrar satisfies BootstrapInterruptRegistrar {
+    machine install<machine Fatal00, machine Fatal01, machine Fatal02, machine Fatal03, machine Fatal04, machine Fatal05, machine Fatal06, machine Fatal07, machine Fatal08, machine Fatal09, machine Fatal10, machine Fatal11, machine Fatal12, machine Fatal13, machine Fatal14, machine Fatal15, machine Fatal16, machine Fatal17, machine Fatal18, machine Fatal19, machine Fatal20, machine Fatal21, machine Fatal22, machine Fatal23, machine Fatal24, machine Fatal25, machine Fatal26, machine Fatal27, machine Fatal28, machine Fatal29, machine Fatal30, machine Fatal31, machine Timer>(
+        table: &mut BootstrapIdt, storage: &mut TaskStateStorage,
+        context: &BootstrapInterruptContext, profile: &ProfileArrivalFrames
+    ) -> bool
+    requires machine Fatal00 satisfies FatalVector00::enter;
+    requires machine Fatal01 satisfies FatalVector01::enter;
+    requires machine Fatal02 satisfies FatalVector02::enter;
+    requires machine Fatal03 satisfies FatalVector03::enter;
+    requires machine Fatal04 satisfies FatalVector04::enter;
+    requires machine Fatal05 satisfies FatalVector05::enter;
+    requires machine Fatal06 satisfies FatalVector06::enter;
+    requires machine Fatal07 satisfies FatalVector07::enter;
+    requires machine Fatal08 satisfies FatalVector08::enter;
+    requires machine Fatal09 satisfies FatalVector09::enter;
+    requires machine Fatal10 satisfies FatalVector10::enter;
+    requires machine Fatal11 satisfies FatalVector11::enter;
+    requires machine Fatal12 satisfies FatalVector12::enter;
+    requires machine Fatal13 satisfies FatalVector13::enter;
+    requires machine Fatal14 satisfies FatalVector14::enter;
+    requires machine Fatal15 satisfies FatalVector15::enter;
+    requires machine Fatal16 satisfies FatalVector16::enter;
+    requires machine Fatal17 satisfies FatalVector17::enter;
+    requires machine Fatal18 satisfies FatalVector18::enter;
+    requires machine Fatal19 satisfies FatalVector19::enter;
+    requires machine Fatal20 satisfies FatalVector20::enter;
+    requires machine Fatal21 satisfies FatalVector21::enter;
+    requires machine Fatal22 satisfies FatalVector22::enter;
+    requires machine Fatal23 satisfies FatalVector23::enter;
+    requires machine Fatal24 satisfies FatalVector24::enter;
+    requires machine Fatal25 satisfies FatalVector25::enter;
+    requires machine Fatal26 satisfies FatalVector26::enter;
+    requires machine Fatal27 satisfies FatalVector27::enter;
+    requires machine Fatal28 satisfies FatalVector28::enter;
+    requires machine Fatal29 satisfies FatalVector29::enter;
+    requires machine Fatal30 satisfies FatalVector30::enter;
+    requires machine Fatal31 satisfies FatalVector31::enter;
+    requires machine Timer satisfies CathedralTimerRoot::enter;
+    reaches MachineControl + PortIo
+    invokes StaticInterruptTableValidation invokes StaticInterruptWork
+    crashes Trap
+    ensures result == false {
+        let mut stacks: [StaticInterruptStack; 4] = [
+            StaticInterruptStack { words: &mut storage.double_fault_stack[1..512], ist: 1u8 },
+            StaticInterruptStack { words: &mut storage.nmi_stack[1..512], ist: 2u8 },
+            StaticInterruptStack { words: &mut storage.machine_check_stack[1..512], ist: 3u8 },
+            StaticInterruptStack { words: &mut storage.irq_stack[1..512], ist: 4u8 }
+        ];
+        let arrivals: [StaticInterruptArrival; 33] = complete_arrivals(profile);
+        X86StaticInterruptScope::run<
+            BootstrapInterruptRegistrar::install<Fatal00, Fatal01, Fatal02, Fatal03, Fatal04, Fatal05, Fatal06, Fatal07, Fatal08, Fatal09, Fatal10, Fatal11, Fatal12, Fatal13, Fatal14, Fatal15, Fatal16, Fatal17, Fatal18, Fatal19, Fatal20, Fatal21, Fatal22, Fatal23, Fatal24, Fatal25, Fatal26, Fatal27, Fatal28, Fatal29, Fatal30, Fatal31, Timer>, GateSlot32,
+            BootstrapIdt, BootstrapInterruptContext, table_policy,
+            BootstrapInterruptTableValidator::validate, TimerEventLoop::run,
+            PicTimerAcknowledgement::complete, 5
+        >(table, &mut storage.gdt, &storage.task_bytes,
+            &mut stacks[..], &arrivals[..], context)
+    }
+}
+
+// Match each of the 33 destinations to its exact callback requirement.
+// Binder declaration order and nominal destination order are independent.
+public BootstrapInterruptRegistrarCalling satisfies CallingPolicy {
+    machine plan(signature: BoundarySignature) -> BoundaryPlanResult {
+        transition signature.parameter_count == 4 && signature.native_parameter_count == 4
+            && signature.has_result && signature.callback_binder_count == 33
+            && signature.callback_demand_count == 33 {
+            true -> accept(signature)
+            _ -> reject()
+        }
+        machine accept(signature: BoundarySignature) -> BoundaryPlanResult { build(signature) }
+        machine build(signature: BoundarySignature) -> BoundaryPlanResult {
+            let mut plan: BoundaryEntryPlan;
+            plan.call.convention = CallingConvention::SystemVAMD64;
+            plan.call.parameter_count = 4;
+            plan.call.parameters[0].shape = AbiValueShape { class: AbiValueClass::Integer, byte_size: 8, alignment: 8 };
+            plan.call.parameters[0].location_count = 1;
+            plan.call.parameters[0].locations[0] = ValueLocation::Register { register: MachineRegister::X86Rdi, value_byte_offset: 0, byte_size: 8 };
+            plan.call.parameters[1].shape = AbiValueShape { class: AbiValueClass::Integer, byte_size: 8, alignment: 8 };
+            plan.call.parameters[1].location_count = 1;
+            plan.call.parameters[1].locations[0] = ValueLocation::Register { register: MachineRegister::X86Rsi, value_byte_offset: 0, byte_size: 8 };
+            plan.call.parameters[2].shape = AbiValueShape { class: AbiValueClass::Integer, byte_size: 8, alignment: 8 };
+            plan.call.parameters[2].location_count = 1;
+            plan.call.parameters[2].locations[0] = ValueLocation::Register { register: MachineRegister::X86Rdx, value_byte_offset: 0, byte_size: 8 };
+            plan.call.parameters[3].shape = AbiValueShape { class: AbiValueClass::Integer, byte_size: 8, alignment: 8 };
+            plan.call.parameters[3].location_count = 1;
+            plan.call.parameters[3].locations[0] = ValueLocation::Register { register: MachineRegister::X86Rcx, value_byte_offset: 0, byte_size: 8 };
+            plan.call.has_result = true;
+            plan.call.result.shape = AbiValueShape { class: AbiValueClass::Integer, byte_size: 1, alignment: 1 };
+            plan.call.result.location_count = 1;
+            plan.call.result.locations[0] = ValueLocation::Register { register: MachineRegister::X86Rax, value_byte_offset: 0, byte_size: 1 };
+            plan.call.callback_materialization_count = 33;
+            plan.call.stack_alignment = 16;
+            plan.call.entry_control = EntryControl::CallReturn;
+            plan.state.initial_regime = MachineRegime::X86Long64;
+            plan.state.permitted_transitive_use.general_registers = true;
+            plan.state.permitted_transitive_use.flags = true;
+            plan.state.permitted_transitive_use.instruction_pointer = true;
+            plan.state.permitted_transitive_use.stack_pointer = true;
+            plan.state.permitted_transitive_use.control_state = true;
+            plan.state.stack = EntryStack::ProviderSelected;
+            plan.state.preemption = Preemption::NotApplicable;
+            transition materialize_slots(&mut plan, &signature, 0, 33) {
+                true -> accepted_plan(plan)
+                _ -> reject()
+            }
+        }
+        machine accepted_plan(plan: BoundaryEntryPlan) -> BoundaryPlanResult {
+            BoundaryPlanResult::Accepted { plan: plan }
+        }
+        machine reject() -> BoundaryPlanResult {
+            BoundaryPlanResult::Rejected { reason: CallingPolicyRejection { reason: "complete exception floor requires four borrows, 33 exact slots and a Boolean refusal result" } }
+        }
+
+        machine materialize_slots(plan: &mut BoundaryEntryPlan, signature: &BoundarySignature,
+            index: u64, remaining: u64) -> bool
+        terminates by remaining {
+            transition index < 33 && remaining > 0 {
+                true -> inspect_slot(plan, signature, index, remaining)
+                _ -> (index == 33)
+            }
+            machine inspect_slot(plan: &mut BoundaryEntryPlan, signature: &BoundarySignature,
+                index: u64, remaining: u64) -> bool
+            requires index < 33 && remaining > 0 {
+                let requirement: u64 = signature.callback_demands[index].requirement;
+                let binder: u64 = exact_binder(signature, requirement, 0, 33, false, 0);
+                transition binder != 0 && no_earlier_demand(signature, requirement, index, 0, 33) {
+                    true -> materialize_slot(plan, signature, index, remaining, binder)
+                    _ -> false
+                }
+            }
+            machine materialize_slot(plan: &mut BoundaryEntryPlan, signature: &BoundarySignature,
+                index: u64, remaining: u64, binder: u64) -> bool
+            requires index < 33 && remaining > 0 {
+                plan.call.callback_materializations[index].binder = binder;
+                plan.call.callback_materializations[index].destination = signature.callback_demands[index].destination;
+                materialize_slots(plan, signature, index + 1, remaining - 1)
+            }
+        }
+        // A second matching binder is ambiguous. Zero denotes refusal only;
+        // actual compiler-issued binder identities are nonzero.
+        machine exact_binder(signature: &BoundarySignature, requirement: u64,
+            index: u64, remaining: u64, found: bool, selected: u64) -> u64
+        terminates by remaining {
+            transition index < 33 && remaining > 0 {
+                true -> inspect_binder(signature, requirement, index, remaining, found, selected)
+                _ -> selected
+            }
+            machine inspect_binder(signature: &BoundarySignature, requirement: u64,
+                index: u64, remaining: u64, found: bool, selected: u64) -> u64
+            requires index < 33 && remaining > 0 {
+                transition signature.callback_binders[index].requirement == requirement {
+                    true -> matched_binder(signature, requirement, index, remaining, found)
+                    _ -> exact_binder(signature, requirement, index + 1, remaining - 1, found, selected)
+                }
+            }
+            machine matched_binder(signature: &BoundarySignature, requirement: u64,
+                index: u64, remaining: u64, found: bool) -> u64
+            requires index < 33 && remaining > 0 {
+                transition found {
+                    true -> 0
+                    _ -> exact_binder(signature, requirement, index + 1, remaining - 1,
+                        true, signature.callback_binders[index].binder)
+                }
+            }
+        }
+        // Distinct demands plus one unique binder per requirement make the
+        // two 33-row rosters a bijection, with no omitted callback contract.
+        machine no_earlier_demand(signature: &BoundarySignature, requirement: u64,
+            stop: u64, index: u64, remaining: u64) -> bool
+        terminates by remaining {
+            transition index < stop && index < 33 && remaining > 0 {
+                true -> inspect_demand(signature, requirement, stop, index, remaining)
+                _ -> (index == stop)
+            }
+            machine inspect_demand(signature: &BoundarySignature, requirement: u64,
+                stop: u64, index: u64, remaining: u64) -> bool
+            requires index < 33 && remaining > 0 {
+                transition signature.callback_demands[index].requirement == requirement {
+                    true -> false
+                    _ -> no_earlier_demand(signature, requirement, stop, index + 1, remaining - 1)
+                }
+            }
+        }
+
+    }
+}

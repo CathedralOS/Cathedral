@@ -1,0 +1,73 @@
+module arrivals;
+use omega::language::core::static_interrupt;
+
+// Fatal handlers never inspect or return through a hardware frame.
+// OpaqueFatal leaves error-word availability unspecified, including reserved slots.
+public data ProfileArrivalFrames {
+    vector09: StaticInterruptFrame;
+    vector15: StaticInterruptFrame;
+    vector22: StaticInterruptFrame;
+    vector23: StaticInterruptFrame;
+    vector24: StaticInterruptFrame;
+    vector25: StaticInterruptFrame;
+    vector26: StaticInterruptFrame;
+    vector27: StaticInterruptFrame;
+    vector28: StaticInterruptFrame;
+    vector29: StaticInterruptFrame;
+    vector30: StaticInterruptFrame;
+    vector31: StaticInterruptFrame;
+}
+public machine fatal_frames() -> ProfileArrivalFrames {
+    ProfileArrivalFrames {
+        vector09: StaticInterruptFrame::OpaqueFatal,
+        vector15: StaticInterruptFrame::OpaqueFatal,
+        vector22: StaticInterruptFrame::OpaqueFatal,
+        vector23: StaticInterruptFrame::OpaqueFatal,
+        vector24: StaticInterruptFrame::OpaqueFatal,
+        vector25: StaticInterruptFrame::OpaqueFatal,
+        vector26: StaticInterruptFrame::OpaqueFatal,
+        vector27: StaticInterruptFrame::OpaqueFatal,
+        vector28: StaticInterruptFrame::OpaqueFatal,
+        vector29: StaticInterruptFrame::OpaqueFatal,
+        vector30: StaticInterruptFrame::OpaqueFatal,
+        vector31: StaticInterruptFrame::OpaqueFatal
+    }
+}
+
+public machine complete_arrivals(profile: &ProfileArrivalFrames) -> [StaticInterruptArrival; 33] {
+    [
+        StaticInterruptArrival { vector: 0u16, frame: StaticInterruptFrame::OpaqueFatal },
+        StaticInterruptArrival { vector: 1u16, frame: StaticInterruptFrame::OpaqueFatal },
+        StaticInterruptArrival { vector: 2u16, frame: StaticInterruptFrame::OpaqueFatal },
+        StaticInterruptArrival { vector: 3u16, frame: StaticInterruptFrame::OpaqueFatal },
+        StaticInterruptArrival { vector: 4u16, frame: StaticInterruptFrame::OpaqueFatal },
+        StaticInterruptArrival { vector: 5u16, frame: StaticInterruptFrame::OpaqueFatal },
+        StaticInterruptArrival { vector: 6u16, frame: StaticInterruptFrame::OpaqueFatal },
+        StaticInterruptArrival { vector: 7u16, frame: StaticInterruptFrame::OpaqueFatal },
+        StaticInterruptArrival { vector: 8u16, frame: StaticInterruptFrame::OpaqueFatal },
+        StaticInterruptArrival { vector: 9u16, frame: profile.vector09 },
+        StaticInterruptArrival { vector: 10u16, frame: StaticInterruptFrame::OpaqueFatal },
+        StaticInterruptArrival { vector: 11u16, frame: StaticInterruptFrame::OpaqueFatal },
+        StaticInterruptArrival { vector: 12u16, frame: StaticInterruptFrame::OpaqueFatal },
+        StaticInterruptArrival { vector: 13u16, frame: StaticInterruptFrame::OpaqueFatal },
+        StaticInterruptArrival { vector: 14u16, frame: StaticInterruptFrame::OpaqueFatal },
+        StaticInterruptArrival { vector: 15u16, frame: profile.vector15 },
+        StaticInterruptArrival { vector: 16u16, frame: StaticInterruptFrame::OpaqueFatal },
+        StaticInterruptArrival { vector: 17u16, frame: StaticInterruptFrame::OpaqueFatal },
+        StaticInterruptArrival { vector: 18u16, frame: StaticInterruptFrame::OpaqueFatal },
+        StaticInterruptArrival { vector: 19u16, frame: StaticInterruptFrame::OpaqueFatal },
+        StaticInterruptArrival { vector: 20u16, frame: StaticInterruptFrame::OpaqueFatal },
+        StaticInterruptArrival { vector: 21u16, frame: StaticInterruptFrame::OpaqueFatal },
+        StaticInterruptArrival { vector: 22u16, frame: profile.vector22 },
+        StaticInterruptArrival { vector: 23u16, frame: profile.vector23 },
+        StaticInterruptArrival { vector: 24u16, frame: profile.vector24 },
+        StaticInterruptArrival { vector: 25u16, frame: profile.vector25 },
+        StaticInterruptArrival { vector: 26u16, frame: profile.vector26 },
+        StaticInterruptArrival { vector: 27u16, frame: profile.vector27 },
+        StaticInterruptArrival { vector: 28u16, frame: profile.vector28 },
+        StaticInterruptArrival { vector: 29u16, frame: profile.vector29 },
+        StaticInterruptArrival { vector: 30u16, frame: profile.vector30 },
+        StaticInterruptArrival { vector: 31u16, frame: profile.vector31 },
+        StaticInterruptArrival { vector: 32u16, frame: StaticInterruptFrame::NoErrorCode }
+    ]
+}

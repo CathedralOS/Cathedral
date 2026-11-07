@@ -7,7 +7,10 @@ use facts::x86_page_table_entry;
 // Every non-address bit of one detached paging entry. Cathedral does not assign
 // role semantics here: in particular, `page_size_or_pat` remains the hardware
 // fact's role-dependent field, and the caller supplies every policy value.
-public data X86BootstrapPageTableEntryNonAddressFields {
+public data X86BootstrapPageTableEntryNonAddressFields
+requires 0 <= self.software_low && self.software_low <= 7 &&
+    0 <= self.software_high && self.software_high <= 127 &&
+    0 <= self.protection_key && self.protection_key <= 15 {
     present: bool;
     writable: bool;
     user: bool;
@@ -17,9 +20,9 @@ public data X86BootstrapPageTableEntryNonAddressFields {
     dirty: bool;
     page_size_or_pat: bool;
     global: bool;
-    software_low: u8 [0..=7];
-    software_high: u8 [0..=127];
-    protection_key: u8 [0..=15];
+    software_low: u8;
+    software_high: u8;
+    protection_key: u8;
     no_execute: bool;
 }
 
@@ -43,7 +46,7 @@ public machine x86_compose_bootstrap_address_bound_page_table_entry(
     physical_address: u64,
     fields: X86BootstrapPageTableEntryNonAddressFields
 ) -> X86BootstrapAddressBoundPageTableEntryCheck {
-    let page_offset: u64 [0..=4095] = physical_address & X86_PAGE_OFFSET_MASK;
+    let page_offset: u64 = physical_address & X86_PAGE_OFFSET_MASK;
     transition page_offset == 0 &&
         physical_address <= X86_MAX_ALIGNED_PHYSICAL_FRAME_ADDRESS {
         true -> compose_address_bound_page_table_entry(physical_address, fields)
@@ -54,7 +57,7 @@ public machine x86_compose_bootstrap_address_bound_page_table_entry(
         physical_address: u64,
         fields: X86BootstrapPageTableEntryNonAddressFields
     ) -> X86BootstrapAddressBoundPageTableEntryCheck {
-        let frame_number: u64 [0..=1099511627775] =
+        let frame_number: u64 =
             (physical_address >> X86_PAGE_SHIFT) & X86_PAGE_FRAME_NUMBER_MAX;
         X86BootstrapAddressBoundPageTableEntryCheck::Composed {
             candidate: X86BootstrapAddressBoundPageTableEntryCandidate {
@@ -93,7 +96,7 @@ public machine x86_compose_bootstrap_address_bound_page_table_entry(
 public machine x86_validate_bootstrap_address_bound_page_table_entry(
     candidate: X86BootstrapAddressBoundPageTableEntryCandidate
 ) -> X86BootstrapAddressBoundPageTableEntryCheck {
-    let page_offset: u64 [0..=4095] =
+    let page_offset: u64 =
         candidate.physical_address & X86_PAGE_OFFSET_MASK;
     transition page_offset == 0 &&
         candidate.physical_address <= X86_MAX_ALIGNED_PHYSICAL_FRAME_ADDRESS {
@@ -104,7 +107,7 @@ public machine x86_validate_bootstrap_address_bound_page_table_entry(
     machine check_address_bound_frame_number(
         candidate: X86BootstrapAddressBoundPageTableEntryCandidate
     ) -> X86BootstrapAddressBoundPageTableEntryCheck {
-        let frame_number: u64 [0..=1099511627775] =
+        let frame_number: u64 =
             (candidate.physical_address >> X86_PAGE_SHIFT) &
             X86_PAGE_FRAME_NUMBER_MAX;
         transition candidate.entry.frame_number == frame_number {

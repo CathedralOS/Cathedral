@@ -20,8 +20,9 @@ pub data X2ApicTimer {
 // start the architectural countdown.
 pub machine X2ApicTimer::configure_one_shot_divide_by_16(
     &mut self,
-    vector: u64 [32..=255]
+    vector: u64
 )
+requires 32 <= vector && vector <= 255
 reaches MachineControl
 {
     asm where clobbers rax, rcx, rdx, r10, r11, r15 {
@@ -34,8 +35,9 @@ reaches MachineControl
 // enumeration/calibration owns the mapping from time to this count.
 pub machine X2ApicTimer::arm_one_shot(
     &mut self,
-    initial_count: u64 [1..=4294967295]
+    initial_count: u64
 )
+requires 1 <= initial_count && initial_count <= 4294967295
 reaches MachineControl
 {
     asm where clobbers rax, rcx, rdx, r10, r11, r15 {

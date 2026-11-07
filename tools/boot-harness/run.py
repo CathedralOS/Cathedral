@@ -152,6 +152,18 @@ def check_boot_milestones(output):
         raise ValueError('Expected kernel code/data selector readback and retained task-state checks after TSS checked.')
 
 
+def check_boot_output(output):
+    # Keep the startup-only checker usable at the pre-Work observation cut.
+    # Normal smoke acceptance additionally requires the authored timer result.
+    check_boot_milestones(output)
+    if b'Timer failed' in output:
+        raise ValueError('The kernel reported timer failure.')
+    ready = list(re.finditer(rb'(?:^|\n)Segments ready\r?\n', output))
+    after_ready = output[ready[-1].end():]
+    if re.search(rb'(?:^|\n)\.{8}Timer wakes 8\r?\n', after_ready) is None:
+        raise ValueError('Expected exactly eight timer wake dots and a complete Timer wakes 8 line after Segments ready.')
+
+
 def main(arguments=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', default=os.environ.get('OMEGA_BIN'))
@@ -160,9 +172,15 @@ def main(arguments=None):
     parser.add_argument('--build-only', action='store_true')
     parser.add_argument('--prepare', action='store_true',
                         help='run ordinary omega update for dependency review before building')
+    parser.add_argument('--bootstrap-assumptions', type=Path,
+                        default=os.environ.get('OMEGA_BOOTSTRAP_ASSUMPTIONS'),
+                        help='pass a reviewed bootstrap condition record to Omega')
+    parser.add_argument('--interrupt-delivery-assumptions', type=Path,
+                        default=os.environ.get('OMEGA_INTERRUPT_DELIVERY_ASSUMPTIONS'),
+                        help='pass a reviewed installed-delivery condition record to Omega')
     parser.add_argument('--build-dir', type=Path, default=ROOT / 'build/boot-harness')
     parser.add_argument('--smoke', action='store_true',
-                        help='require ordered boot milestones through Segments ready')
+                        help='require all ordered boot milestones and exactly eight timer wakes')
     parser.add_argument('--timings', action='store_true',
                         help='print compiler stage durations during the fresh build')
     parser.add_argument('--timeout', type=float, default=30)
@@ -179,6 +197,14 @@ def main(arguments=None):
                         cwd=compiler_directory)
         if options.timings:
             command = command + ['--timings']
+        # Keep platform assumptions explicit. Omega checks the selected records
+        # against this compilation; the harness does not infer them from QEMU.
+        for flag, record in [
+            ('--bootstrap-assumptions', options.bootstrap_assumptions),
+            ('--interrupt-delivery-assumptions', options.interrupt_delivery_assumptions),
+        ]:
+            if record is not None:
+                command = command + [flag, str(record.resolve())]
         directory = create_run_directory(options.build_dir.resolve())
         print(f'Run directory: {directory}', flush=True)
         image = build_image(command, entry, target, directory,
@@ -202,8 +228,8 @@ def main(arguments=None):
             return 0
         invocation += ['-display', 'none']
         serial.write_bytes(b'')
-        # Idle is the expected boot endpoint, so timeout is not success by itself.
-        # The guest must first produce every required milestone in this run.
+        # The guest keeps its installation live, so timeout is not success by itself.
+        # This run must produce every startup marker and the eight-wake result.
         try:
             subprocess.run(invocation, stdin=subprocess.DEVNULL, check=True,
                            timeout=options.timeout)
@@ -211,10 +237,10 @@ def main(arguments=None):
             pass
         output = serial.read_bytes()
         try:
-            check_boot_milestones(output)
+            check_boot_output(output)
         except ValueError as error:
             raise ValueError(f'{error} Inspect {serial}') from error
-        print(f'Boot milestones observed: {serial}')
+        print(f'Boot milestones and eight timer wakes observed: {serial}')
         return 0
     except (OSError, ValueError, subprocess.CalledProcessError) as error:
         print(f'Cathedral Omega boot failed: {error}', file=sys.stderr)

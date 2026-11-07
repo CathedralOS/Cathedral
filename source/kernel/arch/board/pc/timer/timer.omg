@@ -18,14 +18,14 @@ use facts::x86_idt_gate;
 // by 11,932 yields approximately 99.9985 Hz, close to Cathedral's selected
 // 100 Hz periodic QEMU/bootstrap rate. Production LAPIC timing remains
 // calibrated, tickless, and one-shot.
-pub const LEGACY_BOOTSTRAP_TIMER_HZ: u32 = 100;
-pub const LEGACY_BOOTSTRAP_PIT_DIVISOR: u16 = 11_932;
-pub const LEGACY_BOOTSTRAP_PIT_DIVISOR_LOW: u8 = 0x9C;
-pub const LEGACY_BOOTSTRAP_PIT_DIVISOR_HIGH: u8 = 0x2E;
+public const LEGACY_BOOTSTRAP_TIMER_HZ: u32 = 100;
+public const LEGACY_BOOTSTRAP_PIT_DIVISOR: u16 = 11_932;
+public const LEGACY_BOOTSTRAP_PIT_DIVISOR_LOW: u8 = 0x9C;
+public const LEGACY_BOOTSTRAP_PIT_DIVISOR_HIGH: u8 = 0x2E;
 
 // Ordinary policy data for audit/reporting. It grants no PortIo authority and
 // cannot program or unmask the device.
-pub data LegacyPitBootstrapRatePolicy {
+public data LegacyPitBootstrapRatePolicy {
     input_hz: u32;
     target_hz: u32;
     divisor: u16;
@@ -33,7 +33,7 @@ pub data LegacyPitBootstrapRatePolicy {
     divisor_high: u8;
 }
 
-pub machine legacy_pit_bootstrap_rate_policy() -> LegacyPitBootstrapRatePolicy {
+public machine legacy_pit_bootstrap_rate_policy() -> LegacyPitBootstrapRatePolicy {
     LegacyPitBootstrapRatePolicy {
         input_hz: PIT_INPUT_HZ,
         target_hz: LEGACY_BOOTSTRAP_TIMER_HZ,
@@ -48,12 +48,12 @@ pub machine legacy_pit_bootstrap_rate_policy() -> LegacyPitBootstrapRatePolicy {
 // `rate` retains the fixed QEMU/bootstrap PIT choice. This is ordinary data:
 // it does not claim a gate, root, stack, controller state, acknowledgement,
 // installation, or hardware authority.
-pub data LegacyBootstrapTimerRouteRatePolicy {
+public data LegacyBootstrapTimerRouteRatePolicy {
     entry: X86EntryStackAssignment;
     rate: LegacyPitBootstrapRatePolicy;
 }
 
-pub machine legacy_bootstrap_timer_route_rate_policy()
+public machine legacy_bootstrap_timer_route_rate_policy()
     -> LegacyBootstrapTimerRouteRatePolicy
 {
     LegacyBootstrapTimerRouteRatePolicy {
@@ -65,17 +65,17 @@ pub machine legacy_bootstrap_timer_route_rate_policy()
 // Ordinary prepublication data for the complete timer fields Cathedral can
 // already decide. The admitted resolver and boot-selected segment source must
 // still vouch for `gate.entry` and `gate.selector` before materialization.
-pub data LegacyBootstrapTimerGatePolicyCandidate {
+public data LegacyBootstrapTimerGatePolicyCandidate {
     route_rate: LegacyBootstrapTimerRouteRatePolicy;
     gate: X86IdtGate;
 }
 
-pub data LegacyBootstrapTimerGatePolicyCheck {
+public data LegacyBootstrapTimerGatePolicyCheck {
     case Rejected;
     case PolicyConsistent(candidate: LegacyBootstrapTimerGatePolicyCandidate);
 }
 
-pub machine legacy_validate_bootstrap_timer_gate_policy(
+public machine legacy_validate_bootstrap_timer_gate_policy(
     candidate: LegacyBootstrapTimerGatePolicyCandidate
 ) -> LegacyBootstrapTimerGatePolicyCheck {
     let policy: LegacyBootstrapTimerRouteRatePolicy =
@@ -96,7 +96,7 @@ pub machine legacy_validate_bootstrap_timer_gate_policy(
         _ -> reject_timer_gate_policy()
     }
 
-    state check_timer_gate_ist(
+    machine check_timer_gate_ist(
         policy: LegacyBootstrapTimerRouteRatePolicy,
         candidate: LegacyBootstrapTimerGatePolicyCandidate
     ) -> LegacyBootstrapTimerGatePolicyCheck {
@@ -106,7 +106,7 @@ pub machine legacy_validate_bootstrap_timer_gate_policy(
         }
     }
 
-    state check_timer_gate_attributes(
+    machine check_timer_gate_attributes(
         candidate: LegacyBootstrapTimerGatePolicyCandidate
     ) -> LegacyBootstrapTimerGatePolicyCheck {
         transition candidate.gate.type_attributes ==
@@ -116,7 +116,7 @@ pub machine legacy_validate_bootstrap_timer_gate_policy(
         }
     }
 
-    state check_timer_gate_reserved(
+    machine check_timer_gate_reserved(
         candidate: LegacyBootstrapTimerGatePolicyCandidate
     ) -> LegacyBootstrapTimerGatePolicyCheck {
         transition candidate.gate.reserved == RESERVED_ZERO {
@@ -125,7 +125,7 @@ pub machine legacy_validate_bootstrap_timer_gate_policy(
         }
     }
 
-    state accept_timer_gate_policy(
+    machine accept_timer_gate_policy(
         candidate: LegacyBootstrapTimerGatePolicyCandidate
     ) -> LegacyBootstrapTimerGatePolicyCheck {
         LegacyBootstrapTimerGatePolicyCheck::PolicyConsistent {
@@ -133,12 +133,12 @@ pub machine legacy_validate_bootstrap_timer_gate_policy(
         }
     }
 
-    state reject_timer_gate_policy() -> LegacyBootstrapTimerGatePolicyCheck {
+    machine reject_timer_gate_policy() -> LegacyBootstrapTimerGatePolicyCheck {
         LegacyBootstrapTimerGatePolicyCheck::Rejected
     }
 }
 
-pub data LegacyPicPitTimerProvider {
+public data LegacyPicPitTimerProvider {
     pic: Pic8259;
     pit: Pit8254;
 }
@@ -147,13 +147,14 @@ pub data LegacyPicPitTimerProvider {
 // checked transaction: first remap the PIC while masking every input, then
 // program PIT channel 0 with Cathedral's fixed bootstrap divisor. IRQ0 remains
 // masked on return.
-pub machine LegacyPicPitTimerProvider::prepare_masked(
-    &mut self
+public machine LegacyPicPitTimerProvider::prepare_masked(
+    provider: &mut LegacyPicPitTimerProvider
 )
 reaches PortIo
 {
-    self.pic.remap_masked();
-    self.pit.program_channel0_rate_generator(
+    Pic8259::remap_masked(&mut provider.pic);
+    Pit8254::program_channel0_rate_generator(
+        &mut provider.pit,
         LEGACY_BOOTSTRAP_PIT_DIVISOR_LOW,
         LEGACY_BOOTSTRAP_PIT_DIVISOR_HIGH
     );
@@ -162,7 +163,7 @@ reaches PortIo
 // The remapped legacy timer is the first member of the shared maskable-IRQ
 // class. Later PIC/APIC roots cite the same class while owning distinct vector
 // assignments.
-pub machine x86_legacy_timer_entry_stack() -> X86EntryStackAssignment {
+public machine x86_legacy_timer_entry_stack() -> X86EntryStackAssignment {
     X86EntryStackAssignment {
         vector: PROTECTED_MASTER_VECTOR_BASE,
         stack: X86_MASKABLE_IRQ_STACK,

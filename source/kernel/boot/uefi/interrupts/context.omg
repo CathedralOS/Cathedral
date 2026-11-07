@@ -1,0 +1,13 @@
+module context;
+use arch::isa::x86_64::interrupts::fatal::BootstrapFatalExceptionDiagnosticState;
+use core::timing::wake::TimerRootWakeState;
+
+// All entries borrow this one actual owner. Each fatal entry has a distinct
+// diagnostic cell; it never borrows the timer's acknowledgement or provider.
+public data BootstrapInterruptContext {
+    before: u64;
+    fatal: [BootstrapFatalExceptionDiagnosticState; 32];
+    ticks: AtomicU64;
+    wake: TimerRootWakeState;
+    after: u64;
+}

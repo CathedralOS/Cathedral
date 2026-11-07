@@ -1,9 +1,19 @@
+use omega::language::core::static_interrupt;
 // Firmware starts in CathedralBootstrap. After leaving firmware services,
 // Cathedral passes the image and initial allocation to Kernel::start, which
 // owns the local context used by the kernel continuation.
 
 machine build(builder: &mut Build) {
     Build::application(builder, "cathedral");
+    Build::depend_as(builder, "std", Source::Git {
+        repository: "https://github.com/CathedralOS/Omega.git",
+        revision: "c2cfe5f3decef0294ea80527f7a95264e4520ec9",
+        selection: PackageSelection::Named { package: "omega_language_std" }
+    });
+    Build::depend_as(builder, "bootstrap_interrupts", Source::Path { location: "interrupts" });
+    Build::select_provider<bootstrap_interrupts::registrar::BootstrapInterruptRegistrar, bootstrap_interrupts::registrar::CheckedBootstrapInterruptRegistrar>(builder, uefi_x86_64);
+    Build::select_representation<InterruptAcknowledgement, arch::isa::x86_64::interrupts::entry::CathedralAcknowledgementRepresentation>(builder);
+    Build::select_representation<StaticInterruptCompletionPermit, StaticInterruptCompletionPermitRepresentation>(builder);
     // Load the firmware interfaces, kernel memory operations and allocator
     // used to acquire memory and keep it owned after the firmware handoff.
     Build::depend_as(builder, "uefi", Source::Path { location: "../../../contracts/uefi" });

@@ -1,0 +1,115 @@
+module timer;
+use context::BootstrapInterruptContext;
+use serial::serial_byte;
+use serial::timer_wakes_observed;
+use serial::timer_failed;
+use omega::language::core::interrupt;
+use omega::language::core::static_interrupt;
+use omega::language::core::assembly;
+use arch::isa::x86_64::interrupts::entry::CathedralTimerRoot;
+use arch::board::pc::timer::pic::Pic8259;
+use arch::board::pc::timer::pic::PicTimerAcknowledgement;
+use arch::board::pc::timer::timer::LegacyPicPitTimerProvider;
+use core::timing::wake::TimerRootWakeState;
+use core::timing::wake::TimerRootWakeClaim;
+
+public BootstrapTimerHandler satisfies CathedralTimerRoot {
+    machine enter(acknowledgement: InterruptAcknowledgement in Pending)
+    reaches MachineControl + PortIo {
+        publish_tick(&acknowledgement);
+        complete_installed_interrupt<PicTimerAcknowledgement::complete>(acknowledgement);
+    }
+}
+
+// This CPU's masked timer is the sole tick writer. A fatal nested entry never
+// returns. Stop before overflow: no wrapped value can become a wake timestamp.
+machine publish_tick(acknowledgement: &InterruptAcknowledgement)
+requires acknowledgement in InterruptAcknowledgement::Pending
+reaches MachineControl {
+    let context: &BootstrapInterruptContext =
+        view_static_interrupt_context<BootstrapInterruptContext>(acknowledgement);
+    let previous: u64 = context.ticks.load(NoOrdering);
+    transition previous < 18446744073709551615u64 {
+        true -> advance(context, previous)
+        _ -> exhausted()
+    }
+    machine advance(context: &BootstrapInterruptContext, previous: u64)
+    requires previous < 18446744073709551615u64 {
+        let current: u64 = previous + 1;
+        context.ticks.store(current, NoOrdering);
+        TimerRootWakeState::record_and_publish(&context.wake, current);
+    }
+    machine exhausted() ensures false {
+        asm { cli; hlt }
+        transition { _ -> exhausted() }
+    }
+}
+
+public TimerEventLoop satisfies StaticInterruptWork<BootstrapInterruptContext> {
+    machine run(context: &BootstrapInterruptContext)
+    reaches MachineControl + PortIo ensures false { timer_work(context) }
+}
+
+// Scope invokes Work only after publishing the complete table and retaining
+// its code, context and stacks. PIC/PIT preparation leaves IRQs masked until
+// the separate unmask. CLI plus clear/claim and STI;HLT close the lost-wake gap.
+machine timer_work(context: &BootstrapInterruptContext)
+reaches MachineControl + PortIo ensures false {
+    let mut provider: LegacyPicPitTimerProvider;
+    LegacyPicPitTimerProvider::prepare_masked(&mut provider);
+    Pic8259::unmask_timer(&mut provider.pic);
+    transition { _ -> wait(context, 0u64, 0u64) }
+
+    machine wait(context: &BootstrapInterruptContext, previous: u64, observed: u64)
+    requires observed <= 8 {
+        asm { cli }
+        transition TimerRootWakeState::claim_pending(&context.wake) {
+            TimerRootWakeClaim::Idle -> sleep(context, previous, observed)
+            TimerRootWakeClaim::Claimed { observed_time } -> received(context, previous, observed, observed_time)
+        }
+    }
+    machine sleep(context: &BootstrapInterruptContext, previous: u64, observed: u64)
+    requires observed <= 8 {
+        asm { sti; hlt }
+        transition { _ -> wait(context, previous, observed) }
+    }
+    machine received(context: &BootstrapInterruptContext, previous: u64,
+                     observed: u64, current: u64)
+    requires observed <= 8 {
+        transition current >= previous
+            && context.before == 0x13579BDF2468ACE0u64
+            && context.after == 0xFEDCBA9876543210u64 {
+            true -> compare(context, previous, observed, current)
+            _ -> timer_failed()
+        }
+    }
+    machine compare(context: &BootstrapInterruptContext, previous: u64,
+                    observed: u64, current: u64)
+    requires observed <= 8 {
+        transition current > previous {
+            true -> advanced(context, current, observed)
+            _ -> wait(context, previous, observed)
+        }
+    }
+    machine advanced(context: &BootstrapInterruptContext, current: u64, observed: u64)
+    requires observed <= 8 {
+        transition observed < 8 {
+            true -> count(context, current, observed)
+            _ -> wait(context, current, observed)
+        }
+    }
+    machine count(context: &BootstrapInterruptContext, current: u64, observed: u64)
+    requires observed < 8 {
+        serial_byte(46);
+        let next: u64 = observed + 1;
+        transition next == 8 {
+            true -> report(context, current, next)
+            _ -> wait(context, current, next)
+        }
+    }
+    machine report(context: &BootstrapInterruptContext, current: u64, observed: u64)
+    requires observed <= 8 {
+        timer_wakes_observed();
+        transition { _ -> wait(context, current, observed) }
+    }
+}

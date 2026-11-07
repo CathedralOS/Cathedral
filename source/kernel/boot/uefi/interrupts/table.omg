@@ -1,0 +1,879 @@
+module table;
+use std::calling;
+use omega::language::core::layout;
+use omega::language::core::static_interrupt;
+use entries::fatal::FatalVector00;
+use entries::fatal::FatalVector01;
+use entries::fatal::FatalVector02;
+use entries::fatal::FatalVector03;
+use entries::fatal::FatalVector04;
+use entries::fatal::FatalVector05;
+use entries::fatal::FatalVector06;
+use entries::fatal::FatalVector07;
+use entries::fatal::FatalVector08;
+use entries::fatal::FatalVector09;
+use entries::fatal::FatalVector10;
+use entries::fatal::FatalVector11;
+use entries::fatal::FatalVector12;
+use entries::fatal::FatalVector13;
+use entries::fatal::FatalVector14;
+use entries::fatal::FatalVector15;
+use entries::fatal::FatalVector16;
+use entries::fatal::FatalVector17;
+use entries::fatal::FatalVector18;
+use entries::fatal::FatalVector19;
+use entries::fatal::FatalVector20;
+use entries::fatal::FatalVector21;
+use entries::fatal::FatalVector22;
+use entries::fatal::FatalVector23;
+use entries::fatal::FatalVector24;
+use entries::fatal::FatalVector25;
+use entries::fatal::FatalVector26;
+use entries::fatal::FatalVector27;
+use entries::fatal::FatalVector28;
+use entries::fatal::FatalVector29;
+use entries::fatal::FatalVector30;
+use entries::fatal::FatalVector31;
+use arch::isa::x86_64::interrupts::entry::CathedralTimerRoot;
+public data InterruptGate { selector: u16; ist: u8; attributes: u8; reserved: u32; }
+
+public GateSlot00 satisfies PrivateCallbackSlot<InterruptGate, GateLayout00, FatalVector00::enter> {}
+public GateLayout00 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot00>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot00>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot00>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot01 satisfies PrivateCallbackSlot<InterruptGate, GateLayout01, FatalVector01::enter> {}
+public GateLayout01 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot01>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot01>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot01>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot02 satisfies PrivateCallbackSlot<InterruptGate, GateLayout02, FatalVector02::enter> {}
+public GateLayout02 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot02>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot02>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot02>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot03 satisfies PrivateCallbackSlot<InterruptGate, GateLayout03, FatalVector03::enter> {}
+public GateLayout03 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot03>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot03>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot03>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot04 satisfies PrivateCallbackSlot<InterruptGate, GateLayout04, FatalVector04::enter> {}
+public GateLayout04 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot04>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot04>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot04>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot05 satisfies PrivateCallbackSlot<InterruptGate, GateLayout05, FatalVector05::enter> {}
+public GateLayout05 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot05>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot05>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot05>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot06 satisfies PrivateCallbackSlot<InterruptGate, GateLayout06, FatalVector06::enter> {}
+public GateLayout06 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot06>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot06>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot06>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot07 satisfies PrivateCallbackSlot<InterruptGate, GateLayout07, FatalVector07::enter> {}
+public GateLayout07 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot07>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot07>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot07>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot08 satisfies PrivateCallbackSlot<InterruptGate, GateLayout08, FatalVector08::enter> {}
+public GateLayout08 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot08>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot08>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot08>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot09 satisfies PrivateCallbackSlot<InterruptGate, GateLayout09, FatalVector09::enter> {}
+public GateLayout09 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot09>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot09>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot09>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot10 satisfies PrivateCallbackSlot<InterruptGate, GateLayout10, FatalVector10::enter> {}
+public GateLayout10 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot10>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot10>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot10>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot11 satisfies PrivateCallbackSlot<InterruptGate, GateLayout11, FatalVector11::enter> {}
+public GateLayout11 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot11>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot11>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot11>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot12 satisfies PrivateCallbackSlot<InterruptGate, GateLayout12, FatalVector12::enter> {}
+public GateLayout12 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot12>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot12>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot12>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot13 satisfies PrivateCallbackSlot<InterruptGate, GateLayout13, FatalVector13::enter> {}
+public GateLayout13 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot13>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot13>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot13>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot14 satisfies PrivateCallbackSlot<InterruptGate, GateLayout14, FatalVector14::enter> {}
+public GateLayout14 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot14>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot14>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot14>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot15 satisfies PrivateCallbackSlot<InterruptGate, GateLayout15, FatalVector15::enter> {}
+public GateLayout15 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot15>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot15>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot15>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot16 satisfies PrivateCallbackSlot<InterruptGate, GateLayout16, FatalVector16::enter> {}
+public GateLayout16 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot16>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot16>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot16>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot17 satisfies PrivateCallbackSlot<InterruptGate, GateLayout17, FatalVector17::enter> {}
+public GateLayout17 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot17>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot17>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot17>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot18 satisfies PrivateCallbackSlot<InterruptGate, GateLayout18, FatalVector18::enter> {}
+public GateLayout18 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot18>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot18>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot18>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot19 satisfies PrivateCallbackSlot<InterruptGate, GateLayout19, FatalVector19::enter> {}
+public GateLayout19 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot19>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot19>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot19>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot20 satisfies PrivateCallbackSlot<InterruptGate, GateLayout20, FatalVector20::enter> {}
+public GateLayout20 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot20>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot20>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot20>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot21 satisfies PrivateCallbackSlot<InterruptGate, GateLayout21, FatalVector21::enter> {}
+public GateLayout21 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot21>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot21>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot21>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot22 satisfies PrivateCallbackSlot<InterruptGate, GateLayout22, FatalVector22::enter> {}
+public GateLayout22 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot22>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot22>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot22>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot23 satisfies PrivateCallbackSlot<InterruptGate, GateLayout23, FatalVector23::enter> {}
+public GateLayout23 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot23>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot23>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot23>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot24 satisfies PrivateCallbackSlot<InterruptGate, GateLayout24, FatalVector24::enter> {}
+public GateLayout24 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot24>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot24>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot24>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot25 satisfies PrivateCallbackSlot<InterruptGate, GateLayout25, FatalVector25::enter> {}
+public GateLayout25 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot25>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot25>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot25>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot26 satisfies PrivateCallbackSlot<InterruptGate, GateLayout26, FatalVector26::enter> {}
+public GateLayout26 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot26>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot26>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot26>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot27 satisfies PrivateCallbackSlot<InterruptGate, GateLayout27, FatalVector27::enter> {}
+public GateLayout27 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot27>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot27>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot27>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot28 satisfies PrivateCallbackSlot<InterruptGate, GateLayout28, FatalVector28::enter> {}
+public GateLayout28 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot28>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot28>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot28>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot29 satisfies PrivateCallbackSlot<InterruptGate, GateLayout29, FatalVector29::enter> {}
+public GateLayout29 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot29>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot29>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot29>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot30 satisfies PrivateCallbackSlot<InterruptGate, GateLayout30, FatalVector30::enter> {}
+public GateLayout30 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot30>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot30>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot30>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot31 satisfies PrivateCallbackSlot<InterruptGate, GateLayout31, FatalVector31::enter> {}
+public GateLayout31 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot31>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot31>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot31>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public GateSlot32 satisfies PrivateCallbackSlot<InterruptGate, GateLayout32, CathedralTimerRoot::enter> {}
+public GateLayout32 satisfies FixedLayout<InterruptGate> {
+    machine plan(schema: Schema, target: LayoutTarget) -> LayoutPlan reaches terminates {
+        let mut entries: [FieldEntry; 64];
+        entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 2 } };
+        entries[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4 } };
+        entries[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 5 } };
+        entries[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12 } };
+        let plan: LayoutPlan = LayoutPlan { entries: entries, entry_count: 4, size_fixed: 16, size_is_dynamic: false, align: 8 };
+        let low: LayoutPlan = LayoutPlan::place_private<GateSlot32>(plan,
+            FieldPlan::Bits { container: 0, container_width: 16, destination_lsb: 0, source_lsb: 0, width: 16 });
+        let middle: LayoutPlan = LayoutPlan::place_private<GateSlot32>(low,
+            FieldPlan::Bits { container: 6, container_width: 16, destination_lsb: 0, source_lsb: 16, width: 16 });
+        LayoutPlan::place_private<GateSlot32>(middle,
+            FieldPlan::Bits { container: 8, container_width: 32, destination_lsb: 0, source_lsb: 32, width: 32 })
+    }
+}
+
+public data BootstrapIdt {
+    vector00: LayoutStorage<InterruptGate, GateLayout00>;
+    vector01: LayoutStorage<InterruptGate, GateLayout01>;
+    vector02: LayoutStorage<InterruptGate, GateLayout02>;
+    vector03: LayoutStorage<InterruptGate, GateLayout03>;
+    vector04: LayoutStorage<InterruptGate, GateLayout04>;
+    vector05: LayoutStorage<InterruptGate, GateLayout05>;
+    vector06: LayoutStorage<InterruptGate, GateLayout06>;
+    vector07: LayoutStorage<InterruptGate, GateLayout07>;
+    vector08: LayoutStorage<InterruptGate, GateLayout08>;
+    vector09: LayoutStorage<InterruptGate, GateLayout09>;
+    vector10: LayoutStorage<InterruptGate, GateLayout10>;
+    vector11: LayoutStorage<InterruptGate, GateLayout11>;
+    vector12: LayoutStorage<InterruptGate, GateLayout12>;
+    vector13: LayoutStorage<InterruptGate, GateLayout13>;
+    vector14: LayoutStorage<InterruptGate, GateLayout14>;
+    vector15: LayoutStorage<InterruptGate, GateLayout15>;
+    vector16: LayoutStorage<InterruptGate, GateLayout16>;
+    vector17: LayoutStorage<InterruptGate, GateLayout17>;
+    vector18: LayoutStorage<InterruptGate, GateLayout18>;
+    vector19: LayoutStorage<InterruptGate, GateLayout19>;
+    vector20: LayoutStorage<InterruptGate, GateLayout20>;
+    vector21: LayoutStorage<InterruptGate, GateLayout21>;
+    vector22: LayoutStorage<InterruptGate, GateLayout22>;
+    vector23: LayoutStorage<InterruptGate, GateLayout23>;
+    vector24: LayoutStorage<InterruptGate, GateLayout24>;
+    vector25: LayoutStorage<InterruptGate, GateLayout25>;
+    vector26: LayoutStorage<InterruptGate, GateLayout26>;
+    vector27: LayoutStorage<InterruptGate, GateLayout27>;
+    vector28: LayoutStorage<InterruptGate, GateLayout28>;
+    vector29: LayoutStorage<InterruptGate, GateLayout29>;
+    vector30: LayoutStorage<InterruptGate, GateLayout30>;
+    vector31: LayoutStorage<InterruptGate, GateLayout31>;
+    vector32: LayoutStorage<InterruptGate, GateLayout32>;
+}
+
+public data RetainedIdt { before: u64; table: BootstrapIdt; after: u64; }
+public machine initialize_table(table: &mut BootstrapIdt) {
+    table.vector00.selector = 8u16;
+    table.vector00.ist = 0u8;
+    table.vector00.attributes = 142u8;
+    table.vector00.reserved = 0u32;
+    table.vector01.selector = 8u16;
+    table.vector01.ist = 0u8;
+    table.vector01.attributes = 142u8;
+    table.vector01.reserved = 0u32;
+    table.vector02.selector = 8u16;
+    table.vector02.ist = 2u8;
+    table.vector02.attributes = 142u8;
+    table.vector02.reserved = 0u32;
+    table.vector03.selector = 8u16;
+    table.vector03.ist = 0u8;
+    table.vector03.attributes = 142u8;
+    table.vector03.reserved = 0u32;
+    table.vector04.selector = 8u16;
+    table.vector04.ist = 0u8;
+    table.vector04.attributes = 142u8;
+    table.vector04.reserved = 0u32;
+    table.vector05.selector = 8u16;
+    table.vector05.ist = 0u8;
+    table.vector05.attributes = 142u8;
+    table.vector05.reserved = 0u32;
+    table.vector06.selector = 8u16;
+    table.vector06.ist = 0u8;
+    table.vector06.attributes = 142u8;
+    table.vector06.reserved = 0u32;
+    table.vector07.selector = 8u16;
+    table.vector07.ist = 0u8;
+    table.vector07.attributes = 142u8;
+    table.vector07.reserved = 0u32;
+    table.vector08.selector = 8u16;
+    table.vector08.ist = 1u8;
+    table.vector08.attributes = 142u8;
+    table.vector08.reserved = 0u32;
+    table.vector09.selector = 8u16;
+    table.vector09.ist = 0u8;
+    table.vector09.attributes = 142u8;
+    table.vector09.reserved = 0u32;
+    table.vector10.selector = 8u16;
+    table.vector10.ist = 0u8;
+    table.vector10.attributes = 142u8;
+    table.vector10.reserved = 0u32;
+    table.vector11.selector = 8u16;
+    table.vector11.ist = 0u8;
+    table.vector11.attributes = 142u8;
+    table.vector11.reserved = 0u32;
+    table.vector12.selector = 8u16;
+    table.vector12.ist = 0u8;
+    table.vector12.attributes = 142u8;
+    table.vector12.reserved = 0u32;
+    table.vector13.selector = 8u16;
+    table.vector13.ist = 0u8;
+    table.vector13.attributes = 142u8;
+    table.vector13.reserved = 0u32;
+    table.vector14.selector = 8u16;
+    table.vector14.ist = 0u8;
+    table.vector14.attributes = 142u8;
+    table.vector14.reserved = 0u32;
+    table.vector15.selector = 8u16;
+    table.vector15.ist = 0u8;
+    table.vector15.attributes = 142u8;
+    table.vector15.reserved = 0u32;
+    table.vector16.selector = 8u16;
+    table.vector16.ist = 0u8;
+    table.vector16.attributes = 142u8;
+    table.vector16.reserved = 0u32;
+    table.vector17.selector = 8u16;
+    table.vector17.ist = 0u8;
+    table.vector17.attributes = 142u8;
+    table.vector17.reserved = 0u32;
+    table.vector18.selector = 8u16;
+    table.vector18.ist = 3u8;
+    table.vector18.attributes = 142u8;
+    table.vector18.reserved = 0u32;
+    table.vector19.selector = 8u16;
+    table.vector19.ist = 0u8;
+    table.vector19.attributes = 142u8;
+    table.vector19.reserved = 0u32;
+    table.vector20.selector = 8u16;
+    table.vector20.ist = 0u8;
+    table.vector20.attributes = 142u8;
+    table.vector20.reserved = 0u32;
+    table.vector21.selector = 8u16;
+    table.vector21.ist = 0u8;
+    table.vector21.attributes = 142u8;
+    table.vector21.reserved = 0u32;
+    table.vector22.selector = 8u16;
+    table.vector22.ist = 0u8;
+    table.vector22.attributes = 142u8;
+    table.vector22.reserved = 0u32;
+    table.vector23.selector = 8u16;
+    table.vector23.ist = 0u8;
+    table.vector23.attributes = 142u8;
+    table.vector23.reserved = 0u32;
+    table.vector24.selector = 8u16;
+    table.vector24.ist = 0u8;
+    table.vector24.attributes = 142u8;
+    table.vector24.reserved = 0u32;
+    table.vector25.selector = 8u16;
+    table.vector25.ist = 0u8;
+    table.vector25.attributes = 142u8;
+    table.vector25.reserved = 0u32;
+    table.vector26.selector = 8u16;
+    table.vector26.ist = 0u8;
+    table.vector26.attributes = 142u8;
+    table.vector26.reserved = 0u32;
+    table.vector27.selector = 8u16;
+    table.vector27.ist = 0u8;
+    table.vector27.attributes = 142u8;
+    table.vector27.reserved = 0u32;
+    table.vector28.selector = 8u16;
+    table.vector28.ist = 0u8;
+    table.vector28.attributes = 142u8;
+    table.vector28.reserved = 0u32;
+    table.vector29.selector = 8u16;
+    table.vector29.ist = 0u8;
+    table.vector29.attributes = 142u8;
+    table.vector29.reserved = 0u32;
+    table.vector30.selector = 8u16;
+    table.vector30.ist = 0u8;
+    table.vector30.attributes = 142u8;
+    table.vector30.reserved = 0u32;
+    table.vector31.selector = 8u16;
+    table.vector31.ist = 0u8;
+    table.vector31.attributes = 142u8;
+    table.vector31.reserved = 0u32;
+    table.vector32.selector = 8u16;
+    table.vector32.ist = 4u8;
+    table.vector32.attributes = 142u8;
+    table.vector32.reserved = 0u32;
+}
+
+public machine table_policy(accepted: bool, table: &BootstrapIdt) -> bool reaches terminates {
+    !accepted || (
+        table.vector00.selector == 8u16 && table.vector00.ist == 0u8
+        && table.vector00.attributes == 142u8 && table.vector00.reserved == 0u32 &&
+        table.vector01.selector == 8u16 && table.vector01.ist == 0u8
+        && table.vector01.attributes == 142u8 && table.vector01.reserved == 0u32 &&
+        table.vector02.selector == 8u16 && table.vector02.ist == 2u8
+        && table.vector02.attributes == 142u8 && table.vector02.reserved == 0u32 &&
+        table.vector03.selector == 8u16 && table.vector03.ist == 0u8
+        && table.vector03.attributes == 142u8 && table.vector03.reserved == 0u32 &&
+        table.vector04.selector == 8u16 && table.vector04.ist == 0u8
+        && table.vector04.attributes == 142u8 && table.vector04.reserved == 0u32 &&
+        table.vector05.selector == 8u16 && table.vector05.ist == 0u8
+        && table.vector05.attributes == 142u8 && table.vector05.reserved == 0u32 &&
+        table.vector06.selector == 8u16 && table.vector06.ist == 0u8
+        && table.vector06.attributes == 142u8 && table.vector06.reserved == 0u32 &&
+        table.vector07.selector == 8u16 && table.vector07.ist == 0u8
+        && table.vector07.attributes == 142u8 && table.vector07.reserved == 0u32 &&
+        table.vector08.selector == 8u16 && table.vector08.ist == 1u8
+        && table.vector08.attributes == 142u8 && table.vector08.reserved == 0u32 &&
+        table.vector09.selector == 8u16 && table.vector09.ist == 0u8
+        && table.vector09.attributes == 142u8 && table.vector09.reserved == 0u32 &&
+        table.vector10.selector == 8u16 && table.vector10.ist == 0u8
+        && table.vector10.attributes == 142u8 && table.vector10.reserved == 0u32 &&
+        table.vector11.selector == 8u16 && table.vector11.ist == 0u8
+        && table.vector11.attributes == 142u8 && table.vector11.reserved == 0u32 &&
+        table.vector12.selector == 8u16 && table.vector12.ist == 0u8
+        && table.vector12.attributes == 142u8 && table.vector12.reserved == 0u32 &&
+        table.vector13.selector == 8u16 && table.vector13.ist == 0u8
+        && table.vector13.attributes == 142u8 && table.vector13.reserved == 0u32 &&
+        table.vector14.selector == 8u16 && table.vector14.ist == 0u8
+        && table.vector14.attributes == 142u8 && table.vector14.reserved == 0u32 &&
+        table.vector15.selector == 8u16 && table.vector15.ist == 0u8
+        && table.vector15.attributes == 142u8 && table.vector15.reserved == 0u32 &&
+        table.vector16.selector == 8u16 && table.vector16.ist == 0u8
+        && table.vector16.attributes == 142u8 && table.vector16.reserved == 0u32 &&
+        table.vector17.selector == 8u16 && table.vector17.ist == 0u8
+        && table.vector17.attributes == 142u8 && table.vector17.reserved == 0u32 &&
+        table.vector18.selector == 8u16 && table.vector18.ist == 3u8
+        && table.vector18.attributes == 142u8 && table.vector18.reserved == 0u32 &&
+        table.vector19.selector == 8u16 && table.vector19.ist == 0u8
+        && table.vector19.attributes == 142u8 && table.vector19.reserved == 0u32 &&
+        table.vector20.selector == 8u16 && table.vector20.ist == 0u8
+        && table.vector20.attributes == 142u8 && table.vector20.reserved == 0u32 &&
+        table.vector21.selector == 8u16 && table.vector21.ist == 0u8
+        && table.vector21.attributes == 142u8 && table.vector21.reserved == 0u32 &&
+        table.vector22.selector == 8u16 && table.vector22.ist == 0u8
+        && table.vector22.attributes == 142u8 && table.vector22.reserved == 0u32 &&
+        table.vector23.selector == 8u16 && table.vector23.ist == 0u8
+        && table.vector23.attributes == 142u8 && table.vector23.reserved == 0u32 &&
+        table.vector24.selector == 8u16 && table.vector24.ist == 0u8
+        && table.vector24.attributes == 142u8 && table.vector24.reserved == 0u32 &&
+        table.vector25.selector == 8u16 && table.vector25.ist == 0u8
+        && table.vector25.attributes == 142u8 && table.vector25.reserved == 0u32 &&
+        table.vector26.selector == 8u16 && table.vector26.ist == 0u8
+        && table.vector26.attributes == 142u8 && table.vector26.reserved == 0u32 &&
+        table.vector27.selector == 8u16 && table.vector27.ist == 0u8
+        && table.vector27.attributes == 142u8 && table.vector27.reserved == 0u32 &&
+        table.vector28.selector == 8u16 && table.vector28.ist == 0u8
+        && table.vector28.attributes == 142u8 && table.vector28.reserved == 0u32 &&
+        table.vector29.selector == 8u16 && table.vector29.ist == 0u8
+        && table.vector29.attributes == 142u8 && table.vector29.reserved == 0u32 &&
+        table.vector30.selector == 8u16 && table.vector30.ist == 0u8
+        && table.vector30.attributes == 142u8 && table.vector30.reserved == 0u32 &&
+        table.vector31.selector == 8u16 && table.vector31.ist == 0u8
+        && table.vector31.attributes == 142u8 && table.vector31.reserved == 0u32 &&
+        table.vector32.selector == 8u16 && table.vector32.ist == 4u8
+        && table.vector32.attributes == 142u8 && table.vector32.reserved == 0u32
+    )
+}
+public BootstrapInterruptTableValidator satisfies StaticInterruptTableValidation<BootstrapIdt, table_policy> {
+    machine validate(table: &BootstrapIdt) -> bool
+    ensures table_policy(result, table) { table_policy(true, table) }
+}

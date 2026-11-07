@@ -2,7 +2,8 @@
 // Modified numeric operands from x86_64 cc35c876d3badb57df54a66e22f7768a52be95f2.
 // See source/libraries/x86_64/tlb-operands.PORT.md. No CPU or invalidation authority.
 module x86_tlb_operands;
-pub data Pcid [copy] { value: u16 [0..=4095]; }
+pub data Pcid [copy]
+requires 0 <= self.value && self.value <= 4095 { value: u16; }
 pub data InvpcidDescriptor [copy] { pcid: u64; address: u64; }
 pub data InvlpgbLimits [copy] { count_max: u16; nested: bool; nasid: u32; }
 pub data BroadcastRegisters [copy] { rax: u64; ecx: u32; edx: u32; }

@@ -1,16 +1,87 @@
 # Omega UEFI boot qualification
 
-Cathedral's Omega kernel now uses its own code, data and stack settings after
-leaving firmware. A freshly compiled image passed all eighteen ordered QEMU/OVMF
-checks through `Segments ready`, including the earlier firmware-exit,
-retained-memory and mapping checks.
+Cathedral's Omega kernel has booted under controlled QEMU/OVMF, passed all
+eighteen startup markers and observed eight advancing timer wakes in ordinary
+code. A separate stopped invocation checked eight interrupt returns, CPU state
+and retained guards against the same exact image. The final ordinary Git-pin
+compile is still pending. This is a bounded kernel boot milestone, not desktop,
+scheduler, SMP or real-hardware qualification.
 
-The tables, four future interrupt-stack buffers and boot roots remain owned
-while the kernel idles. Installed exception/timer handlers, their stack-resource
-checks, repeated interrupts and an ordinary-code wake remain unfinished.
-This is not a desktop or real-hardware qualification.
+## Current timer qualification, 2026-11-07 UTC
 
-## Selector boot check, 2026-11-04 UTC
+The R13 image leaves firmware, retains the image/initial-storage roots and
+suspended local owners, and installs all 33 entries: 32 fatal exception entries
+and one returning PIC/PIT timer entry. Its undisturbed UEFI boot reports
+`Owned 34 MiB`, all eighteen ordered markers through `Segments ready`, then
+exactly `........Timer wakes 8`. The guest remains alive at that result.
+
+A separate invocation authenticates its own firmware load before stopping at
+the exact installed Work call. It observes all 33 gate targets, eight complete
+entry/pre-IRET/restored frame sequences, context counter and timestamp advancing
+from zero to eight, and all 17 authored table, task-state and stack guard words
+at each of 17 stops (289 comparisons). The context's two separate surrounding
+canaries also remain intact; they are not part of that 17-word roster.
+The actual table, GDT, encoded TSS, root, context and stacks lie in the emitted
+private stack partition. The debugger uses reviewed QEMU host pauses without guest debug
+injection or guest state writes. Observed XMM values are zero; this does not
+qualify a nonzero SIMD pattern. Pending acknowledgement debt is not sampled
+inside the handler. No fatal delivery was injected.
+
+The controlled receiver uses QEMU 11.0.2, machine `pc-q35-11.0`, CPU `qemu64-v1`,
+TCG, one CPU, 128 MiB, pinned OVMF pflash, a fresh variable store and ordinary
+`EFI/BOOT/BOOTX64.EFI` loading. The source's two explicit conditions exclude
+asynchronous NMI/machine-check/physical failure until table publication, then
+require the reviewed single-owner architectural delivery and debug conditions
+while installed. They grant no memory. A separately adopted physical receiving
+contract covers firmware input validity, ABI, complete loaded-image backing and
+retention through ExitBootServices and the suspended installation. Source and
+native owner/call/frame checks support that contract; debugger reads do not
+grant permissions or prove future lifetime.
+
+Exact retained identities:
+
+- Compiler source: `843ab01ddb8adc3d5ecf70d236f57db065af3e4f`.
+
+- Image SHA-256:
+  `c7ef3610fb7589ab5f55a5b47fb54f97cff091716303396a0f0598544aa60c56`.
+- Artifact identity:
+  `0ec43d39d70deb766cf2cef1a7e0e1787daf7d351a7e8010068f3aee1743c1ae`.
+- Captured Terminal SHA-256:
+  `82002ffc567e2ae139a83f887e9c39fcea300a9ff2147a449be4d205159259fc`;
+  semantic fingerprint
+  `e2e6002cea59fdbdfdc232e4e44a39acf6172099a573da9c9458ebb91f6c001b`.
+  Semantic entry 1, physical adapter 54 and installed Scope 312 belong to this
+  capture; they are not names inferred from another image.
+- Native/export driver SHA-256:
+  `b4e46025586044f633ba81fc445c249f755fc8458d42db7b43c586073d118c7b`.
+- OVMF code SHA-256:
+  `33090cc07675baa5190d9f1e84bf5176b33bcbfa9bacac522961150cdb6dbb2a`.
+- Undisturbed runtime result SHA-256:
+  `e7291753406ea840cb0eba1a9cffe77b80b7af62024982662ee050d48e5f92b4`;
+  stopped result:
+  `65e7245ae1781f5fd3eaf53883a9d7f79e64069c11201b5b5dcd394d1d28233b`.
+- Adopted receiving review SHA-256:
+  `4f9a6864bf2133b17ee168b213af4bcebc8cf62f1d2f6f7663f6f8875f6512b1`.
+
+Raw evidence remains in Omega's ignored
+`build/native-main-integration/native-completion-r28-r13-original-parent/`:
+`artifact`, `physical-receiver-r1`, `uefi-undisturbed-r1`, `uefi-observed-r1` and
+`receiving-occurrence-review-r1`. The full source was checked and captured with
+its frozen matching libraries before native completion. This result does not
+claim that the unchanged ordinary Git dependency pins have already reproduced
+that build. Root's final pin selection, review and fresh compile remain pending.
+
+The first stopped attempt failed because the observation plan omitted the two
+context-guard names. Its failed receipt remains separate; the retry added only
+those labels and kept the frozen observer unchanged. Existing source and native
+invalid controls remain separately pinned. The normal boot harness now requires
+the eight-wake line as well as every earlier marker, but its serial oracle does
+not independently perform the stopped observer's state/return checks.
+
+The dated sections below preserve earlier milestones and their original source,
+compiler, image and validation limits.
+
+## Historical selector boot check, 2026-11-04 UTC
 
 After `TSS checked`, the kernel reloads code and then data/stack selectors from
 its retained GDT. The new marker requires CS 8, DS/ES/SS 16, FS/GS 0, TR 24,
