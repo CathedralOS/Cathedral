@@ -22,8 +22,9 @@ set `OMEGA_BIN` to an optimized compiler binary, or `OMEGA_REPO` to the Omega
 checkout, in the environment inherited by VS Code. Isolated Cathedral worktrees
 need one of these overrides when Omega is not their sibling.
 
-For a new checkout, run `python tools/boot-harness/run.py --prepare --build-only`
-first (use `python3` on macOS/Linux), completing any package review requested by
+For a new checkout, set the two reviewed condition records described below,
+then run `python tools/boot-harness/run.py --prepare --build-only`
+(use `python3` on macOS/Linux), completing any package review requested by
 the compiler. F5 does not bypass dependency review. Each launch recompiles the
 Omega kernel before opening QEMU; a failed build never boots an old image.
 
@@ -40,8 +41,8 @@ Python 3.10+ is required on every host. Bash and PowerShell wrappers call the
 same implementation:
 
 ```text
-python tools/boot-harness/run.py --compiler PATH_TO_OMEGA --prepare --build-only
-python tools/boot-harness/run.py --compiler PATH_TO_OMEGA --smoke
+python tools/boot-harness/run.py --compiler PATH_TO_OMEGA --prepare --build-only --bootstrap-assumptions BOOTSTRAP_FILE --interrupt-delivery-assumptions DELIVERY_FILE
+python tools/boot-harness/run.py --compiler PATH_TO_OMEGA --smoke --bootstrap-assumptions BOOTSTRAP_FILE --interrupt-delivery-assumptions DELIVERY_FILE
 ```
 
 Alternatively use `run.sh` or `run.ps1` with the same arguments.
@@ -117,9 +118,9 @@ four stacks, context and boot roots remain retained. The controlled R13
 qualification also checked eight returns and all guards with a separate frozen
 observer; this normal serial harness does not perform those debugger checks.
 The exact pinned configuration and two reviewed bootstrap/delivery conditions
-are in the qualification record. The final ordinary Git-pin compile remains
-pending; the observed image came from the frozen checked source and matching
-library. The milestone does not establish a scheduler, fatal-delivery execution,
+are in the qualification record. The final build from reviewed Git dependencies
+reproduces the qualified image byte for byte and passes fresh undisturbed and
+observed boots. The milestone does not establish a scheduler, fatal-delivery execution,
 SMP support or real hardware.
 The boot-map marker requires the kernel to copy the final memory map from the
 explicit initial-storage packet and check its format, byte count, descriptor

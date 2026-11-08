@@ -3,7 +3,7 @@ machine build(builder: &mut Build) {
     Build::package(builder, "cathedral_bootstrap_interrupts");
     Build::depend_as(builder, "std", Source::Git {
         repository: "https://github.com/CathedralOS/Omega.git",
-        revision: "c2cfe5f3decef0294ea80527f7a95264e4520ec9",
+        revision: "64a843d84e992cad23222769065e18cdc107e2d6",
         selection: PackageSelection::Named { package: "omega_language_std" }
     });
     Build::depend_as(builder, "arch", Source::Path { location: "../../../arch" });

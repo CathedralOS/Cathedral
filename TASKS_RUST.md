@@ -4842,9 +4842,12 @@ roots remain retained. The [qualification record](wiki/boot/omega_uefi_qualifica
 pins image `c7ef3610fb7589ab5f55a5b47fb54f97cff091716303396a0f0598544aa60c56`,
 source, receiving contract and runtime receipts.
 
-The final ordinary Git dependency-pin compile is still pending; the demonstrated
-image used frozen checked source and matching libraries. Keep the two reviewed
-bootstrap/delivery conditions and physical receiving contract explicit.
+The final build from reviewed Git dependencies reproduces the qualified image
+byte for byte and passes fresh undisturbed and observed boots. The current
+compiler, dependency lock, conditions and new runtime receipts are recorded in
+the qualification above; the earlier R13 identities remain historical.
+Keep the two reviewed bootstrap/delivery conditions and physical receiving
+contract explicit.
 Persistent kernel address-space activation, a general scheduler, fatal-delivery
 execution, SMP and real-hardware qualification remain open. The Rust F5 desktop
 has its own qualified compiler; this boot work does not change that selection.

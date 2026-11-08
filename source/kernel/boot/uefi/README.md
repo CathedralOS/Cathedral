@@ -9,9 +9,10 @@ all retained table, stack and context guards. The
 the exact R13 image, source inputs and receiving conditions.
 
 The tables, four interrupt stacks, context and boot roots remain retained while
-Work runs. This result uses frozen checked source and matching libraries; the
-final ordinary Git-pin build is pending. General scheduling, persistent kernel
-address-space activation, a desktop and real-hardware support remain unfinished.
+Work runs. The [qualification](../../../../wiki/boot/omega_uefi_qualification.md) separates
+these recorded boots from the current ordinary-build result. General scheduling,
+persistent kernel address-space activation, a desktop and real-hardware support
+remain unfinished.
 
 Start at [main.omg](main.omg), the selected physical firmware arrival. It
 validates the table and enters [firmware discovery](firmware/firmware.omg), then
@@ -23,8 +24,8 @@ The semantic continuation is currently the [memory lab](lab/memory/main.omg),
 not a normal task-starting kernel. Its [mapping entrance](lab/memory/mapping/mapping.omg)
 descends into clone/program/activate/retire checks. The build selects that
 continuation through `Kernel::start`, which owns ordinary local kernel state.
-The controlled timer qualification has passed; reproducing it through the final
-ordinary Git dependency pins remains a separate check.
+The qualification records which image and dependency pins produced each timer
+result, together with any remaining ordinary-build checks.
 The [native-boot note](../../../../TASKS_RUST.md#native-omega-boot-qualification-after-the-structure-pass)
 records the tested boot path and its limits. Older observations below retain their
 original compiler and source identities.
@@ -75,8 +76,9 @@ select the other's prepared case classifier.
 The compiler provisions an image-backed private stack before the source adapter
 allocates its frames. Its backing includes the exact call-chain demand, both
 entry bridges and the target reserve. The foreign leaves retain their default
-256 KiB allowance; Cathedral keeps a 64 KiB map buffer. Neither allowance nor the
-128 KiB firmware arrival guarantee was reduced or inflated to make boot work.
+256 KiB allowance; Cathedral keeps a 64 KiB map buffer. The current receiving
+contract does not assume a 128 KiB firmware stack: it admits only the incoming
+return-address slot before the image-backed private stack is installed.
 The active stack remains retained storage and is excluded from the image
 extent supplied to `Kernel::enter`.
 
@@ -528,7 +530,7 @@ of the boot's trusted boundary; the serial marker does not independently prove
 firmware correctness or every backing assertion.
 
 The `std` and `alloc` dependencies select the same immutable Omega workspace
-revision, `c2cfe5f3decef0294ea80527f7a95264e4520ec9`. The former supplies the
+revision in [build.omg](build.omg). The former supplies the
 firmware calling vocabulary; the latter exports the borrowed `Bump` API.
 One workspace lineage cannot resolve to conflicting source roots. These pins
 supply library source, not a compiler binary, and require no sibling checkout.
@@ -537,8 +539,8 @@ repository-metadata acquisition limits: this pinned repository exceeds 65,536
 entries although the selected std source does not. Selected-package source and
 cache custody limits remain unchanged. The six-marker boot above was an earlier
 milestone; the earlier mapping image reached all fifteen markers after ordinary
-review. The timer result above used its frozen matching library; its final
-ordinary Git-pin build is still pending.
+review. The timer result above used its frozen matching library; the qualification
+records the status and identities of later ordinary Git-pin builds.
 
 The local calling policy deliberately remains a normal named implementation;
 it must not collide with std's same-spelled policy. Firmware layouts and OS
