@@ -67,7 +67,7 @@ acknowledgement debt was zero. Both owned VMs stopped cleanly afterward.
 | Undisturbed result | `aed83904da2d26597bdf1477ef77564b0f8b24bd3cc50f29c3d3849e55f6db1a` |
 | Observed result | `61560a3ed359e40c208700f880b789cd8b7400748914a0efcad7ca3c4f0e3f2e` |
 | Serial output, both runs | `14793ddd7c84194c4f9a6b7d441b52734a4233d64bfee4200946f753ce16c9c6` |
-| Root's complete runtime readback | `d821da7136236f1afb562e6c483d9e796ce7dcbc1059922c43a21caa4b431cb2` |
+| Runtime record verification | `d821da7136236f1afb562e6c483d9e796ce7dcbc1059922c43a21caa4b431cb2` |
 
 The receiving decision reuses the original exact-image code, layout, private
 stack and retained-owner reviews. The native backend, realization and codecs are
@@ -163,7 +163,8 @@ Raw evidence remains in Omega's ignored
 `receiving-occurrence-review-r1`. The full source was checked and captured with
 its frozen matching libraries before native completion. This result does not
 claim that the unchanged ordinary Git dependency pins have already reproduced
-that build. Root's final pin selection, review and fresh compile remain pending.
+that build. At R13, the dependency-pin update, review and fresh compile were
+still pending. The current section above records their completion.
 
 The first stopped attempt failed because the observation plan omitted the two
 context-guard names. Its failed receipt remains separate; the retry added only
