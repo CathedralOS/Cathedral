@@ -4832,20 +4832,25 @@ flow; the ordinary Rust-kernel F5 desktop is a separate baseline.
 
 ## Native Omega boot qualification after the structure pass
 
-A fresh Omega UEFI image passed all eighteen ordered QEMU/OVMF checks through
-`Segments ready`. After firmware exit and the retained-memory checks, the kernel
-selected its owned task-state table, then switched the CPU's code, data and stack
-selections to its own GDT. It verified the selectors, full table and guard words.
-The tables, four stack buffers and earlier boot roots stay owned while the kernel
-idles. The [qualification record](wiki/boot/omega_uefi_qualification.md) retains
-exact compiler, source and image identities and failure controls. The selector
-compiler support is published in
-[Omega PR #1807](https://github.com/CathedralOS/Omega/pull/1807).
+The controlled Omega UEFI qualification now passes all eighteen startup markers
+and then observes eight advancing timer wakes in ordinary code. The exact R13
+image installs 33 exception/timer entries after firmware exit, mapping and
+selector checks. A separate stopped invocation checked eight interrupt returns,
+CPU state, root/context progression and all 17 table/task/stack guards at Work
+and every entry/return. The tables, four dedicated stacks and original boot
+roots remain retained. The [qualification record](wiki/boot/omega_uefi_qualification.md)
+pins image `c7ef3610fb7589ab5f55a5b47fb54f97cff091716303396a0f0598544aa60c56`,
+source, receiving contract and runtime receipts.
 
-Installed exception/timer handlers, their stack-resource checks, repeated
-hardware timer delivery and an ordinary-code wake remain unfinished. The Rust
-F5 desktop has its own qualified compiler; this boot work does not change that
-selection.
+The final build from reviewed Git dependencies reproduces the qualified image
+byte for byte and passes fresh undisturbed and observed boots. The current
+compiler, dependency lock, conditions and new runtime receipts are recorded in
+the qualification above; the earlier R13 identities remain historical.
+Keep the two reviewed bootstrap/delivery conditions and physical receiving
+contract explicit.
+Persistent kernel address-space activation, a general scheduler, fatal-delivery
+execution, SMP and real-hardware qualification remain open. The Rust F5 desktop
+has its own qualified compiler; this boot work does not change that selection.
 
 ### Historical compiler and acquisition investigations
 

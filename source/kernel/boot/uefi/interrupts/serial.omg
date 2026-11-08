@@ -1,0 +1,45 @@
+module serial;
+use omega::language::core::assembly;
+
+// Keep COM1, as in the existing post-handoff lab. Poll each byte so the new
+// timer marker does not rely on the FIFO accepting an entire unchecked burst.
+public machine serial_byte(value: u8) reaches PortIo + MachineControl {
+    transition { _ -> poll(value, 1000000u64) }
+    machine poll(value: u8, remaining: u64) requires remaining > 0 {
+        let mut status: u8 = 0;
+        asm { in status, 1021 }
+        transition (status & 32) != 0 {
+            true -> ready(value)
+            _ -> retry(value, remaining)
+        }
+    }
+    machine retry(value: u8, remaining: u64) requires remaining > 0 {
+        transition remaining > 1 {
+            true -> poll(value, remaining - 1)
+            _ -> stopped()
+        }
+    }
+    machine ready(value: u8) { asm { out 1016, value } }
+    machine stopped() ensures false {
+        asm { cli; hlt }
+        transition { _ -> stopped() }
+    }
+}
+
+public machine timer_wakes_observed() reaches PortIo + MachineControl {
+    serial_byte(84); serial_byte(105); serial_byte(109); serial_byte(101);
+    serial_byte(114); serial_byte(32); serial_byte(119); serial_byte(97);
+    serial_byte(107); serial_byte(101); serial_byte(115); serial_byte(32);
+    serial_byte(56); serial_byte(13); serial_byte(10);
+}
+public machine timer_failed() reaches PortIo + MachineControl ensures false {
+    serial_byte(84); serial_byte(105); serial_byte(109); serial_byte(101);
+    serial_byte(114); serial_byte(32); serial_byte(102); serial_byte(97);
+    serial_byte(105); serial_byte(108); serial_byte(101); serial_byte(100);
+    serial_byte(13); serial_byte(10);
+    transition { _ -> stopped() }
+    machine stopped() ensures false {
+        asm { cli; hlt }
+        transition { _ -> stopped() }
+    }
+}

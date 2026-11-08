@@ -140,8 +140,9 @@ machine PageTableBuilder::entry(target: u64, no_execute: bool) -> u64 {
     x86_encode_page_table_entry(&entry)
 }
 
-machine PageTableBuilder::step(base: u64, index: u64 [0..=511], word: u64)
-    -> X86BootstrapPageTableWalkStep {
+machine PageTableBuilder::step(base: u64, index: u64, word: u64)
+    -> X86BootstrapPageTableWalkStep
+requires 0 <= index && index <= 511 {
     let entry: X86PageTableEntry = x86_decode_page_table_entry(word);
     X86BootstrapPageTableWalkStep {
         table_address: base, index: index, entry_address: base | (index * 8),

@@ -11,13 +11,13 @@ module isa::x86_64::interrupts::interrupts;
 use facts::x86_exception_vectors;
 use facts::x86_idt_gate;
 use facts::x86_interrupt_stacks;
-use omega::language::std::calling;
+use std::calling;
 
 // The complete pre-timer exception floor is deliberately fatal. Later
 // recovery policy may replace individual entries only through a fresh root
 // admission; the bootstrap table never leaves an absent or silently returning
 // architectural slot.
-pub data X86BootstrapExceptionDisposition {
+public data X86BootstrapExceptionDisposition {
     case FatalDiagnostic;
 }
 
@@ -27,10 +27,11 @@ pub data X86BootstrapExceptionDisposition {
 // derive both fields from one X86IstStackClass so they cannot drift. `delivery`
 // retains the source-authored frame category without resolving CPU-profile-
 // dependent vectors or selecting a normalization plan.
-pub data X86BootstrapExceptionEntryPolicy {
-    vector: u8 [0..=31];
+public data X86BootstrapExceptionEntryPolicy
+requires self.vector <= 31 && self.ist_index <= 7 {
+    vector: u8;
     stack: EntryStack;
-    ist_index: u8 [0..=7];
+    ist_index: u8;
     delivery: X86ExceptionDeliveryShape;
     disposition: X86BootstrapExceptionDisposition;
 }
@@ -39,8 +40,9 @@ pub data X86BootstrapExceptionEntryPolicy {
 // that is not encoded in the 16-byte descriptor itself. This remains ordinary
 // data: `entry` and `selector` inside `gate` have not yet been vouched for by
 // the admitted-root resolver or the boot-selected code-segment fact.
-pub data X86BootstrapExceptionGateCandidate {
-    vector: u8 [0..=31];
+public data X86BootstrapExceptionGateCandidate
+requires 0 <= self.vector && self.vector <= 31 {
+    vector: u8;
     gate: X86IdtGate;
     delivery: X86ExceptionDeliveryShape;
     disposition: X86BootstrapExceptionDisposition;
@@ -49,7 +51,7 @@ pub data X86BootstrapExceptionGateCandidate {
 // `PolicyConsistent` reports only the Cathedral-owned checks performed below.
 // It is deliberately not a MaterializedIdt, receipt, publication token, or
 // assertion that the candidate's entry identity and selector are admitted.
-pub data X86BootstrapExceptionGatePolicyCheck {
+public data X86BootstrapExceptionGatePolicyCheck {
     case Rejected;
     case PolicyConsistent(candidate: X86BootstrapExceptionGateCandidate);
 }
@@ -57,14 +59,14 @@ pub data X86BootstrapExceptionGatePolicyCheck {
 // One complete candidate floor. The fixed array makes absence unrepresentable:
 // callers cannot ask Cathedral to bless a sparse subset and later publish the
 // unchecked holes. This is still ordinary unpublished data, not IDT storage.
-pub data X86BootstrapExceptionTableCandidate {
+public data X86BootstrapExceptionTableCandidate {
     entries: [X86BootstrapExceptionGateCandidate; 32];
 }
 
 // Table-level consistency means only that every slot passed the same decided
 // policy check as the single-entry helper below. It does not validate handler
 // identity or selector and does not grant materialization/install authority.
-pub data X86BootstrapExceptionTablePolicyCheck {
+public data X86BootstrapExceptionTablePolicyCheck {
     case Rejected;
     case PolicyConsistent(candidate: X86BootstrapExceptionTableCandidate);
 }
@@ -73,32 +75,36 @@ pub data X86BootstrapExceptionTablePolicyCheck {
 // profile-optional vectors intentionally receive the same fatal current-stack
 // floor as ordinary exceptions, so unexpected delivery cannot target an
 // absent descriptor.
-pub machine x86_bootstrap_exception_entry_policy(
-    vector: u8 [0..=31]
-) -> X86BootstrapExceptionEntryPolicy {
+public machine x86_bootstrap_exception_entry_policy(
+    vector: u8
+) -> X86BootstrapExceptionEntryPolicy
+requires 0 <= vector && vector <= 31 {
     transition vector == X86_EXCEPTION_NON_MASKABLE_INTERRUPT {
         true -> dedicated(vector, X86_NMI_STACK)
         _ -> double_fault(vector)
     }
 
-    state double_fault(vector: u8 [0..=31]) -> X86BootstrapExceptionEntryPolicy {
+    machine double_fault(vector: u8) -> X86BootstrapExceptionEntryPolicy
+    requires 0 <= vector && vector <= 31 {
         transition vector == X86_EXCEPTION_DOUBLE_FAULT {
             true -> dedicated(vector, X86_DOUBLE_FAULT_STACK)
             _ -> machine_check(vector)
         }
     }
 
-    state machine_check(vector: u8 [0..=31]) -> X86BootstrapExceptionEntryPolicy {
+    machine machine_check(vector: u8) -> X86BootstrapExceptionEntryPolicy
+    requires 0 <= vector && vector <= 31 {
         transition vector == X86_EXCEPTION_MACHINE_CHECK {
             true -> dedicated(vector, X86_MACHINE_CHECK_STACK)
             _ -> current_stack(vector)
         }
     }
 
-    state dedicated(
-        vector: u8 [0..=31],
+    machine dedicated(
+        vector: u8,
         selected: X86IstStackClass
-    ) -> X86BootstrapExceptionEntryPolicy {
+    ) -> X86BootstrapExceptionEntryPolicy
+    requires 0 <= vector && vector <= 31 {
         X86BootstrapExceptionEntryPolicy {
             vector: vector,
             stack: EntryStack::Dedicated { class: selected.stack_class },
@@ -108,7 +114,8 @@ pub machine x86_bootstrap_exception_entry_policy(
         }
     }
 
-    state current_stack(vector: u8 [0..=31]) -> X86BootstrapExceptionEntryPolicy {
+    machine current_stack(vector: u8) -> X86BootstrapExceptionEntryPolicy
+    requires 0 <= vector && vector <= 31 {
         X86BootstrapExceptionEntryPolicy {
             vector: vector,
             stack: EntryStack::Interrupted,
@@ -123,10 +130,11 @@ pub machine x86_bootstrap_exception_entry_policy(
 // The later source-carrier integration must additionally bind `gate.entry` to
 // the exact admitted root and `gate.selector` to the boot-selected ring-0 code
 // segment before materialization can establish a table.
-pub machine x86_validate_bootstrap_exception_gate_policy(
-    expected_vector: u8 [0..=31],
+public machine x86_validate_bootstrap_exception_gate_policy(
+    expected_vector: u8,
     candidate: X86BootstrapExceptionGateCandidate
-) -> X86BootstrapExceptionGatePolicyCheck {
+) -> X86BootstrapExceptionGatePolicyCheck
+requires 0 <= expected_vector && expected_vector <= 31 {
     // Derive the policy internally from the requested table slot; callers
     // cannot obtain consistency merely by supplying a matching invented
     // policy record.
@@ -137,7 +145,7 @@ pub machine x86_validate_bootstrap_exception_gate_policy(
         _ -> reject()
     }
 
-    state check_ist(
+    machine check_ist(
         policy: X86BootstrapExceptionEntryPolicy,
         candidate: X86BootstrapExceptionGateCandidate
     ) -> X86BootstrapExceptionGatePolicyCheck {
@@ -147,7 +155,7 @@ pub machine x86_validate_bootstrap_exception_gate_policy(
         }
     }
 
-    state check_disposition(
+    machine check_disposition(
         policy: X86BootstrapExceptionEntryPolicy,
         candidate: X86BootstrapExceptionGateCandidate
     ) -> X86BootstrapExceptionGatePolicyCheck {
@@ -157,7 +165,7 @@ pub machine x86_validate_bootstrap_exception_gate_policy(
         }
     }
 
-    state check_delivery(
+    machine check_delivery(
         policy: X86BootstrapExceptionEntryPolicy,
         candidate: X86BootstrapExceptionGateCandidate
     ) -> X86BootstrapExceptionGatePolicyCheck {
@@ -167,7 +175,7 @@ pub machine x86_validate_bootstrap_exception_gate_policy(
         }
     }
 
-    state check_attributes(
+    machine check_attributes(
         candidate: X86BootstrapExceptionGateCandidate
     ) -> X86BootstrapExceptionGatePolicyCheck {
         transition candidate.gate.type_attributes == PRESENT_RING0_INTERRUPT_GATE {
@@ -176,7 +184,7 @@ pub machine x86_validate_bootstrap_exception_gate_policy(
         }
     }
 
-    state check_reserved(
+    machine check_reserved(
         candidate: X86BootstrapExceptionGateCandidate
     ) -> X86BootstrapExceptionGatePolicyCheck {
         transition candidate.gate.reserved == RESERVED_ZERO {
@@ -185,7 +193,7 @@ pub machine x86_validate_bootstrap_exception_gate_policy(
         }
     }
 
-    state accept(
+    machine accept(
         candidate: X86BootstrapExceptionGateCandidate
     ) -> X86BootstrapExceptionGatePolicyCheck {
         X86BootstrapExceptionGatePolicyCheck::PolicyConsistent {
@@ -193,7 +201,7 @@ pub machine x86_validate_bootstrap_exception_gate_policy(
         }
     }
 
-    state reject() -> X86BootstrapExceptionGatePolicyCheck {
+    machine reject() -> X86BootstrapExceptionGatePolicyCheck {
         X86BootstrapExceptionGatePolicyCheck::Rejected
     }
 }
@@ -201,7 +209,7 @@ pub machine x86_validate_bootstrap_exception_gate_policy(
 // Validate the whole 0..31 exception floor as one transaction. A failure in
 // any slot rejects the complete candidate; no partially checked table escapes.
 // The bounded index is ordinary source control flow over fixed package data.
-pub machine x86_validate_bootstrap_exception_table_policy(
+public machine x86_validate_bootstrap_exception_table_policy(
     candidate: X86BootstrapExceptionTableCandidate
 ) -> X86BootstrapExceptionTablePolicyCheck {
     x86_scan_bootstrap_exception_table_policy(candidate, 32, true)
@@ -213,16 +221,16 @@ pub machine x86_validate_bootstrap_exception_table_policy(
 // fuel and therefore remains in 0..31.
 machine x86_scan_bootstrap_exception_table_policy(
     candidate: X86BootstrapExceptionTableCandidate,
-    remaining: u64 [1..=32],
+    remaining: u64,
     valid_so_far: bool
-)
-terminates by remaining;
--> X86BootstrapExceptionTablePolicyCheck
+) -> X86BootstrapExceptionTablePolicyCheck
+requires 1 <= remaining && remaining <= 32
+terminates by remaining
 {
-    let expected_vector: u64 [0..=31] = 32 - remaining;
+    let expected_vector: u64 = 32 - remaining;
     let vector: u8 = (expected_vector as u8 in Trapping) as u8;
-    let entry: X86BootstrapExceptionGateCandidate =
-        candidate.entries[expected_vector];
+    let entry: &X86BootstrapExceptionGateCandidate =
+        &candidate.entries[expected_vector];
     let policy: X86BootstrapExceptionEntryPolicy =
         x86_bootstrap_exception_entry_policy(vector);
     let still_valid: bool = valid_so_far &&
@@ -241,7 +249,7 @@ terminates by remaining;
         _ -> settle_table(candidate, still_valid)
     }
 
-    state settle_table(
+    machine settle_table(
         candidate: X86BootstrapExceptionTableCandidate,
         valid: bool
     ) -> X86BootstrapExceptionTablePolicyCheck {
@@ -251,13 +259,13 @@ terminates by remaining;
         }
     }
 
-    state accept_table(
+    machine accept_table(
         candidate: X86BootstrapExceptionTableCandidate
     ) -> X86BootstrapExceptionTablePolicyCheck {
         X86BootstrapExceptionTablePolicyCheck::PolicyConsistent { candidate: candidate }
     }
 
-    state reject_table() -> X86BootstrapExceptionTablePolicyCheck {
+    machine reject_table() -> X86BootstrapExceptionTablePolicyCheck {
         X86BootstrapExceptionTablePolicyCheck::Rejected
     }
 }
@@ -266,14 +274,14 @@ terminates by remaining;
 // role mandatory without assigning byte sizes or pretending that policy data
 // is a StackLease. WCSU and the selected target must still derive the actual
 // nonmoving storage provision for each coupled class/index.
-pub data X86BootstrapStackClassSet {
+public data X86BootstrapStackClassSet {
     double_fault: X86IstStackClass;
     nmi: X86IstStackClass;
     machine_check: X86IstStackClass;
     maskable_irq: X86IstStackClass;
 }
 
-pub data X86BootstrapStackClassSetPolicyCheck {
+public data X86BootstrapStackClassSetPolicyCheck {
     case Rejected;
     case PolicyConsistent(candidate: X86BootstrapStackClassSet);
 }
@@ -281,7 +289,7 @@ pub data X86BootstrapStackClassSetPolicyCheck {
 // Author the complete role-to-class policy once. Later stack provisioning and
 // TSS materialization consume the same record rather than independently
 // pairing analysis classes with hardware IST indices.
-pub machine x86_bootstrap_stack_class_set() -> X86BootstrapStackClassSet {
+public machine x86_bootstrap_stack_class_set() -> X86BootstrapStackClassSet {
     X86BootstrapStackClassSet {
         double_fault: X86_DOUBLE_FAULT_STACK,
         nmi: X86_NMI_STACK,
@@ -292,7 +300,7 @@ pub machine x86_bootstrap_stack_class_set() -> X86BootstrapStackClassSet {
 
 // Pure pre-provisioning validation. Success returns ordinary policy-consistent
 // data only; it grants no storage, placement, TSS, gate, or installation fact.
-pub machine x86_validate_bootstrap_stack_class_set(
+public machine x86_validate_bootstrap_stack_class_set(
     candidate: X86BootstrapStackClassSet
 ) -> X86BootstrapStackClassSetPolicyCheck {
     let expected: X86BootstrapStackClassSet = x86_bootstrap_stack_class_set();
@@ -310,7 +318,7 @@ pub machine x86_validate_bootstrap_stack_class_set(
         _ -> reject_stack_class_set()
     }
 
-    state accept_stack_class_set(
+    machine accept_stack_class_set(
         candidate: X86BootstrapStackClassSet
     ) -> X86BootstrapStackClassSetPolicyCheck {
         X86BootstrapStackClassSetPolicyCheck::PolicyConsistent {
@@ -318,31 +326,31 @@ pub machine x86_validate_bootstrap_stack_class_set(
         }
     }
 
-    state reject_stack_class_set() -> X86BootstrapStackClassSetPolicyCheck {
+    machine reject_stack_class_set() -> X86BootstrapStackClassSetPolicyCheck {
         X86BootstrapStackClassSetPolicyCheck::Rejected
     }
 }
 
-pub data X86EntryStackAssignment {
+public data X86EntryStackAssignment {
     vector: u8;
     stack: X86IstStackClass;
 }
 
-pub machine x86_double_fault_entry_stack() -> X86EntryStackAssignment {
+public machine x86_double_fault_entry_stack() -> X86EntryStackAssignment {
     X86EntryStackAssignment {
         vector: X86_EXCEPTION_DOUBLE_FAULT,
         stack: X86_DOUBLE_FAULT_STACK,
     }
 }
 
-pub machine x86_nmi_entry_stack() -> X86EntryStackAssignment {
+public machine x86_nmi_entry_stack() -> X86EntryStackAssignment {
     X86EntryStackAssignment {
         vector: X86_EXCEPTION_NON_MASKABLE_INTERRUPT,
         stack: X86_NMI_STACK,
     }
 }
 
-pub machine x86_machine_check_entry_stack() -> X86EntryStackAssignment {
+public machine x86_machine_check_entry_stack() -> X86EntryStackAssignment {
     X86EntryStackAssignment {
         vector: X86_EXCEPTION_MACHINE_CHECK,
         stack: X86_MACHINE_CHECK_STACK,

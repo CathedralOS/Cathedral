@@ -10,7 +10,7 @@ This is made possible by the underlying filesystem database, which allows for ne
 
 Cathedral supports update-in-place, removing the need for the vast majority of "restart to update" prompts that plague legacy operating systems.
 
-**Pre-alpha.** Cathedral has an executable Rust bring-up lab and an Omega kernel that reaches UEFI firmware exit, retains its memory roots, exercises resident allocations and indexed page access, and idles with ownership intact. The [boot frontier](source/kernel/boot/uefi/README.md) records the fresh-image QEMU checks, required compiler support and remaining work. The boot lab temporarily installs and checks a replacement mapping, restores firmware translations, and idles. Persistent kernel address-space activation, interrupts and scheduling are not established by that boot. There is no production Omega kernel yet.
+**Pre-alpha.** Cathedral's Omega kernel has booted under controlled QEMU/OVMF, left firmware, retained its memory roots and installed a 33-entry exception/timer table. Ordinary code observed eight advancing timer wakes; a separate stopped run checked eight interrupt returns, CPU state and retained guards. The [boot frontier](source/kernel/boot/uefi/README.md) and [qualification](wiki/boot/omega_uefi_qualification.md) record the exact image and conditions. The final build from reviewed Git dependencies reproduced the qualified image and passed both fresh boot checks. Persistent kernel address-space activation, scheduling, a desktop and real-hardware support remain unfinished. The executable Rust lab is a separate implementation.
 
 [Documentation map](wiki/README.md) ·
 [Specification](wiki/spec/README.md) ·

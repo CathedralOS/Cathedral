@@ -9,14 +9,16 @@
 // tiling and destination overlap before its post-handoff materializer may use
 // the plan.
 
-pub const PRESENT_RING0_INTERRUPT_GATE: u8 = 0x8E;
-pub const NO_IST: u8 = 0;
-pub const RESERVED_ZERO: u32 = 0;
+public const PRESENT_RING0_INTERRUPT_GATE: u8 = 0x8E;
+public const NO_IST: u8 = 0;
+public const RESERVED_ZERO: u32 = 0;
 
-pub data X86IdtGate [copy] {
+public data X86IdtGate [copy]
+requires 0 <= self.ist && self.ist <= 7 &&
+    0 <= self.reserved && self.reserved <= 0 {
     entry: u64;
     selector: u16;
-    ist: u8 [0..=7];
+    ist: u8;
     type_attributes: u8;
-    reserved: u32 [0..=0];
+    reserved: u32;
 }

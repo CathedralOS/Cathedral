@@ -231,7 +231,14 @@ machine plan(
 
         output.state.initial_regime = MachineRegime::X86Long64;
         output.state.permitted_transitive_use.general_registers = true;
+        // Entry code saves XMM registers and changes the stack and control flow.
+        output.state.permitted_transitive_use.vector_registers = true;
         output.state.permitted_transitive_use.flags = true;
+        output.state.permitted_transitive_use.instruction_pointer = true;
+        output.state.permitted_transitive_use.stack_pointer = true;
+        // Kernel setup loads descriptor tables and kernel segment selectors.
+        output.state.permitted_transitive_use.control_state = true;
+        output.state.permitted_transitive_use.segment_state = true;
         output.state.stack = EntryStack::ProviderSelected;
         output.state.preemption = Preemption::NotApplicable;
         BoundaryPlanResult::Accepted { plan: output }
@@ -291,7 +298,14 @@ machine plan(
         output.call.entry_control = EntryControl::CallReturn;
         output.state.initial_regime = MachineRegime::X86Long64;
         output.state.permitted_transitive_use.general_registers = true;
+        // Entry code saves XMM registers and changes the stack and control flow.
+        output.state.permitted_transitive_use.vector_registers = true;
         output.state.permitted_transitive_use.flags = true;
+        output.state.permitted_transitive_use.instruction_pointer = true;
+        output.state.permitted_transitive_use.stack_pointer = true;
+        // Kernel setup loads descriptor tables and kernel segment selectors.
+        output.state.permitted_transitive_use.control_state = true;
+        output.state.permitted_transitive_use.segment_state = true;
         output.state.stack = EntryStack::ProviderSelected;
         output.state.preemption = Preemption::NotApplicable;
         BoundaryPlanResult::Accepted { plan: output }

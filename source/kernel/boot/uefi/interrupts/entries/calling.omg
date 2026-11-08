@@ -1,0 +1,141 @@
+module entries::calling;
+use std::calling;
+
+// The generated arrival code reads IDT, GDT and task-register state. Include
+// those reads in each policy without claiming that it overwrites control state.
+
+// The checked body cannot return. Its interrupted activation has no resumed
+// continuation to preserve. InterruptReturn names the arrival family; the
+// admitted fatal protocol never restores or returns through the opaque frame.
+public InterruptedFatalCalling satisfies CallingPolicy {
+    machine plan(signature: BoundarySignature) -> BoundaryPlanResult {
+        transition signature.parameter_count == 1 && !signature.has_result {
+            true -> accept()
+            _ -> reject()
+        }
+        machine accept() -> BoundaryPlanResult {
+            let mut plan: BoundaryEntryPlan;
+            plan.call.convention = CallingConvention::SystemVAMD64;
+            plan.call.parameter_count = 1;
+            plan.call.parameters[0].shape = AbiValueShape { class: AbiValueClass::Integer, byte_size: 8, alignment: 8 };
+            plan.call.parameters[0].location_count = 1;
+            plan.call.parameters[0].locations[0] = ValueLocation::Register { register: MachineRegister::X86Rdi, value_byte_offset: 0, byte_size: 8 };
+            plan.call.stack_alignment = 16;
+            plan.call.entry_control = EntryControl::InterruptReturn;
+            plan.state.initial_regime = MachineRegime::X86Long64;
+            plan.state.permitted_transitive_use.general_registers = true;
+            plan.state.permitted_transitive_use.flags = true;
+            plan.state.permitted_transitive_use.instruction_pointer = true;
+            plan.state.permitted_transitive_use.stack_pointer = true;
+            plan.state.permitted_transitive_use.control_state = true;
+            plan.state.stack = EntryStack::Interrupted;
+            plan.state.preemption = Preemption::Masked;
+            BoundaryPlanResult::Accepted { plan: plan }
+        }
+        machine reject() -> BoundaryPlanResult {
+            BoundaryPlanResult::Rejected { reason: CallingPolicyRejection { reason: "fatal entry requires its installed context and cannot return" } }
+        }
+    }
+}
+
+// The checked body cannot return. Its interrupted activation has no resumed
+// continuation to preserve. InterruptReturn names the arrival family; the
+// admitted fatal protocol never restores or returns through the opaque frame.
+public DoubleFaultCalling satisfies CallingPolicy {
+    machine plan(signature: BoundarySignature) -> BoundaryPlanResult {
+        transition signature.parameter_count == 1 && !signature.has_result {
+            true -> accept()
+            _ -> reject()
+        }
+        machine accept() -> BoundaryPlanResult {
+            let mut plan: BoundaryEntryPlan;
+            plan.call.convention = CallingConvention::SystemVAMD64;
+            plan.call.parameter_count = 1;
+            plan.call.parameters[0].shape = AbiValueShape { class: AbiValueClass::Integer, byte_size: 8, alignment: 8 };
+            plan.call.parameters[0].location_count = 1;
+            plan.call.parameters[0].locations[0] = ValueLocation::Register { register: MachineRegister::X86Rdi, value_byte_offset: 0, byte_size: 8 };
+            plan.call.stack_alignment = 16;
+            plan.call.entry_control = EntryControl::InterruptReturn;
+            plan.state.initial_regime = MachineRegime::X86Long64;
+            plan.state.permitted_transitive_use.general_registers = true;
+            plan.state.permitted_transitive_use.flags = true;
+            plan.state.permitted_transitive_use.instruction_pointer = true;
+            plan.state.permitted_transitive_use.stack_pointer = true;
+            plan.state.permitted_transitive_use.control_state = true;
+            plan.state.stack = EntryStack::Dedicated { class: 1 };
+            plan.state.preemption = Preemption::Masked;
+            BoundaryPlanResult::Accepted { plan: plan }
+        }
+        machine reject() -> BoundaryPlanResult {
+            BoundaryPlanResult::Rejected { reason: CallingPolicyRejection { reason: "fatal entry requires its installed context and cannot return" } }
+        }
+    }
+}
+
+// The checked body cannot return. Its interrupted activation has no resumed
+// continuation to preserve. InterruptReturn names the arrival family; the
+// admitted fatal protocol never restores or returns through the opaque frame.
+public NmiFatalCalling satisfies CallingPolicy {
+    machine plan(signature: BoundarySignature) -> BoundaryPlanResult {
+        transition signature.parameter_count == 1 && !signature.has_result {
+            true -> accept()
+            _ -> reject()
+        }
+        machine accept() -> BoundaryPlanResult {
+            let mut plan: BoundaryEntryPlan;
+            plan.call.convention = CallingConvention::SystemVAMD64;
+            plan.call.parameter_count = 1;
+            plan.call.parameters[0].shape = AbiValueShape { class: AbiValueClass::Integer, byte_size: 8, alignment: 8 };
+            plan.call.parameters[0].location_count = 1;
+            plan.call.parameters[0].locations[0] = ValueLocation::Register { register: MachineRegister::X86Rdi, value_byte_offset: 0, byte_size: 8 };
+            plan.call.stack_alignment = 16;
+            plan.call.entry_control = EntryControl::InterruptReturn;
+            plan.state.initial_regime = MachineRegime::X86Long64;
+            plan.state.permitted_transitive_use.general_registers = true;
+            plan.state.permitted_transitive_use.flags = true;
+            plan.state.permitted_transitive_use.instruction_pointer = true;
+            plan.state.permitted_transitive_use.stack_pointer = true;
+            plan.state.permitted_transitive_use.control_state = true;
+            plan.state.stack = EntryStack::Dedicated { class: 2 };
+            plan.state.preemption = Preemption::Masked;
+            BoundaryPlanResult::Accepted { plan: plan }
+        }
+        machine reject() -> BoundaryPlanResult {
+            BoundaryPlanResult::Rejected { reason: CallingPolicyRejection { reason: "fatal entry requires its installed context and cannot return" } }
+        }
+    }
+}
+
+// The checked body cannot return. Its interrupted activation has no resumed
+// continuation to preserve. InterruptReturn names the arrival family; the
+// admitted fatal protocol never restores or returns through the opaque frame.
+public MachineCheckCalling satisfies CallingPolicy {
+    machine plan(signature: BoundarySignature) -> BoundaryPlanResult {
+        transition signature.parameter_count == 1 && !signature.has_result {
+            true -> accept()
+            _ -> reject()
+        }
+        machine accept() -> BoundaryPlanResult {
+            let mut plan: BoundaryEntryPlan;
+            plan.call.convention = CallingConvention::SystemVAMD64;
+            plan.call.parameter_count = 1;
+            plan.call.parameters[0].shape = AbiValueShape { class: AbiValueClass::Integer, byte_size: 8, alignment: 8 };
+            plan.call.parameters[0].location_count = 1;
+            plan.call.parameters[0].locations[0] = ValueLocation::Register { register: MachineRegister::X86Rdi, value_byte_offset: 0, byte_size: 8 };
+            plan.call.stack_alignment = 16;
+            plan.call.entry_control = EntryControl::InterruptReturn;
+            plan.state.initial_regime = MachineRegime::X86Long64;
+            plan.state.permitted_transitive_use.general_registers = true;
+            plan.state.permitted_transitive_use.flags = true;
+            plan.state.permitted_transitive_use.instruction_pointer = true;
+            plan.state.permitted_transitive_use.stack_pointer = true;
+            plan.state.permitted_transitive_use.control_state = true;
+            plan.state.stack = EntryStack::Dedicated { class: 3 };
+            plan.state.preemption = Preemption::Masked;
+            BoundaryPlanResult::Accepted { plan: plan }
+        }
+        machine reject() -> BoundaryPlanResult {
+            BoundaryPlanResult::Rejected { reason: CallingPolicyRejection { reason: "fatal entry requires its installed context and cannot return" } }
+        }
+    }
+}

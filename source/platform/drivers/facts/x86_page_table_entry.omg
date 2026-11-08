@@ -17,7 +17,11 @@ public const X86_PAGE_BYTES: u64 = 4096;
 public const X86_MAX_PHYSICAL_ADDRESS_BITS: u8 = 52;
 public const X86_PAGE_FRAME_NUMBER_MAX: u64 = 1099511627775;
 
-public data X86PageTableEntry {
+public data X86PageTableEntry
+requires 0 <= self.software_low && self.software_low <= 7 &&
+    0 <= self.frame_number && self.frame_number <= 1099511627775 &&
+    0 <= self.software_high && self.software_high <= 127 &&
+    0 <= self.protection_key && self.protection_key <= 15 {
     present: bool;
     writable: bool;
     user: bool;
@@ -27,10 +31,10 @@ public data X86PageTableEntry {
     dirty: bool;
     page_size_or_pat: bool;
     global: bool;
-    software_low: u8 [0..=7];
-    frame_number: u64 [0..=1099511627775];
-    software_high: u8 [0..=127];
-    protection_key: u8 [0..=15];
+    software_low: u8;
+    frame_number: u64;
+    software_high: u8;
+    protection_key: u8;
     no_execute: bool;
 }
 

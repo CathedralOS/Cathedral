@@ -1,0 +1,12 @@
+// Boot installs the exception handlers and timer, then retains their owners.
+machine build(builder: &mut Build) {
+    Build::package(builder, "cathedral_bootstrap_interrupts");
+    Build::depend_as(builder, "std", Source::Git {
+        repository: "https://github.com/CathedralOS/Omega.git",
+        revision: "64a843d84e992cad23222769065e18cdc107e2d6",
+        selection: PackageSelection::Named { package: "omega_language_std" }
+    });
+    Build::depend_as(builder, "arch", Source::Path { location: "../../../arch" });
+    Build::depend_as(builder, "core", Source::Path { location: "../../../core" });
+    Build::depend_as(builder, "facts", Source::Path { location: "../../../../platform/drivers/facts" });
+}

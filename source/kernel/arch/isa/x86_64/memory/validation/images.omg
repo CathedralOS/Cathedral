@@ -51,13 +51,14 @@ public machine x86_validate_empty_page_table_page(
 // a dirty slot from being forgotten by an early success path.
 machine x86_scan_empty_page_table_page(
     candidate: X86PageTablePageCandidate,
-    remaining: u64 [1..=512],
+    remaining: u64,
     zero_so_far: bool
 )
+requires 1 <= remaining && remaining <= 512
 terminates by remaining;
 -> X86EmptyPageTablePagePolicyCheck
 {
-    let index: u64 [0..=511] = X86_PAGE_TABLE_ENTRY_COUNT - remaining;
+    let index: u64 = X86_PAGE_TABLE_ENTRY_COUNT - remaining;
     let entry: &X86PageTableEntry = &candidate.entries[index];
     let still_zero: bool = zero_so_far && x86_page_table_entry_is_zero(entry);
     transition remaining > 1 {
@@ -205,13 +206,14 @@ public machine x86_validate_bootstrap_single_entry_page_image(
 // existing exact-zero starting policy.
 machine x86_scan_bootstrap_single_entry_page_image(
     candidate: X86BootstrapSingleEntryPageImageCandidate,
-    remaining: u64 [1..=512],
+    remaining: u64,
     consistent_so_far: bool
 )
+requires 1 <= remaining && remaining <= 512
 terminates by remaining;
 -> X86BootstrapSingleEntryPageImageCheck
 {
-    let index: u64 [0..=511] = X86_PAGE_TABLE_ENTRY_COUNT - remaining;
+    let index: u64 = X86_PAGE_TABLE_ENTRY_COUNT - remaining;
     let entry: &X86PageTableEntry = &candidate.page.entries[index];
     let selected: bool = index == candidate.step.index;
     let slot_consistent: bool =

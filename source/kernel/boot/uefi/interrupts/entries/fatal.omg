@@ -1,0 +1,299 @@
+module entries::fatal;
+use std::calling;
+use context::BootstrapInterruptContext;
+use entries::calling::InterruptedFatalCalling;
+use entries::calling::DoubleFaultCalling;
+use entries::calling::NmiFatalCalling;
+use entries::calling::MachineCheckCalling;
+use arch::isa::x86_64::interrupts::fatal::BootstrapFatalExceptionDiagnosticState;
+
+// Installing the table binds this shared context to every handler.
+// The CPU arrival frame does not supply the context argument.
+
+public boundary trait FatalVector00: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler00 satisfies FatalVector00 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[0], 0u32);
+    }
+}
+
+public boundary trait FatalVector01: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler01 satisfies FatalVector01 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[1], 1u32);
+    }
+}
+
+public boundary trait FatalVector02: Calling<NmiFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler02 satisfies FatalVector02 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[2], 2u32);
+    }
+}
+
+public boundary trait FatalVector03: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler03 satisfies FatalVector03 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[3], 3u32);
+    }
+}
+
+public boundary trait FatalVector04: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler04 satisfies FatalVector04 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[4], 4u32);
+    }
+}
+
+public boundary trait FatalVector05: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler05 satisfies FatalVector05 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[5], 5u32);
+    }
+}
+
+public boundary trait FatalVector06: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler06 satisfies FatalVector06 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[6], 6u32);
+    }
+}
+
+public boundary trait FatalVector07: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler07 satisfies FatalVector07 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[7], 7u32);
+    }
+}
+
+public boundary trait FatalVector08: Calling<DoubleFaultCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler08 satisfies FatalVector08 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[8], 8u32);
+    }
+}
+
+public boundary trait FatalVector09: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler09 satisfies FatalVector09 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[9], 9u32);
+    }
+}
+
+public boundary trait FatalVector10: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler10 satisfies FatalVector10 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[10], 10u32);
+    }
+}
+
+public boundary trait FatalVector11: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler11 satisfies FatalVector11 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[11], 11u32);
+    }
+}
+
+public boundary trait FatalVector12: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler12 satisfies FatalVector12 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[12], 12u32);
+    }
+}
+
+public boundary trait FatalVector13: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler13 satisfies FatalVector13 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[13], 13u32);
+    }
+}
+
+public boundary trait FatalVector14: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler14 satisfies FatalVector14 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[14], 14u32);
+    }
+}
+
+public boundary trait FatalVector15: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler15 satisfies FatalVector15 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[15], 15u32);
+    }
+}
+
+public boundary trait FatalVector16: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler16 satisfies FatalVector16 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[16], 16u32);
+    }
+}
+
+public boundary trait FatalVector17: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler17 satisfies FatalVector17 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[17], 17u32);
+    }
+}
+
+public boundary trait FatalVector18: Calling<MachineCheckCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler18 satisfies FatalVector18 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[18], 18u32);
+    }
+}
+
+public boundary trait FatalVector19: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler19 satisfies FatalVector19 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[19], 19u32);
+    }
+}
+
+public boundary trait FatalVector20: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler20 satisfies FatalVector20 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[20], 20u32);
+    }
+}
+
+public boundary trait FatalVector21: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler21 satisfies FatalVector21 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[21], 21u32);
+    }
+}
+
+public boundary trait FatalVector22: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler22 satisfies FatalVector22 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[22], 22u32);
+    }
+}
+
+public boundary trait FatalVector23: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler23 satisfies FatalVector23 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[23], 23u32);
+    }
+}
+
+public boundary trait FatalVector24: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler24 satisfies FatalVector24 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[24], 24u32);
+    }
+}
+
+public boundary trait FatalVector25: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler25 satisfies FatalVector25 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[25], 25u32);
+    }
+}
+
+public boundary trait FatalVector26: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler26 satisfies FatalVector26 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[26], 26u32);
+    }
+}
+
+public boundary trait FatalVector27: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler27 satisfies FatalVector27 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[27], 27u32);
+    }
+}
+
+public boundary trait FatalVector28: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler28 satisfies FatalVector28 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[28], 28u32);
+    }
+}
+
+public boundary trait FatalVector29: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler29 satisfies FatalVector29 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[29], 29u32);
+    }
+}
+
+public boundary trait FatalVector30: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler30 satisfies FatalVector30 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[30], 30u32);
+    }
+}
+
+public boundary trait FatalVector31: Calling<InterruptedFatalCalling> {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false;
+}
+public FatalHandler31 satisfies FatalVector31 {
+    machine enter(context: &BootstrapInterruptContext) reaches crashes Abort ensures false {
+        BootstrapFatalExceptionDiagnosticState::record_and_abort(&context.fatal[31], 31u32);
+    }
+}

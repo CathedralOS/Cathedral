@@ -79,6 +79,12 @@ public CathedralX86InterruptPolicy satisfies CallingPolicy {
             output.state.restored_state.stack_pointer = true;
             output.state.permitted_transitive_use.general_registers = true;
             output.state.permitted_transitive_use.flags = true;
+            // Calling the handler and returning from the interrupt use the
+            // stack and instruction pointers; the entry restores both.
+            output.state.permitted_transitive_use.instruction_pointer = true;
+            output.state.permitted_transitive_use.stack_pointer = true;
+            // IRETQ restores the saved CS/SS selectors.
+            output.state.permitted_transitive_use.segment_state = true;
             output.state.stack = EntryStack::Dedicated {
                 class: X86_MASKABLE_IRQ_STACK.stack_class,
             };
