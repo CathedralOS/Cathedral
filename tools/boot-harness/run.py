@@ -217,16 +217,22 @@ def main(arguments=None):
         if not qemu.is_file():
             raise ValueError('qemu-system-x86_64 unavailable; use --build-only or install QEMU.')
         serial = directory / 'serial.log'
-        invocation = [str(qemu), '-machine', 'q35', *firmware_arguments(qemu, directory),
+        invocation = [str(qemu), '-machine', 'q35', '-smp', '1',
+                      *firmware_arguments(qemu, directory),
                       '-drive', f'format=raw,file=fat:rw:{directory / "esp"}',
                       '-net', 'none', '-no-reboot', '-monitor', 'none',
                       '-serial', f'file:{serial}' if options.smoke else 'stdio',
                       '-debugcon', f'file:{directory / "ovmf-debug.log"}',
                       '-global', 'isa-debugcon.iobase=0x402']
+        if options.smoke:
+            invocation += ['-display', 'none']
+        # Record the exact VM configuration, including the single virtual CPU,
+        # before launch. This does not establish source-level CPU authority.
+        (directory / 'qemu-command.json').write_text(
+            json.dumps(invocation, indent=2) + '\n', encoding='utf-8')
         if not options.smoke:
             run_checked(invocation)
             return 0
-        invocation += ['-display', 'none']
         serial.write_bytes(b'')
         # The guest keeps its installation live, so timeout is not success by itself.
         # This run must produce every startup marker and the eight-wake result.
