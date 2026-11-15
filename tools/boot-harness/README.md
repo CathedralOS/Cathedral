@@ -46,7 +46,7 @@ python tools/boot-harness/run.py --compiler PATH_TO_OMEGA --smoke --bootstrap-as
 ```
 
 Alternatively use `run.sh` or `run.ps1` with the same arguments.
-`--prepare` runs ordinary `omega update` for dependency review; pending
+`--prepare` runs ordinary `omega packages update` for dependency review; pending
 decisions stop the command. Review them and resume using the compiler's
 instructions. Nothing is automatically accepted.
 Add `--timings` to print compiler stage durations during the fresh image build.
@@ -62,10 +62,10 @@ qualification records the conditions used for the controlled boot.
 
 Compiler selection is explicit `--compiler` / `OMEGA_BIN`, then a checkout
 at `--omega-repo` / `OMEGA_REPO` (default sibling `../Omega`), then an
-installed `omega`. The checkout route uses Cargo package `omega`, not the
-retired `omega-cli` name. Cargo runs from the Omega checkout so Rustup selects
-its pinned toolchain and Cargo reads its local configuration; Cathedral's host
-toolchain is not used to build Omega. An explicit optimized binary is preferable for
+installed `omega`. The checkout route runs `mbx run --locked -p omega` and requires
+[Mr Boxington](https://github.com/jdx/mr-boxington), Omega's build manager, on
+PATH. It runs from the Omega checkout so Rustup selects that checkout's pinned
+toolchain and Cargo reads its local configuration. An explicit optimized binary is preferable for
 repeated iterations. In isolated worktrees, supply the checkout or binary
 explicitly.
 
@@ -215,17 +215,17 @@ largest accepted one-past endpoint. A wrong result crashes; success exits 0.
 Eight additional cases exercise `exclude_image_suffix`: valid interior cuts,
 either storage ordering, boundaries outside the image or leaving an empty
 residual, and initial storage overlapping the retained tail. All twenty cases
-must succeed in both native and Terminal execution.
+must succeed in both native and Psi execution.
 
 ```text
-omega update --project tools/boot-harness/root-geometry
+omega packages update --project tools/boot-harness/root-geometry
 omega run --both tools/boot-harness/root-geometry/main.omg
 ```
 
 Complete ordinary package review if requested. The checkout-local lock is
 regenerated, not shared. Use an Omega compiler containing `711be509b7d2` or
 later for the payload reread proof repair this helper exercises. The native and
-Terminal runs validate numeric geometry only. The helper grants no storage,
+Psi runs validate numeric geometry only. The helper grants no storage,
 performs no firmware calls, and cannot establish stack survival or successful
 UEFI handoff. The boot transaction separately invokes this checker before exit.
 
@@ -241,7 +241,7 @@ uses Exact arithmetic. An arbitrary-input caller in the harness forbids Trap
 independently of the assertion helper, matching the kernel's crash restriction.
 
 ```text
-omega update --project tools/boot-harness/firmware-root
+omega packages update --project tools/boot-harness/firmware-root
 omega run --both tools/boot-harness/firmware-root/main.omg
 ```
 
@@ -257,7 +257,7 @@ numeric cases, including absent entries, child links, both large-page sizes,
 large-page PAT, reserved alignment bits, PT PAT and invalid levels.
 
 ```text
-omega update --project tools/boot-harness/table-walk
+omega packages update --project tools/boot-harness/table-walk
 omega run --both tools/boot-harness/table-walk/main.omg
 ```
 
@@ -277,7 +277,7 @@ changing the borrowed snapshot. This is numeric policy, not a
 root grant or hardware activation.
 
 ```text
-omega update --project tools/boot-harness/table-clone
+omega packages update --project tools/boot-harness/table-clone
 omega run --both tools/boot-harness/table-clone/main.omg
 ```
 

@@ -80,6 +80,7 @@ class BootHarnessTests(unittest.TestCase):
             repository = Path(temporary)
             (repository / 'Cargo.toml').touch()
             command, directory = boot.compiler_command(None, repository)
+            self.assertEqual(command[:3], ['mbx', 'run', '--locked'])
             self.assertEqual(command[-3:], ['-p', 'omega', '--'])
             self.assertEqual(directory, repository)
 
@@ -92,7 +93,7 @@ class BootHarnessTests(unittest.TestCase):
 
             def run_compiler(command, *, cwd=boot.ROOT):
                 self.assertEqual(cwd, repository)
-                self.assertEqual(command[0], 'cargo')
+                self.assertEqual(command[0], 'mbx')
                 calls.append(command)
                 if '--build-dir' in command:
                     output = Path(command[command.index('--build-dir') + 1])
@@ -104,7 +105,7 @@ class BootHarnessTests(unittest.TestCase):
                                     '--build-only', '--build-dir', str(Path(temporary) / 'output')])
             self.assertEqual(result, 0)
             self.assertEqual(len(calls), 2)
-            self.assertIn('update', calls[0])
+            self.assertEqual(calls[0][-6:-4], ['packages', 'update'])
             self.assertIn('--build-dir', calls[1])
 
     def test_installed_binary_keeps_cathedral_working_directory(self):

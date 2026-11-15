@@ -19,9 +19,8 @@ def compiler_command(binary, repository):
         return [str(Path(binary).resolve())], ROOT
     # A checkout is deliberately preferred to a possibly stale installed release.
     if (repository / 'Cargo.toml').is_file():
-        # Rustup and Cargo discover toolchain/configuration from cwd, not
-        # --manifest-path. Build with the producer checkout's own policy.
-        return (['cargo', 'run', '--locked', '--manifest-path',
+        # Run from Omega so its Rust toolchain and build settings apply.
+        return (['mbx', 'run', '--locked', '--manifest-path',
                  str(repository / 'Cargo.toml'), '-p', 'omega', '--'], repository)
     installed = shutil.which('omega')
     if installed:
@@ -171,7 +170,7 @@ def main(arguments=None):
                         default=Path(os.environ.get('OMEGA_REPO', ROOT.parent / 'Omega')))
     parser.add_argument('--build-only', action='store_true')
     parser.add_argument('--prepare', action='store_true',
-                        help='run ordinary omega update for dependency review before building')
+                        help='run omega packages update for dependency review before building')
     parser.add_argument('--bootstrap-assumptions', type=Path,
                         default=os.environ.get('OMEGA_BOOTSTRAP_ASSUMPTIONS'),
                         help='pass a reviewed bootstrap condition record to Omega')
@@ -193,7 +192,7 @@ def main(arguments=None):
         target = profile['target']
         command, compiler_directory = compiler_command(options.compiler, options.omega_repo.resolve())
         if options.prepare:
-            run_checked(command + ['update', '--project', str(entry.parent), '--target', target],
+            run_checked(command + ['packages', 'update', '--project', str(entry.parent), '--target', target],
                         cwd=compiler_directory)
         if options.timings:
             command = command + ['--timings']
