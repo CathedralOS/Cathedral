@@ -11,6 +11,20 @@ from locking import exclusive
 
 
 class BuildTests(unittest.TestCase):
+    def test_current_compiler_uses_package_commands_after_the_profile_option_was_retired(self):
+        missing = subprocess.CalledProcessError(2, ['omega', '--build-profile'],
+                                               stderr='unrecognized option `--build-profile`')
+        with patch.object(build.subprocess, 'check_output', side_effect=[
+                missing, '       omega packages update [package-or-alias...]', 'omega 0.1.0-dev\n']):
+            profile, update = build.compiler_commands(Path('omega'))
+        self.assertEqual(update, ['packages', 'update'])
+        self.assertEqual(profile, {'version': 'omega 0.1.0-dev'})
+
+    def test_legacy_compiler_must_report_an_optimized_profile(self):
+        with patch.object(build.subprocess, 'check_output', return_value='{"opt_level":"0"}'):
+            with self.assertRaisesRegex(ValueError, 'optimized'):
+                build.compiler_commands(Path('omega'))
+
     def test_dependency_and_output_changes_rebuild_but_an_intact_cache_does_not(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory).resolve()
@@ -43,6 +57,7 @@ class BuildTests(unittest.TestCase):
                 actual, paths = build.prepare(app, compiler)
                 self.assertEqual(actual, output)
                 self.assertIn(code, paths)
+                self.assertEqual(invoke.call_args_list[0].args[0][1], 'update')
                 self.assertEqual(invoke.call_count, 2)
                 build.prepare(app, compiler)
                 self.assertEqual(invoke.call_count, 2)

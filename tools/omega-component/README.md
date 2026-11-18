@@ -31,6 +31,12 @@ Cargo/editor/direct builds serialize on the output lock. Source changes during
 compilation refuse publication. Generated binaries and Omega package-manager
 workspaces are not checked in.
 
+When the selected compiler reports its build profile, the builder checks its
+optimization level before running `omega update`. Current Omega enforces
+optimization when building the compiler. The builder records its version and
+runs `omega packages update`. Source packages still need to compile and pass
+ordinary review with the selected compiler.
+
 Compiler review and compilation run through [process.py](process.py), with a
 12 GiB memory allowance and a twenty-minute deadline, since a change to the
 process runtime recompiles the whole stock matrix closure. On Windows a kernel job

@@ -17,6 +17,26 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def compiler_commands(compiler):
+    # Older desktop compilers report their optimization level. Current Omega
+    # enforces it when building the compiler and groups updates under packages.
+    try:
+        raw = subprocess.check_output([str(compiler), '--build-profile'], text=True,
+                                      stderr=subprocess.PIPE)
+    except subprocess.CalledProcessError as error:
+        if 'unrecognized option `--build-profile`' not in error.stderr:
+            raise
+        usage = subprocess.check_output([str(compiler), '--help'], text=True)
+        if 'omega packages update ' not in usage:
+            raise ValueError(f'Cannot identify package update command for {compiler}') from error
+        version = subprocess.check_output([str(compiler), '--version'], text=True).strip()
+        return {'version': version}, ['packages', 'update']
+    profile = json.loads(raw)
+    if profile.get('opt_level') not in ('1', '2', '3', 's', 'z'):
+        raise ValueError('an optimized Omega compiler is required')
+    return profile, ['update']
+
+
 def prepare(source, compiler=None):
     source = source.resolve()
     output = ROOT / 'build/omega-component' / source.relative_to(ROOT / 'source')
@@ -30,9 +50,7 @@ def prepare_locked(source, compiler, output):
     if not selected:
         raise ValueError('build the qualified producer in tools/omega-user/README.md or set OMEGA_BIN')
     compiler = Path(selected).resolve()
-    profile = json.loads(subprocess.check_output([str(compiler), '--build-profile'], text=True))
-    if profile.get('opt_level') not in ('1', '2', '3', 's', 'z'):
-        raise ValueError('an optimized Omega compiler is required')
+    profile, update = compiler_commands(compiler)
     # The native consumer and app plus their explicit local package dependencies.
     import re
     roots, pending = set(), [source]
@@ -57,7 +75,7 @@ def prepare_locked(source, compiler, output):
             return output, roots | paths
     output.mkdir(parents=True, exist_ok=True)
     for step, args in (
-        ('review', ['update', '--project', str(source), '--target', 'linux_x86_64', '--offline']),
+        ('review', [*update, '--project', str(source), '--target', 'linux_x86_64', '--offline']),
         ('compile', ['--target', 'linux_x86_64', '--build-dir', str(output / 'native'), str(source / 'main.omg')]),
     ):
         log = output / (step + '.log')
