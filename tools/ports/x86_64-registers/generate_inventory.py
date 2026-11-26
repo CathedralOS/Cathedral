@@ -28,7 +28,7 @@ methods={
 'src/registers/segmentation.rs':{78:'selector_new',84:'selector_new',88:'selector_index',94:'selector_rpl',100:'selector_set_rpl'},
 }
 for path,file in manifest['files'].items():
- file.update(disposition='translated',reason='Claimed pure register slice translated; live instruction methods, unrelated root modules and Rust-only boilerplate deliberately omitted with per-anchor reasons.',targets=[{'path':facts,'anchor':'module x86_registers;'}])
+ file.update(disposition='translated',reason='Claimed pure register slice translated; live instruction methods, unrelated root modules and Rust-only boilerplate deliberately omitted with per-anchor reasons.',targets=[{'path':facts,'anchor':'pub data Cr0Flags'}])
  for key,row in file['symbols'].items():
   number=int(key.split(':',1)[0]);name=key.split(':',1)[1];target=None
   if (path,number) in constant_by_line:target=(facts,'pub const '+constant_by_line[(path,number)])

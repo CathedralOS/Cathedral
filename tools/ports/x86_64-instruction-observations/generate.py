@@ -20,7 +20,7 @@ for method,bit in [('rdrand_bit',30),('smap_bit',20)]:
 omega+=['transition '+' &&\n'.join(checks)+' { true -> (0) _ -> (1) }','}','const RESULT:i32=test_result();','machine require_success(value:i32) requires value==0; {}','data Main{}','machine Main::main(&mut self){require_success(RESULT);}']
 helper='source/platform/libraries/x86_64/instruction_observations.omg'
 for path,file in m['files'].items():
- file.update(disposition='translated',reason='Only the detached CPUID register predicate is translated; live feature/probe/provider operations remain explicit boundaries.',targets=[{'path':helper,'anchor':'module instruction_observations;'}])
+ file.update(disposition='translated',reason='Only the detached CPUID register predicate is translated; live feature/probe/provider operations remain explicit boundaries.',targets=[{'path':helper,'anchor':'pub machine rdrand_bit'}])
  for key,row in file['symbols'].items():
   if key in ('10:new','36:new'):
    anchor='pub machine rdrand_bit' if path.endswith('random.rs') else 'pub machine smap_bit'

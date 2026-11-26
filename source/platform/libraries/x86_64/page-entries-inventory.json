@@ -764,7 +764,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/x86_64/page_entries.omg",
-          "anchor": "module page_entries;"
+          "anchor": "public const ADDRESS_MASK"
         }
       ]
     }

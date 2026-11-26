@@ -448,7 +448,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/x86_64/mapping_routes.omg",
-          "anchor": "module mapping_routes;"
+          "anchor": "pub data Request"
         }
       ]
     },
@@ -738,7 +738,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/x86_64/mapping_routes.omg",
-          "anchor": "module mapping_routes;"
+          "anchor": "pub data Request"
         }
       ]
     }

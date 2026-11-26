@@ -28,7 +28,7 @@ for key,row in m['files'][path]['symbols'].items():
   reason='Rust formatting/equality/scaffolding or integration-only test; no Omega algorithm claim and no compiler blocker.'
   if line in (495,511,521,870,880,882,893,1054,1060,1063,1131) or 720<=line<=796 or 1467<=line<=1639 or line>=1683:reason='Live instruction, handler function/calling convention, pointer lifetime, volatile saved-frame mutation, assembly return or handler macro integration deliberately excluded from detached numeric values.'
   row.update(disposition='omitted',reason=reason)
-m['files'][path].update(disposition='translated',reason='Bounded inert interrupt representations and pure codecs; all anchors individually classified.',targets=[{'path':facts,'anchor':'module x86_interrupts;'}])
+m['files'][path].update(disposition='translated',reason='Bounded inert interrupt representations and pure codecs; all anchors individually classified.',targets=[{'path':facts,'anchor':'pub data EntryOptions'}])
 m['private_representation_mappings']=[
  {'source':'Entry::{pointer_low,pointer_middle,pointer_high}','target':codecs+'::encode_gate/decode_gate','meaning':'Explicit16/16/32-bit little-endian fragments of existing X86IdtGate.entry.'},
  {'source':'Entry::options / EntryOptions::{cs,bits}','target':facts+'::EntryOptions and '+helpers+'::gate_options/gate_from_options','meaning':'Selector renamed from cs; raw16-bit options preserved, constrained gate rejects reserved IST bits.'},

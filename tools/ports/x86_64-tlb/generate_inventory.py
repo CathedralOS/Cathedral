@@ -20,7 +20,7 @@ notes={
 for path,file in m['files'].items():
  is_tlb=path.endswith('/tlb.rs')
  file.update(disposition='translated' if is_tlb else 'omitted',reason='Pure operand extraction; hardware tails explicitly excluded.' if is_tlb else notes[Path(path).name])
- if is_tlb:file['targets']=[{'path':helpers,'anchor':'module tlb_operands;'}]
+ if is_tlb:file['targets']=[{'path':helpers,'anchor':'pub data PcidResult'}]
  for key,row in file['symbols'].items():
   line,name=key.split(':',1);target=methods.get(int(line)) if is_tlb else None
   if target:

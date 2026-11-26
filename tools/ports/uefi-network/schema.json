@@ -292,11 +292,11 @@
         ],
         [
           "server_name",
-          "[Char8; 64]"
+          "[|scalars|::Char8; 64]"
         ],
         [
           "boot_file_name",
-          "[Char8; 128]"
+          "[|scalars|::Char8; 128]"
         ]
       ]
     },
@@ -592,11 +592,11 @@
       "omega_fields": [
         [
           "status",
-          "Status"
+          "|status|::Status"
         ],
         [
           "completion_event",
-          "Event"
+          "|scalars|::Event"
         ],
         [
           "remote_address",
@@ -756,7 +756,7 @@
         ],
         [
           "local_addr_is_ipv6",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "access_point",
@@ -812,7 +812,7 @@
       "omega_fields": [
         [
           "use_default_addr",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "local_address",
@@ -904,11 +904,11 @@
       "omega_fields": [
         [
           "event",
-          "Event"
+          "|scalars|::Event"
         ],
         [
           "status",
-          "Status"
+          "|status|::Status"
         ],
         [
           "message",
@@ -1256,7 +1256,7 @@
       "omega_fields": [
         [
           "is_started",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "max_packet_size",
@@ -1268,7 +1268,7 @@
         ],
         [
           "is_configured",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "group_count",
@@ -1396,23 +1396,23 @@
         ],
         [
           "accept_any_protocol",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "accept_icmp_errors",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "accept_broadcast",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "accept_promiscuous",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "use_default_address",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "station_address",
@@ -1432,11 +1432,11 @@
         ],
         [
           "do_not_fragment",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "raw_data",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "receive_timeout",
@@ -1512,7 +1512,7 @@
       "omega_fields": [
         [
           "name",
-          "[Char16; 32]"
+          "[|scalars|::Char16; 32]"
         ],
         [
           "if_type",
@@ -1840,19 +1840,19 @@
       "omega_fields": [
         [
           "use_m_cast",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "use_b_cast",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "use_u_cast",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "must_use_list",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "server_m_cast_ip",
@@ -1896,7 +1896,7 @@
         ],
         [
           "accept_any_response",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "reserved",
@@ -2128,71 +2128,71 @@
       "omega_fields": [
         [
           "started",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "ipv6_available",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "ipv6_supported",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "using_ipv6",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "bis_supported",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "bis_detected",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "auto_arp",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "send_guid",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "dhcp_discover_valid",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "dhcp_ack_received",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "proxy_offer_received",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "pxe_discover_valid",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "pxe_reply_received",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "pxe_bis_reply_received",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "icmp_error_received",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "tftp_error_received",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "make_callbacks",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "ttl",
@@ -2752,7 +2752,7 @@
         ],
         [
           "error_string",
-          "[Char8; 127]"
+          "[|scalars|::Char8; 127]"
         ]
       ]
     },
@@ -2888,7 +2888,7 @@
         ],
         [
           "wait_for_packet",
-          "Event"
+          "|scalars|::Event"
         ],
         [
           "mode",
@@ -3304,19 +3304,19 @@
         ],
         [
           "mac_address_changeable",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "multiple_tx_supported",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "media_present_supported",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "media_present",
-          "Boolean"
+          "|scalars|::Boolean"
         ]
       ]
     },
@@ -3536,7 +3536,7 @@
       "omega_fields": [
         [
           "use_default_address",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "station_address",
@@ -3560,7 +3560,7 @@
         ],
         [
           "active_flag",
-          "Boolean"
+          "|scalars|::Boolean"
         ]
       ]
     },
@@ -3676,23 +3676,23 @@
         ],
         [
           "enable_nagle",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "enable_time_stamp",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "enable_window_scaling",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "enable_selective_ack",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "enable_path_mtu_discovery",
-          "Boolean"
+          "|scalars|::Boolean"
         ]
       ]
     },
@@ -3716,11 +3716,11 @@
       "omega_fields": [
         [
           "event",
-          "Event"
+          "|scalars|::Event"
         ],
         [
           "status",
-          "Status"
+          "|status|::Status"
         ]
       ]
     },
@@ -3768,7 +3768,7 @@
         ],
         [
           "new_child_handle",
-          "Handle"
+          "|scalars|::Handle"
         ]
       ]
     },
@@ -3824,7 +3824,7 @@
         ],
         [
           "abort_on_close",
-          "Boolean"
+          "|scalars|::Boolean"
         ]
       ]
     },
@@ -3908,7 +3908,7 @@
       "omega_fields": [
         [
           "urgent",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "data_length",
@@ -3952,11 +3952,11 @@
       "omega_fields": [
         [
           "push",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "urgent",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "data_length",

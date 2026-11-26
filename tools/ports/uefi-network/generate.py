@@ -103,6 +103,10 @@ def translated_type(typ):
     if typ.startswith('['):
         inner, count = typ[1:-1].split(';')
         return '['+translated_type(inner.strip())+'; '+count.strip()+']'
+    if typ in {'Boolean','Char8','Char16','Event','Guid','Handle'}:
+        return '|scalars|::'+typ
+    if typ=='Status':
+        return '|status|::Status'
     return typ
 
 lines = ['// SPDX-License-Identifier: MIT OR Apache-2.0',
@@ -110,10 +114,7 @@ lines = ['// SPDX-License-Identifier: MIT OR Apache-2.0',
          '// See network.PORT.md; generator tools/ports/uefi-network/generate.py.',
          '// Inert raw x86-64 shapes. Addresses and function slots grant no authority.',
          '// Fixed foreign geometry is supplied separately, never inferred from native data.',
-         'module network;']
-for name in ['Boolean','Char8','Char16','Event','Guid','Handle']:
-    lines.append('use scalars::'+name+';')
-lines += ['use status::Status;', '']
+         'use scalars.omg;', 'use status.omg;', '']
 probe = ['// SPDX-License-Identifier: MIT OR Apache-2.0',
          '// Independent measurements of pinned Rust; never Cathedral target code.',
          'use core::mem::{size_of,align_of,offset_of};', 'fn main() {']
@@ -163,8 +164,8 @@ for constant in constants:
     if constant['kind'] == 'bytes':
         guid = uuid.UUID(constant['guid'])
         a,b,c,_,_,_ = guid.fields
-        value = f'Guid {{ data1: 0x{a:08x}, data2: 0x{b:04x}, data3: 0x{c:04x}, data4: ['+', '.join(f'0x{n:02x}' for n in guid.bytes[8:])+'] }'
-        lines.append('pub const '+name+': Guid = '+value+';')
+        value = f'|scalars|::Guid {{ data1: 0x{a:08x}, data2: 0x{b:04x}, data3: 0x{c:04x}, data4: ['+', '.join(f'0x{n:02x}' for n in guid.bytes[8:])+'] }'
+        lines.append('pub const '+name+': |scalars|::Guid = '+value+';')
         probe.append('{ let bytes = '+rust+'.to_bytes(); print!("'+name+'="); for b in bytes { print!("{:02x}", b); } println!(); }')
     else:
         typ=constant.get('primitive',constant['owner'])

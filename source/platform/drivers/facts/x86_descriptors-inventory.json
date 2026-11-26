@@ -634,7 +634,7 @@
       "targets": [
         {
           "path": "source/platform/drivers/facts/x86_descriptors.omg",
-          "anchor": "module x86_descriptors;"
+          "anchor": "public data DescriptorTablePointer"
         }
       ]
     },
@@ -1485,7 +1485,7 @@
       "targets": [
         {
           "path": "source/platform/drivers/facts/x86_descriptors.omg",
-          "anchor": "module x86_descriptors;"
+          "anchor": "public data DescriptorTablePointer"
         }
       ]
     },
@@ -1577,7 +1577,7 @@
       "targets": [
         {
           "path": "source/platform/drivers/facts/x86_descriptors.omg",
-          "anchor": "module x86_descriptors;"
+          "anchor": "public data DescriptorTablePointer"
         }
       ]
     },
@@ -1693,7 +1693,7 @@
       "targets": [
         {
           "path": "source/platform/drivers/facts/x86_descriptors.omg",
-          "anchor": "module x86_descriptors;"
+          "anchor": "public data DescriptorTablePointer"
         }
       ]
     }

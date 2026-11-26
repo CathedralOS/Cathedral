@@ -80,12 +80,12 @@ def mapped(t,mod):
     if t in {'Char16','QuestionId','ImageId','StringId','FormId','VarstoreId','AnimationId','DefaultId'}:return 'u16'
     if t in {'Char8','Boolean'}:return 'u8'
     if t in {'Handle','HiiHandle','FontHandle'}:return 'address'
-    if t=='Guid':return 'scalars::Guid'
-    if t=='GraphicsOutputBltPixel':return 'console::GraphicsOutputBltPixel'
+    if t=='Guid':return '|scalars|::Guid'
+    if t=='GraphicsOutputBltPixel':return '|console|::GraphicsOutputBltPixel'
     if t.startswith('['):
         base,count=t[1:-1].split(';');return '['+mapped(base.strip(),mod)+'; '+count.strip()+']'
     if t in records:
-        r=records[t];return ('' if r['module']==mod else r['module']+'::')+r['local']
+        r=records[t];return ('' if r['module']==mod else '|'+r['module']+'|::')+r['local']
     return t
 
 values={};measurements={};probe=['// SPDX-License-Identifier: MIT OR Apache-2.0','use core::mem::{size_of,align_of,offset_of};','fn main() {']
@@ -125,7 +125,7 @@ if not vpath.exists():
     print('probe ready; run measure.py --write, then rerun generation');sys.exit(0)
 measured=json.loads(vpath.read_text())['measurements']
 outputs={module(p):['// SPDX-License-Identifier: MIT OR Apache-2.0','// Modified rust-osdev/uefi-rs translation at '+PIN+'.','// See hii.PORT.md. Inert carriers; pointer/slot bits confer no authority.',
-                   'module '+module(p)+';','use scalars;','use console;'] for p in PATHS}
+                   'use scalars.omg;','use console.omg;'] for p in PATHS}
 for mod in outputs: outputs[mod].append('')
 schema=[];tails=[]
 for n,r in records.items():
@@ -151,30 +151,30 @@ for n,r in records.items():
 for c in constants:
     mod=module(c['path']);name=c['key'].split('::')[1]
     if 'guid' in c:
-        u=uuid.UUID(c['guid']);a,b,cc,_,_,_=u.fields;typ='scalars::Guid'
-        val=f'scalars::Guid {{ data1: 0x{a:08x}, data2: 0x{b:04x}, data3: 0x{cc:04x}, data4: ['+', '.join(f'0x{x:02x}' for x in u.bytes[8:])+'] }'
+        u=uuid.UUID(c['guid']);a,b,cc,_,_,_=u.fields;typ='|scalars|::Guid'
+        val=f'|scalars|::Guid {{ data1: 0x{a:08x}, data2: 0x{b:04x}, data3: 0x{cc:04x}, data4: ['+', '.join(f'0x{x:02x}' for x in u.bytes[8:])+'] }'
     else:
         typ=c['owner'] if c['type']=='Self' else mapped(c['type'],mod)
         val=typ+' { raw: '+str(c['value'])+' }' if c['type']=='Self' else str(c['value'])
     outputs[mod].append('pub const '+name+': '+typ+' = '+val+';')
 for mod,lines in outputs.items():
-    used={m for m in outputs if m!=mod and any(re.search(r'(?<![\w:])'+re.escape(m)+r'::',line) for line in lines if not line.lstrip().startswith('//'))}
-    lines[6:6]=['use '+m+';' for m in sorted(used)]
+    used={m for m in outputs if m!=mod and any('|'+m+'|::' in line for line in lines if not line.lstrip().startswith('//'))}
+    lines[5:5]=['use '+m+'.omg;' for m in sorted(used)]
     (OUT/(mod+'.omg')).write_text('\n'.join(lines)+'\n')
 (HERE/'schema.json').write_text(json.dumps(schema,indent=2)+'\n')
-plans=['// SPDX-License-Identifier: MIT OR Apache-2.0','// Fixed HII geometry; storage carriers do not establish union semantics.','module hii_layouts;','use omega::language::core::layout;','']
+plans=['// SPDX-License-Identifier: MIT OR Apache-2.0','// Fixed HII geometry; storage carriers do not establish union semantics.','use {omega}/language/core/layout.omg;','']
 for r in schema:
     name=r['name'];key=r['module']+'::'+name
-    plans.extend([f'pub data {name}X64Layout {{ }}',f'pub {name}X64Policy: {name}X64Layout satisfies Layout;',f'pub machine {name}X64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {{','    let mut entries: [FieldEntry; 64];'])
+    plans.extend([f'pub data {name}X64Layout {{ }}',f'pub {name}X64Policy: {name}X64Layout satisfies |layout|::Layout;',f'pub machine {name}X64Layout::plan(schema: |layout|::Schema) -> |layout|::Plan satisfies |layout|::Layout::plan {{','    let mut entries: [|layout|::FieldEntry; 64];'])
     for i,(f,t,original) in enumerate(r['fields']):
         offset=measured.get(key+'.'+original+'.offset',{'value':0})['value']
-        plans.append(f'    entries[{i}] = FieldEntry {{ key: schema.fields[{i}].key, placement: FieldPlan::At {{ offset: {offset} }} }};')
-    plans.extend(['    Plan { entries: entries, entry_count: '+str(len(r['fields']))+', size_fixed: '+str(measured[key+'.size']['value'])+', size_is_dynamic: false, align: '+str(measured[key+'.alignment']['value'])+' }','}',''])
+        plans.append(f'    entries[{i}] = |layout|::FieldEntry {{ key: schema.fields[{i}].key, placement: |layout|::FieldPlan::At {{ offset: {offset} }} }};')
+    plans.extend(['    |layout|::Plan { entries: entries, entry_count: '+str(len(r['fields']))+', size_fixed: '+str(measured[key+'.size']['value'])+', size_is_dynamic: false, align: '+str(measured[key+'.alignment']['value'])+' }','}',''])
 (OUT/'hii_layouts.omg').write_text('\n'.join(plans))
 # Exact source-owner mapping; formatter helpers are intentional non-ABI omissions.
 for path,entry in manifest['files'].items():
     mod=module(path);target='source/contracts/uefi/raw/'+mod+'.omg';text=(OUT/(mod+'.omg')).read_text()
-    entry.update(disposition='translated',targets=[{'path':target,'anchor':'module '+mod+';'}]);entry.pop('reason',None)
+    entry.update(disposition='translated',targets=[{'path':target,'anchor':inventory.omega_file_anchor(ROOT/target)}]);entry.pop('reason',None)
     s=sources[path]
     for key,row in entry['symbols'].items():
         line,name=key.split(':',1);pos=sum(len(x)+1 for x in s.splitlines()[:int(line)-1]);possible=[n for a,b,n in ranges[path] if a<=pos<=b]
@@ -189,7 +189,7 @@ for path,entry in manifest['files'].items():
             machine={'IfrDateFlags':'ifr_date_storage','IfrTimeFlags':'ifr_time_storage','IfrNumericFlags':'ifr_numeric_'+name}[owner]
             row.update(disposition='translated',targets=[{'path':'source/platform/libraries/uefi/hii_helpers.omg','anchor':'pub machine '+machine+'('}]);row.pop('reason',None);continue
         if anchor.startswith('pub mod'):
-            row.update(disposition='translated',targets=[{'path':target,'anchor':'module '+mod+';'}],reason='Rust submodule maps to separate hii_* source module.');continue
+            row.update(disposition='translated',targets=[{'path':target,'anchor':inventory.omega_file_anchor(ROOT/target)}],reason='Rust submodule maps to separate hii_* source module.');continue
         if owner in blocked:
             row.update(disposition='blocked',reason='omega:programmable-overlays: original typed union/member or enclosing type requires checked overlay semantics; mapped Storage only preserves inert backing.',targets=[{'path':target,'anchor':'pub data '+records[owner]['local']+' '}]);continue
         if re.search(r';\s*0\s*\]',anchor):

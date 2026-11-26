@@ -282,7 +282,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/x86_64/mapper_conveniences.omg",
-          "anchor": "module mapper_conveniences;"
+          "anchor": "pub data MappedFrame"
         }
       ]
     }

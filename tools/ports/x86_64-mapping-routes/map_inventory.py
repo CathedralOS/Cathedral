@@ -19,7 +19,7 @@ for path,file in doc['files'].items():
    row.update(disposition='translated',reason='Pure numeric method behavior is represented by captured route requests; Rust mutable mapper/allocator traits are not authority types.',targets=[dict(path=target,anchor='pub data Request [copy]')])
   elif path.endswith('/mod.rs') and name in {'MapToError','UnmapError','FlagUpdateError','TranslateError'}:
    row.update(disposition='translated',reason='Operation-specific semantic cases and payloads are retained by route Outcome wrapping the tested ChildPlan/LeafPlan; invalid raw inputs add explicit rejections.',targets=[dict(path=target,anchor='pub data Outcome [copy]')])
- file.update(disposition='pending',reason='Pure captured mapper routes are translated; cleanup, convenience wrappers and live authority/flush surfaces remain separate pending work.',targets=[dict(path=target,anchor='module mapping_routes;')])
+ file.update(disposition='pending',reason='Pure captured mapper routes are translated; cleanup, convenience wrappers and live authority/flush surfaces remain separate pending work.',targets=[dict(path=target,anchor='pub data Request')])
 text=json.dumps(doc,indent=2)+'\n';path=ROOT/'source/platform/libraries/x86_64/mapping-routes-inventory.json'
 if '--check' in sys.argv:assert path.read_text()==text,'stale route manifest'
 else:path.write_text(text)

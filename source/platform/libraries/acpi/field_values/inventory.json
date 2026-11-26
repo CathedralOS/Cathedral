@@ -760,7 +760,7 @@
           "reason": "Reuses existing canonical interpreter/buffer_fields::copy_bits to assemble validated detached words. This slice does not replace or claim the whole upstream helper/evaluator.",
           "targets": [
             {
-              "anchor": "buffer_fields::copy_bits(",
+              "anchor": "|buffer_fields|::copy_bits(",
               "path": "source/platform/libraries/acpi/field_values/read.omg"
             },
             {

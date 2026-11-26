@@ -518,7 +518,7 @@
       },
       "targets": [
         {
-          "anchor": "module encrypted_frames;",
+          "anchor": "pub data IteratorResult",
           "path": "source/platform/libraries/x86_64/encrypted_frames.omg"
         }
       ]

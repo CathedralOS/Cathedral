@@ -59,7 +59,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/x86_64/instruction_observations.omg",
-          "anchor": "module instruction_observations;"
+          "anchor": "pub machine rdrand_bit"
         }
       ]
     },
@@ -113,7 +113,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/x86_64/instruction_observations.omg",
-          "anchor": "module instruction_observations;"
+          "anchor": "pub machine rdrand_bit"
         }
       ]
     }

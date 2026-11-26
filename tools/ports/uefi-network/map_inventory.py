@@ -56,7 +56,7 @@ for source,file in doc['files'].items():
   symbol.update(value)
  file['disposition']='omitted' if not file['symbols'] else 'blocked' if any(v['disposition']=='blocked' for v in file['symbols'].values()) else 'translated'
  file['reason']='Complete lexical review; per-symbol mappings distinguish fixed raw carriers, pure behavior, presentation omissions and exact blocked tails/views.'
- if file['disposition']=='translated':file['targets']=[{'path':raw,'anchor':'module network;'}]
+ if file['disposition']=='translated':file['targets']=[{'path':raw,'anchor':'pub data Ipv4Address'}]
 path.write_text(json.dumps(doc,indent=2)+'\n')
 from collections import Counter
 print(Counter(v['disposition'] for f in doc['files'].values() for v in f['symbols'].values()))

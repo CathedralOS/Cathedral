@@ -15,7 +15,7 @@ methods={
  'src/structures/idt.rs':{1218:(facts,'pub data SelectorErrorCode'),1224:(helpers,'pub machine selector_error_valid'),1233:(helpers,'pub machine selector_error_truncate'),1241:(helpers,'pub machine selector_error_external'),1246:(helpers,'pub machine selector_error_table'),1257:(helpers,'pub machine selector_error_index'),1262:(helpers,'pub machine selector_error_is_null'),1281:(facts,'pub const DESCRIPTOR_TABLE_GDT')},
 }
 for path,file in m['files'].items():
- file.update(disposition='translated',reason='Bounded pure descriptor slice; every other declaration explicitly omitted below. Source hashes include all branches/private fields.',targets=[{'path':facts,'anchor':'module x86_descriptors;'}])
+ file.update(disposition='translated',reason='Bounded pure descriptor slice; every other declaration explicitly omitted below. Source hashes include all branches/private fields.',targets=[{'path':facts,'anchor':'public data DescriptorTablePointer'}])
  for key,row in file['symbols'].items():
   line,name=key.split(':',1);target=methods.get(path,{}).get(int(line))
   if path.endswith('/gdt.rs') and name in constants:target=(facts,'pub const DESCRIPTOR_'+name+':')

@@ -12,7 +12,7 @@ files[0]:{'266:write':'register_merge','519:write':'register_merge','340:read':'
 files[1]:{'280:write':'register_merge','411:read':'star_expand','605:read':'cet_observed','617:write':'cet_operand','651:read':'cet_observed','663:write':'cet_operand','682:read':'apic_observed','689:read_raw':'apic_observed','705:write':'apic_preserving_operand','723:write_raw':'apic_raw_operand'},
 files[2]:{'100:write':'register_merge'},files[3]:{'90:write':'xcr0_plan'},files[4]:{}}
 for f,row in m['files'].items():
- row.update(disposition='translated',reason='Complete source binding for a bounded extracted numeric recipe or exact PCID mirror; instruction execution and surrounding live APIs are not translated.',targets=[{'path':helper,'anchor':'module register_operands;'}])
+ row.update(disposition='translated',reason='Complete source binding for a bounded extracted numeric recipe or exact PCID mirror; instruction execution and surrounding live APIs are not translated.',targets=[{'path':helper,'anchor':'pub data RegisterKind'}])
  assert set(maps[f])<=set(row['symbols']),(f,set(maps[f])-set(row['symbols']))
  for key,s in row['symbols'].items():
   if key in maps[f]:s.update(disposition='translated',reason='Only detached observation/operand computation is implemented. CPU read/write/feature/lifetime/invalidation authority deliberately remains outside this result.',targets=[{'path':helper,'anchor':'pub machine '+maps[f][key]+'('}])

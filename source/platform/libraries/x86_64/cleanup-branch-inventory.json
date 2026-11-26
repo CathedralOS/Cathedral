@@ -274,7 +274,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/x86_64/cleanup_branch.omg",
-          "anchor": "module cleanup_branch;"
+          "anchor": "pub data CleanupPlan"
         }
       ]
     }

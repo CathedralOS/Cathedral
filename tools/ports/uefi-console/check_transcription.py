@@ -24,7 +24,7 @@ def geometry(module,typ):
     if typ in {'u32','i32'}:return 4,4
     if typ in {'u16','i16'}:return 2,2
     if typ in {'u8','i8'}:return 1,1
-    if typ=='scalars::Guid':return 16,4
+    if typ=='|scalars|::Guid':return 16,4
     if typ.startswith('['):
         base,num=typ[1:-1].split(';');size,align=geometry(module,base.strip());return size*int(num),align
     key=(module,typ)
@@ -69,8 +69,8 @@ print(f'{len(records)} inert records and {count} constants agree with pinned Rus
 
 plans=(RAW/'console_layouts.omg').read_text()
 for (module,name),fields in records.items():
-    body=re.search(r'pub machine '+name+r'X64Layout::plan\(schema: Schema\) -> Plan satisfies Layout::plan \{(.*?)\n\}',plans,re.S)[1]
-    found=re.findall(r'entries\[(\d+)\] = FieldEntry \{ key: schema.fields\[(\d+)\].key, placement: FieldPlan::At \{ offset: (\d+) \}',body)
+    body=re.search(r'pub machine '+name+r'X64Layout::plan\(schema: \|layout\|::Schema\) -> \|layout\|::Plan satisfies \|layout\|::Layout::plan \{(.*?)\n\}',plans,re.S)[1]
+    found=re.findall(r'entries\[(\d+)\] = \|layout\|::FieldEntry \{ key: schema.fields\[(\d+)\].key, placement: \|layout\|::FieldPlan::At \{ offset: (\d+) \}',body)
     expected=[]
     for index,(field,_) in enumerate(fields):
         offset=vector.get(module+'::'+name+'.'+field+'.offset',{'value':0})['value']

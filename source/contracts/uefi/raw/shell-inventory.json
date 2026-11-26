@@ -626,7 +626,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/shell_protocols.omg",
-          "anchor": "module shell_protocols;"
+          "anchor": "pub data ListEntry"
         }
       ]
     }

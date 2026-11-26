@@ -762,11 +762,11 @@
           "reason": "The same lower-bit-first copy arithmetic is composed via existing field_to_integer extraction and chunks::merge; no whole upstream helper or object execution claim.",
           "targets": [
             {
-              "anchor": "buffer_fields::field_to_integer(",
+              "anchor": "|buffer_fields|::field_to_integer(",
               "path": "source/platform/libraries/acpi/field_writes/write.omg"
             },
             {
-              "anchor": "chunks::merge(",
+              "anchor": "|chunks|::merge(",
               "path": "source/platform/libraries/acpi/field_writes/write.omg"
             }
           ]
@@ -777,7 +777,7 @@
           "reason": "Reuses aligned native geometry from the existing field_access planner; no new address or hardware authority.",
           "targets": [
             {
-              "anchor": "geometry::plan(",
+              "anchor": "|geometry|::plan(",
               "path": "source/platform/libraries/acpi/field_writes/write.omg"
             }
           ]

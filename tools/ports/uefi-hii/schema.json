@@ -24,7 +24,7 @@
     "fields": [
       [
         "package_list_guid",
-        "scalars::Guid",
+        "|scalars|::Guid",
         "package_list_guid"
       ],
       [
@@ -185,7 +185,7 @@
       ],
       [
         "guid",
-        "scalars::Guid",
+        "|scalars|::Guid",
         "guid"
       ],
       [
@@ -459,7 +459,7 @@
       ],
       [
         "guid",
-        "scalars::Guid",
+        "|scalars|::Guid",
         "guid"
       ],
       [
@@ -676,12 +676,12 @@
     "fields": [
       [
         "foreground_color",
-        "console::GraphicsOutputBltPixel",
+        "|console|::GraphicsOutputBltPixel",
         "foreground_color"
       ],
       [
         "background_color",
-        "console::GraphicsOutputBltPixel",
+        "|console|::GraphicsOutputBltPixel",
         "background_color"
       ],
       [
@@ -1675,7 +1675,7 @@
       ],
       [
         "method_identifier",
-        "scalars::Guid",
+        "|scalars|::Guid",
         "method_identifier"
       ]
     ],
@@ -1719,7 +1719,7 @@
       ],
       [
         "guid",
-        "scalars::Guid",
+        "|scalars|::Guid",
         "guid"
       ],
       [
@@ -1836,7 +1836,7 @@
       ],
       [
         "guid",
-        "scalars::Guid",
+        "|scalars|::Guid",
         "guid"
       ]
     ],
@@ -1995,7 +1995,7 @@
       ],
       [
         "syntax_type",
-        "scalars::Guid",
+        "|scalars|::Guid",
         "syntax_type"
       ]
     ],
@@ -2620,7 +2620,7 @@
       ],
       [
         "guid",
-        "scalars::Guid",
+        "|scalars|::Guid",
         "guid"
       ]
     ],
@@ -2729,7 +2729,7 @@
       ],
       [
         "formset_id",
-        "scalars::Guid",
+        "|scalars|::Guid",
         "formset_id"
       ]
     ],
@@ -2765,7 +2765,7 @@
       ],
       [
         "formset_id",
-        "scalars::Guid",
+        "|scalars|::Guid",
         "formset_id"
       ],
       [
@@ -2833,7 +2833,7 @@
       ],
       [
         "refresh_event_group_id",
-        "scalars::Guid",
+        "|scalars|::Guid",
         "refresh_event_group_id"
       ]
     ],
@@ -2922,7 +2922,7 @@
       ],
       [
         "permissions",
-        "scalars::Guid",
+        "|scalars|::Guid",
         "permissions"
       ]
     ],
@@ -3523,7 +3523,7 @@
       ],
       [
         "guid",
-        "scalars::Guid",
+        "|scalars|::Guid",
         "guid"
       ],
       [
@@ -3561,7 +3561,7 @@
       ],
       [
         "guid",
-        "scalars::Guid",
+        "|scalars|::Guid",
         "guid"
       ]
     ],
@@ -3587,7 +3587,7 @@
       ],
       [
         "guid",
-        "scalars::Guid",
+        "|scalars|::Guid",
         "guid"
       ],
       [

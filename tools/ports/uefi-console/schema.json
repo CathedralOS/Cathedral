@@ -1009,7 +1009,7 @@
       ],
       [
         "vendor_guid",
-        "scalars::Guid"
+        "|scalars|::Guid"
       ]
     ],
     "packed": true,
@@ -1610,7 +1610,7 @@
       ],
       [
         "vendor_guid",
-        "scalars::Guid"
+        "|scalars|::Guid"
       ]
     ],
     "packed": true,
@@ -2148,7 +2148,7 @@
       ],
       [
         "vendor_guid",
-        "scalars::Guid"
+        "|scalars|::Guid"
       ]
     ],
     "packed": true,
@@ -2182,7 +2182,7 @@
       ],
       [
         "protocol_guid",
-        "scalars::Guid"
+        "|scalars|::Guid"
       ]
     ],
     "packed": true,
@@ -2292,7 +2292,7 @@
     "fields": [
       [
         "raw",
-        "scalars::Guid"
+        "|scalars|::Guid"
       ]
     ],
     "packed": false,

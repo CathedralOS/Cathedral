@@ -10,7 +10,7 @@ value['scope']='Explicit current-encryption-bit frame numeric algorithms and det
 selectors={26:'from_start',65:'from_pfn',88:'from_pfn',122:'containing',132:'from_start',139:'start_valid',160:'pfn',167:'range_count',174:'range_count',192:'arithmetic',199:'arithmetic',207:'arithmetic',214:'arithmetic',222:'difference',240:'range_count',246:'range_count',256:'range_bytes',265:'iterator_step',275:'iterator_step',298:'range_count',308:'iterator_step',317:'iterator_step',381:'range_count',387:'range_count',397:'range_bytes',406:'iterator_step',425:'iterator_step',448:'range_count',458:'iterator_step',476:'iterator_step'}
 for path,file in value['files'].items():
  available={int(k.split(':',1)[0])for k in file['symbols']};assert set(selectors)<=available,set(selectors)-available
- file.update(disposition='translated',reason='Numeric expression/state-transition component with checked admission and explicit iterator failures; nominal/trait/proof infrastructure deliberately outside the component.',targets=[{'path':target,'anchor':'module encrypted_frames;'}])
+ file.update(disposition='translated',reason='Numeric expression/state-transition component with checked admission and explicit iterator failures; nominal/trait/proof infrastructure deliberately outside the component.',targets=[{'path':target,'anchor':'pub data IteratorResult'}])
  for key,row in file['symbols'].items():
   line=int(key.split(':',1)[0]);name=key.split(':',1)[1]
   if line in selectors:row.update(disposition='translated',reason='Explicit-profile numeric operation; checked NumberResult or detached cursor result replaces nominal wrapper and panic. Full cursor update order compared with actual pinned public iterators.',targets=[{'path':target,'anchor':'pub machine '+selectors[line]+'('}])

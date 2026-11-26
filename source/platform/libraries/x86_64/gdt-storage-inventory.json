@@ -433,7 +433,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/x86_64/gdt_storage.omg",
-          "anchor": "module gdt_storage;"
+          "anchor": "pub data Table"
         }
       ]
     }

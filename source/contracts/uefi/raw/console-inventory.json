@@ -25,7 +25,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/console.omg",
-              "anchor": "module console;"
+              "anchor": "pub data AbsolutePointerModeAttributes"
             }
           ]
         },
@@ -236,7 +236,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/console.omg",
-              "anchor": "module console;"
+              "anchor": "pub data AbsolutePointerModeAttributes"
             }
           ]
         },
@@ -687,7 +687,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/console.omg",
-              "anchor": "module console;"
+              "anchor": "pub data AbsolutePointerModeAttributes"
             }
           ]
         },
@@ -838,7 +838,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/console.omg",
-              "anchor": "module console;"
+              "anchor": "pub data AbsolutePointerModeAttributes"
             }
           ]
         },
@@ -1019,7 +1019,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/console.omg",
-              "anchor": "module console;"
+              "anchor": "pub data AbsolutePointerModeAttributes"
             }
           ]
         },
@@ -1080,7 +1080,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/console.omg",
-              "anchor": "module console;"
+              "anchor": "pub data AbsolutePointerModeAttributes"
             }
           ]
         },
@@ -1121,7 +1121,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/console.omg",
-              "anchor": "module console;"
+              "anchor": "pub data AbsolutePointerModeAttributes"
             }
           ]
         },
@@ -1509,7 +1509,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/console.omg",
-          "anchor": "module console;"
+          "anchor": "pub data AbsolutePointerModeAttributes"
         }
       ]
     },
@@ -1844,7 +1844,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/serial.omg",
-              "anchor": "module serial;"
+              "anchor": "pub data ControlBits"
             }
           ]
         },
@@ -2022,7 +2022,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/serial.omg",
-          "anchor": "module serial;"
+          "anchor": "pub data ControlBits"
         }
       ]
     },
@@ -2037,7 +2037,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/device_path.omg",
-              "anchor": "module device_path;"
+              "anchor": "pub data DevicePathProtocol"
             }
           ]
         },
@@ -2048,7 +2048,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/device_path.omg",
-              "anchor": "module device_path;"
+              "anchor": "pub data DevicePathProtocol"
             }
           ]
         },
@@ -2921,7 +2921,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/device_path.omg",
-          "anchor": "module device_path;"
+          "anchor": "pub data DevicePathProtocol"
         }
       ]
     },
@@ -2936,7 +2936,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/device_path.omg",
-              "anchor": "module device_path;"
+              "anchor": "pub data DevicePathProtocol"
             }
           ]
         },
@@ -2987,7 +2987,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/device_path.omg",
-              "anchor": "module device_path;"
+              "anchor": "pub data DevicePathProtocol"
             }
           ]
         },
@@ -3239,7 +3239,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/device_path.omg",
-              "anchor": "module device_path;"
+              "anchor": "pub data DevicePathProtocol"
             }
           ]
         },
@@ -3412,7 +3412,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/device_path.omg",
-              "anchor": "module device_path;"
+              "anchor": "pub data DevicePathProtocol"
             }
           ]
         },
@@ -5090,7 +5090,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/device_path.omg",
-              "anchor": "module device_path;"
+              "anchor": "pub data DevicePathProtocol"
             }
           ]
         },
@@ -5525,7 +5525,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/device_path.omg",
-              "anchor": "module device_path;"
+              "anchor": "pub data DevicePathProtocol"
             }
           ]
         },
@@ -5584,7 +5584,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/device_path.omg",
-          "anchor": "module device_path;"
+          "anchor": "pub data DevicePathProtocol"
         }
       ]
     },
@@ -5746,7 +5746,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/loaded_image.omg",
-          "anchor": "module loaded_image;"
+          "anchor": "pub data LoadedImageProtocol"
         }
       ]
     },
@@ -5858,7 +5858,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/load_file.omg",
-          "anchor": "module load_file;"
+          "anchor": "pub data LoadFileProtocol"
         }
       ]
     },
@@ -5950,7 +5950,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/shell_params.omg",
-          "anchor": "module shell_params;"
+          "anchor": "pub data ShellParametersProtocol"
         }
       ]
     }
