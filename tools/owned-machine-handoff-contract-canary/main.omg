@@ -1,4 +1,4 @@
-// Compile-only host for Main::own_machine. This supplies its existing receiver
+// Compile-only host for own_machine. This supplies its existing receiver
 // shape without importing or selecting the transitional firmware entry.
 
 use {boot}/firmware/ownership/ownership.omg;

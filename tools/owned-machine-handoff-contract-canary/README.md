@@ -65,7 +65,7 @@ uses an installed `omega`, a built sibling `../Omega/target/debug/omega`, or
 builds that sibling with Cargo, in that order. Artifact validation uses `jq`
 and fails with an explicit dependency error when it is unavailable.
 
-The canary compiles and inspects `Main::own_machine` but never calls it. It does
+The canary compiles and inspects `own_machine` but never calls it. It does
 not select or generate the UEFI program-entry stub, compose physical firmware
 inputs with semantic roots, call firmware, grant memory, perform port I/O, or
 execute `hlt`.

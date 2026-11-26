@@ -75,7 +75,7 @@ requires address::Bound == 18446744073709551616
     {
         // Walk the memory map, exit Boot Services, obtain the first qualified
         // Extent, then idle retaining it. The success route does not return.
-        |ownership|::Main::own_machine(context, handle, table);
+        |ownership|::own_machine(context, handle, table);
         transition { _ -> (|uefi|::EFI_SUCCESS) }
     }
 }

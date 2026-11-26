@@ -63,7 +63,7 @@ data KernelRoots {
 // allocated memory and not an Extent. Cathedral advertises 16 KiB first and
 // uses the remaining provision only after an exact EFI_BUFFER_TOO_SMALL result
 // reports a requirement within the fixed ceiling.
-machine Main::own_machine(context: &mut |firmware|::Main, handle: |uefi|::EfiHandle, table: &|uefi|::EfiSystemTable)
+public machine own_machine(context: &mut |firmware|::Main, handle: |uefi|::EfiHandle, table: &|uefi|::EfiSystemTable)
 reaches |boot_services|::BootServices + |core_extent|::ExtentRootProvider + |core_extent|::ProgramStorageEntry + |layout|::ResourceProfileSupply + |assembly|::PortIo + |assembly|::MachineControl
 requires address::Bound == 18446744073709551616
 {
