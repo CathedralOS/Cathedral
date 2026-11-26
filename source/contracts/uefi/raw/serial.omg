@@ -30,26 +30,26 @@ pub data SerialIoProtocolRevision [copy] {
 // Upstream: uefi_raw::protocol::console::serial::SerialIoProtocol
 pub data SerialIoProtocol [copy] {
     revision: SerialIoProtocolRevision;
-    reset: addr;
+    reset: address;
     // Foreign carrier: unsafe extern "efiapi" fn(*mut Self) -> Status
-    set_attributes: addr;
+    set_attributes: address;
     // Foreign carrier: unsafe extern "efiapi" fn( *mut Self, baud_rate: u64, receive_fifo_depth: u32, timeout: u32, parity: Parity, data_bits: u8, stop_bits_type: StopBits, ) -> Status
-    set_control_bits: addr;
+    set_control_bits: address;
     // Foreign carrier: unsafe extern "efiapi" fn(*mut Self, ControlBits) -> Status
-    get_control_bits: addr;
+    get_control_bits: address;
     // Foreign carrier: unsafe extern "efiapi" fn(*const Self, *mut ControlBits) -> Status
-    write: addr;
+    write: address;
     // Foreign carrier: unsafe extern "efiapi" fn(*mut Self, *mut usize, *const u8) -> Status
-    read: addr;
+    read: address;
     // Foreign carrier: unsafe extern "efiapi" fn(*mut Self, *mut usize, *mut u8) -> Status
-    mode: addr;
+    mode: address;
     // Foreign carrier: *const SerialIoMode
 }
 
 // Upstream: uefi_raw::protocol::console::serial::SerialIoProtocol_1_1
 pub data SerialIoProtocol_1_1 [copy] {
     base_protocol: SerialIoProtocol;
-    device_type_guid: addr;
+    device_type_guid: address;
     // Foreign carrier: *const Guid
 }
 

@@ -1109,7 +1109,7 @@ def has_granted_extent_parameter:
           ($own.statements[0].initial_value == {
             kind: "cast",
             value: {kind: "name", path: ["best_start"]},
-            target_type: {kind: "named", name: "addr"},
+            target_type: {kind: "named", name: "address"},
             semantic_domain: [],
             semantic_domain_symbol: 0,
             semantic_domain_id: 0

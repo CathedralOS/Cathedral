@@ -52,7 +52,7 @@ machine MappingExercise::verified(attempt: &MappingAttempt) -> bool {
 }
 
 machine MappingExercise::root(tables: &PreparedPageTables) -> u64
-requires addr::Bound == 18446744073709551616
+requires address::Bound == 18446744073709551616
 {
     transition tables {
         PreparedPageTables::Ready { storage } -> (storage.base as u64)
@@ -66,7 +66,7 @@ requires addr::Bound == 18446744073709551616
 // read every physical page. Every recoverable refusal returns all claims.
 machine MappingExercise::run(tables: BootPageTables, destination: Extent in Granted & BootVirtualDestination,
                              inventory: &FirmwareTableInventory, firmware_root: u64) -> MappingAttempt
-requires addr::Bound == 18446744073709551616
+requires address::Bound == 18446744073709551616
 reaches ResourceProfileSupply + MachineControl + BootTranslation
 crashes Abort
 {
@@ -80,7 +80,7 @@ crashes Abort
     }
     machine allocate(tables: BootPageTables, destination: Extent in Granted & BootVirtualDestination,
                    inventory: &FirmwareTableInventory, firmware_root: u64, root: u64) -> MappingAttempt
-    requires addr::Bound == 18446744073709551616 && tables.reservation.tail.length >= MAPPING_BYTE_COUNT
+    requires address::Bound == 18446744073709551616 && tables.reservation.tail.length >= MAPPING_BYTE_COUNT
     {
         let verified: bool = tables.reservation.verified;
         let parts: VacantExtentParts = split_vacant_extent(tables.reservation.tail, MAPPING_BYTE_COUNT);
@@ -103,7 +103,7 @@ crashes Abort
                 source: Extent in Granted & Resident<MappingRegionPlacement, MappingRegion>,
                 destination: Extent in Granted & BootVirtualDestination,
                 inventory: &FirmwareTableInventory, firmware_root: u64, root: u64) -> MappingAttempt
-    requires addr::Bound == 18446744073709551616
+    requires address::Bound == 18446744073709551616
     {
         transition MappingHandoff::clone(inventory, firmware_root, root,
             source.base as u64, destination.base as u64, source.length) {
@@ -118,7 +118,7 @@ crashes Abort
                   source: Extent in Granted & Resident<MappingRegionPlacement, MappingRegion>,
                   destination: Extent in Granted & BootVirtualDestination,
                   firmware_root: u64, image: X86ClonedPageTables) -> MappingAttempt
-    requires addr::Bound == 18446744073709551616
+    requires address::Bound == 18446744073709551616
     {
         let padding: MappingPadding = MappingPadding {
             leading: tables.leading, target: tables.target_padding,
@@ -138,7 +138,7 @@ crashes Abort
                           destination: Extent in Granted & BootVirtualDestination,
                           tables: Extent in Granted & Resident<InactivePageTablePlacement, InactivePageTables>,
                           firmware_root: u64, image: X86ClonedPageTables) -> MappingAttempt
-    requires addr::Bound == 18446744073709551616
+    requires address::Bound == 18446744073709551616
     {
         transition NativeAccess<InactivePageTablePlacement, InactivePageTables, BootMemory>::move_out(tables) {
             AccessExtraction::Moved { storage, value } -> program(padding, source, destination, storage, firmware_root, image)
@@ -148,7 +148,7 @@ crashes Abort
                   source: Extent in Granted & Resident<MappingRegionPlacement, MappingRegion>,
                   destination: Extent in Granted & BootVirtualDestination, tables: Extent in Granted & Vacant,
                   firmware_root: u64, image: X86ClonedPageTables) -> MappingAttempt
-    requires addr::Bound == 18446744073709551616
+    requires address::Bound == 18446744073709551616
     {
         let mut pending: BootMapping = BootMapping {
             source: source, destination: destination, tables: tables,
@@ -163,7 +163,7 @@ crashes Abort
         }
     }
     machine activate(padding: MappingPadding, pending: BootMapping) -> MappingAttempt
-    requires addr::Bound == 18446744073709551616
+    requires address::Bound == 18446744073709551616
     {
         let mut retained: BootMapping = pending;
         let mapped: bool = BootTranslation::exercise(&mut retained);

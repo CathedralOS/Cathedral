@@ -24,33 +24,33 @@ public data MapKey [copy] { raw: u64; }   // UINTN; freshness is a call contract
 // get_memory_map (5th) and exit_boot_services (27th).
 public data BootServicesTable {
     hdr:                          EfiTableHeader;
-    raise_tpl:                    addr;
-    restore_tpl:                  addr;
-    allocate_pages:               addr;
-    free_pages:                   addr;
-    get_memory_map:               addr;   // bound
-    allocate_pool:                addr;
-    free_pool:                    addr;
-    create_event:                 addr;
-    set_timer:                    addr;
-    wait_for_event:               addr;
-    signal_event:                 addr;
-    close_event:                  addr;
-    check_event:                  addr;
-    install_protocol_interface:   addr;
-    reinstall_protocol_interface: addr;
-    uninstall_protocol_interface: addr;
-    handle_protocol:              addr;
-    reserved:                     addr;
-    register_protocol_notify:     addr;
-    locate_handle:                addr;
-    locate_device_path:           addr;
-    install_configuration_table:  addr;
-    load_image:                   addr;
-    start_image:                  addr;
-    exit:                         addr;
-    unload_image:                 addr;
-    exit_boot_services:           addr;   // bound
+    raise_tpl:                    address;
+    restore_tpl:                  address;
+    allocate_pages:               address;
+    free_pages:                   address;
+    get_memory_map:               address;   // bound
+    allocate_pool:                address;
+    free_pool:                    address;
+    create_event:                 address;
+    set_timer:                    address;
+    wait_for_event:               address;
+    signal_event:                 address;
+    close_event:                  address;
+    check_event:                  address;
+    install_protocol_interface:   address;
+    reinstall_protocol_interface: address;
+    uninstall_protocol_interface: address;
+    handle_protocol:              address;
+    reserved:                     address;
+    register_protocol_notify:     address;
+    locate_handle:                address;
+    locate_device_path:           address;
+    install_configuration_table:  address;
+    load_image:                   address;
+    start_image:                  address;
+    exit:                         address;
+    unload_image:                 address;
+    exit_boot_services:           address;   // bound
 }
 
 // Standard table identity plus the x86-64 prefix through ExitBootServices.

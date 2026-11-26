@@ -17,7 +17,7 @@ assert set(records)==set(original)
 cache={}
 def geometry(typ):
  if '*' in typ or 'fn(' in typ or 'fn (' in typ: return 8,8
- if typ in {'addr','u64','usize','Event','Handle','Status'}: return 8,8
+ if typ in {'address','u64','usize','Event','Handle','Status'}: return 8,8
  if typ in {'u32','i32'}: return 4,4
  if typ in {'u16','Char16'}: return 2,2
  if typ in {'u8','Boolean','Char8'}: return 1,1

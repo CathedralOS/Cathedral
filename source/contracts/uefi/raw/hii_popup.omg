@@ -23,7 +23,7 @@ pub data HiiPopupSelection [copy] {
 // Upstream: uefi_raw::protocol::hii::popup::HiiPopupProtocol
 pub data HiiPopupProtocol [copy] {
     revision: u64;
-    create_popup: addr;
+    create_popup: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, popup_style: HiiPopupStyle, popup_type: HiiPopupType, hii_handle: HiiHandle, message: StringId, user_selection: *mut HiiPopupSelection, ) -> Status
 }
 

@@ -50,45 +50,45 @@ pub data FirmwareVolumeAttributes [copy] { raw: u32; }
 pub data SimpleFileSystemProtocol {
     revision: u64;
     // Upstream: unsafe extern "efiapi" fn(this: *mut Self, root: *mut *mut FileProtocolV1) -> Status
-    open_volume: addr;
+    open_volume: address;
 }
 
 // Upstream uefi-raw/src/protocol/file_system.rs; repr(C).
 pub data FileProtocolV1 {
     revision: FileProtocolRevision;
     // Upstream: unsafe extern "efiapi" fn( this: *mut Self, new_handle: *mut *mut Self, file_name: *const Char16, open_mode: FileMode, attributes: FileAttribute, ) -> Status
-    open: addr;
+    open: address;
     // Upstream: unsafe extern "efiapi" fn(this: *mut Self) -> Status
-    close: addr;
+    close: address;
     // Upstream: unsafe extern "efiapi" fn(this: *mut Self) -> Status
-    delete: addr;
+    delete: address;
     // Upstream: unsafe extern "efiapi" fn( this: *mut Self, buffer_size: *mut usize, buffer: *mut c_void, ) -> Status
-    read: addr;
+    read: address;
     // Upstream: unsafe extern "efiapi" fn( this: *mut Self, buffer_size: *mut usize, buffer: *const c_void, ) -> Status
-    write: addr;
+    write: address;
     // Upstream: unsafe extern "efiapi" fn(this: *const Self, position: *mut u64) -> Status
-    get_position: addr;
+    get_position: address;
     // Upstream: unsafe extern "efiapi" fn(this: *mut Self, position: u64) -> Status
-    set_position: addr;
+    set_position: address;
     // Upstream: unsafe extern "efiapi" fn( this: *mut Self, information_type: *const Guid, buffer_size: *mut usize, buffer: *mut c_void, ) -> Status
-    get_info: addr;
+    get_info: address;
     // Upstream: unsafe extern "efiapi" fn( this: *mut Self, information_type: *const Guid, buffer_size: usize, buffer: *const c_void, ) -> Status
-    set_info: addr;
+    set_info: address;
     // Upstream: unsafe extern "efiapi" fn(this: *mut Self) -> Status
-    flush: addr;
+    flush: address;
 }
 
 // Upstream uefi-raw/src/protocol/file_system.rs; repr(C).
 pub data FileProtocolV2 {
     v1: FileProtocolV1;
     // Upstream: unsafe extern "efiapi" fn( this: *mut Self, new_handle: *mut *mut Self, file_name: *const Char16, open_mode: FileMode, attributes: FileAttribute, token: *mut FileIoToken, ) -> Status
-    open_ex: addr;
+    open_ex: address;
     // Upstream: unsafe extern "efiapi" fn(this: *mut Self, token: *mut FileIoToken) -> Status
-    read_ex: addr;
+    read_ex: address;
     // Upstream: unsafe extern "efiapi" fn(this: *mut Self, token: *mut FileIoToken) -> Status
-    write_ex: addr;
+    write_ex: address;
     // Upstream: unsafe extern "efiapi" fn(this: *mut Self, token: *mut FileIoToken) -> Status
-    flush_ex: addr;
+    flush_ex: address;
 }
 
 // Upstream uefi-raw/src/protocol/file_system.rs; repr(C).
@@ -97,7 +97,7 @@ pub data FileIoToken {
     status: Status;
     buffer_size: u64;
     // Upstream: *mut c_void
-    buffer: addr;
+    buffer: address;
 }
 
 // Upstream uefi-raw/src/protocol/file_system.rs; repr(C).
@@ -147,15 +147,15 @@ pub data BlockIoMedia {
 pub data BlockIoProtocol {
     revision: u64;
     // Upstream: *const BlockIoMedia
-    media: addr;
+    media: address;
     // Upstream: unsafe extern "efiapi" fn(this: *mut Self, extended_verification: Boolean) -> Status
-    reset: addr;
+    reset: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, media_id: u32, lba: Lba, buffer_size: usize, buffer: *mut c_void, ) -> Status
-    read_blocks: addr;
+    read_blocks: address;
     // Upstream: unsafe extern "efiapi" fn( this: *mut Self, media_id: u32, lba: Lba, buffer_size: usize, buffer: *const c_void, ) -> Status
-    write_blocks: addr;
+    write_blocks: address;
     // Upstream: unsafe extern "efiapi" fn(this: *mut Self) -> Status
-    flush_blocks: addr;
+    flush_blocks: address;
 }
 
 // Upstream uefi-raw/src/protocol/block.rs; repr(C).
@@ -167,24 +167,24 @@ pub data BlockIo2Token {
 // Upstream uefi-raw/src/protocol/block.rs; repr(C).
 pub data BlockIo2Protocol {
     // Upstream: *const BlockIoMedia
-    media: addr;
+    media: address;
     // Upstream: unsafe extern "efiapi" fn(this: *mut Self, extended_verification: Boolean) -> Status
-    reset: addr;
+    reset: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, media_id: u32, lba: Lba, token: *mut BlockIo2Token, buffer_size: usize, buffer: *mut c_void, ) -> Status
-    read_blocks_ex: addr;
+    read_blocks_ex: address;
     // Upstream: unsafe extern "efiapi" fn( this: *mut Self, media_id: u32, lba: Lba, token: *mut BlockIo2Token, buffer_size: usize, buffer: *const c_void, ) -> Status
-    write_blocks_ex: addr;
+    write_blocks_ex: address;
     // Upstream: unsafe extern "efiapi" fn(this: *mut Self, token: *mut BlockIo2Token) -> Status
-    flush_blocks_ex: addr;
+    flush_blocks_ex: address;
 }
 
 // Upstream uefi-raw/src/protocol/disk.rs; repr(C).
 pub data DiskIoProtocol {
     revision: u64;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, media_id: u32, offset: u64, buffer_size: usize, buffer: *mut c_void, ) -> Status
-    read_disk: addr;
+    read_disk: address;
     // Upstream: unsafe extern "efiapi" fn( this: *mut Self, media_id: u32, offset: u64, buffer_size: usize, buffer: *const c_void, ) -> Status
-    write_disk: addr;
+    write_disk: address;
 }
 
 // Upstream uefi-raw/src/protocol/disk.rs; repr(C).
@@ -197,26 +197,26 @@ pub data DiskIo2Token {
 pub data DiskIo2Protocol {
     revision: u64;
     // Upstream: unsafe extern "efiapi" fn(this: *mut Self) -> Status
-    cancel: addr;
+    cancel: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, media_id: u32, offset: u64, token: *mut DiskIo2Token, buffer_size: usize, buffer: *mut c_void, ) -> Status
-    read_disk_ex: addr;
+    read_disk_ex: address;
     // Upstream: unsafe extern "efiapi" fn( this: *mut Self, media_id: u32, offset: u64, token: *mut DiskIo2Token, buffer_size: usize, buffer: *const c_void, ) -> Status
-    write_disk_ex: addr;
+    write_disk_ex: address;
     // Upstream: unsafe extern "efiapi" fn(this: *mut Self, token: *mut DiskIo2Token) -> Status
-    flush_disk_ex: addr;
+    flush_disk_ex: address;
 }
 
 // Upstream uefi-raw/src/protocol/disk.rs; repr(C).
 pub data DiskInfoProtocol {
     interface: Guid;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, inquiry_data: *mut c_void, inquiry_data_size: *mut u32, ) -> Status
-    inquiry: addr;
+    inquiry: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, identify_data: *mut c_void, identify_data_size: *mut u32, ) -> Status
-    identify: addr;
+    identify: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, sense_data: *mut c_void, sense_data_size: *mut u32, sense_data_number: *mut u8, ) -> Status
-    sense_data: addr;
+    sense_data: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, ide_channel: *mut u32, ide_device: *mut u32, ) -> Status
-    which_ide: addr;
+    which_ide: address;
 }
 
 // Upstream uefi-raw/src/protocol/ata.rs; repr(C).
@@ -264,14 +264,14 @@ pub data AtaCommandBlock {
 // Upstream uefi-raw/src/protocol/ata.rs; repr(C).
 pub data AtaPassThruCommandPacket {
     // Upstream: *mut AtaStatusBlock
-    asb: addr;
+    asb: address;
     // Upstream: *const AtaCommandBlock
-    acb: addr;
+    acb: address;
     timeout: u64;
     // Upstream: *mut c_void
-    in_data_buffer: addr;
+    in_data_buffer: address;
     // Upstream: *const c_void
-    out_data_buffer: addr;
+    out_data_buffer: address;
     in_transfer_length: u32;
     out_transfer_length: u32;
     protocol: AtaPassThruCommandProtocol;
@@ -281,34 +281,34 @@ pub data AtaPassThruCommandPacket {
 // Upstream uefi-raw/src/protocol/ata.rs; repr(C).
 pub data AtaPassThruProtocol {
     // Upstream: *const AtaPassThruMode
-    mode: addr;
+    mode: address;
     // Upstream: unsafe extern "efiapi" fn( this: *mut Self, port: u16, port_multiplier_port: u16, packet: *mut AtaPassThruCommandPacket, event: Event, ) -> Status
-    pass_thru: addr;
+    pass_thru: address;
     // Upstream: unsafe extern "efiapi" fn(this: *const Self, port: *mut u16) -> Status
-    get_next_port: addr;
+    get_next_port: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, port: u16, port_multiplier_port: *mut u16, ) -> Status
-    get_next_device: addr;
+    get_next_device: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, port: u16, port_multiplier_port: u16, device_path: *mut *mut DevicePathProtocol, ) -> Status
-    build_device_path: addr;
+    build_device_path: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, device_path: *const DevicePathProtocol, port: *mut u16, port_multiplier_port: *mut u16, ) -> Status
-    get_device: addr;
+    get_device: address;
     // Upstream: unsafe extern "efiapi" fn(this: *mut Self, port: u16) -> Status
-    reset_port: addr;
+    reset_port: address;
     // Upstream: unsafe extern "efiapi" fn(this: *mut Self, port: u16, port_multiplier_port: u16) -> Status
-    reset_device: addr;
+    reset_device: address;
 }
 
 // Upstream uefi-raw/src/protocol/scsi.rs; repr(C).
 pub data ScsiIoScsiRequestPacket {
     timeout: u64;
     // Upstream: *mut c_void
-    in_data_buffer: addr;
+    in_data_buffer: address;
     // Upstream: *mut c_void
-    out_data_buffer: addr;
+    out_data_buffer: address;
     // Upstream: *mut c_void
-    sense_data: addr;
+    sense_data: address;
     // Upstream: *mut c_void
-    cdb: addr;
+    cdb: address;
     in_transfer_length: u32;
     out_transfer_length: u32;
     cdb_length: u8;
@@ -321,15 +321,15 @@ pub data ScsiIoScsiRequestPacket {
 // Upstream uefi-raw/src/protocol/scsi.rs; repr(C).
 pub data ScsiIoProtocol {
     // Upstream: unsafe extern "efiapi" fn(this: *const Self, device_type: *mut ScsiIoType) -> Status
-    get_device_type: addr;
+    get_device_type: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, target: *const *mut u8, lun: *mut u64, ) -> Status
-    get_device_location: addr;
+    get_device_location: address;
     // Upstream: unsafe extern "efiapi" fn(this: *mut Self) -> Status
-    reset_bus: addr;
+    reset_bus: address;
     // Upstream: unsafe extern "efiapi" fn(this: *mut Self) -> Status
-    reset_device: addr;
+    reset_device: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, packet: *mut ScsiIoScsiRequestPacket, event: Event, ) -> Status
-    execute_scsi_command: addr;
+    execute_scsi_command: address;
     io_align: u32;
 }
 
@@ -343,21 +343,21 @@ pub data ExtScsiPassThruMode {
 // Upstream uefi-raw/src/protocol/scsi.rs; repr(C).
 pub data ExtScsiPassThruProtocol {
     // Upstream: *const ExtScsiPassThruMode
-    passthru_mode: addr;
+    passthru_mode: address;
     // Upstream: unsafe extern "efiapi" fn( this: *mut Self, target: *const u8, lun: u64, packet: *mut ScsiIoScsiRequestPacket, event: Event, ) -> Status
-    pass_thru: addr;
+    pass_thru: address;
     // Upstream: unsafe extern "efiapi" fn(this: *const Self, target: *mut *mut u8, lun: *mut u64) -> Status
-    get_next_target_lun: addr;
+    get_next_target_lun: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, target: *const u8, lun: u64, device_path: *mut *mut DevicePathProtocol, ) -> Status
-    build_device_path: addr;
+    build_device_path: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, device_path: *const DevicePathProtocol, target: *const *mut u8, lun: *mut u64, ) -> Status
-    get_target_lun: addr;
+    get_target_lun: address;
     // Upstream: unsafe extern "efiapi" fn(this: *mut Self) -> Status
-    reset_channel: addr;
+    reset_channel: address;
     // Upstream: unsafe extern "efiapi" fn(this: *mut Self, target: *const u8, lun: u64) -> Status
-    reset_target_lun: addr;
+    reset_target_lun: address;
     // Upstream: unsafe extern "efiapi" fn(this: *const Self, target: *mut *mut u8) -> Status
-    get_next_target: addr;
+    get_next_target: address;
 }
 
 // Upstream uefi-raw/src/protocol/nvme.rs; repr(C).
@@ -394,82 +394,82 @@ pub data NvmExpressCompletion {
 pub data NvmExpressPassThruCommandPacket {
     command_timeout: u64;
     // Upstream: *mut c_void
-    transfer_buffer: addr;
+    transfer_buffer: address;
     transfer_length: u32;
     // Upstream: *mut c_void
-    meta_data_buffer: addr;
+    meta_data_buffer: address;
     meta_data_length: u32;
     queue_type: NvmExpressQueueType;
     // Upstream: *const NvmExpressCommand
-    nvme_cmd: addr;
+    nvme_cmd: address;
     // Upstream: *mut NvmExpressCompletion
-    nvme_completion: addr;
+    nvme_completion: address;
 }
 
 // Upstream uefi-raw/src/protocol/nvme.rs; repr(C).
 pub data NvmExpressPassThruProtocol {
     // Upstream: *const NvmExpressPassThruMode
-    mode: addr;
+    mode: address;
     // Upstream: unsafe extern "efiapi" fn( this: *mut Self, namespace_id: u32, packet: *mut NvmExpressPassThruCommandPacket, event: Event, ) -> Status
-    pass_thru: addr;
+    pass_thru: address;
     // Upstream: unsafe extern "efiapi" fn(this: *const Self, namespace_id: *mut u32) -> Status
-    get_next_namespace: addr;
+    get_next_namespace: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, namespace_id: u32, device_path: *mut *mut DevicePathProtocol, ) -> Status
-    build_device_path: addr;
+    build_device_path: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, device_path: *const DevicePathProtocol, namespace_id: *mut u32, ) -> Status
-    get_namespace: addr;
+    get_namespace: address;
 }
 
 // Upstream uefi-raw/src/protocol/firmware_volume.rs; repr(C).
 pub data FvWriteFileData {
     // Upstream: *const Guid
-    name_guid: addr;
+    name_guid: address;
     // Upstream raw identifier r#type renamed to file_type.
     file_type: FvFiletype;
     file_attributes: FvFileAttributes;
     // Upstream: *const u8
-    buffer: addr;
+    buffer: address;
     buffer_size: u32;
 }
 
 // Upstream uefi-raw/src/protocol/firmware_volume.rs; repr(C).
 pub data FirmwareVolume2Protocol {
     // Upstream: unsafe extern "efiapi" fn(this: *const Self, fv_attributes: *mut FvAttributes) -> Status
-    get_volume_attributes: addr;
+    get_volume_attributes: address;
     // Upstream: unsafe extern "efiapi" fn(this: *const Self, fv_attributes: *mut FvAttributes) -> Status
-    set_volume_attributes: addr;
+    set_volume_attributes: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, name_guid: *const Guid, buffer: *mut *mut c_void, buffer_size: *mut usize, found_type: *mut FvFiletype, file_attributes: *mut FvFileAttributes, authentication_status: *mut u32, ) -> Status
-    read_file: addr;
+    read_file: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, name_guid: *const Guid, section_type: SectionType, section_instance: usize, buffer: *mut *mut c_void, buffer_size: *mut usize, authentication_status: *mut u32, ) -> Status
-    read_section: addr;
+    read_section: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, number_of_files: u32, write_policy: FvWritePolicy, file_data: *const FvWriteFileData, ) -> Status
-    write_file: addr;
+    write_file: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, key: *mut c_void, file_type: *mut FvFiletype, name_guid: *mut Guid, attributes: *mut FvFileAttributes, size: *mut usize, ) -> Status
-    get_next_file: addr;
+    get_next_file: address;
     key_size: u32;
     parent_handle: Handle;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, information_type: *const Guid, buffer_size: *mut usize, buffer: *mut c_void, ) -> Status
-    get_info: addr;
+    get_info: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, information_type: *const Guid, buffer_size: usize, buffer: *const c_void, ) -> Status
-    set_info: addr;
+    set_info: address;
 }
 
 // Upstream uefi-raw/src/protocol/firmware_volume.rs; repr(C).
 pub data FirmwareVolumeBlock2Protocol {
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, attributes: *mut FirmwareVolumeAttributes, ) -> Status
-    get_attributes: addr;
+    get_attributes: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, attributes: *mut FirmwareVolumeAttributes, ) -> Status
-    set_attributes: addr;
+    set_attributes: address;
     // Upstream: unsafe extern "efiapi" fn(this: *const Self, address: *mut PhysicalAddress) -> Status
-    get_physical_address: addr;
+    get_physical_address: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, lba: Lba, block_size: *mut usize, number_of_blocks: *mut usize, ) -> Status
-    get_block_size: addr;
+    get_block_size: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, lba: Lba, offset: usize, num_bytes: *mut usize, buffer: *mut u8, ) -> Status
-    read: addr;
+    read: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, lba: Lba, offset: usize, num_bytes: *mut usize, buffer: *const u8, ) -> Status
-    write: addr;
+    write: address;
     // Upstream: unsafe extern "C" fn(this: *const Self, ...) -> Status
-    erase_blocks: addr;
+    erase_blocks: address;
     parent_handle: Handle;
 }
 
@@ -504,10 +504,10 @@ pub data FirmwareImageDescriptor {
     image_type_id: Guid;
     image_id: u64;
     // Upstream: *const Char16
-    image_id_name: addr;
+    image_id_name: address;
     version: u32;
     // Upstream: *const Char16
-    version_name: addr;
+    version_name: address;
     size: u64;
     attributes_supported: ImageAttributes;
     attributes_setting: ImageAttributes;
@@ -517,23 +517,23 @@ pub data FirmwareImageDescriptor {
     last_attempt_status: u32;
     hardware_instance: u64;
     // Upstream: *const FirmwareImageDep
-    dependencies: addr;
+    dependencies: address;
 }
 
 // Upstream uefi-raw/src/protocol/firmware_management.rs; repr(C).
 pub data FirmwareManagementProtocol {
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, image_info_size: *mut usize, image_info: *mut FirmwareImageDescriptor, descriptor_version: *mut u32, descriptor_count: *mut u8, descriptor_size: *mut usize, package_version: *mut u32, package_version_name: *mut *mut Char16, ) -> Status
-    get_image_info: addr;
+    get_image_info: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, image_index: u8, image: *mut c_void, image_size: *mut usize, ) -> Status
-    get_image: addr;
+    get_image: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, image_index: u8, image: *const c_void, image_size: usize, vendor_code: *const c_void, progress: unsafe extern "efiapi" fn(completion: usize) -> Status, abort_reason: *mut *mut Char16, ) -> Status
-    set_image: addr;
+    set_image: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, image_index: u8, image: *const c_void, image_size: usize, image_updatable: *mut ImageUpdatable, ) -> Status
-    check_image: addr;
+    check_image: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, package_version: *mut u32, package_version_name: *mut *mut Char16, package_version_name_max_len: *mut u32, attributes_supported: *mut PackageAttributes, attributes_setting: *mut PackageAttributes, ) -> Status
-    get_package_info: addr;
+    get_package_info: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, image: *const c_void, image_size: usize, vendor_code: *const c_void, package_version: u32, package_version_name: *const Char16, ) -> Status
-    set_package_info: addr;
+    set_package_info: address;
 }
 
 // Upstream uefi-raw/src/firmware_storage.rs; repr(C).

@@ -20,7 +20,7 @@ pub data ImageInput [copy] {
     flags: ImageInputFlags;
     width: u16;
     height: u16;
-    bitmap: addr;
+    bitmap: address;
     // Foreign carrier: *const GraphicsOutputBltPixel
 }
 
@@ -42,31 +42,31 @@ pub data ImageOutputWireStorage [copy] {
 
 // Upstream: uefi_raw::protocol::hii::image::HiiImageProtocol
 pub data HiiImageProtocol [copy] {
-    new_image: addr;
+    new_image: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, package_list: HiiHandle, image_id: *mut ImageId, image: *const ImageInput, ) -> Status
-    get_image: addr;
+    get_image: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, package_list: HiiHandle, image_id: ImageId, image: *mut ImageInput, ) -> Status
-    set_image: addr;
+    set_image: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, package_list: HiiHandle, image_id: ImageId, image: *const ImageInput, ) -> Status
-    draw_image: addr;
+    draw_image: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, flags: HiiDrawFlags, image: *const ImageInput, blt: *mut *mut ImageOutput, blt_x: usize, blt_y: usize, ) -> Status
-    draw_image_id: addr;
+    draw_image_id: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, flags: HiiDrawFlags, package_list: HiiHandle, image_id: ImageId, blt: *mut *mut ImageOutput, blt_x: usize, blt_y: usize, ) -> Status
 }
 
 // Upstream: uefi_raw::protocol::hii::image::HiiImageExProtocol
 pub data HiiImageExProtocol [copy] {
-    new_image_ex: addr;
+    new_image_ex: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, package_list: HiiHandle, image_id: *mut ImageId, image: *const ImageInput, ) -> Status
-    get_image_ex: addr;
+    get_image_ex: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, package_list: HiiHandle, image_id: ImageId, image: *mut ImageInput, ) -> Status
-    set_image_ex: addr;
+    set_image_ex: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, package_list: HiiHandle, image_id: ImageId, image: *const ImageInput, ) -> Status
-    draw_image_ex: addr;
+    draw_image_ex: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, flags: HiiDrawFlags, image: *const ImageInput, blt: *mut *mut ImageOutput, blt_x: usize, blt_y: usize, ) -> Status
-    draw_image_id_ex: addr;
+    draw_image_id_ex: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, flags: HiiDrawFlags, package_list: HiiHandle, image_id: ImageId, blt: *mut *mut ImageOutput, blt_x: usize, blt_y: usize, ) -> Status
-    get_image_info: addr;
+    get_image_info: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, package_list: HiiHandle, image_id: ImageId, image: *mut ImageOutput, ) -> Status
 }
 

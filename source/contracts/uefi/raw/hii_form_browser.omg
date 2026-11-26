@@ -20,9 +20,9 @@ pub data BrowserActionRequest [copy] {
 
 // Upstream: uefi_raw::protocol::hii::form_browser::FormBrowser2Protocol
 pub data FormBrowser2Protocol [copy] {
-    send_form: addr;
+    send_form: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, handles: *const HiiHandle, handle_count: usize, formset_guid: *const Guid, form_id: FormId, screen_dimensions: *const ScreenDescriptor, action_request: *mut BrowserActionRequest, ) -> Status
-    browser_callback: addr;
+    browser_callback: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, results_data_size: *mut usize, results_data: *mut Char16, retrieve_data: Boolean, variable_guid: *const Guid, variable_name: *const Char16, ) -> Status
 }
 

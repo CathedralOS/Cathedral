@@ -99,7 +99,7 @@ boot-success comments are not refreshed test evidence.
 | Blocker / obligation | Evidence and scope | Work that continues |
 | --- | --- | --- |
 | `omega:named-calling-policy` | Current [calling-plan spec](../../../../Omega/wiki/spec/build/calling_plans.md) requires `Calling<C, Policy>`; [implementation README](../../../../Omega/omega-rust/omega/representations/calling-conventions/README.md) records only `Calling<C>` source vocabulary. No diagnostic run in this documentation slice. | Inert tables, constants, mappings and host vectors. |
-| Pointer backing, access, retention and boot lifetime | [Foreign storage](../../../../Omega/wiki/spec/build/foreign_storage.md) requires authority separately from `addr`/`Ptr<T>`. Existing shared console view cannot by itself authorize foreign state mutation. | Document raw signatures; implement checked adapters against established contracts later. This is not itself an unresolved language design. |
+| Pointer backing, access, retention and boot lifetime | [Foreign storage](../../../../Omega/wiki/spec/build/foreign_storage.md) requires authority separately from `address`/`Ptr<T>`. Existing shared console view cannot by itself authorize foreign state mutation. | Document raw signatures; implement checked adapters against established contracts later. This is not itself an unresolved language design. |
 | Legacy `uefi_x64 machine` and commented use-site `Uefi` layout | Current requirement-owned calling-policy and explicit layout rules differ from legacy source. No current compilation claim. | Source migration and authored fixed layouts are engineering work. |
 
 `PORT-BLOCKED[omega:named-calling-policy]: select an exact named CallingPolicy

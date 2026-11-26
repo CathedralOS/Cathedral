@@ -75,11 +75,11 @@ for n,r in records.items():r['local']=n+'WireStorage' if n in blocked else n
 
 def mapped(t,mod):
     t=' '.join(t.split())
-    if '*' in t or re.search(r'\bfn\s*\(',t):return 'addr'
+    if '*' in t or re.search(r'\bfn\s*\(',t):return 'address'
     if t=='usize':return 'u64'
     if t in {'Char16','QuestionId','ImageId','StringId','FormId','VarstoreId','AnimationId','DefaultId'}:return 'u16'
     if t in {'Char8','Boolean'}:return 'u8'
-    if t in {'Handle','HiiHandle','FontHandle'}:return 'addr'
+    if t in {'Handle','HiiHandle','FontHandle'}:return 'address'
     if t=='Guid':return 'scalars::Guid'
     if t=='GraphicsOutputBltPixel':return 'console::GraphicsOutputBltPixel'
     if t.startswith('['):
@@ -145,7 +145,7 @@ for n,r in records.items():
                 tails.append((mod,local,f,t));continue
             ft=mapped(t,mod);name=f+'_storage' if t in blocked else ('type_code' if f=='r#type' else f)
             lines.append('    '+name+': '+ft+';');fs.append((name,ft,f))
-            if ft=='addr':lines.append('    // Foreign carrier: '+' '.join(t.split()))
+            if ft=='address':lines.append('    // Foreign carrier: '+' '.join(t.split()))
     lines.extend(['}',''])
     schema.append({'module':mod,'name':local,'upstream':r['rust'],'fields':fs,'packed':r['packed'],'overlay_storage':n in blocked,'union_storage':n in unions,'tail_fields':[f for m,l,f,t in tails if m==mod and l==local]})
 for c in constants:

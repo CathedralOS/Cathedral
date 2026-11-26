@@ -37,7 +37,7 @@ record. Cathedral policy does not become Omega language semantics.
 
 Cathedral distinguishes three relationships:
 
-1. `addr` is inert numeric address data.
+1. `address` is inert numeric address data.
 2. `Extent` is authority over one concrete range with address-space, rights,
    provenance, and lifetime.
 3. An allocation-strategy package partitions qualified backing extents and
@@ -104,7 +104,7 @@ the target address space after embedding both values into proof-level natural
 arithmetic. Its owner-unique content conformance projects the claim to a
 half-open interval with proof-level natural bounds; the end may equal the
 address-space bound even when that one-past value is not representable as an
-`addr`. A split must prove:
+`address`. A split must prove:
 
 ```text
 content(parent) = content(left) • content(right)
@@ -125,7 +125,7 @@ virtual/physical decomposition remains unavailable until Omega has a symbolic
 joint mapping algebra. Cathedral's mapping path uses loans instead.
 
 Fixed mapping consumes authority over its destination virtual range; a requested
-`addr` is only a hint. Its physical source may be owned or borrowed. Unmapping
+`address` is only a hint. Its physical source may be owned or borrowed. Unmapping
 returns reusable ranges only after required shootdown/quiescence completes.
 Ordinary accesses pay no generation-table probe.
 
@@ -140,7 +140,7 @@ The first x86-64 entry schema is pure facts plus an ordinary programmable layout
 policy. Its `bool` and range-constrained integer fields tile the complete 64-bit
 paging word, including the 40-bit page-frame number for physical address bits
 12 through 51. A checked provider derives that number from an aligned physical
-`addr` while holding the frame/mapping authority. The fact package itself
+`address` while holding the frame/mapping authority. The fact package itself
 grants no memory, mapping, installation, or TLB authority.
 
 Cathedral's baseline four-level bootstrap profile also has ordinary numeric

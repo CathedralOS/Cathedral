@@ -8,7 +8,7 @@
 // authority: it cannot mint an Extent, prove a frame owned, install a table,
 // invalidate a TLB, or make arbitrary address bits meaningful.
 //
-// The semantic provider derives `frame_number` from an aligned physical `addr`
+// The semantic provider derives `frame_number` from an aligned physical `address`
 // under frame/mapping authority. Runtime-known addresses are ordinary data;
 // unlike IDT entry identities, they need no symbolic relocation source.
 

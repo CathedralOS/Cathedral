@@ -60,7 +60,7 @@ in source. This metadata is source-review support, not executable authority.
 
 ## Deliberate translation choices
 
-- Pointer and function-pointer members are inert `addr` data. Handles, status,
+- Pointer and function-pointer members are inert `address` data. Handles, status,
   Boolean, time, and UTF-16 elements use the shared scalar modules. Pointer
   constness, output parameters, callback signatures, and variadic tails survive
   in signature comments; none becomes a dereference or call operation.
@@ -137,9 +137,9 @@ tail offsets can be retained now; a live variable-length typed view cannot be
 invented from them. Ordinary explicit bounded byte parsers can still be written
 in later parser tasks; their engineering is not classified as a language block.
 
-Omega's existing authored UEFI layouts also document that `addr` is not a
+Omega's existing authored UEFI layouts also document that `address` is not a
 supported schema materialization carrier and substitute u64. This slice retains
-inert `addr` semantics and awaits an actual supported consumer/inspection route;
+inert `address` semantics and awaits an actual supported consumer/inspection route;
 source typechecking does not supply the missing observation. No record here
 requires more than the current 32 reflected members. Packed and zero-sized
 placement normalization must be exercised before claiming foreign ABI support.

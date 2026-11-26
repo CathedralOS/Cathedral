@@ -14,7 +14,7 @@
           "open_volume",
           "open_volume",
           "unsafe extern \"efiapi\" fn(this: *mut Self, root: *mut *mut FileProtocolV1) -> Status",
-          "addr"
+          "address"
         ]
       ],
       "packed": false,
@@ -36,61 +36,61 @@
           "open",
           "open",
           "unsafe extern \"efiapi\" fn( this: *mut Self, new_handle: *mut *mut Self, file_name: *const Char16, open_mode: FileMode, attributes: FileAttribute, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "close",
           "close",
           "unsafe extern \"efiapi\" fn(this: *mut Self) -> Status",
-          "addr"
+          "address"
         ],
         [
           "delete",
           "delete",
           "unsafe extern \"efiapi\" fn(this: *mut Self) -> Status",
-          "addr"
+          "address"
         ],
         [
           "read",
           "read",
           "unsafe extern \"efiapi\" fn( this: *mut Self, buffer_size: *mut usize, buffer: *mut c_void, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "write",
           "write",
           "unsafe extern \"efiapi\" fn( this: *mut Self, buffer_size: *mut usize, buffer: *const c_void, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "get_position",
           "get_position",
           "unsafe extern \"efiapi\" fn(this: *const Self, position: *mut u64) -> Status",
-          "addr"
+          "address"
         ],
         [
           "set_position",
           "set_position",
           "unsafe extern \"efiapi\" fn(this: *mut Self, position: u64) -> Status",
-          "addr"
+          "address"
         ],
         [
           "get_info",
           "get_info",
           "unsafe extern \"efiapi\" fn( this: *mut Self, information_type: *const Guid, buffer_size: *mut usize, buffer: *mut c_void, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "set_info",
           "set_info",
           "unsafe extern \"efiapi\" fn( this: *mut Self, information_type: *const Guid, buffer_size: usize, buffer: *const c_void, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "flush",
           "flush",
           "unsafe extern \"efiapi\" fn(this: *mut Self) -> Status",
-          "addr"
+          "address"
         ]
       ],
       "packed": false,
@@ -121,25 +121,25 @@
           "open_ex",
           "open_ex",
           "unsafe extern \"efiapi\" fn( this: *mut Self, new_handle: *mut *mut Self, file_name: *const Char16, open_mode: FileMode, attributes: FileAttribute, token: *mut FileIoToken, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "read_ex",
           "read_ex",
           "unsafe extern \"efiapi\" fn(this: *mut Self, token: *mut FileIoToken) -> Status",
-          "addr"
+          "address"
         ],
         [
           "write_ex",
           "write_ex",
           "unsafe extern \"efiapi\" fn(this: *mut Self, token: *mut FileIoToken) -> Status",
-          "addr"
+          "address"
         ],
         [
           "flush_ex",
           "flush_ex",
           "unsafe extern \"efiapi\" fn(this: *mut Self, token: *mut FileIoToken) -> Status",
-          "addr"
+          "address"
         ]
       ],
       "packed": false,
@@ -176,7 +176,7 @@
           "buffer",
           "buffer",
           "*mut c_void",
-          "addr"
+          "address"
         ]
       ],
       "packed": false,
@@ -421,31 +421,31 @@
           "media",
           "media",
           "*const BlockIoMedia",
-          "addr"
+          "address"
         ],
         [
           "reset",
           "reset",
           "unsafe extern \"efiapi\" fn(this: *mut Self, extended_verification: Boolean) -> Status",
-          "addr"
+          "address"
         ],
         [
           "read_blocks",
           "read_blocks",
           "unsafe extern \"efiapi\" fn( this: *const Self, media_id: u32, lba: Lba, buffer_size: usize, buffer: *mut c_void, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "write_blocks",
           "write_blocks",
           "unsafe extern \"efiapi\" fn( this: *mut Self, media_id: u32, lba: Lba, buffer_size: usize, buffer: *const c_void, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "flush_blocks",
           "flush_blocks",
           "unsafe extern \"efiapi\" fn(this: *mut Self) -> Status",
-          "addr"
+          "address"
         ]
       ],
       "packed": false,
@@ -487,31 +487,31 @@
           "media",
           "media",
           "*const BlockIoMedia",
-          "addr"
+          "address"
         ],
         [
           "reset",
           "reset",
           "unsafe extern \"efiapi\" fn(this: *mut Self, extended_verification: Boolean) -> Status",
-          "addr"
+          "address"
         ],
         [
           "read_blocks_ex",
           "read_blocks_ex",
           "unsafe extern \"efiapi\" fn( this: *const Self, media_id: u32, lba: Lba, token: *mut BlockIo2Token, buffer_size: usize, buffer: *mut c_void, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "write_blocks_ex",
           "write_blocks_ex",
           "unsafe extern \"efiapi\" fn( this: *mut Self, media_id: u32, lba: Lba, token: *mut BlockIo2Token, buffer_size: usize, buffer: *const c_void, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "flush_blocks_ex",
           "flush_blocks_ex",
           "unsafe extern \"efiapi\" fn(this: *mut Self, token: *mut BlockIo2Token) -> Status",
-          "addr"
+          "address"
         ]
       ],
       "packed": false,
@@ -536,13 +536,13 @@
           "read_disk",
           "read_disk",
           "unsafe extern \"efiapi\" fn( this: *const Self, media_id: u32, offset: u64, buffer_size: usize, buffer: *mut c_void, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "write_disk",
           "write_disk",
           "unsafe extern \"efiapi\" fn( this: *mut Self, media_id: u32, offset: u64, buffer_size: usize, buffer: *const c_void, ) -> Status",
-          "addr"
+          "address"
         ]
       ],
       "packed": false,
@@ -587,25 +587,25 @@
           "cancel",
           "cancel",
           "unsafe extern \"efiapi\" fn(this: *mut Self) -> Status",
-          "addr"
+          "address"
         ],
         [
           "read_disk_ex",
           "read_disk_ex",
           "unsafe extern \"efiapi\" fn( this: *const Self, media_id: u32, offset: u64, token: *mut DiskIo2Token, buffer_size: usize, buffer: *mut c_void, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "write_disk_ex",
           "write_disk_ex",
           "unsafe extern \"efiapi\" fn( this: *mut Self, media_id: u32, offset: u64, token: *mut DiskIo2Token, buffer_size: usize, buffer: *const c_void, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "flush_disk_ex",
           "flush_disk_ex",
           "unsafe extern \"efiapi\" fn(this: *mut Self, token: *mut DiskIo2Token) -> Status",
-          "addr"
+          "address"
         ]
       ],
       "packed": false,
@@ -630,25 +630,25 @@
           "inquiry",
           "inquiry",
           "unsafe extern \"efiapi\" fn( this: *const Self, inquiry_data: *mut c_void, inquiry_data_size: *mut u32, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "identify",
           "identify",
           "unsafe extern \"efiapi\" fn( this: *const Self, identify_data: *mut c_void, identify_data_size: *mut u32, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "sense_data",
           "sense_data",
           "unsafe extern \"efiapi\" fn( this: *const Self, sense_data: *mut c_void, sense_data_size: *mut u32, sense_data_number: *mut u8, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "which_ide",
           "which_ide",
           "unsafe extern \"efiapi\" fn( this: *const Self, ide_channel: *mut u32, ide_device: *mut u32, ) -> Status",
-          "addr"
+          "address"
         ]
       ],
       "packed": false,
@@ -901,13 +901,13 @@
           "asb",
           "asb",
           "*mut AtaStatusBlock",
-          "addr"
+          "address"
         ],
         [
           "acb",
           "acb",
           "*const AtaCommandBlock",
-          "addr"
+          "address"
         ],
         [
           "timeout",
@@ -919,13 +919,13 @@
           "in_data_buffer",
           "in_data_buffer",
           "*mut c_void",
-          "addr"
+          "address"
         ],
         [
           "out_data_buffer",
           "out_data_buffer",
           "*const c_void",
-          "addr"
+          "address"
         ],
         [
           "in_transfer_length",
@@ -972,49 +972,49 @@
           "mode",
           "mode",
           "*const AtaPassThruMode",
-          "addr"
+          "address"
         ],
         [
           "pass_thru",
           "pass_thru",
           "unsafe extern \"efiapi\" fn( this: *mut Self, port: u16, port_multiplier_port: u16, packet: *mut AtaPassThruCommandPacket, event: Event, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "get_next_port",
           "get_next_port",
           "unsafe extern \"efiapi\" fn(this: *const Self, port: *mut u16) -> Status",
-          "addr"
+          "address"
         ],
         [
           "get_next_device",
           "get_next_device",
           "unsafe extern \"efiapi\" fn( this: *const Self, port: u16, port_multiplier_port: *mut u16, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "build_device_path",
           "build_device_path",
           "unsafe extern \"efiapi\" fn( this: *const Self, port: u16, port_multiplier_port: u16, device_path: *mut *mut DevicePathProtocol, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "get_device",
           "get_device",
           "unsafe extern \"efiapi\" fn( this: *const Self, device_path: *const DevicePathProtocol, port: *mut u16, port_multiplier_port: *mut u16, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "reset_port",
           "reset_port",
           "unsafe extern \"efiapi\" fn(this: *mut Self, port: u16) -> Status",
-          "addr"
+          "address"
         ],
         [
           "reset_device",
           "reset_device",
           "unsafe extern \"efiapi\" fn(this: *mut Self, port: u16, port_multiplier_port: u16) -> Status",
-          "addr"
+          "address"
         ]
       ],
       "packed": false,
@@ -1042,25 +1042,25 @@
           "in_data_buffer",
           "in_data_buffer",
           "*mut c_void",
-          "addr"
+          "address"
         ],
         [
           "out_data_buffer",
           "out_data_buffer",
           "*mut c_void",
-          "addr"
+          "address"
         ],
         [
           "sense_data",
           "sense_data",
           "*mut c_void",
-          "addr"
+          "address"
         ],
         [
           "cdb",
           "cdb",
           "*mut c_void",
-          "addr"
+          "address"
         ],
         [
           "in_transfer_length",
@@ -1128,31 +1128,31 @@
           "get_device_type",
           "get_device_type",
           "unsafe extern \"efiapi\" fn(this: *const Self, device_type: *mut ScsiIoType) -> Status",
-          "addr"
+          "address"
         ],
         [
           "get_device_location",
           "get_device_location",
           "unsafe extern \"efiapi\" fn( this: *const Self, target: *const *mut u8, lun: *mut u64, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "reset_bus",
           "reset_bus",
           "unsafe extern \"efiapi\" fn(this: *mut Self) -> Status",
-          "addr"
+          "address"
         ],
         [
           "reset_device",
           "reset_device",
           "unsafe extern \"efiapi\" fn(this: *mut Self) -> Status",
-          "addr"
+          "address"
         ],
         [
           "execute_scsi_command",
           "execute_scsi_command",
           "unsafe extern \"efiapi\" fn( this: *const Self, packet: *mut ScsiIoScsiRequestPacket, event: Event, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "io_align",
@@ -1207,49 +1207,49 @@
           "passthru_mode",
           "passthru_mode",
           "*const ExtScsiPassThruMode",
-          "addr"
+          "address"
         ],
         [
           "pass_thru",
           "pass_thru",
           "unsafe extern \"efiapi\" fn( this: *mut Self, target: *const u8, lun: u64, packet: *mut ScsiIoScsiRequestPacket, event: Event, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "get_next_target_lun",
           "get_next_target_lun",
           "unsafe extern \"efiapi\" fn(this: *const Self, target: *mut *mut u8, lun: *mut u64) -> Status",
-          "addr"
+          "address"
         ],
         [
           "build_device_path",
           "build_device_path",
           "unsafe extern \"efiapi\" fn( this: *const Self, target: *const u8, lun: u64, device_path: *mut *mut DevicePathProtocol, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "get_target_lun",
           "get_target_lun",
           "unsafe extern \"efiapi\" fn( this: *const Self, device_path: *const DevicePathProtocol, target: *const *mut u8, lun: *mut u64, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "reset_channel",
           "reset_channel",
           "unsafe extern \"efiapi\" fn(this: *mut Self) -> Status",
-          "addr"
+          "address"
         ],
         [
           "reset_target_lun",
           "reset_target_lun",
           "unsafe extern \"efiapi\" fn(this: *mut Self, target: *const u8, lun: u64) -> Status",
-          "addr"
+          "address"
         ],
         [
           "get_next_target",
           "get_next_target",
           "unsafe extern \"efiapi\" fn(this: *const Self, target: *mut *mut u8) -> Status",
-          "addr"
+          "address"
         ]
       ],
       "packed": false,
@@ -1427,7 +1427,7 @@
           "transfer_buffer",
           "transfer_buffer",
           "*mut c_void",
-          "addr"
+          "address"
         ],
         [
           "transfer_length",
@@ -1439,7 +1439,7 @@
           "meta_data_buffer",
           "meta_data_buffer",
           "*mut c_void",
-          "addr"
+          "address"
         ],
         [
           "meta_data_length",
@@ -1457,13 +1457,13 @@
           "nvme_cmd",
           "nvme_cmd",
           "*const NvmExpressCommand",
-          "addr"
+          "address"
         ],
         [
           "nvme_completion",
           "nvme_completion",
           "*mut NvmExpressCompletion",
-          "addr"
+          "address"
         ]
       ],
       "packed": false,
@@ -1485,31 +1485,31 @@
           "mode",
           "mode",
           "*const NvmExpressPassThruMode",
-          "addr"
+          "address"
         ],
         [
           "pass_thru",
           "pass_thru",
           "unsafe extern \"efiapi\" fn( this: *mut Self, namespace_id: u32, packet: *mut NvmExpressPassThruCommandPacket, event: Event, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "get_next_namespace",
           "get_next_namespace",
           "unsafe extern \"efiapi\" fn(this: *const Self, namespace_id: *mut u32) -> Status",
-          "addr"
+          "address"
         ],
         [
           "build_device_path",
           "build_device_path",
           "unsafe extern \"efiapi\" fn( this: *const Self, namespace_id: u32, device_path: *mut *mut DevicePathProtocol, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "get_namespace",
           "get_namespace",
           "unsafe extern \"efiapi\" fn( this: *const Self, device_path: *const DevicePathProtocol, namespace_id: *mut u32, ) -> Status",
-          "addr"
+          "address"
         ]
       ],
       "packed": false,
@@ -1528,7 +1528,7 @@
           "name_guid",
           "name_guid",
           "*const Guid",
-          "addr"
+          "address"
         ],
         [
           "r#type",
@@ -1546,7 +1546,7 @@
           "buffer",
           "buffer",
           "*const u8",
-          "addr"
+          "address"
         ],
         [
           "buffer_size",
@@ -1571,37 +1571,37 @@
           "get_volume_attributes",
           "get_volume_attributes",
           "unsafe extern \"efiapi\" fn(this: *const Self, fv_attributes: *mut FvAttributes) -> Status",
-          "addr"
+          "address"
         ],
         [
           "set_volume_attributes",
           "set_volume_attributes",
           "unsafe extern \"efiapi\" fn(this: *const Self, fv_attributes: *mut FvAttributes) -> Status",
-          "addr"
+          "address"
         ],
         [
           "read_file",
           "read_file",
           "unsafe extern \"efiapi\" fn( this: *const Self, name_guid: *const Guid, buffer: *mut *mut c_void, buffer_size: *mut usize, found_type: *mut FvFiletype, file_attributes: *mut FvFileAttributes, authentication_status: *mut u32, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "read_section",
           "read_section",
           "unsafe extern \"efiapi\" fn( this: *const Self, name_guid: *const Guid, section_type: SectionType, section_instance: usize, buffer: *mut *mut c_void, buffer_size: *mut usize, authentication_status: *mut u32, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "write_file",
           "write_file",
           "unsafe extern \"efiapi\" fn( this: *const Self, number_of_files: u32, write_policy: FvWritePolicy, file_data: *const FvWriteFileData, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "get_next_file",
           "get_next_file",
           "unsafe extern \"efiapi\" fn( this: *const Self, key: *mut c_void, file_type: *mut FvFiletype, name_guid: *mut Guid, attributes: *mut FvFileAttributes, size: *mut usize, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "key_size",
@@ -1619,13 +1619,13 @@
           "get_info",
           "get_info",
           "unsafe extern \"efiapi\" fn( this: *const Self, information_type: *const Guid, buffer_size: *mut usize, buffer: *mut c_void, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "set_info",
           "set_info",
           "unsafe extern \"efiapi\" fn( this: *const Self, information_type: *const Guid, buffer_size: usize, buffer: *const c_void, ) -> Status",
-          "addr"
+          "address"
         ]
       ],
       "packed": false,
@@ -1649,43 +1649,43 @@
           "get_attributes",
           "get_attributes",
           "unsafe extern \"efiapi\" fn( this: *const Self, attributes: *mut FirmwareVolumeAttributes, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "set_attributes",
           "set_attributes",
           "unsafe extern \"efiapi\" fn( this: *const Self, attributes: *mut FirmwareVolumeAttributes, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "get_physical_address",
           "get_physical_address",
           "unsafe extern \"efiapi\" fn(this: *const Self, address: *mut PhysicalAddress) -> Status",
-          "addr"
+          "address"
         ],
         [
           "get_block_size",
           "get_block_size",
           "unsafe extern \"efiapi\" fn( this: *const Self, lba: Lba, block_size: *mut usize, number_of_blocks: *mut usize, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "read",
           "read",
           "unsafe extern \"efiapi\" fn( this: *const Self, lba: Lba, offset: usize, num_bytes: *mut usize, buffer: *mut u8, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "write",
           "write",
           "unsafe extern \"efiapi\" fn( this: *const Self, lba: Lba, offset: usize, num_bytes: *mut usize, buffer: *const u8, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "erase_blocks",
           "erase_blocks",
           "unsafe extern \"C\" fn(this: *const Self, ...) -> Status",
-          "addr"
+          "address"
         ],
         [
           "parent_handle",
@@ -1846,7 +1846,7 @@
           "image_id_name",
           "image_id_name",
           "*const Char16",
-          "addr"
+          "address"
         ],
         [
           "version",
@@ -1858,7 +1858,7 @@
           "version_name",
           "version_name",
           "*const Char16",
-          "addr"
+          "address"
         ],
         [
           "size",
@@ -1912,7 +1912,7 @@
           "dependencies",
           "dependencies",
           "*const FirmwareImageDep",
-          "addr"
+          "address"
         ]
       ],
       "packed": false,
@@ -1941,37 +1941,37 @@
           "get_image_info",
           "get_image_info",
           "unsafe extern \"efiapi\" fn( this: *const Self, image_info_size: *mut usize, image_info: *mut FirmwareImageDescriptor, descriptor_version: *mut u32, descriptor_count: *mut u8, descriptor_size: *mut usize, package_version: *mut u32, package_version_name: *mut *mut Char16, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "get_image",
           "get_image",
           "unsafe extern \"efiapi\" fn( this: *const Self, image_index: u8, image: *mut c_void, image_size: *mut usize, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "set_image",
           "set_image",
           "unsafe extern \"efiapi\" fn( this: *const Self, image_index: u8, image: *const c_void, image_size: usize, vendor_code: *const c_void, progress: unsafe extern \"efiapi\" fn(completion: usize) -> Status, abort_reason: *mut *mut Char16, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "check_image",
           "check_image",
           "unsafe extern \"efiapi\" fn( this: *const Self, image_index: u8, image: *const c_void, image_size: usize, image_updatable: *mut ImageUpdatable, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "get_package_info",
           "get_package_info",
           "unsafe extern \"efiapi\" fn( this: *const Self, package_version: *mut u32, package_version_name: *mut *mut Char16, package_version_name_max_len: *mut u32, attributes_supported: *mut PackageAttributes, attributes_setting: *mut PackageAttributes, ) -> Status",
-          "addr"
+          "address"
         ],
         [
           "set_package_info",
           "set_package_info",
           "unsafe extern \"efiapi\" fn( this: *const Self, image: *const c_void, image_size: usize, vendor_code: *const c_void, package_version: u32, package_version_name: *const Char16, ) -> Status",
-          "addr"
+          "address"
         ]
       ],
       "packed": false,

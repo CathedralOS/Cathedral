@@ -32,15 +32,15 @@ pub data TcgBootServiceCapability [copy] {
 }
 pub data TcgProtocol [copy] {
     // Upstream signature: unsafe extern "efiapi" fn( this: *mut Self, protocol_capability: *mut TcgBootServiceCapability, feature_flags: *mut u32, event_log_location: *mut PhysicalAddress, event_log_last_entry: *mut PhysicalAddress, ) -> Status
-    status_check: addr;
+    status_check: address;
     // Upstream signature: unsafe extern "efiapi" fn( this: *mut Self, hash_data: *const u8, hash_data_len: u64, algorithm_id: u32, hashed_data_len: *mut u64, hashed_data_result: *mut *mut u8, ) -> Status
-    hash_all: addr;
+    hash_all: address;
     // Upstream signature: unsafe extern "efiapi" fn( this: *mut Self, event: *const c_void, event_number: *mut u32, flags: u32, ) -> Status
-    log_event: addr;
+    log_event: address;
     // Upstream signature: unsafe extern "efiapi" fn( this: *mut Self, tpm_input_parameter_block_size: u32, tpm_input_parameter_block: *const u8, tpm_output_parameter_block_size: u32, tpm_output_parameter_block: *mut u8, ) -> Status
-    pass_through_to_tpm: addr;
+    pass_through_to_tpm: address;
     // Upstream signature: unsafe extern "efiapi" fn( this: *mut Self, hash_data: PhysicalAddress, hash_data_len: u64, algorithm_id: u32, event: *mut c_void, event_number: *mut u32, event_log_last_entry: *mut PhysicalAddress, ) -> Status
-    hash_log_extend_event: addr;
+    hash_log_extend_event: address;
 }
 
 pub data Tcg2Version [copy] {
@@ -72,19 +72,19 @@ pub data Tcg2EventHeader [copy] {
 }
 pub data Tcg2Protocol [copy] {
     // Upstream signature: unsafe extern "efiapi" fn( this: *mut Self, protocol_capability: *mut Tcg2BootServiceCapability, ) -> Status
-    get_capability: addr;
+    get_capability: address;
     // Upstream signature: unsafe extern "efiapi" fn( this: *mut Self, event_log_format: Tcg2EventLogFormat, event_log_location: *mut PhysicalAddress, event_log_last_entry: *mut PhysicalAddress, event_log_truncated: *mut Boolean, ) -> Status
-    get_event_log: addr;
+    get_event_log: address;
     // Upstream signature: unsafe extern "efiapi" fn( this: *mut Self, flags: Tcg2HashLogExtendEventFlags, data_to_hash: PhysicalAddress, data_to_hash_len: u64, event: *const c_void, ) -> Status
-    hash_log_extend_event: addr;
+    hash_log_extend_event: address;
     // Upstream signature: unsafe extern "efiapi" fn( this: *mut Self, input_parameter_block_size: u32, input_parameter_block: *const u8, output_parameter_block_size: u32, output_parameter_block: *mut u8, ) -> Status
-    submit_command: addr;
+    submit_command: address;
     // Upstream signature: unsafe extern "efiapi" fn( this: *mut Self, active_pcr_banks: *mut Tcg2HashAlgorithmBitmap, ) -> Status
-    get_active_pcr_banks: addr;
+    get_active_pcr_banks: address;
     // Upstream signature: unsafe extern "efiapi" fn( this: *mut Self, active_pcr_banks: Tcg2HashAlgorithmBitmap, ) -> Status
-    set_active_pcr_banks: addr;
+    set_active_pcr_banks: address;
     // Upstream signature: unsafe extern "efiapi" fn( this: *mut Self, operation_present: *mut u32, response: *mut u32, ) -> Status
-    get_result_of_set_active_pcr_banks: addr;
+    get_result_of_set_active_pcr_banks: address;
 }
 
 // Stored addresses above are opaque numbers. Establishing callable firmware

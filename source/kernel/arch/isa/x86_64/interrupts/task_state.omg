@@ -19,7 +19,7 @@ use facts::x86_descriptor_bytes;
 // and data selections unchanged.
 public boundary trait TaskStatePreparation {
     machine activate(storage: &mut TaskStateStorage) -> bool
-    requires addr::Bound == 18446744073709551616
+    requires address::Bound == 18446744073709551616
     reaches MachineControl + TaskRegisterControl
     invokes TaskRegisterControl
     crashes Abort;
@@ -27,7 +27,7 @@ public boundary trait TaskStatePreparation {
 
 public BootstrapTaskStatePreparation satisfies TaskStatePreparation {
     machine activate(storage: &mut TaskStateStorage) -> bool
-    requires addr::Bound == 18446744073709551616
+    requires address::Bound == 18446744073709551616
     reaches MachineControl + TaskRegisterControl
     invokes TaskRegisterControl
     crashes Abort
@@ -48,7 +48,7 @@ public data TaskStateStorage {
 }
 
 machine activate_task(storage: &mut TaskStateStorage) -> bool
-requires addr::Bound == 18446744073709551616
+requires address::Bound == 18446744073709551616
 reaches MachineControl + TaskRegisterControl
 invokes TaskRegisterControl
 crashes Abort
@@ -95,7 +95,7 @@ crashes Abort
 // Later bootstrap operations recheck the same retained table and guards after
 // changing CPU selections; an earlier observation cannot stand in for this read.
 public machine task_state_selected(storage: &TaskStateStorage) -> bool
-requires addr::Bound == 18446744073709551616
+requires address::Bound == 18446744073709551616
 reaches MachineControl + TaskRegisterControl
 invokes TaskRegisterControl
 {

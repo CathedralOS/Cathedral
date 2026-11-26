@@ -46,7 +46,7 @@ machine BootHandoffPlacement::plan(schema: Schema) -> AccessPlan {
 machine BootHandoff::publish(storage: &mut Extent in Granted, bytes: &[u8; 65536],
                              map_size: u64, descriptor_size: u64,
                              image_base: u64, image_size: u64, retained_start: u64) -> bool
-requires addr::Bound == 18446744073709551616
+requires address::Bound == 18446744073709551616
 reaches ResourceProfileSupply
 {
     transition map_size > 0 && map_size <= 65536 &&
@@ -60,7 +60,7 @@ reaches ResourceProfileSupply
     machine open(storage: &mut Extent in Granted, bytes: &[u8; 65536],
                map_size: u64, descriptor_size: u64,
                image_base: u64, image_size: u64, retained_start: u64) -> bool
-    requires addr::Bound == 18446744073709551616 && map_size <= 65536
+    requires address::Bound == 18446744073709551616 && map_size <= 65536
     {
         let base: u64 = storage.base as u64;
         transition Access::view_extent_mut<BootHandoffPlacement, BootHandoffImage, BootMemory>(storage) {
@@ -120,7 +120,7 @@ reaches ResourceProfileSupply
 }
 
 machine BootHandoff::receive(storage: &Extent in Granted, information: &mut BootInformation) -> bool
-requires addr::Bound == 18446744073709551616
+requires address::Bound == 18446744073709551616
 reaches ResourceProfileSupply
 {
     let base: u64 = storage.base as u64;

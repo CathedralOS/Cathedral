@@ -129,7 +129,7 @@ The artifact was not rebuilt and is not attributed to the checkout revision.
 | `omega:runtime-layout-strides` | `Dhcp4Packet.option`, `Dhcp4PacketOption.data`, `PxeBaseCodeDiscoverInfo.srv_list`, TCP4 receive/transmit `fragment_table` | `Omega/wiki/spec/layouts/plans.md` leaves exact programmable runtime-stride source forms unspecified. All five original tail declarations and measured offsets remain in source/schema; only fixed prefixes are usable. No unchecked extent or reference is invented. |
 | `omega:layout-reflection-capacity` | Complete `PxeBaseCodeMode` foreign plan | `omega --check tools/ports/uefi-network/layout_capacity.omg`: `schema data PxeBaseCodeMode has 34 fields; the current layout slice supports at most 32`. Importing the full plan alone also fails indices32/33 bounds. |
 | `omega:plan-laid-public-fields` | Cross-package field projection and borrowed typed PXE packet views | `layout_projection.omg`: `selects private data NetworkStatisticsX64Layout<NetworkStatistics>::rx_total_frames`; `layout_union_view.omg`: `selects private data PxeBaseCodePacketX64Layout<PxeBaseCodePacket>::raw`. The latter attempts an ordinary checked shared-byte recast; further recast validation is unobserved because this earlier error stops it. No general union/recast design gap is inferred. |
-| Foreign address materialization and invocation seam | All callback/service slots and pointer-bearing records | Raw `addr` values are inert. Omega authority/device-access/calling documentation requires explicit custody, storage lifetime, external mutability and call policy; this slice supplies no binding or service authority. Native/firmware execution is not attempted. |
+| Foreign address materialization and invocation seam | All callback/service slots and pointer-bearing records | Raw `address` values are inert. Omega authority/device-access/calling documentation requires explicit custody, storage lifetime, external mutability and call policy; this slice supplies no binding or service authority. Native/firmware execution is not attempted. |
 
 The upstream unsafe union reads assume initialized bytes and the correct IP
 family, while callback pointers assume firmware ABI, valid buffers, capacities,
@@ -144,7 +144,7 @@ unsafe casts.
 
 - Rust associated constants become prefixed constants; open numeric enums and
   bitflags become nominal `raw` carriers, preserving unknown values.
-- Rust pointers/function pointers become inert `addr`; full pinned signatures
+- Rust pointers/function pointers become inert `address`; full pinned signatures
   remain adjacent. `usize` is explicitly `u64` in this target profile.
 - Untagged unions store full raw bytes/word/address; every alternative is listed.
   These declarations preserve storage, not typed union construction/projection.

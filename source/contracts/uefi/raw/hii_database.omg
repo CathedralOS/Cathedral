@@ -22,33 +22,33 @@ pub data HiiDatabaseNotifyType [copy] {
 
 // Upstream: uefi_raw::protocol::hii::database::HiiDatabaseProtocol
 pub data HiiDatabaseProtocol [copy] {
-    new_package_list: addr;
+    new_package_list: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, package_list: *const HiiPackageListHeader, driver_handle: Handle, handle: *mut HiiHandle, ) -> Status
-    remove_package_list: addr;
+    remove_package_list: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self, handle: HiiHandle) -> Status
-    update_package_list: addr;
+    update_package_list: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, handle: HiiHandle, package_list: *const HiiPackageListHeader, ) -> Status
-    list_package_lists: addr;
+    list_package_lists: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, package_type: u8, package_guid: *const Guid, handle_buffer_length: *mut usize, handle: *mut HiiHandle, ) -> Status
-    export_package_lists: addr;
+    export_package_lists: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, handle: HiiHandle, buffer_size: *mut usize, buffer: *mut HiiPackageListHeader, ) -> Status
-    register_package_notify: addr;
+    register_package_notify: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, package_type: u8, package_guid: *const Guid, package_notify_fn: HiiDatabaseNotifyFn, notify_type: HiiDatabaseNotifyType, notify_handle: *mut Handle, ) -> Status
-    unregister_package_notify: addr;
+    unregister_package_notify: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self, notification_handle: Handle) -> Status
-    find_keyboard_layouts: addr;
+    find_keyboard_layouts: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, key_guid_buffer_length: *mut u16, key_guid_buffer: *mut Guid, ) -> Status
-    get_keyboard_layout: addr;
+    get_keyboard_layout: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, key_guid: *const Guid, keyboard_layout_length: *mut u16, keyboard_layout: *mut HiiKeyboardLayout, ) -> Status
-    set_keyboard_layout: addr;
+    set_keyboard_layout: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self, key_guid: *const Guid) -> Status
-    get_package_list_handle: addr;
+    get_package_list_handle: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, package_list_handle: HiiHandle, driver_handle: *mut Handle, ) -> Status
 }
 
 // Upstream: uefi_raw::protocol::hii::database::HiiDatabaseNotifyFn
 pub data HiiDatabaseNotifyFn [copy] {
-    raw: addr;
+    raw: address;
     // Foreign carrier: unsafe extern "efiapi" fn( package_type: u8, package_guid: *const Guid, package: *const HiiPackageHeader, handle: HiiHandle, notify_type: HiiDatabaseNotifyType, ) -> Status
 }
 

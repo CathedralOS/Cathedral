@@ -53,7 +53,7 @@ def main():
         actual = re.findall(r'^\s*(\w+): ([^;]+);', body, re.M)
         expected = []
         for field, typ in record['fields']:
-            mapped = 'addr' if '*' in typ or 'fn(' in typ or 'fn (' in typ else {'Handle': 'addr', 'usize': 'u64', 'isize': 'i64', 'Boolean': 'u8', 'ResetSystemFn': 'addr', 'Status': 'u64', 'Event': 'addr', 'ShellFileHandle': 'addr'}.get(typ, typ)
+            mapped = 'address' if '*' in typ or 'fn(' in typ or 'fn (' in typ else {'Handle': 'address', 'usize': 'u64', 'isize': 'i64', 'Boolean': 'u8', 'ResetSystemFn': 'address', 'Status': 'u64', 'Event': 'address', 'ShellFileHandle': 'address'}.get(typ, typ)
             expected.append((field.removeprefix('r#'), mapped))
         require(actual == expected, name + ': field/type/order differs')
         plan = re.search(r'pub machine ' + name + r'X64Layout::plan.*?{(.*?)\n}', plans, re.S)[1]

@@ -16,14 +16,14 @@ domain Extent::BootVirtualDestination established by BootVirtualReservation::res
 boundary trait BootVirtualReservation {
     machine reserve(storage: Extent in Granted) -> Extent in Granted
     reaches
-    requires addr::Bound == 18446744073709551616
+    requires address::Bound == 18446744073709551616
     ensures result in Granted & BootVirtualDestination,
         Granted::content(old(&storage)) == Granted::content(&result);
 }
 
 BootstrapVirtualReservationProvider satisfies BootVirtualReservation {
     machine reserve(storage: Extent in Granted) -> Extent in Granted
-    requires addr::Bound == 18446744073709551616
+    requires address::Bound == 18446744073709551616
     ensures result in Granted,
         Granted::content(old(&storage)) == Granted::content(&result)
     {
@@ -53,14 +53,14 @@ data BootMapping {
 
 boundary trait BootTranslation {
     machine exercise(mapping: &mut BootMapping) -> bool
-    requires addr::Bound == 18446744073709551616
+    requires address::Bound == 18446744073709551616
     reaches MachineControl + ResourceProfileSupply
     crashes Abort;
 }
 
 BootstrapTranslationProvider satisfies BootTranslation {
     machine exercise(mapping: &mut BootMapping) -> bool
-    requires addr::Bound == 18446744073709551616
+    requires address::Bound == 18446744073709551616
     reaches MachineControl + ResourceProfileSupply
     crashes Abort
     { BootstrapTranslationNative::exercise(mapping) }
@@ -69,7 +69,7 @@ BootstrapTranslationProvider satisfies BootTranslation {
 data BootstrapTranslationNative {}
 
 uefi_x86_64 machine BootstrapTranslationNative::exercise(mapping: &mut BootMapping) -> bool
-requires addr::Bound == 18446744073709551616
+requires address::Bound == 18446744073709551616
 reaches MachineControl + ResourceProfileSupply
 crashes Abort
     {
@@ -110,7 +110,7 @@ crashes Abort
             _ -> wrong()
         }
         machine install(mapping: &mut BootMapping, previous: u64) -> bool
-        requires addr::Bound == 18446744073709551616
+        requires address::Bound == 18446744073709551616
         {
             let root: u64 = mapping.tables.base as u64;
             // The selected profile has neither PGE nor PCID. MOV CR3 is the

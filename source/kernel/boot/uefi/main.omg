@@ -28,7 +28,7 @@ public CathedralBootstrap satisfies UefiPhysicalEntry {
     invokes ProgramStorageEntry
     invokes ProgramImage
     invokes ResourceProfileSupply
-    requires addr::Bound == 18446744073709551616
+    requires address::Bound == 18446744073709551616
     {
         transition table.header.signature == EFI_SYSTEM_TABLE_SIGNATURE &&
                    table.header.revision >= EFI_MIN_SUPPORTED_REVISION &&
@@ -39,7 +39,7 @@ public CathedralBootstrap satisfies UefiPhysicalEntry {
         }
 
         machine boot(handle: EfiHandle in LoadedApplication, table: &EfiSystemTable) -> EfiStatus
-        requires addr::Bound == 18446744073709551616
+        requires address::Bound == 18446744073709551616
         {
             let mut context: Main;
             Main::run(&mut context, handle, table)

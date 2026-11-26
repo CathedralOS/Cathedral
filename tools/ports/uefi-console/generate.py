@@ -74,10 +74,10 @@ for rel,module in FILES.items():
         aliases.append((module,m[1],m[2].strip(),path))
 
 known={(r['module'],r['name']):r for r in records}
-external={'Boolean':'u8','Char16':'u16','Event':'addr','Handle':'addr','PhysicalAddress':'u64','MemoryType':'u32'}
+external={'Boolean':'u8','Char16':'u16','Event':'address','Handle':'address','PhysicalAddress':'u64','MemoryType':'u32'}
 def translated_type(t,module):
     t=' '.join(t.split())
-    if '*' in t or 'fn(' in t or 'fn (' in t:return 'addr'
+    if '*' in t or 'fn(' in t or 'fn (' in t:return 'address'
     if t in external:return external[t]
     if t=='usize':return 'u64'
     if t=='DevicePathHeader':return 'DevicePathProtocol'
@@ -114,7 +114,7 @@ for r in records:
             tails.append((module,name,field,typ,r['path']))
         else:
             mapped=translated_type(typ,module);dst.append('    '+field+': '+mapped+';')
-            if mapped=='addr':dst.append('    // Foreign carrier: '+' '.join(typ.split()))
+            if mapped=='address':dst.append('    // Foreign carrier: '+' '.join(typ.split()))
             fs.append((field,mapped))
         key=module+'::'+name+'.'+field
         # tuple wrapper raw fields use .0 upstream, not a named field
@@ -129,7 +129,7 @@ for r in records:
         measures[key+'.'+kind]={'kind':kind,'value':0}
     schema.append({'module':module,'name':name,'upstream':r['rust'],'fields':fs,'packed':r['packed'],'tail_fields':[f for mod,n,f,t,p in tails if mod==module and n==name]})
 for module,name,typ,path in aliases:
-    outputs[module].extend(['// Upstream carrier: '+' '.join(typ.split()),f'pub data {name} [copy] {{ raw: addr; }}',''])
+    outputs[module].extend(['// Upstream carrier: '+' '.join(typ.split()),f'pub data {name} [copy] {{ raw: address; }}',''])
     rust='uefi_raw::protocol::'+next(k.removesuffix('.rs').replace('/','::') for k,v in FILES.items() if 'uefi-raw/src/protocol/'+k==path)+'::'+name
     for kind,op in [('size','size_of'),('alignment','align_of')]:
         key=module+'::'+name+'.'+kind;probe.append(f'println!("{key}={{}}", {op}::<{rust}>());');measures[key]={'kind':kind,'value':0}
@@ -216,7 +216,7 @@ if vector_path.exists():
            '// Authored fixed geometry for UEFI-003, derived from pinned target-checked vectors.',
            '// Selecting a policy grants no backing, foreign call or runtime-tail authority.',
            'module console_layouts;', 'use omega::language::core::layout;', '']
-    plan_records=schema+[{'module':m,'name':n,'fields':[('raw','addr')],'tail_fields':[]} for m,n,t,p in aliases]
+    plan_records=schema+[{'module':m,'name':n,'fields':[('raw','address')],'tail_fields':[]} for m,n,t,p in aliases]
     for record in plan_records:
         name=record['name'];key=record['module']+'::'+name;policy=name+'X64Layout'
         if record['tail_fields']:

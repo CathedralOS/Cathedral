@@ -15,7 +15,7 @@ use isa::x86_64::interrupts::task_state;
 // Success does not enable interrupts or establish an installed handler.
 public boundary trait KernelSelectorPreparation {
     machine activate(storage: &mut task_state::TaskStateStorage) -> bool
-    requires addr::Bound == 18446744073709551616
+    requires address::Bound == 18446744073709551616
     reaches MachineControl + CodeSegmentControl + DataSegmentControl + TaskRegisterControl
     invokes CodeSegmentControl
     invokes DataSegmentControl
@@ -24,7 +24,7 @@ public boundary trait KernelSelectorPreparation {
 
 public BootstrapKernelSelectorPreparation satisfies KernelSelectorPreparation {
     machine activate(storage: &mut task_state::TaskStateStorage) -> bool
-    requires addr::Bound == 18446744073709551616
+    requires address::Bound == 18446744073709551616
     reaches MachineControl + CodeSegmentControl + DataSegmentControl + TaskRegisterControl
     invokes CodeSegmentControl
     invokes DataSegmentControl
@@ -37,7 +37,7 @@ public BootstrapKernelSelectorPreparation satisfies KernelSelectorPreparation {
         }
 
         machine select_data(storage: &mut task_state::TaskStateStorage) -> bool
-        requires addr::Bound == 18446744073709551616
+        requires address::Bound == 18446744073709551616
         {
             let data_selected: bool = DataSegmentControl::reload<5>(&mut storage.gdt, 16);
             transition data_selected {
@@ -47,7 +47,7 @@ public BootstrapKernelSelectorPreparation satisfies KernelSelectorPreparation {
         }
 
         machine verify(storage: &task_state::TaskStateStorage) -> bool
-        requires addr::Bound == 18446744073709551616
+        requires address::Bound == 18446744073709551616
         {
             let code: u16 = CodeSegmentControl::selector();
             let data: DataSelectors = DataSegmentControl::selectors();

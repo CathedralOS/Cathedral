@@ -22,40 +22,40 @@ pub data PciRootBridgeIoProtocolAttributes [copy] {
 
 // Upstream: uefi_raw::protocol::pci::root_bridge::PciRootBridgeIoAccess
 pub data PciRootBridgeIoAccess [copy] {
-    read: addr;
+    read: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut PciRootBridgeIoProtocol, width: PciRootBridgeIoProtocolWidth, address: u64, count: usize, buffer: *mut c_void, ) -> Status
-    write: addr;
+    write: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut PciRootBridgeIoProtocol, width: PciRootBridgeIoProtocolWidth, address: u64, count: usize, buffer: *const c_void, ) -> Status
 }
 
 // Upstream: uefi_raw::protocol::pci::root_bridge::PciRootBridgeIoProtocol
 pub data PciRootBridgeIoProtocol [copy] {
-    parent_handle: addr;
+    parent_handle: address;
     // Foreign carrier: Handle
-    poll_mem: addr;
+    poll_mem: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, width: PciRootBridgeIoProtocolWidth, address: u64, mask: u64, value: u64, delay: u64, result: *mut u64, ) -> Status
-    poll_io: addr;
+    poll_io: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, width: PciRootBridgeIoProtocolWidth, address: u64, mask: u64, value: u64, delay: u64, result: *mut u64, ) -> Status
     mem: PciRootBridgeIoAccess;
     io: PciRootBridgeIoAccess;
     pci: PciRootBridgeIoAccess;
-    copy_mem: addr;
+    copy_mem: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, width: PciRootBridgeIoProtocolWidth, dest_addr: u64, src_addr: u64, count: usize, ) -> Status
-    map: addr;
+    map: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, operation: PciRootBridgeIoProtocolOperation, host_addr: *const c_void, num_bytes: *mut usize, device_addr: *mut PhysicalAddress, mapping: *mut *mut c_void, ) -> Status
-    unmap: addr;
+    unmap: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self, mapping: *const c_void) -> Status
-    allocate_buffer: addr;
+    allocate_buffer: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, alloc_ty: AllocateType, memory_ty: MemoryType, pages: usize, host_addr: *mut *mut c_void, attributes: u64, ) -> Status
-    free_buffer: addr;
+    free_buffer: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, pages: usize, host_addr: *const c_void, ) -> Status
-    flush: addr;
+    flush: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self) -> Status
-    get_attributes: addr;
+    get_attributes: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, supports: *mut u64, attributes: *mut u64, ) -> Status
-    set_attributes: addr;
+    set_attributes: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, attributes: u64, resource_base: *mut u64, resource_length: *mut u64, ) -> Status
-    configuration: addr;
+    configuration: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self, resources: *mut *const c_void) -> Status
     segment_number: u32;
 }
@@ -135,37 +135,37 @@ pub data EndpointDescriptor [copy] {
 // Upstream: uefi_raw::protocol::usb::AsyncUsbTransferCallback
 // Foreign carrier: unsafe extern "efiapi" fn( data: *const ffi::c_void, data_length: usize, context: *const ffi::c_void, status: UsbTransferStatus, ) -> Status
 pub data AsyncUsbTransferCallback [copy] {
-    raw: addr;
-    // Foreign carrier: addr
+    raw: address;
+    // Foreign carrier: address
 }
 
 // Upstream: uefi_raw::protocol::usb::io::UsbIoProtocol
 pub data UsbIoProtocol [copy] {
-    control_transfer: addr;
+    control_transfer: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, request: *const DeviceRequest, direction: DataDirection, timeout: u32, data: *mut ffi::c_void, data_length: usize, status: *mut UsbTransferStatus, ) -> Status
-    bulk_transfer: addr;
+    bulk_transfer: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, device_endpoint: u8, data: *mut ffi::c_void, data_length: *mut usize, timeout: usize, status: *mut UsbTransferStatus, ) -> Status
-    async_interrupt_transfer: addr;
+    async_interrupt_transfer: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, device_endpoint: u8, is_new_transfer: Boolean, polling_interval: usize, data_length: usize, interrupt_callback: Option<AsyncUsbTransferCallback>, context: *const ffi::c_void, ) -> Status
-    sync_interrupt_transfer: addr;
+    sync_interrupt_transfer: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, device_endpoint: u8, data: *mut ffi::c_void, data_length: *mut usize, timeout: usize, status: *mut UsbTransferStatus, ) -> Status
-    isochronous_transfer: addr;
+    isochronous_transfer: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, device_endpoint: u8, data: *mut ffi::c_void, data_length: usize, status: *mut UsbTransferStatus, ) -> Status
-    async_isochronous_transfer: addr;
+    async_isochronous_transfer: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, device_endpoint: u8, data: *mut ffi::c_void, data_length: usize, isochronous_callback: AsyncUsbTransferCallback, context: *const ffi::c_void, ) -> Status
-    get_device_descriptor: addr;
+    get_device_descriptor: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, device_descriptor: *mut DeviceDescriptor, ) -> Status
-    get_config_descriptor: addr;
+    get_config_descriptor: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, config_descriptor: *mut ConfigDescriptor, ) -> Status
-    get_interface_descriptor: addr;
+    get_interface_descriptor: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, interface_descriptor: *mut InterfaceDescriptor, ) -> Status
-    get_endpoint_descriptor: addr;
+    get_endpoint_descriptor: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, endpoint_index: u8, endpoint_descriptor: *mut EndpointDescriptor, ) -> Status
-    get_string_descriptor: addr;
+    get_string_descriptor: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, lang_id: u16, string_id: u8, string: *mut *mut Char16, ) -> Status
-    get_supported_languages: addr;
+    get_supported_languages: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, lang_id_table: *mut *mut u16, table_size: *mut u16, ) -> Status
-    port_reset: addr;
+    port_reset: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self) -> Status
 }
 
@@ -213,31 +213,31 @@ pub data PortFeature [copy] {
 
 // Upstream: uefi_raw::protocol::usb::host_controller::Usb2HostControllerProtocol
 pub data Usb2HostControllerProtocol [copy] {
-    get_capability: addr;
+    get_capability: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, max_speed: *mut Speed, port_number: *mut u8, is_64_bit_capable: *mut u8, ) -> Status
-    reset: addr;
+    reset: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, attributes: ResetAttributes) -> Status
-    get_state: addr;
+    get_state: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, state: *mut HostControllerState) -> Status
-    set_state: addr;
+    set_state: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, state: HostControllerState) -> Status
-    control_transfer: addr;
+    control_transfer: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, device_address: u8, device_speed: Speed, maximum_packet_length: usize, request: *const DeviceRequest, transfer_direction: DataDirection, data: *mut ffi::c_void, data_length: *mut usize, timeout: usize, translator: *const TransactionTranslator, transfer_result: *mut UsbTransferStatus, ) -> Status
-    bulk_transfer: addr;
+    bulk_transfer: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, device_address: u8, endpoint_address: u8, device_speed: Speed, maximum_packet_length: usize, data_buffers_number: u8, data: *const *mut ffi::c_void, data_length: *mut usize, data_toggle: *mut u8, timeout: usize, translator: *const TransactionTranslator, transfer_result: *mut UsbTransferStatus, ) -> Status
-    async_interrupt_transfer: addr;
+    async_interrupt_transfer: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, device_address: u8, endpoint_address: u8, device_speed: Speed, maximum_packet_length: usize, is_new_transfer: Boolean, data_toggle: *mut u8, polling_interval: usize, data_length: usize, translator: *const TransactionTranslator, callback_function: Option<AsyncUsbTransferCallback>, context: *const ffi::c_void, ) -> Status
-    sync_interrupt_transfer: addr;
+    sync_interrupt_transfer: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, device_address: u8, endpoint_address: u8, device_speed: Speed, maximum_packet_length: usize, data: *mut ffi::c_void, data_length: *mut usize, data_toggle: *mut u8, timeout: usize, translator: *const TransactionTranslator, transfer_result: *mut UsbTransferStatus, ) -> Status
-    isochronous_transfer: addr;
+    isochronous_transfer: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, device_address: u8, endpoint_address: u8, device_speed: Speed, maximum_packet_length: usize, data_buffers_number: u8, data: *const *mut ffi::c_void, data_length: usize, translator: *const TransactionTranslator, transfer_result: *mut UsbTransferStatus, ) -> Status
-    async_isochronous_transfer: addr;
+    async_isochronous_transfer: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, device_address: u8, endpoint_address: u8, device_speed: Speed, maximum_packet_length: usize, data_buffers_number: u8, data: *const *mut ffi::c_void, data_length: usize, translator: *const TransactionTranslator, isochronous_callback: AsyncUsbTransferCallback, context: *const ffi::c_void, ) -> Status
-    get_root_hub_port_status: addr;
+    get_root_hub_port_status: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, port_number: u8, port_status: *mut UsbPortStatus, ) -> Status
-    set_root_hub_port_feature: addr;
+    set_root_hub_port_feature: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, port_number: u8, port_feature: PortFeature, ) -> Status
-    clear_root_hub_port_feature: addr;
+    clear_root_hub_port_feature: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, port_number: u8, feature: PortFeature) -> Status
     major_revision: u16;
     minor_revision: u16;
@@ -246,15 +246,15 @@ pub data Usb2HostControllerProtocol [copy] {
 // Upstream: uefi_raw::protocol::iommu::EdkiiIommuProtocol
 pub data EdkiiIommuProtocol [copy] {
     revision: u64;
-    set_attribute: addr;
+    set_attribute: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, device_handle: Handle, mapping: *const c_void, iommu_access: EdkiiIommuAccess, ) -> Status
-    map: addr;
+    map: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, operation: EdkiiIommuOperation, host_address: *mut c_void, number_of_bytes: *mut usize, device_address: *mut u64, mapping: *mut *mut c_void, ) -> Status
-    unmap: addr;
+    unmap: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self, mapping: *const c_void) -> Status
-    allocate_buffer: addr;
+    allocate_buffer: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, allocate_type: AllocateType, memory_type: MemoryType, pages: usize, host_address: *mut *mut c_void, attributes: EdkiiIommuAttribute, ) -> Status
-    free_buffer: addr;
+    free_buffer: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, pages: usize, host_address: *const c_void, ) -> Status
 }
 
@@ -280,35 +280,35 @@ pub data RngAlgorithmType [copy] {
 
 // Upstream: uefi_raw::protocol::rng::RngProtocol
 pub data RngProtocol [copy] {
-    get_info: addr;
+    get_info: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, algorithm_list_size: *mut usize, algorithm_list: *mut RngAlgorithmType, ) -> Status
-    get_rng: addr;
+    get_rng: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, algorithm: *const RngAlgorithmType, value_length: usize, value: *mut u8, ) -> Status
 }
 
 // Upstream: uefi_raw::protocol::acpi::AcpiTableProtocol
 pub data AcpiTableProtocol [copy] {
-    install_acpi_table: addr;
+    install_acpi_table: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, acpi_table_buffer: *const c_void, acpi_table_size: usize, table_key: *mut usize, ) -> Status
-    uninstall_acpi_table: addr;
+    uninstall_acpi_table: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self, table_key: usize) -> Status
 }
 
 // Upstream: uefi_raw::protocol::memory_protection::MemoryAttributeProtocol
 pub data MemoryAttributeProtocol [copy] {
-    get_memory_attributes: addr;
+    get_memory_attributes: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, base_address: PhysicalAddress, length: u64, attributes: *mut MemoryAttribute, ) -> Status
-    set_memory_attributes: addr;
+    set_memory_attributes: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, base_address: PhysicalAddress, length: u64, attributes: MemoryAttribute, ) -> Status
-    clear_memory_attributes: addr;
+    clear_memory_attributes: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, base_address: PhysicalAddress, length: u64, attributes: MemoryAttribute, ) -> Status
 }
 
 // Upstream: uefi_raw::protocol::misc::TimestampProtocol
 pub data TimestampProtocol [copy] {
-    get_timestamp: addr;
+    get_timestamp: address;
     // Foreign carrier: unsafe extern "efiapi" fn() -> u64
-    get_properties: addr;
+    get_properties: address;
     // Foreign carrier: unsafe extern "efiapi" fn(*mut TimestampProperties) -> Status
 }
 
@@ -320,67 +320,67 @@ pub data TimestampProperties [copy] {
 
 // Upstream: uefi_raw::protocol::misc::ResetNotificationProtocol
 pub data ResetNotificationProtocol [copy] {
-    register_reset_notify: addr;
+    register_reset_notify: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, reset_function: ResetSystemFn) -> Status
-    unregister_reset_notify: addr;
+    unregister_reset_notify: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, reset_function: ResetSystemFn) -> Status
 }
 
 // Upstream: uefi_raw::protocol::misc::ResetSystemFn
 // Foreign carrier: unsafe extern "efiapi" fn( rt: runtime::ResetType, status: Status, data_size: usize, data: *const u8, )
 pub data ResetSystemFn [copy] {
-    raw: addr;
-    // Foreign carrier: addr
+    raw: address;
+    // Foreign carrier: address
 }
 
 // Upstream: uefi_raw::protocol::driver::DriverBindingProtocol
 pub data DriverBindingProtocol [copy] {
-    supported: addr;
+    supported: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, controller_handle: Handle, remaining_device_path: *const DevicePathProtocol, ) -> Status
-    start: addr;
+    start: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, controller_handle: Handle, remaining_device_path: *const DevicePathProtocol, ) -> Status
-    stop: addr;
+    stop: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, controller_handle: Handle, number_of_children: usize, child_handle_buffer: *const Handle, ) -> Status
     version: u32;
-    image_handle: addr;
+    image_handle: address;
     // Foreign carrier: Handle
-    driver_binding_handle: addr;
+    driver_binding_handle: address;
     // Foreign carrier: Handle
 }
 
 // Upstream: uefi_raw::protocol::driver::ComponentName2Protocol
 pub data ComponentName2Protocol [copy] {
-    get_driver_name: addr;
+    get_driver_name: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, language: *const u8, driver_name: *mut *const u16, ) -> Status
-    get_controller_name: addr;
+    get_controller_name: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, controller_handle: Handle, child_handle: Handle, language: *const u8, controller_name: *mut *const u16, ) -> Status
-    supported_languages: addr;
+    supported_languages: address;
     // Foreign carrier: *const u8
 }
 
 // Upstream: uefi_raw::protocol::driver::ServiceBindingProtocol
 pub data ServiceBindingProtocol [copy] {
-    create_child: addr;
+    create_child: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, child_handle: *mut Handle) -> Status
-    destroy_child: addr;
+    destroy_child: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, child_handle: Handle) -> Status
 }
 
 // Upstream: uefi_raw::protocol::string::UnicodeCollationProtocol
 pub data UnicodeCollationProtocol [copy] {
-    stri_coll: addr;
+    stri_coll: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self, s1: *const Char16, s2: *const Char16) -> isize
-    metai_match: addr;
+    metai_match: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, string: *const Char16, pattern: *const Char16, ) -> Boolean
-    str_lwr: addr;
+    str_lwr: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self, s: *mut Char16)
-    str_upr: addr;
+    str_upr: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self, s: *mut Char16)
-    fat_to_str: addr;
+    fat_to_str: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, fat_size: usize, fat: *const Char8, s: *mut Char16, )
-    str_to_fat: addr;
+    str_to_fat: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, s: *const Char16, fat_size: usize, fat: *mut Char8, ) -> Boolean
-    supported_languages: addr;
+    supported_languages: address;
     // Foreign carrier: *const Char8
 }
 

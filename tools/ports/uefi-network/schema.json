@@ -384,7 +384,7 @@
         ],
         [
           "discover_timeout",
-          "addr"
+          "address"
         ],
         [
           "request_try_count",
@@ -392,7 +392,7 @@
         ],
         [
           "request_timeout",
-          "addr"
+          "address"
         ],
         [
           "client_address",
@@ -400,11 +400,11 @@
         ],
         [
           "callback",
-          "addr"
+          "address"
         ],
         [
           "callback_context",
-          "addr"
+          "address"
         ],
         [
           "option_count",
@@ -412,7 +412,7 @@
         ],
         [
           "option_list",
-          "addr"
+          "address"
         ]
       ]
     },
@@ -496,7 +496,7 @@
         ],
         [
           "reply_packet",
-          "addr"
+          "address"
         ]
       ]
     },
@@ -616,7 +616,7 @@
         ],
         [
           "listen_points",
-          "addr"
+          "address"
         ],
         [
           "timeout_value",
@@ -624,7 +624,7 @@
         ],
         [
           "packet",
-          "addr"
+          "address"
         ],
         [
           "response_count",
@@ -632,7 +632,7 @@
         ],
         [
           "response_list",
-          "addr"
+          "address"
         ]
       ]
     },
@@ -684,39 +684,39 @@
       "omega_fields": [
         [
           "get_mode_data",
-          "addr"
+          "address"
         ],
         [
           "configure",
-          "addr"
+          "address"
         ],
         [
           "start",
-          "addr"
+          "address"
         ],
         [
           "renew_rebind",
-          "addr"
+          "address"
         ],
         [
           "release",
-          "addr"
+          "address"
         ],
         [
           "stop",
-          "addr"
+          "address"
         ],
         [
           "build",
-          "addr"
+          "address"
         ],
         [
           "transmit_receive",
-          "addr"
+          "address"
         ],
         [
           "parse",
-          "addr"
+          "address"
         ]
       ]
     },
@@ -876,7 +876,7 @@
       "omega_fields": [
         [
           "raw",
-          "addr"
+          "address"
         ]
       ]
     },
@@ -912,7 +912,7 @@
         ],
         [
           "message",
-          "addr"
+          "address"
         ]
       ]
     },
@@ -956,7 +956,7 @@
         ],
         [
           "header",
-          "addr"
+          "address"
         ],
         [
           "body_length",
@@ -964,7 +964,7 @@
         ],
         [
           "body",
-          "addr"
+          "address"
         ]
       ]
     },
@@ -992,7 +992,7 @@
         ],
         [
           "url",
-          "addr"
+          "address"
         ]
       ]
     },
@@ -1056,7 +1056,7 @@
       "omega_fields": [
         [
           "raw",
-          "addr"
+          "address"
         ]
       ]
     },
@@ -1080,11 +1080,11 @@
       "omega_fields": [
         [
           "field_name",
-          "addr"
+          "address"
         ],
         [
           "field_value",
-          "addr"
+          "address"
         ]
       ]
     },
@@ -1144,27 +1144,27 @@
       "omega_fields": [
         [
           "get_mode_data",
-          "addr"
+          "address"
         ],
         [
           "configure",
-          "addr"
+          "address"
         ],
         [
           "request",
-          "addr"
+          "address"
         ],
         [
           "cancel",
-          "addr"
+          "address"
         ],
         [
           "response",
-          "addr"
+          "address"
         ],
         [
           "poll",
-          "addr"
+          "address"
         ]
       ]
     },
@@ -1276,7 +1276,7 @@
         ],
         [
           "group_table",
-          "addr"
+          "address"
         ],
         [
           "route_count",
@@ -1284,7 +1284,7 @@
         ],
         [
           "route_table",
-          "addr"
+          "address"
         ],
         [
           "icmp_type_count",
@@ -1292,7 +1292,7 @@
         ],
         [
           "icmp_type_list",
-          "addr"
+          "address"
         ]
       ]
     },
@@ -1540,7 +1540,7 @@
         ],
         [
           "route_table",
-          "addr"
+          "address"
         ]
       ]
     },
@@ -1620,19 +1620,19 @@
       "omega_fields": [
         [
           "set_data",
-          "addr"
+          "address"
         ],
         [
           "get_data",
-          "addr"
+          "address"
         ],
         [
           "register_data_notify",
-          "addr"
+          "address"
         ],
         [
           "unregister_data_notify",
-          "addr"
+          "address"
         ]
       ]
     },
@@ -1708,55 +1708,55 @@
         ],
         [
           "start",
-          "addr"
+          "address"
         ],
         [
           "stop",
-          "addr"
+          "address"
         ],
         [
           "dhcp",
-          "addr"
+          "address"
         ],
         [
           "discover",
-          "addr"
+          "address"
         ],
         [
           "mtftp",
-          "addr"
+          "address"
         ],
         [
           "udp_write",
-          "addr"
+          "address"
         ],
         [
           "udp_read",
-          "addr"
+          "address"
         ],
         [
           "set_ip_filter",
-          "addr"
+          "address"
         ],
         [
           "arp",
-          "addr"
+          "address"
         ],
         [
           "set_parameters",
-          "addr"
+          "address"
         ],
         [
           "set_station_ip",
-          "addr"
+          "address"
         ],
         [
           "set_packets",
-          "addr"
+          "address"
         ],
         [
           "mode",
-          "addr"
+          "address"
         ]
       ]
     },
@@ -2836,55 +2836,55 @@
         ],
         [
           "start",
-          "addr"
+          "address"
         ],
         [
           "stop",
-          "addr"
+          "address"
         ],
         [
           "initialize",
-          "addr"
+          "address"
         ],
         [
           "reset",
-          "addr"
+          "address"
         ],
         [
           "shutdown",
-          "addr"
+          "address"
         ],
         [
           "receive_filters",
-          "addr"
+          "address"
         ],
         [
           "station_address",
-          "addr"
+          "address"
         ],
         [
           "statistics",
-          "addr"
+          "address"
         ],
         [
           "multicast_ip_to_mac",
-          "addr"
+          "address"
         ],
         [
           "non_volatile_data",
-          "addr"
+          "address"
         ],
         [
           "get_status",
-          "addr"
+          "address"
         ],
         [
           "transmit",
-          "addr"
+          "address"
         ],
         [
           "receive",
-          "addr"
+          "address"
         ],
         [
           "wait_for_packet",
@@ -2892,7 +2892,7 @@
         ],
         [
           "mode",
-          "addr"
+          "address"
         ]
       ]
     },
@@ -3392,43 +3392,43 @@
       "omega_fields": [
         [
           "get_mode_data",
-          "addr"
+          "address"
         ],
         [
           "configure",
-          "addr"
+          "address"
         ],
         [
           "routes",
-          "addr"
+          "address"
         ],
         [
           "connect",
-          "addr"
+          "address"
         ],
         [
           "accept",
-          "addr"
+          "address"
         ],
         [
           "transmit",
-          "addr"
+          "address"
         ],
         [
           "receive",
-          "addr"
+          "address"
         ],
         [
           "close",
-          "addr"
+          "address"
         ],
         [
           "cancel",
-          "addr"
+          "address"
         ],
         [
           "poll",
-          "addr"
+          "address"
         ]
       ]
     },
@@ -3492,7 +3492,7 @@
         ],
         [
           "control_option",
-          "addr"
+          "address"
         ]
       ]
     },
@@ -3848,7 +3848,7 @@
       "omega_fields": [
         [
           "raw",
-          "addr"
+          "address"
         ]
       ]
     },
@@ -3876,7 +3876,7 @@
         ],
         [
           "fragment_buf",
-          "addr"
+          "address"
         ]
       ]
     },
@@ -4036,11 +4036,11 @@
       "omega_fields": [
         [
           "set_data",
-          "addr"
+          "address"
         ],
         [
           "get_data",
-          "addr"
+          "address"
         ]
       ]
     },
