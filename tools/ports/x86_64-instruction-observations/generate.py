@@ -12,11 +12,11 @@ assert conditions==['cpuid.ecx & (1 << 30) != 0','cpuid.ebx.get_bit(20)']
 rust='// SPDX-License-Identifier: MIT OR Apache-2.0\nuse bit_field::BitField;\nstruct Observed {ecx:u32,ebx:u32}\n'
 for name,condition in zip(('rdrand','smap'),conditions):rust+='fn '+name+'(cpuid:Observed)->bool { '+condition+' }\n'
 rust+='fn main(){for bit in 0..32 {let x=1u32<<bit;assert_eq!(rdrand(Observed{ecx:x,ebx:0}),bit==30);assert_eq!(smap(Observed{ecx:0,ebx:x}),bit==20);}for x in [0,u32::MAX]{assert_eq!(rdrand(Observed{ecx:x,ebx:x}),x!=0);assert_eq!(smap(Observed{ecx:x,ebx:x}),x!=0);}println!("PASS 68 exact pinned predicate observations; no CPUID execution");}\n'
-omega=['use x86_values::instruction_observations;','machine test_result() -> i32 {']
+omega=['use {x86_values}/instruction_observations.omg;','machine test_result() -> i32 {']
 checks=[]
 for method,bit in [('rdrand_bit',30),('smap_bit',20)]:
- for n in range(32):checks.append(f'instruction_observations::{method}({1<<n}) == {str(n==bit).lower()}')
- checks.extend([f'!instruction_observations::{method}(0)',f'instruction_observations::{method}(4294967295)'])
+ for n in range(32):checks.append(f'|instruction_observations|::{method}({1<<n}) == {str(n==bit).lower()}')
+ checks.extend([f'!|instruction_observations|::{method}(0)',f'|instruction_observations|::{method}(4294967295)'])
 omega+=['transition '+' &&\n'.join(checks)+' { true -> (0) _ -> (1) }','}','const RESULT:i32=test_result();','machine require_success(value:i32) requires value==0; {}','data Main{}','machine Main::main(&mut self){require_success(RESULT);}']
 helper='source/platform/libraries/x86_64/instruction_observations.omg'
 for path,file in m['files'].items():

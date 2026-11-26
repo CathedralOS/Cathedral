@@ -24,7 +24,13 @@ def main():
   normalized=original.replace('module '+row['old_module']+';','module '+row['new_module']+';').replace('use aml::','use ').replace('use flags::','use field_flags::').replace('use field_list::','use field_elements::')
   assert hashlib.sha256(original.encode()).hexdigest()==row['original_sha256']
   assert hashlib.sha256(normalized.encode()).hexdigest()==row['relocated_sha256']
-  assert (ROOT/row['after']).read_text()==normalized,row['after']
+  # The relocation and the later file-import migration are distinct revisions.
+  current=(ROOT/row['after']).read_text()
+  assert hashlib.sha256(current.encode()).hexdigest()==row['file_import_sha256'],row['after']
+  def body(text):
+   text=re.sub(r'^(?:module|use) [^;]+;\s*', '', text, flags=re.M)
+   return re.sub(r'\|\w+\|::', '', text)
+  assert body(current)==body(normalized),row['after']
  aml=ROOT/'source/platform/libraries/acpi/aml'
  assert 'depend_as("fields"'not in (aml/'build.omg').read_text()
  assert sum(p.read_text().count('case FieldUnit(')for p in (ROOT/'source').rglob('*.omg'))==1

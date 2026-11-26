@@ -2,9 +2,9 @@
 """Compact initialized-data fixtures; shared actual Omega comparisons."""
 import generate
 OPS=['from_start','containing','from_pfn','pfn','arithmetic','difference','range_count','range_bytes','range_at','iterator']
-HEAD=generate.IMPORTS+generate.HELPERS+'''data Fixture [copy] {op:u64;start:u64;end:u64;size:u64;index:u64;inclusive:bool;reverse:bool;ok:bool;value:u64;failed:bool;out_start:u64;out_end:u64;}
+HEAD='use {omega}/language/core/nat.omg;\n'+generate.IMPORTS+generate.HELPERS+'''data Fixture [copy] {op:u64;start:u64;end:u64;size:u64;index:u64;inclusive:bool;reverse:bool;ok:bool;value:u64;failed:bool;out_start:u64;out_end:u64;}
 data FixtureRows [copy] {rows:[Fixture;48];}
-machine ef_compact_case(profile:State,row:Fixture)->bool {
+machine ef_compact_case(profile:|memory_encryption|::State,row:Fixture)->bool {
  transition row.op {
 '''
 for i,op in enumerate(OPS):HEAD+=f'{i} -> case_{i}(profile,row)\n'
@@ -16,31 +16,31 @@ for i,op in enumerate(OPS):
  elif op=='difference':call=f'difference(profile,{b},{a},{size})'
  elif op in ['range_count','range_bytes']:call=f'{op}(profile,{a},{b},{size},{inc})'
  else:call=f'{"iterator_step"if op=="iterator"else"range_at"}(profile,{a},{b},{size},{inc},{n},{rev})'
- HEAD+=f'state case_{i}(profile:State,row:Fixture)->bool {{\n'
- if op=='iterator':HEAD+=f'let result:IteratorResult=encrypted_frames::{call};let good:bool=ef_fixture_iterator(result,row.ok,row.value,row.failed,row.out_start,row.out_end);good\n'
+ HEAD+=f'state case_{i}(profile:|memory_encryption|::State,row:Fixture)->bool {{\n'
+ if op=='iterator':HEAD+=f'let result:|encrypted_frames|::IteratorResult=|encrypted_frames|::{call};let good:bool=ef_fixture_iterator(result,row.ok,row.value,row.failed,row.out_start,row.out_end);good\n'
  else:
-  HEAD+=f'let result:NumberResult=encrypted_frames::{call};let good:bool=ef_fixture_number(result,row.ok,row.value);\n'
-  if op=='arithmetic':HEAD+='let step:OverflowingStep=encrypted_frames::arithmetic_overflowing(profile,row.start,row.size,row.index,row.reverse);\ntransition row.ok {true -> (good && !step.overflow && step.value==row.value) _ -> (good && step.overflow && step.value==row.start)}\n'
+  HEAD+=f'let result:|addresses|::NumberResult=|encrypted_frames|::{call};let good:bool=ef_fixture_number(result,row.ok,row.value);\n'
+  if op=='arithmetic':HEAD+='let step:|addresses|::OverflowingStep=|encrypted_frames|::arithmetic_overflowing(profile,row.start,row.size,row.index,row.reverse);\ntransition row.ok {true -> (good && !step.overflow && step.value==row.value) _ -> (good && step.overflow && step.value==row.start)}\n'
   else:HEAD+='good\n'
  HEAD+='}\n'
 HEAD+='''}
-machine ef_compact_rows(profile:State,rows:&FixtureRows,index:u64,count:u64,good:bool)
-terminates by(index,count)->Nat::BoundedDistance;
+machine ef_compact_rows(profile:|memory_encryption|::State,rows:&FixtureRows,index:u64,count:u64,good:bool)
+terminates by(index,count)->|nat|::Nat::BoundedDistance;
 ->bool {
  let next:bool=ef_compact_at(profile,rows,index,count,good);
  transition index<count {true -> ef_compact_rows(profile,rows,index+1,count,next) _ -> (good)}
 }
-machine ef_compact_at(profile:State,rows:&FixtureRows,index:u64,count:u64,good:bool)->bool {
+machine ef_compact_at(profile:|memory_encryption|::State,rows:&FixtureRows,index:u64,count:u64,good:bool)->bool {
  transition index<count && index<48 {true -> item(profile,rows.rows[index],good) _ -> (good)}
- state item(profile:State,row:Fixture,good:bool)->bool {let result:bool=ef_compact_case(profile,row);good && result}
+ state item(profile:|memory_encryption|::State,row:Fixture,good:bool)->bool {let result:bool=ef_compact_case(profile,row);good && result}
 }
 data Suite{}
 '''
 def render(g,control):
- name=g['name']+('_control'if control else'_positive');text='machine Suite::'+name+'(&mut self)->i32 {let mut profile:State=initial();\nlet mut all_configured:bool=true;\n'
+ name=g['name']+('_control'if control else'_positive');text='machine Suite::'+name+'(&mut self)->i32 {let mut profile:|memory_encryption|::State=|memory_encryption|::initial();\nlet mut all_configured:bool=true;\n'
  if g['profile']!='disabled':
   for j,part in enumerate(g['profile'].split('_')):
-   kind='EncryptedBit'if part[0]=='e'else'SharedBit';text+=f'let configured{j}:bool=configure(&mut profile,Configuration::{kind} {{position:{part[1:]}}});all_configured=all_configured && configured{j};\n'
+   kind='EncryptedBit'if part[0]=='e'else'SharedBit';text+=f'let configured{j}:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::{kind} {{position:{part[1:]}}});all_configured=all_configured && configured{j};\n'
  text+='let mut rows:FixtureRows=FixtureRows {};\n'
  for i,r in enumerate(g['cases']):
   row={k:v for k,v in r.items()if k in ['start','end','size','index','inclusive','reverse','ok','value','failed','out_start','out_end']};row['op']=OPS.index(r['op'])

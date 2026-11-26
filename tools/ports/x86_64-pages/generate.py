@@ -66,18 +66,18 @@ def write(path,text):
  if '--check' in sys.argv:
   if not path.is_file() or path.read_text()!=text:raise SystemExit(f'generated fixture differs: {path}')
  else:path.write_text(text)
-source=['// SPDX-License-Identifier: MIT OR Apache-2.0','// Modified pinned page/frame test expectations with explicit checked deviations.','use x86::pages;','use x86::addresses::NumberResult;','use extras;','machine equal(result: NumberResult, expected: u64) -> bool { transition result { NumberResult::Value { value } -> (value == expected) _ -> (false) } }','machine rejected(result: NumberResult) -> bool { result in NumberResult::Rejected }']
+source=['// SPDX-License-Identifier: MIT OR Apache-2.0','// Modified pinned page/frame test expectations with explicit checked deviations.','use {x86}/pages.omg;','use {x86}/addresses.omg;','use extras.omg;','machine equal(result: |addresses|::NumberResult, expected: u64) -> bool { transition result { |addresses|::NumberResult::Value { value } -> (value == expected) _ -> (false) } }','machine rejected(result: |addresses|::NumberResult) -> bool { result in |addresses|::NumberResult::Rejected }']
 groups=[]
 for start in range(0,len(rows),8):
  name=f'group_{start}';groups.append(name);source.append(f'machine {name}() -> i32 {{')
  for i,row in enumerate(rows[start:start+8],start):
-  source.append(f'    let result{i}: NumberResult = pages::{row["call"]};')
+  source.append(f'    let result{i}: |addresses|::NumberResult = |pages|::{row["call"]};')
   check=f'rejected(result{i})' if row['expected'] is None else f'equal(result{i}, {row["expected"]})'
   source.append(f'    let passed{i}: bool = {check};')
  source.append('    transition '+' && '.join(f'passed{i}' for i in range(start,min(start+8,len(rows))))+' { true -> (0) _ -> (1) }\n}')
 source.append('machine test_result() -> i32 {')
 for name in groups:source.append(f'    let {name}_ok: bool = {name}() == 0;')
-source.append('    let extras_ok: bool = extras::result() == 0;')
+source.append('    let extras_ok: bool = |extras|::result() == 0;')
 source.append('    transition extras_ok && '+' && '.join(name+'_ok' for name in groups)+' { true -> (0) _ -> (1) }\n}')
 source += ['const TEST_RESULT: i32 = test_result();','machine require_success(value: i32) requires value == 0; {}','data Main {}','machine Main::main(&mut self) { require_success(TEST_RESULT); }\n']
 write(HERE/'main.omg','\n'.join(source));write(HERE/'vectors.json',json.dumps({'scope':'numeric expected results; explicit Rust deviations recorded per case','cases':rows},indent=2)+'\n')

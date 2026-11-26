@@ -20,7 +20,7 @@ def main():
  for name in ('main.omg','storage_main.omg','table_main.omg','table_encode_main.omg','table_decode_main.omg','table_reject_main.omg','layout_local_projection.omg'):run(omega,'--check',HERE/name)
  run(omega,'--check',ROOT/'tools/x86-idt-gate-layout-canary/main.omg')
  build=(HERE/'build.omg').read_text().replace('../../../source/',str(ROOT/'source')+'/')
- controls=[('main.omg','encoded[6] == 102','encoded[6] == 103','main.omg'),('main.omg','IdtRangeResult::Reversed','IdtRangeResult::IncludesException','main.omg'),('cases.omg','encoded[39] == 40','encoded[39] == 41','main.omg'),('table_impl.omg','vector == 254 && value == 1','vector == 253 && value == 1','table_main.omg'),('table_encode_main.omg','encoded[4085] == 14','encoded[4085] == 15','table_encode_main.omg'),('table_reject_main.omg','vector == 255 && value == 8','vector == 254 && value == 8','table_reject_main.omg')]
+ controls=[('main.omg','encoded[6] == 102','encoded[6] == 103','main.omg'),('main.omg','|interrupts|::IdtRangeResult::Reversed','|interrupts|::IdtRangeResult::IncludesException','main.omg'),('cases.omg','encoded[39] == 40','encoded[39] == 41','main.omg'),('table_impl.omg','vector == 254 && value == 1','vector == 253 && value == 1','table_main.omg'),('table_encode_main.omg','encoded[4085] == 14','encoded[4085] == 15','table_encode_main.omg'),('table_reject_main.omg','vector == 255 && value == 8','vector == 254 && value == 8','table_reject_main.omg')]
  for filename,old,new,entry in controls:
   with tempfile.TemporaryDirectory(prefix='cathedral-interrupt-negative-') as directory:
    p=Path(directory)

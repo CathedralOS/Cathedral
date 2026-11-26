@@ -42,7 +42,7 @@ def main():
    evaluate(body);print('PASS extra',name,flush=True)
    if name=='max_budget':evaluate(body,('done_budget==18446744073709551614','done_budget==18446744073709551615'));print('PASS maximum budget body mutation',flush=True)
    if name=='resume_two':evaluate(body,('second.branch.frames_to_retire[0]==20480','second.branch.frames_to_retire[0]==12288'));print('PASS resumed order body mutation',flush=True)
-  for n,old,new in [(0,'value.cursor.status in RangeStatus::Done','value.cursor.status in RangeStatus::Exhausted'),(2,'value.cursor.next_page==2097152','value.cursor.next_page==4096')]:
+  for n,old,new in [(0,'value.cursor.status in |cleanup_ranges|::RangeStatus::Done','value.cursor.status in |cleanup_ranges|::RangeStatus::Exhausted'),(2,'value.cursor.next_page==2097152','value.cursor.next_page==4096')]:
    evaluate(fixture([n]),(old,new));print('PASS body mutation',n,old,flush=True)
  print('PASS selected cleanup ranges and controls',flush=True)
 if __name__=='__main__':main()

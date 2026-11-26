@@ -19,14 +19,14 @@ for va in [0,0xdeadbeef,0xffff923456789abc]:
   if kind=='mapped':row.update(frame=(word&MASK)&~(size-1),size=size,offset=va&(size-1),flags=word&~MASK)
   rows.append(row)
 rows.append(dict(va=2**47,words=[0x1001,0x2001,0x3001,1],kind='invalid_virtual'))
-prefix='// SPDX-License-Identifier: MIT OR Apache-2.0\nuse x86::translation;\nuse x86::translation::Translation;\n'
+prefix='// SPDX-License-Identifier: MIT OR Apache-2.0\nuse {x86}/translation.omg;\n'
 pieces=[]
 for i,row in enumerate(rows):
- body=f'let result: Translation = translation::translate_words({row["va"]}, '+', '.join(map(str,row['words']))+');\n'
+ body=f'let result: |translation|::Translation = |translation|::translate_words({row["va"]}, '+', '.join(map(str,row['words']))+');\n'
  if row['kind']=='mapped':
-  body+='transition result { Translation::Mapped { frame, size, offset, flags } -> check(frame, size, offset, flags) _ -> (1) }\n'
+  body+='transition result { |translation|::Translation::Mapped { frame, size, offset, flags } -> check(frame, size, offset, flags) _ -> (1) }\n'
   body+='state check(frame:u64,size:u64,offset:u64,flags:u64)->i32 { transition '+ ' && '.join(f'{field} == {row[field]}' for field in ['frame','size','offset','flags'])+' { true -> (0) _ -> (1) } }'
- else:body+='transition result in Translation::'+{'not_mapped':'NotMapped','root_huge':'InvalidRootHugePage','invalid_virtual':'InvalidVirtual'}[row['kind']]+' { true -> (0) _ -> (1) }'
+ else:body+='transition result in |translation|::Translation::'+{'not_mapped':'NotMapped','root_huge':'InvalidRootHugePage','invalid_virtual':'InvalidVirtual'}[row['kind']]+' { true -> (0) _ -> (1) }'
  pieces.append(f'machine translation_case_{i}() -> i32 {{ {body} }}')
 rust=r'''// SPDX-License-Identifier: MIT OR Apache-2.0
 use x86_64::{PhysAddr,VirtAddr};

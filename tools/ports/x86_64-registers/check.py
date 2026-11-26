@@ -23,7 +23,7 @@ def main():
  run(compiler,'--check',ROOT/'source/platform/libraries/x86_64/registers.omg')
  run(compiler,'--check',HERE/'main.omg')
  build=(HERE/'build.omg').read_text().replace('../../../source/platform/libraries/x86_64',str(ROOT/'source/platform/libraries/x86_64')).replace('../../../source/platform/drivers/facts',str(ROOT/'source/platform/drivers/facts'))
- controls=[('main.omg','registers::dr7_size(registers::dr7_set_size(base, 0, 2), 0) == 2','registers::dr7_size(registers::dr7_set_size(base, 0, 2), 0) == 3'),('main.omg','registers::star_plan(11, 3, 8, 16).error == 5','registers::star_plan(11, 3, 8, 16).error == 0'),('values.omg','x86_registers::MXCSR_RESET_BITS == 8064','x86_registers::MXCSR_RESET_BITS == 8065')]
+ controls=[('main.omg','|registers|::dr7_size(|registers|::dr7_set_size(base, 0, 2), 0) == 2','|registers|::dr7_size(|registers|::dr7_set_size(base, 0, 2), 0) == 3'),('main.omg','|registers|::star_plan(11, 3, 8, 16).error == 5','|registers|::star_plan(11, 3, 8, 16).error == 0'),('values.omg','|x86_registers|::MXCSR_RESET_BITS == 8064','|x86_registers|::MXCSR_RESET_BITS == 8065')]
  for filename,old,new in controls:
   with tempfile.TemporaryDirectory(prefix='cathedral-x86-register-negative-') as directory:
    p=Path(directory)
