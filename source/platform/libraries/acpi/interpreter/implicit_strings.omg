@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // ACPI 6.6 Table 19.7 Integer/Buffer-to-String rules, bounded initialized data.
 // Primary-rule companion to the rust-osdev/acpi conversion port.
-module implicit_strings;
-use integers::IntegerSize;
-use integers::integer_bits;
-use integers::normalize;
+use {omega}/language/core/nat.omg;
+use integers.omg;
 pub data StringResult [copy] {
  case Capacity;
  case String(length:u64,bytes:[u8;256]);
 }
 // Logical output excludes a terminator; all unused storage is initialized zero.
-pub machine from_integer(size:IntegerSize,number:u64)->StringResult {
- let value:u64=normalize(size,number);let bits:u64=integer_bits(size);let count:u64=bits/4;
+pub machine from_integer(size:|integers|::IntegerSize,number:u64)->StringResult {
+ let value:u64=|integers|::normalize(size,number);let bits:u64=|integers|::integer_bits(size);let count:u64=bits/4;
  let mut output:[u8;256];_=is_integer(&mut output,value,0,count);
  StringResult::String {length:count,bytes:output}
 }
@@ -26,7 +24,7 @@ pub machine from_buffer(input:&[u8;256],length:u64)->StringResult {
 machine is_length(count:u64)->u64 {transition count>0 && count<=85 {true -> (count*3-1) _ -> (0)}}
 machine is_hex(digit:u8)->u8 {transition {digit<10 -> (digit+48) digit<16 -> (digit+55) _ -> (63)}}
 machine is_integer(output:&mut [u8;256],value:u64,index:u64,count:u64)
-terminates by(index,count)->Nat::BoundedDistance;
+terminates by(index,count)->|nat|::Nat::BoundedDistance;
 ->u8 {
  _=is_integer_at(output,value,index,count);
  transition index<count {true -> is_integer(output,value,index+1,count) _ -> (0)}
@@ -41,7 +39,7 @@ machine is_integer_at(output:&mut [u8;256],value:u64,index:u64,count:u64)->u8 {
  }
 }
 machine is_buffer(input:&[u8;256],output:&mut [u8;256],index:u64,count:u64)
-terminates by(index,count)->Nat::BoundedDistance;
+terminates by(index,count)->|nat|::Nat::BoundedDistance;
 ->u8 {
  _=is_buffer_at(input,output,index,count);
  transition index<count {true -> is_buffer(input,output,index+1,count) _ -> (0)}

@@ -1,10 +1,5 @@
-module requests::owner;
-
 // Owner-only routing and post-success consequences. No request supplies authority.
-use requests::operations::Caller;
-use requests::operations::Facts;
-use requests::operations::Message;
-use requests::operations::Operation;
+use requests/operations.omg;
 
 public data Clearing [copy] {
     case None;
@@ -25,40 +20,40 @@ public data Effects {
     remember_storage: bool;
 }
 
-public machine route(message: Message) -> Operation {
+public machine route(message: |operations|::Message) -> |operations|::Operation {
     transition message {
-        Message::Resolve -> (Operation::Resolve)
-        Message::Pixel -> (Operation::Pixel)
-        _ -> (Operation::Owner)
+        |operations|::Message::Resolve -> (|operations|::Operation::Resolve)
+        |operations|::Message::Pixel -> (|operations|::Operation::Pixel)
+        _ -> (|operations|::Operation::Owner)
     }
 }
 
-public machine fallback(facts: &Facts, message: Message) -> Operation {
-    transition facts.caller == Caller::Owner && !(message in Message::Missing) {
+public machine fallback(facts: &|operations|::Facts, message: |operations|::Message) -> |operations|::Operation {
+    transition facts.caller == |operations|::Caller::Owner && !(message in |operations|::Message::Missing) {
         true -> operation(message)
-        _ -> (Operation::Deny)
+        _ -> (|operations|::Operation::Deny)
     }
-    machine operation(message: Message) -> Operation {
+    machine operation(message: |operations|::Message) -> |operations|::Operation {
         transition message {
-            Message::RecoveryOwner -> (Operation::RecoveryOwner)
-            Message::StorageOwner -> (Operation::StorageOwner)
-            _ -> (Operation::LayoutOwner)
+            |operations|::Message::RecoveryOwner -> (|operations|::Operation::RecoveryOwner)
+            |operations|::Message::StorageOwner -> (|operations|::Operation::StorageOwner)
+            _ -> (|operations|::Operation::LayoutOwner)
         }
     }
 }
 
-public machine effects(facts: &Facts, message: Message, children: u64, success: bool) -> Effects {
-    transition facts.caller == Caller::Owner && !(message in Message::Missing) && success {
+public machine effects(facts: &|operations|::Facts, message: |operations|::Message, children: u64, success: bool) -> Effects {
+    transition facts.caller == |operations|::Caller::Owner && !(message in |operations|::Message::Missing) && success {
         true -> operation(message, children)
         _ -> (Effects { changed: false, clearing: Clearing::None,
             replay: Replay::None, remember_storage: false })
     }
-    machine operation(message: Message, children: u64) -> Effects {
+    machine operation(message: |operations|::Message, children: u64) -> Effects {
         transition message {
-            Message::StorageOwner -> changed(Clearing::None, Replay::None, true)
-            Message::Bind -> changed(Clearing::Pair, Replay::All, false)
-            Message::Place -> changed(Clearing::None, Replay::Slot, false)
-            Message::Revoke { slot, canonical } -> revoke(slot, canonical, children)
+            |operations|::Message::StorageOwner -> changed(Clearing::None, Replay::None, true)
+            |operations|::Message::Bind -> changed(Clearing::Pair, Replay::All, false)
+            |operations|::Message::Place -> changed(Clearing::None, Replay::Slot, false)
+            |operations|::Message::Revoke { slot, canonical } -> revoke(slot, canonical, children)
             _ -> changed(Clearing::None, Replay::None, false)
         }
     }

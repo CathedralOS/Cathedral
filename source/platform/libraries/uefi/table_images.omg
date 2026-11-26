@@ -1,9 +1,6 @@
 // Independently authored inert UEFI producer/consumer fixtures, UEFI-010.
 // Numerical slot tokens are fixture IDs, never native addresses or authority.
-module table_images;
-use cathedral_uefi_raw::tables::BOOT_SERVICES_SIGNATURE;
-use cathedral_uefi_raw::tables::BOOTSERVICES_STALL_SLOT;
-use cathedral_uefi_raw::tables::BOOTSERVICES_GET_NEXT_MONOTONIC_COUNT_SLOT;
+use {cathedral_uefi_raw}/tables.omg;
 
 pub const BOOT_IMAGE_SIZE: u64 = 376;
 pub const MOCK_STALL_TOKEN: u64 = 0xcafe0001;
@@ -32,7 +29,7 @@ pub machine encode_u64_le(value: u64) -> [u8; 8] {
 // Produces all 44 slot positions. Unimplemented and reserved positions stay zero.
 pub machine produce_boot_image() -> BootServicesImage {
     let mut image: BootServicesImage;
-    let encoded1: [u8; 8] = encode_u64_le(BOOT_SERVICES_SIGNATURE);
+    let encoded1: [u8; 8] = encode_u64_le(|tables|::BOOT_SERVICES_SIGNATURE);
     image.bytes[0] = encoded1[0];
     image.bytes[1] = encoded1[1];
     image.bytes[2] = encoded1[2];
@@ -87,7 +84,7 @@ pub machine mock_header_matches(image: &BootServicesImage) -> bool {
     let size: u32 = read_u32_le([image.bytes[12],image.bytes[13],image.bytes[14],image.bytes[15]]);
     let checksum: u32 = read_u32_le([image.bytes[16],image.bytes[17],image.bytes[18],image.bytes[19]]);
     let reserved: u32 = read_u32_le([image.bytes[20],image.bytes[21],image.bytes[22],image.bytes[23]]);
-    signature == BOOT_SERVICES_SIGNATURE && revision == 0x20064 && size == 376 &&
+    signature == |tables|::BOOT_SERVICES_SIGNATURE && revision == 0x20064 && size == 376 &&
     checksum == 472562399 && reserved == 0
 }
 pub machine read_boot_slot(image: &BootServicesImage, slot: u64) -> u64
@@ -118,7 +115,7 @@ pub machine mock_stall(microseconds: u64) -> u64 {
 }
 pub machine consume_mock_stall(image: &BootServicesImage, microseconds: u64) -> u64 {
     let valid: bool = mock_header_matches(image);
-    let slot: u64 = read_boot_slot(image, BOOTSERVICES_STALL_SLOT);
+    let slot: u64 = read_boot_slot(image, |tables|::BOOTSERVICES_STALL_SLOT);
     let result: u64 = mock_stall(microseconds);
     transition valid && slot == MOCK_STALL_TOKEN {
         true -> (result)

@@ -82,10 +82,10 @@ review may acquire the pinned Git dependency; `--offline` restricts review to
 already acquired sources. Review the actual pending rows and resume through
 Omega's normal acceptance workflow before running the program.
 
-Omega operations are ordinary module declarations with explicit runtime
-arguments, such as `omega_ui::context::setup(&mut context, width, height)`.
-Import public data by its exact path (`use omega_ui::context::UiContext;`);
-nested machines scope code and receive their own arguments.
+Import the UI context file with `use {omega_ui}/context.omg;`. Its public
+context type is `|context|::UiContext`. Call
+`|context|::setup(&mut context, width, height)` to configure it. Nested
+machines receive their own arguments.
 `gallery` and `snapshots` require Windows; the executable and captures are in
 `build/omega-ui/gallery`. Regenerate the font atlas only when changing fonts with
 `python tools/omega-ui/bake_native_font.py` (Pillow required for regeneration).

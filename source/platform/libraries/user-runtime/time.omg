@@ -1,15 +1,13 @@
-module time;
-use kernel::Gate;
-use kernel::Kernel;
+use kernel.omg;
 
 public data Tick [copy] {
     case Read(value: u64);
     case Failed(code: u64);
 }
 
-public machine read(gate: &Gate, clock: u64) -> Tick reaches Kernel invokes Kernel {
+public machine read(gate: &|kernel|::Gate, clock: u64) -> Tick reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let mut record: [u64; 8];
-    let status: u64 = Kernel::clock_read(gate, clock, &mut record);
+    let status: u64 = |kernel|::Kernel::clock_read(gate, clock, &mut record);
     transition status == 0u64 {
         true -> (Tick::Read { value: record[0] })
         _ -> (Tick::Failed { code: status })
@@ -25,9 +23,9 @@ public machine reached(now: u64, deadline: u64) -> bool {
     elapsed < 0x8000000000000000u64
 }
 
-public machine park_until(gate: &Gate, deadline: u64) -> u64 reaches Kernel blocks invokes Kernel {
+public machine park_until(gate: &|kernel|::Gate, deadline: u64) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     let empty: [u64; 8];
-    block Kernel::wait(gate, &empty, 0u64, deadline)
+    block |kernel|::Kernel::wait(gate, &empty, 0u64, deadline)
 }
 
 // Diagnostic sample from the same clock grant as read(). CPU is this account's
@@ -36,9 +34,9 @@ public data Stamp [copy] {
     case Read(ticks: u64, micros: u64, cpu: u64);
     case Failed(code: u64);
 }
-public machine stamp(gate: &Gate, clock: u64) -> Stamp reaches Kernel invokes Kernel {
+public machine stamp(gate: &|kernel|::Gate, clock: u64) -> Stamp reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let mut record: [u64; 8];
-    let status: u64 = Kernel::clock_stamp(gate, clock, &mut record);
+    let status: u64 = |kernel|::Kernel::clock_stamp(gate, clock, &mut record);
     transition status == 0u64 {
         true -> (Stamp::Read { ticks: record[0], micros: record[1], cpu: record[2] })
         _ -> (Stamp::Failed { code: status })

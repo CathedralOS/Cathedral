@@ -1,4 +1,3 @@
-module storage::operations;
 // The object protocol's operations, as a delegated child issues them below
 // STORAGE_BASE. Wire owner: source-rs/platform/contracts/storage.rs.
 public const HEAD: u64 = 1u64;

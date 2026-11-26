@@ -1,7 +1,7 @@
 // Discover one import record through bounded reads of a sealed ELF64 image,
 // and the stack the program declares beside it. This is declaration
 // discovery, not kernel executable/load validation.
-use record;
+use record.omg;
 // The program header that declares the stack; its memory size is the stack's bytes.
 const PT_GNU_STACK: u64 = 1685382481u64;
 public const IMAGE_READ: u64 = 1u64;
@@ -99,7 +99,7 @@ machine prefix(scan: &mut ImageScan, bytes: &[u8; 64], length: u64) -> ImageRead
         }
     }
     machine version(scan: &mut ImageScan, bytes: &[u8; 64], length: u64) -> ImageRead {
-        let size: u64 = record_bytes(image_word(bytes, 0u64));
+        let size: u64 = |record|::record_bytes(image_word(bytes, 0u64));
         transition length == 8u64 && size != 0u64 && size <= scan.segment_bytes && scan.found_bytes == 0u64 {
             true -> found(scan, size) _ -> malformed(scan)
         }

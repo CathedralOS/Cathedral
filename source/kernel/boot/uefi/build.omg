@@ -1,4 +1,28 @@
-use omega::language::core::static_interrupt;
+use {omega}/language/core/interrupt.omg;
+use {omega}/language/core/extent.omg as core_extent;
+use {omega}/language/core/code_segment.omg;
+use {omega}/language/core/data_segment.omg;
+use {omega}/language/core/task_register.omg;
+use {omega}/language/core/layout.omg;
+use {omega}/language/core/program_image.omg;
+use memory/profile.omg;
+use lab/memory/mapping/firmware/root.omg;
+use lab/memory/mapping/custody.omg;
+use lab/memory/mapping/activation.omg;
+use lab/memory/lifecycle.omg;
+use {uefi}/uefi.omg;
+use {uefi}/boot_services.omg;
+use {uefi}/loaded_image.omg;
+use main.omg;
+use lab/memory/main.omg as kernel_memory;
+
+use {arch}/isa/x86_64/interrupts/entry.omg;
+use {arch}/isa/x86_64/interrupts/segments.omg;
+use {arch}/isa/x86_64/interrupts/selectors.omg;
+use {arch}/isa/x86_64/interrupts/task_state.omg;
+use {bootstrap_interrupts}/registrar.omg;
+use {core}/memory/extent.omg;
+use {omega}/language/core/static_interrupt.omg;
 // Firmware starts in CathedralBootstrap. After leaving firmware services,
 // Cathedral passes the image and initial allocation to Kernel::start, which
 // owns the local context used by the kernel continuation.
@@ -11,9 +35,9 @@ machine build(builder: &mut Build) {
         selection: PackageSelection::Named { package: "omega_language_std" }
     });
     Build::depend_as(builder, "bootstrap_interrupts", Source::Path { location: "interrupts" });
-    Build::select_provider<bootstrap_interrupts::registrar::BootstrapInterruptRegistrar, bootstrap_interrupts::registrar::CheckedBootstrapInterruptRegistrar>(builder, uefi_x86_64);
-    Build::select_representation<InterruptAcknowledgement, arch::isa::x86_64::interrupts::entry::CathedralAcknowledgementRepresentation>(builder);
-    Build::select_representation<StaticInterruptCompletionPermit, StaticInterruptCompletionPermitRepresentation>(builder);
+    Build::select_provider<|registrar|::BootstrapInterruptRegistrar, |registrar|::CheckedBootstrapInterruptRegistrar>(builder, uefi_x86_64);
+    Build::select_representation<|interrupt|::InterruptAcknowledgement, |entry|::CathedralAcknowledgementRepresentation>(builder);
+    Build::select_representation<|static_interrupt|::StaticInterruptCompletionPermit, |static_interrupt|::StaticInterruptCompletionPermitRepresentation>(builder);
     // Load the firmware interfaces, kernel memory operations and allocator
     // used to acquire memory and keep it owned after the firmware handoff.
     Build::depend_as(builder, "uefi", Source::Path { location: "../../../contracts/uefi" });
@@ -26,42 +50,42 @@ machine build(builder: &mut Build) {
         revision: "64a843d84e992cad23222769065e18cdc107e2d6",
         selection: PackageSelection::Named { package: "alloc" }
     });
-    Build::accept_boundary<ExtentRootProvider>(builder);
-    Build::select_provider<ExtentRootProvider, core::memory::extent::CathedralExtentRootProvider>(builder, uefi_x86_64);
-    Build::accept_boundary<VacantContentTransfer>(builder);
-    Build::select_provider<VacantContentTransfer, BootVacantStorageProvider>(builder, uefi_x86_64);
-    Build::accept_boundary<BootMemorySupply>(builder);
-    Build::accept_boundary<FirmwareMemorySupply>(builder);
-    Build::select_provider<BootMemorySupply, BootMemoryProfileProvider>(builder, uefi_x86_64);
-    Build::select_provider<FirmwareMemorySupply, FirmwareMemoryProfileProvider>(builder, uefi_x86_64);
-    Build::accept_boundary<HardwareTableSupply>(builder);
-    Build::select_provider<HardwareTableSupply, HardwareTableProfileProvider>(builder, uefi_x86_64);
-    Build::accept_boundary<MappedRegionSupply>(builder);
-    Build::select_provider<MappedRegionSupply, MappedRegionProfileProvider>(builder, uefi_x86_64);
-    Build::accept_boundary<BootVirtualReservation>(builder);
-    Build::select_provider<BootVirtualReservation, BootstrapVirtualReservationProvider>(builder, uefi_x86_64);
-    Build::accept_boundary<BootTranslation>(builder);
-    Build::select_provider<BootTranslation, BootstrapTranslationProvider>(builder, uefi_x86_64);
-    Build::accept_boundary<CodeSegmentControl>(builder);
-    Build::select_provider<CodeSegmentControl, X86CodeSegmentControl>(builder, uefi_x86_64);
-    Build::accept_boundary<DataSegmentControl>(builder);
-    Build::select_provider<DataSegmentControl, X86DataSegmentControl>(builder, uefi_x86_64);
-    Build::accept_boundary<arch::isa::x86_64::interrupts::selectors::KernelSelectorPreparation>(builder);
-    Build::select_provider<arch::isa::x86_64::interrupts::selectors::KernelSelectorPreparation, arch::isa::x86_64::interrupts::selectors::BootstrapKernelSelectorPreparation>(builder, uefi_x86_64);
-    Build::accept_boundary<TaskRegisterControl>(builder);
-    Build::select_provider<TaskRegisterControl, X86TaskRegisterControl>(builder, uefi_x86_64);
-    Build::accept_boundary<arch::isa::x86_64::interrupts::task_state::TaskStatePreparation>(builder);
-    Build::select_provider<arch::isa::x86_64::interrupts::task_state::TaskStatePreparation, arch::isa::x86_64::interrupts::task_state::BootstrapTaskStatePreparation>(builder, uefi_x86_64);
-    Build::accept_boundary<arch::isa::x86_64::interrupts::segments::SegmentTablePreparation>(builder);
-    Build::select_provider<arch::isa::x86_64::interrupts::segments::SegmentTablePreparation, arch::isa::x86_64::interrupts::segments::BootstrapSegmentPreparation>(builder, uefi_x86_64);
-    Build::select_provider<AccessLifecycle<KernelWordPlacement, KernelWord>, KernelMemoryPlacement>(builder, uefi_x86_64);
-    Build::select_provider<ProgramStorageEntry, ProgramStorageEntryNativeProvider>(builder, uefi_x86_64);
-    Build::select_provider<ProgramImage, ProgramImageNativeProvider>(builder, uefi_x86_64);
-    Build::select_provider<uefi::SimpleTextOutput, uefi::UefiTextOutputProvider>(builder, uefi_x86_64);
-    Build::select_provider<uefi::BootServices, uefi::UefiBootServicesProvider>(builder, uefi_x86_64);
-    Build::select_provider<uefi::LoadedImageAccess, uefi::UefiLoadedImageProvider>(builder, uefi_x86_64);
-    Build::select_provider<uefi::UefiPhysicalEntry, CathedralBootstrap>(builder, uefi_x86_64);
-    Build::bind(builder, uefi_x86_64::ProgramEntry, Kernel::start);
+    Build::accept_boundary<|core_extent|::ExtentRootProvider>(builder);
+    Build::select_provider<|core_extent|::ExtentRootProvider, |extent|::CathedralExtentRootProvider>(builder, uefi_x86_64);
+    Build::accept_boundary<|core_extent|::VacantContentTransfer>(builder);
+    Build::select_provider<|core_extent|::VacantContentTransfer, |kernel_memory|::BootVacantStorageProvider>(builder, uefi_x86_64);
+    Build::accept_boundary<|profile|::BootMemorySupply>(builder);
+    Build::accept_boundary<|root|::FirmwareMemorySupply>(builder);
+    Build::select_provider<|profile|::BootMemorySupply, |profile|::BootMemoryProfileProvider>(builder, uefi_x86_64);
+    Build::select_provider<|root|::FirmwareMemorySupply, |root|::FirmwareMemoryProfileProvider>(builder, uefi_x86_64);
+    Build::accept_boundary<|custody|::HardwareTableSupply>(builder);
+    Build::select_provider<|custody|::HardwareTableSupply, |custody|::HardwareTableProfileProvider>(builder, uefi_x86_64);
+    Build::accept_boundary<|activation|::MappedRegionSupply>(builder);
+    Build::select_provider<|activation|::MappedRegionSupply, |activation|::MappedRegionProfileProvider>(builder, uefi_x86_64);
+    Build::accept_boundary<|activation|::BootVirtualReservation>(builder);
+    Build::select_provider<|activation|::BootVirtualReservation, |activation|::BootstrapVirtualReservationProvider>(builder, uefi_x86_64);
+    Build::accept_boundary<|activation|::BootTranslation>(builder);
+    Build::select_provider<|activation|::BootTranslation, |activation|::BootstrapTranslationProvider>(builder, uefi_x86_64);
+    Build::accept_boundary<|code_segment|::CodeSegmentControl>(builder);
+    Build::select_provider<|code_segment|::CodeSegmentControl, |code_segment|::X86CodeSegmentControl>(builder, uefi_x86_64);
+    Build::accept_boundary<|data_segment|::DataSegmentControl>(builder);
+    Build::select_provider<|data_segment|::DataSegmentControl, |data_segment|::X86DataSegmentControl>(builder, uefi_x86_64);
+    Build::accept_boundary<|selectors|::KernelSelectorPreparation>(builder);
+    Build::select_provider<|selectors|::KernelSelectorPreparation, |selectors|::BootstrapKernelSelectorPreparation>(builder, uefi_x86_64);
+    Build::accept_boundary<|task_register|::TaskRegisterControl>(builder);
+    Build::select_provider<|task_register|::TaskRegisterControl, |task_register|::X86TaskRegisterControl>(builder, uefi_x86_64);
+    Build::accept_boundary<|task_state|::TaskStatePreparation>(builder);
+    Build::select_provider<|task_state|::TaskStatePreparation, |task_state|::BootstrapTaskStatePreparation>(builder, uefi_x86_64);
+    Build::accept_boundary<|segments|::SegmentTablePreparation>(builder);
+    Build::select_provider<|segments|::SegmentTablePreparation, |segments|::BootstrapSegmentPreparation>(builder, uefi_x86_64);
+    Build::select_provider<|layout|::AccessLifecycle<|lifecycle|::KernelWordPlacement, |lifecycle|::KernelWord>, |lifecycle|::KernelMemoryPlacement>(builder, uefi_x86_64);
+    Build::select_provider<|core_extent|::ProgramStorageEntry, |core_extent|::ProgramStorageEntryNativeProvider>(builder, uefi_x86_64);
+    Build::select_provider<|program_image|::ProgramImage, |program_image|::ProgramImageNativeProvider>(builder, uefi_x86_64);
+    Build::select_provider<|uefi|::SimpleTextOutput, |uefi|::UefiTextOutputProvider>(builder, uefi_x86_64);
+    Build::select_provider<|boot_services|::BootServices, |boot_services|::UefiBootServicesProvider>(builder, uefi_x86_64);
+    Build::select_provider<|loaded_image|::LoadedImageAccess, |loaded_image|::UefiLoadedImageProvider>(builder, uefi_x86_64);
+    Build::select_provider<|uefi|::UefiPhysicalEntry, |main|::CathedralBootstrap>(builder, uefi_x86_64);
+    Build::bind(builder, uefi_x86_64::ProgramEntry, |kernel_memory|::Kernel::start);
 
     builder.subsystem    = Subsystem::EfiApplication;   // import-free PE32+ firmware loads directly
     builder.freestanding = true;                         // runs without a hosted operating-system runtime

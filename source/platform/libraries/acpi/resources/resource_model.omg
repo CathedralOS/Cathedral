@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified resource.rs from acpi 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
 // Upstream copyright 2018 Isaac Woods; bounded Cathedral adaptation 2026.
-module resource_model;
 pub data Outcome [copy] {case InvalidState;case Success;case Truncated;case BadEncoding;case MissingEndTag;case BadChecksum;case TrailingData;}
 pub data Span [copy] {start:u64;end:u64;}
 pub data Envelope [copy] {outcome:Outcome;large:bool;tag:u8;start:u64;body:u64;end:u64;length:u64;}

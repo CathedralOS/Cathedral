@@ -1,63 +1,41 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // One bounded execution token. Reuses AML token/NameString/envelope parsing;
 // it does not duplicate the static loader or grant access to any service.
-module decode_execution;
-use aml::model::ObjectStore;
-use aml::model::Value;
-use aml::model::Read;
-use aml::model::Envelope;
-use aml::bytes::opcode;
-use aml::bytes::read_le;
-use aml::bytes::envelope;
-use aml::names::lead_char;
-use execution_model::ExecutionOutcome;
-use execution_model::Frame;
-use execution_model::Operation;
-use execution_model::Operand;
-use execution_model::OperandResult;
-use execution_model::ValueResult;
-use execution_model::Target;
-use execution_model::TargetResult;
-use execution_names::NamedResult;
-use execution_names::cached_named;
-use execution_names::decode_outcome;
-use execution_names::parse_target;
-use operands::contribute_integer;
-use operands::contribute_target;
-use operands::push_operation;
-use operands::current_operation;
-use operator_specs::value_count;
-use operator_specs::target_count;
-use generic_targets::read_generic_target;
-use generic_values::validate_operand;
-use operands::contribute_operand;
-use control::leave_loop;
-use integer_helpers::integers::integer_mask;
-use object_type_execution::ObjectTypeResult;
-use object_type_execution::inspect_object_type;
-pub machine decode_target(input: &[u8; 1024], space: &ObjectStore, frame: &mut Frame) -> ExecutionOutcome {
-    let parsed: TargetResult = parse_target(input, &space.space, frame);
-    let operation: Operation = current_operation(frame);
+use {aml}/model.omg;
+use {aml}/bytes.omg;
+use {aml}/names.omg;
+use execution_model.omg;
+use execution_names.omg;
+use operands.omg;
+use operator_specs.omg;
+use generic_targets.omg;
+use generic_values.omg;
+use control.omg;
+use {integer_helpers}/integers.omg;
+use object_type_execution.omg;
+pub machine decode_target(input: &[u8; 1024], space: &|model|::ObjectStore, frame: &mut |execution_model|::Frame) -> |execution_model|::ExecutionOutcome {
+    let parsed: |execution_model|::TargetResult = |execution_names|::parse_target(input, &space.space, frame);
+    let operation: |execution_model|::Operation = |operands|::current_operation(frame);
     let allowed: bool = target_allowed(operation.opcode, parsed.target);
-    transition { parsed.outcome != ExecutionOutcome::Success -> (parsed.outcome)
-        !allowed -> (ExecutionOutcome::InvalidTarget)
-        parsed.next <= frame.pc || parsed.next > frame.end -> (ExecutionOutcome::Truncated)
+    transition { parsed.outcome != |execution_model|::ExecutionOutcome::Success -> (parsed.outcome)
+        !allowed -> (|execution_model|::ExecutionOutcome::InvalidTarget)
+        parsed.next <= frame.pc || parsed.next > frame.end -> (|execution_model|::ExecutionOutcome::Truncated)
         _ -> contribute(frame, parsed) }
-    state contribute(frame: &mut Frame, parsed: TargetResult) -> ExecutionOutcome {
-        let result: ExecutionOutcome = contribute_target(frame, parsed.target);
-        let committed:ExecutionOutcome=decode_commit_cursor(frame,parsed.next,result);committed
+    state contribute(frame: &mut |execution_model|::Frame, parsed: |execution_model|::TargetResult) -> |execution_model|::ExecutionOutcome {
+        let result: |execution_model|::ExecutionOutcome = |operands|::contribute_target(frame, parsed.target);
+        let committed:|execution_model|::ExecutionOutcome=decode_commit_cursor(frame,parsed.next,result);committed
     }
 }
-machine target_allowed(opcode: u64, target: Target) -> bool {
-    transition target { Target::Null -> (opcode != 0x70 && opcode != 0x9d && opcode != 0x75 && opcode != 0x76)
-        Target::Debug -> (opcode != 0x9d) _ -> (true) }
+machine target_allowed(opcode: u64, target: |execution_model|::Target) -> bool {
+    transition target { |execution_model|::Target::Null -> (|bytes|::opcode != 0x70 && |bytes|::opcode != 0x9d && |bytes|::opcode != 0x75 && |bytes|::opcode != 0x76)
+        |execution_model|::Target::Debug -> (|bytes|::opcode != 0x9d) _ -> (true) }
 }
-pub machine decode_term(input: &[u8; 1024], space: &ObjectStore, frame: &mut Frame) -> ExecutionOutcome {
-    let token: Read = opcode(input, frame.end, frame.pc);
-    let outcome: ExecutionOutcome = decode_outcome(token.outcome);
-    transition outcome == ExecutionOutcome::Success { true -> token(input, space, frame, token) _ -> (outcome) }
-    state token(input: &[u8; 1024], space: &ObjectStore, frame: &mut Frame, token: Read) -> ExecutionOutcome {
-        let named: bool = lead_char(token.value) || token.value == 0x5c || token.value == 0x5e || token.value == 0x2e || token.value == 0x2f;
+pub machine decode_term(input: &[u8; 1024], space: &|model|::ObjectStore, frame: &mut |execution_model|::Frame) -> |execution_model|::ExecutionOutcome {
+    let token: |model|::Read = |bytes|::opcode(input, frame.end, frame.pc);
+    let outcome: |execution_model|::ExecutionOutcome = |execution_names|::decode_outcome(token.outcome);
+    transition outcome == |execution_model|::ExecutionOutcome::Success { true -> token(input, space, frame, token) _ -> (outcome) }
+    state token(input: &[u8; 1024], space: &|model|::ObjectStore, frame: &mut |execution_model|::Frame, token: |model|::Read) -> |execution_model|::ExecutionOutcome {
+        let named: bool = |names|::lead_char(token.value) || token.value == 0x5c || token.value == 0x5e || token.value == 0x2e || token.value == 0x2f;
         transition {
             named -> named(input, space, frame)
             token.value == 0 -> constant(frame, token.next, 0)
@@ -73,114 +51,114 @@ pub machine decode_term(input: &[u8; 1024], space: &ObjectStore, frame: &mut Fra
             token.value == 0xa0 || token.value == 0xa2 -> branch(input, frame, token)
             token.value == 0xa3 -> noop(frame, token.next)
             token.value == 0xa5 || token.value == 0x9f -> loop_control(frame, token)
-            token.value == 0xa1 -> (ExecutionOutcome::BadEncoding)
-            token.value == 0xcc || token.value == 0x86 || token.value == 0x5b21 || token.value == 0x5b22 || token.value == 0x5b23 || token.value == 0x5b24 || token.value == 0x5b25 || token.value == 0x5b26 || token.value == 0x5b27 || token.value == 0x5b31 || token.value == 0x5b32 || token.value == 0x5b33 -> (ExecutionOutcome::UnresolvedService)
+            token.value == 0xa1 -> (|execution_model|::ExecutionOutcome::BadEncoding)
+            token.value == 0xcc || token.value == 0x86 || token.value == 0x5b21 || token.value == 0x5b22 || token.value == 0x5b23 || token.value == 0x5b24 || token.value == 0x5b25 || token.value == 0x5b26 || token.value == 0x5b27 || token.value == 0x5b31 || token.value == 0x5b32 || token.value == 0x5b33 -> (|execution_model|::ExecutionOutcome::UnresolvedService)
             _ -> operation(frame, token)
         }
     }
-    state constant(frame: &mut Frame, next: u64, number: u64) -> ExecutionOutcome {
-        let result: ExecutionOutcome = contribute_integer(frame, number);
-        let committed:ExecutionOutcome=decode_commit_cursor(frame,next,result);committed
+    state constant(frame: &mut |execution_model|::Frame, next: u64, number: u64) -> |execution_model|::ExecutionOutcome {
+        let result: |execution_model|::ExecutionOutcome = |operands|::contribute_integer(frame, number);
+        let committed:|execution_model|::ExecutionOutcome=decode_commit_cursor(frame,next,result);committed
     }
-    state ones(frame: &mut Frame, next: u64) -> ExecutionOutcome {
-        let number: u64 = integer_mask(frame.size);
-        let result: ExecutionOutcome = contribute_integer(frame, number);
-        let committed:ExecutionOutcome=decode_commit_cursor(frame,next,result);committed
+    state ones(frame: &mut |execution_model|::Frame, next: u64) -> |execution_model|::ExecutionOutcome {
+        let number: u64 = |integers|::integer_mask(frame.size);
+        let result: |execution_model|::ExecutionOutcome = |operands|::contribute_integer(frame, number);
+        let committed:|execution_model|::ExecutionOutcome=decode_commit_cursor(frame,next,result);committed
     }
-    state literal(input: &[u8; 1024], frame: &mut Frame, at: u64, width: u64) -> ExecutionOutcome {
-        let number: Read = read_le(input, frame.end, at, width);
-        let outcome: ExecutionOutcome = decode_outcome(number.outcome);
-        transition outcome == ExecutionOutcome::Success { true -> constant(frame, number.next, number.value) _ -> (outcome) }
+    state literal(input: &[u8; 1024], frame: &mut |execution_model|::Frame, at: u64, width: u64) -> |execution_model|::ExecutionOutcome {
+        let number: |model|::Read = |bytes|::read_le(input, frame.end, at, width);
+        let outcome: |execution_model|::ExecutionOutcome = |execution_names|::decode_outcome(number.outcome);
+        transition outcome == |execution_model|::ExecutionOutcome::Success { true -> constant(frame, number.next, number.value) _ -> (outcome) }
     }
-    state local(input:&[u8;1024],space:&ObjectStore,frame:&mut Frame,next:u64,index:u64)->ExecutionOutcome {
-        let found:OperandResult=read_generic_target(space,frame,Target::Local {local_index:index});
-        let result:ExecutionOutcome=decode_generic_value(input,space,frame,next,found);result
+    state local(input:&[u8;1024],space:&|model|::ObjectStore,frame:&mut |execution_model|::Frame,next:u64,index:u64)->|execution_model|::ExecutionOutcome {
+        let found:|execution_model|::OperandResult=|generic_targets|::read_generic_target(space,frame,|execution_model|::Target::Local {local_index:index});
+        let result:|execution_model|::ExecutionOutcome=decode_generic_value(input,space,frame,next,found);result
     }
-    state argument(input:&[u8;1024],space:&ObjectStore,frame:&mut Frame,next:u64,index:u64)->ExecutionOutcome {
-        let found:OperandResult=read_generic_target(space,frame,Target::Argument {argument_index:index});
-        let result:ExecutionOutcome=decode_generic_value(input,space,frame,next,found);result
+    state argument(input:&[u8;1024],space:&|model|::ObjectStore,frame:&mut |execution_model|::Frame,next:u64,index:u64)->|execution_model|::ExecutionOutcome {
+        let found:|execution_model|::OperandResult=|generic_targets|::read_generic_target(space,frame,|execution_model|::Target::Argument {argument_index:index});
+        let result:|execution_model|::ExecutionOutcome=decode_generic_value(input,space,frame,next,found);result
     }
     // ObjectType's admitted SimpleName/Debug grammar is one metadata token.
     // It neither invokes a named method nor evaluates an ordinary TermArg.
-    state object_type(input:&[u8;1024],space:&ObjectStore,frame:&mut Frame,at:u64)->ExecutionOutcome {
-        let found:ObjectTypeResult=inspect_object_type(input,space,frame,at);
-        transition found.outcome==ExecutionOutcome::Success {true -> constant(frame,found.next,found.number) _ -> (found.outcome)}
+    state object_type(input:&[u8;1024],space:&|model|::ObjectStore,frame:&mut |execution_model|::Frame,at:u64)->|execution_model|::ExecutionOutcome {
+        let found:|object_type_execution|::ObjectTypeResult=|object_type_execution|::inspect_object_type(input,space,frame,at);
+        transition found.outcome==|execution_model|::ExecutionOutcome::Success {true -> constant(frame,found.next,found.number) _ -> (found.outcome)}
     }
-    state operation(frame: &mut Frame, token: Read) -> ExecutionOutcome {
-        let values: u64 = value_count(token.value);
-        let targets: u64 = target_count(token.value);
-        transition { values == 255 -> (ExecutionOutcome::UnsupportedOpcode)
-            token.value == 0xa4 && frame.operation_count != 0 -> (ExecutionOutcome::BadEncoding)
+    state operation(frame: &mut |execution_model|::Frame, token: |model|::Read) -> |execution_model|::ExecutionOutcome {
+        let values: u64 = |operator_specs|::value_count(token.value);
+        let targets: u64 = |operator_specs|::target_count(token.value);
+        transition { values == 255 -> (|execution_model|::ExecutionOutcome::UnsupportedOpcode)
+            token.value == 0xa4 && frame.operation_count != 0 -> (|execution_model|::ExecutionOutcome::BadEncoding)
             _ -> push(frame, token, values, targets) }
     }
-    state push(frame: &mut Frame, token: Read, values: u64, targets: u64) -> ExecutionOutcome {
-        let result: ExecutionOutcome = push_operation(frame, Operation { opcode: token.value, value_arity: values, target_arity: targets });
-        let committed:ExecutionOutcome=decode_commit_cursor(frame,token.next,result);committed
+    state push(frame: &mut |execution_model|::Frame, token: |model|::Read, values: u64, targets: u64) -> |execution_model|::ExecutionOutcome {
+        let result: |execution_model|::ExecutionOutcome = |operands|::push_operation(frame, |execution_model|::Operation { opcode: token.value, value_arity: values, target_arity: targets });
+        let committed:|execution_model|::ExecutionOutcome=decode_commit_cursor(frame,token.next,result);committed
     }
-    state branch(input: &[u8; 1024], frame: &mut Frame, token: Read) -> ExecutionOutcome {
-        transition frame.operation_count == 0 { true -> package(input, frame, token) _ -> (ExecutionOutcome::BadEncoding) }
+    state branch(input: &[u8; 1024], frame: &mut |execution_model|::Frame, token: |model|::Read) -> |execution_model|::ExecutionOutcome {
+        transition frame.operation_count == 0 { true -> package(input, frame, token) _ -> (|execution_model|::ExecutionOutcome::BadEncoding) }
     }
-    state package(input: &[u8; 1024], frame: &mut Frame, token: Read) -> ExecutionOutcome {
-        let body: Envelope = envelope(input, frame.end, token.next);
-        let outcome: ExecutionOutcome = decode_outcome(body.outcome);
-        transition outcome == ExecutionOutcome::Success { true -> predicate(frame, token, body) _ -> (outcome) }
+    state package(input: &[u8; 1024], frame: &mut |execution_model|::Frame, token: |model|::Read) -> |execution_model|::ExecutionOutcome {
+        let body: |model|::Envelope = |bytes|::envelope(input, frame.end, token.next);
+        let outcome: |execution_model|::ExecutionOutcome = |execution_names|::decode_outcome(body.outcome);
+        transition outcome == |execution_model|::ExecutionOutcome::Success { true -> predicate(frame, token, body) _ -> (outcome) }
     }
-    state predicate(frame: &mut Frame, token: Read, body: Envelope) -> ExecutionOutcome {
-        let result: ExecutionOutcome = push_operation(frame, Operation { opcode: token.value, value_arity: 1, body_end: body.end, predicate: frame.pc, parent_end: frame.end });
-        let committed:ExecutionOutcome=decode_commit_window(frame,body.body,body.end,result);committed
+    state predicate(frame: &mut |execution_model|::Frame, token: |model|::Read, body: |model|::Envelope) -> |execution_model|::ExecutionOutcome {
+        let result: |execution_model|::ExecutionOutcome = |operands|::push_operation(frame, |execution_model|::Operation { opcode: token.value, value_arity: 1, body_end: body.end, predicate: frame.pc, parent_end: frame.end });
+        let committed:|execution_model|::ExecutionOutcome=decode_commit_window(frame,body.body,body.end,result);committed
     }
-    state noop(frame: &mut Frame, next: u64) -> ExecutionOutcome {
-        transition frame.operation_count == 0 { true -> advance(frame, next) _ -> (ExecutionOutcome::BadEncoding) }
+    state noop(frame: &mut |execution_model|::Frame, next: u64) -> |execution_model|::ExecutionOutcome {
+        transition frame.operation_count == 0 { true -> advance(frame, next) _ -> (|execution_model|::ExecutionOutcome::BadEncoding) }
     }
-    state advance(frame: &mut Frame, next: u64) -> ExecutionOutcome { frame.pc = next; ExecutionOutcome::Success }
-    state loop_control(frame: &mut Frame, token: Read) -> ExecutionOutcome {
+    state advance(frame: &mut |execution_model|::Frame, next: u64) -> |execution_model|::ExecutionOutcome { frame.pc = next; |execution_model|::ExecutionOutcome::Success }
+    state loop_control(frame: &mut |execution_model|::Frame, token: |model|::Read) -> |execution_model|::ExecutionOutcome {
         let again: bool = token.value == 0x9f;
-        let result: ExecutionOutcome = leave_loop(frame, again); result
+        let result: |execution_model|::ExecutionOutcome = |control|::leave_loop(frame, again); result
     }
-    state named(input: &[u8; 1024], space: &ObjectStore, frame: &mut Frame) -> ExecutionOutcome {
-        let found: NamedResult = cached_named(input, &space.space, frame);
-        transition found.outcome == ExecutionOutcome::Success && found.object_id < space.space.object_count && found.object_id < 64 {
+    state named(input: &[u8; 1024], space: &|model|::ObjectStore, frame: &mut |execution_model|::Frame) -> |execution_model|::ExecutionOutcome {
+        let found: |execution_names|::NamedResult = |execution_names|::cached_named(input, &space.space, frame);
+        transition found.outcome == |execution_model|::ExecutionOutcome::Success && found.object_id < space.space.object_count && found.object_id < 64 {
             true -> named_value(input, space, frame, found) _ -> (found.outcome)
         }
     }
-    state named_value(input:&[u8;1024], space: &ObjectStore, frame: &mut Frame, found: NamedResult) -> ExecutionOutcome {
+    state named_value(input:&[u8;1024], space: &|model|::ObjectStore, frame: &mut |execution_model|::Frame, found: |execution_names|::NamedResult) -> |execution_model|::ExecutionOutcome {
         let index: u64 = found.object_id;
-        transition index < 64 { true -> named_slot(input, space, frame, found, index) _ -> (ExecutionOutcome::MissingObject) }
+        transition index < 64 { true -> named_slot(input, space, frame, found, index) _ -> (|execution_model|::ExecutionOutcome::MissingObject) }
     }
-    state named_slot(input:&[u8;1024], space: &ObjectStore, frame: &mut Frame, found: NamedResult, index: u64) -> ExecutionOutcome {
-        let value: Value = space.space.objects[index].value;
-        let result: ExecutionOutcome = named_operand(input, space, frame, found, value); result
+    state named_slot(input:&[u8;1024], space: &|model|::ObjectStore, frame: &mut |execution_model|::Frame, found: |execution_names|::NamedResult, index: u64) -> |execution_model|::ExecutionOutcome {
+        let value: |model|::Value = space.space.objects[index].value;
+        let result: |execution_model|::ExecutionOutcome = named_operand(input, space, frame, found, value); result
     }
 }
-machine named_operand(input:&[u8;1024],store:&ObjectStore,frame:&mut Frame,found:NamedResult,value:Value)->ExecutionOutcome {
+machine named_operand(input:&[u8;1024],store:&|model|::ObjectStore,frame:&mut |execution_model|::Frame,found:|execution_names|::NamedResult,value:|model|::Value)->|execution_model|::ExecutionOutcome {
  transition value {
-  Value::Method {flags,body} -> method(frame,found,flags,body)
+  |model|::Value::Method {flags,body} -> method(frame,found,flags,body)
   _ -> data(input,store,frame,found)
  }
- state data(input:&[u8;1024],store:&ObjectStore,frame:&mut Frame,found:NamedResult)->ExecutionOutcome {
-  let result:ExecutionOutcome=decode_generic_value(input,store,frame,found.next,OperandResult {operand:Operand::Object {object_id:found.object_id}});result
+ state data(input:&[u8;1024],store:&|model|::ObjectStore,frame:&mut |execution_model|::Frame,found:|execution_names|::NamedResult)->|execution_model|::ExecutionOutcome {
+  let result:|execution_model|::ExecutionOutcome=decode_generic_value(input,store,frame,found.next,|execution_model|::OperandResult {operand:|execution_model|::Operand::Object {object_id:found.object_id}});result
  }
- state method(frame:&mut Frame,found:NamedResult,flags:u8,body:aml::model::Span)->ExecutionOutcome {
+ state method(frame:&mut |execution_model|::Frame,found:|execution_names|::NamedResult,flags:u8,body:|model|::Span)->|execution_model|::ExecutionOutcome {
   let count:u64=(flags & 7) as u64;
-  let result:ExecutionOutcome=push_operation(frame,Operation {opcode:0x10000,value_arity:count,method_id:found.object_id,method_body:body,method_flags:flags});let committed:ExecutionOutcome=decode_commit_cursor(frame,found.next,result);committed
+  let result:|execution_model|::ExecutionOutcome=|operands|::push_operation(frame,|execution_model|::Operation {opcode:0x10000,value_arity:count,method_id:found.object_id,method_body:body,method_flags:flags});let committed:|execution_model|::ExecutionOutcome=decode_commit_cursor(frame,found.next,result);committed
  }
 }
-machine decode_generic_value(input:&[u8;1024],store:&ObjectStore,frame:&mut Frame,next:u64,found:OperandResult)->ExecutionOutcome {
- transition found.outcome==ExecutionOutcome::Success {true -> admit(input,store,frame,next,found.operand) _ -> (found.outcome)}
- state admit(input:&[u8;1024],store:&ObjectStore,frame:&mut Frame,next:u64,operand:Operand)->ExecutionOutcome {
-  let value:ExecutionOutcome=validate_operand(input,frame.source_length,frame.body.unit,store,operand);
-  transition value==ExecutionOutcome::Success {true -> contribute(frame,next,operand) _ -> (value)}
+machine decode_generic_value(input:&[u8;1024],store:&|model|::ObjectStore,frame:&mut |execution_model|::Frame,next:u64,found:|execution_model|::OperandResult)->|execution_model|::ExecutionOutcome {
+ transition found.outcome==|execution_model|::ExecutionOutcome::Success {true -> admit(input,store,frame,next,found.operand) _ -> (found.outcome)}
+ state admit(input:&[u8;1024],store:&|model|::ObjectStore,frame:&mut |execution_model|::Frame,next:u64,operand:|execution_model|::Operand)->|execution_model|::ExecutionOutcome {
+  let value:|execution_model|::ExecutionOutcome=|generic_values|::validate_operand(input,frame.source_length,frame.body.unit,store,operand);
+  transition value==|execution_model|::ExecutionOutcome::Success {true -> contribute(frame,next,operand) _ -> (value)}
  }
- state contribute(frame:&mut Frame,next:u64,operand:Operand)->ExecutionOutcome {let result:ExecutionOutcome=contribute_operand(frame,operand);let committed:ExecutionOutcome=decode_commit_cursor(frame,next,result);committed}
+ state contribute(frame:&mut |execution_model|::Frame,next:u64,operand:|execution_model|::Operand)->|execution_model|::ExecutionOutcome {let result:|execution_model|::ExecutionOutcome=|operands|::contribute_operand(frame,operand);let committed:|execution_model|::ExecutionOutcome=decode_commit_cursor(frame,next,result);committed}
 }
 
 // Failed contribution leaves the instruction cursor/window untouched. Name
 // lookup caches may have been populated separately; this is not a frame rollback.
-machine decode_commit_cursor(frame:&mut Frame,next:u64,outcome:ExecutionOutcome)->ExecutionOutcome {
- transition outcome==ExecutionOutcome::Success {true -> commit(frame,next) _ -> (outcome)}
- state commit(frame:&mut Frame,next:u64)->ExecutionOutcome {frame.pc=next;ExecutionOutcome::Success}
+machine decode_commit_cursor(frame:&mut |execution_model|::Frame,next:u64,outcome:|execution_model|::ExecutionOutcome)->|execution_model|::ExecutionOutcome {
+ transition outcome==|execution_model|::ExecutionOutcome::Success {true -> commit(frame,next) _ -> (outcome)}
+ state commit(frame:&mut |execution_model|::Frame,next:u64)->|execution_model|::ExecutionOutcome {frame.pc=next;|execution_model|::ExecutionOutcome::Success}
 }
-machine decode_commit_window(frame:&mut Frame,next:u64,end:u64,outcome:ExecutionOutcome)->ExecutionOutcome {
- transition outcome==ExecutionOutcome::Success {true -> commit(frame,next,end) _ -> (outcome)}
- state commit(frame:&mut Frame,next:u64,end:u64)->ExecutionOutcome {frame.pc=next;frame.end=end;ExecutionOutcome::Success}
+machine decode_commit_window(frame:&mut |execution_model|::Frame,next:u64,end:u64,outcome:|execution_model|::ExecutionOutcome)->|execution_model|::ExecutionOutcome {
+ transition outcome==|execution_model|::ExecutionOutcome::Success {true -> commit(frame,next,end) _ -> (outcome)}
+ state commit(frame:&mut |execution_model|::Frame,next:u64,end:u64)->|execution_model|::ExecutionOutcome {frame.pc=next;frame.end=end;|execution_model|::ExecutionOutcome::Success}
 }

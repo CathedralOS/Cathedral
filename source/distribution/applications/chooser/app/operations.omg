@@ -1,4 +1,3 @@
-module operations;
 // Typed app/driver boundary. Service frames retain their real eight-word wire
 // representation; host opcodes, packet offsets and scratch sizes do not leak in.
 public data Command [copy] {

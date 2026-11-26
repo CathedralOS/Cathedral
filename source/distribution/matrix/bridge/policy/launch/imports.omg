@@ -1,30 +1,28 @@
-module launch::imports;
-
 // Native declaration records and binding results. Op 10 exposes the common
 // matcher directly to conformance tests; ordinary admission uses stock policy.
-use services::main;
-use services::types;
-use service::children::launch::imports;
+use {services}/main.omg;
+use {services}/types.omg;
+use {service}/children/launch/imports.omg;
 
 public machine import_binding(packet: &mut [u64; 128]) -> u64 {
-    let mut entries: [Import; 4];
+    let mut entries: [|types|::Import; 4];
     transition packet[2] == 0u64 {
         true -> defaulted(packet, &mut entries)
         _ -> copy(packet, &mut entries, 0u64)
     }
-    machine defaulted(packet: &mut [u64; 128], entries: &mut [Import; 4]) -> u64 {
-        service::children::launch::imports::default_imports(entries);
-        select(packet, entries, service::children::launch::imports::DEFAULT_IMPORT_COUNT, false)
+    machine defaulted(packet: &mut [u64; 128], entries: &mut [|types|::Import; 4]) -> u64 {
+        |imports|::default_imports(entries);
+        select(packet, entries, |imports|::DEFAULT_IMPORT_COUNT, false)
     }
-    machine copy(packet: &mut [u64; 128], entries: &mut [Import; 4], index: u64) -> u64 {
+    machine copy(packet: &mut [u64; 128], entries: &mut [|types|::Import; 4], index: u64) -> u64 {
         transition index < 4u64 {
             true -> item(packet, entries, index)
             _ -> supplied(packet, entries)
         }
     }
-    machine item(packet: &mut [u64; 128], entries: &mut [Import; 4], index: u64) -> u64 requires index < 4u64 {
+    machine item(packet: &mut [u64; 128], entries: &mut [|types|::Import; 4], index: u64) -> u64 requires index < 4u64 {
         let offset: u64 = 16u64 + index * 4u64;
-        entries[index] = Import {
+        entries[index] = |types|::Import {
             contract: packet[offset], minimum: packet[offset + 1u64],
             maximum: packet[offset + 2u64], required: packet[offset + 3u64] != 0u64
         };
@@ -32,28 +30,28 @@ public machine import_binding(packet: &mut [u64; 128]) -> u64 {
             _ -> copy(packet, entries, index + 1u64)
         }
     }
-    machine supplied(packet: &mut [u64; 128], entries: &[Import; 4]) -> u64 {
+    machine supplied(packet: &mut [u64; 128], entries: &[|types|::Import; 4]) -> u64 {
         let count: u64 = packet[4];
         let brokered: bool = packet[3] != 0u64;
         select(packet, entries, count, brokered)
     }
-    machine select(packet: &mut [u64; 128], entries: &[Import; 4], count: u64, brokered: bool) -> u64 {
+    machine select(packet: &mut [u64; 128], entries: &[|types|::Import; 4], count: u64, brokered: bool) -> u64 {
         transition packet[1] == 10u64 {
             true -> generic(packet, entries, count)
             _ -> stock(packet, entries, count, brokered)
         }
     }
-    machine generic(packet: &mut [u64; 128], entries: &[Import; 4], count: u64) -> u64 {
-        let result: Binding = bind(entries, count, packet[5]);
+    machine generic(packet: &mut [u64; 128], entries: &[|types|::Import; 4], count: u64) -> u64 {
+        let result: |types|::Binding = |main|::bind(entries, count, packet[5]);
         publish(packet, result)
     }
-    machine stock(packet: &mut [u64; 128], entries: &[Import; 4], count: u64, brokered: bool) -> u64 {
-        let result: Binding = service::children::launch::imports::select(entries, count, brokered, packet[5]);
+    machine stock(packet: &mut [u64; 128], entries: &[|types|::Import; 4], count: u64, brokered: bool) -> u64 {
+        let result: |types|::Binding = |imports|::select(entries, count, brokered, packet[5]);
         publish(packet, result)
     }
 }
 
-machine publish(packet: &mut [u64; 128], result: Binding) -> u64 {
+machine publish(packet: &mut [u64; 128], result: |types|::Binding) -> u64 {
     packet[32] = result.mask;
     packet[33] = result.contract;
     result.status

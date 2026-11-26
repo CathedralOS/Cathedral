@@ -1,325 +1,322 @@
-use x86::encrypted_recursive_constructor;
-use x86::mapper_topology::RecursiveObservation;
-use x86::mapper_topology::InactiveReason;
-use x86::memory_encryption;
-use x86::memory_encryption::State;
-use x86::memory_encryption::Configuration;
-machine matches_constructor(value:RecursiveObservation,kind:u8,want_index:u16,want_frame:u64)->bool {
+use {x86}/encrypted_recursive_constructor.omg;
+use {x86}/mapper_topology.omg;
+use {x86}/memory_encryption.omg;
+machine matches_constructor(value:|mapper_topology|::RecursiveObservation,kind:u8,want_index:u16,want_frame:u64)->bool {
  transition value {
-  RecursiveObservation::InvalidAddress -> (kind==5)
-  RecursiveObservation::InvalidObservedFrame -> (kind==6)
-  RecursiveObservation::NotRecursive -> (kind==1)
-  RecursiveObservation::NotActive {reason} -> inactive(reason,kind)
-  RecursiveObservation::Observed {recursive_index,physical_frame} -> (kind==0 && recursive_index==want_index && physical_frame==want_frame)
+  |mapper_topology|::RecursiveObservation::InvalidAddress -> (kind==5)
+  |mapper_topology|::RecursiveObservation::InvalidObservedFrame -> (kind==6)
+  |mapper_topology|::RecursiveObservation::NotRecursive -> (kind==1)
+  |mapper_topology|::RecursiveObservation::NotActive {reason} -> inactive(reason,kind)
+  |mapper_topology|::RecursiveObservation::Observed {recursive_index,physical_frame} -> (kind==0 && recursive_index==want_index && physical_frame==want_frame)
  }
- state inactive(reason:InactiveReason,kind:u8)->bool {
-  transition reason {InactiveReason::EntryNotPresent -> (kind==2) InactiveReason::EntryHugeFrame -> (kind==3) _ -> (kind==4)}
+ state inactive(reason:|mapper_topology|::InactiveReason,kind:u8)->bool {
+  transition reason {|mapper_topology|::InactiveReason::EntryNotPresent -> (kind==2) |mapper_topology|::InactiveReason::EntryHugeFrame -> (kind==3) _ -> (kind==4)}
  }
 }
 machine row0()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,0,0,1);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,0,0,1);
 matches_constructor(observed,0,0,0) }
 machine row1()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,0,0,1);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,0,0,1);
 matches_constructor(observed,0,0,0) }
 machine row2()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,0,0,1);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,0,0,1);
 matches_constructor(observed,0,0,0) }
 machine row3()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,0,0,0);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,0,0,0);
 matches_constructor(observed,2,0,0) }
 machine row4()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,0,0,128);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,0,0,128);
 matches_constructor(observed,2,0,0) }
 machine row5()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,0,0,129);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,0,0,129);
 matches_constructor(observed,3,0,0) }
 machine row6()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,0,4096,4097);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,0,4096,4097);
 matches_constructor(observed,0,0,4096) }
 machine row7()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,0,8192,4097);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,0,8192,4097);
 matches_constructor(observed,4,0,0) }
 machine row8()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,0,1,0);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,0,1,0);
 matches_constructor(observed,6,0,0) }
 machine row9()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,0,1,129);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,0,1,129);
 matches_constructor(observed,6,0,0) }
 machine row10()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,0,281474976710656,281474976710657);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,0,281474976710656,281474976710657);
 matches_constructor(observed,0,0,281474976710656) }
 machine row11()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,0,0,18446744073709551615);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,0,0,18446744073709551615);
 matches_constructor(observed,3,0,0) }
 machine row12()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,15,0,1);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,15,0,1);
 matches_constructor(observed,0,0,0) }
 machine row13()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,2097152,18446744073709551615,0);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,2097152,18446744073709551615,0);
 matches_constructor(observed,1,0,0) }
 machine row14()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,0,4503599627370496,1);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,0,4503599627370496,1);
 matches_constructor(observed,6,0,0) }
 machine row15()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,140462072524800,0,1);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,140462072524800,0,1);
 matches_constructor(observed,0,255,0) }
 machine row16()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,140462072524800,0,1);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,140462072524800,0,1);
 matches_constructor(observed,0,255,0) }
 machine row17()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,140462072524800,0,1);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,140462072524800,0,1);
 matches_constructor(observed,0,255,0) }
 machine row18()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,140462072524800,0,0);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,140462072524800,0,0);
 matches_constructor(observed,2,0,0) }
 machine row19()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,140462072524800,0,128);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,140462072524800,0,128);
 matches_constructor(observed,2,0,0) }
 machine row20()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,140462072524800,0,129);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,140462072524800,0,129);
 matches_constructor(observed,3,0,0) }
 machine row21()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,140462072524800,4096,4097);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,140462072524800,4096,4097);
 matches_constructor(observed,0,255,4096) }
 machine row22()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,140462072524800,8192,4097);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,140462072524800,8192,4097);
 matches_constructor(observed,4,0,0) }
 machine row23()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,140462072524800,1,0);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,140462072524800,1,0);
 matches_constructor(observed,6,0,0) }
 machine row24()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,140462072524800,1,129);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,140462072524800,1,129);
 matches_constructor(observed,6,0,0) }
 machine row25()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,140462072524800,281474976710656,281474976710657);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,140462072524800,281474976710656,281474976710657);
 matches_constructor(observed,0,255,281474976710656) }
 machine row26()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,140462072524800,0,18446744073709551615);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,140462072524800,0,18446744073709551615);
 matches_constructor(observed,3,0,0) }
 machine row27()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,140462072524815,0,1);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,140462072524815,0,1);
 matches_constructor(observed,0,255,0) }
 machine row28()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,140462070427648,18446744073709551615,0);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,140462070427648,18446744073709551615,0);
 matches_constructor(observed,1,0,0) }
 machine row29()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,140462072524800,4503599627370496,1);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,140462072524800,4503599627370496,1);
 matches_constructor(observed,6,0,0) }
 machine row30()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446603611637022720,0,1);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446603611637022720,0,1);
 matches_constructor(observed,0,256,0) }
 machine row31()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446603611637022720,0,1);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446603611637022720,0,1);
 matches_constructor(observed,0,256,0) }
 machine row32()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446603611637022720,0,1);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446603611637022720,0,1);
 matches_constructor(observed,0,256,0) }
 machine row33()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446603611637022720,0,0);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446603611637022720,0,0);
 matches_constructor(observed,2,0,0) }
 machine row34()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446603611637022720,0,128);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446603611637022720,0,128);
 matches_constructor(observed,2,0,0) }
 machine row35()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446603611637022720,0,129);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446603611637022720,0,129);
 matches_constructor(observed,3,0,0) }
 machine row36()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446603611637022720,4096,4097);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446603611637022720,4096,4097);
 matches_constructor(observed,0,256,4096) }
 machine row37()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446603611637022720,8192,4097);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446603611637022720,8192,4097);
 matches_constructor(observed,4,0,0) }
 machine row38()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446603611637022720,1,0);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446603611637022720,1,0);
 matches_constructor(observed,6,0,0) }
 machine row39()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446603611637022720,1,129);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446603611637022720,1,129);
 matches_constructor(observed,6,0,0) }
 machine row40()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446603611637022720,281474976710656,281474976710657);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446603611637022720,281474976710656,281474976710657);
 matches_constructor(observed,0,256,281474976710656) }
 machine row41()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446603611637022720,0,18446744073709551615);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446603611637022720,0,18446744073709551615);
 matches_constructor(observed,3,0,0) }
 machine row42()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446603611637022735,0,1);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446603611637022735,0,1);
 matches_constructor(observed,0,256,0) }
 machine row43()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446603611639119872,18446744073709551615,0);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446603611639119872,18446744073709551615,0);
 matches_constructor(observed,1,0,0) }
 machine row44()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446603611637022720,4503599627370496,1);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446603611637022720,4503599627370496,1);
 matches_constructor(observed,6,0,0) }
 machine row45()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446744073709547520,0,1);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446744073709547520,0,1);
 matches_constructor(observed,0,511,0) }
 machine row46()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446744073709547520,0,1);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446744073709547520,0,1);
 matches_constructor(observed,0,511,0) }
 machine row47()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446744073709547520,0,1);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446744073709547520,0,1);
 matches_constructor(observed,0,511,0) }
 machine row48()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446744073709547520,0,0);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446744073709547520,0,0);
 matches_constructor(observed,2,0,0) }
 machine row49()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446744073709547520,0,128);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446744073709547520,0,128);
 matches_constructor(observed,2,0,0) }
 machine row50()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446744073709547520,0,129);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446744073709547520,0,129);
 matches_constructor(observed,3,0,0) }
 machine row51()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446744073709547520,4096,4097);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446744073709547520,4096,4097);
 matches_constructor(observed,0,511,4096) }
 machine row52()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446744073709547520,8192,4097);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446744073709547520,8192,4097);
 matches_constructor(observed,4,0,0) }
 machine row53()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446744073709547520,1,0);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446744073709547520,1,0);
 matches_constructor(observed,6,0,0) }
 machine row54()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446744073709547520,1,129);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446744073709547520,1,129);
 matches_constructor(observed,6,0,0) }
 machine row55()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446744073709547520,281474976710656,281474976710657);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446744073709547520,281474976710656,281474976710657);
 matches_constructor(observed,0,511,281474976710656) }
 machine row56()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446744073709547520,0,18446744073709551615);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446744073709547520,0,18446744073709551615);
 matches_constructor(observed,3,0,0) }
 machine row57()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446744073709547535,0,1);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446744073709547535,0,1);
 matches_constructor(observed,0,511,0) }
 machine row58()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446744073707450368,18446744073709551615,0);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446744073707450368,18446744073709551615,0);
 matches_constructor(observed,1,0,0) }
 machine row59()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,18446744073709547520,4503599627370496,1);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,18446744073709547520,4503599627370496,1);
 matches_constructor(observed,6,0,0) }
 machine row60()->bool {
-let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit {position:0});
-let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,140737488355328,18446744073709551615,0);
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit {position:0});
+let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,140737488355328,18446744073709551615,0);
 matches_constructor(observed,5,0,0) }
 machine scenario()->i32 {
 let pass0:bool=row0();

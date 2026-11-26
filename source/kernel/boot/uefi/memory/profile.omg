@@ -1,10 +1,10 @@
-use omega::language::core::extent;
-use omega::language::core::layout;
+use {omega}/language/core/extent.omg;
+use {omega}/language/core/layout.omg;
 
 // A static supply role selects this closed boot composition's initial RAM.
 // It is not a grant and cannot make unrelated firmware storage Stable.
 public data BootMemory {}
-public boundary trait BootMemorySupply: ResourceProfileSupply<BootMemory> {}
+public boundary trait BootMemorySupply: |layout|::ResourceProfileSupply<BootMemory> {}
 
 // Admitted only for the initial ConventionalMemory root retained after the
 // successful firmware handoff and its conserved children. The boot mapping
@@ -18,17 +18,17 @@ public boundary trait BootMemorySupply: ResourceProfileSupply<BootMemory> {}
 // proves it. No firmware service or device loan may revoke the backing. This
 // describes phase-bounded backing supply, not contents or a second root.
 BootMemoryProfileProvider satisfies BootMemorySupply {
-    machine profile(storage: &Extent in Granted) -> ResourceProfile {
+    machine profile(storage: &|extent|::Extent in |extent|::Granted) -> |layout|::ResourceProfile {
         let services: [u64; 32];
-        let mut regions: [ResourceRegion; 32];
-        regions[0] = ResourceRegion {
-            range: RelativeRange { offset: 0, length: storage.length },
-            peer: PeerWritability::Exclusive,
-            stable: StableCapability::ReadWrite,
-            external: ExternalCapability::None,
-            atomic: AtomicCapability::None,
-            reach: BoundaryReach { services: services, service_count: 0 },
+        let mut regions: [|layout|::ResourceRegion; 32];
+        regions[0] = |layout|::ResourceRegion {
+            range: |layout|::RelativeRange { offset: 0, length: storage.length },
+            peer: |layout|::PeerWritability::Exclusive,
+            stable: |layout|::StableCapability::ReadWrite,
+            external: |layout|::ExternalCapability::None,
+            atomic: |layout|::AtomicCapability::None,
+            reach: |layout|::BoundaryReach { services: services, service_count: 0 },
         };
-        ResourceProfile { regions: regions, region_count: 1 }
+        |layout|::ResourceProfile { regions: regions, region_count: 1 }
     }
 }

@@ -1,12 +1,8 @@
-module connection::mailbox;
 // Single writer per direction. Payload precedes release publication; copied
 // input precedes release acknowledgement. No sequence wraps or jumps are accepted.
 // Wire: source-rs/platform/libraries/user-runtime/mailbox.rs (three header words).
-use kernel::Gate;
-use kernel::Kernel;
-use kernel;
-use connection::main::Peer;
-use connection::main::Frame;
+use kernel.omg;
+use connection/main.omg;
 
 // Attachment kinds follow the frame word: 0 none, 1 sealed object, 2 endpoint,
 // 3 notification right. The typed grant is sent before the frame that names it.
@@ -14,26 +10,26 @@ public const NONE: u64 = 0u64;
 public const OBJECT: u64 = 1u64;
 public const ENDPOINT: u64 = 2u64;
 public const NOTIFICATION: u64 = 3u64;
-public machine send(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], object: u64) -> u64
-    reaches Kernel blocks invokes Kernel {
+public machine send(gate: &|kernel|::Gate, peer: &mut |main|::Peer, id: u64, payload: &[u64; 8], object: u64) -> u64
+    reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     block send_sized(gate, peer, id, payload, object, 64u64)
 }
 // Frames carry `bytes` of the payload; the display's six-word requests use 48.
-public machine send_sized(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], object: u64, bytes: u64 [0..=64]) -> u64
-    reaches Kernel blocks invokes Kernel {
+public machine send_sized(gate: &|kernel|::Gate, peer: &mut |main|::Peer, id: u64, payload: &[u64; 8], object: u64, bytes: u64 [0..=64]) -> u64
+    reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     transition object == 0u64 {
         true -> block send_attached_sized(gate, peer, id, payload, NONE, 0u64, bytes)
         _ -> block send_attached_sized(gate, peer, id, payload, OBJECT, object, bytes)
     }
 }
-public machine send_attached(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], kind: u64 [0..=3], handle: u64) -> u64
-    reaches Kernel blocks invokes Kernel {
+public machine send_attached(gate: &|kernel|::Gate, peer: &mut |main|::Peer, id: u64, payload: &[u64; 8], kind: u64 [0..=3], handle: u64) -> u64
+    reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     block send_attached_sized(gate, peer, id, payload, kind, handle, 64u64)
 }
-public machine send_attached_sized(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], kind: u64 [0..=3], handle: u64, bytes: u64 [0..=64]) -> u64
-    reaches Kernel blocks invokes Kernel {
+public machine send_attached_sized(gate: &|kernel|::Gate, peer: &mut |main|::Peer, id: u64, payload: &[u64; 8], kind: u64 [0..=3], handle: u64, bytes: u64 [0..=64]) -> u64
+    reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     let mut header: [u64; 8];
-    let status: u64 = block Kernel::shared_read(gate, peer.reader.handle, 1u64, &mut header, 1u64);
+    let status: u64 = block |kernel|::Kernel::shared_read(gate, peer.reader.handle, 1u64, &mut header, 1u64);
     transition status == 0u64 {
         true -> block acknowledged(gate, peer, id, payload, kind, handle, bytes, header[0])
         _ -> (status)
@@ -42,25 +38,25 @@ public machine send_attached_sized(gate: &Gate, peer: &mut Peer, id: u64, payloa
 // WOULD_BLOCK is returned only before publication or a successful handoff.
 // Callers may retry it with their original right. Once frame writes start,
 // failure is terminal, including a failure after a right was delegated.
-machine availability(peer: &Peer, ack: u64) -> u64 {
+machine availability(peer: &|main|::Peer, ack: u64) -> u64 {
     transition {
-        ack > peer.sent || peer.sent == 0xffffffffffffffffu64 -> (kernel::IO_ERROR)
+        ack > peer.sent || peer.sent == 0xffffffffffffffffu64 -> (|kernel|::IO_ERROR)
         ack == peer.sent -> (0u64)
-        _ -> (kernel::WOULD_BLOCK)
+        _ -> (|kernel|::WOULD_BLOCK)
     }
 }
-machine acknowledged(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], kind: u64 [0..=3], handle: u64, bytes: u64 [0..=64], ack: u64) -> u64 reaches Kernel {
+machine acknowledged(gate: &|kernel|::Gate, peer: &mut |main|::Peer, id: u64, payload: &[u64; 8], kind: u64 [0..=3], handle: u64, bytes: u64 [0..=64], ack: u64) -> u64 reaches |kernel|::Kernel {
     let status: u64 = availability(peer, ack);
     transition status == 0u64 {
         true -> block attached(gate, peer, id, payload, kind, handle, bytes)
         _ -> (status)
     }
 }
-machine writing(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], attachment: u64, bytes: u64 [0..=64]) -> u64 reaches Kernel {
+machine writing(gate: &|kernel|::Gate, peer: &mut |main|::Peer, id: u64, payload: &[u64; 8], attachment: u64, bytes: u64 [0..=64]) -> u64 reaches |kernel|::Kernel {
     let status: u64 = block body(gate, peer, id, payload, attachment, bytes);
-    transition status == kernel::WOULD_BLOCK { true -> (kernel::IO_ERROR) _ -> (status) }
+    transition status == |kernel|::WOULD_BLOCK { true -> (|kernel|::IO_ERROR) _ -> (status) }
 }
-machine body(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], attachment: u64, bytes: u64 [0..=64]) -> u64 reaches Kernel {
+machine body(gate: &|kernel|::Gate, peer: &mut |main|::Peer, id: u64, payload: &[u64; 8], attachment: u64, bytes: u64 [0..=64]) -> u64 reaches |kernel|::Kernel {
     let mut first: [u64; 8];
     // Keep length and the first payload words together. Publication remains a
     // separate final write, so a partial body never makes a new frame visible.
@@ -72,56 +68,56 @@ machine body(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], attachme
     first[5] = payload[2];
     first[6] = payload[3];
     first[7] = payload[4];
-    let status: u64 = block Kernel::shared_write(gate, peer.writer.handle, 2u64, &first, 8u64);
+    let status: u64 = block |kernel|::Kernel::shared_write(gate, peer.writer.handle, 2u64, &first, 8u64);
     transition status == 0u64 {
         true -> block tail(gate, peer, payload)
         _ -> (status)
     }
 }
-machine attached(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], kind: u64 [0..=3], handle: u64, bytes: u64 [0..=64]) -> u64 reaches Kernel {
+machine attached(gate: &|kernel|::Gate, peer: &mut |main|::Peer, id: u64, payload: &[u64; 8], kind: u64 [0..=3], handle: u64, bytes: u64 [0..=64]) -> u64 reaches |kernel|::Kernel {
     transition kind == NONE || handle == 0u64 {
         true -> block writing(gate, peer, id, payload, NONE, bytes)
         _ -> block delegate(gate, peer, id, payload, kind, handle, bytes)
     }
     // Each typed send carries the request ID as its correlation word. A failed
     // send leaves the right with the caller; the frame is never written without it.
-    machine delegate(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], kind: u64 [0..=3], handle: u64, bytes: u64 [0..=64]) -> u64 reaches Kernel {
+    machine delegate(gate: &|kernel|::Gate, peer: &mut |main|::Peer, id: u64, payload: &[u64; 8], kind: u64 [0..=3], handle: u64, bytes: u64 [0..=64]) -> u64 reaches |kernel|::Kernel {
         let mut packet: [u64; 10];
         packet[0] = 8u64; packet[1] = handle; packet[2] = id;
         transition kind {
-            OBJECT -> block delegated(gate, peer, id, payload, kind, bytes, Kernel::object_send(gate, peer.sender, &packet))
-            ENDPOINT -> block delegated(gate, peer, id, payload, kind, bytes, Kernel::endpoint_send(gate, peer.sender, &packet))
-            _ -> block delegated(gate, peer, id, payload, kind, bytes, Kernel::notify_send(gate, peer.sender, &packet))
+            OBJECT -> block delegated(gate, peer, id, payload, kind, bytes, |kernel|::Kernel::object_send(gate, peer.sender, &packet))
+            ENDPOINT -> block delegated(gate, peer, id, payload, kind, bytes, |kernel|::Kernel::endpoint_send(gate, peer.sender, &packet))
+            _ -> block delegated(gate, peer, id, payload, kind, bytes, |kernel|::Kernel::notify_send(gate, peer.sender, &packet))
         }
     }
-    machine delegated(gate: &Gate, peer: &mut Peer, id: u64, payload: &[u64; 8], kind: u64 [0..=3], bytes: u64 [0..=64], status: u64) -> u64 reaches Kernel {
+    machine delegated(gate: &|kernel|::Gate, peer: &mut |main|::Peer, id: u64, payload: &[u64; 8], kind: u64 [0..=3], bytes: u64 [0..=64], status: u64) -> u64 reaches |kernel|::Kernel {
         transition status == 8u64 {
             true -> block writing(gate, peer, id, payload, kind, bytes)
             _ -> (status)
         }
     }
 }
-machine tail(gate: &Gate, peer: &mut Peer, payload: &[u64; 8]) -> u64 reaches Kernel {
+machine tail(gate: &|kernel|::Gate, peer: &mut |main|::Peer, payload: &[u64; 8]) -> u64 reaches |kernel|::Kernel {
     let mut last: [u64; 8];
     last[0] = payload[5];
     last[1] = payload[6];
     last[2] = payload[7];
-    let status: u64 = block Kernel::shared_write(gate, peer.writer.handle, 10u64, &last, 3u64);
+    let status: u64 = block |kernel|::Kernel::shared_write(gate, peer.writer.handle, 10u64, &last, 3u64);
     transition status == 0u64 {
         true -> block publish(gate, peer)
         _ -> (status)
     }
 }
-machine publish(gate: &Gate, peer: &mut Peer) -> u64 reaches Kernel {
+machine publish(gate: &|kernel|::Gate, peer: &mut |main|::Peer) -> u64 reaches |kernel|::Kernel {
     let previous: u64 = peer.sent;
     transition previous < 0xffffffffffffffffu64 {
         true -> block next(gate, peer, previous + 1u64)
-        _ -> (kernel::IO_ERROR)
+        _ -> (|kernel|::IO_ERROR)
     }
-    machine next(gate: &Gate, peer: &mut Peer, sequence: u64) -> u64 reaches Kernel {
+    machine next(gate: &|kernel|::Gate, peer: &mut |main|::Peer, sequence: u64) -> u64 reaches |kernel|::Kernel {
         let mut word: [u64; 8];
         word[0] = sequence;
-        let status: u64 = block Kernel::shared_write(gate, peer.writer.handle, 0u64, &word, 1u64);
+        let status: u64 = block |kernel|::Kernel::shared_write(gate, peer.writer.handle, 0u64, &word, 1u64);
         peer.sent = sequence;
         status
     }
@@ -131,62 +127,62 @@ machine publish(gate: &Gate, peer: &mut Peer) -> u64 reaches Kernel {
 // never chooses copy bounds. Check the sequence again after the remaining words;
 // no atomic multiword snapshot is promised against a hostile writer. The later
 // steps borrow these private copies; no shared-memory reference escapes a read.
-public machine receive(gate: &Gate, peer: &mut Peer) -> u64
-    reaches Kernel blocks invokes Kernel {
+public machine receive(gate: &|kernel|::Gate, peer: &mut |main|::Peer) -> u64
+    reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     let mut first: [u64; 8];
-    let status: u64 = block Kernel::shared_read(gate, peer.reader.handle, 0u64, &mut first, 8u64);
+    let status: u64 = block |kernel|::Kernel::shared_read(gate, peer.reader.handle, 0u64, &mut first, 8u64);
     transition status == 0u64 {
         true -> block published(gate, peer, &first)
         _ -> (status)
     }
 }
-machine published(gate: &Gate, peer: &mut Peer, first: &[u64; 8]) -> u64 reaches Kernel {
+machine published(gate: &|kernel|::Gate, peer: &mut |main|::Peer, first: &[u64; 8]) -> u64 reaches |kernel|::Kernel {
     transition first[0] == peer.received {
-        true -> (kernel::WOULD_BLOCK)
+        true -> (|kernel|::WOULD_BLOCK)
         _ -> block validate(gate, peer, first)
     }
-    machine validate(gate: &Gate, peer: &mut Peer, first: &[u64; 8]) -> u64 reaches Kernel {
+    machine validate(gate: &|kernel|::Gate, peer: &mut |main|::Peer, first: &[u64; 8]) -> u64 reaches |kernel|::Kernel {
         let previous: u64 = peer.received;
         transition previous < 0xffffffffffffffffu64 {
             true -> block successor(gate, peer, first, previous + 1u64)
-            _ -> (kernel::IO_ERROR)
+            _ -> (|kernel|::IO_ERROR)
         }
     }
-    machine successor(gate: &Gate, peer: &mut Peer, first: &[u64; 8], expected: u64) -> u64 reaches Kernel {
+    machine successor(gate: &|kernel|::Gate, peer: &mut |main|::Peer, first: &[u64; 8], expected: u64) -> u64 reaches |kernel|::Kernel {
         transition first[0] == expected && first[2] >= 16u64 && first[2] <= 80u64 {
             true -> block snapshot_tail(gate, peer, first, first[2])
-            _ -> (kernel::IO_ERROR)
+            _ -> (|kernel|::IO_ERROR)
         }
     }
 }
-machine snapshot_tail(gate: &Gate, peer: &mut Peer, first: &[u64; 8], bytes: u64 [16..=80]) -> u64 reaches Kernel {
+machine snapshot_tail(gate: &|kernel|::Gate, peer: &mut |main|::Peer, first: &[u64; 8], bytes: u64 [16..=80]) -> u64 reaches |kernel|::Kernel {
     let mut last: [u64; 8];
-    let status: u64 = block Kernel::shared_read(gate, peer.reader.handle, 8u64, &mut last, 5u64);
+    let status: u64 = block |kernel|::Kernel::shared_read(gate, peer.reader.handle, 8u64, &mut last, 5u64);
     transition status == 0u64 {
         true -> block stable(gate, peer, bytes, first, &last)
         _ -> (status)
     }
 }
-machine stable(gate: &Gate, peer: &mut Peer, bytes: u64 [16..=80], first: &[u64; 8], last: &[u64; 8]) -> u64 reaches Kernel {
+machine stable(gate: &|kernel|::Gate, peer: &mut |main|::Peer, bytes: u64 [16..=80], first: &[u64; 8], last: &[u64; 8]) -> u64 reaches |kernel|::Kernel {
     let mut word: [u64; 8];
-    let status: u64 = block Kernel::shared_read(gate, peer.reader.handle, 0u64, &mut word, 1u64);
+    let status: u64 = block |kernel|::Kernel::shared_read(gate, peer.reader.handle, 0u64, &mut word, 1u64);
     transition status == 0u64 && word[0] == first[0] && first[3] != 0u64 {
         true -> block acknowledge(gate, peer, bytes, first, last)
-        _ -> (kernel::IO_ERROR)
+        _ -> (|kernel|::IO_ERROR)
     }
 }
 // Acknowledge only the completely copied, sequence-checked frame. Installation
 // follows a successful acknowledgement so the next reply cannot outrun it.
-machine acknowledge(gate: &Gate, peer: &mut Peer, bytes: u64 [16..=80], first: &[u64; 8], last: &[u64; 8]) -> u64 reaches Kernel {
+machine acknowledge(gate: &|kernel|::Gate, peer: &mut |main|::Peer, bytes: u64 [16..=80], first: &[u64; 8], last: &[u64; 8]) -> u64 reaches |kernel|::Kernel {
     let mut word: [u64; 8];
     word[0] = first[0];
-    let status: u64 = block Kernel::shared_write(gate, peer.writer.handle, 1u64, &word, 1u64);
+    let status: u64 = block |kernel|::Kernel::shared_write(gate, peer.writer.handle, 1u64, &word, 1u64);
     transition status == 0u64 {
         true -> installed(peer, bytes, first, last)
         _ -> (status)
     }
 }
-machine installed(peer: &mut Peer, bytes: u64 [16..=80], first: &[u64; 8], last: &[u64; 8]) -> u64 {
+machine installed(peer: &mut |main|::Peer, bytes: u64 [16..=80], first: &[u64; 8], last: &[u64; 8]) -> u64 {
     peer.received = first[0];
     peer.has_frame = true;
     peer.frame.id = first[3];

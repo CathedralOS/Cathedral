@@ -1,7 +1,5 @@
-module configuration::bytes;
-
 // Native one-word-per-byte envelope. The CTHMAT02 codec remains in the service.
-use service::children::configuration::encoding;
+use {service}/children/configuration/encoding.omg;
 
 public machine decode(p: &mut [u64; 128]) -> u64 {
     let mut bytes: [u8; 104];
@@ -28,7 +26,7 @@ public machine decode(p: &mut [u64; 128]) -> u64 {
         }
     }
     machine validate(p: &mut [u64; 128], bytes: &mut [u8; 104]) -> u64 {
-        transition service::children::configuration::encoding::normalize(bytes) {
+        transition |encoding|::normalize(bytes) {
             true -> publish(p, bytes, 0u64)
             _ -> (0u64)
         }

@@ -1,5 +1,8 @@
+use kernel.omg;
+use arch/x86_64/gate.omg;
+
 machine build(builder: &mut Build) {
     Build::package(builder, "cathedral_user_runtime");
     Build::depend_as(builder, "protocol", Source::Path { location: "../../contracts/reference" });
-    Build::select_provider<kernel::Kernel, arch::x86_64::gate::NativeKernel>(builder, linux_x86_64);
+    Build::select_provider<|kernel|::Kernel, |gate|::NativeKernel>(builder, linux_x86_64);
 }

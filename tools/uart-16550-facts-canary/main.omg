@@ -1,22 +1,7 @@
 // Compile-only acceptance root that makes the UART constants visible in the
 // typed artifact without performing hardware access.
 
-use facts::uart_16550::COM1;
-use facts::uart_16550::FCR_ENABLE_CLEAR;
-use facts::uart_16550::LCR_8N1;
-use facts::uart_16550::LCR_DLAB;
-use facts::uart_16550::LSR_DATA_READY;
-use facts::uart_16550::LSR_THR_EMPTY;
-use facts::uart_16550::MCR_DTR_RTS_OUT2;
-use facts::uart_16550::REG_DATA;
-use facts::uart_16550::REG_DIVISOR_HIGH;
-use facts::uart_16550::REG_DIVISOR_LOW;
-use facts::uart_16550::REG_FIFO_CONTROL;
-use facts::uart_16550::REG_INTERRUPT_ENABLE;
-use facts::uart_16550::REG_LINE_CONTROL;
-use facts::uart_16550::REG_LINE_STATUS;
-use facts::uart_16550::REG_MODEM_CONTROL;
-use facts::uart_16550::REG_SCRATCH;
+use {facts}/uart_16550.omg;
 
 data Uart16550FactSnapshot [copy] {
     com1: u16;
@@ -39,22 +24,22 @@ data Uart16550FactSnapshot [copy] {
 
 machine uart_16550_fact_snapshot() -> Uart16550FactSnapshot {
     Uart16550FactSnapshot {
-        com1: COM1,
-        data_offset: REG_DATA,
-        interrupt_enable_offset: REG_INTERRUPT_ENABLE,
-        divisor_low_offset: REG_DIVISOR_LOW,
-        divisor_high_offset: REG_DIVISOR_HIGH,
-        fifo_control_offset: REG_FIFO_CONTROL,
-        line_control_offset: REG_LINE_CONTROL,
-        modem_control_offset: REG_MODEM_CONTROL,
-        line_status_offset: REG_LINE_STATUS,
-        scratch_offset: REG_SCRATCH,
-        lcr_dlab: LCR_DLAB,
-        lcr_8n1: LCR_8N1,
-        lsr_data_ready: LSR_DATA_READY,
-        lsr_thr_empty: LSR_THR_EMPTY,
-        fcr_enable_clear: FCR_ENABLE_CLEAR,
-        mcr_dtr_rts_out2: MCR_DTR_RTS_OUT2,
+        com1: |uart_16550|::COM1,
+        data_offset: |uart_16550|::REG_DATA,
+        interrupt_enable_offset: |uart_16550|::REG_INTERRUPT_ENABLE,
+        divisor_low_offset: |uart_16550|::REG_DIVISOR_LOW,
+        divisor_high_offset: |uart_16550|::REG_DIVISOR_HIGH,
+        fifo_control_offset: |uart_16550|::REG_FIFO_CONTROL,
+        line_control_offset: |uart_16550|::REG_LINE_CONTROL,
+        modem_control_offset: |uart_16550|::REG_MODEM_CONTROL,
+        line_status_offset: |uart_16550|::REG_LINE_STATUS,
+        scratch_offset: |uart_16550|::REG_SCRATCH,
+        lcr_dlab: |uart_16550|::LCR_DLAB,
+        lcr_8n1: |uart_16550|::LCR_8N1,
+        lsr_data_ready: |uart_16550|::LSR_DATA_READY,
+        lsr_thr_empty: |uart_16550|::LSR_THR_EMPTY,
+        fcr_enable_clear: |uart_16550|::FCR_ENABLE_CLEAR,
+        mcr_dtr_rts_out2: |uart_16550|::MCR_DTR_RTS_OUT2,
     }
 }
 

@@ -1,101 +1,98 @@
-module storage::requests;
-use application::application;
-use main::Context;
-use app::state::State;
-use app::operations::Command;
-use app::operations::Completion;
-use app::operations::Reply;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::time::Tick;
-use runtime::connection::call::CallReply;
-use runtime::memory::object::Creation;
-use runtime::storage::main;
-use services::exchange;
-use services::transfer;
-use storage::records;
-use protocol::main;
-use services::replies;
+use {runtime}/connection/main.omg as connection_main;
+use application/application.omg;
+use main.omg;
+use {app}/state.omg as app_state;
+use {app}/operations.omg;
+use {runtime}/kernel.omg;
+use {runtime}/time.omg;
+use {runtime}/connection/call.omg;
+use {runtime}/memory/object.omg;
+use {runtime}/storage/main.omg as storage_main;
+use services/exchange.omg;
+use services/transfer.omg;
+use storage/records.omg;
+use {protocol}/main.omg as protocol_main;
+use services/replies.omg;
 
-public machine bind(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State) reaches Kernel blocks invokes Kernel {
-    let tick: Tick = runtime::time::read(gate, context.clock);
+public machine bind(output: &mut |application|::Work, gate: &|kernel|::Gate, context: &mut |main|::Context, state: &|app_state|::State) reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
+    let tick: |time|::Tick = |time|::read(gate, context.clock);
     transition tick {
-        Tick::Read { value } -> block binding(output, gate, context, state, value)
-        Tick::Failed { code } -> services::replies::failed(output, code)
+        |time|::Tick::Read { value } -> block binding(output, gate, context, state, value)
+        |time|::Tick::Failed { code } -> |replies|::failed(output, code)
     }
 }
-machine binding(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, now: u64) reaches Kernel {
-    let words: [u64; 8] = runtime::storage::main::bind_request(now);
-    let reply: CallReply = block services::exchange::request(gate, context, state, true, &words, 0u64, words[7]);
+machine binding(output: &mut |application|::Work, gate: &|kernel|::Gate, context: &mut |main|::Context, state: &|app_state|::State, now: u64) reaches |kernel|::Kernel {
+    let words: [u64; 8] = |storage_main|::bind_request(now);
+    let reply: |call|::CallReply = block |exchange|::request(gate, context, state, true, &words, 0u64, words[7]);
     transition reply {
-        CallReply::Received { frame, notification } -> block bound(output, gate, context, frame, notification)
-        CallReply::Object { frame, object } -> block object(output, gate, context, object)
-        CallReply::Endpoint { frame, endpoint } -> block endpoint(output, gate, context, endpoint)
-        CallReply::Failed { code } -> services::replies::failed(output, code)
+        |call|::CallReply::Received { frame, notification } -> block bound(output, gate, context, frame, notification)
+        |call|::CallReply::Object { frame, object } -> block object(output, gate, context, object)
+        |call|::CallReply::Endpoint { frame, endpoint } -> block endpoint(output, gate, context, endpoint)
+        |call|::CallReply::Failed { code } -> |replies|::failed(output, code)
     }
 }
-machine bound(output: &mut application::application::Work, gate: &Gate, context: &mut Context, frame: runtime::connection::main::Frame, notification: u64) reaches Kernel {
+machine bound(output: &mut |application|::Work, gate: &|kernel|::Gate, context: &mut |main|::Context, frame: |connection_main|::Frame, notification: u64) reaches |kernel|::Kernel {
     transition frame.bytes == 64u64 && notification == 0u64 {
         true -> installed(output, context, frame.payload)
         _ -> block notification(output, gate, context, notification)
     }
 }
-machine installed(output: &mut application::application::Work, context: &mut Context, words: [u64; 8]) {
-    let status: u64 = runtime::storage::main::bound(&mut context.storage, words);
-    services::replies::bound(output, status, context.storage.realm)
+machine installed(output: &mut |application|::Work, context: &mut |main|::Context, words: [u64; 8]) {
+    let status: u64 = |storage_main|::bound(&mut context.storage, words);
+    |replies|::bound(output, status, context.storage.realm)
 }
-machine endpoint(output: &mut application::application::Work, gate: &Gate, context: &mut Context, endpoint: u64) reaches Kernel {
-    let ignored: u64 = Kernel::close(gate, endpoint);
+machine endpoint(output: &mut |application|::Work, gate: &|kernel|::Gate, context: &mut |main|::Context, endpoint: u64) reaches |kernel|::Kernel {
+    let ignored: u64 = |kernel|::Kernel::close(gate, endpoint);
     transition { _ -> block malformed(output, gate, context) }
 }
-machine notification(output: &mut application::application::Work, gate: &Gate, context: &mut Context, notification: u64) reaches Kernel {
-    let ignored: u64 = Kernel::notify_drop(gate, notification);
+machine notification(output: &mut |application|::Work, gate: &|kernel|::Gate, context: &mut |main|::Context, notification: u64) reaches |kernel|::Kernel {
+    let ignored: u64 = |kernel|::Kernel::notify_drop(gate, notification);
     transition { _ -> block malformed(output, gate, context) }
 }
-machine malformed(output: &mut application::application::Work, gate: &Gate, context: &mut Context) reaches Kernel {
-    let ignored: u64 = block runtime::connection::main::close(gate, &mut context.storage.peer);
-    services::replies::failed(output, runtime::kernel::IO_ERROR)
+machine malformed(output: &mut |application|::Work, gate: &|kernel|::Gate, context: &mut |main|::Context) reaches |kernel|::Kernel {
+    let ignored: u64 = block |connection_main|::close(gate, &mut context.storage.peer);
+    |replies|::failed(output, |kernel|::IO_ERROR)
 }
-public machine execute(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, command: &application::application::Request) reaches Kernel blocks invokes Kernel {
-    let tick: Tick = runtime::time::read(gate, context.clock);
+public machine execute(output: &mut |application|::Work, gate: &|kernel|::Gate, context: &mut |main|::Context, state: &|app_state|::State, command: &|application|::Request) reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
+    let tick: |time|::Tick = |time|::read(gate, context.clock);
     transition tick {
-        Tick::Read { value } -> block scoped(output, gate, context, state, command, value)
-        Tick::Failed { code } -> services::replies::failed(output, code)
+        |time|::Tick::Read { value } -> block scoped(output, gate, context, state, command, value)
+        |time|::Tick::Failed { code } -> |replies|::failed(output, code)
     }
 }
-machine scoped(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, command: &application::application::Request, now: u64) reaches Kernel {
+machine scoped(output: &mut |application|::Work, gate: &|kernel|::Gate, context: &mut |main|::Context, state: &|app_state|::State, command: &|application|::Request, now: u64) reaches |kernel|::Kernel {
     let mut words: [u64; 8] = encode(command);
-    let status: u64 = runtime::storage::main::request(&context.storage, &mut words, now);
+    let status: u64 = |storage_main|::request(&context.storage, &mut words, now);
     transition status == 0u64 {
         true -> block send(output, gate, context, state, command, &words)
-        _ -> services::replies::failed(output, status)
+        _ -> |replies|::failed(output, status)
     }
 }
-machine send(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, command: &application::application::Request, words: &[u64; 8]) reaches Kernel {
+machine send(output: &mut |application|::Work, gate: &|kernel|::Gate, context: &mut |main|::Context, state: &|app_state|::State, command: &|application|::Request, words: &[u64; 8]) reaches |kernel|::Kernel {
     transition command.command {
-        Command::Publish { object, revision, realm, record } -> block publish(output, gate, context, state, command, words, record)
-        Command::Read { object, revision, length } -> block storage::records::receive(output, gate, context, state, command, words, length)
-        _ -> block services::transfer::plain(output, gate, context, state, command, true, words, 0u64, words[7])
+        |operations|::Command::Publish { object, revision, realm, record } -> block publish(output, gate, context, state, command, words, record)
+        |operations|::Command::Read { object, revision, length } -> block |records|::receive(output, gate, context, state, command, words, length)
+        _ -> block |transfer|::plain(output, gate, context, state, command, true, words, 0u64, words[7])
     }
 }
-machine publish(output: &mut application::application::Work, gate: &Gate, context: &mut Context, state: &State, command: &application::application::Request, words: &[u64; 8], record: app::operations::Record) reaches Kernel {
-    let created: Creation = block storage::records::backing(gate, &record);
+machine publish(output: &mut |application|::Work, gate: &|kernel|::Gate, context: &mut |main|::Context, state: &|app_state|::State, command: &|application|::Request, words: &[u64; 8], record: |operations|::Record) reaches |kernel|::Kernel {
+    let created: |object|::Creation = block |records|::backing(gate, &record);
     transition created {
-        Creation::Ready { object } -> block services::transfer::retained(output, gate, context, state, command, true, words, object.handle, words[7])
-        Creation::Failed { code } -> services::replies::failed(output, code)
+        |object|::Creation::Ready { object } -> block |transfer|::retained(output, gate, context, state, command, true, words, object.handle, words[7])
+        |object|::Creation::Failed { code } -> |replies|::failed(output, code)
     }
 }
-machine encode(command: &application::application::Request) -> [u64; 8] {
+machine encode(command: &|application|::Request) -> [u64; 8] {
     transition command.command {
-        Command::List { realm, after } -> ([STORE_LIST, realm, 0u64, after, 0u64, 0u64, 0u64, 0u64])
-        Command::Head { object } -> ([STORE_HEAD, object, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64])
-        Command::Read { object, revision, length } -> ([STORE_BULK, object, revision, 0u64, length, 0u64, 0u64, 0u64])
-        Command::Publish { object, revision, realm, record } -> ([STORE_PUBLISH, object, revision, realm, record.length, 0u64, 0u64, 0u64])
-        Command::Copy { object, revision, realm } -> ([STORE_COPY, object, revision, realm, 0u64, 0u64, 0u64, 0u64])
+        |operations|::Command::List { realm, after } -> ([|protocol_main|::STORE_LIST, realm, 0u64, after, 0u64, 0u64, 0u64, 0u64])
+        |operations|::Command::Head { object } -> ([|protocol_main|::STORE_HEAD, object, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64])
+        |operations|::Command::Read { object, revision, length } -> ([|protocol_main|::STORE_BULK, object, revision, 0u64, length, 0u64, 0u64, 0u64])
+        |operations|::Command::Publish { object, revision, realm, record } -> ([|protocol_main|::STORE_PUBLISH, object, revision, realm, record.length, 0u64, 0u64, 0u64])
+        |operations|::Command::Copy { object, revision, realm } -> ([|protocol_main|::STORE_COPY, object, revision, realm, 0u64, 0u64, 0u64, 0u64])
         _ -> ([0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64])
     }
 }
-machine object(output: &mut application::application::Work, gate: &Gate, context: &mut Context, object: u64) reaches Kernel {
-    let ignored: u64 = block Kernel::memory_release(gate, object);
+machine object(output: &mut |application|::Work, gate: &|kernel|::Gate, context: &mut |main|::Context, object: u64) reaches |kernel|::Kernel {
+    let ignored: u64 = block |kernel|::Kernel::memory_release(gate, object);
     transition { _ -> block malformed(output, gate, context) }
 }

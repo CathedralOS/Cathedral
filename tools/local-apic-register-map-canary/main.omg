@@ -1,7 +1,7 @@
 // Compile-only acceptance root that makes the xAPIC/x2APIC register pairs
 // visible in the typed artifact without accessing either transport.
 
-use facts::local_apic;
+use {facts}/local_apic.omg;
 
 data LocalApicRegisterPair {
     xapic_offset: u16;
@@ -15,15 +15,15 @@ data LocalApicRegisterMapSnapshot {
 machine local_apic_register_map_snapshot() -> LocalApicRegisterMapSnapshot {
     LocalApicRegisterMapSnapshot {
         pairs: [
-            LocalApicRegisterPair { xapic_offset: XAPIC_ID_OFFSET, x2apic_msr: X2APIC_ID_MSR },
-            LocalApicRegisterPair { xapic_offset: XAPIC_VERSION_OFFSET, x2apic_msr: X2APIC_VERSION_MSR },
-            LocalApicRegisterPair { xapic_offset: XAPIC_TASK_PRIORITY_OFFSET, x2apic_msr: X2APIC_TASK_PRIORITY_MSR },
-            LocalApicRegisterPair { xapic_offset: XAPIC_EOI_OFFSET, x2apic_msr: X2APIC_EOI_MSR },
-            LocalApicRegisterPair { xapic_offset: XAPIC_SPURIOUS_VECTOR_OFFSET, x2apic_msr: X2APIC_SPURIOUS_VECTOR_MSR },
-            LocalApicRegisterPair { xapic_offset: XAPIC_LVT_TIMER_OFFSET, x2apic_msr: X2APIC_LVT_TIMER_MSR },
-            LocalApicRegisterPair { xapic_offset: XAPIC_TIMER_INITIAL_COUNT_OFFSET, x2apic_msr: X2APIC_TIMER_INITIAL_COUNT_MSR },
-            LocalApicRegisterPair { xapic_offset: XAPIC_TIMER_CURRENT_COUNT_OFFSET, x2apic_msr: X2APIC_TIMER_CURRENT_COUNT_MSR },
-            LocalApicRegisterPair { xapic_offset: XAPIC_TIMER_DIVIDE_CONFIG_OFFSET, x2apic_msr: X2APIC_TIMER_DIVIDE_CONFIG_MSR }
+            LocalApicRegisterPair { xapic_offset: |local_apic|::XAPIC_ID_OFFSET, x2apic_msr: |local_apic|::X2APIC_ID_MSR },
+            LocalApicRegisterPair { xapic_offset: |local_apic|::XAPIC_VERSION_OFFSET, x2apic_msr: |local_apic|::X2APIC_VERSION_MSR },
+            LocalApicRegisterPair { xapic_offset: |local_apic|::XAPIC_TASK_PRIORITY_OFFSET, x2apic_msr: |local_apic|::X2APIC_TASK_PRIORITY_MSR },
+            LocalApicRegisterPair { xapic_offset: |local_apic|::XAPIC_EOI_OFFSET, x2apic_msr: |local_apic|::X2APIC_EOI_MSR },
+            LocalApicRegisterPair { xapic_offset: |local_apic|::XAPIC_SPURIOUS_VECTOR_OFFSET, x2apic_msr: |local_apic|::X2APIC_SPURIOUS_VECTOR_MSR },
+            LocalApicRegisterPair { xapic_offset: |local_apic|::XAPIC_LVT_TIMER_OFFSET, x2apic_msr: |local_apic|::X2APIC_LVT_TIMER_MSR },
+            LocalApicRegisterPair { xapic_offset: |local_apic|::XAPIC_TIMER_INITIAL_COUNT_OFFSET, x2apic_msr: |local_apic|::X2APIC_TIMER_INITIAL_COUNT_MSR },
+            LocalApicRegisterPair { xapic_offset: |local_apic|::XAPIC_TIMER_CURRENT_COUNT_OFFSET, x2apic_msr: |local_apic|::X2APIC_TIMER_CURRENT_COUNT_MSR },
+            LocalApicRegisterPair { xapic_offset: |local_apic|::XAPIC_TIMER_DIVIDE_CONFIG_OFFSET, x2apic_msr: |local_apic|::X2APIC_TIMER_DIVIDE_CONFIG_MSR }
         ],
     }
 }

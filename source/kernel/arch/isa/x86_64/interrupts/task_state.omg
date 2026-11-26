@@ -1,9 +1,7 @@
-module isa::x86_64::interrupts::task_state;
-
-use omega::language::core::assembly;
-use omega::language::core::task_register;
-use facts::x86_descriptors::TaskStateSegment;
-use facts::x86_descriptor_bytes;
+use {omega}/language/core/assembly.omg;
+use {omega}/language/core/task_register.omg;
+use {facts}/x86_descriptors.omg;
+use {facts}/x86_descriptor_bytes.omg;
 
 // The kernel owns this storage for the rest of its bootstrap continuation.
 // Activation runs inside that continuation's whole-owner borrow. No address
@@ -20,16 +18,16 @@ use facts::x86_descriptor_bytes;
 public boundary trait TaskStatePreparation {
     machine activate(storage: &mut TaskStateStorage) -> bool
     requires address::Bound == 18446744073709551616
-    reaches MachineControl + TaskRegisterControl
-    invokes TaskRegisterControl
+    reaches |assembly|::MachineControl + |task_register|::TaskRegisterControl
+    invokes |task_register|::TaskRegisterControl
     crashes Abort;
 }
 
 public BootstrapTaskStatePreparation satisfies TaskStatePreparation {
     machine activate(storage: &mut TaskStateStorage) -> bool
     requires address::Bound == 18446744073709551616
-    reaches MachineControl + TaskRegisterControl
-    invokes TaskRegisterControl
+    reaches |assembly|::MachineControl + |task_register|::TaskRegisterControl
+    invokes |task_register|::TaskRegisterControl
     crashes Abort
     { activate_task(storage) }
 }
@@ -38,7 +36,7 @@ public data TaskStateStorage {
     before: u64;
     gdt: [u64; 5];
     gdt_after: u64;
-    task: TaskStateSegment;
+    task: |x86_descriptors|::TaskStateSegment;
     task_bytes: [u8; 104];
     double_fault_stack: [u64; 514];
     nmi_stack: [u64; 514];
@@ -49,8 +47,8 @@ public data TaskStateStorage {
 
 machine activate_task(storage: &mut TaskStateStorage) -> bool
 requires address::Bound == 18446744073709551616
-reaches MachineControl + TaskRegisterControl
-invokes TaskRegisterControl
+reaches |assembly|::MachineControl + |task_register|::TaskRegisterControl
+invokes |task_register|::TaskRegisterControl
 crashes Abort
 {
     // Keep the four Rust bootstrap stack roles separate. Interrupt delivery
@@ -65,14 +63,14 @@ crashes Abort
     // Preserve Cathedral's typed table and its existing explicit hardware codec.
     // Both remain owned; changing the typed value later would require a new
     // encoding before the CPU could consume it.
-    storage.task = TaskStateSegment {
+    storage.task = |x86_descriptors|::TaskStateSegment {
         reserved_1: 0,
         privilege_stack_table: [irq_top, 0, 0],
         reserved_2: 0,
         interrupt_stack_table: [double_fault_top, nmi_top, machine_check_top, irq_top, 0, 0, 0],
         reserved_3: 0, reserved_4: 0, iomap_base: 104,
     };
-    storage.task_bytes = x86_descriptor_bytes::encode_TaskStateSegment(&storage.task);
+    storage.task_bytes = |x86_descriptor_bytes|::encode_TaskStateSegment(&storage.task);
     let task_base: u64 = address_of(&storage.task_bytes[0]) as u64;
     storage.gdt[0] = 0;
     storage.gdt[1] = 0x00AF9B000000FFFF;
@@ -87,7 +85,7 @@ crashes Abort
 
     // The compiler operation checks the current GDTR and this descriptor
     // against these exact borrowed owners before it can issue LTR.
-    let activated: bool = TaskRegisterControl::activate<5>(
+    let activated: bool = |task_register|::TaskRegisterControl::activate<5>(
         &mut storage.gdt, &storage.task_bytes, 24);
     activated && task_state_selected(storage)
 }
@@ -96,10 +94,10 @@ crashes Abort
 // changing CPU selections; an earlier observation cannot stand in for this read.
 public machine task_state_selected(storage: &TaskStateStorage) -> bool
 requires address::Bound == 18446744073709551616
-reaches MachineControl + TaskRegisterControl
-invokes TaskRegisterControl
+reaches |assembly|::MachineControl + |task_register|::TaskRegisterControl
+invokes |task_register|::TaskRegisterControl
 {
-    let selected: u16 = TaskRegisterControl::selector();
+    let selected: u16 = |task_register|::TaskRegisterControl::selector();
     let task_base: u64 = address_of(&storage.task_bytes[0]) as u64;
     let busy_descriptor: u64 = 103 | ((task_base & 0xFFFFFF) << 16)
         | (0x8Bu64 << 40) | (((task_base >> 24) & 255) << 56);

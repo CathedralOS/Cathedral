@@ -1,16 +1,16 @@
-use x86_values::interrupts;
-use facts::x86_interrupts::DetachedIdt;
-use facts::x86_idt_gate;
-use facts::x86_registers::SegmentSelector;
+use {x86_values}/interrupts.omg;
+use {facts}/x86_interrupts.omg;
+use {facts}/x86_idt_gate.omg;
+use {facts}/x86_registers.omg;
 machine test_result() -> i32 {
-    let mut table: DetachedIdt = interrupts::idt_missing();
-    let gate: X86IdtGate = interrupts::gate_candidate(1234, SegmentSelector { raw: 40 });
-    interrupts::idt_set(&mut table, 200, gate);
-    let changed: X86IdtGate = interrupts::idt_entry(&table, 200);
-    interrupts::idt_reset(&mut table);
-    let reset: X86IdtGate = interrupts::idt_entry(&table, 200);
-    let first: X86IdtGate = interrupts::idt_entry(&table, 0);
-    let last: X86IdtGate = interrupts::idt_entry(&table, 255);
+    let mut table: |x86_interrupts|::DetachedIdt = |interrupts|::idt_missing();
+    let gate: |x86_idt_gate|::X86IdtGate = |interrupts|::gate_candidate(1234, |x86_registers|::SegmentSelector { raw: 40 });
+    |interrupts|::idt_set(&mut table, 200, gate);
+    let changed: |x86_idt_gate|::X86IdtGate = |interrupts|::idt_entry(&table, 200);
+    |interrupts|::idt_reset(&mut table);
+    let reset: |x86_idt_gate|::X86IdtGate = |interrupts|::idt_entry(&table, 200);
+    let first: |x86_idt_gate|::X86IdtGate = |interrupts|::idt_entry(&table, 0);
+    let last: |x86_idt_gate|::X86IdtGate = |interrupts|::idt_entry(&table, 255);
     transition changed.entry == 1234 && changed.selector == 40 && changed.type_attributes == 142 &&
         reset.entry == 0 && reset.selector == 0 && reset.ist == 0 && reset.type_attributes == 14 &&
         first.type_attributes == 14 && last.type_attributes == 14 {

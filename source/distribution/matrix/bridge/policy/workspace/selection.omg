@@ -1,13 +1,7 @@
-module workspace::selection;
-
 // Native switch encoding. The service carries a typed ready/waiting command;
 // numeric tags and the historical waiting offset are confined to this file.
-use service::children::workspace::main;
-use service::children::workspace::operation::Switch;
-use service::children::workspace::operation::Command;
-use service::children::workspace::operation::Phase;
-use service::children::workspace::operation::Dispatch;
-use service::children::workspace::operation::Completion;
+use {service}/children/workspace/main.omg;
+use {service}/children/workspace/operation.omg;
 
 const BEGIN: u64 = 0u64;
 const NEXT: u64 = 1u64;
@@ -21,7 +15,7 @@ public machine selection_decision(packet: &mut [u64; 128]) -> u64 {
         _ -> (0u64)
     }
     machine decoded(packet: &mut [u64; 128]) -> u64 {
-        let mut work: Switch;
+        let mut work: |operation|::Switch;
         work.phase = decode_phase(packet[16]);
         work.ticket = packet[17];
         work.refusal = packet[18];
@@ -33,99 +27,99 @@ public machine selection_decision(packet: &mut [u64; 128]) -> u64 {
     }
 }
 
-machine apply(packet: &[u64; 128], work: &mut Switch) -> u64 {
+machine apply(packet: &[u64; 128], work: &mut |operation|::Switch) -> u64 {
     transition packet[1] {
-        BEGIN -> boolean(service::children::workspace::main::begin(work, packet[2]))
+        BEGIN -> boolean(|main|::begin(work, packet[2]))
         NEXT -> next(work)
         COMPLETE -> completion(packet, work)
-        CANCEL -> boolean(service::children::workspace::main::cancel(work, packet[2]))
+        CANCEL -> boolean(|main|::cancel(work, packet[2]))
         _ -> (0u64)
     }
-    machine next(work: &mut Switch) -> u64 {
-        let dispatch: Dispatch = service::children::workspace::main::next(work);
+    machine next(work: &mut |operation|::Switch) -> u64 {
+        let dispatch: |operation|::Dispatch = |main|::next(work);
         transition dispatch {
-            Dispatch::Issue { command } -> encode_command(command)
-            Dispatch::Wait -> (0u64)
+            |operation|::Dispatch::Issue { command } -> encode_command(command)
+            |operation|::Dispatch::Wait -> (0u64)
         }
     }
 }
 
-machine completion(packet: &[u64; 128], work: &mut Switch) -> u64 {
+machine completion(packet: &[u64; 128], work: &mut |operation|::Switch) -> u64 {
     // The fatal Failed command cannot be completed into a successful finish.
     transition packet[3] >= 1u64 && packet[3] <= 6u64 {
         true -> decoded(packet, work)
         _ -> (0u64)
     }
-    machine decoded(packet: &[u64; 128], work: &mut Switch) -> u64
+    machine decoded(packet: &[u64; 128], work: &mut |operation|::Switch) -> u64
         requires packet[3] >= 1u64 && packet[3] <= 6u64 {
-        let completion: Completion = Completion {
+        let completion: |operation|::Completion = |operation|::Completion {
             ticket: packet[2], command: decode_command(packet[3]),
             status: packet[4], committed: packet[5] != 0u64
         };
-        boolean(service::children::workspace::main::complete(work, completion))
+        boolean(|main|::complete(work, completion))
     }
 }
 
-machine decode_phase(value: u64) -> Phase {
+machine decode_phase(value: u64) -> |operation|::Phase {
     transition value >= 1u64 && value <= 7u64 {
         true -> ready(value)
         _ -> waiting_or_dormant(value)
     }
-    machine ready(value: u64) -> Phase requires value >= 1u64 && value <= 7u64 {
-        Phase::Ready { command: decode_command(value) }
+    machine ready(value: u64) -> |operation|::Phase requires value >= 1u64 && value <= 7u64 {
+        |operation|::Phase::Ready { command: decode_command(value) }
     }
-    machine waiting_or_dormant(value: u64) -> Phase {
+    machine waiting_or_dormant(value: u64) -> |operation|::Phase {
         transition value >= 33u64 && value <= 39u64 {
             true -> waiting(value)
-            _ -> (Phase::Dormant)
+            _ -> (|operation|::Phase::Dormant)
         }
     }
-    machine waiting(value: u64) -> Phase requires value >= 33u64 && value <= 39u64 {
-        Phase::Waiting { command: decode_command(value - 32u64) }
+    machine waiting(value: u64) -> |operation|::Phase requires value >= 33u64 && value <= 39u64 {
+        |operation|::Phase::Waiting { command: decode_command(value - 32u64) }
     }
 }
 
-machine decode_command(value: u64) -> Command requires value >= 1u64 && value <= 7u64 {
+machine decode_command(value: u64) -> |operation|::Command requires value >= 1u64 && value <= 7u64 {
     transition value {
-        1u64 -> (Command::BeginScene)
-        2u64 -> (Command::AwaitScene)
-        3u64 -> (Command::Activate)
-        4u64 -> (Command::BeginRestore)
-        5u64 -> (Command::AwaitRestore)
-        6u64 -> (Command::Finish)
-        _ -> (Command::Failed)
+        1u64 -> (|operation|::Command::BeginScene)
+        2u64 -> (|operation|::Command::AwaitScene)
+        3u64 -> (|operation|::Command::Activate)
+        4u64 -> (|operation|::Command::BeginRestore)
+        5u64 -> (|operation|::Command::AwaitRestore)
+        6u64 -> (|operation|::Command::Finish)
+        _ -> (|operation|::Command::Failed)
     }
 }
 
-machine encode_phase(phase: Phase) -> u64 {
+machine encode_phase(phase: |operation|::Phase) -> u64 {
     transition phase {
-        Phase::Ready { command } -> encode_command(command)
-        Phase::Waiting { command } -> encode_waiting(command)
-        Phase::Dormant -> (0u64)
+        |operation|::Phase::Ready { command } -> encode_command(command)
+        |operation|::Phase::Waiting { command } -> encode_waiting(command)
+        |operation|::Phase::Dormant -> (0u64)
     }
 }
 
-machine encode_command(command: Command) -> u64 {
+machine encode_command(command: |operation|::Command) -> u64 {
     transition command {
-        Command::BeginScene -> (1u64)
-        Command::AwaitScene -> (2u64)
-        Command::Activate -> (3u64)
-        Command::BeginRestore -> (4u64)
-        Command::AwaitRestore -> (5u64)
-        Command::Finish -> (6u64)
-        Command::Failed -> (7u64)
+        |operation|::Command::BeginScene -> (1u64)
+        |operation|::Command::AwaitScene -> (2u64)
+        |operation|::Command::Activate -> (3u64)
+        |operation|::Command::BeginRestore -> (4u64)
+        |operation|::Command::AwaitRestore -> (5u64)
+        |operation|::Command::Finish -> (6u64)
+        |operation|::Command::Failed -> (7u64)
     }
 }
 
-machine encode_waiting(command: Command) -> u64 {
+machine encode_waiting(command: |operation|::Command) -> u64 {
     transition command {
-        Command::BeginScene -> (33u64)
-        Command::AwaitScene -> (34u64)
-        Command::Activate -> (35u64)
-        Command::BeginRestore -> (36u64)
-        Command::AwaitRestore -> (37u64)
-        Command::Finish -> (38u64)
-        Command::Failed -> (39u64)
+        |operation|::Command::BeginScene -> (33u64)
+        |operation|::Command::AwaitScene -> (34u64)
+        |operation|::Command::Activate -> (35u64)
+        |operation|::Command::BeginRestore -> (36u64)
+        |operation|::Command::AwaitRestore -> (37u64)
+        |operation|::Command::Finish -> (38u64)
+        |operation|::Command::Failed -> (39u64)
     }
 }
 

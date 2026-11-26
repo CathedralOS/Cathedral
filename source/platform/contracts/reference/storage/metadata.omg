@@ -1,4 +1,3 @@
-module storage::metadata;
 // Two canonical 32-byte UTF-8 fields. Names additionally exclude path syntax.
 public machine valid(text: &[u8; 32], name: bool) -> bool {
     transition name && text[0] == 46u8 && (text[1] == 0u8 || (text[1] == 46u8 && text[2] == 0u8)) {

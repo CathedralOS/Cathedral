@@ -1,41 +1,39 @@
-module startup;
+use {runtime}/services/main.omg as services_main;
 // The owner initiates control independently. Complete that connection before
 // asking the broker for service work, so startup cannot consume its setup window.
-use main::Context;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::main::Startup;
-use runtime::main::Environment;
-use runtime::time::Tick;
-use runtime::server::owner;
+use main.omg;
+use {runtime}/kernel.omg;
+use {runtime}/main.omg as runtime_main;
+use {runtime}/time.omg;
+use {runtime}/server/owner.omg;
 
-public machine open(gate: &Gate, context: &mut Context) -> u64 reaches Kernel blocks invokes Kernel {
-    context.clock = Kernel::clock(gate);
-    let startup: Startup = runtime::main::start(gate);
+public machine open(gate: &|kernel|::Gate, context: &mut |main|::Context) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
+    context.clock = |kernel|::Kernel::clock(gate);
+    let startup: |runtime_main|::Startup = |runtime_main|::start(gate);
     transition startup {
-        Startup::Ready { environment } -> block timed(gate, context, environment)
-        Startup::Failed { code } -> (code)
-        Startup::InvalidEnvironment -> (runtime::kernel::INVALID_ARGUMENT)
+        |runtime_main|::Startup::Ready { environment } -> block timed(gate, context, environment)
+        |runtime_main|::Startup::Failed { code } -> (code)
+        |runtime_main|::Startup::InvalidEnvironment -> (|kernel|::INVALID_ARGUMENT)
     }
 }
-machine timed(gate: &Gate, context: &mut Context, environment: Environment) -> u64 reaches Kernel {
-    let tick: Tick = runtime::time::read(gate, context.clock);
+machine timed(gate: &|kernel|::Gate, context: &mut |main|::Context, environment: |runtime_main|::Environment) -> u64 reaches |kernel|::Kernel {
+    let tick: |time|::Tick = |time|::read(gate, context.clock);
     transition tick {
-        Tick::Read { value } -> block owner(gate, context, environment, value)
-        Tick::Failed { code } -> (code)
+        |time|::Tick::Read { value } -> block owner(gate, context, environment, value)
+        |time|::Tick::Failed { code } -> (code)
     }
 }
-machine owner(gate: &Gate, context: &mut Context, environment: Environment, now: u64) -> u64 reaches Kernel {
-    let status: u64 = block runtime::server::owner::open(gate, &mut context.owner, runtime::time::after(now, 300u64));
+machine owner(gate: &|kernel|::Gate, context: &mut |main|::Context, environment: |runtime_main|::Environment, now: u64) -> u64 reaches |kernel|::Kernel {
+    let status: u64 = block |owner|::open(gate, &mut context.owner, |time|::after(now, 300u64));
     transition status == 0u64 {
         true -> block broker_time(gate, context, environment)
         _ -> (status)
     }
 }
-machine broker_time(gate: &Gate, context: &mut Context, environment: Environment) -> u64 reaches Kernel {
-    let tick: Tick = runtime::time::read(gate, context.clock);
+machine broker_time(gate: &|kernel|::Gate, context: &mut |main|::Context, environment: |runtime_main|::Environment) -> u64 reaches |kernel|::Kernel {
+    let tick: |time|::Tick = |time|::read(gate, context.clock);
     transition tick {
-        Tick::Read { value } -> block runtime::services::main::open(gate, &mut context.services, &environment, runtime::time::after(value, 300u64))
-        Tick::Failed { code } -> (code)
+        |time|::Tick::Read { value } -> block |services_main|::open(gate, &mut context.services, &environment, |time|::after(value, 300u64))
+        |time|::Tick::Failed { code } -> (code)
     }
 }

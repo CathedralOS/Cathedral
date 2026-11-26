@@ -1,33 +1,28 @@
-module children::startup::realm::picker;
-
 // Recovery-budget arming precedes the read; setup refusal reaches the owner.
-use children::startup::realm::operations::Setup;
-use children::startup::realm::operations::Command;
-use children::startup::realm::operations::Outcome;
-use children::startup::realm::operations::Completion;
+use children/startup/realm/operations.omg;
 
-public machine completed(setup: &mut Setup, completion: Completion) -> Command {
+public machine completed(setup: &mut |operations|::Setup, completion: |operations|::Completion) -> |operations|::Command {
     transition completion.outcome {
-        Outcome::Success -> succeeded(completion.command)
+        |operations|::Outcome::Success -> succeeded(completion.command)
         _ -> failed(setup, completion.outcome)
     }
-    machine failed(setup: &mut Setup, outcome: Outcome) -> Command {
+    machine failed(setup: &mut |operations|::Setup, outcome: |operations|::Outcome) -> |operations|::Command {
         setup.outcome = outcome;
-        Command::Finish
+        |operations|::Command::Finish
     }
 }
 
-machine succeeded(command: Command) -> Command {
+machine succeeded(command: |operations|::Command) -> |operations|::Command {
     transition command {
-        Command::PreparePicker -> (Command::ReadPicker)
-        Command::ReadPicker -> (Command::ValidatePicker)
-        Command::ValidatePicker -> (Command::AdmitPicker)
-        Command::AdmitPicker -> (Command::BindPicker)
-        Command::BindPicker -> (Command::PlacePicker)
-        Command::PlacePicker -> (Command::InstallPicker)
-        Command::InstallPicker -> (Command::Notify)
-        Command::Notify -> (Command::RecordPicker)
-        Command::RecordPicker -> (Command::Finish)
-        _ -> (Command::Finish)
+        |operations|::Command::PreparePicker -> (|operations|::Command::ReadPicker)
+        |operations|::Command::ReadPicker -> (|operations|::Command::ValidatePicker)
+        |operations|::Command::ValidatePicker -> (|operations|::Command::AdmitPicker)
+        |operations|::Command::AdmitPicker -> (|operations|::Command::BindPicker)
+        |operations|::Command::BindPicker -> (|operations|::Command::PlacePicker)
+        |operations|::Command::PlacePicker -> (|operations|::Command::InstallPicker)
+        |operations|::Command::InstallPicker -> (|operations|::Command::Notify)
+        |operations|::Command::Notify -> (|operations|::Command::RecordPicker)
+        |operations|::Command::RecordPicker -> (|operations|::Command::Finish)
+        _ -> (|operations|::Command::Finish)
     }
 }

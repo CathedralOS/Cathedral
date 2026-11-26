@@ -1,5 +1,4 @@
-module state;
-use operations::Input;
+use operations.omg;
 public data LoadMode [copy] {
     case ReplaceDraft;
     case Reconcile;
@@ -59,7 +58,7 @@ public data State {
     epoch: u64;
     width: u64;
     height: u64;
-    input: Input;
+    input: |operations|::Input;
     requested: bool;
     channels: [u64; 4];
     buttons: [u64; 4];

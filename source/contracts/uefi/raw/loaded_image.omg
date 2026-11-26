@@ -3,8 +3,7 @@
 // See console.PORT.md; reproduced by tools/ports/uefi-console/generate.py.
 // Inert x86-64 representation corpus. No pointer dereference or callable authority.
 // Layout vectors describe required foreign geometry, not default Omega layout.
-module loaded_image;
-use scalars;
+use scalars.omg;
 
 // Upstream: uefi_raw::protocol::loaded_image::LoadedImageProtocol
 pub data LoadedImageProtocol [copy] {
@@ -31,4 +30,4 @@ pub data LoadedImageProtocol [copy] {
     // Foreign carrier: Option<unsafe extern "efiapi" fn(image_handle: Handle) -> Status>
 }
 
-pub const LOADED_IMAGE_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x5b1b31a1, data2: 0x9562, data3: 0x11d2, data4: [0x8e, 0x3f, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
+pub const LOADED_IMAGE_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x5b1b31a1, data2: 0x9562, data3: 0x11d2, data4: [0x8e, 0x3f, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };

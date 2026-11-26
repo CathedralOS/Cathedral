@@ -3,92 +3,85 @@
 // rust-osdev/acpi 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5 adaptations.
 // Copyright 2018 Isaac Woods; Omega adaptation 2026. See PORT.md.
 // Detached payload only; no repeated write execution, Store or provider authority.
-module sequence;
-use aml::model::ObjectStore;
-use aml::model::Value;
-use aml::byte_storage;
-use aml::byte_storage::ByteRead;
-use aml::byte_storage::ByteOutcome;
-use aml::byte_storage::ByteKind;
-use aml::object_conversions::ConversionFailure;
-use integers::integers;
-use integers::integers::IntegerSize;
-use integers::integers::IntegerResult;
-use integers::conversions;
-use integers::buffer_fields;
-use model::PayloadResult;
+use {aml}/model.omg;
+use {aml}/byte_storage.omg;
+use {aml}/object_conversions.omg;
+use {integers}/integers.omg;
+use {integers}/conversions.omg;
+use {integers}/buffer_fields.omg;
+use model.omg as model_file;
 data Bytes [copy] {bytes:[u8;256];}
 
 // Inline executor Integers need no temporary namespace object or backing slot.
 // Width admission precedes ordinal selection, just as in the object entry.
-pub machine integer_payload_at(number:u64,size:IntegerSize,field_bits:u64,ordinal:u64)->PayloadResult {
- transition {field_bits==0 -> (PayloadResult::Failure {reason:ConversionFailure::Bounds})
-  field_bits>2048 -> (PayloadResult::Failure {reason:ConversionFailure::Capacity})
+pub machine integer_payload_at(number:u64,size:|integers|::IntegerSize,field_bits:u64,ordinal:u64)->|model_file|::PayloadResult {
+ transition {field_bits==0 -> (|model_file|::PayloadResult::Failure {reason:|object_conversions|::ConversionFailure::Bounds})
+  field_bits>2048 -> (|model_file|::PayloadResult::Failure {reason:|object_conversions|::ConversionFailure::Capacity})
   _ -> integer(number,size,field_bits,ordinal)}
- state integer(number:u64,size:IntegerSize,field_bits:u64,ordinal:u64)->PayloadResult {
-  let result:PayloadResult=integer_payload(number,size,field_bits,ordinal);result
+ state integer(number:u64,size:|integers|::IntegerSize,field_bits:u64,ordinal:u64)->|model_file|::PayloadResult {
+  let result:|model_file|::PayloadResult=integer_payload(number,size,field_bits,ordinal);result
  }
 }
 
-pub machine payload_at(input:&[u8;1024],input_length:u64,unit:u64,store:&ObjectStore,source:u64,size:IntegerSize,field_bits:u64,ordinal:u64)->PayloadResult {
- transition {field_bits==0 -> (PayloadResult::Failure {reason:ConversionFailure::Bounds})
-  field_bits>2048 -> (PayloadResult::Failure {reason:ConversionFailure::Capacity})
+pub machine payload_at(input:&[u8;1024],input_length:u64,unit:u64,store:&|model|::ObjectStore,source:u64,size:|integers|::IntegerSize,field_bits:u64,ordinal:u64)->|model_file|::PayloadResult {
+ transition {field_bits==0 -> (|model_file|::PayloadResult::Failure {reason:|object_conversions|::ConversionFailure::Bounds})
+  field_bits>2048 -> (|model_file|::PayloadResult::Failure {reason:|object_conversions|::ConversionFailure::Capacity})
   _ -> identity(input,input_length,unit,store,source,size,field_bits,ordinal)}
- state identity(input:&[u8;1024],input_length:u64,unit:u64,store:&ObjectStore,source:u64,size:IntegerSize,field_bits:u64,ordinal:u64)->PayloadResult {
+ state identity(input:&[u8;1024],input_length:u64,unit:u64,store:&|model|::ObjectStore,source:u64,size:|integers|::IntegerSize,field_bits:u64,ordinal:u64)->|model_file|::PayloadResult {
   let count:u64=store.space.object_count;
-  transition count<=64 && source<count && source<64 {true -> value(input,input_length,unit,store,source,size,field_bits,ordinal) _ -> (PayloadResult::Failure {reason:ConversionFailure::InvalidState})}
+  transition count<=64 && source<count && source<64 {true -> value(input,input_length,unit,store,source,size,field_bits,ordinal) _ -> (|model_file|::PayloadResult::Failure {reason:|object_conversions|::ConversionFailure::InvalidState})}
  }
- state value(input:&[u8;1024],input_length:u64,unit:u64,store:&ObjectStore,source:u64,size:IntegerSize,field_bits:u64,ordinal:u64)->PayloadResult {
+ state value(input:&[u8;1024],input_length:u64,unit:u64,store:&|model|::ObjectStore,source:u64,size:|integers|::IntegerSize,field_bits:u64,ordinal:u64)->|model_file|::PayloadResult {
   transition store.space.objects[source].value {
-   Value::Integer {number} -> integer(number,size,field_bits,ordinal)
-   Value::Buffer {buffer_storage} -> bytes(input,input_length,unit,store,source,field_bits,ordinal)
-   Value::String {string_storage} -> bytes(input,input_length,unit,store,source,field_bits,ordinal)
-   _ -> (PayloadResult::Failure {reason:ConversionFailure::UnsupportedValue})
+   |model|::Value::Integer {number} -> integer(number,size,field_bits,ordinal)
+   |model|::Value::Buffer {buffer_storage} -> bytes(input,input_length,unit,store,source,field_bits,ordinal)
+   |model|::Value::String {string_storage} -> bytes(input,input_length,unit,store,source,field_bits,ordinal)
+   _ -> (|model_file|::PayloadResult::Failure {reason:|object_conversions|::ConversionFailure::UnsupportedValue})
   }
  }
- state integer(number:u64,size:IntegerSize,field_bits:u64,ordinal:u64)->PayloadResult {
-  let result:PayloadResult=integer_payload(number,size,field_bits,ordinal);result
+ state integer(number:u64,size:|integers|::IntegerSize,field_bits:u64,ordinal:u64)->|model_file|::PayloadResult {
+  let result:|model_file|::PayloadResult=integer_payload(number,size,field_bits,ordinal);result
  }
- state bytes(input:&[u8;1024],input_length:u64,unit:u64,store:&ObjectStore,source:u64,field_bits:u64,ordinal:u64)->PayloadResult {
-  let read:ByteRead=byte_storage::read_bytes(input,input_length,unit,store,source);
-  transition read.outcome==ByteOutcome::Success {true -> validated(read,field_bits,ordinal) _ -> failed(read.outcome)}
+ state bytes(input:&[u8;1024],input_length:u64,unit:u64,store:&|model|::ObjectStore,source:u64,field_bits:u64,ordinal:u64)->|model_file|::PayloadResult {
+  let read:|byte_storage|::ByteRead=|byte_storage|::read_bytes(input,input_length,unit,store,source);
+  transition read.outcome==|byte_storage|::ByteOutcome::Success {true -> validated(read,field_bits,ordinal) _ -> failed(read.outcome)}
  }
- state failed(error:ByteOutcome)->PayloadResult {let reason:ConversionFailure=storage_failure(error);PayloadResult::Failure {reason:reason}}
- state validated(read:ByteRead,field_bits:u64,ordinal:u64)->PayloadResult {
+ state failed(error:|byte_storage|::ByteOutcome)->|model_file|::PayloadResult {let reason:|object_conversions|::ConversionFailure=storage_failure(error);|model_file|::PayloadResult::Failure {reason:reason}}
+ state validated(read:|byte_storage|::ByteRead,field_bits:u64,ordinal:u64)->|model_file|::PayloadResult {
   let length:u64=read.length;
-  transition length<=256 {true -> kind(read,field_bits,ordinal,length) _ -> (PayloadResult::Failure {reason:ConversionFailure::Capacity})}
+  transition length<=256 {true -> kind(read,field_bits,ordinal,length) _ -> (|model_file|::PayloadResult::Failure {reason:|object_conversions|::ConversionFailure::Capacity})}
  }
- state kind(read:ByteRead,field_bits:u64,ordinal:u64,length:u64)->PayloadResult {
-  transition read.kind {ByteKind::String -> string(read,field_bits,ordinal,length) ByteKind::Buffer -> buffer(read,field_bits,ordinal,length)}
+ state kind(read:|byte_storage|::ByteRead,field_bits:u64,ordinal:u64,length:u64)->|model_file|::PayloadResult {
+  transition read.kind {|byte_storage|::ByteKind::String -> string(read,field_bits,ordinal,length) |byte_storage|::ByteKind::Buffer -> buffer(read,field_bits,ordinal,length)}
  }
- state string(read:ByteRead,field_bits:u64,ordinal:u64,length:u64)->PayloadResult {
-  transition ordinal<length && ordinal<256 {true -> character(read,field_bits,ordinal,length) _ -> (PayloadResult::End {total:length})}
+ state string(read:|byte_storage|::ByteRead,field_bits:u64,ordinal:u64,length:u64)->|model_file|::PayloadResult {
+  transition ordinal<length && ordinal<256 {true -> character(read,field_bits,ordinal,length) _ -> (|model_file|::PayloadResult::End {total:length})}
  }
- state character(read:ByteRead,field_bits:u64,ordinal:u64,length:u64)->PayloadResult {
+ state character(read:|byte_storage|::ByteRead,field_bits:u64,ordinal:u64,length:u64)->|model_file|::PayloadResult {
   let mut character:Bytes=Bytes {};character.bytes[0]=read.bytes[ordinal];
-  let result:PayloadResult=copy_payload(&character.bytes,1,0,field_bits,length,ordinal);result
+  let result:|model_file|::PayloadResult=copy_payload(&character.bytes,1,0,field_bits,length,ordinal);result
  }
- state buffer(read:ByteRead,field_bits:u64,ordinal:u64,length:u64)->PayloadResult {
-  transition field_bits>0 && field_bits<=2048 && length<=256 {true -> rounds(read,field_bits,ordinal,length*8) _ -> (PayloadResult::Failure {reason:ConversionFailure::Bounds})}
+ state buffer(read:|byte_storage|::ByteRead,field_bits:u64,ordinal:u64,length:u64)->|model_file|::PayloadResult {
+  transition field_bits>0 && field_bits<=2048 && length<=256 {true -> rounds(read,field_bits,ordinal,length*8) _ -> (|model_file|::PayloadResult::Failure {reason:|object_conversions|::ConversionFailure::Bounds})}
  }
- state rounds(read:ByteRead,field_bits:u64,ordinal:u64,bits:u64)->PayloadResult {
+ state rounds(read:|byte_storage|::ByteRead,field_bits:u64,ordinal:u64,bits:u64)->|model_file|::PayloadResult {
   let total:u64=buffer_rounds(bits,field_bits);
-  transition ordinal<total {true -> start(read,field_bits,ordinal,total) _ -> (PayloadResult::End {total:total})}
+  transition ordinal<total {true -> start(read,field_bits,ordinal,total) _ -> (|model_file|::PayloadResult::End {total:total})}
  }
- state start(read:ByteRead,field_bits:u64,ordinal:u64,total:u64)->PayloadResult {
+ state start(read:|byte_storage|::ByteRead,field_bits:u64,ordinal:u64,total:u64)->|model_file|::PayloadResult {
   // Establish bounded scalar arithmetic before multiplication, including MAX ordinal.
-  transition ordinal<2048 && field_bits<=2048 {true -> part(read,field_bits,ordinal,total,ordinal*field_bits) _ -> (PayloadResult::Failure {reason:ConversionFailure::Bounds})}
+  transition ordinal<2048 && field_bits<=2048 {true -> part(read,field_bits,ordinal,total,ordinal*field_bits) _ -> (|model_file|::PayloadResult::Failure {reason:|object_conversions|::ConversionFailure::Bounds})}
  }
- state part(read:ByteRead,field_bits:u64,ordinal:u64,total:u64,start:u64)->PayloadResult {
-  let result:PayloadResult=copy_payload(&read.bytes,read.length,start,field_bits,total,ordinal);result
+ state part(read:|byte_storage|::ByteRead,field_bits:u64,ordinal:u64,total:u64,start:u64)->|model_file|::PayloadResult {
+  let result:|model_file|::PayloadResult=copy_payload(&read.bytes,read.length,start,field_bits,total,ordinal);result
  }
 }
-machine integer_payload(number:u64,size:IntegerSize,field_bits:u64,ordinal:u64)->PayloadResult {
- let normalized:u64=integers::normalize(size,number);
- transition ordinal==0 {true -> encode(normalized,size,field_bits) _ -> (PayloadResult::End {total:1})}
- state encode(number:u64,size:IntegerSize,field_bits:u64)->PayloadResult {
-  let mut data:Bytes=Bytes {};let encoded:IntegerResult=conversions::integer_to_buffer(size,number,&mut data.bytes);
-  let result:PayloadResult=copy_payload(&data.bytes,encoded.value,0,field_bits,1,0);result
+machine integer_payload(number:u64,size:|integers|::IntegerSize,field_bits:u64,ordinal:u64)->|model_file|::PayloadResult {
+ let normalized:u64=|integers|::normalize(size,number);
+ transition ordinal==0 {true -> encode(normalized,size,field_bits) _ -> (|model_file|::PayloadResult::End {total:1})}
+ state encode(number:u64,size:|integers|::IntegerSize,field_bits:u64)->|model_file|::PayloadResult {
+  let mut data:Bytes=Bytes {};let encoded:|integers|::IntegerResult=|conversions|::integer_to_buffer(size,number,&mut data.bytes);
+  let result:|model_file|::PayloadResult=copy_payload(&data.bytes,encoded.value,0,field_bits,1,0);result
  }
 }
 machine buffer_rounds(bits:u64,width:u64)->u64 {
@@ -97,16 +90,16 @@ machine buffer_rounds(bits:u64,width:u64)->u64 {
   transition width>0 && width<=2048 && bits<=2048 {true -> ((bits-1)/width+1) _ -> (0)}
  }
 }
-machine copy_payload(source:&[u8;256],source_length:u64,start:u64,field_bits:u64,total:u64,ordinal:u64)->PayloadResult {
- transition field_bits>0 && field_bits<=2048 {true -> copy(source,source_length,start,field_bits,total,ordinal,(field_bits+7)/8) _ -> (PayloadResult::Failure {reason:ConversionFailure::Bounds})}
- state copy(source:&[u8;256],source_length:u64,start:u64,field_bits:u64,total:u64,ordinal:u64,length:u64)->PayloadResult {
-  let mut result:Bytes=Bytes {};let error:u8=buffer_fields::copy_bits(source,source_length,start,&mut result.bytes,length,0,field_bits);
-  transition error==0 {true -> (PayloadResult::Payload {total:total,ordinal:ordinal,length:length,bytes:result.bytes}) _ -> (PayloadResult::Failure {reason:ConversionFailure::Bounds})}
+machine copy_payload(source:&[u8;256],source_length:u64,start:u64,field_bits:u64,total:u64,ordinal:u64)->|model_file|::PayloadResult {
+ transition field_bits>0 && field_bits<=2048 {true -> copy(source,source_length,start,field_bits,total,ordinal,(field_bits+7)/8) _ -> (|model_file|::PayloadResult::Failure {reason:|object_conversions|::ConversionFailure::Bounds})}
+ state copy(source:&[u8;256],source_length:u64,start:u64,field_bits:u64,total:u64,ordinal:u64,length:u64)->|model_file|::PayloadResult {
+  let mut result:Bytes=Bytes {};let error:u8=|buffer_fields|::copy_bits(source,source_length,start,&mut result.bytes,length,0,field_bits);
+  transition error==0 {true -> (|model_file|::PayloadResult::Payload {total:total,ordinal:ordinal,length:length,bytes:result.bytes}) _ -> (|model_file|::PayloadResult::Failure {reason:|object_conversions|::ConversionFailure::Bounds})}
  }
 }
-machine storage_failure(error:ByteOutcome)->ConversionFailure {
- transition error {ByteOutcome::Capacity -> (ConversionFailure::Capacity) ByteOutcome::Bounds -> (ConversionFailure::Bounds)
- ByteOutcome::Encoding -> (ConversionFailure::Encoding) ByteOutcome::UnsupportedValue -> (ConversionFailure::UnsupportedValue)
- ByteOutcome::ReferenceCycle -> (ConversionFailure::ReferenceCycle) ByteOutcome::WorkLimit -> (ConversionFailure::WorkLimit)
- _ -> (ConversionFailure::InvalidState)}
+machine storage_failure(error:|byte_storage|::ByteOutcome)->|object_conversions|::ConversionFailure {
+ transition error {|byte_storage|::ByteOutcome::Capacity -> (|object_conversions|::ConversionFailure::Capacity) |byte_storage|::ByteOutcome::Bounds -> (|object_conversions|::ConversionFailure::Bounds)
+ |byte_storage|::ByteOutcome::Encoding -> (|object_conversions|::ConversionFailure::Encoding) |byte_storage|::ByteOutcome::UnsupportedValue -> (|object_conversions|::ConversionFailure::UnsupportedValue)
+ |byte_storage|::ByteOutcome::ReferenceCycle -> (|object_conversions|::ConversionFailure::ReferenceCycle) |byte_storage|::ByteOutcome::WorkLimit -> (|object_conversions|::ConversionFailure::WorkLimit)
+ _ -> (|object_conversions|::ConversionFailure::InvalidState)}
 }

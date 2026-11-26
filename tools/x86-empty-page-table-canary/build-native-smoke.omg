@@ -1,15 +1,22 @@
 // Hosted hard-root smoke for lowering Cathedral's imported x86 core.
 
+use main.omg as smoke;
+
 target macos_arm64 {
 }
 
 machine build(builder: &mut Build) {
     builder.application("cathedral-x86-page-table-native-smoke");
-    builder.depend_as("core", Source::Path {
-        location: "core"
+    builder.depend_as("arch", Source::Path {
+        location: "arch"
     });
     builder.depend_as("facts", Source::Path {
         location: "facts"
     });
-    builder.roots.bind(macos_arm64::ProgramEntry, Main::main);
+    builder.depend_as("std", Source::Git {
+        repository: "https://github.com/CathedralOS/Omega.git",
+        revision: "64a843d84e992cad23222769065e18cdc107e2d6",
+        selection: PackageSelection::Named { package: "omega_language_std" }
+    });
+    builder.roots.bind(macos_arm64::ProgramEntry, |smoke|::Main::main);
 }

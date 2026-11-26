@@ -1,48 +1,38 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Bounded scalar MethodContext::new_from_method adaptation; unsupported values
 // and serialized methods are rejected before execution, never silently emulated.
-module frames;
-use aml::model::Value;
-use aml::model::Path;
-use aml::model::Span;
-use aml::names::path_valid;
-use integer_helpers::integers::IntegerSize;
-use integer_helpers::integers::normalize;
-use execution_model::ExecutionOutcome;
-use execution_model::Slot;
-use execution_model::Operand;
-use execution_model::Binding;
-use execution_model::SlotResult;
-use execution_model::Frame;
-use execution_model::FrameResult;
-use aml::model::MethodDefinition;
-pub machine scalar_slot(size: IntegerSize, value: Value) -> SlotResult {
+use {omega}/language/core/nat.omg;
+use {aml}/model.omg;
+use {aml}/names.omg;
+use {integer_helpers}/integers.omg;
+use execution_model.omg;
+pub machine scalar_slot(size: |integers|::IntegerSize, value: |model|::Value) -> |execution_model|::SlotResult {
     transition value {
-        Value::Integer { number } -> scalar(size, number)
-        Value::Uninitialized -> (SlotResult { outcome: ExecutionOutcome::Uninitialized })
-        Value::FieldUnit {binding,declaration,field} -> (SlotResult {outcome:ExecutionOutcome::UnresolvedRegion})
-        Value::OperationRegion { space, base, length, scope } -> (SlotResult { outcome: ExecutionOutcome::UnresolvedRegion })
-        _ -> (SlotResult { outcome: ExecutionOutcome::UnsupportedValue })
+        |model|::Value::Integer { number } -> scalar(size, number)
+        |model|::Value::Uninitialized -> (|execution_model|::SlotResult { outcome: |execution_model|::ExecutionOutcome::Uninitialized })
+        |model|::Value::FieldUnit {binding,declaration,field} -> (|execution_model|::SlotResult {outcome:|execution_model|::ExecutionOutcome::UnresolvedRegion})
+        |model|::Value::OperationRegion { space, base, length, scope } -> (|execution_model|::SlotResult { outcome: |execution_model|::ExecutionOutcome::UnresolvedRegion })
+        _ -> (|execution_model|::SlotResult { outcome: |execution_model|::ExecutionOutcome::UnsupportedValue })
     }
-    state scalar(size: IntegerSize, number: u64) -> SlotResult {
-        let value: u64 = normalize(size, number);
-        SlotResult { slot: Slot { initialized: true, number: value } }
+    state scalar(size: |integers|::IntegerSize, number: u64) -> |execution_model|::SlotResult {
+        let value: u64 = |integers|::normalize(size, number);
+        |execution_model|::SlotResult { slot: |execution_model|::Slot { initialized: true, number: value } }
     }
 }
-pub machine new_frame(method: Value, scope: Path, arguments: &[Operand; 7], count: u64,
-    size: IntegerSize, unit: u64, length: u64) -> FrameResult {
-    let valid: bool = path_valid(scope);
+pub machine new_frame(method: |model|::Value, scope: |model|::Path, arguments: &[|execution_model|::Operand; 7], count: u64,
+    size: |integers|::IntegerSize, unit: u64, length: u64) -> |execution_model|::FrameResult {
+    let valid: bool = |names|::path_valid(scope);
     transition length <= 1024 && count <= 7 && valid && scope.absolute {
         true -> kind(method, scope, arguments, count, size, unit, length)
-        _ -> (FrameResult { outcome: ExecutionOutcome::InvalidState })
+        _ -> (|execution_model|::FrameResult { outcome: |execution_model|::ExecutionOutcome::InvalidState })
     }
-    state kind(method: Value, scope: Path, arguments: &[Operand; 7], count: u64,
-        size: IntegerSize, unit: u64, length: u64) -> FrameResult {
-        transition method { Value::Method { flags, body } -> method(scope, arguments, count, size, unit, length, flags, body)
-            _ -> (FrameResult { outcome: ExecutionOutcome::UnsupportedValue }) }
+    state kind(method: |model|::Value, scope: |model|::Path, arguments: &[|execution_model|::Operand; 7], count: u64,
+        size: |integers|::IntegerSize, unit: u64, length: u64) -> |execution_model|::FrameResult {
+        transition method { |model|::Value::Method { flags, body } -> method(scope, arguments, count, size, unit, length, flags, body)
+            _ -> (|execution_model|::FrameResult { outcome: |execution_model|::ExecutionOutcome::UnsupportedValue }) }
     }
-    state method(scope: Path, arguments: &[Operand; 7], count: u64, size: IntegerSize,
-        unit: u64, length: u64, flags: u8, body: Span) -> FrameResult {
+    state method(scope: |model|::Path, arguments: &[|execution_model|::Operand; 7], count: u64, size: |integers|::IntegerSize,
+        unit: u64, length: u64, flags: u8, body: |model|::Span) -> |execution_model|::FrameResult {
         // Stage record values as typed scalars before unsigned ordering. The
         // pinned evaluator miscompares a direct field carrying u64::MAX.
         let start: u64 = body.start;
@@ -50,57 +40,57 @@ pub machine new_frame(method: Value, scope: Path, arguments: &[Operand; 7], coun
         let source_unit: u64 = body.unit;
         let required: u64 = (flags & 7) as u64;
         let serialized: bool = (flags & 8) != 0;
-        transition { source_unit != unit -> (FrameResult { outcome: ExecutionOutcome::SourceUnit })
-            start > end || end > length -> (FrameResult { outcome: ExecutionOutcome::Truncated })
-            required != count -> (FrameResult { outcome: ExecutionOutcome::ArgumentCount })
-            serialized -> (FrameResult { outcome: ExecutionOutcome::UnresolvedSynchronization })
+        transition { source_unit != unit -> (|execution_model|::FrameResult { outcome: |execution_model|::ExecutionOutcome::SourceUnit })
+            start > end || end > length -> (|execution_model|::FrameResult { outcome: |execution_model|::ExecutionOutcome::Truncated })
+            required != count -> (|execution_model|::FrameResult { outcome: |execution_model|::ExecutionOutcome::ArgumentCount })
+            serialized -> (|execution_model|::FrameResult { outcome: |execution_model|::ExecutionOutcome::UnresolvedSynchronization })
             _ -> seed(scope, arguments, count, size, body, length) }
     }
-    state seed(scope: Path, arguments: &[Operand; 7], count: u64, size: IntegerSize, body: Span, length:u64) -> FrameResult {
-        let frame: Frame = Frame { scope: scope, body: body, source_length:length, size: size, pc: body.start, end: body.end };
-        let result: FrameResult = frame_arguments(arguments, 0, count, FrameResult { frame: frame }); result
+    state seed(scope: |model|::Path, arguments: &[|execution_model|::Operand; 7], count: u64, size: |integers|::IntegerSize, body: |model|::Span, length:u64) -> |execution_model|::FrameResult {
+        let frame: |execution_model|::Frame = |execution_model|::Frame { scope: scope, body: body, source_length:length, size: size, pc: body.start, end: body.end };
+        let result: |execution_model|::FrameResult = frame_arguments(arguments, 0, count, |execution_model|::FrameResult { frame: frame }); result
     }
 }
-machine frame_arguments(arguments: &[Operand; 7], index: u64, count: u64, result: FrameResult)
-terminates by (index, count) -> Nat::BoundedDistance;
--> FrameResult {
-    let next: FrameResult = frame_argument(arguments, index, count, result);
+machine frame_arguments(arguments: &[|execution_model|::Operand; 7], index: u64, count: u64, result: |execution_model|::FrameResult)
+terminates by (index, count) -> |nat|::Nat::BoundedDistance;
+-> |execution_model|::FrameResult {
+    let next: |execution_model|::FrameResult = frame_argument(arguments, index, count, result);
     transition index < count { true -> frame_arguments(arguments, index + 1, count, next) _ -> (result) }
 }
-machine frame_argument(arguments: &[Operand; 7], index: u64, count: u64, result: FrameResult) -> FrameResult {
-    transition result.outcome == ExecutionOutcome::Success && index < count && index < 7 {
+machine frame_argument(arguments: &[|execution_model|::Operand; 7], index: u64, count: u64, result: |execution_model|::FrameResult) -> |execution_model|::FrameResult {
+    transition result.outcome == |execution_model|::ExecutionOutcome::Success && index < count && index < 7 {
         true -> convert(arguments, index, result) _ -> (result)
     }
-    state convert(arguments: &[Operand; 7], index: u64, result: FrameResult) -> FrameResult {
-        let mut out:FrameResult=result;
+    state convert(arguments: &[|execution_model|::Operand; 7], index: u64, result: |execution_model|::FrameResult) -> |execution_model|::FrameResult {
+        let mut out:|execution_model|::FrameResult=result;
         out.frame.arguments[index]=argument_binding(result.frame.size,arguments[index]);out
     }
 }
-pub machine argument_binding(size:IntegerSize,operand:Operand)->Binding {
- transition operand {Operand::Uninitialized -> (Binding::Uninitialized) Operand::Integer {number} -> scalar(size,number) Operand::Object {object_id} -> (Binding::Shared {shared_id:object_id})}
- state scalar(size:IntegerSize,number:u64)->Binding {let value:u64=normalize(size,number);Binding::Integer {number:value}}
+pub machine argument_binding(size:|integers|::IntegerSize,operand:|execution_model|::Operand)->|execution_model|::Binding {
+ transition operand {|execution_model|::Operand::Uninitialized -> (|execution_model|::Binding::Uninitialized) |execution_model|::Operand::Integer {number} -> scalar(size,number) |execution_model|::Operand::Object {object_id} -> (|execution_model|::Binding::Shared {shared_id:object_id})}
+ state scalar(size:|integers|::IntegerSize,number:u64)->|execution_model|::Binding {let value:u64=|integers|::normalize(size,number);|execution_model|::Binding::Integer {number:value}}
 }
 
 // Definition observations must be retained with their source unit when methods
 // are declared. The namespace lookup path is deliberately not a scope input.
-pub machine observed_frame(method: Value, object_id: u64, definitions: &[MethodDefinition; 64],
-    arguments: &[Operand; 7], count: u64, size: IntegerSize, unit: u64, length: u64) -> FrameResult {
+pub machine observed_frame(method: |model|::Value, object_id: u64, definitions: &[|model|::MethodDefinition; 64],
+    arguments: &[|execution_model|::Operand; 7], count: u64, size: |integers|::IntegerSize, unit: u64, length: u64) -> |execution_model|::FrameResult {
     transition object_id < 64 { true -> definition(method, object_id, definitions[object_id], arguments, count, size, unit, length)
-        _ -> (FrameResult { outcome: ExecutionOutcome::MethodDefinition }) }
-    state definition(method: Value, object_id: u64, observation: MethodDefinition,
-        arguments: &[Operand; 7], count: u64, size: IntegerSize, unit: u64, length: u64) -> FrameResult {
-        transition method { Value::Method { flags, body } -> compare(method, object_id, observation, flags, body, arguments, count, size, unit, length)
-            _ -> (FrameResult { outcome: ExecutionOutcome::UnsupportedValue }) }
+        _ -> (|execution_model|::FrameResult { outcome: |execution_model|::ExecutionOutcome::MethodDefinition }) }
+    state definition(method: |model|::Value, object_id: u64, observation: |model|::MethodDefinition,
+        arguments: &[|execution_model|::Operand; 7], count: u64, size: |integers|::IntegerSize, unit: u64, length: u64) -> |execution_model|::FrameResult {
+        transition method { |model|::Value::Method { flags, body } -> compare(method, object_id, observation, flags, body, arguments, count, size, unit, length)
+            _ -> (|execution_model|::FrameResult { outcome: |execution_model|::ExecutionOutcome::UnsupportedValue }) }
     }
-    state compare(method: Value, object_id: u64, observation: MethodDefinition, flags: u8, body: Span,
-        arguments: &[Operand; 7], count: u64, size: IntegerSize, unit: u64, length: u64) -> FrameResult {
+    state compare(method: |model|::Value, object_id: u64, observation: |model|::MethodDefinition, flags: u8, body: |model|::Span,
+        arguments: &[|execution_model|::Operand; 7], count: u64, size: |integers|::IntegerSize, unit: u64, length: u64) -> |execution_model|::FrameResult {
         transition observation.present && observation.object_id == object_id && observation.flags == flags &&
             observation.body.unit == body.unit && observation.body.start == body.start && observation.body.end == body.end {
             true -> start(method, observation.scope, arguments, count, size, unit, length)
-            _ -> (FrameResult { outcome: ExecutionOutcome::MethodDefinition })
+            _ -> (|execution_model|::FrameResult { outcome: |execution_model|::ExecutionOutcome::MethodDefinition })
         }
     }
-    state start(method: Value, scope: Path, arguments: &[Operand; 7], count: u64, size: IntegerSize, unit: u64, length: u64) -> FrameResult {
-        let result: FrameResult = new_frame(method, scope, arguments, count, size, unit, length); result
+    state start(method: |model|::Value, scope: |model|::Path, arguments: &[|execution_model|::Operand; 7], count: u64, size: |integers|::IntegerSize, unit: u64, length: u64) -> |execution_model|::FrameResult {
+        let result: |execution_model|::FrameResult = new_frame(method, scope, arguments, count, size, unit, length); result
     }
 }

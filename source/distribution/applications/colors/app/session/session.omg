@@ -1,112 +1,107 @@
-module session::session;
-
 // Acquire -> load -> receive -> act -> present, yielding one operation at a time.
-use state::State;
-use state::Phase;
-use operations::Command;
-use operations::Reply;
-use operations::View;
-use control::report;
-use storage::storage;
-use rendering::rendering;
-use session::input;
+use state.omg as local_state;
+use operations.omg;
+use control.omg;
+use storage/storage.omg;
+use rendering/rendering.omg;
+use session/input.omg;
 
-public machine resume(s: &mut State, reply: Reply) -> Command {
+public machine resume(s: &mut |local_state|::State, reply: |operations|::Reply) -> |operations|::Command {
     transition s.phase {
-        Phase::Start -> acquire_interaction(s)
-        Phase::InteractionReady -> acquire_storage(s)
-        Phase::StorageReady -> storage::storage::load(s)
-        Phase::Polled -> polled(s, reply)
-        Phase::Awakened -> awakened(s, reply)
-        Phase::ControlReplied -> wait(s)
-        Phase::Storage { step } -> storage::storage::complete(s, step, reply)
-        Phase::Rendering { step } -> rendering::rendering::complete(s, step, reply)
+        |local_state|::Phase::Start -> acquire_interaction(s)
+        |local_state|::Phase::InteractionReady -> acquire_storage(s)
+        |local_state|::Phase::StorageReady -> |storage|::load(s)
+        |local_state|::Phase::Polled -> polled(s, reply)
+        |local_state|::Phase::Awakened -> awakened(s, reply)
+        |local_state|::Phase::ControlReplied -> wait(s)
+        |local_state|::Phase::Storage { step } -> |storage|::complete(s, step, reply)
+        |local_state|::Phase::Rendering { step } -> |rendering|::complete(s, step, reply)
     }
 }
 
-machine acquire_interaction(s: &mut State) -> Command {
-    s.phase = Phase::InteractionReady;
-    Command::AcquireInteraction
+machine acquire_interaction(s: &mut |local_state|::State) -> |operations|::Command {
+    s.phase = |local_state|::Phase::InteractionReady;
+    |operations|::Command::AcquireInteraction
 }
 
-machine acquire_storage(s: &mut State) -> Command {
-    s.phase = Phase::StorageReady;
-    Command::AcquireStorage
+machine acquire_storage(s: &mut |local_state|::State) -> |operations|::Command {
+    s.phase = |local_state|::Phase::StorageReady;
+    |operations|::Command::AcquireStorage
 }
 
-public machine poll(s: &mut State) -> Command {
-    s.phase = Phase::Polled;
-    Command::Poll
+public machine poll(s: &mut |local_state|::State) -> |operations|::Command {
+    s.phase = |local_state|::Phase::Polled;
+    |operations|::Command::Poll
 }
 
-machine polled(s: &mut State, reply: Reply) -> Command {
+machine polled(s: &mut |local_state|::State, reply: |operations|::Reply) -> |operations|::Command {
     transition reply {
-        Reply::View { view } -> observed(s, view)
-        _ -> (Command::Exit)
+        |operations|::Reply::View { view } -> observed(s, view)
+        _ -> (|operations|::Command::Exit)
     }
 }
 
-machine observed(s: &mut State, view: View) -> Command {
+machine observed(s: &mut |local_state|::State, view: |operations|::View) -> |operations|::Command {
     transition view.status == 0u64 && view.epoch != 0u64
         && view.width != 0u64 && view.height != 0u64
         && view.width < 65536u64 && view.height < 65536u64 {
         true -> accept(s, view)
         _ -> hidden(s)
     }
-    machine hidden(s: &mut State) -> Command {
+    machine hidden(s: &mut |local_state|::State) -> |operations|::Command {
         s.scene = false;
         s.dirty = true;
         wait(s)
     }
-    machine accept(s: &mut State, view: View) -> Command {
+    machine accept(s: &mut |local_state|::State, view: |operations|::View) -> |operations|::Command {
         transition s.epoch != view.epoch {
             true -> rebound(s, view)
             _ -> geometry(s, view)
         }
     }
-    machine rebound(s: &mut State, view: View) -> Command {
-        session::input::reset_channels(s);
+    machine rebound(s: &mut |local_state|::State, view: |operations|::View) -> |operations|::Command {
+        |input|::reset_channels(s);
         s.scene = false;
         s.dirty = true;
         s.epoch = view.epoch;
         geometry(s, view)
     }
-    machine geometry(s: &mut State, view: View) -> Command {
+    machine geometry(s: &mut |local_state|::State, view: |operations|::View) -> |operations|::Command {
         s.dirty = s.dirty || s.width != view.width || s.height != view.height;
         s.width = view.width;
         s.height = view.height;
         s.frames = view.frames;
         s.more = view.more;
         s.drained = ((s.drained as u64 in Saturating) + 1) as u64;
-        session::input::accept(s, view.input)
+        |input|::accept(s, view.input)
     }
 }
 
-public machine after_input(s: &mut State) -> Command {
+public machine after_input(s: &mut |local_state|::State) -> |operations|::Command {
     transition s.more && s.drained < 8u64 {
         true -> poll(s)
-        _ -> rendering::rendering::render(s)
+        _ -> |rendering|::render(s)
     }
 }
 
-public machine wait(s: &mut State) -> Command {
+public machine wait(s: &mut |local_state|::State) -> |operations|::Command {
     s.drained = 0u64;
-    s.phase = Phase::Awakened;
-    Command::Wait
+    s.phase = |local_state|::Phase::Awakened;
+    |operations|::Command::Wait
 }
 
-machine awakened(s: &mut State, reply: Reply) -> Command {
+machine awakened(s: &mut |local_state|::State, reply: |operations|::Reply) -> |operations|::Command {
     transition reply {
-        Reply::Wake -> wake(s)
-        Reply::Control { loss, cpu } -> control(s, loss, cpu)
-        _ -> (Command::Exit)
+        |operations|::Reply::Wake -> wake(s)
+        |operations|::Reply::Control { loss, cpu } -> control(s, loss, cpu)
+        _ -> (|operations|::Command::Exit)
     }
-    machine wake(s: &mut State) -> Command {
+    machine wake(s: &mut |local_state|::State) -> |operations|::Command {
         s.wakes = ((s.wakes as u64 in Saturating) + 1) as u64;
         poll(s)
     }
-    machine control(s: &mut State, loss: bool, cpu: u64) -> Command {
-        s.phase = Phase::ControlReplied;
-        Command::Control { report: report(s, loss, cpu) }
+    machine control(s: &mut |local_state|::State, loss: bool, cpu: u64) -> |operations|::Command {
+        s.phase = |local_state|::Phase::ControlReplied;
+        |operations|::Command::Control { report: |control|::report(s, loss, cpu) }
     }
 }

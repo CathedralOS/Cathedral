@@ -1,27 +1,23 @@
-module main;
-
 // Advance one completed operation. Storage retains uncertain outcomes; startup
 // interprets optional service refusal. Reporting remains best effort; other
 // transport loss stops the app.
-use state::State;
-use state::Phase;
-use operations::Completion;
-use operations::Command;
-use session::session;
-use session::input;
-use storage::storage;
-public machine advance(s: &mut State, completion: &Completion) -> Command {
+use state.omg as local_state;
+use operations.omg;
+use session/session.omg;
+use session/input.omg;
+use storage/storage.omg;
+public machine advance(s: &mut |local_state|::State, completion: &|operations|::Completion) -> |operations|::Command {
     transition completion.transport_status == 0u64 {
-        true -> session::session::resume(s, completion.reply)
+        true -> |session|::resume(s, completion.reply)
         _ -> failed(s, completion.transport_status)
     }
-    machine failed(s: &mut State, status: u64) -> Command {
+    machine failed(s: &mut |local_state|::State, status: u64) -> |operations|::Command {
         transition s.phase {
-            Phase::StorageReady -> session::session::storage_ready(s, status)
-            Phase::ControlReplied -> session::session::wait(s)
-            Phase::LoadReported -> session::input::input(s)
-            Phase::Storage { step } -> storage::storage::failed(s, status)
-            _ -> (Command::Exit)
+            |local_state|::Phase::StorageReady -> |session|::storage_ready(s, status)
+            |local_state|::Phase::ControlReplied -> |session|::wait(s)
+            |local_state|::Phase::LoadReported -> |input|::input(s)
+            |local_state|::Phase::Storage { step } -> |storage|::failed(s, status)
+            _ -> (|operations|::Command::Exit)
         }
     }
 }

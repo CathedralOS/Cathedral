@@ -1,7 +1,7 @@
-use uart::baud;
-use uart::errors;
-use uart::enum_ordinals;
-use uart::pure;
-use uart::plans;
+use {uart}/baud.omg;
+use {uart}/errors.omg;
+use {uart}/enum_ordinals.omg;
+use {uart}/pure.omg;
+use {uart}/plans.omg;
 data Main {}
 machine Main::main(&mut self) {}

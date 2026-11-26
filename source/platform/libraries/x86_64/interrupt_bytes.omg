@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Copyright 2017 Philipp Oppermann. See the README.md (upstream idt.rs).
 // Modified inert IDT/frame translation at cc35c876d3badb57df54a66e22f7768a52be95f2. See x86_interrupts.PORT.md.
-module interrupt_bytes;
-use facts::x86_interrupts::EntryOptions;
-use facts::x86_interrupts::RawInterruptStackFrame;
-use facts::x86_registers::SegmentSelector;
-use facts::x86_registers::RFlags;
+use {omega}/language/core/nat.omg;
+use {facts}/x86_interrupts.omg;
+use {facts}/x86_registers.omg;
 
-pub machine encode_EntryOptions(value: &EntryOptions) -> [u8; 4] {
+pub machine encode_EntryOptions(value: &|x86_interrupts|::EntryOptions) -> [u8; 4] {
     let mut output: [u8; 4];
     output[0] = ((value.selector.raw >> 0) & 255) as u8;
     output[1] = ((value.selector.raw >> 8) & 255) as u8;
@@ -15,13 +13,13 @@ pub machine encode_EntryOptions(value: &EntryOptions) -> [u8; 4] {
     output[3] = ((value.bits >> 8) & 255) as u8;
     output
 }
-pub machine decode_EntryOptions(input: &[u8; 4]) -> EntryOptions {
-    let selector: SegmentSelector = SegmentSelector { raw: ((input[0] as u16) << 0) | ((input[1] as u16) << 8) };
+pub machine decode_EntryOptions(input: &[u8; 4]) -> |x86_interrupts|::EntryOptions {
+    let selector: |x86_registers|::SegmentSelector = |x86_registers|::SegmentSelector { raw: ((input[0] as u16) << 0) | ((input[1] as u16) << 8) };
     let bits: u16 = ((input[2] as u16) << 0) | ((input[3] as u16) << 8);
-    EntryOptions { selector: selector, bits: bits }
+    |x86_interrupts|::EntryOptions { selector: selector, bits: bits }
 }
 
-pub machine encode_RawInterruptStackFrame(value: &RawInterruptStackFrame) -> [u8; 40] {
+pub machine encode_RawInterruptStackFrame(value: &|x86_interrupts|::RawInterruptStackFrame) -> [u8; 40] {
     let mut output: [u8; 40];
     output[0] = ((value.instruction_pointer >> 0) & 255) as u8;
     output[1] = ((value.instruction_pointer >> 8) & 255) as u8;
@@ -65,23 +63,22 @@ pub machine encode_RawInterruptStackFrame(value: &RawInterruptStackFrame) -> [u8
     output[39] = ((value.reserved_2[5] >> 0) & 255) as u8;
     output
 }
-pub machine decode_RawInterruptStackFrame(input: &[u8; 40]) -> RawInterruptStackFrame {
+pub machine decode_RawInterruptStackFrame(input: &[u8; 40]) -> |x86_interrupts|::RawInterruptStackFrame {
     let instruction_pointer: u64 = ((input[0] as u64) << 0) | ((input[1] as u64) << 8) | ((input[2] as u64) << 16) | ((input[3] as u64) << 24) | ((input[4] as u64) << 32) | ((input[5] as u64) << 40) | ((input[6] as u64) << 48) | ((input[7] as u64) << 56);
-    let code_segment: SegmentSelector = SegmentSelector { raw: ((input[8] as u16) << 0) | ((input[9] as u16) << 8) };
+    let code_segment: |x86_registers|::SegmentSelector = |x86_registers|::SegmentSelector { raw: ((input[8] as u16) << 0) | ((input[9] as u16) << 8) };
     let reserved_1: [u8; 6] = [((input[10] as u8) << 0), ((input[11] as u8) << 0), ((input[12] as u8) << 0), ((input[13] as u8) << 0), ((input[14] as u8) << 0), ((input[15] as u8) << 0)];
-    let cpu_flags: RFlags = RFlags { raw: ((input[16] as u64) << 0) | ((input[17] as u64) << 8) | ((input[18] as u64) << 16) | ((input[19] as u64) << 24) | ((input[20] as u64) << 32) | ((input[21] as u64) << 40) | ((input[22] as u64) << 48) | ((input[23] as u64) << 56) };
+    let cpu_flags: |x86_registers|::RFlags = |x86_registers|::RFlags { raw: ((input[16] as u64) << 0) | ((input[17] as u64) << 8) | ((input[18] as u64) << 16) | ((input[19] as u64) << 24) | ((input[20] as u64) << 32) | ((input[21] as u64) << 40) | ((input[22] as u64) << 48) | ((input[23] as u64) << 56) };
     let stack_pointer: u64 = ((input[24] as u64) << 0) | ((input[25] as u64) << 8) | ((input[26] as u64) << 16) | ((input[27] as u64) << 24) | ((input[28] as u64) << 32) | ((input[29] as u64) << 40) | ((input[30] as u64) << 48) | ((input[31] as u64) << 56);
-    let stack_segment: SegmentSelector = SegmentSelector { raw: ((input[32] as u16) << 0) | ((input[33] as u16) << 8) };
+    let stack_segment: |x86_registers|::SegmentSelector = |x86_registers|::SegmentSelector { raw: ((input[32] as u16) << 0) | ((input[33] as u16) << 8) };
     let reserved_2: [u8; 6] = [((input[34] as u8) << 0), ((input[35] as u8) << 0), ((input[36] as u8) << 0), ((input[37] as u8) << 0), ((input[38] as u8) << 0), ((input[39] as u8) << 0)];
-    RawInterruptStackFrame { instruction_pointer: instruction_pointer, code_segment: code_segment, reserved_1: reserved_1, cpu_flags: cpu_flags, stack_pointer: stack_pointer, stack_segment: stack_segment, reserved_2: reserved_2 }
+    |x86_interrupts|::RawInterruptStackFrame { instruction_pointer: instruction_pointer, code_segment: code_segment, reserved_1: reserved_1, cpu_flags: cpu_flags, stack_pointer: stack_pointer, stack_segment: stack_segment, reserved_2: reserved_2 }
 }
 
 // Canonical constrained gate: reserved bytes are checked before construction.
-use facts::x86_idt_gate;
-use facts::x86_interrupts::DetachedIdt;
-use interrupts::GateDecodeResult;
+use {facts}/x86_idt_gate.omg;
+use interrupts.omg;
 
-pub machine encode_gate(value: &X86IdtGate) -> [u8; 16] {
+pub machine encode_gate(value: &|x86_idt_gate|::X86IdtGate) -> [u8; 16] {
     [ (value.entry & 255) as u8, ((value.entry >> 8) & 255) as u8,
       (value.selector & 255) as u8, ((value.selector >> 8) & 255) as u8,
       value.ist, value.type_attributes,
@@ -90,20 +87,20 @@ pub machine encode_gate(value: &X86IdtGate) -> [u8; 16] {
       ((value.entry >> 48) & 255) as u8, ((value.entry >> 56) & 255) as u8,
       0, 0, 0, 0 ]
 }
-pub machine decode_gate(input: &[u8; 16]) -> GateDecodeResult {
+pub machine decode_gate(input: &[u8; 16]) -> |interrupts|::GateDecodeResult {
     transition input[4] <= 7 {
         true -> reserved(input)
-        _ -> (GateDecodeResult::ReservedIstBits { value: input[4] })
+        _ -> (|interrupts|::GateDecodeResult::ReservedIstBits { value: input[4] })
     }
     state reserved(input: &[u8; 16]) {
         let tail: u32 = (input[12] as u32) | ((input[13] as u32) << 8) | ((input[14] as u32) << 16) | ((input[15] as u32) << 24);
         transition tail == 0 {
             true -> ready(input)
-            _ -> (GateDecodeResult::ReservedTail { value: tail })
+            _ -> (|interrupts|::GateDecodeResult::ReservedTail { value: tail })
         }
     }
     state ready(input: &[u8; 16]) {
-        GateDecodeResult::Value { gate: X86IdtGate {
+        |interrupts|::GateDecodeResult::Value { gate: |x86_idt_gate|::X86IdtGate {
             entry: (input[0] as u64) | ((input[1] as u64) << 8) | ((input[6] as u64) << 16) | ((input[7] as u64) << 24) |
                 ((input[8] as u64) << 32) | ((input[9] as u64) << 40) | ((input[10] as u64) << 48) | ((input[11] as u64) << 56),
             selector: (input[2] as u16) | ((input[3] as u16) << 8),
@@ -115,19 +112,19 @@ pub machine decode_gate(input: &[u8; 16]) -> GateDecodeResult {
 pub data IdtDecodeResult [copy] {
     case ReservedIstBits(vector: u8, value: u8);
     case ReservedTail(vector: u8, value: u32);
-    case Value(table: DetachedIdt);
+    case Value(table: |x86_interrupts|::DetachedIdt);
 }
-pub machine encode_idt(input: &DetachedIdt) -> [u8; 4096] {
+pub machine encode_idt(input: &|x86_interrupts|::DetachedIdt) -> [u8; 4096] {
     let mut output: [u8; 4096];
     encode_idt_scan(input, &mut output, 0);
     output
 }
-machine encode_idt_scan(input: &DetachedIdt, output: &mut [u8; 4096], index: u16)
-terminates by (index, 256) -> Nat::BoundedDistance;
+machine encode_idt_scan(input: &|x86_interrupts|::DetachedIdt, output: &mut [u8; 4096], index: u16)
+terminates by (index, 256) -> |nat|::Nat::BoundedDistance;
 {
     transition index < 256 { true -> active(input, output, index) _ -> done() }
-    state active(input: &DetachedIdt, output: &mut [u8; 4096], index: u16 [0..=255]) {
-        let gate: X86IdtGate = input.entries[index];
+    state active(input: &|x86_interrupts|::DetachedIdt, output: &mut [u8; 4096], index: u16 [0..=255]) {
+        let gate: |x86_idt_gate|::X86IdtGate = input.entries[index];
         let bytes: [u8; 16] = encode_gate(&gate);
         let offset: u16 [0..=4080] = index * 16;
         let o0: u16 [0..=4095] = offset + 0;
@@ -166,7 +163,7 @@ terminates by (index, 256) -> Nat::BoundedDistance;
     }
     state done() {}
 }
-pub machine decode_idt_slot(input: &[u8; 4096], vector: u8) -> GateDecodeResult {
+pub machine decode_idt_slot(input: &[u8; 4096], vector: u8) -> |interrupts|::GateDecodeResult {
     let offset: u16 [0..=4080] = (vector as u16) * 16;
     let o0: u16 [0..=4095] = offset + 0;
     let o1: u16 [0..=4095] = offset + 1;
@@ -185,17 +182,17 @@ pub machine decode_idt_slot(input: &[u8; 4096], vector: u8) -> GateDecodeResult 
     let o14: u16 [0..=4095] = offset + 14;
     let o15: u16 [0..=4095] = offset + 15;
     let bytes: [u8; 16] = [input[o0], input[o1], input[o2], input[o3], input[o4], input[o5], input[o6], input[o7], input[o8], input[o9], input[o10], input[o11], input[o12], input[o13], input[o14], input[o15]];
-    let result: GateDecodeResult = decode_gate(&bytes);
+    let result: |interrupts|::GateDecodeResult = decode_gate(&bytes);
     result
 }
 pub machine decode_idt(input: &[u8; 4096]) -> IdtDecodeResult {
-    let table: DetachedIdt;
+    let table: |x86_interrupts|::DetachedIdt;
     let value: IdtDecodeResult = IdtDecodeResult::Value { table: table };
     let result: IdtDecodeResult = decode_idt_scan(input, value, 0, 256);
     result
 }
 machine decode_idt_scan(input: &[u8; 4096], value: IdtDecodeResult, index: u16, limit: u16)
-terminates by (index, limit) -> Nat::BoundedDistance;
+terminates by (index, limit) -> |nat|::Nat::BoundedDistance;
 -> IdtDecodeResult {
     let next: IdtDecodeResult = decode_idt_step(input, value, index);
     transition index < limit {
@@ -211,16 +208,16 @@ machine decode_idt_step(input: &[u8; 4096], value: IdtDecodeResult, index: u16) 
             _ -> (value)
         }
     }
-    state active(input: &[u8; 4096], table: DetachedIdt, index: u16 [0..=255]) {
-        let decoded: GateDecodeResult = decode_idt_slot(input, index as u8);
+    state active(input: &[u8; 4096], table: |x86_interrupts|::DetachedIdt, index: u16 [0..=255]) {
+        let decoded: |interrupts|::GateDecodeResult = decode_idt_slot(input, index as u8);
         transition decoded {
-            GateDecodeResult::Value { gate } -> assign(table, index, gate)
-            GateDecodeResult::ReservedIstBits { value } -> (IdtDecodeResult::ReservedIstBits { vector: index as u8, value: value })
-            GateDecodeResult::ReservedTail { value } -> (IdtDecodeResult::ReservedTail { vector: index as u8, value: value })
+            |interrupts|::GateDecodeResult::Value { gate } -> assign(table, index, gate)
+            |interrupts|::GateDecodeResult::ReservedIstBits { value } -> (IdtDecodeResult::ReservedIstBits { vector: index as u8, value: value })
+            |interrupts|::GateDecodeResult::ReservedTail { value } -> (IdtDecodeResult::ReservedTail { vector: index as u8, value: value })
         }
     }
-    state assign(table: DetachedIdt, index: u16 [0..=255], gate: X86IdtGate) {
-        let mut updated: DetachedIdt = table;
+    state assign(table: |x86_interrupts|::DetachedIdt, index: u16 [0..=255], gate: |x86_idt_gate|::X86IdtGate) {
+        let mut updated: |x86_interrupts|::DetachedIdt = table;
         updated.entries[index] = gate;
         IdtDecodeResult::Value { table: updated }
     }

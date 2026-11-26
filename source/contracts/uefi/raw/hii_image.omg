@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified rust-osdev/uefi-rs translation at c0facddf9ba42b74906a37fca2869e6cdbc8da6a.
 // See hii.PORT.md. Inert carriers; pointer/slot bits confer no authority.
-module hii_image;
-use scalars;
-use console;
+use scalars.omg;
+use console.omg;
 
 // Upstream: uefi_raw::protocol::hii::image::HiiDrawFlags
 pub data HiiDrawFlags [copy] {
@@ -77,5 +76,5 @@ pub const HII_DRAW_FLAGS_TRANSPARENT: HiiDrawFlags = HiiDrawFlags { raw: 48 };
 pub const HII_DRAW_FLAGS_DIRECT_TO_SCREEN: HiiDrawFlags = HiiDrawFlags { raw: 128 };
 pub const IMAGE_INPUT_FLAGS_TRANSPARENT: ImageInputFlags = ImageInputFlags { raw: 1 };
 pub const HII_DRAW_FLAGS_DEFAULT: HiiDrawFlags = HiiDrawFlags { raw: 0 };
-pub const HII_IMAGE_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x31a6406a, data2: 0x6bdf, data3: 0x4e46, data4: [0xb2, 0xa2, 0xeb, 0xaa, 0x89, 0xc4, 0x09, 0x20] };
-pub const HII_IMAGE_EX_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x1a1241e6, data2: 0x8f19, data3: 0x41a9, data4: [0xbc, 0x0e, 0xe8, 0xef, 0x39, 0xe0, 0x65, 0x46] };
+pub const HII_IMAGE_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x31a6406a, data2: 0x6bdf, data3: 0x4e46, data4: [0xb2, 0xa2, 0xeb, 0xaa, 0x89, 0xc4, 0x09, 0x20] };
+pub const HII_IMAGE_EX_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x1a1241e6, data2: 0x8f19, data3: 0x41a9, data4: [0xbc, 0x0e, 0xe8, 0xef, 0x39, 0xe0, 0x65, 0x46] };

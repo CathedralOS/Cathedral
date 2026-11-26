@@ -1,47 +1,47 @@
 // Match declarations to a supplied interface offer. This creates no capabilities.
-use types;
-use record;
+use types.omg;
+use record.omg;
 // Decode the complete bounded little-endian record before any service matching.
 // On false the output is unspecified and must not be used for admission.
-public machine decode(bytes: &[u8; 168], length: u64, output: &mut Declaration) -> bool {
-    transition header(bytes, length, output) { true -> records(bytes, output) _ -> (false) }
-    machine records(bytes: &[u8; 168], output: &mut Declaration) -> bool {
-        transition entries(bytes, output) { true -> padding(bytes, output.count) _ -> (false) }
+public machine decode(bytes: &[u8; 168], length: u64, output: &mut |types|::Declaration) -> bool {
+    transition |record|::header(bytes, length, output) { true -> records(bytes, output) _ -> (false) }
+    machine records(bytes: &[u8; 168], output: &mut |types|::Declaration) -> bool {
+        transition |record|::entries(bytes, output) { true -> |record|::padding(bytes, output.count) _ -> (false) }
     }
 }
-public machine bind(entries: &[Import; 4], count: u64, offered: u64) -> Binding {
-    transition count <= 4u64 && (offered & ~SUPPORTED) == 0u64 { true -> next(entries, count, offered, 0u64, 0u64) _ -> failed(MALFORMED, 0u64) }
-    machine next(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64) -> Binding requires count <= 4u64 {
-        transition i < count { true -> inspect(entries, count, offered, i, mask) _ -> (Binding { status: 0u64, mask: mask, contract: 0u64 }) }
+public machine bind(entries: &[|types|::Import; 4], count: u64, offered: u64) -> |types|::Binding {
+    transition count <= 4u64 && (offered & ~|types|::SUPPORTED) == 0u64 { true -> next(entries, count, offered, 0u64, 0u64) _ -> failed(|types|::MALFORMED, 0u64) }
+    machine next(entries: &[|types|::Import; 4], count: u64, offered: u64, i: u64, mask: u64) -> |types|::Binding requires count <= 4u64 {
+        transition i < count { true -> inspect(entries, count, offered, i, mask) _ -> (|types|::Binding { status: 0u64, mask: mask, contract: 0u64 }) }
     }
-    machine inspect(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64) -> Binding requires count <= 4u64 && i < count {
-        let item: Import = entries[i];
+    machine inspect(entries: &[|types|::Import; 4], count: u64, offered: u64, i: u64, mask: u64) -> |types|::Binding requires count <= 4u64 && i < count {
+        let item: |types|::Import = entries[i];
         transition item.contract != 0u64 && item.minimum != 0u64 && item.minimum <= item.maximum {
-            true -> duplicates(entries, count, offered, i, mask, item, 0u64) _ -> failed(MALFORMED, 0u64)
+            true -> duplicates(entries, count, offered, i, mask, item, 0u64) _ -> failed(|types|::MALFORMED, 0u64)
         }
     }
-    machine duplicates(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: Import, prior: u64) -> Binding requires count <= 4u64 && i < count {
+    machine duplicates(entries: &[|types|::Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: |types|::Import, prior: u64) -> |types|::Binding requires count <= 4u64 && i < count {
         transition prior < i { true -> compare(entries, count, offered, i, mask, item, prior) _ -> known(entries, count, offered, i, mask, item) }
     }
-    machine compare(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: Import, prior: u64) -> Binding requires count <= 4u64 && i < count && prior < i {
-        transition entries[prior].contract == item.contract { true -> failed(MALFORMED, 0u64) _ -> duplicates(entries, count, offered, i, mask, item, prior + 1u64) }
+    machine compare(entries: &[|types|::Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: |types|::Import, prior: u64) -> |types|::Binding requires count <= 4u64 && i < count && prior < i {
+        transition entries[prior].contract == item.contract { true -> failed(|types|::MALFORMED, 0u64) _ -> duplicates(entries, count, offered, i, mask, item, prior + 1u64) }
     }
-    machine known(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: Import) -> Binding requires count <= 4u64 && i < count {
-        transition item.contract == INTERACTION || item.contract == STORAGE || item.contract == INPUT_PRODUCER || item.contract == CAPTURE {
+    machine known(entries: &[|types|::Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: |types|::Import) -> |types|::Binding requires count <= 4u64 && i < count {
+        transition item.contract == |types|::INTERACTION || item.contract == |types|::STORAGE || item.contract == |types|::INPUT_PRODUCER || item.contract == |types|::CAPTURE {
             true -> offered(entries, count, offered, i, mask, item) _ -> absent(entries, count, offered, i, mask, item)
         }
     }
-    machine offered(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: Import) -> Binding requires count <= 4u64 && i < count {
+    machine offered(entries: &[|types|::Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: |types|::Import) -> |types|::Binding requires count <= 4u64 && i < count {
         transition (offered & item.contract) != 0u64 { true -> version(entries, count, offered, i, mask, item) _ -> absent(entries, count, offered, i, mask, item) }
     }
-    machine absent(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: Import) -> Binding requires count <= 4u64 && i < count {
-        transition item.required { true -> failed(MISSING, item.contract) _ -> next(entries, count, offered, i + 1u64, mask) }
+    machine absent(entries: &[|types|::Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: |types|::Import) -> |types|::Binding requires count <= 4u64 && i < count {
+        transition item.required { true -> failed(|types|::MISSING, item.contract) _ -> next(entries, count, offered, i + 1u64, mask) }
     }
-    machine version(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: Import) -> Binding requires count <= 4u64 && i < count {
+    machine version(entries: &[|types|::Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: |types|::Import) -> |types|::Binding requires count <= 4u64 && i < count {
         transition item.minimum == 1u64 { true -> next(entries, count, offered, i + 1u64, mask | item.contract) _ -> incompatible(entries, count, offered, i, mask, item) }
     }
-    machine incompatible(entries: &[Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: Import) -> Binding requires count <= 4u64 && i < count {
-        transition item.required { true -> failed(VERSION, item.contract) _ -> next(entries, count, offered, i + 1u64, mask) }
+    machine incompatible(entries: &[|types|::Import; 4], count: u64, offered: u64, i: u64, mask: u64, item: |types|::Import) -> |types|::Binding requires count <= 4u64 && i < count {
+        transition item.required { true -> failed(|types|::VERSION, item.contract) _ -> next(entries, count, offered, i + 1u64, mask) }
     }
 }
-machine failed(status: u64, contract: u64) -> Binding { Binding { status: status, mask: 0u64, contract: contract } }
+machine failed(status: u64, contract: u64) -> |types|::Binding { |types|::Binding { status: status, mask: 0u64, contract: contract } }

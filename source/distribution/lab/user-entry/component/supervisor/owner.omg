@@ -1,31 +1,31 @@
-module supervisor::owner;
+use {runtime}/admission/main.omg as admission_main;
+use {runtime}/admission/pending.omg;
+use {runtime}/task/main.omg as task_main;
 // Owner commands: 1 admit [slot, granted, launch, argument], 2 stop [slot],
 // 3 status, 4 submit admission, 5 submit stop, 6 submit-and-cancel, 99 exit. Submission replies before collecting
 // construction; ordinary turns then publish its listener or record the failure.
 // Status words: slot liveness, handled echoes, stored storage messages, last
 // exit kinds and whether each slot holds a request. Any owner failure ends the witness.
-use supervisor::main::State;
-use supervisor::slots;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::kernel;
-use runtime::server::main::Event;
-use runtime::connection::main::Frame;
-public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
-    let event: Event = block runtime::server::main::poll(gate, &mut context.owner, now);
+use supervisor/main.omg;
+use supervisor/slots.omg;
+use {runtime}/kernel.omg;
+use {runtime}/server/main.omg as server_main;
+use {runtime}/connection/main.omg as connection_main;
+public machine step(gate: &|kernel|::Gate, context: &mut |main|::State, now: u64) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
+    let event: |server_main|::Event = block |server_main|::poll(gate, &mut context.owner, now);
     transition event {
-        Event::Request { frame } -> block command(gate, context, now, frame)
-        Event::Pending -> (0u64)
-        Event::Failed { code } -> (code)
+        |server_main|::Event::Request { frame } -> block command(gate, context, now, frame)
+        |server_main|::Event::Pending -> (0u64)
+        |server_main|::Event::Failed { code } -> (code)
     }
 }
-machine command(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel {
+machine command(gate: &|kernel|::Gate, context: &mut |main|::State, now: u64, frame: |connection_main|::Frame) -> u64 reaches |kernel|::Kernel {
     transition frame.bytes == 64u64 {
         true -> block routed(gate, context, now, frame)
         _ -> (307u64)
     }
 }
-machine routed(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel {
+machine routed(gate: &|kernel|::Gate, context: &mut |main|::State, now: u64, frame: |connection_main|::Frame) -> u64 reaches |kernel|::Kernel {
     transition frame.payload[0] {
         1u64 -> block admit(gate, context, now, frame)
         4u64 -> block admit(gate, context, now, frame)
@@ -34,28 +34,28 @@ machine routed(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 
         5u64 -> block begin_stop(gate, context, frame)
         3u64 -> block status(gate, context)
         99u64 -> block exit(gate, context)
-        _ -> block reply(gate, context, kernel::INVALID_ARGUMENT, 0u64)
+        _ -> block reply(gate, context, |kernel|::INVALID_ARGUMENT, 0u64)
     }
 }
-machine admit(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel {
+machine admit(gate: &|kernel|::Gate, context: &mut |main|::State, now: u64, frame: |connection_main|::Frame) -> u64 reaches |kernel|::Kernel {
     transition frame.payload[1] < 2u64 {
         true -> block slot(gate, context, now, frame, frame.payload[1])
-        _ -> block reply(gate, context, kernel::INVALID_ARGUMENT, 0u64)
+        _ -> block reply(gate, context, |kernel|::INVALID_ARGUMENT, 0u64)
     }
-    machine slot(gate: &Gate, context: &mut State, now: u64, frame: Frame, slot: u64 [0..=1]) -> u64 reaches Kernel {
+    machine slot(gate: &|kernel|::Gate, context: &mut |main|::State, now: u64, frame: |connection_main|::Frame, slot: u64 [0..=1]) -> u64 reaches |kernel|::Kernel {
         transition context.stopping[slot] || context.slots[slot].live || context.slots[slot].pending != 0u64 {
-            true -> block reply(gate, context, kernel::BUSY, 0u64)
+            true -> block reply(gate, context, |kernel|::BUSY, 0u64)
             _ -> block launch(gate, context, now, frame, slot)
         }
     }
-    machine launch(gate: &Gate, context: &mut State, now: u64, frame: Frame, slot: u64 [0..=1]) -> u64 reaches Kernel {
-        let launch: u64 = runtime::task::main::launch(gate, frame.payload[3]);
-        transition launch < kernel::ERROR_BASE {
+    machine launch(gate: &|kernel|::Gate, context: &mut |main|::State, now: u64, frame: |connection_main|::Frame, slot: u64 [0..=1]) -> u64 reaches |kernel|::Kernel {
+        let launch: u64 = |task_main|::launch(gate, frame.payload[3]);
+        transition launch < |kernel|::ERROR_BASE {
             true -> block admitted(gate, context, now, frame, slot, launch)
             _ -> block reply(gate, context, launch, 0u64)
         }
     }
-    machine admitted(gate: &Gate, context: &mut State, now: u64, frame: Frame, slot: u64 [0..=1], launch: u64) -> u64 reaches Kernel {
+    machine admitted(gate: &|kernel|::Gate, context: &mut |main|::State, now: u64, frame: |connection_main|::Frame, slot: u64 [0..=1], launch: u64) -> u64 reaches |kernel|::Kernel {
         // Fixture word 5 requests a bad handshake clock after real publication.
         context.invalid_clock[slot] = frame.payload[0] == 4u64 && frame.payload[5] == 1u64;
         context.admission_failures[slot] = 0u64;
@@ -68,75 +68,75 @@ machine admit(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 r
     }
     // No ordinary admission poll has consumed this receipt. The generic
     // retirement path must handle either private rollback or committed custody.
-    machine cancel_before_observation(gate: &Gate, context: &mut State, slot: u64 [0..=1]) -> u64 reaches Kernel {
+    machine cancel_before_observation(gate: &|kernel|::Gate, context: &mut |main|::State, slot: u64 [0..=1]) -> u64 reaches |kernel|::Kernel {
         context.stopping[slot] = true;
-        let status: u64 = block slots::collecting(gate, context, slot);
+        let status: u64 = block |slots|::collecting(gate, context, slot);
         block reply(gate, context, status, 0u64)
     }
-    machine submit(gate: &Gate, context: &mut State, frame: Frame, slot: u64 [0..=1], launch: u64) -> u64 reaches Kernel {
+    machine submit(gate: &|kernel|::Gate, context: &mut |main|::State, frame: |connection_main|::Frame, slot: u64 [0..=1], launch: u64) -> u64 reaches |kernel|::Kernel {
         let loans: [u64; 14];
         transition frame.payload[0] == 4u64 || frame.payload[0] == 6u64 {
-            true -> block runtime::admission::pending::begin(gate, &mut context.slots[slot], launch,
+            true -> block |pending|::begin(gate, &mut context.slots[slot], launch,
                 frame.payload[4], &loans, 0u64, frame.payload[2])
-            _ -> block runtime::admission::main::admit(gate, &mut context.slots[slot], launch,
+            _ -> block |admission_main|::admit(gate, &mut context.slots[slot], launch,
                 frame.payload[4], &loans, 0u64, frame.payload[2], context.clock, 300u64, false)
         }
     }
 }
-machine stop(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Kernel {
+machine stop(gate: &|kernel|::Gate, context: &mut |main|::State, frame: |connection_main|::Frame) -> u64 reaches |kernel|::Kernel {
     transition frame.payload[1] < 2u64 {
         true -> block slot(gate, context, frame.payload[1])
-        _ -> block reply(gate, context, kernel::INVALID_ARGUMENT, 0u64)
+        _ -> block reply(gate, context, |kernel|::INVALID_ARGUMENT, 0u64)
     }
-    machine slot(gate: &Gate, context: &mut State, slot: u64 [0..=1]) -> u64 reaches Kernel {
+    machine slot(gate: &|kernel|::Gate, context: &mut |main|::State, slot: u64 [0..=1]) -> u64 reaches |kernel|::Kernel {
         transition context.slots[slot].live || context.slots[slot].pending != 0u64 {
             true -> block stopping(gate, context, slot)
-            _ -> block reply(gate, context, kernel::PEER_CLOSED, 0u64)
+            _ -> block reply(gate, context, |kernel|::PEER_CLOSED, 0u64)
         }
     }
-    machine stopping(gate: &Gate, context: &mut State, slot: u64 [0..=1]) -> u64 reaches Kernel {
-        block slots::reclaim(gate, context, slot);
+    machine stopping(gate: &|kernel|::Gate, context: &mut |main|::State, slot: u64 [0..=1]) -> u64 reaches |kernel|::Kernel {
+        block |slots|::reclaim(gate, context, slot);
         let kind: u64 = context.exits[slot];
         block reply(gate, context, 0u64, kind)
     }
 }
-machine status(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+machine status(gate: &|kernel|::Gate, context: &mut |main|::State) -> u64 reaches |kernel|::Kernel {
     let mut words: [u64; 8];
-    words[0] = slots::flag(context.slots[0].live);
-    words[1] = slots::flag(context.slots[1].live);
+    words[0] = |slots|::flag(context.slots[0].live);
+    words[1] = |slots|::flag(context.slots[1].live);
     words[2] = context.handled;
     words[3] = context.stored;
     words[4] = context.exits[0];
     words[5] = context.exits[1];
-    words[6] = slots::flag(context.slots[0].listener.pending != 0u64);
-    words[7] = slots::flag(context.slots[1].listener.pending != 0u64);
-    block runtime::server::main::reply(gate, &mut context.owner, &words)
+    words[6] = |slots|::flag(context.slots[0].listener.pending != 0u64);
+    words[7] = |slots|::flag(context.slots[1].listener.pending != 0u64);
+    block |server_main|::reply(gate, &mut context.owner, &words)
 }
-machine exit(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+machine exit(gate: &|kernel|::Gate, context: &mut |main|::State) -> u64 reaches |kernel|::Kernel {
     context.stopped = true;
     block reply(gate, context, 0u64, 0u64)
 }
-machine reply(gate: &Gate, context: &mut State, first: u64, second: u64) -> u64 reaches Kernel {
+machine reply(gate: &|kernel|::Gate, context: &mut |main|::State, first: u64, second: u64) -> u64 reaches |kernel|::Kernel {
     let mut words: [u64; 8];
     words[0] = first;
     words[1] = second;
-    block runtime::server::main::reply(gate, &mut context.owner, &words)
+    block |server_main|::reply(gate, &mut context.owner, &words)
 }
 
 // The submission reply does not promise completed teardown. Ordinary turns poll
 // the exact child ticket while the owner connection remains serviceable.
-machine begin_stop(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Kernel {
+machine begin_stop(gate: &|kernel|::Gate, context: &mut |main|::State, frame: |connection_main|::Frame) -> u64 reaches |kernel|::Kernel {
     transition frame.payload[1] < 2u64 {
         true -> block slot(gate, context, frame.payload[1])
-        _ -> block reply(gate, context, kernel::INVALID_ARGUMENT, 0u64)
+        _ -> block reply(gate, context, |kernel|::INVALID_ARGUMENT, 0u64)
     }
-    machine slot(gate: &Gate, context: &mut State, slot: u64 [0..=1]) -> u64 reaches Kernel {
+    machine slot(gate: &|kernel|::Gate, context: &mut |main|::State, slot: u64 [0..=1]) -> u64 reaches |kernel|::Kernel {
         transition (context.slots[slot].live || context.slots[slot].pending != 0u64) && !context.stopping[slot] {
             true -> block submit(gate, context, slot)
-            _ -> block reply(gate, context, kernel::BUSY, 0u64)
+            _ -> block reply(gate, context, |kernel|::BUSY, 0u64)
         }
     }
-    machine submit(gate: &Gate, context: &mut State, slot: u64 [0..=1]) -> u64 reaches Kernel {
+    machine submit(gate: &|kernel|::Gate, context: &mut |main|::State, slot: u64 [0..=1]) -> u64 reaches |kernel|::Kernel {
         context.stopping[slot] = true;
         block reply(gate, context, 0u64, 0u64)
     }

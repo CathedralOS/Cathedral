@@ -1,6 +1,7 @@
+use {omega}/language/core/nat.omg;
+
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Bounded adaptation of pinned acpi Object::aml_cmp; explicit spec/pin profiles.
-module byte_comparison;
 pub data BufferOrdering [copy] {case Lexicographic;case PinnedLengthFirst;}
 pub data Comparison [copy] {case Capacity;case Encoding;case Less;case Equal;case Greater;}
 
@@ -25,7 +26,7 @@ pub machine compare_strings(left:&[u8;256],left_length:u64,right:&[u8;256],right
  state lexical(left:&[u8;256],a:u64,right:&[u8;256],b:u64)->Comparison {let value:Comparison=compare_valid(left,a,right,b);value}
 }
 machine ascii_extent(input:&[u8;256],index:u64,count:u64,valid:bool)
-terminates by (index,count)->Nat::BoundedDistance;
+terminates by (index,count)->|nat|::Nat::BoundedDistance;
 ->bool {
  let next:bool=ascii_at(input,index,count,valid);
  transition index<count {true -> ascii_extent(input,index+1,count,next) _ -> (valid)}
@@ -40,7 +41,7 @@ machine compare_valid(left:&[u8;256],a:u64,right:&[u8;256],b:u64)->Comparison {
 }
 machine minimum(a:u64,b:u64)->u64 {transition a<b {true -> (a) _ -> (b)}}
 machine compare_prefix(left:&[u8;256],right:&[u8;256],index:u64,count:u64,order:u8)
-terminates by (index,count)->Nat::BoundedDistance;
+terminates by (index,count)->|nat|::Nat::BoundedDistance;
 ->u8 {
  let next:u8=compare_at(left,right,index,count,order);
  transition index<count {true -> compare_prefix(left,right,index+1,count,next) _ -> (order)}

@@ -1,16 +1,13 @@
-module interaction::interaction;
-
-use interaction::model::Input;
+use interaction/model.omg;
 
 // Input -> selection. Pointer geometry and keyboard navigation share tile IDs.
-use interaction::model;
-use interaction::pointer;
-use interaction::keyboard;
+use interaction/pointer.omg;
+use interaction/keyboard.omg;
 
-public machine selection(context: &model::Context, input: Input) -> model::Selection {
+public machine selection(context: &|model|::Context, input: |model|::Input) -> |model|::Selection {
     transition input {
-        Input::Pointer { x, y, clicked } -> pointer::select_pointer(context, x, y, clicked)
-        Input::Key { code, pressed } -> keyboard::select_key(context, code, pressed)
-        _ -> model::unchanged(context)
+        |model|::Input::Pointer { x, y, clicked } -> |pointer|::select_pointer(context, x, y, clicked)
+        |model|::Input::Key { code, pressed } -> |keyboard|::select_key(context, code, pressed)
+        _ -> |model|::unchanged(context)
     }
 }

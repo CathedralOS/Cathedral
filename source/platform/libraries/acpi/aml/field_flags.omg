@@ -1,44 +1,39 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // FieldFlags adapted from rust-osdev/acpi 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
 // Upstream copyright 2018 Isaac Woods; Cathedral bounded metadata adaptation 2026.
-module field_flags;
-use model::Outcome;
-use model::Read;
-use field_model::AccessType;
-use field_model::UpdateRule;
-use field_model::Access;
-use field_model::AccessResult;
-pub machine decode_flags(raw:u8)->AccessResult {
+use model.omg;
+use field_model.omg;
+pub machine decode_flags(raw:u8)->|field_model|::AccessResult {
  let code:u8=raw&15;let update:u8=(raw>>5)&3;
  transition raw<128 && code<=5 && update<=2 {
-  true -> valid(raw,code,update) _ -> (AccessResult {outcome:Outcome::BadEncoding})
+  true -> valid(raw,code,update) _ -> (|field_model|::AccessResult {outcome:|model|::Outcome::BadEncoding})
  }
- state valid(raw:u8,code:u8,update:u8)->AccessResult {
-  let kind:AccessType=access_kind(code);let rule:UpdateRule=update_kind(update);
-  AccessResult {access:Access {flags:raw,kind:kind,locked:(raw&16)!=0,update:rule}}
+ state valid(raw:u8,code:u8,update:u8)->|field_model|::AccessResult {
+  let kind:|field_model|::AccessType=access_kind(code);let rule:|field_model|::UpdateRule=update_kind(update);
+  |field_model|::AccessResult {access:|field_model|::Access {flags:raw,kind:kind,locked:(raw&16)!=0,update:rule}}
  }
 }
-machine access_kind(code:u8)->AccessType {
- transition code {1 -> (AccessType::Byte) 2 -> (AccessType::Word) 3 -> (AccessType::DWord) 4 -> (AccessType::QWord) 5 -> (AccessType::Buffer) _ -> (AccessType::Any)}
+machine access_kind(code:u8)->|field_model|::AccessType {
+ transition code {1 -> (|field_model|::AccessType::Byte) 2 -> (|field_model|::AccessType::Word) 3 -> (|field_model|::AccessType::DWord) 4 -> (|field_model|::AccessType::QWord) 5 -> (|field_model|::AccessType::Buffer) _ -> (|field_model|::AccessType::Any)}
 }
-machine update_kind(code:u8)->UpdateRule {transition code {1 -> (UpdateRule::WriteAsOnes) 2 -> (UpdateRule::WriteAsZeros) _ -> (UpdateRule::Preserve)}}
+machine update_kind(code:u8)->|field_model|::UpdateRule {transition code {1 -> (|field_model|::UpdateRule::WriteAsOnes) 2 -> (|field_model|::UpdateRule::WriteAsZeros) _ -> (|field_model|::UpdateRule::Preserve)}}
 // Pin-compatible nominal width only; AnyAcc and BufferAcc return one. No I/O plan.
-pub machine nominal_width(raw:u8)->Read {
- let checked:AccessResult=decode_flags(raw);
- transition checked.outcome==Outcome::Success {true -> width(checked.access.kind) _ -> (Read {outcome:checked.outcome})}
- state width(kind:AccessType)->Read {transition kind {AccessType::Word -> (Read {value:2}) AccessType::DWord -> (Read {value:4}) AccessType::QWord -> (Read {value:8}) _ -> (Read {value:1})}}
+pub machine nominal_width(raw:u8)->|model|::Read {
+ let checked:|field_model|::AccessResult=decode_flags(raw);
+ transition checked.outcome==|model|::Outcome::Success {true -> width(checked.access.kind) _ -> (|model|::Read {outcome:checked.outcome})}
+ state width(kind:|field_model|::AccessType)->|model|::Read {transition kind {|field_model|::AccessType::Word -> (|model|::Read {value:2}) |field_model|::AccessType::DWord -> (|model|::Read {value:4}) |field_model|::AccessType::QWord -> (|model|::Read {value:8}) _ -> (|model|::Read {value:1})}}
 }
 // AccessType upper bits retain attribute mode; reserved bits 4:5 must be zero.
-pub machine change_access(current:Access,type_byte:u8,attribute:u8,extended:bool,length:u8)->AccessResult {
+pub machine change_access(current:|field_model|::Access,type_byte:u8,attribute:u8,extended:bool,length:u8)->|field_model|::AccessResult {
  let code:u8=type_byte&15;let reserved:u8=type_byte&48;
  let valid_extended:bool=!extended || attribute==11 || attribute==14 || attribute==15;
  transition code<=5 && reserved==0 && valid_extended {
-  true -> apply(current,type_byte,attribute,extended,length,code) _ -> (AccessResult {outcome:Outcome::BadEncoding})
+  true -> apply(current,type_byte,attribute,extended,length,code) _ -> (|field_model|::AccessResult {outcome:|model|::Outcome::BadEncoding})
  }
- state apply(current:Access,type_byte:u8,attribute:u8,extended:bool,length:u8,code:u8)->AccessResult {
-  let mut value:Access=current;let kind:AccessType=access_kind(code);
+ state apply(current:|field_model|::Access,type_byte:u8,attribute:u8,extended:bool,length:u8,code:u8)->|field_model|::AccessResult {
+  let mut value:|field_model|::Access=current;let kind:|field_model|::AccessType=access_kind(code);
   value.flags=(current.flags&240)|code;value.kind=kind;value.attribute=attribute;
   value.attribute_mode=type_byte>>6;value.extended=extended;value.access_length=length;
-  AccessResult {access:value}
+  |field_model|::AccessResult {access:value}
  }
 }

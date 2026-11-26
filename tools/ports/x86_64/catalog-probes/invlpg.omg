@@ -1,7 +1,7 @@
 // PORT-BLOCKED[omega:x86-tlb-instructions]: a checked TLB instruction contract and realization are required.
-use omega::language::core::assembly;
+use {omega}/language/core/assembly.omg;
 data Main {}
-machine Main::main(&mut self) reaches MachineControl {
+machine Main::main(&mut self) reaches |assembly|::MachineControl {
     let address: u64 = 0;
     asm { invlpg address }
 }

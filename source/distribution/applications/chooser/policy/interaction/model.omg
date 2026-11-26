@@ -1,5 +1,3 @@
-module interaction::model;
-
 // Selection is local UI state. Object identity and permission remain separate.
 public const NEW_USER: u64 = 6u64;
 public const SETTINGS: u64 = 7u64;

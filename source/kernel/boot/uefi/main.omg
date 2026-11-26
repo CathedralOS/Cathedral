@@ -4,45 +4,45 @@
 // memory. After firmware exit, execution continues with the kernel memory
 // and descriptor-table checks selected by build.omg, then observes eight
 // advancing timer wakes while retaining its memory owners.
-use firmware::firmware;
-use lab::memory::main;
+use firmware/firmware.omg;
+use lab/memory/main.omg;
 
-use uefi::uefi;
-use uefi::boot_services;
-use uefi::loaded_image;
-use omega::language::core::extent;
-use omega::language::core::assembly;
-use omega::language::core::program_image;
-use omega::language::core::layout;
+use {uefi}/uefi.omg;
+use {uefi}/boot_services.omg;
+use {uefi}/loaded_image.omg;
+use {omega}/language/core/extent.omg;
+use {omega}/language/core/assembly.omg;
+use {omega}/language/core/program_image.omg;
+use {omega}/language/core/layout.omg;
 
 // Firmware arrival is selected explicitly by build.omg. The receiving UEFI
 // profile supplies the validity/lifetime of this exact incoming table borrow;
 // the declaration itself neither creates that borrow nor grants any Extent.
-public CathedralBootstrap satisfies UefiPhysicalEntry {
-    machine enter(handle: EfiHandle in LoadedApplication, table: &EfiSystemTable) -> EfiStatus
-    reaches SimpleTextOutput + LoadedImageAccess + BootServices + ExtentRootProvider + ProgramStorageEntry + ProgramImage + ResourceProfileSupply + PortIo + MachineControl
-    invokes SimpleTextOutput
-    invokes LoadedImageAccess
-    invokes BootServices
-    invokes ExtentRootProvider
-    invokes ProgramStorageEntry
-    invokes ProgramImage
-    invokes ResourceProfileSupply
+public CathedralBootstrap satisfies |uefi|::UefiPhysicalEntry {
+    machine enter(handle: |uefi|::EfiHandle in |uefi|::LoadedApplication, table: &|uefi|::EfiSystemTable) -> |uefi|::EfiStatus
+    reaches |uefi|::SimpleTextOutput + |loaded_image|::LoadedImageAccess + |boot_services|::BootServices + |extent|::ExtentRootProvider + |extent|::ProgramStorageEntry + |program_image|::ProgramImage + |layout|::ResourceProfileSupply + |assembly|::PortIo + |assembly|::MachineControl
+    invokes |uefi|::SimpleTextOutput
+    invokes |loaded_image|::LoadedImageAccess
+    invokes |boot_services|::BootServices
+    invokes |extent|::ExtentRootProvider
+    invokes |extent|::ProgramStorageEntry
+    invokes |program_image|::ProgramImage
+    invokes |layout|::ResourceProfileSupply
     requires address::Bound == 18446744073709551616
     {
-        transition table.header.signature == EFI_SYSTEM_TABLE_SIGNATURE &&
-                   table.header.revision >= EFI_MIN_SUPPORTED_REVISION &&
-                   table.header.header_size >= EFI_SYSTEM_TABLE_REQUIRED_SIZE &&
+        transition table.header.signature == |uefi|::EFI_SYSTEM_TABLE_SIGNATURE &&
+                   table.header.revision >= |uefi|::EFI_MIN_SUPPORTED_REVISION &&
+                   table.header.header_size >= |uefi|::EFI_SYSTEM_TABLE_REQUIRED_SIZE &&
                    table.header.reserved == 0 {
             true -> boot(handle, table)
-            _ -> (EFI_INVALID_PARAMETER)
+            _ -> (|uefi|::EFI_INVALID_PARAMETER)
         }
 
-        machine boot(handle: EfiHandle in LoadedApplication, table: &EfiSystemTable) -> EfiStatus
+        machine boot(handle: |uefi|::EfiHandle in |uefi|::LoadedApplication, table: &|uefi|::EfiSystemTable) -> |uefi|::EfiStatus
         requires address::Bound == 18446744073709551616
         {
-            let mut context: Main;
-            Main::run(&mut context, handle, table)
+            let mut context: |firmware|::Main;
+            |firmware|::Main::run(&mut context, handle, table)
         }
     }
 }

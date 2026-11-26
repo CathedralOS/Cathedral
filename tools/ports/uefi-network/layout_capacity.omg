@@ -1,5 +1,4 @@
-module main;
-use cathedral_uefi_raw::network::PxeBaseCodeMode;
-use cathedral_uefi_raw::network_large_layouts::PxeBaseCodeModeX64Layout;
-data Main { value: PxeBaseCodeModeX64Layout<PxeBaseCodeMode>; }
+use {cathedral_uefi_raw}/network.omg;
+use {cathedral_uefi_raw}/network_large_layouts.omg;
+data Main { value: |network_large_layouts|::PxeBaseCodeModeX64Layout<|network|::PxeBaseCodeMode>; }
 machine Main::main(&mut self) {}

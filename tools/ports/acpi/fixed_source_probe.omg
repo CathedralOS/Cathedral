@@ -1,10 +1,10 @@
-use acpi::madt;
-use acpi::fadt;
-use acpi::hpet;
-use acpi::mcfg;
-use acpi::fixed_types;
-use acpi::fixed_decode;
-use acpi::fixed_bytes;
-use acpi::gas;
+use {acpi}/madt.omg;
+use {acpi}/fadt.omg;
+use {acpi}/hpet.omg;
+use {acpi}/mcfg.omg;
+use {acpi}/fixed_types.omg;
+use {acpi}/fixed_decode.omg;
+use {acpi}/fixed_bytes.omg;
+use {acpi}/gas.omg;
 data Main {}
 machine Main::main(&mut self) {}

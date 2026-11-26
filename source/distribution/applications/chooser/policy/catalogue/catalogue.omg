@@ -1,5 +1,3 @@
-module catalogue::catalogue;
-
 public data Request {
     picker: bool;
     own: u64;

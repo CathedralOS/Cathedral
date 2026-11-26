@@ -2,70 +2,62 @@
 // Modified do_store composition from rust-osdev/acpi
 // 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5. Copyright 2018 Isaac Woods.
 // ACPI 6.6 19.3.5.5/19.3.5.8: named fixed-type result conversion.
-module named_store;
-use aml::model::ObjectStore;
-use aml::model::Outcome;
-use aml::model::ReferenceState;
-use aml::object_references::unwrap_transparent;
-use aml::object_conversions::ConversionFailure;
-use aml::named_value_store::DestinationResult;
-use aml::named_value_store::StoreResult;
-use aml::named_value_store::admit_destination;
-use aml::named_value_store::store_integer;
-use aml::named_value_store::store_value;
-use execution_model::Operand;
-use execution_model::ExecutionOutcome;
-use integer_helpers::integers::IntegerSize;
+use {aml}/model.omg;
+use {aml}/object_references.omg;
+use {aml}/object_conversions.omg;
+use {aml}/named_value_store.omg;
+use execution_model.omg;
+use {integer_helpers}/integers.omg;
 
 // Selection is inert: re-admit the current destination before inspecting the
 // source. Transparent carriers may resolve to data; explicit RefOf/Index values
 // retain their type and are rejected by the canonical conversion kernel.
-pub machine store_named_operand(input:&[u8;1024],length:u64,unit:u64,size:IntegerSize,store:&mut ObjectStore,destination:u64,operand:Operand)->ExecutionOutcome {
- let admitted:DestinationResult=admit_destination(input,length,unit,store,destination);
+pub machine store_named_operand(input:&[u8;1024],length:u64,unit:u64,size:|integers|::IntegerSize,store:&mut |model|::ObjectStore,destination:u64,operand:|execution_model|::Operand)->|execution_model|::ExecutionOutcome {
+ let admitted:|named_value_store|::DestinationResult=|named_value_store|::admit_destination(input,length,unit,store,destination);
  transition admitted {
-  DestinationResult::Failure {reason} -> failure(reason)
-  DestinationResult::Target {target,extent} -> source(input,length,unit,size,store,destination,operand)
+  |named_value_store|::DestinationResult::Failure {reason} -> failure(reason)
+  |named_value_store|::DestinationResult::Target {target,extent} -> source(input,length,unit,size,store,destination,operand)
  }
- state failure(reason:ConversionFailure)->ExecutionOutcome {let result:ExecutionOutcome=conversion_outcome(reason);result}
- state source(input:&[u8;1024],length:u64,unit:u64,size:IntegerSize,store:&mut ObjectStore,destination:u64,operand:Operand)->ExecutionOutcome {
+ state failure(reason:|object_conversions|::ConversionFailure)->|execution_model|::ExecutionOutcome {let result:|execution_model|::ExecutionOutcome=conversion_outcome(reason);result}
+ state source(input:&[u8;1024],length:u64,unit:u64,size:|integers|::IntegerSize,store:&mut |model|::ObjectStore,destination:u64,operand:|execution_model|::Operand)->|execution_model|::ExecutionOutcome {
   transition operand {
-   Operand::Uninitialized -> (ExecutionOutcome::Uninitialized)
-   Operand::Integer {number} -> integer(input,length,unit,size,store,destination,number)
-   Operand::Object {object_id} -> object(input,length,unit,size,store,destination,object_id)
+   |execution_model|::Operand::Uninitialized -> (|execution_model|::ExecutionOutcome::Uninitialized)
+   |execution_model|::Operand::Integer {number} -> integer(input,length,unit,size,store,destination,number)
+   |execution_model|::Operand::Object {object_id} -> object(input,length,unit,size,store,destination,object_id)
   }
  }
- state integer(input:&[u8;1024],length:u64,unit:u64,size:IntegerSize,store:&mut ObjectStore,destination:u64,number:u64)->ExecutionOutcome {
-  let stored:StoreResult=store_integer(input,length,unit,store,destination,number,size);
-  let result:ExecutionOutcome=store_outcome(stored);result
+ state integer(input:&[u8;1024],length:u64,unit:u64,size:|integers|::IntegerSize,store:&mut |model|::ObjectStore,destination:u64,number:u64)->|execution_model|::ExecutionOutcome {
+  let stored:|named_value_store|::StoreResult=|named_value_store|::store_integer(input,length,unit,store,destination,number,size);
+  let result:|execution_model|::ExecutionOutcome=store_outcome(stored);result
  }
- state object(input:&[u8;1024],length:u64,unit:u64,size:IntegerSize,store:&mut ObjectStore,destination:u64,id:u64)->ExecutionOutcome {
-  let found:ReferenceState=unwrap_transparent(&store.space,id,64);
+ state object(input:&[u8;1024],length:u64,unit:u64,size:|integers|::IntegerSize,store:&mut |model|::ObjectStore,destination:u64,id:u64)->|execution_model|::ExecutionOutcome {
+  let found:|model|::ReferenceState=|object_references|::unwrap_transparent(&store.space,id,64);
   transition found.outcome {
-   Outcome::Success -> resolved(input,length,unit,size,store,destination,found.object)
-   Outcome::ReferenceCycle -> (ExecutionOutcome::ReferenceCycle)
-   Outcome::WorkLimit -> (ExecutionOutcome::WorkLimit)
-   _ -> (ExecutionOutcome::InvalidState)
+   |model|::Outcome::Success -> resolved(input,length,unit,size,store,destination,found.object)
+   |model|::Outcome::ReferenceCycle -> (|execution_model|::ExecutionOutcome::ReferenceCycle)
+   |model|::Outcome::WorkLimit -> (|execution_model|::ExecutionOutcome::WorkLimit)
+   _ -> (|execution_model|::ExecutionOutcome::InvalidState)
   }
  }
- state resolved(input:&[u8;1024],length:u64,unit:u64,size:IntegerSize,store:&mut ObjectStore,destination:u64,id:u64)->ExecutionOutcome {
-  let stored:StoreResult=store_value(input,length,unit,store,destination,id,size);
-  let result:ExecutionOutcome=store_outcome(stored);result
+ state resolved(input:&[u8;1024],length:u64,unit:u64,size:|integers|::IntegerSize,store:&mut |model|::ObjectStore,destination:u64,id:u64)->|execution_model|::ExecutionOutcome {
+  let stored:|named_value_store|::StoreResult=|named_value_store|::store_value(input,length,unit,store,destination,id,size);
+  let result:|execution_model|::ExecutionOutcome=store_outcome(stored);result
  }
 }
-machine store_outcome(result:StoreResult)->ExecutionOutcome {
- transition result {StoreResult::Stored {object} -> (ExecutionOutcome::Success) StoreResult::Failure {reason} -> failure(reason)}
- state failure(reason:ConversionFailure)->ExecutionOutcome {let result:ExecutionOutcome=conversion_outcome(reason);result}
+machine store_outcome(result:|named_value_store|::StoreResult)->|execution_model|::ExecutionOutcome {
+ transition result {|named_value_store|::StoreResult::Stored {object} -> (|execution_model|::ExecutionOutcome::Success) |named_value_store|::StoreResult::Failure {reason} -> failure(reason)}
+ state failure(reason:|object_conversions|::ConversionFailure)->|execution_model|::ExecutionOutcome {let result:|execution_model|::ExecutionOutcome=conversion_outcome(reason);result}
 }
-pub machine conversion_outcome(reason:ConversionFailure)->ExecutionOutcome {
+pub machine conversion_outcome(reason:|object_conversions|::ConversionFailure)->|execution_model|::ExecutionOutcome {
  transition reason {
-  ConversionFailure::InvalidState -> (ExecutionOutcome::InvalidState)
-  ConversionFailure::UnsupportedValue -> (ExecutionOutcome::UnsupportedValue)
-  ConversionFailure::Bounds -> (ExecutionOutcome::Bounds)
-  ConversionFailure::Capacity -> (ExecutionOutcome::Capacity)
-  ConversionFailure::Empty -> (ExecutionOutcome::Empty)
-  ConversionFailure::Encoding -> (ExecutionOutcome::Encoding)
-  ConversionFailure::Overflow -> (ExecutionOutcome::Overflow)
-  ConversionFailure::ReferenceCycle -> (ExecutionOutcome::ReferenceCycle)
-  ConversionFailure::WorkLimit -> (ExecutionOutcome::WorkLimit)
+  |object_conversions|::ConversionFailure::InvalidState -> (|execution_model|::ExecutionOutcome::InvalidState)
+  |object_conversions|::ConversionFailure::UnsupportedValue -> (|execution_model|::ExecutionOutcome::UnsupportedValue)
+  |object_conversions|::ConversionFailure::Bounds -> (|execution_model|::ExecutionOutcome::Bounds)
+  |object_conversions|::ConversionFailure::Capacity -> (|execution_model|::ExecutionOutcome::Capacity)
+  |object_conversions|::ConversionFailure::Empty -> (|execution_model|::ExecutionOutcome::Empty)
+  |object_conversions|::ConversionFailure::Encoding -> (|execution_model|::ExecutionOutcome::Encoding)
+  |object_conversions|::ConversionFailure::Overflow -> (|execution_model|::ExecutionOutcome::Overflow)
+  |object_conversions|::ConversionFailure::ReferenceCycle -> (|execution_model|::ExecutionOutcome::ReferenceCycle)
+  |object_conversions|::ConversionFailure::WorkLimit -> (|execution_model|::ExecutionOutcome::WorkLimit)
  }
 }

@@ -1,5 +1,3 @@
-module timing::wake;
-
 // A timer interrupt records an observation and wakes ordinary kernel code.
 // Repeated arrivals share one pending bit, so this state never grows a queue.
 // The handler must receive this preallocated state through an installed

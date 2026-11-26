@@ -1,15 +1,12 @@
-module isa::x86_64::memory::validation::images;
-
-use isa::x86_64::memory::validation::geometry::X86_PAGE_TABLE_ENTRY_COUNT;
-use isa::x86_64::memory::validation::walk::X86BootstrapPageTableWalkStep;
-use isa::x86_64::memory::validation::walk::x86_bootstrap_page_table_walk_step_is_consistent;
-use facts::x86_page_table_entry;
+use isa/x86_64/memory/validation/geometry.omg;
+use isa/x86_64/memory/validation/walk.omg;
+use {facts}/x86_page_table_entry.omg;
 
 // Ordinary candidate data. A future placed-page provider must bind this shape
 // to pre-reserved qualified storage; declaring the array grants no Extent,
 // capacity, placement, mapping, or installation authority.
 public data X86PageTablePageCandidate {
-    entries: [X86PageTableEntry; 512];
+    entries: [|x86_page_table_entry|::X86PageTableEntry; 512];
 }
 
 public data X86EmptyPageTablePagePolicyCheck {
@@ -21,7 +18,7 @@ public data X86EmptyPageTablePagePolicyCheck {
 // insufficient for this bootstrap baseline: accepting residual software or
 // address bits would make zero-initialized storage and a reused dirty page
 // indistinguishable at the policy boundary.
-machine x86_page_table_entry_is_zero(entry: &X86PageTableEntry) -> bool {
+machine x86_page_table_entry_is_zero(entry: &|x86_page_table_entry|::X86PageTableEntry) -> bool {
     !entry.present &&
     !entry.writable &&
     !entry.user &&
@@ -43,7 +40,7 @@ machine x86_page_table_entry_is_zero(entry: &X86PageTableEntry) -> bool {
 public machine x86_validate_empty_page_table_page(
     candidate: X86PageTablePageCandidate
 ) -> X86EmptyPageTablePagePolicyCheck {
-    x86_scan_empty_page_table_page(candidate, X86_PAGE_TABLE_ENTRY_COUNT, true)
+    x86_scan_empty_page_table_page(candidate, |geometry|::X86_PAGE_TABLE_ENTRY_COUNT, true)
 }
 
 // The fixed scan always visits indices 0..511 under checked decreasing fuel.
@@ -58,8 +55,8 @@ requires 1 <= remaining && remaining <= 512
 terminates by remaining;
 -> X86EmptyPageTablePagePolicyCheck
 {
-    let index: u64 = X86_PAGE_TABLE_ENTRY_COUNT - remaining;
-    let entry: &X86PageTableEntry = &candidate.entries[index];
+    let index: u64 = |geometry|::X86_PAGE_TABLE_ENTRY_COUNT - remaining;
+    let entry: &|x86_page_table_entry|::X86PageTableEntry = &candidate.entries[index];
     let still_zero: bool = zero_so_far && x86_page_table_entry_is_zero(entry);
     transition remaining > 1 {
         true -> x86_scan_empty_page_table_page(
@@ -98,7 +95,7 @@ terminates by remaining;
 // numeric data; this carrier establishes no backing, placement, hierarchy,
 // mapping, TLB, installation, CR3, or machine-control authority.
 public data X86BootstrapSingleEntryPageImageCandidate {
-    step: X86BootstrapPageTableWalkStep;
+    step: |walk|::X86BootstrapPageTableWalkStep;
     page: X86PageTablePageCandidate;
 }
 
@@ -113,8 +110,8 @@ public data X86BootstrapSingleEntryPageImageCheck {
 // permission, cache, software, address, and role-dependent field is copied as
 // uninterpreted data rather than inferred or normalized here.
 machine x86_page_table_entries_are_equal(
-    left: &X86PageTableEntry,
-    right: &X86PageTableEntry
+    left: &|x86_page_table_entry|::X86PageTableEntry,
+    right: &|x86_page_table_entry|::X86PageTableEntry
 ) -> bool {
     left.present == right.present &&
     left.writable == right.writable &&
@@ -138,8 +135,8 @@ machine x86_page_table_entries_are_equal(
 // level step retained by the endpoint-consistent descriptor without assigning
 // any further meaning to the entry fields.
 public machine x86_bootstrap_page_table_walk_steps_are_equal(
-    left: &X86BootstrapPageTableWalkStep,
-    right: &X86BootstrapPageTableWalkStep
+    left: &|walk|::X86BootstrapPageTableWalkStep,
+    right: &|walk|::X86BootstrapPageTableWalkStep
 ) -> bool {
     left.table_address == right.table_address &&
     left.index == right.index &&
@@ -152,8 +149,8 @@ public machine x86_bootstrap_page_table_walk_steps_are_equal(
 // scanner with one visibly decreasing edge. The selected slot preserves every
 // retained entry field; an unselected slot preserves the exact-zero baseline.
 machine x86_bootstrap_single_entry_page_slot_is_consistent(
-    entry: &X86PageTableEntry,
-    expected: &X86PageTableEntry,
+    entry: &|x86_page_table_entry|::X86PageTableEntry,
+    expected: &|x86_page_table_entry|::X86PageTableEntry,
     selected: bool
 ) -> bool {
     transition selected {
@@ -162,14 +159,14 @@ machine x86_bootstrap_single_entry_page_slot_is_consistent(
     }
 
     machine compare_selected_bootstrap_page_entry(
-        entry: &X86PageTableEntry,
-        expected: &X86PageTableEntry
+        entry: &|x86_page_table_entry|::X86PageTableEntry,
+        expected: &|x86_page_table_entry|::X86PageTableEntry
     ) -> bool {
         x86_page_table_entries_are_equal(entry, expected)
     }
 
     machine compare_zero_bootstrap_page_entry(
-        entry: &X86PageTableEntry
+        entry: &|x86_page_table_entry|::X86PageTableEntry
     ) -> bool {
         x86_page_table_entry_is_zero(entry)
     }
@@ -181,14 +178,14 @@ public machine x86_validate_bootstrap_single_entry_page_image(
     candidate: X86BootstrapSingleEntryPageImageCandidate
 ) -> X86BootstrapSingleEntryPageImageCheck {
     let step_consistent: bool =
-        x86_bootstrap_page_table_walk_step_is_consistent(
+        |walk|::x86_bootstrap_page_table_walk_step_is_consistent(
             &candidate.step,
             candidate.step.index
         );
     transition step_consistent && candidate.step.entry.entry.present {
         true -> (x86_scan_bootstrap_single_entry_page_image(
             candidate,
-            X86_PAGE_TABLE_ENTRY_COUNT,
+            |geometry|::X86_PAGE_TABLE_ENTRY_COUNT,
             true
         ))
         _ -> reject_bootstrap_single_entry_page_image()
@@ -213,8 +210,8 @@ requires 1 <= remaining && remaining <= 512
 terminates by remaining;
 -> X86BootstrapSingleEntryPageImageCheck
 {
-    let index: u64 = X86_PAGE_TABLE_ENTRY_COUNT - remaining;
-    let entry: &X86PageTableEntry = &candidate.page.entries[index];
+    let index: u64 = |geometry|::X86_PAGE_TABLE_ENTRY_COUNT - remaining;
+    let entry: &|x86_page_table_entry|::X86PageTableEntry = &candidate.page.entries[index];
     let selected: bool = index == candidate.step.index;
     let slot_consistent: bool =
         x86_bootstrap_single_entry_page_slot_is_consistent(

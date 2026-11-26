@@ -1,35 +1,32 @@
-use bootstrap_interrupts::install::install_bootstrap_interrupts;
-use bootstrap_interrupts::registrar::BootstrapInterruptRegistrar;
+use {bootstrap_interrupts}/install.omg;
+use {bootstrap_interrupts}/registrar.omg;
 // After firmware exit, validate the copied boot record, exercise owned memory,
 // and load the descriptor tables. The final call runs the timer event loop
 // while this activation keeps its memory owners and task-state storage alive.
-use lab::memory::diagnostics::markers;
+use lab/memory/diagnostics/markers.omg;
 
-use arch::isa::x86_64::memory::memory::PageTableBuilder;
-use arch::isa::x86_64::memory::memory::PageTableReservation;
-use arch::isa::x86_64::memory::profile::BootstrapPaging;
-use arch::isa::x86_64::memory::profile::BootstrapPagingProfile;
-use arch::isa::x86_64::interrupts::segments::SegmentTablePreparation;
-use arch::isa::x86_64::interrupts::task_state::TaskStatePreparation;
-use arch::isa::x86_64::interrupts::task_state::TaskStateStorage;
-use arch::isa::x86_64::interrupts::selectors::KernelSelectorPreparation;
-use core::memory::geometry::BootGeometry;
-use omega::language::core::extent;
-use omega::language::core::assembly;
-use omega::language::core::task_register;
-use omega::language::core::code_segment;
-use omega::language::core::data_segment;
-use omega::language::core::layout;
-use lab::memory::lifecycle;
-use lab::memory::page;
-use handoff::handoff;
-use memory_map::firmware_root;
-use memory::profile;
-use lab::memory::mapping::firmware::root;
-use lab::memory::mapping::firmware::firmware;
-use lab::memory::mapping::mapping;
-use lab::memory::mapping::activation;
-use lab::memory::mapping::region;
+use {arch}/isa/x86_64/memory/memory.omg;
+use {arch}/isa/x86_64/memory/profile.omg;
+use {arch}/isa/x86_64/interrupts/segments.omg;
+use {arch}/isa/x86_64/interrupts/task_state.omg;
+use {arch}/isa/x86_64/interrupts/selectors.omg;
+use {core}/memory/geometry.omg;
+use {omega}/language/core/extent.omg;
+use {omega}/language/core/assembly.omg;
+use {omega}/language/core/task_register.omg;
+use {omega}/language/core/code_segment.omg;
+use {omega}/language/core/data_segment.omg;
+use {omega}/language/core/layout.omg;
+use lab/memory/lifecycle.omg;
+use lab/memory/page.omg;
+use handoff/handoff.omg;
+use {memory_map}/firmware_root.omg;
+use memory/profile.omg as memory_profile;
+use lab/memory/mapping/firmware/root.omg;
+use lab/memory/mapping/firmware/firmware.omg;
+use lab/memory/mapping/mapping.omg;
+use lab/memory/mapping/activation.omg;
+use lab/memory/mapping/region.omg;
 
 data KernelState {
     entered: bool;
@@ -37,15 +34,15 @@ data KernelState {
     initial_storage_bytes: u64;
     initial_storage_base: u64;
     firmware_root: u64;
-    boot_information: BootInformation;
+    boot_information: |handoff|::BootInformation;
 }
 
 data Kernel {}
 
 // The privileged observer belongs to this boot composition. The shared core
 // predicate consumes only a sample and grants no machine or mapping authority.
-uefi_x86_64 machine Kernel::observe_paging() -> BootstrapPagingProfile
-reaches MachineControl
+uefi_x86_64 machine Kernel::observe_paging() -> |profile|::BootstrapPagingProfile
+reaches |assembly|::MachineControl
 {
     let mut control0: u64 = 0;
     let mut control4: u64 = 0;
@@ -54,7 +51,7 @@ reaches MachineControl
     asm { read_cr0 control0 }
     asm { read_cr4 control4 }
     asm { rdmsr extended_features, extended_feature_register }
-    BootstrapPagingProfile {
+    |profile|::BootstrapPagingProfile {
         control0: control0, control4: control4, extended_features: extended_features,
     }
 }
@@ -67,10 +64,10 @@ reaches MachineControl
 // direct calls to this adapter cannot introduce Vacant. Admission covers this
 // closed boot artifact's initial-storage call, not arbitrary Granted inputs;
 // selecting this provider never justifies a future call on occupied storage.
-BootVacantStorageProvider satisfies VacantContentTransfer {
-    machine transfer(storage: Extent in Granted) -> Extent
-    ensures result in Granted,
-            Granted::content(old(&storage)) == Granted::content(&result)
+BootVacantStorageProvider satisfies |extent|::VacantContentTransfer {
+    machine transfer(storage: |extent|::Extent in |extent|::Granted) -> |extent|::Extent
+    ensures result in |extent|::Granted,
+            |extent|::Granted::content(old(&storage)) == |extent|::Granted::content(&result)
     {
         storage
     }
@@ -79,22 +76,22 @@ BootVacantStorageProvider satisfies VacantContentTransfer {
 // Start with the two roots supplied by the boot bridge and ordinary zeroed
 // local state. This activation owns the context for the kernel's lifetime;
 // selecting the entry neither allocates a context nor grants either root.
-machine Kernel::start(image: Extent in Granted, initial_storage: Extent in Granted)
+machine Kernel::start(image: |extent|::Extent in |extent|::Granted, initial_storage: |extent|::Extent in |extent|::Granted)
 requires address::Bound == 18446744073709551616
-reaches PortIo + MachineControl + VacantContentTransfer + ResourceProfileSupply + AccessLifecycle + ExtentRootProvider + BootVirtualReservation + BootTranslation + SegmentTablePreparation + TaskStatePreparation + TaskRegisterControl + KernelSelectorPreparation + CodeSegmentControl + DataSegmentControl + BootstrapInterruptRegistrar
-invokes ExtentRootProvider
-invokes VacantContentTransfer
-invokes ResourceProfileSupply
-invokes AccessLifecycle
-invokes BootVirtualReservation
-invokes BootTranslation
-invokes SegmentTablePreparation
-invokes TaskStatePreparation
-invokes TaskRegisterControl
-invokes KernelSelectorPreparation
-invokes CodeSegmentControl
-invokes DataSegmentControl
-invokes BootstrapInterruptRegistrar
+reaches |assembly|::PortIo + |assembly|::MachineControl + |extent|::VacantContentTransfer + |layout|::ResourceProfileSupply + |layout|::AccessLifecycle + |extent|::ExtentRootProvider + |activation|::BootVirtualReservation + |activation|::BootTranslation + |segments|::SegmentTablePreparation + |task_state|::TaskStatePreparation + |task_register|::TaskRegisterControl + |selectors|::KernelSelectorPreparation + |code_segment|::CodeSegmentControl + |data_segment|::DataSegmentControl + |registrar|::BootstrapInterruptRegistrar
+invokes |extent|::ExtentRootProvider
+invokes |extent|::VacantContentTransfer
+invokes |layout|::ResourceProfileSupply
+invokes |layout|::AccessLifecycle
+invokes |activation|::BootVirtualReservation
+invokes |activation|::BootTranslation
+invokes |segments|::SegmentTablePreparation
+invokes |task_state|::TaskStatePreparation
+invokes |task_register|::TaskRegisterControl
+invokes |selectors|::KernelSelectorPreparation
+invokes |code_segment|::CodeSegmentControl
+invokes |data_segment|::DataSegmentControl
+invokes |registrar|::BootstrapInterruptRegistrar
 crashes Abort
 crashes Trap
 {
@@ -104,23 +101,23 @@ crashes Trap
 
 // Check the caller-owned context and both transferred roots before reporting
 // entry. The continuation retains the context borrow and root claims while idle.
-machine Kernel::enter(context: &mut KernelState, image: Extent in Granted,
-                      initial_storage: Extent in Granted)
+machine Kernel::enter(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                      initial_storage: |extent|::Extent in |extent|::Granted)
 requires address::Bound == 18446744073709551616
-reaches PortIo + MachineControl + VacantContentTransfer + ResourceProfileSupply + AccessLifecycle + ExtentRootProvider + BootVirtualReservation + BootTranslation + SegmentTablePreparation + TaskStatePreparation + TaskRegisterControl + KernelSelectorPreparation + CodeSegmentControl + DataSegmentControl + BootstrapInterruptRegistrar
-invokes ExtentRootProvider
-invokes VacantContentTransfer
-invokes ResourceProfileSupply
-invokes AccessLifecycle
-invokes BootVirtualReservation
-invokes BootTranslation
-invokes SegmentTablePreparation
-invokes TaskStatePreparation
-invokes TaskRegisterControl
-invokes KernelSelectorPreparation
-invokes CodeSegmentControl
-invokes DataSegmentControl
-invokes BootstrapInterruptRegistrar
+reaches |assembly|::PortIo + |assembly|::MachineControl + |extent|::VacantContentTransfer + |layout|::ResourceProfileSupply + |layout|::AccessLifecycle + |extent|::ExtentRootProvider + |activation|::BootVirtualReservation + |activation|::BootTranslation + |segments|::SegmentTablePreparation + |task_state|::TaskStatePreparation + |task_register|::TaskRegisterControl + |selectors|::KernelSelectorPreparation + |code_segment|::CodeSegmentControl + |data_segment|::DataSegmentControl + |registrar|::BootstrapInterruptRegistrar
+invokes |extent|::ExtentRootProvider
+invokes |extent|::VacantContentTransfer
+invokes |layout|::ResourceProfileSupply
+invokes |layout|::AccessLifecycle
+invokes |activation|::BootVirtualReservation
+invokes |activation|::BootTranslation
+invokes |segments|::SegmentTablePreparation
+invokes |task_state|::TaskStatePreparation
+invokes |task_register|::TaskRegisterControl
+invokes |selectors|::KernelSelectorPreparation
+invokes |code_segment|::CodeSegmentControl
+invokes |data_segment|::DataSegmentControl
+invokes |registrar|::BootstrapInterruptRegistrar
 crashes Abort
 crashes Trap
 {
@@ -132,19 +129,19 @@ crashes Trap
         _ -> retain(context, image, initial_storage)
     }
 
-    machine establish(context: &mut KernelState, image: Extent in Granted,
-                    initial_storage: Extent in Granted)
+    machine establish(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                    initial_storage: |extent|::Extent in |extent|::Granted)
     requires address::Bound == 18446744073709551616
     {
-        let copied: bool = BootHandoff::receive(&initial_storage, &mut context.boot_information);
+        let copied: bool = |handoff|::BootHandoff::receive(&initial_storage, &mut context.boot_information);
         transition copied {
             true -> check_handoff(context, image, initial_storage)
             _ -> retain(context, image, initial_storage)
         }
     }
 
-    machine check_handoff(context: &mut KernelState, image: Extent in Granted,
-                        initial_storage: Extent in Granted)
+    machine check_handoff(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                        initial_storage: |extent|::Extent in |extent|::Granted)
     requires address::Bound == 18446744073709551616
     {
         // Packet geometry must describe the same image partition the entry
@@ -158,8 +155,8 @@ crashes Trap
         }
     }
 
-    machine accept_handoff(context: &mut KernelState, image: Extent in Granted,
-                         initial_storage: Extent in Granted)
+    machine accept_handoff(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                         initial_storage: |extent|::Extent in |extent|::Granted)
     requires address::Bound == 18446744073709551616
     {
         context.image_bytes = image.length;
@@ -172,8 +169,8 @@ crashes Trap
         transition { _ -> handoff_wait(context, image, initial_storage, 1000000) }
     }
 
-    machine handoff_wait(context: &mut KernelState, image: Extent in Granted,
-                       initial_storage: Extent in Granted, remaining: u64)
+    machine handoff_wait(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                       initial_storage: |extent|::Extent in |extent|::Granted, remaining: u64)
     requires address::Bound == 18446744073709551616
     {
         let mut status: u8 = 0;
@@ -184,8 +181,8 @@ crashes Trap
         }
     }
 
-    machine handoff_retry(context: &mut KernelState, image: Extent in Granted,
-                        initial_storage: Extent in Granted, remaining: u64)
+    machine handoff_retry(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                        initial_storage: |extent|::Extent in |extent|::Granted, remaining: u64)
     requires address::Bound == 18446744073709551616
     {
         transition remaining > 1 {
@@ -194,17 +191,17 @@ crashes Trap
         }
     }
 
-    machine handoff_report(context: &mut KernelState, image: Extent in Granted,
-                         initial_storage: Extent in Granted)
+    machine handoff_report(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                         initial_storage: |extent|::Extent in |extent|::Granted)
     requires address::Bound == 18446744073709551616
     {
-        BootMarkers::handoff_received();
+        |markers|::BootMarkers::handoff_received();
         transition { _ -> announce(context, image, initial_storage, 1000000) }
     }
 
     // Drain the preceding ownership report before one 16-byte FIFO burst.
     // A missing UART suppresses diagnostics, never ownership or kernel entry.
-    machine announce(context: &mut KernelState, image: Extent in Granted, initial_storage: Extent in Granted,
+    machine announce(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted, initial_storage: |extent|::Extent in |extent|::Granted,
                    remaining: u64)
     requires address::Bound == 18446744073709551616
     {
@@ -216,7 +213,7 @@ crashes Trap
         }
     }
 
-    machine wait(context: &mut KernelState, image: Extent in Granted, initial_storage: Extent in Granted,
+    machine wait(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted, initial_storage: |extent|::Extent in |extent|::Granted,
                remaining: u64)
     requires address::Bound == 18446744073709551616
     {
@@ -226,24 +223,24 @@ crashes Trap
         }
     }
 
-    machine report(context: &mut KernelState, image: Extent in Granted, initial_storage: Extent in Granted)
+    machine report(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted, initial_storage: |extent|::Extent in |extent|::Granted)
     requires address::Bound == 18446744073709551616
     {
-        BootMarkers::entered();
-        let vacant: Extent in Granted & Vacant = VacantContentTransfer::transfer(initial_storage);
+        |markers|::BootMarkers::entered();
+        let vacant: |extent|::Extent in |extent|::Granted & |extent|::Vacant = |extent|::VacantContentTransfer::transfer(initial_storage);
         transition vacant.length >= 4096 {
             true -> reserve(context, image, vacant)
             _ -> retain_vacant(context, image, vacant)
         }
     }
 
-    machine reserve(context: &mut KernelState, image: Extent in Granted,
-                  storage: Extent in Granted & Vacant)
+    machine reserve(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                  storage: |extent|::Extent in |extent|::Granted & |extent|::Vacant)
     requires address::Bound == 18446744073709551616 && storage.length >= 4096
     {
-        let parts: VacantExtentParts = split_vacant_extent(storage, 4096);
-        let profile: ResourceProfile = ResourceProfileSupply<BootMemory>::profile(
-            (&parts.taken) as &Extent in Granted
+        let parts: |extent|::VacantExtentParts = |extent|::split_vacant_extent(storage, 4096);
+        let profile: |layout|::ResourceProfile = |layout|::ResourceProfileSupply<|memory_profile|::BootMemory>::profile(
+            (&parts.taken) as &|extent|::Extent in |extent|::Granted
         );
         // Observe the actual returned geometry before announcing success. The
         // comparison grants no custody; the checked split already conserved
@@ -258,8 +255,8 @@ crashes Trap
         }
     }
 
-    machine memory_wait(context: &mut KernelState, image: Extent in Granted,
-                      parts: VacantExtentParts, remaining: u64)
+    machine memory_wait(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                      parts: |extent|::VacantExtentParts, remaining: u64)
     requires address::Bound == 18446744073709551616
     {
         let mut status: u8 = 0;
@@ -270,8 +267,8 @@ crashes Trap
         }
     }
 
-    machine memory_retry(context: &mut KernelState, image: Extent in Granted,
-                       parts: VacantExtentParts, remaining: u64)
+    machine memory_retry(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                       parts: |extent|::VacantExtentParts, remaining: u64)
     requires address::Bound == 18446744073709551616
     {
         transition remaining > 1 {
@@ -280,30 +277,30 @@ crashes Trap
         }
     }
 
-    machine memory_report(context: &mut KernelState, image: Extent in Granted,
-                        parts: VacantExtentParts)
+    machine memory_report(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                        parts: |extent|::VacantExtentParts)
     requires address::Bound == 18446744073709551616
     {
-        BootMarkers::partitioned();
+        |markers|::BootMarkers::partitioned();
         transition { _ -> exercise_memory(context, image, parts) }
     }
 
-    machine exercise_memory(context: &mut KernelState, image: Extent in Granted,
-                          parts: VacantExtentParts)
+    machine exercise_memory(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                          parts: |extent|::VacantExtentParts)
     requires address::Bound == 18446744073709551616
     {
         let original_base: address = parts.taken.base;
         let original_length: u64 = parts.taken.length;
-        let empty: Extent in Granted & Vacant = KernelMemory::reunite_partition(parts.taken, 0);
-        let interior: Extent in Granted & Vacant = KernelMemory::reunite_partition(empty, original_length / 2);
-        let full: Extent in Granted & Vacant = KernelMemory::reunite_partition(interior, original_length);
-        let result: KernelMemoryResult = KernelMemory::exercise(full);
+        let empty: |extent|::Extent in |extent|::Granted & |extent|::Vacant = |lifecycle|::KernelMemory::reunite_partition(parts.taken, 0);
+        let interior: |extent|::Extent in |extent|::Granted & |extent|::Vacant = |lifecycle|::KernelMemory::reunite_partition(empty, original_length / 2);
+        let full: |extent|::Extent in |extent|::Granted & |extent|::Vacant = |lifecycle|::KernelMemory::reunite_partition(interior, original_length);
+        let result: |lifecycle|::KernelMemoryResult = |lifecycle|::KernelMemory::exercise(full);
         // These are runtime observations, not establishment of custody. The
         // lifecycle's checked result must already conserve the original claim.
         let verified: bool = result.initialized &&
             result.initial == 17 && result.updated == 29 && result.extracted == 29 &&
             result.storage.base == original_base && result.storage.length == original_length;
-        let recovered: VacantExtentParts = VacantExtentParts {
+        let recovered: |extent|::VacantExtentParts = |extent|::VacantExtentParts {
             taken: result.storage, rest: parts.rest,
         };
         transition verified {
@@ -312,8 +309,8 @@ crashes Trap
         }
     }
 
-    machine verified_wait(context: &mut KernelState, image: Extent in Granted,
-                        parts: VacantExtentParts, remaining: u64)
+    machine verified_wait(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                        parts: |extent|::VacantExtentParts, remaining: u64)
     requires address::Bound == 18446744073709551616
     {
         let mut status: u8 = 0;
@@ -324,8 +321,8 @@ crashes Trap
         }
     }
 
-    machine verified_retry(context: &mut KernelState, image: Extent in Granted,
-                         parts: VacantExtentParts, remaining: u64)
+    machine verified_retry(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                         parts: |extent|::VacantExtentParts, remaining: u64)
     requires address::Bound == 18446744073709551616
     {
         transition remaining > 1 {
@@ -334,24 +331,24 @@ crashes Trap
         }
     }
 
-    machine verified_report(context: &mut KernelState, image: Extent in Granted,
-                          parts: VacantExtentParts)
+    machine verified_report(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                          parts: |extent|::VacantExtentParts)
     requires address::Bound == 18446744073709551616
     {
-        BootMarkers::memory_checked();
+        |markers|::BootMarkers::memory_checked();
         transition parts.taken.length >= 16 {
             true -> exercise_pair(context, image, parts)
             _ -> retain_parts(context, image, parts)
         }
     }
 
-    machine exercise_pair(context: &mut KernelState, image: Extent in Granted,
-                        parts: VacantExtentParts)
+    machine exercise_pair(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                        parts: |extent|::VacantExtentParts)
     requires address::Bound == 18446744073709551616 && parts.taken.length >= 16
     {
         let length: u64 = parts.taken.length;
         let base: address = parts.taken.base;
-        let pair: KernelMemoryPair = KernelMemory::exercise_pair(parts.taken);
+        let pair: |lifecycle|::KernelMemoryPair = |lifecycle|::KernelMemory::exercise_pair(parts.taken);
         let verified: bool = pair.verified && pair.first.base == base &&
             pair.first.length == 8 && pair.second.length == 8 && pair.tail.length == length - 16;
         transition verified {
@@ -360,8 +357,8 @@ crashes Trap
         }
     }
 
-    machine paired_wait(context: &mut KernelState, image: Extent in Granted,
-                      pair: KernelMemoryPair, rest: Extent in Granted & Vacant,
+    machine paired_wait(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                      pair: |lifecycle|::KernelMemoryPair, rest: |extent|::Extent in |extent|::Granted & |extent|::Vacant,
                       remaining: u64)
     requires address::Bound == 18446744073709551616
     {
@@ -373,8 +370,8 @@ crashes Trap
         }
     }
 
-    machine paired_retry(context: &mut KernelState, image: Extent in Granted,
-                       pair: KernelMemoryPair, rest: Extent in Granted & Vacant,
+    machine paired_retry(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                       pair: |lifecycle|::KernelMemoryPair, rest: |extent|::Extent in |extent|::Granted & |extent|::Vacant,
                        remaining: u64)
     requires address::Bound == 18446744073709551616
     {
@@ -384,26 +381,26 @@ crashes Trap
         }
     }
 
-    machine paired_report(context: &mut KernelState, image: Extent in Granted,
-                        pair: KernelMemoryPair, rest: Extent in Granted & Vacant)
+    machine paired_report(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                        pair: |lifecycle|::KernelMemoryPair, rest: |extent|::Extent in |extent|::Granted & |extent|::Vacant)
     requires address::Bound == 18446744073709551616
     {
-        BootMarkers::pair_checked();
+        |markers|::BootMarkers::pair_checked();
         transition rest.length >= 8199 {
             true -> prepare_page(context, image, pair, rest)
             _ -> retain_pair(context, image, pair, rest)
         }
     }
 
-    machine prepare_page(context: &mut KernelState, image: Extent in Granted,
-                       pair: KernelMemoryPair, rest: Extent in Granted & Vacant)
+    machine prepare_page(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                       pair: |lifecycle|::KernelMemoryPair, rest: |extent|::Extent in |extent|::Granted & |extent|::Vacant)
     requires address::Bound == 18446744073709551616 && rest.length >= 8199
     {
         // Retain an ordinary leading reservation so alignment is exercised
         // after a non-page-sized allocation, not only on firmware-aligned input.
-        let parts: VacantExtentParts = split_vacant_extent(rest, 8);
-        let page: BootPage = BootPage {
-            leading: parts.taken, reservation: PageFrame::prepare(parts.rest),
+        let parts: |extent|::VacantExtentParts = |extent|::split_vacant_extent(rest, 8);
+        let page: |page|::BootPage = |page|::BootPage {
+            leading: parts.taken, reservation: |page|::PageFrame::prepare(parts.rest),
         };
         transition page.reservation.verified {
             true -> page_wait(context, image, pair, page, 1000000)
@@ -411,8 +408,8 @@ crashes Trap
         }
     }
 
-    machine page_wait(context: &mut KernelState, image: Extent in Granted,
-                    pair: KernelMemoryPair, page: BootPage, remaining: u64)
+    machine page_wait(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                    pair: |lifecycle|::KernelMemoryPair, page: |page|::BootPage, remaining: u64)
     requires address::Bound == 18446744073709551616
     {
         let mut status: u8 = 0;
@@ -423,8 +420,8 @@ crashes Trap
         }
     }
 
-    machine page_retry(context: &mut KernelState, image: Extent in Granted,
-                     pair: KernelMemoryPair, page: BootPage, remaining: u64)
+    machine page_retry(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                     pair: |lifecycle|::KernelMemoryPair, page: |page|::BootPage, remaining: u64)
     requires address::Bound == 18446744073709551616
     {
         transition remaining > 1 {
@@ -433,47 +430,47 @@ crashes Trap
         }
     }
 
-    machine page_report(context: &mut KernelState, image: Extent in Granted,
-                      pair: KernelMemoryPair, page: BootPage)
+    machine page_report(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                      pair: |lifecycle|::KernelMemoryPair, page: |page|::BootPage)
     requires address::Bound == 18446744073709551616
     {
-        BootMarkers::page_ready();
+        |markers|::BootMarkers::page_ready();
         transition page.reservation.tail.length >= 20479 {
             true -> prepare_tables(context, image, pair, page)
             _ -> retain_page(context, image, pair, page)
         }
     }
 
-    machine prepare_tables(context: &mut KernelState, image: Extent in Granted,
-                         pair: KernelMemoryPair, page: BootPage)
+    machine prepare_tables(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                         pair: |lifecycle|::KernelMemoryPair, page: |page|::BootPage)
     requires address::Bound == 18446744073709551616 && page.reservation.tail.length >= 20479
     {
         transition page.reservation.page {
-            PreparedPage::Ready { storage } -> build_tables(context, image, pair,
+            |page|::PreparedPage::Ready { storage } -> build_tables(context, image, pair,
                 page.leading, page.reservation.padding, storage, page.reservation.tail)
-            PreparedPage::Rejected { storage } -> retain_page(context, image, pair, BootPage {
-                leading: page.leading, reservation: PageReservation {
-                    padding: page.reservation.padding, page: PreparedPage::Rejected { storage: storage },
+            |page|::PreparedPage::Rejected { storage } -> retain_page(context, image, pair, |page|::BootPage {
+                leading: page.leading, reservation: |page|::PageReservation {
+                    padding: page.reservation.padding, page: |page|::PreparedPage::Rejected { storage: storage },
                     tail: page.reservation.tail, verified: false,
                 },
             })
         }
     }
 
-    machine build_tables(context: &mut KernelState, image: Extent in Granted,
-                       pair: KernelMemoryPair, leading: Extent in Granted & Vacant,
-                       padding: Extent in Granted & Vacant,
-                       target: Extent in Granted & Resident<KernelPagePlacement, KernelPage>,
-                       tail: Extent in Granted & Vacant)
+    machine build_tables(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                       pair: |lifecycle|::KernelMemoryPair, leading: |extent|::Extent in |extent|::Granted & |extent|::Vacant,
+                       padding: |extent|::Extent in |extent|::Granted & |extent|::Vacant,
+                       target: |extent|::Extent in |extent|::Granted & |extent|::Resident<|page|::KernelPagePlacement, |page|::KernelPage>,
+                       tail: |extent|::Extent in |extent|::Granted & |extent|::Vacant)
     requires address::Bound == 18446744073709551616 && tail.length >= 20479
     {
         // This is an inactive candidate for a single virtual page, not a
         // replacement for the firmware mappings of our live image and stack.
-        let reservation: PageTableReservation = PageTableBuilder::prepare<BootMemory>(
-            tail, &target as &Extent in Granted, 1073741824
+        let reservation: |memory|::PageTableReservation = |memory|::PageTableBuilder::prepare<|memory_profile|::BootMemory>(
+            tail, &target as &|extent|::Extent in |extent|::Granted, 1073741824
         );
         let verified: bool = reservation.verified;
-        let tables: BootPageTables = BootPageTables {
+        let tables: |mapping|::BootPageTables = |mapping|::BootPageTables {
             leading: leading, target_padding: padding, target: target, reservation: reservation,
         };
         transition verified {
@@ -482,8 +479,8 @@ crashes Trap
         }
     }
 
-    machine tables_wait(context: &mut KernelState, image: Extent in Granted,
-                      pair: KernelMemoryPair, tables: BootPageTables, remaining: u64)
+    machine tables_wait(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                      pair: |lifecycle|::KernelMemoryPair, tables: |mapping|::BootPageTables, remaining: u64)
     requires address::Bound == 18446744073709551616
     {
         let mut status: u8 = 0;
@@ -494,8 +491,8 @@ crashes Trap
         }
     }
 
-    machine tables_retry(context: &mut KernelState, image: Extent in Granted,
-                       pair: KernelMemoryPair, tables: BootPageTables, remaining: u64)
+    machine tables_retry(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                       pair: |lifecycle|::KernelMemoryPair, tables: |mapping|::BootPageTables, remaining: u64)
     requires address::Bound == 18446744073709551616
     {
         transition remaining > 1 {
@@ -504,27 +501,27 @@ crashes Trap
         }
     }
 
-    machine tables_report(context: &mut KernelState, image: Extent in Granted,
-                        pair: KernelMemoryPair, tables: BootPageTables)
+    machine tables_report(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                        pair: |lifecycle|::KernelMemoryPair, tables: |mapping|::BootPageTables)
     requires address::Bound == 18446744073709551616
     {
-        BootMarkers::tables_ready();
+        |markers|::BootMarkers::tables_ready();
         transition { _ -> inspect_paging(context, image, pair, tables) }
     }
 
-    machine inspect_paging(context: &mut KernelState, image: Extent in Granted,
-                         pair: KernelMemoryPair, tables: BootPageTables)
+    machine inspect_paging(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                         pair: |lifecycle|::KernelMemoryPair, tables: |mapping|::BootPageTables)
     requires address::Bound == 18446744073709551616
     {
-        let profile: BootstrapPagingProfile = Kernel::observe_paging();
-        transition BootstrapPaging::supported(&profile) {
+        let profile: |profile|::BootstrapPagingProfile = Kernel::observe_paging();
+        transition |profile|::BootstrapPaging::supported(&profile) {
             true -> paging_wait(context, image, pair, tables, 1000000)
             _ -> retain_tables(context, image, pair, tables)
         }
     }
 
-    machine paging_wait(context: &mut KernelState, image: Extent in Granted,
-                      pair: KernelMemoryPair, tables: BootPageTables, remaining: u64)
+    machine paging_wait(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                      pair: |lifecycle|::KernelMemoryPair, tables: |mapping|::BootPageTables, remaining: u64)
     requires address::Bound == 18446744073709551616
     {
         let mut status: u8 = 0;
@@ -535,8 +532,8 @@ crashes Trap
         }
     }
 
-    machine paging_retry(context: &mut KernelState, image: Extent in Granted,
-                       pair: KernelMemoryPair, tables: BootPageTables, remaining: u64)
+    machine paging_retry(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                       pair: |lifecycle|::KernelMemoryPair, tables: |mapping|::BootPageTables, remaining: u64)
     requires address::Bound == 18446744073709551616
     {
         transition remaining > 1 {
@@ -545,28 +542,28 @@ crashes Trap
         }
     }
 
-    machine paging_report(context: &mut KernelState, image: Extent in Granted,
-                        pair: KernelMemoryPair, tables: BootPageTables)
+    machine paging_report(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                        pair: |lifecycle|::KernelMemoryPair, tables: |mapping|::BootPageTables)
     requires address::Bound == 18446744073709551616
     {
-        BootMarkers::cpu_checked();
+        |markers|::BootMarkers::cpu_checked();
         transition { _ -> locate_firmware_root(context, image, pair, tables) }
     }
 
-    machine locate_firmware_root(context: &mut KernelState, image: Extent in Granted,
-                               pair: KernelMemoryPair, tables: BootPageTables)
+    machine locate_firmware_root(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                               pair: |lifecycle|::KernelMemoryPair, tables: |mapping|::BootPageTables)
     requires address::Bound == 18446744073709551616
     {
         let mut control3: u64 = 0;
         asm { read_cr3 control3 }
-        let root: u64 = FirmwareRootMap::frame(control3);
-        let excluded: BootGeometry = BootGeometry {
+        let root: u64 = |firmware_root|::FirmwareRootMap::frame(control3);
+        let excluded: |geometry|::BootGeometry = |geometry|::BootGeometry {
             image_base: context.boot_information.image_base,
             image_length: context.boot_information.image_size,
             storage_base: context.initial_storage_base,
             storage_length: context.initial_storage_bytes,
         };
-        let located: bool = FirmwareRootMap::contains(&context.boot_information.bytes,
+        let located: bool = |firmware_root|::FirmwareRootMap::contains(&context.boot_information.bytes,
             context.boot_information.map_size, context.boot_information.descriptor_size, root, &excluded);
         // Numeric eligibility precedes the separately admitted grant. It does
         // not itself establish readable backing or a retained table closure.
@@ -577,8 +574,8 @@ crashes Trap
         }
     }
 
-    machine root_wait(context: &mut KernelState, image: Extent in Granted,
-                    pair: KernelMemoryPair, tables: BootPageTables, remaining: u64)
+    machine root_wait(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                    pair: |lifecycle|::KernelMemoryPair, tables: |mapping|::BootPageTables, remaining: u64)
     requires address::Bound == 18446744073709551616
     {
         let mut status: u8 = 0;
@@ -589,8 +586,8 @@ crashes Trap
         }
     }
 
-    machine root_retry(context: &mut KernelState, image: Extent in Granted,
-                     pair: KernelMemoryPair, tables: BootPageTables, remaining: u64)
+    machine root_retry(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                     pair: |lifecycle|::KernelMemoryPair, tables: |mapping|::BootPageTables, remaining: u64)
     requires address::Bound == 18446744073709551616
     {
         transition remaining > 1 {
@@ -599,16 +596,16 @@ crashes Trap
         }
     }
 
-    machine root_report(context: &mut KernelState, image: Extent in Granted,
-                      pair: KernelMemoryPair, tables: BootPageTables)
+    machine root_report(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                      pair: |lifecycle|::KernelMemoryPair, tables: |mapping|::BootPageTables)
     requires address::Bound == 18446744073709551616
     {
-        BootMarkers::root_located();
+        |markers|::BootMarkers::root_located();
         transition { _ -> admit_firmware_root(context, image, pair, tables) }
     }
 
-    machine admit_firmware_root(context: &mut KernelState, image: Extent in Granted,
-                             pair: KernelMemoryPair, tables: BootPageTables)
+    machine admit_firmware_root(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                             pair: |lifecycle|::KernelMemoryPair, tables: |mapping|::BootPageTables)
     requires address::Bound == 18446744073709551616
     {
         let root: u64 = context.firmware_root;
@@ -618,8 +615,8 @@ crashes Trap
         }
     }
 
-    machine grant_firmware_root(context: &mut KernelState, image: Extent in Granted,
-                             pair: KernelMemoryPair, tables: BootPageTables, root: u64)
+    machine grant_firmware_root(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                             pair: |lifecycle|::KernelMemoryPair, tables: |mapping|::BootPageTables, root: u64)
     requires address::Bound == 18446744073709551616 && root != 0 &&
              root % 4096 == 0 && root <= 4503599627366400
     {
@@ -629,33 +626,33 @@ crashes Trap
         // No allocator, remap or firmware call may reuse/revoke it. The map
         // checks exclude all initial-storage descendants and the full image.
         // Every following success/failure path retains this linear claim.
-        let retained_root: Extent in Granted = ExtentRootProvider::grant(
-            Extent { base: root as address, length: 4096 }
+        let retained_root: |extent|::Extent in |extent|::Granted = |extent|::ExtentRootProvider::grant(
+            |extent|::Extent { base: root as address, length: 4096 }
         );
-        let snapshot: FirmwareRootSnapshot = PagingHandoff::snapshot<FirmwareMemory>(&retained_root);
+        let snapshot: |root|::FirmwareRootSnapshot = |root|::PagingHandoff::snapshot<|root|::FirmwareMemory>(&retained_root);
         transition snapshot {
-            FirmwareRootSnapshot::Ready { entries } ->
+            |root|::FirmwareRootSnapshot::Ready { entries } ->
                 check_firmware_root(context, image, pair, tables, retained_root, entries)
-            FirmwareRootSnapshot::Unavailable ->
+            |root|::FirmwareRootSnapshot::Unavailable ->
                 retain_firmware_root(context, image, pair, tables, retained_root)
         }
     }
 
-    machine check_firmware_root(context: &mut KernelState, image: Extent in Granted,
-                             pair: KernelMemoryPair, tables: BootPageTables,
-                             retained_root: Extent in Granted, entries: [u64; 512])
+    machine check_firmware_root(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                             pair: |lifecycle|::KernelMemoryPair, tables: |mapping|::BootPageTables,
+                             retained_root: |extent|::Extent in |extent|::Granted, entries: [u64; 512])
     requires address::Bound == 18446744073709551616
     {
-        let populated: bool = PagingHandoff::has_present_entry(&entries);
+        let populated: bool = |root|::PagingHandoff::has_present_entry(&entries);
         transition populated {
             true -> root_read_wait(context, image, pair, tables, retained_root, 1000000)
             _ -> retain_firmware_root(context, image, pair, tables, retained_root)
         }
     }
 
-    machine root_read_wait(context: &mut KernelState, image: Extent in Granted,
-                         pair: KernelMemoryPair, tables: BootPageTables,
-                         retained_root: Extent in Granted, remaining: u64)
+    machine root_read_wait(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                         pair: |lifecycle|::KernelMemoryPair, tables: |mapping|::BootPageTables,
+                         retained_root: |extent|::Extent in |extent|::Granted, remaining: u64)
     requires address::Bound == 18446744073709551616
     {
         let mut status: u8 = 0;
@@ -666,9 +663,9 @@ crashes Trap
         }
     }
 
-    machine root_read_retry(context: &mut KernelState, image: Extent in Granted,
-                          pair: KernelMemoryPair, tables: BootPageTables,
-                          retained_root: Extent in Granted, remaining: u64)
+    machine root_read_retry(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                          pair: |lifecycle|::KernelMemoryPair, tables: |mapping|::BootPageTables,
+                          retained_root: |extent|::Extent in |extent|::Granted, remaining: u64)
     requires address::Bound == 18446744073709551616
     {
         transition remaining > 1 {
@@ -677,27 +674,27 @@ crashes Trap
         }
     }
 
-    machine root_read_report(context: &mut KernelState, image: Extent in Granted,
-                           pair: KernelMemoryPair, tables: BootPageTables,
-                           retained_root: Extent in Granted)
+    machine root_read_report(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                           pair: |lifecycle|::KernelMemoryPair, tables: |mapping|::BootPageTables,
+                           retained_root: |extent|::Extent in |extent|::Granted)
     requires address::Bound == 18446744073709551616
     {
-        BootMarkers::root_read();
+        |markers|::BootMarkers::root_read();
         transition { _ -> collect_firmware_tables(context, image, pair, tables, retained_root) }
     }
 
-    machine collect_firmware_tables(context: &mut KernelState, image: Extent in Granted,
-                                  pair: KernelMemoryPair, tables: BootPageTables,
-                                  retained_root: Extent in Granted)
+    machine collect_firmware_tables(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                                  pair: |lifecycle|::KernelMemoryPair, tables: |mapping|::BootPageTables,
+                                  retained_root: |extent|::Extent in |extent|::Granted)
     requires address::Bound == 18446744073709551616
     {
-        let excluded: BootGeometry = BootGeometry {
+        let excluded: |geometry|::BootGeometry = |geometry|::BootGeometry {
             image_base: context.boot_information.image_base,
             image_length: context.boot_information.image_size,
             storage_base: context.initial_storage_base,
             storage_length: context.initial_storage_bytes,
         };
-        let inventory: FirmwareTableInventory = FirmwareTables::collect(
+        let inventory: |firmware|::FirmwareTableInventory = |firmware|::FirmwareTables::collect(
             retained_root, &context.boot_information, &excluded);
         transition inventory.complete {
             true -> closure_wait(context, image, pair, tables, inventory, 1000000)
@@ -705,9 +702,9 @@ crashes Trap
         }
     }
 
-    machine closure_wait(context: &mut KernelState, image: Extent in Granted,
-                       pair: KernelMemoryPair, tables: BootPageTables,
-                       inventory: FirmwareTableInventory, remaining: u64)
+    machine closure_wait(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                       pair: |lifecycle|::KernelMemoryPair, tables: |mapping|::BootPageTables,
+                       inventory: |firmware|::FirmwareTableInventory, remaining: u64)
     requires address::Bound == 18446744073709551616
     {
         let mut status: u8 = 0;
@@ -718,9 +715,9 @@ crashes Trap
         }
     }
 
-    machine closure_retry(context: &mut KernelState, image: Extent in Granted,
-                        pair: KernelMemoryPair, tables: BootPageTables,
-                        inventory: FirmwareTableInventory, remaining: u64)
+    machine closure_retry(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                        pair: |lifecycle|::KernelMemoryPair, tables: |mapping|::BootPageTables,
+                        inventory: |firmware|::FirmwareTableInventory, remaining: u64)
     requires address::Bound == 18446744073709551616
     {
         transition remaining > 1 {
@@ -729,18 +726,18 @@ crashes Trap
         }
     }
 
-    machine closure_report(context: &mut KernelState, image: Extent in Granted,
-                         pair: KernelMemoryPair, tables: BootPageTables,
-                         inventory: FirmwareTableInventory)
+    machine closure_report(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                         pair: |lifecycle|::KernelMemoryPair, tables: |mapping|::BootPageTables,
+                         inventory: |firmware|::FirmwareTableInventory)
     requires address::Bound == 18446744073709551616
     {
-        BootMarkers::tables_retained();
+        |markers|::BootMarkers::tables_retained();
         transition { _ -> mapping(context, image, pair, tables, inventory) }
     }
 
-    machine mapping(context: &mut KernelState, image: Extent in Granted,
-                  pair: KernelMemoryPair, tables: BootPageTables,
-                  inventory: FirmwareTableInventory)
+    machine mapping(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                  pair: |lifecycle|::KernelMemoryPair, tables: |mapping|::BootPageTables,
+                  inventory: |firmware|::FirmwareTableInventory)
     requires address::Bound == 18446744073709551616
     {
         // Per-occurrence root admission: issue a fresh claim in the continuing
@@ -749,13 +746,13 @@ crashes Trap
         // not own this namespace. This grant supplies no physical backing;
         // the independently retained source page supplies that separately.
         // Neither this address's geometry nor reserve below proves issuance.
-        let reservation: Extent in Granted = ExtentRootProvider::grant(
-            Extent { base: 0x40000000 as address, length: MAPPING_BYTE_COUNT }
+        let reservation: |extent|::Extent in |extent|::Granted = |extent|::ExtentRootProvider::grant(
+            |extent|::Extent { base: 0x40000000 as address, length: |region|::MAPPING_BYTE_COUNT }
         );
-        let destination: Extent in Granted & BootVirtualDestination = BootVirtualReservation::reserve(reservation);
-        let attempt: MappingAttempt = MappingExercise::run(tables, destination, &inventory, context.firmware_root);
-        let retired: bool = MappingExercise::retired(&attempt);
-        let verified: bool = MappingExercise::verified(&attempt);
+        let destination: |extent|::Extent in |extent|::Granted & |activation|::BootVirtualDestination = |activation|::BootVirtualReservation::reserve(reservation);
+        let attempt: |mapping|::MappingAttempt = |mapping|::MappingExercise::run(tables, destination, &inventory, context.firmware_root);
+        let retired: bool = |mapping|::MappingExercise::retired(&attempt);
+        let verified: bool = |mapping|::MappingExercise::verified(&attempt);
         // Observe independently of the provider's Boolean and private saved
         // CR3 word. Only a returned activation transaction can reach this marker.
         let mut observed: u64 = 0;
@@ -766,9 +763,9 @@ crashes Trap
         }
     }
 
-    machine mapping_retired_wait(context: &mut KernelState, image: Extent in Granted,
-                               pair: KernelMemoryPair, inventory: FirmwareTableInventory,
-                               attempt: MappingAttempt, verified: bool, remaining: u64)
+    machine mapping_retired_wait(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                               pair: |lifecycle|::KernelMemoryPair, inventory: |firmware|::FirmwareTableInventory,
+                               attempt: |mapping|::MappingAttempt, verified: bool, remaining: u64)
     requires address::Bound == 18446744073709551616
     {
         let mut status: u8 = 0;
@@ -779,9 +776,9 @@ crashes Trap
         }
     }
 
-    machine mapping_retired_retry(context: &mut KernelState, image: Extent in Granted,
-                                pair: KernelMemoryPair, inventory: FirmwareTableInventory,
-                                attempt: MappingAttempt, verified: bool, remaining: u64)
+    machine mapping_retired_retry(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                                pair: |lifecycle|::KernelMemoryPair, inventory: |firmware|::FirmwareTableInventory,
+                                attempt: |mapping|::MappingAttempt, verified: bool, remaining: u64)
     requires address::Bound == 18446744073709551616
     {
         transition remaining > 1 {
@@ -790,18 +787,18 @@ crashes Trap
         }
     }
 
-    machine mapping_retired_report(context: &mut KernelState, image: Extent in Granted,
-                                 pair: KernelMemoryPair, inventory: FirmwareTableInventory,
-                                 attempt: MappingAttempt, verified: bool)
+    machine mapping_retired_report(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                                 pair: |lifecycle|::KernelMemoryPair, inventory: |firmware|::FirmwareTableInventory,
+                                 attempt: |mapping|::MappingAttempt, verified: bool)
     requires address::Bound == 18446744073709551616
     {
-        BootMarkers::mapping_retired();
+        |markers|::BootMarkers::mapping_retired();
         transition { _ -> mapping_checked(context, image, pair, inventory, attempt, verified) }
     }
 
-    machine mapping_checked(context: &mut KernelState, image: Extent in Granted,
-                          pair: KernelMemoryPair, inventory: FirmwareTableInventory,
-                          attempt: MappingAttempt, verified: bool)
+    machine mapping_checked(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                          pair: |lifecycle|::KernelMemoryPair, inventory: |firmware|::FirmwareTableInventory,
+                          attempt: |mapping|::MappingAttempt, verified: bool)
     requires address::Bound == 18446744073709551616
     {
         transition verified {
@@ -810,9 +807,9 @@ crashes Trap
         }
     }
 
-    machine mapping_wait(context: &mut KernelState, image: Extent in Granted,
-                       pair: KernelMemoryPair, inventory: FirmwareTableInventory,
-                       attempt: MappingAttempt, remaining: u64)
+    machine mapping_wait(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                       pair: |lifecycle|::KernelMemoryPair, inventory: |firmware|::FirmwareTableInventory,
+                       attempt: |mapping|::MappingAttempt, remaining: u64)
     requires address::Bound == 18446744073709551616
     {
         let mut status: u8 = 0;
@@ -823,9 +820,9 @@ crashes Trap
         }
     }
 
-    machine mapping_retry(context: &mut KernelState, image: Extent in Granted,
-                        pair: KernelMemoryPair, inventory: FirmwareTableInventory,
-                        attempt: MappingAttempt, remaining: u64)
+    machine mapping_retry(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                        pair: |lifecycle|::KernelMemoryPair, inventory: |firmware|::FirmwareTableInventory,
+                        attempt: |mapping|::MappingAttempt, remaining: u64)
     requires address::Bound == 18446744073709551616
     {
         transition remaining > 1 {
@@ -834,46 +831,46 @@ crashes Trap
         }
     }
 
-    machine mapping_report(context: &mut KernelState, image: Extent in Granted,
-                         pair: KernelMemoryPair, inventory: FirmwareTableInventory, attempt: MappingAttempt)
+    machine mapping_report(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                         pair: |lifecycle|::KernelMemoryPair, inventory: |firmware|::FirmwareTableInventory, attempt: |mapping|::MappingAttempt)
     requires address::Bound == 18446744073709551616
     {
-        BootMarkers::mapping_checked();
-        let checked: bool = SegmentTablePreparation::check_descriptor_load();
+        |markers|::BootMarkers::mapping_checked();
+        let checked: bool = |segments|::SegmentTablePreparation::check_descriptor_load();
         transition checked {
             true -> segments_report(context, image, pair, inventory, attempt)
             _ -> segments_failed(context, image, pair, inventory, attempt)
         }
     }
 
-    machine segments_report(context: &mut KernelState, image: Extent in Granted,
-                            pair: KernelMemoryPair, inventory: FirmwareTableInventory,
-                            attempt: MappingAttempt)
+    machine segments_report(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                            pair: |lifecycle|::KernelMemoryPair, inventory: |firmware|::FirmwareTableInventory,
+                            attempt: |mapping|::MappingAttempt)
     requires address::Bound == 18446744073709551616
     {
-        BootMarkers::segments_checked();
-        let mut task_storage: TaskStateStorage;
+        |markers|::BootMarkers::segments_checked();
+        let mut task_storage: |task_state|::TaskStateStorage;
         activate_task_state(context, image, pair, inventory, attempt, &mut task_storage);
         // The CPU still names task_storage after activation. Normal return would
         // end its owner, so this continuation must retain its borrow forever.
         crash Abort;
     }
 
-    machine activate_task_state(context: &mut KernelState, image: Extent in Granted,
-                                pair: KernelMemoryPair, inventory: FirmwareTableInventory,
-                                attempt: MappingAttempt, storage: &mut TaskStateStorage)
+    machine activate_task_state(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                                pair: |lifecycle|::KernelMemoryPair, inventory: |firmware|::FirmwareTableInventory,
+                                attempt: |mapping|::MappingAttempt, storage: &mut |task_state|::TaskStateStorage)
     requires address::Bound == 18446744073709551616
     {
-        let activated: bool = TaskStatePreparation::activate(storage);
+        let activated: bool = |task_state|::TaskStatePreparation::activate(storage);
         transition activated {
             true -> task_state_wait(context, image, pair, inventory, attempt, storage, 1000000)
             _ -> task_state_failed(context, image, pair, inventory, attempt, storage)
         }
     }
 
-    machine task_state_wait(context: &mut KernelState, image: Extent in Granted,
-                            pair: KernelMemoryPair, inventory: FirmwareTableInventory,
-                            attempt: MappingAttempt, storage: &mut TaskStateStorage, remaining: u64)
+    machine task_state_wait(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                            pair: |lifecycle|::KernelMemoryPair, inventory: |firmware|::FirmwareTableInventory,
+                            attempt: |mapping|::MappingAttempt, storage: &mut |task_state|::TaskStateStorage, remaining: u64)
     requires address::Bound == 18446744073709551616
     {
         let mut status: u8 = 0;
@@ -884,9 +881,9 @@ crashes Trap
         }
     }
 
-    machine task_state_retry(context: &mut KernelState, image: Extent in Granted,
-                             pair: KernelMemoryPair, inventory: FirmwareTableInventory,
-                             attempt: MappingAttempt, storage: &mut TaskStateStorage, remaining: u64)
+    machine task_state_retry(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                             pair: |lifecycle|::KernelMemoryPair, inventory: |firmware|::FirmwareTableInventory,
+                             attempt: |mapping|::MappingAttempt, storage: &mut |task_state|::TaskStateStorage, remaining: u64)
     requires address::Bound == 18446744073709551616
     {
         transition remaining > 1 {
@@ -895,30 +892,30 @@ crashes Trap
         }
     }
 
-    machine task_state_report(context: &mut KernelState, image: Extent in Granted,
-                              pair: KernelMemoryPair, inventory: FirmwareTableInventory,
-                              attempt: MappingAttempt, storage: &mut TaskStateStorage)
+    machine task_state_report(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                              pair: |lifecycle|::KernelMemoryPair, inventory: |firmware|::FirmwareTableInventory,
+                              attempt: |mapping|::MappingAttempt, storage: &mut |task_state|::TaskStateStorage)
     requires address::Bound == 18446744073709551616
     {
-        BootMarkers::task_state_checked();
+        |markers|::BootMarkers::task_state_checked();
         transition { _ -> activate_selectors(context, image, pair, inventory, attempt, storage) }
     }
 
-    machine activate_selectors(context: &mut KernelState, image: Extent in Granted,
-                               pair: KernelMemoryPair, inventory: FirmwareTableInventory,
-                               attempt: MappingAttempt, storage: &mut TaskStateStorage)
+    machine activate_selectors(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                               pair: |lifecycle|::KernelMemoryPair, inventory: |firmware|::FirmwareTableInventory,
+                               attempt: |mapping|::MappingAttempt, storage: &mut |task_state|::TaskStateStorage)
     requires address::Bound == 18446744073709551616
     {
-        let selected: bool = KernelSelectorPreparation::activate(storage);
+        let selected: bool = |selectors|::KernelSelectorPreparation::activate(storage);
         transition selected {
             true -> selectors_wait(context, image, pair, inventory, attempt, storage, 1000000)
             _ -> task_state_failed(context, image, pair, inventory, attempt, storage)
         }
     }
 
-    machine selectors_wait(context: &mut KernelState, image: Extent in Granted,
-                           pair: KernelMemoryPair, inventory: FirmwareTableInventory,
-                           attempt: MappingAttempt, storage: &mut TaskStateStorage, remaining: u64)
+    machine selectors_wait(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                           pair: |lifecycle|::KernelMemoryPair, inventory: |firmware|::FirmwareTableInventory,
+                           attempt: |mapping|::MappingAttempt, storage: &mut |task_state|::TaskStateStorage, remaining: u64)
     requires address::Bound == 18446744073709551616
     {
         let mut status: u8 = 0;
@@ -929,9 +926,9 @@ crashes Trap
         }
     }
 
-    machine selectors_retry(context: &mut KernelState, image: Extent in Granted,
-                            pair: KernelMemoryPair, inventory: FirmwareTableInventory,
-                            attempt: MappingAttempt, storage: &mut TaskStateStorage, remaining: u64)
+    machine selectors_retry(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                            pair: |lifecycle|::KernelMemoryPair, inventory: |firmware|::FirmwareTableInventory,
+                            attempt: |mapping|::MappingAttempt, storage: &mut |task_state|::TaskStateStorage, remaining: u64)
     requires address::Bound == 18446744073709551616
     {
         transition remaining > 1 {
@@ -940,106 +937,106 @@ crashes Trap
         }
     }
 
-    machine selectors_report(context: &mut KernelState, image: Extent in Granted,
-                             pair: KernelMemoryPair, inventory: FirmwareTableInventory,
-                             attempt: MappingAttempt, storage: &mut TaskStateStorage)
+    machine selectors_report(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                             pair: |lifecycle|::KernelMemoryPair, inventory: |firmware|::FirmwareTableInventory,
+                             attempt: |mapping|::MappingAttempt, storage: &mut |task_state|::TaskStateStorage)
     requires address::Bound == 18446744073709551616
     {
-        BootMarkers::selectors_checked();
+        |markers|::BootMarkers::selectors_checked();
         // Keep every boot root and the whole TaskStateStorage owner in this
         // activation while the installed scope runs without returning.
-        install_bootstrap_interrupts(storage);
+        |install|::install_bootstrap_interrupts(storage);
         crash Abort;
     }
 
-    machine retain_task_state(context: &mut KernelState, image: Extent in Granted,
-                              pair: KernelMemoryPair, inventory: FirmwareTableInventory,
-                              attempt: MappingAttempt, storage: &mut TaskStateStorage)
+    machine retain_task_state(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                              pair: |lifecycle|::KernelMemoryPair, inventory: |firmware|::FirmwareTableInventory,
+                              attempt: |mapping|::MappingAttempt, storage: &mut |task_state|::TaskStateStorage)
     requires address::Bound == 18446744073709551616
     {
         asm { hlt }
         transition { _ -> retain_task_state(context, image, pair, inventory, attempt, storage) }
     }
 
-    machine task_state_failed(context: &mut KernelState, image: Extent in Granted,
-                              pair: KernelMemoryPair, inventory: FirmwareTableInventory,
-                              attempt: MappingAttempt, storage: &mut TaskStateStorage)
+    machine task_state_failed(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                              pair: |lifecycle|::KernelMemoryPair, inventory: |firmware|::FirmwareTableInventory,
+                              attempt: |mapping|::MappingAttempt, storage: &mut |task_state|::TaskStateStorage)
     crashes Abort
     { crash Abort; }
 
-    machine segments_failed(context: &mut KernelState, image: Extent in Granted,
-                            pair: KernelMemoryPair, inventory: FirmwareTableInventory,
-                            attempt: MappingAttempt)
+    machine segments_failed(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                            pair: |lifecycle|::KernelMemoryPair, inventory: |firmware|::FirmwareTableInventory,
+                            attempt: |mapping|::MappingAttempt)
     crashes Abort
     { crash Abort; }
 
-    machine retain_mapping(context: &mut KernelState, image: Extent in Granted,
-                         pair: KernelMemoryPair, inventory: FirmwareTableInventory, attempt: MappingAttempt)
+    machine retain_mapping(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                         pair: |lifecycle|::KernelMemoryPair, inventory: |firmware|::FirmwareTableInventory, attempt: |mapping|::MappingAttempt)
     requires address::Bound == 18446744073709551616
     {
         asm { hlt }
         transition { _ -> retain_mapping(context, image, pair, inventory, attempt) }
     }
 
-    machine retain_firmware_tables(context: &mut KernelState, image: Extent in Granted,
-                                 pair: KernelMemoryPair, tables: BootPageTables,
-                                 inventory: FirmwareTableInventory)
+    machine retain_firmware_tables(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                                 pair: |lifecycle|::KernelMemoryPair, tables: |mapping|::BootPageTables,
+                                 inventory: |firmware|::FirmwareTableInventory)
     requires address::Bound == 18446744073709551616
     {
         asm { hlt }
         transition { _ -> retain_firmware_tables(context, image, pair, tables, inventory) }
     }
 
-    machine retain_firmware_root(context: &mut KernelState, image: Extent in Granted,
-                               pair: KernelMemoryPair, tables: BootPageTables,
-                               retained_root: Extent in Granted)
+    machine retain_firmware_root(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                               pair: |lifecycle|::KernelMemoryPair, tables: |mapping|::BootPageTables,
+                               retained_root: |extent|::Extent in |extent|::Granted)
     requires address::Bound == 18446744073709551616
     {
         asm { hlt }
         transition { _ -> retain_firmware_root(context, image, pair, tables, retained_root) }
     }
 
-    machine retain_tables(context: &mut KernelState, image: Extent in Granted,
-                        pair: KernelMemoryPair, tables: BootPageTables)
+    machine retain_tables(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                        pair: |lifecycle|::KernelMemoryPair, tables: |mapping|::BootPageTables)
     requires address::Bound == 18446744073709551616
     {
         asm { hlt }
         transition { _ -> retain_tables(context, image, pair, tables) }
     }
 
-    machine retain_page(context: &mut KernelState, image: Extent in Granted,
-                      pair: KernelMemoryPair, page: BootPage)
+    machine retain_page(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                      pair: |lifecycle|::KernelMemoryPair, page: |page|::BootPage)
     requires address::Bound == 18446744073709551616
     {
         asm { hlt }
         transition { _ -> retain_page(context, image, pair, page) }
     }
 
-    machine retain_pair(context: &mut KernelState, image: Extent in Granted,
-                      pair: KernelMemoryPair, rest: Extent in Granted & Vacant)
+    machine retain_pair(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                      pair: |lifecycle|::KernelMemoryPair, rest: |extent|::Extent in |extent|::Granted & |extent|::Vacant)
     requires address::Bound == 18446744073709551616
     {
         asm { hlt }
         transition { _ -> retain_pair(context, image, pair, rest) }
     }
 
-    machine retain_parts(context: &mut KernelState, image: Extent in Granted,
-                       parts: VacantExtentParts)
+    machine retain_parts(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                       parts: |extent|::VacantExtentParts)
     requires address::Bound == 18446744073709551616
     {
         asm { hlt }
         transition { _ -> retain_parts(context, image, parts) }
     }
 
-    machine retain_vacant(context: &mut KernelState, image: Extent in Granted,
-                        storage: Extent in Granted & Vacant)
+    machine retain_vacant(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted,
+                        storage: |extent|::Extent in |extent|::Granted & |extent|::Vacant)
     requires address::Bound == 18446744073709551616
     {
         asm { hlt }
         transition { _ -> retain_vacant(context, image, storage) }
     }
 
-    machine retain(context: &mut KernelState, image: Extent in Granted, initial_storage: Extent in Granted)
+    machine retain(context: &mut KernelState, image: |extent|::Extent in |extent|::Granted, initial_storage: |extent|::Extent in |extent|::Granted)
     requires address::Bound == 18446744073709551616
     {
         asm { hlt }

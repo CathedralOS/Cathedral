@@ -1,6 +1,7 @@
-use omega::language::core::extent;
-use omega::language::core::layout;
-use memory::profile;
+use {omega}/language/core/extent.omg;
+use {omega}/language/core/layout.omg;
+use {omega}/language/core/access/access.omg;
+use memory/profile.omg;
 
 // The boot composition chooses one bounded region. Allocation, leaf
 // installation and access iterate this same geometry; no per-count compiler
@@ -13,48 +14,48 @@ public data MappingRegion { words: [u64; MAPPING_WORD_COUNT]; }
 public data MappingRegionPlacement {}
 
 data MappingRegionPreparation {
-    case Ready(storage: Extent in Granted & Resident<MappingRegionPlacement, MappingRegion>);
-    case Rejected(storage: Extent in Granted & Vacant);
+    case Ready(storage: |extent|::Extent in |extent|::Granted & |extent|::Resident<MappingRegionPlacement, MappingRegion>);
+    case Rejected(storage: |extent|::Extent in |extent|::Granted & |extent|::Vacant);
 }
 
-machine MappingRegionPlacement::plan(schema: Schema) -> AccessPlan {
-    let mut entries: [FieldEntry; 64];
-    entries[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 0 } };
+machine MappingRegionPlacement::plan(schema: |layout|::Schema) -> |layout|::AccessPlan {
+    let mut entries: [|layout|::FieldEntry; 64];
+    entries[0] = |layout|::FieldEntry { key: schema.fields[0].key, representation: |layout|::FieldPlan::At { offset: 0 } };
     let services: [u64; 32];
-    let layout: LayoutPlan = LayoutPlan {
+    let layout: |layout|::LayoutPlan = |layout|::LayoutPlan {
         entries: entries, entry_count: 1, size_fixed: schema.fields[0].size,
         size_is_dynamic: false, align: 4096,
     };
-    AccessPlan::with_reach(
-        AccessPlan::with(AccessPlan::inaccessible(layout), schema.fields[0].key,
-            FieldAccess::Stable { read: true, write: true, exposure: Exposure::Exported }),
-        BoundaryReach { services: services, service_count: 0 }
+    |layout|::AccessPlan::with_reach(
+        |layout|::AccessPlan::with(|layout|::AccessPlan::inaccessible(layout), schema.fields[0].key,
+            |layout|::FieldAccess::Stable { read: true, write: true, exposure: |layout|::Exposure::Exported }),
+        |layout|::BoundaryReach { services: services, service_count: 0 }
     )
 }
 
 // Initialize the complete physical region before any virtual alias exists.
 // Rejection returns the exact allocation; it cannot be silently merged back
 // into an unrelated formal tail or abandoned.
-machine prepare_mapping_region(storage: Extent in Granted & Vacant) -> MappingRegionPreparation
-reaches ResourceProfileSupply
+machine prepare_mapping_region(storage: |extent|::Extent in |extent|::Granted & |extent|::Vacant) -> MappingRegionPreparation
+reaches |layout|::ResourceProfileSupply
 {
     let words: [u64; MAPPING_WORD_COUNT];
-    transition NativeAccess<MappingRegionPlacement, MappingRegion, BootMemory>::initialize(
+    transition |layout|::NativeAccess<MappingRegionPlacement, MappingRegion, |profile|::BootMemory>::initialize(
         storage, MappingRegion { words: words }
     ) {
-        AccessOutcome::Ready { view } -> (MappingRegionPreparation::Ready { storage: view })
-        AccessOutcome::Rejected { returned, reason } -> (MappingRegionPreparation::Rejected { storage: returned.source })
+        |layout|::AccessOutcome::Ready { view } -> (MappingRegionPreparation::Ready { storage: view })
+        |layout|::AccessOutcome::Rejected { returned, reason } -> (MappingRegionPreparation::Rejected { storage: returned.source })
     }
 }
 
 // Only called after the scoped provider restored and checked the old CR3.
 // Each page's distinct endpoints catch repeated/swapped physical frames;
 // checking just one page or a shared value would not establish the range.
-machine check_mapping_region(storage: &mut Extent in Granted & Resident<MappingRegionPlacement, MappingRegion>) -> bool {
-    let view: &mut Access<MappingRegionPlacement, MappingRegion> =
-        Access::view_resident_mut<MappingRegionPlacement, MappingRegion>(storage);
+machine check_mapping_region(storage: &mut |extent|::Extent in |extent|::Granted & |extent|::Resident<MappingRegionPlacement, MappingRegion>) -> bool {
+    let view: &mut |layout|::Access<MappingRegionPlacement, MappingRegion> =
+        |access|::view_resident_mut<MappingRegionPlacement, MappingRegion>(storage);
     transition { _ -> page(view, 0) }
-    machine page(view: &Access<MappingRegionPlacement, MappingRegion>, next: u64) -> bool
+    machine page(view: &|layout|::Access<MappingRegionPlacement, MappingRegion>, next: u64) -> bool
     requires next <= MAPPING_PAGE_COUNT
     {
         transition next < MAPPING_PAGE_COUNT {
@@ -62,11 +63,11 @@ machine check_mapping_region(storage: &mut Extent in Granted & Resident<MappingR
             _ -> true
         }
     }
-    machine observe(view: &Access<MappingRegionPlacement, MappingRegion>, next: u64) -> bool
+    machine observe(view: &|layout|::Access<MappingRegionPlacement, MappingRegion>, next: u64) -> bool
     requires next < MAPPING_PAGE_COUNT
     {
-        let first: u64 = omega::language::read(&view.words[next * 512]);
-        let last: u64 = omega::language::read(&view.words[next * 512 + 511]);
+        let first: u64 = |layout|::read(&view.words[next * 512]);
+        let last: u64 = |layout|::read(&view.words[next * 512 + 511]);
         transition first == 73 + next && last == 97 + next {
             true -> page(view, next + 1)
             _ -> false

@@ -1,6 +1,5 @@
-module storage;
-use runtime::server::main::Ticket;
-use world::scopes::Proof;
+use {runtime}/server/main.omg;
+use {world}/scopes.omg;
 // Identity of the source that supplied a retained executable. Binding validates it.
 public data Prepared [copy] {
     status: u64;
@@ -34,7 +33,7 @@ public data Exchange {
 // One bounded slot per child; a replacement listener cannot inherit this work.
 public data Relay {
     phase: u64;
-    ticket: Ticket;
+    ticket: |main|::Ticket;
     incarnation: u64;
     revision: u64;
     source: u64;
@@ -42,7 +41,7 @@ public data Relay {
     object: u64;
     check: [u64; 8];
     request: [u64; 8];
-    proof: Proof;
+    proof: |scopes|::Proof;
     cancelled: bool;
 }
 

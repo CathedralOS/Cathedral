@@ -7,11 +7,11 @@
 // (header + services, in spec order); attached external leaves name the FIELD
 // to call — no magic slot index, header handled for free, audit reads by name.
 //
-// Same package as uefi.omg (cathedral_contracts_uefi) → its symbols (EfiStatus,
-// EfiHandle, EfiTableHeader) are visible directly, no `use`. PROVISIONAL until
-// the Omega agent lands field-model dispatch + the M2 ladder.
+// The sibling UEFI file owns the handle, status and common table header.
 
-use memory::memory_map;
+use {omega}/language/core/external_binding.omg;
+use uefi.omg;
+use {memory}/memory_map.omg;
 
 // The map key GetMemoryMap returns; ExitBootServices only succeeds against the
 // current key (the freshness contract).
@@ -23,7 +23,7 @@ public data MapKey [copy] { raw: u64; }   // UINTN; freshness is a call contract
 // layout policy compute each offset and the FFI audit read by NAME. We call
 // get_memory_map (5th) and exit_boot_services (27th).
 public data BootServicesTable {
-    hdr:                          EfiTableHeader;
+    hdr:                          |uefi|::EfiTableHeader;
     raise_tpl:                    address;
     restore_tpl:                  address;
     allocate_pages:               address;
@@ -81,7 +81,7 @@ public boundary trait BootServices {
         map_key:            &mut MapKey,
         descriptor_size:    &mut u64,
         descriptor_version: &mut u32
-    ) -> EfiStatus
+    ) -> |uefi|::EfiStatus
     reaches;
 
     // ExitBootServices(ImageHandle, MapKey). Succeeds only against the current
@@ -90,9 +90,9 @@ public boundary trait BootServices {
     // fails closed. On success firmware is gone and the map is final.
     machine exit_boot_services(
         table:        &BootServicesTable,
-        image_handle: EfiHandle,
+        image_handle: |uefi|::EfiHandle,
         map_key:      MapKey
-    ) -> EfiStatus
+    ) -> |uefi|::EfiStatus
     reaches;
 }
 
@@ -109,13 +109,13 @@ uefi_x86_64 machine BootServicesTable::get_memory_map_leaf(
     map_key:            &mut MapKey,
     descriptor_size:    &mut u64,
     descriptor_version: &mut u32
-) -> EfiStatus satisfies BootServices::get_memory_map via ForeignBinding::TableFunction(get_memory_map);
+) -> |uefi|::EfiStatus satisfies BootServices::get_memory_map via |external_binding|::ForeignBinding::TableFunction(get_memory_map);
 
 uefi_x86_64 machine BootServicesTable::exit_boot_services_leaf(
     table:        &BootServicesTable,
-    image_handle: EfiHandle,
+    image_handle: |uefi|::EfiHandle,
     map_key:      MapKey
-) -> EfiStatus satisfies BootServices::exit_boot_services via ForeignBinding::TableFunction(exit_boot_services);
+) -> |uefi|::EfiStatus satisfies BootServices::exit_boot_services via |external_binding|::ForeignBinding::TableFunction(exit_boot_services);
 
 public UefiBootServicesProvider satisfies BootServices {
     machine get_memory_map(
@@ -125,14 +125,14 @@ public UefiBootServicesProvider satisfies BootServices {
         map_key: &mut MapKey,
         descriptor_size: &mut u64,
         descriptor_version: &mut u32
-    ) -> EfiStatus {
+    ) -> |uefi|::EfiStatus {
         BootServicesTable::get_memory_map_leaf(
             table, map_size, buffer, map_key, descriptor_size, descriptor_version
         )
     }
     machine exit_boot_services(
-        table: &BootServicesTable, image_handle: EfiHandle, map_key: MapKey
-    ) -> EfiStatus {
+        table: &BootServicesTable, image_handle: |uefi|::EfiHandle, map_key: MapKey
+    ) -> |uefi|::EfiStatus {
         BootServicesTable::exit_boot_services_leaf(table, image_handle, map_key)
     }
 }

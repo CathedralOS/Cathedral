@@ -1,9 +1,7 @@
-use helpers::byte_comparison;
-use helpers::byte_comparison::Comparison;
-use helpers::byte_comparison::BufferOrdering;
+use {helpers}/byte_comparison.omg;
 machine test_result()->i32 {
 let mut left:[u8;256];let mut right:[u8;256];
-let observed:Comparison=byte_comparison::compare_buffers(&left,0,&right,0,BufferOrdering::Lexicographic);transition observed {Comparison::Equal -> (0) _ -> (1)} }
+let observed:|byte_comparison|::Comparison=|byte_comparison|::compare_buffers(&left,0,&right,0,|byte_comparison|::BufferOrdering::Lexicographic);transition observed {|byte_comparison|::Comparison::Equal -> (0) _ -> (1)} }
 const TEST_RESULT:i32=test_result();
 machine require_ok(value:i32) requires value==0;{}
 data Main{}

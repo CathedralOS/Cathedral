@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified pinned PCI capability decoding with bounded copied bytes and inert plans.
-module transport_pci;
 pub data Cap [copy] { cap_vndr: u8; cap_next: u8; cap_len: u8; cfg_type: u8; bar: u8; id: u8; padding: [u8; 2]; offset: u32; length: u32; }
 pub data Cap64 [copy] { cap: Cap; offset_hi: u32; length_hi: u32; }
 pub data NotifyCap [copy] { cap: Cap; notify_off_multiplier: u32; }

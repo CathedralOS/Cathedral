@@ -1,31 +1,28 @@
-module operations;
-use main::Context;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use app::model::Command;
-use app::model::Event;
-use app::model::Failure;
-use presentation;
-use waiting;
-use diagnostic;
+use {runtime}/services/main.omg as services_main;
+use main.omg;
+use {runtime}/kernel.omg;
+use {app}/model.omg;
+use presentation.omg;
+use waiting.omg;
+use diagnostic.omg;
 
-public machine execute(gate: &Gate, context: &mut Context, command: Command) -> Event reaches Kernel blocks invokes Kernel {
+public machine execute(gate: &|kernel|::Gate, context: &mut |main|::Context, command: |model|::Command) -> |model|::Event reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     transition command {
-        Command::AcquireInteraction -> block acquire(gate, context)
-        Command::Poll -> block presentation::poll(gate, context)
-        Command::ProbeStorage -> block presentation::probe_storage(gate, context)
-        Command::CreateSurface { epoch } -> block presentation::create(gate, context, epoch)
-        Command::Paint { view, surface, color } -> block presentation::paint(gate, context, view, surface, color)
-        Command::Wait { ticks } -> block waiting::next(gate, context, ticks)
-        Command::ReplyControl { accepted } -> block waiting::reply(gate, context, accepted)
-        Command::ReportScope -> diagnostic::scope(gate)
-        _ -> (Event::Failed { failure: Failure::UnexpectedReply })
+        |model|::Command::AcquireInteraction -> block acquire(gate, context)
+        |model|::Command::Poll -> block |presentation|::poll(gate, context)
+        |model|::Command::ProbeStorage -> block |presentation|::probe_storage(gate, context)
+        |model|::Command::CreateSurface { epoch } -> block |presentation|::create(gate, context, epoch)
+        |model|::Command::Paint { view, surface, color } -> block |presentation|::paint(gate, context, view, surface, color)
+        |model|::Command::Wait { ticks } -> block |waiting|::next(gate, context, ticks)
+        |model|::Command::ReplyControl { accepted } -> block |waiting|::reply(gate, context, accepted)
+        |model|::Command::ReportScope -> |diagnostic|::scope(gate)
+        _ -> (|model|::Event::Failed { failure: |model|::Failure::UnexpectedReply })
     }
 }
-machine acquire(gate: &Gate, context: &mut Context) -> Event reaches Kernel {
-    let status: u64 = block runtime::services::main::interaction(gate, &mut context.services, context.clock, 1u64, 1u64);
+machine acquire(gate: &|kernel|::Gate, context: &mut |main|::Context) -> |model|::Event reaches |kernel|::Kernel {
+    let status: u64 = block |services_main|::interaction(gate, &mut context.services, context.clock, 1u64, 1u64);
     transition status == 0u64 {
-        true -> (Event::Complete)
-        _ -> (Event::Failed { failure: Failure::Transport { code: status } })
+        true -> (|model|::Event::Complete)
+        _ -> (|model|::Event::Failed { failure: |model|::Failure::Transport { code: status } })
     }
 }

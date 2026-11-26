@@ -1,19 +1,8 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Original Cathedral semantic fixture; no firmware or external example content.
-use aml::model::Outcome;
-use aml::model::Path;
-use aml::model::Span;
-use aml::model::Read;
-use aml::field_model::Access;
-use aml::field_model::AccessType;
-use aml::field_model::UpdateRule;
-use aml::field_model::AccessResult;
-use aml::field_model::Connection;
-use aml::field_model::ListState;
-use aml::field_model::DeclarationKind;
-use aml::field_model::DeclarationResult;
-use aml::field_model::Pending;
-use fields::declarations::parse_declaration;
+use {aml}/model.omg;
+use {aml}/field_model.omg;
+use {fields}/declarations.omg;
 
 machine test()->u64 {
 let mut input:[u8;1024];
@@ -21,8 +10,8 @@ input[0]=91;
 input[1]=129;
 input[2]=2;
 input[3]=65;
-let scope:Path=Path {absolute:true};let result:DeclarationResult=parse_declaration(&input,4,0,7,scope,1024,32);
- transition result.outcome==Outcome::Truncated && result.list.count==0 {true -> (0) _ -> (1)}
+let scope:|model|::Path=|model|::Path {absolute:true};let result:|field_model|::DeclarationResult=|declarations|::parse_declaration(&input,4,0,7,scope,1024,32);
+ transition result.outcome==|model|::Outcome::Truncated && result.list.count==0 {true -> (0) _ -> (1)}
 }
 
 const TEST_RESULT:u64=test();

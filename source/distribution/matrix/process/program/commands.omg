@@ -1,4 +1,4 @@
-module commands;
+use {runtime}/task/main.omg as task_main;
 // Owner words over the kernel-installed control pair: liveness, the root
 // binding, launch policy for a slot, the children words that stage, run and
 // stop a child, the storage words that grant, revoke and report bindings, the
@@ -11,130 +11,122 @@ module commands;
 // make and a word that needs this matrix's view takes the parent's snapshot
 // first when none has granted one yet. The rest of the stock vocabulary
 // arrives in later slices; until then it is denied, never silently accepted.
-use protocol::main;
-use protocol::matrix;
-use shared::state::State;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::kernel;
-use runtime::server::main::Event;
-use runtime::connection::main::Frame;
-use world::level;
-use world::surfaces;
-use world::geometry;
-use world::geometry::Grant;
-use world::geometry::zeros_from;
-use world::main::owner_command;
-use policy::requests::desktop::CONFIGURE;
-use policy::requests::desktop::LAUNCHER_FALLBACK;
-use policy::requests::desktop::SAVE_RECOVERY_GRANT;
-use policy::requests::desktop::SAVE_RECOVERY_POLL;
-use world::scopes;
-use world::scopes::Bound;
-use connections::source;
-use children::lifecycle;
-use connections::storage::storage;
-use children::stored;
-use children::launch::authority;
-use children::forward;
-use connections::upstream;
-use realm::jobs;
-use connections::listing;
-use stopping;
+use {protocol}/main.omg;
+use {protocol}/matrix.omg;
+use {shared}/state.omg as shared_state;
+use {runtime}/kernel.omg;
+use {runtime}/server/main.omg as server_main;
+use {runtime}/connection/main.omg as connection_main;
+use {world}/level.omg;
+use {world}/surfaces.omg;
+use {world}/geometry.omg;
+use {world}/main.omg as world_main;
+use {policy}/requests/desktop.omg;
+use {world}/scopes.omg;
+use {connections}/source.omg;
+use {children}/lifecycle.omg;
+use {connections}/storage/storage.omg;
+use {children}/stored.omg;
+use {children}/launch/authority.omg;
+use {children}/forward.omg;
+use {connections}/upstream.omg;
+use {realm}/jobs.omg;
+use {connections}/listing.omg;
+use stopping.omg;
 
-public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
+public machine step(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     transition {
         context.owner.peer.fault != 0u64 -> (context.owner.peer.fault)
-        context.stopping.active -> block stopping::step(gate, context, now)
+        context.stopping.active -> block |stopping|::step(gate, context, now)
         context.scene_owner.active && !context.presentation_work.active -> block queued(gate, context, now)
         context.owner.pending != 0u64 -> block held(gate, context, now)
         _ -> block receive(gate, context, now)
     }
 }
-machine held(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
-    let status: u64 = block runtime::server::main::maintain(gate, &mut context.owner, now);
+machine held(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64) -> u64 reaches |kernel|::Kernel {
+    let status: u64 = block |server_main|::maintain(gate, &mut context.owner, now);
     0u64
 }
-machine receive(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
-    let event: Event = block runtime::server::main::poll(gate, &mut context.owner, now);
+machine receive(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64) -> u64 reaches |kernel|::Kernel {
+    let event: |server_main|::Event = block |server_main|::poll(gate, &mut context.owner, now);
     transition event {
-        Event::Request { frame } -> block command(gate, context, now, frame)
-        Event::Pending -> (0u64)
-        Event::Failed { code } -> (code)
+        |server_main|::Event::Request { frame } -> block command(gate, context, now, frame)
+        |server_main|::Event::Pending -> (0u64)
+        |server_main|::Event::Failed { code } -> (code)
     }
 }
-machine queued(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
-    let frame: Frame = context.scene_owner.frame;
+machine queued(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64) -> u64 reaches |kernel|::Kernel {
+    let frame: |connection_main|::Frame = context.scene_owner.frame;
     context.scene_owner.active = false;
     block command(gate, context, now, frame)
 }
-machine command(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel {
+machine command(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, frame: |connection_main|::Frame) -> u64 reaches |kernel|::Kernel {
     transition {
-        frame.payload[0] == HEALTH -> block dispatch(gate, context, now, frame)
-        forward::routed(frame.payload[0]) -> block dispatch(gate, context, now, frame)
-        frame.payload[0] == LOSS && zeros_from(&frame.payload, 1u64) -> block dispatch(gate, context, now, frame)
-        frame.payload[0] == STOP -> block stopping::begin(gate, context, frame)
+        frame.payload[0] == |main|::HEALTH -> block dispatch(gate, context, now, frame)
+        |forward|::routed(frame.payload[0]) -> block dispatch(gate, context, now, frame)
+        frame.payload[0] == |main|::LOSS && |geometry|::zeros_from(&frame.payload, 1u64) -> block dispatch(gate, context, now, frame)
+        frame.payload[0] == |matrix|::STOP -> block |stopping|::begin(gate, context, frame)
         context.presentation_work.active -> queued(context, frame)
         _ -> block placed(gate, context, now, frame)
     }
-    machine queued(context: &mut State, frame: Frame) -> u64 {
+    machine queued(context: &mut |shared_state|::State, frame: |connection_main|::Frame) -> u64 {
         context.scene_owner.active = true;
         context.scene_owner.frame = frame;
         0u64
     }
 }
-machine placed(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel {
-    let unplaced: bool = context.has_parent && !geometry::valid_grant(context.world.parent);
+machine placed(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, frame: |connection_main|::Frame) -> u64 reaches |kernel|::Kernel {
+    let unplaced: bool = context.has_parent && !|geometry|::valid_grant(context.world.parent);
     transition unplaced {
         true -> block refreshed(gate, context, now, frame)
         _ -> block dispatch(gate, context, now, frame)
     }
 }
-machine refreshed(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel {
-    let status: u64 = block upstream::refresh(gate, context, now);
+machine refreshed(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, frame: |connection_main|::Frame) -> u64 reaches |kernel|::Kernel {
+    let status: u64 = block |upstream|::refresh(gate, context, now);
     block dispatch(gate, context, now, frame)
 }
-machine dispatch(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel {
-    let routed: bool = forward::routed(frame.payload[0]);
-    let child_word: bool = lifecycle::owner_word(frame.payload[0]);
-    let storage_word: bool = storage::owner_word(frame.payload[0]);
-    let stored_word: bool = stored::owner_word(frame.payload[0]);
+machine dispatch(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, frame: |connection_main|::Frame) -> u64 reaches |kernel|::Kernel {
+    let routed: bool = |forward|::routed(frame.payload[0]);
+    let child_word: bool = |lifecycle|::owner_word(frame.payload[0]);
+    let storage_word: bool = |storage|::owner_word(frame.payload[0]);
+    let stored_word: bool = |stored|::owner_word(frame.payload[0]);
     transition {
-        frame.bytes != 64u64 -> block reply(gate, context, error(kernel::DENIED))
-        routed -> block forward::owner(gate, context, now, frame)
+        frame.bytes != 64u64 -> block reply(gate, context, error(|kernel|::DENIED))
+        routed -> block |forward|::owner(gate, context, now, frame)
         // Only the canonical loss question may begin a close survey.
-        frame.payload[0] == LOSS && zeros_from(&frame.payload, 1u64) -> block forward::survey(gate, context, now)
-        child_word -> block lifecycle::owner(gate, context, now, frame)
-        storage_word -> block storage::owner(gate, context, now, frame)
-        stored_word -> block stored::owner(gate, context, now, frame)
-        frame.payload[0] == HEALTH && zeros_from(&frame.payload, 1u64) -> block reply(gate, context, ok())
-        frame.payload[0] == BIND && zeros_from(&frame.payload, 4u64) && !context.has_parent ->
+        frame.payload[0] == |main|::LOSS && |geometry|::zeros_from(&frame.payload, 1u64) -> block |forward|::survey(gate, context, now)
+        child_word -> block |lifecycle|::owner(gate, context, now, frame)
+        storage_word -> block |storage|::owner(gate, context, now, frame)
+        stored_word -> block |stored|::owner(gate, context, now, frame)
+        frame.payload[0] == |main|::HEALTH && |geometry|::zeros_from(&frame.payload, 1u64) -> block reply(gate, context, ok())
+        frame.payload[0] == |matrix|::BIND && |geometry|::zeros_from(&frame.payload, 4u64) && !context.has_parent ->
             block bound(gate, context, frame.payload[1], frame.payload[2], frame.payload[3])
-        frame.payload[0] == LAUNCH_IMAGES || frame.payload[0] == LAUNCH_POLICY || frame.payload[0] == LAUNCH_PLACE ->
+        frame.payload[0] == |matrix|::LAUNCH_IMAGES || frame.payload[0] == |matrix|::LAUNCH_POLICY || frame.payload[0] == |matrix|::LAUNCH_PLACE ->
             block policy(gate, context, frame)
-        frame.payload[0] == CONFIGURE && zeros_from(&frame.payload, 1u64) -> block configuring(gate, context, now)
-        frame.payload[0] == RESTORE_STORAGE && zeros_from(&frame.payload, 1u64) -> block restoring(gate, context, now, 0u64)
-        frame.payload[0] == LAUNCHER_FALLBACK && zeros_from(&frame.payload, 3u64) -> block fallback(gate, context, frame.payload[1], frame.payload[2])
-        frame.payload[0] == SAVE_RECOVERY_GRANT && zeros_from(&frame.payload, 3u64) ->
+        frame.payload[0] == |desktop|::CONFIGURE && |geometry|::zeros_from(&frame.payload, 1u64) -> block configuring(gate, context, now)
+        frame.payload[0] == |matrix|::RESTORE_STORAGE && |geometry|::zeros_from(&frame.payload, 1u64) -> block restoring(gate, context, now, 0u64)
+        frame.payload[0] == |desktop|::LAUNCHER_FALLBACK && |geometry|::zeros_from(&frame.payload, 3u64) -> block fallback(gate, context, frame.payload[1], frame.payload[2])
+        frame.payload[0] == |desktop|::SAVE_RECOVERY_GRANT && |geometry|::zeros_from(&frame.payload, 3u64) ->
             block recovery_grant(gate, context, frame.payload[1], frame.payload[2])
-        frame.payload[0] == SAVE_RECOVERY_POLL && zeros_from(&frame.payload, 2u64) -> block recovery_poll(gate, context, frame.payload[1])
-        frame.payload[0] == RESOLVE_PATH -> block resolving(gate, context, now, frame)
+        frame.payload[0] == |desktop|::SAVE_RECOVERY_POLL && |geometry|::zeros_from(&frame.payload, 2u64) -> block recovery_poll(gate, context, frame.payload[1])
+        frame.payload[0] == |matrix|::RESOLVE_PATH -> block resolving(gate, context, now, frame)
         _ -> block arranged(gate, context, frame)
     }
 }
 // The configuration job from the realm's saved record; idempotent once a workspace stands.
 // The configuration job runs over later turns; its result answers the owner.
-machine configuring(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
-    block jobs::configure(gate, context)
+machine configuring(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64) -> u64 reaches |kernel|::Kernel {
+    block |jobs|::configure(gate, context)
 }
 // Remake every live child's remembered binding after the provider was
 // replaced; one that already stands is kept.
-machine restoring(gate: &Gate, context: &mut State, now: u64, slot: u64) -> u64 reaches Kernel requires slot <= 5u64 {
+machine restoring(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, slot: u64) -> u64 reaches |kernel|::Kernel requires slot <= 5u64 {
     transition slot < 5u64 {
         true -> block restore_slot(gate, context, now, slot)
         _ -> block reply(gate, context, ok())
     }
-    machine restore_slot(gate: &Gate, context: &mut State, now: u64, slot: u64) -> u64 reaches Kernel requires slot < 5u64 {
+    machine restore_slot(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, slot: u64) -> u64 reaches |kernel|::Kernel requires slot < 5u64 {
         let source: u64 = context.saved_source[slot];
         let scope: u64 = context.saved_scope[slot];
         transition context.saved_bound[slot] && context.slots[slot].live {
@@ -142,11 +134,11 @@ machine restoring(gate: &Gate, context: &mut State, now: u64, slot: u64) -> u64 
             _ -> block restoring(gate, context, now, slot + 1u64)
         }
     }
-    machine rebinding(gate: &Gate, context: &mut State, now: u64, slot: u64, source: u64, subtree: u64) -> u64 reaches Kernel requires slot < 5u64 {
-        let status: u64 = block storage::bind(gate, context, now, slot, source, subtree);
-        let held: Bound = scopes::binding(&context.store.scopes, slot, context.store.listeners[slot].incarnation);
+    machine rebinding(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, slot: u64, source: u64, subtree: u64) -> u64 reaches |kernel|::Kernel requires slot < 5u64 {
+        let status: u64 = block |storage|::bind(gate, context, now, slot, source, subtree);
+        let held: |scopes|::Bound = |scopes|::binding(&context.store.scopes, slot, context.store.listeners[slot].incarnation);
         let same: bool = held.status == 0u64 && held.source == source && held.scope == subtree;
-        transition status == 0u64 || (status == kernel::BUSY && same) {
+        transition status == 0u64 || (status == |kernel|::BUSY && same) {
             true -> block restoring(gate, context, now, slot + 1u64)
             _ -> block reply(gate, context, error(status))
         }
@@ -154,24 +146,24 @@ machine restoring(gate: &Gate, context: &mut State, now: u64, slot: u64) -> u64 
 }
 // [LAUNCHER_FALLBACK, image plus one or zero, argument]: the catalogue image a
 // failed launcher is replaced by, remembered for recovery.
-machine fallback(gate: &Gate, context: &mut State, image: u64, argument: u64) -> u64 reaches Kernel {
+machine fallback(gate: &|kernel|::Gate, context: &mut |shared_state|::State, image: u64, argument: u64) -> u64 reaches |kernel|::Kernel {
     transition {
         image == 0u64 -> block fallback_cleared(gate, context)
-        image <= 14u64 -> block fallback_checked(gate, context, image, argument, runtime::task::main::image_at(gate, image - 1u64))
-        _ -> block reply(gate, context, error(kernel::DENIED))
+        image <= 14u64 -> block fallback_checked(gate, context, image, argument, |task_main|::image_at(gate, image - 1u64))
+        _ -> block reply(gate, context, error(|kernel|::DENIED))
     }
-    machine fallback_cleared(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+    machine fallback_cleared(gate: &|kernel|::Gate, context: &mut |shared_state|::State) -> u64 reaches |kernel|::Kernel {
         context.fallback_image = 0u64;
         context.fallback_argument = 0u64;
         block reply(gate, context, ok())
     }
-    machine fallback_checked(gate: &Gate, context: &mut State, image: u64, argument: u64, grant: u64) -> u64 reaches Kernel {
-        transition grant < kernel::ERROR_BASE {
+    machine fallback_checked(gate: &|kernel|::Gate, context: &mut |shared_state|::State, image: u64, argument: u64, grant: u64) -> u64 reaches |kernel|::Kernel {
+        transition grant < |kernel|::ERROR_BASE {
             true -> block fallback_kept(gate, context, image, argument)
             _ -> block reply(gate, context, error(grant))
         }
     }
-    machine fallback_kept(gate: &Gate, context: &mut State, image: u64, argument: u64) -> u64 reaches Kernel {
+    machine fallback_kept(gate: &|kernel|::Gate, context: &mut |shared_state|::State, image: u64, argument: u64) -> u64 reaches |kernel|::Kernel {
         context.fallback_image = image;
         context.fallback_argument = argument;
         block reply(gate, context, ok())
@@ -179,75 +171,75 @@ machine fallback(gate: &Gate, context: &mut State, image: u64, argument: u64) ->
 }
 // [SAVE_RECOVERY_GRANT, slot, enabled]: the child in the slot may request the
 // save recovery the owner polls for.
-machine recovery_grant(gate: &Gate, context: &mut State, slot: u64, enabled: u64) -> u64 reaches Kernel {
+machine recovery_grant(gate: &|kernel|::Gate, context: &mut |shared_state|::State, slot: u64, enabled: u64) -> u64 reaches |kernel|::Kernel {
     transition slot < 5u64 && enabled <= 1u64 {
         true -> block recovery_slot(gate, context, slot, enabled)
-        _ -> block reply(gate, context, error(kernel::DENIED))
+        _ -> block reply(gate, context, error(|kernel|::DENIED))
     }
-    machine recovery_slot(gate: &Gate, context: &mut State, slot: u64, enabled: u64) -> u64 reaches Kernel requires slot < 5u64 && enabled <= 1u64 {
+    machine recovery_slot(gate: &|kernel|::Gate, context: &mut |shared_state|::State, slot: u64, enabled: u64) -> u64 reaches |kernel|::Kernel requires slot < 5u64 && enabled <= 1u64 {
         transition {
-            enabled == 1u64 && !context.slots[slot].live -> block reply(gate, context, error(kernel::DENIED))
+            enabled == 1u64 && !context.slots[slot].live -> block reply(gate, context, error(|kernel|::DENIED))
             enabled == 1u64 -> block recovery_set(gate, context, context.recovery_grants | (1u64 << slot))
             _ -> block recovery_set(gate, context, context.recovery_grants & ~(1u64 << slot))
         }
     }
-    machine recovery_set(gate: &Gate, context: &mut State, grants: u64) -> u64 reaches Kernel {
+    machine recovery_set(gate: &|kernel|::Gate, context: &mut |shared_state|::State, grants: u64) -> u64 reaches |kernel|::Kernel {
         context.recovery_grants = grants;
         block reply(gate, context, ok())
     }
 }
 // [SAVE_RECOVERY_POLL, state] -> [0, requested]: the root reports whether a
 // child asked for save recovery; none can yet.
-machine recovery_poll(gate: &Gate, context: &mut State, state: u64) -> u64 reaches Kernel {
+machine recovery_poll(gate: &|kernel|::Gate, context: &mut |shared_state|::State, state: u64) -> u64 reaches |kernel|::Kernel {
     transition state <= 2u64 && !context.has_parent {
         true -> block reply(gate, context, ok())
-        _ -> block reply(gate, context, error(kernel::DENIED))
+        _ -> block reply(gate, context, error(|kernel|::DENIED))
     }
 }
-machine resolving(gate: &Gate, context: &mut State, now: u64, frame: Frame) -> u64 reaches Kernel {
+machine resolving(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, frame: |connection_main|::Frame) -> u64 reaches |kernel|::Kernel {
     let words: [u64; 8] = frame.payload;
-    let answer: [u64; 8] = block listing::resolve(gate, context, now, &words);
+    let answer: [u64; 8] = block |listing|::resolve(gate, context, now, &words);
     block reply(gate, context, answer)
 }
 // The root binding: the display's extent and keys become this world's grant,
 // with the compositor's whole tile allowance behind it and the source streams bound.
-machine bound(gate: &Gate, context: &mut State, width: u64, height: u64, keys: u64) -> u64 reaches Kernel {
-    transition width >= 1u64 && width <= MAX_EXTENT && height >= 1u64 && height <= MAX_EXTENT && (keys & ~VALID_KEY_MASK) == 0u64 {
+machine bound(gate: &|kernel|::Gate, context: &mut |shared_state|::State, width: u64, height: u64, keys: u64) -> u64 reaches |kernel|::Kernel {
+    transition width >= 1u64 && width <= |main|::MAX_EXTENT && height >= 1u64 && height <= |main|::MAX_EXTENT && (keys & ~|main|::VALID_KEY_MASK) == 0u64 {
         true -> block binding(gate, context, width, height, keys)
-        _ -> block reply(gate, context, error(kernel::DENIED))
+        _ -> block reply(gate, context, error(|kernel|::DENIED))
     }
 }
-machine binding(gate: &Gate, context: &mut State, width: u64, height: u64, keys: u64) -> u64 reaches Kernel {
+machine binding(gate: &|kernel|::Gate, context: &mut |shared_state|::State, width: u64, height: u64, keys: u64) -> u64 reaches |kernel|::Kernel {
     context.width = width;
     context.height = height;
     context.keys = keys;
-    level::inherit(&mut context.world, Grant { epoch: 1u64, width: width, height: height, keys: keys });
-    surfaces::capacity(&mut context.world, MAX_SURFACES);
-    let status: u64 = source::bind_streams(&mut context.world);
+    |level|::inherit(&mut context.world, |geometry|::Grant { epoch: 1u64, width: width, height: height, keys: keys });
+    |surfaces|::capacity(&mut context.world, |main|::MAX_SURFACES);
+    let status: u64 = |source|::bind_streams(&mut context.world);
     block reply(gate, context, error(status))
 }
 // Policy for the next launch into a slot: permitted images, resource ceilings
 // and the placement it will receive. Recorded now, applied when launches arrive.
-machine policy(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Kernel {
+machine policy(gate: &|kernel|::Gate, context: &mut |shared_state|::State, frame: |connection_main|::Frame) -> u64 reaches |kernel|::Kernel {
     transition frame.payload[1] < 5u64 {
         true -> block slotted(gate, context, frame, frame.payload[1])
-        _ -> block reply(gate, context, error(kernel::DENIED))
+        _ -> block reply(gate, context, error(|kernel|::DENIED))
     }
-    machine slotted(gate: &Gate, context: &mut State, frame: Frame, slot: u64 [0..=4]) -> u64 reaches Kernel {
+    machine slotted(gate: &|kernel|::Gate, context: &mut |shared_state|::State, frame: |connection_main|::Frame, slot: u64 [0..=4]) -> u64 reaches |kernel|::Kernel {
         transition {
-            frame.payload[0] == LAUNCH_IMAGES && zeros_from(&frame.payload, 3u64) -> block images(gate, context, slot, frame.payload[2])
-            frame.payload[0] == LAUNCH_POLICY -> block ceilings(gate, context, frame, slot)
-            frame.payload[0] == LAUNCH_PLACE && frame.payload[7] == 0u64 -> block placement(gate, context, frame, slot)
-            _ -> block reply(gate, context, error(kernel::DENIED))
+            frame.payload[0] == |matrix|::LAUNCH_IMAGES && |geometry|::zeros_from(&frame.payload, 3u64) -> block images(gate, context, slot, frame.payload[2])
+            frame.payload[0] == |matrix|::LAUNCH_POLICY -> block ceilings(gate, context, frame, slot)
+            frame.payload[0] == |matrix|::LAUNCH_PLACE && frame.payload[7] == 0u64 -> block placement(gate, context, frame, slot)
+            _ -> block reply(gate, context, error(|kernel|::DENIED))
         }
     }
-    machine images(gate: &Gate, context: &mut State, slot: u64 [0..=4], mask: u64) -> u64 reaches Kernel {
-        authority::policy_changed(context, slot);
+    machine images(gate: &|kernel|::Gate, context: &mut |shared_state|::State, slot: u64 [0..=4], mask: u64) -> u64 reaches |kernel|::Kernel {
+        |authority|::policy_changed(context, slot);
         context.policies[slot].images = mask;
         block reply(gate, context, ok())
     }
-    machine ceilings(gate: &Gate, context: &mut State, frame: Frame, slot: u64 [0..=4]) -> u64 reaches Kernel {
-        authority::policy_changed(context, slot);
+    machine ceilings(gate: &|kernel|::Gate, context: &mut |shared_state|::State, frame: |connection_main|::Frame, slot: u64 [0..=4]) -> u64 reaches |kernel|::Kernel {
+        |authority|::policy_changed(context, slot);
         context.policies[slot].private_pages = frame.payload[2];
         context.policies[slot].reader_pages = frame.payload[3];
         context.policies[slot].channels = frame.payload[4];
@@ -257,8 +249,8 @@ machine policy(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Ke
         context.policies[slot].standing = true;
         block reply(gate, context, ok())
     }
-    machine placement(gate: &Gate, context: &mut State, frame: Frame, slot: u64 [0..=4]) -> u64 reaches Kernel {
-        authority::policy_changed(context, slot);
+    machine placement(gate: &|kernel|::Gate, context: &mut |shared_state|::State, frame: |connection_main|::Frame, slot: u64 [0..=4]) -> u64 reaches |kernel|::Kernel {
+        |authority|::policy_changed(context, slot);
         context.policies[slot].placed = true;
         context.policies[slot].x = frame.payload[2];
         context.policies[slot].y = frame.payload[3];
@@ -268,12 +260,12 @@ machine policy(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Ke
         block reply(gate, context, ok())
     }
 }
-machine arranged(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Kernel {
-    let answer: [u64; 8] = owner_command(&mut context.world, &frame.payload);
+machine arranged(gate: &|kernel|::Gate, context: &mut |shared_state|::State, frame: |connection_main|::Frame) -> u64 reaches |kernel|::Kernel {
+    let answer: [u64; 8] = |world_main|::owner_command(&mut context.world, &frame.payload);
     block reply(gate, context, answer)
 }
-machine reply(gate: &Gate, context: &mut State, words: [u64; 8]) -> u64 reaches Kernel {
-    block runtime::server::main::reply(gate, &mut context.owner, &words)
+machine reply(gate: &|kernel|::Gate, context: &mut |shared_state|::State, words: [u64; 8]) -> u64 reaches |kernel|::Kernel {
+    block |server_main|::reply(gate, &mut context.owner, &words)
 }
 machine error(code: u64) -> [u64; 8] {
     let mut words: [u64; 8];

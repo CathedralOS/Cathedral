@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Original bounded initialized-byte helpers; strict parsing uses no reference casts.
-module bytes;
-use headers::ChecksumResult;
+use {omega}/language/core/nat.omg;
+use headers.omg;
 pub machine le32(input: &[u8; 4096], offset: u64) -> u32 requires offset <= 4092; {
     let o1: u64 = offset + 1;
     let o2: u64 = offset + 2;
@@ -28,23 +28,23 @@ pub machine le64(input: &[u8; 4096], offset: u64) -> u64 requires offset <= 4088
         (input[offset] as u64) | ((input[o1] as u64) << 8) | ((input[o2] as u64) << 16) | ((input[o3] as u64) << 24) | ((input[o4] as u64) << 32) | ((input[o5] as u64) << 40) | ((input[o6] as u64) << 48) | ((input[o7] as u64) << 56)
     }
 }
-pub machine checksum(input: &[u8; 4096], length: u64) -> ChecksumResult {
-    transition length <= 4096 { true -> bounded(input, length) _ -> (ChecksumResult { error: 1 }) }
-    state bounded(input: &[u8; 4096], length: u64) -> ChecksumResult {
+pub machine checksum(input: &[u8; 4096], length: u64) -> |headers|::ChecksumResult {
+    transition length <= 4096 { true -> bounded(input, length) _ -> (|headers|::ChecksumResult { error: 1 }) }
+    state bounded(input: &[u8; 4096], length: u64) -> |headers|::ChecksumResult {
         let blocks: u64 = length / 8;
-        transition blocks <= 512 { true -> chunks(input, length, blocks) _ -> (ChecksumResult { error: 1 }) }
+        transition blocks <= 512 { true -> chunks(input, length, blocks) _ -> (|headers|::ChecksumResult { error: 1 }) }
     }
-    state chunks(input: &[u8; 4096], length: u64, blocks: u64) -> ChecksumResult {
+    state chunks(input: &[u8; 4096], length: u64, blocks: u64) -> |headers|::ChecksumResult {
         let start: u64 = blocks * 8;
         let sum: u16 = checksum_blocks(input, blocks, 0, 0);
-        let result: ChecksumResult = checksum_scan(input, length, start, sum);
+        let result: |headers|::ChecksumResult = checksum_scan(input, length, start, sum);
         result
     }
 }
 // Eight-byte blocks keep the ordinary semantic evaluator within its fixed
 // work budget for a full-capacity input. The final scan handles at most 7 bytes.
 machine checksum_blocks(input: &[u8; 4096], blocks: u64, index: u64, sum: u16)
-terminates by (index, blocks) -> Nat::BoundedDistance;
+terminates by (index, blocks) -> |nat|::Nat::BoundedDistance;
 -> u16 {
     let next: u16 = checksum_block(input, blocks, index, sum);
     transition index < blocks {
@@ -74,12 +74,12 @@ machine checksum_block(input: &[u8; 4096], blocks: u64, index: u64, sum: u16) ->
     }
 }
 machine checksum_scan(input: &[u8; 4096], length: u64, index: u64, sum: u16)
-terminates by (index, length) -> Nat::BoundedDistance;
--> ChecksumResult {
+terminates by (index, length) -> |nat|::Nat::BoundedDistance;
+-> |headers|::ChecksumResult {
     let next: u16 = checksum_step(input, length, index, sum);
     transition index < length {
         true -> checksum_scan(input, length, index + 1, next)
-        _ -> (ChecksumResult { sum: (sum & 255) as u8 })
+        _ -> (|headers|::ChecksumResult { sum: (sum & 255) as u8 })
     }
 }
 machine checksum_step(input: &[u8; 4096], length: u64, index: u64, sum: u16) -> u16 {

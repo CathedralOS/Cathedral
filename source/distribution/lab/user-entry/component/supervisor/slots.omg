@@ -1,24 +1,19 @@
-module supervisor::slots;
+use {runtime}/admission/main.omg as admission_main;
 // One slot per turn: a retired listener means the child left, so reclaim it;
 // a held request is maintained; otherwise take one request. Acquisition goes to
 // the runtime's offer, request word 10 is held unanswered, anything else echoes.
 // A copied message on the provider's storage end counts as stored.
-use supervisor::main::State;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::kernel;
-use runtime::server::main::Event;
-use runtime::server::main::Ticket;
-use runtime::connection::main::Frame;
-use runtime::task::main::Exit;
-use runtime::admission::retirement;
-use runtime::admission::retirement::Retirement;
-use runtime::admission::retirement::Outcome;
-use runtime::waiting::Set;
-use runtime::admission::offer;
-use runtime::admission::pending::Progress;
-use protocol::services::ACQUIRE;
-public machine step(gate: &Gate, context: &mut State, slot: u64 [0..=1], now: u64) -> u64 reaches Kernel blocks invokes Kernel {
+use supervisor/main.omg;
+use {runtime}/kernel.omg;
+use {runtime}/server/main.omg as server_main;
+use {runtime}/connection/main.omg as connection_main;
+use {runtime}/task/main.omg as task_main;
+use {runtime}/admission/retirement.omg;
+use {runtime}/waiting.omg;
+use {runtime}/admission/offer.omg;
+use {runtime}/admission/pending.omg;
+use {protocol}/services.omg;
+public machine step(gate: &|kernel|::Gate, context: &mut |main|::State, slot: u64 [0..=1], now: u64) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     transition {
         context.stopping[slot] -> block collecting(gate, context, slot)
         context.slots[slot].pending != 0u64 -> block admitting(gate, context, slot)
@@ -28,17 +23,17 @@ public machine step(gate: &Gate, context: &mut State, slot: u64 [0..=1], now: u6
         _ -> block receive(gate, context, slot, now)
     }
 }
-machine admitting(gate: &Gate, context: &mut State, slot: u64 [0..=1]) -> u64 reaches Kernel {
+machine admitting(gate: &|kernel|::Gate, context: &mut |main|::State, slot: u64 [0..=1]) -> u64 reaches |kernel|::Kernel {
     let clock: u64 = admission_clock(context, slot);
-    let progress: Progress = block runtime::admission::pending::poll(gate, &mut context.slots[slot], clock, 300u64, false);
+    let progress: |pending|::Progress = block |pending|::poll(gate, &mut context.slots[slot], clock, 300u64, false);
     transition progress {
-        Progress::Failed { code } -> failed(context, slot, code)
+        |pending|::Progress::Failed { code } -> failed(context, slot, code)
         _ -> (0u64)
     }
-    machine failed(context: &mut State, slot: u64 [0..=1], code: u64) -> u64 {
+    machine failed(context: &mut |main|::State, slot: u64 [0..=1], code: u64) -> u64 {
         // The fault must return before collection, with the real task ticket and
         // acquired control intact, and no names for the moved broker endpoints.
-        transition !context.invalid_clock[slot] || (code == kernel::BAD_HANDLE
+        transition !context.invalid_clock[slot] || (code == |kernel|::BAD_HANDLE
             && context.slots[slot].live && context.slots[slot].task != 0u64
             && context.slots[slot].pending == 0u64 && context.slots[slot].control.sender != 0u64
             && context.slots[slot].handoff[0] == 0u64 && context.slots[slot].handoff[1] == 0u64) {
@@ -46,116 +41,116 @@ machine admitting(gate: &Gate, context: &mut State, slot: u64 [0..=1]) -> u64 re
             _ -> (324u64)
         }
     }
-    machine retained(context: &mut State, slot: u64 [0..=1], code: u64) -> u64 {
+    machine retained(context: &mut |main|::State, slot: u64 [0..=1], code: u64) -> u64 {
         context.admission_failures[slot] = code;
         context.stopping[slot] = true;
         0u64
     }
 }
-machine admission_clock(context: &State, slot: u64 [0..=1]) -> u64 {
+machine admission_clock(context: &|main|::State, slot: u64 [0..=1]) -> u64 {
     transition context.invalid_clock[slot] { true -> (0u64) _ -> (context.clock) }
 }
-machine departed(gate: &Gate, context: &mut State, slot: u64 [0..=1]) -> u64 reaches Kernel {
+machine departed(gate: &|kernel|::Gate, context: &mut |main|::State, slot: u64 [0..=1]) -> u64 reaches |kernel|::Kernel {
     block reclaim(gate, context, slot);
     0u64
 }
-machine held(gate: &Gate, context: &mut State, slot: u64 [0..=1], now: u64) -> u64 reaches Kernel {
-    let status: u64 = block runtime::server::main::maintain(gate, &mut context.slots[slot].listener, now);
+machine held(gate: &|kernel|::Gate, context: &mut |main|::State, slot: u64 [0..=1], now: u64) -> u64 reaches |kernel|::Kernel {
+    let status: u64 = block |server_main|::maintain(gate, &mut context.slots[slot].listener, now);
     block storage(gate, context, slot, now)
 }
-machine receive(gate: &Gate, context: &mut State, slot: u64 [0..=1], now: u64) -> u64 reaches Kernel {
-    let event: Event = block runtime::server::main::poll(gate, &mut context.slots[slot].listener, now);
+machine receive(gate: &|kernel|::Gate, context: &mut |main|::State, slot: u64 [0..=1], now: u64) -> u64 reaches |kernel|::Kernel {
+    let event: |server_main|::Event = block |server_main|::poll(gate, &mut context.slots[slot].listener, now);
     transition event {
-        Event::Request { frame } -> block request(gate, context, slot, now, frame)
-        Event::Pending -> block storage(gate, context, slot, now)
-        Event::Failed { code } -> block departed(gate, context, slot)
+        |server_main|::Event::Request { frame } -> block request(gate, context, slot, now, frame)
+        |server_main|::Event::Pending -> block storage(gate, context, slot, now)
+        |server_main|::Event::Failed { code } -> block departed(gate, context, slot)
     }
 }
-machine request(gate: &Gate, context: &mut State, slot: u64 [0..=1], now: u64, frame: Frame) -> u64 reaches Kernel {
-    let issued: Ticket = runtime::server::main::ticket(&context.slots[slot].listener);
+machine request(gate: &|kernel|::Gate, context: &mut |main|::State, slot: u64 [0..=1], now: u64, frame: |connection_main|::Frame) -> u64 reaches |kernel|::Kernel {
+    let issued: |server_main|::Ticket = |server_main|::ticket(&context.slots[slot].listener);
     transition {
         frame.bytes != 64u64 -> block departed(gate, context, slot)
-        frame.payload[0] == ACQUIRE -> block acquire(gate, context, slot, now, issued, frame)
+        frame.payload[0] == |services|::ACQUIRE -> block acquire(gate, context, slot, now, issued, frame)
         frame.payload[0] == 10u64 -> block storage(gate, context, slot, now)
         _ -> block echo(gate, context, slot, now, issued, frame)
     }
 }
-machine acquire(gate: &Gate, context: &mut State, slot: u64 [0..=1], now: u64, issued: Ticket, frame: Frame) -> u64 reaches Kernel {
-    let status: u64 = block offer::reply(gate, &mut context.slots[slot], issued, &frame.payload);
+machine acquire(gate: &|kernel|::Gate, context: &mut |main|::State, slot: u64 [0..=1], now: u64, issued: |server_main|::Ticket, frame: |connection_main|::Frame) -> u64 reaches |kernel|::Kernel {
+    let status: u64 = block |offer|::reply(gate, &mut context.slots[slot], issued, &frame.payload);
     block storage(gate, context, slot, now)
 }
-machine echo(gate: &Gate, context: &mut State, slot: u64 [0..=1], now: u64, issued: Ticket, frame: Frame) -> u64 reaches Kernel {
-    let status: u64 = block runtime::server::main::reply_to(gate, &mut context.slots[slot].listener, issued, &frame.payload);
+machine echo(gate: &|kernel|::Gate, context: &mut |main|::State, slot: u64 [0..=1], now: u64, issued: |server_main|::Ticket, frame: |connection_main|::Frame) -> u64 reaches |kernel|::Kernel {
+    let status: u64 = block |server_main|::reply_to(gate, &mut context.slots[slot].listener, issued, &frame.payload);
     context.handled = ((context.handled as u64 in Wrapping) + 1u64) as u64;
     block storage(gate, context, slot, now)
 }
 // Readiness on the provider's storage receiver includes closure; count only
 // delivered messages. The child's departure is reclaimed through its listener.
-machine storage(gate: &Gate, context: &mut State, slot: u64 [0..=1], now: u64) -> u64 reaches Kernel {
+machine storage(gate: &|kernel|::Gate, context: &mut |main|::State, slot: u64 [0..=1], now: u64) -> u64 reaches |kernel|::Kernel {
     let receiver: u64 = context.slots[slot].storage.receiver;
     transition receiver != 0u64 {
         true -> block ready(gate, context, slot, now, receiver)
         _ -> (0u64)
     }
-    machine ready(gate: &Gate, context: &mut State, slot: u64 [0..=1], now: u64, receiver: u64) -> u64 reaches Kernel {
+    machine ready(gate: &|kernel|::Gate, context: &mut |main|::State, slot: u64 [0..=1], now: u64, receiver: u64) -> u64 reaches |kernel|::Kernel {
         let mut interests: [u64; 8];
         interests[1] = receiver;
-        let status: u64 = block Kernel::wait(gate, &interests, 1u64, now);
+        let status: u64 = block |kernel|::Kernel::wait(gate, &interests, 1u64, now);
         transition status == 0u64 {
             true -> block message(gate, context, receiver)
             _ -> (0u64)
         }
     }
-    machine message(gate: &Gate, context: &mut State, receiver: u64) -> u64 reaches Kernel {
+    machine message(gate: &|kernel|::Gate, context: &mut |main|::State, receiver: u64) -> u64 reaches |kernel|::Kernel {
         let mut bytes: [u64; 8];
-        let received: u64 = block Kernel::receive(gate, receiver, &mut bytes);
+        let received: u64 = block |kernel|::Kernel::receive(gate, receiver, &mut bytes);
         transition received <= 64u64 {
             true -> counted(context)
             _ -> (0u64)
         }
     }
-    machine counted(context: &mut State) -> u64 {
+    machine counted(context: &mut |main|::State) -> u64 {
         context.stored = ((context.stored as u64 in Wrapping) + 1u64) as u64;
         0u64
     }
 }
 // Stop, collect and release the slot; remember how the child ended.
-public machine reclaim(gate: &Gate, context: &mut State, slot: u64 [0..=1]) reaches Kernel blocks invokes Kernel {
+public machine reclaim(gate: &|kernel|::Gate, context: &mut |main|::State, slot: u64 [0..=1]) reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     context.stopping[slot] = false;
     transition {
         context.slots[slot].pending != 0u64 -> block abandon(gate, context, slot)
         context.slots[slot].live -> block stopping(gate, context, slot)
         _ -> done()
     }
-    machine abandon(gate: &Gate, context: &mut State, slot: u64 [0..=1]) reaches Kernel {
-        block runtime::admission::main::release(gate, &mut context.slots[slot]);
+    machine abandon(gate: &|kernel|::Gate, context: &mut |main|::State, slot: u64 [0..=1]) reaches |kernel|::Kernel {
+        block |admission_main|::release(gate, &mut context.slots[slot]);
         context.exits[slot] = 3u64;
     }
-    machine stopping(gate: &Gate, context: &mut State, slot: u64 [0..=1]) reaches Kernel {
-        let exit: Exit = block runtime::admission::main::stop(gate, &mut context.slots[slot]);
+    machine stopping(gate: &|kernel|::Gate, context: &mut |main|::State, slot: u64 [0..=1]) reaches |kernel|::Kernel {
+        let exit: |task_main|::Exit = block |admission_main|::stop(gate, &mut context.slots[slot]);
         context.exits[slot] = kind(exit);
     }
 }
-machine kind(exit: Exit) -> u64 {
+machine kind(exit: |task_main|::Exit) -> u64 {
     transition exit {
-        Exit::Returned { status } -> returned(status)
-        Exit::Fault { vector, error, address, instruction } -> (2u64)
-        Exit::Cancelled -> (3u64)
-        Exit::Failed { code } -> (4u64)
+        |task_main|::Exit::Returned { status } -> returned(status)
+        |task_main|::Exit::Fault { vector, error, address, instruction } -> (2u64)
+        |task_main|::Exit::Cancelled -> (3u64)
+        |task_main|::Exit::Failed { code } -> (4u64)
     }
     machine returned(status: u64) -> u64 {
         transition status == 0u64 { true -> (1u64) _ -> (5u64) }
     }
 }
-public machine watch(context: &State, slot: u64 [0..=1], set: &mut Set) {
+public machine watch(context: &|main|::State, slot: u64 [0..=1], set: &mut |waiting|::Set) {
     transition context.slots[slot].live && !context.stopping[slot] {
         true -> watched(context, slot, set)
         _ -> done()
     }
-    machine watched(context: &State, slot: u64 [0..=1], set: &mut Set) {
-        runtime::server::main::watch(&context.slots[slot].listener, set);
+    machine watched(context: &|main|::State, slot: u64 [0..=1], set: &mut |waiting|::Set) {
+        |server_main|::watch(&context.slots[slot].listener, set);
         transition context.slots[slot].storage.receiver != 0u64 {
-            true -> runtime::waiting::add(set, runtime::waiting::IPC, context.slots[slot].storage.receiver)
+            true -> |waiting|::add(set, |waiting|::IPC, context.slots[slot].storage.receiver)
             _ -> done()
         }
     }
@@ -165,30 +160,30 @@ public machine flag(live: bool) -> u64 {
 }
 machine done() {}
 
-public machine collecting(gate: &Gate, context: &mut State, slot: u64 [0..=1]) -> u64 reaches Kernel blocks invokes Kernel {
-    let result: Retirement = retirement::poll(gate, &mut context.slots[slot]);
+public machine collecting(gate: &|kernel|::Gate, context: &mut |main|::State, slot: u64 [0..=1]) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
+    let result: |retirement|::Retirement = |retirement|::poll(gate, &mut context.slots[slot]);
     transition result {
-        Retirement::Pending -> (0u64)
-        Retirement::Failed { code } -> (code)
-        Retirement::Ready { outcome } -> block collected(gate, context, slot, outcome)
+        |retirement|::Retirement::Pending -> (0u64)
+        |retirement|::Retirement::Failed { code } -> (code)
+        |retirement|::Retirement::Ready { outcome } -> block collected(gate, context, slot, outcome)
     }
-    machine collected(gate: &Gate, context: &mut State, slot: u64 [0..=1], outcome: Outcome) -> u64 reaches Kernel {
-        block runtime::admission::main::release(gate, &mut context.slots[slot]);
+    machine collected(gate: &|kernel|::Gate, context: &mut |main|::State, slot: u64 [0..=1], outcome: |retirement|::Outcome) -> u64 reaches |kernel|::Kernel {
+        block |admission_main|::release(gate, &mut context.slots[slot]);
         context.stopping[slot] = false;
         context.exits[slot] = finished_kind(outcome, context.admission_failures[slot]);
         0u64
     }
 }
-machine finished_kind(outcome: Outcome, failure: u64) -> u64 {
+machine finished_kind(outcome: |retirement|::Outcome, failure: u64) -> u64 {
     transition failure != 0u64 { true -> (failure) _ -> stopped_kind(outcome) }
 }
-machine stopped_kind(outcome: Outcome) -> u64 {
+machine stopped_kind(outcome: |retirement|::Outcome) -> u64 {
     transition outcome {
-        Outcome::Collected { exit } -> kind(exit)
-        Outcome::Aborted { code } -> aborted(code)
-        Outcome::Empty -> (0u64)
+        |retirement|::Outcome::Collected { exit } -> kind(exit)
+        |retirement|::Outcome::Aborted { code } -> aborted(code)
+        |retirement|::Outcome::Empty -> (0u64)
     }
     machine aborted(code: u64) -> u64 {
-        transition code == kernel::REVOKED { true -> (3u64) _ -> (code) }
+        transition code == |kernel|::REVOKED { true -> (3u64) _ -> (code) }
     }
 }

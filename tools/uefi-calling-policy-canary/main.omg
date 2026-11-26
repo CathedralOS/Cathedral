@@ -1,7 +1,7 @@
 // Compile-only acceptance root for the UEFI calling-policy contract.
 
-use uefi::uefi;
-use uefi::boot_services;
+use {uefi}/uefi.omg;
+use {uefi}/boot_services.omg;
 
 data Main {
 }

@@ -1,6 +1,6 @@
 // Compile-only acceptance root for the PIT channel-0 programming operation.
 
-use core::pit_8254;
+use {arch}/board/pc/timer/pit.omg;
 
 data Main {
 }

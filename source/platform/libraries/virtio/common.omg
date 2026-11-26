@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified translation of virtio-spec ad565bd701e93fa47bc288d45701e1ae53ac3c12; see PORT.md.
-module common;
 pub data DeviceStatus [copy] { raw: u8; }
 pub const STATUS_ACKNOWLEDGE: DeviceStatus = DeviceStatus { raw: 1 };
 pub const STATUS_DRIVER: DeviceStatus = DeviceStatus { raw: 2 };

@@ -1,5 +1,3 @@
-module children::configuration::placement;
-
 // Checked stock bottom bar and workspace. Every subtraction follows its bound;
 // extreme input values cannot wrap into an accepted rectangle.
 public data Geometry [copy] {

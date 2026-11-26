@@ -1,3 +1,7 @@
+use uefi.omg;
+use boot_services.omg;
+use loaded_image.omg;
+
 // Firmware contracts use the ordinary, revision-pinned std calling vocabulary.
 // Package acquisition and trust decisions remain subject to root review.
 
@@ -12,7 +16,7 @@ machine build(builder: &mut Build) {
     // The package's own review resolves the same named providers its consumer
     // selects. Attached external leaves are ABI definitions, not a competing
     // implicit implementation chosen by import order.
-    Build::select_provider<SimpleTextOutput, UefiTextOutputProvider>(builder, uefi_x86_64);
-    Build::select_provider<BootServices, UefiBootServicesProvider>(builder, uefi_x86_64);
-    Build::select_provider<LoadedImageAccess, UefiLoadedImageProvider>(builder, uefi_x86_64);
+    Build::select_provider<|uefi|::SimpleTextOutput, |uefi|::UefiTextOutputProvider>(builder, uefi_x86_64);
+    Build::select_provider<|boot_services|::BootServices, |boot_services|::UefiBootServicesProvider>(builder, uefi_x86_64);
+    Build::select_provider<|loaded_image|::LoadedImageAccess, |loaded_image|::UefiLoadedImageProvider>(builder, uefi_x86_64);
 }

@@ -1,6 +1,6 @@
 // Compile-only acceptance root for the fixed empty page-table page policy.
 
-use core::x86_page_table;
+use {arch}/isa/x86_64/memory/memory.omg;
 
 data Main {
 }

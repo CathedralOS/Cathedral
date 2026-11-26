@@ -1,138 +1,133 @@
-module storage::storage;
-
 // Confirm before displaying a toggle. After uncertainty, read; never replay.
-use state::State;
-use state::Phase;
-use state::StorageStep;
-use operations::Command;
-use operations::Reply;
-use session::session;
-use storage::record;
-use protocol::main;
+use state.omg as local_state;
+use operations.omg;
+use session/session.omg;
+use storage/record.omg;
+use {protocol}/main.omg;
 
-public machine load(s: &mut State) -> Command {
-    s.phase = Phase::Storage { step: StorageStep::Bound };
+public machine load(s: &mut |local_state|::State) -> |operations|::Command {
+    s.phase = |local_state|::Phase::Storage { step: |local_state|::StorageStep::Bound };
     s.loading = true;
-    Command::BindStorage
+    |operations|::Command::BindStorage
 }
 
-public machine toggle(s: &mut State) -> Command {
-    s.phase = Phase::Storage { step: StorageStep::Saved };
-    Command::Publish { object: s.object, revision: s.revision, realm: 0u64,
-        bytes: storage::record::encode((s.alternate ^ 1u64) & 1u64) }
+public machine toggle(s: &mut |local_state|::State) -> |operations|::Command {
+    s.phase = |local_state|::Phase::Storage { step: |local_state|::StorageStep::Saved };
+    |operations|::Command::Publish { object: s.object, revision: s.revision, realm: 0u64,
+        bytes: |record|::encode((s.alternate ^ 1u64) & 1u64) }
 }
 
-public machine complete(s: &mut State, step: StorageStep, reply: Reply) -> Command {
+public machine complete(s: &mut |local_state|::State, step: |local_state|::StorageStep, reply: |operations|::Reply) -> |operations|::Command {
     transition reply {
-        Reply::Bound { status, realm } -> bound(s, status, realm)
-        Reply::Listed { status, count, object } -> listed(s, step, status, count, object)
-        Reply::Created { status } -> created(s, status)
-        Reply::Read { status, revision, length, bytes } -> read(s, status, revision, length, bytes)
-        Reply::Saved { status, object, revision } -> saved(s, status, object, revision)
-        _ -> (Command::Exit)
+        |operations|::Reply::Bound { status, realm } -> bound(s, status, realm)
+        |operations|::Reply::Listed { status, count, object } -> listed(s, step, status, count, object)
+        |operations|::Reply::Created { status } -> created(s, status)
+        |operations|::Reply::Read { status, revision, length, bytes } -> read(s, status, revision, length, bytes)
+        |operations|::Reply::Saved { status, object, revision } -> saved(s, status, object, revision)
+        _ -> (|operations|::Command::Exit)
     }
 }
 
-machine bound(s: &mut State, status: u64, realm: u64) -> Command {
+machine bound(s: &mut |local_state|::State, status: u64, realm: u64) -> |operations|::Command {
     transition status == 0u64 {
         true -> listing(s, realm)
         _ -> failed(s, status)
     }
-    machine listing(s: &mut State, realm: u64) -> Command {
+    machine listing(s: &mut |local_state|::State, realm: u64) -> |operations|::Command {
         s.realm = realm;
-        s.phase = Phase::Storage { step: StorageStep::Listed };
-        Command::List { realm: realm }
+        s.phase = |local_state|::Phase::Storage { step: |local_state|::StorageStep::Listed };
+        |operations|::Command::List { realm: realm }
     }
 }
 
-machine listed(s: &mut State, step: StorageStep, status: u64, count: u64, object: u64) -> Command {
+machine listed(s: &mut |local_state|::State, step: |local_state|::StorageStep, status: u64, count: u64, object: u64) -> |operations|::Command {
     transition status == 0u64 {
         true -> entries(s, step, count, object)
         _ -> failed(s, status)
     }
-    machine entries(s: &mut State, step: StorageStep, count: u64, object: u64) -> Command {
+    machine entries(s: &mut |local_state|::State, step: |local_state|::StorageStep, count: u64, object: u64) -> |operations|::Command {
         transition count != 0u64 {
             true -> reading(s, object)
             _ -> empty(s, step)
         }
     }
-    machine empty(s: &mut State, step: StorageStep) -> Command {
+    machine empty(s: &mut |local_state|::State, step: |local_state|::StorageStep) -> |operations|::Command {
         transition step {
-            StorageStep::Listed -> create(s)
+            |local_state|::StorageStep::Listed -> create(s)
             _ -> absent(s)
         }
     }
-    machine absent(s: &mut State) -> Command {
+    machine absent(s: &mut |local_state|::State) -> |operations|::Command {
         let status: u64 = s.creation_error;
         transition status == 0u64 {
-            true -> failed(s, IO_ERROR)
+            true -> failed(s, |main|::IO_ERROR)
             _ -> failed(s, status)
         }
     }
-    machine reading(s: &mut State, object: u64) -> Command {
+    machine reading(s: &mut |local_state|::State, object: u64) -> |operations|::Command {
         s.object = object;
-        s.phase = Phase::Storage { step: StorageStep::Read };
-        Command::Read { object: object }
+        s.phase = |local_state|::Phase::Storage { step: |local_state|::StorageStep::Read };
+        |operations|::Command::Read { object: object }
     }
 }
 
-machine create(s: &mut State) -> Command {
-    s.phase = Phase::Storage { step: StorageStep::Created };
-    Command::Publish { object: 0u64, revision: 0u64, realm: s.realm,
-        bytes: storage::record::encode(0u64) }
+machine create(s: &mut |local_state|::State) -> |operations|::Command {
+    s.phase = |local_state|::Phase::Storage { step: |local_state|::StorageStep::Created };
+    |operations|::Command::Publish { object: 0u64, revision: 0u64, realm: s.realm,
+        bytes: |record|::encode(0u64) }
 }
 
-machine created(s: &mut State, status: u64) -> Command {
+machine created(s: &mut |local_state|::State, status: u64) -> |operations|::Command {
     s.creation_error = status;
-    s.phase = Phase::Storage { step: StorageStep::Relisted };
-    Command::List { realm: s.realm }
+    s.phase = |local_state|::Phase::Storage { step: |local_state|::StorageStep::Relisted };
+    |operations|::Command::List { realm: s.realm }
 }
 
-machine read(s: &mut State, status: u64, revision: u64, length: u64, bytes: [u8; 6]) -> Command {
+machine read(s: &mut |local_state|::State, status: u64, revision: u64, length: u64, bytes: [u8; 6]) -> |operations|::Command {
     transition status == 0u64 {
         true -> validate(s, revision, length, bytes)
         _ -> failed(s, status)
     }
-    machine validate(s: &mut State, revision: u64, length: u64, bytes: [u8; 6]) -> Command {
-        transition storage::record::valid(length, &bytes) {
+    machine validate(s: &mut |local_state|::State, revision: u64, length: u64, bytes: [u8; 6]) -> |operations|::Command {
+        transition |record|::valid(length, &bytes) {
             true -> loaded(s, revision, bytes[5] as u64)
-            _ -> failed(s, IO_ERROR)
+            _ -> failed(s, |main|::IO_ERROR)
         }
     }
-    machine loaded(s: &mut State, revision: u64, alternate: u64) -> Command {
+    machine loaded(s: &mut |local_state|::State, revision: u64, alternate: u64) -> |operations|::Command {
         s.revision = revision;
         s.alternate = alternate;
         s.error = 0u64;
         s.dirty = true;
         s.loading = false;
-        session::session::poll(s)
+        |session|::poll(s)
     }
 }
 
-machine saved(s: &mut State, status: u64, object: u64, revision: u64) -> Command {
+machine saved(s: &mut |local_state|::State, status: u64, object: u64, revision: u64) -> |operations|::Command {
     transition status == 0u64 {
         true -> confirmed(s, object, revision)
         _ -> failed(s, status)
     }
-    machine confirmed(s: &mut State, object: u64, revision: u64) -> Command {
+    machine confirmed(s: &mut |local_state|::State, object: u64, revision: u64) -> |operations|::Command {
         s.object = object;
         s.revision = revision;
         s.alternate = (s.alternate ^ 1u64) & 1u64;
         s.error = 0u64;
         s.dirty = true;
-        session::session::after_input(s)
+        |session|::after_input(s)
     }
 }
 
-public machine failed(s: &mut State, status: u64) -> Command {
+public machine failed(s: &mut |local_state|::State, status: u64) -> |operations|::Command {
     s.error = status;
     s.dirty = true;
     transition s.loading {
         true -> resume(s)
-        _ -> session::session::after_input(s)
+        _ -> |session|::after_input(s)
     }
-    machine resume(s: &mut State) -> Command {
+    machine resume(s: &mut |local_state|::State) -> |operations|::Command {
         s.loading = false;
-        session::session::poll(s)
+        |session|::poll(s)
     }
 }

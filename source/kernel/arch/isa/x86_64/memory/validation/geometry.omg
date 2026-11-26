@@ -1,6 +1,4 @@
-module isa::x86_64::memory::validation::geometry;
-
-use facts::x86_page_table_entry;
+use {facts}/x86_page_table_entry.omg;
 
 public const X86_PAGE_TABLE_ENTRY_COUNT: u64 = 512;
 public const X86_BOOTSTRAP_LOW_CANONICAL_MAX: u64 = 0x00007FFFFFFFFFFF;
@@ -33,8 +31,8 @@ public machine x86_bootstrap_address_space_profile()
         translation_level_count: 4,
         index_bits_per_level: 9,
         entries_per_table: X86_PAGE_TABLE_ENTRY_COUNT,
-        page_shift: X86_PAGE_SHIFT,
-        page_bytes: X86_PAGE_BYTES,
+        page_shift: |x86_page_table_entry|::X86_PAGE_SHIFT,
+        page_bytes: |x86_page_table_entry|::X86_PAGE_BYTES,
         level_shifts: [39, 30, 21, 12],
         la57_enabled: false,
     }
@@ -180,7 +178,7 @@ public machine x86_validate_bootstrap_physical_frame_geometry(
         // The mask makes the result domain explicit; the prior envelope check
         // ensures this cannot silently truncate a higher physical-address bit.
         let frame_number: u64 =
-            (address >> X86_PAGE_SHIFT) & X86_PAGE_FRAME_NUMBER_MAX;
+            (address >> |x86_page_table_entry|::X86_PAGE_SHIFT) & |x86_page_table_entry|::X86_PAGE_FRAME_NUMBER_MAX;
         X86BootstrapPhysicalFrameGeometryCheck::GeometryConsistent {
             frame: X86BootstrapPhysicalFrameGeometry {
                 address: address,

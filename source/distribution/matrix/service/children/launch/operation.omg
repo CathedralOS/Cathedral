@@ -1,5 +1,3 @@
-module children::launch::operation;
-
 // Correlation and cleanup obligations for one launch. These values name work;
 // the host retains the authenticated caller, image, bindings and actual task.
 public data Command [copy] {

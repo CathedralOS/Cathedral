@@ -1,8 +1,14 @@
+use main.omg;
+
+use {fixture}/main.omg as fixture_main;
+use {runtime}/arch/x86_64/gate.omg;
+use {runtime}/entry.omg;
+use {runtime}/kernel.omg;
 machine build(builder: &mut Build) {
     Build::application(builder, "cathedral_matrix_handoff_native");
     Build::depend_as(builder, "runtime", Source::Path { location: "../../../../platform/libraries/user-runtime" });
     Build::depend_as(builder, "fixture", Source::Path { location: "../process" });
-    Build::select_provider<runtime::entry::Program, fixture::main::ProgramProvider>(builder, linux_x86_64, CompositionMode::Independent);
-    Build::select_provider<runtime::kernel::Kernel, runtime::arch::x86_64::gate::NativeKernel>(builder, linux_x86_64);
-    Build::bind(builder, linux_x86_64::ProgramEntry, main);
+    Build::select_provider<|entry|::Program, |fixture_main|::ProgramProvider>(builder, linux_x86_64, CompositionMode::Independent);
+    Build::select_provider<|kernel|::Kernel, |gate|::NativeKernel>(builder, linux_x86_64);
+    Build::bind(builder, linux_x86_64::ProgramEntry, |main|::main);
 }

@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified rust-osdev/uefi-rs translation at c0facddf9ba42b74906a37fca2869e6cdbc8da6a.
 // See hii.PORT.md. Inert carriers; pointer/slot bits confer no authority.
-module hii_config;
-use scalars;
-use console;
+use scalars.omg;
+use console.omg;
 
 // Upstream: uefi_raw::protocol::hii::config::ConfigKeywordHandlerProtocol
 pub data ConfigKeywordHandlerProtocol [copy] {
@@ -56,6 +55,6 @@ pub const BROWSER_ACTION_DEFAULT_SAFE: BrowserAction = BrowserAction { raw: 4098
 pub const BROWSER_ACTION_DEFAULT_PLATFORM: BrowserAction = BrowserAction { raw: 8192 };
 pub const BROWSER_ACTION_DEFAULT_HARDWARE: BrowserAction = BrowserAction { raw: 12288 };
 pub const BROWSER_ACTION_DEFAULT_FIRMWARE: BrowserAction = BrowserAction { raw: 16384 };
-pub const CONFIG_KEYWORD_HANDLER_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x0a8badd5, data2: 0x03b8, data3: 0x4d19, data4: [0xb1, 0x28, 0x7b, 0x8f, 0x0e, 0xda, 0xa5, 0x96] };
-pub const HII_CONFIG_ACCESS_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x330d4706, data2: 0xf2a0, data3: 0x4e4f, data4: [0xa3, 0x69, 0xb6, 0x6f, 0xa8, 0xd5, 0x43, 0x85] };
-pub const HII_CONFIG_ROUTING_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x587e72d7, data2: 0xcc50, data3: 0x4f79, data4: [0x82, 0x09, 0xca, 0x29, 0x1f, 0xc1, 0xa1, 0x0f] };
+pub const CONFIG_KEYWORD_HANDLER_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x0a8badd5, data2: 0x03b8, data3: 0x4d19, data4: [0xb1, 0x28, 0x7b, 0x8f, 0x0e, 0xda, 0xa5, 0x96] };
+pub const HII_CONFIG_ACCESS_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x330d4706, data2: 0xf2a0, data3: 0x4e4f, data4: [0xa3, 0x69, 0xb6, 0x6f, 0xa8, 0xd5, 0x43, 0x85] };
+pub const HII_CONFIG_ROUTING_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x587e72d7, data2: 0xcc50, data3: 0x4f79, data4: [0x82, 0x09, 0xca, 0x29, 0x1f, 0xc1, 0xa1, 0x0f] };

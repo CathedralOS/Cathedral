@@ -1,121 +1,112 @@
-module storage::storage;
-
 // Bind -> enumerate -> revision-pinned read. After uncertainty, reconcile;
 // never repeat a mutation automatically or replace an unconfirmed draft.
-use state::State;
-use state::LoadMode;
-use state::Phase;
-use state::StorageStep;
-use operations::Record;
-use operations::StorageReply;
-use operations::StorageResult;
-use operations::Reply;
-use operations::Command;
-use protocol::main;
-use document::document;
-use document::encoding;
-use session::session;
-use session::diagnostics;
+use state.omg as local_state;
+use operations.omg;
+use {protocol}/main.omg;
+use document/document.omg;
+use document/encoding.omg;
+use session/session.omg;
+use session/diagnostics.omg;
 
-public machine load(s: &mut State) -> Command {
-    s.phase = Phase::Storage { step: StorageStep::Bound };
-    Command::BindStorage
+public machine load(s: &mut |local_state|::State) -> |operations|::Command {
+    s.phase = |local_state|::Phase::Storage { step: |local_state|::StorageStep::Bound };
+    |operations|::Command::BindStorage
 }
-machine list(s: &mut State) -> Command {
-    s.phase = Phase::Storage { step: StorageStep::Listed };
-    Command::List { realm: s.realm, after: s.after }
+machine list(s: &mut |local_state|::State) -> |operations|::Command {
+    s.phase = |local_state|::Phase::Storage { step: |local_state|::StorageStep::Listed };
+    |operations|::Command::List { realm: s.realm, after: s.after }
 }
-public machine head(s: &mut State) -> Command {
+public machine head(s: &mut |local_state|::State) -> |operations|::Command {
     transition s.current < s.count && s.current < 8u64 {
         true -> request(s)
-        _ -> failed(s, IO_ERROR)
+        _ -> failed(s, |main|::IO_ERROR)
     }
-    machine request(s: &mut State) -> Command requires s.current < 8u64 {
-        s.phase = Phase::Storage { step: StorageStep::Headed };
-        Command::Head { object: s.ids[s.current] }
+    machine request(s: &mut |local_state|::State) -> |operations|::Command requires s.current < 8u64 {
+        s.phase = |local_state|::Phase::Storage { step: |local_state|::StorageStep::Headed };
+        |operations|::Command::Head { object: s.ids[s.current] }
     }
 }
-public machine save(s: &mut State) -> Command {
+public machine save(s: &mut |local_state|::State) -> |operations|::Command {
     transition s.count == 0u64 {
         true -> create(s)
         _ -> existing(s)
     }
-    machine create(s: &mut State) -> Command {
+    machine create(s: &mut |local_state|::State) -> |operations|::Command {
         let realm: u64 = s.realm;
         publish(s, 0u64, 0u64, realm)
     }
-    machine existing(s: &mut State) -> Command {
+    machine existing(s: &mut |local_state|::State) -> |operations|::Command {
         transition s.current < 8u64 {
             true -> replace(s)
-            _ -> failed(s, IO_ERROR)
+            _ -> failed(s, |main|::IO_ERROR)
         }
     }
-    machine replace(s: &mut State) -> Command requires s.current < 8u64 {
+    machine replace(s: &mut |local_state|::State) -> |operations|::Command requires s.current < 8u64 {
         let object: u64 = s.ids[s.current];
         let revision: u64 = s.revision;
         publish(s, object, revision, 0u64)
     }
-    machine publish(s: &mut State, object: u64, revision: u64, realm: u64) -> Command {
-        s.phase = Phase::Storage { step: StorageStep::Saved };
-        Command::Publish { object: object, revision: revision, realm: realm, record: document::encoding::encode(s) }
+    machine publish(s: &mut |local_state|::State, object: u64, revision: u64, realm: u64) -> |operations|::Command {
+        s.phase = |local_state|::Phase::Storage { step: |local_state|::StorageStep::Saved };
+        |operations|::Command::Publish { object: object, revision: revision, realm: realm, record: |encoding|::encode(s) }
     }
 }
-public machine duplicate(s: &mut State) -> Command {
+public machine duplicate(s: &mut |local_state|::State) -> |operations|::Command {
     transition s.count > 0u64 && s.count < 8u64 && s.current < 8u64 {
         true -> request(s)
-        _ -> failed(s, IO_ERROR)
+        _ -> failed(s, |main|::IO_ERROR)
     }
-    machine request(s: &mut State) -> Command requires s.current < 8u64 {
-        s.phase = Phase::Storage { step: StorageStep::Copied };
-        Command::Copy { object: s.ids[s.current], revision: s.revision, realm: s.realm }
+    machine request(s: &mut |local_state|::State) -> |operations|::Command requires s.current < 8u64 {
+        s.phase = |local_state|::Phase::Storage { step: |local_state|::StorageStep::Copied };
+        |operations|::Command::Copy { object: s.ids[s.current], revision: s.revision, realm: s.realm }
     }
 }
-public machine persistence(s: &mut State, reply: Reply) -> Command {
+public machine persistence(s: &mut |local_state|::State, reply: |operations|::Reply) -> |operations|::Command {
     transition reply {
-        Reply::Storage { reply } -> provider(s, reply)
-        _ -> (Command::Exit)
+        |operations|::Reply::Storage { reply } -> provider(s, reply)
+        _ -> (|operations|::Command::Exit)
     }
-    machine provider(s: &mut State, reply: StorageReply) -> Command {
+    machine provider(s: &mut |local_state|::State, reply: |operations|::StorageReply) -> |operations|::Command {
         transition reply.status == 0u64 {
             true -> dispatch(s, reply.result)
             _ -> failed(s, reply.status)
         }
     }
-    machine dispatch(s: &mut State, result: StorageResult) -> Command {
+    machine dispatch(s: &mut |local_state|::State, result: |operations|::StorageResult) -> |operations|::Command {
         transition result {
-            StorageResult::Bound { realm } -> bound(s, realm)
-            StorageResult::Listed { count, entries } -> listed(s, count, entries)
-            StorageResult::Head { revision, length } -> headed(s, revision, length)
-            StorageResult::Read { revision, reported, record } -> read(s, revision, reported, record)
-            StorageResult::Saved { object, revision } -> saved(s, object, revision)
-            StorageResult::Copied { object } -> copied(s, object)
+            |operations|::StorageResult::Bound { realm } -> bound(s, realm)
+            |operations|::StorageResult::Listed { count, entries } -> listed(s, count, entries)
+            |operations|::StorageResult::Head { revision, length } -> headed(s, revision, length)
+            |operations|::StorageResult::Read { revision, reported, record } -> read(s, revision, reported, record)
+            |operations|::StorageResult::Saved { object, revision } -> saved(s, object, revision)
+            |operations|::StorageResult::Copied { object } -> copied(s, object)
         }
     }
 }
-machine bound(s: &mut State, realm: u64) -> Command {
+machine bound(s: &mut |local_state|::State, realm: u64) -> |operations|::Command {
     s.realm = realm;
     s.count = 0u64;
     s.after = 0u64;
     list(s)
 }
-machine listed(s: &mut State, count: u64, ids: [u64; 6]) -> Command {
+machine listed(s: &mut |local_state|::State, count: u64, ids: [u64; 6]) -> |operations|::Command {
     transition count <= 6u64 {
         true -> entries(s, count, ids, 0u64)
-        _ -> failed(s, IO_ERROR)
+        _ -> failed(s, |main|::IO_ERROR)
     }
-    machine entries(s: &mut State, count: u64, ids: [u64; 6], i: u64) -> Command {
+    machine entries(s: &mut |local_state|::State, count: u64, ids: [u64; 6], i: u64) -> |operations|::Command {
         transition i < count && i < 6u64 && s.count < 8u64 {
             true -> item(s, count, ids, i)
             _ -> listed_all(s, count)
         }
     }
-    machine item(s: &mut State, count: u64, ids: [u64; 6], i: u64) -> Command requires i < 6u64 && s.count < 8u64 {
+    machine item(s: &mut |local_state|::State, count: u64, ids: [u64; 6], i: u64) -> |operations|::Command requires i < 6u64 && s.count < 8u64 {
         transition ids[i] > s.after {
             true -> retain(s, count, ids, i)
-            _ -> failed(s, IO_ERROR)
+            _ -> failed(s, |main|::IO_ERROR)
         }
     }
-    machine retain(s: &mut State, count: u64, ids: [u64; 6], i: u64) -> Command requires i < 6u64 && s.count < 8u64 {
+    machine retain(s: &mut |local_state|::State, count: u64, ids: [u64; 6], i: u64) -> |operations|::Command requires i < 6u64 && s.count < 8u64 {
         s.ids[s.count] = ids[i];
         s.after = ids[i];
         s.count = ((s.count as u64 in Saturating) + 1) as u64;
@@ -123,111 +114,111 @@ machine listed(s: &mut State, count: u64, ids: [u64; 6]) -> Command {
             _ -> entries(s, count, ids, i + 1u64)
         }
     }
-    machine listed_all(s: &mut State, count: u64) -> Command {
+    machine listed_all(s: &mut |local_state|::State, count: u64) -> |operations|::Command {
         transition count == 6u64 && s.count < 8u64 {
             true -> list(s)
             _ -> selected(s)
         }
     }
 }
-machine selected(s: &mut State) -> Command {
+machine selected(s: &mut |local_state|::State) -> |operations|::Command {
     transition s.count == 0u64 {
         true -> empty(s)
         _ -> select(s)
     }
-    machine empty(s: &mut State) -> Command {
+    machine empty(s: &mut |local_state|::State) -> |operations|::Command {
         s.current = 0u64;
         s.revision = 0u64;
-        document::encoding::empty(s);
+        |encoding|::empty(s);
         complete(s)
     }
-    machine select(s: &mut State) -> Command {
+    machine select(s: &mut |local_state|::State) -> |operations|::Command {
         transition s.current < s.count {
             true -> head(s)
             _ -> last(s)
         }
     }
-    machine last(s: &mut State) -> Command {
+    machine last(s: &mut |local_state|::State) -> |operations|::Command {
         s.current = ((s.count as u64 in Saturating) - 1) as u64;
         head(s)
     }
 }
-machine headed(s: &mut State, revision: u64, length: u64) -> Command {
+machine headed(s: &mut |local_state|::State, revision: u64, length: u64) -> |operations|::Command {
     transition length >= 4u64 && length <= 244u64 && revision != 0u64 && s.current < 8u64 {
         true -> bulk(s, revision, length)
-        _ -> failed(s, IO_ERROR)
+        _ -> failed(s, |main|::IO_ERROR)
     }
-    machine bulk(s: &mut State, revision: u64, length: u64) -> Command requires s.current < 8u64 {
+    machine bulk(s: &mut |local_state|::State, revision: u64, length: u64) -> |operations|::Command requires s.current < 8u64 {
         s.read_length = length;
         s.read_revision = revision;
-        s.phase = Phase::Storage { step: StorageStep::Read };
-        Command::Read { object: s.ids[s.current], revision: revision, length: length }
+        s.phase = |local_state|::Phase::Storage { step: |local_state|::StorageStep::Read };
+        |operations|::Command::Read { object: s.ids[s.current], revision: revision, length: length }
     }
 }
-machine read(s: &mut State, revision: u64, reported: u64, record: Record) -> Command {
-    transition document::encoding::valid(&record) && record.length == s.read_length && revision == s.read_revision && reported == record.length {
+machine read(s: &mut |local_state|::State, revision: u64, reported: u64, record: |operations|::Record) -> |operations|::Command {
+    transition |encoding|::valid(&record) && record.length == s.read_length && revision == s.read_revision && reported == record.length {
         true -> decoded(s, revision, record)
-        _ -> failed(s, IO_ERROR)
+        _ -> failed(s, |main|::IO_ERROR)
     }
-    machine decoded(s: &mut State, revision: u64, record: Record) -> Command {
-        document::encoding::decode(s, &record);
+    machine decoded(s: &mut |local_state|::State, revision: u64, record: |operations|::Record) -> |operations|::Command {
+        |encoding|::decode(s, &record);
         s.revision = revision;
         complete(s)
     }
 }
-machine saved(s: &mut State, object: u64, revision: u64) -> Command {
+machine saved(s: &mut |local_state|::State, object: u64, revision: u64) -> |operations|::Command {
     transition s.count == 0u64 {
         true -> created(s, object, revision)
         _ -> confirmed(s, revision)
     }
-    machine created(s: &mut State, object: u64, revision: u64) -> Command {
+    machine created(s: &mut |local_state|::State, object: u64, revision: u64) -> |operations|::Command {
         s.count = 1u64;
         s.current = 0u64;
         s.ids[0] = object;
         confirmed(s, revision)
     }
-    machine confirmed(s: &mut State, revision: u64) -> Command {
+    machine confirmed(s: &mut |local_state|::State, revision: u64) -> |operations|::Command {
         s.revision = revision;
-        document::document::confirm(s);
+        |document|::confirm(s);
         complete(s)
     }
 }
-machine copied(s: &mut State, object: u64) -> Command {
+machine copied(s: &mut |local_state|::State, object: u64) -> |operations|::Command {
     transition s.count < 8u64 {
         true -> appended(s, object)
-        _ -> failed(s, IO_ERROR)
+        _ -> failed(s, |main|::IO_ERROR)
     }
-    machine appended(s: &mut State, object: u64) -> Command requires s.count < 8u64 {
+    machine appended(s: &mut |local_state|::State, object: u64) -> |operations|::Command requires s.count < 8u64 {
         s.ids[s.count] = object;
         s.current = s.count;
         s.count = ((s.count as u64 in Saturating) + 1) as u64;
-        s.loading = LoadMode::ReplaceDraft;
+        s.loading = |local_state|::LoadMode::ReplaceDraft;
         head(s)
     }
 }
-machine complete(s: &mut State) -> Command {
+machine complete(s: &mut |local_state|::State) -> |operations|::Command {
     s.error = 0u64;
     s.dirty = true;
-    transition s.close_after && !document::document::changed(s) {
-        true -> (Command::Exit)
+    transition s.close_after && !|document|::changed(s) {
+        true -> (|operations|::Command::Exit)
         _ -> resume(s)
     }
 }
-public machine failed(s: &mut State, status: u64) -> Command {
+public machine failed(s: &mut |local_state|::State, status: u64) -> |operations|::Command {
     s.error = status;
     s.dirty = true;
     resume(s)
 }
-machine resume(s: &mut State) -> Command {
+machine resume(s: &mut |local_state|::State) -> |operations|::Command {
     s.close_after = false;
     transition !s.loaded {
-        true -> session::diagnostics::loaded(s)
+        true -> |diagnostics|::loaded(s)
         _ -> resumed(s)
     }
 }
-public machine resumed(s: &mut State) -> Command {
+public machine resumed(s: &mut |local_state|::State) -> |operations|::Command {
     transition s.epoch == 0u64 {
-        true -> session::session::poll(s)
-        _ -> session::session::after_input(s)
+        true -> |session|::poll(s)
+        _ -> |session|::after_input(s)
     }
 }

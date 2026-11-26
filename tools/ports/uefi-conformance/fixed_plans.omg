@@ -1,9 +1,9 @@
 // Checks plan machine definitions; does not select or materialize foreign layouts.
-use cathedral_uefi_raw::console_layouts;
-use cathedral_uefi_raw::storage_layouts;
-use cathedral_uefi_raw::machine_layouts;
-use cathedral_uefi_raw::tcg_layouts;
-use cathedral_uefi_raw::hii_layouts;
-use cathedral_uefi_raw::network_layouts;
+use {cathedral_uefi_raw}/console_layouts.omg;
+use {cathedral_uefi_raw}/storage_layouts.omg;
+use {cathedral_uefi_raw}/machine_layouts.omg;
+use {cathedral_uefi_raw}/tcg_layouts.omg;
+use {cathedral_uefi_raw}/hii_layouts.omg;
+use {cathedral_uefi_raw}/network_layouts.omg;
 data Main {}
 machine Main::main(&mut self) {}

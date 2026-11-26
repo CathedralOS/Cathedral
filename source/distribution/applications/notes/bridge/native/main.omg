@@ -1,7 +1,7 @@
-use component::main::Notes;
-use app::state::State;
-machine main() reaches Notes {
-    let mut s: State;
+use {component}/main.omg;
+use {app}/state.omg as app_state;
+machine main() reaches |main|::Notes {
+    let mut s: |app_state|::State;
     let mut p: [u64; 4096];
-    let result: u64 = Notes::step(&mut s, &mut p);
+    let result: u64 = |main|::Notes::step(&mut s, &mut p);
 }

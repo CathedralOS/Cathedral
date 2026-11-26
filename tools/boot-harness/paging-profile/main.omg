@@ -2,13 +2,12 @@
 // Exercise the actual boot policy. These numeric profiles are not hardware
 // observations, machine-owner authority or persistent translation evidence.
 
-use arch::isa::x86_64::memory::profile::BootstrapPaging;
-use arch::isa::x86_64::memory::profile::BootstrapPagingProfile;
+use {arch}/isa/x86_64/memory/profile.omg;
 machine supported(control0: u64, control4: u64, extended: u64) -> bool {
-    let profile: BootstrapPagingProfile = BootstrapPagingProfile {
+    let profile: |profile|::BootstrapPagingProfile = |profile|::BootstrapPagingProfile {
         control0: control0, control4: control4, extended_features: extended,
     };
-    BootstrapPaging::supported(&profile)
+    |profile|::BootstrapPaging::supported(&profile)
 }
 
 machine main() crashes Trap {

@@ -1,4 +1,3 @@
-module display;
 // Display service protocol: the six-word frames a root matrix exchanges with
 // the compositor. Wire owner: source-rs/platform/contracts/display/.
 public const REQUEST_BYTES: u64 = 48u64;

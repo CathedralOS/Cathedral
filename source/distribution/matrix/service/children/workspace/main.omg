@@ -1,82 +1,76 @@
-module children::workspace::main;
-
 // Issue once and retain the first refusal while draining the outstanding scene.
 // selection.omg owns activation/restoration; catalogue.omg owns instance identity.
-use children::workspace::operation::Switch;
-use children::workspace::operation::Command;
-use children::workspace::operation::Phase;
-use children::workspace::operation::Dispatch;
-use children::workspace::operation::Completion;
-use children::workspace::selection;
+use children/workspace/operation.omg;
+use children/workspace/selection.omg;
 
-public machine begin(work: &mut Switch, ticket: u64) -> bool {
-    transition (work.phase in Phase::Dormant) && ticket != 0u64 {
+public machine begin(work: &mut |operation|::Switch, ticket: u64) -> bool {
+    transition (work.phase in |operation|::Phase::Dormant) && ticket != 0u64 {
         true -> start(work, ticket)
         _ -> (false)
     }
-    machine start(work: &mut Switch, ticket: u64) -> bool {
-        work.phase = Phase::Ready { command: Command::BeginScene };
+    machine start(work: &mut |operation|::Switch, ticket: u64) -> bool {
+        work.phase = |operation|::Phase::Ready { command: |operation|::Command::BeginScene };
         work.ticket = ticket;
         work.refusal = 0u64;
         true
     }
 }
 
-public machine next(work: &mut Switch) -> Dispatch {
+public machine next(work: &mut |operation|::Switch) -> |operation|::Dispatch {
     transition work.phase {
-        Phase::Ready { command } -> issue(work, command)
-        _ -> (Dispatch::Wait)
+        |operation|::Phase::Ready { command } -> issue(work, command)
+        _ -> (|operation|::Dispatch::Wait)
     }
-    machine issue(work: &mut Switch, command: Command) -> Dispatch {
-        work.phase = Phase::Waiting { command: command };
-        Dispatch::Issue { command: command }
+    machine issue(work: &mut |operation|::Switch, command: |operation|::Command) -> |operation|::Dispatch {
+        work.phase = |operation|::Phase::Waiting { command: command };
+        |operation|::Dispatch::Issue { command: command }
     }
 }
 
-public machine complete(work: &mut Switch, completion: Completion) -> bool {
+public machine complete(work: &mut |operation|::Switch, completion: |operation|::Completion) -> bool {
     transition accepts(work, completion) {
         true -> remember(work, completion)
         _ -> (false)
     }
-    machine remember(work: &mut Switch, completion: Completion) -> bool {
+    machine remember(work: &mut |operation|::Switch, completion: |operation|::Completion) -> bool {
         transition work.refusal == 0u64 {
             true -> status(work, completion)
-            _ -> children::workspace::selection::completed(work, completion)
+            _ -> |selection|::completed(work, completion)
         }
     }
-    machine status(work: &mut Switch, completion: Completion) -> bool {
+    machine status(work: &mut |operation|::Switch, completion: |operation|::Completion) -> bool {
         work.refusal = completion.status;
-        children::workspace::selection::completed(work, completion)
+        |selection|::completed(work, completion)
     }
 }
 
-public machine cancel(work: &mut Switch, status: u64) -> bool {
+public machine cancel(work: &mut |operation|::Switch, status: u64) -> bool {
     transition status != 0u64 && work.refusal == 0u64 && cancellable(work.phase) {
         true -> refused(work, status)
         _ -> (false)
     }
-    machine refused(work: &mut Switch, status: u64) -> bool {
+    machine refused(work: &mut |operation|::Switch, status: u64) -> bool {
         // Do not manufacture completion or release an outstanding scene.
         work.refusal = status;
         true
     }
 }
 
-machine accepts(work: &Switch, completion: Completion) -> bool {
+machine accepts(work: &|operation|::Switch, completion: |operation|::Completion) -> bool {
     transition work.phase {
-        Phase::Waiting { command } -> (work.ticket == completion.ticket
-            && command == completion.command && command != Command::Failed)
+        |operation|::Phase::Waiting { command } -> (work.ticket == completion.ticket
+            && command == completion.command && command != |operation|::Command::Failed)
         _ -> (false)
     }
 }
 
-machine cancellable(phase: Phase) -> bool {
+machine cancellable(phase: |operation|::Phase) -> bool {
     transition phase {
-        Phase::Ready { command } -> before_activation(command)
-        Phase::Waiting { command } -> before_activation(command)
-        Phase::Dormant -> (false)
+        |operation|::Phase::Ready { command } -> before_activation(command)
+        |operation|::Phase::Waiting { command } -> before_activation(command)
+        |operation|::Phase::Dormant -> (false)
     }
-    machine before_activation(command: Command) -> bool {
-        command == Command::BeginScene || command == Command::AwaitScene
+    machine before_activation(command: |operation|::Command) -> bool {
+        command == |operation|::Command::BeginScene || command == |operation|::Command::AwaitScene
     }
 }

@@ -1,21 +1,18 @@
-module diagnostic;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use app::model::Event;
-use app::model::Failure;
-use runtime::time::Stamp;
+use {runtime}/kernel.omg;
+use {app}/model.omg;
+use {runtime}/time.omg;
 
 // Sparse owner-query timestamps: 0 online, 1 received, 2 reply published,
 // 3 reply failed. The startup microsecond stamp is diagnostic, not authority.
 // Account CPU includes other work; elapsed minus CPU does not identify a wait.
 public data Trace { origin: u64; }
-public machine control(gate: &Gate, clock: u64, trace: &mut Trace, phase: u64) reaches Kernel invokes Kernel {
-    let sample: Stamp = runtime::time::stamp(gate, clock);
+public machine control(gate: &|kernel|::Gate, clock: u64, trace: &mut Trace, phase: u64) reaches |kernel|::Kernel invokes |kernel|::Kernel {
+    let sample: |time|::Stamp = |time|::stamp(gate, clock);
     transition sample {
-        Stamp::Read { ticks, micros, cpu } -> recorded(gate, trace, phase, micros, cpu)
+        |time|::Stamp::Read { ticks, micros, cpu } -> recorded(gate, trace, phase, micros, cpu)
         _ -> done()
     }
-    machine recorded(gate: &Gate, trace: &mut Trace, phase: u64, micros: u64, cpu: u64) reaches Kernel {
+    machine recorded(gate: &|kernel|::Gate, trace: &mut Trace, phase: u64, micros: u64, cpu: u64) reaches |kernel|::Kernel {
         initialize(trace, micros);
         let mut words: [u64; 8];
         words[0] = 0x203a6c7463206742u64; // "Bg ctl: "
@@ -27,7 +24,7 @@ public machine control(gate: &Gate, clock: u64, trace: &mut Trace, phase: u64) r
         put(&mut words, 43u64, 32u64);
         hex(&mut words, 44u64, cpu, 0u64);
         put(&mut words, 60u64, 10u64);
-        let ignored: u64 = Kernel::write(gate, &words, 61u64);
+        let ignored: u64 = |kernel|::Kernel::write(gate, &words, 61u64);
     }
 }
 machine initialize(trace: &mut Trace, micros: u64) {
@@ -56,26 +53,26 @@ machine hex(words: &mut [u64; 8], start: u64, value: u64, digit: u64) requires s
 }
 machine done() {}
 
-public machine scope(gate: &Gate) -> Event reaches Kernel invokes Kernel {
+public machine scope(gate: &|kernel|::Gate) -> |model|::Event reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let text: [u8; 63] = "Cathedral background: shared interaction ready; storage denied\n";
     let mut words: [u64; 8];
     transition { _ -> pack(gate, &text, &mut words, 0u64) }
-    machine pack(gate: &Gate, text: &[u8; 63], words: &mut [u64; 8], index: u64) -> Event requires index <= 63u64 reaches Kernel {
+    machine pack(gate: &|kernel|::Gate, text: &[u8; 63], words: &mut [u64; 8], index: u64) -> |model|::Event requires index <= 63u64 reaches |kernel|::Kernel {
         transition index < 63u64 {
             true -> byte(gate, text, words, index)
             _ -> write(gate, words)
         }
     }
-    machine byte(gate: &Gate, text: &[u8; 63], words: &mut [u64; 8], index: u64) -> Event requires index < 63u64 reaches Kernel {
+    machine byte(gate: &|kernel|::Gate, text: &[u8; 63], words: &mut [u64; 8], index: u64) -> |model|::Event requires index < 63u64 reaches |kernel|::Kernel {
         let word: u64 = index / 8u64;
         words[word] = words[word] | ((text[index] as u64) << ((index % 8u64) * 8u64));
         transition { _ -> pack(gate, text, words, index + 1u64) }
     }
-    machine write(gate: &Gate, words: &[u64; 8]) -> Event reaches Kernel {
-        let status: u64 = Kernel::write(gate, words, 63u64);
+    machine write(gate: &|kernel|::Gate, words: &[u64; 8]) -> |model|::Event reaches |kernel|::Kernel {
+        let status: u64 = |kernel|::Kernel::write(gate, words, 63u64);
         transition status == 63u64 {
-            true -> (Event::Complete)
-            _ -> (Event::Failed { failure: Failure::Transport { code: status } })
+            true -> (|model|::Event::Complete)
+            _ -> (|model|::Event::Failed { failure: |model|::Failure::Transport { code: status } })
         }
     }
 }

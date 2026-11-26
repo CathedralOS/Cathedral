@@ -1,30 +1,27 @@
-module application::application;
 // Reuse one bounded exchange. Neither app state nor its directory/raster body
 // passes by value through the service call chain.
-use main::Context;
-use app::main::advance;
-use app::state::State;
-use app::operations::Exchange;
-use app::operations::Command;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use application::operations;
-public machine run(gate: &Gate, context: &mut Context, argument: u64) -> u64 reaches Kernel blocks invokes Kernel {
-    let mut state: State;
-    let mut exchange: Exchange;
+use main.omg;
+use {app}/main.omg as app_main;
+use {app}/state.omg as app_state;
+use {app}/operations.omg;
+use {runtime}/kernel.omg;
+use application/operations.omg as application_operations;
+public machine run(gate: &|kernel|::Gate, context: &mut |main|::Context, argument: u64) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
+    let mut state: |app_state|::State;
+    let mut exchange: |operations|::Exchange;
     exchange.argument = argument;
     transition { _ -> block drive(gate, context, &mut state, &mut exchange) }
 }
-machine drive(gate: &Gate, context: &mut Context, state: &mut State, exchange: &mut Exchange) -> u64 reaches Kernel {
-    let command: Command = app::main::advance(state, exchange);
+machine drive(gate: &|kernel|::Gate, context: &mut |main|::Context, state: &mut |app_state|::State, exchange: &mut |operations|::Exchange) -> u64 reaches |kernel|::Kernel {
+    let command: |operations|::Command = |app_main|::advance(state, exchange);
     transition command {
-        Command::Exit -> (0u64)
+        |operations|::Command::Exit -> (0u64)
         _ -> block execute(gate, context, state, exchange, command)
     }
 }
-machine execute(gate: &Gate, context: &mut Context, state: &mut State, exchange: &mut Exchange, command: Command) -> u64 reaches Kernel {
+machine execute(gate: &|kernel|::Gate, context: &mut |main|::Context, state: &mut |app_state|::State, exchange: &mut |operations|::Exchange, command: |operations|::Command) -> u64 reaches |kernel|::Kernel {
     exchange.owner_request = false;
-    let status: u64 = block application::operations::execute(gate, context, state, exchange, command);
+    let status: u64 = block |application_operations|::execute(gate, context, state, exchange, command);
     exchange.transport_status = status;
     transition { _ -> block drive(gate, context, state, exchange) }
 }

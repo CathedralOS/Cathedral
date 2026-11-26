@@ -1,20 +1,19 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified pure helpers from uefi-raw c0facddf9ba42b74906a37fca2869e6cdbc8da6a.
 // No union projection, firmware calls or authority establishment.
-module hii_helpers;
-use cathedral_uefi_raw::hii_ifr;
+use {cathedral_uefi_raw}/hii_ifr.omg;
 
-pub machine ifr_date_storage(flags: hii_ifr::IfrDateFlags) -> hii_ifr::IfrDateStorage {
-    hii_ifr::IfrDateStorage { raw: flags.raw & 0x30 }
+pub machine ifr_date_storage(flags: |hii_ifr|::IfrDateFlags) -> |hii_ifr|::IfrDateStorage {
+    |hii_ifr|::IfrDateStorage { raw: flags.raw & 0x30 }
 }
-pub machine ifr_time_storage(flags: hii_ifr::IfrTimeFlags) -> hii_ifr::IfrTimeStorage {
-    hii_ifr::IfrTimeStorage { raw: flags.raw & 0x30 }
+pub machine ifr_time_storage(flags: |hii_ifr|::IfrTimeFlags) -> |hii_ifr|::IfrTimeStorage {
+    |hii_ifr|::IfrTimeStorage { raw: flags.raw & 0x30 }
 }
-pub machine ifr_numeric_size(flags: hii_ifr::IfrNumericFlags) -> hii_ifr::IfrNumericSize {
-    hii_ifr::IfrNumericSize { raw: flags.raw & 0x03 }
+pub machine ifr_numeric_size(flags: |hii_ifr|::IfrNumericFlags) -> |hii_ifr|::IfrNumericSize {
+    |hii_ifr|::IfrNumericSize { raw: flags.raw & 0x03 }
 }
-pub machine ifr_numeric_display(flags: hii_ifr::IfrNumericFlags) -> hii_ifr::IfrNumericDisplay {
-    hii_ifr::IfrNumericDisplay { raw: flags.raw & 0x30 }
+pub machine ifr_numeric_display(flags: |hii_ifr|::IfrNumericFlags) -> |hii_ifr|::IfrNumericDisplay {
+    |hii_ifr|::IfrNumericDisplay { raw: flags.raw & 0x30 }
 }
 
 // Locally authored field extraction and bounded header checks, UEFI section33.

@@ -1,109 +1,105 @@
-module main;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::main::Startup;
-use runtime::main::start;
-use runtime::main::yield_now;
-use runtime::entry::Program;
-use channel;
-use timing;
-use shared;
-use notification;
-use connection;
-use control;
-use services;
-use service::main;
-use supervisor::main;
-use pipeline::main;
+use {runtime}/kernel.omg;
+use {runtime}/main.omg;
+use {runtime}/entry.omg;
+use channel.omg;
+use timing.omg;
+use shared.omg;
+use notification.omg;
+use connection.omg;
+use control.omg;
+use services.omg;
+use service/main.omg as service_main;
+use supervisor/main.omg as supervisor_main;
+use pipeline/main.omg as pipeline_main;
 
-public ProgramProvider satisfies Program {
-    machine run(gate: &Gate, first: u64, second: u64) -> u64 reaches Kernel blocks invokes Kernel {
+public ProgramProvider satisfies |entry|::Program {
+    machine run(gate: &|kernel|::Gate, first: u64, second: u64) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
         transition first == 2u64 {
             true -> block transport(gate, second)
             _ -> block primitives(gate)
         }
     }
 }
-machine transport(gate: &Gate, mode: u64) -> u64 reaches Kernel {
+machine transport(gate: &|kernel|::Gate, mode: u64) -> u64 reaches |kernel|::Kernel {
     transition {
-        mode >= 400u64 -> block pipeline::main::check(gate, mode)
-        mode >= 300u64 -> block supervisor::main::check(gate)
-        mode >= 200u64 -> block service::main::check(gate)
+        mode >= 400u64 -> block |pipeline_main|::check(gate, mode)
+        mode >= 300u64 -> block |supervisor_main|::check(gate)
+        mode >= 200u64 -> block |service_main|::check(gate)
         _ -> block existing(gate, mode)
     }
 }
-machine existing(gate: &Gate, mode: u64) -> u64 reaches Kernel {
+machine existing(gate: &|kernel|::Gate, mode: u64) -> u64 reaches |kernel|::Kernel {
     transition mode >= 120u64 {
-        true -> block services::check(gate, mode)
+        true -> block |services|::check(gate, mode)
         _ -> block owner_or_client(gate, mode)
     }
-    machine owner_or_client(gate: &Gate, mode: u64) -> u64 reaches Kernel {
+    machine owner_or_client(gate: &|kernel|::Gate, mode: u64) -> u64 reaches |kernel|::Kernel {
         transition mode >= 110u64 {
-            true -> block control::check(gate, mode)
-            _ -> block connection::check(gate, mode)
+            true -> block |control|::check(gate, mode)
+            _ -> block |connection|::check(gate, mode)
         }
     }
 }
-machine primitives(gate: &Gate) -> u64 reaches Kernel {
-    let startup: Startup = start(gate);
+machine primitives(gate: &|kernel|::Gate) -> u64 reaches |kernel|::Kernel {
+    let startup: |main|::Startup = |main|::start(gate);
     transition startup {
-        Startup::Ready { environment } -> block environment_ready(gate, environment.count)
+        |main|::Startup::Ready { environment } -> block environment_ready(gate, environment.count)
         _ -> (101u64)
     }
 }
-machine environment_ready(gate: &Gate, endpoints: u64) -> u64 reaches Kernel {
+machine environment_ready(gate: &|kernel|::Gate, endpoints: u64) -> u64 reaches |kernel|::Kernel {
     transition endpoints == 0u64 {
         true -> block yielded(gate)
         _ -> (108u64)
     }
 }
-machine yielded(gate: &Gate) -> u64 reaches Kernel {
-    let status: u64 = block yield_now(gate);
+machine yielded(gate: &|kernel|::Gate) -> u64 reaches |kernel|::Kernel {
+    let status: u64 = block |main|::yield_now(gate);
     transition status == 0u64 {
         true -> block checked(gate)
         _ -> (106u64)
     }
 }
-machine checked(gate: &Gate) -> u64 reaches Kernel {
-    let status: u64 = block channel::check(gate);
+machine checked(gate: &|kernel|::Gate) -> u64 reaches |kernel|::Kernel {
+    let status: u64 = block |channel|::check(gate);
     transition status == 0u64 {
         true -> block shared_backing(gate)
         _ -> (status)
     }
 }
-machine shared_backing(gate: &Gate) -> u64 reaches Kernel {
-    let status: u64 = block shared::check(gate);
+machine shared_backing(gate: &|kernel|::Gate) -> u64 reaches |kernel|::Kernel {
+    let status: u64 = block |shared|::check(gate);
     transition status == 0u64 {
         true -> block notifications(gate)
         _ -> (status)
     }
 }
-machine notifications(gate: &Gate) -> u64 reaches Kernel {
-    let status: u64 = block notification::check(gate);
+machine notifications(gate: &|kernel|::Gate) -> u64 reaches |kernel|::Kernel {
+    let status: u64 = block |notification|::check(gate);
     transition status == 0u64 {
         true -> block timed(gate)
         _ -> (status)
     }
 }
-machine timed(gate: &Gate) -> u64 reaches Kernel {
-    let status: u64 = block timing::check(gate);
+machine timed(gate: &|kernel|::Gate) -> u64 reaches |kernel|::Kernel {
+    let status: u64 = block |timing|::check(gate);
     transition status == 0u64 {
         true -> report(gate)
         _ -> (status)
     }
 }
-machine report(gate: &Gate) -> u64 reaches Kernel {
+machine report(gate: &|kernel|::Gate) -> u64 reaches |kernel|::Kernel {
     let mut message: [u64; 8];
     // "Omega IPC ready\n" in the reference kernel's little-endian wire.
     message[0] = 0x5049206167656d4fu64;
     message[1] = 0x000a79646165722043u64;
-    let bytes: u64 = Kernel::write(gate, &message, 16u64);
+    let bytes: u64 = |kernel|::Kernel::write(gate, &message, 16u64);
     transition bytes == 16u64 {
         true -> (0u64)
         _ -> (107u64)
     }
 }
-public machine component_entry() reaches Program + Kernel blocks invokes Program invokes Kernel {
-    let gate: Gate;
-    let result: u64 = block Program::run(&gate, 0u64, 0u64);
+public machine component_entry() reaches |entry|::Program + |kernel|::Kernel blocks invokes |entry|::Program invokes |kernel|::Kernel {
+    let gate: |kernel|::Gate;
+    let result: u64 = block |entry|::Program::run(&gate, 0u64, 0u64);
 }

@@ -1,22 +1,16 @@
-use arch::isa::x86_64::memory::clone::X86ClonedPageTables;
-use arch::isa::x86_64::memory::clone::X86ObservedTablePage;
-use arch::isa::x86_64::memory::clone::X86PageTableClone;
-use arch::isa::x86_64::memory::clone::X86PageTableCloneResult;
-use arch::isa::x86_64::memory::clone::X86PagingPathSnapshot;
-use arch::isa::x86_64::memory::validation::geometry::X86BootstrapVirtualAddressCheck;
-use arch::isa::x86_64::memory::validation::geometry::X86BootstrapVirtualAddressIndices;
-use arch::isa::x86_64::memory::validation::geometry::x86_decompose_bootstrap_virtual_address;
-use arch::isa::x86_64::memory::walk::X86TableEntryRoute;
-use arch::isa::x86_64::memory::walk::X86TableWalk;
-use omega::language::core::extent;
-use omega::language::core::layout;
-use lab::memory::mapping::firmware::firmware;
-use lab::memory::mapping::firmware::root;
+use {arch}/isa/x86_64/memory/clone.omg;
+use {arch}/isa/x86_64/memory/validation/geometry.omg;
+use {arch}/isa/x86_64/memory/walk.omg;
+use {omega}/language/core/extent.omg;
+use {omega}/language/core/layout.omg;
+use {omega}/language/core/access/access.omg;
+use lab/memory/mapping/firmware/firmware.omg;
+use lab/memory/mapping/firmware/root.omg;
 
 data MappingHandoff {}
 
 public data HardwareTableMemory {}
-public boundary trait HardwareTableSupply: ResourceProfileSupply<HardwareTableMemory> {}
+public boundary trait HardwareTableSupply: |layout|::ResourceProfileSupply<HardwareTableMemory> {}
 public data HardwareTablePlacement {}
 
 // This occurrence covers only the four owned replacement pages after their
@@ -25,47 +19,47 @@ public data HardwareTablePlacement {}
 // The backing remains identity mapped and retained, but never Stable. The boot
 // provider admits that exact phase/range, not arbitrary Granted geometry.
 HardwareTableProfileProvider satisfies HardwareTableSupply {
-    machine profile(storage: &Extent in Granted) -> ResourceProfile {
+    machine profile(storage: &|extent|::Extent in |extent|::Granted) -> |layout|::ResourceProfile {
         let services: [u64; 32];
-        let mut transfers: [TransferRule; 16];
-        transfers[0] = TransferRule { width_bits: 64, alignment_bytes: 8 };
-        let mut regions: [ResourceRegion; 32];
-        regions[0] = ResourceRegion {
-            range: RelativeRange { offset: 0, length: storage.length },
-            peer: PeerWritability::HostileShared,
-            stable: StableCapability::None,
-            external: ExternalCapability::Access {
-                read: ExternalReadBehavior::Repeatable, write: true,
-                transfers: TransferRules { entries: transfers, rule_count: 1 },
+        let mut transfers: [|layout|::TransferRule; 16];
+        transfers[0] = |layout|::TransferRule { width_bits: 64, alignment_bytes: 8 };
+        let mut regions: [|layout|::ResourceRegion; 32];
+        regions[0] = |layout|::ResourceRegion {
+            range: |layout|::RelativeRange { offset: 0, length: storage.length },
+            peer: |layout|::PeerWritability::HostileShared,
+            stable: |layout|::StableCapability::None,
+            external: |layout|::ExternalCapability::Access {
+                read: |layout|::ExternalReadBehavior::Repeatable, write: true,
+                transfers: |layout|::TransferRules { entries: transfers, rule_count: 1 },
             },
-            atomic: AtomicCapability::None,
-            reach: BoundaryReach { services: services, service_count: 0 },
+            atomic: |layout|::AtomicCapability::None,
+            reach: |layout|::BoundaryReach { services: services, service_count: 0 },
         };
-        ResourceProfile { regions: regions, region_count: 1 }
+        |layout|::ResourceProfile { regions: regions, region_count: 1 }
     }
 }
 
-machine HardwareTablePlacement::plan(schema: Schema) -> AccessPlan {
-    let mut fields: [FieldEntry; 64];
-    fields[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 0 } };
-    fields[1] = FieldEntry { key: schema.fields[1].key, representation: FieldPlan::At { offset: 4096 } };
-    fields[2] = FieldEntry { key: schema.fields[2].key, representation: FieldPlan::At { offset: 8192 } };
-    fields[3] = FieldEntry { key: schema.fields[3].key, representation: FieldPlan::At { offset: 12288 } };
-    let layout: LayoutPlan = LayoutPlan {
+machine HardwareTablePlacement::plan(schema: |layout|::Schema) -> |layout|::AccessPlan {
+    let mut fields: [|layout|::FieldEntry; 64];
+    fields[0] = |layout|::FieldEntry { key: schema.fields[0].key, representation: |layout|::FieldPlan::At { offset: 0 } };
+    fields[1] = |layout|::FieldEntry { key: schema.fields[1].key, representation: |layout|::FieldPlan::At { offset: 4096 } };
+    fields[2] = |layout|::FieldEntry { key: schema.fields[2].key, representation: |layout|::FieldPlan::At { offset: 8192 } };
+    fields[3] = |layout|::FieldEntry { key: schema.fields[3].key, representation: |layout|::FieldPlan::At { offset: 12288 } };
+    let layout: |layout|::LayoutPlan = |layout|::LayoutPlan {
         entries: fields, entry_count: 4, size_fixed: 16384, size_is_dynamic: false, align: 4096,
     };
-    let first: AccessPlan = AccessPlan::with(AccessPlan::inaccessible(layout), schema.fields[0].key, HardwareTablePlacement::access());
-    let second: AccessPlan = AccessPlan::with(first, schema.fields[1].key, HardwareTablePlacement::access());
-    let third: AccessPlan = AccessPlan::with(second, schema.fields[2].key, HardwareTablePlacement::access());
+    let first: |layout|::AccessPlan = |layout|::AccessPlan::with(|layout|::AccessPlan::inaccessible(layout), schema.fields[0].key, HardwareTablePlacement::access());
+    let second: |layout|::AccessPlan = |layout|::AccessPlan::with(first, schema.fields[1].key, HardwareTablePlacement::access());
+    let third: |layout|::AccessPlan = |layout|::AccessPlan::with(second, schema.fields[2].key, HardwareTablePlacement::access());
     let services: [u64; 32];
-    AccessPlan::with_reach(
-        AccessPlan::with(third, schema.fields[3].key, HardwareTablePlacement::access()),
-        BoundaryReach { services: services, service_count: 0 }
+    |layout|::AccessPlan::with_reach(
+        |layout|::AccessPlan::with(third, schema.fields[3].key, HardwareTablePlacement::access()),
+        |layout|::BoundaryReach { services: services, service_count: 0 }
     )
 }
 
-machine HardwareTablePlacement::access() -> FieldAccess {
-    FieldAccess::External { read: ExternalRead::Read, write: true, exposure: Exposure::Exported }
+machine HardwareTablePlacement::access() -> |layout|::FieldAccess {
+    |layout|::FieldAccess::External { read: |layout|::ExternalRead::Read, write: true, exposure: |layout|::Exposure::Exported }
 }
 
 // Extraction retires the Omega resident; it does not promise which bytes an
@@ -73,17 +67,17 @@ machine HardwareTablePlacement::access() -> FieldAccess {
 // through the External-only policy before publishing the new root. Vacancy
 // here means absence of an Omega resident, not zero bytes or absence of the
 // hardware's page-table representation. No Stable view crosses publication.
-machine MappingHandoff::program(storage: &mut Extent in Granted, image: &X86ClonedPageTables) -> bool
-requires storage in Vacant
-ensures storage in Vacant
-reaches ResourceProfileSupply
+machine MappingHandoff::program(storage: &mut |extent|::Extent in |extent|::Granted, image: &|clone|::X86ClonedPageTables) -> bool
+requires storage in |extent|::Vacant
+ensures storage in |extent|::Vacant
+reaches |layout|::ResourceProfileSupply
 {
-    transition Access::view_extent_mut<HardwareTablePlacement, X86ClonedPageTables, HardwareTableMemory>(storage) {
-        AccessOutcome::Ready { view } -> write(view, image, 0)
-        AccessOutcome::Rejected { returned, reason } -> false
+    transition |access|::view_extent_mut<HardwareTablePlacement, |clone|::X86ClonedPageTables, HardwareTableMemory>(storage) {
+        |layout|::AccessOutcome::Ready { view } -> write(view, image, 0)
+        |layout|::AccessOutcome::Rejected { returned, reason } -> false
     }
-    machine write(view: &mut Access<HardwareTablePlacement, X86ClonedPageTables>,
-                image: &X86ClonedPageTables, next: u64) -> bool
+    machine write(view: &mut |layout|::Access<HardwareTablePlacement, |clone|::X86ClonedPageTables>,
+                image: &|clone|::X86ClonedPageTables, next: u64) -> bool
     requires next <= 512
     {
         transition next < 512 {
@@ -91,18 +85,18 @@ reaches ResourceProfileSupply
             _ -> verify(view, image, 0, true)
         }
     }
-    machine word(view: &mut Access<HardwareTablePlacement, X86ClonedPageTables>,
-               image: &X86ClonedPageTables, next: u64) -> bool
+    machine word(view: &mut |layout|::Access<HardwareTablePlacement, |clone|::X86ClonedPageTables>,
+               image: &|clone|::X86ClonedPageTables, next: u64) -> bool
     requires next < 512
     {
-        omega::language::write(&mut view.pml4[next], image.pml4[next]);
-        omega::language::write(&mut view.pdpt[next], image.pdpt[next]);
-        omega::language::write(&mut view.pd[next], image.pd[next]);
-        omega::language::write(&mut view.pt[next], image.pt[next]);
+        |layout|::write(&mut view.pml4[next], image.pml4[next]);
+        |layout|::write(&mut view.pdpt[next], image.pdpt[next]);
+        |layout|::write(&mut view.pd[next], image.pd[next]);
+        |layout|::write(&mut view.pt[next], image.pt[next]);
         transition { _ -> write(view, image, next + 1) }
     }
-    machine verify(view: &mut Access<HardwareTablePlacement, X86ClonedPageTables>,
-                 image: &X86ClonedPageTables, next: u64, matched: bool) -> bool
+    machine verify(view: &mut |layout|::Access<HardwareTablePlacement, |clone|::X86ClonedPageTables>,
+                 image: &|clone|::X86ClonedPageTables, next: u64, matched: bool) -> bool
     requires next <= 512
     {
         transition next < 512 {
@@ -110,14 +104,14 @@ reaches ResourceProfileSupply
             _ -> matched
         }
     }
-    machine compare(view: &mut Access<HardwareTablePlacement, X86ClonedPageTables>,
-                  image: &X86ClonedPageTables, next: u64, matched: bool) -> bool
+    machine compare(view: &mut |layout|::Access<HardwareTablePlacement, |clone|::X86ClonedPageTables>,
+                  image: &|clone|::X86ClonedPageTables, next: u64, matched: bool) -> bool
     requires next < 512
     {
-        let root: u64 = omega::language::read(&view.pml4[next]);
-        let pointer: u64 = omega::language::read(&view.pdpt[next]);
-        let directory: u64 = omega::language::read(&view.pd[next]);
-        let leaf: u64 = omega::language::read(&view.pt[next]);
+        let root: u64 = |layout|::read(&view.pml4[next]);
+        let pointer: u64 = |layout|::read(&view.pdpt[next]);
+        let directory: u64 = |layout|::read(&view.pd[next]);
+        let leaf: u64 = |layout|::read(&view.pt[next]);
         let same: bool = root == image.pml4[next] && pointer == image.pdpt[next] &&
             directory == image.pd[next] && leaf == image.pt[next];
         transition { _ -> verify(view, image, next + 1, matched && same) }
@@ -129,26 +123,26 @@ reaches ResourceProfileSupply
 // rather than the inventory's parallel lookup array. Missing or invalid links
 // leave unavailable pages; the core cloner independently validates the whole
 // path before accepting it. Large leaves need no invented child observation.
-machine MappingHandoff::observe(inventory: &FirmwareTableInventory, address: u64)
-    -> X86ObservedTablePage
+machine MappingHandoff::observe(inventory: &|firmware|::FirmwareTableInventory, address: u64)
+    -> |clone|::X86ObservedTablePage
 requires address::Bound == 18446744073709551616
-reaches ResourceProfileSupply
+reaches |layout|::ResourceProfileSupply
 {
-    let index: u64 = FirmwareTables::find(inventory, address);
+    let index: u64 = |firmware|::FirmwareTables::find(inventory, address);
     transition index < 2048 {
         true -> slot(inventory, address, index)
         _ -> unavailable()
     }
-    machine slot(inventory: &FirmwareTableInventory, address: u64, index: u64)
-        -> X86ObservedTablePage
+    machine slot(inventory: &|firmware|::FirmwareTableInventory, address: u64, index: u64)
+        -> |clone|::X86ObservedTablePage
     requires index < 2048 && address::Bound == 18446744073709551616
     {
         transition &inventory.roots[index] {
-            FirmwareTableSlot::Held { storage } -> backing(storage, address)
+            |firmware|::FirmwareTableSlot::Held { storage } -> backing(storage, address)
             _ -> unavailable()
         }
     }
-    machine backing(storage: &Extent in Granted, address: u64) -> X86ObservedTablePage
+    machine backing(storage: &|extent|::Extent in |extent|::Granted, address: u64) -> |clone|::X86ObservedTablePage
     requires address::Bound == 18446744073709551616
     {
         transition storage.base as u64 == address && storage.length == 4096 {
@@ -156,56 +150,56 @@ reaches ResourceProfileSupply
             _ -> unavailable()
         }
     }
-    machine read(storage: &Extent in Granted, address: u64) -> X86ObservedTablePage {
-        transition PagingHandoff::snapshot<FirmwareMemory>(storage) {
-            FirmwareRootSnapshot::Ready { entries } -> (X86ObservedTablePage {
+    machine read(storage: &|extent|::Extent in |extent|::Granted, address: u64) -> |clone|::X86ObservedTablePage {
+        transition |root|::PagingHandoff::snapshot<|root|::FirmwareMemory>(storage) {
+            |root|::FirmwareRootSnapshot::Ready { entries } -> (|clone|::X86ObservedTablePage {
                 available: true, address: address, entries: entries,
             })
             _ -> unavailable()
         }
     }
-    machine unavailable() -> X86ObservedTablePage {
-        let page: X86ObservedTablePage;
+    machine unavailable() -> |clone|::X86ObservedTablePage {
+        let page: |clone|::X86ObservedTablePage;
         page
     }
 }
 
-machine MappingHandoff::child(inventory: &FirmwareTableInventory, word: u64, level: u64)
-    -> X86ObservedTablePage
+machine MappingHandoff::child(inventory: &|firmware|::FirmwareTableInventory, word: u64, level: u64)
+    -> |clone|::X86ObservedTablePage
 requires address::Bound == 18446744073709551616
-reaches ResourceProfileSupply
+reaches |layout|::ResourceProfileSupply
 {
-    transition X86TableWalk::classify(word, level) {
-        X86TableEntryRoute::Link { address } -> MappingHandoff::observe(inventory, address)
+    transition |walk|::X86TableWalk::classify(word, level) {
+        |walk|::X86TableEntryRoute::Link { address } -> MappingHandoff::observe(inventory, address)
         _ -> unavailable()
     }
-    machine unavailable() -> X86ObservedTablePage {
-        let page: X86ObservedTablePage;
+    machine unavailable() -> |clone|::X86ObservedTablePage {
+        let page: |clone|::X86ObservedTablePage;
         page
     }
 }
 
 data MappingCloneResult {
     case Unavailable;
-    case Ready(tables: X86ClonedPageTables);
+    case Ready(tables: |clone|::X86ClonedPageTables);
 }
 
-machine MappingHandoff::clone(inventory: &FirmwareTableInventory, firmware_root: u64,
+machine MappingHandoff::clone(inventory: &|firmware|::FirmwareTableInventory, firmware_root: u64,
                               new_root: u64, target: u64, virtual_address: u64, length: u64)
     -> MappingCloneResult
 requires address::Bound == 18446744073709551616
-reaches ResourceProfileSupply
+reaches |layout|::ResourceProfileSupply
 {
-    transition x86_decompose_bootstrap_virtual_address(virtual_address) {
-            X86BootstrapVirtualAddressCheck::Canonical { indices } -> observe(inventory, firmware_root, new_root, target, length, indices)
+    transition |geometry|::x86_decompose_bootstrap_virtual_address(virtual_address) {
+            |geometry|::X86BootstrapVirtualAddressCheck::Canonical { indices } -> observe(inventory, firmware_root, new_root, target, length, indices)
         _ -> MappingCloneResult::Unavailable
     }
-    machine observe(inventory: &FirmwareTableInventory, firmware_root: u64,
-                  new_root: u64, target: u64, length: u64, indices: X86BootstrapVirtualAddressIndices)
+    machine observe(inventory: &|firmware|::FirmwareTableInventory, firmware_root: u64,
+                  new_root: u64, target: u64, length: u64, indices: |geometry|::X86BootstrapVirtualAddressIndices)
         -> MappingCloneResult
     requires address::Bound == 18446744073709551616
     {
-        let mut source: X86PagingPathSnapshot;
+        let mut source: |clone|::X86PagingPathSnapshot;
         source.pml4 = MappingHandoff::observe(inventory, firmware_root);
         let root: u64 = source.pml4.entries[indices.pml4_index];
         source.pdpt = MappingHandoff::child(inventory, root, 4);
@@ -213,8 +207,8 @@ reaches ResourceProfileSupply
         source.pd = MappingHandoff::child(inventory, directory_pointer, 3);
         let directory: u64 = source.pd.entries[indices.pd_index];
         source.pt = MappingHandoff::child(inventory, directory, 2);
-        transition X86PageTableClone::prepare_range(&source, new_root, target, indices.address, length) {
-            X86PageTableCloneResult::Ready { tables } -> (MappingCloneResult::Ready { tables: tables })
+        transition |clone|::X86PageTableClone::prepare_range(&source, new_root, target, indices.address, length) {
+            |clone|::X86PageTableCloneResult::Ready { tables } -> (MappingCloneResult::Ready { tables: tables })
             _ -> MappingCloneResult::Unavailable
         }
     }

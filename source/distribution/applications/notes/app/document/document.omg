@@ -1,38 +1,36 @@
-module document::document;
-
 // The bounded editor and NTS1 schema belong to Notes, not the storage service.
-use state::State;
-use document::encoding;
-public machine changed(s: &State) -> bool {
+use state.omg as local_state;
+use document/encoding.omg;
+public machine changed(s: &|local_state|::State) -> bool {
     transition s.length != s.saved_length {
         true -> (true)
         _ -> scan(s, 0u64)
     }
-    machine scan(s: &State, i: u64) -> bool {
+    machine scan(s: &|local_state|::State, i: u64) -> bool {
         transition i < s.length && i < 240u64 {
             true -> byte(s, i)
             _ -> (false)
         }
     }
-    machine byte(s: &State, i: u64) -> bool requires i < 240u64 {
+    machine byte(s: &|local_state|::State, i: u64) -> bool requires i < 240u64 {
         transition s.draft[i] != s.confirmed[i] {
             true -> (true)
             _ -> scan(s, i + 1u64)
         }
     }
 }
-public machine confirm(s: &mut State) {
+public machine confirm(s: &mut |local_state|::State) {
     s.saved_length = s.length;
     transition {
         _ -> copy(s, 0u64)
     }
-    machine copy(s: &mut State, i: u64) {
+    machine copy(s: &mut |local_state|::State, i: u64) {
         transition i < 240u64 {
             true -> byte(s, i)
             _ -> done()
         }
     }
-    machine byte(s: &mut State, i: u64) requires i < 240u64 {
+    machine byte(s: &mut |local_state|::State, i: u64) requires i < 240u64 {
         s.confirmed[i] = s.draft[i];
         transition {
             _ -> copy(s, i + 1u64)
@@ -40,11 +38,11 @@ public machine confirm(s: &mut State) {
     }
     machine done() {}
 }
-public machine edit(s: &mut State, key: u64) {
+public machine edit(s: &mut |local_state|::State, key: u64) {
     transition s.length <= 240u64 && s.cursor <= s.length {
         true -> command(s, key) _ -> done()
     }
-    machine command(s: &mut State, key: u64) {
+    machine command(s: &mut |local_state|::State, key: u64) {
         transition key {
             3u64 -> left(s)
             4u64 -> right(s)
@@ -52,27 +50,27 @@ public machine edit(s: &mut State, key: u64) {
             _ -> character(s, key)
         }
     }
-    machine left(s: &mut State) {
+    machine left(s: &mut |local_state|::State) {
         s.cursor = ((s.cursor as u64 in Saturating) - 1) as u64;
         s.dirty = true;
     }
-    machine right(s: &mut State) {
+    machine right(s: &mut |local_state|::State) {
         transition s.cursor < s.length && s.cursor < 240u64 {
             true -> advance(s)
             _ -> done()
         }
     }
-    machine advance(s: &mut State) requires s.cursor < 240u64 {
+    machine advance(s: &mut |local_state|::State) requires s.cursor < 240u64 {
         s.cursor = s.cursor + 1u64;
         s.dirty = true;
     }
-    machine backspace(s: &mut State) {
+    machine backspace(s: &mut |local_state|::State) {
         transition s.cursor > 0u64 && s.cursor <= 240u64 && s.length > 0u64 && s.length <= 240u64 {
             true -> erase(s)
             _ -> done()
         }
     }
-    machine erase(s: &mut State) requires s.cursor > 0u64 && s.length > 0u64 {
+    machine erase(s: &mut |local_state|::State) requires s.cursor > 0u64 && s.length > 0u64 {
         s.cursor = s.cursor - 1u64;
         s.length = s.length - 1u64;
         s.dirty = true;
@@ -81,59 +79,59 @@ public machine edit(s: &mut State, key: u64) {
             _ -> shift_left(s, start)
         }
     }
-    machine shift_left(s: &mut State, i: u64) {
+    machine shift_left(s: &mut |local_state|::State, i: u64) {
         transition i < s.length && i < 239u64 {
             true -> move_left(s, i)
             _ -> clear(s)
         }
     }
-    machine move_left(s: &mut State, i: u64) requires i < 239u64 {
+    machine move_left(s: &mut |local_state|::State, i: u64) requires i < 239u64 {
         s.draft[i] = s.draft[i + 1u64];
         transition {
             _ -> shift_left(s, i + 1u64)
         }
     }
-    machine clear(s: &mut State) {
+    machine clear(s: &mut |local_state|::State) {
         transition s.length < 240u64 {
             true -> zero(s)
             _ -> done()
         }
     }
-    machine zero(s: &mut State) requires s.length < 240u64 {
+    machine zero(s: &mut |local_state|::State) requires s.length < 240u64 {
         s.draft[s.length] = 0u8;
     }
-    machine character(s: &mut State, key: u64) {
+    machine character(s: &mut |local_state|::State, key: u64) {
         let byte: u64 = key_byte(key);
         transition byte != 0u64 && s.length < 240u64 {
             true -> insert(s, byte)
             _ -> done()
         }
     }
-    machine insert(s: &mut State, byte: u64) {
+    machine insert(s: &mut |local_state|::State, byte: u64) {
         let end: u64 = s.length;
         transition {
             _ -> shift_right(s, byte, end)
         }
     }
-    machine shift_right(s: &mut State, byte: u64, i: u64) {
+    machine shift_right(s: &mut |local_state|::State, byte: u64, i: u64) {
         transition i > s.cursor && i > 0u64 && i < 240u64 {
             true -> move_right(s, byte, i)
             _ -> put(s, byte)
         }
     }
-    machine move_right(s: &mut State, byte: u64, i: u64) requires i > 0u64 && i < 240u64 {
+    machine move_right(s: &mut |local_state|::State, byte: u64, i: u64) requires i > 0u64 && i < 240u64 {
         s.draft[i] = s.draft[i - 1u64];
         transition {
             _ -> shift_right(s, byte, i - 1u64)
         }
     }
-    machine put(s: &mut State, byte: u64) {
+    machine put(s: &mut |local_state|::State, byte: u64) {
         transition s.cursor < 240u64 && s.length < 240u64 && byte < 256u64 {
             true -> commit(s, byte)
             _ -> done()
         }
     }
-    machine commit(s: &mut State, byte: u64) requires s.cursor < 240u64 && s.length < 240u64 && byte < 256u64 {
+    machine commit(s: &mut |local_state|::State, byte: u64) requires s.cursor < 240u64 && s.length < 240u64 && byte < 256u64 {
         s.draft[s.cursor] = byte as u8;
         s.cursor = s.cursor + 1u64;
         s.length = s.length + 1u64;

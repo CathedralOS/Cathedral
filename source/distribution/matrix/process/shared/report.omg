@@ -1,192 +1,189 @@
-module report;
-use runtime::time::Stamp;
+use {runtime}/time.omg;
 // Startup diagnostics on the console, worded as the Rust host's lines so the
 // boot harness can key on them.
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::kernel;
+use {runtime}/kernel.omg;
 
-public machine handoff_held(gate: &Gate) reaches Kernel invokes Kernel {
+public machine handoff_held(gate: &|kernel|::Gate) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let text: [u8; 64] = "Matrix handoff probe: held\n                                     ";
     line(gate, &text);
 }
-public machine handoff_released(gate: &Gate) reaches Kernel invokes Kernel {
+public machine handoff_released(gate: &|kernel|::Gate) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let text: [u8; 64] = "Matrix handoff probe: released\n                                 ";
     line(gate, &text);
 }
-public machine construction_held(gate: &Gate) reaches Kernel invokes Kernel {
+public machine construction_held(gate: &|kernel|::Gate) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let text: [u8; 64] = "Matrix admission probe: held\n                                   ";
     line(gate, &text);
 }
-public machine construction_released(gate: &Gate) reaches Kernel invokes Kernel {
+public machine construction_released(gate: &|kernel|::Gate) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let text: [u8; 64] = "Matrix admission probe: released\n                               ";
     line(gate, &text);
 }
 
-public machine unused_reservation_released(gate: &Gate, slot: u64) reaches Kernel invokes Kernel {
+public machine unused_reservation_released(gate: &|kernel|::Gate, slot: u64) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let mut text: [u8; 64] = "Matrix unused reservation released: 0\n                          ";
     text[36u64] = (48u64 + (slot & 7u64)) as u8;
     line(gate, &text);
 }
 
-public machine display_ready(gate: &Gate) reaches Kernel invokes Kernel {
+public machine display_ready(gate: &|kernel|::Gate) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let text: [u8; 64] = "Cathedral matrix: shared display connection ready\n              ";
     line(gate, &text);
 }
-public machine storage_ready(gate: &Gate) reaches Kernel invokes Kernel {
+public machine storage_ready(gate: &|kernel|::Gate) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let text: [u8; 64] = "Cathedral matrix: shared storage connection ready\n              ";
     line(gate, &text);
 }
-public machine owner_control_ready(gate: &Gate) reaches Kernel invokes Kernel {
+public machine owner_control_ready(gate: &|kernel|::Gate) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let text: [u8; 64] = "Cathedral matrix: shared owner control ready\n                   ";
     line(gate, &text);
 }
-public machine parent_interaction_ready(gate: &Gate) reaches Kernel invokes Kernel {
+public machine parent_interaction_ready(gate: &|kernel|::Gate) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let text: [u8; 64] = "Cathedral matrix: shared parent interaction ready\n              ";
     line(gate, &text);
 }
-public machine parent_storage_ready(gate: &Gate) reaches Kernel invokes Kernel {
+public machine parent_storage_ready(gate: &|kernel|::Gate) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let text: [u8; 64] = "Cathedral matrix: shared parent storage ready\n                  ";
     line(gate, &text);
 }
-public machine brokered_ready(gate: &Gate) reaches Kernel invokes Kernel {
+public machine brokered_ready(gate: &|kernel|::Gate) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let text: [u8; 64] = "Cathedral matrix: brokered startup and input wake ready\n        ";
     line(gate, &text);
 }
-public machine child_control_ready(gate: &Gate) reaches Kernel invokes Kernel {
+public machine child_control_ready(gate: &|kernel|::Gate) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let text: [u8; 64] = "Cathedral matrix: shared child control ready\n                   ";
     line(gate, &text);
 }
-public machine configured(gate: &Gate) reaches Kernel invokes Kernel {
+public machine configured(gate: &|kernel|::Gate) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let text: [u8; 64] = "Cathedral matrix: configured from realm paths\n                  ";
     line(gate, &text);
 }
-public machine background_admitted(gate: &Gate) reaches Kernel invokes Kernel {
+public machine background_admitted(gate: &|kernel|::Gate) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let text: [u8; 64] = "Cathedral matrix: background admitted with presentation only\n   ";
     line(gate, &text);
 }
-public machine picker_placed(gate: &Gate) reaches Kernel invokes Kernel {
+public machine picker_placed(gate: &|kernel|::Gate) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let text: [u8; 64] = "Cathedral matrix: scoped picker placed over users\n              ";
     line(gate, &text);
 }
-public machine picker_retired(gate: &Gate) reaches Kernel invokes Kernel {
+public machine picker_retired(gate: &|kernel|::Gate) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let text: [u8; 64] = "Cathedral matrix: picker retired; user owns viewport\n           ";
     line(gate, &text);
 }
-public machine picker_exhausted(gate: &Gate) reaches Kernel invokes Kernel {
+public machine picker_exhausted(gate: &|kernel|::Gate) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let text: [u8; 64] = "Cathedral matrix: picker retries spent\n                         ";
     line(gate, &text);
 }
-public machine picker_restored(gate: &Gate) reaches Kernel invokes Kernel {
+public machine picker_restored(gate: &|kernel|::Gate) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let text: [u8; 64] = "Cathedral matrix: local picker restored\n                        ";
     line(gate, &text);
 }
 // Each line is a 64-byte literal written through its first newline in one
 // console write; the spaces after the newline only fill the literal.
-machine line(gate: &Gate, text: &[u8; 64]) reaches Kernel {
+machine line(gate: &|kernel|::Gate, text: &[u8; 64]) reaches |kernel|::Kernel {
     let mut words: [u64; 8];
     transition { _ -> pack(gate, text, &mut words, 0u64) }
-    machine pack(gate: &Gate, text: &[u8; 64], words: &mut [u64; 8], index: u64) requires index <= 64u64 reaches Kernel {
+    machine pack(gate: &|kernel|::Gate, text: &[u8; 64], words: &mut [u64; 8], index: u64) requires index <= 64u64 reaches |kernel|::Kernel {
         transition index < 64u64 {
             true -> byte(gate, text, words, index)
             _ -> written(gate, words, 64u64)
         }
     }
-    machine byte(gate: &Gate, text: &[u8; 64], words: &mut [u64; 8], index: u64) requires index < 64u64 reaches Kernel {
+    machine byte(gate: &|kernel|::Gate, text: &[u8; 64], words: &mut [u64; 8], index: u64) requires index < 64u64 reaches |kernel|::Kernel {
         words[index / 8u64] = words[index / 8u64] | ((text[index] as u64) << ((index % 8u64) * 8u64));
         transition text[index] == 10u8 {
             true -> written(gate, words, index + 1u64)
             _ -> pack(gate, text, words, index + 1u64)
         }
     }
-    machine written(gate: &Gate, words: &[u64; 8], bytes: u64 [0..=64]) reaches Kernel {
-        let status: u64 = Kernel::write(gate, words, bytes);
+    machine written(gate: &|kernel|::Gate, words: &[u64; 8], bytes: u64 [0..=64]) reaches |kernel|::Kernel {
+        let status: u64 = |kernel|::Kernel::write(gate, words, bytes);
     }
 }
 // A child's retirement on the console: its slot, then the exit's variant and
 // code in hex (1 returned, 2 fault with 2a address and 2b instruction,
 // 3 cancelled, 4 failed).
-public machine child(gate: &Gate, slot: u64, kind: u64, value: u64) reaches Kernel invokes Kernel {
+public machine child(gate: &|kernel|::Gate, slot: u64, kind: u64, value: u64) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let text: [u8; 24] = "Cathedral matrix: child ";
     let mut words: [u64; 8];
     transition { _ -> pack(gate, &text, &mut words, 0u64, slot, kind, value) }
-    machine pack(gate: &Gate, text: &[u8; 24], words: &mut [u64; 8], index: u64, slot: u64, kind: u64, value: u64) requires index <= 24u64 reaches Kernel {
+    machine pack(gate: &|kernel|::Gate, text: &[u8; 24], words: &mut [u64; 8], index: u64, slot: u64, kind: u64, value: u64) requires index <= 24u64 reaches |kernel|::Kernel {
         transition index < 24u64 {
             true -> byte(gate, text, words, index, slot, kind, value)
             _ -> numbered(gate, words, slot, kind, value)
         }
     }
-    machine byte(gate: &Gate, text: &[u8; 24], words: &mut [u64; 8], index: u64, slot: u64, kind: u64, value: u64) requires index < 24u64 reaches Kernel {
+    machine byte(gate: &|kernel|::Gate, text: &[u8; 24], words: &mut [u64; 8], index: u64, slot: u64, kind: u64, value: u64) requires index < 24u64 reaches |kernel|::Kernel {
         let word: u64 = index / 8u64;
         words[word] = words[word] | ((text[index] as u64) << ((index % 8u64) * 8u64));
         transition { _ -> pack(gate, text, words, index + 1u64, slot, kind, value) }
     }
-    machine numbered(gate: &Gate, words: &mut [u64; 8], slot: u64, kind: u64, value: u64) reaches Kernel {
+    machine numbered(gate: &|kernel|::Gate, words: &mut [u64; 8], slot: u64, kind: u64, value: u64) reaches |kernel|::Kernel {
         put(words, 24u64, 48u64 + (slot & 7u64));
         put(words, 25u64, 32u64);
         hex(words, 26u64, kind, 0u64);
         put(words, 42u64, 32u64);
         hex(words, 43u64, value, 0u64);
         put(words, 59u64, 10u64);
-        let status: u64 = Kernel::write(gate, words, 60u64);
+        let status: u64 = |kernel|::Kernel::write(gate, words, 60u64);
     }
 }
 // Where a child's admission from an image stands: the slot, then the stage
 // (0 admitted, 1 declaration, 2 fit, 3 image grant, 4 reservation, 5 admission, 6
 // binding, 7 funding, 8 release, 9 surface ranks, 10 placement, 11 activation)
 // and the code in hex.
-public machine launch_stage(gate: &Gate, slot: u64, stage: u64, code: u64) reaches Kernel invokes Kernel {
+public machine launch_stage(gate: &|kernel|::Gate, slot: u64, stage: u64, code: u64) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let text: [u8; 25] = "Cathedral matrix: launch ";
     let mut words: [u64; 8];
     transition { _ -> pack(gate, &text, &mut words, 0u64, slot, stage, code) }
-    machine pack(gate: &Gate, text: &[u8; 25], words: &mut [u64; 8], index: u64, slot: u64, stage: u64, code: u64) requires index <= 25u64 reaches Kernel {
+    machine pack(gate: &|kernel|::Gate, text: &[u8; 25], words: &mut [u64; 8], index: u64, slot: u64, stage: u64, code: u64) requires index <= 25u64 reaches |kernel|::Kernel {
         transition index < 25u64 {
             true -> byte(gate, text, words, index, slot, stage, code)
             _ -> numbered(gate, words, slot, stage, code)
         }
     }
-    machine byte(gate: &Gate, text: &[u8; 25], words: &mut [u64; 8], index: u64, slot: u64, stage: u64, code: u64) requires index < 25u64 reaches Kernel {
+    machine byte(gate: &|kernel|::Gate, text: &[u8; 25], words: &mut [u64; 8], index: u64, slot: u64, stage: u64, code: u64) requires index < 25u64 reaches |kernel|::Kernel {
         let word: u64 = index / 8u64;
         words[word] = words[word] | ((text[index] as u64) << ((index % 8u64) * 8u64));
         transition { _ -> pack(gate, text, words, index + 1u64, slot, stage, code) }
     }
-    machine numbered(gate: &Gate, words: &mut [u64; 8], slot: u64, stage: u64, code: u64) reaches Kernel {
+    machine numbered(gate: &|kernel|::Gate, words: &mut [u64; 8], slot: u64, stage: u64, code: u64) reaches |kernel|::Kernel {
         put(words, 25u64, 48u64 + (slot & 7u64));
         put(words, 26u64, 32u64);
         hex(words, 27u64, stage, 0u64);
         put(words, 43u64, 32u64);
         hex(words, 44u64, code, 0u64);
         put(words, 60u64, 10u64);
-        let status: u64 = Kernel::write(gate, words, 61u64);
+        let status: u64 = |kernel|::Kernel::write(gate, words, 61u64);
     }
 }
 // Funding on the console, in hex: what this matrix asks its owner for, as
 // private pages, reader pages, channels, slots and frames; and why it refused a
 // child's request (1 past the grant's ceiling, 2 not covered upstream, 3 the
 // kernel refused the growth), with the child's slot.
-public machine funding_asked(gate: &Gate, delta: [u64; 5]) reaches Kernel invokes Kernel {
+public machine funding_asked(gate: &|kernel|::Gate, delta: [u64; 5]) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let text: [u8; 24] = "Cathedral matrix: fund  ";
     funding_vector(gate, &text, delta);
 }
 // The root cannot ask an owner: expose the exact missing dimension on refusal.
-public machine funding_shortfall(gate: &Gate, delta: [u64; 5]) reaches Kernel invokes Kernel {
+public machine funding_shortfall(gate: &|kernel|::Gate, delta: [u64; 5]) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let text: [u8; 24] = "Cathedral matrix: lack  ";
     funding_vector(gate, &text, delta);
 }
-machine funding_vector(gate: &Gate, text: &[u8; 24], delta: [u64; 5]) reaches Kernel {
+machine funding_vector(gate: &|kernel|::Gate, text: &[u8; 24], delta: [u64; 5]) reaches |kernel|::Kernel {
     let mut words: [u64; 8];
     transition { _ -> pack(gate, text, &mut words, 0u64, delta) }
-    machine pack(gate: &Gate, text: &[u8; 24], words: &mut [u64; 8], index: u64, delta: [u64; 5]) requires index <= 23u64 reaches Kernel {
+    machine pack(gate: &|kernel|::Gate, text: &[u8; 24], words: &mut [u64; 8], index: u64, delta: [u64; 5]) requires index <= 23u64 reaches |kernel|::Kernel {
         transition index < 23u64 {
             true -> byte(gate, text, words, index, delta)
             _ -> numbered(gate, words, delta)
         }
     }
-    machine byte(gate: &Gate, text: &[u8; 24], words: &mut [u64; 8], index: u64, delta: [u64; 5]) requires index < 23u64 reaches Kernel {
+    machine byte(gate: &|kernel|::Gate, text: &[u8; 24], words: &mut [u64; 8], index: u64, delta: [u64; 5]) requires index < 23u64 reaches |kernel|::Kernel {
         words[index / 8u64] = words[index / 8u64] | ((text[index] as u64) << ((index % 8u64) * 8u64));
         transition { _ -> pack(gate, text, words, index + 1u64, delta) }
     }
-    machine numbered(gate: &Gate, words: &mut [u64; 8], delta: [u64; 5]) reaches Kernel {
+    machine numbered(gate: &|kernel|::Gate, words: &mut [u64; 8], delta: [u64; 5]) reaches |kernel|::Kernel {
         short(words, 23u64, delta[0], 0u64);
         put(words, 27u64, 32u64);
         short(words, 28u64, delta[1], 0u64);
@@ -197,95 +194,95 @@ machine funding_vector(gate: &Gate, text: &[u8; 24], delta: [u64; 5]) reaches Ke
         put(words, 42u64, 32u64);
         short(words, 43u64, delta[4], 0u64);
         put(words, 47u64, 10u64);
-        let status: u64 = Kernel::write(gate, words, 48u64);
+        let status: u64 = |kernel|::Kernel::write(gate, words, 48u64);
     }
 }
-public machine funding_refused(gate: &Gate, slot: u64, reason: u64) reaches Kernel invokes Kernel {
+public machine funding_refused(gate: &|kernel|::Gate, slot: u64, reason: u64) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let text: [u8; 64] = "Cathedral matrix: fund refused      \n                           ";
     let mut words: [u64; 8];
     transition { _ -> pack(gate, &text, &mut words, 0u64, slot, reason) }
-    machine pack(gate: &Gate, text: &[u8; 64], words: &mut [u64; 8], index: u64, slot: u64, reason: u64) requires index <= 37u64 reaches Kernel {
+    machine pack(gate: &|kernel|::Gate, text: &[u8; 64], words: &mut [u64; 8], index: u64, slot: u64, reason: u64) requires index <= 37u64 reaches |kernel|::Kernel {
         transition index < 37u64 {
             true -> byte(gate, text, words, index, slot, reason)
             _ -> numbered(gate, words, slot, reason)
         }
     }
-    machine byte(gate: &Gate, text: &[u8; 64], words: &mut [u64; 8], index: u64, slot: u64, reason: u64) requires index < 37u64 reaches Kernel {
+    machine byte(gate: &|kernel|::Gate, text: &[u8; 64], words: &mut [u64; 8], index: u64, slot: u64, reason: u64) requires index < 37u64 reaches |kernel|::Kernel {
         words[index / 8u64] = words[index / 8u64] | ((text[index] as u64) << ((index % 8u64) * 8u64));
         transition { _ -> pack(gate, text, words, index + 1u64, slot, reason) }
     }
-    machine numbered(gate: &Gate, words: &mut [u64; 8], slot: u64, reason: u64) reaches Kernel {
+    machine numbered(gate: &|kernel|::Gate, words: &mut [u64; 8], slot: u64, reason: u64) reaches |kernel|::Kernel {
         put(words, 32u64, 48u64 + (slot & 7u64));
         put(words, 35u64, 48u64 + (reason & 7u64));
-        let status: u64 = Kernel::write(gate, words, 37u64);
+        let status: u64 = |kernel|::Kernel::write(gate, words, 37u64);
     }
 }
 // The matrix's own use in hex: private pages, reader pages and channels, as
 // the lab sizes a manifest from the console.
-public machine budget(gate: &Gate) reaches Kernel invokes Kernel {
+public machine budget(gate: &|kernel|::Gate) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let mut record: [u64; 8];
-    let status: u64 = Kernel::resource_budget(gate, &mut record);
+    let status: u64 = |kernel|::Kernel::resource_budget(gate, &mut record);
     transition status == 0u64 { true -> known(gate, record[3], record[4], record[5]) _ -> done() }
-    machine known(gate: &Gate, pages: u64, readers: u64, channels: u64) reaches Kernel {
+    machine known(gate: &|kernel|::Gate, pages: u64, readers: u64, channels: u64) reaches |kernel|::Kernel {
         let text: [u8; 25] = "Cathedral matrix: budget ";
         let mut words: [u64; 8];
         transition { _ -> pack(gate, &text, &mut words, 0u64, pages, readers, channels) }
     }
-    machine pack(gate: &Gate, text: &[u8; 25], words: &mut [u64; 8], index: u64, pages: u64, readers: u64, channels: u64)
-        requires index <= 25u64 reaches Kernel {
+    machine pack(gate: &|kernel|::Gate, text: &[u8; 25], words: &mut [u64; 8], index: u64, pages: u64, readers: u64, channels: u64)
+        requires index <= 25u64 reaches |kernel|::Kernel {
         transition index < 25u64 {
             true -> byte(gate, text, words, index, pages, readers, channels)
             _ -> numbered(gate, words, pages, readers, channels)
         }
     }
-    machine byte(gate: &Gate, text: &[u8; 25], words: &mut [u64; 8], index: u64, pages: u64, readers: u64, channels: u64)
-        requires index < 25u64 reaches Kernel {
+    machine byte(gate: &|kernel|::Gate, text: &[u8; 25], words: &mut [u64; 8], index: u64, pages: u64, readers: u64, channels: u64)
+        requires index < 25u64 reaches |kernel|::Kernel {
         let word: u64 = index / 8u64;
         words[word] = words[word] | ((text[index] as u64) << ((index % 8u64) * 8u64));
         transition { _ -> pack(gate, text, words, index + 1u64, pages, readers, channels) }
     }
-    machine numbered(gate: &Gate, words: &mut [u64; 8], pages: u64, readers: u64, channels: u64) reaches Kernel {
+    machine numbered(gate: &|kernel|::Gate, words: &mut [u64; 8], pages: u64, readers: u64, channels: u64) reaches |kernel|::Kernel {
         short(words, 25u64, pages, 0u64);
         put(words, 29u64, 32u64);
         short(words, 30u64, readers, 0u64);
         put(words, 34u64, 32u64);
         short(words, 35u64, channels, 0u64);
         put(words, 39u64, 10u64);
-        let status: u64 = Kernel::write(gate, words, 40u64);
+        let status: u64 = |kernel|::Kernel::write(gate, words, 40u64);
     }
 }
 // This matrix's account once a child's subtree is gone, in hex: the slot, the
 // private and reader pages and frames still charged, and the launch slots
 // free. A soak compares these across cycles, so a leak shows as drift.
-public machine reclaimed(gate: &Gate, slot: u64) reaches Kernel invokes Kernel {
+public machine reclaimed(gate: &|kernel|::Gate, slot: u64) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let mut budget: [u64; 8];
     let mut physical: [u64; 8];
-    let budgeted: u64 = Kernel::resource_budget(gate, &mut budget);
-    let measured: u64 = Kernel::physical_budget(gate, &mut physical);
-    let free: u64 = Kernel::pool_available(gate);
-    transition budgeted == 0u64 && measured == 0u64 && free < kernel::ERROR_BASE {
+    let budgeted: u64 = |kernel|::Kernel::resource_budget(gate, &mut budget);
+    let measured: u64 = |kernel|::Kernel::physical_budget(gate, &mut physical);
+    let free: u64 = |kernel|::Kernel::pool_available(gate);
+    transition budgeted == 0u64 && measured == 0u64 && free < |kernel|::ERROR_BASE {
         true -> known(gate, slot, budget[3], budget[4], physical[1], free)
         _ -> done()
     }
-    machine known(gate: &Gate, slot: u64, pages: u64, readers: u64, frames: u64, free: u64) reaches Kernel {
+    machine known(gate: &|kernel|::Gate, slot: u64, pages: u64, readers: u64, frames: u64, free: u64) reaches |kernel|::Kernel {
         let text: [u8; 28] = "Cathedral matrix: reclaimed ";
         let mut words: [u64; 8];
         transition { _ -> pack(gate, &text, &mut words, 0u64, slot, pages, readers, frames, free) }
     }
-    machine pack(gate: &Gate, text: &[u8; 28], words: &mut [u64; 8], index: u64, slot: u64, pages: u64, readers: u64, frames: u64, free: u64)
-        requires index <= 28u64 reaches Kernel {
+    machine pack(gate: &|kernel|::Gate, text: &[u8; 28], words: &mut [u64; 8], index: u64, slot: u64, pages: u64, readers: u64, frames: u64, free: u64)
+        requires index <= 28u64 reaches |kernel|::Kernel {
         transition index < 28u64 {
             true -> byte(gate, text, words, index, slot, pages, readers, frames, free)
             _ -> numbered(gate, words, slot, pages, readers, frames, free)
         }
     }
-    machine byte(gate: &Gate, text: &[u8; 28], words: &mut [u64; 8], index: u64, slot: u64, pages: u64, readers: u64, frames: u64, free: u64)
-        requires index < 28u64 reaches Kernel {
+    machine byte(gate: &|kernel|::Gate, text: &[u8; 28], words: &mut [u64; 8], index: u64, slot: u64, pages: u64, readers: u64, frames: u64, free: u64)
+        requires index < 28u64 reaches |kernel|::Kernel {
         let word: u64 = index / 8u64;
         words[word] = words[word] | ((text[index] as u64) << ((index % 8u64) * 8u64));
         transition { _ -> pack(gate, text, words, index + 1u64, slot, pages, readers, frames, free) }
     }
-    machine numbered(gate: &Gate, words: &mut [u64; 8], slot: u64, pages: u64, readers: u64, frames: u64, free: u64) reaches Kernel {
+    machine numbered(gate: &|kernel|::Gate, words: &mut [u64; 8], slot: u64, pages: u64, readers: u64, frames: u64, free: u64) reaches |kernel|::Kernel {
         put(words, 28u64, 48u64 + (slot & 7u64));
         put(words, 29u64, 32u64);
         short(words, 30u64, pages, 0u64);
@@ -296,7 +293,7 @@ public machine reclaimed(gate: &Gate, slot: u64) reaches Kernel invokes Kernel {
         put(words, 44u64, 32u64);
         short(words, 45u64, free, 0u64);
         put(words, 49u64, 10u64);
-        let status: u64 = Kernel::write(gate, words, 50u64);
+        let status: u64 = |kernel|::Kernel::write(gate, words, 50u64);
     }
 }
 // Four hex digits of a count below 65536.
@@ -319,49 +316,49 @@ machine short(words: &mut [u64; 8], start: u64, value: u64, digit: u64) requires
 }
 // A storage link this matrix retired, which source and why, in hex: a
 // parent's link (2) cannot be remade, so its loss ends this matrix's storage.
-public machine storage_lost(gate: &Gate, link: u64, code: u64) reaches Kernel invokes Kernel {
+public machine storage_lost(gate: &|kernel|::Gate, link: u64, code: u64) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let text: [u8; 31] = "Cathedral matrix: storage lost ";
     let mut words: [u64; 8];
     transition { _ -> pack(gate, &text, &mut words, 0u64, link, code) }
-    machine pack(gate: &Gate, text: &[u8; 31], words: &mut [u64; 8], index: u64, link: u64, code: u64) requires index <= 31u64 reaches Kernel {
+    machine pack(gate: &|kernel|::Gate, text: &[u8; 31], words: &mut [u64; 8], index: u64, link: u64, code: u64) requires index <= 31u64 reaches |kernel|::Kernel {
         transition index < 31u64 {
             true -> byte(gate, text, words, index, link, code)
             _ -> numbered(gate, words, link, code)
         }
     }
-    machine byte(gate: &Gate, text: &[u8; 31], words: &mut [u64; 8], index: u64, link: u64, code: u64) requires index < 31u64 reaches Kernel {
+    machine byte(gate: &|kernel|::Gate, text: &[u8; 31], words: &mut [u64; 8], index: u64, link: u64, code: u64) requires index < 31u64 reaches |kernel|::Kernel {
         let word: u64 = index / 8u64;
         words[word] = words[word] | ((text[index] as u64) << ((index % 8u64) * 8u64));
         transition { _ -> pack(gate, text, words, index + 1u64, link, code) }
     }
-    machine numbered(gate: &Gate, words: &mut [u64; 8], link: u64, code: u64) reaches Kernel {
+    machine numbered(gate: &|kernel|::Gate, words: &mut [u64; 8], link: u64, code: u64) reaches |kernel|::Kernel {
         put(words, 31u64, 48u64 + (link & 7u64));
         put(words, 32u64, 32u64);
         hex(words, 33u64, code, 0u64);
         put(words, 49u64, 10u64);
-        let status: u64 = Kernel::write(gate, words, 50u64);
+        let status: u64 = |kernel|::Kernel::write(gate, words, 50u64);
     }
 }
 // A child's launch this matrix refused, with the code in hex.
-public machine launch_refused(gate: &Gate, code: u64) reaches Kernel invokes Kernel {
+public machine launch_refused(gate: &|kernel|::Gate, code: u64) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let text: [u8; 33] = "Cathedral matrix: launch refused ";
     let mut words: [u64; 8];
     transition { _ -> pack(gate, &text, &mut words, 0u64, code) }
-    machine pack(gate: &Gate, text: &[u8; 33], words: &mut [u64; 8], index: u64, code: u64) requires index <= 33u64 reaches Kernel {
+    machine pack(gate: &|kernel|::Gate, text: &[u8; 33], words: &mut [u64; 8], index: u64, code: u64) requires index <= 33u64 reaches |kernel|::Kernel {
         transition index < 33u64 {
             true -> byte(gate, text, words, index, code)
             _ -> numbered(gate, words, code)
         }
     }
-    machine byte(gate: &Gate, text: &[u8; 33], words: &mut [u64; 8], index: u64, code: u64) requires index < 33u64 reaches Kernel {
+    machine byte(gate: &|kernel|::Gate, text: &[u8; 33], words: &mut [u64; 8], index: u64, code: u64) requires index < 33u64 reaches |kernel|::Kernel {
         let word: u64 = index / 8u64;
         words[word] = words[word] | ((text[index] as u64) << ((index % 8u64) * 8u64));
         transition { _ -> pack(gate, text, words, index + 1u64, code) }
     }
-    machine numbered(gate: &Gate, words: &mut [u64; 8], code: u64) reaches Kernel {
+    machine numbered(gate: &|kernel|::Gate, words: &mut [u64; 8], code: u64) reaches |kernel|::Kernel {
         hex(words, 33u64, code, 0u64);
         put(words, 49u64, 10u64);
-        let status: u64 = Kernel::write(gate, words, 50u64);
+        let status: u64 = |kernel|::Kernel::write(gate, words, 50u64);
     }
 }
 machine put(words: &mut [u64; 8], index: u64, byte: u64) requires index < 64u64 {
@@ -387,12 +384,12 @@ machine hex(words: &mut [u64; 8], start: u64, value: u64, digit: u64) requires s
 }
 machine done() {}
 
-public machine selection_restored(gate: &Gate) reaches Kernel invokes Kernel {
+public machine selection_restored(gate: &|kernel|::Gate) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let text: [u8; 64] = "Cathedral matrix: selection restored\n                           ";
     line(gate, &text);
 }
 
-public machine selection_cancelled(gate: &Gate) reaches Kernel invokes Kernel {
+public machine selection_cancelled(gate: &|kernel|::Gate) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let text: [u8; 64] = "Cathedral matrix: selection cancelled\n                          ";
     line(gate, &text);
 }
@@ -403,28 +400,28 @@ public machine selection_cancelled(gate: &Gate) reaches Kernel invokes Kernel {
 // 5 aggregate loss; 6 close refusal; 7 process cleanup reason.
 // Events 8/9: child request dispatched/queued (value is its opcode).
 // Startup stamps correlate logs in one boot; they are not process authority.
-public machine control(gate: &Gate, clock: u64, owner: u64, event: u64, slot: u64, value: u64) reaches Kernel invokes Kernel {
-    let sample: Stamp = runtime::time::stamp(gate, clock);
+public machine control(gate: &|kernel|::Gate, clock: u64, owner: u64, event: u64, slot: u64, value: u64) reaches |kernel|::Kernel invokes |kernel|::Kernel {
+    let sample: |time|::Stamp = |time|::stamp(gate, clock);
     timed(gate, owner, event, slot, sample);
     control_value(gate, owner, event, slot, value);
 }
-machine control_value(gate: &Gate, owner: u64, event: u64, slot: u64, value: u64) reaches Kernel {
+machine control_value(gate: &|kernel|::Gate, owner: u64, event: u64, slot: u64, value: u64) reaches |kernel|::Kernel {
     let text: [u8; 16] = "Matrix control: ";
     let mut words: [u64; 8];
     transition { _ -> pack(gate, &text, &mut words, 0u64, owner, event, slot, value) }
-    machine pack(gate: &Gate, text: &[u8; 16], words: &mut [u64; 8], index: u64, owner: u64, event: u64, slot: u64, value: u64)
-        requires index <= 16u64 reaches Kernel {
+    machine pack(gate: &|kernel|::Gate, text: &[u8; 16], words: &mut [u64; 8], index: u64, owner: u64, event: u64, slot: u64, value: u64)
+        requires index <= 16u64 reaches |kernel|::Kernel {
         transition index < 16u64 {
             true -> byte(gate, text, words, index, owner, event, slot, value)
             _ -> numbered(gate, words, owner, event, slot, value)
         }
     }
-    machine byte(gate: &Gate, text: &[u8; 16], words: &mut [u64; 8], index: u64, owner: u64, event: u64, slot: u64, value: u64)
-        requires index < 16u64 reaches Kernel {
+    machine byte(gate: &|kernel|::Gate, text: &[u8; 16], words: &mut [u64; 8], index: u64, owner: u64, event: u64, slot: u64, value: u64)
+        requires index < 16u64 reaches |kernel|::Kernel {
         put(words, index, text[index] as u64);
         transition { _ -> pack(gate, text, words, index + 1u64, owner, event, slot, value) }
     }
-    machine numbered(gate: &Gate, words: &mut [u64; 8], owner: u64, event: u64, slot: u64, value: u64) reaches Kernel {
+    machine numbered(gate: &|kernel|::Gate, words: &mut [u64; 8], owner: u64, event: u64, slot: u64, value: u64) reaches |kernel|::Kernel {
         hex(words, 16u64, owner, 0u64);
         put(words, 32u64, 32u64);
         put(words, 33u64, 48u64 + (event % 10u64));
@@ -433,35 +430,35 @@ machine control_value(gate: &Gate, owner: u64, event: u64, slot: u64, value: u64
         put(words, 36u64, 32u64);
         hex(words, 37u64, value, 0u64);
         put(words, 53u64, 10u64);
-        let status: u64 = Kernel::write(gate, words, 54u64);
+        let status: u64 = |kernel|::Kernel::write(gate, words, 54u64);
     }
 }
 
 // Full-width monotonic and caller-CPU microseconds, sampled before either write.
 // Adjacent reply status/loss samples also expose the diagnostic overhead.
-machine timed(gate: &Gate, origin: u64, event: u64, slot: u64, sample: Stamp) reaches Kernel {
+machine timed(gate: &|kernel|::Gate, origin: u64, event: u64, slot: u64, sample: |time|::Stamp) reaches |kernel|::Kernel {
     transition sample {
-        Stamp::Read { ticks, micros, cpu } -> packed(gate, origin, event, slot, micros, cpu)
+        |time|::Stamp::Read { ticks, micros, cpu } -> packed(gate, origin, event, slot, micros, cpu)
         _ -> done()
     }
-    machine packed(gate: &Gate, origin: u64, event: u64, slot: u64, micros: u64, cpu: u64) reaches Kernel {
+    machine packed(gate: &|kernel|::Gate, origin: u64, event: u64, slot: u64, micros: u64, cpu: u64) reaches |kernel|::Kernel {
         let text: [u8; 10] = "Matrix t: ";
         let mut words: [u64; 8];
         transition { _ -> prefix(gate, &text, &mut words, 0u64, origin, event, slot, micros, cpu) }
     }
-    machine prefix(gate: &Gate, text: &[u8; 10], words: &mut [u64; 8], index: u64,
-        origin: u64, event: u64, slot: u64, micros: u64, cpu: u64) reaches Kernel requires index <= 10u64 {
+    machine prefix(gate: &|kernel|::Gate, text: &[u8; 10], words: &mut [u64; 8], index: u64,
+        origin: u64, event: u64, slot: u64, micros: u64, cpu: u64) reaches |kernel|::Kernel requires index <= 10u64 {
         transition index < 10u64 {
             true -> byte(gate, text, words, index, origin, event, slot, micros, cpu)
             _ -> numbered(gate, words, origin, event, slot, micros, cpu)
         }
     }
-    machine byte(gate: &Gate, text: &[u8; 10], words: &mut [u64; 8], index: u64,
-        origin: u64, event: u64, slot: u64, micros: u64, cpu: u64) reaches Kernel requires index < 10u64 {
+    machine byte(gate: &|kernel|::Gate, text: &[u8; 10], words: &mut [u64; 8], index: u64,
+        origin: u64, event: u64, slot: u64, micros: u64, cpu: u64) reaches |kernel|::Kernel requires index < 10u64 {
         put(words, index, text[index] as u64);
         transition { _ -> prefix(gate, text, words, index + 1u64, origin, event, slot, micros, cpu) }
     }
-    machine numbered(gate: &Gate, words: &mut [u64; 8], origin: u64, event: u64, slot: u64, micros: u64, cpu: u64) reaches Kernel {
+    machine numbered(gate: &|kernel|::Gate, words: &mut [u64; 8], origin: u64, event: u64, slot: u64, micros: u64, cpu: u64) reaches |kernel|::Kernel {
         hex(words, 10u64, origin, 0u64);
         put(words, 26u64, 32u64);
         put(words, 27u64, 48u64 + (event % 10u64));
@@ -471,7 +468,7 @@ machine timed(gate: &Gate, origin: u64, event: u64, slot: u64, sample: Stamp) re
         put(words, 46u64, 32u64);
         hex(words, 47u64, cpu, 0u64);
         put(words, 63u64, 10u64);
-        let status: u64 = Kernel::write(gate, words, 64u64);
+        let status: u64 = |kernel|::Kernel::write(gate, words, 64u64);
     }
     machine done() {}
 }

@@ -1,7 +1,8 @@
-use arch::isa::x86_64::interrupts::entry::CathedralAcknowledgementRepresentation;
-use arch::board::pc::timer::root::LegacyPicTimerRoot;
-use omega::language::core::interrupt;
+use {omega}/language/core/assembly.omg;
+use {arch}/isa/x86_64/interrupts/entry.omg;
+use {arch}/board/pc/timer/root.omg;
+use {omega}/language/core/interrupt.omg;
 
-machine timer_entry(acknowledgement: InterruptAcknowledgement in Pending) reaches PortIo {
+machine timer_entry(acknowledgement: |interrupt|::InterruptAcknowledgement in |interrupt|::Pending) reaches |assembly|::PortIo {
 
 }

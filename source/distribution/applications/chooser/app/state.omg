@@ -1,8 +1,7 @@
-module state;
-use decisions::outcomes;
-use decisions::catalogue::metadata;
-use decisions::catalogue::catalogue;
-use decisions::layout;
+use {decisions}/outcomes.omg;
+use {decisions}/catalogue/metadata.omg;
+use {decisions}/catalogue/catalogue.omg;
+use {decisions}/layout.omg;
 
 // Opaque app state. The host knows only its size/alignment, never its fields.
 public data State {
@@ -10,12 +9,12 @@ public data State {
     picker: bool;
     own: u64;
     realm: u64;
-    notice: decisions::outcomes::Notice;
+    notice: |outcomes|::Notice;
     metadata: [u64; 64];
-    classification: decisions::catalogue::metadata::Classification;
-    catalogue_request: decisions::catalogue::catalogue::Request;
-    entries: decisions::catalogue::catalogue::Catalogue;
-    geometry: decisions::layout::Geometry;
+    classification: |metadata|::Classification;
+    catalogue_request: |catalogue|::Request;
+    entries: |catalogue|::Catalogue;
+    geometry: |layout|::Geometry;
     candidate_names: [[u8; 13]; 51];
     found: u64;
     template: u64;

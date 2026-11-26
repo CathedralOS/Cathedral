@@ -1,5 +1,3 @@
-module children::control::main;
-
 // A close requires a clean answer. A survey waits for every queried child and
 // preserves uncertainty once any child might lose work.
 public const CHILD_CAPACITY: u64 = 5u64;

@@ -1,11 +1,10 @@
-module rects;
 // The compact presentation word: one or two paints published atomically under
 // one revision, in the same revision space as BEGIN and COMMIT. Three header
 // words, then two records of a child-local name, four 16-bit extents and an
 // RGB colour, little-endian across the remaining words; an unused second
 // record is entirely zero. Decoding re-encodes to check ranges, distinct
 // names and zero padding. Wire owner: source-rs/platform/contracts/matrix.rs.
-use protocol::main;
+use {protocol}/main.omg;
 
 public data Rects [copy] {
     count: u64;
@@ -30,7 +29,7 @@ public machine decode(words: &[u64; 8]) -> Rects {
     }
     machine checked(words: &[u64; 8], first: [u64; 8], second: [u64; 8], count: u64) -> Rects {
         let encoded: [u64; 8] = encode(words[1], words[2], first, second, count);
-        transition words[0] == PRESENT_RECTS && same(words, &encoded) {
+        transition words[0] == |main|::PRESENT_RECTS && same(words, &encoded) {
             true -> (Rects { count: count, first: first, second: second })
             _ -> (Rects { count: 0u64, first: first, second: second })
         }
@@ -38,7 +37,7 @@ public machine decode(words: &[u64; 8]) -> Rects {
 }
 machine fields(epoch: u64, name: u64, geometry: u64, colour: u64) -> [u64; 8] {
     let mut words: [u64; 8];
-    words[0] = MATRIX_PAINT;
+    words[0] = |main|::MATRIX_PAINT;
     words[1] = epoch;
     words[2] = name;
     words[3] = geometry & 0xffffu64;
@@ -50,7 +49,7 @@ machine fields(epoch: u64, name: u64, geometry: u64, colour: u64) -> [u64; 8] {
 }
 machine record(epoch: u64, p: [u64; 8]) -> Record {
     let bounded: bool = p[3] <= 0xffffu64 && p[4] <= 0xffffu64 && p[5] <= 0xffffu64 && p[6] <= 0xffffu64;
-    let valid: bool = p[0] == MATRIX_PAINT && p[1] == epoch && p[2] != 0u64 && p[7] <= 0xffffffu64 && bounded;
+    let valid: bool = p[0] == |main|::MATRIX_PAINT && p[1] == epoch && p[2] != 0u64 && p[7] <= 0xffffffu64 && bounded;
     let geometry: u64 = p[3] | (((p[4] as u64 in Wrapping) << 16u64) as u64) | (((p[5] as u64 in Wrapping) << 32u64) as u64)
         | (((p[6] as u64 in Wrapping) << 48u64) as u64);
     Record { valid: valid, name: p[2], geometry: geometry, colour: p[7] }
@@ -71,7 +70,7 @@ machine packed(epoch: u64, revision: u64, one: Record, two: Record, count: u64) 
     let geometry: u64 = second_field(two.geometry, count);
     let colour: u64 = second_field(two.colour, count);
     let mut words: [u64; 8];
-    words[0] = PRESENT_RECTS;
+    words[0] = |main|::PRESENT_RECTS;
     words[1] = epoch;
     words[2] = revision;
     words[3] = one.name;

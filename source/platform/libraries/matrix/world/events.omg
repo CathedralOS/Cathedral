@@ -1,4 +1,3 @@
-module events;
 // Bounded FIFO for one supplied input stream inside one child. Sixteen ordinary
 // events plus one reserved boundary slot. Overflow collapses this stream to a
 // CANCEL boundary and cannot disturb another stream. Entries keep their global
@@ -7,19 +6,19 @@ module events;
 // thirteen bits each of x and y (extents stay below 4096), then the value. A
 // described channel announces its description once, before its first event,
 // apart from queue pressure.
-use protocol::main;
-use names::Name;
-use description::Description;
+use {protocol}/main.omg;
+use names.omg;
+use description.omg;
 
 public const CAPACITY: u64 = 17u64;
 public data Queue {
     // Child-local channel name; zero until the first delivery binds this stream.
     channel: u64;
     // The supplying stream, as the world names it.
-    source: Name;
+    source: |names|::Name;
     // Child-local group name.
     group: u64;
-    described: Description;
+    described: |description|::Description;
     describe_pending: bool;
     entries: [u64; 17];
     orders: [u64; 17];
@@ -43,11 +42,11 @@ public machine first_order(queue: &Queue) -> u64 {
 public machine last_order(queue: &Queue) -> u64 {
     transition queue.len != 0u64 { true -> (queue.orders[queue.len - 1u64]) _ -> (0u64) }
 }
-public machine retiring(queue: &Queue) -> bool { queue.len == 1u64 && kind_of(queue.entries[0]) == RETIRED }
+public machine retiring(queue: &Queue) -> bool { queue.len == 1u64 && kind_of(queue.entries[0]) == |main|::RETIRED }
 
 // True when the event was queued; false when the stream overflowed and collapsed.
 public machine push(queue: &mut Queue, kind: u64, x: u64, y: u64, value: u64, order: u64, coalesce: bool) -> bool {
-    transition coalesce && kind == POINTER && queue.len >= 2u64 {
+    transition coalesce && kind == |main|::POINTER && queue.len >= 2u64 {
         true -> coalescing(queue, kind, x, y, value, order)
         _ -> appending(queue, kind, x, y, value, order)
     }
@@ -55,14 +54,14 @@ public machine push(queue: &mut Queue, kind: u64, x: u64, y: u64, value: u64, or
     machine coalescing(queue: &mut Queue, kind: u64, x: u64, y: u64, value: u64, order: u64) -> bool requires queue.len >= 2u64 {
         let tail: u64 = queue.len - 1u64;
         let before: u64 = queue.len - 2u64;
-        transition kind_of(queue.entries[tail]) == POINTER && kind_of(queue.entries[before]) == POINTER
+        transition kind_of(queue.entries[tail]) == |main|::POINTER && kind_of(queue.entries[before]) == |main|::POINTER
             && value_of(queue.entries[tail]) == value && value_of(queue.entries[before]) == value {
             true -> merged(queue, tail, x, y, value, order)
             _ -> appending(queue, kind, x, y, value, order)
         }
     }
     machine merged(queue: &mut Queue, tail: u64, x: u64, y: u64, value: u64, order: u64) -> bool requires tail < 17u64 {
-        queue.entries[tail] = pack(POINTER, x, y, value);
+        queue.entries[tail] = pack(|main|::POINTER, x, y, value);
         queue.orders[tail] = order;
         true
     }
@@ -87,13 +86,13 @@ public machine push(queue: &mut Queue, kind: u64, x: u64, y: u64, value: u64, or
 // Collapse pending input to one CANCEL boundary; a retiring stream keeps RETIRED.
 public machine cancel(queue: &mut Queue, order: u64) {
     transition queue.channel != 0u64 && !retiring(queue) {
-        true -> boundary(queue, CANCEL, order)
+        true -> boundary(queue, |main|::CANCEL, order)
         _ -> done()
     }
 }
 public machine retire(queue: &mut Queue, order: u64) {
     transition queue.channel != 0u64 {
-        true -> boundary(queue, RETIRED, order)
+        true -> boundary(queue, |main|::RETIRED, order)
         _ -> done()
     }
 }
@@ -115,7 +114,7 @@ public machine next(queue: &mut Queue, epoch: u64) -> [u64; 8] {
         queue.describe_pending = false;
         let mut packet: [u64; 8];
         packet[1] = epoch;
-        packet[2] = DESCRIBED;
+        packet[2] = |main|::DESCRIBED;
         packet[3] = queue.described.first;
         packet[4] = queue.described.second;
         packet[5] = queue.described.controls;
@@ -136,7 +135,7 @@ public machine next(queue: &mut Queue, epoch: u64) -> [u64; 8] {
         let remaining: u64 = queue.len - 1u64;
         shift(queue, 0u64);
         queue.len = remaining;
-        transition packet[2] == RETIRED {
+        transition packet[2] == |main|::RETIRED {
             true -> forgotten(queue, packet)
             _ -> (packet)
         }
@@ -155,7 +154,7 @@ public machine next(queue: &mut Queue, epoch: u64) -> [u64; 8] {
 machine empty_packet(epoch: u64) -> [u64; 8] {
     let mut packet: [u64; 8];
     packet[1] = epoch;
-    packet[2] = NONE;
+    packet[2] = |main|::NONE;
     packet
 }
 // Move entries one place toward the front, from `index` to the last entry.
@@ -184,7 +183,7 @@ public machine cancel_keys(queue: &mut Queue, order: u64) {
     }
     machine examine(queue: &mut Queue, index: u64, keep: u64, order: u64) requires keep <= index && index < 17u64 {
         let kind: u64 = kind_of(queue.entries[index]);
-        transition kind == KEY || kind == CANCEL_KEYS {
+        transition kind == |main|::KEY || kind == |main|::CANCEL_KEYS {
             true -> compact(queue, index + 1u64, keep, order)
             _ -> kept(queue, index, keep, order)
         }
@@ -202,7 +201,7 @@ public machine cancel_keys(queue: &mut Queue, order: u64) {
         }
     }
     machine closed(queue: &mut Queue, keep: u64, order: u64) requires keep < 17u64 {
-        queue.entries[keep] = pack(CANCEL_KEYS, 0u64, 0u64, 0u64);
+        queue.entries[keep] = pack(|main|::CANCEL_KEYS, 0u64, 0u64, 0u64);
         queue.orders[keep] = order;
         queue.len = keep + 1u64;
     }

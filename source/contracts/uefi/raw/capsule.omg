@@ -3,16 +3,14 @@
 // c0facddf9ba42b74906a37fca2869e6cdbc8da6a; see scalars.PORT.md.
 // Inert x86-64 carriers: numeric address/handle bits establish no authority.
 // ABI expectations are scalars.vectors.json, not inferred Omega native layout.
-module capsule;
-use scalars::Guid;
-use scalars::PhysicalAddress;
+use scalars.omg;
 
 pub data CapsuleFlags [copy] { raw: u32; }
 // The upstream address union is one physical-address carrier; length selects
 // data (nonzero), continuation (zero, address nonzero), or end (both zero).
-pub data CapsuleBlockDescriptor [copy] { length: u64; address: PhysicalAddress; }
+pub data CapsuleBlockDescriptor [copy] { length: u64; address: |scalars|::PhysicalAddress; }
 pub data CapsuleHeader [copy] {
-    capsule_guid: Guid;
+    capsule_guid: |scalars|::Guid;
     header_size: u32;
     flags: CapsuleFlags;
     capsule_image_size: u32;

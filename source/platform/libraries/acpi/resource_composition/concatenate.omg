@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Bounded adaptation of acpi AML ConcatRes at pin257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
 // Original upstream copyright2018 Isaac Woods; strict input profile is explicit.
-module concatenate;
-use resources::resource_template;
-use resources::resource_model::Outcome;
-use resources::resource_model::Template;
+use {omega}/language/core/nat.omg;
+use {resources}/resource_template.omg;
+use {resources}/resource_model.omg;
 pub data Composition [copy] {
  case Capacity;
- case InvalidLeft(reason:Outcome);
- case InvalidRight(reason:Outcome);
+ case InvalidLeft(reason:|resource_model|::Outcome);
+ case InvalidRight(reason:|resource_model|::Outcome);
  case Composed(length:u64,unsupported:u64);
 }
-data Input [copy] {outcome:Outcome;body_length:u64;unsupported:u64;}
+data Input [copy] {outcome:|resource_model|::Outcome;body_length:u64;unsupported:u64;}
 // Initialized detached buffers only. Complete preflight precedes every write.
 pub machine compose(left:&[u8;4096],left_length:u64,right:&[u8;4096],right_length:u64,capacity:u64,output:&mut [u8;4096])->Composition {
  transition left_length<=4096 && right_length<=4096 && capacity<=4096 {
@@ -20,14 +19,14 @@ pub machine compose(left:&[u8;4096],left_length:u64,right:&[u8;4096],right_lengt
  }
  state left_input(left:&[u8;4096],a:u64,right:&[u8;4096],b:u64,capacity:u64,output:&mut [u8;4096])->Composition {
   let first:Input=inspect(left,a);
-  transition first.outcome==Outcome::Success {
+  transition first.outcome==|resource_model|::Outcome::Success {
    true -> right_input(left,first,right,b,capacity,output)
    _ -> (Composition::InvalidLeft{reason:first.outcome})
   }
  }
  state right_input(left:&[u8;4096],first:Input,right:&[u8;4096],b:u64,capacity:u64,output:&mut [u8;4096])->Composition {
   let second:Input=inspect(right,b);
-  transition second.outcome==Outcome::Success {
+  transition second.outcome==|resource_model|::Outcome::Success {
    true -> size(left,first,right,second,capacity,output,first.body_length,second.body_length)
    _ -> (Composition::InvalidRight{reason:second.outcome})
   }
@@ -48,14 +47,14 @@ pub machine compose(left:&[u8;4096],left_length:u64,right:&[u8;4096],right_lengt
 // ACPI19.6.13 admits empty buffers as empty templates; one-byte input fails.
 // Other inputs must meet the existing strict template parser profile.
 machine inspect(input:&[u8;4096],length:u64)->Input {
- transition {length==0 -> (Input{outcome:Outcome::Success}) length==1 -> (Input{outcome:Outcome::BadEncoding}) _ -> validate(input,length)}
+ transition {length==0 -> (Input{outcome:|resource_model|::Outcome::Success}) length==1 -> (Input{outcome:|resource_model|::Outcome::BadEncoding}) _ -> validate(input,length)}
  state validate(input:&[u8;4096],length:u64)->Input {
-  let parsed:Template=resource_template::validate_template(input,length);
-  transition parsed.outcome==Outcome::Success && length>=2 {true -> (Input{outcome:Outcome::Success,body_length:length-2,unsupported:parsed.unsupported}) _ -> (Input{outcome:parsed.outcome})}
+  let parsed:|resource_model|::Template=|resource_template|::validate_template(input,length);
+  transition parsed.outcome==|resource_model|::Outcome::Success && length>=2 {true -> (Input{outcome:|resource_model|::Outcome::Success,body_length:length-2,unsupported:parsed.unsupported}) _ -> (Input{outcome:parsed.outcome})}
  }
 }
 machine copy_prefix(input:&[u8;4096],output:&mut [u8;4096],index:u64,count:u64,start:u64)
-terminates by (index,count)->Nat::BoundedDistance;
+terminates by (index,count)->|nat|::Nat::BoundedDistance;
 ->u8 {
  _=copy_byte(input,output,index,count,start);
  transition index<count {true -> copy_prefix(input,output,index+1,count,start) _ -> (0)}

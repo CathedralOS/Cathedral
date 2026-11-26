@@ -1,45 +1,42 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Derived from pinned acpi Object::to_integer / do_to_dec_hex_string expressions.
 // Bounded initialized ASCII extents; no generic Object, targets or invocation.
-module string_numbers;
-use integers::IntegerSize;
-use integers::IntegerResult;
-use integers::integer_mask;
-use integers::normalize;
+use {omega}/language/core/nat.omg;
+use integers.omg;
 pub data ParseProfile [copy] { case StrictDecimalHex; case PinnedAscii; }
 pub data NumberFormat [copy] { case Decimal; case Hexadecimal; }
 data ParseState [copy] { error:u8; value:u64; digits:u64; done:bool; }
 
 // Logical String extent excludes NUL. Validate the entire extent, even after a
 // numeric-prefix delimiter. PinnedAscii is deliberately not arbitrary Rust UTF-8.
-pub machine string_to_integer(size:IntegerSize,input:&[u8;256],length:u64,profile:ParseProfile)->IntegerResult {
- transition length<=256 {true -> validate(size,input,length,profile) _ -> (IntegerResult {error:4})}
- state validate(size:IntegerSize,input:&[u8;256],length:u64,profile:ParseProfile)->IntegerResult {
+pub machine string_to_integer(size:|integers|::IntegerSize,input:&[u8;256],length:u64,profile:ParseProfile)->|integers|::IntegerResult {
+ transition length<=256 {true -> validate(size,input,length,profile) _ -> (|integers|::IntegerResult {error:4})}
+ state validate(size:|integers|::IntegerSize,input:&[u8;256],length:u64,profile:ParseProfile)->|integers|::IntegerResult {
   let valid:u8=sn_ascii(input,0,length,0);
-  transition valid==0 {true -> policy(size,input,length,profile) _ -> (IntegerResult {error:7})}
+  transition valid==0 {true -> policy(size,input,length,profile) _ -> (|integers|::IntegerResult {error:7})}
  }
- state policy(size:IntegerSize,input:&[u8;256],length:u64,profile:ParseProfile)->IntegerResult {
+ state policy(size:|integers|::IntegerSize,input:&[u8;256],length:u64,profile:ParseProfile)->|integers|::IntegerResult {
   transition profile {ParseProfile::StrictDecimalHex -> strict(size,input,length) ParseProfile::PinnedAscii -> pinned(input,length)}
  }
- state strict(size:IntegerSize,input:&[u8;256],length:u64)->IntegerResult {
-  let mask:u64=integer_mask(size);
-  transition length!=0 {true -> start(input,length,0,mask,true) _ -> (IntegerResult {error:6})}
+ state strict(size:|integers|::IntegerSize,input:&[u8;256],length:u64)->|integers|::IntegerResult {
+  let mask:u64=|integers|::integer_mask(size);
+  transition length!=0 {true -> start(input,length,0,mask,true) _ -> (|integers|::IntegerResult {error:6})}
  }
- state pinned(input:&[u8;256],length:u64)->IntegerResult {
+ state pinned(input:&[u8;256],length:u64)->|integers|::IntegerResult {
   let begin:u64=sn_leading_space(input,0,length,0);
-  transition begin<length {true -> start(input,length,begin,18446744073709551615,false) _ -> (IntegerResult {})}
+  transition begin<length {true -> start(input,length,begin,18446744073709551615,false) _ -> (|integers|::IntegerResult {})}
  }
- state start(input:&[u8;256],length:u64,begin:u64,limit:u64,strict:bool)->IntegerResult {
+ state start(input:&[u8;256],length:u64,begin:u64,limit:u64,strict:bool)->|integers|::IntegerResult {
   let hex:bool=sn_hex_prefix(input,length,begin);
   transition hex && begin<255 {true -> parse(input,length,begin+2,16,limit,strict) _ -> parse(input,length,begin,10,limit,strict)}
  }
- state parse(input:&[u8;256],length:u64,begin:u64,base:u64,limit:u64,strict:bool)->IntegerResult {
+ state parse(input:&[u8;256],length:u64,begin:u64,base:u64,limit:u64,strict:bool)->|integers|::IntegerResult {
   let parsed:ParseState=sn_parse(input,begin,length,base,limit,strict,ParseState {});
-  transition {parsed.error!=0 -> (IntegerResult {error:parsed.error}) strict && parsed.digits==0 -> (IntegerResult {error:7}) _ -> (IntegerResult {value:parsed.value})}
+  transition {parsed.error!=0 -> (|integers|::IntegerResult {error:parsed.error}) strict && parsed.digits==0 -> (|integers|::IntegerResult {error:7}) _ -> (|integers|::IntegerResult {value:parsed.value})}
  }
 }
 machine sn_ascii(input:&[u8;256],index:u64,count:u64,error:u8)
-terminates by (index,count)->Nat::BoundedDistance;
+terminates by (index,count)->|nat|::Nat::BoundedDistance;
 ->u8 {
  let next:u8=sn_ascii_step(input,index,count,error);
  transition index<count {true -> sn_ascii(input,index+1,count,next) _ -> (error)}
@@ -49,7 +46,7 @@ machine sn_ascii_step(input:&[u8;256],index:u64,count:u64,error:u8)->u8 {
  state inspect(byte:u8)->u8 {transition byte!=0 && byte<128 {true -> (0) _ -> (7)}}
 }
 machine sn_leading_space(input:&[u8;256],index:u64,count:u64,begin:u64)
-terminates by (index,count)->Nat::BoundedDistance;
+terminates by (index,count)->|nat|::Nat::BoundedDistance;
 ->u64 {
  let next:u64=sn_space_step(input,index,count,begin);
  transition index<count {true -> sn_leading_space(input,index+1,count,next) _ -> (begin)}
@@ -70,7 +67,7 @@ machine sn_digit(byte:u8)->u64 {
  transition {byte>=48 && byte<=57 -> ((byte as u64)-48) byte>=65 && byte<=70 -> ((byte as u64)-55) byte>=97 && byte<=102 -> ((byte as u64)-87) _ -> (255)}
 }
 machine sn_parse(input:&[u8;256],index:u64,count:u64,base:u64,limit:u64,strict:bool,value:ParseState)
-terminates by (index,count)->Nat::BoundedDistance;
+terminates by (index,count)->|nat|::Nat::BoundedDistance;
 ->ParseState {
  let next:ParseState=sn_parse_step(input,index,count,base,limit,strict,value);
  transition index<count {true -> sn_parse(input,index+1,count,base,limit,strict,next) _ -> (value)}
@@ -99,46 +96,46 @@ machine sn_parse_step(input:&[u8;256],index:u64,count:u64,base:u64,limit:u64,str
 
 // Output logical length excludes a terminator; trailing storage is untouched.
 // Capacity errors are preflighted before the first write, with no truncation.
-pub machine integer_to_string(size:IntegerSize,value:u64,format:NumberFormat,capacity:u64,output:&mut [u8;256])->IntegerResult {
- let number:u64=normalize(size,value);let base:u64=sn_base(format);let digits:u64=sn_digits(number,base);
+pub machine integer_to_string(size:|integers|::IntegerSize,value:u64,format:NumberFormat,capacity:u64,output:&mut [u8;256])->|integers|::IntegerResult {
+ let number:u64=|integers|::normalize(size,value);let base:u64=sn_base(format);let digits:u64=sn_digits(number,base);
  let prefix:u64=sn_prefix(format);
- transition digits<=20 && prefix<=2 {true -> extent(number,base,digits,prefix,capacity,output) _ -> (IntegerResult {error:4})}
- state extent(number:u64,base:u64,digits:u64,prefix:u64,capacity:u64,output:&mut [u8;256])->IntegerResult {
+ transition digits<=20 && prefix<=2 {true -> extent(number,base,digits,prefix,capacity,output) _ -> (|integers|::IntegerResult {error:4})}
+ state extent(number:u64,base:u64,digits:u64,prefix:u64,capacity:u64,output:&mut [u8;256])->|integers|::IntegerResult {
  let count:u64=digits+prefix;
- transition capacity<=256 && count<=capacity {true -> write(number,base,digits,prefix,count,output) _ -> (IntegerResult {error:4})}
+ transition capacity<=256 && count<=capacity {true -> write(number,base,digits,prefix,count,output) _ -> (|integers|::IntegerResult {error:4})}
  }
- state write(number:u64,base:u64,digits:u64,prefix:u64,count:u64,output:&mut [u8;256])->IntegerResult {
-  _=sn_write_number(number,base,digits,prefix,0,output);IntegerResult {value:count}
+ state write(number:u64,base:u64,digits:u64,prefix:u64,count:u64,output:&mut [u8;256])->|integers|::IntegerResult {
+  _=sn_write_number(number,base,digits,prefix,0,output);|integers|::IntegerResult {value:count}
  }
 }
-pub machine buffer_to_numeric_string(input:&[u8;256],length:u64,format:NumberFormat,capacity:u64,output:&mut [u8;256])->IntegerResult {
- transition length<=256 && capacity<=256 {true -> measure(input,length,format,capacity,output) _ -> (IntegerResult {error:4})}
- state measure(input:&[u8;256],length:u64,format:NumberFormat,capacity:u64,output:&mut [u8;256])->IntegerResult {
+pub machine buffer_to_numeric_string(input:&[u8;256],length:u64,format:NumberFormat,capacity:u64,output:&mut [u8;256])->|integers|::IntegerResult {
+ transition length<=256 && capacity<=256 {true -> measure(input,length,format,capacity,output) _ -> (|integers|::IntegerResult {error:4})}
+ state measure(input:&[u8;256],length:u64,format:NumberFormat,capacity:u64,output:&mut [u8;256])->|integers|::IntegerResult {
   let count:u64=sn_measure_buffer(input,0,length,format,0);
-  transition count<=capacity {true -> write(input,length,format,count,output) _ -> (IntegerResult {error:4})}
+  transition count<=capacity {true -> write(input,length,format,count,output) _ -> (|integers|::IntegerResult {error:4})}
  }
- state write(input:&[u8;256],length:u64,format:NumberFormat,count:u64,output:&mut [u8;256])->IntegerResult {
-  _=sn_write_buffer(input,0,length,format,0,output);IntegerResult {value:count}
+ state write(input:&[u8;256],length:u64,format:NumberFormat,count:u64,output:&mut [u8;256])->|integers|::IntegerResult {
+  _=sn_write_buffer(input,0,length,format,0,output);|integers|::IntegerResult {value:count}
  }
 }
 machine sn_base(format:NumberFormat)->u64 {transition format {NumberFormat::Decimal -> (10) NumberFormat::Hexadecimal -> (16)}}
 machine sn_prefix(format:NumberFormat)->u64 {transition format {NumberFormat::Decimal -> (0) NumberFormat::Hexadecimal -> (2)}}
 machine sn_digits(number:u64,base:u64)->u64 {let result:u64=sn_count_digits(number,base,0,20,1);result}
 machine sn_count_digits(number:u64,base:u64,index:u64,count:u64,digits:u64)
-terminates by (index,count)->Nat::BoundedDistance;
+terminates by (index,count)->|nat|::Nat::BoundedDistance;
 ->u64 {
- let next:IntegerResult=sn_count_step(number,base,index,count,digits);
+ let next:|integers|::IntegerResult=sn_count_step(number,base,index,count,digits);
  transition index<count {true -> sn_count_digits(next.value,base,index+1,count,next.remainder) _ -> (digits)}
 }
-machine sn_count_step(number:u64,base:u64,index:u64,count:u64,digits:u64)->IntegerResult {
- transition base!=0 && number>=base && index<count {true -> (IntegerResult {value:number/base,remainder:digits+1}) _ -> (IntegerResult {value:number,remainder:digits})}
+machine sn_count_step(number:u64,base:u64,index:u64,count:u64,digits:u64)->|integers|::IntegerResult {
+ transition base!=0 && number>=base && index<count {true -> (|integers|::IntegerResult {value:number/base,remainder:digits+1}) _ -> (|integers|::IntegerResult {value:number,remainder:digits})}
 }
 machine sn_byte_digits(byte:u8,format:NumberFormat)->u64 {
  transition format {NumberFormat::Hexadecimal -> (2) NumberFormat::Decimal -> decimal(byte)}
  state decimal(byte:u8)->u64 {let result:u64=sn_digits(byte as u64,10);result}
 }
 machine sn_measure_buffer(input:&[u8;256],index:u64,count:u64,format:NumberFormat,length:u64)
-terminates by (index,count)->Nat::BoundedDistance;
+terminates by (index,count)->|nat|::Nat::BoundedDistance;
 ->u64 {
  let next:u64=sn_measure_step(input,index,count,format,length);
  transition index<count {true -> sn_measure_buffer(input,index+1,count,format,next) _ -> (length)}
@@ -163,7 +160,7 @@ machine sn_write_prefix(output:&mut [u8;256],start:u64,prefix:u64)->u8 {
  state both(output:&mut [u8;256],start:u64,next:u64)->u8 {output[start]=48;output[next]=120;0}
 }
 machine sn_write_digits(number:u64,base:u64,index:u64,count:u64,start:u64,output:&mut [u8;256])
-terminates by (index,count)->Nat::BoundedDistance;
+terminates by (index,count)->|nat|::Nat::BoundedDistance;
 ->u8 {
  let next:u64=sn_write_digit(number,base,index,count,start,output);
  transition index<count {true -> sn_write_digits(next,base,index+1,count,start,output) _ -> (0)}
@@ -182,7 +179,7 @@ machine sn_write_digit(number:u64,base:u64,index:u64,count:u64,start:u64,output:
 }
 machine sn_print_digit(digit:u64)->u8 {transition digit<16 {true -> valid(digit) _ -> (63)} state valid(digit:u64)->u8 {transition digit<10 {true -> ((digit+48) as u8) _ -> ((digit+55) as u8)}}}
 machine sn_write_buffer(input:&[u8;256],index:u64,count:u64,format:NumberFormat,start:u64,output:&mut [u8;256])
-terminates by (index,count)->Nat::BoundedDistance;
+terminates by (index,count)->|nat|::Nat::BoundedDistance;
 ->u64 {
  let next:u64=sn_write_buffer_step(input,index,count,format,start,output);
  transition index<count {true -> sn_write_buffer(input,index+1,count,format,next,output) _ -> (start)}

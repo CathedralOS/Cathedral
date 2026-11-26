@@ -1,4 +1,4 @@
-use fields::declarations::parse_declaration;
-use fields::flags::nominal_width;
+use {fields}/declarations.omg;
+use {fields}/flags.omg;
 data Main {}
 machine Main::main(&mut self) {}

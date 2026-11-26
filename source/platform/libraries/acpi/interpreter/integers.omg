@@ -1,7 +1,8 @@
+use {omega}/language/core/nat.omg;
+
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Derived from acpi/src/aml/mod.rs at 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5.
 // Pure integer operations; no opcode stream, namespace writes or live services.
-module integers;
 pub data IntegerSize [copy] { case FourBytes; case EightBytes; }
 pub data Binary [copy] { case Add; case Subtract; case Multiply; case Divide; case Mod;
     case ShiftLeft; case ShiftRight; case And; case Nand; case Or; case Nor; case Xor; }
@@ -93,7 +94,7 @@ pub machine find_set_right(size: IntegerSize, value: u64) -> u64 {
     let result: u64 = scan_bits(normalized, 0, 64, 0, true); result
 }
 machine scan_bits(value: u64, index: u64, limit: u64, found: u64, first: bool)
-terminates by (index, limit) -> Nat::BoundedDistance;
+terminates by (index, limit) -> |nat|::Nat::BoundedDistance;
 -> u64 {
     let next: u64 = bit_step(value, index, found, first);
     transition index < limit { true -> scan_bits(value, index + 1, limit, next, first) _ -> (found) }

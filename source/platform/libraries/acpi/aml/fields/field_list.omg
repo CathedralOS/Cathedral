@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Compatibility entry into the canonical AML-owned field syntax.
-module field_list;
-use aml::field_elements;
-use aml::model::Path;
-use aml::field_model::ListState;
-pub machine parse_list(input:&[u8;1024],end:u64,at:u64,unit:u64,scope:Path,flags:u8,bit_limit:u64,budget:u64)->ListState {
- let result:ListState=field_elements::parse_list(input,end,at,unit,scope,flags,bit_limit,budget);result
+use {aml}/field_elements.omg;
+use {aml}/model.omg;
+use {aml}/field_model.omg;
+pub machine parse_list(input:&[u8;1024],end:u64,at:u64,unit:u64,scope:|model|::Path,flags:u8,bit_limit:u64,budget:u64)->|field_model|::ListState {
+ let result:|field_model|::ListState=|field_elements|::parse_list(input,end,at,unit,scope,flags,bit_limit,budget);result
 }

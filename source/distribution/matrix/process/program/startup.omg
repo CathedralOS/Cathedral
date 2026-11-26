@@ -1,5 +1,5 @@
-module startup;
-use runtime::time::Stamp;
+use {runtime}/server/main.omg as server_main;
+use {runtime}/time.omg;
 // Learn what this instance is from its environment. Supplied provider links
 // make it the storage root. Four endpoints make the display root: owner
 // control opens first, because the supervisor connects it right after
@@ -9,66 +9,62 @@ use runtime::time::Stamp;
 // since the parent connects it right after admission and only then serves
 // the broker; then the parent's interaction, its storage pair and the first
 // snapshot of the view it grants.
-use shared::state::State;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::kernel;
-use runtime::main::Startup;
-use runtime::main::Environment;
-use runtime::time::Tick;
-use runtime::server::owner;
-use connections::scene;
-use connections::storage::storage;
-use connections::upstream;
-use shared::report;
+use {shared}/state.omg as shared_state;
+use {runtime}/kernel.omg;
+use {runtime}/main.omg;
+use {runtime}/server/owner.omg;
+use {connections}/scene.omg;
+use {connections}/storage/storage.omg;
+use {connections}/upstream.omg;
+use {shared}/report.omg;
 
-public machine open(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks invokes Kernel {
-    context.clock = Kernel::clock(gate);
+public machine open(gate: &|kernel|::Gate, context: &mut |shared_state|::State) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
+    context.clock = |kernel|::Kernel::clock(gate);
     trace_origin(gate, context);
     context.world.slots = 5u64;
-    storage::discover(gate, context);
-    let startup: Startup = runtime::main::start(gate);
+    |storage|::discover(gate, context);
+    let startup: |main|::Startup = |main|::start(gate);
     transition startup {
-        Startup::Ready { environment } -> block timed(gate, context, environment)
-        Startup::Failed { code } -> (code)
-        Startup::InvalidEnvironment -> (kernel::INVALID_ARGUMENT)
+        |main|::Startup::Ready { environment } -> block timed(gate, context, environment)
+        |main|::Startup::Failed { code } -> (code)
+        |main|::Startup::InvalidEnvironment -> (|kernel|::INVALID_ARGUMENT)
     }
 }
-machine timed(gate: &Gate, context: &mut State, environment: Environment) -> u64 reaches Kernel {
-    let tick: Tick = runtime::time::read(gate, context.clock);
+machine timed(gate: &|kernel|::Gate, context: &mut |shared_state|::State, environment: |main|::Environment) -> u64 reaches |kernel|::Kernel {
+    let tick: |time|::Tick = |time|::read(gate, context.clock);
     transition tick {
-        Tick::Read { value } -> block shaped(gate, context, environment, value)
-        Tick::Failed { code } -> (code)
+        |time|::Tick::Read { value } -> block shaped(gate, context, environment, value)
+        |time|::Tick::Failed { code } -> (code)
     }
 }
-machine shaped(gate: &Gate, context: &mut State, environment: Environment, now: u64) -> u64 reaches Kernel {
+machine shaped(gate: &|kernel|::Gate, context: &mut |shared_state|::State, environment: |main|::Environment, now: u64) -> u64 reaches |kernel|::Kernel {
     transition environment.count {
         4u64 -> block control(gate, context, environment, now)
         2u64 -> block nested(gate, context, environment, now)
-        _ -> (kernel::INVALID_ARGUMENT)
+        _ -> (|kernel|::INVALID_ARGUMENT)
     }
 }
-machine nested(gate: &Gate, context: &mut State, environment: Environment, now: u64) -> u64 reaches Kernel {
-    let status: u64 = block owner::open(gate, &mut context.owner, runtime::time::after(now, 300u64));
+machine nested(gate: &|kernel|::Gate, context: &mut |shared_state|::State, environment: |main|::Environment, now: u64) -> u64 reaches |kernel|::Kernel {
+    let status: u64 = block |storage|::owner::open(gate, &mut context.owner, |time|::after(now, 300u64));
     transition status == 0u64 {
         true -> block controlled(gate, context, environment, now)
         _ -> (status)
     }
 }
-machine controlled(gate: &Gate, context: &mut State, environment: Environment, now: u64) -> u64 reaches Kernel {
-    report::owner_control_ready(gate);
-    block upstream::open(gate, context, environment, now)
+machine controlled(gate: &|kernel|::Gate, context: &mut |shared_state|::State, environment: |main|::Environment, now: u64) -> u64 reaches |kernel|::Kernel {
+    |report|::owner_control_ready(gate);
+    block |upstream|::open(gate, context, environment, now)
 }
-machine control(gate: &Gate, context: &mut State, environment: Environment, now: u64) -> u64 reaches Kernel {
-    let status: u64 = block owner::open(gate, &mut context.owner, runtime::time::after(now, 300u64));
+machine control(gate: &|kernel|::Gate, context: &mut |shared_state|::State, environment: |main|::Environment, now: u64) -> u64 reaches |kernel|::Kernel {
+    let status: u64 = block |storage|::owner::open(gate, &mut context.owner, |time|::after(now, 300u64));
     transition status == 0u64 {
         true -> block presented(gate, context, environment, now)
         _ -> (status)
     }
 }
-machine presented(gate: &Gate, context: &mut State, environment: Environment, now: u64) -> u64 reaches Kernel {
-    let status: u64 = block scene::connect(gate, context, environment.endpoints[0], environment.endpoints[1],
-        runtime::time::after(now, 300u64));
+machine presented(gate: &|kernel|::Gate, context: &mut |shared_state|::State, environment: |main|::Environment, now: u64) -> u64 reaches |kernel|::Kernel {
+    let status: u64 = block |scene|::connect(gate, context, environment.endpoints[0], environment.endpoints[1],
+        |time|::after(now, 300u64));
     transition status == 0u64 {
         true -> sourced(gate, context, environment, now)
         _ -> (status)
@@ -76,18 +72,18 @@ machine presented(gate: &Gate, context: &mut State, environment: Environment, no
 }
 // The supervisor supplies the source pair as this task's receive end then its
 // send end, the opposite order from the display pair it connects as a client.
-machine sourced(gate: &Gate, context: &mut State, environment: Environment, now: u64) -> u64 reaches Kernel {
-    report::display_ready(gate);
-    runtime::server::main::begin(&mut context.source, environment.endpoints[3], environment.endpoints[2],
-        runtime::time::after(now, 3000u64), false)
+machine sourced(gate: &|kernel|::Gate, context: &mut |shared_state|::State, environment: |main|::Environment, now: u64) -> u64 reaches |kernel|::Kernel {
+    |report|::display_ready(gate);
+    |server_main|::begin(&mut context.source, environment.endpoints[3], environment.endpoints[2],
+        |time|::after(now, 3000u64), false)
 }
 
-machine trace_origin(gate: &Gate, context: &mut State) reaches Kernel {
-    let sample: Stamp = runtime::time::stamp(gate, context.clock);
+machine trace_origin(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
+    let sample: |time|::Stamp = |time|::stamp(gate, context.clock);
     transition sample {
-        Stamp::Read { ticks, micros, cpu } -> recorded(context, micros)
+        |time|::Stamp::Read { ticks, micros, cpu } -> recorded(context, micros)
         _ -> done()
     }
-    machine recorded(context: &mut State, micros: u64) { context.trace_origin = micros; }
+    machine recorded(context: &mut |shared_state|::State, micros: u64) { context.trace_origin = micros; }
     machine done() {}
 }

@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified translation from uefi-raw c0facddf9ba42b74906a37fca2869e6cdbc8da6a.
 // See contracts/uefi/raw/console.PORT.md. Pure values; no foreign calls or access.
-module console_helpers;
-use cathedral_uefi_raw::device_path::DevicePathProtocol;
-use cathedral_uefi_raw::console::GraphicsOutputProtocolMode;
+use {cathedral_uefi_raw}/device_path.omg;
+use {cathedral_uefi_raw}/console.omg;
 
 // Upstream DevicePathProtocol::length: decoding alone validates no node.
-pub machine device_path_length(header: &DevicePathProtocol) -> u16 {
+pub machine device_path_length(header: &|device_path|::DevicePathProtocol) -> u16 {
     (header.length[0] as u16) | ((header.length[1] as u16) << 8)
 }
 
@@ -18,8 +17,8 @@ pub machine device_path_node_fits(length: u16, available: u64) -> bool {
 }
 
 // Upstream GraphicsOutputProtocolMode::default; all address slots are inert.
-pub machine graphics_output_mode_default() -> GraphicsOutputProtocolMode {
-    GraphicsOutputProtocolMode {
+pub machine graphics_output_mode_default() -> |console|::GraphicsOutputProtocolMode {
+    |console|::GraphicsOutputProtocolMode {
         max_mode: 0, mode: 0, info: 0, size_of_info: 0,
         frame_buffer_base: 0, frame_buffer_size: 0,
     }

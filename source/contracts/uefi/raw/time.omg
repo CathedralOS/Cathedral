@@ -3,7 +3,6 @@
 // c0facddf9ba42b74906a37fca2869e6cdbc8da6a; see scalars.PORT.md.
 // Inert x86-64 carriers: numeric address/handle bits establish no authority.
 // ABI expectations are scalars.vectors.json, not inferred Omega native layout.
-module time;
 
 pub data Daylight [copy] { raw: u8; }
 pub const DAYLIGHT_ADJUST_DAYLIGHT: Daylight = Daylight { raw: 1 };

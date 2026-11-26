@@ -1,6 +1,5 @@
-module diagnostic;
 // Existing desktop witness: refusal did not retire the interaction broker.
-use host::main;
+use {host}/main.omg;
 
 public machine scope(p: &mut [u64; 4096]) -> u64 {
     let text: [u8; 63] = "Cathedral background: shared interaction ready; storage denied\n";
@@ -21,6 +20,6 @@ public machine scope(p: &mut [u64; 4096]) -> u64 {
     }
     machine ready(p: &mut [u64; 4096]) -> u64 {
         p[8] = 63u64;
-        WRITE
+        |main|::WRITE
     }
 }

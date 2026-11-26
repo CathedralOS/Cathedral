@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Named owner handoff data. No request grants authority or performs an effect.
-module transport_seams;
 pub data DiscoveryRequest [copy] { transport: u8; vendor: u16; device: u16; }
 pub data MappingRequest [copy] { physical_base: u64; bytes: u64; }
 pub data DmaRequest [copy] { bytes: u64; alignment: u32; device_writes: bool; }

@@ -1,6 +1,6 @@
 // Compile-only acceptance root for source/core/x86_interrupt_profile.omg.
 
-use core::x86_interrupt_profile;
+use {arch}/isa/x86_64/interrupts/interrupts.omg;
 
 data Main {
 }

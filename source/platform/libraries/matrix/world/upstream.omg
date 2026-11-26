@@ -1,130 +1,129 @@
-module upstream;
 // Apply one parent POLL snapshot: adopt its view, then route the one event it
 // carries under the parent's stream and group names. A snapshot that cannot be
 // honoured drops the parent grant rather than guessing; a later snapshot regrants.
 // Call `registration::ready` before polling again, so recipients drain their
 // retirement boundaries before a replacement channel needs the slot.
-use protocol::main;
-use surfaces;
-use demand;
-use level::World;
-use geometry::Grant;
-use names::Name;
-use input::main::Admitted;
-use input::main::Stream;
-use input::pointer;
-use input::keys;
-use input::registration;
-use input::describe;
-use input::capacity;
+use children.omg;
+use {protocol}/main.omg;
+use surfaces.omg;
+use demand.omg;
+use level.omg;
+use geometry.omg;
+use names.omg;
+use input/main.omg as input_main;
+use input/pointer.omg;
+use input/keys.omg;
+use input/registration.omg;
+use input/describe.omg;
+use input/capacity.omg;
 
-public machine inherit_poll(world: &mut World, reply: &[u64; 8]) -> Grant {
-    let grant: Grant = snapshot(reply);
-    level::inherit(world, grant);
-    demand::render_demand(world, poll_frames(reply));
-    registration::reap(world);
-    surfaces::capacity(world, allowance_of(reply, geometry::valid_grant(grant)));
-    transition geometry::valid_grant(grant) {
+public machine inherit_poll(world: &mut |level|::World, reply: &[u64; 8]) -> |geometry|::Grant {
+    let grant: |geometry|::Grant = snapshot(reply);
+    |level|::inherit(world, grant);
+    |demand|::render_demand(world, poll_frames(reply));
+    |registration|::reap(world);
+    |surfaces|::capacity(world, allowance_of(reply, |geometry|::valid_grant(grant)));
+    transition |geometry|::valid_grant(grant) {
         true -> event(world, grant, reply[5] & 255u64, reply[6], reply[7], (reply[5] >> 8u64) & 7u64,
             reply[5] >> 32u64, (reply[5] >> 17u64) & 0x7fffu64)
         _ -> (grant)
     }
-    machine event(world: &mut World, grant: Grant, kind: u64, x: u64, y: u64, value: u64, channel: u64, group: u64) -> Grant {
+    machine event(world: &mut |level|::World, grant: |geometry|::Grant, kind: u64, x: u64, y: u64, value: u64, channel: u64, group: u64) -> |geometry|::Grant {
         transition {
-            kind == NONE -> (grant)
-            kind == GROUP_RETIRED && channel == 0u64 -> group_retired(world, grant, kind, x, y, value, names::upstream(group))
-            kind == GROUP_RETIRED -> lost(world)
-            _ -> binding(world, grant, kind, x, y, value, names::upstream(channel), names::upstream(group))
+            kind == |main|::NONE -> (grant)
+            kind == |main|::GROUP_RETIRED && channel == 0u64 -> group_retired(world, grant, kind, x, y, value, |names|::upstream(group))
+            kind == |main|::GROUP_RETIRED -> lost(world)
+            _ -> binding(world, grant, kind, x, y, value, |names|::upstream(channel), |names|::upstream(group))
         }
     }
-    machine binding(world: &mut World, grant: Grant, kind: u64, x: u64, y: u64, value: u64, channel: Name, group: Name) -> Grant {
-        let admitted: Admitted = input::main::bind(&mut world.input, channel, group);
+    machine binding(world: &mut |level|::World, grant: |geometry|::Grant, kind: u64, x: u64, y: u64, value: u64, channel: |names|::Name, group: |names|::Name) -> |geometry|::Grant {
+        let admitted: |input_main|::Admitted = |input_main|::bind(&mut world.input, channel, group);
         transition admitted {
-            Admitted::Slot { index } -> routed(world, grant, kind, x, y, value, channel)
-            Admitted::Failed { code } -> lost(world)
+            |input_main|::Admitted::Slot { index } -> routed(world, grant, kind, x, y, value, channel)
+            |input_main|::Admitted::Failed { code } -> lost(world)
         }
     }
-    machine routed(world: &mut World, grant: Grant, kind: u64, x: u64, y: u64, value: u64, channel: Name) -> Grant {
+    machine routed(world: &mut |level|::World, grant: |geometry|::Grant, kind: u64, x: u64, y: u64, value: u64, channel: |names|::Name) -> |geometry|::Grant {
         transition {
-            kind == POINTER -> pointed(world, grant, kind, x, y, value, channel)
-            kind == KEY -> keyed(world, grant, kind, x, y, value, channel)
-            kind == CANCEL -> stream_cancelled(world, grant, kind, x, y, value, channel)
-            kind == CANCEL_KEYS -> keys_cancelled(world, grant, kind, x, y, value, channel)
-            kind == DESCRIBED -> described(world, grant, kind, x, y, value, channel)
-            kind == RETIRED -> stream_retired(world, grant, kind, x, y, value, channel)
+            kind == |main|::POINTER -> pointed(world, grant, kind, x, y, value, channel)
+            kind == |main|::KEY -> keyed(world, grant, kind, x, y, value, channel)
+            kind == |main|::CANCEL -> stream_cancelled(world, grant, kind, x, y, value, channel)
+            kind == |main|::CANCEL_KEYS -> keys_cancelled(world, grant, kind, x, y, value, channel)
+            kind == |main|::DESCRIBED -> described(world, grant, kind, x, y, value, channel)
+            kind == |main|::RETIRED -> stream_retired(world, grant, kind, x, y, value, channel)
             _ -> lost(world)
         }
     }
-    machine pointed(world: &mut World, grant: Grant, kind: u64, x: u64, y: u64, value: u64, channel: Name) -> Grant {
-        let status: u64 = pointer::route(world, channel, x, y, value, true);
+    machine pointed(world: &mut |level|::World, grant: |geometry|::Grant, kind: u64, x: u64, y: u64, value: u64, channel: |names|::Name) -> |geometry|::Grant {
+        let status: u64 = |pointer|::route(world, channel, x, y, value, true);
         transition { _ -> outcome(world, grant, status, channel, kind, x, y, value) }
     }
-    machine keyed(world: &mut World, grant: Grant, kind: u64, x: u64, y: u64, value: u64, channel: Name) -> Grant {
-        let status: u64 = keys::route(world, channel, x, y);
+    machine keyed(world: &mut |level|::World, grant: |geometry|::Grant, kind: u64, x: u64, y: u64, value: u64, channel: |names|::Name) -> |geometry|::Grant {
+        let status: u64 = |keys|::route(world, channel, x, y);
         transition { _ -> outcome(world, grant, status, channel, kind, x, y, value) }
     }
-    machine stream_cancelled(world: &mut World, grant: Grant, kind: u64, x: u64, y: u64, value: u64, channel: Name) -> Grant {
+    machine stream_cancelled(world: &mut |level|::World, grant: |geometry|::Grant, kind: u64, x: u64, y: u64, value: u64, channel: |names|::Name) -> |geometry|::Grant {
         let status: u64 = stream_cancel(world, channel);
         transition { _ -> outcome(world, grant, status, channel, kind, x, y, value) }
     }
-    machine keys_cancelled(world: &mut World, grant: Grant, kind: u64, x: u64, y: u64, value: u64, channel: Name) -> Grant {
+    machine keys_cancelled(world: &mut |level|::World, grant: |geometry|::Grant, kind: u64, x: u64, y: u64, value: u64, channel: |names|::Name) -> |geometry|::Grant {
         let status: u64 = key_cancel(world, channel);
         transition { _ -> outcome(world, grant, status, channel, kind, x, y, value) }
     }
-    machine described(world: &mut World, grant: Grant, kind: u64, x: u64, y: u64, value: u64, channel: Name) -> Grant {
-        let status: u64 = describe::from_words(world, channel, x, y, value);
+    machine described(world: &mut |level|::World, grant: |geometry|::Grant, kind: u64, x: u64, y: u64, value: u64, channel: |names|::Name) -> |geometry|::Grant {
+        let status: u64 = |describe|::describe::from_words(world, channel, x, y, value);
         transition { _ -> outcome(world, grant, status, channel, kind, x, y, value) }
     }
-    machine stream_retired(world: &mut World, grant: Grant, kind: u64, x: u64, y: u64, value: u64, channel: Name) -> Grant {
-        let status: u64 = registration::retire_named(world, channel);
+    machine stream_retired(world: &mut |level|::World, grant: |geometry|::Grant, kind: u64, x: u64, y: u64, value: u64, channel: |names|::Name) -> |geometry|::Grant {
+        let status: u64 = |registration|::retire_named(world, channel);
         transition { _ -> outcome(world, grant, status, channel, kind, x, y, value) }
     }
-    machine group_retired(world: &mut World, grant: Grant, kind: u64, x: u64, y: u64, value: u64, group: Name) -> Grant {
-        let status: u64 = registration::retire_group_named(world, group);
-        transition { _ -> outcome(world, grant, status, names::upstream(0u64), kind, x, y, value) }
+    machine group_retired(world: &mut |level|::World, grant: |geometry|::Grant, kind: u64, x: u64, y: u64, value: u64, group: |names|::Name) -> |geometry|::Grant {
+        let status: u64 = |registration|::retire_group_named(world, group);
+        transition { _ -> outcome(world, grant, status, |names|::upstream(0u64), kind, x, y, value) }
     }
     // Running out of child-local names drops only this stream, not the grant.
-    machine outcome(world: &mut World, grant: Grant, status: u64, channel: Name, kind: u64, x: u64, y: u64, value: u64) -> Grant {
+    machine outcome(world: &mut |level|::World, grant: |geometry|::Grant, status: u64, channel: |names|::Name, kind: u64, x: u64, y: u64, value: u64) -> |geometry|::Grant {
         transition {
             status == 0u64 -> (grant)
-            status == NO_MEMORY -> interrupted(world, grant, channel, kind, x, y, value)
+            status == |main|::NO_MEMORY -> interrupted(world, grant, channel, kind, x, y, value)
             _ -> lost(world)
         }
     }
-    machine interrupted(world: &mut World, grant: Grant, channel: Name, kind: u64, x: u64, y: u64, value: u64) -> Grant {
-        capacity::loss(world, channel, kind, x, y, value);
+    machine interrupted(world: &mut |level|::World, grant: |geometry|::Grant, channel: |names|::Name, kind: u64, x: u64, y: u64, value: u64) -> |geometry|::Grant {
+        |surfaces|::capacity::loss(world, channel, kind, x, y, value);
         grant
     }
-    machine lost(world: &mut World) -> Grant {
-        level::inherit(world, geometry::no_grant());
-        geometry::no_grant()
+    machine lost(world: &mut |level|::World) -> |geometry|::Grant {
+        |level|::inherit(world, |geometry|::no_grant());
+        |geometry|::no_grant()
     }
 }
 machine poll_frames(reply: &[u64; 8]) -> bool {
-    reply[0] == 0u64 && reply[1] != 0u64 && reply[2] != 0u64 && reply[3] != 0u64 && (reply[4] & NO_FRAMES) == 0u64
+    reply[0] == 0u64 && reply[1] != 0u64 && reply[2] != 0u64 && reply[3] != 0u64 && (reply[4] & |main|::NO_FRAMES) == 0u64
 }
 machine allowance_of(reply: &[u64; 8], valid: bool) -> u64 {
-    transition valid { true -> (reply[4] >> SURFACE_BITS) _ -> (0u64) }
+    transition valid { true -> (reply[4] >> |main|::SURFACE_BITS) _ -> (0u64) }
 }
-machine snapshot(reply: &[u64; 8]) -> Grant {
+machine snapshot(reply: &[u64; 8]) -> |geometry|::Grant {
     transition reply[0] == 0u64 {
-        true -> (Grant { epoch: reply[1], width: reply[2], height: reply[3], keys: reply[4] & VALID_KEY_MASK })
-        _ -> (geometry::no_grant())
+        true -> (|geometry|::Grant { epoch: reply[1], width: reply[2], height: reply[3], keys: reply[4] & |main|::VALID_KEY_MASK })
+        _ -> (|geometry|::no_grant())
     }
 }
 // A delivered CANCEL already ends the upstream stream's held state; its sender
 // suppresses residual holds, so this world must not wait for releases. The
 // stream keeps its description and cursor cycle.
-machine stream_cancel(world: &mut World, channel: Name) -> u64 {
-    let admitted: Admitted = input::main::admit(&mut world.input, channel);
+machine stream_cancel(world: &mut |level|::World, channel: |names|::Name) -> u64 {
+    let admitted: |input_main|::Admitted = |input_main|::admit(&mut world.input, channel);
     transition admitted {
-        Admitted::Slot { index } -> cancelled(world, channel, index)
-        Admitted::Failed { code } -> (code)
+        |input_main|::Admitted::Slot { index } -> cancelled(world, channel, index)
+        |input_main|::Admitted::Failed { code } -> (code)
     }
-    machine cancelled(world: &mut World, channel: Name, index: u64 [0..=3]) -> u64 {
-        level::cancel_stream(world, index);
-        let previous: Stream = world.input.streams[index];
-        let mut stream: Stream;
+    machine cancelled(world: &mut |level|::World, channel: |names|::Name, index: u64 [0..=3]) -> u64 {
+        |level|::cancel_stream(world, index);
+        let previous: |input_main|::Stream = world.input.streams[index];
+        let mut stream: |input_main|::Stream;
         stream.id = channel;
         stream.group = previous.group;
         stream.described = previous.described;
@@ -134,23 +133,23 @@ machine stream_cancel(world: &mut World, channel: Name) -> u64 {
         0u64
     }
 }
-machine key_cancel(world: &mut World, channel: Name) -> u64 {
-    let admitted: Admitted = input::main::admit(&mut world.input, channel);
+machine key_cancel(world: &mut |level|::World, channel: |names|::Name) -> u64 {
+    let admitted: |input_main|::Admitted = |input_main|::admit(&mut world.input, channel);
     transition admitted {
-        Admitted::Slot { index } -> cancelled(world, channel, index, 0u64)
-        Admitted::Failed { code } -> (code)
+        |input_main|::Admitted::Slot { index } -> cancelled(world, channel, index, 0u64)
+        |input_main|::Admitted::Failed { code } -> (code)
     }
-    machine cancelled(world: &mut World, channel: Name, index: u64 [0..=3], slot: u64) -> u64 requires slot <= 5u64 {
+    machine cancelled(world: &mut |level|::World, channel: |names|::Name, index: u64 [0..=3], slot: u64) -> u64 requires slot <= 5u64 {
         transition slot < 5u64 {
             true -> child(world, channel, index, slot)
             _ -> cleared(world, index)
         }
     }
-    machine child(world: &mut World, channel: Name, index: u64 [0..=3], slot: u64) -> u64 requires slot < 5u64 {
-        children::cancel_keys(&mut world.children[slot], index, channel);
+    machine child(world: &mut |level|::World, channel: |names|::Name, index: u64 [0..=3], slot: u64) -> u64 requires slot < 5u64 {
+        |children|::cancel_keys(&mut world.children[slot], index, channel);
         transition { _ -> cancelled(world, channel, index, slot + 1u64) }
     }
-    machine cleared(world: &mut World, index: u64 [0..=3]) -> u64 {
+    machine cleared(world: &mut |level|::World, index: u64 [0..=3]) -> u64 {
         world.input.streams[index].held = 0u64;
         world.input.streams[index].suppressed = 0u64;
         0u64

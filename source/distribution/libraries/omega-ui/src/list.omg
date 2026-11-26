@@ -1,11 +1,4 @@
-module list;
-
-use types::add_i32;
-use types::clamp_i32;
-use types::max_i32;
-use types::min_i32;
-use types::mul_i32;
-use types::sub_i32;
+use types.omg;
 
 
 /*
@@ -14,7 +7,6 @@ range plus requested overscan. Item indices remain stable when the viewport
 changes. Bounds use saturating arithmetic; an empty or invalid list has no rows.
 The caller paints or builds rows inside the same viewport clip.
 */
-use types;
 
 public data UiListRange [copy] {
     first: i32;
@@ -26,22 +18,22 @@ public data UiListRange [copy] {
 }
 
 public machine visible(count: i32, row_height: i32, gap: i32, viewport_height: i32, scroll: i32, overscan: i32) -> UiListRange {
-    let stride: i32 = max_i32(add_i32(row_height, max_i32(gap, 0)), 1);
+    let stride: i32 = |types|::max_i32(|types|::add_i32(row_height, |types|::max_i32(gap, 0)), 1);
     transition count > 0 && row_height > 0 && viewport_height > 0 && stride > 0 {
-        true -> calculate(count, max_i32(gap, 0), viewport_height, scroll, clamp_i32(overscan, 0, 128), stride)
+        true -> calculate(count, |types|::max_i32(gap, 0), viewport_height, scroll, |types|::clamp_i32(overscan, 0, 128), stride)
         _ -> (UiListRange { first: 0, end: 0, scroll: 0, stride: stride, leading: 0, trailing: 0 })
     }
     machine calculate(count: i32, gap: i32, viewport_height: i32, scroll: i32, overscan: i32, stride: i32) -> UiListRange
     requires stride > 0 {
-        let extent: i32 = max_i32(sub_i32(mul_i32(count, stride), gap), 0);
-        let position: i32 = clamp_i32(scroll, 0, max_i32(sub_i32(extent, viewport_height), 0));
-        let first: i32 = max_i32(sub_i32(position / stride, overscan), 0);
-        let end: i32 = min_i32(add_i32(add_i32(add_i32(position, viewport_height), sub_i32(stride, 1)) / stride, overscan), count);
+        let extent: i32 = |types|::max_i32(|types|::sub_i32(|types|::mul_i32(count, stride), gap), 0);
+        let position: i32 = |types|::clamp_i32(scroll, 0, |types|::max_i32(|types|::sub_i32(extent, viewport_height), 0));
+        let first: i32 = |types|::max_i32(|types|::sub_i32(position / stride, overscan), 0);
+        let end: i32 = |types|::min_i32(|types|::add_i32(|types|::add_i32(|types|::add_i32(position, viewport_height), |types|::sub_i32(stride, 1)) / stride, overscan), count);
         UiListRange { first: first, end: end, scroll: position, stride: stride,
-            leading: mul_i32(first, stride), trailing: max_i32(sub_i32(extent, mul_i32(end, stride)), 0) }
+            leading: |types|::mul_i32(first, stride), trailing: |types|::max_i32(|types|::sub_i32(extent, |types|::mul_i32(end, stride)), 0) }
     }
 }
 
 public machine row_y(range: &UiListRange, index: i32) -> i32 {
-    sub_i32(mul_i32(index, range.stride), range.scroll)
+    |types|::sub_i32(|types|::mul_i32(index, range.stride), range.scroll)
 }

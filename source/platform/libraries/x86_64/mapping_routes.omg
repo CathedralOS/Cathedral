@@ -1,13 +1,9 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified pure orchestration of pinned x86_64 MappedPageTable Mapper methods.
 // Captures, allocations and edits are numeric proposals, never live custody.
-module mapping_routes;
-use pages;
-use page_entries;
-use mapping_plans;
-use mapping_plans::FrameSupply;
-use mapping_plans::ChildPlan;
-use mapping_plans::LeafPlan;
+use pages.omg;
+use page_entries.omg;
+use mapping_plans.omg;
 
 pub data Request [copy] {
     case Translate;
@@ -19,7 +15,7 @@ pub data Request [copy] {
 // Entries selected by the requested page's p4/p3/p2/p1 indices. Each table ID
 // identifies the snapshot containing that word; unused captures are ignored.
 pub data CapturedPath [copy] { table_ids: [u64; 4]; words: [u64; 4]; }
-pub data AllocationInputs [copy] { frames: [FrameSupply; 3]; }
+pub data AllocationInputs [copy] { frames: [|mapping_plans|::FrameSupply; 3]; }
 pub data Edits [copy] {
     table_ids: [u64; 4]; words: [u64; 4]; indices: [u16; 4];
     write_mask: u8; zero_mask: u8; allocation_calls: u8; visited: u8;
@@ -29,14 +25,14 @@ pub data Outcome [copy] {
     case Continue;
     case ParentNotMapped;
     case ParentHugePage;
-    case ChildFailure(child: ChildPlan);
+    case ChildFailure(child: |mapping_plans|::ChildPlan);
     case CaptureMismatch(expected: u64, supplied: u64);
-    case Leaf(leaf: LeafPlan);
+    case Leaf(leaf: |mapping_plans|::LeafPlan);
 }
 pub data RoutePlan [copy] { edits: Edits; outcome: Outcome; }
 
 pub machine plan(path: &CapturedPath, allocations: &AllocationInputs, page: u64, size: u64, request: Request) -> RoutePlan {
-    let valid_page: bool = pages::start_valid(page, size, false);
+    let valid_page: bool = |pages|::start_valid(page, size, false);
     let valid_request: bool = request_valid(request, size);
     transition valid_page && valid_request {
         true -> begin(path, allocations, page, size, request)
@@ -58,7 +54,7 @@ machine request_valid(request: Request, size: u64) -> bool {
         _ -> (true)
     }
     state frame_valid(frame: u64, size: u64) -> bool {
-        let valid: bool = pages::start_valid(frame, size, true);
+        let valid: bool = |pages|::start_valid(frame, size, true);
         valid
     }
 }
@@ -119,16 +115,16 @@ machine parent_step(path: &CapturedPath, allocations: &AllocationInputs, edits: 
         _ -> existing(path, edits, index, word)
     }
     state mapping(path: &CapturedPath, allocations: &AllocationInputs, edits: &mut Edits, index: u8 [0..=2], word: u64, flags: u64) -> Outcome {
-        let supplied: FrameSupply = allocation(allocations, edits, word);
-        let child: ChildPlan = mapping_plans::prepare_child(word, flags, supplied);
+        let supplied: |mapping_plans|::FrameSupply = allocation(allocations, edits, word);
+        let child: |mapping_plans|::ChildPlan = |mapping_plans|::prepare_child(word, flags, supplied);
         record_word(edits, index, child.word, child.write);
         transition child {
-            ChildPlan::Ready { address, zero_child } -> ready_child(path, edits, index, address, zero_child)
+            |mapping_plans|::ChildPlan::Ready { address, zero_child } -> ready_child(path, edits, index, address, zero_child)
             _ -> (Outcome::ChildFailure { child: child })
         }
     }
     state existing(path: &CapturedPath, edits: &mut Edits, index: u8 [0..=2], word: u64) -> Outcome {
-        let address: u64 = page_entries::address(word);
+        let address: u64 = |page_entries|::address(word);
         let present: bool = (word & 1) != 0;
         let huge: bool = (word & 128) != 0;
         transition {
@@ -142,14 +138,14 @@ machine parent_step(path: &CapturedPath, allocations: &AllocationInputs, edits: 
         result
     }
 }
-machine allocation(allocations: &AllocationInputs, edits: &mut Edits, word: u64) -> FrameSupply {
+machine allocation(allocations: &AllocationInputs, edits: &mut Edits, word: u64) -> |mapping_plans|::FrameSupply {
     let count: u8 = edits.allocation_calls;
     transition word == 0 && count < 3 {
         true -> consume(allocations, edits, count)
-        _ -> (FrameSupply::Unavailable)
+        _ -> (|mapping_plans|::FrameSupply::Unavailable)
     }
-    state consume(allocations: &AllocationInputs, edits: &mut Edits, count: u8 [0..=2]) -> FrameSupply {
-        let supplied: FrameSupply = allocations.frames[count];
+    state consume(allocations: &AllocationInputs, edits: &mut Edits, count: u8 [0..=2]) -> |mapping_plans|::FrameSupply {
+        let supplied: |mapping_plans|::FrameSupply = allocations.frames[count];
         edits.allocation_calls = count + 1;
         supplied
     }
@@ -184,11 +180,11 @@ machine child_ready(path: &CapturedPath, edits: &mut Edits, index: u8 [0..=2], a
 machine finish(edits: &mut Edits, size: u64, request: Request, index: u8 [0..=3]) -> Outcome {
     edits.visited = index + 1;
     let word: u64 = edits.words[index];
-    let leaf: LeafPlan = leaf_decision(word, size, request);
+    let leaf: |mapping_plans|::LeafPlan = leaf_decision(word, size, request);
     record_word(edits, index, leaf.word, leaf.write);
     Outcome::Leaf { leaf: leaf }
 }
-machine leaf_decision(word: u64, size: u64, request: Request) -> LeafPlan {
+machine leaf_decision(word: u64, size: u64, request: Request) -> |mapping_plans|::LeafPlan {
     transition request {
         Request::Map { frame, flags, parent_flags } -> mapping(word, size, frame, flags)
         Request::Unmap -> unmapping(word, size)
@@ -196,8 +192,8 @@ machine leaf_decision(word: u64, size: u64, request: Request) -> LeafPlan {
         Request::SetParent { level, table_flags } -> updating(word, 4096, table_flags)
         _ -> translating(word, size)
     }
-    state mapping(word: u64, size: u64, frame: u64, flags: u64) -> LeafPlan { let result: LeafPlan = mapping_plans::map_leaf(word, frame, size, flags); result }
-    state unmapping(word: u64, size: u64) -> LeafPlan { let result: LeafPlan = mapping_plans::unmap_leaf(word, size); result }
-    state updating(word: u64, size: u64, flags: u64) -> LeafPlan { let result: LeafPlan = mapping_plans::update_leaf_flags(word, size, flags); result }
-    state translating(word: u64, size: u64) -> LeafPlan { let result: LeafPlan = mapping_plans::translate_leaf(word, size); result }
+    state mapping(word: u64, size: u64, frame: u64, flags: u64) -> |mapping_plans|::LeafPlan { let result: |mapping_plans|::LeafPlan = |mapping_plans|::map_leaf(word, frame, size, flags); result }
+    state unmapping(word: u64, size: u64) -> |mapping_plans|::LeafPlan { let result: |mapping_plans|::LeafPlan = |mapping_plans|::unmap_leaf(word, size); result }
+    state updating(word: u64, size: u64, flags: u64) -> |mapping_plans|::LeafPlan { let result: |mapping_plans|::LeafPlan = |mapping_plans|::update_leaf_flags(word, size, flags); result }
+    state translating(word: u64, size: u64) -> |mapping_plans|::LeafPlan { let result: |mapping_plans|::LeafPlan = |mapping_plans|::translate_leaf(word, size); result }
 }

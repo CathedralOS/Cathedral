@@ -1,4 +1,3 @@
-module display;
 // One compositor exchange, plus the newest cursor position waiting to be drawn.
 // Input events have their own queues and are never coalesced here.
 public data Pending {

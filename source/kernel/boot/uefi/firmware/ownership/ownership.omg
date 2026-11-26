@@ -1,4 +1,4 @@
-use firmware::firmware;
+use firmware/firmware.omg;
 // source/boot/uefi/own_machine.omg
 //
 // MILESTONE 2 — own the machine. Get the firmware memory map, walk it for free
@@ -12,16 +12,15 @@ use firmware::firmware;
 // M2 chain: the machine only arrives there after a successful map walk, a
 // successful ExitBootServices, and the admitted grant.
 
-use core::memory::extent::PAGE_SIZE;
-use core::memory::geometry::BootGeometry;
-use core::memory::geometry::BootGeometryCheck;
-use uefi::uefi;            // EfiHandle, EfiSystemTable, EfiStatus
-use uefi::boot_services;   // MapKey, BootServicesTable and callable services
-use uefi_memory::memory_map;    // EfiMemoryDescriptor and memory type/attribute data
-use omega::language::core::assembly; // PortIo, MachineControl
-use omega::language::core::extent;   // Extent, Granted, ExtentRootProvider
-use omega::language::core::layout;
-use handoff::handoff;
+use {core}/memory/extent.omg;
+use {core}/memory/geometry.omg;
+use {uefi}/uefi.omg;            // EfiHandle, EfiSystemTable, EfiStatus
+use {uefi}/boot_services.omg;   // MapKey, BootServicesTable and callable services
+use {uefi_memory}/memory_map.omg;    // EfiMemoryDescriptor and memory type/attribute data
+use {omega}/language/core/assembly.omg; // PortIo, MachineControl
+use {omega}/language/core/extent.omg as core_extent;   // Extent, Granted, ExtentRootProvider
+use {omega}/language/core/layout.omg;
+use handoff/handoff.omg;
 
 // Conservative runtime geometry ceiling for one page-count multiplication.
 // This is ordinary Cathedral policy over firmware data, not evidence that the
@@ -48,8 +47,8 @@ public data UefiMemoryMapStorage {
 // reporting. Its fields retain the two linear debts; the container declares
 // no additional nominal obligation. The semantic handoff consumes both fields.
 data KernelRoots {
-    image: Extent in Granted;
-    initial_storage: Extent in Granted;
+    image: |core_extent|::Extent in |core_extent|::Granted;
+    initial_storage: |core_extent|::Extent in |core_extent|::Granted;
 }
 
 // Get the map, walk it, exit, grant, report.
@@ -64,30 +63,30 @@ data KernelRoots {
 // allocated memory and not an Extent. Cathedral advertises 16 KiB first and
 // uses the remaining provision only after an exact EFI_BUFFER_TOO_SMALL result
 // reports a requirement within the fixed ceiling.
-machine Main::own_machine(context: &mut Main, handle: EfiHandle, table: &EfiSystemTable)
-reaches BootServices + ExtentRootProvider + ProgramStorageEntry + ResourceProfileSupply + PortIo + MachineControl
+machine Main::own_machine(context: &mut |firmware|::Main, handle: |uefi|::EfiHandle, table: &|uefi|::EfiSystemTable)
+reaches |boot_services|::BootServices + |core_extent|::ExtentRootProvider + |core_extent|::ProgramStorageEntry + |layout|::ResourceProfileSupply + |assembly|::PortIo + |assembly|::MachineControl
 requires address::Bound == 18446744073709551616
 {
     // The boundary vouches the reference shape, not arbitrary firmware field
     // contents. Fail closed before projecting or dispatching through Boot
     // Services unless the enclosing table has its standard identity, covers
     // the complete prefix Cathedral declares, and keeps Reserved zero.
-    transition table.header.signature == EFI_SYSTEM_TABLE_SIGNATURE &&
-               table.header.revision >= EFI_MIN_SUPPORTED_REVISION &&
-               table.header.header_size >= EFI_SYSTEM_TABLE_REQUIRED_SIZE &&
+    transition table.header.signature == |uefi|::EFI_SYSTEM_TABLE_SIGNATURE &&
+               table.header.revision >= |uefi|::EFI_MIN_SUPPORTED_REVISION &&
+               table.header.header_size >= |uefi|::EFI_SYSTEM_TABLE_REQUIRED_SIZE &&
                table.header.reserved == 0 {
         true -> validate_boot_services(context, handle, table)
         _    -> idle()
     }
 
-    machine validate_boot_services(context: &mut Main, handle: EfiHandle,
-                                 table: &EfiSystemTable)
+    machine validate_boot_services(context: &mut |firmware|::Main, handle: |uefi|::EfiHandle,
+                                 table: &|uefi|::EfiSystemTable)
     requires address::Bound == 18446744073709551616
     {
-        let bs: &BootServicesTable = table.boot_services;
-        transition bs.hdr.signature == EFI_BOOT_SERVICES_SIGNATURE &&
+        let bs: &|boot_services|::BootServicesTable = table.boot_services;
+        transition bs.hdr.signature == |boot_services|::EFI_BOOT_SERVICES_SIGNATURE &&
                    bs.hdr.revision == table.header.revision &&
-                   bs.hdr.header_size >= EFI_BOOT_SERVICES_REQUIRED_SIZE &&
+                   bs.hdr.header_size >= |boot_services|::EFI_BOOT_SERVICES_REQUIRED_SIZE &&
                    bs.hdr.reserved == 0 {
             true -> refresh_map(context, bs, handle, 0)
             _    -> idle()
@@ -97,23 +96,23 @@ requires address::Bound == 18446744073709551616
     // Get a fresh map and its inseparable key. This state is also the only
     // retry target after ExitBootServices reports EFI_INVALID_PARAMETER: the
     // old key and every descriptor-derived candidate are discarded together.
-    machine refresh_map(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine refresh_map(context: &mut |firmware|::Main, bs: &|boot_services|::BootServicesTable, handle: |uefi|::EfiHandle,
                       stale_retry_used: u64)
     requires address::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         transition { _ -> get_map(context, bs, handle, stale_retry_used, 16384) }
     }
 
-    machine get_map(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine get_map(context: &mut |firmware|::Main, bs: &|boot_services|::BootServicesTable, handle: |uefi|::EfiHandle,
                   stale_retry_used: u64,
                   attempted_capacity: u64)
     requires address::Bound == 18446744073709551616 && stale_retry_used <= 1 && 16384 <= attempted_capacity && attempted_capacity <= 65536
     {
         let mut map_size: u64 = attempted_capacity; // in = capacity, out = actual/needed
-        let mut key: MapKey = MapKey { raw: 0 };
+        let mut key: |boot_services|::MapKey = |boot_services|::MapKey { raw: 0 };
         let mut desc_size: u64 = 0;                 // out = the RUNTIME descriptor stride
         let mut desc_version: u32 = 0;
-        let status: EfiStatus = BootServices::get_memory_map(
+        let status: |uefi|::EfiStatus = |boot_services|::BootServices::get_memory_map(
             bs,
             &mut map_size,
             &mut context.map_buf.bytes,
@@ -133,7 +132,7 @@ requires address::Bound == 18446744073709551616
         // firmware genuinely can return malformed values; these conjuncts are
         // also the bound and alignment witnesses for the walk's recast.
         transition status_code == 0 &&
-                   desc_version == EFI_MEMORY_DESCRIPTOR_VERSION &&
+                   desc_version == |memory_map|::EFI_MEMORY_DESCRIPTOR_VERSION &&
                    desc_size >= 40 && desc_size <= 65536 &&
                    desc_size % 8 == 0 &&
                    map_size >= desc_size &&
@@ -150,13 +149,13 @@ requires address::Bound == 18446744073709551616
     // Only the exact capacity signal may expand the advertised window, and
     // only once. Key, descriptor size/version, and all buffer contents from the
     // failed call are ignored. A requirement above the static ceiling parks.
-    machine map_failed(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine map_failed(context: &mut |firmware|::Main, bs: &|boot_services|::BootServicesTable, handle: |uefi|::EfiHandle,
                      stale_retry_used: u64,
                      attempted_capacity: u64,
                      status_code: u64, required_size: u64)
     requires address::Bound == 18446744073709551616 && stale_retry_used <= 1 && 16384 <= attempted_capacity && attempted_capacity <= 65536
     {
-        transition attempted_capacity == 16384 && status_code == EFI_BUFFER_TOO_SMALL.code && required_size > 16384 && required_size <= 65536 {
+        transition attempted_capacity == 16384 && status_code == |uefi|::EFI_BUFFER_TOO_SMALL.code && required_size > 16384 && required_size <= 65536 {
             true -> get_map(context, bs, handle, stale_retry_used, 65536)
             _    -> idle()
         }
@@ -175,18 +174,18 @@ requires address::Bound == 18446744073709551616
     // edge supplies 0; the loop edge proves <= 65496 (65536 buffer bytes minus
     // the 40-byte descriptor footprint) before advancing. `in Trapping` on the walk
     // arithmetic: hostile out-values trip a trap instead of wrapping.
-    machine walk(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine walk(context: &mut |firmware|::Main, bs: &|boot_services|::BootServicesTable, handle: |uefi|::EfiHandle,
                stale_retry_used: u64,
-               map_size: u64 in Trapping, desc_size: u64 in Trapping, key: MapKey,
+               map_size: u64 in Trapping, desc_size: u64 in Trapping, key: |boot_services|::MapKey,
                offset: u64 in Trapping, best_start: u64, best_pages: u64,
                best_offset: u64 in Trapping)
     requires address::Bound == 18446744073709551616 && stale_retry_used <= 1 && offset <= 65496
     {
-        let d: &EfiMemoryDescriptor = &context.map_buf.bytes[offset] as &EfiMemoryDescriptor;
-        let is_free: bool = d.kind == EFI_CONVENTIONAL_MEMORY &&
-                            (d.attribute & EFI_MEMORY_RUNTIME.bits) == 0 &&
-                            (d.attribute & EFI_MEMORY_HOT_PLUGGABLE.bits) == 0 &&
-                            (d.attribute & EFI_MEMORY_SP.bits) == 0;
+        let d: &|memory_map|::EfiMemoryDescriptor = &context.map_buf.bytes[offset] as &|memory_map|::EfiMemoryDescriptor;
+        let is_free: bool = d.kind == |memory_map|::EFI_CONVENTIONAL_MEMORY &&
+                            (d.attribute & |memory_map|::EFI_MEMORY_RUNTIME.bits) == 0 &&
+                            (d.attribute & |memory_map|::EFI_MEMORY_HOT_PLUGGABLE.bits) == 0 &&
+                            (d.attribute & |memory_map|::EFI_MEMORY_SP.bits) == 0;
         transition is_free && d.number_of_pages > best_pages {
             true -> step(context, bs, handle, stale_retry_used, map_size, desc_size, key,
                          offset, d.physical_start, d.number_of_pages, offset)
@@ -195,9 +194,9 @@ requires address::Bound == 18446744073709551616
         }
     }
 
-    machine step(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine step(context: &mut |firmware|::Main, bs: &|boot_services|::BootServicesTable, handle: |uefi|::EfiHandle,
                stale_retry_used: u64,
-               map_size: u64 in Trapping, desc_size: u64 in Trapping, key: MapKey,
+               map_size: u64 in Trapping, desc_size: u64 in Trapping, key: |boot_services|::MapKey,
                offset: u64 in Trapping, best_start: u64, best_pages: u64,
                best_offset: u64 in Trapping)
     requires address::Bound == 18446744073709551616 && stale_retry_used <= 1
@@ -220,17 +219,17 @@ requires address::Bound == 18446744073709551616
     // backing fact. Page-count bounding makes the following multiplication
     // exact; alignment follows the UEFI page contract but is checked rather
     // than trusted from raw descriptor bytes.
-    machine validate_candidate(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine validate_candidate(context: &mut |firmware|::Main, bs: &|boot_services|::BootServicesTable, handle: |uefi|::EfiHandle,
                              stale_retry_used: u64,
                              map_size: u64 in Trapping,
-                             desc_size: u64 in Trapping, key: MapKey,
+                             desc_size: u64 in Trapping, key: |boot_services|::MapKey,
                              best_start: u64, best_pages: u64,
                              best_offset: u64 in Trapping)
     requires address::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         transition best_pages > 0 &&
                    best_pages <= MAX_BOOTSTRAP_PAGE_COUNT &&
-                   best_start % PAGE_SIZE == 0 {
+                   best_start % |extent|::PAGE_SIZE == 0 {
             true -> validate_candidate_end(context, bs, handle, stale_retry_used,
                                            map_size, desc_size, key,
                                            best_start, best_pages, best_offset)
@@ -238,22 +237,22 @@ requires address::Bound == 18446744073709551616
         }
     }
 
-    machine validate_candidate_end(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine validate_candidate_end(context: &mut |firmware|::Main, bs: &|boot_services|::BootServicesTable, handle: |uefi|::EfiHandle,
                                  stale_retry_used: u64,
                                  map_size: u64 in Trapping,
-                                 desc_size: u64 in Trapping, key: MapKey,
+                                 desc_size: u64 in Trapping, key: |boot_services|::MapKey,
                                  best_start: u64,
                                  best_pages: u64,
                                  best_offset: u64 in Trapping)
     requires address::Bound == 18446744073709551616 && stale_retry_used <= 1 && 1 <= best_pages && best_pages <= 4503599627370495
     {
         let checked_pages: u64 in Trapping = best_pages as u64 in Trapping;
-        let checked_length: u64 in Trapping = checked_pages * PAGE_SIZE;
+        let checked_length: u64 in Trapping = checked_pages * |extent|::PAGE_SIZE;
         let length: u64 = checked_length as u64;
         let max_address: u64 = 0xFFFF_FFFF_FFFF_FFFF;
         // The selected span must hold the complete handoff packet before we
         // make the irreversible ExitBootServices call.
-        transition length >= BOOT_HANDOFF_BYTES && best_start <= max_address - length {
+        transition length >= |handoff|::BOOT_HANDOFF_BYTES && best_start <= max_address - length {
             true -> prepare_audit(context, bs, handle, stale_retry_used,
                                   map_size, desc_size, key, best_start,
                                   best_pages, length, best_offset)
@@ -269,10 +268,10 @@ requires address::Bound == 18446744073709551616
     // that validation, skip only the selected record's own
     // overlap comparison. Every other range must lie wholly to one side of the
     // chosen conventional span. No ordering assumption is made.
-    machine prepare_audit(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine prepare_audit(context: &mut |firmware|::Main, bs: &|boot_services|::BootServicesTable, handle: |uefi|::EfiHandle,
                         stale_retry_used: u64,
                         map_size: u64 in Trapping,
-                        desc_size: u64 in Trapping, key: MapKey,
+                        desc_size: u64 in Trapping, key: |boot_services|::MapKey,
                         best_start: u64, best_pages: u64, length: u64,
                         best_offset: u64 in Trapping)
     requires address::Bound == 18446744073709551616 && stale_retry_used <= 1
@@ -286,17 +285,17 @@ requires address::Bound == 18446744073709551616
                                            best_offset, 0) }
     }
 
-    machine audit_descriptor(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine audit_descriptor(context: &mut |firmware|::Main, bs: &|boot_services|::BootServicesTable, handle: |uefi|::EfiHandle,
                            stale_retry_used: u64,
                            map_size: u64 in Trapping,
-                           desc_size: u64 in Trapping, key: MapKey,
+                           desc_size: u64 in Trapping, key: |boot_services|::MapKey,
                            best_start: u64, best_pages: u64, length: u64,
                            best_end: u64 in Trapping,
                            best_offset: u64 in Trapping,
                            audit_offset: u64 in Trapping)
     requires address::Bound == 18446744073709551616 && stale_retry_used <= 1 && audit_offset <= 65496
     {
-        let d: &EfiMemoryDescriptor = &context.map_buf.bytes[audit_offset] as &EfiMemoryDescriptor;
+        let d: &|memory_map|::EfiMemoryDescriptor = &context.map_buf.bytes[audit_offset] as &|memory_map|::EfiMemoryDescriptor;
         transition { _ -> audit_geometry(context, bs, handle, stale_retry_used,
                                          map_size, desc_size, key,
                                          best_start, best_pages, length,
@@ -306,10 +305,10 @@ requires address::Bound == 18446744073709551616
                                          d.number_of_pages) }
     }
 
-    machine audit_geometry(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine audit_geometry(context: &mut |firmware|::Main, bs: &|boot_services|::BootServicesTable, handle: |uefi|::EfiHandle,
                          stale_retry_used: u64,
                          map_size: u64 in Trapping,
-                         desc_size: u64 in Trapping, key: MapKey,
+                         desc_size: u64 in Trapping, key: |boot_services|::MapKey,
                          best_start: u64, best_pages: u64, length: u64,
                          best_end: u64 in Trapping,
                          best_offset: u64 in Trapping,
@@ -320,15 +319,15 @@ requires address::Bound == 18446744073709551616
                          other_pages: u64)
     requires address::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
-        transition (other_kind < EFI_MAX_MEMORY_TYPE ||
-                    other_kind >= EFI_OEM_MEMORY_TYPE_MIN) &&
-                   (other_attribute & EFI_MEMORY_RESERVED_MASK.bits) == 0 &&
-                   (other_attribute & EFI_MEMORY_ISA_MASK.bits) <=
-                       (other_attribute & EFI_MEMORY_ISA_VALID.bits) &&
+        transition (other_kind < |memory_map|::EFI_MAX_MEMORY_TYPE ||
+                    other_kind >= |memory_map|::EFI_OEM_MEMORY_TYPE_MIN) &&
+                   (other_attribute & |memory_map|::EFI_MEMORY_RESERVED_MASK.bits) == 0 &&
+                   (other_attribute & |memory_map|::EFI_MEMORY_ISA_MASK.bits) <=
+                       (other_attribute & |memory_map|::EFI_MEMORY_ISA_VALID.bits) &&
                    other_pages > 0 &&
                    other_pages <= MAX_BOOTSTRAP_PAGE_COUNT &&
-                   other_start % PAGE_SIZE == 0 &&
-                   other_virtual_start % PAGE_SIZE == 0 {
+                   other_start % |extent|::PAGE_SIZE == 0 &&
+                   other_virtual_start % |extent|::PAGE_SIZE == 0 {
             true -> audit_geometry_end(context, bs, handle, stale_retry_used,
                                        map_size, desc_size, key,
                                        best_start, best_pages, length, best_end,
@@ -339,10 +338,10 @@ requires address::Bound == 18446744073709551616
         }
     }
 
-    machine audit_geometry_end(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine audit_geometry_end(context: &mut |firmware|::Main, bs: &|boot_services|::BootServicesTable, handle: |uefi|::EfiHandle,
                              stale_retry_used: u64,
                              map_size: u64 in Trapping,
-                             desc_size: u64 in Trapping, key: MapKey,
+                             desc_size: u64 in Trapping, key: |boot_services|::MapKey,
                              best_start: u64, best_pages: u64, length: u64,
                              best_end: u64 in Trapping,
                              best_offset: u64 in Trapping,
@@ -352,7 +351,7 @@ requires address::Bound == 18446744073709551616
     requires address::Bound == 18446744073709551616 && stale_retry_used <= 1 && 1 <= other_pages && other_pages <= 4503599627370495
     {
         let checked_pages: u64 in Trapping = other_pages as u64 in Trapping;
-        let checked_length: u64 in Trapping = checked_pages * PAGE_SIZE;
+        let checked_length: u64 in Trapping = checked_pages * |extent|::PAGE_SIZE;
         let other_length: u64 = checked_length as u64;
         let checked_other_length: u64 in Trapping = other_length as u64 in Trapping;
         let last_offset: u64 in Trapping = checked_other_length - 1;
@@ -371,10 +370,10 @@ requires address::Bound == 18446744073709551616
 
     // The selected record has now passed the same complete descriptor-geometry
     // validation as every other record; skip only its overlap comparison.
-    machine audit_overlap(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine audit_overlap(context: &mut |firmware|::Main, bs: &|boot_services|::BootServicesTable, handle: |uefi|::EfiHandle,
                         stale_retry_used: u64,
                         map_size: u64 in Trapping,
-                        desc_size: u64 in Trapping, key: MapKey,
+                        desc_size: u64 in Trapping, key: |boot_services|::MapKey,
                         best_start: u64, best_pages: u64, length: u64,
                         best_end: u64 in Trapping,
                         best_offset: u64 in Trapping,
@@ -394,10 +393,10 @@ requires address::Bound == 18446744073709551616
         }
     }
 
-    machine audit_classify(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine audit_classify(context: &mut |firmware|::Main, bs: &|boot_services|::BootServicesTable, handle: |uefi|::EfiHandle,
                          stale_retry_used: u64,
                          map_size: u64 in Trapping,
-                         desc_size: u64 in Trapping, key: MapKey,
+                         desc_size: u64 in Trapping, key: |boot_services|::MapKey,
                          best_start: u64, best_pages: u64, length: u64,
                          best_end: u64 in Trapping,
                          best_offset: u64 in Trapping,
@@ -419,10 +418,10 @@ requires address::Bound == 18446744073709551616
         }
     }
 
-    machine audit_left(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine audit_left(context: &mut |firmware|::Main, bs: &|boot_services|::BootServicesTable, handle: |uefi|::EfiHandle,
                      stale_retry_used: u64,
                      map_size: u64 in Trapping,
-                     desc_size: u64 in Trapping, key: MapKey,
+                     desc_size: u64 in Trapping, key: |boot_services|::MapKey,
                      best_start: u64, best_pages: u64, length: u64,
                      best_end: u64 in Trapping,
                      best_offset: u64 in Trapping,
@@ -438,10 +437,10 @@ requires address::Bound == 18446744073709551616
         }
     }
 
-    machine audit_right(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine audit_right(context: &mut |firmware|::Main, bs: &|boot_services|::BootServicesTable, handle: |uefi|::EfiHandle,
                       stale_retry_used: u64,
                       map_size: u64 in Trapping,
-                      desc_size: u64 in Trapping, key: MapKey,
+                      desc_size: u64 in Trapping, key: |boot_services|::MapKey,
                       best_start: u64, best_pages: u64, length: u64,
                       best_end: u64 in Trapping,
                       best_offset: u64 in Trapping,
@@ -456,10 +455,10 @@ requires address::Bound == 18446744073709551616
         }
     }
 
-    machine audit_step(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine audit_step(context: &mut |firmware|::Main, bs: &|boot_services|::BootServicesTable, handle: |uefi|::EfiHandle,
                      stale_retry_used: u64,
                      map_size: u64 in Trapping,
-                     desc_size: u64 in Trapping, key: MapKey,
+                     desc_size: u64 in Trapping, key: |boot_services|::MapKey,
                      best_start: u64, best_pages: u64, length: u64,
                      best_end: u64 in Trapping,
                      best_offset: u64 in Trapping,
@@ -481,26 +480,26 @@ requires address::Bound == 18446744073709551616
     // This value is numeric evidence only: successful firmware completion and
     // surviving-stack/installation custody still establish the actual roots.
     // A stale key discards this preparation with the map it was derived from.
-    machine prepare_entry(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
-                        stale_retry_used: u64, key: MapKey,
+    machine prepare_entry(context: &mut |firmware|::Main, bs: &|boot_services|::BootServicesTable, handle: |uefi|::EfiHandle,
+                        stale_retry_used: u64, key: |boot_services|::MapKey,
                         best_start: u64, best_pages: u64, length: u64)
     requires address::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         // The explicit address-model premise proves this captured address
         // fits firmware's 64-bit coordinates; host pointer width is irrelevant.
-        let geometry: BootGeometry = BootGeometry {
+        let geometry: |geometry|::BootGeometry = |geometry|::BootGeometry {
             image_base: context.image_base as u64,
             image_length: context.image_size,
             storage_base: best_start,
             storage_length: length,
         };
-        let checked: BootGeometryCheck = BootGeometry::exclude_image_suffix(
+        let checked: |geometry|::BootGeometryCheck = |geometry|::BootGeometry::exclude_image_suffix(
             geometry, context.image_retained_start
         );
         transition checked {
-            BootGeometryCheck::Ready { geometry } -> exit(context, bs, handle,
+            |geometry|::BootGeometryCheck::Ready { geometry } -> exit(context, bs, handle,
                 stale_retry_used, key, best_pages, geometry)
-            BootGeometryCheck::Rejected -> idle()
+            |geometry|::BootGeometryCheck::Rejected -> idle()
         }
     }
 
@@ -509,12 +508,12 @@ requires address::Bound == 18446744073709551616
     // do not grant, discard the old map-derived candidate, and obtain a new map
     // and key before the one permitted retry. Any other firmware error parks
     // unowned.
-    machine exit(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
-               stale_retry_used: u64, key: MapKey,
-               best_pages: u64, geometry: BootGeometry in core::memory::geometry::BootGeometry::Separated)
+    machine exit(context: &mut |firmware|::Main, bs: &|boot_services|::BootServicesTable, handle: |uefi|::EfiHandle,
+               stale_retry_used: u64, key: |boot_services|::MapKey,
+               best_pages: u64, geometry: |geometry|::BootGeometry in |geometry|::BootGeometry::Separated)
     requires address::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
-        let exit_status: EfiStatus = BootServices::exit_boot_services(bs, handle, key);
+        let exit_status: |uefi|::EfiStatus = |boot_services|::BootServices::exit_boot_services(bs, handle, key);
         let exit_code: u64 = exit_status.code;
         transition exit_code == 0 {
             true -> own(context, geometry, best_pages)
@@ -525,11 +524,11 @@ requires address::Bound == 18446744073709551616
     // The first stale key gets the spec-required fresh map/exit pair. A second
     // stale rejection parks: hostile or broken firmware cannot keep Cathedral
     // in an unbounded bootstrap loop, and no rejected transaction can grant.
-    machine exit_failed(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
+    machine exit_failed(context: &mut |firmware|::Main, bs: &|boot_services|::BootServicesTable, handle: |uefi|::EfiHandle,
                       stale_retry_used: u64, exit_code: u64)
     requires address::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
-        transition stale_retry_used == 0 && exit_code == EFI_INVALID_PARAMETER.code {
+        transition stale_retry_used == 0 && exit_code == |uefi|::EFI_INVALID_PARAMETER.code {
             true -> refresh_map(context, bs, handle, 1)
             _    -> idle()
         }
@@ -538,20 +537,20 @@ requires address::Bound == 18446744073709551616
     // Firmware has released the checked ranges. Ask the selected root provider
     // to grant the image prefix and initial allocation before using either.
     // Their numeric addresses and lengths alone do not establish ownership.
-    machine own(context: &mut Main, geometry: BootGeometry in core::memory::geometry::BootGeometry::Separated, best_pages: u64)
+    machine own(context: &mut |firmware|::Main, geometry: |geometry|::BootGeometry in |geometry|::BootGeometry::Separated, best_pages: u64)
     requires address::Bound == 18446744073709551616
     {
-        let image_geometry: Extent = Extent {
+        let image_geometry: |core_extent|::Extent = |core_extent|::Extent {
             base: geometry.image_base as address,
             length: geometry.image_length,
         };
-        let storage_geometry: Extent = Extent {
+        let storage_geometry: |core_extent|::Extent = |core_extent|::Extent {
             base: geometry.storage_base as address,
             length: geometry.storage_length,
         };
-        let image: Extent = ExtentRootProvider::grant(image_geometry);
-        let mut storage: Extent in Granted = ExtentRootProvider::grant(storage_geometry);
-        let published: bool = BootHandoff::publish(&mut storage, &context.map_buf.bytes,
+        let image: |core_extent|::Extent = |core_extent|::ExtentRootProvider::grant(image_geometry);
+        let mut storage: |core_extent|::Extent in |core_extent|::Granted = |core_extent|::ExtentRootProvider::grant(storage_geometry);
+        let published: bool = |handoff|::BootHandoff::publish(&mut storage, &context.map_buf.bytes,
             context.final_map_size, context.final_descriptor_size,
             context.image_base as u64, context.image_size, context.image_retained_start);
         let roots: KernelRoots = KernelRoots { image: image, initial_storage: storage };
@@ -801,7 +800,7 @@ requires address::Bound == 18446744073709551616
     // the destination; this source does not hardcode a kernel implementation.
     machine enter_kernel(roots: KernelRoots) {
         let { image, initial_storage } = roots;
-        ProgramStorageEntry::enter(image, initial_storage);
+        |core_extent|::ProgramStorageEntry::enter(image, initial_storage);
     }
 }
 

@@ -5,14 +5,9 @@
 // Modified for Cathedral: Omega raw carriers, inert address slots, explicit
 // foreign geometry, named constants, and zero-length tail prefix markers.
 // No pointer, protocol GUID, token, or descriptor grants device/firmware access.
-module storage;
-use scalars::Guid;
-use scalars::Char16;
-use scalars::Boolean;
-use scalars::Event;
-use scalars::Handle;
-use status::Status;
-use time::Time;
+use scalars.omg;
+use status.omg;
+use time.omg;
 
 // Zero-length arrays preserve the upstream ABI prefix boundary only. Their
 // declarations do not provide variable-tail length, bounds, or live access.
@@ -93,8 +88,8 @@ pub data FileProtocolV2 {
 
 // Upstream uefi-raw/src/protocol/file_system.rs; repr(C).
 pub data FileIoToken {
-    event: Event;
-    status: Status;
+    event: |scalars|::Event;
+    status: |status|::Status;
     buffer_size: u64;
     // Upstream: *mut c_void
     buffer: address;
@@ -105,36 +100,36 @@ pub data FileInfo {
     size: u64;
     file_size: u64;
     physical_size: u64;
-    create_time: Time;
-    last_access_time: Time;
-    modification_time: Time;
+    create_time: |time|::Time;
+    last_access_time: |time|::Time;
+    modification_time: |time|::Time;
     attribute: FileAttribute;
-    file_name: [Char16; 0];
+    file_name: [|scalars|::Char16; 0];
 }
 
 // Upstream uefi-raw/src/protocol/file_system.rs; repr(C).
 pub data FileSystemInfo {
     size: u64;
-    read_only: Boolean;
+    read_only: |scalars|::Boolean;
     volume_size: u64;
     free_space: u64;
     block_size: u32;
-    volume_label: [Char16; 0];
+    volume_label: [|scalars|::Char16; 0];
 }
 
 // Upstream uefi-raw/src/protocol/file_system.rs; repr(C).
 pub data FileSystemVolumeLabel {
-    volume_label: [Char16; 0];
+    volume_label: [|scalars|::Char16; 0];
 }
 
 // Upstream uefi-raw/src/protocol/block.rs; repr(C).
 pub data BlockIoMedia {
     media_id: u32;
-    removable_media: Boolean;
-    media_present: Boolean;
-    logical_partition: Boolean;
-    read_only: Boolean;
-    write_caching: Boolean;
+    removable_media: |scalars|::Boolean;
+    media_present: |scalars|::Boolean;
+    logical_partition: |scalars|::Boolean;
+    read_only: |scalars|::Boolean;
+    write_caching: |scalars|::Boolean;
     block_size: u32;
     io_align: u32;
     last_block: Lba;
@@ -160,8 +155,8 @@ pub data BlockIoProtocol {
 
 // Upstream uefi-raw/src/protocol/block.rs; repr(C).
 pub data BlockIo2Token {
-    event: Event;
-    transaction_status: Status;
+    event: |scalars|::Event;
+    transaction_status: |status|::Status;
 }
 
 // Upstream uefi-raw/src/protocol/block.rs; repr(C).
@@ -189,8 +184,8 @@ pub data DiskIoProtocol {
 
 // Upstream uefi-raw/src/protocol/disk.rs; repr(C).
 pub data DiskIo2Token {
-    event: Event;
-    transaction_status: Status;
+    event: |scalars|::Event;
+    transaction_status: |status|::Status;
 }
 
 // Upstream uefi-raw/src/protocol/disk.rs; repr(C).
@@ -208,7 +203,7 @@ pub data DiskIo2Protocol {
 
 // Upstream uefi-raw/src/protocol/disk.rs; repr(C).
 pub data DiskInfoProtocol {
-    interface: Guid;
+    interface: |scalars|::Guid;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, inquiry_data: *mut c_void, inquiry_data_size: *mut u32, ) -> Status
     inquiry: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, identify_data: *mut c_void, identify_data_size: *mut u32, ) -> Status
@@ -447,7 +442,7 @@ pub data FirmwareVolume2Protocol {
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, key: *mut c_void, file_type: *mut FvFiletype, name_guid: *mut Guid, attributes: *mut FvFileAttributes, size: *mut usize, ) -> Status
     get_next_file: address;
     key_size: u32;
-    parent_handle: Handle;
+    parent_handle: |scalars|::Handle;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, information_type: *const Guid, buffer_size: *mut usize, buffer: *mut c_void, ) -> Status
     get_info: address;
     // Upstream: unsafe extern "efiapi" fn( this: *const Self, information_type: *const Guid, buffer_size: usize, buffer: *const c_void, ) -> Status
@@ -470,7 +465,7 @@ pub data FirmwareVolumeBlock2Protocol {
     write: address;
     // Upstream: unsafe extern "C" fn(this: *const Self, ...) -> Status
     erase_blocks: address;
-    parent_handle: Handle;
+    parent_handle: |scalars|::Handle;
 }
 
 // Upstream uefi-raw/src/protocol/firmware_management.rs; repr(C, packed).
@@ -484,7 +479,7 @@ pub data FirmwareManagementCapsuleHeader {
 // Upstream uefi-raw/src/protocol/firmware_management.rs; repr(C, packed).
 pub data FirmwareManagementCapsuleImageHeader {
     version: u32;
-    update_image_type_id: Guid;
+    update_image_type_id: |scalars|::Guid;
     update_image_index: u8;
     reserved_bytes: [u8; 3];
     update_image_size: u32;
@@ -501,7 +496,7 @@ pub data FirmwareImageDep {
 // Upstream uefi-raw/src/protocol/firmware_management.rs; repr(C).
 pub data FirmwareImageDescriptor {
     image_index: u8;
-    image_type_id: Guid;
+    image_type_id: |scalars|::Guid;
     image_id: u64;
     // Upstream: *const Char16
     image_id_name: address;
@@ -539,7 +534,7 @@ pub data FirmwareManagementProtocol {
 // Upstream uefi-raw/src/firmware_storage.rs; repr(C).
 pub data FirmwareVolumeHeader {
     zero_vector: [u8; 16];
-    file_system_guid: Guid;
+    file_system_guid: |scalars|::Guid;
     fv_length: u64;
     signature: [u8; 4];
     attributes: FirmwareVolumeAttributes;
@@ -569,42 +564,42 @@ pub const FILE_MODE_READ: FileMode = FileMode { raw: 1 };
 pub const FILE_MODE_WRITE: FileMode = FileMode { raw: 2 };
 pub const FILE_MODE_CREATE: FileMode = FileMode { raw: 9223372036854775808 };
 // 964e5b22-6459-11d2-8e39-00a0c969723b
-pub const SIMPLE_FILE_SYSTEM_PROTOCOL_GUID: Guid = Guid { data1: 0x964e5b22, data2: 0x6459, data3: 0x11d2, data4: [0x8e, 0x39, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
+pub const SIMPLE_FILE_SYSTEM_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x964e5b22, data2: 0x6459, data3: 0x11d2, data4: [0x8e, 0x39, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
 // 09576e92-6d3f-11d2-8e39-00a0c969723b
-pub const FILE_INFO_ID: Guid = Guid { data1: 0x09576e92, data2: 0x6d3f, data3: 0x11d2, data4: [0x8e, 0x39, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
+pub const FILE_INFO_ID: |scalars|::Guid = |scalars|::Guid { data1: 0x09576e92, data2: 0x6d3f, data3: 0x11d2, data4: [0x8e, 0x39, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
 // 09576e93-6d3f-11d2-8e39-00a0c969723b
-pub const FILE_SYSTEM_INFO_ID: Guid = Guid { data1: 0x09576e93, data2: 0x6d3f, data3: 0x11d2, data4: [0x8e, 0x39, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
+pub const FILE_SYSTEM_INFO_ID: |scalars|::Guid = |scalars|::Guid { data1: 0x09576e93, data2: 0x6d3f, data3: 0x11d2, data4: [0x8e, 0x39, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
 // db47d7d3-fe81-11d3-9a35-0090273fc14d
-pub const FILE_SYSTEM_VOLUME_LABEL_ID: Guid = Guid { data1: 0xdb47d7d3, data2: 0xfe81, data3: 0x11d3, data4: [0x9a, 0x35, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d] };
+pub const FILE_SYSTEM_VOLUME_LABEL_ID: |scalars|::Guid = |scalars|::Guid { data1: 0xdb47d7d3, data2: 0xfe81, data3: 0x11d3, data4: [0x9a, 0x35, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d] };
 // 964e5b21-6459-11d2-8e39-00a0c969723b
-pub const BLOCK_IO_PROTOCOL_GUID: Guid = Guid { data1: 0x964e5b21, data2: 0x6459, data3: 0x11d2, data4: [0x8e, 0x39, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
+pub const BLOCK_IO_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x964e5b21, data2: 0x6459, data3: 0x11d2, data4: [0x8e, 0x39, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
 pub const BLOCK_IO_PROTOCOL_REVISION: u64 = 65536;
 pub const BLOCK_IO_PROTOCOL_REVISION_2: u64 = 131073;
 pub const BLOCK_IO_PROTOCOL_REVISION_3: u64 = 131103;
 // a77b2472-e282-4e9f-a245-c2c0e27bbcc1
-pub const BLOCK_IO2_PROTOCOL_GUID: Guid = Guid { data1: 0xa77b2472, data2: 0xe282, data3: 0x4e9f, data4: [0xa2, 0x45, 0xc2, 0xc0, 0xe2, 0x7b, 0xbc, 0xc1] };
+pub const BLOCK_IO2_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0xa77b2472, data2: 0xe282, data3: 0x4e9f, data4: [0xa2, 0x45, 0xc2, 0xc0, 0xe2, 0x7b, 0xbc, 0xc1] };
 // ce345171-ba0b-11d2-8e4f-00a0c969723b
-pub const DISK_IO_PROTOCOL_GUID: Guid = Guid { data1: 0xce345171, data2: 0xba0b, data3: 0x11d2, data4: [0x8e, 0x4f, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
+pub const DISK_IO_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0xce345171, data2: 0xba0b, data3: 0x11d2, data4: [0x8e, 0x4f, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
 pub const DISK_IO_PROTOCOL_REVISION: u64 = 65536;
 // 151c8eae-7f2c-472c-9e54-9828194f6a88
-pub const DISK_IO2_PROTOCOL_GUID: Guid = Guid { data1: 0x151c8eae, data2: 0x7f2c, data3: 0x472c, data4: [0x9e, 0x54, 0x98, 0x28, 0x19, 0x4f, 0x6a, 0x88] };
+pub const DISK_IO2_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x151c8eae, data2: 0x7f2c, data3: 0x472c, data4: [0x9e, 0x54, 0x98, 0x28, 0x19, 0x4f, 0x6a, 0x88] };
 pub const DISK_IO2_PROTOCOL_REVISION: u64 = 131072;
 // d432a67f-14dc-484b-b3bb-3f0291849327
-pub const DISK_INFO_PROTOCOL_GUID: Guid = Guid { data1: 0xd432a67f, data2: 0x14dc, data3: 0x484b, data4: [0xb3, 0xbb, 0x3f, 0x02, 0x91, 0x84, 0x93, 0x27] };
+pub const DISK_INFO_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0xd432a67f, data2: 0x14dc, data3: 0x484b, data4: [0xb3, 0xbb, 0x3f, 0x02, 0x91, 0x84, 0x93, 0x27] };
 // 5e948fe3-26d3-42b5-af17-610287188dec
-pub const DISK_INFO_PROTOCOL_IDE_INTERFACE_GUID: Guid = Guid { data1: 0x5e948fe3, data2: 0x26d3, data3: 0x42b5, data4: [0xaf, 0x17, 0x61, 0x02, 0x87, 0x18, 0x8d, 0xec] };
+pub const DISK_INFO_PROTOCOL_IDE_INTERFACE_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x5e948fe3, data2: 0x26d3, data3: 0x42b5, data4: [0xaf, 0x17, 0x61, 0x02, 0x87, 0x18, 0x8d, 0xec] };
 // 4b3029cc-6b98-47fb-bc96-76dcb80441f0
-pub const DISK_INFO_PROTOCOL_UFS_INTERFACE_GUID: Guid = Guid { data1: 0x4b3029cc, data2: 0x6b98, data3: 0x47fb, data4: [0xbc, 0x96, 0x76, 0xdc, 0xb8, 0x04, 0x41, 0xf0] };
+pub const DISK_INFO_PROTOCOL_UFS_INTERFACE_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x4b3029cc, data2: 0x6b98, data3: 0x47fb, data4: [0xbc, 0x96, 0x76, 0xdc, 0xb8, 0x04, 0x41, 0xf0] };
 // cb871572-c11a-47b5-b492-675eafa77727
-pub const DISK_INFO_PROTOCOL_USB_INTERFACE_GUID: Guid = Guid { data1: 0xcb871572, data2: 0xc11a, data3: 0x47b5, data4: [0xb4, 0x92, 0x67, 0x5e, 0xaf, 0xa7, 0x77, 0x27] };
+pub const DISK_INFO_PROTOCOL_USB_INTERFACE_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0xcb871572, data2: 0xc11a, data3: 0x47b5, data4: [0xb4, 0x92, 0x67, 0x5e, 0xaf, 0xa7, 0x77, 0x27] };
 // 9e498932-4abc-45af-a34d-0247787be7c6
-pub const DISK_INFO_PROTOCOL_AHCI_INTERFACE_GUID: Guid = Guid { data1: 0x9e498932, data2: 0x4abc, data3: 0x45af, data4: [0xa3, 0x4d, 0x02, 0x47, 0x78, 0x7b, 0xe7, 0xc6] };
+pub const DISK_INFO_PROTOCOL_AHCI_INTERFACE_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x9e498932, data2: 0x4abc, data3: 0x45af, data4: [0xa3, 0x4d, 0x02, 0x47, 0x78, 0x7b, 0xe7, 0xc6] };
 // 3ab14680-5d3f-4a4d-bcdc-cc380018c7f7
-pub const DISK_INFO_PROTOCOL_NVME_INTERFACE_GUID: Guid = Guid { data1: 0x3ab14680, data2: 0x5d3f, data3: 0x4a4d, data4: [0xbc, 0xdc, 0xcc, 0x38, 0x00, 0x18, 0xc7, 0xf7] };
+pub const DISK_INFO_PROTOCOL_NVME_INTERFACE_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x3ab14680, data2: 0x5d3f, data3: 0x4a4d, data4: [0xbc, 0xdc, 0xcc, 0x38, 0x00, 0x18, 0xc7, 0xf7] };
 // 08f74baa-ea36-41d9-9521-21a70f8780bc
-pub const DISK_INFO_PROTOCOL_SCSI_INTERFACE_GUID: Guid = Guid { data1: 0x08f74baa, data2: 0xea36, data3: 0x41d9, data4: [0x95, 0x21, 0x21, 0xa7, 0x0f, 0x87, 0x80, 0xbc] };
+pub const DISK_INFO_PROTOCOL_SCSI_INTERFACE_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x08f74baa, data2: 0xea36, data3: 0x41d9, data4: [0x95, 0x21, 0x21, 0xa7, 0x0f, 0x87, 0x80, 0xbc] };
 // 8deec992-d39c-4a5c-ab6b-986e14242b9d
-pub const DISK_INFO_PROTOCOL_SD_MMC_INTERFACE_GUID: Guid = Guid { data1: 0x8deec992, data2: 0xd39c, data3: 0x4a5c, data4: [0xab, 0x6b, 0x98, 0x6e, 0x14, 0x24, 0x2b, 0x9d] };
+pub const DISK_INFO_PROTOCOL_SD_MMC_INTERFACE_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x8deec992, data2: 0xd39c, data3: 0x4a5c, data4: [0xab, 0x6b, 0x98, 0x6e, 0x14, 0x24, 0x2b, 0x9d] };
 pub const ATA_PASS_THRU_ATTRIBUTES_PHYSICAL: AtaPassThruAttributes = AtaPassThruAttributes { raw: 1 };
 pub const ATA_PASS_THRU_ATTRIBUTES_LOGICAL: AtaPassThruAttributes = AtaPassThruAttributes { raw: 2 };
 pub const ATA_PASS_THRU_ATTRIBUTES_NONBLOCKIO: AtaPassThruAttributes = AtaPassThruAttributes { raw: 4 };
@@ -629,7 +624,7 @@ pub const ATA_PASS_THRU_LENGTH_SECTOR_COUNT: AtaPassThruLength = AtaPassThruLeng
 pub const ATA_PASS_THRU_LENGTH_TPSIU: AtaPassThruLength = AtaPassThruLength { raw: 48 };
 pub const ATA_PASS_THRU_LENGTH_COUNT: AtaPassThruLength = AtaPassThruLength { raw: 15 };
 // 1d3de7f0-0807-424f-aa69-11a54e19a46f
-pub const ATA_PASS_THRU_PROTOCOL_GUID: Guid = Guid { data1: 0x1d3de7f0, data2: 0x0807, data3: 0x424f, data4: [0xaa, 0x69, 0x11, 0xa5, 0x4e, 0x19, 0xa4, 0x6f] };
+pub const ATA_PASS_THRU_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x1d3de7f0, data2: 0x0807, data3: 0x424f, data4: [0xaa, 0x69, 0x11, 0xa5, 0x4e, 0x19, 0xa4, 0x6f] };
 pub const SCSI_IO_TYPE_DISK: ScsiIoType = ScsiIoType { raw: 0 };
 pub const SCSI_IO_TYPE_TAPE: ScsiIoType = ScsiIoType { raw: 1 };
 pub const SCSI_IO_TYPE_PRINTER: ScsiIoType = ScsiIoType { raw: 2 };
@@ -674,9 +669,9 @@ pub const SCSI_IO_TARGET_STATUS_RESERVATION_CONFLICT: ScsiIoTargetStatus = ScsiI
 pub const SCSI_IO_TARGET_STATUS_COMMAND_TERMINATED: ScsiIoTargetStatus = ScsiIoTargetStatus { raw: 34 };
 pub const SCSI_IO_TARGET_STATUS_QUEUE_FULL: ScsiIoTargetStatus = ScsiIoTargetStatus { raw: 40 };
 // 932f47e6-2362-4002-803e-3cd54b138f85
-pub const SCSI_IO_PROTOCOL_GUID: Guid = Guid { data1: 0x932f47e6, data2: 0x2362, data3: 0x4002, data4: [0x80, 0x3e, 0x3c, 0xd5, 0x4b, 0x13, 0x8f, 0x85] };
+pub const SCSI_IO_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x932f47e6, data2: 0x2362, data3: 0x4002, data4: [0x80, 0x3e, 0x3c, 0xd5, 0x4b, 0x13, 0x8f, 0x85] };
 // 143b7632-b81b-4cb7-abd3-b625a5b9bffe
-pub const EXT_SCSI_PASS_THRU_PROTOCOL_GUID: Guid = Guid { data1: 0x143b7632, data2: 0xb81b, data3: 0x4cb7, data4: [0xab, 0xd3, 0xb6, 0x25, 0xa5, 0xb9, 0xbf, 0xfe] };
+pub const EXT_SCSI_PASS_THRU_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x143b7632, data2: 0xb81b, data3: 0x4cb7, data4: [0xab, 0xd3, 0xb6, 0x25, 0xa5, 0xb9, 0xbf, 0xfe] };
 pub const NVM_EXPRESS_COMMAND_CDW_VALIDITY_CDW_2: NvmExpressCommandCdwValidity = NvmExpressCommandCdwValidity { raw: 1 };
 pub const NVM_EXPRESS_COMMAND_CDW_VALIDITY_CDW_3: NvmExpressCommandCdwValidity = NvmExpressCommandCdwValidity { raw: 2 };
 pub const NVM_EXPRESS_COMMAND_CDW_VALIDITY_CDW_10: NvmExpressCommandCdwValidity = NvmExpressCommandCdwValidity { raw: 4 };
@@ -692,7 +687,7 @@ pub const NVM_EXPRESS_PASS_THRU_ATTRIBUTES_CMD_SET_NVM: NvmExpressPassThruAttrib
 pub const NVM_EXPRESS_QUEUE_TYPE_ADMIN: NvmExpressQueueType = NvmExpressQueueType { raw: 0 };
 pub const NVM_EXPRESS_QUEUE_TYPE_IO: NvmExpressQueueType = NvmExpressQueueType { raw: 1 };
 // 52c78312-8edc-4233-98f2-1a1aa5e388a5
-pub const NVM_EXPRESS_PASS_THRU_PROTOCOL_GUID: Guid = Guid { data1: 0x52c78312, data2: 0x8edc, data3: 0x4233, data4: [0x98, 0xf2, 0x1a, 0x1a, 0xa5, 0xe3, 0x88, 0xa5] };
+pub const NVM_EXPRESS_PASS_THRU_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x52c78312, data2: 0x8edc, data3: 0x4233, data4: [0x98, 0xf2, 0x1a, 0x1a, 0xa5, 0xe3, 0x88, 0xa5] };
 pub const FV_ATTRIBUTES_READ_DISABLE_CAP: FvAttributes = FvAttributes { raw: 1 };
 pub const FV_ATTRIBUTES_READ_ENABLE_CAP: FvAttributes = FvAttributes { raw: 2 };
 pub const FV_ATTRIBUTES_READ_STATUS: FvAttributes = FvAttributes { raw: 4 };
@@ -784,9 +779,9 @@ pub const FV_FILETYPE_DEBUG_RANGE_MAX: u8 = 239;
 pub const FV_FILETYPE_FFS_RANGE_MIN: u8 = 240;
 pub const FV_FILETYPE_FFS_RANGE_MAX: u8 = 255;
 // 220e73b6-6bdb-4413-8405-b974b108619a
-pub const FIRMWARE_VOLUME2_PROTOCOL_GUID: Guid = Guid { data1: 0x220e73b6, data2: 0x6bdb, data3: 0x4413, data4: [0x84, 0x05, 0xb9, 0x74, 0xb1, 0x08, 0x61, 0x9a] };
+pub const FIRMWARE_VOLUME2_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x220e73b6, data2: 0x6bdb, data3: 0x4413, data4: [0x84, 0x05, 0xb9, 0x74, 0xb1, 0x08, 0x61, 0x9a] };
 // 8f644fa9-e850-4db1-9ce2-0b44698e8da4
-pub const FIRMWARE_VOLUME_BLOCK2_PROTOCOL_GUID: Guid = Guid { data1: 0x8f644fa9, data2: 0xe850, data3: 0x4db1, data4: [0x9c, 0xe2, 0x0b, 0x44, 0x69, 0x8e, 0x8d, 0xa4] };
+pub const FIRMWARE_VOLUME_BLOCK2_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x8f644fa9, data2: 0xe850, data3: 0x4db1, data4: [0x9c, 0xe2, 0x0b, 0x44, 0x69, 0x8e, 0x8d, 0xa4] };
 pub const FIRMWARE_VOLUME_BLOCK2_PROTOCOL_LBA_LIST_TERMINATOR: u64 = 18446744073709551615;
 pub const CAPSULE_SUPPORT_AUTHENTICATION: CapsuleSupport = CapsuleSupport { raw: 1 };
 pub const CAPSULE_SUPPORT_DEPENDENCY: CapsuleSupport = CapsuleSupport { raw: 2 };
@@ -825,7 +820,7 @@ pub const FIRMWARE_MANAGEMENT_CAPSULE_HEADER_INIT_VERSION: u32 = 1;
 pub const FIRMWARE_MANAGEMENT_CAPSULE_IMAGE_HEADER_INIT_VERSION: u32 = 3;
 pub const FIRMWARE_IMAGE_DESCRIPTOR_VERSION: u32 = 4;
 // 86c77a67-0b97-4633-a187-49104d0685c7
-pub const FIRMWARE_MANAGEMENT_PROTOCOL_GUID: Guid = Guid { data1: 0x86c77a67, data2: 0x0b97, data3: 0x4633, data4: [0xa1, 0x87, 0x49, 0x10, 0x4d, 0x06, 0x85, 0xc7] };
+pub const FIRMWARE_MANAGEMENT_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x86c77a67, data2: 0x0b97, data3: 0x4633, data4: [0xa1, 0x87, 0x49, 0x10, 0x4d, 0x06, 0x85, 0xc7] };
 pub const FIRMWARE_VOLUME_ATTRIBUTES_READ_DISABLED_CAP: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 1 };
 pub const FIRMWARE_VOLUME_ATTRIBUTES_READ_ENABLED_CAP: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 2 };
 pub const FIRMWARE_VOLUME_ATTRIBUTES_READ_STATUS: FirmwareVolumeAttributes = FirmwareVolumeAttributes { raw: 4 };

@@ -1,111 +1,87 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-use aml::model::Value;
-use aml::model::Path;
-use aml::model::Lookup;
-use aml::model::ReferenceKind;
-use aml::model::BufferStorage;
-use aml::model::Span;
-use aml::model::Outcome;
-use aml::namespace::get;
-use aml::byte_storage::ByteRead;
-use aml::byte_storage::ByteResult;
-use aml::byte_storage::ByteOutcome;
-use aml::byte_storage::materialize;
-use aml::byte_storage::create_buffer_field;
-use aml::byte_storage::write_field_integer;
-use execution::engine::ExecutionResult;
-use execution::execution_model::ExecutionOutcome;
-use execution::execution_model::Operand;
-use execution::execution_model::ValueResult;
-use execution::generic_values::read_value;
-use execution::generic_values::byte_snapshot;
-use pipeline::program::Program;
-use pipeline::program::Prepared;
-use pipeline::program::prepare_program;
-use pipeline::program::run_program;
-use integer_helpers::integers::IntegerSize;
-data GenericCase [copy] {input:[u8;1024];length:u64;kind:u64;number:u64;bytes:[u8;256];byte_count:u64;has_after:bool;after:u64;after_segment:u32;check_count:bool;object_count:u64;error:ExecutionOutcome;patch:u64;mutate_source:bool;size:IntegerSize;}
+use {omega}/language/core/nat.omg;
+use {aml}/model.omg;
+use {aml}/namespace.omg;
+use {aml}/byte_storage.omg;
+use {execution}/engine.omg;
+use {execution}/execution_model.omg;
+use {execution}/generic_values.omg;
+use {pipeline}/program.omg;
+use {integer_helpers}/integers.omg;
+data GenericCase [copy] {input:[u8;1024];length:u64;kind:u64;number:u64;bytes:[u8;256];byte_count:u64;has_after:bool;after:u64;after_segment:u32;check_count:bool;object_count:u64;error:|execution_model|::ExecutionOutcome;patch:u64;mutate_source:bool;size:|integers|::IntegerSize;}
 machine ge_same_bytes(left:&[u8;256],right:&[u8;256],index:u64,count:u64,prior:bool)
-terminates by(index,count)->Nat::BoundedDistance;
+terminates by(index,count)->|nat|::Nat::BoundedDistance;
 ->bool {let good:bool=ge_byte(left,right,index,count);transition index<count {true -> ge_same_bytes(left,right,index+1,count,prior && good) _ -> (prior)}}
 machine ge_byte(left:&[u8;256],right:&[u8;256],index:u64,count:u64)->bool {transition index<count && index<256 {true -> (left[index]==right[index]) _ -> (true)}}
-machine ge_integer(value:Value,number:u64)->bool {transition value {Value::Integer {number as actual} -> (actual==number) _ -> (false)}}
-machine ge_transport(value:Operand,kind:u64)->bool {transition value {Operand::Integer {number} -> (kind==1) Operand::Object {object_id} -> (kind>=2 && kind<=5) _ -> (false)}}
-machine ge_kind(value:Value,kind:u64,number:u64)->bool {transition value {Value::Integer {number as actual} -> (kind==1 && actual==number) Value::Buffer {buffer_storage} -> (kind==2) Value::String {string_storage} -> (kind==3) Value::Package {first,count} -> (kind==4 && count==number) Value::Reference {kind as reference_kind,object_id} -> (kind==5 && reference_kind==ReferenceKind::RefOf && object_id==number) _ -> (false)}}
+machine ge_integer(value:|model|::Value,number:u64)->bool {transition value {|model|::Value::Integer {number as actual} -> (actual==number) _ -> (false)}}
+machine ge_transport(value:|execution_model|::Operand,kind:u64)->bool {transition value {|execution_model|::Operand::Integer {number} -> (kind==1) |execution_model|::Operand::Object {object_id} -> (kind>=2 && kind<=5) _ -> (false)}}
+machine ge_kind(value:|model|::Value,kind:u64,number:u64)->bool {transition value {|model|::Value::Integer {number as actual} -> (kind==1 && actual==number) |model|::Value::Buffer {buffer_storage} -> (kind==2) |model|::Value::String {string_storage} -> (kind==3) |model|::Value::Package {first,count} -> (kind==4 && count==number) |model|::Value::Reference {kind as reference_kind,object_id} -> (kind==5 && reference_kind==|model|::ReferenceKind::RefOf && object_id==number) _ -> (false)}}
 machine ge_check(row:GenericCase)->i32 {
- let loaded:Prepared=prepare_program(row.input,row.length,7,128,128);let mut program:Program=loaded.program;
+ let loaded:|program|::Prepared=|program|::prepare_program(row.input,row.length,7,128,128);let mut program:|program|::Program=loaded.program;
  _=ge_setup(&mut program,row.patch);
- let mut path:Path=Path {absolute:true,count:1};path.segments[0]=1313423693;
- let arguments:[Value;7];let result:ExecutionResult=run_program(&mut program,path,&arguments,0,row.size,256);
+ let mut path:|model|::Path=|model|::Path {absolute:true,count:1};path.segments[0]=1313423693;
+ let arguments:[|model|::Value;7];let result:|engine|::ExecutionResult=|program|::run_program(&mut program,path,&arguments,0,row.size,256);
  let count:bool=!row.check_count || program.store.space.object_count==row.object_count;
  let mutation:bool=ge_mutate_source(&mut program,row.mutate_source);
- let found:ValueResult=read_value(&program.store,result.operand);
+ let found:|execution_model|::ValueResult=|generic_values|::read_value(&program.store,result.operand);
  let matched:bool=ge_kind(found.value,row.kind,row.number);let transport:bool=ge_transport(result.operand,row.kind);
  let bytes:bool=ge_check_bytes(&program,result.operand,row);
  let after:bool=ge_after(&program,row);
  let good:bool=ge_result(loaded.outcome,result.outcome,row.error,result.has_value,matched && transport,bytes,after,count,mutation);
  transition good {true -> (0) _ -> (1)}
 }
-machine ge_result(loaded:Outcome,actual:ExecutionOutcome,expected:ExecutionOutcome,present:bool,matched:bool,bytes:bool,after:bool,count:bool,mutation:bool)->bool {loaded==Outcome::Success && actual==expected && after && count && mutation && (expected!=ExecutionOutcome::Success || (present && matched && bytes))}
-machine ge_check_bytes(program:&Program,operand:Operand,row:GenericCase)->bool {
+machine ge_result(loaded:|model|::Outcome,actual:|execution_model|::ExecutionOutcome,expected:|execution_model|::ExecutionOutcome,present:bool,matched:bool,bytes:bool,after:bool,count:bool,mutation:bool)->bool {loaded==|model|::Outcome::Success && actual==expected && after && count && mutation && (expected!=|execution_model|::ExecutionOutcome::Success || (present && matched && bytes))}
+machine ge_check_bytes(program:&|program|::Program,operand:|execution_model|::Operand,row:GenericCase)->bool {
  transition row.kind==2 || row.kind==3 {true -> bytes(program,operand,row) _ -> (true)}
- state bytes(program:&Program,operand:Operand,row:GenericCase)->bool {let value:ValueResult=read_value(&program.store,operand);let snapshot:ByteRead=byte_snapshot(&program.source,program.length,program.unit,&program.store,value);let equal:bool=ge_same_bytes(&snapshot.bytes,&row.bytes,0,row.byte_count,true);value.outcome==ExecutionOutcome::Success && snapshot.outcome==ByteOutcome::Success && snapshot.length==row.byte_count && equal}
+ state bytes(program:&|program|::Program,operand:|execution_model|::Operand,row:GenericCase)->bool {let value:|execution_model|::ValueResult=|generic_values|::read_value(&program.store,operand);let snapshot:|byte_storage|::ByteRead=|generic_values|::byte_snapshot(&program.source,program.length,program.unit,&program.store,value);let equal:bool=ge_same_bytes(&snapshot.bytes,&row.bytes,0,row.byte_count,true);value.outcome==|execution_model|::ExecutionOutcome::Success && snapshot.outcome==|byte_storage|::ByteOutcome::Success && snapshot.length==row.byte_count && equal}
 }
-machine ge_after(program:&Program,row:GenericCase)->bool {
+machine ge_after(program:&|program|::Program,row:GenericCase)->bool {
  transition row.has_after {true -> lookup(program,row) _ -> (true)}
- state lookup(program:&Program,row:GenericCase)->bool {let mut path:Path=Path {absolute:true,count:1};path.segments[0]=row.after_segment;let found:Lookup=get(program.store.space,path);transition found.outcome==Outcome::Success && found.object<64 {true -> value(program,found.object,row.after) _ -> (false)}}
- state value(program:&Program,id:u64,number:u64)->bool {let good:bool=ge_integer(program.store.space.objects[id].value,number);good}
+ state lookup(program:&|program|::Program,row:GenericCase)->bool {let mut path:|model|::Path=|model|::Path {absolute:true,count:1};path.segments[0]=row.after_segment;let found:|model|::Lookup=|namespace|::get(program.store.space,path);transition found.outcome==|model|::Outcome::Success && found.object<64 {true -> value(program,found.object,row.after) _ -> (false)}}
+ state value(program:&|program|::Program,id:u64,number:u64)->bool {let good:bool=ge_integer(program.store.space.objects[id].value,number);good}
 }
-machine ge_mutate_source(program:&mut Program,change:bool)->bool {
+machine ge_mutate_source(program:&mut |program|::Program,change:bool)->bool {
  transition change {true -> field(program) _ -> (true)}
- state field(program:&mut Program)->bool {let field:ByteResult=create_buffer_field(&program.source,program.length,program.unit,&mut program.store,0,0,8);transition field.outcome==ByteOutcome::Success {true -> write(program,field.object) _ -> (false)}}
- state write(program:&mut Program,id:u64)->bool {let written:ByteResult=write_field_integer(&program.source,program.length,program.unit,&mut program.store,id,IntegerSize::EightBytes,68);written.outcome==ByteOutcome::Success}
+ state field(program:&mut |program|::Program)->bool {let field:|byte_storage|::ByteResult=|byte_storage|::create_buffer_field(&program.source,program.length,program.unit,&mut program.store,0,0,8);transition field.outcome==|byte_storage|::ByteOutcome::Success {true -> write(program,field.object) _ -> (false)}}
+ state write(program:&mut |program|::Program,id:u64)->bool {let written:|byte_storage|::ByteResult=|byte_storage|::write_field_integer(&program.source,program.length,program.unit,&mut program.store,id,|integers|::IntegerSize::EightBytes,68);written.outcome==|byte_storage|::ByteOutcome::Success}
 }
 data Suite {}
 
 
-use aml::model::ObjectStore;
-use aml::model::NamespaceResult;
-use aml::namespace::insert;
-use aml::namespace::empty;
-use execution::execution_model::Frame;
-use execution::execution_model::Binding;
-use execution::execution_model::Operation;
-use execution::decode_execution::decode_term;
-use execution::decode_execution::decode_target;
+use {execution}/decode_execution.omg;
 machine ge_decoder(mode:u64,expected_pc:u64)->i32 {
- let mut input:[u8;1024];let mut store:ObjectStore=ObjectStore {};store.space=empty();
- let mut frame:Frame=Frame {scope:Path {absolute:true},source_length:4,body:Span {unit:7},end:4,operation_count:1};
- frame.operations[0]=Operation {opcode:0x72,value_arity:1,count:1};
- let expected:ExecutionOutcome=ge_decoder_setup(&mut input,&mut store,&mut frame,mode);
+ let mut input:[u8;1024];let mut store:|model|::ObjectStore=|model|::ObjectStore {};store.space=|namespace|::empty();
+ let mut frame:|execution_model|::Frame=|execution_model|::Frame {scope:|model|::Path {absolute:true},source_length:4,body:|model|::Span {unit:7},end:4,operation_count:1};
+ frame.operations[0]=|execution_model|::Operation {opcode:0x72,value_arity:1,count:1};
+ let expected:|execution_model|::ExecutionOutcome=ge_decoder_setup(&mut input,&mut store,&mut frame,mode);
  let count:u64=frame.operation_count;
- let actual:ExecutionOutcome=ge_decoder_run(&input,&store,&mut frame,mode);
+ let actual:|execution_model|::ExecutionOutcome=ge_decoder_run(&input,&store,&mut frame,mode);
  let good:bool=ge_decoder_result(actual,expected,frame.pc,expected_pc,frame.end,frame.operation_count,count);
  transition good {true -> (0) _ -> (1)}
 }
-machine ge_decoder_result(actual:ExecutionOutcome,expected:ExecutionOutcome,pc:u64,want:u64,end:u64,count:u64,prior:u64)->bool {actual==expected && pc==want && end==4 && count==prior}
-machine ge_decoder_run(input:&[u8;1024],store:&ObjectStore,frame:&mut Frame,mode:u64)->ExecutionOutcome {
+machine ge_decoder_result(actual:|execution_model|::ExecutionOutcome,expected:|execution_model|::ExecutionOutcome,pc:u64,want:u64,end:u64,count:u64,prior:u64)->bool {actual==expected && pc==want && end==4 && count==prior}
+machine ge_decoder_run(input:&[u8;1024],store:&|model|::ObjectStore,frame:&mut |execution_model|::Frame,mode:u64)->|execution_model|::ExecutionOutcome {
  transition mode==5 {true -> target(input,store,frame) _ -> term(input,store,frame)}
- state target(input:&[u8;1024],store:&ObjectStore,frame:&mut Frame)->ExecutionOutcome {let result:ExecutionOutcome=decode_target(input,store,frame);result}
- state term(input:&[u8;1024],store:&ObjectStore,frame:&mut Frame)->ExecutionOutcome {let result:ExecutionOutcome=decode_term(input,store,frame);result}
+ state target(input:&[u8;1024],store:&|model|::ObjectStore,frame:&mut |execution_model|::Frame)->|execution_model|::ExecutionOutcome {let result:|execution_model|::ExecutionOutcome=|decode_execution|::decode_target(input,store,frame);result}
+ state term(input:&[u8;1024],store:&|model|::ObjectStore,frame:&mut |execution_model|::Frame)->|execution_model|::ExecutionOutcome {let result:|execution_model|::ExecutionOutcome=|decode_execution|::decode_term(input,store,frame);result}
 }
-machine ge_decoder_setup(input:&mut [u8;1024],store:&mut ObjectStore,frame:&mut Frame,mode:u64)->ExecutionOutcome {
- transition mode {0 -> (ExecutionOutcome::InvalidState) 1 -> local(input,frame) 2 -> operation(input,frame) 3 -> named(input,store,frame,false) 4 -> named(input,store,frame,true) _ -> target(frame)}
- state local(input:&mut [u8;1024],frame:&mut Frame)->ExecutionOutcome {input[0]=0x60;frame.locals[0]=Binding::Integer {number:11};ExecutionOutcome::InvalidState}
- state operation(input:&mut [u8;1024],frame:&mut Frame)->ExecutionOutcome {input[0]=0x72;frame.operation_count=16;ExecutionOutcome::Depth}
- state named(input:&mut [u8;1024],store:&mut ObjectStore,frame:&mut Frame,method:bool)->ExecutionOutcome {
+machine ge_decoder_setup(input:&mut [u8;1024],store:&mut |model|::ObjectStore,frame:&mut |execution_model|::Frame,mode:u64)->|execution_model|::ExecutionOutcome {
+ transition mode {0 -> (|execution_model|::ExecutionOutcome::InvalidState) 1 -> local(input,frame) 2 -> operation(input,frame) 3 -> named(input,store,frame,false) 4 -> named(input,store,frame,true) _ -> target(frame)}
+ state local(input:&mut [u8;1024],frame:&mut |execution_model|::Frame)->|execution_model|::ExecutionOutcome {input[0]=0x60;frame.locals[0]=|execution_model|::Binding::Integer {number:11};|execution_model|::ExecutionOutcome::InvalidState}
+ state operation(input:&mut [u8;1024],frame:&mut |execution_model|::Frame)->|execution_model|::ExecutionOutcome {input[0]=0x72;frame.operation_count=16;|execution_model|::ExecutionOutcome::Depth}
+ state named(input:&mut [u8;1024],store:&mut |model|::ObjectStore,frame:&mut |execution_model|::Frame,method:bool)->|execution_model|::ExecutionOutcome {
   input[0]=88;input[1]=95;input[2]=95;input[3]=95;
-  let mut path:Path=Path {absolute:true,count:1};path.segments[0]=1600085848;
-  let value:Value=ge_decoder_named_value(method);
-  let inserted:NamespaceResult=insert(store.space,path,value);store.space=inserted.space;
-  transition method {true -> method_frame(frame) _ -> (ExecutionOutcome::InvalidState)}
+  let mut path:|model|::Path=|model|::Path {absolute:true,count:1};path.segments[0]=1600085848;
+  let value:|model|::Value=ge_decoder_named_value(method);
+  let inserted:|model|::NamespaceResult=|namespace|::insert(store.space,path,value);store.space=inserted.space;
+  transition method {true -> method_frame(frame) _ -> (|execution_model|::ExecutionOutcome::InvalidState)}
  }
- state method_frame(frame:&mut Frame)->ExecutionOutcome {frame.operation_count=16;ExecutionOutcome::Depth}
- state target(frame:&mut Frame)->ExecutionOutcome {frame.operations[0]=Operation {opcode:0x72};ExecutionOutcome::InvalidState}
+ state method_frame(frame:&mut |execution_model|::Frame)->|execution_model|::ExecutionOutcome {frame.operation_count=16;|execution_model|::ExecutionOutcome::Depth}
+ state target(frame:&mut |execution_model|::Frame)->|execution_model|::ExecutionOutcome {frame.operations[0]=|execution_model|::Operation {opcode:0x72};|execution_model|::ExecutionOutcome::InvalidState}
 }
-machine ge_decoder_named_value(method:bool)->Value {transition method {true -> (Value::Method {body:Span {unit:7}}) _ -> (Value::Integer {number:11})}}
+machine ge_decoder_named_value(method:bool)->|model|::Value {transition method {true -> (|model|::Value::Method {body:|model|::Span {unit:7}}) _ -> (|model|::Value::Integer {number:11})}}
 
-machine ge_setup(program:&mut Program,patch:u64)->u8 {transition patch {
+machine ge_setup(program:&mut |program|::Program,patch:u64)->u8 {transition patch {
 28 -> patch_28(program)
 33 -> patch_33(program)
 34 -> patch_34(program)
@@ -120,22 +96,22 @@ machine ge_setup(program:&mut Program,patch:u64)->u8 {transition patch {
 44 -> patch_44(program)
 45 -> patch_45(program)
 _ -> (0)}
-state patch_28(program:&mut Program)->u8 {let materialized:ByteResult=materialize(&program.source,program.length,program.unit,&mut program.store,0);0}
-state patch_33(program:&mut Program)->u8 {program.store.space.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};0}
-state patch_34(program:&mut Program)->u8 {program.store.space.object_count=64;0}
-state patch_36(program:&mut Program)->u8 {program.store.space.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};0}
-state patch_37(program:&mut Program)->u8 {program.store.space.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};0}
-state patch_38(program:&mut Program)->u8 {program.store.space.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};0}
-state patch_39(program:&mut Program)->u8 {program.store.space.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};0}
-state patch_40(program:&mut Program)->u8 {program.store.space.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};0}
-state patch_41(program:&mut Program)->u8 {program.store.space.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};0}
-state patch_42(program:&mut Program)->u8 {program.store.space.object_count=64;0}
-state patch_43(program:&mut Program)->u8 {program.store.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Source {declared_size:1,buffer_initializer:Span {unit:8,start:0,end:1}}};0}
-state patch_44(program:&mut Program)->u8 {program.store.space.objects[0].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:1}};0}
-state patch_45(program:&mut Program)->u8 {program.store.space.objects[1].has_next=false;0}
+state patch_28(program:&mut |program|::Program)->u8 {let materialized:|byte_storage|::ByteResult=|byte_storage|::materialize(&program.source,program.length,program.unit,&mut program.store,0);0}
+state patch_33(program:&mut |program|::Program)->u8 {program.store.space.objects[1].value=|model|::Value::Reference {kind:|model|::ReferenceKind::RefOf,object_id:0};0}
+state patch_34(program:&mut |program|::Program)->u8 {program.store.space.object_count=64;0}
+state patch_36(program:&mut |program|::Program)->u8 {program.store.space.objects[1].value=|model|::Value::Reference {kind:|model|::ReferenceKind::RefOf,object_id:0};0}
+state patch_37(program:&mut |program|::Program)->u8 {program.store.space.objects[1].value=|model|::Value::Reference {kind:|model|::ReferenceKind::RefOf,object_id:0};0}
+state patch_38(program:&mut |program|::Program)->u8 {program.store.space.objects[1].value=|model|::Value::Reference {kind:|model|::ReferenceKind::RefOf,object_id:0};0}
+state patch_39(program:&mut |program|::Program)->u8 {program.store.space.objects[1].value=|model|::Value::Reference {kind:|model|::ReferenceKind::RefOf,object_id:0};0}
+state patch_40(program:&mut |program|::Program)->u8 {program.store.space.objects[1].value=|model|::Value::Reference {kind:|model|::ReferenceKind::RefOf,object_id:0};0}
+state patch_41(program:&mut |program|::Program)->u8 {program.store.space.objects[1].value=|model|::Value::Reference {kind:|model|::ReferenceKind::RefOf,object_id:0};0}
+state patch_42(program:&mut |program|::Program)->u8 {program.store.space.object_count=64;0}
+state patch_43(program:&mut |program|::Program)->u8 {program.store.space.objects[0].value=|model|::Value::Buffer {buffer_storage:|model|::BufferStorage::Source {declared_size:1,buffer_initializer:|model|::Span {unit:8,start:0,end:1}}};0}
+state patch_44(program:&mut |program|::Program)->u8 {program.store.space.objects[0].value=|model|::Value::Buffer {buffer_storage:|model|::BufferStorage::Owned {buffer_owner:1}};0}
+state patch_45(program:&mut |program|::Program)->u8 {program.store.space.objects[1].has_next=false;0}
 }
 machine Suite::return_buffer_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:24,kind:2,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:1,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:24,kind:2,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:|execution_model|::ExecutionOutcome::Success,patch:1,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -165,7 +141,7 @@ row.bytes[2]=51;
 let result:i32=ge_check(row);result
 }
 machine Suite::return_buffer_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:24,kind:2,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:1,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:24,kind:2,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:|execution_model|::ExecutionOutcome::Success,patch:1,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -196,7 +172,7 @@ row.bytes[0]=16;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_local_buffer_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:27,kind:2,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:2,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:27,kind:2,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:2,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -229,7 +205,7 @@ row.bytes[2]=51;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_local_buffer_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:27,kind:2,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:2,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:27,kind:2,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:2,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -263,7 +239,7 @@ row.bytes[0]=16;
 let result:i32=ge_check(row);result
 }
 machine Suite::call_return_buffer_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:37,kind:2,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:3,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:37,kind:2,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:3,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -306,7 +282,7 @@ row.bytes[2]=51;
 let result:i32=ge_check(row);result
 }
 machine Suite::call_return_buffer_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:37,kind:2,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:3,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:37,kind:2,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:3,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -350,7 +326,7 @@ row.bytes[0]=16;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_named_buffer_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:39,kind:2,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:4,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:39,kind:2,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:4,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -394,7 +370,7 @@ row.bytes[2]=51;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_named_buffer_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:39,kind:2,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:4,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:39,kind:2,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:4,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -439,7 +415,7 @@ row.bytes[0]=16;
 let result:i32=ge_check(row);result
 }
 machine Suite::return_string_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:22,kind:3,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:5,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:22,kind:3,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:|execution_model|::ExecutionOutcome::Success,patch:5,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -466,7 +442,7 @@ row.bytes[2]=67;
 let result:i32=ge_check(row);result
 }
 machine Suite::return_string_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:22,kind:3,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:5,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:22,kind:3,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:|execution_model|::ExecutionOutcome::Success,patch:5,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -494,7 +470,7 @@ row.bytes[0]=64;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_local_string_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:25,kind:3,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:6,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:25,kind:3,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:6,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -524,7 +500,7 @@ row.bytes[2]=67;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_local_string_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:25,kind:3,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:6,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:25,kind:3,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:6,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -555,7 +531,7 @@ row.bytes[0]=64;
 let result:i32=ge_check(row);result
 }
 machine Suite::call_return_string_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:35,kind:3,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:7,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:35,kind:3,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:7,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -595,7 +571,7 @@ row.bytes[2]=67;
 let result:i32=ge_check(row);result
 }
 machine Suite::call_return_string_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:35,kind:3,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:7,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:35,kind:3,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:7,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -636,7 +612,7 @@ row.bytes[0]=64;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_named_string_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:37,kind:3,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:8,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:37,kind:3,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:8,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -677,7 +653,7 @@ row.bytes[2]=67;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_named_string_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:37,kind:3,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:8,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:37,kind:3,number:0,byte_count:3,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:8,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -719,7 +695,7 @@ row.bytes[0]=64;
 let result:i32=ge_check(row);result
 }
 machine Suite::return_empty_buffer_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:20,kind:2,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:9,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:20,kind:2,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:|execution_model|::ExecutionOutcome::Success,patch:9,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -741,7 +717,7 @@ row.input[19]=95;
 let result:i32=ge_check(row);result
 }
 machine Suite::return_empty_buffer_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:20,kind:2,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:9,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:20,kind:2,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:|execution_model|::ExecutionOutcome::Success,patch:9,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -764,7 +740,7 @@ row.byte_count=1;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_local_empty_buffer_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:23,kind:2,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:10,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:23,kind:2,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:10,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -789,7 +765,7 @@ row.input[22]=96;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_local_empty_buffer_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:23,kind:2,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:10,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:23,kind:2,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:10,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -815,7 +791,7 @@ row.byte_count=1;
 let result:i32=ge_check(row);result
 }
 machine Suite::call_return_empty_buffer_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:33,kind:2,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:11,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:33,kind:2,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:11,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -850,7 +826,7 @@ row.input[32]=104;
 let result:i32=ge_check(row);result
 }
 machine Suite::call_return_empty_buffer_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:33,kind:2,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:11,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:33,kind:2,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:11,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -886,7 +862,7 @@ row.byte_count=1;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_named_empty_buffer_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:35,kind:2,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:12,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:35,kind:2,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:12,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -922,7 +898,7 @@ row.input[34]=95;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_named_empty_buffer_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:35,kind:2,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:12,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:35,kind:2,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:12,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -959,7 +935,7 @@ row.byte_count=1;
 let result:i32=ge_check(row);result
 }
 machine Suite::return_empty_string_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:19,kind:3,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:13,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:19,kind:3,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:|execution_model|::ExecutionOutcome::Success,patch:13,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -980,7 +956,7 @@ row.input[18]=95;
 let result:i32=ge_check(row);result
 }
 machine Suite::return_empty_string_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:19,kind:3,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:13,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:19,kind:3,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:|execution_model|::ExecutionOutcome::Success,patch:13,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -1002,7 +978,7 @@ row.byte_count=1;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_local_empty_string_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:22,kind:3,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:14,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:22,kind:3,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:14,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -1026,7 +1002,7 @@ row.input[21]=96;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_local_empty_string_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:22,kind:3,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:14,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:22,kind:3,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:14,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -1051,7 +1027,7 @@ row.byte_count=1;
 let result:i32=ge_check(row);result
 }
 machine Suite::call_return_empty_string_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:32,kind:3,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:15,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:32,kind:3,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:15,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -1085,7 +1061,7 @@ row.input[31]=104;
 let result:i32=ge_check(row);result
 }
 machine Suite::call_return_empty_string_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:32,kind:3,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:15,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:32,kind:3,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:15,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -1120,7 +1096,7 @@ row.byte_count=1;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_named_empty_string_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:34,kind:3,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:16,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:34,kind:3,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:16,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -1155,7 +1131,7 @@ row.input[33]=95;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_named_empty_string_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:34,kind:3,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:16,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:34,kind:3,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:16,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -1191,7 +1167,7 @@ row.byte_count=1;
 let result:i32=ge_check(row);result
 }
 machine Suite::package_return_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:24,kind:4,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:4,error:ExecutionOutcome::Success,patch:17,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:24,kind:4,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:4,error:|execution_model|::ExecutionOutcome::Success,patch:17,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -1218,7 +1194,7 @@ row.input[23]=95;
 let result:i32=ge_check(row);result
 }
 machine Suite::package_return_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:24,kind:4,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:4,error:ExecutionOutcome::Success,patch:17,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:24,kind:4,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:4,error:|execution_model|::ExecutionOutcome::Success,patch:17,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -1246,7 +1222,7 @@ row.number=3;
 let result:i32=ge_check(row);result
 }
 machine Suite::package_copy_local_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:27,kind:4,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:5,error:ExecutionOutcome::Success,patch:18,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:27,kind:4,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:5,error:|execution_model|::ExecutionOutcome::Success,patch:18,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -1276,7 +1252,7 @@ row.input[26]=96;
 let result:i32=ge_check(row);result
 }
 machine Suite::package_copy_local_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:27,kind:4,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:5,error:ExecutionOutcome::Success,patch:18,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:27,kind:4,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:5,error:|execution_model|::ExecutionOutcome::Success,patch:18,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -1307,7 +1283,7 @@ row.number=3;
 let result:i32=ge_check(row);result
 }
 machine Suite::package_copy_named_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:39,kind:4,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:5,error:ExecutionOutcome::Success,patch:19,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:39,kind:4,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:5,error:|execution_model|::ExecutionOutcome::Success,patch:19,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -1348,7 +1324,7 @@ row.input[38]=95;
 let result:i32=ge_check(row);result
 }
 machine Suite::package_copy_named_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:39,kind:4,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:5,error:ExecutionOutcome::Success,patch:19,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:39,kind:4,number:2,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:5,error:|execution_model|::ExecutionOutcome::Success,patch:19,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -1390,7 +1366,7 @@ row.number=3;
 let result:i32=ge_check(row);result
 }
 machine Suite::store_argument_plain_named_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:36,kind:1,number:22,byte_count:0,has_after:true,after:11,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:20,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:36,kind:1,number:22,byte_count:0,has_after:true,after:11,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:20,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -1429,7 +1405,7 @@ row.input[35]=104;
 let result:i32=ge_check(row);result
 }
 machine Suite::store_argument_plain_named_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:36,kind:1,number:22,byte_count:0,has_after:true,after:11,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:20,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:36,kind:1,number:22,byte_count:0,has_after:true,after:11,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:20,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -1469,7 +1445,7 @@ row.number=23;
 let result:i32=ge_check(row);result
 }
 machine Suite::store_argument_plain_local_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:31,kind:1,number:11,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:21,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:31,kind:1,number:11,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:|execution_model|::ExecutionOutcome::Success,patch:21,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=20;
 row.input[1]=17;
 row.input[2]=77;
@@ -1503,7 +1479,7 @@ row.input[30]=104;
 let result:i32=ge_check(row);result
 }
 machine Suite::store_argument_plain_local_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:31,kind:1,number:11,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:21,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:31,kind:1,number:11,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:|execution_model|::ExecutionOutcome::Success,patch:21,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=20;
 row.input[1]=17;
 row.input[2]=77;
@@ -1538,7 +1514,7 @@ row.number=12;
 let result:i32=ge_check(row);result
 }
 machine Suite::store_argument_buffer_replace_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:38,kind:1,number:22,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:22,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:38,kind:1,number:22,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:22,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -1579,7 +1555,7 @@ row.input[37]=104;
 let result:i32=ge_check(row);result
 }
 machine Suite::store_argument_buffer_replace_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:38,kind:1,number:22,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:22,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:38,kind:1,number:22,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:22,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -1621,7 +1597,7 @@ row.number=23;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_argument_plain_named_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:36,kind:1,number:22,byte_count:0,has_after:true,after:11,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:23,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:36,kind:1,number:22,byte_count:0,has_after:true,after:11,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:23,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -1660,7 +1636,7 @@ row.input[35]=104;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_argument_plain_named_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:36,kind:1,number:22,byte_count:0,has_after:true,after:11,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:23,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:36,kind:1,number:22,byte_count:0,has_after:true,after:11,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:23,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -1700,7 +1676,7 @@ row.number=23;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_argument_plain_local_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:31,kind:1,number:11,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:24,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:31,kind:1,number:11,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:|execution_model|::ExecutionOutcome::Success,patch:24,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=20;
 row.input[1]=17;
 row.input[2]=77;
@@ -1734,7 +1710,7 @@ row.input[30]=104;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_argument_plain_local_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:31,kind:1,number:11,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:24,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:31,kind:1,number:11,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:|execution_model|::ExecutionOutcome::Success,patch:24,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=20;
 row.input[1]=17;
 row.input[2]=77;
@@ -1769,7 +1745,7 @@ row.number=12;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_argument_buffer_replace_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:38,kind:1,number:22,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:25,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:38,kind:1,number:22,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:25,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -1810,7 +1786,7 @@ row.input[37]=104;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_argument_buffer_replace_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:38,kind:1,number:22,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:25,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:38,kind:1,number:22,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:25,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -1852,7 +1828,7 @@ row.number=23;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_local_byte_then_integer_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:28,kind:1,number:22,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:26,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:28,kind:1,number:22,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:26,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -1883,7 +1859,7 @@ row.input[27]=96;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_local_byte_then_integer_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:28,kind:1,number:22,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:26,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:28,kind:1,number:22,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:26,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -1915,7 +1891,7 @@ row.number=23;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_local_byte_reuses_cell_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:41,kind:2,number:0,byte_count:2,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:4,error:ExecutionOutcome::Success,patch:27,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:41,kind:2,number:0,byte_count:2,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:4,error:|execution_model|::ExecutionOutcome::Success,patch:27,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -1961,7 +1937,7 @@ row.bytes[1]=85;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_local_byte_reuses_cell_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:41,kind:2,number:0,byte_count:2,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:4,error:ExecutionOutcome::Success,patch:27,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:41,kind:2,number:0,byte_count:2,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:4,error:|execution_model|::ExecutionOutcome::Success,patch:27,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -2008,7 +1984,7 @@ row.bytes[0]=69;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_owned_buffer_independent_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:26,kind:2,number:0,byte_count:2,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:28,mutate_source:true,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:26,kind:2,number:0,byte_count:2,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:28,mutate_source:true,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -2039,7 +2015,7 @@ row.bytes[1]=34;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_owned_buffer_independent_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:26,kind:2,number:0,byte_count:2,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:28,mutate_source:true,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:26,kind:2,number:0,byte_count:2,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:28,mutate_source:true,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -2071,7 +2047,7 @@ row.bytes[0]=16;
 let result:i32=ge_check(row);result
 }
 machine Suite::call_buffer_shared_payload_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:36,kind:2,number:0,byte_count:2,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:29,mutate_source:true,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:36,kind:2,number:0,byte_count:2,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:29,mutate_source:true,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -2112,7 +2088,7 @@ row.bytes[1]=34;
 let result:i32=ge_check(row);result
 }
 machine Suite::call_buffer_shared_payload_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:36,kind:2,number:0,byte_count:2,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:29,mutate_source:true,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:36,kind:2,number:0,byte_count:2,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:29,mutate_source:true,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -2154,7 +2130,7 @@ row.bytes[0]=69;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_named_self_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:32,kind:2,number:0,byte_count:2,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:30,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:32,kind:2,number:0,byte_count:2,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:|execution_model|::ExecutionOutcome::Success,patch:30,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -2191,7 +2167,7 @@ row.bytes[1]=34;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_named_self_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:32,kind:2,number:0,byte_count:2,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:30,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:32,kind:2,number:0,byte_count:2,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:|execution_model|::ExecutionOutcome::Success,patch:30,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -2229,7 +2205,7 @@ row.bytes[0]=16;
 let result:i32=ge_check(row);result
 }
 machine Suite::late_named_operand_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:41,kind:1,number:23,byte_count:0,has_after:true,after:22,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:31,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:41,kind:1,number:23,byte_count:0,has_after:true,after:22,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:31,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -2271,7 +2247,7 @@ row.input[40]=1;
 let result:i32=ge_check(row);result
 }
 machine Suite::late_named_operand_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:41,kind:1,number:23,byte_count:0,has_after:true,after:22,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:31,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:41,kind:1,number:23,byte_count:0,has_after:true,after:22,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:31,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -2314,7 +2290,7 @@ row.number=24;
 let result:i32=ge_check(row);result
 }
 machine Suite::package_local_payload_independence_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:34,kind:4,number:2,byte_count:0,has_after:true,after:99,after_segment:1600085848,check_count:true,object_count:5,error:ExecutionOutcome::Success,patch:32,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:34,kind:4,number:2,byte_count:0,has_after:true,after:99,after_segment:1600085848,check_count:true,object_count:5,error:|execution_model|::ExecutionOutcome::Success,patch:32,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -2351,7 +2327,7 @@ row.input[33]=96;
 let result:i32=ge_check(row);result
 }
 machine Suite::package_local_payload_independence_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:34,kind:4,number:2,byte_count:0,has_after:true,after:99,after_segment:1600085848,check_count:true,object_count:5,error:ExecutionOutcome::Success,patch:32,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:34,kind:4,number:2,byte_count:0,has_after:true,after:99,after_segment:1600085848,check_count:true,object_count:5,error:|execution_model|::ExecutionOutcome::Success,patch:32,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -2389,7 +2365,7 @@ row.number=3;
 let result:i32=ge_check(row);result
 }
 machine Suite::reference_local_payload_independence_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:35,kind:5,number:0,byte_count:0,has_after:true,after:99,after_segment:1600085842,check_count:true,object_count:4,error:ExecutionOutcome::Success,patch:33,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:35,kind:5,number:0,byte_count:0,has_after:true,after:99,after_segment:1600085842,check_count:true,object_count:4,error:|execution_model|::ExecutionOutcome::Success,patch:33,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -2426,7 +2402,7 @@ row.input[34]=96;
 let result:i32=ge_check(row);result
 }
 machine Suite::reference_local_payload_independence_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:35,kind:5,number:0,byte_count:0,has_after:true,after:99,after_segment:1600085842,check_count:true,object_count:4,error:ExecutionOutcome::Success,patch:33,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:35,kind:5,number:0,byte_count:0,has_after:true,after:99,after_segment:1600085842,check_count:true,object_count:4,error:|execution_model|::ExecutionOutcome::Success,patch:33,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -2464,7 +2440,7 @@ row.number=1;
 let result:i32=ge_check(row);result
 }
 machine Suite::capacity_copy_package_atomic_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:25,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:64,error:ExecutionOutcome::Capacity,patch:34,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:25,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:64,error:|execution_model|::ExecutionOutcome::Capacity,patch:34,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -2492,7 +2468,7 @@ row.input[24]=96;
 let result:i32=ge_check(row);result
 }
 machine Suite::capacity_copy_package_atomic_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:25,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:64,error:ExecutionOutcome::Capacity,patch:34,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:25,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:64,error:|execution_model|::ExecutionOutcome::Capacity,patch:34,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -2517,11 +2493,11 @@ row.input[21]=95;
 row.input[22]=96;
 row.input[23]=164;
 row.input[24]=96;
-row.error=ExecutionOutcome::Success;
+row.error=|execution_model|::ExecutionOutcome::Success;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_method_destination_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:26,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:ExecutionOutcome::UnsupportedValue,patch:35,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:26,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:|execution_model|::ExecutionOutcome::UnsupportedValue,patch:35,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=20;
 row.input[1]=15;
 row.input[2]=77;
@@ -2548,7 +2524,7 @@ row.input[25]=11;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_method_destination_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:26,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:ExecutionOutcome::UnsupportedValue,patch:35,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:26,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:|execution_model|::ExecutionOutcome::UnsupportedValue,patch:35,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=20;
 row.input[1]=15;
 row.input[2]=77;
@@ -2572,11 +2548,11 @@ row.input[21]=95;
 row.input[23]=164;
 row.input[24]=10;
 row.input[25]=11;
-row.error=ExecutionOutcome::Success;
+row.error=|execution_model|::ExecutionOutcome::Success;
 let result:i32=ge_check(row);result
 }
 machine Suite::store_explicit_reference_argument_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:42,kind:1,number:22,byte_count:0,has_after:true,after:22,after_segment:1600085848,check_count:true,object_count:4,error:ExecutionOutcome::Success,patch:36,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:42,kind:1,number:22,byte_count:0,has_after:true,after:22,after_segment:1600085848,check_count:true,object_count:4,error:|execution_model|::ExecutionOutcome::Success,patch:36,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -2620,7 +2596,7 @@ row.input[41]=104;
 let result:i32=ge_check(row);result
 }
 machine Suite::store_explicit_reference_argument_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:42,kind:1,number:22,byte_count:0,has_after:true,after:22,after_segment:1600085848,check_count:true,object_count:4,error:ExecutionOutcome::Success,patch:36,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:42,kind:1,number:22,byte_count:0,has_after:true,after:22,after_segment:1600085848,check_count:true,object_count:4,error:|execution_model|::ExecutionOutcome::Success,patch:36,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -2665,7 +2641,7 @@ row.number=23;
 let result:i32=ge_check(row);result
 }
 machine Suite::store_reference_argument_type_replacement_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:53,kind:3,number:0,byte_count:2,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:5,error:ExecutionOutcome::Success,patch:37,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:53,kind:3,number:0,byte_count:2,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:5,error:|execution_model|::ExecutionOutcome::Success,patch:37,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -2721,7 +2697,7 @@ row.bytes[1]=66;
 let result:i32=ge_check(row);result
 }
 machine Suite::store_reference_argument_type_replacement_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:53,kind:3,number:0,byte_count:2,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:5,error:ExecutionOutcome::Success,patch:37,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:53,kind:3,number:0,byte_count:2,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:5,error:|execution_model|::ExecutionOutcome::Success,patch:37,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -2778,7 +2754,7 @@ row.bytes[0]=64;
 let result:i32=ge_check(row);result
 }
 machine Suite::store_local_reference_replaced_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:32,kind:1,number:22,byte_count:0,has_after:true,after:11,after_segment:1600085848,check_count:true,object_count:4,error:ExecutionOutcome::Success,patch:38,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:32,kind:1,number:22,byte_count:0,has_after:true,after:11,after_segment:1600085848,check_count:true,object_count:4,error:|execution_model|::ExecutionOutcome::Success,patch:38,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -2812,7 +2788,7 @@ row.input[31]=96;
 let result:i32=ge_check(row);result
 }
 machine Suite::store_local_reference_replaced_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:32,kind:1,number:22,byte_count:0,has_after:true,after:11,after_segment:1600085848,check_count:true,object_count:4,error:ExecutionOutcome::Success,patch:38,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:32,kind:1,number:22,byte_count:0,has_after:true,after:11,after_segment:1600085848,check_count:true,object_count:4,error:|execution_model|::ExecutionOutcome::Success,patch:38,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -2847,7 +2823,7 @@ row.number=23;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_explicit_reference_argument_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:42,kind:1,number:22,byte_count:0,has_after:true,after:22,after_segment:1600085848,check_count:true,object_count:4,error:ExecutionOutcome::Success,patch:39,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:42,kind:1,number:22,byte_count:0,has_after:true,after:22,after_segment:1600085848,check_count:true,object_count:4,error:|execution_model|::ExecutionOutcome::Success,patch:39,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -2891,7 +2867,7 @@ row.input[41]=104;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_explicit_reference_argument_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:42,kind:1,number:22,byte_count:0,has_after:true,after:22,after_segment:1600085848,check_count:true,object_count:4,error:ExecutionOutcome::Success,patch:39,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:42,kind:1,number:22,byte_count:0,has_after:true,after:22,after_segment:1600085848,check_count:true,object_count:4,error:|execution_model|::ExecutionOutcome::Success,patch:39,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -2936,7 +2912,7 @@ row.number=23;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_reference_argument_type_replacement_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:53,kind:3,number:0,byte_count:2,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:5,error:ExecutionOutcome::Success,patch:40,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:53,kind:3,number:0,byte_count:2,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:5,error:|execution_model|::ExecutionOutcome::Success,patch:40,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -2992,7 +2968,7 @@ row.bytes[1]=66;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_reference_argument_type_replacement_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:53,kind:3,number:0,byte_count:2,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:5,error:ExecutionOutcome::Success,patch:40,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:53,kind:3,number:0,byte_count:2,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:5,error:|execution_model|::ExecutionOutcome::Success,patch:40,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -3049,7 +3025,7 @@ row.bytes[0]=64;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_local_reference_replaced_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:32,kind:1,number:22,byte_count:0,has_after:true,after:11,after_segment:1600085848,check_count:true,object_count:4,error:ExecutionOutcome::Success,patch:41,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:32,kind:1,number:22,byte_count:0,has_after:true,after:11,after_segment:1600085848,check_count:true,object_count:4,error:|execution_model|::ExecutionOutcome::Success,patch:41,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -3083,7 +3059,7 @@ row.input[31]=96;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_local_reference_replaced_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:32,kind:1,number:22,byte_count:0,has_after:true,after:11,after_segment:1600085848,check_count:true,object_count:4,error:ExecutionOutcome::Success,patch:41,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:32,kind:1,number:22,byte_count:0,has_after:true,after:11,after_segment:1600085848,check_count:true,object_count:4,error:|execution_model|::ExecutionOutcome::Success,patch:41,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -3118,7 +3094,7 @@ row.number=23;
 let result:i32=ge_check(row);result
 }
 machine Suite::capacity_copy_byte_atomic_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:24,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:64,error:ExecutionOutcome::Capacity,patch:42,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:24,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:64,error:|execution_model|::ExecutionOutcome::Capacity,patch:42,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -3145,7 +3121,7 @@ row.input[23]=96;
 let result:i32=ge_check(row);result
 }
 machine Suite::capacity_copy_byte_atomic_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:24,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:64,error:ExecutionOutcome::Capacity,patch:42,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:24,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:64,error:|execution_model|::ExecutionOutcome::Capacity,patch:42,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -3169,11 +3145,11 @@ row.input[20]=95;
 row.input[21]=96;
 row.input[22]=164;
 row.input[23]=96;
-row.error=ExecutionOutcome::Success;
+row.error=|execution_model|::ExecutionOutcome::Success;
 let result:i32=ge_check(row);result
 }
 machine Suite::source_unit_bad_byte_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:21,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:ExecutionOutcome::InvalidState,patch:43,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:21,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:|execution_model|::ExecutionOutcome::InvalidState,patch:43,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -3197,7 +3173,7 @@ row.input[20]=95;
 let result:i32=ge_check(row);result
 }
 machine Suite::source_unit_bad_byte_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:21,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:ExecutionOutcome::InvalidState,patch:43,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:21,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:|execution_model|::ExecutionOutcome::InvalidState,patch:43,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -3218,11 +3194,11 @@ row.input[17]=88;
 row.input[18]=95;
 row.input[19]=95;
 row.input[20]=95;
-row.error=ExecutionOutcome::Success;
+row.error=|execution_model|::ExecutionOutcome::Success;
 let result:i32=ge_check(row);result
 }
 machine Suite::owned_wrong_owner_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:21,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:ExecutionOutcome::InvalidState,patch:44,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:21,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:|execution_model|::ExecutionOutcome::InvalidState,patch:44,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -3246,7 +3222,7 @@ row.input[20]=95;
 let result:i32=ge_check(row);result
 }
 machine Suite::owned_wrong_owner_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:21,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:ExecutionOutcome::InvalidState,patch:44,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:21,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:|execution_model|::ExecutionOutcome::InvalidState,patch:44,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -3267,11 +3243,11 @@ row.input[17]=88;
 row.input[18]=95;
 row.input[19]=95;
 row.input[20]=95;
-row.error=ExecutionOutcome::Success;
+row.error=|execution_model|::ExecutionOutcome::Success;
 let result:i32=ge_check(row);result
 }
 machine Suite::package_bad_link_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:24,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:ExecutionOutcome::InvalidState,patch:45,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:24,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:|execution_model|::ExecutionOutcome::InvalidState,patch:45,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -3298,7 +3274,7 @@ row.input[23]=95;
 let result:i32=ge_check(row);result
 }
 machine Suite::package_bad_link_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:24,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:ExecutionOutcome::InvalidState,patch:45,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:24,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:|execution_model|::ExecutionOutcome::InvalidState,patch:45,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -3322,11 +3298,11 @@ row.input[20]=88;
 row.input[21]=95;
 row.input[22]=95;
 row.input[23]=95;
-row.error=ExecutionOutcome::Success;
+row.error=|execution_model|::ExecutionOutcome::Success;
 let result:i32=ge_check(row);result
 }
 machine Suite::return_named_width32_carrier_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:18,kind:1,number:4294967295,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:46,mutate_source:false,size:IntegerSize::FourBytes};
+let mut row:GenericCase=GenericCase {length:18,kind:1,number:4294967295,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:|execution_model|::ExecutionOutcome::Success,patch:46,mutate_source:false,size:|integers|::IntegerSize::FourBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -3347,7 +3323,7 @@ row.input[17]=95;
 let result:i32=ge_check(row);result
 }
 machine Suite::return_named_width32_carrier_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:18,kind:1,number:4294967295,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:46,mutate_source:false,size:IntegerSize::FourBytes};
+let mut row:GenericCase=GenericCase {length:18,kind:1,number:4294967295,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:|execution_model|::ExecutionOutcome::Success,patch:46,mutate_source:false,size:|integers|::IntegerSize::FourBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -3369,7 +3345,7 @@ row.number=4294967296;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_named_width32_carrier_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:33,kind:1,number:4294967295,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:47,mutate_source:false,size:IntegerSize::FourBytes};
+let mut row:GenericCase=GenericCase {length:33,kind:1,number:4294967295,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:47,mutate_source:false,size:|integers|::IntegerSize::FourBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -3404,7 +3380,7 @@ row.input[32]=95;
 let result:i32=ge_check(row);result
 }
 machine Suite::copy_named_width32_carrier_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:33,kind:1,number:4294967295,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:ExecutionOutcome::Success,patch:47,mutate_source:false,size:IntegerSize::FourBytes};
+let mut row:GenericCase=GenericCase {length:33,kind:1,number:4294967295,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:3,error:|execution_model|::ExecutionOutcome::Success,patch:47,mutate_source:false,size:|integers|::IntegerSize::FourBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -3440,7 +3416,7 @@ row.number=4294967296;
 let result:i32=ge_check(row);result
 }
 machine Suite::argument_width32_carrier_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:22,kind:1,number:4294967295,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:48,mutate_source:false,size:IntegerSize::FourBytes};
+let mut row:GenericCase=GenericCase {length:22,kind:1,number:4294967295,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:|execution_model|::ExecutionOutcome::Success,patch:48,mutate_source:false,size:|integers|::IntegerSize::FourBytes};
 row.input[0]=20;
 row.input[1]=12;
 row.input[2]=77;
@@ -3465,7 +3441,7 @@ row.input[21]=104;
 let result:i32=ge_check(row);result
 }
 machine Suite::argument_width32_carrier_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:22,kind:1,number:4294967295,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:ExecutionOutcome::Success,patch:48,mutate_source:false,size:IntegerSize::FourBytes};
+let mut row:GenericCase=GenericCase {length:22,kind:1,number:4294967295,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:true,object_count:2,error:|execution_model|::ExecutionOutcome::Success,patch:48,mutate_source:false,size:|integers|::IntegerSize::FourBytes};
 row.input[0]=20;
 row.input[1]=12;
 row.input[2]=77;
@@ -3491,7 +3467,7 @@ row.number=4294967296;
 let result:i32=ge_check(row);result
 }
 machine Suite::buffer_arithmetic_rejected_positive(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:24,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:ExecutionOutcome::UnsupportedValue,patch:49,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:24,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:|execution_model|::ExecutionOutcome::UnsupportedValue,patch:49,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -3517,7 +3493,7 @@ row.input[22]=1;
 let result:i32=ge_check(row);result
 }
 machine Suite::buffer_arithmetic_rejected_control(&mut self)->i32 {
-let mut row:GenericCase=GenericCase {length:24,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:ExecutionOutcome::UnsupportedValue,patch:49,mutate_source:false,size:IntegerSize::EightBytes};
+let mut row:GenericCase=GenericCase {length:24,kind:1,number:0,byte_count:0,has_after:false,after:0,after_segment:1600085848,check_count:false,object_count:0,error:|execution_model|::ExecutionOutcome::UnsupportedValue,patch:49,mutate_source:false,size:|integers|::IntegerSize::EightBytes};
 row.input[0]=8;
 row.input[1]=88;
 row.input[2]=95;
@@ -3540,7 +3516,7 @@ row.input[19]=95;
 row.input[20]=95;
 row.input[21]=95;
 row.input[22]=1;
-row.error=ExecutionOutcome::Success;
+row.error=|execution_model|::ExecutionOutcome::Success;
 let result:i32=ge_check(row);result
 }
 machine Suite::decoder_constant_full_positive(&mut self)->i32 {let result:i32=ge_decoder(0,0);result}

@@ -1,329 +1,328 @@
-module arch::x86_64::gate;
 // Temporary native realization of the Rust reference kernel ABI. The process
 // entry supplies this immutable table from its own executable, not from a peer.
 // TableFunction removes the table argument from the native call. No address
 // becomes a reference: all buffer arguments are ordinary borrowed arrays.
-use kernel::Gate;
-use kernel::Kernel;
+use {omega}/language/core/external_binding.omg;
+use kernel.omg;
 
-linux_x86_64 machine Gate::yield_leaf(gate: &Gate) -> u64
-    satisfies Kernel::yield_now via ForeignBinding::TableFunction(yield_now) blocks;
-linux_x86_64 machine Gate::environment_leaf(gate: &Gate, buffer: &mut [u64; 8]) -> u64
-    satisfies Kernel::environment via ForeignBinding::TableFunction(environment);
-linux_x86_64 machine Gate::channel_leaf(gate: &Gate, buffer: &mut [u64; 8]) -> u64
-    satisfies Kernel::channel via ForeignBinding::TableFunction(channel);
-linux_x86_64 machine Gate::send_leaf(gate: &Gate, handle: u64, buffer: &[u64; 8], bytes: u64 [0..=64]) -> u64
-    satisfies Kernel::send via ForeignBinding::TableFunction(send);
-linux_x86_64 machine Gate::receive_leaf(gate: &Gate, handle: u64, buffer: &mut [u64; 8]) -> u64
-    satisfies Kernel::receive via ForeignBinding::TableFunction(receive) blocks;
-linux_x86_64 machine Gate::close_leaf(gate: &Gate, handle: u64) -> u64
-    satisfies Kernel::close via ForeignBinding::TableFunction(close);
-linux_x86_64 machine Gate::write_leaf(gate: &Gate, buffer: &[u64; 8], bytes: u64 [0..=64]) -> u64
-    satisfies Kernel::write via ForeignBinding::TableFunction(write);
-linux_x86_64 machine Gate::clock_leaf(gate: &Gate) -> u64
-    satisfies Kernel::clock via ForeignBinding::TableFunction(clock);
-linux_x86_64 machine Gate::clock_stamp_leaf(gate: &Gate, handle: u64, buffer: &mut [u64; 8]) -> u64
-    satisfies Kernel::clock_stamp via ForeignBinding::TableFunction(clock_stamp);
-linux_x86_64 machine Gate::clock_read_leaf(gate: &Gate, handle: u64, buffer: &mut [u64; 8]) -> u64
-    satisfies Kernel::clock_read via ForeignBinding::TableFunction(clock_read);
-linux_x86_64 machine Gate::wait_leaf(gate: &Gate, records: &[u64; 8], count: u64 [0..=4], deadline: u64) -> u64
-    satisfies Kernel::wait via ForeignBinding::TableFunction(wait) blocks;
+linux_x86_64 machine Gate::yield_leaf(gate: &|kernel|::Gate) -> u64
+    satisfies |kernel|::Kernel::yield_now via |external_binding|::ForeignBinding::TableFunction(yield_now) blocks;
+linux_x86_64 machine Gate::environment_leaf(gate: &|kernel|::Gate, buffer: &mut [u64; 8]) -> u64
+    satisfies |kernel|::Kernel::environment via |external_binding|::ForeignBinding::TableFunction(environment);
+linux_x86_64 machine Gate::channel_leaf(gate: &|kernel|::Gate, buffer: &mut [u64; 8]) -> u64
+    satisfies |kernel|::Kernel::channel via |external_binding|::ForeignBinding::TableFunction(channel);
+linux_x86_64 machine Gate::send_leaf(gate: &|kernel|::Gate, handle: u64, buffer: &[u64; 8], bytes: u64 [0..=64]) -> u64
+    satisfies |kernel|::Kernel::send via |external_binding|::ForeignBinding::TableFunction(send);
+linux_x86_64 machine Gate::receive_leaf(gate: &|kernel|::Gate, handle: u64, buffer: &mut [u64; 8]) -> u64
+    satisfies |kernel|::Kernel::receive via |external_binding|::ForeignBinding::TableFunction(receive) blocks;
+linux_x86_64 machine Gate::close_leaf(gate: &|kernel|::Gate, handle: u64) -> u64
+    satisfies |kernel|::Kernel::close via |external_binding|::ForeignBinding::TableFunction(close);
+linux_x86_64 machine Gate::write_leaf(gate: &|kernel|::Gate, buffer: &[u64; 8], bytes: u64 [0..=64]) -> u64
+    satisfies |kernel|::Kernel::write via |external_binding|::ForeignBinding::TableFunction(write);
+linux_x86_64 machine Gate::clock_leaf(gate: &|kernel|::Gate) -> u64
+    satisfies |kernel|::Kernel::clock via |external_binding|::ForeignBinding::TableFunction(clock);
+linux_x86_64 machine Gate::clock_stamp_leaf(gate: &|kernel|::Gate, handle: u64, buffer: &mut [u64; 8]) -> u64
+    satisfies |kernel|::Kernel::clock_stamp via |external_binding|::ForeignBinding::TableFunction(clock_stamp);
+linux_x86_64 machine Gate::clock_read_leaf(gate: &|kernel|::Gate, handle: u64, buffer: &mut [u64; 8]) -> u64
+    satisfies |kernel|::Kernel::clock_read via |external_binding|::ForeignBinding::TableFunction(clock_read);
+linux_x86_64 machine Gate::wait_leaf(gate: &|kernel|::Gate, records: &[u64; 8], count: u64 [0..=4], deadline: u64) -> u64
+    satisfies |kernel|::Kernel::wait via |external_binding|::ForeignBinding::TableFunction(wait) blocks;
 
-linux_x86_64 machine Gate::memory_allocate_leaf(gate: &Gate, pages: u64 [1..=512]) -> u64
-    satisfies Kernel::memory_allocate via ForeignBinding::TableFunction(memory_allocate) blocks;
-linux_x86_64 machine Gate::memory_share_leaf(gate: &Gate, handle: u64) -> u64
-    satisfies Kernel::memory_share via ForeignBinding::TableFunction(memory_share) blocks;
-linux_x86_64 machine Gate::memory_release_leaf(gate: &Gate, handle: u64) -> u64
-    satisfies Kernel::memory_release via ForeignBinding::TableFunction(memory_release) blocks;
-linux_x86_64 machine Gate::shared_read_leaf(gate: &Gate, handle: u64, index: u64, words: &mut [u64; 8], count: u64 [1..=8]) -> u64
-    satisfies Kernel::shared_read via ForeignBinding::TableFunction(shared_read) blocks;
-linux_x86_64 machine Gate::shared_write_leaf(gate: &Gate, handle: u64, index: u64, words: &[u64; 8], count: u64 [1..=8]) -> u64
-    satisfies Kernel::shared_write via ForeignBinding::TableFunction(shared_write) blocks;
-linux_x86_64 machine Gate::shared_send_leaf(gate: &Gate, endpoint: u64, packet: &[u64; 10]) -> u64
-    satisfies Kernel::shared_send via ForeignBinding::TableFunction(shared_send);
-linux_x86_64 machine Gate::shared_receive_leaf(gate: &Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64
-    satisfies Kernel::shared_receive via ForeignBinding::TableFunction(shared_receive) blocks;
-linux_x86_64 machine Gate::notify_create_leaf(gate: &Gate, record: &mut [u64; 8]) -> u64
-    satisfies Kernel::notify_create via ForeignBinding::TableFunction(notify_create);
-linux_x86_64 machine Gate::notify_drop_leaf(gate: &Gate, handle: u64) -> u64
-    satisfies Kernel::notify_drop via ForeignBinding::TableFunction(notify_drop);
-linux_x86_64 machine Gate::notify_signal_leaf(gate: &Gate, handle: u64) -> u64
-    satisfies Kernel::notify_signal via ForeignBinding::TableFunction(notify_signal);
-linux_x86_64 machine Gate::notify_wait_leaf(gate: &Gate, handle: u64, deadline: u64, timed: u64 [0..=1]) -> u64
-    satisfies Kernel::notify_wait via ForeignBinding::TableFunction(notify_wait) blocks;
-linux_x86_64 machine Gate::notify_control_leaf(gate: &Gate, handle: u64, action: u64 [0..=2]) -> u64
-    satisfies Kernel::notify_control via ForeignBinding::TableFunction(notify_control);
-linux_x86_64 machine Gate::notify_send_leaf(gate: &Gate, endpoint: u64, packet: &[u64; 10]) -> u64
-    satisfies Kernel::notify_send via ForeignBinding::TableFunction(notify_send);
-linux_x86_64 machine Gate::notify_receive_leaf(gate: &Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64
-    satisfies Kernel::notify_receive via ForeignBinding::TableFunction(notify_receive) blocks;
+linux_x86_64 machine Gate::memory_allocate_leaf(gate: &|kernel|::Gate, pages: u64 [1..=512]) -> u64
+    satisfies |kernel|::Kernel::memory_allocate via |external_binding|::ForeignBinding::TableFunction(memory_allocate) blocks;
+linux_x86_64 machine Gate::memory_share_leaf(gate: &|kernel|::Gate, handle: u64) -> u64
+    satisfies |kernel|::Kernel::memory_share via |external_binding|::ForeignBinding::TableFunction(memory_share) blocks;
+linux_x86_64 machine Gate::memory_release_leaf(gate: &|kernel|::Gate, handle: u64) -> u64
+    satisfies |kernel|::Kernel::memory_release via |external_binding|::ForeignBinding::TableFunction(memory_release) blocks;
+linux_x86_64 machine Gate::shared_read_leaf(gate: &|kernel|::Gate, handle: u64, index: u64, words: &mut [u64; 8], count: u64 [1..=8]) -> u64
+    satisfies |kernel|::Kernel::shared_read via |external_binding|::ForeignBinding::TableFunction(shared_read) blocks;
+linux_x86_64 machine Gate::shared_write_leaf(gate: &|kernel|::Gate, handle: u64, index: u64, words: &[u64; 8], count: u64 [1..=8]) -> u64
+    satisfies |kernel|::Kernel::shared_write via |external_binding|::ForeignBinding::TableFunction(shared_write) blocks;
+linux_x86_64 machine Gate::shared_send_leaf(gate: &|kernel|::Gate, endpoint: u64, packet: &[u64; 10]) -> u64
+    satisfies |kernel|::Kernel::shared_send via |external_binding|::ForeignBinding::TableFunction(shared_send);
+linux_x86_64 machine Gate::shared_receive_leaf(gate: &|kernel|::Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64
+    satisfies |kernel|::Kernel::shared_receive via |external_binding|::ForeignBinding::TableFunction(shared_receive) blocks;
+linux_x86_64 machine Gate::notify_create_leaf(gate: &|kernel|::Gate, record: &mut [u64; 8]) -> u64
+    satisfies |kernel|::Kernel::notify_create via |external_binding|::ForeignBinding::TableFunction(notify_create);
+linux_x86_64 machine Gate::notify_drop_leaf(gate: &|kernel|::Gate, handle: u64) -> u64
+    satisfies |kernel|::Kernel::notify_drop via |external_binding|::ForeignBinding::TableFunction(notify_drop);
+linux_x86_64 machine Gate::notify_signal_leaf(gate: &|kernel|::Gate, handle: u64) -> u64
+    satisfies |kernel|::Kernel::notify_signal via |external_binding|::ForeignBinding::TableFunction(notify_signal);
+linux_x86_64 machine Gate::notify_wait_leaf(gate: &|kernel|::Gate, handle: u64, deadline: u64, timed: u64 [0..=1]) -> u64
+    satisfies |kernel|::Kernel::notify_wait via |external_binding|::ForeignBinding::TableFunction(notify_wait) blocks;
+linux_x86_64 machine Gate::notify_control_leaf(gate: &|kernel|::Gate, handle: u64, action: u64 [0..=2]) -> u64
+    satisfies |kernel|::Kernel::notify_control via |external_binding|::ForeignBinding::TableFunction(notify_control);
+linux_x86_64 machine Gate::notify_send_leaf(gate: &|kernel|::Gate, endpoint: u64, packet: &[u64; 10]) -> u64
+    satisfies |kernel|::Kernel::notify_send via |external_binding|::ForeignBinding::TableFunction(notify_send);
+linux_x86_64 machine Gate::notify_receive_leaf(gate: &|kernel|::Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64
+    satisfies |kernel|::Kernel::notify_receive via |external_binding|::ForeignBinding::TableFunction(notify_receive) blocks;
 
-linux_x86_64 machine Gate::bootstrap_leaf(gate: &Gate, index: u64) -> u64
-    satisfies Kernel::bootstrap via ForeignBinding::TableFunction(bootstrap);
+linux_x86_64 machine Gate::bootstrap_leaf(gate: &|kernel|::Gate, index: u64) -> u64
+    satisfies |kernel|::Kernel::bootstrap via |external_binding|::ForeignBinding::TableFunction(bootstrap);
 
-linux_x86_64 machine Gate::wait_many_leaf(gate: &Gate, records: &[u64; 96], count: u64 [0..=48], deadline: u64) -> u64
-    satisfies Kernel::wait_many via ForeignBinding::TableFunction(wait_many) blocks;
+linux_x86_64 machine Gate::wait_many_leaf(gate: &|kernel|::Gate, records: &[u64; 96], count: u64 [0..=48], deadline: u64) -> u64
+    satisfies |kernel|::Kernel::wait_many via |external_binding|::ForeignBinding::TableFunction(wait_many) blocks;
 
-linux_x86_64 machine Gate::launch_at_leaf(gate: &Gate, index: u64) -> u64
-    satisfies Kernel::launch_at via ForeignBinding::TableFunction(launch_at);
-linux_x86_64 machine Gate::launch_port_leaf(gate: &Gate, launch: u64) -> u64
-    satisfies Kernel::launch_port via ForeignBinding::TableFunction(launch_port);
-linux_x86_64 machine Gate::task_connect_leaf(gate: &Gate, port: u64) -> u64
-    satisfies Kernel::task_connect via ForeignBinding::TableFunction(task_connect);
-linux_x86_64 machine Gate::spawn_tree_leaf(gate: &Gate, launch: u64, record: &[u64; 22]) -> u64
-    satisfies Kernel::spawn_tree via ForeignBinding::TableFunction(spawn_tree) blocks;
-linux_x86_64 machine Gate::spawn_begin_leaf(gate: &Gate, launch: u64, record: &[u64; 22]) -> u64
-    satisfies Kernel::spawn_begin via ForeignBinding::TableFunction(spawn_begin);
-linux_x86_64 machine Gate::spawn_result_leaf(gate: &Gate, receipt: u64, record: &mut [u64; 8], cancel: u64 [0..=1]) -> u64
-    satisfies Kernel::spawn_result via ForeignBinding::TableFunction(spawn_result);
-linux_x86_64 machine Gate::task_cancel_begin_leaf(gate: &Gate, child: u64) -> u64
-    satisfies Kernel::task_cancel_begin via ForeignBinding::TableFunction(task_cancel_begin);
-linux_x86_64 machine Gate::task_try_wait_leaf(gate: &Gate, child: u64, record: &mut [u64; 8]) -> u64
-    satisfies Kernel::task_try_wait via ForeignBinding::TableFunction(task_try_wait);
-linux_x86_64 machine Gate::task_cancel_leaf(gate: &Gate, child: u64) -> u64
-    satisfies Kernel::task_cancel via ForeignBinding::TableFunction(task_cancel) blocks;
-linux_x86_64 machine Gate::task_wait_leaf(gate: &Gate, child: u64, record: &mut [u64; 8]) -> u64
-    satisfies Kernel::task_wait via ForeignBinding::TableFunction(task_wait) blocks;
-linux_x86_64 machine Gate::endpoint_send_leaf(gate: &Gate, endpoint: u64, packet: &[u64; 10]) -> u64
-    satisfies Kernel::endpoint_send via ForeignBinding::TableFunction(endpoint_send);
-linux_x86_64 machine Gate::resource_budget_leaf(gate: &Gate, record: &mut [u64; 8]) -> u64
-    satisfies Kernel::resource_budget via ForeignBinding::TableFunction(resource_budget);
-linux_x86_64 machine Gate::notification_budget_leaf(gate: &Gate, record: &mut [u64; 8]) -> u64
-    satisfies Kernel::notification_budget via ForeignBinding::TableFunction(notification_budget);
-linux_x86_64 machine Gate::image_at_leaf(gate: &Gate, index: u64) -> u64
-    satisfies Kernel::image_at via ForeignBinding::TableFunction(image_at);
-linux_x86_64 machine Gate::image_from_object_leaf(gate: &Gate, object: u64, role: u64) -> u64
-    satisfies Kernel::image_from_object via ForeignBinding::TableFunction(image_from_object);
-linux_x86_64 machine Gate::image_release_leaf(gate: &Gate, image: u64) -> u64
-    satisfies Kernel::image_release via ForeignBinding::TableFunction(image_release);
-linux_x86_64 machine Gate::task_reserve_leaf(gate: &Gate, executable: u64, request: &[u64; 6]) -> u64
-    satisfies Kernel::task_reserve via ForeignBinding::TableFunction(task_reserve);
-linux_x86_64 machine Gate::task_release_leaf(gate: &Gate, launch: u64) -> u64
-    satisfies Kernel::task_release via ForeignBinding::TableFunction(task_release);
-linux_x86_64 machine Gate::pool_assign_leaf(gate: &Gate, launch: u64, count: u64) -> u64
-    satisfies Kernel::pool_assign via ForeignBinding::TableFunction(pool_assign);
-linux_x86_64 machine Gate::image_allow_leaf(gate: &Gate, launch: u64, image: u64) -> u64
-    satisfies Kernel::image_allow via ForeignBinding::TableFunction(image_allow);
-linux_x86_64 machine Gate::cpu_assign_leaf(gate: &Gate, launch: u64, limit: u64) -> u64
-    satisfies Kernel::cpu_assign via ForeignBinding::TableFunction(cpu_assign);
-linux_x86_64 machine Gate::physical_assign_leaf(gate: &Gate, launch: u64, frames: u64) -> u64
-    satisfies Kernel::physical_assign via ForeignBinding::TableFunction(physical_assign);
-linux_x86_64 machine Gate::resource_assign_leaf(gate: &Gate, launch: u64, limits: &[u64; 3]) -> u64
-    satisfies Kernel::resource_assign via ForeignBinding::TableFunction(resource_assign);
-linux_x86_64 machine Gate::link_handle_leaf(gate: &Gate, index: u64) -> u64
-    satisfies Kernel::link_handle via ForeignBinding::TableFunction(link_handle);
-linux_x86_64 machine Gate::link_connect_leaf(gate: &Gate, link: u64) -> u64
-    satisfies Kernel::link_connect via ForeignBinding::TableFunction(link_connect);
-linux_x86_64 machine Gate::resource_grow_leaf(gate: &Gate, launch: u64, delta: &[u64; 5]) -> u64
-    satisfies Kernel::resource_grow via ForeignBinding::TableFunction(resource_grow);
-linux_x86_64 machine Gate::physical_budget_leaf(gate: &Gate, record: &mut [u64; 8]) -> u64
-    satisfies Kernel::physical_budget via ForeignBinding::TableFunction(physical_budget);
-linux_x86_64 machine Gate::pool_available_leaf(gate: &Gate) -> u64
-    satisfies Kernel::pool_available via ForeignBinding::TableFunction(pool_available);
+linux_x86_64 machine Gate::launch_at_leaf(gate: &|kernel|::Gate, index: u64) -> u64
+    satisfies |kernel|::Kernel::launch_at via |external_binding|::ForeignBinding::TableFunction(launch_at);
+linux_x86_64 machine Gate::launch_port_leaf(gate: &|kernel|::Gate, launch: u64) -> u64
+    satisfies |kernel|::Kernel::launch_port via |external_binding|::ForeignBinding::TableFunction(launch_port);
+linux_x86_64 machine Gate::task_connect_leaf(gate: &|kernel|::Gate, port: u64) -> u64
+    satisfies |kernel|::Kernel::task_connect via |external_binding|::ForeignBinding::TableFunction(task_connect);
+linux_x86_64 machine Gate::spawn_tree_leaf(gate: &|kernel|::Gate, launch: u64, record: &[u64; 22]) -> u64
+    satisfies |kernel|::Kernel::spawn_tree via |external_binding|::ForeignBinding::TableFunction(spawn_tree) blocks;
+linux_x86_64 machine Gate::spawn_begin_leaf(gate: &|kernel|::Gate, launch: u64, record: &[u64; 22]) -> u64
+    satisfies |kernel|::Kernel::spawn_begin via |external_binding|::ForeignBinding::TableFunction(spawn_begin);
+linux_x86_64 machine Gate::spawn_result_leaf(gate: &|kernel|::Gate, receipt: u64, record: &mut [u64; 8], cancel: u64 [0..=1]) -> u64
+    satisfies |kernel|::Kernel::spawn_result via |external_binding|::ForeignBinding::TableFunction(spawn_result);
+linux_x86_64 machine Gate::task_cancel_begin_leaf(gate: &|kernel|::Gate, child: u64) -> u64
+    satisfies |kernel|::Kernel::task_cancel_begin via |external_binding|::ForeignBinding::TableFunction(task_cancel_begin);
+linux_x86_64 machine Gate::task_try_wait_leaf(gate: &|kernel|::Gate, child: u64, record: &mut [u64; 8]) -> u64
+    satisfies |kernel|::Kernel::task_try_wait via |external_binding|::ForeignBinding::TableFunction(task_try_wait);
+linux_x86_64 machine Gate::task_cancel_leaf(gate: &|kernel|::Gate, child: u64) -> u64
+    satisfies |kernel|::Kernel::task_cancel via |external_binding|::ForeignBinding::TableFunction(task_cancel) blocks;
+linux_x86_64 machine Gate::task_wait_leaf(gate: &|kernel|::Gate, child: u64, record: &mut [u64; 8]) -> u64
+    satisfies |kernel|::Kernel::task_wait via |external_binding|::ForeignBinding::TableFunction(task_wait) blocks;
+linux_x86_64 machine Gate::endpoint_send_leaf(gate: &|kernel|::Gate, endpoint: u64, packet: &[u64; 10]) -> u64
+    satisfies |kernel|::Kernel::endpoint_send via |external_binding|::ForeignBinding::TableFunction(endpoint_send);
+linux_x86_64 machine Gate::resource_budget_leaf(gate: &|kernel|::Gate, record: &mut [u64; 8]) -> u64
+    satisfies |kernel|::Kernel::resource_budget via |external_binding|::ForeignBinding::TableFunction(resource_budget);
+linux_x86_64 machine Gate::notification_budget_leaf(gate: &|kernel|::Gate, record: &mut [u64; 8]) -> u64
+    satisfies |kernel|::Kernel::notification_budget via |external_binding|::ForeignBinding::TableFunction(notification_budget);
+linux_x86_64 machine Gate::image_at_leaf(gate: &|kernel|::Gate, index: u64) -> u64
+    satisfies |kernel|::Kernel::image_at via |external_binding|::ForeignBinding::TableFunction(image_at);
+linux_x86_64 machine Gate::image_from_object_leaf(gate: &|kernel|::Gate, object: u64, role: u64) -> u64
+    satisfies |kernel|::Kernel::image_from_object via |external_binding|::ForeignBinding::TableFunction(image_from_object);
+linux_x86_64 machine Gate::image_release_leaf(gate: &|kernel|::Gate, image: u64) -> u64
+    satisfies |kernel|::Kernel::image_release via |external_binding|::ForeignBinding::TableFunction(image_release);
+linux_x86_64 machine Gate::task_reserve_leaf(gate: &|kernel|::Gate, executable: u64, request: &[u64; 6]) -> u64
+    satisfies |kernel|::Kernel::task_reserve via |external_binding|::ForeignBinding::TableFunction(task_reserve);
+linux_x86_64 machine Gate::task_release_leaf(gate: &|kernel|::Gate, launch: u64) -> u64
+    satisfies |kernel|::Kernel::task_release via |external_binding|::ForeignBinding::TableFunction(task_release);
+linux_x86_64 machine Gate::pool_assign_leaf(gate: &|kernel|::Gate, launch: u64, count: u64) -> u64
+    satisfies |kernel|::Kernel::pool_assign via |external_binding|::ForeignBinding::TableFunction(pool_assign);
+linux_x86_64 machine Gate::image_allow_leaf(gate: &|kernel|::Gate, launch: u64, image: u64) -> u64
+    satisfies |kernel|::Kernel::image_allow via |external_binding|::ForeignBinding::TableFunction(image_allow);
+linux_x86_64 machine Gate::cpu_assign_leaf(gate: &|kernel|::Gate, launch: u64, limit: u64) -> u64
+    satisfies |kernel|::Kernel::cpu_assign via |external_binding|::ForeignBinding::TableFunction(cpu_assign);
+linux_x86_64 machine Gate::physical_assign_leaf(gate: &|kernel|::Gate, launch: u64, frames: u64) -> u64
+    satisfies |kernel|::Kernel::physical_assign via |external_binding|::ForeignBinding::TableFunction(physical_assign);
+linux_x86_64 machine Gate::resource_assign_leaf(gate: &|kernel|::Gate, launch: u64, limits: &[u64; 3]) -> u64
+    satisfies |kernel|::Kernel::resource_assign via |external_binding|::ForeignBinding::TableFunction(resource_assign);
+linux_x86_64 machine Gate::link_handle_leaf(gate: &|kernel|::Gate, index: u64) -> u64
+    satisfies |kernel|::Kernel::link_handle via |external_binding|::ForeignBinding::TableFunction(link_handle);
+linux_x86_64 machine Gate::link_connect_leaf(gate: &|kernel|::Gate, link: u64) -> u64
+    satisfies |kernel|::Kernel::link_connect via |external_binding|::ForeignBinding::TableFunction(link_connect);
+linux_x86_64 machine Gate::resource_grow_leaf(gate: &|kernel|::Gate, launch: u64, delta: &[u64; 5]) -> u64
+    satisfies |kernel|::Kernel::resource_grow via |external_binding|::ForeignBinding::TableFunction(resource_grow);
+linux_x86_64 machine Gate::physical_budget_leaf(gate: &|kernel|::Gate, record: &mut [u64; 8]) -> u64
+    satisfies |kernel|::Kernel::physical_budget via |external_binding|::ForeignBinding::TableFunction(physical_budget);
+linux_x86_64 machine Gate::pool_available_leaf(gate: &|kernel|::Gate) -> u64
+    satisfies |kernel|::Kernel::pool_available via |external_binding|::ForeignBinding::TableFunction(pool_available);
 
-public NativeKernel satisfies Kernel {
-    machine wait_many(gate: &Gate, records: &[u64; 96], count: u64 [0..=48], deadline: u64) -> u64 blocks {
+public NativeKernel satisfies |kernel|::Kernel {
+    machine wait_many(gate: &|kernel|::Gate, records: &[u64; 96], count: u64 [0..=48], deadline: u64) -> u64 blocks {
         block Gate::wait_many_leaf(gate, records, count, deadline)
     }
-    machine launch_at(gate: &Gate, index: u64) -> u64 {
+    machine launch_at(gate: &|kernel|::Gate, index: u64) -> u64 {
         Gate::launch_at_leaf(gate, index)
     }
-    machine launch_port(gate: &Gate, launch: u64) -> u64 {
+    machine launch_port(gate: &|kernel|::Gate, launch: u64) -> u64 {
         Gate::launch_port_leaf(gate, launch)
     }
-    machine task_connect(gate: &Gate, port: u64) -> u64 {
+    machine task_connect(gate: &|kernel|::Gate, port: u64) -> u64 {
         Gate::task_connect_leaf(gate, port)
     }
-    machine spawn_tree(gate: &Gate, launch: u64, record: &[u64; 22]) -> u64 blocks {
+    machine spawn_tree(gate: &|kernel|::Gate, launch: u64, record: &[u64; 22]) -> u64 blocks {
         block Gate::spawn_tree_leaf(gate, launch, record)
     }
-    machine spawn_begin(gate: &Gate, launch: u64, record: &[u64; 22]) -> u64 {
+    machine spawn_begin(gate: &|kernel|::Gate, launch: u64, record: &[u64; 22]) -> u64 {
         Gate::spawn_begin_leaf(gate, launch, record)
     }
-    machine spawn_result(gate: &Gate, receipt: u64, record: &mut [u64; 8], cancel: u64 [0..=1]) -> u64 {
+    machine spawn_result(gate: &|kernel|::Gate, receipt: u64, record: &mut [u64; 8], cancel: u64 [0..=1]) -> u64 {
         Gate::spawn_result_leaf(gate, receipt, record, cancel)
     }
-    machine task_cancel_begin(gate: &Gate, child: u64) -> u64 {
+    machine task_cancel_begin(gate: &|kernel|::Gate, child: u64) -> u64 {
         Gate::task_cancel_begin_leaf(gate, child)
     }
-    machine task_try_wait(gate: &Gate, child: u64, record: &mut [u64; 8]) -> u64 {
+    machine task_try_wait(gate: &|kernel|::Gate, child: u64, record: &mut [u64; 8]) -> u64 {
         Gate::task_try_wait_leaf(gate, child, record)
     }
-    machine task_cancel(gate: &Gate, child: u64) -> u64 blocks {
+    machine task_cancel(gate: &|kernel|::Gate, child: u64) -> u64 blocks {
         block Gate::task_cancel_leaf(gate, child)
     }
-    machine task_wait(gate: &Gate, child: u64, record: &mut [u64; 8]) -> u64 blocks {
+    machine task_wait(gate: &|kernel|::Gate, child: u64, record: &mut [u64; 8]) -> u64 blocks {
         block Gate::task_wait_leaf(gate, child, record)
     }
-    machine endpoint_send(gate: &Gate, endpoint: u64, packet: &[u64; 10]) -> u64 {
+    machine endpoint_send(gate: &|kernel|::Gate, endpoint: u64, packet: &[u64; 10]) -> u64 {
         Gate::endpoint_send_leaf(gate, endpoint, packet)
     }
-    machine resource_budget(gate: &Gate, record: &mut [u64; 8]) -> u64 {
+    machine resource_budget(gate: &|kernel|::Gate, record: &mut [u64; 8]) -> u64 {
         Gate::resource_budget_leaf(gate, record)
     }
-    machine notification_budget(gate: &Gate, record: &mut [u64; 8]) -> u64 {
+    machine notification_budget(gate: &|kernel|::Gate, record: &mut [u64; 8]) -> u64 {
         Gate::notification_budget_leaf(gate, record)
     }
-    machine image_at(gate: &Gate, index: u64) -> u64 {
+    machine image_at(gate: &|kernel|::Gate, index: u64) -> u64 {
         Gate::image_at_leaf(gate, index)
     }
-    machine image_from_object(gate: &Gate, object: u64, role: u64) -> u64 {
+    machine image_from_object(gate: &|kernel|::Gate, object: u64, role: u64) -> u64 {
         Gate::image_from_object_leaf(gate, object, role)
     }
-    machine image_release(gate: &Gate, image: u64) -> u64 {
+    machine image_release(gate: &|kernel|::Gate, image: u64) -> u64 {
         Gate::image_release_leaf(gate, image)
     }
-    machine task_reserve(gate: &Gate, executable: u64, request: &[u64; 6]) -> u64 {
+    machine task_reserve(gate: &|kernel|::Gate, executable: u64, request: &[u64; 6]) -> u64 {
         Gate::task_reserve_leaf(gate, executable, request)
     }
-    machine task_release(gate: &Gate, launch: u64) -> u64 {
+    machine task_release(gate: &|kernel|::Gate, launch: u64) -> u64 {
         Gate::task_release_leaf(gate, launch)
     }
-    machine pool_assign(gate: &Gate, launch: u64, count: u64) -> u64 {
+    machine pool_assign(gate: &|kernel|::Gate, launch: u64, count: u64) -> u64 {
         Gate::pool_assign_leaf(gate, launch, count)
     }
-    machine image_allow(gate: &Gate, launch: u64, image: u64) -> u64 {
+    machine image_allow(gate: &|kernel|::Gate, launch: u64, image: u64) -> u64 {
         Gate::image_allow_leaf(gate, launch, image)
     }
-    machine cpu_assign(gate: &Gate, launch: u64, limit: u64) -> u64 {
+    machine cpu_assign(gate: &|kernel|::Gate, launch: u64, limit: u64) -> u64 {
         Gate::cpu_assign_leaf(gate, launch, limit)
     }
-    machine physical_assign(gate: &Gate, launch: u64, frames: u64) -> u64 {
+    machine physical_assign(gate: &|kernel|::Gate, launch: u64, frames: u64) -> u64 {
         Gate::physical_assign_leaf(gate, launch, frames)
     }
-    machine resource_assign(gate: &Gate, launch: u64, limits: &[u64; 3]) -> u64 {
+    machine resource_assign(gate: &|kernel|::Gate, launch: u64, limits: &[u64; 3]) -> u64 {
         Gate::resource_assign_leaf(gate, launch, limits)
     }
-    machine link_handle(gate: &Gate, index: u64) -> u64 {
+    machine link_handle(gate: &|kernel|::Gate, index: u64) -> u64 {
         Gate::link_handle_leaf(gate, index)
     }
-    machine link_connect(gate: &Gate, link: u64) -> u64 {
+    machine link_connect(gate: &|kernel|::Gate, link: u64) -> u64 {
         Gate::link_connect_leaf(gate, link)
     }
-    machine resource_grow(gate: &Gate, launch: u64, delta: &[u64; 5]) -> u64 {
+    machine resource_grow(gate: &|kernel|::Gate, launch: u64, delta: &[u64; 5]) -> u64 {
         Gate::resource_grow_leaf(gate, launch, delta)
     }
-    machine physical_budget(gate: &Gate, record: &mut [u64; 8]) -> u64 {
+    machine physical_budget(gate: &|kernel|::Gate, record: &mut [u64; 8]) -> u64 {
         Gate::physical_budget_leaf(gate, record)
     }
-    machine pool_available(gate: &Gate) -> u64 {
+    machine pool_available(gate: &|kernel|::Gate) -> u64 {
         Gate::pool_available_leaf(gate)
     }
-    machine object_create(gate: &Gate, words: &[u64; 2048], bytes: u64 [1..=16384]) -> u64 blocks {
+    machine object_create(gate: &|kernel|::Gate, words: &[u64; 2048], bytes: u64 [1..=16384]) -> u64 blocks {
         block Gate::object_create_leaf(gate, words, bytes)
     }
-    machine object_send(gate: &Gate, endpoint: u64, packet: &[u64; 10]) -> u64 {
+    machine object_send(gate: &|kernel|::Gate, endpoint: u64, packet: &[u64; 10]) -> u64 {
         Gate::object_send_leaf(gate, endpoint, packet)
     }
-    machine object_receive(gate: &Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64 blocks {
+    machine object_receive(gate: &|kernel|::Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64 blocks {
         block Gate::object_receive_leaf(gate, endpoint, packet)
     }
-    machine object_read(gate: &Gate, handle: u64, index: u64, words: &mut [u64; 8], count: u64 [1..=8]) -> u64 blocks {
+    machine object_read(gate: &|kernel|::Gate, handle: u64, index: u64, words: &mut [u64; 8], count: u64 [1..=8]) -> u64 blocks {
         block Gate::object_read_leaf(gate, handle, index, words, count)
     }
-    machine private_write(gate: &Gate, handle: u64, offset: u64, words: &[u64; 1024], bytes: u64 [1..=8192]) -> u64 blocks {
+    machine private_write(gate: &|kernel|::Gate, handle: u64, offset: u64, words: &[u64; 1024], bytes: u64 [1..=8192]) -> u64 blocks {
         block Gate::private_write_leaf(gate, handle, offset, words, bytes)
     }
-    machine object_freeze(gate: &Gate, handle: u64) -> u64 blocks {
+    machine object_freeze(gate: &|kernel|::Gate, handle: u64) -> u64 blocks {
         block Gate::object_freeze_leaf(gate, handle)
     }
-    machine endpoint_receive(gate: &Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64 blocks {
+    machine endpoint_receive(gate: &|kernel|::Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64 blocks {
         block Gate::endpoint_receive_leaf(gate, endpoint, packet)
     }
-    machine bootstrap(gate: &Gate, index: u64) -> u64 {
+    machine bootstrap(gate: &|kernel|::Gate, index: u64) -> u64 {
         Gate::bootstrap_leaf(gate, index)
     }
-    machine yield_now(gate: &Gate) -> u64 blocks {
+    machine yield_now(gate: &|kernel|::Gate) -> u64 blocks {
         block Gate::yield_leaf(gate)
     }
-    machine environment(gate: &Gate, buffer: &mut [u64; 8]) -> u64 {
+    machine environment(gate: &|kernel|::Gate, buffer: &mut [u64; 8]) -> u64 {
         Gate::environment_leaf(gate, buffer)
     }
-    machine channel(gate: &Gate, buffer: &mut [u64; 8]) -> u64 {
+    machine channel(gate: &|kernel|::Gate, buffer: &mut [u64; 8]) -> u64 {
         Gate::channel_leaf(gate, buffer)
     }
-    machine send(gate: &Gate, handle: u64, buffer: &[u64; 8], bytes: u64 [0..=64]) -> u64 {
+    machine send(gate: &|kernel|::Gate, handle: u64, buffer: &[u64; 8], bytes: u64 [0..=64]) -> u64 {
         Gate::send_leaf(gate, handle, buffer, bytes)
     }
-    machine receive(gate: &Gate, handle: u64, buffer: &mut [u64; 8]) -> u64 blocks {
+    machine receive(gate: &|kernel|::Gate, handle: u64, buffer: &mut [u64; 8]) -> u64 blocks {
         block Gate::receive_leaf(gate, handle, buffer)
     }
-    machine close(gate: &Gate, handle: u64) -> u64 {
+    machine close(gate: &|kernel|::Gate, handle: u64) -> u64 {
         Gate::close_leaf(gate, handle)
     }
-    machine write(gate: &Gate, buffer: &[u64; 8], bytes: u64 [0..=64]) -> u64 {
+    machine write(gate: &|kernel|::Gate, buffer: &[u64; 8], bytes: u64 [0..=64]) -> u64 {
         Gate::write_leaf(gate, buffer, bytes)
     }
-    machine clock(gate: &Gate) -> u64 {
+    machine clock(gate: &|kernel|::Gate) -> u64 {
         Gate::clock_leaf(gate)
     }
-    machine clock_stamp(gate: &Gate, handle: u64, buffer: &mut [u64; 8]) -> u64 {
+    machine clock_stamp(gate: &|kernel|::Gate, handle: u64, buffer: &mut [u64; 8]) -> u64 {
         Gate::clock_stamp_leaf(gate, handle, buffer)
     }
-    machine clock_read(gate: &Gate, handle: u64, buffer: &mut [u64; 8]) -> u64 {
+    machine clock_read(gate: &|kernel|::Gate, handle: u64, buffer: &mut [u64; 8]) -> u64 {
         Gate::clock_read_leaf(gate, handle, buffer)
     }
-    machine wait(gate: &Gate, records: &[u64; 8], count: u64 [0..=4], deadline: u64) -> u64 blocks {
+    machine wait(gate: &|kernel|::Gate, records: &[u64; 8], count: u64 [0..=4], deadline: u64) -> u64 blocks {
         block Gate::wait_leaf(gate, records, count, deadline)
     }
 
-    machine memory_allocate(gate: &Gate, pages: u64 [1..=512]) -> u64 blocks {
+    machine memory_allocate(gate: &|kernel|::Gate, pages: u64 [1..=512]) -> u64 blocks {
         block Gate::memory_allocate_leaf(gate, pages)
     }
-    machine memory_share(gate: &Gate, handle: u64) -> u64 blocks {
+    machine memory_share(gate: &|kernel|::Gate, handle: u64) -> u64 blocks {
         block Gate::memory_share_leaf(gate, handle)
     }
-    machine memory_release(gate: &Gate, handle: u64) -> u64 blocks {
+    machine memory_release(gate: &|kernel|::Gate, handle: u64) -> u64 blocks {
         block Gate::memory_release_leaf(gate, handle)
     }
-    machine shared_read(gate: &Gate, handle: u64, index: u64, words: &mut [u64; 8], count: u64 [1..=8]) -> u64 blocks {
+    machine shared_read(gate: &|kernel|::Gate, handle: u64, index: u64, words: &mut [u64; 8], count: u64 [1..=8]) -> u64 blocks {
         block Gate::shared_read_leaf(gate, handle, index, words, count)
     }
-    machine shared_write(gate: &Gate, handle: u64, index: u64, words: &[u64; 8], count: u64 [1..=8]) -> u64 blocks {
+    machine shared_write(gate: &|kernel|::Gate, handle: u64, index: u64, words: &[u64; 8], count: u64 [1..=8]) -> u64 blocks {
         block Gate::shared_write_leaf(gate, handle, index, words, count)
     }
-    machine shared_send(gate: &Gate, endpoint: u64, packet: &[u64; 10]) -> u64 {
+    machine shared_send(gate: &|kernel|::Gate, endpoint: u64, packet: &[u64; 10]) -> u64 {
         Gate::shared_send_leaf(gate, endpoint, packet)
     }
-    machine shared_receive(gate: &Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64 blocks {
+    machine shared_receive(gate: &|kernel|::Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64 blocks {
         block Gate::shared_receive_leaf(gate, endpoint, packet)
     }
-    machine notify_create(gate: &Gate, record: &mut [u64; 8]) -> u64 {
+    machine notify_create(gate: &|kernel|::Gate, record: &mut [u64; 8]) -> u64 {
         Gate::notify_create_leaf(gate, record)
     }
-    machine notify_drop(gate: &Gate, handle: u64) -> u64 {
+    machine notify_drop(gate: &|kernel|::Gate, handle: u64) -> u64 {
         Gate::notify_drop_leaf(gate, handle)
     }
-    machine notify_signal(gate: &Gate, handle: u64) -> u64 {
+    machine notify_signal(gate: &|kernel|::Gate, handle: u64) -> u64 {
         Gate::notify_signal_leaf(gate, handle)
     }
-    machine notify_wait(gate: &Gate, handle: u64, deadline: u64, timed: u64 [0..=1]) -> u64 blocks {
+    machine notify_wait(gate: &|kernel|::Gate, handle: u64, deadline: u64, timed: u64 [0..=1]) -> u64 blocks {
         block Gate::notify_wait_leaf(gate, handle, deadline, timed)
     }
-    machine notify_control(gate: &Gate, handle: u64, action: u64 [0..=2]) -> u64 {
+    machine notify_control(gate: &|kernel|::Gate, handle: u64, action: u64 [0..=2]) -> u64 {
         Gate::notify_control_leaf(gate, handle, action)
     }
-    machine notify_send(gate: &Gate, endpoint: u64, packet: &[u64; 10]) -> u64 {
+    machine notify_send(gate: &|kernel|::Gate, endpoint: u64, packet: &[u64; 10]) -> u64 {
         Gate::notify_send_leaf(gate, endpoint, packet)
     }
-    machine notify_receive(gate: &Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64 blocks {
+    machine notify_receive(gate: &|kernel|::Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64 blocks {
         block Gate::notify_receive_leaf(gate, endpoint, packet)
     }
 }
 
-linux_x86_64 machine Gate::endpoint_receive_leaf(gate: &Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64
-    satisfies Kernel::endpoint_receive via ForeignBinding::TableFunction(endpoint_receive) blocks;
-linux_x86_64 machine Gate::object_create_leaf(gate: &Gate, words: &[u64; 2048], bytes: u64 [1..=16384]) -> u64
-    satisfies Kernel::object_create via ForeignBinding::TableFunction(object_create) blocks;
-linux_x86_64 machine Gate::object_send_leaf(gate: &Gate, endpoint: u64, packet: &[u64; 10]) -> u64
-    satisfies Kernel::object_send via ForeignBinding::TableFunction(object_send);
+linux_x86_64 machine Gate::endpoint_receive_leaf(gate: &|kernel|::Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64
+    satisfies |kernel|::Kernel::endpoint_receive via |external_binding|::ForeignBinding::TableFunction(endpoint_receive) blocks;
+linux_x86_64 machine Gate::object_create_leaf(gate: &|kernel|::Gate, words: &[u64; 2048], bytes: u64 [1..=16384]) -> u64
+    satisfies |kernel|::Kernel::object_create via |external_binding|::ForeignBinding::TableFunction(object_create) blocks;
+linux_x86_64 machine Gate::object_send_leaf(gate: &|kernel|::Gate, endpoint: u64, packet: &[u64; 10]) -> u64
+    satisfies |kernel|::Kernel::object_send via |external_binding|::ForeignBinding::TableFunction(object_send);
 
-linux_x86_64 machine Gate::object_receive_leaf(gate: &Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64
-    satisfies Kernel::object_receive via ForeignBinding::TableFunction(object_receive) blocks;
-linux_x86_64 machine Gate::object_read_leaf(gate: &Gate, handle: u64, index: u64, words: &mut [u64; 8], count: u64 [1..=8]) -> u64
-    satisfies Kernel::object_read via ForeignBinding::TableFunction(object_read) blocks;
+linux_x86_64 machine Gate::object_receive_leaf(gate: &|kernel|::Gate, endpoint: u64, packet: &mut [u64; 10]) -> u64
+    satisfies |kernel|::Kernel::object_receive via |external_binding|::ForeignBinding::TableFunction(object_receive) blocks;
+linux_x86_64 machine Gate::object_read_leaf(gate: &|kernel|::Gate, handle: u64, index: u64, words: &mut [u64; 8], count: u64 [1..=8]) -> u64
+    satisfies |kernel|::Kernel::object_read via |external_binding|::ForeignBinding::TableFunction(object_read) blocks;
 
-linux_x86_64 machine Gate::private_write_leaf(gate: &Gate, handle: u64, offset: u64, words: &[u64; 1024], bytes: u64 [1..=8192]) -> u64
-    satisfies Kernel::private_write via ForeignBinding::TableFunction(private_write) blocks;
-linux_x86_64 machine Gate::object_freeze_leaf(gate: &Gate, handle: u64) -> u64
-    satisfies Kernel::object_freeze via ForeignBinding::TableFunction(object_freeze) blocks;
+linux_x86_64 machine Gate::private_write_leaf(gate: &|kernel|::Gate, handle: u64, offset: u64, words: &[u64; 1024], bytes: u64 [1..=8192]) -> u64
+    satisfies |kernel|::Kernel::private_write via |external_binding|::ForeignBinding::TableFunction(private_write) blocks;
+linux_x86_64 machine Gate::object_freeze_leaf(gate: &|kernel|::Gate, handle: u64) -> u64
+    satisfies |kernel|::Kernel::object_freeze via |external_binding|::ForeignBinding::TableFunction(object_freeze) blocks;

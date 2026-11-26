@@ -1,4 +1,3 @@
-module services;
 // Service acquisition over the supplied matrix connection. Names and versions
 // request a grant; only the authenticated provider chooses the actual authority.
 // Wire owner: source-rs/platform/contracts/services/services.rs.

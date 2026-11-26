@@ -1,25 +1,12 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Original Cathedral semantic fixture; no firmware or external example content.
-use aml::model::Outcome;
-use aml::model::Path;
-use aml::model::Span;
-use aml::model::Read;
-use aml::field_model::Access;
-use aml::field_model::AccessType;
-use aml::field_model::UpdateRule;
-use aml::field_model::AccessResult;
-use aml::field_model::Connection;
-use aml::field_model::ListState;
-use aml::field_model::DeclarationKind;
-use aml::field_model::DeclarationResult;
-use aml::field_model::Pending;
-use fields::flags::decode_flags;
-use fields::flags::change_access;
-use fields::flags::nominal_width;
+use {aml}/model.omg;
+use {aml}/field_model.omg;
+use {fields}/flags.omg;
 
 machine test()->u64 {
-let good:AccessResult=decode_flags(0x52);let invalid_access:AccessResult=decode_flags(6);let invalid_update:AccessResult=decode_flags(0x60);let reserved:AccessResult=decode_flags(0x80);let width:Read=nominal_width(4);
- transition good.outcome==Outcome::Success && good.access.kind==AccessType::Word && good.access.locked && good.access.update==UpdateRule::WriteAsZeros && invalid_access.outcome==Outcome::BadEncoding && invalid_update.outcome==Outcome::BadEncoding && reserved.outcome==Outcome::BadEncoding && width.value==8 {true -> (0) _ -> (1)}
+let good:|field_model|::AccessResult=|flags|::decode_flags(0x52);let invalid_access:|field_model|::AccessResult=|flags|::decode_flags(6);let invalid_update:|field_model|::AccessResult=|flags|::decode_flags(0x60);let reserved:|field_model|::AccessResult=|flags|::decode_flags(0x80);let width:|model|::Read=|flags|::nominal_width(4);
+ transition good.outcome==|model|::Outcome::Success && good.access.kind==|field_model|::AccessType::Word && good.access.locked && good.access.update==|field_model|::UpdateRule::WriteAsZeros && invalid_access.outcome==|model|::Outcome::BadEncoding && invalid_update.outcome==|model|::Outcome::BadEncoding && reserved.outcome==|model|::Outcome::BadEncoding && width.value==8 {true -> (0) _ -> (1)}
 }
 
 const TEST_RESULT:u64=test();

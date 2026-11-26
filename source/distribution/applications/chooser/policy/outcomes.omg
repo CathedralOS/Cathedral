@@ -1,7 +1,5 @@
-module outcomes;
-
 // Replies, not optimistic UI state, decide whether an operation was accepted.
-use protocol::main;
+use {protocol}/main.omg;
 
 public data Operation [copy] {
     case Launch;
@@ -56,14 +54,14 @@ machine refusal(operation: Operation, status: u64) -> Notice {
     }
     machine launch_error(status: u64) -> Notice {
         transition status {
-            BUSY -> (Notice::Retry)
-            NO_MEMORY -> (Notice::Capacity)
+            |main|::BUSY -> (Notice::Retry)
+            |main|::NO_MEMORY -> (Notice::Capacity)
             _ -> (Notice::Unavailable)
         }
     }
     machine copy_error(status: u64) -> Notice {
         transition status {
-            NO_MEMORY -> (Notice::Capacity)
+            |main|::NO_MEMORY -> (Notice::Capacity)
             _ -> (Notice::Retry)
         }
     }
@@ -83,8 +81,8 @@ public machine observation(status: u64, state: u64) -> Observation {
     }
     machine observed(state: u64) -> Observation {
         transition state {
-            LAUNCH_RUNNING -> (Observation { running: true, notice: Notice::None })
-            LAUNCH_FAILED -> (Observation { running: false, notice: Notice::Stopped })
+            |main|::LAUNCH_RUNNING -> (Observation { running: true, notice: Notice::None })
+            |main|::LAUNCH_FAILED -> (Observation { running: false, notice: Notice::Stopped })
             _ -> (Observation { running: false, notice: Notice::None })
         }
     }

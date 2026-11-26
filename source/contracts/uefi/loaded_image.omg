@@ -4,8 +4,9 @@
 // that protocol before entry, so the admitted firmware behavior guarantees a
 // live protocol view. A nonzero arbitrary handle is not enough. The view expires
 // with Boot Services, and its geometry grants no storage authority.
-use uefi;
-use boot_services;
+use {omega}/language/core/external_binding.omg;
+use uefi.omg;
+use boot_services.omg;
 
 public data EfiGuid [copy] {
     data1: u32;
@@ -61,37 +62,37 @@ public boundary trait LoadedImageAccess {
     // Not a general nullable HandleProtocol binding. The selected provider's
     // postcondition is conditional on this exact admitted handle/protocol pair.
     machine discover<'firmware>(
-        services: &'firmware BootServicesTable,
-        handle: EfiHandle in LoadedApplication,
+        services: &'firmware |boot_services|::BootServicesTable,
+        handle: |uefi|::EfiHandle in |uefi|::LoadedApplication,
         protocol: &EfiGuid,
         output: &mut LoadedImageOutput<'firmware>
-    ) -> EfiStatus
+    ) -> |uefi|::EfiStatus
     reaches
     requires protocol in EfiGuid::LoadedImageGuid
     ensures result.code == 0;
 }
 
-uefi_x86_64 machine BootServicesTable::loaded_image_leaf<'firmware>(
-    services: &'firmware BootServicesTable,
-    handle: EfiHandle in LoadedApplication,
+uefi_x86_64 machine |boot_services|::BootServicesTable::loaded_image_leaf<'firmware>(
+    services: &'firmware |boot_services|::BootServicesTable,
+    handle: |uefi|::EfiHandle in |uefi|::LoadedApplication,
     protocol: &EfiGuid,
     output: &mut LoadedImageOutput<'firmware>
-) -> EfiStatus
+) -> |uefi|::EfiStatus
 satisfies LoadedImageAccess::discover
-via ForeignBinding::TableFunction(handle_protocol)
+via |external_binding|::ForeignBinding::TableFunction(handle_protocol)
 requires protocol in EfiGuid::LoadedImageGuid
 ensures result.code == 0;
 
 public UefiLoadedImageProvider satisfies LoadedImageAccess {
     machine discover<'firmware>(
-        services: &'firmware BootServicesTable,
-        handle: EfiHandle in LoadedApplication,
+        services: &'firmware |boot_services|::BootServicesTable,
+        handle: |uefi|::EfiHandle in |uefi|::LoadedApplication,
         protocol: &EfiGuid,
         output: &mut LoadedImageOutput<'firmware>
-    ) -> EfiStatus
+    ) -> |uefi|::EfiStatus
     requires protocol in EfiGuid::LoadedImageGuid
     ensures result.code == 0
     {
-        BootServicesTable::loaded_image_leaf(services, handle, protocol, output)
+        |boot_services|::BootServicesTable::loaded_image_leaf(services, handle, protocol, output)
     }
 }

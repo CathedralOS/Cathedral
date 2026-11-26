@@ -1,6 +1,3 @@
-module text;
-
-
 // Stores frame-owned UTF-8 labels with generation-checked spans and explicit capacity failure.
 
 public data UiTextSpan [copy] {

@@ -1,5 +1,3 @@
-module isa::x86_64::timer;
-
 // Checked x2APIC one-shot timer operations for Cathedral's production timer
 // provider. These helpers expose no raw MSR primitive, choose no root, publish
 // no IDT entry, and cannot enable CPU interrupts. Their parsed `wrmsr`
@@ -8,8 +6,8 @@ module isa::x86_64::timer;
 // The caller must already hold the platform-admitted fact that x2APIC mode is
 // active and must calibrate the count against the enumerated platform clock.
 
-use facts::local_apic;
-use omega::language::core::assembly;
+use {facts}/local_apic.omg;
+use {omega}/language/core/assembly.omg;
 
 pub data X2ApicTimer {
 }
@@ -23,11 +21,11 @@ pub machine X2ApicTimer::configure_one_shot_divide_by_16(
     vector: u64
 )
 requires 32 <= vector && vector <= 255
-reaches MachineControl
+reaches |assembly|::MachineControl
 {
     asm where clobbers rax, rcx, rdx, r10, r11, r15 {
-        wrmsr X2APIC_TIMER_DIVIDE_CONFIG_MSR, X2APIC_TIMER_DIVIDE_BY_16;
-        wrmsr X2APIC_LVT_TIMER_MSR, vector
+        wrmsr |local_apic|::X2APIC_TIMER_DIVIDE_CONFIG_MSR, |local_apic|::X2APIC_TIMER_DIVIDE_BY_16;
+        wrmsr |local_apic|::X2APIC_LVT_TIMER_MSR, vector
     }
 }
 
@@ -38,18 +36,18 @@ pub machine X2ApicTimer::arm_one_shot(
     initial_count: u64
 )
 requires 1 <= initial_count && initial_count <= 4294967295
-reaches MachineControl
+reaches |assembly|::MachineControl
 {
     asm where clobbers rax, rcx, rdx, r10, r11, r15 {
-        wrmsr X2APIC_TIMER_INITIAL_COUNT_MSR, initial_count
+        wrmsr |local_apic|::X2APIC_TIMER_INITIAL_COUNT_MSR, initial_count
     }
 }
 
 pub machine X2ApicTimer::stop(&mut self)
-reaches MachineControl
+reaches |assembly|::MachineControl
 {
     asm where clobbers rax, rcx, rdx, r10, r11, r15 {
-        wrmsr X2APIC_TIMER_INITIAL_COUNT_MSR, X2APIC_TIMER_STOP
+        wrmsr |local_apic|::X2APIC_TIMER_INITIAL_COUNT_MSR, |local_apic|::X2APIC_TIMER_STOP
     }
 }
 
@@ -57,9 +55,9 @@ reaches MachineControl
 // acknowledgement transition admits this provider. The public root contract
 // remains PIC/LAPIC/x2APIC-neutral.
 pub machine X2ApicTimer::complete_timer_acknowledgement(&mut self)
-reaches MachineControl
+reaches |assembly|::MachineControl
 {
     asm where clobbers rax, rcx, rdx, r10, r11, r15 {
-        wrmsr X2APIC_EOI_MSR, X2APIC_EOI_ZERO
+        wrmsr |local_apic|::X2APIC_EOI_MSR, |local_apic|::X2APIC_EOI_ZERO
     }
 }

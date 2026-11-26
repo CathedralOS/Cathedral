@@ -1,7 +1,6 @@
 // Expected exit: 0. Four-level table topology is numeric policy, not authority.
 
-use arch::isa::x86_64::memory::walk::X86TableEntryRoute;
-use arch::isa::x86_64::memory::walk::X86TableWalk;
+use {arch}/isa/x86_64/memory/walk.omg;
 machine require(value: bool) crashes Trap {
     transition value { true -> done() false -> wrong() }
     machine done() {}
@@ -9,11 +8,11 @@ machine require(value: bool) crashes Trap {
 }
 
 machine check(word: u64, level: u64, kind: u64, expected: u64) crashes Trap {
-    let route: X86TableEntryRoute = X86TableWalk::classify(word, level);
+    let route: |walk|::X86TableEntryRoute = |walk|::X86TableWalk::classify(word, level);
     transition route {
-        X86TableEntryRoute::End -> require(kind == 0)
-        X86TableEntryRoute::Link { address } -> require(kind == 1 && address == expected)
-        X86TableEntryRoute::Invalid -> require(kind == 2)
+        |walk|::X86TableEntryRoute::End -> require(kind == 0)
+        |walk|::X86TableEntryRoute::Link { address } -> require(kind == 1 && address == expected)
+        |walk|::X86TableEntryRoute::Invalid -> require(kind == 2)
     }
 }
 

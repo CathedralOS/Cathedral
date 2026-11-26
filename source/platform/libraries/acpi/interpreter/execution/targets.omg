@@ -1,28 +1,21 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Scalar projections route through canonical generic target handling.
-module targets;
-use aml::model::ObjectStore;
-use aml::model::Value;
-use execution_model::ExecutionOutcome;
-use execution_model::Operand;
-use execution_model::OperandResult;
-use execution_model::SlotResult;
-use execution_model::Target;
-use execution_model::Frame;
-use generic_targets::read_generic_target;
-use integer_target_bridge::write_integer_target;
-use generic_values::integer_operand;
-use integer_helpers::integers::normalize;
-pub machine read_target(store:&ObjectStore,frame:&Frame,target:Target)->SlotResult {
- let found:OperandResult=read_generic_target(store,frame,target);
- transition found.outcome==ExecutionOutcome::Success {true -> scalar(store,frame,found.operand) _ -> (SlotResult {outcome:found.outcome})}
- state scalar(store:&ObjectStore,frame:&Frame,operand:Operand)->SlotResult {let result:SlotResult=integer_operand(store,frame.size,operand);result}
+use {aml}/model.omg;
+use execution_model.omg;
+use generic_targets.omg;
+use integer_target_bridge.omg;
+use generic_values.omg;
+use {integer_helpers}/integers.omg;
+pub machine read_target(store:&|model|::ObjectStore,frame:&|execution_model|::Frame,target:|execution_model|::Target)->|execution_model|::SlotResult {
+ let found:|execution_model|::OperandResult=|generic_targets|::read_generic_target(store,frame,target);
+ transition found.outcome==|execution_model|::ExecutionOutcome::Success {true -> scalar(store,frame,found.operand) _ -> (|execution_model|::SlotResult {outcome:found.outcome})}
+ state scalar(store:&|model|::ObjectStore,frame:&|execution_model|::Frame,operand:|execution_model|::Operand)->|execution_model|::SlotResult {let result:|execution_model|::SlotResult=|generic_values|::integer_operand(store,frame.size,operand);result}
 }
-pub machine store_target(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,target:Target,number:u64)->ExecutionOutcome {
- let result:ExecutionOutcome=write_integer_target(input,store,frame,target,number,false);result
+pub machine store_target(input:&[u8;1024],store:&mut |model|::ObjectStore,frame:&mut |execution_model|::Frame,target:|execution_model|::Target,number:u64)->|execution_model|::ExecutionOutcome {
+ let result:|execution_model|::ExecutionOutcome=|integer_target_bridge|::write_integer_target(input,store,frame,target,number,false);result
 }
 
 // Retained scalar convenience entry; all copying uses canonical target policy.
-pub machine copy_integer_target(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,target:Target,number:u64)->ExecutionOutcome {
- let result:ExecutionOutcome=write_integer_target(input,store,frame,target,number,true);result
+pub machine copy_integer_target(input:&[u8;1024],store:&mut |model|::ObjectStore,frame:&mut |execution_model|::Frame,target:|execution_model|::Target,number:u64)->|execution_model|::ExecutionOutcome {
+ let result:|execution_model|::ExecutionOutcome=|integer_target_bridge|::write_integer_target(input,store,frame,target,number,true);result
 }

@@ -1,42 +1,35 @@
-module arrangement::arrangement;
 // Layout application: retain a controller proposal, publish without changing the
 // live World, then install geometry and retire old grants after acceptance.
 // Parent waits yield to the ordinary service loop; STOP cancels captured work.
-use shared::state::State;
-use shared::presentation::Transfer;
-use shared::presentation::Arrangement;
-use shared::presentation::SceneOperation;
-use shared::presentation::Phase;
-use world::layout;
-use world::layout::Proposal;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::kernel;
-use runtime::server::main::Ticket;
-use connections::responses;
-use connections::transfers::transfer;
-use protocol::matrix;
-use arrangement::publication;
-use arrangement::settlement;
+use {shared}/state.omg as shared_state;
+use {shared}/presentation.omg;
+use {world}/layout.omg;
+use {runtime}/kernel.omg;
+use {runtime}/server/main.omg;
+use {connections}/responses.omg;
+use {connections}/transfers/transfer.omg;
+use {protocol}/matrix.omg;
+use arrangement/publication.omg;
+use arrangement/settlement.omg;
 
-public machine begin(context: &mut State, slot: u64 [0..=4], proposal: Proposal, remember: u64) -> u64 {
-    transition !context.presentation_work.active && layout::current(&context.world, &proposal)
+public machine begin(context: &mut |shared_state|::State, slot: u64 [0..=4], proposal: |layout|::Proposal, remember: u64) -> u64 {
+    transition !context.presentation_work.active && |layout|::layout::current(&context.world, &proposal)
         && (context.has_parent || context.has_scene) {
         true -> retained(context, slot, proposal, remember)
-        _ -> (kernel::DENIED)
+        _ -> (|kernel|::DENIED)
     }
-    machine retained(context: &mut State, slot: u64 [0..=4], proposal: Proposal, remember: u64) -> u64 {
-        let ticket: Ticket = runtime::server::main::ticket(&context.slots[slot].listener);
-        let status: u64 = responses::retain(context, slot, ticket);
+    machine retained(context: &mut |shared_state|::State, slot: u64 [0..=4], proposal: |layout|::Proposal, remember: u64) -> u64 {
+        let ticket: |main|::Ticket = |main|::ticket(&context.slots[slot].listener);
+        let status: u64 = |responses|::retain(context, slot, ticket);
         transition status == 0u64 { true -> started(context, slot, proposal, remember, ticket) _ -> (status) }
     }
-    machine started(context: &mut State, slot: u64 [0..=4], proposal: Proposal, remember: u64, ticket: Ticket) -> u64 {
-        let mut work: Transfer;
-        let mut change: Arrangement;
+    machine started(context: &mut |shared_state|::State, slot: u64 [0..=4], proposal: |layout|::Proposal, remember: u64, ticket: |main|::Ticket) -> u64 {
+        let mut work: |presentation|::Transfer;
+        let mut change: |presentation|::Arrangement;
         context.revision = ((context.revision as u64 in Wrapping) + 1u64) as u64;
         work.active = true;
-        work.operation = SceneOperation::Arrangement;
-        work.phase = Phase::Begin;
+        work.operation = |presentation|::SceneOperation::Arrangement;
+        work.phase = |presentation|::Phase::Begin;
         work.slot = slot;
         work.ticket = ticket;
         work.frame.payload[1] = proposal.epoch;
@@ -49,40 +42,40 @@ public machine begin(context: &mut State, slot: u64 [0..=4], proposal: Proposal,
         0u64
     }
 }
-public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
+public machine step(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     transition {
-        !context.presentation_work.active || context.presentation_work.operation != SceneOperation::Arrangement -> done()
+        !context.presentation_work.active || context.presentation_work.operation != |presentation|::SceneOperation::Arrangement -> done()
         context.answers[context.presentation_work.slot].active -> block draining(gate, context)
         context.presentation_work.submitted -> block receiving(gate, context)
         _ -> block advance(gate, context)
     }
-    machine draining(gate: &Gate, context: &mut State) reaches Kernel {
+    machine draining(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
         let slot: u64 [0..=4] = context.presentation_work.slot;
-        let status: u64 = block responses::step(gate, context, slot);
+        let status: u64 = block |responses|::step(gate, context, slot);
     }
-    machine receiving(gate: &Gate, context: &mut State) reaches Kernel {
-        block publication::receive(gate, context);
+    machine receiving(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
+        block |publication|::receive(gate, context);
         transition context.presentation_work.submitted { true -> done() _ -> block advance(gate, context) }
     }
 }
-machine advance(gate: &Gate, context: &mut State) reaches Kernel {
+machine advance(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
     transition {
-        context.presentation_work.phase == Phase::Finished -> block settlement::finish(gate, context)
-        context.presentation_work.phase == Phase::Abort -> block publication::control(gate, context, PRESENT_ABORT)
-        context.world.parent.epoch != context.presentation_work.parent_epoch -> publication::invalidated(context)
-        !context.arrangement_work.restoring && !current(context) -> publication::invalidated(context)
-        context.presentation_work.phase == Phase::Begin -> block publication::control(gate, context, PRESENT_BEGIN)
-        context.presentation_work.phase == Phase::Commit -> block publication::control(gate, context, PRESENT_COMMIT)
-        _ -> block publication::entries(gate, context)
+        context.presentation_work.phase == |presentation|::Phase::Finished -> block |settlement|::finish(gate, context)
+        context.presentation_work.phase == |presentation|::Phase::Abort -> block |publication|::control(gate, context, |matrix|::PRESENT_ABORT)
+        context.world.parent.epoch != context.presentation_work.parent_epoch -> |publication|::invalidated(context)
+        !context.arrangement_work.restoring && !current(context) -> |publication|::invalidated(context)
+        context.presentation_work.phase == |presentation|::Phase::Begin -> block |publication|::control(gate, context, |matrix|::PRESENT_BEGIN)
+        context.presentation_work.phase == |presentation|::Phase::Commit -> block |publication|::control(gate, context, |matrix|::PRESENT_COMMIT)
+        _ -> block |publication|::entries(gate, context)
     }
 }
-public machine current(context: &State) -> bool {
-    transfer::current(context) && layout::current(&context.world, &context.arrangement_work.proposal)
+public machine current(context: &|shared_state|::State) -> bool {
+    |transfer|::current(context) && |layout|::layout::current(&context.world, &context.arrangement_work.proposal)
         && !retiring(context, 0u64)
 }
-machine retiring(context: &State, slot: u64) -> bool requires slot <= 5u64 {
+machine retiring(context: &|shared_state|::State, slot: u64) -> bool requires slot <= 5u64 {
     transition slot < 5u64 { true -> checked(context, slot) _ -> (false) }
-    machine checked(context: &State, slot: u64 [0..=4]) -> bool {
+    machine checked(context: &|shared_state|::State, slot: u64 [0..=4]) -> bool {
         transition context.arrangement_work.proposal.placed[slot] && context.retire_after_present[slot] {
             true -> (true)
             _ -> retiring(context, slot + 1u64)

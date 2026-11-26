@@ -1,30 +1,28 @@
-use x86::encrypted_recursive_constructor;
-use x86::mapper_topology::RecursiveObservation;
-use x86::mapper_topology::InactiveReason;
-use x86::memory_encryption;
-use x86::memory_encryption::State;
-use x86::memory_encryption::Configuration;
+use {omega}/language/core/nat.omg;
+use {x86}/encrypted_recursive_constructor.omg;
+use {x86}/mapper_topology.omg;
+use {x86}/memory_encryption.omg;
 data Case [copy] {address:u64;observed:u64;word:u64;kind:u8;index:u16;frame:u64;}
 data Suite {}
-machine one(profile:State,row:Case,mutate:bool)->bool {
- let observed:RecursiveObservation=encrypted_recursive_constructor::observe_recursive(profile,row.address,row.observed,row.word);
+machine one(profile:|memory_encryption|::State,row:Case,mutate:bool)->bool {
+ let observed:|mapper_topology|::RecursiveObservation=|encrypted_recursive_constructor|::observe_recursive(profile,row.address,row.observed,row.word);
  transition observed {
-  RecursiveObservation::InvalidAddress -> (row.kind==5)
-  RecursiveObservation::InvalidObservedFrame -> (row.kind==6)
-  RecursiveObservation::NotRecursive -> (row.kind==1)
-  RecursiveObservation::NotActive {reason} -> inactive(reason,row.kind)
-  RecursiveObservation::Observed {recursive_index,physical_frame} -> (row.kind==0 && recursive_index==row.index && ((physical_frame==row.frame)!=mutate))
+  |mapper_topology|::RecursiveObservation::InvalidAddress -> (row.kind==5)
+  |mapper_topology|::RecursiveObservation::InvalidObservedFrame -> (row.kind==6)
+  |mapper_topology|::RecursiveObservation::NotRecursive -> (row.kind==1)
+  |mapper_topology|::RecursiveObservation::NotActive {reason} -> inactive(reason,row.kind)
+  |mapper_topology|::RecursiveObservation::Observed {recursive_index,physical_frame} -> (row.kind==0 && recursive_index==row.index && ((physical_frame==row.frame)!=mutate))
  }
- state inactive(reason:InactiveReason,kind:u8)->bool {transition reason {InactiveReason::EntryNotPresent -> (kind==2) InactiveReason::EntryHugeFrame -> (kind==3) _ -> (kind==4)}}
+ state inactive(reason:|mapper_topology|::InactiveReason,kind:u8)->bool {transition reason {|mapper_topology|::InactiveReason::EntryNotPresent -> (kind==2) |mapper_topology|::InactiveReason::EntryHugeFrame -> (kind==3) _ -> (kind==4)}}
 }
-machine loop_rows(profile:State,rows:&[Case;61],index:u64,count:u64,mutate:bool,valid:bool)
-terminates by (index,count)->Nat::BoundedDistance;
+machine loop_rows(profile:|memory_encryption|::State,rows:&[Case;61],index:u64,count:u64,mutate:bool,valid:bool)
+terminates by (index,count)->|nat|::Nat::BoundedDistance;
 ->bool {let next:bool=row_at(profile,rows,index,count,mutate,valid);transition index<count {true -> loop_rows(profile,rows,index+1,count,mutate,next) _ -> (valid)}}
-machine row_at(profile:State,rows:&[Case;61],index:u64,count:u64,mutate:bool,valid:bool)->bool {
+machine row_at(profile:|memory_encryption|::State,rows:&[Case;61],index:u64,count:u64,mutate:bool,valid:bool)->bool {
  transition index<count && index<61 {true -> compare(profile,rows[index],mutate,valid) _ -> (valid)}
- state compare(profile:State,row:Case,mutate:bool,valid:bool)->bool {let good:bool=one(profile,row,mutate);valid && good}
+ state compare(profile:|memory_encryption|::State,row:Case,mutate:bool,valid:bool)->bool {let good:bool=one(profile,row,mutate);valid && good}
 }
-machine Suite::p0_positive(&mut self)->i32 {let profile:State=memory_encryption::initial();
+machine Suite::p0_positive(&mut self)->i32 {let profile:|memory_encryption|::State=|memory_encryption|::initial();
 let mut rows:[Case;61];
 rows[0]=Case{address:0,observed:0,word:1,kind:0,index:0,frame:0};
 rows[1]=Case{address:0,observed:0,word:1,kind:0,index:0,frame:0};
@@ -88,7 +86,7 @@ rows[58]=Case{address:18446744073707450368,observed:18446744073709551615,word:0,
 rows[59]=Case{address:18446744073709547520,observed:4503599627370496,word:1,kind:6,index:0,frame:0};
 rows[60]=Case{address:140737488355328,observed:18446744073709551615,word:0,kind:5,index:0,frame:0};
 let valid:bool=loop_rows(profile,&rows,0,61,false,true);transition valid {true -> (0) _ -> (1)} }
-machine Suite::p0_control(&mut self)->i32 {let profile:State=memory_encryption::initial();
+machine Suite::p0_control(&mut self)->i32 {let profile:|memory_encryption|::State=|memory_encryption|::initial();
 let mut rows:[Case;61];
 rows[0]=Case{address:0,observed:0,word:1,kind:0,index:0,frame:0};
 rows[1]=Case{address:0,observed:0,word:1,kind:0,index:0,frame:0};
@@ -152,8 +150,8 @@ rows[58]=Case{address:18446744073707450368,observed:18446744073709551615,word:0,
 rows[59]=Case{address:18446744073709547520,observed:4503599627370496,word:1,kind:6,index:0,frame:0};
 rows[60]=Case{address:140737488355328,observed:18446744073709551615,word:0,kind:5,index:0,frame:0};
 let valid:bool=loop_rows(profile,&rows,0,61,true,true);transition valid {true -> (0) _ -> (1)} }
-machine Suite::p1_positive(&mut self)->i32 {let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit{position:0});
+machine Suite::p1_positive(&mut self)->i32 {let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit{position:0});
 let mut rows:[Case;61];
 rows[0]=Case{address:0,observed:0,word:1,kind:0,index:0,frame:0};
 rows[1]=Case{address:0,observed:0,word:1,kind:0,index:0,frame:0};
@@ -217,8 +215,8 @@ rows[58]=Case{address:18446744073707450368,observed:18446744073709551615,word:0,
 rows[59]=Case{address:18446744073709547520,observed:4503599627370496,word:1,kind:6,index:0,frame:0};
 rows[60]=Case{address:140737488355328,observed:18446744073709551615,word:0,kind:5,index:0,frame:0};
 let valid:bool=loop_rows(profile,&rows,0,61,false,true);transition valid {true -> (0) _ -> (1)} }
-machine Suite::p1_control(&mut self)->i32 {let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit{position:0});
+machine Suite::p1_control(&mut self)->i32 {let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit{position:0});
 let mut rows:[Case;61];
 rows[0]=Case{address:0,observed:0,word:1,kind:0,index:0,frame:0};
 rows[1]=Case{address:0,observed:0,word:1,kind:0,index:0,frame:0};
@@ -282,8 +280,8 @@ rows[58]=Case{address:18446744073707450368,observed:18446744073709551615,word:0,
 rows[59]=Case{address:18446744073709547520,observed:4503599627370496,word:1,kind:6,index:0,frame:0};
 rows[60]=Case{address:140737488355328,observed:18446744073709551615,word:0,kind:5,index:0,frame:0};
 let valid:bool=loop_rows(profile,&rows,0,61,true,true);transition valid {true -> (0) _ -> (1)} }
-machine Suite::p2_positive(&mut self)->i32 {let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit{position:7});
+machine Suite::p2_positive(&mut self)->i32 {let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit{position:7});
 let mut rows:[Case;61];
 rows[0]=Case{address:0,observed:0,word:1,kind:0,index:0,frame:0};
 rows[1]=Case{address:0,observed:0,word:129,kind:3,index:0,frame:0};
@@ -347,8 +345,8 @@ rows[58]=Case{address:18446744073707450368,observed:18446744073709551615,word:0,
 rows[59]=Case{address:18446744073709547520,observed:4503599627370496,word:1,kind:6,index:0,frame:0};
 rows[60]=Case{address:140737488355328,observed:18446744073709551615,word:0,kind:5,index:0,frame:0};
 let valid:bool=loop_rows(profile,&rows,0,61,false,true);transition valid {true -> (0) _ -> (1)} }
-machine Suite::p2_control(&mut self)->i32 {let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit{position:7});
+machine Suite::p2_control(&mut self)->i32 {let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit{position:7});
 let mut rows:[Case;61];
 rows[0]=Case{address:0,observed:0,word:1,kind:0,index:0,frame:0};
 rows[1]=Case{address:0,observed:0,word:129,kind:3,index:0,frame:0};
@@ -412,8 +410,8 @@ rows[58]=Case{address:18446744073707450368,observed:18446744073709551615,word:0,
 rows[59]=Case{address:18446744073709547520,observed:4503599627370496,word:1,kind:6,index:0,frame:0};
 rows[60]=Case{address:140737488355328,observed:18446744073709551615,word:0,kind:5,index:0,frame:0};
 let valid:bool=loop_rows(profile,&rows,0,61,true,true);transition valid {true -> (0) _ -> (1)} }
-machine Suite::p3_positive(&mut self)->i32 {let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit{position:12});
+machine Suite::p3_positive(&mut self)->i32 {let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit{position:12});
 let mut rows:[Case;61];
 rows[0]=Case{address:0,observed:0,word:1,kind:0,index:0,frame:0};
 rows[1]=Case{address:0,observed:0,word:4097,kind:0,index:0,frame:0};
@@ -477,8 +475,8 @@ rows[58]=Case{address:18446744073707450368,observed:18446744073709551615,word:0,
 rows[59]=Case{address:18446744073709547520,observed:4503599627370496,word:1,kind:6,index:0,frame:0};
 rows[60]=Case{address:140737488355328,observed:18446744073709551615,word:0,kind:5,index:0,frame:0};
 let valid:bool=loop_rows(profile,&rows,0,61,false,true);transition valid {true -> (0) _ -> (1)} }
-machine Suite::p3_control(&mut self)->i32 {let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit{position:12});
+machine Suite::p3_control(&mut self)->i32 {let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit{position:12});
 let mut rows:[Case;61];
 rows[0]=Case{address:0,observed:0,word:1,kind:0,index:0,frame:0};
 rows[1]=Case{address:0,observed:0,word:4097,kind:0,index:0,frame:0};
@@ -542,8 +540,8 @@ rows[58]=Case{address:18446744073707450368,observed:18446744073709551615,word:0,
 rows[59]=Case{address:18446744073709547520,observed:4503599627370496,word:1,kind:6,index:0,frame:0};
 rows[60]=Case{address:140737488355328,observed:18446744073709551615,word:0,kind:5,index:0,frame:0};
 let valid:bool=loop_rows(profile,&rows,0,61,true,true);transition valid {true -> (0) _ -> (1)} }
-machine Suite::p4_positive(&mut self)->i32 {let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit{position:21});
+machine Suite::p4_positive(&mut self)->i32 {let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit{position:21});
 let mut rows:[Case;61];
 rows[0]=Case{address:0,observed:0,word:1,kind:0,index:0,frame:0};
 rows[1]=Case{address:0,observed:0,word:2097153,kind:0,index:0,frame:0};
@@ -607,8 +605,8 @@ rows[58]=Case{address:18446744073707450368,observed:18446744073709551615,word:0,
 rows[59]=Case{address:18446744073709547520,observed:4503599627370496,word:1,kind:6,index:0,frame:0};
 rows[60]=Case{address:140737488355328,observed:18446744073709551615,word:0,kind:5,index:0,frame:0};
 let valid:bool=loop_rows(profile,&rows,0,61,false,true);transition valid {true -> (0) _ -> (1)} }
-machine Suite::p4_control(&mut self)->i32 {let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit{position:21});
+machine Suite::p4_control(&mut self)->i32 {let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit{position:21});
 let mut rows:[Case;61];
 rows[0]=Case{address:0,observed:0,word:1,kind:0,index:0,frame:0};
 rows[1]=Case{address:0,observed:0,word:2097153,kind:0,index:0,frame:0};
@@ -672,8 +670,8 @@ rows[58]=Case{address:18446744073707450368,observed:18446744073709551615,word:0,
 rows[59]=Case{address:18446744073709547520,observed:4503599627370496,word:1,kind:6,index:0,frame:0};
 rows[60]=Case{address:140737488355328,observed:18446744073709551615,word:0,kind:5,index:0,frame:0};
 let valid:bool=loop_rows(profile,&rows,0,61,true,true);transition valid {true -> (0) _ -> (1)} }
-machine Suite::p5_positive(&mut self)->i32 {let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit{position:47});
+machine Suite::p5_positive(&mut self)->i32 {let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit{position:47});
 let mut rows:[Case;61];
 rows[0]=Case{address:0,observed:0,word:1,kind:0,index:0,frame:0};
 rows[1]=Case{address:0,observed:0,word:140737488355329,kind:0,index:0,frame:0};
@@ -737,8 +735,8 @@ rows[58]=Case{address:18446744073707450368,observed:18446744073709551615,word:0,
 rows[59]=Case{address:18446744073709547520,observed:4503599627370496,word:1,kind:6,index:0,frame:0};
 rows[60]=Case{address:140737488355328,observed:18446744073709551615,word:0,kind:5,index:0,frame:0};
 let valid:bool=loop_rows(profile,&rows,0,61,false,true);transition valid {true -> (0) _ -> (1)} }
-machine Suite::p5_control(&mut self)->i32 {let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit{position:47});
+machine Suite::p5_control(&mut self)->i32 {let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit{position:47});
 let mut rows:[Case;61];
 rows[0]=Case{address:0,observed:0,word:1,kind:0,index:0,frame:0};
 rows[1]=Case{address:0,observed:0,word:140737488355329,kind:0,index:0,frame:0};
@@ -802,8 +800,8 @@ rows[58]=Case{address:18446744073707450368,observed:18446744073709551615,word:0,
 rows[59]=Case{address:18446744073709547520,observed:4503599627370496,word:1,kind:6,index:0,frame:0};
 rows[60]=Case{address:140737488355328,observed:18446744073709551615,word:0,kind:5,index:0,frame:0};
 let valid:bool=loop_rows(profile,&rows,0,61,true,true);transition valid {true -> (0) _ -> (1)} }
-machine Suite::p6_positive(&mut self)->i32 {let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::SharedBit{position:47});
+machine Suite::p6_positive(&mut self)->i32 {let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::SharedBit{position:47});
 let mut rows:[Case;61];
 rows[0]=Case{address:0,observed:0,word:1,kind:0,index:0,frame:0};
 rows[1]=Case{address:0,observed:0,word:140737488355329,kind:0,index:0,frame:0};
@@ -867,8 +865,8 @@ rows[58]=Case{address:18446744073707450368,observed:18446744073709551615,word:0,
 rows[59]=Case{address:18446744073709547520,observed:4503599627370496,word:1,kind:6,index:0,frame:0};
 rows[60]=Case{address:140737488355328,observed:18446744073709551615,word:0,kind:5,index:0,frame:0};
 let valid:bool=loop_rows(profile,&rows,0,61,false,true);transition valid {true -> (0) _ -> (1)} }
-machine Suite::p6_control(&mut self)->i32 {let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::SharedBit{position:47});
+machine Suite::p6_control(&mut self)->i32 {let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::SharedBit{position:47});
 let mut rows:[Case;61];
 rows[0]=Case{address:0,observed:0,word:1,kind:0,index:0,frame:0};
 rows[1]=Case{address:0,observed:0,word:140737488355329,kind:0,index:0,frame:0};
@@ -932,8 +930,8 @@ rows[58]=Case{address:18446744073707450368,observed:18446744073709551615,word:0,
 rows[59]=Case{address:18446744073709547520,observed:4503599627370496,word:1,kind:6,index:0,frame:0};
 rows[60]=Case{address:140737488355328,observed:18446744073709551615,word:0,kind:5,index:0,frame:0};
 let valid:bool=loop_rows(profile,&rows,0,61,true,true);transition valid {true -> (0) _ -> (1)} }
-machine Suite::p7_positive(&mut self)->i32 {let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit{position:51});
+machine Suite::p7_positive(&mut self)->i32 {let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit{position:51});
 let mut rows:[Case;61];
 rows[0]=Case{address:0,observed:0,word:1,kind:0,index:0,frame:0};
 rows[1]=Case{address:0,observed:0,word:2251799813685249,kind:0,index:0,frame:0};
@@ -997,8 +995,8 @@ rows[58]=Case{address:18446744073707450368,observed:18446744073709551615,word:0,
 rows[59]=Case{address:18446744073709547520,observed:4503599627370496,word:1,kind:6,index:0,frame:0};
 rows[60]=Case{address:140737488355328,observed:18446744073709551615,word:0,kind:5,index:0,frame:0};
 let valid:bool=loop_rows(profile,&rows,0,61,false,true);transition valid {true -> (0) _ -> (1)} }
-machine Suite::p7_control(&mut self)->i32 {let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit{position:51});
+machine Suite::p7_control(&mut self)->i32 {let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit{position:51});
 let mut rows:[Case;61];
 rows[0]=Case{address:0,observed:0,word:1,kind:0,index:0,frame:0};
 rows[1]=Case{address:0,observed:0,word:2251799813685249,kind:0,index:0,frame:0};
@@ -1062,8 +1060,8 @@ rows[58]=Case{address:18446744073707450368,observed:18446744073709551615,word:0,
 rows[59]=Case{address:18446744073709547520,observed:4503599627370496,word:1,kind:6,index:0,frame:0};
 rows[60]=Case{address:140737488355328,observed:18446744073709551615,word:0,kind:5,index:0,frame:0};
 let valid:bool=loop_rows(profile,&rows,0,61,true,true);transition valid {true -> (0) _ -> (1)} }
-machine Suite::p8_positive(&mut self)->i32 {let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::SharedBit{position:63});
+machine Suite::p8_positive(&mut self)->i32 {let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::SharedBit{position:63});
 let mut rows:[Case;61];
 rows[0]=Case{address:0,observed:0,word:1,kind:0,index:0,frame:0};
 rows[1]=Case{address:0,observed:0,word:9223372036854775809,kind:0,index:0,frame:0};
@@ -1127,8 +1125,8 @@ rows[58]=Case{address:18446744073707450368,observed:18446744073709551615,word:0,
 rows[59]=Case{address:18446744073709547520,observed:4503599627370496,word:1,kind:6,index:0,frame:0};
 rows[60]=Case{address:140737488355328,observed:18446744073709551615,word:0,kind:5,index:0,frame:0};
 let valid:bool=loop_rows(profile,&rows,0,61,false,true);transition valid {true -> (0) _ -> (1)} }
-machine Suite::p8_control(&mut self)->i32 {let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::SharedBit{position:63});
+machine Suite::p8_control(&mut self)->i32 {let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::SharedBit{position:63});
 let mut rows:[Case;61];
 rows[0]=Case{address:0,observed:0,word:1,kind:0,index:0,frame:0};
 rows[1]=Case{address:0,observed:0,word:9223372036854775809,kind:0,index:0,frame:0};
@@ -1192,10 +1190,10 @@ rows[58]=Case{address:18446744073707450368,observed:18446744073709551615,word:0,
 rows[59]=Case{address:18446744073709547520,observed:4503599627370496,word:1,kind:6,index:0,frame:0};
 rows[60]=Case{address:140737488355328,observed:18446744073709551615,word:0,kind:5,index:0,frame:0};
 let valid:bool=loop_rows(profile,&rows,0,61,true,true);transition valid {true -> (0) _ -> (1)} }
-machine Suite::p9_positive(&mut self)->i32 {let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit{position:47});
-let configured1:bool=memory_encryption::configure(&mut profile,Configuration::SharedBit{position:48});
-let configured2:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit{position:47});
+machine Suite::p9_positive(&mut self)->i32 {let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit{position:47});
+let configured1:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::SharedBit{position:48});
+let configured2:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit{position:47});
 let mut rows:[Case;61];
 rows[0]=Case{address:0,observed:0,word:1,kind:0,index:0,frame:0};
 rows[1]=Case{address:0,observed:0,word:140737488355329,kind:0,index:0,frame:0};
@@ -1259,10 +1257,10 @@ rows[58]=Case{address:18446744073707450368,observed:18446744073709551615,word:0,
 rows[59]=Case{address:18446744073709547520,observed:4503599627370496,word:1,kind:6,index:0,frame:0};
 rows[60]=Case{address:140737488355328,observed:18446744073709551615,word:0,kind:5,index:0,frame:0};
 let valid:bool=loop_rows(profile,&rows,0,61,false,true);transition valid {true -> (0) _ -> (1)} }
-machine Suite::p9_control(&mut self)->i32 {let profile:State=memory_encryption::initial();
-let configured0:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit{position:47});
-let configured1:bool=memory_encryption::configure(&mut profile,Configuration::SharedBit{position:48});
-let configured2:bool=memory_encryption::configure(&mut profile,Configuration::EncryptedBit{position:47});
+machine Suite::p9_control(&mut self)->i32 {let profile:|memory_encryption|::State=|memory_encryption|::initial();
+let configured0:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit{position:47});
+let configured1:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::SharedBit{position:48});
+let configured2:bool=|memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit{position:47});
 let mut rows:[Case;61];
 rows[0]=Case{address:0,observed:0,word:1,kind:0,index:0,frame:0};
 rows[1]=Case{address:0,observed:0,word:140737488355329,kind:0,index:0,frame:0};

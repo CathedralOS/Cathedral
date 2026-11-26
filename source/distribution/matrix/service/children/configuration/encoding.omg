@@ -1,7 +1,5 @@
-module children::configuration::encoding;
-
 // CTHMAT02: preserve startup-only authority fields while editing geometry.
-use children::configuration::name;
+use children/configuration/name.omg;
 
 public machine word(bytes: &[u8; 104], at: u64) -> u64 {
     transition at <= 96u64 {
@@ -60,7 +58,7 @@ public machine equal(a: &[u8; 104], b: &[u8; 104]) -> bool {
 }
 
 public machine normalize(bytes: &mut [u8; 104]) -> bool {
-    transition bytes[0] == 67u8 && bytes[1] == 84u8 && bytes[2] == 72u8 && bytes[3] == 77u8 && bytes[4] == 65u8 && bytes[5] == 84u8 && bytes[6] == 48u8 && (bytes[7] == 49u8 || bytes[7] == 50u8) && children::configuration::name::valid_name(bytes) {
+    transition bytes[0] == 67u8 && bytes[1] == 84u8 && bytes[2] == 72u8 && bytes[3] == 77u8 && bytes[4] == 65u8 && bytes[5] == 84u8 && bytes[6] == 48u8 && (bytes[7] == 49u8 || bytes[7] == 50u8) && |name|::valid_name(bytes) {
         true -> bounds(bytes)
         _ -> (false)
     }

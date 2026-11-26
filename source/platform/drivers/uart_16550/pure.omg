@@ -1,14 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified translation of uart_16550 653455f17e92c67a67e44b4c4b6eaba22411e57b.
 // Pure values and decisions only. PORT.md records API changes and boundary contracts.
-module pure;
-use facts::uart_16550::CLK_FREQUENCY_HZ;
-use facts::uart_16550::FIFO_SIZE;
-use facts::uart_16550::LSR_DATA_READY;
-use facts::uart_16550::LSR_THR_EMPTY;
-use facts::uart_16550::LSR_TRANSMIT_EMPTY;
-use facts::uart_16550::LCR_DLAB;
-use facts::uart_16550::MCR_DTR_RTS_OUT2;
+use {facts}/uart_16550.omg;
 
 // Error codes: 0 success, 1 zero input, 2 invalid prescaler, 3 arithmetic
 // overflow, 4 noninteger result, 5 divisor outside u16. All input retained by caller.
@@ -30,7 +23,7 @@ pub data ConfigRegisterDump [copy] {
     ier: u8; isr: u8; lcr: u8; mcr: u8; lsr: u8; msr: u8; spr: u8; dll: u8; dlm: u8;
 }
 pub machine default_config() -> Config {
-    Config { frequency: CLK_FREQUENCY_HZ, fifo_enabled: true, fifo_trigger_bits: 3,
+    Config { frequency: |uart_16550|::CLK_FREQUENCY_HZ, fifo_enabled: true, fifo_trigger_bits: 3,
              baud_rate: 9600, word_length_bits: 3 }
 }
 pub machine baud_compare(left: u32, right: u32) -> i32 {
@@ -135,10 +128,10 @@ pub machine register_offset(index: u8, stride: u8) -> RegisterOffset {
         true -> (RegisterOffset { valid: true, bytes: bytes as u8 }) _ -> (RegisterOffset {})
     }
 }
-pub machine ready_to_receive(lsr: u8) -> bool { (lsr & LSR_DATA_READY) != 0 }
+pub machine ready_to_receive(lsr: u8) -> bool { (lsr & |uart_16550|::LSR_DATA_READY) != 0 }
 // 0 ready, 1 no capacity, 2 remote CTS false. Input snapshots alone grant no IO.
 pub machine ready_to_send(lsr: u8, mcr: u8, msr: u8, check_cts: bool) -> u8 {
-    let guard_0: bool = (lsr & LSR_THR_EMPTY) == 0;
+    let guard_0: bool = (lsr & |uart_16550|::LSR_THR_EMPTY) == 0;
     let guard_1: bool = check_cts && (mcr & 16) == 0 && (msr & 16) == 0;
     transition { guard_0 -> (1)
         guard_1 -> (2) _ -> (0) }
@@ -151,9 +144,9 @@ pub machine check_connected(msr: u8) -> u8 {
 pub machine send_count(length: u64, fifo_enabled: bool, readiness: u8) -> u8 {
     let guard_0: bool = length == 0 || readiness != 0;
     let guard_1: bool = !fifo_enabled;
-    let guard_2: bool = length > (FIFO_SIZE as u64);
+    let guard_2: bool = length > (|uart_16550|::FIFO_SIZE as u64);
     transition { guard_0 -> (0) guard_1 -> (1)
-        guard_2 -> (FIFO_SIZE) _ -> ((length & 255) as u8) }
+        guard_2 -> (|uart_16550|::FIFO_SIZE) _ -> ((length & 255) as u8) }
 }
 // Upstream try_send_byte collapses CTS rejection into NoCapacity via send_bytes.
 pub machine try_send_error(readiness: u8) -> u8 { transition readiness == 0 { true -> (0) _ -> (1) } }

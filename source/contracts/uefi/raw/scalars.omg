@@ -3,7 +3,6 @@
 // c0facddf9ba42b74906a37fca2869e6cdbc8da6a; see scalars.PORT.md.
 // Inert x86-64 carriers: numeric address/handle bits establish no authority.
 // ABI expectations are scalars.vectors.json, not inferred Omega native layout.
-module scalars;
 
 pub data Handle [copy] { raw: u64; }
 pub data Event [copy] { raw: u64; }

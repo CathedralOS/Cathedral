@@ -1,28 +1,10 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Cathedral finite pure model built on the pinned translated VirtIO algorithms.
 // No addresses, DMA, devices, barriers or asynchronous execution are modeled.
-module simulator;
-use features::Features;
-use features::NegotiatedFeatures;
-use features::negotiate_features;
-use features::feature_has;
-use packed::Cursor;
-use packed::CursorResult;
-use packed::FlagsResult;
-use packed::NotifyResult;
-use packed::EventSuppress;
-use packed::advance;
-use packed::cursor_valid;
-use packed::available_flags;
-use packed::used_flags;
-use packed::descriptor_available;
-use packed::descriptor_used;
-use packed::notify;
-use split::split_notify;
-use split::index_add;
-use split::index_distance;
-use split::split_queue_size_valid;
-pub data DeviceSession [copy] { status: u8; offered: Features; accepted: Features; }
+use features.omg;
+use packed.omg;
+use split.omg;
+pub data DeviceSession [copy] { status: u8; offered: |features|::Features; accepted: |features|::Features; }
 pub data SessionResult [copy] { ok: bool; session: DeviceSession; }
 pub machine device_acknowledge(value: DeviceSession) -> SessionResult {
     transition value.status == 0 { true -> set(value) _ -> (SessionResult { session: value }) }
@@ -36,14 +18,14 @@ pub machine device_driver(value: DeviceSession) -> SessionResult {
       let mut out: DeviceSession = value; out.status = 3; SessionResult { ok: true, session: out }
     }
 }
-pub machine device_negotiate(value: DeviceSession, supported: Features, required: Features, network: bool) -> SessionResult {
+pub machine device_negotiate(value: DeviceSession, supported: |features|::Features, required: |features|::Features, network: bool) -> SessionResult {
     transition value.status == 3 { true -> choose(value, supported, required, network) _ -> (SessionResult { session: value }) }
-    state choose(value: DeviceSession, supported: Features, required: Features, network: bool) -> SessionResult {
-      let selected: NegotiatedFeatures = negotiate_features(value.offered, supported, required, network, true);
+    state choose(value: DeviceSession, supported: |features|::Features, required: |features|::Features, network: bool) -> SessionResult {
+      let selected: |features|::NegotiatedFeatures = |features|::negotiate_features(value.offered, supported, required, network, true);
       let mut out: DeviceSession = value;
       transition selected.ok { true -> accept(out, selected.value) _ -> reject(out) }
     }
-    state accept(value: DeviceSession, accepted: Features) -> SessionResult {
+    state accept(value: DeviceSession, accepted: |features|::Features) -> SessionResult {
       let mut out: DeviceSession = value; out.status = 11; out.accepted = accepted;
       SessionResult { ok: true, session: out }
     }
@@ -61,32 +43,32 @@ pub machine device_reset(value: DeviceSession) -> DeviceSession { DeviceSession 
 pub data SimBuffer [copy] { id: u16; bytes: u32; writable: bool; flags: u16; }
 pub data Completion [copy] { id: u16; bytes: u32; }
 pub data QueueSimulation [copy] {
-    active: bool; size: u16; packed: bool; negotiated: Features;
+    active: bool; size: u16; packed: bool; negotiated: |features|::Features;
     produced: u16; consumed: u16; reaped: u16;
-    producer: Cursor; consumer: Cursor; reaper: Cursor;
+    producer: |packed|::Cursor; consumer: |packed|::Cursor; reaper: |packed|::Cursor;
     queued: u16; inflight: u16; completed: u16;
     descriptors: [SimBuffer; 8]; available: [u16; 8]; used: [Completion; 8];
     busy: [bool; 8]; lengths: [u32; 8]; writable: [bool; 8];
 }
 pub data QueueStep [copy] { ok: bool; queue: QueueSimulation; completion: Completion; notification: bool; }
 pub machine queue_create(session: DeviceSession, size: u16) -> QueueStep {
-    let packed: bool = feature_has(session.accepted, 34);
-    transition session.status == 15 && feature_has(session.accepted, 32) && size > 0 && size <= 8 && (packed || split_queue_size_valid(size)) {
+    let packed: bool = |features|::feature_has(session.accepted, 34);
+    transition session.status == 15 && |features|::feature_has(session.accepted, 32) && size > 0 && size <= 8 && (packed || |split|::split_queue_size_valid(size)) {
       true -> create(session.accepted, size, packed) _ -> (QueueStep {})
     }
-    state create(accepted: Features, size: u16, packed: bool) -> QueueStep {
+    state create(accepted: |features|::Features, size: u16, packed: bool) -> QueueStep {
       QueueStep { ok: true, queue: QueueSimulation { active: true, size: size, packed: packed, negotiated: accepted,
-        producer: Cursor { wrap: 1 }, consumer: Cursor { wrap: 1 }, reaper: Cursor { wrap: 1 } } }
+        producer: |packed|::Cursor { wrap: 1 }, consumer: |packed|::Cursor { wrap: 1 }, reaper: |packed|::Cursor { wrap: 1 } } }
     }
 }
 pub machine queue_well_formed(value: QueueSimulation) -> bool {
-    value.active && feature_has(value.negotiated, 32) && value.packed == feature_has(value.negotiated, 34) && value.size > 0 && value.size <= 8 && (value.packed || split_queue_size_valid(value.size)) &&
+    value.active && |features|::feature_has(value.negotiated, 32) && value.packed == |features|::feature_has(value.negotiated, 34) && value.size > 0 && value.size <= 8 && (value.packed || |split|::split_queue_size_valid(value.size)) &&
     value.queued <= value.size && value.inflight <= value.size && value.completed <= value.size &&
     (value.inflight as u32) == (value.queued as u32) + (value.completed as u32) &&
-    index_distance(value.produced, value.consumed) == value.queued &&
-    index_distance(value.consumed, value.reaped) == value.completed &&
-    index_distance(value.produced, value.reaped) == value.inflight && busy_count(value) == value.inflight &&
-    cursor_valid(value.size, value.producer) && cursor_valid(value.size, value.consumer) && cursor_valid(value.size, value.reaper)
+    |split|::index_distance(value.produced, value.consumed) == value.queued &&
+    |split|::index_distance(value.consumed, value.reaped) == value.completed &&
+    |split|::index_distance(value.produced, value.reaped) == value.inflight && busy_count(value) == value.inflight &&
+    |packed|::cursor_valid(value.size, value.producer) && |packed|::cursor_valid(value.size, value.consumer) && |packed|::cursor_valid(value.size, value.reaper)
 }
 machine flag_count(value: bool) -> u8 { transition value { true -> (1) _ -> (0) } }
 machine busy_count(value: QueueSimulation) -> u16 {
@@ -102,39 +84,39 @@ machine decrement_count(value: u16) -> u16 {
     transition value > 0 { true -> (value - 1) _ -> (0) }
 }
 pub machine queue_reset(value: QueueSimulation) -> QueueSimulation { QueueSimulation {} }
-pub machine queue_submit(value: QueueSimulation, id: u16, bytes: u32, writable: bool, packed_event: EventSuppress, split_event: u16, split_flags: u16) -> QueueStep {
+pub machine queue_submit(value: QueueSimulation, id: u16, bytes: u32, writable: bool, packed_event: |packed|::EventSuppress, split_event: u16, split_flags: u16) -> QueueStep {
     transition queue_well_formed(value) && value.inflight < value.size && id < 8 && (value.packed || id < value.size) {
       true -> free(value, id, bytes, writable, packed_event, split_event, split_flags) _ -> (QueueStep { queue: value })
     }
-    state free(value: QueueSimulation, id: u16, bytes: u32, writable: bool, event: EventSuppress, split_event: u16, split_flags: u16) -> QueueStep {
+    state free(value: QueueSimulation, id: u16, bytes: u32, writable: bool, event: |packed|::EventSuppress, split_event: u16, split_flags: u16) -> QueueStep {
       let safe_id: u16 = id & 7;
       transition !busy_at(value, safe_id) { true -> prepare(value, safe_id, bytes, writable, event, split_event, split_flags) _ -> (QueueStep { queue: value }) }
     }
-    state prepare(value: QueueSimulation, id: u16, bytes: u32, writable: bool, event: EventSuppress, split_event: u16, split_flags: u16) -> QueueStep {
-      let next: CursorResult = advance(value.size, value.producer, 1);
-      let sequence: u16 = index_add(value.produced, 1);
-      let event_idx: bool = feature_has(value.negotiated, 29);
+    state prepare(value: QueueSimulation, id: u16, bytes: u32, writable: bool, event: |packed|::EventSuppress, split_event: u16, split_flags: u16) -> QueueStep {
+      let next: |packed|::CursorResult = |packed|::advance(value.size, value.producer, 1);
+      let sequence: u16 = |split|::index_add(value.produced, 1);
+      let event_idx: bool = |features|::feature_has(value.negotiated, 29);
       transition value.packed {
         true -> packed_notice(value, id, bytes, writable, event, next.value, sequence, event_idx)
         _ -> split_notice(value, id, bytes, writable, split_event, split_flags, next.value, sequence, event_idx)
       }
     }
-    state packed_notice(value: QueueSimulation, id: u16, bytes: u32, writable: bool, event: EventSuppress, next: Cursor, sequence: u16, event_idx: bool) -> QueueStep {
-      let notice: NotifyResult = notify(event, value.size, event_idx, value.producer, next);
+    state packed_notice(value: QueueSimulation, id: u16, bytes: u32, writable: bool, event: |packed|::EventSuppress, next: |packed|::Cursor, sequence: u16, event_idx: bool) -> QueueStep {
+      let notice: |packed|::NotifyResult = |packed|::notify(event, value.size, event_idx, value.producer, next);
       transition notice.ok { true -> select_flags(value, id, bytes, writable, next, sequence, notice.notify) _ -> (QueueStep { queue: value }) }
     }
-    state split_notice(value: QueueSimulation, id: u16, bytes: u32, writable: bool, event: u16, flags: u16, next: Cursor, sequence: u16, event_idx: bool) -> QueueStep {
-      let notice: bool = split_notify(event_idx, event, flags, sequence, value.produced);
+    state split_notice(value: QueueSimulation, id: u16, bytes: u32, writable: bool, event: u16, flags: u16, next: |packed|::Cursor, sequence: u16, event_idx: bool) -> QueueStep {
+      let notice: bool = |split|::split_notify(event_idx, event, flags, sequence, value.produced);
       transition writable { true -> commit(value, id, bytes, writable, next, sequence, notice, 2) _ -> commit(value, id, bytes, writable, next, sequence, notice, 0) }
     }
-    state select_flags(value: QueueSimulation, id: u16, bytes: u32, writable: bool, next: Cursor, sequence: u16, notice: bool) -> QueueStep {
+    state select_flags(value: QueueSimulation, id: u16, bytes: u32, writable: bool, next: |packed|::Cursor, sequence: u16, notice: bool) -> QueueStep {
       transition writable { true -> packed_flags(value, id, bytes, writable, next, sequence, notice, 2) _ -> packed_flags(value, id, bytes, writable, next, sequence, notice, 0) }
     }
-    state packed_flags(value: QueueSimulation, id: u16, bytes: u32, writable: bool, next: Cursor, sequence: u16, notice: bool, base: u16) -> QueueStep {
-      let flags: FlagsResult = available_flags(base, value.producer.wrap);
+    state packed_flags(value: QueueSimulation, id: u16, bytes: u32, writable: bool, next: |packed|::Cursor, sequence: u16, notice: bool, base: u16) -> QueueStep {
+      let flags: |packed|::FlagsResult = |packed|::available_flags(base, value.producer.wrap);
       transition flags.ok { true -> commit(value, id, bytes, writable, next, sequence, notice, flags.value) _ -> (QueueStep { queue: value }) }
     }
-    state commit(value: QueueSimulation, id: u16, bytes: u32, writable: bool, next: Cursor, sequence: u16, notice: bool, flags: u16) -> QueueStep {
+    state commit(value: QueueSimulation, id: u16, bytes: u32, writable: bool, next: |packed|::Cursor, sequence: u16, notice: bool, flags: u16) -> QueueStep {
       let safe_id: u16 = id & 7; let slot: u16 = value.producer.offset & 7;
       let mut out: QueueSimulation = value;
       out = custody_set(out, safe_id, true, bytes, writable);
@@ -169,7 +151,7 @@ pub machine queue_process(value: QueueSimulation, written: u32) -> QueueStep {
       transition buffer.id == id { true -> validate(value, written, buffer) _ -> (QueueStep { queue: value }) }
     }
     state validate(value: QueueSimulation, written: u32, buffer: SimBuffer) -> QueueStep {
-      transition buffer.id < 8 && written <= buffer.bytes && (buffer.writable || written == 0) && (!value.packed || descriptor_available(buffer.flags, value.consumer.wrap)) {
+      transition buffer.id < 8 && written <= buffer.bytes && (buffer.writable || written == 0) && (!value.packed || |packed|::descriptor_available(buffer.flags, value.consumer.wrap)) {
         true -> custody(value, written, buffer) _ -> (QueueStep { queue: value })
       }
     }
@@ -178,13 +160,13 @@ pub machine queue_process(value: QueueSimulation, written: u32) -> QueueStep {
       transition busy_at(value, id) && length_at(value, id) == buffer.bytes && writable_at(value, id) == buffer.writable { true -> ready(value, written, buffer) _ -> (QueueStep { queue: value }) }
     }
     state ready(value: QueueSimulation, written: u32, buffer: SimBuffer) -> QueueStep {
-      let next: CursorResult = advance(value.size, value.consumer, 1);
-      let sequence: u16 = index_add(value.consumed, 1);
+      let next: |packed|::CursorResult = |packed|::advance(value.size, value.consumer, 1);
+      let sequence: u16 = |split|::index_add(value.consumed, 1);
       transition buffer.writable { true -> complete(value, written, buffer.id, next.value, sequence, 2) _ -> complete(value, written, buffer.id, next.value, sequence, 0) }
     }
-    state complete(value: QueueSimulation, written: u32, id: u16, next: Cursor, sequence: u16, base: u16) -> QueueStep {
+    state complete(value: QueueSimulation, written: u32, id: u16, next: |packed|::Cursor, sequence: u16, base: u16) -> QueueStep {
       let slot: u16 = value.consumer.offset & 7;
-      let flags: FlagsResult = used_flags(base, value.consumer.wrap);
+      let flags: |packed|::FlagsResult = |packed|::used_flags(base, value.consumer.wrap);
       let mut out: QueueSimulation = value;
       let completion: Completion = Completion { id: id, bytes: written };
       out = completion_set(out, slot, completion); out.consumer = next; out.consumed = sequence;
@@ -202,7 +184,7 @@ pub machine queue_reap(value: QueueSimulation) -> QueueStep {
     state select(value: QueueSimulation) -> QueueStep {
       let slot: u16 = value.reaper.offset & 7; let completion: Completion = completion_at(value, slot);
       let buffer: SimBuffer = buffer_at(value, slot);
-      transition completion.id < 8 && (!value.packed || descriptor_used(buffer.flags, value.reaper.wrap)) {
+      transition completion.id < 8 && (!value.packed || |packed|::descriptor_used(buffer.flags, value.reaper.wrap)) {
         true -> validate(value, completion) _ -> (QueueStep { queue: value })
       }
     }
@@ -211,9 +193,9 @@ pub machine queue_reap(value: QueueSimulation) -> QueueStep {
       transition busy_at(value, id) && completion.bytes <= length_at(value, id) { true -> commit(value, completion) _ -> (QueueStep { queue: value }) }
     }
     state commit(value: QueueSimulation, completion: Completion) -> QueueStep {
-      let id: u16 = completion.id & 7; let next: CursorResult = advance(value.size, value.reaper, 1);
+      let id: u16 = completion.id & 7; let next: |packed|::CursorResult = |packed|::advance(value.size, value.reaper, 1);
       let mut out: QueueSimulation = value; out = busy_clear(out, id);
-      out.reaper = next.value; out.reaped = index_add(value.reaped, 1);
+      out.reaper = next.value; out.reaped = |split|::index_add(value.reaped, 1);
       out.inflight = decrement_count(value.inflight); out.completed = decrement_count(value.completed);
       QueueStep { ok: true, queue: out, completion: completion }
     }

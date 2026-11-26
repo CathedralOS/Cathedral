@@ -2,185 +2,172 @@
 // Primary named-value component alongside rust-osdev/acpi do_store / replacement,
 // pin 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5. Copyright 2018 Isaac Woods.
 // Direct allocated IDs only; caller selects named fixed-type target semantics.
-module named_value_store;
-use model::ObjectStore;
-use model::Value;
-use model::ByteBlock;
-use model::StringStorage;
-use model::BufferStorage;
-use byte_storage::ByteRead;
-use byte_storage::ByteOutcome;
-use byte_storage::read_bytes;
-use implicit_conversions::ImplicitResult;
-use implicit_conversions::ConversionTarget;
-use implicit_conversions::convert;
-use buffer_target_values::prepare_buffer_extent;
-use object_conversions::ConversionFailure;
-use integer_helpers::integers::IntegerSize;
-pub data StoreResult [copy] {case Failure(reason:ConversionFailure);case Stored(object:u64);}
+use model.omg;
+use byte_storage.omg;
+use implicit_conversions.omg;
+use buffer_target_values.omg;
+use object_conversions.omg;
+use {integer_helpers}/integers.omg;
+pub data StoreResult [copy] {case Failure(reason:|object_conversions|::ConversionFailure);case Stored(object:u64);}
 
-use integer_helpers::integers::normalize;
-use integer_helpers::integers::IntegerResult;
-use integer_helpers::implicit_strings::from_integer;
-use integer_helpers::implicit_strings::StringResult;
-use integer_helpers::conversions::integer_to_buffer;
-use integer_helpers::conversions::mid;
+use {integer_helpers}/implicit_strings.omg;
+use {integer_helpers}/conversions.omg;
 
 // Ordinary read-only metadata. A Target does not authorize publication and is
 // never accepted as admission evidence by either mutation entry point.
 pub data DestinationResult [copy] {
- case Failure(reason:ConversionFailure);
- case Target(target:ConversionTarget,extent:u64);
+ case Failure(reason:|object_conversions|::ConversionFailure);
+ case Target(target:|implicit_conversions|::ConversionTarget,extent:u64);
 }
-pub machine admit_destination(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,destination:u64)->DestinationResult {
+pub machine admit_destination(input:&[u8;1024],length:u64,unit:u64,store:&|model|::ObjectStore,destination:u64)->DestinationResult {
  let count:u64=store.space.object_count;
  transition count<=64 && destination<count && destination<64 {
   true -> target(input,length,unit,store,destination,store.space.objects[destination].value)
-  _ -> (DestinationResult::Failure {reason:ConversionFailure::InvalidState})
+  _ -> (DestinationResult::Failure {reason:|object_conversions|::ConversionFailure::InvalidState})
  }
- state target(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,destination:u64,value:Value)->DestinationResult {
+ state target(input:&[u8;1024],length:u64,unit:u64,store:&|model|::ObjectStore,destination:u64,value:|model|::Value)->DestinationResult {
   transition value {
-   Value::Integer {number} -> (DestinationResult::Target {target:ConversionTarget::Integer,extent:0})
-   Value::String {string_storage} -> bytes(input,length,unit,store,destination,ConversionTarget::String)
-   Value::Buffer {buffer_storage} -> bytes(input,length,unit,store,destination,ConversionTarget::Buffer)
-   _ -> (DestinationResult::Failure {reason:ConversionFailure::UnsupportedValue})
+   |model|::Value::Integer {number} -> (DestinationResult::Target {target:|implicit_conversions|::ConversionTarget::Integer,extent:0})
+   |model|::Value::String {string_storage} -> bytes(input,length,unit,store,destination,|implicit_conversions|::ConversionTarget::String)
+   |model|::Value::Buffer {buffer_storage} -> bytes(input,length,unit,store,destination,|implicit_conversions|::ConversionTarget::Buffer)
+   _ -> (DestinationResult::Failure {reason:|object_conversions|::ConversionFailure::UnsupportedValue})
   }
  }
- state bytes(input:&[u8;1024],length:u64,unit:u64,store:&ObjectStore,destination:u64,target:ConversionTarget)->DestinationResult {
-  let admitted:ByteRead=read_bytes(input,length,unit,store,destination);
-  transition admitted.outcome==ByteOutcome::Success {
+ state bytes(input:&[u8;1024],length:u64,unit:u64,store:&|model|::ObjectStore,destination:u64,target:|implicit_conversions|::ConversionTarget)->DestinationResult {
+  let admitted:|byte_storage|::ByteRead=|byte_storage|::read_bytes(input,length,unit,store,destination);
+  transition admitted.outcome==|byte_storage|::ByteOutcome::Success {
    true -> (DestinationResult::Target {target:target,extent:admitted.length})
    _ -> failed(admitted.outcome)
   }
  }
- state failed(outcome:ByteOutcome)->DestinationResult {let reason:ConversionFailure=storage_failure(outcome);DestinationResult::Failure {reason:reason}}
+ state failed(outcome:|byte_storage|::ByteOutcome)->DestinationResult {let reason:|object_conversions|::ConversionFailure=storage_failure(outcome);DestinationResult::Failure {reason:reason}}
 }
 // Destination admission precedes source conversion. Both public writers perform
 // it on the current store, including after any earlier caller observation.
-pub machine store_value(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,source:u64,size:IntegerSize)->StoreResult {
+pub machine store_value(input:&[u8;1024],length:u64,unit:u64,store:&mut |model|::ObjectStore,destination:u64,source:u64,size:|integers|::IntegerSize)->StoreResult {
  let admitted:DestinationResult=admit_destination(input,length,unit,store,destination);
  transition admitted {
   DestinationResult::Failure {reason} -> (StoreResult::Failure {reason:reason})
   DestinationResult::Target {target,extent} -> prepare(input,length,unit,store,destination,source,size,target,extent)
  }
- state prepare(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,source:u64,size:IntegerSize,target:ConversionTarget,extent:u64)->StoreResult {
-  transition target==ConversionTarget::Buffer {
+ state prepare(input:&[u8;1024],length:u64,unit:u64,store:&mut |model|::ObjectStore,destination:u64,source:u64,size:|integers|::IntegerSize,target:|implicit_conversions|::ConversionTarget,extent:u64)->StoreResult {
+  transition target==|implicit_conversions|::ConversionTarget::Buffer {
    true -> buffer(input,length,unit,store,destination,source,size,extent)
    _ -> ordinary(input,length,unit,store,destination,source,size,target)
   }
  }
- state buffer(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,source:u64,size:IntegerSize,extent:u64)->StoreResult {
+ state buffer(input:&[u8;1024],length:u64,unit:u64,store:&mut |model|::ObjectStore,destination:u64,source:u64,size:|integers|::IntegerSize,extent:u64)->StoreResult {
   let count:u64=store.space.object_count;
-  transition count<=64 && source<count && source<64 {true -> buffer_source(input,length,unit,store,destination,source,size,extent) _ -> (StoreResult::Failure {reason:ConversionFailure::InvalidState})}
+  transition count<=64 && source<count && source<64 {true -> buffer_source(input,length,unit,store,destination,source,size,extent) _ -> (StoreResult::Failure {reason:|object_conversions|::ConversionFailure::InvalidState})}
  }
  // Table 19.14 requires same-type named copying. This bounded slice admits
  // equal Buffer extents (including zero); differing extents remain excluded.
  // It does not infer a resize rule from Integer/String conversion geometry.
- state buffer_source(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,source:u64,size:IntegerSize,extent:u64)->StoreResult {
+ state buffer_source(input:&[u8;1024],length:u64,unit:u64,store:&mut |model|::ObjectStore,destination:u64,source:u64,size:|integers|::IntegerSize,extent:u64)->StoreResult {
   transition store.space.objects[source].value {
-   Value::Buffer {buffer_storage} -> buffer_copy(input,length,unit,store,destination,source,size,extent)
+   |model|::Value::Buffer {buffer_storage} -> buffer_copy(input,length,unit,store,destination,source,size,extent)
    _ -> buffer_conversion(input,length,unit,store,destination,source,size,extent)
   }
  }
- state buffer_copy(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,source:u64,size:IntegerSize,extent:u64)->StoreResult {
-  let prepared:ImplicitResult=convert(input,length,unit,store,source,size,ConversionTarget::Buffer);
+ state buffer_copy(input:&[u8;1024],length:u64,unit:u64,store:&mut |model|::ObjectStore,destination:u64,source:u64,size:|integers|::IntegerSize,extent:u64)->StoreResult {
+  let prepared:|implicit_conversions|::ImplicitResult=|implicit_conversions|::convert(input,length,unit,store,source,size,|implicit_conversions|::ConversionTarget::Buffer);
   transition prepared {
-   ImplicitResult::Failure {reason} -> (StoreResult::Failure {reason:reason})
-   ImplicitResult::Buffer {length,bytes} -> same_extent(store,destination,extent,length,bytes)
-   _ -> (StoreResult::Failure {reason:ConversionFailure::InvalidState})
+   |implicit_conversions|::ImplicitResult::Failure {reason} -> (StoreResult::Failure {reason:reason})
+   |implicit_conversions|::ImplicitResult::Buffer {length,bytes} -> same_extent(store,destination,extent,length,bytes)
+   _ -> (StoreResult::Failure {reason:|object_conversions|::ConversionFailure::InvalidState})
   }
  }
- state same_extent(store:&mut ObjectStore,destination:u64,extent:u64,length:u64,bytes:[u8;256])->StoreResult {
+ state same_extent(store:&mut |model|::ObjectStore,destination:u64,extent:u64,length:u64,bytes:[u8;256])->StoreResult {
   transition {
    length==extent -> publish_copy(store,destination,length,bytes)
-   extent==0 -> (StoreResult::Failure {reason:ConversionFailure::Bounds})
-   _ -> (StoreResult::Failure {reason:ConversionFailure::UnsupportedValue})
+   extent==0 -> (StoreResult::Failure {reason:|object_conversions|::ConversionFailure::Bounds})
+   _ -> (StoreResult::Failure {reason:|object_conversions|::ConversionFailure::UnsupportedValue})
   }
  }
- state publish_copy(store:&mut ObjectStore,destination:u64,length:u64,bytes:[u8;256])->StoreResult {
-  let result:StoreResult=publish(store,destination,ConversionTarget::Buffer,ImplicitResult::Buffer {length:length,bytes:bytes});result
+ state publish_copy(store:&mut |model|::ObjectStore,destination:u64,length:u64,bytes:[u8;256])->StoreResult {
+  let result:StoreResult=publish(store,destination,|implicit_conversions|::ConversionTarget::Buffer,|implicit_conversions|::ImplicitResult::Buffer {length:length,bytes:bytes});result
  }
- state buffer_conversion(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,source:u64,size:IntegerSize,extent:u64)->StoreResult {
-  let prepared:ImplicitResult=prepare_buffer_extent(input,length,unit,store,source,size,extent);
-  let result:StoreResult=publish(store,destination,ConversionTarget::Buffer,prepared);result
+ state buffer_conversion(input:&[u8;1024],length:u64,unit:u64,store:&mut |model|::ObjectStore,destination:u64,source:u64,size:|integers|::IntegerSize,extent:u64)->StoreResult {
+  let prepared:|implicit_conversions|::ImplicitResult=|buffer_target_values|::prepare_buffer_extent(input,length,unit,store,source,size,extent);
+  let result:StoreResult=publish(store,destination,|implicit_conversions|::ConversionTarget::Buffer,prepared);result
  }
- state ordinary(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,source:u64,size:IntegerSize,target:ConversionTarget)->StoreResult {
-  let prepared:ImplicitResult=convert(input,length,unit,store,source,size,target);
+ state ordinary(input:&[u8;1024],length:u64,unit:u64,store:&mut |model|::ObjectStore,destination:u64,source:u64,size:|integers|::IntegerSize,target:|implicit_conversions|::ConversionTarget)->StoreResult {
+  let prepared:|implicit_conversions|::ImplicitResult=|implicit_conversions|::convert(input,length,unit,store,source,size,target);
   let result:StoreResult=publish(store,destination,target,prepared);result
  }
 }
 // An already-evaluated scalar is normalized here; it needs no object slot or
 // synthetic source store. It cannot establish an alias or target authority.
-pub machine store_integer(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,destination:u64,number:u64,size:IntegerSize)->StoreResult {
+pub machine store_integer(input:&[u8;1024],length:u64,unit:u64,store:&mut |model|::ObjectStore,destination:u64,number:u64,size:|integers|::IntegerSize)->StoreResult {
  let admitted:DestinationResult=admit_destination(input,length,unit,store,destination);
  transition admitted {
   DestinationResult::Failure {reason} -> (StoreResult::Failure {reason:reason})
   DestinationResult::Target {target,extent} -> prepare(store,destination,number,size,target,extent)
  }
- state prepare(store:&mut ObjectStore,destination:u64,number:u64,size:IntegerSize,target:ConversionTarget,extent:u64)->StoreResult {
-  let prepared:ImplicitResult=prepare_integer(number,size,target,extent);
+ state prepare(store:&mut |model|::ObjectStore,destination:u64,number:u64,size:|integers|::IntegerSize,target:|implicit_conversions|::ConversionTarget,extent:u64)->StoreResult {
+  let prepared:|implicit_conversions|::ImplicitResult=prepare_integer(number,size,target,extent);
   let result:StoreResult=publish(store,destination,target,prepared);result
  }
 }
-machine prepare_integer(number:u64,size:IntegerSize,target:ConversionTarget,extent:u64)->ImplicitResult {
+machine prepare_integer(number:u64,size:|integers|::IntegerSize,target:|implicit_conversions|::ConversionTarget,extent:u64)->|implicit_conversions|::ImplicitResult {
  transition target {
-  ConversionTarget::Integer -> integer(number,size)
-  ConversionTarget::String -> string(number,size)
-  ConversionTarget::Buffer -> bounded(number,size,extent)
+  |implicit_conversions|::ConversionTarget::Integer -> integer(number,size)
+  |implicit_conversions|::ConversionTarget::String -> string(number,size)
+  |implicit_conversions|::ConversionTarget::Buffer -> bounded(number,size,extent)
  }
- state integer(number:u64,size:IntegerSize)->ImplicitResult {let value:u64=normalize(size,number);ImplicitResult::Integer {number:value}}
- state string(number:u64,size:IntegerSize)->ImplicitResult {
-  let formatted:StringResult=from_integer(size,number);
-  transition formatted {StringResult::String {length,bytes} -> (ImplicitResult::String {length:length,bytes:bytes}) StringResult::Capacity -> (ImplicitResult::Failure {reason:ConversionFailure::Capacity})}
+ state integer(number:u64,size:|integers|::IntegerSize)->|implicit_conversions|::ImplicitResult {let value:u64=|integers|::normalize(size,number);|implicit_conversions|::ImplicitResult::Integer {number:value}}
+ state string(number:u64,size:|integers|::IntegerSize)->|implicit_conversions|::ImplicitResult {
+  let formatted:|implicit_strings|::StringResult=|implicit_strings|::from_integer(size,number);
+  transition formatted {|implicit_strings|::StringResult::String {length,bytes} -> (|implicit_conversions|::ImplicitResult::String {length:length,bytes:bytes}) |implicit_strings|::StringResult::Capacity -> (|implicit_conversions|::ImplicitResult::Failure {reason:|object_conversions|::ConversionFailure::Capacity})}
  }
- state bounded(number:u64,size:IntegerSize,extent:u64)->ImplicitResult {
-  transition {extent>256 -> (ImplicitResult::Failure {reason:ConversionFailure::Capacity}) _ -> buffer(number,size,extent)}
+ state bounded(number:u64,size:|integers|::IntegerSize,extent:u64)->|implicit_conversions|::ImplicitResult {
+  transition {extent>256 -> (|implicit_conversions|::ImplicitResult::Failure {reason:|object_conversions|::ConversionFailure::Capacity}) _ -> buffer(number,size,extent)}
  }
- state buffer(number:u64,size:IntegerSize,extent:u64)->ImplicitResult {
-  let mut bytes:[u8;256];let packed:IntegerResult=integer_to_buffer(size,number,&mut bytes);
-  transition packed.error==0 {true -> fit(bytes,packed.value,extent) _ -> (ImplicitResult::Failure {reason:ConversionFailure::InvalidState})}
+ state buffer(number:u64,size:|integers|::IntegerSize,extent:u64)->|implicit_conversions|::ImplicitResult {
+  let mut bytes:[u8;256];let packed:|integers|::IntegerResult=|conversions|::integer_to_buffer(size,number,&mut bytes);
+  transition packed.error==0 {true -> fit(bytes,packed.value,extent) _ -> (|implicit_conversions|::ImplicitResult::Failure {reason:|object_conversions|::ConversionFailure::InvalidState})}
  }
- state fit(bytes:[u8;256],count:u64,extent:u64)->ImplicitResult {
-  let mut output:[u8;256];let copied:IntegerResult=mid(&bytes,count,0,extent,&mut output);
-  transition copied.error==0 {true -> (ImplicitResult::Buffer {length:extent,bytes:output}) _ -> (ImplicitResult::Failure {reason:ConversionFailure::InvalidState})}
+ state fit(bytes:[u8;256],count:u64,extent:u64)->|implicit_conversions|::ImplicitResult {
+  let mut output:[u8;256];let copied:|integers|::IntegerResult=|conversions|::mid(&bytes,count,0,extent,&mut output);
+  transition copied.error==0 {true -> (|implicit_conversions|::ImplicitResult::Buffer {length:extent,bytes:output}) _ -> (|implicit_conversions|::ImplicitResult::Failure {reason:|object_conversions|::ConversionFailure::InvalidState})}
  }
 }
 // This private publisher only receives canonical helper results, never a caller
 // supplied payload. Full-value replacement resets the destination's byte block;
 // object links, namespace metadata and every other object/block are untouched.
-machine publish(store:&mut ObjectStore,destination:u64,target:ConversionTarget,prepared:ImplicitResult)->StoreResult {
+machine publish(store:&mut |model|::ObjectStore,destination:u64,target:|implicit_conversions|::ConversionTarget,prepared:|implicit_conversions|::ImplicitResult)->StoreResult {
  transition prepared {
-  ImplicitResult::Failure {reason} -> (StoreResult::Failure {reason:reason})
-  ImplicitResult::Integer {number} -> integer(store,destination,target,number)
-  ImplicitResult::String {length,bytes} -> string(store,destination,target,length,bytes)
-  ImplicitResult::Buffer {length,bytes} -> buffer(store,destination,target,length,bytes)
+  |implicit_conversions|::ImplicitResult::Failure {reason} -> (StoreResult::Failure {reason:reason})
+  |implicit_conversions|::ImplicitResult::Integer {number} -> integer(store,destination,target,number)
+  |implicit_conversions|::ImplicitResult::String {length,bytes} -> string(store,destination,target,length,bytes)
+  |implicit_conversions|::ImplicitResult::Buffer {length,bytes} -> buffer(store,destination,target,length,bytes)
  }
- state integer(store:&mut ObjectStore,destination:u64,target:ConversionTarget,number:u64)->StoreResult {
-  transition destination<64 && target==ConversionTarget::Integer {true -> put_integer(store,destination,number) _ -> (StoreResult::Failure {reason:ConversionFailure::InvalidState})}
+ state integer(store:&mut |model|::ObjectStore,destination:u64,target:|implicit_conversions|::ConversionTarget,number:u64)->StoreResult {
+  transition destination<64 && target==|implicit_conversions|::ConversionTarget::Integer {true -> put_integer(store,destination,number) _ -> (StoreResult::Failure {reason:|object_conversions|::ConversionFailure::InvalidState})}
  }
- state put_integer(store:&mut ObjectStore,destination:u64,number:u64)->StoreResult {
-  store.space.objects[destination].value=Value::Integer {number:number};store.bytes.blocks[destination]=ByteBlock {};
+ state put_integer(store:&mut |model|::ObjectStore,destination:u64,number:u64)->StoreResult {
+  store.space.objects[destination].value=|model|::Value::Integer {number:number};store.bytes.blocks[destination]=|model|::ByteBlock {};
   StoreResult::Stored {object:destination}
  }
- state string(store:&mut ObjectStore,destination:u64,target:ConversionTarget,length:u64,bytes:[u8;256])->StoreResult {
-  transition destination<64 && length<=256 && target==ConversionTarget::String {true -> put(store,destination,length,bytes,Value::String {string_storage:StringStorage::Owned {string_owner:destination}}) _ -> (StoreResult::Failure {reason:ConversionFailure::InvalidState})}
+ state string(store:&mut |model|::ObjectStore,destination:u64,target:|implicit_conversions|::ConversionTarget,length:u64,bytes:[u8;256])->StoreResult {
+  transition destination<64 && length<=256 && target==|implicit_conversions|::ConversionTarget::String {true -> put(store,destination,length,bytes,|model|::Value::String {string_storage:|model|::StringStorage::Owned {string_owner:destination}}) _ -> (StoreResult::Failure {reason:|object_conversions|::ConversionFailure::InvalidState})}
  }
- state buffer(store:&mut ObjectStore,destination:u64,target:ConversionTarget,length:u64,bytes:[u8;256])->StoreResult {
-  transition destination<64 && length<=256 && target==ConversionTarget::Buffer {true -> put(store,destination,length,bytes,Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:destination}}) _ -> (StoreResult::Failure {reason:ConversionFailure::InvalidState})}
+ state buffer(store:&mut |model|::ObjectStore,destination:u64,target:|implicit_conversions|::ConversionTarget,length:u64,bytes:[u8;256])->StoreResult {
+  transition destination<64 && length<=256 && target==|implicit_conversions|::ConversionTarget::Buffer {true -> put(store,destination,length,bytes,|model|::Value::Buffer {buffer_storage:|model|::BufferStorage::Owned {buffer_owner:destination}}) _ -> (StoreResult::Failure {reason:|object_conversions|::ConversionFailure::InvalidState})}
  }
- state put(store:&mut ObjectStore,destination:u64,length:u64,bytes:[u8;256],value:Value)->StoreResult {
-  store.space.objects[destination].value=value;store.bytes.blocks[destination]=ByteBlock {initialized:true,length:length,bytes:bytes};
+ state put(store:&mut |model|::ObjectStore,destination:u64,length:u64,bytes:[u8;256],value:|model|::Value)->StoreResult {
+  store.space.objects[destination].value=value;store.bytes.blocks[destination]=|model|::ByteBlock {initialized:true,length:length,bytes:bytes};
   StoreResult::Stored {object:destination}
  }
 }
-machine storage_failure(outcome:ByteOutcome)->ConversionFailure {
+machine storage_failure(outcome:|byte_storage|::ByteOutcome)->|object_conversions|::ConversionFailure {
  transition outcome {
-  ByteOutcome::Capacity -> (ConversionFailure::Capacity)
-  ByteOutcome::Bounds -> (ConversionFailure::Bounds)
-  ByteOutcome::Encoding -> (ConversionFailure::Encoding)
-  ByteOutcome::UnsupportedValue -> (ConversionFailure::UnsupportedValue)
-  ByteOutcome::ReferenceCycle -> (ConversionFailure::ReferenceCycle)
-  ByteOutcome::WorkLimit -> (ConversionFailure::WorkLimit)
-  _ -> (ConversionFailure::InvalidState)
+  |byte_storage|::ByteOutcome::Capacity -> (|object_conversions|::ConversionFailure::Capacity)
+  |byte_storage|::ByteOutcome::Bounds -> (|object_conversions|::ConversionFailure::Bounds)
+  |byte_storage|::ByteOutcome::Encoding -> (|object_conversions|::ConversionFailure::Encoding)
+  |byte_storage|::ByteOutcome::UnsupportedValue -> (|object_conversions|::ConversionFailure::UnsupportedValue)
+  |byte_storage|::ByteOutcome::ReferenceCycle -> (|object_conversions|::ConversionFailure::ReferenceCycle)
+  |byte_storage|::ByteOutcome::WorkLimit -> (|object_conversions|::ConversionFailure::WorkLimit)
+  _ -> (|object_conversions|::ConversionFailure::InvalidState)
  }
 }

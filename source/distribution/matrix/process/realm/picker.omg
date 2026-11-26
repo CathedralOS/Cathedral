@@ -1,34 +1,24 @@
-module picker;
 // The picker job: count the attempt against the startup recovery budget,
 // read the realm's Login, admit it into the first slot over the Users folder
 // under the stock picker offer, bind its storage to that folder, place it
 // over the whole view, and open the second slot to the user it will choose
 // with the stock user offer and the whole view as its placement.
-use protocol::main;
-use protocol::matrix;
-use shared::state::State;
-use shared::state::SlotPolicy;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::kernel;
-use policy::children::startup::realm::operations::Command;
-use policy::children::startup::realm::operations::Completion;
-use policy::children::startup::main::PickerMode;
-use policy::children::startup::main::picker_started;
-use policy::children::launch::resources::recipes;
-use policy::children::launch::resources::recipes::Role;
-use policy::children::launch::resources::recipes::Offer;
-use policy::children::launch::resources::recipes::OfferDecision;
-use world::level;
-use world::surfaces;
-use world::geometry::Rect;
-use connections::storage::storage;
-use shared::storage::Outcome;
-use children::stored;
-use children::lifecycle;
-use jobs;
-use jobs::Step;
-use shared::report;
+use {protocol}/main.omg;
+use {protocol}/matrix.omg;
+use {shared}/state.omg as shared_state;
+use {runtime}/kernel.omg;
+use {policy}/children/startup/realm/operations.omg;
+use {policy}/children/startup/main.omg as startup_main;
+use {policy}/children/launch/resources/recipes.omg;
+use {world}/level.omg;
+use {world}/surfaces.omg;
+use {world}/geometry.omg;
+use {connections}/storage/storage.omg;
+use {shared}/storage.omg as shared_storage;
+use {children}/stored.omg;
+use {children}/lifecycle.omg;
+use jobs.omg;
+use {shared}/report.omg;
 
 public const SLOT: u64 = 0u64;
 public const USER_SLOT: u64 = 1u64;
@@ -37,149 +27,149 @@ public const NORMAL: u64 = 1u64;
 public const SELECTION_FAILED: u64 = 2u64;
 
 // One command of this job, for the job stack in [jobs.omg](jobs.omg).
-public machine execute(gate: &Gate, context: &mut State, now: u64, command: Command) -> Step reaches Kernel blocks invokes Kernel {
+public machine execute(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, command: |operations|::Command) -> |jobs|::Step reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     transition command {
         _ -> block done_with(gate, context, now, command)
     }
-    machine done_with(gate: &Gate, context: &mut State, now: u64, command: Command) -> Step reaches Kernel {
-        let completion: Completion = block run_command(gate, context, now, command);
-        Step::Done { completion: completion }
+    machine done_with(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, command: |operations|::Command) -> |jobs|::Step reaches |kernel|::Kernel {
+        let completion: |operations|::Completion = block run_command(gate, context, now, command);
+        |jobs|::Step::Done { completion: completion }
     }
 }
-machine run_command(gate: &Gate, context: &mut State, now: u64, command: Command) -> Completion reaches Kernel {
+machine run_command(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, command: |operations|::Command) -> |operations|::Completion reaches |kernel|::Kernel {
     transition command {
-        Command::PreparePicker -> (prepared(context))
-        Command::ReadPicker -> block reading(gate, context, now)
-        Command::ValidatePicker -> (validated(context))
-        Command::AdmitPicker -> block admitting(gate, context, now)
-        Command::BindPicker -> block binding(gate, context, now)
-        Command::PlacePicker -> (placed(context))
-        Command::InstallPicker -> (installed(context))
-        Command::Notify -> (notifying(gate, context))
-        Command::RecordPicker -> (recording(gate))
-        _ -> (jobs::completed(command, 0u64))
+        |operations|::Command::PreparePicker -> (prepared(context))
+        |operations|::Command::ReadPicker -> block reading(gate, context, now)
+        |operations|::Command::ValidatePicker -> (validated(context))
+        |operations|::Command::AdmitPicker -> block admitting(gate, context, now)
+        |operations|::Command::BindPicker -> block binding(gate, context, now)
+        |operations|::Command::PlacePicker -> (placed(context))
+        |operations|::Command::InstallPicker -> (installed(context))
+        |operations|::Command::Notify -> (notifying(gate, context))
+        |operations|::Command::RecordPicker -> (recording(gate))
+        _ -> (|jobs|::completed(command, 0u64))
     }
 }
-machine prepared(context: &mut State) -> Completion {
-    let mode: PickerMode = picker_started(&mut context.startup);
+machine prepared(context: &mut |shared_state|::State) -> |operations|::Completion {
+    let mode: |startup_main|::PickerMode = |startup_main|::picker_started(&mut context.startup);
     transition mode {
-        PickerMode::Normal -> moded(context, NORMAL)
-        PickerMode::SelectionFailed -> moded(context, SELECTION_FAILED)
+        |startup_main|::PickerMode::Normal -> moded(context, NORMAL)
+        |startup_main|::PickerMode::SelectionFailed -> moded(context, SELECTION_FAILED)
     }
-    machine moded(context: &mut State, mode: u64) -> Completion {
+    machine moded(context: &mut |shared_state|::State, mode: u64) -> |operations|::Completion {
         context.picker_mode = mode;
-        jobs::completed(Command::PreparePicker, 0u64)
+        |jobs|::completed(|operations|::Command::PreparePicker, 0u64)
     }
 }
-machine reading(gate: &Gate, context: &mut State, now: u64) -> Completion reaches Kernel {
+machine reading(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64) -> |operations|::Completion reaches |kernel|::Kernel {
     let object: u64 = context.picker_object;
-    let outcome: Outcome = block storage::read_object(gate, context, now, object, 0u64);
+    let outcome: |shared_storage|::Outcome = block |storage|::read_object(gate, context, now, object, 0u64);
     transition outcome.words[0] == 0u64 && outcome.attachment != 0u64 {
         true -> (loaded(context, outcome))
         _ -> block unread(gate, outcome)
     }
-    machine loaded(context: &mut State, outcome: Outcome) -> Completion {
+    machine loaded(context: &mut |shared_state|::State, outcome: |shared_storage|::Outcome) -> |operations|::Completion {
         context.image = outcome.attachment;
         context.image_length = outcome.words[4];
-        jobs::completed(Command::ReadPicker, 0u64)
+        |jobs|::completed(|operations|::Command::ReadPicker, 0u64)
     }
-    machine unread(gate: &Gate, outcome: Outcome) -> Completion reaches Kernel {
+    machine unread(gate: &|kernel|::Gate, outcome: |shared_storage|::Outcome) -> |operations|::Completion reaches |kernel|::Kernel {
         block release(gate, outcome.attachment);
         transition outcome.words[0] == 0u64 {
-            true -> (jobs::completed(Command::ReadPicker, kernel::IO_ERROR))
-            _ -> (jobs::completed(Command::ReadPicker, outcome.words[0]))
+            true -> (|jobs|::completed(|operations|::Command::ReadPicker, |kernel|::IO_ERROR))
+            _ -> (|jobs|::completed(|operations|::Command::ReadPicker, outcome.words[0]))
         }
     }
 }
 // The picker offer needs the host's backing behind the allowance.
-machine validated(context: &mut State) -> Completion {
-    let decision: OfferDecision = recipes::offer(Role::Picker { backed_surfaces: context.world.allowance });
+machine validated(context: &mut |shared_state|::State) -> |operations|::Completion {
+    let decision: |recipes|::OfferDecision = |recipes|::offer(|recipes|::Role::Picker { backed_surfaces: context.world.allowance });
     transition decision {
-        OfferDecision::Offered { offer } -> kept(context, offer)
-        OfferDecision::InsufficientBacking -> (jobs::completed(Command::ValidatePicker, kernel::NO_MEMORY))
+        |recipes|::OfferDecision::Offered { offer } -> kept(context, offer)
+        |recipes|::OfferDecision::InsufficientBacking -> (|jobs|::completed(|operations|::Command::ValidatePicker, |kernel|::NO_MEMORY))
     }
-    machine kept(context: &mut State, offer: Offer) -> Completion {
+    machine kept(context: &mut |shared_state|::State, offer: |recipes|::Offer) -> |operations|::Completion {
         context.picker_offer = offer;
-        jobs::completed(Command::ValidatePicker, 0u64)
+        |jobs|::completed(|operations|::Command::ValidatePicker, 0u64)
     }
 }
-machine admitting(gate: &Gate, context: &mut State, now: u64) -> Completion reaches Kernel {
-    let offer: Offer = context.picker_offer;
+machine admitting(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64) -> |operations|::Completion reaches |kernel|::Kernel {
+    let offer: |recipes|::Offer = context.picker_offer;
     let image: u64 = context.image;
     let length: u64 = context.image_length;
-    let argument: u64 = jobs::launch_argument(context.picker_mode, context.picker_object);
+    let argument: u64 = |jobs|::launch_argument(context.picker_mode, context.picker_object);
     context.image = 0u64;
     context.image_length = 0u64;
-    let status: u64 = block stored::admit_image(gate, context, now, SLOT, image, length, 0u64, argument, offer.channels,
+    let status: u64 = block |stored|::admit_image(gate, context, now, SLOT, image, length, 0u64, argument, offer.channels,
         offer.descendants, offer.cpu, offer.private_pages, offer.reader_pages, 0u64, offer.imports, false, false);
     block release(gate, image);
-    jobs::completed(Command::AdmitPicker, status)
+    |jobs|::completed(|operations|::Command::AdmitPicker, status)
 }
 // The picker sees the users folder and nothing above it.
-machine binding(gate: &Gate, context: &mut State, now: u64) -> Completion reaches Kernel {
+machine binding(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64) -> |operations|::Completion reaches |kernel|::Kernel {
     let users: u64 = context.users_object;
-    let status: u64 = block storage::bind(gate, context, now, SLOT, 0u64, users);
+    let status: u64 = block |storage|::bind(gate, context, now, SLOT, 0u64, users);
     transition status == 0u64 {
         true -> (bound(context, users))
-        _ -> (jobs::completed(Command::BindPicker, status))
+        _ -> (|jobs|::completed(|operations|::Command::BindPicker, status))
     }
-    machine bound(context: &mut State, users: u64) -> Completion {
+    machine bound(context: &mut |shared_state|::State, users: u64) -> |operations|::Completion {
         context.saved_source[0] = 0u64;
         context.saved_scope[0] = users;
         context.saved_bound[0] = true;
-        jobs::completed(Command::BindPicker, 0u64)
+        |jobs|::completed(|operations|::Command::BindPicker, 0u64)
     }
 }
 // The top ranks of the allowance, over the whole view with its keys.
-machine placed(context: &mut State) -> Completion {
+machine placed(context: &mut |shared_state|::State) -> |operations|::Completion {
     let allowance: u64 = context.world.allowance;
     let count: u64 = context.picker_offer.surfaces;
     transition count <= allowance && count <= 16u64 {
         true -> ranked(context, allowance - count, count)
-        _ -> (jobs::completed(Command::PlacePicker, kernel::NO_MEMORY))
+        _ -> (|jobs|::completed(|operations|::Command::PlacePicker, |kernel|::NO_MEMORY))
     }
-    machine ranked(context: &mut State, base: u64, count: u64) -> Completion {
-        let ranged: u64 = surfaces::range(&mut context.world, SLOT, base, count);
-        let whole: Rect = Rect { x: 0u64, y: 0u64, width: context.world.parent.width, height: context.world.parent.height };
+    machine ranked(context: &mut |shared_state|::State, base: u64, count: u64) -> |operations|::Completion {
+        let ranged: u64 = |surfaces|::range(&mut context.world, SLOT, base, count);
+        let whole: |geometry|::Rect = |geometry|::Rect { x: 0u64, y: 0u64, width: context.world.parent.width, height: context.world.parent.height };
         let keys: u64 = context.world.parent.keys;
         transition ranged == 0u64 {
-            true -> (jobs::completed(Command::PlacePicker, level::place(&mut context.world, SLOT, whole, keys)))
-            _ -> (jobs::completed(Command::PlacePicker, ranged))
+            true -> (|jobs|::completed(|operations|::Command::PlacePicker, |level|::place(&mut context.world, SLOT, whole, keys)))
+            _ -> (|jobs|::completed(|operations|::Command::PlacePicker, ranged))
         }
     }
 }
 // The slot the chosen user takes, with the stock user offer over the whole view.
-machine installed(context: &mut State) -> Completion {
-    let decision: OfferDecision = recipes::offer(Role::User { backed_surfaces: context.world.allowance });
+machine installed(context: &mut |shared_state|::State) -> |operations|::Completion {
+    let decision: |recipes|::OfferDecision = |recipes|::offer(|recipes|::Role::User { backed_surfaces: context.world.allowance });
     transition decision {
-        OfferDecision::Offered { offer } -> opened(context, offer)
-        OfferDecision::InsufficientBacking -> (jobs::completed(Command::InstallPicker, kernel::NO_MEMORY))
+        |recipes|::OfferDecision::Offered { offer } -> opened(context, offer)
+        |recipes|::OfferDecision::InsufficientBacking -> (|jobs|::completed(|operations|::Command::InstallPicker, |kernel|::NO_MEMORY))
     }
-    machine opened(context: &mut State, offer: Offer) -> Completion {
-        let policy: SlotPolicy = SlotPolicy { images: 0u64, private_pages: offer.private_pages, reader_pages: offer.reader_pages,
+    machine opened(context: &mut |shared_state|::State, offer: |recipes|::Offer) -> |operations|::Completion {
+        let policy: |shared_state|::SlotPolicy = |shared_state|::SlotPolicy { images: 0u64, private_pages: offer.private_pages, reader_pages: offer.reader_pages,
             channels: offer.channels, descendants: offer.descendants, cpu: offer.cpu, surfaces: offer.surfaces, placed: true,
             x: 0u64, y: 0u64, width: context.world.parent.width, height: context.world.parent.height, keys: context.world.parent.keys,
             imports: offer.imports, imports_set: true, standing: true };
         context.policies[USER_SLOT] = policy;
         context.login = true;
-        jobs::completed(Command::InstallPicker, 0u64)
+        |jobs|::completed(|operations|::Command::InstallPicker, 0u64)
     }
 }
-machine notifying(gate: &Gate, context: &mut State) -> Completion reaches Kernel {
-    lifecycle::notify(gate, context);
-    jobs::completed(Command::Notify, 0u64)
+machine notifying(gate: &|kernel|::Gate, context: &mut |shared_state|::State) -> |operations|::Completion reaches |kernel|::Kernel {
+    |lifecycle|::notify(gate, context);
+    |jobs|::completed(|operations|::Command::Notify, 0u64)
 }
-machine recording(gate: &Gate) -> Completion reaches Kernel {
-    report::picker_placed(gate);
-    jobs::completed(Command::RecordPicker, 0u64)
+machine recording(gate: &|kernel|::Gate) -> |operations|::Completion reaches |kernel|::Kernel {
+    |report|::picker_placed(gate);
+    |jobs|::completed(|operations|::Command::RecordPicker, 0u64)
 }
-machine release(gate: &Gate, handle: u64) reaches Kernel {
+machine release(gate: &|kernel|::Gate, handle: u64) reaches |kernel|::Kernel {
     transition handle != 0u64 {
         true -> block releasing(gate, handle)
         _ -> done()
     }
-    machine releasing(gate: &Gate, handle: u64) reaches Kernel {
-        let ignored: u64 = block Kernel::memory_release(gate, handle);
+    machine releasing(gate: &|kernel|::Gate, handle: u64) reaches |kernel|::Kernel {
+        let ignored: u64 = block |kernel|::Kernel::memory_release(gate, handle);
     }
 }
 machine done() {}

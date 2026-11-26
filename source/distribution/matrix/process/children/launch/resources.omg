@@ -1,76 +1,66 @@
-module launch::resources;
+use {policy}/children/launch/resources/funding.omg;
 // Resolve a sealed executable, fit the owner's offer, and calculate funding.
 // This plan owns no resources; admission consumes it only after reauthorization.
-use shared::admission::Plan;
-use declaration;
-use declaration::Declared;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::kernel;
-use policy::children::launch::resources::main::allocate;
-use policy::children::launch::resources::main::Capacity;
-use policy::children::launch::resources::main::Profile;
-use policy::children::launch::resources::main::Declaration;
-use policy::children::launch::resources::main::Admission;
-use policy::children::launch::resources::main::Allocation;
-use policy::children::launch::resources::main::SurfaceRequest;
-use protocol::services::STORAGE;
-use protocol::services::INPUT_PRODUCER;
-use lifecycle;
-use world::geometry::plus;
+use {shared}/admission.omg;
+use declaration.omg;
+use {runtime}/kernel.omg;
+use {policy}/children/launch/resources/main.omg;
+use {protocol}/services.omg;
+use lifecycle.omg;
+use {world}/geometry.omg;
 
-public machine prepare(gate: &Gate, image: u64, length: u64, offered: u64, capacity: Capacity, staged: u64, desktop: bool) -> Plan
-    reaches Kernel blocks invokes Kernel {
-    let found: Declared = block declaration::resolve(gate, image, length, offered);
+public machine prepare(gate: &|kernel|::Gate, image: u64, length: u64, offered: u64, capacity: |main|::Capacity, staged: u64, desktop: bool) -> |admission|::Plan
+    reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
+    let found: |declaration|::Declared = block |declaration|::resolve(gate, image, length, offered);
     transition {
         found.status != 0u64 -> failed(1u64, found.status)
-        !found.brokered -> failed(1u64, kernel::DENIED)
+        !found.brokered -> failed(1u64, |kernel|::DENIED)
         _ -> fitted(found, capacity, length, staged, desktop)
     }
 }
-machine fitted(found: Declared, capacity: Capacity, length: u64, staged: u64, desktop: bool) -> Plan {
-    let admission: Admission = allocate(&capacity, profile_of(found), declaration_of(found), desktop);
+machine fitted(found: |declaration|::Declared, capacity: |main|::Capacity, length: u64, staged: u64, desktop: bool) -> |admission|::Plan {
+    let admission: |main|::Admission = |main|::allocate(&capacity, profile_of(found), declaration_of(found), desktop);
     transition admission {
-        Admission::Accepted { allocation } -> sized(found, allocation, length, staged)
-        Admission::Refused -> failed(2u64, kernel::NO_MEMORY)
+        |main|::Admission::Accepted { allocation } -> sized(found, allocation, length, staged)
+        |main|::Admission::Refused -> failed(2u64, |kernel|::NO_MEMORY)
     }
 }
-machine sized(found: Declared, allocation: Allocation, length: u64, staged: u64) -> Plan {
+machine sized(found: |declaration|::Declared, allocation: |main|::Allocation, length: u64, staged: u64) -> |admission|::Plan {
     transition allocation.capacity.descendants < 64u64 {
         true -> prepared(found, allocation, length, staged, allocation.capacity.descendants)
-        _ -> failed(2u64, kernel::INVALID_ARGUMENT)
+        _ -> failed(2u64, |kernel|::INVALID_ARGUMENT)
     }
 }
-machine prepared(found: Declared, allocation: Allocation, length: u64, staged: u64, descendants: u64 [0..=63]) -> Plan {
-    let mut plan: Plan;
+machine prepared(found: |declaration|::Declared, allocation: |main|::Allocation, length: u64, staged: u64, descendants: u64 [0..=63]) -> |admission|::Plan {
+    let mut plan: |admission|::Plan;
     plan.mask = found.mask;
     plan.private_pages = allocation.capacity.private_pages;
     plan.reader_pages = allocation.capacity.reader_pages;
     plan.channels = allocation.capacity.channels;
     plan.descendants = descendants;
-    plan.frames = lifecycle::physical_frames(staged, plus(length, kernel::PAGE_BYTES - 1u64) / kernel::PAGE_BYTES,
+    plan.frames = |lifecycle|::physical_frames(staged, |geometry|::plus(length, |kernel|::PAGE_BYTES - 1u64) / |kernel|::PAGE_BYTES,
         found.stack_pages, plan.private_pages, descendants);
     plan.surfaces = surfaces(allocation.surfaces);
     plan.profiled = found.profiled;
     plan
 }
-public machine needed(plan: Plan) -> [u64; 5] {
-    policy::children::launch::resources::funding::needed(plan.private_pages, plan.reader_pages, plan.channels, plan.descendants,
-        plan.frames, (plan.mask & STORAGE) != 0u64, (plan.mask & INPUT_PRODUCER) != 0u64)
+public machine needed(plan: |admission|::Plan) -> [u64; 5] {
+    |funding|::needed(plan.private_pages, plan.reader_pages, plan.channels, plan.descendants,
+        plan.frames, (plan.mask & |services|::STORAGE) != 0u64, (plan.mask & |services|::INPUT_PRODUCER) != 0u64)
 }
-machine surfaces(request: SurfaceRequest) -> u64 {
-    transition request { SurfaceRequest::Request { count } -> (count) SurfaceRequest::Inherit -> (0u64) }
+machine surfaces(request: |main|::SurfaceRequest) -> u64 {
+    transition request { |main|::SurfaceRequest::Request { count } -> (count) |main|::SurfaceRequest::Inherit -> (0u64) }
 }
-machine profile_of(found: Declared) -> Profile {
+machine profile_of(found: |declaration|::Declared) -> |main|::Profile {
     transition found.profiled {
-        true -> (Profile::Required { private_pages: found.private_pages, reader_pages: found.reader_pages, surfaces: found.surfaces })
-        _ -> (Profile::Unspecified)
+        true -> (|main|::Profile::Required { private_pages: found.private_pages, reader_pages: found.reader_pages, surfaces: found.surfaces })
+        _ -> (|main|::Profile::Unspecified)
     }
 }
-machine declaration_of(found: Declared) -> Declaration {
+machine declaration_of(found: |declaration|::Declared) -> |main|::Declaration {
     transition found.funded {
-        true -> (Declaration::Required { channels: found.channels, descendants: found.descendants })
-        _ -> (Declaration::Unspecified)
+        true -> (|main|::Declaration::Required { channels: found.channels, descendants: found.descendants })
+        _ -> (|main|::Declaration::Unspecified)
     }
 }
-machine failed(stage: u64, status: u64) -> Plan { let mut plan: Plan; plan.stage = stage; plan.status = status; plan }
+machine failed(stage: u64, status: u64) -> |admission|::Plan { let mut plan: |admission|::Plan; plan.stage = stage; plan.status = status; plan }

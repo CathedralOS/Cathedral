@@ -1,5 +1,3 @@
-module children::launch::resources::funding;
-
 // The stock funding policy, in the order the FUND word carries amounts:
 // private pages, reader pages, channels, descendant slots, physical frames.
 // What one admission needs from the funder's own allowances, and how far a

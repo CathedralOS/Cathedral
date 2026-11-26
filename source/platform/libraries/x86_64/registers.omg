@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified pure x86_64 register algorithms at cc35c876d3badb57df54a66e22f7768a52be95f2.
 // See source/drivers/facts/x86_registers.PORT.md. No instruction or live CPU state.
-module registers;
-use facts::x86_registers;
+use {facts}/x86_registers.omg;
 
 pub data RegisterCodeResult [copy] { valid: bool; raw: u64; }
 pub data StarPlan [copy] { error: u8; bits: u64; }
@@ -34,66 +33,66 @@ pub machine breakpoint_size_from_bytes(value: u64) -> RegisterCodeResult {
 pub machine selector_input_valid(index: u16, rpl: u8) -> bool { index <= 8191 && rpl <= 3 }
 // Upstream wraps excessive indices in u16. This checked constructor admits
 // only the complete13-bit index; raw selector construction still preserves bits.
-pub machine selector_new(index: u16 [0..=8191], rpl: u8 [0..=3]) -> x86_registers::SegmentSelector {
-    x86_registers::SegmentSelector { raw: (index << 3) | (rpl as u16) }
+pub machine selector_new(index: u16 [0..=8191], rpl: u8 [0..=3]) -> |x86_registers|::SegmentSelector {
+    |x86_registers|::SegmentSelector { raw: (index << 3) | (rpl as u16) }
 }
-pub machine selector_index(value: x86_registers::SegmentSelector) -> u16 { value.raw >> 3 }
-pub machine selector_rpl(value: x86_registers::SegmentSelector) -> u8 { (value.raw & 3) as u8 }
-pub machine selector_set_rpl(value: x86_registers::SegmentSelector, rpl: u8 [0..=3]) -> x86_registers::SegmentSelector {
-    x86_registers::SegmentSelector { raw: (value.raw & 65532) | (rpl as u16) }
+pub machine selector_index(value: |x86_registers|::SegmentSelector) -> u16 { value.raw >> 3 }
+pub machine selector_rpl(value: |x86_registers|::SegmentSelector) -> u8 { (value.raw & 3) as u8 }
+pub machine selector_set_rpl(value: |x86_registers|::SegmentSelector, rpl: u8 [0..=3]) -> |x86_registers|::SegmentSelector {
+    |x86_registers|::SegmentSelector { raw: (value.raw & 65532) | (rpl as u16) }
 }
-pub machine msr_new(index: u32) -> x86_registers::Msr { x86_registers::Msr { raw: index } }
-pub machine mxcsr_default() -> x86_registers::MxCsr { x86_registers::MxCsr { raw: x86_registers::MXCSR_RESET_BITS } }
+pub machine msr_new(index: u32) -> |x86_registers|::Msr { |x86_registers|::Msr { raw: index } }
+pub machine mxcsr_default() -> |x86_registers|::MxCsr { |x86_registers|::MxCsr { raw: |x86_registers|::MXCSR_RESET_BITS } }
 
-pub machine dr6_trap(number: u8 [0..=3]) -> x86_registers::Dr6Flags {
+pub machine dr6_trap(number: u8 [0..=3]) -> |x86_registers|::Dr6Flags {
     let one: u64 = 1;
-    x86_registers::Dr6Flags { raw: one << number }
+    |x86_registers|::Dr6Flags { raw: one << number }
 }
-pub machine dr7_local_enable(number: u8 [0..=3]) -> x86_registers::Dr7Flags {
+pub machine dr7_local_enable(number: u8 [0..=3]) -> |x86_registers|::Dr7Flags {
     let one: u64 = 1;
-    x86_registers::Dr7Flags { raw: one << (number * 2) }
+    |x86_registers|::Dr7Flags { raw: one << (number * 2) }
 }
-pub machine dr7_global_enable(number: u8 [0..=3]) -> x86_registers::Dr7Flags {
+pub machine dr7_global_enable(number: u8 [0..=3]) -> |x86_registers|::Dr7Flags {
     let one: u64 = 1;
-    x86_registers::Dr7Flags { raw: one << (number * 2 + 1) }
+    |x86_registers|::Dr7Flags { raw: one << (number * 2 + 1) }
 }
-pub machine dr7_bits_valid(bits: u64) -> bool { (bits & ~x86_registers::DR7_VALID_BITS) == 0 }
-pub machine dr7_from_bits_truncate(bits: u64) -> x86_registers::Dr7Bits {
-    x86_registers::Dr7Bits { raw: bits & x86_registers::DR7_VALID_BITS }
+pub machine dr7_bits_valid(bits: u64) -> bool { (bits & ~|x86_registers|::DR7_VALID_BITS) == 0 }
+pub machine dr7_from_bits_truncate(bits: u64) -> |x86_registers|::Dr7Bits {
+    |x86_registers|::Dr7Bits { raw: bits & |x86_registers|::DR7_VALID_BITS }
 }
-pub machine dr7_flags(value: x86_registers::Dr7Bits) -> x86_registers::Dr7Flags {
-    x86_registers::Dr7Flags { raw: value.raw & x86_registers::DR7_FLAGS_KNOWN_BITS }
+pub machine dr7_flags(value: |x86_registers|::Dr7Bits) -> |x86_registers|::Dr7Flags {
+    |x86_registers|::Dr7Flags { raw: value.raw & |x86_registers|::DR7_FLAGS_KNOWN_BITS }
 }
-pub machine dr7_insert_flags(value: x86_registers::Dr7Bits, flags: x86_registers::Dr7Flags) -> x86_registers::Dr7Bits {
-    x86_registers::Dr7Bits { raw: value.raw | flags.raw }
+pub machine dr7_insert_flags(value: |x86_registers|::Dr7Bits, flags: |x86_registers|::Dr7Flags) -> |x86_registers|::Dr7Bits {
+    |x86_registers|::Dr7Bits { raw: value.raw | flags.raw }
 }
-pub machine dr7_remove_flags(value: x86_registers::Dr7Bits, flags: x86_registers::Dr7Flags) -> x86_registers::Dr7Bits {
-    x86_registers::Dr7Bits { raw: value.raw & ~flags.raw }
+pub machine dr7_remove_flags(value: |x86_registers|::Dr7Bits, flags: |x86_registers|::Dr7Flags) -> |x86_registers|::Dr7Bits {
+    |x86_registers|::Dr7Bits { raw: value.raw & ~flags.raw }
 }
-pub machine dr7_toggle_flags(value: x86_registers::Dr7Bits, flags: x86_registers::Dr7Flags) -> x86_registers::Dr7Bits {
-    x86_registers::Dr7Bits { raw: value.raw ^ flags.raw }
+pub machine dr7_toggle_flags(value: |x86_registers|::Dr7Bits, flags: |x86_registers|::Dr7Flags) -> |x86_registers|::Dr7Bits {
+    |x86_registers|::Dr7Bits { raw: value.raw ^ flags.raw }
 }
-pub machine dr7_set_flags(value: x86_registers::Dr7Bits, flags: x86_registers::Dr7Flags, enabled: bool) -> x86_registers::Dr7Bits {
+pub machine dr7_set_flags(value: |x86_registers|::Dr7Bits, flags: |x86_registers|::Dr7Flags, enabled: bool) -> |x86_registers|::Dr7Bits {
     transition enabled {
-        true -> (x86_registers::Dr7Bits { raw: value.raw | flags.raw })
-        _ -> (x86_registers::Dr7Bits { raw: value.raw & ~flags.raw })
+        true -> (|x86_registers|::Dr7Bits { raw: value.raw | flags.raw })
+        _ -> (|x86_registers|::Dr7Bits { raw: value.raw & ~flags.raw })
     }
 }
-pub machine dr7_condition(value: x86_registers::Dr7Bits, number: u8 [0..=3]) -> u8 {
+pub machine dr7_condition(value: |x86_registers|::Dr7Bits, number: u8 [0..=3]) -> u8 {
     ((value.raw >> (16 + 4 * number)) & 3) as u8
 }
-pub machine dr7_size(value: x86_registers::Dr7Bits, number: u8 [0..=3]) -> u8 {
+pub machine dr7_size(value: |x86_registers|::Dr7Bits, number: u8 [0..=3]) -> u8 {
     ((value.raw >> (18 + 4 * number)) & 3) as u8
 }
-pub machine dr7_set_condition(value: x86_registers::Dr7Bits, number: u8 [0..=3], condition: u8 [0..=3]) -> x86_registers::Dr7Bits {
+pub machine dr7_set_condition(value: |x86_registers|::Dr7Bits, number: u8 [0..=3], condition: u8 [0..=3]) -> |x86_registers|::Dr7Bits {
     let shift: u8 = 16 + 4 * number;
     let mask: u64 = 3;
-    x86_registers::Dr7Bits { raw: (value.raw & ~(mask << shift)) | ((condition as u64) << shift) }
+    |x86_registers|::Dr7Bits { raw: (value.raw & ~(mask << shift)) | ((condition as u64) << shift) }
 }
-pub machine dr7_set_size(value: x86_registers::Dr7Bits, number: u8 [0..=3], size: u8 [0..=3]) -> x86_registers::Dr7Bits {
+pub machine dr7_set_size(value: |x86_registers|::Dr7Bits, number: u8 [0..=3], size: u8 [0..=3]) -> |x86_registers|::Dr7Bits {
     let shift: u8 = 18 + 4 * number;
     let mask: u64 = 3;
-    x86_registers::Dr7Bits { raw: (value.raw & ~(mask << shift)) | ((size as u64) << shift) }
+    |x86_registers|::Dr7Bits { raw: (value.raw & ~(mask << shift)) | ((size as u64) << shift) }
 }
 
 // The raw STAR payload exposes only the two16-bit fields; it does not assert

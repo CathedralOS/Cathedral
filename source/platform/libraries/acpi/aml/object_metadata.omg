@@ -2,7 +2,6 @@
 // MethodFlags and DeviceStatus facts from rust-osdev/acpi object.rs,
 // 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5, copyright 2018 Isaac Woods.
 // Decoding only: no synchronization, evaluation or enumeration policy.
-module object_metadata;
 pub data MethodFacts [copy] { argument_count:u8; serialized:bool; sync_level:u8; }
 pub data StatusFacts [copy] { present:bool; enabled:bool; show_in_ui:bool; functioning:bool; battery_present:bool; }
 pub machine method_flags(raw:u8)->MethodFacts {

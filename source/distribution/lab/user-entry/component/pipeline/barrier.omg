@@ -1,70 +1,68 @@
-module pipeline::barrier;
+use {runtime}/connection/main.omg;
 // A separate copied-message fixture channel holds the provider before its first
 // request read. No timing assumption decides whether the mailbox is full.
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::kernel;
-use runtime::time::Tick;
-public machine release(gate: &Gate, endpoint: u64) -> u64 reaches Kernel invokes Kernel {
+use {runtime}/kernel.omg;
+use {runtime}/time.omg;
+public machine release(gate: &|kernel|::Gate, endpoint: u64) -> u64 reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let mut words: [u64; 8]; words[0] = 1u64;
-    let sent: u64 = Kernel::send(gate, endpoint, &words, 8u64);
+    let sent: u64 = |kernel|::Kernel::send(gate, endpoint, &words, 8u64);
     close(gate, endpoint);
     transition sent == 8u64 { true -> (0u64) _ -> (sent) }
 }
-public machine arrived(gate: &Gate, endpoint: u64, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
+public machine arrived(gate: &|kernel|::Gate, endpoint: u64, now: u64) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     let mut interests: [u64; 8]; interests[1] = endpoint;
-    let ready: u64 = block Kernel::wait(gate, &interests, 1u64, now);
+    let ready: u64 = block |kernel|::Kernel::wait(gate, &interests, 1u64, now);
     transition {
         ready == 0u64 -> block read(gate, endpoint)
-        ready == kernel::TIMED_OUT -> (kernel::WOULD_BLOCK)
+        ready == |kernel|::TIMED_OUT -> (|kernel|::WOULD_BLOCK)
         _ -> (ready)
     }
-    machine read(gate: &Gate, endpoint: u64) -> u64 reaches Kernel {
+    machine read(gate: &|kernel|::Gate, endpoint: u64) -> u64 reaches |kernel|::Kernel {
         let mut words: [u64; 8];
-        let received: u64 = block Kernel::receive(gate, endpoint, &mut words);
-        transition received == 8u64 && words[0] == 1u64 { true -> (0u64) _ -> (kernel::IO_ERROR) }
+        let received: u64 = block |kernel|::Kernel::receive(gate, endpoint, &mut words);
+        transition received == 8u64 && words[0] == 1u64 { true -> (0u64) _ -> (|kernel|::IO_ERROR) }
     }
 }
-public machine close(gate: &Gate, endpoint: u64) reaches Kernel invokes Kernel {
+public machine close(gate: &|kernel|::Gate, endpoint: u64) reaches |kernel|::Kernel invokes |kernel|::Kernel {
     transition endpoint != 0u64 { true -> closed(gate, endpoint) _ -> done() }
-    machine closed(gate: &Gate, endpoint: u64) reaches Kernel { let ignored: u64 = Kernel::close(gate, endpoint); }
+    machine closed(gate: &|kernel|::Gate, endpoint: u64) reaches |kernel|::Kernel { let ignored: u64 = |kernel|::Kernel::close(gate, endpoint); }
 }
 machine done() {}
 
 // A second scenario waits for the first frame's acknowledgement, while its
 // typed grant remains queued. Backpressure must then be from the grant slot.
-public machine consumed(gate: &Gate, peer: &runtime::connection::main::Peer) -> bool reaches Kernel blocks invokes Kernel {
+public machine consumed(gate: &|kernel|::Gate, peer: &|main|::Peer) -> bool reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     let mut words: [u64; 8];
-    let status: u64 = block Kernel::shared_read(gate, peer.reader.handle, 1u64, &mut words, 1u64);
+    let status: u64 = block |kernel|::Kernel::shared_read(gate, peer.reader.handle, 1u64, &mut words, 1u64);
     status == 0u64 && words[0] == peer.sent
 }
 
 // Fixture-only word outside the v4 frame/header. It coordinates reply
 // backpressure without consuming the reply or sending another request.
 const REPLY_BLOCKED: u64 = 128u64;
-public machine reply_blocked(gate: &Gate, peer: &runtime::connection::main::Peer) -> bool reaches Kernel blocks invokes Kernel {
+public machine reply_blocked(gate: &|kernel|::Gate, peer: &|main|::Peer) -> bool reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     let mut words: [u64; 8];
-    let status: u64 = block Kernel::shared_read(gate, peer.reader.handle, REPLY_BLOCKED, &mut words, 1u64);
+    let status: u64 = block |kernel|::Kernel::shared_read(gate, peer.reader.handle, REPLY_BLOCKED, &mut words, 1u64);
     status == 0u64 && words[0] == 1u64
 }
-public machine reply_wake(gate: &Gate, peer: &runtime::connection::main::Peer, clock: u64) -> u64 reaches Kernel blocks invokes Kernel {
-    let tick: Tick = runtime::time::read(gate, clock);
+public machine reply_wake(gate: &|kernel|::Gate, peer: &|main|::Peer, clock: u64) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
+    let tick: |time|::Tick = |time|::read(gate, clock);
     transition tick {
-        Tick::Read { value } -> block armed(gate, peer, value)
-        _ -> (kernel::IO_ERROR)
+        |time|::Tick::Read { value } -> block armed(gate, peer, value)
+        _ -> (|kernel|::IO_ERROR)
     }
-    machine armed(gate: &Gate, peer: &runtime::connection::main::Peer, now: u64) -> u64 reaches Kernel {
-        let drained: u64 = block Kernel::notify_wait(gate, peer.bell.wait, now, 1u64);
+    machine armed(gate: &|kernel|::Gate, peer: &|main|::Peer, now: u64) -> u64 reaches |kernel|::Kernel {
+        let drained: u64 = block |kernel|::Kernel::notify_wait(gate, peer.bell.wait, now, 1u64);
         let words: [u64; 8] = [1u64,0u64,0u64,0u64,0u64,0u64,0u64,0u64];
-        let status: u64 = block Kernel::shared_write(gate, peer.writer.handle, REPLY_BLOCKED, &words, 1u64);
+        let status: u64 = block |kernel|::Kernel::shared_write(gate, peer.writer.handle, REPLY_BLOCKED, &words, 1u64);
         transition status == 0u64 {
             true -> block waiting(gate, peer, now)
             _ -> (status)
         }
     }
-    machine waiting(gate: &Gate, peer: &runtime::connection::main::Peer, now: u64) -> u64 reaches Kernel {
-        let status: u64 = block Kernel::notify_wait(gate, peer.bell.wait, runtime::time::after(now, 100u64), 1u64);
+    machine waiting(gate: &|kernel|::Gate, peer: &|main|::Peer, now: u64) -> u64 reaches |kernel|::Kernel {
+        let status: u64 = block |kernel|::Kernel::notify_wait(gate, peer.bell.wait, |time|::after(now, 100u64), 1u64);
         let acknowledged: bool = block consumed(gate, peer);
-        transition status == kernel::NOTIFY_SIGNALED && acknowledged { true -> (0u64) _ -> (kernel::TIMED_OUT) }
+        transition status == |kernel|::NOTIFY_SIGNALED && acknowledged { true -> (0u64) _ -> (|kernel|::TIMED_OUT) }
     }
 }

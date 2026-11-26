@@ -1,79 +1,71 @@
-module rendering::rendering;
-
 // Local surface lifetimes and app presentation. The bridge serializes commands;
 // immutable image custody belongs to the host and the accepting compositor.
-use state::State;
-use state::Phase;
-use state::RenderStep;
-use operations::Command;
-use operations::Reply;
-use operations::View;
-use operations::Asset;
-use operations::Rectangle;
-use session::session;
-use session::input;
+use state.omg as local_state;
+use operations.omg;
+use session/session.omg;
+use session/input.omg;
 
-public machine render(s: &mut State) -> Command {
+public machine render(s: &mut |local_state|::State) -> |operations|::Command {
     transition s.frames && s.dirty {
         true -> scene(s)
-        _ -> session::session::wait(s)
+        _ -> |session|::wait(s)
     }
-    machine scene(s: &mut State) -> Command {
+    machine scene(s: &mut |local_state|::State) -> |operations|::Command {
         transition s.scene {
             true -> rectangles(s)
             _ -> allocate(s)
         }
     }
-    machine allocate(s: &mut State) -> Command {
+    machine allocate(s: &mut |local_state|::State) -> |operations|::Command {
         s.rank = 0u64;
         create(s)
     }
 }
 
-machine create(s: &mut State) -> Command {
-    s.phase = Phase::Rendering { step: RenderStep::SurfaceCreated };
-    Command::CreateSurface { epoch: s.epoch, rank: s.rank }
+machine create(s: &mut |local_state|::State) -> |operations|::Command {
+    s.phase = |local_state|::Phase::Rendering { step: |local_state|::RenderStep::SurfaceCreated };
+    |operations|::Command::CreateSurface { epoch: s.epoch, rank: s.rank }
 }
 
-public machine complete(s: &mut State, step: RenderStep, reply: Reply) -> Command {
+public machine complete(s: &mut |local_state|::State, step: |local_state|::RenderStep, reply: |operations|::Reply) -> |operations|::Command {
     transition reply {
-        Reply::View { view } -> recheck(s, view)
-        Reply::Surface { status, handle } -> surface(s, status, handle)
-        Reply::Presented { status } -> presented(s, step, status)
-        _ -> (Command::Exit)
+        |operations|::Reply::View { view } -> recheck(s, view)
+        |operations|::Reply::Surface { status, handle } -> surface(s, status, handle)
+        |operations|::Reply::Presented { status } -> presented(s, step, status)
+        _ -> (|operations|::Command::Exit)
     }
 }
 
-machine changed(s: &mut State) -> Command {
-    s.phase = Phase::Rendering { step: RenderStep::ViewRechecked };
-    Command::View
+machine changed(s: &mut |local_state|::State) -> |operations|::Command {
+    s.phase = |local_state|::Phase::Rendering { step: |local_state|::RenderStep::ViewRechecked };
+    |operations|::Command::View
 }
 
-machine recheck(s: &mut State, view: View) -> Command {
+machine recheck(s: &mut |local_state|::State, view: |operations|::View) -> |operations|::Command {
     transition view.status != 0u64 || view.epoch != s.epoch {
         true -> rebound(s)
-        _ -> (Command::Exit)
+        _ -> (|operations|::Command::Exit)
     }
-    machine rebound(s: &mut State) -> Command {
-        session::input::reset_channels(s);
+    machine rebound(s: &mut |local_state|::State) -> |operations|::Command {
+        |input|::reset_channels(s);
         s.scene = false;
         s.dirty = true;
-        session::session::poll(s)
+        |session|::poll(s)
     }
 }
 
-machine surface(s: &mut State, status: u64, handle: u64) -> Command {
+machine surface(s: &mut |local_state|::State, status: u64, handle: u64) -> |operations|::Command {
     transition status == 0u64 {
         true -> created(s, handle)
         _ -> changed(s)
     }
-    machine created(s: &mut State, handle: u64) -> Command {
+    machine created(s: &mut |local_state|::State, handle: u64) -> |operations|::Command {
         transition s.rank < 4u64 {
             true -> retain(s, handle)
-            _ -> (Command::Exit)
+            _ -> (|operations|::Command::Exit)
         }
     }
-    machine retain(s: &mut State, handle: u64) -> Command requires s.rank < 4u64 {
+    machine retain(s: &mut |local_state|::State, handle: u64) -> |operations|::Command requires s.rank < 4u64 {
         s.surfaces[s.rank] = handle;
         s.rank = s.rank + 1u64;
         transition s.rank < 4u64 {
@@ -81,73 +73,73 @@ machine surface(s: &mut State, status: u64, handle: u64) -> Command {
             _ -> checker(s)
         }
     }
-    machine checker(s: &mut State) -> Command {
-        s.phase = Phase::Rendering { step: RenderStep::CheckerReady };
-        Command::Image { epoch: s.epoch, surface: s.surfaces[2], x: 180u64, y: 110u64, asset: Asset::Checker }
+    machine checker(s: &mut |local_state|::State) -> |operations|::Command {
+        s.phase = |local_state|::Phase::Rendering { step: |local_state|::RenderStep::CheckerReady };
+        |operations|::Command::Image { epoch: s.epoch, surface: s.surfaces[2], x: 180u64, y: 110u64, asset: |operations|::Asset::Checker }
     }
 }
 
-machine presented(s: &mut State, step: RenderStep, status: u64) -> Command {
+machine presented(s: &mut |local_state|::State, step: |local_state|::RenderStep, status: u64) -> |operations|::Command {
     transition status == 0u64 {
         true -> dispatch(s, step)
         _ -> changed(s)
     }
-    machine dispatch(s: &mut State, step: RenderStep) -> Command {
+    machine dispatch(s: &mut |local_state|::State, step: |local_state|::RenderStep) -> |operations|::Command {
         transition step {
-            RenderStep::CheckerReady -> checker_ready(s)
-            RenderStep::RectanglesReady -> close_button(s)
-            RenderStep::CloseReady -> painted(s)
-            _ -> (Command::Exit)
+            |local_state|::RenderStep::CheckerReady -> checker_ready(s)
+            |local_state|::RenderStep::RectanglesReady -> close_button(s)
+            |local_state|::RenderStep::CloseReady -> painted(s)
+            _ -> (|operations|::Command::Exit)
         }
     }
-    machine checker_ready(s: &mut State) -> Command {
+    machine checker_ready(s: &mut |local_state|::State) -> |operations|::Command {
         s.scene = true;
         rectangles(s)
     }
-    machine painted(s: &mut State) -> Command {
+    machine painted(s: &mut |local_state|::State) -> |operations|::Command {
         s.dirty = false;
         s.paints = ((s.paints as u64 in Saturating) + 1) as u64;
-        session::session::wait(s)
+        |session|::wait(s)
     }
 }
 
-machine rectangles(s: &mut State) -> Command {
+machine rectangles(s: &mut |local_state|::State) -> |operations|::Command {
     transition s.paint_revision < 18446744073709551615u64 {
         true -> color(s)
-        _ -> (Command::Exit)
+        _ -> (|operations|::Command::Exit)
     }
-    machine color(s: &mut State) -> Command {
+    machine color(s: &mut |local_state|::State) -> |operations|::Command {
         transition s.alternate == 0u64 {
             true -> accent(s, 0x315ca8u64)
             _ -> accent(s, 0xd18b35u64)
         }
     }
-    machine accent(s: &mut State, color: u64) -> Command {
+    machine accent(s: &mut |local_state|::State, color: u64) -> |operations|::Command {
         transition s.error == 0u64 {
             true -> present(s, color, 0xe5e7ebu64)
             _ -> present(s, color, 0xe96f6fu64)
         }
     }
-    machine present(s: &mut State, color: u64, accent: u64) -> Command {
+    machine present(s: &mut |local_state|::State, color: u64, accent: u64) -> |operations|::Command {
         s.paint_revision = ((s.paint_revision as u64 in Saturating) + 1) as u64;
-        s.phase = Phase::Rendering { step: RenderStep::RectanglesReady };
-        Command::Rectangles { epoch: s.epoch, revision: s.paint_revision,
-            background: Rectangle { surface: s.surfaces[0], x: 0u64, y: 0u64,
+        s.phase = |local_state|::Phase::Rendering { step: |local_state|::RenderStep::RectanglesReady };
+        |operations|::Command::Rectangles { epoch: s.epoch, revision: s.paint_revision,
+            background: |operations|::Rectangle { surface: s.surfaces[0], x: 0u64, y: 0u64,
                 width: s.width, height: s.height, color: color },
-            indicator: Rectangle { surface: s.surfaces[1], x: 30u64, y: 40u64,
+            indicator: |operations|::Rectangle { surface: s.surfaces[1], x: 30u64, y: 40u64,
                 width: 40u64, height: 18u64, color: accent } }
     }
 }
 
-machine close_button(s: &mut State) -> Command {
+machine close_button(s: &mut |local_state|::State) -> |operations|::Command {
     transition s.confirm {
         true -> image(s, 156u64)
         _ -> image(s, 20u64)
     }
-    machine image(s: &mut State, width: u64) -> Command {
-        s.phase = Phase::Rendering { step: RenderStep::CloseReady };
+    machine image(s: &mut |local_state|::State, width: u64) -> |operations|::Command {
+        s.phase = |local_state|::Phase::Rendering { step: |local_state|::RenderStep::CloseReady };
         let x: u64 in Saturating = (s.width as u64 in Saturating) - ((width as u64 in Saturating) + 4);
-        Command::Image { epoch: s.epoch, surface: s.surfaces[3], x: x as u64, y: 2u64,
-            asset: Asset::Close { width: width } }
+        |operations|::Command::Image { epoch: s.epoch, surface: s.surfaces[3], x: x as u64, y: 2u64,
+            asset: |operations|::Asset::Close { width: width } }
     }
 }

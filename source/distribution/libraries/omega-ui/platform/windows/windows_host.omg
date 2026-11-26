@@ -1,5 +1,3 @@
-module windows_host;
-
 // The Windows window and thread-message service. Handles and message storage
 // belong to the caller; the provider keeps no virtual desktop or hidden state.
 // Class and title use the Windows ANSI API encoding and include a terminating

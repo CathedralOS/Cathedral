@@ -1,22 +1,15 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-module integer_target_bridge;
-use aml::model::ObjectStore;
-use execution_model::ExecutionOutcome;
-use execution_model::Frame;
-use execution_model::Target;
-use execution_model::Operand;
-use execution_model::BindingResult;
-use generic_target_model::TargetSelection;
-use generic_target_model::TargetAction;
-use generic_targets::select_target;
-use generic_targets::publish_target;
-use generic_target_values::classify_target;
-use integer_target_values::apply_integer_action;
-use integer_helpers::integers::normalize;
-pub machine write_integer_target(input:&[u8;1024],store:&mut ObjectStore,frame:&mut Frame,target:Target,number:u64,copy:bool)->ExecutionOutcome {
- let normalized:u64=normalize(frame.size,number);let length:u64=frame.source_length;let unit:u64=frame.body.unit;
- let selection:TargetSelection=select_target(frame,target);
- let action:TargetAction=classify_target(store,selection,Operand::Integer {number:normalized},copy);
- let result:BindingResult=apply_integer_action(input,length,unit,frame.size,store,action,normalized);
- let outcome:ExecutionOutcome=publish_target(frame,selection,result);outcome
+use {aml}/model.omg;
+use execution_model.omg;
+use generic_target_model.omg;
+use generic_targets.omg;
+use generic_target_values.omg;
+use integer_target_values.omg;
+use {integer_helpers}/integers.omg;
+pub machine write_integer_target(input:&[u8;1024],store:&mut |model|::ObjectStore,frame:&mut |execution_model|::Frame,target:|execution_model|::Target,number:u64,copy:bool)->|execution_model|::ExecutionOutcome {
+ let normalized:u64=|integers|::normalize(frame.size,number);let length:u64=frame.source_length;let unit:u64=frame.body.unit;
+ let selection:|generic_target_model|::TargetSelection=|generic_targets|::select_target(frame,target);
+ let action:|generic_target_model|::TargetAction=|generic_target_values|::classify_target(store,selection,|execution_model|::Operand::Integer {number:normalized},copy);
+ let result:|execution_model|::BindingResult=|integer_target_values|::apply_integer_action(input,length,unit,frame.size,store,action,normalized);
+ let outcome:|execution_model|::ExecutionOutcome=|generic_targets|::publish_target(frame,selection,result);outcome
 }

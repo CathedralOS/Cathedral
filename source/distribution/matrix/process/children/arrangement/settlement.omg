@@ -1,55 +1,51 @@
-module arrangement::settlement;
 // Acceptance installs geometry and standing policy exactly once. The existing
 // owed-erasure continuation then fences rank reuse and releases image backing.
 // Refusal leaves both the old World and its retained pictures untouched.
-use shared::state::State;
-use shared::presentation::Transfer;
-use shared::presentation::Arrangement;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::kernel;
-use world::layout;
-use world::level;
-use world::geometry;
-use workspace;
-use connections::presentation;
-use connections::responses;
-use connections::transfers::backing;
+use {shared}/state.omg as shared_state;
+use {shared}/presentation.omg;
+use {runtime}/kernel.omg;
+use {world}/layout.omg;
+use {world}/level.omg;
+use {world}/geometry.omg;
+use workspace.omg;
+use {connections}/presentation.omg as connections_presentation;
+use {connections}/responses.omg;
+use {connections}/transfers/backing.omg;
 
-public machine finish(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
-    let work: Transfer = context.presentation_work;
+public machine finish(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
+    let work: |presentation|::Transfer = context.presentation_work;
     let status: u64 = apply(context, work.status);
     transition work.status == 0u64 && status != 0u64 {
         true -> block inconsistent(gate, context, work, status)
         _ -> block settled(gate, context, work, status)
     }
-    machine inconsistent(gate: &Gate, context: &mut State, work: Transfer, status: u64) reaches Kernel {
+    machine inconsistent(gate: &|kernel|::Gate, context: &mut |shared_state|::State, work: |presentation|::Transfer, status: u64) reaches |kernel|::Kernel {
         // There is no dispatch between checking COMMIT and installing the World.
         // A failed local revalidation therefore means we cannot trust the link.
-        block backing::close(gate, context);
-        level::inherit(&mut context.world, geometry::no_grant());
+        block |backing|::close(gate, context);
+        |level|::inherit(&mut context.world, |geometry|::no_grant());
         block settled(gate, context, work, status);
     }
-    machine settled(gate: &Gate, context: &mut State, work: Transfer, status: u64) reaches Kernel {
-        let empty: Transfer;
-        let no_change: Arrangement;
+    machine settled(gate: &|kernel|::Gate, context: &mut |shared_state|::State, work: |presentation|::Transfer, status: u64) reaches |kernel|::Kernel {
+        let empty: |presentation|::Transfer;
+        let no_change: |presentation|::Arrangement;
         context.presentation_work = empty;
         context.arrangement_work = no_change;
         context.next_child = (work.slot + 1u64) % 5u64;
         // Start the retirement fence before any child can reuse a surface rank.
-        let flushed: u64 = block presentation::flush_turn(gate, context);
-        let sent: u64 = block responses::send(gate, context, work.slot, work.ticket, presentation::error(status));
+        let flushed: u64 = block |connections_presentation|::flush_turn(gate, context);
+        let sent: u64 = block |responses|::send(gate, context, work.slot, work.ticket, |connections_presentation|::error(status));
     }
 }
-machine apply(context: &mut State, status: u64) -> u64 {
+machine apply(context: &mut |shared_state|::State, status: u64) -> u64 {
     transition status == 0u64 { true -> committed(context) _ -> (status) }
-    machine committed(context: &mut State) -> u64 {
-        let change: Arrangement = context.arrangement_work;
-        let status: u64 = layout::commit(&mut context.world, &change.proposal);
+    machine committed(context: &mut |shared_state|::State) -> u64 {
+        let change: |presentation|::Arrangement = context.arrangement_work;
+        let status: u64 = |layout|::layout::commit(&mut context.world, &change.proposal);
         transition status == 0u64 { true -> remembered(context, change) _ -> (status) }
     }
-    machine remembered(context: &mut State, change: Arrangement) -> u64 {
-        workspace::remember_layout(context, &change.proposal.rects, change.remember);
+    machine remembered(context: &mut |shared_state|::State, change: |presentation|::Arrangement) -> u64 {
+        |workspace|::remember_layout(context, &change.proposal.rects, change.remember);
         0u64
     }
 }

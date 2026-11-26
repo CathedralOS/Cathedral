@@ -1,18 +1,8 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Generated original fixtures by header_fixtures.py; do not edit.
-use acpi::headers::RsdpResult;
-use acpi::headers::SdtResult;
-use acpi::headers::RootResult;
-use acpi::headers::EntryResult;
-use acpi::headers::ChecksumResult;
-use acpi::headers::RootPointer;
-use acpi::headers::SIGNATURE_RSDT;
-use acpi::parser::parse_rsdp;
-use acpi::parser::parse_sdt;
-use acpi::parser::parse_root;
-use acpi::parser::root_entry;
-use acpi::parser::select_root;
-use acpi::bytes::checksum;
+use {acpi}/headers.omg;
+use {acpi}/parser.omg;
+use {acpi}/bytes.omg;
 machine test_rsdp_legacy() -> bool {
     let mut input: [u8; 4096];
     input[0] = 82;
@@ -34,7 +24,7 @@ machine test_rsdp_legacy() -> bool {
     input[17] = 69;
     input[18] = 35;
     input[19] = 129;
-    let result: RsdpResult = parse_rsdp(&input, 20);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 20);
     result.error == 0 &&
     result.value.rsdt_address == 2166572391 &&
     result.value.length == 20 &&
@@ -72,9 +62,9 @@ machine test_rsdp_extended() -> bool {
     input[30] = 220;
     input[31] = 254;
     input[32] = 164;
-    let result: RsdpResult = parse_rsdp(&input, 36);
-    let preferred: RootPointer = select_root(result, false);
-    let fallback: RootPointer = select_root(result, true);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 36);
+    let preferred: |headers|::RootPointer = |parser|::select_root(result, false);
+    let fallback: |headers|::RootPointer = |parser|::select_root(result, true);
     result.error == 0 &&
     result.value.rsdt_address == 2166572391 &&
     result.value.length == 36 &&
@@ -126,14 +116,14 @@ machine test_rsdp_trailing_ignored() -> bool {
     input[35] = 97;
     input[36] = 99;
     input[37] = 121;
-    let result: RsdpResult = parse_rsdp(&input, 38);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 38);
     result.error == 0 &&
     result.value.length == 20
  }
 machine test_rsdp_empty() -> bool {
     let mut input: [u8; 4096];
-    let result: RsdpResult = parse_rsdp(&input, 0);
-    let selected: RootPointer = select_root(result, false);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 0);
+    let selected: |headers|::RootPointer = |parser|::select_root(result, false);
     result.error == 2 &&
     !selected.available &&
     selected.address == 0
@@ -159,8 +149,8 @@ machine test_rsdp_short() -> bool {
     input[17] = 69;
     input[18] = 35;
     input[19] = 129;
-    let result: RsdpResult = parse_rsdp(&input, 19);
-    let selected: RootPointer = select_root(result, false);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 19);
+    let selected: |headers|::RootPointer = |parser|::select_root(result, false);
     result.error == 2 &&
     !selected.available &&
     selected.address == 0
@@ -197,8 +187,8 @@ machine test_rsdp_capacity() -> bool {
     input[30] = 220;
     input[31] = 254;
     input[32] = 164;
-    let result: RsdpResult = parse_rsdp(&input, 4097);
-    let selected: RootPointer = select_root(result, false);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 4097);
+    let selected: |headers|::RootPointer = |parser|::select_root(result, false);
     result.error == 1 &&
     !selected.available &&
     selected.address == 0
@@ -235,8 +225,8 @@ machine test_rsdp_short_extended() -> bool {
     input[30] = 220;
     input[31] = 254;
     input[32] = 164;
-    let result: RsdpResult = parse_rsdp(&input, 35);
-    let selected: RootPointer = select_root(result, false);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 35);
+    let selected: |headers|::RootPointer = |parser|::select_root(result, false);
     result.error == 2 &&
     !selected.available &&
     selected.address == 0
@@ -272,8 +262,8 @@ machine test_rsdp_signature() -> bool {
     input[30] = 220;
     input[31] = 254;
     input[32] = 164;
-    let result: RsdpResult = parse_rsdp(&input, 36);
-    let selected: RootPointer = select_root(result, false);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 36);
+    let selected: |headers|::RootPointer = |parser|::select_root(result, false);
     result.error == 3 &&
     !selected.available &&
     selected.address == 0
@@ -310,8 +300,8 @@ machine test_rsdp_revision_1() -> bool {
     input[30] = 220;
     input[31] = 254;
     input[32] = 164;
-    let result: RsdpResult = parse_rsdp(&input, 36);
-    let selected: RootPointer = select_root(result, false);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 36);
+    let selected: |headers|::RootPointer = |parser|::select_root(result, false);
     result.error == 4 &&
     !selected.available &&
     selected.address == 0
@@ -348,8 +338,8 @@ machine test_rsdp_revision_3() -> bool {
     input[30] = 220;
     input[31] = 254;
     input[32] = 164;
-    let result: RsdpResult = parse_rsdp(&input, 36);
-    let selected: RootPointer = select_root(result, false);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 36);
+    let selected: |headers|::RootPointer = |parser|::select_root(result, false);
     result.error == 4 &&
     !selected.available &&
     selected.address == 0
@@ -386,8 +376,8 @@ machine test_rsdp_revision_255() -> bool {
     input[30] = 220;
     input[31] = 254;
     input[32] = 164;
-    let result: RsdpResult = parse_rsdp(&input, 36);
-    let selected: RootPointer = select_root(result, false);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 36);
+    let selected: |headers|::RootPointer = |parser|::select_root(result, false);
     result.error == 4 &&
     !selected.available &&
     selected.address == 0
@@ -424,7 +414,7 @@ machine test_rsdp_oem_bytes() -> bool {
     input[30] = 220;
     input[31] = 254;
     input[32] = 164;
-    let result: RsdpResult = parse_rsdp(&input, 36);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 36);
     result.error == 0 &&
     result.value.oem_id[0] == 128
  }
@@ -460,8 +450,8 @@ machine test_rsdp_legacy_checksum() -> bool {
     input[30] = 220;
     input[31] = 254;
     input[32] = 164;
-    let result: RsdpResult = parse_rsdp(&input, 36);
-    let selected: RootPointer = select_root(result, false);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 36);
+    let selected: |headers|::RootPointer = |parser|::select_root(result, false);
     result.error == 6 &&
     !selected.available &&
     selected.address == 0
@@ -498,8 +488,8 @@ machine test_rsdp_compensated_legacy_checksum() -> bool {
     input[30] = 220;
     input[31] = 254;
     input[32] = 163;
-    let result: RsdpResult = parse_rsdp(&input, 36);
-    let selected: RootPointer = select_root(result, false);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 36);
+    let selected: |headers|::RootPointer = |parser|::select_root(result, false);
     result.error == 6 &&
     !selected.available &&
     selected.address == 0
@@ -536,8 +526,8 @@ machine test_rsdp_extended_checksum() -> bool {
     input[30] = 220;
     input[31] = 254;
     input[32] = 165;
-    let result: RsdpResult = parse_rsdp(&input, 36);
-    let selected: RootPointer = select_root(result, false);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 36);
+    let selected: |headers|::RootPointer = |parser|::select_root(result, false);
     result.error == 6 &&
     !selected.available &&
     selected.address == 0
@@ -573,8 +563,8 @@ machine test_rsdp_declared_0() -> bool {
     input[30] = 220;
     input[31] = 254;
     input[32] = 200;
-    let result: RsdpResult = parse_rsdp(&input, 36);
-    let selected: RootPointer = select_root(result, false);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 36);
+    let selected: |headers|::RootPointer = |parser|::select_root(result, false);
     result.error == 5 &&
     !selected.available &&
     selected.address == 0
@@ -611,8 +601,8 @@ machine test_rsdp_declared_20() -> bool {
     input[30] = 220;
     input[31] = 254;
     input[32] = 180;
-    let result: RsdpResult = parse_rsdp(&input, 36);
-    let selected: RootPointer = select_root(result, false);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 36);
+    let selected: |headers|::RootPointer = |parser|::select_root(result, false);
     result.error == 5 &&
     !selected.available &&
     selected.address == 0
@@ -649,8 +639,8 @@ machine test_rsdp_declared_35() -> bool {
     input[30] = 220;
     input[31] = 254;
     input[32] = 165;
-    let result: RsdpResult = parse_rsdp(&input, 36);
-    let selected: RootPointer = select_root(result, false);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 36);
+    let selected: |headers|::RootPointer = |parser|::select_root(result, false);
     result.error == 5 &&
     !selected.available &&
     selected.address == 0
@@ -687,8 +677,8 @@ machine test_rsdp_declared_truncated() -> bool {
     input[30] = 220;
     input[31] = 254;
     input[32] = 163;
-    let result: RsdpResult = parse_rsdp(&input, 36);
-    let selected: RootPointer = select_root(result, false);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 36);
+    let selected: |headers|::RootPointer = |parser|::select_root(result, false);
     result.error == 2 &&
     !selected.available &&
     selected.address == 0
@@ -728,8 +718,8 @@ machine test_rsdp_declared_max() -> bool {
     input[30] = 220;
     input[31] = 254;
     input[32] = 204;
-    let result: RsdpResult = parse_rsdp(&input, 36);
-    let selected: RootPointer = select_root(result, false);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 36);
+    let selected: |headers|::RootPointer = |parser|::select_root(result, false);
     result.error == 2 &&
     !selected.available &&
     selected.address == 0
@@ -770,7 +760,7 @@ machine test_rsdp_extension() -> bool {
     input[37] = 97;
     input[38] = 105;
     input[39] = 108;
-    let result: RsdpResult = parse_rsdp(&input, 40);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 40);
     result.error == 0 &&
     result.value.length == 40
  }
@@ -810,8 +800,8 @@ machine test_rsdp_extension_checksum() -> bool {
     input[37] = 97;
     input[38] = 105;
     input[39] = 109;
-    let result: RsdpResult = parse_rsdp(&input, 40);
-    let selected: RootPointer = select_root(result, false);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 40);
+    let selected: |headers|::RootPointer = |parser|::select_root(result, false);
     result.error == 6 &&
     !selected.available &&
     selected.address == 0
@@ -849,7 +839,7 @@ machine test_rsdp_reserved_33() -> bool {
     input[31] = 254;
     input[32] = 163;
     input[33] = 1;
-    let result: RsdpResult = parse_rsdp(&input, 36);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 36);
     result.error == 0 &&
     result.value.reserved[0] == 1
  }
@@ -886,7 +876,7 @@ machine test_rsdp_reserved_34() -> bool {
     input[31] = 254;
     input[32] = 163;
     input[34] = 1;
-    let result: RsdpResult = parse_rsdp(&input, 36);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 36);
     result.error == 0 &&
     result.value.reserved[1] == 1
  }
@@ -923,7 +913,7 @@ machine test_rsdp_reserved_35() -> bool {
     input[31] = 254;
     input[32] = 163;
     input[35] = 1;
-    let result: RsdpResult = parse_rsdp(&input, 36);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 36);
     result.error == 0 &&
     result.value.reserved[2] == 1
  }
@@ -960,7 +950,7 @@ machine test_rsdp_capacity_exact() -> bool {
     input[31] = 254;
     input[32] = 185;
     input[4095] = 255;
-    let result: RsdpResult = parse_rsdp(&input, 4096);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 4096);
     result.error == 0 &&
     result.value.length == 4096
  }
@@ -988,8 +978,8 @@ machine test_rsdp_zero_xsdt() -> bool {
     input[19] = 129;
     input[20] = 36;
     input[32] = 220;
-    let result: RsdpResult = parse_rsdp(&input, 36);
-    let selected: RootPointer = select_root(result, false);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 36);
+    let selected: |headers|::RootPointer = |parser|::select_root(result, false);
     result.error == 0 &&
     result.value.xsdt_address == 0 &&
     selected.address == 2166572391 &&
@@ -1016,8 +1006,8 @@ machine test_rsdp_no_root() -> bool {
     input[15] = 2;
     input[20] = 36;
     input[32] = 220;
-    let result: RsdpResult = parse_rsdp(&input, 36);
-    let selected: RootPointer = select_root(result, false);
+    let result: |headers|::RsdpResult = |parser|::parse_rsdp(&input, 36);
+    let selected: |headers|::RootPointer = |parser|::select_root(result, false);
     result.error == 0 &&
     result.value.xsdt_address == 0 &&
     selected.address == 0 &&
@@ -1059,7 +1049,7 @@ machine test_sdt_header() -> bool {
     input[33] = 67;
     input[34] = 101;
     input[35] = 135;
-    let result: SdtResult = parse_sdt(&input, 36, SIGNATURE_RSDT);
+    let result: |headers|::SdtResult = |parser|::parse_sdt(&input, 36, |headers|::SIGNATURE_RSDT);
     result.error == 0 &&
     result.value.length == 36 &&
     result.value.oem_revision == 0x12345678 &&
@@ -1106,7 +1096,7 @@ machine test_sdt_trailing_ignored() -> bool {
     input[38] = 116;
     input[39] = 114;
     input[40] = 97;
-    let result: SdtResult = parse_sdt(&input, 41, SIGNATURE_RSDT);
+    let result: |headers|::SdtResult = |parser|::parse_sdt(&input, 41, |headers|::SIGNATURE_RSDT);
     result.error == 0 &&
     result.value.length == 36 &&
     result.value.oem_revision == 0x12345678 &&
@@ -1115,7 +1105,7 @@ machine test_sdt_trailing_ignored() -> bool {
  }
 machine test_sdt_empty() -> bool {
     let mut input: [u8; 4096];
-    let result: SdtResult = parse_sdt(&input, 0, SIGNATURE_RSDT);
+    let result: |headers|::SdtResult = |parser|::parse_sdt(&input, 0, |headers|::SIGNATURE_RSDT);
     result.error == 2
  }
 machine test_sdt_short() -> bool {
@@ -1153,7 +1143,7 @@ machine test_sdt_short() -> bool {
     input[33] = 67;
     input[34] = 101;
     input[35] = 135;
-    let result: SdtResult = parse_sdt(&input, 35, SIGNATURE_RSDT);
+    let result: |headers|::SdtResult = |parser|::parse_sdt(&input, 35, |headers|::SIGNATURE_RSDT);
     result.error == 2
  }
 machine test_sdt_capacity() -> bool {
@@ -1191,7 +1181,7 @@ machine test_sdt_capacity() -> bool {
     input[33] = 67;
     input[34] = 101;
     input[35] = 135;
-    let result: SdtResult = parse_sdt(&input, 4097, SIGNATURE_RSDT);
+    let result: |headers|::SdtResult = |parser|::parse_sdt(&input, 4097, |headers|::SIGNATURE_RSDT);
     result.error == 1
  }
 machine test_sdt_wrong_signature() -> bool {
@@ -1229,7 +1219,7 @@ machine test_sdt_wrong_signature() -> bool {
     input[33] = 67;
     input[34] = 101;
     input[35] = 135;
-    let result: SdtResult = parse_sdt(&input, 36, SIGNATURE_RSDT);
+    let result: |headers|::SdtResult = |parser|::parse_sdt(&input, 36, |headers|::SIGNATURE_RSDT);
     result.error == 3
  }
 machine test_sdt_declared_0() -> bool {
@@ -1266,7 +1256,7 @@ machine test_sdt_declared_0() -> bool {
     input[33] = 67;
     input[34] = 101;
     input[35] = 135;
-    let result: SdtResult = parse_sdt(&input, 36, SIGNATURE_RSDT);
+    let result: |headers|::SdtResult = |parser|::parse_sdt(&input, 36, |headers|::SIGNATURE_RSDT);
     result.error == 5
  }
 machine test_sdt_declared_35() -> bool {
@@ -1304,7 +1294,7 @@ machine test_sdt_declared_35() -> bool {
     input[33] = 67;
     input[34] = 101;
     input[35] = 135;
-    let result: SdtResult = parse_sdt(&input, 36, SIGNATURE_RSDT);
+    let result: |headers|::SdtResult = |parser|::parse_sdt(&input, 36, |headers|::SIGNATURE_RSDT);
     result.error == 5
  }
 machine test_sdt_declared_37() -> bool {
@@ -1342,7 +1332,7 @@ machine test_sdt_declared_37() -> bool {
     input[33] = 67;
     input[34] = 101;
     input[35] = 135;
-    let result: SdtResult = parse_sdt(&input, 36, SIGNATURE_RSDT);
+    let result: |headers|::SdtResult = |parser|::parse_sdt(&input, 36, |headers|::SIGNATURE_RSDT);
     result.error == 2
  }
 machine test_sdt_declared_4294967295() -> bool {
@@ -1383,7 +1373,7 @@ machine test_sdt_declared_4294967295() -> bool {
     input[33] = 67;
     input[34] = 101;
     input[35] = 135;
-    let result: SdtResult = parse_sdt(&input, 36, SIGNATURE_RSDT);
+    let result: |headers|::SdtResult = |parser|::parse_sdt(&input, 36, |headers|::SIGNATURE_RSDT);
     result.error == 2
  }
 machine test_sdt_oem_bytes_10() -> bool {
@@ -1421,7 +1411,7 @@ machine test_sdt_oem_bytes_10() -> bool {
     input[33] = 67;
     input[34] = 101;
     input[35] = 135;
-    let result: SdtResult = parse_sdt(&input, 36, SIGNATURE_RSDT);
+    let result: |headers|::SdtResult = |parser|::parse_sdt(&input, 36, |headers|::SIGNATURE_RSDT);
     result.error == 0 &&
     result.value.oem_id[0] == 128 &&
     result.value.oem_revision == 0x12345678 &&
@@ -1463,7 +1453,7 @@ machine test_sdt_oem_bytes_16() -> bool {
     input[33] = 67;
     input[34] = 101;
     input[35] = 135;
-    let result: SdtResult = parse_sdt(&input, 36, SIGNATURE_RSDT);
+    let result: |headers|::SdtResult = |parser|::parse_sdt(&input, 36, |headers|::SIGNATURE_RSDT);
     result.error == 0 &&
     result.value.oem_table_id[0] == 128 &&
     result.value.oem_revision == 0x12345678 &&
@@ -1505,7 +1495,7 @@ machine test_sdt_checksum() -> bool {
     input[33] = 67;
     input[34] = 101;
     input[35] = 135;
-    let result: SdtResult = parse_sdt(&input, 36, SIGNATURE_RSDT);
+    let result: |headers|::SdtResult = |parser|::parse_sdt(&input, 36, |headers|::SIGNATURE_RSDT);
     result.error == 6
  }
 machine test_sdt_revision_preserved() -> bool {
@@ -1543,7 +1533,7 @@ machine test_sdt_revision_preserved() -> bool {
     input[33] = 67;
     input[34] = 101;
     input[35] = 135;
-    let result: SdtResult = parse_sdt(&input, 36, SIGNATURE_RSDT);
+    let result: |headers|::SdtResult = |parser|::parse_sdt(&input, 36, |headers|::SIGNATURE_RSDT);
     result.error == 0 &&
     result.value.length == 36 &&
     result.value.revision == 255 &&
@@ -1594,11 +1584,11 @@ machine test_rsdt_entries() -> bool {
     input[41] = 255;
     input[42] = 255;
     input[43] = 255;
-    let result: RootResult = parse_root(&input, 44, false);
-    let entry0: EntryResult = root_entry(&input, 44, false, 0);
-    let entry1: EntryResult = root_entry(&input, 44, false, 1);
-    let end: EntryResult = root_entry(&input, 44, false, 2);
-    let huge: EntryResult = root_entry(&input, 44, false, 18446744073709551615);
+    let result: |headers|::RootResult = |parser|::parse_root(&input, 44, false);
+    let entry0: |headers|::EntryResult = |parser|::root_entry(&input, 44, false, 0);
+    let entry1: |headers|::EntryResult = |parser|::root_entry(&input, 44, false, 1);
+    let end: |headers|::EntryResult = |parser|::root_entry(&input, 44, false, 2);
+    let huge: |headers|::EntryResult = |parser|::root_entry(&input, 44, false, 18446744073709551615);
     result.error == 0 &&
     result.entry_count == 2 &&
     result.entry_size == 4 &&
@@ -1644,9 +1634,9 @@ machine test_rsdt_empty() -> bool {
     input[33] = 67;
     input[34] = 101;
     input[35] = 135;
-    let result: RootResult = parse_root(&input, 36, false);
-    let end: EntryResult = root_entry(&input, 36, false, 0);
-    let huge: EntryResult = root_entry(&input, 36, false, 18446744073709551615);
+    let result: |headers|::RootResult = |parser|::parse_root(&input, 36, false);
+    let end: |headers|::EntryResult = |parser|::root_entry(&input, 36, false, 0);
+    let huge: |headers|::EntryResult = |parser|::root_entry(&input, 36, false, 18446744073709551615);
     result.error == 0 &&
     result.entry_count == 0 &&
     result.entry_size == 4 &&
@@ -1688,7 +1678,7 @@ machine test_rsdt_partial() -> bool {
     input[33] = 67;
     input[34] = 101;
     input[35] = 135;
-    let result: RootResult = parse_root(&input, 37, false);
+    let result: |headers|::RootResult = |parser|::parse_root(&input, 37, false);
     result.error == 9
  }
 machine test_rsdt_revision() -> bool {
@@ -1726,7 +1716,7 @@ machine test_rsdt_revision() -> bool {
     input[33] = 67;
     input[34] = 101;
     input[35] = 135;
-    let result: RootResult = parse_root(&input, 36, false);
+    let result: |headers|::RootResult = |parser|::parse_root(&input, 36, false);
     result.error == 4
  }
 machine test_rsdt_checksum() -> bool {
@@ -1772,7 +1762,7 @@ machine test_rsdt_checksum() -> bool {
     input[41] = 255;
     input[42] = 255;
     input[43] = 254;
-    let result: RootResult = parse_root(&input, 44, false);
+    let result: |headers|::RootResult = |parser|::parse_root(&input, 44, false);
     result.error == 6
  }
 machine test_xsdt_entries() -> bool {
@@ -1822,11 +1812,11 @@ machine test_xsdt_entries() -> bool {
     input[49] = 186;
     input[50] = 220;
     input[51] = 254;
-    let result: RootResult = parse_root(&input, 52, true);
-    let entry0: EntryResult = root_entry(&input, 52, true, 0);
-    let entry1: EntryResult = root_entry(&input, 52, true, 1);
-    let end: EntryResult = root_entry(&input, 52, true, 2);
-    let huge: EntryResult = root_entry(&input, 52, true, 18446744073709551615);
+    let result: |headers|::RootResult = |parser|::parse_root(&input, 52, true);
+    let entry0: |headers|::EntryResult = |parser|::root_entry(&input, 52, true, 0);
+    let entry1: |headers|::EntryResult = |parser|::root_entry(&input, 52, true, 1);
+    let end: |headers|::EntryResult = |parser|::root_entry(&input, 52, true, 2);
+    let huge: |headers|::EntryResult = |parser|::root_entry(&input, 52, true, 18446744073709551615);
     result.error == 0 &&
     result.entry_count == 2 &&
     result.entry_size == 8 &&
@@ -1872,9 +1862,9 @@ machine test_xsdt_empty() -> bool {
     input[33] = 67;
     input[34] = 101;
     input[35] = 135;
-    let result: RootResult = parse_root(&input, 36, true);
-    let end: EntryResult = root_entry(&input, 36, true, 0);
-    let huge: EntryResult = root_entry(&input, 36, true, 18446744073709551615);
+    let result: |headers|::RootResult = |parser|::parse_root(&input, 36, true);
+    let end: |headers|::EntryResult = |parser|::root_entry(&input, 36, true, 0);
+    let huge: |headers|::EntryResult = |parser|::root_entry(&input, 36, true, 18446744073709551615);
     result.error == 0 &&
     result.entry_count == 0 &&
     result.entry_size == 8 &&
@@ -1916,7 +1906,7 @@ machine test_xsdt_partial() -> bool {
     input[33] = 67;
     input[34] = 101;
     input[35] = 135;
-    let result: RootResult = parse_root(&input, 37, true);
+    let result: |headers|::RootResult = |parser|::parse_root(&input, 37, true);
     result.error == 9
  }
 machine test_xsdt_revision() -> bool {
@@ -1954,7 +1944,7 @@ machine test_xsdt_revision() -> bool {
     input[33] = 67;
     input[34] = 101;
     input[35] = 135;
-    let result: RootResult = parse_root(&input, 36, true);
+    let result: |headers|::RootResult = |parser|::parse_root(&input, 36, true);
     result.error == 4
  }
 machine test_xsdt_checksum() -> bool {
@@ -2004,7 +1994,7 @@ machine test_xsdt_checksum() -> bool {
     input[49] = 186;
     input[50] = 220;
     input[51] = 255;
-    let result: RootResult = parse_root(&input, 52, true);
+    let result: |headers|::RootResult = |parser|::parse_root(&input, 52, true);
     result.error == 6
  }
 machine test_root_last_4() -> bool {
@@ -2046,7 +2036,7 @@ machine test_root_last_4() -> bool {
     input[4093] = 255;
     input[4094] = 255;
     input[4095] = 255;
-    let result: EntryResult = root_entry(&input, 4096, false, 1014);
+    let result: |headers|::EntryResult = |parser|::root_entry(&input, 4096, false, 1014);
     result.error == 0 &&
     result.address == 4294967295
  }
@@ -2094,7 +2084,7 @@ machine test_root_last_8() -> bool {
     input[4089] = 186;
     input[4090] = 220;
     input[4091] = 254;
-    let result: EntryResult = root_entry(&input, 4092, true, 506);
+    let result: |headers|::EntryResult = |parser|::root_entry(&input, 4092, true, 506);
     result.error == 0 &&
     result.address == 18364758544493064720
  }
@@ -2109,7 +2099,7 @@ machine test_checksum_tail_1() -> bool {
     input[6] = 7;
     input[7] = 8;
     input[8] = 9;
-    let result: ChecksumResult = checksum(&input, 9);
+    let result: |headers|::ChecksumResult = |bytes|::checksum(&input, 9);
     result.error == 0 &&
     result.sum == 45
  }
@@ -2125,7 +2115,7 @@ machine test_checksum_tail_2() -> bool {
     input[7] = 8;
     input[8] = 9;
     input[9] = 10;
-    let result: ChecksumResult = checksum(&input, 10);
+    let result: |headers|::ChecksumResult = |bytes|::checksum(&input, 10);
     result.error == 0 &&
     result.sum == 55
  }
@@ -2142,7 +2132,7 @@ machine test_checksum_tail_3() -> bool {
     input[8] = 9;
     input[9] = 10;
     input[10] = 11;
-    let result: ChecksumResult = checksum(&input, 11);
+    let result: |headers|::ChecksumResult = |bytes|::checksum(&input, 11);
     result.error == 0 &&
     result.sum == 66
  }
@@ -2160,7 +2150,7 @@ machine test_checksum_tail_4() -> bool {
     input[9] = 10;
     input[10] = 11;
     input[11] = 12;
-    let result: ChecksumResult = checksum(&input, 12);
+    let result: |headers|::ChecksumResult = |bytes|::checksum(&input, 12);
     result.error == 0 &&
     result.sum == 78
  }
@@ -2179,7 +2169,7 @@ machine test_checksum_tail_5() -> bool {
     input[10] = 11;
     input[11] = 12;
     input[12] = 13;
-    let result: ChecksumResult = checksum(&input, 13);
+    let result: |headers|::ChecksumResult = |bytes|::checksum(&input, 13);
     result.error == 0 &&
     result.sum == 91
  }
@@ -2199,7 +2189,7 @@ machine test_checksum_tail_6() -> bool {
     input[11] = 12;
     input[12] = 13;
     input[13] = 14;
-    let result: ChecksumResult = checksum(&input, 14);
+    let result: |headers|::ChecksumResult = |bytes|::checksum(&input, 14);
     result.error == 0 &&
     result.sum == 105
  }
@@ -2220,7 +2210,7 @@ machine test_checksum_tail_7() -> bool {
     input[12] = 13;
     input[13] = 14;
     input[14] = 15;
-    let result: ChecksumResult = checksum(&input, 15);
+    let result: |headers|::ChecksumResult = |bytes|::checksum(&input, 15);
     result.error == 0 &&
     result.sum == 120
  }
@@ -2483,25 +2473,25 @@ machine test_checksum_wrap() -> bool {
     input[254] = 255;
     input[255] = 255;
     input[256] = 255;
-    let result: ChecksumResult = checksum(&input, 257);
+    let result: |headers|::ChecksumResult = |bytes|::checksum(&input, 257);
     result.error == 0 &&
     result.sum == 255
  }
 machine test_checksum_empty() -> bool {
     let mut input: [u8; 4096];
-    let result: ChecksumResult = checksum(&input, 0);
+    let result: |headers|::ChecksumResult = |bytes|::checksum(&input, 0);
     result.error == 0 &&
     result.sum == 0
  }
 machine test_checksum_capacity() -> bool {
     let mut input: [u8; 4096];
-    let result: ChecksumResult = checksum(&input, 4097);
+    let result: |headers|::ChecksumResult = |bytes|::checksum(&input, 4097);
     result.error == 1
  }
 machine test_checksum_capacity_exact() -> bool {
     let mut input: [u8; 4096];
     input[4095] = 255;
-    let result: ChecksumResult = checksum(&input, 4096);
+    let result: |headers|::ChecksumResult = |bytes|::checksum(&input, 4096);
     result.error == 0 &&
     result.sum == 255
  }

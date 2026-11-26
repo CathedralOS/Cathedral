@@ -2,11 +2,8 @@
 // Modified numeric mem_encrypt.rs/page_table.rs algorithms from x86_64
 // cc35c876d3badb57df54a66e22f7768a52be95f2. See memory-encryption.PORT.md.
 // Explicit simulation state; no global configuration, CPU discovery or mapping grant.
-module memory_encryption;
-use addresses;
-use addresses::NumberResult;
-use page_entries;
-use page_entries::FrameResult;
+use addresses.omg;
+use page_entries.omg;
 
 pub data Configuration [copy] {
     case EncryptedBit(position: u8);
@@ -14,7 +11,7 @@ pub data Configuration [copy] {
 }
 pub data State [copy] { address_mask: u64; bit_mask: u64; reversed: bool; }
 pub machine initial() -> State {
-    State { address_mask: page_entries::ADDRESS_MASK, bit_mask: 0, reversed: false }
+    State { address_mask: |page_entries|::ADDRESS_MASK, bit_mask: 0, reversed: false }
 }
 // Positions 0..63 preserve the representable pinned arithmetic, not a claim that
 // any position is valid for a CPU. Invalid shift positions leave state unchanged.
@@ -38,22 +35,22 @@ pub machine configure(state: &mut State, configuration: Configuration) -> bool {
         true
     }
 }
-pub machine encryption_flag(state: &State) -> NumberResult {
+pub machine encryption_flag(state: &State) -> |addresses|::NumberResult {
     transition state.bit_mask != 0 {
-        true -> (NumberResult::Value { value: state.bit_mask })
-        _ -> (NumberResult::Rejected)
+        true -> (|addresses|::NumberResult::Value { value: state.bit_mask })
+        _ -> (|addresses|::NumberResult::Rejected)
     }
 }
-pub machine set_encrypted(state: &State, flags: u64, encrypted: bool) -> NumberResult {
+pub machine set_encrypted(state: &State, flags: u64, encrypted: bool) -> |addresses|::NumberResult {
     transition state.bit_mask != 0 {
         true -> selected(state, flags, encrypted)
-        _ -> (NumberResult::Rejected)
+        _ -> (|addresses|::NumberResult::Rejected)
     }
     state selected(state: &State, flags: u64, encrypted: bool) {
         let set_bit: bool = encrypted != state.reversed;
         transition set_bit {
-            true -> (NumberResult::Value { value: flags | state.bit_mask })
-            _ -> (NumberResult::Value { value: flags & ~state.bit_mask })
+            true -> (|addresses|::NumberResult::Value { value: flags | state.bit_mask })
+            _ -> (|addresses|::NumberResult::Value { value: flags & ~state.bit_mask })
         }
     }
 }
@@ -70,41 +67,41 @@ pub machine is_encrypted(state: &State, flags: u64) -> bool {
 }
 // Mask high encryption positions out of the input to the existing strict
 // physical52 helper: those bits are already absent from every physical52 value.
-pub machine physical_check(state: &State, value: u64) -> NumberResult {
-    let mask: u64 = state.bit_mask & addresses::PHYSICAL_MAX;
-    addresses::physical_check(value, mask)
+pub machine physical_check(state: &State, value: u64) -> |addresses|::NumberResult {
+    let mask: u64 = state.bit_mask & |addresses|::PHYSICAL_MAX;
+    |addresses|::physical_check(value, mask)
 }
-pub machine physical_truncate(state: &State, value: u64) -> NumberResult {
-    let mask: u64 = state.bit_mask & addresses::PHYSICAL_MAX;
-    addresses::physical_truncate(value, mask)
+pub machine physical_truncate(state: &State, value: u64) -> |addresses|::NumberResult {
+    let mask: u64 = state.bit_mask & |addresses|::PHYSICAL_MAX;
+    |addresses|::physical_truncate(value, mask)
 }
 pub machine entry_address(state: &State, word: u64) -> u64 { word & state.address_mask }
 pub machine entry_flags(state: &State, word: u64) -> u64 { word & ~state.address_mask }
-pub machine entry_frame(state: &State, word: u64) -> FrameResult {
+pub machine entry_frame(state: &State, word: u64) -> |page_entries|::FrameResult {
     let flags: u64 = entry_flags(state, word);
     let base: u64 = entry_address(state, word);
     let present: bool = (flags & 1) != 0;
     let huge: bool = (flags & 128) != 0;
     transition {
-        !present -> (FrameResult::NotPresent)
-        huge -> (FrameResult::HugeFrame)
-        _ -> (FrameResult::Value { address: base })
+        !present -> (|page_entries|::FrameResult::NotPresent)
+        huge -> (|page_entries|::FrameResult::HugeFrame)
+        _ -> (|page_entries|::FrameResult::Value { address: base })
     }
 }
-pub machine set_address(state: &State, base: u64, flags: u64) -> NumberResult {
-    let checked: NumberResult = physical_check(state, base);
+pub machine set_address(state: &State, base: u64, flags: u64) -> |addresses|::NumberResult {
+    let checked: |addresses|::NumberResult = physical_check(state, base);
     transition checked {
-        NumberResult::Value { value } -> aligned(value, flags)
-        _ -> (NumberResult::Rejected)
+        |addresses|::NumberResult::Value { value } -> aligned(value, flags)
+        _ -> (|addresses|::NumberResult::Rejected)
     }
     state aligned(value: u64, flags: u64) {
-        let result: NumberResult = page_entries::set_address(value, flags);
+        let result: |addresses|::NumberResult = |page_entries|::set_address(value, flags);
         result
     }
 }
-pub machine set_frame(state: &State, base: u64, flags: u64) -> NumberResult {
-    let result: NumberResult = set_address(state, base, flags);
-    transition (flags & 128) == 0 { true -> (result) _ -> (NumberResult::Rejected) }
+pub machine set_frame(state: &State, base: u64, flags: u64) -> |addresses|::NumberResult {
+    let result: |addresses|::NumberResult = set_address(state, base, flags);
+    transition (flags & 128) == 0 { true -> (result) _ -> (|addresses|::NumberResult::Rejected) }
 }
 pub machine set_flags(state: &State, word: u64, flags: u64) -> u64 {
     (word & state.address_mask) | flags

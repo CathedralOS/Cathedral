@@ -1,31 +1,25 @@
-module launch::placement;
 // After admission, place and publish the child, or describe the failure.
 // launch/completion retains refusal while lifecycle collects the failed child.
-use protocol::main;
-use protocol::matrix;
-use shared::state::State;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::kernel;
-use runtime::time::Tick;
-use policy::children::launch::resources::surfaces::Demand;
-use policy::children::launch::resources::surfaces::Preference;
-use policy::children::launch::resources::surfaces::preferred;
-use policy::children::launch::admission;
-use world::level;
-use world::surfaces;
-use world::launches;
-use world::launches::Recorded;
-use world::geometry::Rect;
-use lifecycle;
-use shared::report;
-use workspace;
-use selection;
-use connections::presentation::Submission;
+use {protocol}/main.omg;
+use {protocol}/matrix.omg;
+use {shared}/state.omg as shared_state;
+use {runtime}/kernel.omg;
+use {runtime}/time.omg;
+use {policy}/children/launch/resources/surfaces.omg;
+use {policy}/children/launch/admission.omg;
+use {world}/level.omg;
+use {world}/surfaces.omg as world_surfaces;
+use {world}/launches.omg;
+use {world}/geometry.omg;
+use lifecycle.omg;
+use {shared}/report.omg;
+use workspace.omg;
+use selection.omg;
+use {connections}/presentation.omg;
 
 // The ranks the policy allotted or the slot's standing count; then the owner's placement.
-public machine place(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4], object: u64) -> Submission
-    reaches Kernel blocks invokes Kernel {
+public machine place(gate: &|kernel|::Gate, context: &mut |shared_state|::State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4], object: u64) -> |presentation|::Submission
+    reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     let standing: u64 = context.policies[slot].surfaces;
     let allotted: u64 = context.launch.plan.surfaces;
     let allowance: u64 = context.world.allowance;
@@ -35,10 +29,10 @@ public machine place(gate: &Gate, context: &mut State, requester: u64 [0..=4], i
         _ -> failed(gate, context, slot, 9u64, ranged)
     }
 }
-machine located(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4], object: u64) -> Submission
-    reaches Kernel {
+machine located(gate: &|kernel|::Gate, context: &mut |shared_state|::State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4], object: u64) -> |presentation|::Submission
+    reaches |kernel|::Kernel {
     let placed: bool = context.policies[slot].placed;
-    let rect: Rect = Rect { x: context.policies[slot].x, y: context.policies[slot].y, width: context.policies[slot].width,
+    let rect: |geometry|::Rect = |geometry|::Rect { x: context.policies[slot].x, y: context.policies[slot].y, width: context.policies[slot].width,
         height: context.policies[slot].height };
     let keys: u64 = context.policies[slot].keys;
     transition placed {
@@ -46,9 +40,9 @@ machine located(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarn
         _ -> block presented(gate, context, requester, incarnation, slot, object)
     }
 }
-machine positioned(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4], rect: Rect, keys: u64,
-    object: u64) -> Submission reaches Kernel {
-    let status: u64 = level::place(&mut context.world, slot, rect, keys);
+machine positioned(gate: &|kernel|::Gate, context: &mut |shared_state|::State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4], rect: |geometry|::Rect, keys: u64,
+    object: u64) -> |presentation|::Submission reaches |kernel|::Kernel {
+    let status: u64 = |level|::place(&mut context.world, slot, rect, keys);
     transition status == 0u64 {
         true -> block presented(gate, context, requester, incarnation, slot, object)
         _ -> failed(gate, context, slot, 10u64, status)
@@ -56,63 +50,63 @@ machine positioned(gate: &Gate, context: &mut State, requester: u64 [0..=4], inc
 }
 // In a workspace an app joins the catalogue and becomes the active one; a
 // scene that cannot switch takes the new app back down.
-machine presented(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4], object: u64) -> Submission
-    reaches Kernel {
-    let tick: Tick = runtime::time::read(gate, context.clock);
+machine presented(gate: &|kernel|::Gate, context: &mut |shared_state|::State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4], object: u64) -> |presentation|::Submission
+    reaches |kernel|::Kernel {
+    let tick: |time|::Tick = |time|::read(gate, context.clock);
     block settled_control(gate, context, slot, tick);
     transition {
-        context.retire_after_present[slot] -> failed(gate, context, slot, 11u64, kernel::PEER_CLOSED)
+        context.retire_after_present[slot] -> failed(gate, context, slot, 11u64, |kernel|::PEER_CLOSED)
         context.desktop && slot >= 1u64 && slot <= 3u64 -> staged(gate, context, slot, object)
-        _ -> (Submission::Answer { words: receipt(context, requester, incarnation, slot) })
+        _ -> (|presentation|::Submission::Answer { words: receipt(context, requester, incarnation, slot) })
     }
 }
-machine staged(gate: &Gate, context: &mut State, slot: u64 [0..=4], object: u64) -> Submission reaches Kernel {
-    let status: u64 = workspace::prepare_launch(context, slot, object);
+machine staged(gate: &|kernel|::Gate, context: &mut |shared_state|::State, slot: u64 [0..=4], object: u64) -> |presentation|::Submission reaches |kernel|::Kernel {
+    let status: u64 = |workspace|::prepare_launch(context, slot, object);
     transition status == 0u64 {
         true -> switching(gate, context, slot)
         _ -> failed(gate, context, slot, 11u64, status)
     }
 }
-machine switching(gate: &Gate, context: &mut State, slot: u64 [0..=4]) -> Submission reaches Kernel {
-    let status: u64 = selection::begin_launch(context);
+machine switching(gate: &|kernel|::Gate, context: &mut |shared_state|::State, slot: u64 [0..=4]) -> |presentation|::Submission reaches |kernel|::Kernel {
+    let status: u64 = |selection|::begin_launch(context);
     transition status == 0u64 {
         true -> pending(context)
         _ -> failed(gate, context, slot, 11u64, status)
     }
-    machine pending(context: &mut State) -> Submission {
+    machine pending(context: &mut |shared_state|::State) -> |presentation|::Submission {
         context.launch.phase = 3u64;
-        Submission::Pending
+        |presentation|::Submission::Pending
     }
 }
-machine failed(gate: &Gate, context: &mut State, slot: u64 [0..=4], stage: u64, status: u64) -> Submission reaches Kernel {
+machine failed(gate: &|kernel|::Gate, context: &mut |shared_state|::State, slot: u64 [0..=4], stage: u64, status: u64) -> |presentation|::Submission reaches |kernel|::Kernel {
     let words: [u64; 8] = unplaced(gate, context, slot, stage, status);
-    Submission::Answer { words: words }
+    |presentation|::Submission::Answer { words: words }
 }
 // Called only after the scene barrier releases its backing and identities.
-public machine finish(gate: &Gate, context: &mut State, status: u64) -> [u64; 8] reaches Kernel invokes Kernel {
+public machine finish(gate: &|kernel|::Gate, context: &mut |shared_state|::State, status: u64) -> [u64; 8] reaches |kernel|::Kernel invokes |kernel|::Kernel {
     transition status == 0u64 {
         true -> (receipt(context, context.launch.requester, context.launch.incarnation, context.launch.slot))
         _ -> unplaced(gate, context, context.launch.slot, 11u64, status)
     }
 }
-machine unplaced(gate: &Gate, context: &mut State, slot: u64 [0..=4], stage: u64, status: u64) -> [u64; 8] reaches Kernel {
-    report::launch_stage(gate, slot, stage, status);
+machine unplaced(gate: &|kernel|::Gate, context: &mut |shared_state|::State, slot: u64 [0..=4], stage: u64, status: u64) -> [u64; 8] reaches |kernel|::Kernel {
+    |report|::launch_stage(gate, slot, stage, status);
     error(status)
 }
-machine settled_control(gate: &Gate, context: &mut State, slot: u64 [0..=4], tick: Tick) reaches Kernel {
+machine settled_control(gate: &|kernel|::Gate, context: &mut |shared_state|::State, slot: u64 [0..=4], tick: |time|::Tick) reaches |kernel|::Kernel {
     transition tick {
-        Tick::Read { value } -> block lifecycle::open_control(gate, context, value, slot)
-        Tick::Failed { code } -> done_now()
+        |time|::Tick::Read { value } -> block |lifecycle|::open_control(gate, context, value, slot)
+        |time|::Tick::Failed { code } -> done_now()
     }
 }
 machine done_now() {}
 // The requester's receipt names its latest launch on this connection.
-machine receipt(context: &mut State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4]) -> [u64; 8] {
+machine receipt(context: &mut |shared_state|::State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4]) -> [u64; 8] {
     let child: u64 = context.slots[slot].task;
-    let recorded: Recorded = launches::record(&mut context.observations, requester, incarnation, child);
+    let recorded: |launches|::Recorded = |launches|::record(&mut context.observations, requester, incarnation, child);
     transition recorded {
-        Recorded::Receipt { value } -> (launched(slot, value))
-        Recorded::Refused { code } -> (error(code))
+        |launches|::Recorded::Receipt { value } -> (launched(slot, value))
+        |launches|::Recorded::Refused { code } -> (error(code))
     }
 }
 machine launched(slot: u64, receipt: u64) -> [u64; 8] {
@@ -130,49 +124,49 @@ machine launched(slot: u64, receipt: u64) -> [u64; 8] {
 // below the launcher's ranks. Under this matrix's own login the user takes
 // its standing count from the bottom, below the picker; elsewhere the owner's
 // standing count holds.
-machine range_for(context: &mut State, slot: u64 [0..=4], standing: u64, allotted: u64, allowance: u64) -> u64 {
-    let demand: Demand = Demand { requested: allotted, ceiling: standing, has_descendants: context.launch.plan.descendants != 0u64,
+machine range_for(context: &mut |shared_state|::State, slot: u64 [0..=4], standing: u64, allotted: u64, allowance: u64) -> u64 {
+    let demand: |surfaces|::Demand = |surfaces|::Demand { requested: allotted, ceiling: standing, has_descendants: context.launch.plan.descendants != 0u64,
         explicit_profile: context.launch.plan.profiled, backed: allowance };
     transition {
-        context.desktop && allotted != 0u64 -> preferring(context, slot, allotted, preferred(&demand), allowance)
-        context.desktop -> (kernel::NO_MEMORY)
-        context.login -> (surfaces::range(&mut context.world, slot, 0u64, standing))
-        slot == 0u64 -> (surfaces::range(&mut context.world, slot, 0u64, standing))
-        slot == 1u64 && standing <= allowance -> (surfaces::range(&mut context.world, slot, allowance - standing, standing))
-        slot == 1u64 -> (kernel::NO_MEMORY)
-        _ -> (kernel::DENIED)
+        context.desktop && allotted != 0u64 -> preferring(context, slot, allotted, |surfaces|::preferred(&demand), allowance)
+        context.desktop -> (|kernel|::NO_MEMORY)
+        context.login -> (|world_surfaces|::range(&mut context.world, slot, 0u64, standing))
+        slot == 0u64 -> (|world_surfaces|::range(&mut context.world, slot, 0u64, standing))
+        slot == 1u64 && standing <= allowance -> (|world_surfaces|::range(&mut context.world, slot, allowance - standing, standing))
+        slot == 1u64 -> (|kernel|::NO_MEMORY)
+        _ -> (|kernel|::DENIED)
     }
-    machine preferring(context: &mut State, slot: u64 [0..=4], minimum: u64, preference: Preference, allowance: u64) -> u64 {
+    machine preferring(context: &mut |shared_state|::State, slot: u64 [0..=4], minimum: u64, preference: |surfaces|::Preference, allowance: u64) -> u64 {
         transition preference {
-            Preference::Preferred { count } -> descending(context, slot, minimum, count, allowance)
-            Preference::ExceedsCeiling -> (kernel::NO_MEMORY)
+            |surfaces|::Preference::Preferred { count } -> descending(context, slot, minimum, count, allowance)
+            |surfaces|::Preference::ExceedsCeiling -> (|kernel|::NO_MEMORY)
         }
     }
-    machine descending(context: &mut State, slot: u64 [0..=4], minimum: u64, count: u64, allowance: u64) -> u64 {
+    machine descending(context: &mut |shared_state|::State, slot: u64 [0..=4], minimum: u64, count: u64, allowance: u64) -> u64 {
         transition count >= minimum && count >= 1u64 && count <= 64u64 {
             true -> attempting(context, slot, minimum, count, allowance)
-            _ -> (kernel::NO_MEMORY)
+            _ -> (|kernel|::NO_MEMORY)
         }
     }
-    machine attempting(context: &mut State, slot: u64 [0..=4], minimum: u64, count: u64, allowance: u64) -> u64 requires count <= 64u64 {
+    machine attempting(context: &mut |shared_state|::State, slot: u64 [0..=4], minimum: u64, count: u64, allowance: u64) -> u64 requires count <= 64u64 {
         let status: u64 = lowest(context, slot, count, allowance, 1u64);
         transition { _ -> attempted(context, slot, minimum, count, allowance, status) }
     }
-    machine attempted(context: &mut State, slot: u64 [0..=4], minimum: u64, count: u64, allowance: u64, status: u64) -> u64 {
+    machine attempted(context: &mut |shared_state|::State, slot: u64 [0..=4], minimum: u64, count: u64, allowance: u64, status: u64) -> u64 {
         transition {
             status == 0u64 -> (0u64)
             count > minimum -> descending(context, slot, minimum, count - 1u64, allowance)
             _ -> (status)
         }
     }
-    machine lowest(context: &mut State, slot: u64 [0..=4], count: u64, allowance: u64, base: u64) -> u64 requires count <= 64u64 && base <= 64u64 {
+    machine lowest(context: &mut |shared_state|::State, slot: u64 [0..=4], count: u64, allowance: u64, base: u64) -> u64 requires count <= 64u64 && base <= 64u64 {
         transition base < 64u64 && allowance > LAUNCHER_RANKS && base < allowance - LAUNCHER_RANKS {
             true -> tried(context, slot, count, allowance, base)
-            _ -> (kernel::NO_MEMORY)
+            _ -> (|kernel|::NO_MEMORY)
         }
     }
-    machine tried(context: &mut State, slot: u64 [0..=4], count: u64, allowance: u64, base: u64) -> u64 requires count <= 64u64 && base < 64u64 {
-        let status: u64 = surfaces::range(&mut context.world, slot, base, count);
+    machine tried(context: &mut |shared_state|::State, slot: u64 [0..=4], count: u64, allowance: u64, base: u64) -> u64 requires count <= 64u64 && base < 64u64 {
+        let status: u64 = |world_surfaces|::range(&mut context.world, slot, base, count);
         transition status == 0u64 {
             true -> (0u64)
             _ -> lowest(context, slot, count, allowance, base + 1u64)

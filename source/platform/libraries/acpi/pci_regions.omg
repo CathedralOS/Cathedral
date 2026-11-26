@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified pinned acpi platform/pci.rs. Numeric descriptions grant no access.
-module pci_regions;
-use fixed_types::McfgEntry;
-use fixed_types::McfgEntryResult;
-use mcfg::McfgView;
-use mcfg::parse_mcfg;
-use mcfg::mcfg_entry;
+use {omega}/language/core/nat.omg;
+use fixed_types.omg;
+use mcfg.omg;
 pub data PciConfigRegion [copy] { base_address: u64; segment: u16; first_bus: u8; last_bus: u8; }
 pub data PciRegionResult [copy] { error: u8; value: PciConfigRegion; }
 pub data PciAddressResult [copy] { error: u8; found: bool; address: u64; }
 pub machine pci_region(input: &[u8; 4096], length: u64, allow_partial_tail: bool, index: u64) -> PciRegionResult {
-    let entry: McfgEntryResult = mcfg_entry(input, length, allow_partial_tail, index);
+    let entry: |fixed_types|::McfgEntryResult = |mcfg|::mcfg_entry(input, length, allow_partial_tail, index);
     PciRegionResult { error: entry.error, value: PciConfigRegion { base_address: entry.value.base_address, segment: entry.value.pci_segment_group, first_bus: entry.value.bus_number_start, last_bus: entry.value.bus_number_end } }
 }
 // PCI Firmware ECAM base is relative to bus0, even when first_bus is nonzero.
@@ -36,7 +33,7 @@ pub machine find_address(regions: &[PciConfigRegion; 253], count: u64, segment: 
     }
 }
 machine scan(regions: &[PciConfigRegion; 253], count: u64, index: u64, segment: u16, bus: u8, device: u8, function: u8, result: PciAddressResult)
-terminates by (index, count) -> Nat::BoundedDistance;
+terminates by (index, count) -> |nat|::Nat::BoundedDistance;
 -> PciAddressResult {
     let next: PciAddressResult = step(regions, count, index, segment, bus, device, function, result);
     transition index < count { true -> scan(regions, count, index + 1, segment, bus, device, function, next) _ -> (result) }

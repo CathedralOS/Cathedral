@@ -1,30 +1,25 @@
-use aml::model::Value;
-use execution::execution_model::Frame;
-use execution::execution_model::Target;
-use execution::execution_model::Binding;
-use execution::execution_model::BindingResult;
-use execution::execution_model::ExecutionOutcome;
-use execution::generic_target_model::TargetSelection;
-use execution::generic_targets::select_target;
-use execution::generic_targets::publish_target;
+use {aml}/model.omg;
+use {execution}/execution_model.omg;
+use {execution}/generic_target_model.omg;
+use {execution}/generic_targets.omg;
 data Suite {}
-machine gf_number(binding:Binding)->u64 {transition binding {Binding::Integer {number} -> (number) _ -> (999)}}
+machine gf_number(binding:|execution_model|::Binding)->u64 {transition binding {|execution_model|::Binding::Integer {number} -> (number) _ -> (999)}}
 machine gf_case(mode:u64,expected:u64)->i32 {
- let mut frame:Frame=Frame {};frame.locals[0]=Binding::Integer {number:11};frame.arguments[0]=frame.locals[0];
- let selection:TargetSelection=gf_select(&frame,mode);let status:ExecutionOutcome=gf_status(mode);
- let result:BindingResult=BindingResult {outcome:status,binding:Binding::Integer {number:22}};
- let actual:ExecutionOutcome=publish_target(&mut frame,selection,result);
- let observed:u64=gf_observe(&frame,mode);let wanted:ExecutionOutcome=gf_wanted(mode);
+ let mut frame:|execution_model|::Frame=|execution_model|::Frame {};frame.locals[0]=|execution_model|::Binding::Integer {number:11};frame.arguments[0]=frame.locals[0];
+ let selection:|generic_target_model|::TargetSelection=gf_select(&frame,mode);let status:|execution_model|::ExecutionOutcome=gf_status(mode);
+ let result:|execution_model|::BindingResult=|execution_model|::BindingResult {outcome:status,binding:|execution_model|::Binding::Integer {number:22}};
+ let actual:|execution_model|::ExecutionOutcome=|generic_targets|::publish_target(&mut frame,selection,result);
+ let observed:u64=gf_observe(&frame,mode);let wanted:|execution_model|::ExecutionOutcome=gf_wanted(mode);
  let good:bool=gf_result(observed,expected,actual,wanted,frame.pc);
  transition good {true -> (0) _ -> (1)}
 }
-machine gf_result(number:u64,expected:u64,actual:ExecutionOutcome,wanted:ExecutionOutcome,pc:u64)->bool {number==expected && actual==wanted && pc==0}
-machine gf_status(mode:u64)->ExecutionOutcome {transition mode==7 {true -> (ExecutionOutcome::InvalidState) _ -> (ExecutionOutcome::Success)}}
-machine gf_wanted(mode:u64)->ExecutionOutcome {transition {mode<2 -> (ExecutionOutcome::Success) mode<6 -> (ExecutionOutcome::InvalidTarget) mode==6 -> (ExecutionOutcome::Capacity) _ -> (ExecutionOutcome::InvalidState)}}
-machine gf_observe(frame:&Frame,mode:u64)->u64 {transition mode==1 {true -> argument(frame) _ -> local(frame)} state argument(frame:&Frame)->u64 {let result:u64=gf_number(frame.arguments[0]);result} state local(frame:&Frame)->u64 {let result:u64=gf_number(frame.locals[0]);result}}
-machine gf_select(frame:&Frame,mode:u64)->TargetSelection {
- transition mode {0 -> selected(frame,Target::Local {local_index:0}) 1 -> selected(frame,Target::Argument {argument_index:0}) 2 -> selected(frame,Target::Local {local_index:8}) 3 -> selected(frame,Target::Argument {argument_index:18446744073709551615}) 4 -> (TargetSelection::Local {local_index:8,local_binding:Binding::Uninitialized}) 5 -> (TargetSelection::Argument {argument_index:18446744073709551615,argument_binding:Binding::Uninitialized}) 6 -> (TargetSelection::Failure {outcome:ExecutionOutcome::Capacity}) _ -> selected(frame,Target::Local {local_index:0})}
- state selected(frame:&Frame,target:Target)->TargetSelection {let result:TargetSelection=select_target(frame,target);result}
+machine gf_result(number:u64,expected:u64,actual:|execution_model|::ExecutionOutcome,wanted:|execution_model|::ExecutionOutcome,pc:u64)->bool {number==expected && actual==wanted && pc==0}
+machine gf_status(mode:u64)->|execution_model|::ExecutionOutcome {transition mode==7 {true -> (|execution_model|::ExecutionOutcome::InvalidState) _ -> (|execution_model|::ExecutionOutcome::Success)}}
+machine gf_wanted(mode:u64)->|execution_model|::ExecutionOutcome {transition {mode<2 -> (|execution_model|::ExecutionOutcome::Success) mode<6 -> (|execution_model|::ExecutionOutcome::InvalidTarget) mode==6 -> (|execution_model|::ExecutionOutcome::Capacity) _ -> (|execution_model|::ExecutionOutcome::InvalidState)}}
+machine gf_observe(frame:&|execution_model|::Frame,mode:u64)->u64 {transition mode==1 {true -> argument(frame) _ -> local(frame)} state argument(frame:&|execution_model|::Frame)->u64 {let result:u64=gf_number(frame.arguments[0]);result} state local(frame:&|execution_model|::Frame)->u64 {let result:u64=gf_number(frame.locals[0]);result}}
+machine gf_select(frame:&|execution_model|::Frame,mode:u64)->|generic_target_model|::TargetSelection {
+ transition mode {0 -> selected(frame,|execution_model|::Target::Local {local_index:0}) 1 -> selected(frame,|execution_model|::Target::Argument {argument_index:0}) 2 -> selected(frame,|execution_model|::Target::Local {local_index:8}) 3 -> selected(frame,|execution_model|::Target::Argument {argument_index:18446744073709551615}) 4 -> (|generic_target_model|::TargetSelection::Local {local_index:8,local_binding:|execution_model|::Binding::Uninitialized}) 5 -> (|generic_target_model|::TargetSelection::Argument {argument_index:18446744073709551615,argument_binding:|execution_model|::Binding::Uninitialized}) 6 -> (|generic_target_model|::TargetSelection::Failure {outcome:|execution_model|::ExecutionOutcome::Capacity}) _ -> selected(frame,|execution_model|::Target::Local {local_index:0})}
+ state selected(frame:&|execution_model|::Frame,target:|execution_model|::Target)->|generic_target_model|::TargetSelection {let result:|generic_target_model|::TargetSelection=|generic_targets|::select_target(frame,target);result}
 }
 machine Suite::frame_0_0(&mut self)->i32 {let result:i32=gf_case(0,22);result}
 machine Suite::frame_0_1(&mut self)->i32 {let result:i32=gf_case(0,23);result}

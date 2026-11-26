@@ -1,10 +1,9 @@
-module description;
 // Bounded virtual-input hints: advisory control categories and a short label,
 // carried as three wire words. Labels are display text, never identity or
 // authority. Unknown, all zero, stays distinct from an empty device. A
 // description is fixed for the life of its channel; replace the channel to
 // change it. Wire owner: source-rs/platform/contracts/input/description.rs.
-use protocol::main;
+use {protocol}/main.omg;
 
 public data Description [copy] {
     // Sixteen label bytes as two little-endian words, zero padded.

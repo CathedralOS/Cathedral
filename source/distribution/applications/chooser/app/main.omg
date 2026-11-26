@@ -1,10 +1,8 @@
-module main;
 // The process completes the last command, then this entry chooses the next.
 // Typed continuations and bounded data are shared with both real and test hosts.
-use state::State;
-use operations::Command;
-use operations::Exchange;
-use session::session::session;
-public machine advance(s: &mut State, exchange: &mut Exchange) -> Command {
-    session(s, exchange)
+use state.omg as local_state;
+use operations.omg;
+use session/session.omg;
+public machine advance(s: &mut |local_state|::State, exchange: &mut |operations|::Exchange) -> |operations|::Command {
+    |session|::session(s, exchange)
 }

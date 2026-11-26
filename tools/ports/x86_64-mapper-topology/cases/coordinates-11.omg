@@ -1,40 +1,35 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Expected numeric results observed from pinned Rust public APIs/private mirrors.
-use values::addresses::NumberResult;
-use values::mapper_topology::offset_frame_address;
-use values::mapper_topology::recursive_p3;
-use values::mapper_topology::recursive_p2;
-use values::mapper_topology::recursive_p1;
-use values::mapper_topology::observe_recursive;
-use values::mapper_topology::RecursiveObservation;
-use values::mapper_topology::InactiveReason;
-machine number_is(result:NumberResult,valid:bool,expected:u64)->bool {
- transition result {NumberResult::Value {value} -> compare(value,valid,expected) _ -> (!valid)}
+use {omega}/language/core/nat.omg;
+use {values}/addresses.omg;
+use {values}/mapper_topology.omg;
+machine number_is(result:|addresses|::NumberResult,valid:bool,expected:u64)->bool {
+ transition result {|addresses|::NumberResult::Value {value} -> compare(value,valid,expected) _ -> (!valid)}
  state compare(value:u64,valid:bool,expected:u64)->bool {valid && value==expected}
 }
-machine observed_is(result:RecursiveObservation,code:u64,index:u16,frame:u64)->bool {
+machine observed_is(result:|mapper_topology|::RecursiveObservation,code:u64,index:u16,frame:u64)->bool {
  transition result {
-  RecursiveObservation::InvalidAddress -> (code==5)
-  RecursiveObservation::InvalidObservedFrame -> (code==6)
-  RecursiveObservation::NotRecursive -> (code==1)
-  RecursiveObservation::NotActive {reason} -> inactive(reason,code)
-  RecursiveObservation::Observed {recursive_index,physical_frame} -> active(recursive_index,physical_frame,code,index,frame)
+  |mapper_topology|::RecursiveObservation::InvalidAddress -> (code==5)
+  |mapper_topology|::RecursiveObservation::InvalidObservedFrame -> (code==6)
+  |mapper_topology|::RecursiveObservation::NotRecursive -> (code==1)
+  |mapper_topology|::RecursiveObservation::NotActive {reason} -> inactive(reason,code)
+  |mapper_topology|::RecursiveObservation::Observed {recursive_index,physical_frame} -> active(recursive_index,physical_frame,code,index,frame)
  }
- state inactive(reason:InactiveReason,code:u64)->bool {transition reason {InactiveReason::EntryNotPresent -> (code==2) InactiveReason::EntryHugeFrame -> (code==3) InactiveReason::DifferentFrame -> (code==4)}}
+ state inactive(reason:|mapper_topology|::InactiveReason,code:u64)->bool {transition reason {|mapper_topology|::InactiveReason::EntryNotPresent -> (code==2) |mapper_topology|::InactiveReason::EntryHugeFrame -> (code==3) |mapper_topology|::InactiveReason::DifferentFrame -> (code==4)}}
  state active(actual_index:u16,actual_frame:u64,code:u64,index:u16,frame:u64)->bool {code==0 && actual_index==index && actual_frame==frame}
 }
 
 data Vector [copy]{recursive_index:u16;page4:u64;page2:u64;page1:u64;third4:u64;third2:u64;third1:u64;second4:u64;second2:u64;first4:u64;}
 machine check_vector(row:Vector)->bool {
  let r:u16=row.recursive_index;let p4:u64=row.page4;let p2:u64=row.page2;let p1:u64=row.page1;
- let a:NumberResult=recursive_p3(p4,4096,r);let b:NumberResult=recursive_p3(p2,2097152,r);let c:NumberResult=recursive_p3(p1,1073741824,r);
- let d:NumberResult=recursive_p2(p4,4096,r);let e:NumberResult=recursive_p2(p2,2097152,r);let f:NumberResult=recursive_p1(p4,r);
+ let a:|addresses|::NumberResult=|mapper_topology|::recursive_p3(p4,4096,r);let b:|addresses|::NumberResult=|mapper_topology|::recursive_p3(p2,2097152,r);let c:|addresses|::NumberResult=|mapper_topology|::recursive_p3(p1,1073741824,r);
+ let d:|addresses|::NumberResult=|mapper_topology|::recursive_p2(p4,4096,r);let e:|addresses|::NumberResult=|mapper_topology|::recursive_p2(p2,2097152,r);let f:|addresses|::NumberResult=|mapper_topology|::recursive_p1(p4,r);
  let aa:bool=number_is(a,true,row.third4);let bb:bool=number_is(b,true,row.third2);let cc:bool=number_is(c,true,row.third1);
  let dd:bool=number_is(d,true,row.second4);let ee:bool=number_is(e,true,row.second2);let ff:bool=number_is(f,true,row.first4);
  aa && bb && cc && dd && ee && ff
 }
 machine topology_scan(rows:&[Vector;32],index:u64,limit:u64,ok:bool)
-terminates by (index,limit) -> Nat::BoundedDistance;
+terminates by (index,limit) -> |nat|::Nat::BoundedDistance;
 -> bool {
  let next:bool=topology_step(rows,index,ok);
  transition index<limit {true -> topology_scan(rows,index+1,limit,next) _ -> (ok)}

@@ -1,3 +1,7 @@
+use main.omg;
+
+use {omega_ui_windows}/windows_host.omg;
+use {omega_ui_windows}/windows_native.omg;
 // omega_ui Gallery: an interactive native windowed desktop application
 // showcasing omega_ui's immediate-mode Flexbox layout, cards, buttons,
 // toggles, checkboxes, sliders, progress bars, and light/dark themes.
@@ -13,7 +17,7 @@ machine build(builder: &mut Build) {
         revision: "e53f0955e26aee23fada4957e50b01379e9ce6b4",
         selection: PackageSelection::Named { package: "omega_language_std" }
     });
-    Build::select_provider<omega_ui_windows::windows_host::WindowsUiHost, omega_ui_windows::windows_native::NativeWindowsUi>(builder, windows_x86_64);
-    Build::bind(builder, windows_x86_64::ProgramEntry, main);
+    Build::select_provider<|windows_host|::WindowsUiHost, |windows_native|::NativeWindowsUi>(builder, windows_x86_64);
+    Build::bind(builder, windows_x86_64::ProgramEntry, |main|::main);
     builder.subsystem = Subsystem::Gui;
 }

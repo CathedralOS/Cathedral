@@ -1,8 +1,7 @@
-module launches;
 // Bounded launch observations. Receipt sequences and results are local to the
 // requesting endpoint and follow an exact child handle rather than its slot. No
 // PID, fault address, other caller's activity or later occupant is exposed.
-use protocol::main;
+use {protocol}/main.omg;
 
 public data Observation [copy] {
     live: bool;
@@ -29,13 +28,13 @@ public machine available(ledger: &Launches, slot: u64) -> bool {
 public machine record(ledger: &mut Launches, slot: u64, incarnation: u64, child: u64) -> Recorded {
     transition slot < 5u64 {
         true -> checked(ledger, slot, incarnation, child)
-        _ -> (Recorded::Refused { code: NO_MEMORY })
+        _ -> (Recorded::Refused { code: |main|::NO_MEMORY })
     }
     machine checked(ledger: &mut Launches, slot: u64, incarnation: u64, child: u64) -> Recorded requires slot < 5u64 {
         let serial: u64 = ledger.next[slot];
         transition serial < 0xffffffffffffffffu64 {
             true -> recorded(ledger, slot, incarnation, child, serial + 1u64)
-            _ -> (Recorded::Refused { code: NO_MEMORY })
+            _ -> (Recorded::Refused { code: |main|::NO_MEMORY })
         }
     }
     machine recorded(ledger: &mut Launches, slot: u64, incarnation: u64, child: u64, receipt: u64) -> Recorded requires slot < 5u64 {
@@ -45,7 +44,7 @@ public machine record(ledger: &mut Launches, slot: u64, incarnation: u64, child:
         entry.incarnation = incarnation;
         entry.receipt = receipt;
         entry.child = child;
-        entry.state = LAUNCH_RUNNING;
+        entry.state = |main|::LAUNCH_RUNNING;
         ledger.entries[slot] = entry;
         Recorded::Receipt { value: receipt }
     }
@@ -55,7 +54,7 @@ public machine query(ledger: &Launches, slot: u64, incarnation: u64, receipt: u6
     transition slot < 5u64 && ledger.entries[slot].live && ledger.entries[slot].incarnation == incarnation
         && ledger.entries[slot].receipt == receipt {
         true -> (status_of(ledger, slot))
-        _ -> (error(DENIED))
+        _ -> (error(|main|::DENIED))
     }
 }
 machine status_of(ledger: &Launches, slot: u64) -> [u64; 8] requires slot < 5u64 {
@@ -65,7 +64,7 @@ machine status_of(ledger: &Launches, slot: u64) -> [u64; 8] requires slot < 5u64
 }
 // The exact running child ended: the observer's slot plus one, or zero.
 public machine finished(ledger: &mut Launches, child: u64, state: u64) -> u64 {
-    transition state == LAUNCH_EXITED || state == LAUNCH_FAILED || state == LAUNCH_STOPPED {
+    transition state == |main|::LAUNCH_EXITED || state == |main|::LAUNCH_FAILED || state == |main|::LAUNCH_STOPPED {
         true -> finding(ledger, child, state, 0u64)
         _ -> (0u64)
     }
@@ -76,7 +75,7 @@ public machine finished(ledger: &mut Launches, child: u64, state: u64) -> u64 {
         }
     }
     machine checked(ledger: &mut Launches, child: u64, state: u64, slot: u64) -> u64 requires slot < 5u64 {
-        transition ledger.entries[slot].live && ledger.entries[slot].child == child && ledger.entries[slot].state == LAUNCH_RUNNING {
+        transition ledger.entries[slot].live && ledger.entries[slot].child == child && ledger.entries[slot].state == |main|::LAUNCH_RUNNING {
             true -> ended(ledger, state, slot)
             _ -> finding(ledger, child, state, slot + 1u64)
         }

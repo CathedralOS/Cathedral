@@ -1,99 +1,95 @@
-module transfers::maintenance;
 // Cursor drawing and owed erasures share the scene barrier, without borrowing a
 // child's reply ticket. Only the latest cursor position waits; input stays queued.
-use shared::state::State;
-use shared::presentation::Transfer;
-use shared::presentation::Maintenance;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::kernel;
-use protocol::display;
-use scene;
-use transfers::backing;
-use presentation;
-use world::level;
-use world::geometry;
+use {shared}/state.omg as shared_state;
+use {shared}/presentation.omg;
+use {runtime}/kernel.omg;
+use {protocol}/display.omg;
+use scene.omg;
+use transfers/backing.omg;
+use presentation.omg as presentation_file;
+use {world}/level.omg;
+use {world}/geometry.omg;
 
-public machine pointer(context: &mut State) {
+public machine pointer(context: &mut |shared_state|::State) {
     transition !context.has_parent && context.has_scene && !context.presentation_work.active && context.display_work.pointer {
         true -> started(context)
         _ -> done()
     }
-    machine started(context: &mut State) {
-        let packet: [u64; 8] = [display::MATRIX_POINTER,context.display_work.x,context.display_work.y,0u64,0u64,0u64,0u64,0u64];
-        begin(context, Maintenance::Pointer, packet);
+    machine started(context: &mut |shared_state|::State) {
+        let packet: [u64; 8] = [|display|::MATRIX_POINTER,context.display_work.x,context.display_work.y,0u64,0u64,0u64,0u64,0u64];
+        begin(context, |presentation|::Maintenance::Pointer, packet);
         context.display_work.pointer = false;
     }
 }
-public machine style(context: &mut State, mode: u64) {
-    begin(context, Maintenance::Style, [display::MATRIX_POINTER_STYLE,mode,0u64,0u64,0u64,0u64,0u64,0u64]);
+public machine style(context: &mut |shared_state|::State, mode: u64) {
+    begin(context, |presentation|::Maintenance::Style, [|display|::MATRIX_POINTER_STYLE,mode,0u64,0u64,0u64,0u64,0u64,0u64]);
 }
-public machine erase(context: &mut State, words: [u64; 8]) { begin(context, Maintenance::Erase, words); }
-machine begin(context: &mut State, kind: Maintenance, packet: [u64; 8]) {
-    let mut work: Transfer;
+public machine erase(context: &mut |shared_state|::State, words: [u64; 8]) { begin(context, |presentation|::Maintenance::Erase, words); }
+machine begin(context: &mut |shared_state|::State, kind: |presentation|::Maintenance, packet: [u64; 8]) {
+    let mut work: |presentation|::Transfer;
     work.active = true;
     work.maintenance = kind;
     work.packet = packet;
     context.presentation_work = work;
 }
-public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
+public machine step(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     transition context.presentation_work.submitted { true -> block receiving(gate, context) _ -> block sending(gate, context) }
-    machine receiving(gate: &Gate, context: &mut State) reaches Kernel {
-        transition backing::ready(context) { true -> block received(gate, context) _ -> done() }
+    machine receiving(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
+        transition |backing|::ready(context) { true -> block received(gate, context) _ -> done() }
     }
-    machine received(gate: &Gate, context: &mut State) reaches Kernel {
-        let status: u64 = backing::take(context);
+    machine received(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
+        let status: u64 = |backing|::take(context);
         block finish(gate, context, status);
     }
-    machine sending(gate: &Gate, context: &mut State) reaches Kernel {
-        let work: Transfer = context.presentation_work;
-        transition work.maintenance == Maintenance::Erase {
+    machine sending(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
+        let work: |presentation|::Transfer = context.presentation_work;
+        transition work.maintenance == |presentation|::Maintenance::Erase {
             true -> block erased(gate, context, work.packet)
             _ -> block pointed(gate, context, work.packet)
         }
     }
-    machine erased(gate: &Gate, context: &mut State, words: [u64; 8]) reaches Kernel {
-        let status: u64 = block backing::submit(gate, context, words, 0u64);
+    machine erased(gate: &|kernel|::Gate, context: &mut |shared_state|::State, words: [u64; 8]) reaches |kernel|::Kernel {
+        let status: u64 = block |backing|::submit(gate, context, words, 0u64);
         block submitted(gate, context, status);
     }
-    machine pointed(gate: &Gate, context: &mut State, words: [u64; 8]) reaches Kernel {
-        let status: u64 = block scene::submit(gate, context, [words[0],words[1],words[2],0u64,0u64,0u64], 0u64);
+    machine pointed(gate: &|kernel|::Gate, context: &mut |shared_state|::State, words: [u64; 8]) reaches |kernel|::Kernel {
+        let status: u64 = block |scene|::submit(gate, context, [words[0],words[1],words[2],0u64,0u64,0u64], 0u64);
         block submitted(gate, context, status);
     }
-    machine submitted(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
+    machine submitted(gate: &|kernel|::Gate, context: &mut |shared_state|::State, status: u64) reaches |kernel|::Kernel {
         transition {
             status == 0u64 -> accepted(context)
-            status == kernel::WOULD_BLOCK -> done()
+            status == |kernel|::WOULD_BLOCK -> done()
             _ -> block finish(gate, context, status)
         }
     }
-    machine accepted(context: &mut State) { context.presentation_work.submitted = true; }
+    machine accepted(context: &mut |shared_state|::State) { context.presentation_work.submitted = true; }
 }
-machine finish(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
-    let work: Transfer = context.presentation_work;
-    transition status == 0u64 || (work.maintenance == Maintenance::Erase && (status == kernel::DENIED || status == kernel::BAD_HANDLE || status == kernel::INVALID_ARGUMENT)) {
+machine finish(gate: &|kernel|::Gate, context: &mut |shared_state|::State, status: u64) reaches |kernel|::Kernel {
+    let work: |presentation|::Transfer = context.presentation_work;
+    transition status == 0u64 || (work.maintenance == |presentation|::Maintenance::Erase && (status == |kernel|::DENIED || status == |kernel|::BAD_HANDLE || status == |kernel|::INVALID_ARGUMENT)) {
         true -> block settled(gate, context, work, status)
         _ -> block lost(gate, context, work)
     }
-    machine lost(gate: &Gate, context: &mut State, work: Transfer) reaches Kernel {
-        block backing::close(gate, context);
-        level::inherit(&mut context.world, geometry::no_grant());
-        block settled(gate, context, work, kernel::IO_ERROR);
+    machine lost(gate: &|kernel|::Gate, context: &mut |shared_state|::State, work: |presentation|::Transfer) reaches |kernel|::Kernel {
+        block |backing|::close(gate, context);
+        |level|::inherit(&mut context.world, |geometry|::no_grant());
+        block settled(gate, context, work, |kernel|::IO_ERROR);
     }
-    machine settled(gate: &Gate, context: &mut State, work: Transfer, status: u64) reaches Kernel {
-        let empty: Transfer;
+    machine settled(gate: &|kernel|::Gate, context: &mut |shared_state|::State, work: |presentation|::Transfer, status: u64) reaches |kernel|::Kernel {
+        let empty: |presentation|::Transfer;
         context.presentation_work = empty;
         transition {
-            work.maintenance == Maintenance::Erase -> block erased(gate, context, work.packet[2])
-            work.maintenance == Maintenance::Style && status == 0u64 -> styled(context, work.packet[1])
+            work.maintenance == |presentation|::Maintenance::Erase -> block erased(gate, context, work.packet[2])
+            work.maintenance == |presentation|::Maintenance::Style && status == 0u64 -> styled(context, work.packet[1])
             _ -> done()
         }
     }
-    machine erased(gate: &Gate, context: &mut State, key: u64) reaches Kernel {
-        block presentation::drop_image(gate, context, key);
+    machine erased(gate: &|kernel|::Gate, context: &mut |shared_state|::State, key: u64) reaches |kernel|::Kernel {
+        block |presentation_file|::drop_image(gate, context, key);
         // Drain the entire retirement fence before admission can reuse ranks.
-        let status: u64 = block presentation::flush_turn(gate, context);
+        let status: u64 = block |presentation_file|::flush_turn(gate, context);
     }
-    machine styled(context: &mut State, mode: u64) { context.styled = true; context.style = mode; }
+    machine styled(context: &mut |shared_state|::State, mode: u64) { context.styled = true; context.style = mode; }
 }
 machine done() {}

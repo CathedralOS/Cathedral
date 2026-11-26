@@ -1,50 +1,47 @@
-module requests::control::wire;
-
 // Recognize canonical loss independently of launch policy. Routed
 // requests retain their first hop and whether the word configures or launches
 // from storage; the host owns the original packet and reply.
-use requests::control::operation::Request;
-use requests::control::operation::Local;
-use requests::desktop;
-use requests::wire;
-use protocol::main;
-use protocol::matrix;
+use requests/control/operation.omg;
+use requests/desktop.omg;
+use requests/wire.omg;
+use {protocol}/main.omg;
+use {protocol}/matrix.omg;
 
-public machine decode(words: &[u64; 8]) -> Request {
-    transition words[0] == LOSS && requests::wire::zero_tail(words, 1u64) {
-        true -> (Request::Loss)
+public machine decode(words: &[u64; 8]) -> |operation|::Request {
+    transition words[0] == |main|::LOSS && |wire|::zero_tail(words, 1u64) {
+        true -> (|operation|::Request::Loss)
         _ -> routed(words)
     }
-    machine routed(words: &[u64; 8]) -> Request {
+    machine routed(words: &[u64; 8]) -> |operation|::Request {
         let op: u64 = words[0] & 65535u64;
         transition words[0] >> 16u64 != 0u64 {
-            true -> (Request::Forward { hop: (words[0] >> 16u64) & 7u64,
-                configuration: op == requests::desktop::CONFIGURE, stored: op == RUN_OBJECT })
+            true -> (|operation|::Request::Forward { hop: (words[0] >> 16u64) & 7u64,
+                configuration: op == |desktop|::CONFIGURE, stored: op == |matrix|::RUN_OBJECT })
             _ -> local(words)
         }
     }
 }
 
-machine local(words: &[u64; 8]) -> Request {
+machine local(words: &[u64; 8]) -> |operation|::Request {
     transition words[0] {
-        requests::desktop::CONFIGURE -> (Request::Configure { canonical: requests::wire::zero_tail(words, 1u64) })
-        RESTORE_STORAGE -> (Request::Restore { canonical: requests::wire::zero_tail(words, 1u64) })
-        requests::desktop::LAUNCHER_FALLBACK -> (Request::Fallback { canonical: requests::wire::zero_tail(words, 3u64) })
-        RUN_OBJECT -> child(words[1], Local::Stored { object: words[2] })
-        LAUNCH_IMAGES -> child(words[1], Local::Images { mask: words[2], canonical: requests::wire::zero_tail(words, 3u64) })
-        MANAGEMENT_GRANT -> child(words[1], Local::Management { count: words[2], canonical: requests::wire::zero_tail(words, 3u64) })
-        LAUNCH_IMPORTS -> child(words[1], Local::Imports { mask: words[2], canonical: requests::wire::zero_tail(words, 3u64) })
-        RUN_PAGES -> child(words[1], Local::Pages { private_pages: words[2], reader_pages: words[3], canonical: requests::wire::zero_tail(words, 4u64) })
-        RUN_MEMORY -> child(words[1], Local::Memory { canonical: requests::wire::zero_tail(words, 3u64) })
-        LAUNCH_POLICY -> child(words[1], Local::Policy { private_pages: words[2], reader_pages: words[3], surfaces: words[7] })
-        LAUNCH_PLACE -> child(words[1], Local::Placement { canonical: words[7] == 0u64 })
-        SPAWN -> child(words[1], Local::Spawn { canonical: requests::wire::zero_tail(words, 5u64) })
-        RUN -> child(words[1], Local::Run)
-        STOP -> child(words[1], Local::Stop { canonical: requests::wire::zero_tail(words, 2u64) })
-        _ -> (Request::Unknown)
+        |desktop|::CONFIGURE -> (|operation|::Request::Configure { canonical: |wire|::zero_tail(words, 1u64) })
+        |matrix|::RESTORE_STORAGE -> (|operation|::Request::Restore { canonical: |wire|::zero_tail(words, 1u64) })
+        |desktop|::LAUNCHER_FALLBACK -> (|operation|::Request::Fallback { canonical: |wire|::zero_tail(words, 3u64) })
+        |matrix|::RUN_OBJECT -> child(words[1], |operation|::Local::Stored { object: words[2] })
+        |matrix|::LAUNCH_IMAGES -> child(words[1], |operation|::Local::Images { mask: words[2], canonical: |wire|::zero_tail(words, 3u64) })
+        |matrix|::MANAGEMENT_GRANT -> child(words[1], |operation|::Local::Management { count: words[2], canonical: |wire|::zero_tail(words, 3u64) })
+        |matrix|::LAUNCH_IMPORTS -> child(words[1], |operation|::Local::Imports { mask: words[2], canonical: |wire|::zero_tail(words, 3u64) })
+        |matrix|::RUN_PAGES -> child(words[1], |operation|::Local::Pages { private_pages: words[2], reader_pages: words[3], canonical: |wire|::zero_tail(words, 4u64) })
+        |matrix|::RUN_MEMORY -> child(words[1], |operation|::Local::Memory { canonical: |wire|::zero_tail(words, 3u64) })
+        |matrix|::LAUNCH_POLICY -> child(words[1], |operation|::Local::Policy { private_pages: words[2], reader_pages: words[3], surfaces: words[7] })
+        |matrix|::LAUNCH_PLACE -> child(words[1], |operation|::Local::Placement { canonical: words[7] == 0u64 })
+        |matrix|::SPAWN -> child(words[1], |operation|::Local::Spawn { canonical: |wire|::zero_tail(words, 5u64) })
+        |matrix|::RUN -> child(words[1], |operation|::Local::Run)
+        |matrix|::STOP -> child(words[1], |operation|::Local::Stop { canonical: |wire|::zero_tail(words, 2u64) })
+        _ -> (|operation|::Request::Unknown)
     }
 }
 
-machine child(slot: u64, work: Local) -> Request {
-    Request::Child { slot: slot, work: work }
+machine child(slot: u64, work: |operation|::Local) -> |operation|::Request {
+    |operation|::Request::Child { slot: slot, work: work }
 }

@@ -1,88 +1,83 @@
-module requests::main;
-
 // Authenticated connection -> decoded request family -> operation owner.
 // The native bridge supplies facts; wire.omg classifies the actual IPC message.
-use requests::operations::Caller;
-use requests::operations::Facts;
-use requests::operations::Message;
-use requests::operations::Operation;
-use requests::owner;
-use requests::children;
+use requests/operations.omg;
+use requests/owner.omg;
+use requests/children.omg;
 
-public machine route(facts: &Facts, message: Message) -> Operation {
-    transition facts.caller == Caller::Producer {
-        true -> (Operation::Producer)
+public machine route(facts: &|operations|::Facts, message: |operations|::Message) -> |operations|::Operation {
+    transition facts.caller == |operations|::Caller::Producer {
+        true -> (|operations|::Operation::Producer)
         _ -> decoded(facts, message)
     }
-    machine decoded(facts: &Facts, message: Message) -> Operation {
+    machine decoded(facts: &|operations|::Facts, message: |operations|::Message) -> |operations|::Operation {
         transition message {
-            Message::Missing -> malformed(facts)
-            Message::Acquire -> acquisition(facts, message)
+            |operations|::Message::Missing -> malformed(facts)
+            |operations|::Message::Acquire -> acquisition(facts, message)
             _ -> caller(facts, message)
         }
     }
-    machine malformed(facts: &Facts) -> Operation {
-        transition facts.caller == Caller::Storage {
-            true -> (Operation::DenyNow)
-            _ -> (Operation::Deny)
+    machine malformed(facts: &|operations|::Facts) -> |operations|::Operation {
+        transition facts.caller == |operations|::Caller::Storage {
+            true -> (|operations|::Operation::DenyNow)
+            _ -> (|operations|::Operation::Deny)
         }
     }
-    machine acquisition(facts: &Facts, message: Message) -> Operation {
-        transition facts.caller != Caller::Owner && facts.caller != Caller::Unknown {
-            true -> (Operation::Acquire)
+    machine acquisition(facts: &|operations|::Facts, message: |operations|::Message) -> |operations|::Operation {
+        transition facts.caller != |operations|::Caller::Owner && facts.caller != |operations|::Caller::Unknown {
+            true -> (|operations|::Operation::Acquire)
             _ -> caller(facts, message)
         }
     }
-    machine caller(facts: &Facts, message: Message) -> Operation {
+    machine caller(facts: &|operations|::Facts, message: |operations|::Message) -> |operations|::Operation {
         transition facts.caller {
-            Caller::Owner -> requests::owner::route(message)
-            Caller::Source -> (Operation::Source)
-            Caller::Child -> interaction(facts, message)
-            Caller::Storage -> interaction(facts, message)
-            _ -> (Operation::Deny)
+            |operations|::Caller::Owner -> |owner|::route(message)
+            |operations|::Caller::Source -> (|operations|::Operation::Source)
+            |operations|::Caller::Child -> interaction(facts, message)
+            |operations|::Caller::Storage -> interaction(facts, message)
+            _ -> (|operations|::Operation::Deny)
         }
     }
-    machine interaction(facts: &Facts, message: Message) -> Operation {
+    machine interaction(facts: &|operations|::Facts, message: |operations|::Message) -> |operations|::Operation {
         transition message {
-            Message::Storage -> storage(facts)
+            |operations|::Message::Storage -> storage(facts)
             _ -> child_connection(facts, message)
         }
     }
-    machine storage(facts: &Facts) -> Operation {
+    machine storage(facts: &|operations|::Facts) -> |operations|::Operation {
         transition facts.storage_stream {
-            true -> (Operation::Storage)
-            _ -> (Operation::DenyNow)
+            true -> (|operations|::Operation::Storage)
+            _ -> (|operations|::Operation::DenyNow)
         }
     }
-    machine child_connection(facts: &Facts, message: Message) -> Operation {
-        transition facts.caller == Caller::Storage {
-            true -> (Operation::DenyNow)
+    machine child_connection(facts: &|operations|::Facts, message: |operations|::Message) -> |operations|::Operation {
+        transition facts.caller == |operations|::Caller::Storage {
+            true -> (|operations|::Operation::DenyNow)
             _ -> producer(facts, message)
         }
     }
-    machine producer(facts: &Facts, message: Message) -> Operation {
-        transition facts.separate_producer && (message in Message::Producer) {
-            true -> (Operation::Deny)
-            _ -> requests::children::route(message)
+    machine producer(facts: &|operations|::Facts, message: |operations|::Message) -> |operations|::Operation {
+        transition facts.separate_producer && (message in |operations|::Message::Producer) {
+            true -> (|operations|::Operation::Deny)
+            _ -> |children|::route(message)
         }
     }
 }
 
-public machine attachment(facts: &Facts, message: Message) -> Operation {
-    transition facts.caller == Caller::Storage && facts.storage_stream {
+public machine attachment(facts: &|operations|::Facts, message: |operations|::Message) -> |operations|::Operation {
+    transition facts.caller == |operations|::Caller::Storage && facts.storage_stream {
         true -> allowed(message)
-        _ -> (Operation::DenyNow)
+        _ -> (|operations|::Operation::DenyNow)
     }
-    machine allowed(message: Message) -> Operation {
+    machine allowed(message: |operations|::Message) -> |operations|::Operation {
         transition message {
-            Message::Storage { attachment } -> eligible(attachment)
-            _ -> (Operation::DenyNow)
+            |operations|::Message::Storage { attachment } -> eligible(attachment)
+            _ -> (|operations|::Operation::DenyNow)
         }
     }
-    machine eligible(allowed: bool) -> Operation {
+    machine eligible(allowed: bool) -> |operations|::Operation {
         transition allowed {
-            true -> (Operation::Storage)
-            _ -> (Operation::DenyNow)
+            true -> (|operations|::Operation::Storage)
+            _ -> (|operations|::Operation::DenyNow)
         }
     }
 }

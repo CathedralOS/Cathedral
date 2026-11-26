@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Derived from acpi/src/aml/object.rs copy_bits/read_buffer_field at pinned commit.
 // Fixed initialized byte stores replace Vec, Arc, UnsafeCell and ObjectToken.
-module buffer_fields;
-use integers::IntegerSize;
-use integers::IntegerResult;
-use integers::integer_bits;
+use {omega}/language/core/nat.omg;
+use integers.omg;
 // Beyond the declared source extent, bits are zero. No pointer is synthesized.
 pub machine source_bit(source: &[u8; 256], length: u64, start: u64, index: u64) -> u8 {
     transition length <= 256 && start < 2048 { true -> bounded(source, length, start, index) _ -> (0) }
@@ -41,7 +39,7 @@ pub machine copy_bits(source: &[u8; 256], source_length: u64, source_start: u64,
     }
 }
 machine copy_scan(source: &[u8; 256], length: u64, start: u64, destination: &mut [u8; 256], destination_start: u64, index: u64, limit: u64)
-terminates by (index, limit) -> Nat::BoundedDistance;
+terminates by (index, limit) -> |nat|::Nat::BoundedDistance;
 -> u8 {
     _ = copy_step(source, length, start, destination, destination_start, index, limit);
     transition index < limit { true -> copy_scan(source, length, start, destination, destination_start, index + 1, limit) _ -> (0) }
@@ -65,16 +63,16 @@ machine copy_step(source: &[u8; 256], length: u64, start: u64, destination: &mut
         0
     }
 }
-pub machine field_to_integer(size: IntegerSize, source: &[u8; 256], length: u64, start: u64, count: u64) -> IntegerResult {
-    let bits: u64 = integer_bits(size);
-    transition length <= 256 { true -> bounded(source, length, start, count, bits) _ -> (IntegerResult { error: 4 }) }
-    state bounded(source: &[u8; 256], length: u64, start: u64, count: u64, bits: u64) -> IntegerResult {
+pub machine field_to_integer(size: |integers|::IntegerSize, source: &[u8; 256], length: u64, start: u64, count: u64) -> |integers|::IntegerResult {
+    let bits: u64 = |integers|::integer_bits(size);
+    transition length <= 256 { true -> bounded(source, length, start, count, bits) _ -> (|integers|::IntegerResult { error: 4 }) }
+    state bounded(source: &[u8; 256], length: u64, start: u64, count: u64, bits: u64) -> |integers|::IntegerResult {
         let result: u64 = field_scan(source, length, start, count, 0, bits, 0);
-        IntegerResult { value: result }
+        |integers|::IntegerResult { value: result }
     }
 }
 machine field_scan(source: &[u8; 256], length: u64, start: u64, count: u64, index: u64, limit: u64, value: u64)
-terminates by (index, limit) -> Nat::BoundedDistance;
+terminates by (index, limit) -> |nat|::Nat::BoundedDistance;
 -> u64 {
     let next: u64 = field_step(source, length, start, count, index, value);
     transition index < limit { true -> field_scan(source, length, start, count, index + 1, limit, next) _ -> (value) }

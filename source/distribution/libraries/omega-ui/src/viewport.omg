@@ -1,8 +1,6 @@
-module viewport;
-
 /* Layout and input use logical units. Rendering maps the explicit viewport to
 physical pixels; no application canvas dimensions are implicit in this contract. */
-use types;
+use types.omg;
 
 public data UiViewport [copy] {
     logical_width: i32;

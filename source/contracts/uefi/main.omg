@@ -1,5 +1,5 @@
 // Public checked firmware contracts. Package review starts here, so the exact
 // entry schema and its calling policy participate in ordinary admission.
-use uefi;
-use boot_services;
-use loaded_image;
+use uefi.omg;
+use boot_services.omg;
+use loaded_image.omg;

@@ -1,48 +1,44 @@
-module transfers::transfer;
 // One scene writer at a time. Input and service acquisition remain independent;
 // image and transaction continuations share the parent receiver and reply outbox.
-use shared::state::State;
-use shared::presentation::Transfer;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::server::deferred;
-use world::level;
-use transfers::forwarded;
-use transfers::transaction;
-use transfers::retirement;
-use transfers::backing;
-use transfers::maintenance;
-use shared::presentation::Maintenance;
-use shared::presentation::SceneOperation;
-use presentation;
+use {shared}/state.omg as shared_state;
+use {shared}/presentation.omg;
+use {runtime}/kernel.omg;
+use {runtime}/server/deferred.omg;
+use {world}/level.omg;
+use transfers/forwarded.omg;
+use transfers/transaction.omg;
+use transfers/retirement.omg;
+use transfers/backing.omg;
+use transfers/maintenance.omg;
+use presentation.omg as presentation_file;
 
-public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
-    let child: bool = context.presentation_work.active && context.presentation_work.maintenance == Maintenance::None;
+public machine step(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
+    let child: bool = context.presentation_work.active && context.presentation_work.maintenance == |presentation|::Maintenance::None;
     block advance(gate, context);
-    transition child && !context.presentation_work.active { true -> maintenance::pointer(context) _ -> done() }
+    transition child && !context.presentation_work.active { true -> |maintenance|::pointer(context) _ -> done() }
 }
-machine advance(gate: &Gate, context: &mut State) reaches Kernel {
-    transition context.presentation_work.operation != SceneOperation::Content {
+machine advance(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
+    transition context.presentation_work.operation != |presentation|::SceneOperation::Content {
         true -> done()
         _ -> block rendering(gate, context)
     }
 }
-machine rendering(gate: &Gate, context: &mut State) reaches Kernel {
-    transition context.presentation_work.maintenance != Maintenance::None {
-        true -> block maintenance::step(gate, context)
+machine rendering(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
+    transition context.presentation_work.maintenance != |presentation|::Maintenance::None {
+        true -> block |maintenance|::step(gate, context)
         _ -> block publication(gate, context)
     }
 }
-machine publication(gate: &Gate, context: &mut State) reaches Kernel {
+machine publication(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
     transition context.presentation_work.batch {
-        true -> block transaction::step(gate, context)
-        _ -> block forwarded::step(gate, context)
+        true -> block |transaction|::step(gate, context)
+        _ -> block |forwarded|::step(gate, context)
     }
 }
-public machine current(context: &State) -> bool {
-    deferred::matches(&context.slots[context.presentation_work.slot].listener, context.presentation_work.ticket)
+public machine current(context: &|shared_state|::State) -> bool {
+    |deferred|::matches(&context.slots[context.presentation_work.slot].listener, context.presentation_work.ticket)
         && !context.retire_after_present[context.presentation_work.slot]
-        && level::binding_matches(&context.world, context.presentation_work.slot, context.presentation_work.ticket.incarnation,
+        && |level|::binding_matches(&context.world, context.presentation_work.slot, context.presentation_work.ticket.incarnation,
             context.presentation_work.frame.payload[1])
         && context.world.parent.epoch == context.presentation_work.parent_epoch
         && (context.has_parent || context.has_scene)
@@ -50,16 +46,16 @@ public machine current(context: &State) -> bool {
 // Shutdown abandons the link, never reuses it for another publication. Batch
 // payloads still staged remain in their slot for child reclamation. Detached
 // predecessors/discards belong to the transfer and must be drained here.
-public machine discard(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
+public machine discard(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     transition context.presentation_work.active {
         true -> block abandoned(gate, context)
         _ -> done()
     }
-    machine abandoned(gate: &Gate, context: &mut State) reaches Kernel {
-        block backing::close(gate, context);
-        block presentation::release(gate, context.presentation_work.object);
-        block retirement::drain(gate, context);
-        let empty: Transfer;
+    machine abandoned(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
+        block |backing|::close(gate, context);
+        block |presentation_file|::release(gate, context.presentation_work.object);
+        block |retirement|::drain(gate, context);
+        let empty: |presentation|::Transfer;
         context.presentation_work = empty;
     }
 }

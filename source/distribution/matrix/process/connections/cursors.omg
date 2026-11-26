@@ -1,63 +1,58 @@
-module cursors;
 // Pointer presentation preferences, as the World resolves them for each input
 // stream from the child under the pointer. Under a parent, the preference on
 // an inherited pointer goes up under the parent's view, once per change; a
 // pointer whose preference lapsed is forgotten so the next one is sent fresh.
 // At the root the physical pointer's preference is the compositor's pointer
 // style.
-use protocol::main;
-use protocol::display;
-use shared::state::State;
-use shared::state::Sent;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::kernel;
-use world::geometry;
-use world::input::cursor::Found;
-use world::input::cursor::Cursor;
-use upstream;
-use transfers::maintenance;
-use source;
+use {protocol}/main.omg;
+use {protocol}/display.omg;
+use {shared}/state.omg as shared_state;
+use {runtime}/kernel.omg;
+use {world}/geometry.omg;
+use {world}/input/cursor.omg;
+use upstream.omg;
+use transfers/maintenance.omg;
+use source.omg;
 
-public machine step(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks invokes Kernel {
+public machine step(gate: &|kernel|::Gate, context: &mut |shared_state|::State) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     transition context.presentation_work.active {
         true -> (0u64)
         _ -> block idle_step(gate, context)
     }
 }
-machine idle_step(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks invokes Kernel {
+machine idle_step(gate: &|kernel|::Gate, context: &mut |shared_state|::State) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     transition {
-        context.has_parent && geometry::valid_grant(context.world.parent) -> block forwarding(gate, context, 0u64)
+        context.has_parent && |geometry|::valid_grant(context.world.parent) -> block forwarding(gate, context, 0u64)
         context.has_parent -> (0u64)
         context.has_scene -> styling(context, physical(context, 0u64))
         _ -> (0u64)
     }
 }
-machine forwarding(gate: &Gate, context: &mut State, index: u64) -> u64 reaches Kernel requires index <= 4u64 {
+machine forwarding(gate: &|kernel|::Gate, context: &mut |shared_state|::State, index: u64) -> u64 reaches |kernel|::Kernel requires index <= 4u64 {
     transition index < 4u64 {
         true -> block stream(gate, context, index)
         _ -> (0u64)
     }
-    machine stream(gate: &Gate, context: &mut State, index: u64) -> u64 reaches Kernel requires index < 4u64 {
-        let found: Found = world::input::cursor::cursor(&context.world, index);
+    machine stream(gate: &|kernel|::Gate, context: &mut |shared_state|::State, index: u64) -> u64 reaches |kernel|::Kernel requires index < 4u64 {
+        let found: |cursor|::Found = |cursor|::cursor(&context.world, index);
         transition found {
-            Found::Observed { seen } -> block observed(gate, context, index, seen)
-            Found::Nothing -> block forgotten(gate, context, index)
+            |cursor|::Found::Observed { seen } -> block observed(gate, context, index, seen)
+            |cursor|::Found::Nothing -> block forgotten(gate, context, index)
         }
     }
-    machine observed(gate: &Gate, context: &mut State, index: u64, seen: Cursor) -> u64 reaches Kernel requires index < 4u64 {
+    machine observed(gate: &|kernel|::Gate, context: &mut |shared_state|::State, index: u64, seen: |cursor|::Cursor) -> u64 reaches |kernel|::Kernel requires index < 4u64 {
         transition seen.inherited {
-            true -> block binding(gate, context, index, Sent { live: true, epoch: context.world.parent.epoch, cycle: seen.cycle,
+            true -> block binding(gate, context, index, |shared_state|::Sent { live: true, epoch: context.world.parent.epoch, cycle: seen.cycle,
                 channel: seen.channel, mode: seen.mode })
             _ -> block forgotten(gate, context, index)
         }
     }
-    machine forgotten(gate: &Gate, context: &mut State, index: u64) -> u64 reaches Kernel requires index < 4u64 {
-        let empty: Sent;
+    machine forgotten(gate: &|kernel|::Gate, context: &mut |shared_state|::State, index: u64) -> u64 reaches |kernel|::Kernel requires index < 4u64 {
+        let empty: |shared_state|::Sent;
         context.cursors[index] = empty;
         block forwarding(gate, context, index + 1u64)
     }
-    machine binding(gate: &Gate, context: &mut State, index: u64, wanted: Sent) -> u64 reaches Kernel requires index < 4u64 {
+    machine binding(gate: &|kernel|::Gate, context: &mut |shared_state|::State, index: u64, wanted: |shared_state|::Sent) -> u64 reaches |kernel|::Kernel requires index < 4u64 {
         transition same(context.cursors[index], wanted) {
             true -> block forwarding(gate, context, index + 1u64)
             _ -> block sending(gate, context, index, wanted)
@@ -66,53 +61,53 @@ machine forwarding(gate: &Gate, context: &mut State, index: u64) -> u64 reaches 
     // A view or channel can retire before the parent hears of it: DENIED is
     // accepted and the next binding asks afresh; any other refusal is tried
     // again on a later turn.
-    machine sending(gate: &Gate, context: &mut State, index: u64, wanted: Sent) -> u64 reaches Kernel requires index < 4u64 {
+    machine sending(gate: &|kernel|::Gate, context: &mut |shared_state|::State, index: u64, wanted: |shared_state|::Sent) -> u64 reaches |kernel|::Kernel requires index < 4u64 {
         let mut words: [u64; 8];
-        words[0] = CURSOR_PREFERENCE;
+        words[0] = |main|::CURSOR_PREFERENCE;
         words[1] = wanted.epoch;
         words[2] = wanted.channel;
         words[3] = wanted.mode;
-        let reply: [u64; 8] = block upstream::exchange(gate, context, words);
-        transition reply[0] == 0u64 || reply[0] == kernel::DENIED {
+        let reply: [u64; 8] = block |upstream|::exchange(gate, context, words);
+        transition reply[0] == 0u64 || reply[0] == |kernel|::DENIED {
             true -> block accepted(gate, context, index, wanted)
             _ -> block forwarding(gate, context, index + 1u64)
         }
     }
-    machine accepted(gate: &Gate, context: &mut State, index: u64, wanted: Sent) -> u64 reaches Kernel requires index < 4u64 {
+    machine accepted(gate: &|kernel|::Gate, context: &mut |shared_state|::State, index: u64, wanted: |shared_state|::Sent) -> u64 reaches |kernel|::Kernel requires index < 4u64 {
         context.cursors[index] = wanted;
         block forwarding(gate, context, index + 1u64)
     }
 }
-machine same(sent: Sent, wanted: Sent) -> bool {
+machine same(sent: |shared_state|::Sent, wanted: |shared_state|::Sent) -> bool {
     sent.live && sent.epoch == wanted.epoch && sent.cycle == wanted.cycle && sent.channel == wanted.channel && sent.mode == wanted.mode
 }
 // The physical pointer's mode: the first local stream on the source's
 // pointer channel, or the default when no child chose one.
-machine physical(context: &State, index: u64) -> u64 requires index <= 4u64 {
+machine physical(context: &|shared_state|::State, index: u64) -> u64 requires index <= 4u64 {
     transition index < 4u64 {
-        true -> examined(context, index, world::input::cursor::cursor(&context.world, index))
-        _ -> (CURSOR_DEFAULT)
+        true -> examined(context, index, |cursor|::cursor(&context.world, index))
+        _ -> (|main|::CURSOR_DEFAULT)
     }
-    machine examined(context: &State, index: u64, found: Found) -> u64 requires index < 4u64 {
+    machine examined(context: &|shared_state|::State, index: u64, found: |cursor|::Found) -> u64 requires index < 4u64 {
         transition found {
-            Found::Observed { seen } -> chosen(context, index, seen)
-            Found::Nothing -> physical(context, index + 1u64)
+            |cursor|::Found::Observed { seen } -> chosen(context, index, seen)
+            |cursor|::Found::Nothing -> physical(context, index + 1u64)
         }
     }
-    machine chosen(context: &State, index: u64, seen: Cursor) -> u64 requires index < 4u64 {
-        transition !seen.inherited && seen.channel == source::POINTER_STREAM {
+    machine chosen(context: &|shared_state|::State, index: u64, seen: |cursor|::Cursor) -> u64 requires index < 4u64 {
+        transition !seen.inherited && seen.channel == |source|::POINTER_STREAM {
             true -> (seen.mode)
             _ -> physical(context, index + 1u64)
         }
     }
 }
-machine styling(context: &mut State, mode: u64) -> u64 {
+machine styling(context: &mut |shared_state|::State, mode: u64) -> u64 {
     transition context.styled && context.style == mode {
         true -> (0u64)
         _ -> restyled(context, mode)
     }
-    machine restyled(context: &mut State, mode: u64) -> u64 {
-        maintenance::style(context, mode);
+    machine restyled(context: &mut |shared_state|::State, mode: u64) -> u64 {
+        |maintenance|::style(context, mode);
         0u64
     }
 }

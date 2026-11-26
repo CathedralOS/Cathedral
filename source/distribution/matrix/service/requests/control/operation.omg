@@ -1,5 +1,3 @@
-module requests::control::operation;
-
 // Authenticated host state and decoded child-control syntax. Masks name local
 // positions only; live tasks, executable grants and replies remain with the host.
 public data Facts {

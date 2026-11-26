@@ -1,4 +1,3 @@
-module admission;
 // A checked sealed image's resource plan. Funding may wait without publishing
 // allocations or overwriting another launch's allotted surface values.
 public data Plan [copy] {

@@ -1,4 +1,3 @@
-module names;
 // Stream and group names carry their supplying boundary so an inherited name
 // can never collide with a locally admitted one. Names never go on the wire.
 public data Name [copy] {

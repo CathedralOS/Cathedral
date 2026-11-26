@@ -1,88 +1,75 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Detached data application has no Frame parameter. Selection contains inert
 // metadata; public Local/Argument bounds are checked before store mutation.
-module generic_target_values;
-use aml::model::ObjectStore;
-use aml::model::Value;
-use aml::model::ReferenceKind;
-use execution_model::ExecutionOutcome;
-use execution_model::Operand;
-use execution_model::Binding;
-use execution_model::BindingResult;
-use execution_model::ValueResult;
-use generic_target_model::TargetSelection;
-use generic_target_model::ArgumentAction;
-use generic_target_model::TargetAction;
-use generic_values::binding_operand;
-use generic_values::read_value;
-use generic_values::normalized_operand;
-use generic_values::copied_binding;
-use generic_values::copy_into;
-use integer_helpers::integers::IntegerSize;
-use named_store::store_named_operand;
+use {aml}/model.omg;
+use execution_model.omg;
+use generic_target_model.omg;
+use generic_values.omg;
+use {integer_helpers}/integers.omg;
+use named_store.omg;
 // All policy selection is read-only. Mutation receives one small selected action.
-pub machine apply_selected(input:&[u8;1024],length:u64,unit:u64,size:IntegerSize,store:&mut ObjectStore,selection:TargetSelection,incoming:Operand,copy:bool)->BindingResult {
- let operand:Operand=normalized_operand(store,size,incoming);
- let action:TargetAction=classify_target(store,selection,operand,copy);
- let result:BindingResult=apply_target_action(input,length,unit,size,store,action,operand);result
+pub machine apply_selected(input:&[u8;1024],length:u64,unit:u64,size:|integers|::IntegerSize,store:&mut |model|::ObjectStore,selection:|generic_target_model|::TargetSelection,incoming:|execution_model|::Operand,copy:bool)->|execution_model|::BindingResult {
+ let operand:|execution_model|::Operand=|generic_values|::normalized_operand(store,size,incoming);
+ let action:|generic_target_model|::TargetAction=classify_target(store,selection,operand,copy);
+ let result:|execution_model|::BindingResult=apply_target_action(input,length,unit,size,store,action,operand);result
 }
-pub machine classify_target(store:&ObjectStore,selection:TargetSelection,operand:Operand,copy:bool)->TargetAction {
+pub machine classify_target(store:&|model|::ObjectStore,selection:|generic_target_model|::TargetSelection,operand:|execution_model|::Operand,copy:bool)->|generic_target_model|::TargetAction {
  transition selection {
- TargetSelection::Failure {outcome} -> (TargetAction::Failure {outcome:outcome})
- TargetSelection::Null -> null(copy)
- TargetSelection::Debug -> debug(copy)
- TargetSelection::Local {local_index,local_binding} -> local_bound(local_index,local_binding)
- TargetSelection::Argument {argument_index,argument_binding} -> argument_bound(store,argument_index,argument_binding)
- TargetSelection::Named {object_id} -> named(store,object_id,operand,copy)
+ |generic_target_model|::TargetSelection::Failure {outcome} -> (|generic_target_model|::TargetAction::Failure {outcome:outcome})
+ |generic_target_model|::TargetSelection::Null -> null(copy)
+ |generic_target_model|::TargetSelection::Debug -> debug(copy)
+ |generic_target_model|::TargetSelection::Local {local_index,local_binding} -> local_bound(local_index,local_binding)
+ |generic_target_model|::TargetSelection::Argument {argument_index,argument_binding} -> argument_bound(store,argument_index,argument_binding)
+ |generic_target_model|::TargetSelection::Named {object_id} -> named(store,object_id,operand,copy)
  }
- state null(copy:bool)->TargetAction {transition copy {true -> (TargetAction::Failure {outcome:ExecutionOutcome::InvalidTarget}) _ -> (TargetAction::NoWrite)}}
- state debug(copy:bool)->TargetAction {transition copy {true -> (TargetAction::Failure {outcome:ExecutionOutcome::InvalidTarget}) _ -> (TargetAction::Failure {outcome:ExecutionOutcome::UnresolvedService})}}
- state local_bound(index:u64,binding:Binding)->TargetAction {transition index<8 {true -> (TargetAction::Replace {binding:binding}) _ -> (TargetAction::Failure {outcome:ExecutionOutcome::InvalidTarget})}}
- state argument_bound(store:&ObjectStore,index:u64,binding:Binding)->TargetAction {transition index<7 {true -> argument(store,binding) _ -> (TargetAction::Failure {outcome:ExecutionOutcome::InvalidTarget})}}
- state argument(store:&ObjectStore,binding:Binding)->TargetAction {let action:ArgumentAction=classify_argument(store,binding);let result:TargetAction=target_from_argument(action);result}
- state named(store:&ObjectStore,id:u64,operand:Operand,copy:bool)->TargetAction {transition copy {true -> (TargetAction::CopyTo {object_id:id,result_binding:Binding::Uninitialized}) _ -> named_store(store,id,operand)}}
- state named_store(store:&ObjectStore,id:u64,operand:Operand)->TargetAction {
+ state null(copy:bool)->|generic_target_model|::TargetAction {transition copy {true -> (|generic_target_model|::TargetAction::Failure {outcome:|execution_model|::ExecutionOutcome::InvalidTarget}) _ -> (|generic_target_model|::TargetAction::NoWrite)}}
+ state debug(copy:bool)->|generic_target_model|::TargetAction {transition copy {true -> (|generic_target_model|::TargetAction::Failure {outcome:|execution_model|::ExecutionOutcome::InvalidTarget}) _ -> (|generic_target_model|::TargetAction::Failure {outcome:|execution_model|::ExecutionOutcome::UnresolvedService})}}
+ state local_bound(index:u64,binding:|execution_model|::Binding)->|generic_target_model|::TargetAction {transition index<8 {true -> (|generic_target_model|::TargetAction::Replace {binding:binding}) _ -> (|generic_target_model|::TargetAction::Failure {outcome:|execution_model|::ExecutionOutcome::InvalidTarget})}}
+ state argument_bound(store:&|model|::ObjectStore,index:u64,binding:|execution_model|::Binding)->|generic_target_model|::TargetAction {transition index<7 {true -> argument(store,binding) _ -> (|generic_target_model|::TargetAction::Failure {outcome:|execution_model|::ExecutionOutcome::InvalidTarget})}}
+ state argument(store:&|model|::ObjectStore,binding:|execution_model|::Binding)->|generic_target_model|::TargetAction {let action:|generic_target_model|::ArgumentAction=classify_argument(store,binding);let result:|generic_target_model|::TargetAction=target_from_argument(action);result}
+ state named(store:&|model|::ObjectStore,id:u64,operand:|execution_model|::Operand,copy:bool)->|generic_target_model|::TargetAction {transition copy {true -> (|generic_target_model|::TargetAction::CopyTo {object_id:id,result_binding:|execution_model|::Binding::Uninitialized}) _ -> named_store(store,id,operand)}}
+ state named_store(store:&|model|::ObjectStore,id:u64,operand:|execution_model|::Operand)->|generic_target_model|::TargetAction {
   let count:u64=store.space.object_count;
-  transition count<=64 && id<count && id<64 {true -> named_kind(store,id,operand,store.space.objects[id].value) _ -> (TargetAction::Failure {outcome:ExecutionOutcome::MissingObject})}
+  transition count<=64 && id<count && id<64 {true -> named_kind(store,id,operand,store.space.objects[id].value) _ -> (|generic_target_model|::TargetAction::Failure {outcome:|execution_model|::ExecutionOutcome::MissingObject})}
  }
- state named_kind(store:&ObjectStore,id:u64,operand:Operand,value:Value)->TargetAction {
+ state named_kind(store:&|model|::ObjectStore,id:u64,operand:|execution_model|::Operand,value:|model|::Value)->|generic_target_model|::TargetAction {
   transition value {
-   Value::Integer {number} -> (TargetAction::StoreNamed {object_id:id})
-   Value::String {string_storage} -> (TargetAction::StoreNamed {object_id:id})
-   Value::Buffer {buffer_storage} -> (TargetAction::StoreNamed {object_id:id})
-   Value::Uninitialized -> (TargetAction::CopyTo {object_id:id,result_binding:Binding::Uninitialized})
-   Value::FieldUnit {binding,declaration,field} -> (TargetAction::Failure {outcome:ExecutionOutcome::UnresolvedRegion})
-   Value::OperationRegion {space,base,length,scope} -> (TargetAction::Failure {outcome:ExecutionOutcome::UnresolvedRegion})
-   _ -> (TargetAction::Failure {outcome:ExecutionOutcome::UnsupportedValue})
+   |model|::Value::Integer {number} -> (|generic_target_model|::TargetAction::StoreNamed {object_id:id})
+   |model|::Value::String {string_storage} -> (|generic_target_model|::TargetAction::StoreNamed {object_id:id})
+   |model|::Value::Buffer {buffer_storage} -> (|generic_target_model|::TargetAction::StoreNamed {object_id:id})
+   |model|::Value::Uninitialized -> (|generic_target_model|::TargetAction::CopyTo {object_id:id,result_binding:|execution_model|::Binding::Uninitialized})
+   |model|::Value::FieldUnit {binding,declaration,field} -> (|generic_target_model|::TargetAction::Failure {outcome:|execution_model|::ExecutionOutcome::UnresolvedRegion})
+   |model|::Value::OperationRegion {space,base,length,scope} -> (|generic_target_model|::TargetAction::Failure {outcome:|execution_model|::ExecutionOutcome::UnresolvedRegion})
+   _ -> (|generic_target_model|::TargetAction::Failure {outcome:|execution_model|::ExecutionOutcome::UnsupportedValue})
   }
  }
 }
-machine target_from_argument(action:ArgumentAction)->TargetAction {
- transition action {ArgumentAction::Failure {outcome} -> (TargetAction::Failure {outcome:outcome}) ArgumentAction::Replace {binding} -> (TargetAction::Replace {binding:binding}) ArgumentAction::CopyReferent {binding,object_id} -> (TargetAction::CopyTo {object_id:object_id,result_binding:binding})}
+machine target_from_argument(action:|generic_target_model|::ArgumentAction)->|generic_target_model|::TargetAction {
+ transition action {|generic_target_model|::ArgumentAction::Failure {outcome} -> (|generic_target_model|::TargetAction::Failure {outcome:outcome}) |generic_target_model|::ArgumentAction::Replace {binding} -> (|generic_target_model|::TargetAction::Replace {binding:binding}) |generic_target_model|::ArgumentAction::CopyReferent {binding,object_id} -> (|generic_target_model|::TargetAction::CopyTo {object_id:object_id,result_binding:binding})}
 }
-pub machine apply_target_action(input:&[u8;1024],length:u64,unit:u64,size:IntegerSize,store:&mut ObjectStore,action:TargetAction,operand:Operand)->BindingResult {
- transition action {TargetAction::StoreNamed {object_id} -> named(input,length,unit,size,store,object_id,operand) TargetAction::Failure {outcome} -> (BindingResult {outcome:outcome}) TargetAction::NoWrite -> (BindingResult {}) TargetAction::Replace {binding} -> replace(input,length,unit,store,binding,operand) TargetAction::CopyTo {object_id,result_binding} -> copy(input,length,unit,store,object_id,result_binding,operand)}
- state named(input:&[u8;1024],length:u64,unit:u64,size:IntegerSize,store:&mut ObjectStore,id:u64,operand:Operand)->BindingResult {
-  let outcome:ExecutionOutcome=store_named_operand(input,length,unit,size,store,id,operand);BindingResult {outcome:outcome}
+pub machine apply_target_action(input:&[u8;1024],length:u64,unit:u64,size:|integers|::IntegerSize,store:&mut |model|::ObjectStore,action:|generic_target_model|::TargetAction,operand:|execution_model|::Operand)->|execution_model|::BindingResult {
+ transition action {|generic_target_model|::TargetAction::StoreNamed {object_id} -> named(input,length,unit,size,store,object_id,operand) |generic_target_model|::TargetAction::Failure {outcome} -> (|execution_model|::BindingResult {outcome:outcome}) |generic_target_model|::TargetAction::NoWrite -> (|execution_model|::BindingResult {}) |generic_target_model|::TargetAction::Replace {binding} -> replace(input,length,unit,store,binding,operand) |generic_target_model|::TargetAction::CopyTo {object_id,result_binding} -> copy(input,length,unit,store,object_id,result_binding,operand)}
+ state named(input:&[u8;1024],length:u64,unit:u64,size:|integers|::IntegerSize,store:&mut |model|::ObjectStore,id:u64,operand:|execution_model|::Operand)->|execution_model|::BindingResult {
+  let outcome:|execution_model|::ExecutionOutcome=|named_store|::store_named_operand(input,length,unit,size,store,id,operand);|execution_model|::BindingResult {outcome:outcome}
  }
- state replace(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,binding:Binding,operand:Operand)->BindingResult {let result:BindingResult=copied_binding(input,length,unit,store,binding,operand);result}
- state copy(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,id:u64,binding:Binding,operand:Operand)->BindingResult {let outcome:ExecutionOutcome=copy_into(input,length,unit,store,id,operand);BindingResult {outcome:outcome,binding:binding}}
+ state replace(input:&[u8;1024],length:u64,unit:u64,store:&mut |model|::ObjectStore,binding:|execution_model|::Binding,operand:|execution_model|::Operand)->|execution_model|::BindingResult {let result:|execution_model|::BindingResult=|generic_values|::copied_binding(input,length,unit,store,binding,operand);result}
+ state copy(input:&[u8;1024],length:u64,unit:u64,store:&mut |model|::ObjectStore,id:u64,binding:|execution_model|::Binding,operand:|execution_model|::Operand)->|execution_model|::BindingResult {let outcome:|execution_model|::ExecutionOutcome=|generic_values|::copy_into(input,length,unit,store,id,operand);|execution_model|::BindingResult {outcome:outcome,binding:binding}}
 }
 // Read-only classification resolves the old argument binding once. Mutation
 // receives only the selected action, preserving the original binding when an
 // explicit RefOf/Index reference redirects the write to its referent.
-pub machine classify_argument(store:&ObjectStore,binding:Binding)->ArgumentAction {
- let old:Operand=binding_operand(binding);let found:ValueResult=read_value(store,old);
- transition found.outcome==ExecutionOutcome::Success {true -> value(binding,found.value) _ -> (ArgumentAction::Failure {outcome:found.outcome})}
- state value(binding:Binding,value:Value)->ArgumentAction {
-  transition value {Value::Reference {kind,object_id} -> reference(binding,kind,object_id) _ -> (ArgumentAction::Replace {binding:binding})}
+pub machine classify_argument(store:&|model|::ObjectStore,binding:|execution_model|::Binding)->|generic_target_model|::ArgumentAction {
+ let old:|execution_model|::Operand=|generic_values|::binding_operand(binding);let found:|execution_model|::ValueResult=|generic_values|::read_value(store,old);
+ transition found.outcome==|execution_model|::ExecutionOutcome::Success {true -> value(binding,found.value) _ -> (|generic_target_model|::ArgumentAction::Failure {outcome:found.outcome})}
+ state value(binding:|execution_model|::Binding,value:|model|::Value)->|generic_target_model|::ArgumentAction {
+  transition value {|model|::Value::Reference {kind,object_id} -> reference(binding,kind,object_id) _ -> (|generic_target_model|::ArgumentAction::Replace {binding:binding})}
  }
- state reference(binding:Binding,kind:ReferenceKind,id:u64)->ArgumentAction {
-  transition kind {ReferenceKind::RefOf -> (ArgumentAction::CopyReferent {binding:binding,object_id:id}) ReferenceKind::Index -> (ArgumentAction::CopyReferent {binding:binding,object_id:id}) _ -> (ArgumentAction::Failure {outcome:ExecutionOutcome::InvalidTarget})}
+ state reference(binding:|execution_model|::Binding,kind:|model|::ReferenceKind,id:u64)->|generic_target_model|::ArgumentAction {
+  transition kind {|model|::ReferenceKind::RefOf -> (|generic_target_model|::ArgumentAction::CopyReferent {binding:binding,object_id:id}) |model|::ReferenceKind::Index -> (|generic_target_model|::ArgumentAction::CopyReferent {binding:binding,object_id:id}) _ -> (|generic_target_model|::ArgumentAction::Failure {outcome:|execution_model|::ExecutionOutcome::InvalidTarget})}
  }
 }
-pub machine apply_argument(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,action:ArgumentAction,operand:Operand)->BindingResult {
- transition action {ArgumentAction::Failure {outcome} -> (BindingResult {outcome:outcome}) ArgumentAction::Replace {binding} -> replace(input,length,unit,store,binding,operand) ArgumentAction::CopyReferent {binding,object_id} -> copy(input,length,unit,store,binding,object_id,operand)}
- state replace(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,binding:Binding,operand:Operand)->BindingResult {let result:BindingResult=copied_binding(input,length,unit,store,binding,operand);result}
- state copy(input:&[u8;1024],length:u64,unit:u64,store:&mut ObjectStore,binding:Binding,id:u64,operand:Operand)->BindingResult {let outcome:ExecutionOutcome=copy_into(input,length,unit,store,id,operand);BindingResult {outcome:outcome,binding:binding}}
+pub machine apply_argument(input:&[u8;1024],length:u64,unit:u64,store:&mut |model|::ObjectStore,action:|generic_target_model|::ArgumentAction,operand:|execution_model|::Operand)->|execution_model|::BindingResult {
+ transition action {|generic_target_model|::ArgumentAction::Failure {outcome} -> (|execution_model|::BindingResult {outcome:outcome}) |generic_target_model|::ArgumentAction::Replace {binding} -> replace(input,length,unit,store,binding,operand) |generic_target_model|::ArgumentAction::CopyReferent {binding,object_id} -> copy(input,length,unit,store,binding,object_id,operand)}
+ state replace(input:&[u8;1024],length:u64,unit:u64,store:&mut |model|::ObjectStore,binding:|execution_model|::Binding,operand:|execution_model|::Operand)->|execution_model|::BindingResult {let result:|execution_model|::BindingResult=|generic_values|::copied_binding(input,length,unit,store,binding,operand);result}
+ state copy(input:&[u8;1024],length:u64,unit:u64,store:&mut |model|::ObjectStore,binding:|execution_model|::Binding,id:u64,operand:|execution_model|::Operand)->|execution_model|::BindingResult {let outcome:|execution_model|::ExecutionOutcome=|generic_values|::copy_into(input,length,unit,store,id,operand);|execution_model|::BindingResult {outcome:outcome,binding:binding}}
 }

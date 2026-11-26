@@ -1,8 +1,5 @@
-module isa::x86_64::memory::validation::entries;
-
-use isa::x86_64::memory::validation::geometry::X86_MAX_ALIGNED_PHYSICAL_FRAME_ADDRESS;
-use isa::x86_64::memory::validation::geometry::X86_PAGE_OFFSET_MASK;
-use facts::x86_page_table_entry;
+use isa/x86_64/memory/validation/geometry.omg;
+use {facts}/x86_page_table_entry.omg;
 
 // Every non-address bit of one detached paging entry. Cathedral does not assign
 // role semantics here: in particular, `page_size_or_pat` remains the hardware
@@ -30,7 +27,7 @@ requires 0 <= self.software_low && self.software_low <= 7 &&
 // prevents the derived PFN from becoming a free-standing address claim.
 public data X86BootstrapAddressBoundPageTableEntryCandidate {
     physical_address: u64;
-    entry: X86PageTableEntry;
+    entry: |x86_page_table_entry|::X86PageTableEntry;
 }
 
 public data X86BootstrapAddressBoundPageTableEntryCheck {
@@ -46,9 +43,9 @@ public machine x86_compose_bootstrap_address_bound_page_table_entry(
     physical_address: u64,
     fields: X86BootstrapPageTableEntryNonAddressFields
 ) -> X86BootstrapAddressBoundPageTableEntryCheck {
-    let page_offset: u64 = physical_address & X86_PAGE_OFFSET_MASK;
+    let page_offset: u64 = physical_address & |geometry|::X86_PAGE_OFFSET_MASK;
     transition page_offset == 0 &&
-        physical_address <= X86_MAX_ALIGNED_PHYSICAL_FRAME_ADDRESS {
+        physical_address <= |geometry|::X86_MAX_ALIGNED_PHYSICAL_FRAME_ADDRESS {
         true -> compose_address_bound_page_table_entry(physical_address, fields)
         _ -> reject_address_bound_page_table_entry()
     }
@@ -58,11 +55,11 @@ public machine x86_compose_bootstrap_address_bound_page_table_entry(
         fields: X86BootstrapPageTableEntryNonAddressFields
     ) -> X86BootstrapAddressBoundPageTableEntryCheck {
         let frame_number: u64 =
-            (physical_address >> X86_PAGE_SHIFT) & X86_PAGE_FRAME_NUMBER_MAX;
+            (physical_address >> |x86_page_table_entry|::X86_PAGE_SHIFT) & |x86_page_table_entry|::X86_PAGE_FRAME_NUMBER_MAX;
         X86BootstrapAddressBoundPageTableEntryCheck::Composed {
             candidate: X86BootstrapAddressBoundPageTableEntryCandidate {
                 physical_address: physical_address,
-                entry: X86PageTableEntry {
+                entry: |x86_page_table_entry|::X86PageTableEntry {
                     present: fields.present,
                     writable: fields.writable,
                     user: fields.user,
@@ -97,9 +94,9 @@ public machine x86_validate_bootstrap_address_bound_page_table_entry(
     candidate: X86BootstrapAddressBoundPageTableEntryCandidate
 ) -> X86BootstrapAddressBoundPageTableEntryCheck {
     let page_offset: u64 =
-        candidate.physical_address & X86_PAGE_OFFSET_MASK;
+        candidate.physical_address & |geometry|::X86_PAGE_OFFSET_MASK;
     transition page_offset == 0 &&
-        candidate.physical_address <= X86_MAX_ALIGNED_PHYSICAL_FRAME_ADDRESS {
+        candidate.physical_address <= |geometry|::X86_MAX_ALIGNED_PHYSICAL_FRAME_ADDRESS {
         true -> check_address_bound_frame_number(candidate)
         _ -> reject_retained_address_bound_page_table_entry()
     }
@@ -108,8 +105,8 @@ public machine x86_validate_bootstrap_address_bound_page_table_entry(
         candidate: X86BootstrapAddressBoundPageTableEntryCandidate
     ) -> X86BootstrapAddressBoundPageTableEntryCheck {
         let frame_number: u64 =
-            (candidate.physical_address >> X86_PAGE_SHIFT) &
-            X86_PAGE_FRAME_NUMBER_MAX;
+            (candidate.physical_address >> |x86_page_table_entry|::X86_PAGE_SHIFT) &
+            |x86_page_table_entry|::X86_PAGE_FRAME_NUMBER_MAX;
         transition candidate.entry.frame_number == frame_number {
             true -> accept_retained_address_bound_page_table_entry(candidate)
             _ -> reject_retained_address_bound_page_table_entry()

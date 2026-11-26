@@ -4,28 +4,28 @@
 // not ownership of that namespace. Admission asserts no live image, stack,
 // firmware callback or other claimant uses it. Geometry cannot prove freshness.
 
-use arch::isa::x86_64::memory::profile::BootstrapPaging;
-use arch::isa::x86_64::memory::profile::BootstrapPagingProfile;
-use omega::language::core::assembly;
-use omega::language::core::extent;
-use omega::language::core::layout;
-use lab::memory::mapping::region;
-use lab::memory::mapping::custody;
+use {arch}/isa/x86_64/memory/profile.omg;
+use {omega}/language/core/assembly.omg;
+use {omega}/language/core/extent.omg;
+use {omega}/language/core/layout.omg;
+use {omega}/language/core/access/access.omg;
+use lab/memory/mapping/region.omg;
+use lab/memory/mapping/custody.omg;
 domain Extent::BootVirtualDestination established by BootVirtualReservation::reserve;
 
 boundary trait BootVirtualReservation {
-    machine reserve(storage: Extent in Granted) -> Extent in Granted
+    machine reserve(storage: |extent|::Extent in |extent|::Granted) -> |extent|::Extent in |extent|::Granted
     reaches
     requires address::Bound == 18446744073709551616
-    ensures result in Granted & BootVirtualDestination,
-        Granted::content(old(&storage)) == Granted::content(&result);
+    ensures result in |extent|::Granted & BootVirtualDestination,
+        |extent|::Granted::content(old(&storage)) == |extent|::Granted::content(&result);
 }
 
 BootstrapVirtualReservationProvider satisfies BootVirtualReservation {
-    machine reserve(storage: Extent in Granted) -> Extent in Granted
+    machine reserve(storage: |extent|::Extent in |extent|::Granted) -> |extent|::Extent in |extent|::Granted
     requires address::Bound == 18446744073709551616
-    ensures result in Granted,
-        Granted::content(old(&storage)) == Granted::content(&result)
+    ensures result in |extent|::Granted,
+        |extent|::Granted::content(old(&storage)) == |extent|::Granted::content(&result)
     {
         // Qualify the existing namespace grant; this requirement is not an
         // Extent issuer and cannot manufacture Granted on a fresh result.
@@ -45,23 +45,23 @@ BootstrapVirtualReservationProvider satisfies BootVirtualReservation {
 // MTRR/platform contributions. Granted and ConventionalMemory do not prove
 // that premise. Activation checks PAT[0] itself, not those external conditions.
 data BootMapping {
-    source: Extent in Granted & Resident<MappingRegionPlacement, MappingRegion>;
-    destination: Extent in Granted & BootVirtualDestination;
-    tables: Extent in Granted & Vacant;
+    source: |extent|::Extent in |extent|::Granted & |extent|::Resident<|region|::MappingRegionPlacement, |region|::MappingRegion>;
+    destination: |extent|::Extent in |extent|::Granted & BootVirtualDestination;
+    tables: |extent|::Extent in |extent|::Granted & |extent|::Vacant;
     firmware_root: u64;
 }
 
 boundary trait BootTranslation {
     machine exercise(mapping: &mut BootMapping) -> bool
     requires address::Bound == 18446744073709551616
-    reaches MachineControl + ResourceProfileSupply
+    reaches |assembly|::MachineControl + |layout|::ResourceProfileSupply
     crashes Abort;
 }
 
 BootstrapTranslationProvider satisfies BootTranslation {
     machine exercise(mapping: &mut BootMapping) -> bool
     requires address::Bound == 18446744073709551616
-    reaches MachineControl + ResourceProfileSupply
+    reaches |assembly|::MachineControl + |layout|::ResourceProfileSupply
     crashes Abort
     { BootstrapTranslationNative::exercise(mapping) }
 }
@@ -70,7 +70,7 @@ data BootstrapTranslationNative {}
 
 uefi_x86_64 machine BootstrapTranslationNative::exercise(mapping: &mut BootMapping) -> bool
 requires address::Bound == 18446744073709551616
-reaches MachineControl + ResourceProfileSupply
+reaches |assembly|::MachineControl + |layout|::ResourceProfileSupply
 crashes Abort
     {
         // No firmware calls or enabled interrupt roots follow this handoff.
@@ -89,10 +89,10 @@ crashes Abort
         asm { read_cr4 control4 }
         asm { rdmsr extended_features, extended_feature_register }
         asm { rdmsr page_attributes, page_attribute_register }
-        let profile: BootstrapPagingProfile = BootstrapPagingProfile {
+        let profile: |profile|::BootstrapPagingProfile = |profile|::BootstrapPagingProfile {
             control0: control0, control4: control4, extended_features: extended_features,
         };
-        let supported: bool = BootstrapPaging::supported(&profile);
+        let supported: bool = |profile|::BootstrapPaging::supported(&profile);
         // New paging pointers and the target leaf select PAT entry zero.
         // The external admission above still owes the effective cache type
         // and physical identity-alias compatibility; this test is not that proof.
@@ -104,8 +104,8 @@ crashes Abort
         transition supported && write_back &&
             (control3 & 0x000FFFFFFFFFF000) == mapping.firmware_root &&
             mapping.tables.length == 16384 && root % 4096 == 0 &&
-            root <= 0x000FFFFFFFFFC000 && mapping.source.length == MAPPING_BYTE_COUNT &&
-            mapping.destination.length == MAPPING_BYTE_COUNT {
+            root <= 0x000FFFFFFFFFC000 && mapping.source.length == |region|::MAPPING_BYTE_COUNT &&
+            mapping.destination.length == |region|::MAPPING_BYTE_COUNT {
             true -> install(mapping, control3)
             _ -> wrong()
         }
@@ -140,7 +140,7 @@ crashes Abort
 }
 
 public data MappedRegionMemory {}
-public boundary trait MappedRegionSupply: ResourceProfileSupply<MappedRegionMemory> {}
+public boundary trait MappedRegionSupply: |layout|::ResourceProfileSupply<MappedRegionMemory> {}
 public data MappedRegionPlacement {}
 
 // Admitted only for this transaction's exact reserved virtual range after the
@@ -149,37 +149,37 @@ public data MappedRegionPlacement {}
 // physical Stable view is live across these aliases, and every mapped view
 // ends before the CR3 restore.
 MappedRegionProfileProvider satisfies MappedRegionSupply {
-    machine profile(storage: &Extent in Granted) -> ResourceProfile {
+    machine profile(storage: &|extent|::Extent in |extent|::Granted) -> |layout|::ResourceProfile {
         let services: [u64; 32];
-        let mut transfers: [TransferRule; 16];
-        transfers[0] = TransferRule { width_bits: 64, alignment_bytes: 8 };
-        let mut regions: [ResourceRegion; 32];
-        regions[0] = ResourceRegion {
-            range: RelativeRange { offset: 0, length: storage.length },
-            peer: PeerWritability::HostileShared,
-            stable: StableCapability::None,
-            external: ExternalCapability::Access {
-                read: ExternalReadBehavior::Repeatable, write: true,
-                transfers: TransferRules { entries: transfers, rule_count: 1 },
+        let mut transfers: [|layout|::TransferRule; 16];
+        transfers[0] = |layout|::TransferRule { width_bits: 64, alignment_bytes: 8 };
+        let mut regions: [|layout|::ResourceRegion; 32];
+        regions[0] = |layout|::ResourceRegion {
+            range: |layout|::RelativeRange { offset: 0, length: storage.length },
+            peer: |layout|::PeerWritability::HostileShared,
+            stable: |layout|::StableCapability::None,
+            external: |layout|::ExternalCapability::Access {
+                read: |layout|::ExternalReadBehavior::Repeatable, write: true,
+                transfers: |layout|::TransferRules { entries: transfers, rule_count: 1 },
             },
-            atomic: AtomicCapability::None,
-            reach: BoundaryReach { services: services, service_count: 0 },
+            atomic: |layout|::AtomicCapability::None,
+            reach: |layout|::BoundaryReach { services: services, service_count: 0 },
         };
-        ResourceProfile { regions: regions, region_count: 1 }
+        |layout|::ResourceProfile { regions: regions, region_count: 1 }
     }
 }
 
-machine MappedRegionPlacement::plan(schema: Schema) -> AccessPlan {
-    let mut fields: [FieldEntry; 64];
-    fields[0] = FieldEntry { key: schema.fields[0].key, representation: FieldPlan::At { offset: 0 } };
+machine MappedRegionPlacement::plan(schema: |layout|::Schema) -> |layout|::AccessPlan {
+    let mut fields: [|layout|::FieldEntry; 64];
+    fields[0] = |layout|::FieldEntry { key: schema.fields[0].key, representation: |layout|::FieldPlan::At { offset: 0 } };
     let services: [u64; 32];
-    let layout: LayoutPlan = LayoutPlan {
+    let layout: |layout|::LayoutPlan = |layout|::LayoutPlan {
         entries: fields, entry_count: 1, size_fixed: schema.fields[0].size, size_is_dynamic: false, align: 4096,
     };
-    AccessPlan::with_reach(
-        AccessPlan::with(AccessPlan::inaccessible(layout), schema.fields[0].key,
-            FieldAccess::External { read: ExternalRead::Read, write: true, exposure: Exposure::Exported }),
-        BoundaryReach { services: services, service_count: 0 }
+    |layout|::AccessPlan::with_reach(
+        |layout|::AccessPlan::with(|layout|::AccessPlan::inaccessible(layout), schema.fields[0].key,
+            |layout|::FieldAccess::External { read: |layout|::ExternalRead::Read, write: true, exposure: |layout|::Exposure::Exported }),
+        |layout|::BoundaryReach { services: services, service_count: 0 }
     )
 }
 
@@ -187,42 +187,42 @@ data MappingAccess {}
 
 // Private implementation detail of BootTranslation's admitted closed body,
 // not a general pre-activation mapping API. No mapped reference is returned.
-machine MappingAccess::probe(destination: &mut Extent in Granted) -> bool
+machine MappingAccess::probe(destination: &mut |extent|::Extent in |extent|::Granted) -> bool
 requires destination in BootVirtualDestination
 ensures destination in BootVirtualDestination
-reaches ResourceProfileSupply
+reaches |layout|::ResourceProfileSupply
 {
-    transition Access::view_extent_mut<MappedRegionPlacement, MappingRegion, MappedRegionMemory>(
+    transition |access|::view_extent_mut<MappedRegionPlacement, |region|::MappingRegion, MappedRegionMemory>(
         destination
     ) {
-        AccessOutcome::Ready { view } -> page(view, 0)
-        AccessOutcome::Rejected { returned, reason } -> false
+        |layout|::AccessOutcome::Ready { view } -> page(view, 0)
+        |layout|::AccessOutcome::Rejected { returned, reason } -> false
     }
-    machine page(view: &mut Access<MappedRegionPlacement, MappingRegion>, next: u64) -> bool
-    requires next <= MAPPING_PAGE_COUNT
+    machine page(view: &mut |layout|::Access<MappedRegionPlacement, |region|::MappingRegion>, next: u64) -> bool
+    requires next <= |region|::MAPPING_PAGE_COUNT
     {
-        transition next < MAPPING_PAGE_COUNT {
+        transition next < |region|::MAPPING_PAGE_COUNT {
             true -> observe(view, next)
             _ -> true
         }
     }
-    machine observe(view: &mut Access<MappedRegionPlacement, MappingRegion>, next: u64) -> bool
-    requires next < MAPPING_PAGE_COUNT
+    machine observe(view: &mut |layout|::Access<MappedRegionPlacement, |region|::MappingRegion>, next: u64) -> bool
+    requires next < |region|::MAPPING_PAGE_COUNT
     {
-        let first: u64 = omega::language::read(&view.words[next * 512]);
-        let last: u64 = omega::language::read(&view.words[next * 512 + 511]);
+        let first: u64 = |layout|::read(&view.words[next * 512]);
+        let last: u64 = |layout|::read(&view.words[next * 512 + 511]);
         transition first == 0 && last == 0 {
             true -> write(view, next)
             _ -> false
         }
     }
-    machine write(view: &mut Access<MappedRegionPlacement, MappingRegion>, next: u64) -> bool
-    requires next < MAPPING_PAGE_COUNT
+    machine write(view: &mut |layout|::Access<MappedRegionPlacement, |region|::MappingRegion>, next: u64) -> bool
+    requires next < |region|::MAPPING_PAGE_COUNT
     {
-        omega::language::write(&mut view.words[next * 512], 73 + next);
-        omega::language::write(&mut view.words[next * 512 + 511], 97 + next);
-        let first: u64 = omega::language::read(&view.words[next * 512]);
-        let last: u64 = omega::language::read(&view.words[next * 512 + 511]);
+        |layout|::write(&mut view.words[next * 512], 73 + next);
+        |layout|::write(&mut view.words[next * 512 + 511], 97 + next);
+        let first: u64 = |layout|::read(&view.words[next * 512]);
+        let last: u64 = |layout|::read(&view.words[next * 512 + 511]);
         transition first == 73 + next && last == 97 + next {
             true -> page(view, next + 1)
             _ -> false

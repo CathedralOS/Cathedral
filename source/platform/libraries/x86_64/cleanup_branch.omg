@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified MappedPageTable::clean_up_addr_range for one selected 4KiB page.
 // Bottom-up detach/deallocation proposals; never releases actual frame custody.
-module cleanup_branch;
-use pages;
-use page_entries;
-use facts::x86_page_table_entry;
+use {omega}/language/core/nat.omg;
+use pages.omg;
+use page_entries.omg;
+use {facts}/x86_page_table_entry.omg;
 
 pub data CleanupPlan [copy] {
     words: [u64; 4]; frames_to_retire: [u64; 3]; retire_count: u8;
@@ -20,14 +20,14 @@ pub data CleanupOutcome [copy] {
 // It is a detached observation; `has_other_entries` can compute it from a full
 // initialized snapshot. The table IDs name those snapshots, not live grants.
 pub machine plan(words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4], page: u64) -> CleanupPlan {
-    let valid: bool = pages::start_valid(page, 4096, false);
+    let valid: bool = |pages|::start_valid(page, 4096, false);
     transition valid {
         true -> start(words, table_ids, other_nonzero)
         _ -> (CleanupPlan { outcome: CleanupOutcome::InvalidPage, words: [words[0], words[1], words[2], words[3]] })
     }
     state start(words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4]) -> CleanupPlan {
         let linked: bool = table_link(words[0]);
-        let address: u64 = page_entries::address(words[0]);
+        let address: u64 = |page_entries|::address(words[0]);
         transition {
             !linked -> (CleanupPlan { outcome: CleanupOutcome::Ready, words: [words[0], words[1], words[2], words[3]], visited: 1 })
             address != table_ids[1] -> (CleanupPlan { words: [words[0], words[1], words[2], words[3]], visited: 1, outcome: CleanupOutcome::CaptureMismatch { expected: address, supplied: table_ids[1] } })
@@ -36,7 +36,7 @@ pub machine plan(words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 
     }
     state p3(words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4]) -> CleanupPlan {
         let linked: bool = table_link(words[1]);
-        let address: u64 = page_entries::address(words[1]);
+        let address: u64 = |page_entries|::address(words[1]);
         transition {
             !linked -> unwind(words, table_ids, other_nonzero, 1)
             address != table_ids[2] -> (CleanupPlan { words: [words[0], words[1], words[2], words[3]], visited: 2, outcome: CleanupOutcome::CaptureMismatch { expected: address, supplied: table_ids[2] } })
@@ -45,7 +45,7 @@ pub machine plan(words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 
     }
     state p2(words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4]) -> CleanupPlan {
         let linked: bool = table_link(words[2]);
-        let address: u64 = page_entries::address(words[2]);
+        let address: u64 = |page_entries|::address(words[2]);
         transition {
             !linked -> unwind(words, table_ids, other_nonzero, 2)
             address != table_ids[3] -> (CleanupPlan { words: [words[0], words[1], words[2], words[3]], visited: 3, outcome: CleanupOutcome::CaptureMismatch { expected: address, supplied: table_ids[3] } })
@@ -95,23 +95,23 @@ machine unwind_branch(result: &mut CleanupPlan, table_ids: &[u64; 4], other_nonz
     }
 }
 
-pub machine has_other_entries(table: &[X86PageTableEntry; 512], selected: u16 [0..=511]) -> bool {
+pub machine has_other_entries(table: &[|x86_page_table_entry|::X86PageTableEntry; 512], selected: u16 [0..=511]) -> bool {
     let result: bool = scan_others(table, selected, 0, 512, false);
     result
 }
-machine scan_others(table: &[X86PageTableEntry; 512], selected: u16 [0..=511], index: u64, end: u64, found: bool)
-terminates by (index, end) -> Nat::BoundedDistance;
+machine scan_others(table: &[|x86_page_table_entry|::X86PageTableEntry; 512], selected: u16 [0..=511], index: u64, end: u64, found: bool)
+terminates by (index, end) -> |nat|::Nat::BoundedDistance;
 -> bool {
     let next: bool = other_step(table, selected, index, found);
     transition index < end { true -> scan_others(table, selected, index + 1, end, next) _ -> (found) }
 }
-machine other_step(table: &[X86PageTableEntry; 512], selected: u16 [0..=511], index: u64, found: bool) -> bool {
+machine other_step(table: &[|x86_page_table_entry|::X86PageTableEntry; 512], selected: u16 [0..=511], index: u64, found: bool) -> bool {
     transition index < 512 && index != selected as u64 {
         true -> inspect(table, index, found)
         _ -> (found)
     }
-    state inspect(table: &[X86PageTableEntry; 512], index: u64 [0..=511], found: bool) -> bool {
-        let word: u64 = page_entries::encode(&table[index]);
+    state inspect(table: &[|x86_page_table_entry|::X86PageTableEntry; 512], index: u64 [0..=511], found: bool) -> bool {
+        let word: u64 = |page_entries|::encode(&table[index]);
         found || word != 0
     }
 }

@@ -1,15 +1,11 @@
-module session::input;
-
 // Independent pointer edges. Cancellation and metadata cannot create a click.
-use operations::Input;
-use operations::Command;
-use state::State;
-use state::LoadMode;
-use session::session;
-use storage::storage;
-use document::document;
-use session::keys;
-public machine reset_channels(s: &mut State) {
+use operations.omg;
+use state.omg as local_state;
+use session/session.omg;
+use storage/storage.omg;
+use document/document.omg;
+use session/keys.omg;
+public machine reset_channels(s: &mut |local_state|::State) {
     s.channels[0] = 0u64;
     s.channels[1] = 0u64;
     s.channels[2] = 0u64;
@@ -23,51 +19,51 @@ public machine reset_channels(s: &mut State) {
     s.buttons[2] = 0u64;
     s.buttons[3] = 0u64;
 }
-public machine input(s: &mut State) -> Command {
+public machine input(s: &mut |local_state|::State) -> |operations|::Command {
     transition s.input {
-        Input::Pointer { channel, group, buttons, x, y } -> pointer(s, channel, group, buttons, x, y)
-        Input::Key { group, code, action } -> key(s, group, code, action)
-        Input::Cancel { channel, retire } -> cancel(s, channel)
-        _ -> session::session::after_input(s)
+        |operations|::Input::Pointer { channel, group, buttons, x, y } -> pointer(s, channel, group, buttons, x, y)
+        |operations|::Input::Key { group, code, action } -> key(s, group, code, action)
+        |operations|::Input::Cancel { channel, retire } -> cancel(s, channel)
+        _ -> |session|::after_input(s)
     }
-    machine key(s: &mut State, group: u64, code: u64, action: u64) -> Command {
+    machine key(s: &mut |local_state|::State, group: u64, code: u64, action: u64) -> |operations|::Command {
         s.cursor_group = group;
-        session::keys::keys(s, code, action)
+        |keys|::keys(s, code, action)
     }
 }
-machine cancel(s: &mut State, channel: u64) -> Command {
+machine cancel(s: &mut |local_state|::State, channel: u64) -> |operations|::Command {
     let slot: u64 = find(s, channel, 0u64);
     transition slot < 4u64 {
         true -> clear(s, slot)
-        _ -> session::session::after_input(s)
+        _ -> |session|::after_input(s)
     }
-    machine clear(s: &mut State, slot: u64) -> Command requires slot < 4u64 {
+    machine clear(s: &mut |local_state|::State, slot: u64) -> |operations|::Command requires slot < 4u64 {
         s.buttons[slot] = 0u64;
         s.hidden[slot] = false;
         s.channels[slot] = 0u64;
-        session::session::after_input(s)
+        |session|::after_input(s)
     }
 }
-machine pointer(s: &mut State, channel: u64, group: u64, buttons: u64, x: u64, y: u64) -> Command {
+machine pointer(s: &mut |local_state|::State, channel: u64, group: u64, buttons: u64, x: u64, y: u64) -> |operations|::Command {
     transition channel != 0u64 {
         true -> locate(s, channel, group, buttons, x, y)
-        _ -> session::session::after_input(s)
+        _ -> |session|::after_input(s)
     }
-    machine locate(s: &mut State, channel: u64, group: u64, buttons: u64, x: u64, y: u64) -> Command {
+    machine locate(s: &mut |local_state|::State, channel: u64, group: u64, buttons: u64, x: u64, y: u64) -> |operations|::Command {
         let slot: u64 = find(s, channel, 0u64);
         transition slot < 4u64 {
             true -> edge(s, channel, group, buttons, x, y, slot)
             _ -> available(s, channel, group, buttons, x, y)
         }
     }
-    machine available(s: &mut State, channel: u64, group: u64, buttons: u64, x: u64, y: u64) -> Command {
+    machine available(s: &mut |local_state|::State, channel: u64, group: u64, buttons: u64, x: u64, y: u64) -> |operations|::Command {
         let slot: u64 = find(s, 0u64, 0u64);
         transition slot < 4u64 {
             true -> edge(s, channel, group, buttons, x, y, slot)
-            _ -> session::session::after_input(s)
+            _ -> |session|::after_input(s)
         }
     }
-    machine edge(s: &mut State, channel: u64, group: u64, buttons: u64, x: u64, y: u64, slot: u64) -> Command
+    machine edge(s: &mut |local_state|::State, channel: u64, group: u64, buttons: u64, x: u64, y: u64, slot: u64) -> |operations|::Command
         requires slot < 4u64
     {
         let pressed: bool = (buttons & 1u64) != 0u64 && (s.buttons[slot] & 1u64) == 0u64;
@@ -76,72 +72,72 @@ machine pointer(s: &mut State, channel: u64, group: u64, buttons: u64, x: u64, y
         s.groups[slot] = group;
         transition pressed {
             true -> clicked(s, x, y)
-            _ -> session::session::after_input(s)
+            _ -> |session|::after_input(s)
         }
     }
 }
-machine clicked(s: &mut State, x: u64, y: u64) -> Command {
+machine clicked(s: &mut |local_state|::State, x: u64, y: u64) -> |operations|::Command {
     let left: u64 in Saturating = (s.width as u64 in Saturating) - 24;
     let right: u64 in Saturating = (s.width as u64 in Saturating) - 4;
     transition x >= left && x < right && y >= 2u64 && y < 18u64 {
         true -> close(s)
         _ -> dialog(s, x, y)
     }
-    machine close(s: &mut State) -> Command {
-        transition s.error == 0u64 && !document::document::changed(s) {
-            true -> (Command::Exit)
+    machine close(s: &mut |local_state|::State) -> |operations|::Command {
+        transition s.error == 0u64 && !|document|::changed(s) {
+            true -> (|operations|::Command::Exit)
             _ -> ask(s)
         }
     }
-    machine ask(s: &mut State) -> Command {
+    machine ask(s: &mut |local_state|::State) -> |operations|::Command {
         s.closing = true;
         s.dirty = true;
-        session::session::after_input(s)
+        |session|::after_input(s)
     }
 }
-machine dialog(s: &mut State, x: u64, y: u64) -> Command {
+machine dialog(s: &mut |local_state|::State, x: u64, y: u64) -> |operations|::Command {
     transition s.closing && x >= 10u64 && x < 190u64 {
         true -> choice(s, y)
-        _ -> session::session::after_input(s)
+        _ -> |session|::after_input(s)
     }
-    machine choice(s: &mut State, y: u64) -> Command {
+    machine choice(s: &mut |local_state|::State, y: u64) -> |operations|::Command {
         transition y >= 36u64 && y < 52u64 && !s.temporary {
             true -> commit(s)
             _ -> discard(s, y)
         }
     }
-    machine commit(s: &mut State) -> Command {
+    machine commit(s: &mut |local_state|::State) -> |operations|::Command {
         s.close_after = true;
-        s.loading = LoadMode::Reconcile;
+        s.loading = |local_state|::LoadMode::Reconcile;
         transition s.error == 0u64 {
-            true -> storage::storage::save(s)
-            _ -> storage::storage::load(s)
+            true -> |storage|::save(s)
+            _ -> |storage|::load(s)
         }
     }
-    machine discard(s: &mut State, y: u64) -> Command {
+    machine discard(s: &mut |local_state|::State, y: u64) -> |operations|::Command {
         transition y >= 52u64 && y < 68u64 {
-            true -> (Command::Exit)
+            true -> (|operations|::Command::Exit)
             _ -> cancel_dialog(s, y)
         }
     }
-    machine cancel_dialog(s: &mut State, y: u64) -> Command {
+    machine cancel_dialog(s: &mut |local_state|::State, y: u64) -> |operations|::Command {
         transition y >= 68u64 && y < 84u64 {
             true -> dismiss(s)
-            _ -> session::session::after_input(s)
+            _ -> |session|::after_input(s)
         }
     }
-    machine dismiss(s: &mut State) -> Command {
+    machine dismiss(s: &mut |local_state|::State) -> |operations|::Command {
         s.closing = false;
         s.dirty = true;
-        session::session::after_input(s)
+        |session|::after_input(s)
     }
 }
-machine find(s: &State, name: u64, index: u64) -> u64 {
+machine find(s: &|local_state|::State, name: u64, index: u64) -> u64 {
     transition index < 4u64 {
         true -> inspect(s, name, index)
         _ -> (4u64)
     }
-    machine inspect(s: &State, name: u64, index: u64) -> u64 requires index < 4u64 {
+    machine inspect(s: &|local_state|::State, name: u64, index: u64) -> u64 requires index < 4u64 {
         transition s.channels[index] == name {
             true -> (index)
             _ -> find(s, name, index + 1u64)

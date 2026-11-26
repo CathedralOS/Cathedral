@@ -1,92 +1,85 @@
-module session::session;
-
 // Acquire -> wait for placement -> load -> receive -> act -> present.
-use state::State;
-use state::LoadMode;
-use state::Phase;
-use operations::View;
-use operations::Reply;
-use operations::Report;
-use operations::Command;
-use protocol::main;
-use storage::storage;
-use rendering::rendering;
-use session::input;
-use session::cursors;
-use session::diagnostics;
-use document::document;
+use state.omg as local_state;
+use operations.omg;
+use {protocol}/main.omg;
+use storage/storage.omg;
+use rendering/rendering.omg;
+use session/input.omg;
+use session/cursors.omg;
+use session/diagnostics.omg;
+use document/document.omg;
 
-public machine resume(s: &mut State, reply: Reply) -> Command {
+public machine resume(s: &mut |local_state|::State, reply: |operations|::Reply) -> |operations|::Command {
     transition s.phase {
-        Phase::Start -> acquire_interaction(s)
-        Phase::InteractionReady -> acquire_storage(s)
-        Phase::StorageReady -> storage_ready(s, 0u64)
-        Phase::Polled -> polled(s, reply)
-        Phase::Awakened -> awakened(s, reply)
-        Phase::ControlReplied -> wait(s)
-        Phase::CursorChanged -> session::cursors::cursor_reply(s, reply)
-        Phase::LoadReported -> session::input::input(s)
-        Phase::Storage { step } -> storage::storage::persistence(s, reply)
-        Phase::Rendering { step } -> rendering::rendering::presentation(s, step, reply)
+        |local_state|::Phase::Start -> acquire_interaction(s)
+        |local_state|::Phase::InteractionReady -> acquire_storage(s)
+        |local_state|::Phase::StorageReady -> storage_ready(s, 0u64)
+        |local_state|::Phase::Polled -> polled(s, reply)
+        |local_state|::Phase::Awakened -> awakened(s, reply)
+        |local_state|::Phase::ControlReplied -> wait(s)
+        |local_state|::Phase::CursorChanged -> |cursors|::cursor_reply(s, reply)
+        |local_state|::Phase::LoadReported -> |input|::input(s)
+        |local_state|::Phase::Storage { step } -> |storage|::persistence(s, reply)
+        |local_state|::Phase::Rendering { step } -> |rendering|::presentation(s, step, reply)
     }
 }
-machine acquire_interaction(s: &mut State) -> Command {
-    s.phase = Phase::InteractionReady;
-    Command::AcquireInteraction
+machine acquire_interaction(s: &mut |local_state|::State) -> |operations|::Command {
+    s.phase = |local_state|::Phase::InteractionReady;
+    |operations|::Command::AcquireInteraction
 }
-machine acquire_storage(s: &mut State) -> Command {
-    s.phase = Phase::StorageReady;
-    Command::AcquireStorage
+machine acquire_storage(s: &mut |local_state|::State) -> |operations|::Command {
+    s.phase = |local_state|::Phase::StorageReady;
+    |operations|::Command::AcquireStorage
 }
-public machine storage_ready(s: &mut State, status: u64) -> Command {
-    s.loading = LoadMode::ReplaceDraft;
+public machine storage_ready(s: &mut |local_state|::State, status: u64) -> |operations|::Command {
+    s.loading = |local_state|::LoadMode::ReplaceDraft;
     transition status {
         0u64 -> poll(s)
-        UNAVAILABLE -> temporary(s)
-        _ -> (Command::Exit)
+        |main|::UNAVAILABLE -> temporary(s)
+        _ -> (|operations|::Command::Exit)
     }
-    machine temporary(s: &mut State) -> Command {
+    machine temporary(s: &mut |local_state|::State) -> |operations|::Command {
         s.temporary = true;
         s.dirty = true;
         poll(s)
     }
 }
-public machine poll(s: &mut State) -> Command {
-    s.phase = Phase::Polled;
-    Command::Poll
+public machine poll(s: &mut |local_state|::State) -> |operations|::Command {
+    s.phase = |local_state|::Phase::Polled;
+    |operations|::Command::Poll
 }
-machine polled(s: &mut State, reply: Reply) -> Command {
+machine polled(s: &mut |local_state|::State, reply: |operations|::Reply) -> |operations|::Command {
     transition reply {
-        Reply::View { view } -> observed(s, view)
-        _ -> (Command::Exit)
+        |operations|::Reply::View { view } -> observed(s, view)
+        _ -> (|operations|::Command::Exit)
     }
 }
-machine observed(s: &mut State, view: View) -> Command {
+machine observed(s: &mut |local_state|::State, view: |operations|::View) -> |operations|::Command {
     transition view.status == 0u64 && view.epoch != 0u64
         && view.width != 0u64 && view.height != 0u64
         && view.width < 65536u64 && view.height < 65536u64 {
         true -> accept(s, view)
         _ -> hidden(s)
     }
-    machine hidden(s: &mut State) -> Command {
+    machine hidden(s: &mut |local_state|::State) -> |operations|::Command {
         s.scene = false;
         s.dirty = true;
         wait(s)
     }
-    machine accept(s: &mut State, view: View) -> Command {
+    machine accept(s: &mut |local_state|::State, view: |operations|::View) -> |operations|::Command {
         transition s.epoch != view.epoch {
             true -> rebound(s, view)
             _ -> geometry(s, view)
         }
     }
-    machine rebound(s: &mut State, view: View) -> Command {
-        session::input::reset_channels(s);
+    machine rebound(s: &mut |local_state|::State, view: |operations|::View) -> |operations|::Command {
+        |input|::reset_channels(s);
         s.scene = false;
         s.dirty = true;
         s.epoch = view.epoch;
         geometry(s, view)
     }
-    machine geometry(s: &mut State, view: View) -> Command {
+    machine geometry(s: &mut |local_state|::State, view: |operations|::View) -> |operations|::Command {
         s.dirty = s.dirty || s.width != view.width || s.height != view.height;
         s.width = view.width;
         s.height = view.height;
@@ -96,46 +89,46 @@ machine observed(s: &mut State, view: View) -> Command {
         s.input = view.input;
         s.drained = ((s.drained as u64 in Saturating) + 1) as u64;
         transition s.loaded {
-            true -> session::input::input(s)
+            true -> |input|::input(s)
             _ -> first(s)
         }
     }
-    machine first(s: &mut State) -> Command {
+    machine first(s: &mut |local_state|::State) -> |operations|::Command {
         transition s.temporary {
-            true -> session::diagnostics::loaded(s)
-            _ -> storage::storage::load(s)
+            true -> |diagnostics|::loaded(s)
+            _ -> |storage|::load(s)
         }
     }
 }
-public machine after_input(s: &mut State) -> Command {
+public machine after_input(s: &mut |local_state|::State) -> |operations|::Command {
     transition s.more && s.drained < 8u64 {
         true -> poll(s)
-        _ -> rendering::rendering::render(s)
+        _ -> |rendering|::render(s)
     }
 }
-public machine wait(s: &mut State) -> Command {
+public machine wait(s: &mut |local_state|::State) -> |operations|::Command {
     s.drained = 0u64;
-    s.phase = Phase::Awakened;
-    Command::Wait
+    s.phase = |local_state|::Phase::Awakened;
+    |operations|::Command::Wait
 }
-machine awakened(s: &mut State, reply: Reply) -> Command {
+machine awakened(s: &mut |local_state|::State, reply: |operations|::Reply) -> |operations|::Command {
     transition reply {
-        Reply::Wake -> poll(s)
-        Reply::Control { loss } -> control(s, loss)
-        _ -> (Command::Exit)
+        |operations|::Reply::Wake -> poll(s)
+        |operations|::Reply::Control { loss } -> control(s, loss)
+        _ -> (|operations|::Command::Exit)
     }
-    machine control(s: &mut State, loss: bool) -> Command {
-        s.phase = Phase::ControlReplied;
+    machine control(s: &mut |local_state|::State, loss: bool) -> |operations|::Command {
+        s.phase = |local_state|::Phase::ControlReplied;
         transition loss {
-            true -> (Command::Control { report: Report::Loss { changed: document::document::changed(s) } })
-            _ -> (Command::Control { report: Report::Health {
+            true -> (|operations|::Command::Control { report: |operations|::Report::Loss { changed: |document|::changed(s) } })
+            _ -> (|operations|::Command::Control { report: |operations|::Report::Health {
                 revision: s.revision, length: s.length, error: s.error,
-                changed: document::document::changed(s), count: s.count, selected: selection(s)
+                changed: |document|::changed(s), count: s.count, selected: selection(s)
             } })
         }
     }
 }
-machine selection(s: &State) -> u64 {
+machine selection(s: &|local_state|::State) -> u64 {
     transition s.count == 0u64 {
         true -> (0u64)
         _ -> (((s.current as u64 in Saturating) + 1) as u64)
