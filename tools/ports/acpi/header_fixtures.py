@@ -2,10 +2,25 @@
 """Original synthetic ACPI header fixtures; no firmware or upstream AML inputs."""
 import argparse
 import json
+import re
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
+
+
+def fixture_selectors(declarations):
+    """Resolve the fixture templates' named ACPI declarations to their files."""
+    names = {name: f'|{module}|::{name}' for module, members in declarations.items() for name in members}
+    # A record field, variant or explicit selector already has an owner.
+    references = re.compile(r'(?<![.:\w])\b(?:' + '|'.join(map(re.escape, names)) + r')\b(?!\s*:(?!:))')
+    return lambda source: references.sub(lambda match: names[match[0]], source)
+
+
+def fixture_program(lines, declarations):
+    body = '\n'.join(lines[2:])
+    imports = [f'use {{acpi}}/{name}.omg;' for name in declarations if f'|{name}|::' in body]
+    return '\n'.join([*lines[:2], *imports, body]) + '\n'
 
 
 def fix(data, offset, length=None):
@@ -118,20 +133,14 @@ def cases():
 def render(rows, evaluate=True):
     out=['// SPDX-License-Identifier: MIT OR Apache-2.0',
          '// Generated original fixtures by header_fixtures.py; do not edit.',
-         'use acpi::headers::RsdpResult;','use acpi::headers::SdtResult;',
-         'use acpi::headers::RootResult;','use acpi::headers::EntryResult;',
-         'use acpi::headers::ChecksumResult;','use acpi::headers::RootPointer;',
-         'use acpi::headers::SIGNATURE_RSDT;','use acpi::parser::parse_rsdp;',
-         'use acpi::parser::parse_sdt;','use acpi::parser::parse_root;',
-         'use acpi::parser::root_entry;','use acpi::parser::select_root;',
-         'use acpi::bytes::checksum;']
+         'use {acpi}/headers.omg;', 'use {acpi}/parser.omg;', 'use {acpi}/bytes.omg;']
     for row in rows:
         kind=row['kind'];length=row['length'];xsdt=str(row.get('xsdt',False)).lower()
         out += [f"machine test_{row['name']}() -> bool {{",'    let mut input: [u8; 4096];']
         out += [f'    input[{i}] = {b};'for i,b in enumerate(bytes.fromhex(row['bytes'])) if b]
-        typ={'rsdp':'RsdpResult','sdt':'SdtResult','root':'RootResult','checksum':'ChecksumResult','entry':'EntryResult'}[kind]
-        call={'rsdp':f'parse_rsdp(&input, {length})','sdt':f'parse_sdt(&input, {length}, SIGNATURE_RSDT)',
-              'root':f'parse_root(&input, {length}, {xsdt})','checksum':f'checksum(&input, {length})','entry':f"root_entry(&input, {length}, {xsdt}, {row.get('index',0)})"}[kind]
+        typ={'rsdp':'|headers|::RsdpResult','sdt':'|headers|::SdtResult','root':'|headers|::RootResult','checksum':'|headers|::ChecksumResult','entry':'|headers|::EntryResult'}[kind]
+        call={'rsdp':f'|parser|::parse_rsdp(&input, {length})','sdt':f'|parser|::parse_sdt(&input, {length}, |headers|::SIGNATURE_RSDT)',
+              'root':f'|parser|::parse_root(&input, {length}, {xsdt})','checksum':f'|bytes|::checksum(&input, {length})','entry':f"|parser|::root_entry(&input, {length}, {xsdt}, {row.get('index',0)})"}[kind]
         out += [f'    let result: {typ} = {call};']
         checks=[f"result.error == {row['error']}"]
         if not row['error']:
@@ -145,22 +154,22 @@ def render(rows, evaluate=True):
             if kind=='root':
                 checks += [f"result.entry_count == {row['count']}",f"result.entry_size == {8 if row['xsdt'] else 4}"]
                 for i,address in enumerate(row['addresses']):
-                    out += [f'    let entry{i}: EntryResult = root_entry(&input, {length}, {xsdt}, {i});']
+                    out += [f'    let entry{i}: |headers|::EntryResult = |parser|::root_entry(&input, {length}, {xsdt}, {i});']
                     checks += [f'entry{i}.error == 0',f'entry{i}.address == {address}']
-                out += [f"    let end: EntryResult = root_entry(&input, {length}, {xsdt}, {row['count']});",
-                        f'    let huge: EntryResult = root_entry(&input, {length}, {xsdt}, 18446744073709551615);']
+                out += [f"    let end: |headers|::EntryResult = |parser|::root_entry(&input, {length}, {xsdt}, {row['count']});",
+                        f'    let huge: |headers|::EntryResult = |parser|::root_entry(&input, {length}, {xsdt}, 18446744073709551615);']
                 checks += ['end.error == 10','huge.error == 10']
             if kind=='entry':checks.append(f"result.address == {row['address']}")
             if kind=='rsdp' and 'selected' in row:
-                out += ['    let selected: RootPointer = select_root(result, false);']
+                out += ['    let selected: |headers|::RootPointer = |parser|::select_root(result, false);']
                 checks += [f"selected.address == {row['selected']}",f"selected.available == {str(row['selected'] != 0).lower()}",'selected.entry_size == 4']
             if kind=='checksum': checks.append(f"result.sum == {row['sum']}")
             if row['name']=='rsdp_extended':
-                out += ['    let preferred: RootPointer = select_root(result, false);','    let fallback: RootPointer = select_root(result, true);']
+                out += ['    let preferred: |headers|::RootPointer = |parser|::select_root(result, false);','    let fallback: |headers|::RootPointer = |parser|::select_root(result, true);']
                 checks += ['preferred.available','preferred.address == 0xfedcba9876543210','preferred.entry_size == 8',
                            'fallback.available','fallback.address == 0x81234567','fallback.entry_size == 4']
         elif kind=='rsdp':
-            out += ['    let selected: RootPointer = select_root(result, false);']
+            out += ['    let selected: |headers|::RootPointer = |parser|::select_root(result, false);']
             checks += ['!selected.available','selected.address == 0']
         out += ['    '+' &&\n    '.join(checks),' }']
     if evaluate:

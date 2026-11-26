@@ -6,7 +6,7 @@
       "name": "gas_offset_0",
       "bytes": "804003041032547698badcfe",
       "body": [
-        "let result: RawGasResult = parse_gas(&input, 12, 0);"
+        "let result: |gas|::RawGasResult = |gas|::parse_gas(&input, 12, 0);"
       ],
       "checks": [
         "result.error == 0",
@@ -21,7 +21,7 @@
       "name": "gas_offset_4084",
       "bytes": "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000804003041032547698badcfe",
       "body": [
-        "let result: RawGasResult = parse_gas(&input, 4096, 4084);"
+        "let result: |gas|::RawGasResult = |gas|::parse_gas(&input, 4096, 4084);"
       ],
       "checks": [
         "result.error == 0",
@@ -36,7 +36,7 @@
       "name": "gas_bounds_11_0",
       "bytes": "804003041032547698badcfe",
       "body": [
-        "let result: RawGasResult = parse_gas(&input, 11, 0);"
+        "let result: |gas|::RawGasResult = |gas|::parse_gas(&input, 11, 0);"
       ],
       "checks": [
         "result.error == 2"
@@ -46,7 +46,7 @@
       "name": "gas_bounds_4097_0",
       "bytes": "804003041032547698badcfe",
       "body": [
-        "let result: RawGasResult = parse_gas(&input, 4097, 0);"
+        "let result: |gas|::RawGasResult = |gas|::parse_gas(&input, 4097, 0);"
       ],
       "checks": [
         "result.error == 2"
@@ -56,7 +56,7 @@
       "name": "gas_bounds_12_1",
       "bytes": "804003041032547698badcfe",
       "body": [
-        "let result: RawGasResult = parse_gas(&input, 12, 1);"
+        "let result: |gas|::RawGasResult = |gas|::parse_gas(&input, 12, 1);"
       ],
       "checks": [
         "result.error == 2"
@@ -66,7 +66,7 @@
       "name": "gas_bounds_4096_4085",
       "bytes": "804003041032547698badcfe",
       "body": [
-        "let result: RawGasResult = parse_gas(&input, 4096, 4085);"
+        "let result: |gas|::RawGasResult = |gas|::parse_gas(&input, 4096, 4085);"
       ],
       "checks": [
         "result.error == 2"
@@ -76,7 +76,7 @@
       "name": "gas_bounds_12_18446744073709551615",
       "bytes": "804003041032547698badcfe",
       "body": [
-        "let result: RawGasResult = parse_gas(&input, 12, 18446744073709551615);"
+        "let result: |gas|::RawGasResult = |gas|::parse_gas(&input, 12, 18446744073709551615);"
       ],
       "checks": [
         "result.error == 2"
@@ -86,7 +86,7 @@
       "name": "gas_space_0",
       "bytes": "",
       "body": [
-        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 0, address: 18446744073709551615 });"
+        "let result: |gas|::GenericAddressResult = |gas|::gas_from_raw(|gas|::RawGenericAddress { address_space: 0, address: 18446744073709551615 });"
       ],
       "checks": [
         "result.error == 0",
@@ -98,7 +98,7 @@
       "name": "gas_space_1",
       "bytes": "",
       "body": [
-        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 1, address: 18446744073709551615 });"
+        "let result: |gas|::GenericAddressResult = |gas|::gas_from_raw(|gas|::RawGenericAddress { address_space: 1, address: 18446744073709551615 });"
       ],
       "checks": [
         "result.error == 0",
@@ -110,7 +110,7 @@
       "name": "gas_space_2",
       "bytes": "",
       "body": [
-        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 2, address: 18446744073709551615 });"
+        "let result: |gas|::GenericAddressResult = |gas|::gas_from_raw(|gas|::RawGenericAddress { address_space: 2, address: 18446744073709551615 });"
       ],
       "checks": [
         "result.error == 0",
@@ -122,7 +122,7 @@
       "name": "gas_space_3",
       "bytes": "",
       "body": [
-        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 3, address: 18446744073709551615 });"
+        "let result: |gas|::GenericAddressResult = |gas|::gas_from_raw(|gas|::RawGenericAddress { address_space: 3, address: 18446744073709551615 });"
       ],
       "checks": [
         "result.error == 0",
@@ -134,7 +134,7 @@
       "name": "gas_space_4",
       "bytes": "",
       "body": [
-        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 4, address: 18446744073709551615 });"
+        "let result: |gas|::GenericAddressResult = |gas|::gas_from_raw(|gas|::RawGenericAddress { address_space: 4, address: 18446744073709551615 });"
       ],
       "checks": [
         "result.error == 0",
@@ -146,7 +146,7 @@
       "name": "gas_space_5",
       "bytes": "",
       "body": [
-        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 5, address: 18446744073709551615 });"
+        "let result: |gas|::GenericAddressResult = |gas|::gas_from_raw(|gas|::RawGenericAddress { address_space: 5, address: 18446744073709551615 });"
       ],
       "checks": [
         "result.error == 0",
@@ -158,7 +158,7 @@
       "name": "gas_space_6",
       "bytes": "",
       "body": [
-        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 6, address: 18446744073709551615 });"
+        "let result: |gas|::GenericAddressResult = |gas|::gas_from_raw(|gas|::RawGenericAddress { address_space: 6, address: 18446744073709551615 });"
       ],
       "checks": [
         "result.error == 0",
@@ -170,7 +170,7 @@
       "name": "gas_space_7",
       "bytes": "",
       "body": [
-        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 7, address: 18446744073709551615 });"
+        "let result: |gas|::GenericAddressResult = |gas|::gas_from_raw(|gas|::RawGenericAddress { address_space: 7, address: 18446744073709551615 });"
       ],
       "checks": [
         "result.error == 0",
@@ -182,7 +182,7 @@
       "name": "gas_space_8",
       "bytes": "",
       "body": [
-        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 8, address: 18446744073709551615 });"
+        "let result: |gas|::GenericAddressResult = |gas|::gas_from_raw(|gas|::RawGenericAddress { address_space: 8, address: 18446744073709551615 });"
       ],
       "checks": [
         "result.error == 0",
@@ -194,7 +194,7 @@
       "name": "gas_space_9",
       "bytes": "",
       "body": [
-        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 9, address: 18446744073709551615 });"
+        "let result: |gas|::GenericAddressResult = |gas|::gas_from_raw(|gas|::RawGenericAddress { address_space: 9, address: 18446744073709551615 });"
       ],
       "checks": [
         "result.error == 0",
@@ -206,7 +206,7 @@
       "name": "gas_space_10",
       "bytes": "",
       "body": [
-        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 10, address: 18446744073709551615 });"
+        "let result: |gas|::GenericAddressResult = |gas|::gas_from_raw(|gas|::RawGenericAddress { address_space: 10, address: 18446744073709551615 });"
       ],
       "checks": [
         "result.error == 0",
@@ -218,7 +218,7 @@
       "name": "gas_space_11",
       "bytes": "",
       "body": [
-        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 11, address: 18446744073709551615 });"
+        "let result: |gas|::GenericAddressResult = |gas|::gas_from_raw(|gas|::RawGenericAddress { address_space: 11, address: 18446744073709551615 });"
       ],
       "checks": [
         "result.error == 0",
@@ -230,7 +230,7 @@
       "name": "gas_space_12",
       "bytes": "",
       "body": [
-        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 12, address: 18446744073709551615 });"
+        "let result: |gas|::GenericAddressResult = |gas|::gas_from_raw(|gas|::RawGenericAddress { address_space: 12, address: 18446744073709551615 });"
       ],
       "checks": [
         "result.error == 11"
@@ -240,7 +240,7 @@
       "name": "gas_space_126",
       "bytes": "",
       "body": [
-        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 126, address: 18446744073709551615 });"
+        "let result: |gas|::GenericAddressResult = |gas|::gas_from_raw(|gas|::RawGenericAddress { address_space: 126, address: 18446744073709551615 });"
       ],
       "checks": [
         "result.error == 11"
@@ -250,7 +250,7 @@
       "name": "gas_space_127",
       "bytes": "",
       "body": [
-        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 127, address: 18446744073709551615 });"
+        "let result: |gas|::GenericAddressResult = |gas|::gas_from_raw(|gas|::RawGenericAddress { address_space: 127, address: 18446744073709551615 });"
       ],
       "checks": [
         "result.error == 0",
@@ -262,7 +262,7 @@
       "name": "gas_space_128",
       "bytes": "",
       "body": [
-        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 128, address: 18446744073709551615 });"
+        "let result: |gas|::GenericAddressResult = |gas|::gas_from_raw(|gas|::RawGenericAddress { address_space: 128, address: 18446744073709551615 });"
       ],
       "checks": [
         "result.error == 0",
@@ -274,7 +274,7 @@
       "name": "gas_space_191",
       "bytes": "",
       "body": [
-        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 191, address: 18446744073709551615 });"
+        "let result: |gas|::GenericAddressResult = |gas|::gas_from_raw(|gas|::RawGenericAddress { address_space: 191, address: 18446744073709551615 });"
       ],
       "checks": [
         "result.error == 0",
@@ -286,7 +286,7 @@
       "name": "gas_space_192",
       "bytes": "",
       "body": [
-        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 192, address: 18446744073709551615 });"
+        "let result: |gas|::GenericAddressResult = |gas|::gas_from_raw(|gas|::RawGenericAddress { address_space: 192, address: 18446744073709551615 });"
       ],
       "checks": [
         "result.error == 0",
@@ -298,7 +298,7 @@
       "name": "gas_space_255",
       "bytes": "",
       "body": [
-        "let result: GenericAddressResult = gas_from_raw(RawGenericAddress { address_space: 255, address: 18446744073709551615 });"
+        "let result: |gas|::GenericAddressResult = |gas|::gas_from_raw(|gas|::RawGenericAddress { address_space: 255, address: 18446744073709551615 });"
       ],
       "checks": [
         "result.error == 0",
@@ -310,7 +310,7 @@
       "name": "gas_access_0",
       "bytes": "",
       "body": [
-        "let result: U8Result = standard_access_size(0);"
+        "let result: |fixed_bytes|::U8Result = |gas|::standard_access_size(0);"
       ],
       "checks": [
         "result.error == 0",
@@ -321,7 +321,7 @@
       "name": "gas_access_1",
       "bytes": "",
       "body": [
-        "let result: U8Result = standard_access_size(1);"
+        "let result: |fixed_bytes|::U8Result = |gas|::standard_access_size(1);"
       ],
       "checks": [
         "result.error == 0",
@@ -332,7 +332,7 @@
       "name": "gas_access_2",
       "bytes": "",
       "body": [
-        "let result: U8Result = standard_access_size(2);"
+        "let result: |fixed_bytes|::U8Result = |gas|::standard_access_size(2);"
       ],
       "checks": [
         "result.error == 0",
@@ -343,7 +343,7 @@
       "name": "gas_access_3",
       "bytes": "",
       "body": [
-        "let result: U8Result = standard_access_size(3);"
+        "let result: |fixed_bytes|::U8Result = |gas|::standard_access_size(3);"
       ],
       "checks": [
         "result.error == 0",
@@ -354,7 +354,7 @@
       "name": "gas_access_4",
       "bytes": "",
       "body": [
-        "let result: U8Result = standard_access_size(4);"
+        "let result: |fixed_bytes|::U8Result = |gas|::standard_access_size(4);"
       ],
       "checks": [
         "result.error == 0",
@@ -365,7 +365,7 @@
       "name": "gas_access_5",
       "bytes": "",
       "body": [
-        "let result: U8Result = standard_access_size(5);"
+        "let result: |fixed_bytes|::U8Result = |gas|::standard_access_size(5);"
       ],
       "checks": [
         "result.error == 11"
@@ -375,7 +375,7 @@
       "name": "gas_access_255",
       "bytes": "",
       "body": [
-        "let result: U8Result = standard_access_size(255);"
+        "let result: |fixed_bytes|::U8Result = |gas|::standard_access_size(255);"
       ],
       "checks": [
         "result.error == 11"
@@ -385,7 +385,7 @@
       "name": "gas_width_8_0_255",
       "bytes": "",
       "body": [
-        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 8, bit_offset: 0, access_size: 255 });"
+        "let result: |fixed_bytes|::U8Result = |gas|::gas_decode_access_bit_width(|gas|::GenericAddress { bit_width: 8, bit_offset: 0, access_size: 255 });"
       ],
       "checks": [
         "result.error == 0",
@@ -396,7 +396,7 @@
       "name": "gas_width_16_0_4",
       "bytes": "",
       "body": [
-        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 16, bit_offset: 0, access_size: 4 });"
+        "let result: |fixed_bytes|::U8Result = |gas|::gas_decode_access_bit_width(|gas|::GenericAddress { bit_width: 16, bit_offset: 0, access_size: 4 });"
       ],
       "checks": [
         "result.error == 0",
@@ -407,7 +407,7 @@
       "name": "gas_width_32_0_0",
       "bytes": "",
       "body": [
-        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 32, bit_offset: 0, access_size: 0 });"
+        "let result: |fixed_bytes|::U8Result = |gas|::gas_decode_access_bit_width(|gas|::GenericAddress { bit_width: 32, bit_offset: 0, access_size: 0 });"
       ],
       "checks": [
         "result.error == 0",
@@ -418,7 +418,7 @@
       "name": "gas_width_64_0_1",
       "bytes": "",
       "body": [
-        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 64, bit_offset: 0, access_size: 1 });"
+        "let result: |fixed_bytes|::U8Result = |gas|::gas_decode_access_bit_width(|gas|::GenericAddress { bit_width: 64, bit_offset: 0, access_size: 1 });"
       ],
       "checks": [
         "result.error == 0",
@@ -429,7 +429,7 @@
       "name": "gas_width_0_0_0",
       "bytes": "",
       "body": [
-        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 0, bit_offset: 0, access_size: 0 });"
+        "let result: |fixed_bytes|::U8Result = |gas|::gas_decode_access_bit_width(|gas|::GenericAddress { bit_width: 0, bit_offset: 0, access_size: 0 });"
       ],
       "checks": [
         "result.error == 0",
@@ -440,7 +440,7 @@
       "name": "gas_width_7_1_0",
       "bytes": "",
       "body": [
-        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 7, bit_offset: 1, access_size: 0 });"
+        "let result: |fixed_bytes|::U8Result = |gas|::gas_decode_access_bit_width(|gas|::GenericAddress { bit_width: 7, bit_offset: 1, access_size: 0 });"
       ],
       "checks": [
         "result.error == 0",
@@ -451,7 +451,7 @@
       "name": "gas_width_8_1_0",
       "bytes": "",
       "body": [
-        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 8, bit_offset: 1, access_size: 0 });"
+        "let result: |fixed_bytes|::U8Result = |gas|::gas_decode_access_bit_width(|gas|::GenericAddress { bit_width: 8, bit_offset: 1, access_size: 0 });"
       ],
       "checks": [
         "result.error == 0",
@@ -462,7 +462,7 @@
       "name": "gas_width_15_1_0",
       "bytes": "",
       "body": [
-        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 15, bit_offset: 1, access_size: 0 });"
+        "let result: |fixed_bytes|::U8Result = |gas|::gas_decode_access_bit_width(|gas|::GenericAddress { bit_width: 15, bit_offset: 1, access_size: 0 });"
       ],
       "checks": [
         "result.error == 0",
@@ -473,7 +473,7 @@
       "name": "gas_width_16_1_0",
       "bytes": "",
       "body": [
-        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 16, bit_offset: 1, access_size: 0 });"
+        "let result: |fixed_bytes|::U8Result = |gas|::gas_decode_access_bit_width(|gas|::GenericAddress { bit_width: 16, bit_offset: 1, access_size: 0 });"
       ],
       "checks": [
         "result.error == 0",
@@ -484,7 +484,7 @@
       "name": "gas_width_31_1_0",
       "bytes": "",
       "body": [
-        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 31, bit_offset: 1, access_size: 0 });"
+        "let result: |fixed_bytes|::U8Result = |gas|::gas_decode_access_bit_width(|gas|::GenericAddress { bit_width: 31, bit_offset: 1, access_size: 0 });"
       ],
       "checks": [
         "result.error == 0",
@@ -495,7 +495,7 @@
       "name": "gas_width_32_1_0",
       "bytes": "",
       "body": [
-        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 32, bit_offset: 1, access_size: 0 });"
+        "let result: |fixed_bytes|::U8Result = |gas|::gas_decode_access_bit_width(|gas|::GenericAddress { bit_width: 32, bit_offset: 1, access_size: 0 });"
       ],
       "checks": [
         "result.error == 0",
@@ -506,7 +506,7 @@
       "name": "gas_width_255_255_0",
       "bytes": "",
       "body": [
-        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 255, bit_offset: 255, access_size: 0 });"
+        "let result: |fixed_bytes|::U8Result = |gas|::gas_decode_access_bit_width(|gas|::GenericAddress { bit_width: 255, bit_offset: 255, access_size: 0 });"
       ],
       "checks": [
         "result.error == 0",
@@ -517,7 +517,7 @@
       "name": "gas_width_3_1_1",
       "bytes": "",
       "body": [
-        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 3, bit_offset: 1, access_size: 1 });"
+        "let result: |fixed_bytes|::U8Result = |gas|::gas_decode_access_bit_width(|gas|::GenericAddress { bit_width: 3, bit_offset: 1, access_size: 1 });"
       ],
       "checks": [
         "result.error == 0",
@@ -528,7 +528,7 @@
       "name": "gas_width_3_1_2",
       "bytes": "",
       "body": [
-        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 3, bit_offset: 1, access_size: 2 });"
+        "let result: |fixed_bytes|::U8Result = |gas|::gas_decode_access_bit_width(|gas|::GenericAddress { bit_width: 3, bit_offset: 1, access_size: 2 });"
       ],
       "checks": [
         "result.error == 0",
@@ -539,7 +539,7 @@
       "name": "gas_width_3_1_3",
       "bytes": "",
       "body": [
-        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 3, bit_offset: 1, access_size: 3 });"
+        "let result: |fixed_bytes|::U8Result = |gas|::gas_decode_access_bit_width(|gas|::GenericAddress { bit_width: 3, bit_offset: 1, access_size: 3 });"
       ],
       "checks": [
         "result.error == 0",
@@ -550,7 +550,7 @@
       "name": "gas_width_3_1_4",
       "bytes": "",
       "body": [
-        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 3, bit_offset: 1, access_size: 4 });"
+        "let result: |fixed_bytes|::U8Result = |gas|::gas_decode_access_bit_width(|gas|::GenericAddress { bit_width: 3, bit_offset: 1, access_size: 4 });"
       ],
       "checks": [
         "result.error == 0",
@@ -561,7 +561,7 @@
       "name": "gas_width_3_1_5",
       "bytes": "",
       "body": [
-        "let result: U8Result = gas_decode_access_bit_width(GenericAddress { bit_width: 3, bit_offset: 1, access_size: 5 });"
+        "let result: |fixed_bytes|::U8Result = |gas|::gas_decode_access_bit_width(|gas|::GenericAddress { bit_width: 3, bit_offset: 1, access_size: 5 });"
       ],
       "checks": [
         "result.error == 11",
@@ -572,8 +572,8 @@
       "name": "gas_empty",
       "bytes": "",
       "body": [
-        "let empty: bool = gas_is_empty(RawGenericAddress {});",
-        "let occupied: bool = gas_is_empty(RawGenericAddress { access_size: 1 });"
+        "let empty: bool = |gas|::gas_is_empty(|gas|::RawGenericAddress {});",
+        "let occupied: bool = |gas|::gas_is_empty(|gas|::RawGenericAddress { access_size: 1 });"
       ],
       "checks": [
         "empty",
@@ -584,7 +584,7 @@
       "name": "fadt_revision_1",
       "bytes": "464143507400000001fa4341544f53204f524947494e414c785634124341544c214365870000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
       "body": [
-        "let result: FadtResult = parse_fadt(&input, 116);"
+        "let result: |fixed_types|::FadtResult = |fadt|::parse_fadt(&input, 116);"
       ],
       "checks": [
         "result.error == 0",
@@ -597,7 +597,7 @@
       "name": "fadt_short_revision_1",
       "bytes": "464143507300000001fb4341544f53204f524947494e414c785634124341544c2143658700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
       "body": [
-        "let result: FadtResult = parse_fadt(&input, 115);"
+        "let result: |fixed_types|::FadtResult = |fadt|::parse_fadt(&input, 115);"
       ],
       "checks": [
         "result.error == 5"
@@ -607,7 +607,7 @@
       "name": "fadt_revision_2",
       "bytes": "464143508400000002e94341544f53204f524947494e414c785634124341544c21436587000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
       "body": [
-        "let result: FadtResult = parse_fadt(&input, 132);"
+        "let result: |fixed_types|::FadtResult = |fadt|::parse_fadt(&input, 132);"
       ],
       "checks": [
         "result.error == 0",
@@ -620,7 +620,7 @@
       "name": "fadt_short_revision_2",
       "bytes": "464143508300000002ea4341544f53204f524947494e414c785634124341544c214365870000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
       "body": [
-        "let result: FadtResult = parse_fadt(&input, 131);"
+        "let result: |fixed_types|::FadtResult = |fadt|::parse_fadt(&input, 131);"
       ],
       "checks": [
         "result.error == 5"
@@ -630,7 +630,7 @@
       "name": "fadt_revision_3",
       "bytes": "46414350f400000003784341544f53204f524947494e414c785634124341544c2143658700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
       "body": [
-        "let result: FadtResult = parse_fadt(&input, 244);"
+        "let result: |fixed_types|::FadtResult = |fadt|::parse_fadt(&input, 244);"
       ],
       "checks": [
         "result.error == 0",
@@ -643,7 +643,7 @@
       "name": "fadt_short_revision_3",
       "bytes": "46414350f300000003794341544f53204f524947494e414c785634124341544c21436587000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
       "body": [
-        "let result: FadtResult = parse_fadt(&input, 243);"
+        "let result: |fixed_types|::FadtResult = |fadt|::parse_fadt(&input, 243);"
       ],
       "checks": [
         "result.error == 5"
@@ -653,7 +653,7 @@
       "name": "fadt_revision_4",
       "bytes": "46414350f400000004774341544f53204f524947494e414c785634124341544c2143658700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
       "body": [
-        "let result: FadtResult = parse_fadt(&input, 244);"
+        "let result: |fixed_types|::FadtResult = |fadt|::parse_fadt(&input, 244);"
       ],
       "checks": [
         "result.error == 0",
@@ -666,7 +666,7 @@
       "name": "fadt_short_revision_4",
       "bytes": "46414350f300000004784341544f53204f524947494e414c785634124341544c21436587000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
       "body": [
-        "let result: FadtResult = parse_fadt(&input, 243);"
+        "let result: |fixed_types|::FadtResult = |fadt|::parse_fadt(&input, 243);"
       ],
       "checks": [
         "result.error == 5"
@@ -676,7 +676,7 @@
       "name": "fadt_revision_5",
       "bytes": "464143500c010000055d4341544f53204f524947494e414c785634124341544c2143658700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
       "body": [
-        "let result: FadtResult = parse_fadt(&input, 268);"
+        "let result: |fixed_types|::FadtResult = |fadt|::parse_fadt(&input, 268);"
       ],
       "checks": [
         "result.error == 0",
@@ -689,7 +689,7 @@
       "name": "fadt_short_revision_5",
       "bytes": "464143500b010000055e4341544f53204f524947494e414c785634124341544c21436587000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
       "body": [
-        "let result: FadtResult = parse_fadt(&input, 267);"
+        "let result: |fixed_types|::FadtResult = |fadt|::parse_fadt(&input, 267);"
       ],
       "checks": [
         "result.error == 5"
@@ -699,7 +699,7 @@
       "name": "fadt_revision_6",
       "bytes": "464143501401000006544341544f53204f524947494e414c785634124341544c21436587000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
       "body": [
-        "let result: FadtResult = parse_fadt(&input, 276);"
+        "let result: |fixed_types|::FadtResult = |fadt|::parse_fadt(&input, 276);"
       ],
       "checks": [
         "result.error == 0",
@@ -712,7 +712,7 @@
       "name": "fadt_short_revision_6",
       "bytes": "464143501301000006554341544f53204f524947494e414c785634124341544c214365870000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
       "body": [
-        "let result: FadtResult = parse_fadt(&input, 275);"
+        "let result: |fixed_types|::FadtResult = |fadt|::parse_fadt(&input, 275);"
       ],
       "checks": [
         "result.error == 5"
@@ -722,7 +722,7 @@
       "name": "fadt_revision_255",
       "bytes": "4641435018010000ff574341544f53204f524947494e414c785634124341544c2143658700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
       "body": [
-        "let result: FadtResult = parse_fadt(&input, 280);"
+        "let result: |fixed_types|::FadtResult = |fadt|::parse_fadt(&input, 280);"
       ],
       "checks": [
         "result.error == 0",
@@ -735,7 +735,7 @@
       "name": "fadt_short_revision_255",
       "bytes": "4641435017010000ff584341544f53204f524947494e414c785634124341544c21436587000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
       "body": [
-        "let result: FadtResult = parse_fadt(&input, 279);"
+        "let result: |fixed_types|::FadtResult = |fadt|::parse_fadt(&input, 279);"
       ],
       "checks": [
         "result.error == 0"
@@ -745,7 +745,7 @@
       "name": "fadt_revision_zero",
       "bytes": "4641435014010000005a4341544f53204f524947494e414c785634124341544c21436587000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
       "body": [
-        "let result: FadtResult = parse_fadt(&input, 276);"
+        "let result: |fixed_types|::FadtResult = |fadt|::parse_fadt(&input, 276);"
       ],
       "checks": [
         "result.error == 4"
@@ -755,7 +755,7 @@
       "name": "fadt_all_fields",
       "bytes": "464143501401000006d84341544f53204f524947494e414c785634124341544c2143658704000080070000808a8d10801300008096999c9f2200008025000080280000802b0000802e000080310000803400008037000080babdc0c3c6c9cccf5280558058805b80dee1e4e7ea6d80f073000080012000032700000098badcfef97c80ff82000000000000808500000000000080012000032d00000098badcfe012000032e00000098badcfe012000032f00000098badcfe012000033000000098badcfe012000033100000098badcfe012000033200000098badcfe012000033300000098badcfe012000033400000098badcfe012000033500000098badcfe012000033600000098badcfea600000000000080",
       "body": [
-        "let result: FadtResult = parse_fadt(&input, 276);"
+        "let result: |fixed_types|::FadtResult = |fadt|::parse_fadt(&input, 276);"
       ],
       "checks": [
         "result.error == 0",
@@ -878,7 +878,7 @@
       "name": "fadt_bad_checksum",
       "bytes": "464143501401000006544341544f53204f524947494e414c785634124341544c21436587000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001",
       "body": [
-        "let result: FadtResult = parse_fadt(&input, 276);"
+        "let result: |fixed_types|::FadtResult = |fadt|::parse_fadt(&input, 276);"
       ],
       "checks": [
         "result.error == 6"
@@ -888,7 +888,7 @@
       "name": "fadt_bad_signature",
       "bytes": "474143501401000006534341544f53204f524947494e414c785634124341544c21436587000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
       "body": [
-        "let result: FadtResult = parse_fadt(&input, 276);"
+        "let result: |fixed_types|::FadtResult = |fadt|::parse_fadt(&input, 276);"
       ],
       "checks": [
         "result.error == 3"
@@ -898,7 +898,7 @@
       "name": "fadt_truncated",
       "bytes": "464143501401000006544341544f53204f524947494e414c785634124341544c21436587000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
       "body": [
-        "let result: FadtResult = parse_fadt(&input, 275);"
+        "let result: |fixed_types|::FadtResult = |fadt|::parse_fadt(&input, 275);"
       ],
       "checks": [
         "result.error == 2"
@@ -908,7 +908,7 @@
       "name": "fadt_capacity",
       "bytes": "464143501401000006544341544f53204f524947494e414c785634124341544c21436587000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
       "body": [
-        "let result: FadtResult = parse_fadt(&input, 4097);"
+        "let result: |fixed_types|::FadtResult = |fadt|::parse_fadt(&input, 4097);"
       ],
       "checks": [
         "result.error == 1"
@@ -918,7 +918,7 @@
       "name": "hpet_bad_checksum",
       "bytes": "4850455438000000011f4341544f53204f524947494e414c785634124341544c214365870000000000000000000000000000000000000001",
       "body": [
-        "let result: HpetTableResult = parse_hpet(&input, 56);"
+        "let result: |fixed_types|::HpetTableResult = |hpet|::parse_hpet(&input, 56);"
       ],
       "checks": [
         "result.error == 6"
@@ -928,7 +928,7 @@
       "name": "hpet_bad_signature",
       "bytes": "4950455438000000011e4341544f53204f524947494e414c785634124341544c214365870000000000000000000000000000000000000000",
       "body": [
-        "let result: HpetTableResult = parse_hpet(&input, 56);"
+        "let result: |fixed_types|::HpetTableResult = |hpet|::parse_hpet(&input, 56);"
       ],
       "checks": [
         "result.error == 3"
@@ -938,7 +938,7 @@
       "name": "hpet_truncated",
       "bytes": "4850455438000000011f4341544f53204f524947494e414c785634124341544c214365870000000000000000000000000000000000000000",
       "body": [
-        "let result: HpetTableResult = parse_hpet(&input, 55);"
+        "let result: |fixed_types|::HpetTableResult = |hpet|::parse_hpet(&input, 55);"
       ],
       "checks": [
         "result.error == 2"
@@ -948,7 +948,7 @@
       "name": "hpet_capacity",
       "bytes": "4850455438000000011f4341544f53204f524947494e414c785634124341544c214365870000000000000000000000000000000000000000",
       "body": [
-        "let result: HpetTableResult = parse_hpet(&input, 4097);"
+        "let result: |fixed_types|::HpetTableResult = |hpet|::parse_hpet(&input, 4097);"
       ],
       "checks": [
         "result.error == 1"
@@ -958,7 +958,7 @@
       "name": "madt_bad_checksum",
       "bytes": "415049432c000000013f4341544f53204f524947494e414c785634124341544c214365870000000000000001",
       "body": [
-        "let result: MadtResult = parse_madt(&input, 44);"
+        "let result: |fixed_types|::MadtResult = |madt|::parse_madt(&input, 44);"
       ],
       "checks": [
         "result.error == 6"
@@ -968,7 +968,7 @@
       "name": "madt_bad_signature",
       "bytes": "405049432c00000001404341544f53204f524947494e414c785634124341544c214365870000000000000000",
       "body": [
-        "let result: MadtResult = parse_madt(&input, 44);"
+        "let result: |fixed_types|::MadtResult = |madt|::parse_madt(&input, 44);"
       ],
       "checks": [
         "result.error == 3"
@@ -978,7 +978,7 @@
       "name": "madt_truncated",
       "bytes": "415049432c000000013f4341544f53204f524947494e414c785634124341544c214365870000000000000000",
       "body": [
-        "let result: MadtResult = parse_madt(&input, 43);"
+        "let result: |fixed_types|::MadtResult = |madt|::parse_madt(&input, 43);"
       ],
       "checks": [
         "result.error == 2"
@@ -988,7 +988,7 @@
       "name": "madt_capacity",
       "bytes": "415049432c000000013f4341544f53204f524947494e414c785634124341544c214365870000000000000000",
       "body": [
-        "let result: MadtResult = parse_madt(&input, 4097);"
+        "let result: |fixed_types|::MadtResult = |madt|::parse_madt(&input, 4097);"
       ],
       "checks": [
         "result.error == 1"
@@ -998,7 +998,7 @@
       "name": "preferred_79",
       "bytes": "",
       "body": [
-        "let result: U64Result = preferred_address(OptionalU64 { present: false, value: 9 }, 7);"
+        "let result: |fixed_bytes|::U64Result = |fadt|::preferred_address(|fixed_bytes|::OptionalU64 { present: false, value: 9 }, 7);"
       ],
       "checks": [
         "result.error == 0",
@@ -1009,7 +1009,7 @@
       "name": "preferred_80",
       "bytes": "",
       "body": [
-        "let result: U64Result = preferred_address(OptionalU64 { present: true, value: 9 }, 7);"
+        "let result: |fixed_bytes|::U64Result = |fadt|::preferred_address(|fixed_bytes|::OptionalU64 { present: true, value: 9 }, 7);"
       ],
       "checks": [
         "result.error == 0",
@@ -1020,7 +1020,7 @@
       "name": "preferred_81",
       "bytes": "",
       "body": [
-        "let result: U64Result = preferred_address(OptionalU64 { present: true, value: 0 }, 7);"
+        "let result: |fixed_bytes|::U64Result = |fadt|::preferred_address(|fixed_bytes|::OptionalU64 { present: true, value: 0 }, 7);"
       ],
       "checks": [
         "result.error == 0",
@@ -1031,7 +1031,7 @@
       "name": "preferred_82",
       "bytes": "",
       "body": [
-        "let result: U64Result = preferred_address(OptionalU64 { present: false, value: 0 }, 0);"
+        "let result: |fixed_bytes|::U64Result = |fadt|::preferred_address(|fixed_bytes|::OptionalU64 { present: false, value: 0 }, 0);"
       ],
       "checks": [
         "result.error == 12",
@@ -1042,7 +1042,7 @@
       "name": "preferred_83",
       "bytes": "",
       "body": [
-        "let result: U64Result = preferred_address(OptionalU64 { present: true, value: 18446744073709551615 }, 7);"
+        "let result: |fixed_bytes|::U64Result = |fadt|::preferred_address(|fixed_bytes|::OptionalU64 { present: true, value: 18446744073709551615 }, 7);"
       ],
       "checks": [
         "result.error == 0",
@@ -1053,7 +1053,7 @@
       "name": "register_width_0",
       "bytes": "",
       "body": [
-        "let result: GasSelection = select_register(OptionalRawGas {}, 1234, 0, true);"
+        "let result: |gas|::GasSelection = |fadt|::select_register(|gas|::OptionalRawGas {}, 1234, 0, true);"
       ],
       "checks": [
         "result.error == 0",
@@ -1066,7 +1066,7 @@
       "name": "register_width_4",
       "bytes": "",
       "body": [
-        "let result: GasSelection = select_register(OptionalRawGas {}, 1234, 4, true);"
+        "let result: |gas|::GasSelection = |fadt|::select_register(|gas|::OptionalRawGas {}, 1234, 4, true);"
       ],
       "checks": [
         "result.error == 0",
@@ -1079,7 +1079,7 @@
       "name": "register_width_31",
       "bytes": "",
       "body": [
-        "let result: GasSelection = select_register(OptionalRawGas {}, 1234, 31, true);"
+        "let result: |gas|::GasSelection = |fadt|::select_register(|gas|::OptionalRawGas {}, 1234, 31, true);"
       ],
       "checks": [
         "result.error == 0",
@@ -1092,7 +1092,7 @@
       "name": "register_width_32",
       "bytes": "",
       "body": [
-        "let result: GasSelection = select_register(OptionalRawGas {}, 1234, 32, true);"
+        "let result: |gas|::GasSelection = |fadt|::select_register(|gas|::OptionalRawGas {}, 1234, 32, true);"
       ],
       "checks": [
         "result.error == 11"
@@ -1102,7 +1102,7 @@
       "name": "register_width_255",
       "bytes": "",
       "body": [
-        "let result: GasSelection = select_register(OptionalRawGas {}, 1234, 255, true);"
+        "let result: |gas|::GasSelection = |fadt|::select_register(|gas|::OptionalRawGas {}, 1234, 255, true);"
       ],
       "checks": [
         "result.error == 11"
@@ -1112,7 +1112,7 @@
       "name": "register_optional_zero",
       "bytes": "",
       "body": [
-        "let result: GasSelection = select_register(OptionalRawGas {}, 0, 4, false);"
+        "let result: |gas|::GasSelection = |fadt|::select_register(|gas|::OptionalRawGas {}, 0, 4, false);"
       ],
       "checks": [
         "result.error == 0",
@@ -1123,7 +1123,7 @@
       "name": "register_required_zero",
       "bytes": "",
       "body": [
-        "let result: GasSelection = select_register(OptionalRawGas {}, 0, 4, true);"
+        "let result: |gas|::GasSelection = |fadt|::select_register(|gas|::OptionalRawGas {}, 0, 4, true);"
       ],
       "checks": [
         "result.error == 0",
@@ -1135,7 +1135,7 @@
       "name": "register_extended_1",
       "bytes": "",
       "body": [
-        "let result: GasSelection = select_register(OptionalRawGas { present: true, value: RawGenericAddress { address_space: 1, address: 18446744073709551615, bit_width: 64 } }, 1234, 255, false);"
+        "let result: |gas|::GasSelection = |fadt|::select_register(|gas|::OptionalRawGas { present: true, value: |gas|::RawGenericAddress { address_space: 1, address: 18446744073709551615, bit_width: 64 } }, 1234, 255, false);"
       ],
       "checks": [
         "result.error == 0",
@@ -1147,7 +1147,7 @@
       "name": "register_extended_128",
       "bytes": "",
       "body": [
-        "let result: GasSelection = select_register(OptionalRawGas { present: true, value: RawGenericAddress { address_space: 128, address: 18446744073709551615, bit_width: 64 } }, 1234, 255, false);"
+        "let result: |gas|::GasSelection = |fadt|::select_register(|gas|::OptionalRawGas { present: true, value: |gas|::RawGenericAddress { address_space: 128, address: 18446744073709551615, bit_width: 64 } }, 1234, 255, false);"
       ],
       "checks": [
         "result.error == 0",
@@ -1159,7 +1159,7 @@
       "name": "register_extended_12",
       "bytes": "",
       "body": [
-        "let result: GasSelection = select_register(OptionalRawGas { present: true, value: RawGenericAddress { address_space: 12, address: 18446744073709551615, bit_width: 64 } }, 1234, 255, false);"
+        "let result: |gas|::GasSelection = |fadt|::select_register(|gas|::OptionalRawGas { present: true, value: |gas|::RawGenericAddress { address_space: 12, address: 18446744073709551615, bit_width: 64 } }, 1234, 255, false);"
       ],
       "checks": [
         "result.error == 11"
@@ -1169,7 +1169,7 @@
       "name": "timer_bad_length",
       "bytes": "",
       "body": [
-        "let result: GasSelection = pm_timer_block(Fadt { pm_timer_length: 8, x_pm_timer_block: OptionalRawGas { present: true, value: RawGenericAddress { address: 1234 } } });"
+        "let result: |gas|::GasSelection = |fadt|::pm_timer_block(|fixed_types|::Fadt { pm_timer_length: 8, x_pm_timer_block: |gas|::OptionalRawGas { present: true, value: |gas|::RawGenericAddress { address: 1234 } } });"
       ],
       "checks": [
         "!result.present",
@@ -1180,7 +1180,7 @@
       "name": "reset_register_absent",
       "bytes": "",
       "body": [
-        "let result: GasSelection = reset_register(Fadt {});"
+        "let result: |gas|::GasSelection = |fadt|::reset_register(|fixed_types|::Fadt {});"
       ],
       "checks": [
         "!result.present"
@@ -1190,7 +1190,7 @@
       "name": "sleep_control_register_absent",
       "bytes": "",
       "body": [
-        "let result: GasSelection = sleep_control_register(Fadt {});"
+        "let result: |gas|::GasSelection = |fadt|::sleep_control_register(|fixed_types|::Fadt {});"
       ],
       "checks": [
         "!result.present"
@@ -1200,7 +1200,7 @@
       "name": "sleep_status_register_absent",
       "bytes": "",
       "body": [
-        "let result: GasSelection = sleep_status_register(Fadt {});"
+        "let result: |gas|::GasSelection = |fadt|::sleep_status_register(|fixed_types|::Fadt {});"
       ],
       "checks": [
         "!result.present"
@@ -1210,8 +1210,8 @@
       "name": "flag_supports_equivalent_to_wbinvd",
       "bytes": "",
       "body": [
-        "let set: bool = supports_equivalent_to_wbinvd(1);",
-        "let clear: bool = supports_equivalent_to_wbinvd(4294967294);"
+        "let set: bool = |fadt|::supports_equivalent_to_wbinvd(1);",
+        "let clear: bool = |fadt|::supports_equivalent_to_wbinvd(4294967294);"
       ],
       "checks": [
         "set",
@@ -1222,8 +1222,8 @@
       "name": "flag_wbinvd_flushes_all_caches",
       "bytes": "",
       "body": [
-        "let set: bool = wbinvd_flushes_all_caches(2);",
-        "let clear: bool = wbinvd_flushes_all_caches(4294967293);"
+        "let set: bool = |fadt|::wbinvd_flushes_all_caches(2);",
+        "let clear: bool = |fadt|::wbinvd_flushes_all_caches(4294967293);"
       ],
       "checks": [
         "set",
@@ -1234,8 +1234,8 @@
       "name": "flag_all_procs_support_c1_power_state",
       "bytes": "",
       "body": [
-        "let set: bool = all_procs_support_c1_power_state(4);",
-        "let clear: bool = all_procs_support_c1_power_state(4294967291);"
+        "let set: bool = |fadt|::all_procs_support_c1_power_state(4);",
+        "let clear: bool = |fadt|::all_procs_support_c1_power_state(4294967291);"
       ],
       "checks": [
         "set",
@@ -1246,8 +1246,8 @@
       "name": "flag_c2_configured_for_mp_system",
       "bytes": "",
       "body": [
-        "let set: bool = c2_configured_for_mp_system(8);",
-        "let clear: bool = c2_configured_for_mp_system(4294967287);"
+        "let set: bool = |fadt|::c2_configured_for_mp_system(8);",
+        "let clear: bool = |fadt|::c2_configured_for_mp_system(4294967287);"
       ],
       "checks": [
         "set",
@@ -1258,8 +1258,8 @@
       "name": "flag_power_button_is_control_method",
       "bytes": "",
       "body": [
-        "let set: bool = power_button_is_control_method(16);",
-        "let clear: bool = power_button_is_control_method(4294967279);"
+        "let set: bool = |fadt|::power_button_is_control_method(16);",
+        "let clear: bool = |fadt|::power_button_is_control_method(4294967279);"
       ],
       "checks": [
         "set",
@@ -1270,8 +1270,8 @@
       "name": "flag_sleep_button_is_control_method",
       "bytes": "",
       "body": [
-        "let set: bool = sleep_button_is_control_method(32);",
-        "let clear: bool = sleep_button_is_control_method(4294967263);"
+        "let set: bool = |fadt|::sleep_button_is_control_method(32);",
+        "let clear: bool = |fadt|::sleep_button_is_control_method(4294967263);"
       ],
       "checks": [
         "set",
@@ -1282,8 +1282,8 @@
       "name": "flag_no_rtc_wake_in_fixed_register_space",
       "bytes": "",
       "body": [
-        "let set: bool = no_rtc_wake_in_fixed_register_space(64);",
-        "let clear: bool = no_rtc_wake_in_fixed_register_space(4294967231);"
+        "let set: bool = |fadt|::no_rtc_wake_in_fixed_register_space(64);",
+        "let clear: bool = |fadt|::no_rtc_wake_in_fixed_register_space(4294967231);"
       ],
       "checks": [
         "set",
@@ -1294,8 +1294,8 @@
       "name": "flag_rtc_wakes_system_from_s4",
       "bytes": "",
       "body": [
-        "let set: bool = rtc_wakes_system_from_s4(128);",
-        "let clear: bool = rtc_wakes_system_from_s4(4294967167);"
+        "let set: bool = |fadt|::rtc_wakes_system_from_s4(128);",
+        "let clear: bool = |fadt|::rtc_wakes_system_from_s4(4294967167);"
       ],
       "checks": [
         "set",
@@ -1306,8 +1306,8 @@
       "name": "flag_pm_timer_is_32_bit",
       "bytes": "",
       "body": [
-        "let set: bool = pm_timer_is_32_bit(256);",
-        "let clear: bool = pm_timer_is_32_bit(4294967039);"
+        "let set: bool = |fadt|::pm_timer_is_32_bit(256);",
+        "let clear: bool = |fadt|::pm_timer_is_32_bit(4294967039);"
       ],
       "checks": [
         "set",
@@ -1318,8 +1318,8 @@
       "name": "flag_supports_docking",
       "bytes": "",
       "body": [
-        "let set: bool = supports_docking(512);",
-        "let clear: bool = supports_docking(4294966783);"
+        "let set: bool = |fadt|::supports_docking(512);",
+        "let clear: bool = |fadt|::supports_docking(4294966783);"
       ],
       "checks": [
         "set",
@@ -1330,8 +1330,8 @@
       "name": "flag_supports_system_reset_via_fadt",
       "bytes": "",
       "body": [
-        "let set: bool = supports_system_reset_via_fadt(1024);",
-        "let clear: bool = supports_system_reset_via_fadt(4294966271);"
+        "let set: bool = |fadt|::supports_system_reset_via_fadt(1024);",
+        "let clear: bool = |fadt|::supports_system_reset_via_fadt(4294966271);"
       ],
       "checks": [
         "set",
@@ -1342,8 +1342,8 @@
       "name": "flag_case_is_sealed",
       "bytes": "",
       "body": [
-        "let set: bool = case_is_sealed(2048);",
-        "let clear: bool = case_is_sealed(4294965247);"
+        "let set: bool = |fadt|::case_is_sealed(2048);",
+        "let clear: bool = |fadt|::case_is_sealed(4294965247);"
       ],
       "checks": [
         "set",
@@ -1354,8 +1354,8 @@
       "name": "flag_system_is_headless",
       "bytes": "",
       "body": [
-        "let set: bool = system_is_headless(4096);",
-        "let clear: bool = system_is_headless(4294963199);"
+        "let set: bool = |fadt|::system_is_headless(4096);",
+        "let clear: bool = |fadt|::system_is_headless(4294963199);"
       ],
       "checks": [
         "set",
@@ -1366,8 +1366,8 @@
       "name": "flag_use_instr_after_write_to_slp_typx",
       "bytes": "",
       "body": [
-        "let set: bool = use_instr_after_write_to_slp_typx(8192);",
-        "let clear: bool = use_instr_after_write_to_slp_typx(4294959103);"
+        "let set: bool = |fadt|::use_instr_after_write_to_slp_typx(8192);",
+        "let clear: bool = |fadt|::use_instr_after_write_to_slp_typx(4294959103);"
       ],
       "checks": [
         "set",
@@ -1378,8 +1378,8 @@
       "name": "flag_supports_pciexp_wake_in_pm1",
       "bytes": "",
       "body": [
-        "let set: bool = supports_pciexp_wake_in_pm1(16384);",
-        "let clear: bool = supports_pciexp_wake_in_pm1(4294950911);"
+        "let set: bool = |fadt|::supports_pciexp_wake_in_pm1(16384);",
+        "let clear: bool = |fadt|::supports_pciexp_wake_in_pm1(4294950911);"
       ],
       "checks": [
         "set",
@@ -1390,8 +1390,8 @@
       "name": "flag_use_pm_or_hpet_for_monotonically_decreasing_timers",
       "bytes": "",
       "body": [
-        "let set: bool = use_pm_or_hpet_for_monotonically_decreasing_timers(32768);",
-        "let clear: bool = use_pm_or_hpet_for_monotonically_decreasing_timers(4294934527);"
+        "let set: bool = |fadt|::use_pm_or_hpet_for_monotonically_decreasing_timers(32768);",
+        "let clear: bool = |fadt|::use_pm_or_hpet_for_monotonically_decreasing_timers(4294934527);"
       ],
       "checks": [
         "set",
@@ -1402,8 +1402,8 @@
       "name": "flag_rtc_sts_is_valid_after_wakeup_from_s4",
       "bytes": "",
       "body": [
-        "let set: bool = rtc_sts_is_valid_after_wakeup_from_s4(65536);",
-        "let clear: bool = rtc_sts_is_valid_after_wakeup_from_s4(4294901759);"
+        "let set: bool = |fadt|::rtc_sts_is_valid_after_wakeup_from_s4(65536);",
+        "let clear: bool = |fadt|::rtc_sts_is_valid_after_wakeup_from_s4(4294901759);"
       ],
       "checks": [
         "set",
@@ -1414,8 +1414,8 @@
       "name": "flag_ospm_may_leave_gpe_wake_events_armed_before_s5",
       "bytes": "",
       "body": [
-        "let set: bool = ospm_may_leave_gpe_wake_events_armed_before_s5(131072);",
-        "let clear: bool = ospm_may_leave_gpe_wake_events_armed_before_s5(4294836223);"
+        "let set: bool = |fadt|::ospm_may_leave_gpe_wake_events_armed_before_s5(131072);",
+        "let clear: bool = |fadt|::ospm_may_leave_gpe_wake_events_armed_before_s5(4294836223);"
       ],
       "checks": [
         "set",
@@ -1426,8 +1426,8 @@
       "name": "flag_lapics_must_use_cluster_model_for_logical_mode",
       "bytes": "",
       "body": [
-        "let set: bool = lapics_must_use_cluster_model_for_logical_mode(262144);",
-        "let clear: bool = lapics_must_use_cluster_model_for_logical_mode(4294705151);"
+        "let set: bool = |fadt|::lapics_must_use_cluster_model_for_logical_mode(262144);",
+        "let clear: bool = |fadt|::lapics_must_use_cluster_model_for_logical_mode(4294705151);"
       ],
       "checks": [
         "set",
@@ -1438,8 +1438,8 @@
       "name": "flag_local_xapics_must_use_physical_destination_mode",
       "bytes": "",
       "body": [
-        "let set: bool = local_xapics_must_use_physical_destination_mode(524288);",
-        "let clear: bool = local_xapics_must_use_physical_destination_mode(4294443007);"
+        "let set: bool = |fadt|::local_xapics_must_use_physical_destination_mode(524288);",
+        "let clear: bool = |fadt|::local_xapics_must_use_physical_destination_mode(4294443007);"
       ],
       "checks": [
         "set",
@@ -1450,8 +1450,8 @@
       "name": "flag_system_is_hw_reduced_acpi",
       "bytes": "",
       "body": [
-        "let set: bool = system_is_hw_reduced_acpi(1048576);",
-        "let clear: bool = system_is_hw_reduced_acpi(4293918719);"
+        "let set: bool = |fadt|::system_is_hw_reduced_acpi(1048576);",
+        "let clear: bool = |fadt|::system_is_hw_reduced_acpi(4293918719);"
       ],
       "checks": [
         "set",
@@ -1462,8 +1462,8 @@
       "name": "flag_no_benefit_to_s3",
       "bytes": "",
       "body": [
-        "let set: bool = no_benefit_to_s3(2097152);",
-        "let clear: bool = no_benefit_to_s3(4292870143);"
+        "let set: bool = |fadt|::no_benefit_to_s3(2097152);",
+        "let clear: bool = |fadt|::no_benefit_to_s3(4292870143);"
       ],
       "checks": [
         "set",
@@ -1474,8 +1474,8 @@
       "name": "flag_legacy_devices_are_accessible",
       "bytes": "",
       "body": [
-        "let set: bool = legacy_devices_are_accessible(1);",
-        "let clear: bool = legacy_devices_are_accessible(65534);"
+        "let set: bool = |fadt|::legacy_devices_are_accessible(1);",
+        "let clear: bool = |fadt|::legacy_devices_are_accessible(65534);"
       ],
       "checks": [
         "set",
@@ -1486,8 +1486,8 @@
       "name": "flag_motherboard_implements_8042",
       "bytes": "",
       "body": [
-        "let set: bool = motherboard_implements_8042(2);",
-        "let clear: bool = motherboard_implements_8042(65533);"
+        "let set: bool = |fadt|::motherboard_implements_8042(2);",
+        "let clear: bool = |fadt|::motherboard_implements_8042(65533);"
       ],
       "checks": [
         "set",
@@ -1498,8 +1498,8 @@
       "name": "flag_dont_probe_vga",
       "bytes": "",
       "body": [
-        "let set: bool = dont_probe_vga(4);",
-        "let clear: bool = dont_probe_vga(65531);"
+        "let set: bool = |fadt|::dont_probe_vga(4);",
+        "let clear: bool = |fadt|::dont_probe_vga(65531);"
       ],
       "checks": [
         "set",
@@ -1510,8 +1510,8 @@
       "name": "flag_dont_enable_msi",
       "bytes": "",
       "body": [
-        "let set: bool = dont_enable_msi(8);",
-        "let clear: bool = dont_enable_msi(65527);"
+        "let set: bool = |fadt|::dont_enable_msi(8);",
+        "let clear: bool = |fadt|::dont_enable_msi(65527);"
       ],
       "checks": [
         "set",
@@ -1522,8 +1522,8 @@
       "name": "flag_dont_enable_pcie_aspm",
       "bytes": "",
       "body": [
-        "let set: bool = dont_enable_pcie_aspm(16);",
-        "let clear: bool = dont_enable_pcie_aspm(65519);"
+        "let set: bool = |fadt|::dont_enable_pcie_aspm(16);",
+        "let clear: bool = |fadt|::dont_enable_pcie_aspm(65519);"
       ],
       "checks": [
         "set",
@@ -1534,8 +1534,8 @@
       "name": "flag_use_time_and_alarm_namespace_for_rtc",
       "bytes": "",
       "body": [
-        "let set: bool = use_time_and_alarm_namespace_for_rtc(32);",
-        "let clear: bool = use_time_and_alarm_namespace_for_rtc(65503);"
+        "let set: bool = |fadt|::use_time_and_alarm_namespace_for_rtc(32);",
+        "let clear: bool = |fadt|::use_time_and_alarm_namespace_for_rtc(65503);"
       ],
       "checks": [
         "set",
@@ -1546,8 +1546,8 @@
       "name": "flag_implements_psci",
       "bytes": "",
       "body": [
-        "let set: bool = implements_psci(1);",
-        "let clear: bool = implements_psci(65534);"
+        "let set: bool = |fadt|::implements_psci(1);",
+        "let clear: bool = |fadt|::implements_psci(65534);"
       ],
       "checks": [
         "set",
@@ -1558,8 +1558,8 @@
       "name": "flag_use_hvc_as_psci_conduit",
       "bytes": "",
       "body": [
-        "let set: bool = use_hvc_as_psci_conduit(2);",
-        "let clear: bool = use_hvc_as_psci_conduit(65533);"
+        "let set: bool = |fadt|::use_hvc_as_psci_conduit(2);",
+        "let clear: bool = |fadt|::use_hvc_as_psci_conduit(65533);"
       ],
       "checks": [
         "set",
@@ -1570,7 +1570,7 @@
       "name": "hpet_all_fields",
       "bytes": "485045543800000001a24341544f53204f524947494e414c785634124341544c2143658704000080012000030200000098badcfe8a0d8090",
       "body": [
-        "let result: HpetTableResult = parse_hpet(&input, 56);"
+        "let result: |fixed_types|::HpetTableResult = |hpet|::parse_hpet(&input, 56);"
       ],
       "checks": [
         "result.error == 0",
@@ -1589,7 +1589,7 @@
       "name": "hpet_short",
       "bytes": "485045543700000001204341544f53204f524947494e414c785634124341544c2143658700000000000000000000000000000000000000",
       "body": [
-        "let result: HpetTableResult = parse_hpet(&input, 55);"
+        "let result: |fixed_types|::HpetTableResult = |hpet|::parse_hpet(&input, 55);"
       ],
       "checks": [
         "result.error == 5"
@@ -1599,7 +1599,7 @@
       "name": "hpet_revision",
       "bytes": "4850455438000000021e4341544f53204f524947494e414c785634124341544c214365870000000000000000000000000000000000000000",
       "body": [
-        "let result: HpetTableResult = parse_hpet(&input, 56);"
+        "let result: |fixed_types|::HpetTableResult = |hpet|::parse_hpet(&input, 56);"
       ],
       "checks": [
         "result.error == 4"
@@ -1609,7 +1609,7 @@
       "name": "hpet_count_0",
       "bytes": "",
       "body": [
-        "let result: HpetInfo = hpet_info(HpetTable { event_timer_block_id: 305438849, base_address: RawGenericAddress { address_space: 1, address: 18446744073709551615 }, hpet_number: 255, clock_tick_unit: 65535, page_protection_and_oem: 242 });"
+        "let result: |hpet|::HpetInfo = |hpet|::hpet_info(|fixed_types|::HpetTable { event_timer_block_id: 305438849, base_address: |gas|::RawGenericAddress { address_space: 1, address: 18446744073709551615 }, hpet_number: 255, clock_tick_unit: 65535, page_protection_and_oem: 242 });"
       ],
       "checks": [
         "result.num_comparators == 1",
@@ -1629,7 +1629,7 @@
       "name": "hpet_count_2",
       "bytes": "",
       "body": [
-        "let result: HpetInfo = hpet_info(HpetTable { event_timer_block_id: 305439361, base_address: RawGenericAddress { address_space: 1, address: 18446744073709551615 }, hpet_number: 255, clock_tick_unit: 65535, page_protection_and_oem: 242 });"
+        "let result: |hpet|::HpetInfo = |hpet|::hpet_info(|fixed_types|::HpetTable { event_timer_block_id: 305439361, base_address: |gas|::RawGenericAddress { address_space: 1, address: 18446744073709551615 }, hpet_number: 255, clock_tick_unit: 65535, page_protection_and_oem: 242 });"
       ],
       "checks": [
         "result.num_comparators == 3",
@@ -1649,7 +1649,7 @@
       "name": "hpet_count_31",
       "bytes": "",
       "body": [
-        "let result: HpetInfo = hpet_info(HpetTable { event_timer_block_id: 305446785, base_address: RawGenericAddress { address_space: 1, address: 18446744073709551615 }, hpet_number: 255, clock_tick_unit: 65535, page_protection_and_oem: 242 });"
+        "let result: |hpet|::HpetInfo = |hpet|::hpet_info(|fixed_types|::HpetTable { event_timer_block_id: 305446785, base_address: |gas|::RawGenericAddress { address_space: 1, address: 18446744073709551615 }, hpet_number: 255, clock_tick_unit: 65535, page_protection_and_oem: 242 });"
       ],
       "checks": [
         "result.num_comparators == 32",
@@ -1669,7 +1669,7 @@
       "name": "mcfg_empty",
       "bytes": "4d4346472c000000013f4341544f53204f524947494e414c785634124341544c214365870000000000000000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 44, false);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 44, false);"
       ],
       "checks": [
         "result.error == 0",
@@ -1680,7 +1680,7 @@
       "name": "mcfg_entry",
       "bytes": "4d4346473c00000001ca4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef01",
       "body": [
-        "let result: McfgEntryResult = mcfg_entry(&input, 60, false, 0);"
+        "let result: |fixed_types|::McfgEntryResult = |mcfg|::mcfg_entry(&input, 60, false, 0);"
       ],
       "checks": [
         "result.error == 0",
@@ -1695,7 +1695,7 @@
       "name": "mcfg_index",
       "bytes": "4d4346473c00000001ca4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef01",
       "body": [
-        "let result: McfgEntryResult = mcfg_entry(&input, 60, false, 1);"
+        "let result: |fixed_types|::McfgEntryResult = |mcfg|::mcfg_entry(&input, 60, false, 1);"
       ],
       "checks": [
         "result.error == 10"
@@ -1705,7 +1705,7 @@
       "name": "mcfg_huge_index",
       "bytes": "4d4346473c00000001ca4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef01",
       "body": [
-        "let result: McfgEntryResult = mcfg_entry(&input, 60, false, 18446744073709551615);"
+        "let result: |fixed_types|::McfgEntryResult = |mcfg|::mcfg_entry(&input, 60, false, 18446744073709551615);"
       ],
       "checks": [
         "result.error == 10"
@@ -1715,7 +1715,7 @@
       "name": "mcfg_inverted",
       "bytes": "4d4346473c00000001ca4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe3412ff80abcdef01",
       "body": [
-        "let result: McfgEntryResult = mcfg_entry(&input, 60, false, 0);"
+        "let result: |fixed_types|::McfgEntryResult = |mcfg|::mcfg_entry(&input, 60, false, 0);"
       ],
       "checks": [
         "result.error == 13"
@@ -1725,7 +1725,7 @@
       "name": "mcfg_tail_strict_1",
       "bytes": "4d4346473d00000001c94341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef0100",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 61, false);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 61, false);"
       ],
       "checks": [
         "result.error == 9"
@@ -1735,7 +1735,7 @@
       "name": "mcfg_tail_quirk_1",
       "bytes": "4d4346473d00000001c94341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef0100",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 61, true);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 61, true);"
       ],
       "checks": [
         "result.error == 0",
@@ -1747,7 +1747,7 @@
       "name": "mcfg_tail_strict_2",
       "bytes": "4d4346473e00000001c84341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef010000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 62, false);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 62, false);"
       ],
       "checks": [
         "result.error == 9"
@@ -1757,7 +1757,7 @@
       "name": "mcfg_tail_quirk_2",
       "bytes": "4d4346473e00000001c84341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef010000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 62, true);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 62, true);"
       ],
       "checks": [
         "result.error == 0",
@@ -1769,7 +1769,7 @@
       "name": "mcfg_tail_strict_3",
       "bytes": "4d4346473f00000001c74341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef01000000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 63, false);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 63, false);"
       ],
       "checks": [
         "result.error == 9"
@@ -1779,7 +1779,7 @@
       "name": "mcfg_tail_quirk_3",
       "bytes": "4d4346473f00000001c74341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef01000000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 63, true);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 63, true);"
       ],
       "checks": [
         "result.error == 0",
@@ -1791,7 +1791,7 @@
       "name": "mcfg_tail_strict_4",
       "bytes": "4d4346474000000001c64341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef0100000000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 64, false);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 64, false);"
       ],
       "checks": [
         "result.error == 9"
@@ -1801,7 +1801,7 @@
       "name": "mcfg_tail_quirk_4",
       "bytes": "4d4346474000000001c64341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef0100000000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 64, true);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 64, true);"
       ],
       "checks": [
         "result.error == 0",
@@ -1813,7 +1813,7 @@
       "name": "mcfg_tail_strict_5",
       "bytes": "4d4346474100000001c54341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef010000000000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 65, false);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 65, false);"
       ],
       "checks": [
         "result.error == 9"
@@ -1823,7 +1823,7 @@
       "name": "mcfg_tail_quirk_5",
       "bytes": "4d4346474100000001c54341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef010000000000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 65, true);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 65, true);"
       ],
       "checks": [
         "result.error == 0",
@@ -1835,7 +1835,7 @@
       "name": "mcfg_tail_strict_6",
       "bytes": "4d4346474200000001c44341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef01000000000000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 66, false);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 66, false);"
       ],
       "checks": [
         "result.error == 9"
@@ -1845,7 +1845,7 @@
       "name": "mcfg_tail_quirk_6",
       "bytes": "4d4346474200000001c44341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef01000000000000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 66, true);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 66, true);"
       ],
       "checks": [
         "result.error == 0",
@@ -1857,7 +1857,7 @@
       "name": "mcfg_tail_strict_7",
       "bytes": "4d4346474300000001c34341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef0100000000000000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 67, false);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 67, false);"
       ],
       "checks": [
         "result.error == 9"
@@ -1867,7 +1867,7 @@
       "name": "mcfg_tail_quirk_7",
       "bytes": "4d4346474300000001c34341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef0100000000000000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 67, true);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 67, true);"
       ],
       "checks": [
         "result.error == 0",
@@ -1879,7 +1879,7 @@
       "name": "mcfg_tail_strict_8",
       "bytes": "4d4346474400000001c24341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef010000000000000000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 68, false);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 68, false);"
       ],
       "checks": [
         "result.error == 9"
@@ -1889,7 +1889,7 @@
       "name": "mcfg_tail_quirk_8",
       "bytes": "4d4346474400000001c24341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef010000000000000000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 68, true);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 68, true);"
       ],
       "checks": [
         "result.error == 0",
@@ -1901,7 +1901,7 @@
       "name": "mcfg_tail_strict_9",
       "bytes": "4d4346474500000001c14341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef01000000000000000000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 69, false);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 69, false);"
       ],
       "checks": [
         "result.error == 9"
@@ -1911,7 +1911,7 @@
       "name": "mcfg_tail_quirk_9",
       "bytes": "4d4346474500000001c14341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef01000000000000000000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 69, true);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 69, true);"
       ],
       "checks": [
         "result.error == 0",
@@ -1923,7 +1923,7 @@
       "name": "mcfg_tail_strict_10",
       "bytes": "4d4346474600000001c04341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef0100000000000000000000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 70, false);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 70, false);"
       ],
       "checks": [
         "result.error == 9"
@@ -1933,7 +1933,7 @@
       "name": "mcfg_tail_quirk_10",
       "bytes": "4d4346474600000001c04341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef0100000000000000000000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 70, true);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 70, true);"
       ],
       "checks": [
         "result.error == 0",
@@ -1945,7 +1945,7 @@
       "name": "mcfg_tail_strict_11",
       "bytes": "4d4346474700000001bf4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef010000000000000000000000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 71, false);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 71, false);"
       ],
       "checks": [
         "result.error == 9"
@@ -1955,7 +1955,7 @@
       "name": "mcfg_tail_quirk_11",
       "bytes": "4d4346474700000001bf4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef010000000000000000000000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 71, true);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 71, true);"
       ],
       "checks": [
         "result.error == 0",
@@ -1967,7 +1967,7 @@
       "name": "mcfg_tail_strict_12",
       "bytes": "4d4346474800000001be4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef01000000000000000000000000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 72, false);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 72, false);"
       ],
       "checks": [
         "result.error == 9"
@@ -1977,7 +1977,7 @@
       "name": "mcfg_tail_quirk_12",
       "bytes": "4d4346474800000001be4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef01000000000000000000000000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 72, true);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 72, true);"
       ],
       "checks": [
         "result.error == 0",
@@ -1989,7 +1989,7 @@
       "name": "mcfg_tail_strict_13",
       "bytes": "4d4346474900000001bd4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef0100000000000000000000000000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 73, false);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 73, false);"
       ],
       "checks": [
         "result.error == 9"
@@ -1999,7 +1999,7 @@
       "name": "mcfg_tail_quirk_13",
       "bytes": "4d4346474900000001bd4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef0100000000000000000000000000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 73, true);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 73, true);"
       ],
       "checks": [
         "result.error == 0",
@@ -2011,7 +2011,7 @@
       "name": "mcfg_tail_strict_14",
       "bytes": "4d4346474a00000001bc4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef010000000000000000000000000000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 74, false);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 74, false);"
       ],
       "checks": [
         "result.error == 9"
@@ -2021,7 +2021,7 @@
       "name": "mcfg_tail_quirk_14",
       "bytes": "4d4346474a00000001bc4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef010000000000000000000000000000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 74, true);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 74, true);"
       ],
       "checks": [
         "result.error == 0",
@@ -2033,7 +2033,7 @@
       "name": "mcfg_tail_strict_15",
       "bytes": "4d4346474b00000001bb4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef01000000000000000000000000000000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 75, false);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 75, false);"
       ],
       "checks": [
         "result.error == 9"
@@ -2043,7 +2043,7 @@
       "name": "mcfg_tail_quirk_15",
       "bytes": "4d4346474b00000001bb4341544f53204f524947494e414c785634124341544c2143658700000000000000001032547698badcfe341280ffabcdef01000000000000000000000000000000",
       "body": [
-        "let result: McfgView = parse_mcfg(&input, 75, true);"
+        "let result: |mcfg|::McfgView = |mcfg|::parse_mcfg(&input, 75, true);"
       ],
       "checks": [
         "result.error == 0",
@@ -2055,7 +2055,7 @@
       "name": "madt_LocalApicEntry",
       "bytes": "415049433400000006954341544f53204f524947494e414c785634124341544c214365870000000000000000000884870a000080",
       "body": [
-        "let step: MadtStep = madt_next(&input, 52, 44);",
+        "let step: |madt|::MadtStep = |madt|::madt_next(&input, 52, 44);",
         "let fields: bool = fields_LocalApicEntry(step.entry);"
       ],
       "checks": [
@@ -2086,7 +2086,7 @@
       "name": "madt_short_LocalApicEntry",
       "bytes": "415049433300000006174341544f53204f524947494e414c785634124341544c214365870000000000000000000784870a0000",
       "body": [
-        "let result: MadtStep = madt_next(&input, 51, 44);"
+        "let result: |madt|::MadtStep = |madt|::madt_next(&input, 51, 44);"
       ],
       "checks": [
         "result.error == 14"
@@ -2096,7 +2096,7 @@
       "name": "madt_IoApicEntry",
       "bytes": "415049433800000006ff4341544f53204f524947494e414c785634124341544c214365870000000000000000010c84870a0000800d000080",
       "body": [
-        "let step: MadtStep = madt_next(&input, 56, 44);",
+        "let step: |madt|::MadtStep = |madt|::madt_next(&input, 56, 44);",
         "let fields: bool = fields_IoApicEntry(step.entry);"
       ],
       "checks": [
@@ -2131,7 +2131,7 @@
       "name": "madt_short_IoApicEntry",
       "bytes": "415049433700000006814341544f53204f524947494e414c785634124341544c214365870000000000000000010b84870a0000800d0000",
       "body": [
-        "let result: MadtStep = madt_next(&input, 55, 44);"
+        "let result: |madt|::MadtStep = |madt|::madt_next(&input, 55, 44);"
       ],
       "checks": [
         "result.error == 14"
@@ -2141,7 +2141,7 @@
       "name": "madt_InterruptSourceOverrideEntry",
       "bytes": "415049433600000006024341544f53204f524947494e414c785634124341544c214365870000000000000000020a84870a0000800d80",
       "body": [
-        "let step: MadtStep = madt_next(&input, 54, 44);",
+        "let step: |madt|::MadtStep = |madt|::madt_next(&input, 54, 44);",
         "let fields: bool = fields_InterruptSourceOverrideEntry(step.entry);"
       ],
       "checks": [
@@ -2176,7 +2176,7 @@
       "name": "madt_short_InterruptSourceOverrideEntry",
       "bytes": "415049433500000006844341544f53204f524947494e414c785634124341544c214365870000000000000000020984870a0000800d",
       "body": [
-        "let result: MadtStep = madt_next(&input, 53, 44);"
+        "let result: |madt|::MadtStep = |madt|::madt_next(&input, 53, 44);"
       ],
       "checks": [
         "result.error == 14"
@@ -2186,7 +2186,7 @@
       "name": "madt_NmiSourceEntry",
       "bytes": "4150494334000000061c4341544f53204f524947494e414c785634124341544c2143658700000000000000000308048007000080",
       "body": [
-        "let step: MadtStep = madt_next(&input, 52, 44);",
+        "let step: |madt|::MadtStep = |madt|::madt_next(&input, 52, 44);",
         "let fields: bool = fields_NmiSourceEntry(step.entry);"
       ],
       "checks": [
@@ -2213,7 +2213,7 @@
       "name": "madt_short_NmiSourceEntry",
       "bytes": "4150494333000000069e4341544f53204f524947494e414c785634124341544c21436587000000000000000003070480070000",
       "body": [
-        "let result: MadtStep = madt_next(&input, 51, 44);"
+        "let result: |madt|::MadtStep = |madt|::madt_next(&input, 51, 44);"
       ],
       "checks": [
         "result.error == 14"
@@ -2223,7 +2223,7 @@
       "name": "madt_LocalApicNmiEntry",
       "bytes": "415049433200000006954341544f53204f524947494e414c785634124341544c21436587000000000000000004068407808a",
       "body": [
-        "let step: MadtStep = madt_next(&input, 50, 44);",
+        "let step: |madt|::MadtStep = |madt|::madt_next(&input, 50, 44);",
         "let fields: bool = fields_LocalApicNmiEntry(step.entry);"
       ],
       "checks": [
@@ -2254,7 +2254,7 @@
       "name": "madt_short_LocalApicNmiEntry",
       "bytes": "415049433100000006214341544f53204f524947494e414c785634124341544c2143658700000000000000000405840780",
       "body": [
-        "let result: MadtStep = madt_next(&input, 49, 44);"
+        "let result: |madt|::MadtStep = |madt|::madt_next(&input, 49, 44);"
       ],
       "checks": [
         "result.error == 14"
@@ -2264,7 +2264,7 @@
       "name": "madt_LocalApicAddressOverrideEntry",
       "bytes": "415049433800000006124341544f53204f524947494e414c785634124341544c214365870000000000000000050c04800700000000000080",
       "body": [
-        "let step: MadtStep = madt_next(&input, 56, 44);",
+        "let step: |madt|::MadtStep = |madt|::madt_next(&input, 56, 44);",
         "let fields: bool = fields_LocalApicAddressOverrideEntry(step.entry);"
       ],
       "checks": [
@@ -2291,7 +2291,7 @@
       "name": "madt_short_LocalApicAddressOverrideEntry",
       "bytes": "415049433700000006944341544f53204f524947494e414c785634124341544c214365870000000000000000050b048007000000000000",
       "body": [
-        "let result: MadtStep = madt_next(&input, 55, 44);"
+        "let result: |madt|::MadtStep = |madt|::madt_next(&input, 55, 44);"
       ],
       "checks": [
         "result.error == 14"
@@ -2301,7 +2301,7 @@
       "name": "madt_IoSapicEntry",
       "bytes": "415049433c00000006f24341544f53204f524947494e414c785634124341544c214365870000000000000000061084870a0000800d00000000000080",
       "body": [
-        "let step: MadtStep = madt_next(&input, 60, 44);",
+        "let step: |madt|::MadtStep = |madt|::madt_next(&input, 60, 44);",
         "let fields: bool = fields_IoSapicEntry(step.entry);"
       ],
       "checks": [
@@ -2336,7 +2336,7 @@
       "name": "madt_short_IoSapicEntry",
       "bytes": "415049433b00000006744341544f53204f524947494e414c785634124341544c214365870000000000000000060f84870a0000800d000000000000",
       "body": [
-        "let result: MadtStep = madt_next(&input, 59, 44);"
+        "let result: |madt|::MadtStep = |madt|::madt_next(&input, 59, 44);"
       ],
       "checks": [
         "result.error == 14"
@@ -2346,7 +2346,7 @@
       "name": "madt_LocalSapicEntry",
       "bytes": "415049433d00000006394341544f53204f524947494e414c785634124341544c214365870000000000000000071184878a2d2e2f100000801300008096",
       "body": [
-        "let step: MadtStep = madt_next(&input, 61, 44);",
+        "let step: |madt|::MadtStep = |madt|::madt_next(&input, 61, 44);",
         "let fields: bool = fields_LocalSapicEntry(step.entry);"
       ],
       "checks": [
@@ -2401,7 +2401,7 @@
       "name": "madt_short_LocalSapicEntry",
       "bytes": "415049433c00000006d14341544f53204f524947494e414c785634124341544c214365870000000000000000071084878a2d2e2f1000008013000080",
       "body": [
-        "let result: MadtStep = madt_next(&input, 60, 44);"
+        "let result: |madt|::MadtStep = |madt|::madt_next(&input, 60, 44);"
       ],
       "checks": [
         "result.error == 14"
@@ -2411,7 +2411,7 @@
       "name": "madt_PlatformInterruptSourceEntry",
       "bytes": "415049433c00000006374341544f53204f524947494e414c785634124341544c21436587000000000000000008100480878a8d901300008016000080",
       "body": [
-        "let step: MadtStep = madt_next(&input, 60, 44);",
+        "let step: |madt|::MadtStep = |madt|::madt_next(&input, 60, 44);",
         "let fields: bool = fields_PlatformInterruptSourceEntry(step.entry);"
       ],
       "checks": [
@@ -2458,7 +2458,7 @@
       "name": "madt_short_PlatformInterruptSourceEntry",
       "bytes": "415049433b00000006b94341544f53204f524947494e414c785634124341544c214365870000000000000000080f0480878a8d9013000080160000",
       "body": [
-        "let result: MadtStep = madt_next(&input, 59, 44);"
+        "let result: |madt|::MadtStep = |madt|::madt_next(&input, 59, 44);"
       ],
       "checks": [
         "result.error == 14"
@@ -2468,7 +2468,7 @@
       "name": "madt_LocalX2ApicEntry",
       "bytes": "415049433c00000006ef4341544f53204f524947494e414c785634124341544c21436587000000000000000009100480070000800a0000800d000080",
       "body": [
-        "let step: MadtStep = madt_next(&input, 60, 44);",
+        "let step: |madt|::MadtStep = |madt|::madt_next(&input, 60, 44);",
         "let fields: bool = fields_LocalX2ApicEntry(step.entry);"
       ],
       "checks": [
@@ -2503,7 +2503,7 @@
       "name": "madt_short_LocalX2ApicEntry",
       "bytes": "415049433b00000006714341544f53204f524947494e414c785634124341544c214365870000000000000000090f0480070000800a0000800d0000",
       "body": [
-        "let result: MadtStep = madt_next(&input, 59, 44);"
+        "let result: |madt|::MadtStep = |madt|::madt_next(&input, 59, 44);"
       ],
       "checks": [
         "result.error == 14"
@@ -2513,7 +2513,7 @@
       "name": "madt_X2ApicNmiEntry",
       "bytes": "415049433800000006f94341544f53204f524947494e414c785634124341544c2143658700000000000000000a0c0480070000808a2d2e2f",
       "body": [
-        "let step: MadtStep = madt_next(&input, 56, 44);",
+        "let step: |madt|::MadtStep = |madt|::madt_next(&input, 56, 44);",
         "let fields: bool = fields_X2ApicNmiEntry(step.entry);"
       ],
       "checks": [
@@ -2556,7 +2556,7 @@
       "name": "madt_short_X2ApicNmiEntry",
       "bytes": "4150494337000000062a4341544f53204f524947494e414c785634124341544c2143658700000000000000000a0b0480070000808a2d2e",
       "body": [
-        "let result: MadtStep = madt_next(&input, 55, 44);"
+        "let result: |madt|::MadtStep = |madt|::madt_next(&input, 55, 44);"
       ],
       "checks": [
         "result.error == 14"
@@ -2566,7 +2566,7 @@
       "name": "madt_GiccEntry",
       "bytes": "415049437e000000062f4341544f53204f524947494e414c785634124341544c2143658700000000000000000b520480070000800a0000800d0000801000008013000080160000000000008019000000000000801c000000000000801f000000000000802200008025000000000000802800000000000080abae31803480",
       "body": [
-        "let step: MadtStep = madt_next(&input, 126, 44);",
+        "let step: |madt|::MadtStep = |madt|::madt_next(&input, 126, 44);",
         "let fields: bool = fields_GiccEntry(step.entry);"
       ],
       "checks": [
@@ -2657,7 +2657,7 @@
       "name": "madt_short_GiccEntry",
       "bytes": "415049437d00000006b14341544f53204f524947494e414c785634124341544c2143658700000000000000000b510480070000800a0000800d0000801000008013000080160000000000008019000000000000801c000000000000801f000000000000802200008025000000000000802800000000000080abae318034",
       "body": [
-        "let result: MadtStep = madt_next(&input, 125, 44);"
+        "let result: |madt|::MadtStep = |madt|::madt_next(&input, 125, 44);"
       ],
       "checks": [
         "result.error == 14"
@@ -2667,7 +2667,7 @@
       "name": "madt_GicdEntry",
       "bytes": "415049434400000006804341544f53204f524947494e414c785634124341544c2143658700000000000000000c180480070000800a000000000000800d00008090434445",
       "body": [
-        "let step: MadtStep = madt_next(&input, 68, 44);",
+        "let step: |madt|::MadtStep = |madt|::madt_next(&input, 68, 44);",
         "let fields: bool = fields_GicdEntry(step.entry);"
       ],
       "checks": [
@@ -2718,7 +2718,7 @@
       "name": "madt_short_GicdEntry",
       "bytes": "415049434300000006c74341544f53204f524947494e414c785634124341544c2143658700000000000000000c170480070000800a000000000000800d000080904344",
       "body": [
-        "let result: MadtStep = madt_next(&input, 67, 44);"
+        "let result: |madt|::MadtStep = |madt|::madt_next(&input, 67, 44);"
       ],
       "checks": [
         "result.error == 14"
@@ -2728,7 +2728,7 @@
       "name": "madt_GicMsiFrameEntry",
       "bytes": "415049434400000006b84341544f53204f524947494e414c785634124341544c2143658700000000000000000d180480070000800a000000000000800d00008010801380",
       "body": [
-        "let step: MadtStep = madt_next(&input, 68, 44);",
+        "let step: |madt|::MadtStep = |madt|::madt_next(&input, 68, 44);",
         "let fields: bool = fields_GicMsiFrameEntry(step.entry);"
       ],
       "checks": [
@@ -2771,7 +2771,7 @@
       "name": "madt_short_GicMsiFrameEntry",
       "bytes": "4150494343000000063a4341544f53204f524947494e414c785634124341544c2143658700000000000000000d170480070000800a000000000000800d000080108013",
       "body": [
-        "let result: MadtStep = madt_next(&input, 67, 44);"
+        "let result: |madt|::MadtStep = |madt|::madt_next(&input, 67, 44);"
       ],
       "checks": [
         "result.error == 14"
@@ -2781,7 +2781,7 @@
       "name": "madt_GicRedistributorEntry",
       "bytes": "415049433c00000006774341544f53204f524947494e414c785634124341544c2143658700000000000000000e10048007000000000000800a000080",
       "body": [
-        "let step: MadtStep = madt_next(&input, 60, 44);",
+        "let step: |madt|::MadtStep = |madt|::madt_next(&input, 60, 44);",
         "let fields: bool = fields_GicRedistributorEntry(step.entry);"
       ],
       "checks": [
@@ -2812,7 +2812,7 @@
       "name": "madt_short_GicRedistributorEntry",
       "bytes": "415049433b00000006f94341544f53204f524947494e414c785634124341544c2143658700000000000000000e0f048007000000000000800a0000",
       "body": [
-        "let result: MadtStep = madt_next(&input, 59, 44);"
+        "let result: |madt|::MadtStep = |madt|::madt_next(&input, 59, 44);"
       ],
       "checks": [
         "result.error == 14"
@@ -2822,7 +2822,7 @@
       "name": "madt_GicInterruptTranslationServiceEntry",
       "bytes": "415049434000000006e14341544f53204f524947494e414c785634124341544c2143658700000000000000000f140480070000800a000000000000800d000080",
       "body": [
-        "let step: MadtStep = madt_next(&input, 64, 44);",
+        "let step: |madt|::MadtStep = |madt|::madt_next(&input, 64, 44);",
         "let fields: bool = fields_GicInterruptTranslationServiceEntry(step.entry);"
       ],
       "checks": [
@@ -2857,7 +2857,7 @@
       "name": "madt_short_GicInterruptTranslationServiceEntry",
       "bytes": "415049433f00000006634341544f53204f524947494e414c785634124341544c2143658700000000000000000f130480070000800a000000000000800d0000",
       "body": [
-        "let result: MadtStep = madt_next(&input, 63, 44);"
+        "let result: |madt|::MadtStep = |madt|::madt_next(&input, 63, 44);"
       ],
       "checks": [
         "result.error == 14"
@@ -2867,7 +2867,7 @@
       "name": "madt_MultiprocessorWakeupEntry",
       "bytes": "415049433c00000006754341544f53204f524947494e414c785634124341544c21436587000000000000000010100480070000800a00000000000080",
       "body": [
-        "let step: MadtStep = madt_next(&input, 60, 44);",
+        "let step: |madt|::MadtStep = |madt|::madt_next(&input, 60, 44);",
         "let fields: bool = fields_MultiprocessorWakeupEntry(step.entry);"
       ],
       "checks": [
@@ -2898,7 +2898,7 @@
       "name": "madt_short_MultiprocessorWakeupEntry",
       "bytes": "415049433b00000006f74341544f53204f524947494e414c785634124341544c214365870000000000000000100f0480070000800a000000000000",
       "body": [
-        "let result: MadtStep = madt_next(&input, 59, 44);"
+        "let result: |madt|::MadtStep = |madt|::madt_next(&input, 59, 44);"
       ],
       "checks": [
         "result.error == 14"
@@ -2908,7 +2908,7 @@
       "name": "madt_zero",
       "bytes": "415049432e00000001bd4341544f53204f524947494e414c785634124341544c2143658700000000000000008000",
       "body": [
-        "let result: MadtStep = madt_next(&input, 46, 44);"
+        "let result: |madt|::MadtStep = |madt|::madt_next(&input, 46, 44);"
       ],
       "checks": [
         "result.error == 14"
@@ -2918,7 +2918,7 @@
       "name": "madt_one",
       "bytes": "415049432e00000001bc4341544f53204f524947494e414c785634124341544c2143658700000000000000008001",
       "body": [
-        "let result: MadtStep = madt_next(&input, 46, 44);"
+        "let result: |madt|::MadtStep = |madt|::madt_next(&input, 46, 44);"
       ],
       "checks": [
         "result.error == 14"
@@ -2928,7 +2928,7 @@
       "name": "madt_header_short",
       "bytes": "415049432d00000001be4341544f53204f524947494e414c785634124341544c21436587000000000000000080",
       "body": [
-        "let result: MadtStep = madt_next(&input, 45, 44);"
+        "let result: |madt|::MadtStep = |madt|::madt_next(&input, 45, 44);"
       ],
       "checks": [
         "result.error == 2"
@@ -2938,7 +2938,7 @@
       "name": "madt_overrun",
       "bytes": "415049432e00000001ba4341544f53204f524947494e414c785634124341544c2143658700000000000000008003",
       "body": [
-        "let result: MadtStep = madt_next(&input, 46, 44);"
+        "let result: |madt|::MadtStep = |madt|::madt_next(&input, 46, 44);"
       ],
       "checks": [
         "result.error == 2"
@@ -2948,7 +2948,7 @@
       "name": "madt_unknown",
       "bytes": "415049432e00000001bb4341544f53204f524947494e414c785634124341544c2143658700000000000000008002",
       "body": [
-        "let result: MadtStep = madt_next(&input, 46, 44);"
+        "let result: |madt|::MadtStep = |madt|::madt_next(&input, 46, 44);"
       ],
       "checks": [
         "result.error == 0",
@@ -2960,7 +2960,7 @@
       "name": "madt_cursor_44",
       "bytes": "415049432c000000013f4341544f53204f524947494e414c785634124341544c214365870000000000000000",
       "body": [
-        "let result: MadtStep = madt_next(&input, 44, 44);"
+        "let result: |madt|::MadtStep = |madt|::madt_next(&input, 44, 44);"
       ],
       "checks": [
         "result.error == 0",
@@ -2971,7 +2971,7 @@
       "name": "madt_cursor_43",
       "bytes": "415049432c000000013f4341544f53204f524947494e414c785634124341544c214365870000000000000000",
       "body": [
-        "let result: MadtStep = madt_next(&input, 44, 43);"
+        "let result: |madt|::MadtStep = |madt|::madt_next(&input, 44, 43);"
       ],
       "checks": [
         "result.error == 10"
@@ -2981,7 +2981,7 @@
       "name": "madt_cursor_45",
       "bytes": "415049432c000000013f4341544f53204f524947494e414c785634124341544c214365870000000000000000",
       "body": [
-        "let result: MadtStep = madt_next(&input, 44, 45);"
+        "let result: |madt|::MadtStep = |madt|::madt_next(&input, 44, 45);"
       ],
       "checks": [
         "result.error == 10"
@@ -2991,7 +2991,7 @@
       "name": "madt_cursor_18446744073709551615",
       "bytes": "415049432c000000013f4341544f53204f524947494e414c785634124341544c214365870000000000000000",
       "body": [
-        "let result: MadtStep = madt_next(&input, 44, 18446744073709551615);"
+        "let result: |madt|::MadtStep = |madt|::madt_next(&input, 44, 18446744073709551615);"
       ],
       "checks": [
         "result.error == 10"
@@ -3001,7 +3001,7 @@
       "name": "madt_unknown_byte_2",
       "bytes": "415049432f00000001ba4341544f53204f524947494e414c785634124341544c2143658700000000000000008003ff",
       "body": [
-        "let result: U8Result = madt_entry_byte(&input, 47, 44, 2);"
+        "let result: |fixed_bytes|::U8Result = |madt|::madt_entry_byte(&input, 47, 44, 2);"
       ],
       "checks": [
         "result.error == 0",
@@ -3012,7 +3012,7 @@
       "name": "madt_unknown_byte_3",
       "bytes": "415049432f00000001ba4341544f53204f524947494e414c785634124341544c2143658700000000000000008003ff",
       "body": [
-        "let result: U8Result = madt_entry_byte(&input, 47, 44, 3);"
+        "let result: |fixed_bytes|::U8Result = |madt|::madt_entry_byte(&input, 47, 44, 3);"
       ],
       "checks": [
         "result.error == 10"
@@ -3022,7 +3022,7 @@
       "name": "madt_unknown_byte_18446744073709551615",
       "bytes": "415049432f00000001ba4341544f53204f524947494e414c785634124341544c2143658700000000000000008003ff",
       "body": [
-        "let result: U8Result = madt_entry_byte(&input, 47, 44, 18446744073709551615);"
+        "let result: |fixed_bytes|::U8Result = |madt|::madt_entry_byte(&input, 47, 44, 18446744073709551615);"
       ],
       "checks": [
         "result.error == 10"
@@ -3032,7 +3032,7 @@
       "name": "madt_inti_0",
       "bytes": "",
       "body": [
-        "let result: IntiResult = parse_mps_inti_flags(65520);"
+        "let result: |madt|::IntiResult = |madt|::parse_mps_inti_flags(65520);"
       ],
       "checks": [
         "result.error == 0"
@@ -3042,7 +3042,7 @@
       "name": "madt_inti_1",
       "bytes": "",
       "body": [
-        "let result: IntiResult = parse_mps_inti_flags(65521);"
+        "let result: |madt|::IntiResult = |madt|::parse_mps_inti_flags(65521);"
       ],
       "checks": [
         "result.error == 0"
@@ -3052,7 +3052,7 @@
       "name": "madt_inti_2",
       "bytes": "",
       "body": [
-        "let result: IntiResult = parse_mps_inti_flags(65522);"
+        "let result: |madt|::IntiResult = |madt|::parse_mps_inti_flags(65522);"
       ],
       "checks": [
         "result.error == 15"
@@ -3062,7 +3062,7 @@
       "name": "madt_inti_3",
       "bytes": "",
       "body": [
-        "let result: IntiResult = parse_mps_inti_flags(65523);"
+        "let result: |madt|::IntiResult = |madt|::parse_mps_inti_flags(65523);"
       ],
       "checks": [
         "result.error == 0"
@@ -3072,7 +3072,7 @@
       "name": "madt_inti_4",
       "bytes": "",
       "body": [
-        "let result: IntiResult = parse_mps_inti_flags(65524);"
+        "let result: |madt|::IntiResult = |madt|::parse_mps_inti_flags(65524);"
       ],
       "checks": [
         "result.error == 0"
@@ -3082,7 +3082,7 @@
       "name": "madt_inti_5",
       "bytes": "",
       "body": [
-        "let result: IntiResult = parse_mps_inti_flags(65525);"
+        "let result: |madt|::IntiResult = |madt|::parse_mps_inti_flags(65525);"
       ],
       "checks": [
         "result.error == 0"
@@ -3092,7 +3092,7 @@
       "name": "madt_inti_6",
       "bytes": "",
       "body": [
-        "let result: IntiResult = parse_mps_inti_flags(65526);"
+        "let result: |madt|::IntiResult = |madt|::parse_mps_inti_flags(65526);"
       ],
       "checks": [
         "result.error == 15"
@@ -3102,7 +3102,7 @@
       "name": "madt_inti_7",
       "bytes": "",
       "body": [
-        "let result: IntiResult = parse_mps_inti_flags(65527);"
+        "let result: |madt|::IntiResult = |madt|::parse_mps_inti_flags(65527);"
       ],
       "checks": [
         "result.error == 0"
@@ -3112,7 +3112,7 @@
       "name": "madt_inti_8",
       "bytes": "",
       "body": [
-        "let result: IntiResult = parse_mps_inti_flags(65528);"
+        "let result: |madt|::IntiResult = |madt|::parse_mps_inti_flags(65528);"
       ],
       "checks": [
         "result.error == 16"
@@ -3122,7 +3122,7 @@
       "name": "madt_inti_9",
       "bytes": "",
       "body": [
-        "let result: IntiResult = parse_mps_inti_flags(65529);"
+        "let result: |madt|::IntiResult = |madt|::parse_mps_inti_flags(65529);"
       ],
       "checks": [
         "result.error == 16"
@@ -3132,7 +3132,7 @@
       "name": "madt_inti_10",
       "bytes": "",
       "body": [
-        "let result: IntiResult = parse_mps_inti_flags(65530);"
+        "let result: |madt|::IntiResult = |madt|::parse_mps_inti_flags(65530);"
       ],
       "checks": [
         "result.error == 15"
@@ -3142,7 +3142,7 @@
       "name": "madt_inti_11",
       "bytes": "",
       "body": [
-        "let result: IntiResult = parse_mps_inti_flags(65531);"
+        "let result: |madt|::IntiResult = |madt|::parse_mps_inti_flags(65531);"
       ],
       "checks": [
         "result.error == 16"
@@ -3152,7 +3152,7 @@
       "name": "madt_inti_12",
       "bytes": "",
       "body": [
-        "let result: IntiResult = parse_mps_inti_flags(65532);"
+        "let result: |madt|::IntiResult = |madt|::parse_mps_inti_flags(65532);"
       ],
       "checks": [
         "result.error == 0"
@@ -3162,7 +3162,7 @@
       "name": "madt_inti_13",
       "bytes": "",
       "body": [
-        "let result: IntiResult = parse_mps_inti_flags(65533);"
+        "let result: |madt|::IntiResult = |madt|::parse_mps_inti_flags(65533);"
       ],
       "checks": [
         "result.error == 0"
@@ -3172,7 +3172,7 @@
       "name": "madt_inti_14",
       "bytes": "",
       "body": [
-        "let result: IntiResult = parse_mps_inti_flags(65534);"
+        "let result: |madt|::IntiResult = |madt|::parse_mps_inti_flags(65534);"
       ],
       "checks": [
         "result.error == 15"
@@ -3182,7 +3182,7 @@
       "name": "madt_inti_15",
       "bytes": "",
       "body": [
-        "let result: IntiResult = parse_mps_inti_flags(65535);"
+        "let result: |madt|::IntiResult = |madt|::parse_mps_inti_flags(65535);"
       ],
       "checks": [
         "result.error == 0"
@@ -3192,7 +3192,7 @@
       "name": "madt_wakeup_0",
       "bytes": "",
       "body": [
-        "let result: WakeupCommandResult = wakeup_command(0);"
+        "let result: |madt|::WakeupCommandResult = |madt|::wakeup_command(0);"
       ],
       "checks": [
         "result.error == 0"
@@ -3202,7 +3202,7 @@
       "name": "madt_wakeup_1",
       "bytes": "",
       "body": [
-        "let result: WakeupCommandResult = wakeup_command(1);"
+        "let result: |madt|::WakeupCommandResult = |madt|::wakeup_command(1);"
       ],
       "checks": [
         "result.error == 0"
@@ -3212,7 +3212,7 @@
       "name": "madt_wakeup_2",
       "bytes": "",
       "body": [
-        "let result: WakeupCommandResult = wakeup_command(2);"
+        "let result: |madt|::WakeupCommandResult = |madt|::wakeup_command(2);"
       ],
       "checks": [
         "result.error == 0"
@@ -3222,7 +3222,7 @@
       "name": "madt_wakeup_3",
       "bytes": "",
       "body": [
-        "let result: WakeupCommandResult = wakeup_command(3);"
+        "let result: |madt|::WakeupCommandResult = |madt|::wakeup_command(3);"
       ],
       "checks": [
         "result.error == 0"
@@ -3232,7 +3232,7 @@
       "name": "madt_wakeup_4",
       "bytes": "",
       "body": [
-        "let result: WakeupCommandResult = wakeup_command(4);"
+        "let result: |madt|::WakeupCommandResult = |madt|::wakeup_command(4);"
       ],
       "checks": [
         "result.error == 17"
@@ -3242,7 +3242,7 @@
       "name": "madt_wakeup_65535",
       "bytes": "",
       "body": [
-        "let result: WakeupCommandResult = wakeup_command(65535);"
+        "let result: |madt|::WakeupCommandResult = |madt|::wakeup_command(65535);"
       ],
       "checks": [
         "result.error == 17"
@@ -3252,7 +3252,7 @@
       "name": "inti_values_0",
       "bytes": "",
       "body": [
-        "let result: IntiResult = parse_mps_inti_flags(0);",
+        "let result: |madt|::IntiResult = |madt|::parse_mps_inti_flags(0);",
         "let p: u8 = polarity_code(result.polarity);",
         "let t: u8 = trigger_code(result.trigger_mode);"
       ],
@@ -3265,7 +3265,7 @@
       "name": "inti_values_1",
       "bytes": "",
       "body": [
-        "let result: IntiResult = parse_mps_inti_flags(1);",
+        "let result: |madt|::IntiResult = |madt|::parse_mps_inti_flags(1);",
         "let p: u8 = polarity_code(result.polarity);",
         "let t: u8 = trigger_code(result.trigger_mode);"
       ],
@@ -3278,7 +3278,7 @@
       "name": "inti_values_3",
       "bytes": "",
       "body": [
-        "let result: IntiResult = parse_mps_inti_flags(3);",
+        "let result: |madt|::IntiResult = |madt|::parse_mps_inti_flags(3);",
         "let p: u8 = polarity_code(result.polarity);",
         "let t: u8 = trigger_code(result.trigger_mode);"
       ],
@@ -3291,7 +3291,7 @@
       "name": "inti_values_4",
       "bytes": "",
       "body": [
-        "let result: IntiResult = parse_mps_inti_flags(4);",
+        "let result: |madt|::IntiResult = |madt|::parse_mps_inti_flags(4);",
         "let p: u8 = polarity_code(result.polarity);",
         "let t: u8 = trigger_code(result.trigger_mode);"
       ],
@@ -3304,7 +3304,7 @@
       "name": "inti_values_5",
       "bytes": "",
       "body": [
-        "let result: IntiResult = parse_mps_inti_flags(5);",
+        "let result: |madt|::IntiResult = |madt|::parse_mps_inti_flags(5);",
         "let p: u8 = polarity_code(result.polarity);",
         "let t: u8 = trigger_code(result.trigger_mode);"
       ],
@@ -3317,7 +3317,7 @@
       "name": "inti_values_7",
       "bytes": "",
       "body": [
-        "let result: IntiResult = parse_mps_inti_flags(7);",
+        "let result: |madt|::IntiResult = |madt|::parse_mps_inti_flags(7);",
         "let p: u8 = polarity_code(result.polarity);",
         "let t: u8 = trigger_code(result.trigger_mode);"
       ],
@@ -3330,7 +3330,7 @@
       "name": "inti_values_12",
       "bytes": "",
       "body": [
-        "let result: IntiResult = parse_mps_inti_flags(12);",
+        "let result: |madt|::IntiResult = |madt|::parse_mps_inti_flags(12);",
         "let p: u8 = polarity_code(result.polarity);",
         "let t: u8 = trigger_code(result.trigger_mode);"
       ],
@@ -3343,7 +3343,7 @@
       "name": "inti_values_13",
       "bytes": "",
       "body": [
-        "let result: IntiResult = parse_mps_inti_flags(13);",
+        "let result: |madt|::IntiResult = |madt|::parse_mps_inti_flags(13);",
         "let p: u8 = polarity_code(result.polarity);",
         "let t: u8 = trigger_code(result.trigger_mode);"
       ],
@@ -3356,7 +3356,7 @@
       "name": "inti_values_15",
       "bytes": "",
       "body": [
-        "let result: IntiResult = parse_mps_inti_flags(15);",
+        "let result: |madt|::IntiResult = |madt|::parse_mps_inti_flags(15);",
         "let p: u8 = polarity_code(result.polarity);",
         "let t: u8 = trigger_code(result.trigger_mode);"
       ],
@@ -3369,7 +3369,7 @@
       "name": "wakeup_value_0",
       "bytes": "",
       "body": [
-        "let result: WakeupCommandResult = wakeup_command(0);",
+        "let result: |madt|::WakeupCommandResult = |madt|::wakeup_command(0);",
         "let code: u16 = wake_code(result.value);"
       ],
       "checks": [
@@ -3380,7 +3380,7 @@
       "name": "wakeup_value_1",
       "bytes": "",
       "body": [
-        "let result: WakeupCommandResult = wakeup_command(1);",
+        "let result: |madt|::WakeupCommandResult = |madt|::wakeup_command(1);",
         "let code: u16 = wake_code(result.value);"
       ],
       "checks": [
@@ -3391,7 +3391,7 @@
       "name": "wakeup_value_2",
       "bytes": "",
       "body": [
-        "let result: WakeupCommandResult = wakeup_command(2);",
+        "let result: |madt|::WakeupCommandResult = |madt|::wakeup_command(2);",
         "let code: u16 = wake_code(result.value);"
       ],
       "checks": [
@@ -3402,7 +3402,7 @@
       "name": "wakeup_value_3",
       "bytes": "",
       "body": [
-        "let result: WakeupCommandResult = wakeup_command(3);",
+        "let result: |madt|::WakeupCommandResult = |madt|::wakeup_command(3);",
         "let code: u16 = wake_code(result.value);"
       ],
       "checks": [
@@ -3413,7 +3413,7 @@
       "name": "hpet_page_0",
       "bytes": "",
       "body": [
-        "let value: PageProtection = page_protection(0);",
+        "let value: |hpet|::PageProtection = |hpet|::page_protection(0);",
         "let code: u8 = page_code(value);"
       ],
       "checks": [
@@ -3424,7 +3424,7 @@
       "name": "hpet_page_1",
       "bytes": "",
       "body": [
-        "let value: PageProtection = page_protection(1);",
+        "let value: |hpet|::PageProtection = |hpet|::page_protection(1);",
         "let code: u8 = page_code(value);"
       ],
       "checks": [
@@ -3435,7 +3435,7 @@
       "name": "hpet_page_2",
       "bytes": "",
       "body": [
-        "let value: PageProtection = page_protection(2);",
+        "let value: |hpet|::PageProtection = |hpet|::page_protection(2);",
         "let code: u8 = page_code(value);"
       ],
       "checks": [
@@ -3446,7 +3446,7 @@
       "name": "hpet_page_3",
       "bytes": "",
       "body": [
-        "let value: PageProtection = page_protection(3);",
+        "let value: |hpet|::PageProtection = |hpet|::page_protection(3);",
         "let code: u8 = page_code(value);"
       ],
       "checks": [
@@ -3457,7 +3457,7 @@
       "name": "hpet_page_15",
       "bytes": "",
       "body": [
-        "let value: PageProtection = page_protection(15);",
+        "let value: |hpet|::PageProtection = |hpet|::page_protection(15);",
         "let code: u8 = page_code(value);"
       ],
       "checks": [
@@ -3468,7 +3468,7 @@
       "name": "hpet_page_16",
       "bytes": "",
       "body": [
-        "let value: PageProtection = page_protection(16);",
+        "let value: |hpet|::PageProtection = |hpet|::page_protection(16);",
         "let code: u8 = page_code(value);"
       ],
       "checks": [
@@ -3479,7 +3479,7 @@
       "name": "hpet_page_17",
       "bytes": "",
       "body": [
-        "let value: PageProtection = page_protection(17);",
+        "let value: |hpet|::PageProtection = |hpet|::page_protection(17);",
         "let code: u8 = page_code(value);"
       ],
       "checks": [
@@ -3490,7 +3490,7 @@
       "name": "hpet_page_18",
       "bytes": "",
       "body": [
-        "let value: PageProtection = page_protection(18);",
+        "let value: |hpet|::PageProtection = |hpet|::page_protection(18);",
         "let code: u8 = page_code(value);"
       ],
       "checks": [
@@ -3501,7 +3501,7 @@
       "name": "hpet_page_255",
       "bytes": "",
       "body": [
-        "let value: PageProtection = page_protection(255);",
+        "let value: |hpet|::PageProtection = |hpet|::page_protection(255);",
         "let code: u8 = page_code(value);"
       ],
       "checks": [
@@ -3512,7 +3512,7 @@
       "name": "power_profile_0",
       "bytes": "",
       "body": [
-        "let value: PowerProfile = power_profile(Fadt { preferred_pm_profile: 0 });",
+        "let value: |fadt|::PowerProfile = |fadt|::power_profile(|fixed_types|::Fadt { preferred_pm_profile: 0 });",
         "let code: u8 = profile_code(value);"
       ],
       "checks": [
@@ -3523,7 +3523,7 @@
       "name": "power_profile_1",
       "bytes": "",
       "body": [
-        "let value: PowerProfile = power_profile(Fadt { preferred_pm_profile: 1 });",
+        "let value: |fadt|::PowerProfile = |fadt|::power_profile(|fixed_types|::Fadt { preferred_pm_profile: 1 });",
         "let code: u8 = profile_code(value);"
       ],
       "checks": [
@@ -3534,7 +3534,7 @@
       "name": "power_profile_2",
       "bytes": "",
       "body": [
-        "let value: PowerProfile = power_profile(Fadt { preferred_pm_profile: 2 });",
+        "let value: |fadt|::PowerProfile = |fadt|::power_profile(|fixed_types|::Fadt { preferred_pm_profile: 2 });",
         "let code: u8 = profile_code(value);"
       ],
       "checks": [
@@ -3545,7 +3545,7 @@
       "name": "power_profile_3",
       "bytes": "",
       "body": [
-        "let value: PowerProfile = power_profile(Fadt { preferred_pm_profile: 3 });",
+        "let value: |fadt|::PowerProfile = |fadt|::power_profile(|fixed_types|::Fadt { preferred_pm_profile: 3 });",
         "let code: u8 = profile_code(value);"
       ],
       "checks": [
@@ -3556,7 +3556,7 @@
       "name": "power_profile_4",
       "bytes": "",
       "body": [
-        "let value: PowerProfile = power_profile(Fadt { preferred_pm_profile: 4 });",
+        "let value: |fadt|::PowerProfile = |fadt|::power_profile(|fixed_types|::Fadt { preferred_pm_profile: 4 });",
         "let code: u8 = profile_code(value);"
       ],
       "checks": [
@@ -3567,7 +3567,7 @@
       "name": "power_profile_5",
       "bytes": "",
       "body": [
-        "let value: PowerProfile = power_profile(Fadt { preferred_pm_profile: 5 });",
+        "let value: |fadt|::PowerProfile = |fadt|::power_profile(|fixed_types|::Fadt { preferred_pm_profile: 5 });",
         "let code: u8 = profile_code(value);"
       ],
       "checks": [
@@ -3578,7 +3578,7 @@
       "name": "power_profile_6",
       "bytes": "",
       "body": [
-        "let value: PowerProfile = power_profile(Fadt { preferred_pm_profile: 6 });",
+        "let value: |fadt|::PowerProfile = |fadt|::power_profile(|fixed_types|::Fadt { preferred_pm_profile: 6 });",
         "let code: u8 = profile_code(value);"
       ],
       "checks": [
@@ -3589,7 +3589,7 @@
       "name": "power_profile_7",
       "bytes": "",
       "body": [
-        "let value: PowerProfile = power_profile(Fadt { preferred_pm_profile: 7 });",
+        "let value: |fadt|::PowerProfile = |fadt|::power_profile(|fixed_types|::Fadt { preferred_pm_profile: 7 });",
         "let code: u8 = profile_code(value);"
       ],
       "checks": [
@@ -3600,7 +3600,7 @@
       "name": "power_profile_8",
       "bytes": "",
       "body": [
-        "let value: PowerProfile = power_profile(Fadt { preferred_pm_profile: 8 });",
+        "let value: |fadt|::PowerProfile = |fadt|::power_profile(|fixed_types|::Fadt { preferred_pm_profile: 8 });",
         "let code: u8 = profile_code(value);"
       ],
       "checks": [
@@ -3611,7 +3611,7 @@
       "name": "power_profile_9",
       "bytes": "",
       "body": [
-        "let value: PowerProfile = power_profile(Fadt { preferred_pm_profile: 9 });",
+        "let value: |fadt|::PowerProfile = |fadt|::power_profile(|fixed_types|::Fadt { preferred_pm_profile: 9 });",
         "let code: u8 = profile_code(value);"
       ],
       "checks": [
@@ -3622,7 +3622,7 @@
       "name": "power_profile_255",
       "bytes": "",
       "body": [
-        "let value: PowerProfile = power_profile(Fadt { preferred_pm_profile: 255 });",
+        "let value: |fadt|::PowerProfile = |fadt|::power_profile(|fixed_types|::Fadt { preferred_pm_profile: 255 });",
         "let code: u8 = profile_code(value);"
       ],
       "checks": [
@@ -3633,9 +3633,9 @@
       "name": "fadt_address_helpers",
       "bytes": "",
       "body": [
-        "let table: Fadt = Fadt { firmware_ctrl: 123, dsdt_address: 456, x_firmware_ctrl: OptionalU64 { present: true, value: 18446744073709551615 }, x_dsdt_address: OptionalU64 { present: true, value: 0 } };",
-        "let facs: U64Result = facs_address(table);",
-        "let dsdt: U64Result = dsdt_address(table);"
+        "let table: |fixed_types|::Fadt = |fixed_types|::Fadt { firmware_ctrl: 123, dsdt_address: 456, x_firmware_ctrl: |fixed_bytes|::OptionalU64 { present: true, value: 18446744073709551615 }, x_dsdt_address: |fixed_bytes|::OptionalU64 { present: true, value: 0 } };",
+        "let facs: |fixed_bytes|::U64Result = |fadt|::facs_address(table);",
+        "let dsdt: |fixed_bytes|::U64Result = |fadt|::dsdt_address(table);"
       ],
       "checks": [
         "facs.error == 0",
@@ -3648,7 +3648,7 @@
       "name": "madt_8259_0",
       "bytes": "",
       "body": [
-        "let result: bool = supports_8259(Madt { flags: 0 });"
+        "let result: bool = |madt|::supports_8259(|fixed_types|::Madt { flags: 0 });"
       ],
       "checks": [
         "result == false"
@@ -3658,7 +3658,7 @@
       "name": "madt_8259_1",
       "bytes": "",
       "body": [
-        "let result: bool = supports_8259(Madt { flags: 1 });"
+        "let result: bool = |madt|::supports_8259(|fixed_types|::Madt { flags: 1 });"
       ],
       "checks": [
         "result == true"
@@ -3668,7 +3668,7 @@
       "name": "madt_8259_2",
       "bytes": "",
       "body": [
-        "let result: bool = supports_8259(Madt { flags: 2 });"
+        "let result: bool = |madt|::supports_8259(|fixed_types|::Madt { flags: 2 });"
       ],
       "checks": [
         "result == false"
@@ -3678,7 +3678,7 @@
       "name": "madt_8259_4294967295",
       "bytes": "",
       "body": [
-        "let result: bool = supports_8259(Madt { flags: 4294967295 });"
+        "let result: bool = |madt|::supports_8259(|fixed_types|::Madt { flags: 4294967295 });"
       ],
       "checks": [
         "result == true"
@@ -3688,7 +3688,7 @@
       "name": "madt_gicc_legacy80",
       "bytes": "415049437c00000005e84341544f53204f524947494e414c785634124341544c2143658700000000000000000b500480070000800a0000800d0000801000008013000080160000000000008019000000000000801c000000000000801f000000000000802200008025000000000000802800000000000080abae3180",
       "body": [
-        "let step: MadtStep = madt_next(&input, 124, 44);",
+        "let step: |madt|::MadtStep = |madt|::madt_next(&input, 124, 44);",
         "let fields: bool = fields_GiccEntry(step.entry);"
       ],
       "checks": [
@@ -3777,7 +3777,7 @@
       "name": "mailbox_empty",
       "bytes": "415049432c000000013f4341544f53204f524947494e414c785634124341544c214365870000000000000000",
       "body": [
-        "let result: U64Result = get_mpwk_mailbox_addr(&input, 44);"
+        "let result: |fixed_bytes|::U64Result = |madt_search|::get_mpwk_mailbox_addr(&input, 44);"
       ],
       "checks": [
         "result.error == 18",
@@ -3788,7 +3788,7 @@
       "name": "mailbox_direct",
       "bytes": "415049433c00000001d74341544f53204f524947494e414c785634124341544c21436587000000000000000010100000000000001032547698badcfe",
       "body": [
-        "let result: U64Result = get_mpwk_mailbox_addr(&input, 60);"
+        "let result: |fixed_bytes|::U64Result = |madt_search|::get_mpwk_mailbox_addr(&input, 60);"
       ],
       "checks": [
         "result.error == 0",
@@ -3799,7 +3799,7 @@
       "name": "mailbox_after_unknown",
       "bytes": "415049433e00000001534341544f53204f524947494e414c785634124341544c214365870000000000000000800210100000000000001032547698badcfe",
       "body": [
-        "let result: U64Result = get_mpwk_mailbox_addr(&input, 62);"
+        "let result: |fixed_bytes|::U64Result = |madt_search|::get_mpwk_mailbox_addr(&input, 62);"
       ],
       "checks": [
         "result.error == 0",
@@ -3810,7 +3810,7 @@
       "name": "mailbox_malformed",
       "bytes": "415049433e00000001554341544f53204f524947494e414c785634124341544c214365870000000000000000800010100000000000001032547698badcfe",
       "body": [
-        "let result: U64Result = get_mpwk_mailbox_addr(&input, 62);"
+        "let result: |fixed_bytes|::U64Result = |madt_search|::get_mpwk_mailbox_addr(&input, 62);"
       ],
       "checks": [
         "result.error == 14",
@@ -3821,7 +3821,7 @@
       "name": "wrapper_pm1a_event_block",
       "bytes": "",
       "body": [
-        "let result: GasSelection = pm1a_event_block(Fadt { pm1a_event_block: 4096, pm1_event_length: 4 });"
+        "let result: |gas|::GasSelection = |fadt|::pm1a_event_block(|fixed_types|::Fadt { pm1a_event_block: 4096, pm1_event_length: 4 });"
       ],
       "checks": [
         "result.error == 0",
@@ -3835,7 +3835,7 @@
       "name": "wrapper_pm1b_event_block",
       "bytes": "",
       "body": [
-        "let result: GasSelection = pm1b_event_block(Fadt { pm1b_event_block: 4097, pm1_event_length: 4 });"
+        "let result: |gas|::GasSelection = |fadt|::pm1b_event_block(|fixed_types|::Fadt { pm1b_event_block: 4097, pm1_event_length: 4 });"
       ],
       "checks": [
         "result.error == 0",
@@ -3849,7 +3849,7 @@
       "name": "wrapper_pm1a_control_block",
       "bytes": "",
       "body": [
-        "let result: GasSelection = pm1a_control_block(Fadt { pm1a_control_block: 4098, pm1_control_length: 4 });"
+        "let result: |gas|::GasSelection = |fadt|::pm1a_control_block(|fixed_types|::Fadt { pm1a_control_block: 4098, pm1_control_length: 4 });"
       ],
       "checks": [
         "result.error == 0",
@@ -3863,7 +3863,7 @@
       "name": "wrapper_pm1b_control_block",
       "bytes": "",
       "body": [
-        "let result: GasSelection = pm1b_control_block(Fadt { pm1b_control_block: 4099, pm1_control_length: 4 });"
+        "let result: |gas|::GasSelection = |fadt|::pm1b_control_block(|fixed_types|::Fadt { pm1b_control_block: 4099, pm1_control_length: 4 });"
       ],
       "checks": [
         "result.error == 0",
@@ -3877,7 +3877,7 @@
       "name": "wrapper_pm2_control_block",
       "bytes": "",
       "body": [
-        "let result: GasSelection = pm2_control_block(Fadt { pm2_control_block: 4100, pm2_control_length: 4 });"
+        "let result: |gas|::GasSelection = |fadt|::pm2_control_block(|fixed_types|::Fadt { pm2_control_block: 4100, pm2_control_length: 4 });"
       ],
       "checks": [
         "result.error == 0",
@@ -3891,7 +3891,7 @@
       "name": "wrapper_pm_timer_block",
       "bytes": "",
       "body": [
-        "let result: GasSelection = pm_timer_block(Fadt { pm_timer_block: 4101, pm_timer_length: 4 });"
+        "let result: |gas|::GasSelection = |fadt|::pm_timer_block(|fixed_types|::Fadt { pm_timer_block: 4101, pm_timer_length: 4 });"
       ],
       "checks": [
         "result.error == 0",
@@ -3905,7 +3905,7 @@
       "name": "wrapper_gpe0_block",
       "bytes": "",
       "body": [
-        "let result: GasSelection = gpe0_block(Fadt { gpe0_block: 4102, gpe0_block_length: 4 });"
+        "let result: |gas|::GasSelection = |fadt|::gpe0_block(|fixed_types|::Fadt { gpe0_block: 4102, gpe0_block_length: 4 });"
       ],
       "checks": [
         "result.error == 0",
@@ -3919,7 +3919,7 @@
       "name": "wrapper_gpe1_block",
       "bytes": "",
       "body": [
-        "let result: GasSelection = gpe1_block(Fadt { gpe1_block: 4103, gpe1_block_length: 4 });"
+        "let result: |gas|::GasSelection = |fadt|::gpe1_block(|fixed_types|::Fadt { gpe1_block: 4103, gpe1_block_length: 4 });"
       ],
       "checks": [
         "result.error == 0",
@@ -3933,7 +3933,7 @@
       "name": "wrapper_reset_register",
       "bytes": "",
       "body": [
-        "let result: GasSelection = reset_register(Fadt { reset_reg: OptionalRawGas { present: true, value: RawGenericAddress { address_space: 128, address: 18446744073709551615, bit_width: 8 } } });"
+        "let result: |gas|::GasSelection = |fadt|::reset_register(|fixed_types|::Fadt { reset_reg: |gas|::OptionalRawGas { present: true, value: |gas|::RawGenericAddress { address_space: 128, address: 18446744073709551615, bit_width: 8 } } });"
       ],
       "checks": [
         "result.error == 0",
@@ -3947,7 +3947,7 @@
       "name": "wrapper_sleep_control_register",
       "bytes": "",
       "body": [
-        "let result: GasSelection = sleep_control_register(Fadt { sleep_control_reg: OptionalRawGas { present: true, value: RawGenericAddress { address_space: 128, address: 18446744073709551615, bit_width: 8 } } });"
+        "let result: |gas|::GasSelection = |fadt|::sleep_control_register(|fixed_types|::Fadt { sleep_control_reg: |gas|::OptionalRawGas { present: true, value: |gas|::RawGenericAddress { address_space: 128, address: 18446744073709551615, bit_width: 8 } } });"
       ],
       "checks": [
         "result.error == 0",
@@ -3961,7 +3961,7 @@
       "name": "wrapper_sleep_status_register",
       "bytes": "",
       "body": [
-        "let result: GasSelection = sleep_status_register(Fadt { sleep_status_reg: OptionalRawGas { present: true, value: RawGenericAddress { address_space: 128, address: 18446744073709551615, bit_width: 8 } } });"
+        "let result: |gas|::GasSelection = |fadt|::sleep_status_register(|fixed_types|::Fadt { sleep_status_reg: |gas|::OptionalRawGas { present: true, value: |gas|::RawGenericAddress { address_space: 128, address: 18446744073709551615, bit_width: 8 } } });"
       ],
       "checks": [
         "result.error == 0",

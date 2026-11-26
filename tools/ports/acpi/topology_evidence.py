@@ -23,7 +23,7 @@ def evidence():
     elif name=='from_apic_model_in':translated(row,'topology.omg','machine topology_fact','Pure per-record extraction rewritten as ordered bounded stream. Allocator aggregate, first-CPU live-state inference, and model-selection side effects absent; GIC and unknown entries retained.')
     elif name=='local_apic_address':translated(row,'topology.omg','initial_local_apic_address','Initial header address plus separately ordered LocalApicAddress override events; not claimed final until consumer finishes stream.')
     elif name=='also_has_legacy_pics':translated(row,'topology.omg','also_has_legacy_pics:')
-    elif name.startswith('crate::'):translated(row,'topology.omg','use madt::Polarity;')
+    elif name.startswith('crate::'):translated(row,'topology.omg','use madt.omg;')
     elif name in ['io_apics','local_apic_nmi_lines','interrupt_source_overrides','nmi_sources']:
      translated(row,'topology.omg','data TopologyFact','Ordered typed entries replace vectors; no entries silently lost. Collection/storage choice remains caller-owned.')
     else:omitted(row,'Whole mapped/allocator aggregate and model-selection API replaced by explicit topology_header/topology_next stream. No full AcpiTables constructor or global InterruptModel identity is claimed.')

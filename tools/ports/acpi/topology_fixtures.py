@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Original inert topology expectations, including pin deviations."""
-import argparse,json,re
+import argparse,json
 from fixed_model import HERE,ROOT
-from header_fixtures import sdt
+from header_fixtures import sdt, fixture_program, fixture_selectors
 IMPORTS={'topology':['TopologyHeader','topology_header','ObservedBootApic','Processor','processor','TopologyStep','TopologyFact','topology_fact','topology_next','NmiProcessor','LocalInterruptLine'],
  'madt':['MadtEntry','Polarity','TriggerMode'],
  'fixed_types':['LocalApicEntry','LocalX2ApicEntry','IoApicEntry','InterruptSourceOverrideEntry','NmiSourceEntry','LocalApicNmiEntry','X2ApicNmiEntry','LocalApicAddressOverrideEntry','MultiprocessorWakeupEntry','GiccEntry','GicdEntry','GicMsiFrameEntry','GicRedistributorEntry','GicInterruptTranslationServiceEntry','EntryHeader','Fadt'],
@@ -75,12 +75,17 @@ def cases():
   add('topology_header_'+str(flags),['let result: TopologyHeader = topology_header(&input, 44);'],['result.error == 0','result.initial_local_apic_address == 4276092928','result.revision == 6',f'result.also_has_legacy_pics == {str(bool(flags&1)).lower()}'],data)
  for device,function,error in [(32,0,34),(0,8,35)]:
   add(f'empty_region_invalid_{device}_{function}',['let mut regions: [PciConfigRegion; 253];',f'let result: PciAddressResult = find_address(&regions, 0, 0, 0, {device}, {function});'],[f'result.error == {error}'])
+ select = fixture_selectors(IMPORTS)
+ for row in rows:
+  row['body'] = [select(line) for line in row['body']]
+  row['checks'] = [select(line) for line in row['checks']]
+  if row['helper']:
+   row['helper'] = select(row['helper'])
  return rows
 
 
 def render(rows,evaluate=True):
  out=['// SPDX-License-Identifier: MIT OR Apache-2.0','// Original inert topology semantic fixtures.']
- for module,names in IMPORTS.items():out +=[f'use acpi::{module}::{name};'for name in names]
  for row in rows:
   if row['helper']:out.append(row['helper'])
   out += [f'machine test_{row["name"]}() -> bool {{','    let mut input: [u8; 4096];']
@@ -89,8 +94,7 @@ def render(rows,evaluate=True):
  if evaluate:
   out += ['machine test_result() -> i32 { transition '+' && '.join('test_'+r['name']+'()'for r in rows)+' { true -> (0) _ -> (1) } }','const TEST_RESULT: i32 = test_result();','machine require_success(value: i32) requires value == 0; {}','data Main {}','machine Main::main(&mut self) { require_success(TEST_RESULT); }']
  else:out +=['data Main {}','machine Main::main(&mut self) {}']
- body='\n'.join(line for line in out if not line.startswith('use '))
- return '\n'.join(line for line in out if not line.startswith('use ')or re.search(r'\b'+line.rsplit('::',1)[1].rstrip(';')+r'\b',body))+'\n'
+ return fixture_program(out, IMPORTS)
 
 
 def main():
