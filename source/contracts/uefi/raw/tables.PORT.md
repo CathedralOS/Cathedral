@@ -18,7 +18,7 @@ or Cathedral integration is claimed.
 - Preserved license: `MIT OR Apache-2.0`; Copyright (c) The uefi-rs contributors.
   See [third-party notices](../../../../THIRD_PARTY_NOTICES.md) and the exact
   [uefi-raw texts](../../../../licenses/rust-osdev/uefi-rs/uefi-raw).
-- Translation changes: Rust function/pointee pointers become inert `addr`
+- Translation changes: Rust function/pointee pointers become inert `address`
   members; function signatures are retained as adjacent metadata. Explicit
   x86-64 layout plans in `tables_layouts.omg` and flat constant names replace Rust representation
   attributes and associated constants. Source-file notices identify these
@@ -151,9 +151,9 @@ schema reflection capability is needed for this full named source plan. This is
 an implementation limit, not missing Cathedral engineering.
 
 `PORT-BLOCKED[omega:layout-address-carrier]`: the current authored Omega UEFI
-layout source explicitly notes that materialization has no `addr` carrier and
-therefore uses u64. The specification permits inert `addr`, but actual
-materialization of these named addr-containing records still needs supported
+layout source explicitly notes that materialization has no `address` carrier and
+therefore uses u64. The specification permits inert `address`, but actual
+materialization of these named address-containing records still needs supported
 schema/consumer evidence. No forged callable pointer or reference substitutes
 for that missing evidence.
 

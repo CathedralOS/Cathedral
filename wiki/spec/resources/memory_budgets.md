@@ -35,7 +35,7 @@ A zero-byte request rejects without issuing an allocation. Libraries can represe
 empty collections without allocating backing; this does not forbid zero-length
 views or empty residual extents elsewhere in Omega.
 
-The Omega-facing result uses the existing linear `Extent` carrier: `base: addr`
+The Omega-facing result uses the existing linear `Extent` carrier: `base: address`
 and `length: u64`, with the actual backing, address-space, access, provenance and
 lifetime qualifications. `length` is the entire usable extent granted to the
 caller, including any exposed rounding. Hidden provider slack outside that extent

@@ -34,18 +34,18 @@ public const LOADED_IMAGE_PROTOCOL_GUID: EfiGuid = EfiGuid {
 // supplies the pads after Revision and LoadOptionsSize.
 public data EfiLoadedImage {
     revision: u32;
-    parent_handle: addr;
-    system_table: addr;
-    device_handle: addr;
-    file_path: addr;
-    reserved: addr;
+    parent_handle: address;
+    system_table: address;
+    device_handle: address;
+    file_path: address;
+    reserved: address;
     load_options_size: u32;
-    load_options: addr;
-    image_base: addr;
+    load_options: address;
+    image_base: address;
     image_size: u64;
     image_code_type: u32;
     image_data_type: u32;
-    unload: addr;
+    unload: address;
 }
 
 // HandleProtocol writes one pointer into caller-owned output storage. Model

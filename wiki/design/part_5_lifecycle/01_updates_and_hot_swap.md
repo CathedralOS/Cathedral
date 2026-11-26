@@ -244,7 +244,7 @@ replaceable Omega code targets a process-lifetime gateway unless an accepted
 unregister/quiescence contract proves the direct entry unreachable.
 
 Virtual-address reuse follows one rule: Cathedral reuses a retired mapping only
-after proof that no live authority reaches it. Inert `addr` and sealed inert
+after proof that no live authority reaches it. Inert `address` and sealed inert
 `Ptr<T>` values cannot recreate memory or execution authority, so a fully
 checked graph may reuse immediately after quiescence. An incomplete or poisoned
 drain, or a possible opaque holder, leaves the range reserved and

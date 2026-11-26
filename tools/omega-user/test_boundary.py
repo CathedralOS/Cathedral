@@ -35,7 +35,7 @@ class BoundaryTests(unittest.TestCase):
 
     def test_table_order_matches_the_omega_layout(self):
         declaration = (ABI.parents[1] / 'kernel.omg').read_text(encoding='utf-8')
-        fields = re.findall(r'^    (\w+): addr;', declaration, re.MULTILINE)
+        fields = re.findall(r'^    (\w+): address;', declaration, re.MULTILINE)
         assembly = (ABI / 'entry.S').read_text(encoding='utf-8')
         table = re.findall(r'^    \.quad cathedral_(\w+)$', assembly, re.MULTILINE)
         self.assertEqual(['yield' if field == 'yield_now' else field for field in fields], table)

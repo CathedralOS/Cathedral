@@ -43,7 +43,7 @@ Omega's `wiki/spec/layouts/plans.md`,
 `wiki/spec/build/{foreign_storage,boundary_shapes,calling_plans}.md`, and
 `source/library/core/layout.omg` were reviewed before implementation.
 Each scalar enum/flag remains an open numeric wrapper. Handles, pointers and
-function pointers become inert `addr` fields; complete Rust signatures remain
+function pointers become inert `address` fields; complete Rust signatures remain
 adjacent comments, retaining pointer depth, mutability and callback result types.
 These comments are metadata, not executable calling contracts.
 
@@ -91,7 +91,7 @@ Existing boot contracts and their canary inputs are unchanged.
 
 Native slot calls remain `PORT-BLOCKED[omega:named-calling-policy]`, requiring
 admitted calling, backing, lifetime and authority contracts. Current Omega's
-own UEFI tables also document missing `addr` materialization, and the console
+own UEFI tables also document missing `address` materialization, and the console
 slice records selected-layout projection limitations. Passing plan source checks
 does not resolve those consumers. No MMIO, port I/O, DMA mapping, RNG invocation,
 ACPI installation or memory-permission change occurs in this port.

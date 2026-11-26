@@ -8,7 +8,7 @@ use scalars;
 
 // Upstream: uefi_raw::protocol::shell_params::ShellParametersProtocol
 pub data ShellParametersProtocol [copy] {
-    argv: addr;
+    argv: address;
     // Foreign carrier: *const *const Char16
     argc: u64;
     std_in: ShellFileHandle;
@@ -17,6 +17,6 @@ pub data ShellParametersProtocol [copy] {
 }
 
 // Upstream carrier: *mut c_void
-pub data ShellFileHandle [copy] { raw: addr; }
+pub data ShellFileHandle [copy] { raw: address; }
 
 pub const SHELL_PARAMETERS_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x752f3136, data2: 0x4e16, data3: 0x4fdc, data4: [0xa2, 0x2a, 0xe5, 0xf4, 0x68, 0x12, 0xf4, 0xca] };

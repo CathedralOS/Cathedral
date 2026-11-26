@@ -17,7 +17,7 @@ for module in sorted({r['module'] for r in schema}):
 assert set(records)==set(bykey),'declaration coverage mismatch'
 cache={}
 def geometry(module,typ):
-    if typ in {'addr','u64','i64'}:return 8,8
+    if typ in {'address','u64','i64'}:return 8,8
     if typ in {'u32','i32'}:return 4,4
     if typ in {'u16','i16'}:return 2,2
     if typ in {'u8','i8'}:return 1,1

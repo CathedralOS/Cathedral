@@ -32,13 +32,13 @@ pub data AbsolutePointerState [copy] {
 
 // Upstream: uefi_raw::protocol::console::AbsolutePointerProtocol
 pub data AbsolutePointerProtocol [copy] {
-    reset: addr;
+    reset: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, extended_verification: Boolean) -> Status
-    get_state: addr;
+    get_state: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self, state: *mut AbsolutePointerState) -> Status
-    wait_for_input: addr;
+    wait_for_input: address;
     // Foreign carrier: Event
-    mode: addr;
+    mode: address;
     // Foreign carrier: *const AbsolutePointerMode
 }
 
@@ -50,11 +50,11 @@ pub data InputKey [copy] {
 
 // Upstream: uefi_raw::protocol::console::SimpleTextInputProtocol
 pub data SimpleTextInputProtocol [copy] {
-    reset: addr;
+    reset: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, extended_verification: Boolean) -> Status
-    read_key_stroke: addr;
+    read_key_stroke: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, key: *mut InputKey) -> Status
-    wait_for_key: addr;
+    wait_for_key: address;
     // Foreign carrier: Event
 }
 
@@ -82,17 +82,17 @@ pub data KeyToggleState [copy] {
 
 // Upstream: uefi_raw::protocol::console::SimpleTextInputExProtocol
 pub data SimpleTextInputExProtocol [copy] {
-    reset: addr;
+    reset: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, extended_verification: Boolean) -> Status
-    read_key_stroke_ex: addr;
+    read_key_stroke_ex: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, key: *mut KeyData) -> Status
-    wait_for_key_ex: addr;
+    wait_for_key_ex: address;
     // Foreign carrier: Event
-    set_state: addr;
+    set_state: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, state: *const KeyToggleState) -> Status
-    register_key_notify: addr;
+    register_key_notify: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, key_data: *const KeyData, notification_fn: KeyNotifyFn, notify_handle: *mut *mut core::ffi::c_void, ) -> Status
-    unregister_key_notify: addr;
+    unregister_key_notify: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, notify_handle: *const core::ffi::c_void, ) -> Status
 }
 
@@ -108,25 +108,25 @@ pub data SimpleTextOutputMode [copy] {
 
 // Upstream: uefi_raw::protocol::console::SimpleTextOutputProtocol
 pub data SimpleTextOutputProtocol [copy] {
-    reset: addr;
+    reset: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, extended: Boolean) -> Status
-    output_string: addr;
+    output_string: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, string: *const Char16) -> Status
-    test_string: addr;
+    test_string: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, string: *const Char16) -> Status
-    query_mode: addr;
+    query_mode: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, mode: usize, columns: *mut usize, rows: *mut usize, ) -> Status
-    set_mode: addr;
+    set_mode: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, mode: usize) -> Status
-    set_attribute: addr;
+    set_attribute: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, attribute: usize) -> Status
-    clear_screen: addr;
+    clear_screen: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self) -> Status
-    set_cursor_position: addr;
+    set_cursor_position: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, column: usize, row: usize) -> Status
-    enable_cursor: addr;
+    enable_cursor: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, visible: Boolean) -> Status
-    mode: addr;
+    mode: address;
     // Foreign carrier: *const SimpleTextOutputMode
 }
 
@@ -150,25 +150,25 @@ pub data SimplePointerState [copy] {
 
 // Upstream: uefi_raw::protocol::console::SimplePointerProtocol
 pub data SimplePointerProtocol [copy] {
-    reset: addr;
+    reset: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, extended_verification: Boolean) -> Status
-    get_state: addr;
+    get_state: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, state: *mut SimplePointerState) -> Status
-    wait_for_input: addr;
+    wait_for_input: address;
     // Foreign carrier: Event
-    mode: addr;
+    mode: address;
     // Foreign carrier: *const SimplePointerMode
 }
 
 // Upstream: uefi_raw::protocol::console::GraphicsOutputProtocol
 pub data GraphicsOutputProtocol [copy] {
-    query_mode: addr;
+    query_mode: address;
     // Foreign carrier: unsafe extern "efiapi" fn( *const Self, mode_number: u32, size_of_info: *mut usize, info: *mut *mut GraphicsOutputModeInformation, ) -> Status
-    set_mode: addr;
+    set_mode: address;
     // Foreign carrier: unsafe extern "efiapi" fn(*mut Self, mode_number: u32) -> Status
-    blt: addr;
+    blt: address;
     // Foreign carrier: unsafe extern "efiapi" fn( *mut Self, blt_buffer: *mut GraphicsOutputBltPixel, blt_operation: GraphicsOutputBltOperation, source_x: usize, source_y: usize, destination_x: usize, destination_y: usize, width: usize, height: usize, delta: usize, ) -> Status
-    mode: addr;
+    mode: address;
     // Foreign carrier: *const GraphicsOutputProtocolMode
 }
 
@@ -176,7 +176,7 @@ pub data GraphicsOutputProtocol [copy] {
 pub data GraphicsOutputProtocolMode [copy] {
     max_mode: u32;
     mode: u32;
-    info: addr;
+    info: address;
     // Foreign carrier: *const GraphicsOutputModeInformation
     size_of_info: u64;
     frame_buffer_base: u64;
@@ -222,12 +222,12 @@ pub data GraphicsOutputBltOperation [copy] {
 // Upstream: uefi_raw::protocol::console::EdidDiscoveredProtocol
 pub data EdidDiscoveredProtocol [copy] {
     size_of_edid: u32;
-    edid: addr;
+    edid: address;
     // Foreign carrier: *const u8
 }
 
 // Upstream carrier: unsafe extern "efiapi" fn(key_data: *const KeyData) -> Status
-pub data KeyNotifyFn [copy] { raw: addr; }
+pub data KeyNotifyFn [copy] { raw: address; }
 
 pub const ABSOLUTE_POINTER_MODE_ATTRIBUTES_SUPPORTS_ALT_ACTIVE: AbsolutePointerModeAttributes = AbsolutePointerModeAttributes { raw: 1 };
 pub const ABSOLUTE_POINTER_MODE_ATTRIBUTES_SUPPORTS_PRESSURE_AS_Z: AbsolutePointerModeAttributes = AbsolutePointerModeAttributes { raw: 2 };

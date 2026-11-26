@@ -55,33 +55,33 @@ pub data HiiRowInfo [copy] {
 
 // Upstream: uefi_raw::protocol::hii::font::HiiFontProtocol
 pub data HiiFontProtocol [copy] {
-    string_to_image: addr;
+    string_to_image: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, flags: HiiOutFlags, string: *const Char16, string_info: *const FontDisplayInfo, blt: *mut *mut ImageOutput, blt_x: usize, blt_y: usize, row_info_array: *mut *mut HiiRowInfo, row_info_array_size: *mut usize, column_info_array: *mut usize, ) -> Status
-    string_id_to_image: addr;
+    string_id_to_image: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, flags: HiiOutFlags, package_list: HiiHandle, string_id: StringId, language: *const Char8, string_info: *const FontDisplayInfo, blt: *mut *mut ImageOutput, blt_x: usize, blt_y: usize, row_info_array: *mut *mut HiiRowInfo, row_info_array_size: *mut usize, column_info_array: *mut usize, ) -> Status
-    get_glyph: addr;
+    get_glyph: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, char: Char16, string_info: *const FontDisplayInfo, blt: *mut *mut ImageOutput, baseline: *mut usize, ) -> Status
-    get_font_info: addr;
+    get_font_info: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, font_handle: *mut FontHandle, string_info_in: *const FontDisplayInfo, string_info_out: *mut *mut FontDisplayInfo, string: *const Char16, ) -> Status
 }
 
 // Upstream: uefi_raw::protocol::hii::font::HiiFontExProtocol
 pub data HiiFontExProtocol [copy] {
-    string_to_image_ex: addr;
+    string_to_image_ex: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, flags: HiiOutFlags, string: *const Char16, string_info: *const FontDisplayInfo, blt: *mut *mut ImageOutput, blt_x: usize, blt_y: usize, row_info_array: *mut *mut HiiRowInfo, row_info_array_size: *mut usize, column_info_array: *mut usize, ) -> Status
-    string_id_to_image_ex: addr;
+    string_id_to_image_ex: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, flags: HiiOutFlags, package_list: HiiHandle, string_id: StringId, language: *const Char8, string_info: *const FontDisplayInfo, blt: *mut *mut ImageOutput, blt_x: usize, blt_y: usize, row_info_array: *mut *mut HiiRowInfo, row_info_array_size: *mut usize, column_info_array: *mut usize, ) -> Status
-    get_glyph_ex: addr;
+    get_glyph_ex: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, char: Char16, string_info: *const FontDisplayInfo, blt: *mut *mut ImageOutput, baseline: *mut usize, ) -> Status
-    get_font_info_ex: addr;
+    get_font_info_ex: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, font_handle: *mut FontHandle, string_info_in: *const FontDisplayInfo, string_info_out: *mut *mut FontDisplayInfo, string: *const Char16, ) -> Status
-    get_glyph_info: addr;
+    get_glyph_info: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, char: Char16, font_display_info: *const FontDisplayInfo, glyph_info: *mut HiiGlyphInfo, ) -> Status
 }
 
 // Upstream: uefi_raw::protocol::hii::font::FontHandle
 pub data FontHandle [copy] {
-    raw: addr;
+    raw: address;
     // Foreign carrier: *mut core::ffi::c_void
 }
 

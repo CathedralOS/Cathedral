@@ -81,19 +81,19 @@
     "fields": [
       [
         "reset",
-        "addr"
+        "address"
       ],
       [
         "get_state",
-        "addr"
+        "address"
       ],
       [
         "wait_for_input",
-        "addr"
+        "address"
       ],
       [
         "mode",
-        "addr"
+        "address"
       ]
     ],
     "packed": false,
@@ -123,15 +123,15 @@
     "fields": [
       [
         "reset",
-        "addr"
+        "address"
       ],
       [
         "read_key_stroke",
-        "addr"
+        "address"
       ],
       [
         "wait_for_key",
-        "addr"
+        "address"
       ]
     ],
     "packed": false,
@@ -204,27 +204,27 @@
     "fields": [
       [
         "reset",
-        "addr"
+        "address"
       ],
       [
         "read_key_stroke_ex",
-        "addr"
+        "address"
       ],
       [
         "wait_for_key_ex",
-        "addr"
+        "address"
       ],
       [
         "set_state",
-        "addr"
+        "address"
       ],
       [
         "register_key_notify",
-        "addr"
+        "address"
       ],
       [
         "unregister_key_notify",
-        "addr"
+        "address"
       ]
     ],
     "packed": false,
@@ -270,43 +270,43 @@
     "fields": [
       [
         "reset",
-        "addr"
+        "address"
       ],
       [
         "output_string",
-        "addr"
+        "address"
       ],
       [
         "test_string",
-        "addr"
+        "address"
       ],
       [
         "query_mode",
-        "addr"
+        "address"
       ],
       [
         "set_mode",
-        "addr"
+        "address"
       ],
       [
         "set_attribute",
-        "addr"
+        "address"
       ],
       [
         "clear_screen",
-        "addr"
+        "address"
       ],
       [
         "set_cursor_position",
-        "addr"
+        "address"
       ],
       [
         "enable_cursor",
-        "addr"
+        "address"
       ],
       [
         "mode",
-        "addr"
+        "address"
       ]
     ],
     "packed": false,
@@ -377,19 +377,19 @@
     "fields": [
       [
         "reset",
-        "addr"
+        "address"
       ],
       [
         "get_state",
-        "addr"
+        "address"
       ],
       [
         "wait_for_input",
-        "addr"
+        "address"
       ],
       [
         "mode",
-        "addr"
+        "address"
       ]
     ],
     "packed": false,
@@ -402,19 +402,19 @@
     "fields": [
       [
         "query_mode",
-        "addr"
+        "address"
       ],
       [
         "set_mode",
-        "addr"
+        "address"
       ],
       [
         "blt",
-        "addr"
+        "address"
       ],
       [
         "mode",
-        "addr"
+        "address"
       ]
     ],
     "packed": false,
@@ -435,7 +435,7 @@
       ],
       [
         "info",
-        "addr"
+        "address"
       ],
       [
         "size_of_info",
@@ -573,7 +573,7 @@
       ],
       [
         "edid",
-        "addr"
+        "address"
       ]
     ],
     "packed": false,
@@ -653,31 +653,31 @@
       ],
       [
         "reset",
-        "addr"
+        "address"
       ],
       [
         "set_attributes",
-        "addr"
+        "address"
       ],
       [
         "set_control_bits",
-        "addr"
+        "address"
       ],
       [
         "get_control_bits",
-        "addr"
+        "address"
       ],
       [
         "write",
-        "addr"
+        "address"
       ],
       [
         "read",
-        "addr"
+        "address"
       ],
       [
         "mode",
-        "addr"
+        "address"
       ]
     ],
     "packed": false,
@@ -694,7 +694,7 @@
       ],
       [
         "device_type_guid",
-        "addr"
+        "address"
       ]
     ],
     "packed": false,
@@ -737,23 +737,23 @@
       ],
       [
         "parent_handle",
-        "addr"
+        "address"
       ],
       [
         "system_table",
-        "addr"
+        "address"
       ],
       [
         "device_handle",
-        "addr"
+        "address"
       ],
       [
         "file_path",
-        "addr"
+        "address"
       ],
       [
         "reserved",
-        "addr"
+        "address"
       ],
       [
         "load_options_size",
@@ -761,11 +761,11 @@
       ],
       [
         "load_options",
-        "addr"
+        "address"
       ],
       [
         "image_base",
-        "addr"
+        "address"
       ],
       [
         "image_size",
@@ -781,7 +781,7 @@
       ],
       [
         "unload",
-        "addr"
+        "address"
       ]
     ],
     "packed": false,
@@ -841,11 +841,11 @@
     "fields": [
       [
         "convert_device_node_to_text",
-        "addr"
+        "address"
       ],
       [
         "convert_device_path_to_text",
-        "addr"
+        "address"
       ]
     ],
     "packed": false,
@@ -858,11 +858,11 @@
     "fields": [
       [
         "convert_text_to_device_node",
-        "addr"
+        "address"
       ],
       [
         "convert_text_to_device_path",
-        "addr"
+        "address"
       ]
     ],
     "packed": false,
@@ -875,35 +875,35 @@
     "fields": [
       [
         "get_device_path_size",
-        "addr"
+        "address"
       ],
       [
         "duplicate_device_path",
-        "addr"
+        "address"
       ],
       [
         "append_device_path",
-        "addr"
+        "address"
       ],
       [
         "append_device_node",
-        "addr"
+        "address"
       ],
       [
         "append_device_path_instance",
-        "addr"
+        "address"
       ],
       [
         "get_next_device_path_instance",
-        "addr"
+        "address"
       ],
       [
         "is_device_path_multi_instance",
-        "addr"
+        "address"
       ],
       [
         "create_device_node",
-        "addr"
+        "address"
       ]
     ],
     "packed": false,
@@ -2328,7 +2328,7 @@
     "fields": [
       [
         "load_file",
-        "addr"
+        "address"
       ]
     ],
     "packed": false,
@@ -2341,7 +2341,7 @@
     "fields": [
       [
         "load_file",
-        "addr"
+        "address"
       ]
     ],
     "packed": false,
@@ -2354,11 +2354,11 @@
     "fields": [
       [
         "receive_data",
-        "addr"
+        "address"
       ],
       [
         "send_data",
-        "addr"
+        "address"
       ]
     ],
     "packed": false,
@@ -2371,7 +2371,7 @@
     "fields": [
       [
         "argv",
-        "addr"
+        "address"
       ],
       [
         "argc",

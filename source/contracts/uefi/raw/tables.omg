@@ -16,7 +16,7 @@ use revision::Revision;
 
 // X64 policies live in tables_layouts.omg; declarations alone do not select ABI.
 // PORT-BLOCKED[omega:layout-address-carrier]: layout materialization must support
-// inert addr fields; current authored Omega UEFI tables substitute u64 carriers.
+// inert address fields; current authored Omega UEFI tables substitute u64 carriers.
 // tables_layouts.omg records the separate 45-field reflection-capacity blocker.
 
 pub data Header {
@@ -30,117 +30,117 @@ pub data Header {
 
 pub data SystemTable {
     header: Header;
-    firmware_vendor: addr;
+    firmware_vendor: address;
     firmware_revision: u32;
     stdin_handle: Handle;
-    stdin: addr;
+    stdin: address;
     stdout_handle: Handle;
-    stdout: addr;
+    stdout: address;
     stderr_handle: Handle;
-    stderr: addr;
-    runtime_services: addr;
-    boot_services: addr;
+    stderr: address;
+    runtime_services: address;
+    boot_services: address;
     number_of_configuration_table_entries: u64;
-    configuration_table: addr;
+    configuration_table: address;
 }
 
 
 pub data ConfigurationTable {
     vendor_guid: Guid;
-    vendor_table: addr;
+    vendor_table: address;
 }
 
 
 pub data BootServices {
     header: Header;
     // Upstream signature: unsafe extern "efiapi" fn(new_tpl: Tpl) -> Tpl
-    raise_tpl: addr;
+    raise_tpl: address;
     // Upstream signature: unsafe extern "efiapi" fn(old_tpl: Tpl)
-    restore_tpl: addr;
+    restore_tpl: address;
     // Upstream signature: unsafe extern "efiapi" fn( alloc_ty: AllocateType, mem_ty: MemoryType, count: usize, addr: *mut PhysicalAddress, ) -> Status
-    allocate_pages: addr;
+    allocate_pages: address;
     // Upstream signature: unsafe extern "efiapi" fn(addr: PhysicalAddress, pages: usize) -> Status
-    free_pages: addr;
+    free_pages: address;
     // Upstream signature: unsafe extern "efiapi" fn( size: *mut usize, map: *mut MemoryDescriptor, key: *mut usize, desc_size: *mut usize, desc_version: *mut u32, ) -> Status
-    get_memory_map: addr;
+    get_memory_map: address;
     // Upstream signature: unsafe extern "efiapi" fn( pool_type: MemoryType, size: usize, buffer: *mut *mut u8, ) -> Status
-    allocate_pool: addr;
+    allocate_pool: address;
     // Upstream signature: unsafe extern "efiapi" fn(buffer: *mut u8) -> Status
-    free_pool: addr;
+    free_pool: address;
     // Upstream signature: unsafe extern "efiapi" fn( ty: EventType, notify_tpl: Tpl, notify_func: Option<EventNotifyFn>, notify_ctx: *mut c_void, out_event: *mut Event, ) -> Status
-    create_event: addr;
+    create_event: address;
     // Upstream signature: unsafe extern "efiapi" fn(event: Event, ty: TimerDelay, trigger_time: u64) -> Status
-    set_timer: addr;
+    set_timer: address;
     // Upstream signature: unsafe extern "efiapi" fn( number_of_events: usize, events: *const Event, out_index: *mut usize, ) -> Status
-    wait_for_event: addr;
+    wait_for_event: address;
     // Upstream signature: unsafe extern "efiapi" fn(event: Event) -> Status
-    signal_event: addr;
+    signal_event: address;
     // Upstream signature: unsafe extern "efiapi" fn(event: Event) -> Status
-    close_event: addr;
+    close_event: address;
     // Upstream signature: unsafe extern "efiapi" fn(event: Event) -> Status
-    check_event: addr;
+    check_event: address;
     // Upstream signature: unsafe extern "efiapi" fn( handle: *mut Handle, guid: *const Guid, interface_type: InterfaceType, interface: *const c_void, ) -> Status
-    install_protocol_interface: addr;
+    install_protocol_interface: address;
     // Upstream signature: unsafe extern "efiapi" fn( handle: Handle, protocol: *const Guid, old_interface: *const c_void, new_interface: *const c_void, ) -> Status
-    reinstall_protocol_interface: addr;
+    reinstall_protocol_interface: address;
     // Upstream signature: unsafe extern "efiapi" fn( handle: Handle, protocol: *const Guid, interface: *const c_void, ) -> Status
-    uninstall_protocol_interface: addr;
+    uninstall_protocol_interface: address;
     // Upstream signature: unsafe extern "efiapi" fn( handle: Handle, proto: *const Guid, out_proto: *mut *mut c_void, ) -> Status
-    handle_protocol: addr;
+    handle_protocol: address;
     // Upstream signature: *mut c_void
-    reserved: addr;
+    reserved: address;
     // Upstream signature: unsafe extern "efiapi" fn( protocol: *const Guid, event: Event, registration: *mut *mut c_void, ) -> Status
-    register_protocol_notify: addr;
+    register_protocol_notify: address;
     // Upstream signature: unsafe extern "efiapi" fn( search_ty: i32, proto: *const Guid, key: *const c_void, buf_sz: *mut usize, buf: *mut Handle, ) -> Status
-    locate_handle: addr;
+    locate_handle: address;
     // Upstream signature: unsafe extern "efiapi" fn( proto: *const Guid, device_path: *mut *const DevicePathProtocol, out_handle: *mut Handle, ) -> Status
-    locate_device_path: addr;
+    locate_device_path: address;
     // Upstream signature: unsafe extern "efiapi" fn(guid_entry: *const Guid, table_ptr: *const c_void) -> Status
-    install_configuration_table: addr;
+    install_configuration_table: address;
     // Upstream signature: unsafe extern "efiapi" fn( boot_policy: Boolean, parent_image_handle: Handle, device_path: *const DevicePathProtocol, source_buffer: *const u8, source_size: usize, image_handle: *mut Handle, ) -> Status
-    load_image: addr;
+    load_image: address;
     // Upstream signature: unsafe extern "efiapi" fn( image_handle: Handle, exit_data_size: *mut usize, exit_data: *mut *mut Char16, ) -> Status
-    start_image: addr;
+    start_image: address;
     // Upstream signature: unsafe extern "efiapi" fn( image_handle: Handle, exit_status: Status, exit_data_size: usize, exit_data: *mut Char16, ) -> Status
-    exit: addr;
+    exit: address;
     // Upstream signature: unsafe extern "efiapi" fn(image_handle: Handle) -> Status
-    unload_image: addr;
+    unload_image: address;
     // Upstream signature: unsafe extern "efiapi" fn(image_handle: Handle, map_key: usize) -> Status
-    exit_boot_services: addr;
+    exit_boot_services: address;
     // Upstream signature: unsafe extern "efiapi" fn(count: *mut u64) -> Status
-    get_next_monotonic_count: addr;
+    get_next_monotonic_count: address;
     // Upstream signature: unsafe extern "efiapi" fn(microseconds: usize) -> Status
-    stall: addr;
+    stall: address;
     // Upstream signature: unsafe extern "efiapi" fn( timeout: usize, watchdog_code: u64, data_size: usize, watchdog_data: *const u16, ) -> Status
-    set_watchdog_timer: addr;
+    set_watchdog_timer: address;
     // Upstream signature: unsafe extern "efiapi" fn( controller: Handle, driver_image: *const Handle, remaining_device_path: *const DevicePathProtocol, recursive: Boolean, ) -> Status
-    connect_controller: addr;
+    connect_controller: address;
     // Upstream signature: unsafe extern "efiapi" fn( controller: Handle, driver_image: Handle, child: Handle, ) -> Status
-    disconnect_controller: addr;
+    disconnect_controller: address;
     // Upstream signature: unsafe extern "efiapi" fn( handle: Handle, protocol: *const Guid, interface: *mut *mut c_void, agent_handle: Handle, controller_handle: Handle, attributes: u32, ) -> Status
-    open_protocol: addr;
+    open_protocol: address;
     // Upstream signature: unsafe extern "efiapi" fn( handle: Handle, protocol: *const Guid, agent_handle: Handle, controller_handle: Handle, ) -> Status
-    close_protocol: addr;
+    close_protocol: address;
     // Upstream signature: unsafe extern "efiapi" fn( handle: Handle, protocol: *const Guid, entry_buffer: *mut *mut OpenProtocolInformationEntry, entry_count: *mut usize, ) -> Status
-    open_protocol_information: addr;
+    open_protocol_information: address;
     // Upstream signature: unsafe extern "efiapi" fn( handle: Handle, protocol_buffer: *mut *mut *const Guid, protocol_buffer_count: *mut usize, ) -> Status
-    protocols_per_handle: addr;
+    protocols_per_handle: address;
     // Upstream signature: unsafe extern "efiapi" fn( search_ty: i32, proto: *const Guid, key: *const c_void, no_handles: *mut usize, buf: *mut *mut Handle, ) -> Status
-    locate_handle_buffer: addr;
+    locate_handle_buffer: address;
     // Upstream signature: unsafe extern "efiapi" fn( proto: *const Guid, registration: *const c_void, out_proto: *mut *mut c_void, ) -> Status
-    locate_protocol: addr;
+    locate_protocol: address;
     // Upstream signature: unsafe extern "C" fn(handle: *mut Handle, ...) -> Status
-    install_multiple_protocol_interfaces: addr;
+    install_multiple_protocol_interfaces: address;
     // Upstream signature: unsafe extern "C" fn(handle: Handle, ...) -> Status
-    uninstall_multiple_protocol_interfaces: addr;
+    uninstall_multiple_protocol_interfaces: address;
     // Upstream signature: unsafe extern "efiapi" fn(data: *const c_void, data_size: usize, crc32: *mut u32) -> Status
-    calculate_crc32: addr;
+    calculate_crc32: address;
     // Upstream signature: unsafe extern "efiapi" fn(dest: *mut u8, src: *const u8, len: usize)
-    copy_mem: addr;
+    copy_mem: address;
     // Upstream signature: unsafe extern "efiapi" fn(buffer: *mut u8, len: usize, value: u8)
-    set_mem: addr;
+    set_mem: address;
     // Upstream signature: unsafe extern "efiapi" fn( ty: EventType, notify_tpl: Tpl, notify_fn: Option<EventNotifyFn>, notify_ctx: *const c_void, event_group: *const Guid, out_event: *mut Event, ) -> Status
-    create_event_ex: addr;
+    create_event_ex: address;
 }
 
 pub const BOOTSERVICES_RAISE_TPL_SLOT: u64 = 0;
@@ -191,33 +191,33 @@ pub const BOOTSERVICES_CREATE_EVENT_EX_SLOT: u64 = 43;
 pub data RuntimeServices {
     header: Header;
     // Upstream signature: unsafe extern "efiapi" fn(time: *mut Time, capabilities: *mut TimeCapabilities) -> Status
-    get_time: addr;
+    get_time: address;
     // Upstream signature: unsafe extern "efiapi" fn(time: *const Time) -> Status
-    set_time: addr;
+    set_time: address;
     // Upstream signature: unsafe extern "efiapi" fn( enabled: *mut Boolean, pending: *mut Boolean, time: *mut Time, ) -> Status
-    get_wakeup_time: addr;
+    get_wakeup_time: address;
     // Upstream signature: unsafe extern "efiapi" fn(enable: Boolean, time: *const Time) -> Status
-    set_wakeup_time: addr;
+    set_wakeup_time: address;
     // Upstream signature: unsafe extern "efiapi" fn( map_size: usize, desc_size: usize, desc_version: u32, virtual_map: *const MemoryDescriptor, ) -> Status
-    set_virtual_address_map: addr;
+    set_virtual_address_map: address;
     // Upstream signature: unsafe extern "efiapi" fn(debug_disposition: usize, address: *mut *mut c_void) -> Status
-    convert_pointer: addr;
+    convert_pointer: address;
     // Upstream signature: unsafe extern "efiapi" fn( variable_name: *const Char16, vendor_guid: *const Guid, attributes: *mut VariableAttributes, data_size: *mut usize, data: *mut u8, ) -> Status
-    get_variable: addr;
+    get_variable: address;
     // Upstream signature: unsafe extern "efiapi" fn( variable_name_size: *mut usize, variable_name: *mut u16, vendor_guid: *mut Guid, ) -> Status
-    get_next_variable_name: addr;
+    get_next_variable_name: address;
     // Upstream signature: unsafe extern "efiapi" fn( variable_name: *const Char16, vendor_guid: *const Guid, attributes: VariableAttributes, data_size: usize, data: *const u8, ) -> Status
-    set_variable: addr;
+    set_variable: address;
     // Upstream signature: unsafe extern "efiapi" fn(high_count: *mut u32) -> Status
-    get_next_high_monotonic_count: addr;
+    get_next_high_monotonic_count: address;
     // Upstream signature: unsafe extern "efiapi" fn( rt: ResetType, status: Status, data_size: usize, data: *const u8, ) -> !
-    reset_system: addr;
+    reset_system: address;
     // Upstream signature: unsafe extern "efiapi" fn( capsule_header_array: *const *const CapsuleHeader, capsule_count: usize, scatter_gather_list: PhysicalAddress, ) -> Status
-    update_capsule: addr;
+    update_capsule: address;
     // Upstream signature: unsafe extern "efiapi" fn( capsule_header_array: *const *const CapsuleHeader, capsule_count: usize, maximum_capsule_size: *mut u64, reset_type: *mut ResetType, ) -> Status
-    query_capsule_capabilities: addr;
+    query_capsule_capabilities: address;
     // Upstream signature: unsafe extern "efiapi" fn( attributes: VariableAttributes, maximum_variable_storage_size: *mut u64, remaining_variable_storage_size: *mut u64, maximum_variable_size: *mut u64, ) -> Status
-    query_variable_info: addr;
+    query_variable_info: address;
 }
 
 pub const RUNTIMESERVICES_GET_TIME_SLOT: u64 = 0;
@@ -261,7 +261,7 @@ pub data PropertiesTable {
 // unsafe extern "efiapi" fn(event: Event, context: *mut c_void).
 // Callback registration, context custody, and calling-policy installation belong
 // to later admitted boundaries, never to this inert representation.
-pub data EventNotifyFn { raw: addr; }
+pub data EventNotifyFn { raw: address; }
 
 pub data ResetType [copy] { raw: u32; }
 pub data VariableAttributes [copy] { raw: u32; }

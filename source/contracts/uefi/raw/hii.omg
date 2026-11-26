@@ -74,7 +74,7 @@ pub data HiiFormPackageHdr [copy] {
 
 // Upstream: uefi_raw::protocol::hii::HiiHandle
 pub data HiiHandle [copy] {
-    raw: addr;
+    raw: address;
     // Foreign carrier: *mut core::ffi::c_void
 }
 

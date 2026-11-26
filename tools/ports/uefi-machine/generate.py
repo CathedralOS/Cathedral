@@ -71,8 +71,8 @@ def main():
             owners[name] = record
         for match in re.finditer(r'pub type (\w+)\s*=\s*(.*?);', text, re.S):
             name, carrier = match.groups()
-            records.append({'name': name, 'rust': prefix + name, 'path': path, 'base': 'addr',
-                            'fields': [('raw', 'addr')], 'alias': ' '.join(carrier.split()), 'flags': False})
+            records.append({'name': name, 'rust': prefix + name, 'path': path, 'base': 'address',
+                            'fields': [('raw', 'address')], 'alias': ' '.join(carrier.split()), 'flags': False})
         for match in re.finditer(r'pub const (\w+)\s*:\s*([^=]+?)=\s*(.*?);', text, re.S):
             name, typ, expression = match.groups()
             owner = next((name for start, end, name in impl_ranges if start <= match.start() <= end), None)
@@ -113,8 +113,8 @@ def main():
               'module ' + SLICE + '_protocols;', 'use scalars::Guid;', '']
     def mapped(typ):
         if '*' in typ or 'fn(' in typ or 'fn (' in typ:
-            return 'addr'
-        return {'Handle': 'addr', 'usize': 'u64', 'isize': 'i64', 'Boolean': 'u8', 'ResetSystemFn': 'addr', 'Status': 'u64', 'Event': 'addr', 'ShellFileHandle': 'addr'}.get(typ, typ)
+            return 'address'
+        return {'Handle': 'address', 'usize': 'u64', 'isize': 'i64', 'Boolean': 'u8', 'ResetSystemFn': 'address', 'Status': 'u64', 'Event': 'address', 'ShellFileHandle': 'address'}.get(typ, typ)
     for record in records:
         output += ['// Upstream: ' + record['rust']]
         if record.get('alias'):
@@ -122,7 +122,7 @@ def main():
         output += ['pub data ' + record['name'] + ' [copy] {']
         for field, typ in record['fields']:
             output += ['    ' + field.removeprefix('r#') + ': ' + mapped(typ) + ';']
-            if mapped(typ) == 'addr':
+            if mapped(typ) == 'address':
                 output += ['    // Foreign carrier: ' + typ]
         output += ['}', '']
     for const in constants:

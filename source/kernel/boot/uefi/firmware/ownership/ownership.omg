@@ -66,7 +66,7 @@ data KernelRoots {
 // reports a requirement within the fixed ceiling.
 machine Main::own_machine(context: &mut Main, handle: EfiHandle, table: &EfiSystemTable)
 reaches BootServices + ExtentRootProvider + ProgramStorageEntry + ResourceProfileSupply + PortIo + MachineControl
-requires addr::Bound == 18446744073709551616
+requires address::Bound == 18446744073709551616
 {
     // The boundary vouches the reference shape, not arbitrary firmware field
     // contents. Fail closed before projecting or dispatching through Boot
@@ -82,7 +82,7 @@ requires addr::Bound == 18446744073709551616
 
     machine validate_boot_services(context: &mut Main, handle: EfiHandle,
                                  table: &EfiSystemTable)
-    requires addr::Bound == 18446744073709551616
+    requires address::Bound == 18446744073709551616
     {
         let bs: &BootServicesTable = table.boot_services;
         transition bs.hdr.signature == EFI_BOOT_SERVICES_SIGNATURE &&
@@ -99,7 +99,7 @@ requires addr::Bound == 18446744073709551616
     // old key and every descriptor-derived candidate are discarded together.
     machine refresh_map(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                       stale_retry_used: u64)
-    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
+    requires address::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         transition { _ -> get_map(context, bs, handle, stale_retry_used, 16384) }
     }
@@ -107,7 +107,7 @@ requires addr::Bound == 18446744073709551616
     machine get_map(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                   stale_retry_used: u64,
                   attempted_capacity: u64)
-    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1 && 16384 <= attempted_capacity && attempted_capacity <= 65536
+    requires address::Bound == 18446744073709551616 && stale_retry_used <= 1 && 16384 <= attempted_capacity && attempted_capacity <= 65536
     {
         let mut map_size: u64 = attempted_capacity; // in = capacity, out = actual/needed
         let mut key: MapKey = MapKey { raw: 0 };
@@ -154,7 +154,7 @@ requires addr::Bound == 18446744073709551616
                      stale_retry_used: u64,
                      attempted_capacity: u64,
                      status_code: u64, required_size: u64)
-    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1 && 16384 <= attempted_capacity && attempted_capacity <= 65536
+    requires address::Bound == 18446744073709551616 && stale_retry_used <= 1 && 16384 <= attempted_capacity && attempted_capacity <= 65536
     {
         transition attempted_capacity == 16384 && status_code == EFI_BUFFER_TOO_SMALL.code && required_size > 16384 && required_size <= 65536 {
             true -> get_map(context, bs, handle, stale_retry_used, 65536)
@@ -180,7 +180,7 @@ requires addr::Bound == 18446744073709551616
                map_size: u64 in Trapping, desc_size: u64 in Trapping, key: MapKey,
                offset: u64 in Trapping, best_start: u64, best_pages: u64,
                best_offset: u64 in Trapping)
-    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1 && offset <= 65496
+    requires address::Bound == 18446744073709551616 && stale_retry_used <= 1 && offset <= 65496
     {
         let d: &EfiMemoryDescriptor = &context.map_buf.bytes[offset] as &EfiMemoryDescriptor;
         let is_free: bool = d.kind == EFI_CONVENTIONAL_MEMORY &&
@@ -200,7 +200,7 @@ requires addr::Bound == 18446744073709551616
                map_size: u64 in Trapping, desc_size: u64 in Trapping, key: MapKey,
                offset: u64 in Trapping, best_start: u64, best_pages: u64,
                best_offset: u64 in Trapping)
-    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
+    requires address::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         // The second conjunct is implied by the first (map_size <= 65536,
         // desc_size >= 40) but spelled out so the loop edge's bound is a
@@ -226,7 +226,7 @@ requires addr::Bound == 18446744073709551616
                              desc_size: u64 in Trapping, key: MapKey,
                              best_start: u64, best_pages: u64,
                              best_offset: u64 in Trapping)
-    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
+    requires address::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         transition best_pages > 0 &&
                    best_pages <= MAX_BOOTSTRAP_PAGE_COUNT &&
@@ -245,7 +245,7 @@ requires addr::Bound == 18446744073709551616
                                  best_start: u64,
                                  best_pages: u64,
                                  best_offset: u64 in Trapping)
-    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1 && 1 <= best_pages && best_pages <= 4503599627370495
+    requires address::Bound == 18446744073709551616 && stale_retry_used <= 1 && 1 <= best_pages && best_pages <= 4503599627370495
     {
         let checked_pages: u64 in Trapping = best_pages as u64 in Trapping;
         let checked_length: u64 in Trapping = checked_pages * PAGE_SIZE;
@@ -275,7 +275,7 @@ requires addr::Bound == 18446744073709551616
                         desc_size: u64 in Trapping, key: MapKey,
                         best_start: u64, best_pages: u64, length: u64,
                         best_offset: u64 in Trapping)
-    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
+    requires address::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         let checked_start: u64 in Trapping = best_start as u64 in Trapping;
         let checked_length: u64 in Trapping = length as u64 in Trapping;
@@ -294,7 +294,7 @@ requires addr::Bound == 18446744073709551616
                            best_end: u64 in Trapping,
                            best_offset: u64 in Trapping,
                            audit_offset: u64 in Trapping)
-    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1 && audit_offset <= 65496
+    requires address::Bound == 18446744073709551616 && stale_retry_used <= 1 && audit_offset <= 65496
     {
         let d: &EfiMemoryDescriptor = &context.map_buf.bytes[audit_offset] as &EfiMemoryDescriptor;
         transition { _ -> audit_geometry(context, bs, handle, stale_retry_used,
@@ -318,7 +318,7 @@ requires addr::Bound == 18446744073709551616
                          other_start: u64,
                          other_virtual_start: u64,
                          other_pages: u64)
-    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
+    requires address::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         transition (other_kind < EFI_MAX_MEMORY_TYPE ||
                     other_kind >= EFI_OEM_MEMORY_TYPE_MIN) &&
@@ -349,7 +349,7 @@ requires addr::Bound == 18446744073709551616
                              audit_offset: u64 in Trapping,
                              other_start: u64, other_virtual_start: u64,
                              other_pages: u64)
-    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1 && 1 <= other_pages && other_pages <= 4503599627370495
+    requires address::Bound == 18446744073709551616 && stale_retry_used <= 1 && 1 <= other_pages && other_pages <= 4503599627370495
     {
         let checked_pages: u64 in Trapping = other_pages as u64 in Trapping;
         let checked_length: u64 in Trapping = checked_pages * PAGE_SIZE;
@@ -380,7 +380,7 @@ requires addr::Bound == 18446744073709551616
                         best_offset: u64 in Trapping,
                         audit_offset: u64 in Trapping,
                         other_start: u64, last_offset: u64 in Trapping)
-    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
+    requires address::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         transition audit_offset == best_offset {
             true -> audit_step(context, bs, handle, stale_retry_used,
@@ -403,7 +403,7 @@ requires addr::Bound == 18446744073709551616
                          best_offset: u64 in Trapping,
                          audit_offset: u64 in Trapping,
                          other_start: u64, last_offset: u64 in Trapping)
-    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
+    requires address::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         let checked_start: u64 in Trapping = other_start as u64 in Trapping;
         let other_last: u64 in Trapping = checked_start + last_offset;
@@ -428,7 +428,7 @@ requires addr::Bound == 18446744073709551616
                      best_offset: u64 in Trapping,
                      audit_offset: u64 in Trapping,
                      other_last: u64 in Trapping)
-    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
+    requires address::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         transition other_last < best_start {
             true -> audit_step(context, bs, handle, stale_retry_used,
@@ -446,7 +446,7 @@ requires addr::Bound == 18446744073709551616
                       best_end: u64 in Trapping,
                       best_offset: u64 in Trapping,
                       audit_offset: u64 in Trapping, other_start: u64)
-    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
+    requires address::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         transition other_start >= best_end {
             true -> audit_step(context, bs, handle, stale_retry_used,
@@ -464,7 +464,7 @@ requires addr::Bound == 18446744073709551616
                      best_end: u64 in Trapping,
                      best_offset: u64 in Trapping,
                      audit_offset: u64 in Trapping)
-    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
+    requires address::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         transition audit_offset + desc_size + desc_size <= map_size &&
                    audit_offset + desc_size <= 65496 {
@@ -484,7 +484,7 @@ requires addr::Bound == 18446744073709551616
     machine prepare_entry(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                         stale_retry_used: u64, key: MapKey,
                         best_start: u64, best_pages: u64, length: u64)
-    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
+    requires address::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         // The explicit address-model premise proves this captured address
         // fits firmware's 64-bit coordinates; host pointer width is irrelevant.
@@ -512,7 +512,7 @@ requires addr::Bound == 18446744073709551616
     machine exit(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                stale_retry_used: u64, key: MapKey,
                best_pages: u64, geometry: BootGeometry in core::memory::geometry::BootGeometry::Separated)
-    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
+    requires address::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         let exit_status: EfiStatus = BootServices::exit_boot_services(bs, handle, key);
         let exit_code: u64 = exit_status.code;
@@ -527,7 +527,7 @@ requires addr::Bound == 18446744073709551616
     // in an unbounded bootstrap loop, and no rejected transaction can grant.
     machine exit_failed(context: &mut Main, bs: &BootServicesTable, handle: EfiHandle,
                       stale_retry_used: u64, exit_code: u64)
-    requires addr::Bound == 18446744073709551616 && stale_retry_used <= 1
+    requires address::Bound == 18446744073709551616 && stale_retry_used <= 1
     {
         transition stale_retry_used == 0 && exit_code == EFI_INVALID_PARAMETER.code {
             true -> refresh_map(context, bs, handle, 1)
@@ -539,14 +539,14 @@ requires addr::Bound == 18446744073709551616
     // to grant the image prefix and initial allocation before using either.
     // Their numeric addresses and lengths alone do not establish ownership.
     machine own(context: &mut Main, geometry: BootGeometry in core::memory::geometry::BootGeometry::Separated, best_pages: u64)
-    requires addr::Bound == 18446744073709551616
+    requires address::Bound == 18446744073709551616
     {
         let image_geometry: Extent = Extent {
-            base: geometry.image_base as addr,
+            base: geometry.image_base as address,
             length: geometry.image_length,
         };
         let storage_geometry: Extent = Extent {
-            base: geometry.storage_base as addr,
+            base: geometry.storage_base as address,
             length: geometry.storage_length,
         };
         let image: Extent = ExtentRootProvider::grant(image_geometry);

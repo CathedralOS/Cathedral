@@ -30,7 +30,7 @@ data FirmwareTableInventory {
 data FirmwareTables {}
 
 machine FirmwareTables::begin(root: Extent in Granted) -> FirmwareTableInventory
-requires addr::Bound == 18446744073709551616
+requires address::Bound == 18446744073709551616
 {
     let mut inventory: FirmwareTableInventory;
     inventory.addresses[0] = root.base as u64;
@@ -59,7 +59,7 @@ reaches ResourceProfileSupply
 // topology is quiescent during this closed uniprocessor boot (hardware A/D
 // writes remain permitted). Descriptor bytes alone establish none of this.
 machine FirmwareTables::retain_child(slot: &mut FirmwareTableSlot, address: u64) -> bool
-requires addr::Bound == 18446744073709551616 &&
+requires address::Bound == 18446744073709551616 &&
          address > 0 && address % 4096 == 0 && address <= 0x000FFFFFFFFFF000
 reaches ExtentRootProvider
 invokes ExtentRootProvider
@@ -70,12 +70,12 @@ invokes ExtentRootProvider
     }
 
     machine insert(slot: &mut FirmwareTableSlot, address: u64) -> bool
-    requires addr::Bound == 18446744073709551616 &&
+    requires address::Bound == 18446744073709551616 &&
              address > 0 && address % 4096 == 0 && address <= 0x000FFFFFFFFFF000 &&
              (slot in FirmwareTableSlot::Empty)
     {
         let storage: Extent in Granted = ExtentRootProvider::grant(
-            Extent { base: address as addr, length: 4096 }
+            Extent { base: address as address, length: 4096 }
         );
         slot = FirmwareTableSlot::Held { storage: storage };
         true
@@ -104,7 +104,7 @@ machine FirmwareTables::find(inventory: &FirmwareTableInventory, address: u64) -
 
 machine FirmwareTables::collect(root: Extent in Granted, information: &BootInformation,
                                 excluded: &BootGeometry) -> FirmwareTableInventory
-requires addr::Bound == 18446744073709551616
+requires address::Bound == 18446744073709551616
 reaches ExtentRootProvider + ResourceProfileSupply
 invokes ExtentRootProvider
 invokes ResourceProfileSupply
@@ -120,7 +120,7 @@ invokes ResourceProfileSupply
 // copies and whole-claim transfers of every previously retained table.
 machine FirmwareTables::walk(inventory: &mut FirmwareTableInventory,
                              information: &BootInformation, excluded: &BootGeometry) -> bool
-requires addr::Bound == 18446744073709551616
+requires address::Bound == 18446744073709551616
 reaches ExtentRootProvider + ResourceProfileSupply
 invokes ExtentRootProvider
 invokes ResourceProfileSupply
@@ -129,7 +129,7 @@ invokes ResourceProfileSupply
 
     machine next_table(inventory: &mut FirmwareTableInventory, information: &BootInformation,
                      excluded: &BootGeometry, queue_index: u64) -> bool
-    requires addr::Bound == 18446744073709551616 && queue_index <= 8192
+    requires address::Bound == 18446744073709551616 && queue_index <= 8192
     {
         transition queue_index < inventory.queue_count && queue_index < 8192 {
             true -> open(inventory, information, excluded, queue_index)
@@ -139,7 +139,7 @@ invokes ResourceProfileSupply
 
     machine open(inventory: &mut FirmwareTableInventory, information: &BootInformation,
                excluded: &BootGeometry, queue_index: u64) -> bool
-    requires addr::Bound == 18446744073709551616 && queue_index < 8192
+    requires address::Bound == 18446744073709551616 && queue_index < 8192
     {
         let table_index: u64 = inventory.queue_tables[queue_index];
         transition table_index < 2048 {
@@ -151,7 +151,7 @@ invokes ResourceProfileSupply
     machine snapshot(inventory: &mut FirmwareTableInventory, information: &BootInformation,
                    excluded: &BootGeometry, queue_index: u64, table_index: u64)
         -> bool
-    requires addr::Bound == 18446744073709551616 && queue_index < 8192 && table_index < 2048
+    requires address::Bound == 18446744073709551616 && queue_index < 8192 && table_index < 2048
     {
         let copied: FirmwareRootSnapshot = FirmwareTables::snapshot(inventory, table_index);
         transition copied {
@@ -163,7 +163,7 @@ invokes ResourceProfileSupply
     machine scan(inventory: &mut FirmwareTableInventory, information: &BootInformation,
                excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64)
         -> bool
-    requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index <= 512
+    requires address::Bound == 18446744073709551616 && queue_index < 8192 && entry_index <= 512
     {
         transition entry_index < 512 {
             true -> inspect(inventory, information, excluded, queue_index, entries, entry_index)
@@ -174,7 +174,7 @@ invokes ResourceProfileSupply
     machine inspect(inventory: &mut FirmwareTableInventory, information: &BootInformation,
                   excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64)
         -> bool
-    requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512
+    requires address::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512
     {
         let level: u64 = inventory.queue_levels[queue_index];
         let route: X86TableEntryRoute = X86TableWalk::classify(entries[entry_index], level);
@@ -188,7 +188,7 @@ invokes ResourceProfileSupply
     machine locate(inventory: &mut FirmwareTableInventory, information: &BootInformation,
                  excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64,
                  level: u64, child: u64) -> bool
-    requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512
+    requires address::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512
     {
         let known: u64 = FirmwareTables::find(inventory, child);
         transition known < 2048 {
@@ -200,7 +200,7 @@ invokes ResourceProfileSupply
     machine admit(inventory: &mut FirmwareTableInventory, information: &BootInformation,
                 excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64,
                 level: u64, child: u64) -> bool
-    requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512
+    requires address::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512
     {
         let eligible: bool = FirmwareRootMap::contains(&information.bytes, information.map_size,
             information.descriptor_size, child, excluded);
@@ -214,7 +214,7 @@ invokes ResourceProfileSupply
     machine retain(inventory: &mut FirmwareTableInventory, information: &BootInformation,
                  excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64,
                  level: u64, child: u64) -> bool
-    requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512 &&
+    requires address::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512 &&
              inventory.table_count < 2048 && child > 0 && child % 4096 == 0 && child <= 0x000FFFFFFFFFF000
     {
         let table_index: u64 = inventory.table_count;
@@ -228,7 +228,7 @@ invokes ResourceProfileSupply
     machine registered(inventory: &mut FirmwareTableInventory, information: &BootInformation,
                      excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64,
                      level: u64, child: u64, table_index: u64) -> bool
-    requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512 && table_index < 2048
+    requires address::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512 && table_index < 2048
     {
         inventory.addresses[table_index] = child;
         inventory.table_count = table_index + 1;
@@ -238,7 +238,7 @@ invokes ResourceProfileSupply
     machine enqueue(inventory: &mut FirmwareTableInventory, information: &BootInformation,
                   excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64,
                   level: u64, table_index: u64) -> bool
-    requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512
+    requires address::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512
     {
         transition level > 1 && level <= 4 && table_index < 2048 {
             true -> remember(inventory, information, excluded, queue_index, entries, entry_index, level, table_index)
@@ -249,7 +249,7 @@ invokes ResourceProfileSupply
     machine remember(inventory: &mut FirmwareTableInventory, information: &BootInformation,
                    excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64,
                    level: u64, table_index: u64) -> bool
-    requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512 &&
+    requires address::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512 &&
              level > 1 && level <= 4 && table_index < 2048
     {
         let bit: u64 = 1u64 << (level - 1);
@@ -262,7 +262,7 @@ invokes ResourceProfileSupply
     machine reserve(inventory: &mut FirmwareTableInventory, information: &BootInformation,
                   excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64,
                   level: u64, table_index: u64, bit: u64) -> bool
-    requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512 &&
+    requires address::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512 &&
              level > 1 && table_index < 2048
     {
         transition inventory.queue_count < 8192 {
@@ -274,7 +274,7 @@ invokes ResourceProfileSupply
     machine append(inventory: &mut FirmwareTableInventory, information: &BootInformation,
                  excluded: &BootGeometry, queue_index: u64, entries: [u64; 512], entry_index: u64,
                  level: u64, table_index: u64, bit: u64) -> bool
-    requires addr::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512 &&
+    requires address::Bound == 18446744073709551616 && queue_index < 8192 && entry_index < 512 &&
              level > 1 && table_index < 2048 && inventory.queue_count < 8192
     {
         let next: u64 = inventory.queue_count;

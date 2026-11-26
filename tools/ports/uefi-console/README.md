@@ -30,7 +30,7 @@ from the pinned source. It is a restricted translator for these exact seven
 files, not a general Rust parser. It verifies source hashes via `inventory.py`;
 review generated changes and run all checks after regeneration. It preserves
 original Rust pointer/function signatures as comments, while source fields carry
-inert `addr`. Generated packed nodes retain fixed prefixes; runtime tail fields
+inert `address`. Generated packed nodes retain fixed prefixes; runtime tail fields
 are explicit seams. Do not use it to update an upstream pin incidentally.
 
 `src/tests.rs` runs two upstream behavior checks: exhaustive 16-bit device-node

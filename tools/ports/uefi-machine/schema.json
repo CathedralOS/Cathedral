@@ -372,11 +372,11 @@
       "name": "AsyncUsbTransferCallback",
       "rust": "uefi_raw::protocol::usb::AsyncUsbTransferCallback",
       "path": "uefi-raw/src/protocol/usb/mod.rs",
-      "base": "addr",
+      "base": "address",
       "fields": [
         [
           "raw",
-          "addr"
+          "address"
         ]
       ],
       "alias": "unsafe extern \"efiapi\" fn( data: *const ffi::c_void, data_length: usize, context: *const ffi::c_void, status: UsbTransferStatus, ) -> Status",
@@ -819,11 +819,11 @@
       "name": "ResetSystemFn",
       "rust": "uefi_raw::protocol::misc::ResetSystemFn",
       "path": "uefi-raw/src/protocol/misc.rs",
-      "base": "addr",
+      "base": "address",
       "fields": [
         [
           "raw",
-          "addr"
+          "address"
         ]
       ],
       "alias": "unsafe extern \"efiapi\" fn( rt: runtime::ResetType, status: Status, data_size: usize, data: *const u8, )",

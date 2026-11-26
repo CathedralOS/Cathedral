@@ -176,7 +176,7 @@ reaches ResourceProfileSupply + AccessLifecycle
     // The original capacity exceeds the residual by sixteen bytes. Observe
     // rejection and unchanged geometry without using the observation to grant
     // custody or to establish another allocation's static capacity premise.
-    let residual_base: addr = strategy.tail.base;
+    let residual_base: address = strategy.tail.base;
     let residual_length: u64 = strategy.tail.length;
     let residual_capacity: u64 = strategy.remaining;
     let attempt: Attempt = try_allocate(&mut strategy, available);

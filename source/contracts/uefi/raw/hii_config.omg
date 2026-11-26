@@ -7,9 +7,9 @@ use console;
 
 // Upstream: uefi_raw::protocol::hii::config::ConfigKeywordHandlerProtocol
 pub data ConfigKeywordHandlerProtocol [copy] {
-    set_data: addr;
+    set_data: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, keyword_string: *const Char16, progress: *mut *const Char16, progress_err: *mut u32, ) -> Status
-    get_data: addr;
+    get_data: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, namespace_id: *const Char16, keyword_string: *const Char16, progress: *mut *const Char16, progress_err: *mut u32, results: *mut *mut Char16, ) -> Status
 }
 
@@ -20,27 +20,27 @@ pub data BrowserAction [copy] {
 
 // Upstream: uefi_raw::protocol::hii::config::HiiConfigAccessProtocol
 pub data HiiConfigAccessProtocol [copy] {
-    extract_config: addr;
+    extract_config: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, request: *const Char16, progress: *mut *const Char16, results: *mut *mut Char16, ) -> Status
-    route_config: addr;
+    route_config: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, configuration: *const Char16, progress: *mut *const Char16, ) -> Status
-    callback: addr;
+    callback: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, action: BrowserAction, question_id: QuestionId, value_type: u8, value: *mut IfrTypeValue, action_request: *mut BrowserActionRequest, ) -> Status
 }
 
 // Upstream: uefi_raw::protocol::hii::config::HiiConfigRoutingProtocol
 pub data HiiConfigRoutingProtocol [copy] {
-    extract_config: addr;
+    extract_config: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, config_request: *const Char16, progress: *mut *const Char16, results: *mut *mut Char16, ) -> Status
-    export_config: addr;
+    export_config: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self, results: *mut *mut Char16) -> Status
-    route_config: addr;
+    route_config: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, configuration: *const Char16, progress: *mut *const Char16, ) -> Status
-    block_to_config: addr;
+    block_to_config: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, config_request: *const Char16, block: *const u8, block_size: usize, config: *mut *mut Char16, progress: *mut *const Char16, ) -> Status
-    config_to_block: addr;
+    config_to_block: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, config_resp: *const Char16, block: *mut u8, block_size: *mut usize, progress: *mut *const Char16, ) -> Status
-    get_alt_cfg: addr;
+    get_alt_cfg: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, config_resp: *const Char16, guid: *const Guid, name: *const Char16, device_path: *const DevicePathProtocol, alt_cfg_id: *const Char16, alt_cfg_resp: *mut *mut Char16, ) -> Status
 }
 

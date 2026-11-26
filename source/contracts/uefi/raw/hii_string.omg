@@ -7,15 +7,15 @@ use console;
 
 // Upstream: uefi_raw::protocol::hii::string::HiiStringProtocol
 pub data HiiStringProtocol [copy] {
-    new_string: addr;
+    new_string: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, package_list: HiiHandle, string_id: *mut StringId, language: *const Char8, language_name: *const Char16, string: *const Char16, string_font_info: *const FontInfo, ) -> Status
-    get_string: addr;
+    get_string: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, language: *const Char8, package_list: HiiHandle, string_id: StringId, string: *mut Char16, string_size: *mut usize, string_font_info: *mut *mut FontInfo, ) -> Status
-    set_string: addr;
+    set_string: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, package_list: HiiHandle, string_id: StringId, language: *const Char8, string: *const Char16, string_font_info: *const FontInfo, ) -> Status
-    get_languages: addr;
+    get_languages: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, package_list: HiiHandle, languages: *mut Char8, languages_size: *mut usize, ) -> Status
-    get_secondary_languages: addr;
+    get_secondary_languages: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, package_list: HiiHandle, primary_language: *const Char8, secondary_languages: *mut Char8, secondary_languages_size: *mut usize, ) -> Status
 }
 

@@ -48,7 +48,7 @@ def main():
         actual = re.findall(r'(\w+):\s*([^;]*(?:;\s*\d+\])?)\s*;', body_without_comments)
         require(actual == [(f[1], f[3]) for f in fields], f'{name}: Omega fields/types/order differ')
         for _, _, rust_type, omega_type in fields:
-            if omega_type == 'addr':
+            if omega_type == 'address':
                 require('// Upstream: ' + rust_type in body, f'{name}: original pointer/callback signature missing')
         plan = layouts.split('pub machine ' + name + 'X64Layout::plan', 1)[1].split('\n}', 1)[0]
         offsets = [int(n) for n in re.findall(r'FieldPlan::At \{ offset: (\d+) \}', plan)]

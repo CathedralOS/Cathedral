@@ -131,7 +131,7 @@ reaches ResourceProfileSupply
 // path before accepting it. Large leaves need no invented child observation.
 machine MappingHandoff::observe(inventory: &FirmwareTableInventory, address: u64)
     -> X86ObservedTablePage
-requires addr::Bound == 18446744073709551616
+requires address::Bound == 18446744073709551616
 reaches ResourceProfileSupply
 {
     let index: u64 = FirmwareTables::find(inventory, address);
@@ -141,7 +141,7 @@ reaches ResourceProfileSupply
     }
     machine slot(inventory: &FirmwareTableInventory, address: u64, index: u64)
         -> X86ObservedTablePage
-    requires index < 2048 && addr::Bound == 18446744073709551616
+    requires index < 2048 && address::Bound == 18446744073709551616
     {
         transition &inventory.roots[index] {
             FirmwareTableSlot::Held { storage } -> backing(storage, address)
@@ -149,7 +149,7 @@ reaches ResourceProfileSupply
         }
     }
     machine backing(storage: &Extent in Granted, address: u64) -> X86ObservedTablePage
-    requires addr::Bound == 18446744073709551616
+    requires address::Bound == 18446744073709551616
     {
         transition storage.base as u64 == address && storage.length == 4096 {
             true -> read(storage, address)
@@ -172,7 +172,7 @@ reaches ResourceProfileSupply
 
 machine MappingHandoff::child(inventory: &FirmwareTableInventory, word: u64, level: u64)
     -> X86ObservedTablePage
-requires addr::Bound == 18446744073709551616
+requires address::Bound == 18446744073709551616
 reaches ResourceProfileSupply
 {
     transition X86TableWalk::classify(word, level) {
@@ -193,7 +193,7 @@ data MappingCloneResult {
 machine MappingHandoff::clone(inventory: &FirmwareTableInventory, firmware_root: u64,
                               new_root: u64, target: u64, virtual_address: u64, length: u64)
     -> MappingCloneResult
-requires addr::Bound == 18446744073709551616
+requires address::Bound == 18446744073709551616
 reaches ResourceProfileSupply
 {
     transition x86_decompose_bootstrap_virtual_address(virtual_address) {
@@ -203,7 +203,7 @@ reaches ResourceProfileSupply
     machine observe(inventory: &FirmwareTableInventory, firmware_root: u64,
                   new_root: u64, target: u64, length: u64, indices: X86BootstrapVirtualAddressIndices)
         -> MappingCloneResult
-    requires addr::Bound == 18446744073709551616
+    requires address::Bound == 18446744073709551616
     {
         let mut source: X86PagingPathSnapshot;
         source.pml4 = MappingHandoff::observe(inventory, firmware_root);

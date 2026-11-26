@@ -22,7 +22,7 @@ the exact subset; later shell revisions are not inferred. Omega's layout plans,
 foreign-storage and boundary-shape documents were consulted for this corpus.
 
 Status uses an inert x64 u64 here; event/file handles and all pointer/function
-slots use inert addr. ShellFileInfo preserves its nested list entry. These are
+slots use inert address. ShellFileInfo preserves its nested list entry. These are
 foreign representation carriers, not the validated handles in Cathedral's
 boot-facing contracts. No command executes, environment changes, file access,
 linked-list dereference or native callback occurs in this package.

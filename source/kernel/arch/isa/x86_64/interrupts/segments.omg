@@ -17,14 +17,14 @@ data BootstrapSegments {}
 // permanent table installation will use that floor's arrival contract instead.
 public boundary trait SegmentTablePreparation {
     machine check_descriptor_load() -> bool
-    requires addr::Bound == 18446744073709551616
+    requires address::Bound == 18446744073709551616
     reaches MachineControl
     crashes Abort;
 }
 
 public BootstrapSegmentPreparation satisfies SegmentTablePreparation {
     machine check_descriptor_load() -> bool
-    requires addr::Bound == 18446744073709551616
+    requires address::Bound == 18446744073709551616
     reaches MachineControl
     crashes Abort
     { BootstrapSegments::check_descriptor_load() }
@@ -46,7 +46,7 @@ data DescriptorBuffer {
 }
 
 machine BootstrapSegments::check_descriptor_load() -> bool
-requires addr::Bound == 18446744073709551616
+requires address::Bound == 18446744073709551616
 reaches MachineControl
 crashes Abort
 {
@@ -61,7 +61,7 @@ crashes Abort
 // A single call-scoped borrow pins the owner's backing through load and
 // restoration. Exposing its address alone would not retain that loan.
 machine BootstrapSegments::exercise(table: &SegmentTable) -> bool
-requires addr::Bound == 18446744073709551616
+requires address::Bound == 18446744073709551616
 reaches MachineControl
 crashes Abort
 {

@@ -54,7 +54,7 @@ inventory with every complete field mapping. The corpus has 185 inert carriers,
 
 Upstream compile-time assertions map to vectors. `Debug` formatting is omitted
 as Rust tooling, not a firmware operation. Derived traits are not promised Omega
-APIs. Original function-pointer signatures are preserved beside inert `addr`
+APIs. Original function-pointer signatures are preserved beside inert `address`
 slots, including IN/OUT pointer shape; none becomes a callable service.
 
 ## Primary specifications and representation vectors
@@ -131,7 +131,7 @@ platform state. Parsing tags or finding a GUID establishes none of that authorit
 
 ## Deliberate deviations and primary-source disagreements
 
-- Pointer/callback/handle slots use inert `addr`; ID, Boolean and character
+- Pointer/callback/handle slots use inert `address`; ID, Boolean and character
   fields use their raw widths. Open enum/flag wrappers preserve unknown values.
 - Three Rust `r#type` fields become `type_code`; schema and vectors retain their
   exact source correspondence. Rust modules become explicit `hii_*` modules.

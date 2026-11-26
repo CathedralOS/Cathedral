@@ -9,25 +9,25 @@ use scalars;
 // Upstream: uefi_raw::protocol::loaded_image::LoadedImageProtocol
 pub data LoadedImageProtocol [copy] {
     revision: u32;
-    parent_handle: addr;
+    parent_handle: address;
     // Foreign carrier: Handle
-    system_table: addr;
+    system_table: address;
     // Foreign carrier: *const SystemTable
-    device_handle: addr;
+    device_handle: address;
     // Foreign carrier: Handle
-    file_path: addr;
+    file_path: address;
     // Foreign carrier: *const DevicePathProtocol
-    reserved: addr;
+    reserved: address;
     // Foreign carrier: *const c_void
     load_options_size: u32;
-    load_options: addr;
+    load_options: address;
     // Foreign carrier: *const c_void
-    image_base: addr;
+    image_base: address;
     // Foreign carrier: *const c_void
     image_size: u64;
     image_code_type: u32;
     image_data_type: u32;
-    unload: addr;
+    unload: address;
     // Foreign carrier: Option<unsafe extern "efiapi" fn(image_handle: Handle) -> Status>
 }
 

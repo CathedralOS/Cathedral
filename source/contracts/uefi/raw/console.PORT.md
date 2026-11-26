@@ -52,7 +52,7 @@ lexical; it does not expand Rust derive macros.
 
 No upstream raw callable operation is silently implemented: each function-pointer
 field retains its original signature in a comment and its exact native offset
-in vectors, but stores `addr`. Rust derives (`Debug`, comparisons, default for
+in vectors, but stores `address`. Rust derives (`Debug`, comparisons, default for
 trivial scalar records) are not a promise of generated Omega operations.
 
 ## Primary specifications and representation vectors
@@ -73,7 +73,7 @@ same cross-check. GUID fields retain mixed-width little-endian encoding.
 This is stronger than host geometry alone and is still not an Omega observation.
 
 Profile: 64-bit pointer/UINTN, little endian, UEFI x64 data geometry. Native
-function calling is not tested. Source `addr` slots do not authorize calls.
+function calling is not tested. Source `address` slots do not authorize calls.
 Packed nodes require alignment 1 and explicit no-padding layouts, including
 unaligned fields. Plain Omega `data` does not establish those layouts.
 
@@ -138,7 +138,7 @@ establish any of these. No native invocation leaves are added by this slice.
 ## Deliberate deviations
 
 - Pointer, function-pointer, nullable unload and opaque handle fields become
-  inert `addr`. They preserve geometry/signature documentation without callable
+  inert `address`. They preserve geometry/signature documentation without callable
   or reference semantics. Scalar Boolean/Char16/MemoryType fields use their raw
   widths so arbitrary incoming values remain representable.
 - Rust nested device-path modules become category-prefixed names, avoiding

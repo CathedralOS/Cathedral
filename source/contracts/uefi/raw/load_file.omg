@@ -8,21 +8,21 @@ use scalars;
 
 // Upstream: uefi_raw::protocol::media::LoadFileProtocol
 pub data LoadFileProtocol [copy] {
-    load_file: addr;
+    load_file: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, file_path: *const DevicePathProtocol, boot_policy: Boolean, buffer_size: *mut usize, buffer: *mut c_void, ) -> Status
 }
 
 // Upstream: uefi_raw::protocol::media::LoadFile2Protocol
 pub data LoadFile2Protocol [copy] {
-    load_file: addr;
+    load_file: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, file_path: *const DevicePathProtocol, boot_policy: Boolean, buffer_size: *mut usize, buffer: *mut c_void, ) -> Status
 }
 
 // Upstream: uefi_raw::protocol::media::StorageSecurityCommandProtocol
 pub data StorageSecurityCommandProtocol [copy] {
-    receive_data: addr;
+    receive_data: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, media_id: u32, timeout: u64, security_protocol: u8, security_protocol_specific_data: u16, buffer_size: usize, buffer: *mut c_void, transfer_size: *mut usize, ) -> Status
-    send_data: addr;
+    send_data: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, media_id: u32, timeout: u64, security_protocol: u8, security_protocol_specific_data: u16, buffer_size: usize, buffer: *const c_void, ) -> Status
 }
 

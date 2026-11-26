@@ -222,7 +222,7 @@
     "fields": [
       [
         "raw",
-        "addr",
+        "address",
         "raw"
       ]
     ],
@@ -350,12 +350,12 @@
     "fields": [
       [
         "set_data",
-        "addr",
+        "address",
         "set_data"
       ],
       [
         "get_data",
-        "addr",
+        "address",
         "get_data"
       ]
     ],
@@ -387,17 +387,17 @@
     "fields": [
       [
         "extract_config",
-        "addr",
+        "address",
         "extract_config"
       ],
       [
         "route_config",
-        "addr",
+        "address",
         "route_config"
       ],
       [
         "callback",
-        "addr",
+        "address",
         "callback"
       ]
     ],
@@ -413,32 +413,32 @@
     "fields": [
       [
         "extract_config",
-        "addr",
+        "address",
         "extract_config"
       ],
       [
         "export_config",
-        "addr",
+        "address",
         "export_config"
       ],
       [
         "route_config",
-        "addr",
+        "address",
         "route_config"
       ],
       [
         "block_to_config",
-        "addr",
+        "address",
         "block_to_config"
       ],
       [
         "config_to_block",
-        "addr",
+        "address",
         "config_to_block"
       ],
       [
         "get_alt_cfg",
-        "addr",
+        "address",
         "get_alt_cfg"
       ]
     ],
@@ -503,57 +503,57 @@
     "fields": [
       [
         "new_package_list",
-        "addr",
+        "address",
         "new_package_list"
       ],
       [
         "remove_package_list",
-        "addr",
+        "address",
         "remove_package_list"
       ],
       [
         "update_package_list",
-        "addr",
+        "address",
         "update_package_list"
       ],
       [
         "list_package_lists",
-        "addr",
+        "address",
         "list_package_lists"
       ],
       [
         "export_package_lists",
-        "addr",
+        "address",
         "export_package_lists"
       ],
       [
         "register_package_notify",
-        "addr",
+        "address",
         "register_package_notify"
       ],
       [
         "unregister_package_notify",
-        "addr",
+        "address",
         "unregister_package_notify"
       ],
       [
         "find_keyboard_layouts",
-        "addr",
+        "address",
         "find_keyboard_layouts"
       ],
       [
         "get_keyboard_layout",
-        "addr",
+        "address",
         "get_keyboard_layout"
       ],
       [
         "set_keyboard_layout",
-        "addr",
+        "address",
         "set_keyboard_layout"
       ],
       [
         "get_package_list_handle",
-        "addr",
+        "address",
         "get_package_list_handle"
       ]
     ],
@@ -569,7 +569,7 @@
     "fields": [
       [
         "raw",
-        "addr",
+        "address",
         "raw"
       ]
     ],
@@ -759,22 +759,22 @@
     "fields": [
       [
         "string_to_image",
-        "addr",
+        "address",
         "string_to_image"
       ],
       [
         "string_id_to_image",
-        "addr",
+        "address",
         "string_id_to_image"
       ],
       [
         "get_glyph",
-        "addr",
+        "address",
         "get_glyph"
       ],
       [
         "get_font_info",
-        "addr",
+        "address",
         "get_font_info"
       ]
     ],
@@ -790,27 +790,27 @@
     "fields": [
       [
         "string_to_image_ex",
-        "addr",
+        "address",
         "string_to_image_ex"
       ],
       [
         "string_id_to_image_ex",
-        "addr",
+        "address",
         "string_id_to_image_ex"
       ],
       [
         "get_glyph_ex",
-        "addr",
+        "address",
         "get_glyph_ex"
       ],
       [
         "get_font_info_ex",
-        "addr",
+        "address",
         "get_font_info_ex"
       ],
       [
         "get_glyph_info",
-        "addr",
+        "address",
         "get_glyph_info"
       ]
     ],
@@ -826,7 +826,7 @@
     "fields": [
       [
         "raw",
-        "addr",
+        "address",
         "raw"
       ]
     ],
@@ -889,12 +889,12 @@
     "fields": [
       [
         "send_form",
-        "addr",
+        "address",
         "send_form"
       ],
       [
         "browser_callback",
-        "addr",
+        "address",
         "browser_callback"
       ]
     ],
@@ -3757,7 +3757,7 @@
       ],
       [
         "bitmap",
-        "addr",
+        "address",
         "bitmap"
       ]
     ],
@@ -3815,27 +3815,27 @@
     "fields": [
       [
         "new_image",
-        "addr",
+        "address",
         "new_image"
       ],
       [
         "get_image",
-        "addr",
+        "address",
         "get_image"
       ],
       [
         "set_image",
-        "addr",
+        "address",
         "set_image"
       ],
       [
         "draw_image",
-        "addr",
+        "address",
         "draw_image"
       ],
       [
         "draw_image_id",
-        "addr",
+        "address",
         "draw_image_id"
       ]
     ],
@@ -3851,32 +3851,32 @@
     "fields": [
       [
         "new_image_ex",
-        "addr",
+        "address",
         "new_image_ex"
       ],
       [
         "get_image_ex",
-        "addr",
+        "address",
         "get_image_ex"
       ],
       [
         "set_image_ex",
-        "addr",
+        "address",
         "set_image_ex"
       ],
       [
         "draw_image_ex",
-        "addr",
+        "address",
         "draw_image_ex"
       ],
       [
         "draw_image_id_ex",
-        "addr",
+        "address",
         "draw_image_id_ex"
       ],
       [
         "get_image_info",
-        "addr",
+        "address",
         "get_image_info"
       ]
     ],
@@ -3945,7 +3945,7 @@
       ],
       [
         "create_popup",
-        "addr",
+        "address",
         "create_popup"
       ]
     ],
@@ -3961,27 +3961,27 @@
     "fields": [
       [
         "new_string",
-        "addr",
+        "address",
         "new_string"
       ],
       [
         "get_string",
-        "addr",
+        "address",
         "get_string"
       ],
       [
         "set_string",
-        "addr",
+        "address",
         "set_string"
       ],
       [
         "get_languages",
-        "addr",
+        "address",
         "get_languages"
       ],
       [
         "get_secondary_languages",
-        "addr",
+        "address",
         "get_secondary_languages"
       ]
     ],

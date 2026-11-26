@@ -84,18 +84,18 @@ pub data Dhcp4PacketOption [copy] {
 // Pinned source: uefi_raw::protocol::network::dhcp4::Dhcp4ConfigData
 pub data Dhcp4ConfigData [copy] {
     discover_try_count: u32;
-    discover_timeout: addr;
+    discover_timeout: address;
     // Foreign carrier: *mut u32
     request_try_count: u32;
-    request_timeout: addr;
+    request_timeout: address;
     // Foreign carrier: *mut u32
     client_address: Ipv4Address;
-    callback: addr;
+    callback: address;
     // Foreign carrier: Option< unsafe extern "efiapi" fn( this: *mut Dhcp4Protocol, context: *const c_void, current_state: Dhcp4State, dhcp4_event: Dhcp4Event, packet: *const Dhcp4Packet, new_packet: *mut *mut Dhcp4Packet, ) -> Status, >
-    callback_context: addr;
+    callback_context: address;
     // Foreign carrier: *mut c_void
     option_count: u32;
-    option_list: addr;
+    option_list: address;
     // Foreign carrier: *mut *const Dhcp4PacketOption
 }
 
@@ -109,7 +109,7 @@ pub data Dhcp4ModeData [copy] {
     router_address: Ipv4Address;
     subnet_mask: Ipv4Address;
     lease_time: u32;
-    reply_packet: addr;
+    reply_packet: address;
     // Foreign carrier: *const Dhcp4Packet
 }
 
@@ -128,35 +128,35 @@ pub data Dhcp4TransmitReceiveToken [copy] {
     remote_port: u16;
     gateway_address: Ipv4Address;
     listen_point_count: u32;
-    listen_points: addr;
+    listen_points: address;
     // Foreign carrier: *mut Dhcp4ListenPoint
     timeout_value: u32;
-    packet: addr;
+    packet: address;
     // Foreign carrier: *mut Dhcp4Packet
     response_count: u32;
-    response_list: addr;
+    response_list: address;
     // Foreign carrier: *mut Dhcp4Packet
 }
 
 // Pinned source: uefi_raw::protocol::network::dhcp4::Dhcp4Protocol
 pub data Dhcp4Protocol [copy] {
-    get_mode_data: addr;
+    get_mode_data: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self, mode_data: *mut Dhcp4ModeData) -> Status
-    configure: addr;
+    configure: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, cfg_data: *const Dhcp4ConfigData) -> Status
-    start: addr;
+    start: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, completion_event: Event) -> Status
-    renew_rebind: addr;
+    renew_rebind: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, rebind_request: Boolean, completion_event: Event, ) -> Status
-    release: addr;
+    release: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self) -> Status
-    stop: addr;
+    stop: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self) -> Status
-    build: addr;
+    build: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, seed_packet: *const Dhcp4Packet, delete_count: u32, delete_list: *const u8, append_count: u32, append_list: *const *const Dhcp4PacketOption, new_packet: *mut *mut Dhcp4Packet, ) -> Status
-    transmit_receive: addr;
+    transmit_receive: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, token: *mut Dhcp4TransmitReceiveToken) -> Status
-    parse: addr;
+    parse: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, packet: *const Dhcp4Packet, option_count: *mut u32, packet_option_list: *mut *mut Dhcp4PacketOption, ) -> Status
 }
 
@@ -193,14 +193,14 @@ pub data HttpAccessPoint [copy] {
     // Semantic case data needs a separate checked mapping to this storage.
     // Overlapping Rust member ipv4_node: *mut HttpV4AccessPoint (offset 0).
     // Overlapping Rust member ipv6_node: *mut HttpV6AccessPoint (offset 0).
-    raw: addr;
+    raw: address;
 }
 
 // Pinned source: uefi_raw::protocol::network::http::HttpToken
 pub data HttpToken [copy] {
     event: Event;
     status: Status;
-    message: addr;
+    message: address;
     // Foreign carrier: *mut HttpMessage
 }
 
@@ -208,17 +208,17 @@ pub data HttpToken [copy] {
 pub data HttpMessage [copy] {
     data: HttpRequestOrResponse;
     header_count: u64;
-    header: addr;
+    header: address;
     // Foreign carrier: *mut HttpHeader
     body_length: u64;
-    body: addr;
+    body: address;
     // Foreign carrier: *mut c_void
 }
 
 // Pinned source: uefi_raw::protocol::network::http::HttpRequestData
 pub data HttpRequestData [copy] {
     method: HttpMethod;
-    url: addr;
+    url: address;
     // Foreign carrier: *const Char16
 }
 
@@ -238,14 +238,14 @@ pub data HttpRequestOrResponse [copy] {
     // Semantic case data needs a separate checked mapping to this storage.
     // Overlapping Rust member request: *const HttpRequestData (offset 0).
     // Overlapping Rust member response: *mut HttpResponseData (offset 0).
-    raw: addr;
+    raw: address;
 }
 
 // Pinned source: uefi_raw::protocol::network::http::HttpHeader
 pub data HttpHeader [copy] {
-    field_name: addr;
+    field_name: address;
     // Foreign carrier: *const Char8
-    field_value: addr;
+    field_value: address;
     // Foreign carrier: *const Char8
 }
 
@@ -256,17 +256,17 @@ pub data HttpStatusCode [copy] {
 
 // Pinned source: uefi_raw::protocol::network::http::HttpProtocol
 pub data HttpProtocol [copy] {
-    get_mode_data: addr;
+    get_mode_data: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self, config_data: *mut HttpConfigData) -> Status
-    configure: addr;
+    configure: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, config_data: *const HttpConfigData) -> Status
-    request: addr;
+    request: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, token: *mut HttpToken) -> Status
-    cancel: addr;
+    cancel: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, token: *mut HttpToken) -> Status
-    response: addr;
+    response: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, token: *mut HttpToken) -> Status
-    poll: addr;
+    poll: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self) -> Status
 }
 
@@ -284,13 +284,13 @@ pub data Ip4ModeData [copy] {
     config_data: Ip4ConfigData;
     is_configured: Boolean;
     group_count: u32;
-    group_table: addr;
+    group_table: address;
     // Foreign carrier: *const Ipv4Address
     route_count: u32;
-    route_table: addr;
+    route_table: address;
     // Foreign carrier: *const Ip4RouteTable
     icmp_type_count: u32;
-    icmp_type_list: addr;
+    icmp_type_list: address;
     // Foreign carrier: *const Ip4IcmpType
 }
 
@@ -332,7 +332,7 @@ pub data Ip4Config2InterfaceInfo [copy] {
     station_addr: Ipv4Address;
     subnet_mask: Ipv4Address;
     route_table_size: u32;
-    route_table: addr;
+    route_table: address;
     // Foreign carrier: *mut Ip4RouteTable
 }
 
@@ -349,44 +349,44 @@ pub data Ip4Config2ManualAddress [copy] {
 
 // Pinned source: uefi_raw::protocol::network::ip4_config2::Ip4Config2Protocol
 pub data Ip4Config2Protocol [copy] {
-    set_data: addr;
+    set_data: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, data_type: Ip4Config2DataType, data_size: usize, data: *const c_void, ) -> Status
-    get_data: addr;
+    get_data: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, data_type: Ip4Config2DataType, data_size: *mut usize, data: *mut c_void, ) -> Status
-    register_data_notify: addr;
+    register_data_notify: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, data_type: Ip4Config2DataType, event: Event, ) -> Status
-    unregister_data_notify: addr;
+    unregister_data_notify: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, data_type: Ip4Config2DataType, event: Event, ) -> Status
 }
 
 // Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodeProtocol
 pub data PxeBaseCodeProtocol [copy] {
     revision: u64;
-    start: addr;
+    start: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, use_ipv6: Boolean) -> Status
-    stop: addr;
+    stop: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self) -> Status
-    dhcp: addr;
+    dhcp: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, sort_offers: Boolean) -> Status
-    discover: addr;
+    discover: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, ty: PxeBaseCodeBootType, layer: *mut u16, use_bis: Boolean, info: *const PxeBaseCodeDiscoverInfo, ) -> Status
-    mtftp: addr;
+    mtftp: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, operation: PxeBaseCodeTftpOpcode, buffer: *mut c_void, overwrite: Boolean, buffer_size: *mut u64, block_size: *const usize, server_ip: *const IpAddress, filename: *const Char8, info: *const PxeBaseCodeMtftpInfo, dont_use_buffer: Boolean, ) -> Status
-    udp_write: addr;
+    udp_write: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, op_flags: PxeBaseCodeUdpOpFlags, dest_ip: *const IpAddress, dest_port: *const PxeBaseCodeUdpPort, gateway_ip: *const IpAddress, src_ip: *const IpAddress, src_port: *mut PxeBaseCodeUdpPort, header_size: *const usize, header_ptr: *const c_void, buffer_size: *const usize, buffer_ptr: *const c_void, ) -> Status
-    udp_read: addr;
+    udp_read: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, op_flags: PxeBaseCodeUdpOpFlags, dest_ip: *mut IpAddress, dest_port: *mut PxeBaseCodeUdpPort, src_ip: *mut IpAddress, src_port: *mut PxeBaseCodeUdpPort, header_size: *const usize, header_ptr: *mut c_void, buffer_size: *mut usize, buffer_ptr: *mut c_void, ) -> Status
-    set_ip_filter: addr;
+    set_ip_filter: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, new_filter: *const PxeBaseCodeIpFilter, ) -> Status
-    arp: addr;
+    arp: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, ip_addr: *const IpAddress, mac_addr: *mut MacAddress, ) -> Status
-    set_parameters: addr;
+    set_parameters: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, new_auto_arp: *const Boolean, new_send_guid: *const Boolean, new_ttl: *const u8, new_tos: *const u8, new_make_callback: *const Boolean, ) -> Status
-    set_station_ip: addr;
+    set_station_ip: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, new_station_ip: *const IpAddress, new_subnet_mask: *const IpAddress, ) -> Status
-    set_packets: addr;
+    set_packets: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, new_dhcp_discover_valid: *const Boolean, new_dhcp_ack_received: *const Boolean, new_proxy_offer_received: *const Boolean, new_pxe_discover_valid: *const Boolean, new_pxe_reply_received: *const Boolean, new_pxe_bis_reply_received: *const Boolean, new_dhcp_discover: *const PxeBaseCodePacket, new_dhcp_ack: *const PxeBaseCodePacket, new_proxy_offer: *const PxeBaseCodePacket, new_pxe_discover: *const PxeBaseCodePacket, new_pxe_reply: *const PxeBaseCodePacket, new_pxe_bis_reply: *const PxeBaseCodePacket, ) -> Status
-    mode: addr;
+    mode: address;
     // Foreign carrier: *const PxeBaseCodeMode
 }
 
@@ -574,34 +574,34 @@ pub data PxeBaseCodeTftpError [copy] {
 // Pinned source: uefi_raw::protocol::network::snp::SimpleNetworkProtocol
 pub data SimpleNetworkProtocol [copy] {
     revision: u64;
-    start: addr;
+    start: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self) -> Status
-    stop: addr;
+    stop: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self) -> Status
-    initialize: addr;
+    initialize: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, extra_receive_buffer_size: usize, extra_transmit_buffer_size: usize, ) -> Status
-    reset: addr;
+    reset: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self, extended_verification: Boolean) -> Status
-    shutdown: addr;
+    shutdown: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *const Self) -> Status
-    receive_filters: addr;
+    receive_filters: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, enable: ReceiveFlags, disable: ReceiveFlags, reset_multicast_filter: Boolean, multicast_filter_count: usize, multicast_filter: *const MacAddress, ) -> Status
-    station_address: addr;
+    station_address: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, reset: Boolean, new: *const MacAddress, ) -> Status
-    statistics: addr;
+    statistics: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, reset: Boolean, statistics_size: *mut usize, statistics_table: *mut NetworkStatistics, ) -> Status
-    multicast_ip_to_mac: addr;
+    multicast_ip_to_mac: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, ipv6: Boolean, ip: *const IpAddress, mac: *mut MacAddress, ) -> Status
-    non_volatile_data: addr;
+    non_volatile_data: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, read: Boolean, offset: usize, buffer_size: usize, buffer: *mut ffi::c_void, ) -> Status
-    get_status: addr;
+    get_status: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, interrupt_status: *mut InterruptStatus, transmit_buffer: *mut *mut ffi::c_void, ) -> Status
-    transmit: addr;
+    transmit: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, header_size: usize, buffer_size: usize, buffer: *const ffi::c_void, source_address: *const MacAddress, dest_address: *const MacAddress, protocol: *const u16, ) -> Status
-    receive: addr;
+    receive: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, header_size: *mut usize, buffer_size: *mut usize, buffer: *mut ffi::c_void, source_address: *mut MacAddress, dest_address: *mut MacAddress, protocol: *mut u16, ) -> Status
     wait_for_packet: Event;
-    mode: addr;
+    mode: address;
     // Foreign carrier: *const NetworkMode
 }
 
@@ -675,25 +675,25 @@ pub data NetworkState [copy] {
 
 // Pinned source: uefi_raw::protocol::network::tcp4::Tcp4Protocol
 pub data Tcp4Protocol [copy] {
-    get_mode_data: addr;
+    get_mode_data: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, connection_state: *mut Tcp4ConnectionState, config_data: *mut Tcp4ConfigData, ip4_mode_data: *mut Ip4ModeData, managed_network_config_data: *mut c_void, simple_network_mode: *mut NetworkMode, ) -> Status
-    configure: addr;
+    configure: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, config_data: *const Tcp4ConfigData) -> Status
-    routes: addr;
+    routes: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, delete_route: Boolean, subnet_address: *const Ipv4Address, subnet_mask: *const Ipv4Address, gateway_address: *const Ipv4Address, ) -> Status
-    connect: addr;
+    connect: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, token: *mut Tcp4ConnectionToken) -> Status
-    accept: addr;
+    accept: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, listen_token: *mut Tcp4ListenToken) -> Status
-    transmit: addr;
+    transmit: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, token: *mut Tcp4IoToken) -> Status
-    receive: addr;
+    receive: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, token: *mut Tcp4IoToken) -> Status
-    close: addr;
+    close: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self, close_token: *mut Tcp4CloseToken) -> Status
-    cancel: addr;
+    cancel: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, completion_token: *mut Tcp4CompletionToken, ) -> Status
-    poll: addr;
+    poll: address;
     // Foreign carrier: unsafe extern "efiapi" fn(this: *mut Self) -> Status
 }
 
@@ -707,7 +707,7 @@ pub data Tcp4ConfigData [copy] {
     type_of_service: u8;
     time_to_live: u8;
     access_point: Tcp4AccessPoint;
-    control_option: addr;
+    control_option: address;
     // Foreign carrier: *mut Tcp4Option
 }
 
@@ -776,13 +776,13 @@ pub data Tcp4Packet [copy] {
     // Semantic case data needs a separate checked mapping to this storage.
     // Overlapping Rust member rx_data: *mut Tcp4ReceiveData (offset 0).
     // Overlapping Rust member tx_data: *mut Tcp4TransmitData (offset 0).
-    raw: addr;
+    raw: address;
 }
 
 // Pinned source: uefi_raw::protocol::network::tcp4::Tcp4FragmentData
 pub data Tcp4FragmentData [copy] {
     fragment_length: u32;
-    fragment_buf: addr;
+    fragment_buf: address;
     // Foreign carrier: *mut u8
 }
 
@@ -816,9 +816,9 @@ pub data TlsConfigDataType [copy] {
 
 // Pinned source: uefi_raw::protocol::network::tls::TlsConfigurationProtocol
 pub data TlsConfigurationProtocol [copy] {
-    set_data: addr;
+    set_data: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, typ: TlsConfigDataType, data: *const c_void, size: usize, ) -> Status
-    get_data: addr;
+    get_data: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, typ: TlsConfigDataType, data: *mut c_void, size: *mut usize, ) -> Status
 }
 

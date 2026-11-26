@@ -31,7 +31,7 @@ public const EFI_BUFFER_TOO_SMALL:  EfiStatus = EfiStatus { code: 0x8000_0000_00
 
 // EFI_HANDLE — an opaque firmware handle. We never dereference it, only hold and
 // pass it (a gated token; extern brief §12.2 case 3, opaque).
-public data EfiHandle [copy] { raw: addr; }
+public data EfiHandle [copy] { raw: address; }
 
 // The physical UEFI invocation identifies this loaded application, not an
 // arbitrary handle whose numerical bits happen to be nonzero. UEFI installs
@@ -48,8 +48,8 @@ established by UefiPhysicalEntry::enter;
 // null-terminated [u16] (CHAR16*, UCS-2).
 
 public data TextOutputProtocol {
-    reset:         addr;   // EFI_TEXT_RESET (unused; present so output_string's offset is right)
-    output_string: addr;   // EFI_TEXT_STRING — bound below
+    reset:         address;   // EFI_TEXT_RESET (unused; present so output_string's offset is right)
+    output_string: address;   // EFI_TEXT_STRING — bound below
     // test_string, query_mode, set_mode, … follow (unread at milestone 1).
 }
 
@@ -110,18 +110,18 @@ public const EFI_MIN_SUPPORTED_REVISION: u32 = 0x0002_0000;
 // the ones after it land at the wrong offset.
 public data EfiSystemTable {
     header:                  EfiTableHeader;
-    firmware_vendor:         addr;              // CHAR16*
+    firmware_vendor:         address;              // CHAR16*
     firmware_revision:       u32;
     console_in_handle:       EfiHandle;
-    con_in:                  addr;              // EFI_SIMPLE_TEXT_INPUT_PROTOCOL*
+    con_in:                  address;              // EFI_SIMPLE_TEXT_INPUT_PROTOCOL*
     console_out_handle:      EfiHandle;
     con_out:                 &TextOutputProtocol;  // milestone 1 dispatches through this
     standard_error_handle:   EfiHandle;
-    std_err:                 addr;              // EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL*
-    runtime_services:        addr;              // EFI_RUNTIME_SERVICES*
+    std_err:                 address;              // EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL*
+    runtime_services:        address;              // EFI_RUNTIME_SERVICES*
     boot_services:           &BootServicesTable; // milestone 2 dispatches through this (boot_services.omg)
     number_of_table_entries: u64;               // UINTN
-    configuration_table:     addr;              // EFI_CONFIGURATION_TABLE*
+    configuration_table:     address;              // EFI_CONFIGURATION_TABLE*
 }
 
 // --- The firmware hand-off and semantic program-storage entry ---------------
@@ -132,7 +132,7 @@ public data EfiSystemTable {
 // table. Selecting its provider supplies code, not image/storage authority.
 public boundary trait UefiPhysicalEntry {
     machine enter(handle: EfiHandle in LoadedApplication, table: &EfiSystemTable) -> EfiStatus
-    requires addr::Bound == 18446744073709551616
+    requires address::Bound == 18446744073709551616
     reaches SimpleTextOutput + LoadedImageAccess + BootServices + ExtentRootProvider + ProgramStorageEntry + ProgramImage + ResourceProfileSupply + PortIo + MachineControl
     invokes SimpleTextOutput
     invokes LoadedImageAccess

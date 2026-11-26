@@ -41,7 +41,7 @@ page was retrieved successfully.
 | `EFI_SUCCESS` | `status.rs::Status::SUCCESS` | Appendix D; 0. |
 | `EFI_INVALID_PARAMETER` | `status.rs::Status::INVALID_PARAMETER` | Appendix D; error bit plus 2, hardcoded 64-bit error bit. |
 | `EFI_BUFFER_TOO_SMALL` | `status.rs::Status::BUFFER_TOO_SMALL` | Appendix D; error bit plus 5, hardcoded 64-bit error bit. |
-| `EfiHandle` (`raw: addr`) | `lib.rs::Handle` | §2.3; inert handle bits. The source comment “gated token” must not be read as authority originating from this public data constructor. |
+| `EfiHandle` (`raw: address`) | `lib.rs::Handle` | §2.3; inert handle bits. The source comment “gated token” must not be read as authority originating from this public data constructor. |
 | `TextOutputProtocol` | `console::SimpleTextOutputProtocol` | §12.4.1; two-field prefix, not complete protocol. Field map below. |
 | `SimpleTextOutput` | `console::SimpleTextOutputProtocol::output_string` field | §12.4.3; local boundary requirement, not upstream raw data. Its `output_string` operation fixes a 19-code-unit carrier; no upstream fixed-length restriction. |
 | `TextOutputProtocol::output_string_leaf` | same `output_string` function-pointer field | §12.4.3; local foreign binding; `VtableField` retains native `This`. Its shared reference and terminator obligations require separate access/custody review. |
@@ -93,7 +93,7 @@ shell and source adapter must connect them under the separate entry contract.
 ## Field correspondence and expected x64 geometry
 
 Offsets below are derived review expectations for C-compatible x86-64 placement,
-not measured Omega output. `addr`, pointers and UINTN occupy eight bytes in this
+not measured Omega output. `address`, pointers and UINTN occupy eight bytes in this
 profile; scalar/wrapper equivalence still requires explicit validated plans.
 
 ### Header and System Table
@@ -172,7 +172,7 @@ Cathedral consumer admission policy, not a replacement for raw representation.
 
 `BootServicesTable.hdr` maps to `boot::BootServices.header` / `Hdr` at offset 0.
 Every remaining current field maps to the identically spelled upstream field;
-all are declared as `addr`, including the reserved non-function slot. Slot
+all are declared as `address`, including the reserved non-function slot. Slot
 indices below are zero-based after the 24-byte header.
 
 | Cathedral/upstream field | Spec member | Slot | Offset |

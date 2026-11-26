@@ -21,7 +21,7 @@ data Main {
     map_buf:  UefiMemoryMapStorage; // aligned bounded map backing, no authority
     final_map_size: u64;
     final_descriptor_size: u64;
-    image_base: addr;
+    image_base: address;
     image_size: u64;
     image_retained_start: u64;
 }
@@ -38,7 +38,7 @@ invokes ExtentRootProvider
 invokes ProgramStorageEntry
 invokes ProgramImage
 invokes ResourceProfileSupply
-requires addr::Bound == 18446744073709551616
+requires address::Bound == 18446744073709551616
 {
     context.msg = utf16"Hello from Omega\r\n\0";
     // Project con_out through a frame local (the reference-param deref), then
@@ -54,7 +54,7 @@ requires addr::Bound == 18446744073709551616
     }
     machine discover_image(context: &mut Main, handle: EfiHandle in LoadedApplication,
                          table: &EfiSystemTable) -> EfiStatus
-    requires addr::Bound == 18446744073709551616
+    requires address::Bound == 18446744073709551616
     {
         let empty: EfiLoadedImage;
         let mut output: LoadedImageOutput = LoadedImageOutput { image: &empty };
@@ -71,7 +71,7 @@ requires addr::Bound == 18446744073709551616
     }
 
     machine take_ownership(context: &mut Main, handle: EfiHandle, table: &EfiSystemTable) -> EfiStatus
-    requires addr::Bound == 18446744073709551616
+    requires address::Bound == 18446744073709551616
     {
         // Walk the memory map, exit Boot Services, obtain the first qualified
         // Extent, then idle retaining it. The success route does not return.

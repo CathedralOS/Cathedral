@@ -92,12 +92,12 @@ records.append({'name':'PxeBaseCodeUdpPort','rust':'uefi_raw::protocol::network:
                 'path':'uefi-raw/src/protocol/network/pxe.rs','kind':'alias','packed':False,'base':'u16','fields':[('raw','u16')]})
 # Union storage is explicit; no invented Omega overlay syntax or typed pointer.
 union_storage = {'IpAddress':'[u8; 16]', 'PxeBaseCodePacket':'[u8; 1472]',
-                 'PxeBaseCodeIcmpErrorUnion':'u32', 'HttpAccessPoint':'addr',
-                 'HttpRequestOrResponse':'addr', 'Tcp4Packet':'addr'}
+                 'PxeBaseCodeIcmpErrorUnion':'u32', 'HttpAccessPoint':'address',
+                 'HttpRequestOrResponse':'address', 'Tcp4Packet':'address'}
 
 def translated_type(typ):
     if '*' in typ or 'fn(' in typ or 'fn (' in typ:
-        return 'addr'
+        return 'address'
     if typ == 'usize':
         return 'u64'
     if typ.startswith('['):
@@ -134,7 +134,7 @@ for record in records:
         else:
             target = translated_type(typ)
             lines.append('    '+field+': '+target+';')
-            if target == 'addr':
+            if target == 'address':
                 lines.append('    // Foreign carrier: '+typ)
             mapped.append((field, target))
         if field == 'raw' and record.get('base'):
