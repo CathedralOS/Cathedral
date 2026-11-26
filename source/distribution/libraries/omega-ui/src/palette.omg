@@ -1,11 +1,8 @@
-module palette;
-
-use types::Theme;
+use types.omg;
 
 
 // Resolves two theme modes and eight accents into runtime color roles.
 
-use types;
 
 public data ThemePalette {
     background: i32;
@@ -613,8 +610,8 @@ machine dark_rose() -> ThemePalette {
     }
 }
 
-public machine to_theme(resolved_palette: &ThemePalette, dark: bool) -> Theme {
-    Theme {
+public machine to_theme(resolved_palette: &ThemePalette, dark: bool) -> |types|::Theme {
+    |types|::Theme {
         is_dark: dark,
         background: resolved_palette.background,
         sidebar_bg: resolved_palette.background,

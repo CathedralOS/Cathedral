@@ -3,47 +3,42 @@
 // Private range geometry retained from cleanup_ranges unchanged.
 // See encrypted-cleanup.PORT.md.
 // Caller supplies successive consistent detached snapshots and retains effects.
-module encrypted_cleanup_ranges;
-use pages;
-use addresses;
-use encrypted_cleanup_branch;
-use cleanup_branch::CleanupPlan;
-use cleanup_branch::CleanupOutcome;
+use pages.omg;
+use addresses.omg;
+use encrypted_cleanup_branch.omg;
+use cleanup_branch.omg;
 
-use memory_encryption::State;
-use cleanup_ranges;
-use cleanup_ranges::Cursor;
-use cleanup_ranges::RangeStatus;
-use cleanup_ranges::RangeStep;
-pub machine begin(first: u64, last: u64, budget: u64) -> Cursor { cleanup_ranges::begin(first, last, budget) }
-pub machine resume(cursor: Cursor, budget: u64) -> Cursor { cleanup_ranges::resume(cursor, budget) }
-pub machine step(profile: State, cursor: Cursor, words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4]) -> RangeStep {
+use memory_encryption.omg;
+use cleanup_ranges.omg;
+pub machine begin(first: u64, last: u64, budget: u64) -> |cleanup_ranges|::Cursor { |cleanup_ranges|::begin(first, last, budget) }
+pub machine resume(cursor: |cleanup_ranges|::Cursor, budget: u64) -> |cleanup_ranges|::Cursor { |cleanup_ranges|::resume(cursor, budget) }
+pub machine step(profile: |memory_encryption|::State, cursor: |cleanup_ranges|::Cursor, words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4]) -> |cleanup_ranges|::RangeStep {
     transition cursor.status {
-        RangeStatus::Active -> validate(profile, cursor, words, table_ids, other_nonzero)
-        _ -> (RangeStep { cursor: cursor })
+        |cleanup_ranges|::RangeStatus::Active -> validate(profile, cursor, words, table_ids, other_nonzero)
+        _ -> (|cleanup_ranges|::RangeStep { cursor: cursor })
     }
-    state validate(profile: State, cursor: Cursor, words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4]) -> RangeStep {
-        let checked: Cursor = begin(cursor.next_page, cursor.last_page, cursor.budget);
+    state validate(profile: |memory_encryption|::State, cursor: |cleanup_ranges|::Cursor, words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4]) -> |cleanup_ranges|::RangeStep {
+        let checked: |cleanup_ranges|::Cursor = begin(cursor.next_page, cursor.last_page, cursor.budget);
         transition checked.status {
-            RangeStatus::Active -> inspect(profile, checked, words, table_ids, other_nonzero)
-            _ -> (RangeStep { cursor: checked })
+            |cleanup_ranges|::RangeStatus::Active -> inspect(profile, checked, words, table_ids, other_nonzero)
+            _ -> (|cleanup_ranges|::RangeStep { cursor: checked })
         }
     }
-    state inspect(profile: State, cursor: Cursor, words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4]) -> RangeStep {
-        let branch: CleanupPlan = encrypted_cleanup_branch::plan(profile, words, table_ids, other_nonzero, cursor.next_page);
+    state inspect(profile: |memory_encryption|::State, cursor: |cleanup_ranges|::Cursor, words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4]) -> |cleanup_ranges|::RangeStep {
+        let branch: |cleanup_branch|::CleanupPlan = |encrypted_cleanup_branch|::plan(profile, words, table_ids, other_nonzero, cursor.next_page);
         transition branch.outcome {
-            CleanupOutcome::Ready -> complete(cursor, branch, other_nonzero[0])
-            CleanupOutcome::CaptureMismatch { expected, supplied } -> (RangeStep {
-                cursor: Cursor { next_page: cursor.next_page, last_page: cursor.last_page, budget: cursor.budget,
-                    status: RangeStatus::CaptureMismatch { expected: expected, supplied: supplied } },
+            |cleanup_branch|::CleanupOutcome::Ready -> complete(cursor, branch, other_nonzero[0])
+            |cleanup_branch|::CleanupOutcome::CaptureMismatch { expected, supplied } -> (|cleanup_ranges|::RangeStep {
+                cursor: |cleanup_ranges|::Cursor { next_page: cursor.next_page, last_page: cursor.last_page, budget: cursor.budget,
+                    status: |cleanup_ranges|::RangeStatus::CaptureMismatch { expected: expected, supplied: supplied } },
                 has_plan: true, branch: branch })
-            _ -> (RangeStep { cursor: Cursor {}, has_plan: true, branch: branch })
+            _ -> (|cleanup_ranges|::RangeStep { cursor: |cleanup_ranges|::Cursor {}, has_plan: true, branch: branch })
         }
     }
-    state complete(cursor: Cursor, branch: CleanupPlan, root_has_other: bool) -> RangeStep {
+    state complete(cursor: |cleanup_ranges|::Cursor, branch: |cleanup_branch|::CleanupPlan, root_has_other: bool) -> |cleanup_ranges|::RangeStep {
         let span: u64 = covered_span(&branch.words, root_has_other);
-        let next: Cursor = advance(cursor, span);
-        RangeStep { cursor: next, has_plan: true, branch: branch }
+        let next: |cleanup_ranges|::Cursor = advance(cursor, span);
+        |cleanup_ranges|::RangeStep { cursor: next, has_plan: true, branch: branch }
     }
 }
 // Once a selected link is absent or huge, no finer table can be reclaimed in
@@ -55,7 +50,7 @@ machine covered_span(words: &[u64; 4], root_has_other: bool) -> u64 {
     let root_empty: bool = words[0] == 0 && !root_has_other;
     transition { root_empty -> (281474976710656) !p4 -> (549755813888) !p3 -> (1073741824) _ -> (2097152) }
 }
-machine advance(cursor: Cursor, span: u64) -> Cursor {
+machine advance(cursor: |cleanup_ranges|::Cursor, span: u64) -> |cleanup_ranges|::Cursor {
     let current: u64 = cursor.next_page & 281474976710655;
     let last: u64 = cursor.last_page & 281474976710655;
     // Stage the u64 field before ordered comparison; the current evaluator
@@ -63,27 +58,27 @@ machine advance(cursor: Cursor, span: u64) -> Cursor {
     let budget: u64 = cursor.budget;
     transition budget > 0 && span >= 4096 && span <= 281474976710656 {
         true -> interval(cursor, current, last, span, budget)
-        _ -> (Cursor {})
+        _ -> (|cleanup_ranges|::Cursor {})
     }
-    state interval(cursor: Cursor, current: u64, last: u64, span: u64, budget: u64) -> Cursor {
+    state interval(cursor: |cleanup_ranges|::Cursor, current: u64, last: u64, span: u64, budget: u64) -> |cleanup_ranges|::Cursor {
         let end: u64 = (current | (span - 1)) & 18446744073709547520;
         let remaining: u64 = budget - 1;
         transition last <= end {
-            true -> (Cursor { next_page: cursor.next_page, last_page: cursor.last_page, budget: remaining, status: RangeStatus::Done })
+            true -> (|cleanup_ranges|::Cursor { next_page: cursor.next_page, last_page: cursor.last_page, budget: remaining, status: |cleanup_ranges|::RangeStatus::Done })
             _ -> next(cursor.last_page, end, remaining)
         }
     }
-    state next(last: u64, end: u64, remaining: u64) -> Cursor {
+    state next(last: u64, end: u64, remaining: u64) -> |cleanup_ranges|::Cursor {
         transition end <= 281474976706560 {
             true -> canonical(last, end + 4096, remaining)
-            _ -> (Cursor {})
+            _ -> (|cleanup_ranges|::Cursor {})
         }
     }
-    state canonical(last: u64, dense: u64, remaining: u64) -> Cursor {
-        let address: u64 = addresses::virtual_truncate(dense);
+    state canonical(last: u64, dense: u64, remaining: u64) -> |cleanup_ranges|::Cursor {
+        let address: u64 = |addresses|::virtual_truncate(dense);
         transition remaining == 0 {
-            true -> (Cursor { next_page: address, last_page: last, status: RangeStatus::Exhausted })
-            _ -> (Cursor { next_page: address, last_page: last, budget: remaining, status: RangeStatus::Active })
+            true -> (|cleanup_ranges|::Cursor { next_page: address, last_page: last, status: |cleanup_ranges|::RangeStatus::Exhausted })
+            _ -> (|cleanup_ranges|::Cursor { next_page: address, last_page: last, budget: remaining, status: |cleanup_ranges|::RangeStatus::Active })
         }
     }
 }

@@ -29,7 +29,7 @@ def main():
    evaluate(body,('flags==want_flags','flags!=want_flags'));print('PASS leaf flags mutation',n,flush=True)
  if args.end==55:
   body=(HERE/'extras.omg').read_text();evaluate(body);print('PASS invalid virtual input',flush=True)
-  evaluate(body,('value in Translation::InvalidVirtual','value in Translation::NotMapped'));print('PASS invalid virtual body mutation',flush=True)
+  evaluate(body,('value in |translation|::Translation::InvalidVirtual','value in |translation|::Translation::NotMapped'));print('PASS invalid virtual body mutation',flush=True)
   evaluate((HERE/'cases'/'batch-000.omg').read_text(),('kind==3','kind==2'));print('PASS leaf huge failure body mutation',flush=True)
  print('PASS selected encrypted recursive translation cases',flush=True)
 if __name__=='__main__':main()

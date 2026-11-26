@@ -67,7 +67,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/machine_protocols.omg",
-          "anchor": "module machine_protocols;"
+          "anchor": "pub data PciRootBridgeIoProtocolWidth"
         }
       ]
     },
@@ -249,7 +249,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/machine_protocols.omg",
-          "anchor": "module machine_protocols;"
+          "anchor": "pub data PciRootBridgeIoProtocolWidth"
         }
       ]
     },
@@ -521,7 +521,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/machine_protocols.omg",
-          "anchor": "module machine_protocols;"
+          "anchor": "pub data PciRootBridgeIoProtocolWidth"
         }
       ]
     },
@@ -583,7 +583,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/machine_protocols.omg",
-          "anchor": "module machine_protocols;"
+          "anchor": "pub data PciRootBridgeIoProtocolWidth"
         }
       ]
     },
@@ -715,7 +715,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/machine_protocols.omg",
-          "anchor": "module machine_protocols;"
+          "anchor": "pub data PciRootBridgeIoProtocolWidth"
         }
       ]
     },
@@ -732,7 +732,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/machine_protocols.omg",
-          "anchor": "module machine_protocols;"
+          "anchor": "pub data PciRootBridgeIoProtocolWidth"
         }
       ]
     },
@@ -1324,7 +1324,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/machine_protocols.omg",
-          "anchor": "module machine_protocols;"
+          "anchor": "pub data PciRootBridgeIoProtocolWidth"
         }
       ]
     },
@@ -1456,7 +1456,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/machine_protocols.omg",
-          "anchor": "module machine_protocols;"
+          "anchor": "pub data PciRootBridgeIoProtocolWidth"
         }
       ]
     },
@@ -1558,7 +1558,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/machine_protocols.omg",
-          "anchor": "module machine_protocols;"
+          "anchor": "pub data PciRootBridgeIoProtocolWidth"
         }
       ]
     },
@@ -2220,7 +2220,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/machine_protocols.omg",
-          "anchor": "module machine_protocols;"
+          "anchor": "pub data PciRootBridgeIoProtocolWidth"
         }
       ]
     },
@@ -2382,7 +2382,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/machine_protocols.omg",
-          "anchor": "module machine_protocols;"
+          "anchor": "pub data PciRootBridgeIoProtocolWidth"
         }
       ]
     },
@@ -3059,7 +3059,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/machine_protocols.omg",
-          "anchor": "module machine_protocols;"
+          "anchor": "pub data PciRootBridgeIoProtocolWidth"
         }
       ]
     }

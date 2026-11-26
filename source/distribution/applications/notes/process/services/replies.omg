@@ -1,66 +1,58 @@
-module services::replies;
-use application::application;
+use application/application.omg;
 // Decode protocol words into the editor's named completions. Bulk records arrive
 // through records.omg; schema/revision checks remain in the app's storage model.
-use app::operations::Command;
-use app::operations::Completion;
-use app::operations::Reply;
-use app::operations::View;
-use app::operations::Input;
-use app::operations::Record;
-use app::operations::StorageReply;
-use app::operations::StorageResult;
-use protocol::main;
-public machine failed(output: &mut application::application::Work, code: u64) {
-    output.event = Completion { transport_status: code, reply: Reply::Complete };
+use {app}/operations.omg;
+use {protocol}/main.omg;
+public machine failed(output: &mut |application|::Work, code: u64) {
+    output.event = |operations|::Completion { transport_status: code, reply: |operations|::Reply::Complete };
 }
-public machine decoded(output: &mut application::application::Work, command: &application::application::Request, words: [u64; 8]) {
-    output.event = Completion { transport_status: 0u64, reply: reply(command, words) };
+public machine decoded(output: &mut |application|::Work, command: &|application|::Request, words: [u64; 8]) {
+    output.event = |operations|::Completion { transport_status: 0u64, reply: reply(command, words) };
 }
-public machine read(output: &mut application::application::Work, words: [u64; 8], record: Record) {
-    output.event = Completion { transport_status: 0u64, reply: stored(words[0], StorageResult::Read { revision: words[2], reported: words[4], record: record }) };
+public machine read(output: &mut |application|::Work, words: [u64; 8], record: |operations|::Record) {
+    output.event = |operations|::Completion { transport_status: 0u64, reply: stored(words[0], |operations|::StorageResult::Read { revision: words[2], reported: words[4], record: record }) };
 }
-public machine bound(output: &mut application::application::Work, status: u64, realm: u64) {
-    output.event = Completion { transport_status: 0u64, reply: stored(status, StorageResult::Bound { realm: realm }) };
+public machine bound(output: &mut |application|::Work, status: u64, realm: u64) {
+    output.event = |operations|::Completion { transport_status: 0u64, reply: stored(status, |operations|::StorageResult::Bound { realm: realm }) };
 }
-machine stored(status: u64, result: StorageResult) -> Reply {
-    Reply::Storage { reply: StorageReply { status: status, result: result } }
+machine stored(status: u64, result: |operations|::StorageResult) -> |operations|::Reply {
+    |operations|::Reply::Storage { reply: |operations|::StorageReply { status: status, result: result } }
 }
-machine reply(command: &application::application::Request, words: [u64; 8]) -> Reply {
+machine reply(command: &|application|::Request, words: [u64; 8]) -> |operations|::Reply {
     transition command.command {
-        Command::Poll -> view(words)
-        Command::View -> view(words)
-        Command::List { realm, after } -> stored(words[0], StorageResult::Listed { count: words[1], entries: [words[2], words[3], words[4], words[5], words[6], words[7]] })
-        Command::Head { object } -> stored(words[0], StorageResult::Head { revision: words[2], length: words[3] })
-        Command::Read { object, revision, length } -> empty_read(words)
-        Command::Publish { object, revision, realm, record } -> stored(words[0], StorageResult::Saved { object: words[1], revision: words[2] })
-        Command::Copy { object, revision, realm } -> stored(words[0], StorageResult::Copied { object: words[1] })
-        Command::CreateSurface { epoch, rank } -> (Reply::Surface { status: words[0], handle: words[1] })
-        Command::Cursor { epoch, channel, hidden } -> (Reply::Cursor { status: words[0] })
-        Command::FrameDemand { epoch } -> (Reply::Demand { status: words[0], ticket: words[2] })
-        Command::Paint { epoch, surface, width, height, color } -> (Reply::Presented { status: words[0] })
-        Command::PublishText { image } -> (Reply::Presented { status: words[0] })
-        Command::Decorate { image, decoration } -> (Reply::Presented { status: words[0] })
-        Command::FrameReady { epoch, ticket } -> (Reply::Presented { status: words[0] })
-        _ -> (Reply::Complete)
+        |operations|::Command::Poll -> view(words)
+        |operations|::Command::View -> view(words)
+        |operations|::Command::List { realm, after } -> stored(words[0], |operations|::StorageResult::Listed { count: words[1], entries: [words[2], words[3], words[4], words[5], words[6], words[7]] })
+        |operations|::Command::Head { object } -> stored(words[0], |operations|::StorageResult::Head { revision: words[2], length: words[3] })
+        |operations|::Command::Read { object, revision, length } -> empty_read(words)
+        |operations|::Command::Publish { object, revision, realm, record } -> stored(words[0], |operations|::StorageResult::Saved { object: words[1], revision: words[2] })
+        |operations|::Command::Copy { object, revision, realm } -> stored(words[0], |operations|::StorageResult::Copied { object: words[1] })
+        |operations|::Command::CreateSurface { epoch, rank } -> (|operations|::Reply::Surface { status: words[0], handle: words[1] })
+        |operations|::Command::Cursor { epoch, channel, hidden } -> (|operations|::Reply::Cursor { status: words[0] })
+        |operations|::Command::FrameDemand { epoch } -> (|operations|::Reply::Demand { status: words[0], ticket: words[2] })
+        |operations|::Command::Paint { epoch, surface, width, height, color } -> (|operations|::Reply::Presented { status: words[0] })
+        |operations|::Command::PublishText { image } -> (|operations|::Reply::Presented { status: words[0] })
+        |operations|::Command::Decorate { image, decoration } -> (|operations|::Reply::Presented { status: words[0] })
+        |operations|::Command::FrameReady { epoch, ticket } -> (|operations|::Reply::Presented { status: words[0] })
+        _ -> (|operations|::Reply::Complete)
     }
 }
-machine empty_read(words: [u64; 8]) -> Reply {
-    let record: Record;
-    stored(words[0], StorageResult::Read { revision: words[2], reported: words[4], record: record })
+machine empty_read(words: [u64; 8]) -> |operations|::Reply {
+    let record: |operations|::Record;
+    stored(words[0], |operations|::StorageResult::Read { revision: words[2], reported: words[4], record: record })
 }
-machine view(words: [u64; 8]) -> Reply {
-    Reply::View { view: View { status: words[0], epoch: words[1], width: words[2], height: words[3],
-        frames: (words[4] & NO_FRAMES) == 0u64, requested: (words[4] & FRAME_REQUESTED) != 0u64,
-        more: (words[5] & MORE) != 0u64, input: input(words) } }
+machine view(words: [u64; 8]) -> |operations|::Reply {
+    |operations|::Reply::View { view: |operations|::View { status: words[0], epoch: words[1], width: words[2], height: words[3],
+        frames: (words[4] & |main|::NO_FRAMES) == 0u64, requested: (words[4] & |main|::FRAME_REQUESTED) != 0u64,
+        more: (words[5] & |main|::MORE) != 0u64, input: input(words) } }
 }
-machine input(words: [u64; 8]) -> Input {
+machine input(words: [u64; 8]) -> |operations|::Input {
     transition words[5] & 255u64 {
-        POINTER -> (Input::Pointer { channel: words[5] >> 32u64, group: (words[5] >> 17u64) & 32767u64,
+        |main|::POINTER -> (|operations|::Input::Pointer { channel: words[5] >> 32u64, group: (words[5] >> 17u64) & 32767u64,
             buttons: (words[5] >> 8u64) & 7u64, x: words[6], y: words[7] })
-        KEY -> (Input::Key { group: (words[5] >> 17u64) & 32767u64, code: words[6], action: words[7] })
-        CANCEL -> (Input::Cancel { channel: words[5] >> 32u64, retire: false })
-        RETIRED -> (Input::Cancel { channel: words[5] >> 32u64, retire: true })
-        _ -> (Input::Other)
+        |main|::KEY -> (|operations|::Input::Key { group: (words[5] >> 17u64) & 32767u64, code: words[6], action: words[7] })
+        |main|::CANCEL -> (|operations|::Input::Cancel { channel: words[5] >> 32u64, retire: false })
+        |main|::RETIRED -> (|operations|::Input::Cancel { channel: words[5] >> 32u64, retire: true })
+        _ -> (|operations|::Input::Other)
     }
 }

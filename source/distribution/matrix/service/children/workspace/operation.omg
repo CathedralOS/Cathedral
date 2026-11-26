@@ -1,5 +1,3 @@
-module children::workspace::operation;
-
 // One existing-app switch. Task/connection identity and scene custody remain
 // with the host; this operation retains only correlation and the first refusal.
 public data Command [copy] {

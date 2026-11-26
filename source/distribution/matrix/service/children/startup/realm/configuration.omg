@@ -1,88 +1,82 @@
-module children::startup::realm::configuration;
-
 // Bind/place before publication and chrome authority. Background failure is
 // optional; rollback failures replace the original error rather than hide it.
-use children::startup::realm::operations::Setup;
-use children::startup::realm::operations::Command;
-use children::startup::realm::operations::Outcome;
-use children::startup::realm::operations::Completion;
-use children::startup::realm::operations::Context;
+use children/startup/realm/operations.omg;
 
-public machine begin(setup: &mut Setup, context: &Context) -> Command {
+public machine begin(setup: &mut |operations|::Setup, context: &|operations|::Context) -> |operations|::Command {
     transition context.configured {
-        true -> (Command::Finish)
+        true -> (|operations|::Command::Finish)
         _ -> available(setup, context)
     }
-    machine available(setup: &mut Setup, context: &Context) -> Command {
+    machine available(setup: &mut |operations|::Setup, context: &|operations|::Context) -> |operations|::Command {
         transition context.busy {
             true -> busy(setup)
-            _ -> (Command::Refresh)
+            _ -> (|operations|::Command::Refresh)
         }
     }
-    machine busy(setup: &mut Setup) -> Command {
-        setup.outcome = Outcome::Busy;
-        Command::Finish
+    machine busy(setup: &mut |operations|::Setup) -> |operations|::Command {
+        setup.outcome = |operations|::Outcome::Busy;
+        |operations|::Command::Finish
     }
 }
 
-public machine completed(setup: &mut Setup, completion: Completion) -> Command {
-    transition completion.command == Command::StartBackground {
+public machine completed(setup: &mut |operations|::Setup, completion: |operations|::Completion) -> |operations|::Command {
+    transition completion.command == |operations|::Command::StartBackground {
         true -> background(setup, completion.outcome)
         _ -> required(setup, completion)
     }
-    machine background(setup: &mut Setup, outcome: Outcome) -> Command {
+    machine background(setup: &mut |operations|::Setup, outcome: |operations|::Outcome) -> |operations|::Command {
         setup.background_outcome = outcome;
         transition outcome {
-            Outcome::Success -> (Command::Flush)
-            _ -> (Command::BackgroundFailed)
+            |operations|::Outcome::Success -> (|operations|::Command::Flush)
+            _ -> (|operations|::Command::BackgroundFailed)
         }
     }
-    machine required(setup: &mut Setup, completion: Completion) -> Command {
+    machine required(setup: &mut |operations|::Setup, completion: |operations|::Completion) -> |operations|::Command {
         transition completion.outcome {
-            Outcome::Success -> succeeded(setup, completion.command)
+            |operations|::Outcome::Success -> succeeded(setup, completion.command)
             _ -> failed(setup, completion)
         }
     }
 }
 
-machine failed(setup: &mut Setup, completion: Completion) -> Command {
+machine failed(setup: &mut |operations|::Setup, completion: |operations|::Completion) -> |operations|::Command {
     setup.outcome = completion.outcome;
     transition completion.command {
-        Command::AdmitLauncher -> (Command::StopLauncher)
-        Command::BindLauncher -> (Command::StopLauncher)
-        Command::PlaceLauncher -> clear(setup)
-        _ -> (Command::Finish)
+        |operations|::Command::AdmitLauncher -> (|operations|::Command::StopLauncher)
+        |operations|::Command::BindLauncher -> (|operations|::Command::StopLauncher)
+        |operations|::Command::PlaceLauncher -> clear(setup)
+        _ -> (|operations|::Command::Finish)
     }
-    machine clear(setup: &mut Setup) -> Command {
+    machine clear(setup: &mut |operations|::Setup) -> |operations|::Command {
         setup.reset_surfaces = true;
-        Command::ClearWorkspace
+        |operations|::Command::ClearWorkspace
     }
 }
 
-machine succeeded(setup: &Setup, command: Command) -> Command {
+machine succeeded(setup: &|operations|::Setup, command: |operations|::Command) -> |operations|::Command {
     transition command {
-        Command::Refresh -> (Command::ReadConfiguration)
-        Command::ReadConfiguration -> (Command::ValidateConfiguration)
-        Command::ValidateConfiguration -> (Command::AdmitLauncher)
-        Command::AdmitLauncher -> (Command::ReleaseImage)
-        Command::ReleaseImage -> (Command::BindLauncher)
-        Command::BindLauncher -> (Command::InstallWorkspace)
-        Command::InstallWorkspace -> (Command::PlaceLauncher)
-        Command::PlaceLauncher -> (Command::StartBackground)
-        Command::BackgroundFailed -> (Command::Flush)
-        Command::Flush -> (Command::Notify)
-        Command::Notify -> (Command::GrantChrome)
-        Command::GrantChrome -> (Command::RecordLauncher)
-        Command::RecordLauncher -> (Command::Finish)
-        Command::ClearWorkspace -> (Command::StopLauncher)
-        Command::ResetSurfaces -> (Command::Finish)
-        Command::StopLauncher -> stopped(setup)
-        _ -> (Command::Finish)
+        |operations|::Command::Refresh -> (|operations|::Command::ReadConfiguration)
+        |operations|::Command::ReadConfiguration -> (|operations|::Command::ValidateConfiguration)
+        |operations|::Command::ValidateConfiguration -> (|operations|::Command::AdmitLauncher)
+        |operations|::Command::AdmitLauncher -> (|operations|::Command::ReleaseImage)
+        |operations|::Command::ReleaseImage -> (|operations|::Command::BindLauncher)
+        |operations|::Command::BindLauncher -> (|operations|::Command::InstallWorkspace)
+        |operations|::Command::InstallWorkspace -> (|operations|::Command::PlaceLauncher)
+        |operations|::Command::PlaceLauncher -> (|operations|::Command::StartBackground)
+        |operations|::Command::BackgroundFailed -> (|operations|::Command::Flush)
+        |operations|::Command::Flush -> (|operations|::Command::Notify)
+        |operations|::Command::Notify -> (|operations|::Command::GrantChrome)
+        |operations|::Command::GrantChrome -> (|operations|::Command::RecordLauncher)
+        |operations|::Command::RecordLauncher -> (|operations|::Command::Finish)
+        |operations|::Command::ClearWorkspace -> (|operations|::Command::StopLauncher)
+        |operations|::Command::ResetSurfaces -> (|operations|::Command::Finish)
+        |operations|::Command::StopLauncher -> stopped(setup)
+        _ -> (|operations|::Command::Finish)
     }
-    machine stopped(setup: &Setup) -> Command {
+    machine stopped(setup: &|operations|::Setup) -> |operations|::Command {
         transition setup.reset_surfaces {
-            true -> (Command::ResetSurfaces)
-            _ -> (Command::Finish)
+            true -> (|operations|::Command::ResetSurfaces)
+            _ -> (|operations|::Command::Finish)
         }
     }
 }

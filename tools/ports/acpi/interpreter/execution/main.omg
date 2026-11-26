@@ -1,18 +1,10 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Original synthetic AML; primary ACPI6.6 chapters19/20
-use aml::model::Value;
-use aml::model::Path;
-use aml::model::Span;
-use aml::model::Namespace;
-use aml::model::ObjectStore;
-use aml::model::Object;
-use aml::model::Entry;
-use integer_helpers::integers::IntegerSize;
-use execution::engine::run_method;
-use execution::engine::ExecutionResult;
-use execution::execution_model::ExecutionOutcome;
-use aml::model::MethodDefinition;
-machine namespace_integer(value: Value, expected: u64) -> bool { transition value { Value::Integer { number } -> (number == expected) _ -> (false) } }
+use {aml}/model.omg;
+use {integer_helpers}/integers.omg;
+use {execution}/engine.omg;
+use {execution}/execution_model.omg;
+machine namespace_integer(value: |model|::Value, expected: u64) -> bool { transition value { |model|::Value::Integer { number } -> (number == expected) _ -> (false) } }
 machine test_result() -> i32 {
     let mut input: [u8; 1024];
     input[0] = 164;
@@ -21,19 +13,19 @@ machine test_result() -> i32 {
     input[3] = 40;
     input[4] = 10;
     input[5] = 2;
-    let mut definitions: [MethodDefinition; 64];
-    let mut arguments: [Value; 7];
-    let mut space: Namespace = Namespace { count: 2, object_count: 1 };
-    space.entries[0] = Entry { path: Path { absolute: true }, has_level: true };
-    let mut path_0: Path = Path { absolute: true, count: 1 };
+    let mut definitions: [|model|::MethodDefinition; 64];
+    let mut arguments: [|model|::Value; 7];
+    let mut space: |model|::Namespace = |model|::Namespace { count: 2, object_count: 1 };
+    space.entries[0] = |model|::Entry { path: |model|::Path { absolute: true }, has_level: true };
+    let mut path_0: |model|::Path = |model|::Path { absolute: true, count: 1 };
     path_0.segments[0] = 1313423693;
-    space.entries[1] = Entry { path: path_0, has_object: true, object: 0, alias: false };
-    space.objects[0] = Object { value: Value::Method { flags: 0, body: Span { unit: 7, start: 0, end: 7 } } };
-    definitions[0] = MethodDefinition { present: true, object_id: 0, scope: path_0, flags: 0, body: Span { unit: 7, start: 0, end: 7 } };
-    let mut store:ObjectStore=ObjectStore {space:space};
-    let result: ExecutionResult = run_method(&input, 7, 7, &mut store, &definitions, path_0, &arguments, 0, IntegerSize::FourBytes, 16);
+    space.entries[1] = |model|::Entry { path: path_0, has_object: true, object: 0, alias: false };
+    space.objects[0] = |model|::Object { value: |model|::Value::Method { flags: 0, body: |model|::Span { unit: 7, start: 0, end: 7 } } };
+    definitions[0] = |model|::MethodDefinition { present: true, object_id: 0, scope: path_0, flags: 0, body: |model|::Span { unit: 7, start: 0, end: 7 } };
+    let mut store:|model|::ObjectStore=|model|::ObjectStore {space:space};
+    let result: |engine|::ExecutionResult = |engine|::run_method(&input, 7, 7, &mut store, &definitions, path_0, &arguments, 0, |integers|::IntegerSize::FourBytes, 16);
     space=store.space;
-    transition result.outcome == ExecutionOutcome::Success && result.value.initialized == true && result.value.number == 42 { true -> (0) _ -> (1) }
+    transition result.outcome == |execution_model|::ExecutionOutcome::Success && result.value.initialized == true && result.value.number == 42 { true -> (0) _ -> (1) }
 }
 const TEST_RESULT: i32 = test_result();
 machine require_success(value: i32) requires value == 0; {}

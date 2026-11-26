@@ -38,21 +38,21 @@ for word,flags,supply in [(0,3,0x1000),(0,3,None),(0,0,0x1000),(0,128,0x1000),(0
   if not out&1:kind='MissingPresent'
   elif out&128:kind='HugeParent'
  children.append(dict(word=word,flags=flags,supply=supply,kind=kind,out=out,write=write,zero=zero,address=out&MASK))
-prefix='// SPDX-License-Identifier: MIT OR Apache-2.0\nuse x86::mapping_plans;\nuse x86::mapping_plans::LeafPlan;\nuse x86::mapping_plans::ChildPlan;\nuse x86::mapping_plans::FrameSupply;\n'
+prefix='// SPDX-License-Identifier: MIT OR Apache-2.0\nuse {x86}/mapping_plans.omg;\n'
 blocks=[]
 for i,r in enumerate(rows):
  calls={'map':f'map_leaf({r["word"]},{r["frame"]},{r["size"]},{r["flags"]})','unmap':f'unmap_leaf({r["word"]},{r["size"]})','update':f'update_leaf_flags({r["word"]},{r["size"]},{r["flags"]})','translate':f'translate_leaf({r["word"]},{r["size"]})'}
- body=f'let value:LeafPlan=mapping_plans::{calls[r["op"]]}; let common:bool=value.word == {r["out"]} && value.write == {str(r["write"]).lower()};\n'
+ body=f'let value:|mapping_plans|::LeafPlan=|mapping_plans|::{calls[r["op"]]}; let common:bool=value.word == {r["out"]} && value.write == {str(r["write"]).lower()};\n'
  if r['kind'] in ['Ready','InvalidFrameAddress','AlreadyMapped']:
   field={'Ready':'frame','InvalidFrameAddress':'address','AlreadyMapped':'requested_frame'}[r['kind']]
-  body+=f'transition value {{ LeafPlan::{r["kind"]} {{ {field} }} -> payload(common,{field}) _ -> (1) }} state payload(common:bool,number:u64)->i32 {{ transition common && number == {r["payload"]} {{ true -> (0) _ -> (1) }} }}'
- else:body+=f'transition common && value in LeafPlan::{r["kind"]} {{ true -> (0) _ -> (1) }}'
+  body+=f'transition value {{ |mapping_plans|::LeafPlan::{r["kind"]} {{ {field} }} -> payload(common,{field}) _ -> (1) }} state payload(common:bool,number:u64)->i32 {{ transition common && number == {r["payload"]} {{ true -> (0) _ -> (1) }} }}'
+ else:body+=f'transition common && value in |mapping_plans|::LeafPlan::{r["kind"]} {{ true -> (0) _ -> (1) }}'
  blocks.append(f'machine leaf_{i}()->i32 {{ {body} }}')
 for i,r in enumerate(children):
- supply='FrameSupply::Unavailable' if r['supply'] is None else f'FrameSupply::Supplied {{ address:{r["supply"]} }}'
- body=f'let value:ChildPlan=mapping_plans::prepare_child({r["word"]},{r["flags"]},{supply}); let common:bool=value.word == {r["out"]} && value.write == {str(r["write"]).lower()};\n'
- if r['kind']=='Ready':body+=f'transition value {{ ChildPlan::Ready {{ address,zero_child }} -> payload(common,address,zero_child) _ -> (1) }} state payload(common:bool,address:u64,zero:bool)->i32 {{ transition common && address == {r["address"]} && zero == {str(r["zero"]).lower()} {{ true -> (0) _ -> (1) }} }}'
- else:body+=f'transition common && value in ChildPlan::{r["kind"]} {{ true -> (0) _ -> (1) }}'
+ supply='|mapping_plans|::FrameSupply::Unavailable' if r['supply'] is None else f'|mapping_plans|::FrameSupply::Supplied {{ address:{r["supply"]} }}'
+ body=f'let value:|mapping_plans|::ChildPlan=|mapping_plans|::prepare_child({r["word"]},{r["flags"]},{supply}); let common:bool=value.word == {r["out"]} && value.write == {str(r["write"]).lower()};\n'
+ if r['kind']=='Ready':body+=f'transition value {{ |mapping_plans|::ChildPlan::Ready {{ address,zero_child }} -> payload(common,address,zero_child) _ -> (1) }} state payload(common:bool,address:u64,zero:bool)->i32 {{ transition common && address == {r["address"]} && zero == {str(r["zero"]).lower()} {{ true -> (0) _ -> (1) }} }}'
+ else:body+=f'transition common && value in |mapping_plans|::ChildPlan::{r["kind"]} {{ true -> (0) _ -> (1) }}'
  blocks.append(f'machine child_{i}()->i32 {{ {body} }}')
 def write(path,text):
  if '--check' in sys.argv:assert path.read_text()==text,('stale fixture',path)

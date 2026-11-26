@@ -12,7 +12,7 @@ anchors={
  'src/structures/paging/page_table.rs':{28:'address_mask: u64',59:'pub machine entry_flags',65:'pub machine entry_address',77:'pub machine entry_frame',89:'pub machine set_address',96:'pub machine set_frame',103:'pub machine set_flags',115:'pub machine entry_address'},
  'src/addr.rs':{539:'pub machine physical_check',557:'pub machine physical_truncate',578:'pub machine physical_check'}}
 for path,file in m['files'].items():
- file.update(disposition='translated' if 'mem_encrypt' in path else 'pending',reason='Explicit-state encryption component overlay; unrelated declarations remain in separate slices.',targets=[{'path':source,'anchor':'module memory_encryption;'}])
+ file.update(disposition='translated' if 'mem_encrypt' in path else 'pending',reason='Explicit-state encryption component overlay; unrelated declarations remain in separate slices.',targets=[{'path':source,'anchor':'pub data Configuration'}])
  for key,row in file['symbols'].items():
   line=int(key.split(':',1)[0]);anchor=anchors[path].get(line)
   if anchor:row.update(disposition='translated',reason='Detached explicit-state arithmetic only: global atomics and actual CPU/mapping configuration excluded; repeated-mask accumulation preserved.',targets=[{'path':source,'anchor':anchor}])

@@ -1,36 +1,31 @@
-module state;
 // What every part of the stock matrix process shares: one State holding the
 // owner, display and source connections, the parent's broker, the World,
 // the storage, each child slot's admission, policy, funding and batch, the
 // workspace's instances and the realm setup's progress.
-use parent;
-use admission;
-use owner_launch;
-use funding;
-use storage::Exchange;
-use storage::Relay;
-use storage::Read;
-use display;
-use outbox;
-use presentation;
-use runtime::server::main::Server;
-use runtime::server::main::Ticket;
-use runtime::services::main::Services;
-use runtime::connection::main::Peer;
-use runtime::admission::main::Admitted;
-use world::level::World;
-use policy::children::launch::resources::funding::Funding;
-use policy::children::workspace::catalogue::Catalogue;
-use world::batch::Batch;
-use world::launches::Launches;
-use world::management::Management;
-use world::geometry::Rect;
-use policy::children::startup::main::Startup;
-use policy::children::launch::resources::recipes::Offer;
-use world::scopes::Scopes;
-use policy::children::control::main::LossSurvey;
-use policy::children::startup::realm::operations::Setup;
-use policy::children::startup::realm::operations::Command;
+use parent.omg;
+use admission.omg;
+use owner_launch.omg;
+use funding.omg;
+use storage.omg;
+use display.omg;
+use outbox.omg;
+use presentation.omg;
+use {runtime}/server/main.omg;
+use {runtime}/services/main.omg as services_main;
+use {runtime}/connection/main.omg as connection_main;
+use {runtime}/admission/main.omg as admission_main;
+use {world}/level.omg;
+use {policy}/children/launch/resources/funding.omg as resources_funding;
+use {policy}/children/workspace/catalogue.omg;
+use {world}/batch.omg;
+use {world}/launches.omg;
+use {world}/management.omg;
+use {world}/geometry.omg;
+use {policy}/children/startup/main.omg as startup_main;
+use {policy}/children/launch/resources/recipes.omg;
+use {world}/scopes.omg;
+use {policy}/children/control/main.omg as control_main;
+use {policy}/children/startup/realm/operations.omg;
 
 public const CHILDREN: u64 = 5u64;
 // Owner-declared policy for launches into a slot.
@@ -74,13 +69,13 @@ public data Launch {
     probe_started: bool;
     probe_until: u64;
     image: u64;
-    plan: admission::Plan;
-    binding: storage::Prepared;
+    plan: |admission|::Plan;
+    binding: |storage|::Prepared;
     requester: u64 [0..=4];
     incarnation: u64;
     storage_incarnation: u64;
     revision: u64;
-    ticket: Ticket;
+    ticket: |main|::Ticket;
     slot: u64 [0..=4];
     object: u64;
     offered: u64;
@@ -110,14 +105,14 @@ public data Saved [copy] {
     gap: u64;
     app_surfaces: u64;
     keys: u64;
-    chrome: Rect;
-    workspace: Rect;
+    chrome: |geometry|::Rect;
+    workspace: |geometry|::Rect;
 }
 // An owner word relayed to a child's owner control, answered when the child
 // replies; past its deadline the owner heard TIMED_OUT and the reply is drained.
 public data Forward [copy] {
     live: bool;
-    ticket: Ticket;
+    ticket: |main|::Ticket;
     deadline: u64;
     late: bool;
     // What the child's answer settles: the owner's routed word, this matrix's
@@ -125,7 +120,7 @@ public data Forward [copy] {
     // requesting child's slot and the request its answer waits with.
     purpose: u64;
     requester: u64;
-    request: Ticket;
+    request: |main|::Ticket;
 }
 // Cleanup captures the original task before the runtime consumes its ticket.
 // Service withdrawal and collection happen once. Scene settlement can then keep
@@ -139,43 +134,43 @@ public data Retiring [copy] {
 public data Stopping [copy] {
     active: bool;
     slot: u64 [0..=4];
-    ticket: Ticket;
+    ticket: |main|::Ticket;
 }
 // One realm job in progress: which job, the policy's setup record for it and,
 // while a job it started runs, the command waiting for that job's result.
 public data Frame {
     job: u64;
-    setup: Setup;
+    setup: |operations|::Setup;
     waiting: bool;
-    command: Command;
+    command: |operations|::Command;
 }
 public data State {
     construction_window: u64 [0..=100];
     handoff_window: u64 [0..=100];
-    owner: Server;
-    source: Server;
-    scene: Peer;
-    display_work: display::Pending;
+    owner: |main|::Server;
+    source: |main|::Server;
+    scene: |connection_main|::Peer;
+    display_work: |display|::Pending;
     has_scene: bool;
     // The parent matrix's broker connection, when one admitted this instance,
     // and whether its last snapshot left more to take.
-    parent: Services;
-    parent_work: parent::Pending;
-    funding_work: [funding::Work; 6];
-    presentation_work: presentation::Transfer;
-    selection_work: presentation::Switch;
-    arrangement_work: presentation::Arrangement;
+    parent: |services_main|::Services;
+    parent_work: |parent|::Pending;
+    funding_work: [|funding|::Work; 6];
+    presentation_work: |presentation|::Transfer;
+    selection_work: |presentation|::Switch;
+    arrangement_work: |presentation|::Arrangement;
     next_child: u64 [0..=4];
     retire_after_present: [bool; 5];
     retirements: [Retiring; 5];
     retirement_failure: u64;
     stopping: Stopping;
-    scene_owner: presentation::Queued;
-    scene_children: [presentation::Queued; 5];
-    answers: [outbox::Answer; 5];
+    scene_owner: |presentation|::Queued;
+    scene_children: [|presentation|::Queued; 5];
+    answers: [|outbox|::Answer; 5];
     has_parent: bool;
     refresh_due: bool;
-    world: World;
+    world: |level|::World;
     clock: u64;
     // Startup clock sample used only to correlate diagnostics within one boot.
     // Not an identity, authority token or promise of uniqueness.
@@ -187,20 +182,20 @@ public data State {
     policies: [SlotPolicy; 5];
     // Each child's staged presentation batch, the sealed images retained
     // behind compositor tiles, and the compositor transaction revision.
-    batches: [Batch; 5];
+    batches: [|batch|::Batch; 5];
     images: [Image; 64];
     revision: u64;
     // Provider links, bindings and each child's storage connection.
     store: Store;
     launch: Launch;
-    owner_launch: owner_launch::Work;
+    owner_launch: |owner_launch|::Work;
     // Each child's receipt for its latest launch.
-    observations: Launches;
+    observations: |launches|::Launches;
     // Admitted children, this matrix's client to each one's owner control, the
     // launch each was reserved under, how far each may grow by asking, and the
     // allowances staged for the next launch into each slot.
-    slots: [Admitted; 5];
-    controls: [Peer; 5];
+    slots: [|admission_main|::Admitted; 5];
+    controls: [|connection_main|::Peer; 5];
     // When each child's owner control must have finished opening; zero once
     // it has, or when none is opening.
     opening: [u64; 5];
@@ -208,18 +203,18 @@ public data State {
     // Reservations of ended children the kernel would not take back yet,
     // retried until it does: it refuses while their frames are still charged.
     releasing: [u64; 5];
-    funding: [Funding; 5];
+    funding: [|resources_funding|::Funding; 5];
     // The workspace's app instances and the active one.
-    catalogue: Catalogue;
+    catalogue: |catalogue|::Catalogue;
     staged_private: [u64; 5];
     staged_reader: [u64; 5];
     staged_frames: [u64; 5];
     // Routed owner words pending at each child's owner control.
     forwards: [Forward; 5];
     // A loss survey the owner asked for, and the reply it waits with.
-    survey: LossSurvey;
+    survey: |control_main|::LossSurvey;
     surveying: bool;
-    survey_ticket: Ticket;
+    survey_ticket: |main|::Ticket;
     // Exact child tasks included in the survey. A changed subtree cannot use
     // an earlier child's clean answer as permission to stop its replacement.
     survey_members: [u64; 5];
@@ -229,7 +224,7 @@ public data State {
     // offer a job holds, what the last admission granted and allotted, the
     // chrome's delegations, the recovery words the owner recorded and the
     // bindings RESTORE_STORAGE remakes.
-    startup: Startup;
+    startup: |startup_main|::Startup;
     // Realm jobs in progress, outermost first, advanced one command per turn;
     // whether the owner's CONFIGURE waits for its own job's result, or for the
     // jobs ahead of it, and the reply it waits with.
@@ -237,7 +232,7 @@ public data State {
     frame_count: u64 [0..=3];
     configure_held: bool;
     configure_queued: bool;
-    configure_ticket: Ticket;
+    configure_ticket: |main|::Ticket;
     hosted: bool;
     desktop: bool;
     login: bool;
@@ -248,14 +243,14 @@ public data State {
     picker_object: u64;
     users_object: u64;
     picker_mode: u64;
-    picker_offer: Offer;
+    picker_offer: |recipes|::Offer;
     image: u64;
     image_length: u64;
     last_granted: u64;
     allotted_surfaces: u64;
     allotted_descendants: u64;
     allotted_profiled: bool;
-    managers: Management;
+    managers: |management|::Management;
     fallback_image: u64;
     fallback_argument: u64;
     recovery_grants: u64;
@@ -283,14 +278,14 @@ public data Sent [copy] {
 public data Store {
     root: bool;
     handles: [u64; 2];
-    links: [Peer; 3];
+    links: [|connection_main|::Peer; 3];
     linked: [bool; 3];
     failed: u64;
-    scopes: Scopes;
-    listeners: [Server; 5];
-    exchanges: [Exchange; 3];
-    relays: [Relay; 5];
-    read: Read;
+    scopes: |scopes|::Scopes;
+    listeners: [|main|::Server; 5];
+    exchanges: [|storage|::Exchange; 3];
+    relays: [|storage|::Relay; 5];
+    read: |storage|::Read;
     // Under a parent: whether its storage connection was supplied, and the
     // binding revision and realm it last reported, once asked.
     has_upstream: bool;

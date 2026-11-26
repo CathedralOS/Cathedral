@@ -1,5 +1,3 @@
-module operations;
-
 // App requests and completed work. Transport layout belongs to bridge/.
 public data Input [copy] {
     case Other;

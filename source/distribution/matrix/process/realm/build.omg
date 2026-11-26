@@ -1,3 +1,5 @@
+use {runtime}/arch/x86_64/gate.omg;
+use {runtime}/kernel.omg;
 machine build(builder: &mut Build) {
     Build::package(builder, "cathedral_stock_matrix_realm");
     Build::depend_as(builder, "runtime", Source::Path { location: "../../../../platform/libraries/user-runtime" });
@@ -7,5 +9,5 @@ machine build(builder: &mut Build) {
     Build::depend_as(builder, "shared", Source::Path { location: "../shared" });
     Build::depend_as(builder, "connections", Source::Path { location: "../connections" });
     Build::depend_as(builder, "children", Source::Path { location: "../children" });
-    Build::select_provider<runtime::kernel::Kernel, runtime::arch::x86_64::gate::NativeKernel>(builder, linux_x86_64);
+    Build::select_provider<|kernel|::Kernel, |gate|::NativeKernel>(builder, linux_x86_64);
 }

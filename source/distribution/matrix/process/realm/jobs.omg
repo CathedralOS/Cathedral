@@ -1,4 +1,4 @@
-module jobs;
+use {runtime}/server/main.omg as server_main;
 // Realm setup under the stock startup policy, which sequences each job while
 // this process executes its commands. Discovery takes the parent's snapshot,
 // lists the realm for a Matrix configuration, a Login and a Users folder,
@@ -13,39 +13,24 @@ module jobs;
 // starts another job waits for that job's result. Each job keeps a setup
 // record of its own: [configuration.omg](configuration.omg),
 // [background.omg](background.omg) and [picker.omg](picker.omg) execute theirs.
-use protocol::main;
-use protocol::matrix;
-use shared::state::State;
-use shared::state::Frame;
-use policy::children::startup::realm::operations::Job;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::kernel;
-use policy::children::startup::realm::operations::Setup;
-use policy::children::startup::realm::operations::Job;
-use policy::children::startup::realm::operations::Command;
-use policy::children::startup::realm::operations::Outcome;
-use policy::children::startup::realm::operations::Context;
-use policy::children::startup::realm::operations::Completion;
-use policy::children::startup::realm::operations::Entries;
-use policy::children::startup::realm::operations::Dispatch;
-use policy::children::startup::realm::main::begin;
-use policy::children::startup::realm::main::next;
-use policy::children::startup::realm::main::complete;
-use policy::children::startup::main::PickerAction;
-use policy::children::startup::main::take_picker;
-use policy::children::startup::main::take_background;
-use world::geometry;
-use connections::upstream;
-use children::forward;
-use children::lifecycle;
-use connections::storage::storage;
-use connections::listing;
-use realm_names;
-use configuration;
-use background;
-use picker;
-use shared::report;
+use {protocol}/main.omg;
+use {protocol}/matrix.omg;
+use {shared}/state.omg as shared_state;
+use {policy}/children/startup/realm/operations.omg;
+use {runtime}/kernel.omg;
+use {policy}/children/startup/realm/main.omg as realm_main;
+use {policy}/children/startup/main.omg as startup_main;
+use {world}/geometry.omg;
+use {connections}/upstream.omg;
+use {children}/forward.omg;
+use {children}/lifecycle.omg;
+use {connections}/storage/storage.omg;
+use {connections}/listing.omg;
+use realm_names.omg;
+use configuration.omg;
+use background.omg;
+use picker.omg;
+use {shared}/report.omg;
 
 // The jobs a frame runs.
 public const DISCOVERY: u64 = 1u64;
@@ -55,7 +40,7 @@ public const PICKER: u64 = 4u64;
 // What one command did: finished with a completion, or started a nested job
 // whose result becomes the command's.
 public data Step [copy] {
-    case Done(completion: Completion);
+    case Done(completion: |operations|::Completion);
     case Nested(job: u64);
 }
 
@@ -63,16 +48,16 @@ public data Step [copy] {
 // owner's CONFIGURE that waited for the jobs ahead of it starts; otherwise a
 // nested instance not yet hosted starts discovery, as pending startup
 // recovery does.
-public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
+public machine step(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     // A new child accepts owner control, then connects to its supplied broker.
     // Keep serving those handshakes before the next realm command can wait on
     // upstream storage or background loading. No deadline is restarted here.
-    transition context.presentation_work.active || context.owner_launch.phase != 0u64 || lifecycle::starting(context) {
+    transition context.presentation_work.active || context.owner_launch.phase != 0u64 || |lifecycle|::starting(context) {
         true -> (0u64)
         _ -> block idle_step(gate, context, now)
     }
 }
-machine idle_step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
+machine idle_step(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     let pending: bool = context.startup.picker_pending || context.startup.background_pending;
     let unhosted: bool = context.has_parent && !context.hosted;
     transition {
@@ -81,99 +66,99 @@ machine idle_step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Ker
         unhosted || pending -> (discovering(context))
         _ -> (0u64)
     }
-    machine discovering(context: &mut State) -> u64 {
+    machine discovering(context: &mut |shared_state|::State) -> u64 {
         let started: bool = push(context, DISCOVERY);
         0u64
     }
-    machine queued(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+    machine queued(gate: &|kernel|::Gate, context: &mut |shared_state|::State) -> u64 reaches |kernel|::Kernel {
         context.configure_queued = false;
         block owned(gate, context)
     }
 }
 // The owner's CONFIGURE: its reply waits with its job over later turns, and
 // behind jobs already running it waits for them first.
-public machine configure(gate: &Gate, context: &mut State) -> u64 reaches Kernel blocks invokes Kernel {
-    context.configure_ticket = runtime::server::main::ticket(&context.owner);
+public machine configure(gate: &|kernel|::Gate, context: &mut |shared_state|::State) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
+    context.configure_ticket = |server_main|::ticket(&context.owner);
     transition context.frame_count != 0u64 {
         true -> (behind(context))
         _ -> block owned(gate, context)
     }
-    machine behind(context: &mut State) -> u64 {
+    machine behind(context: &mut |shared_state|::State) -> u64 {
         context.configure_queued = true;
         0u64
     }
 }
-machine owned(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+machine owned(gate: &|kernel|::Gate, context: &mut |shared_state|::State) -> u64 reaches |kernel|::Kernel {
     let started: bool = push(context, CONFIGURATION);
     transition started {
         true -> (held(context))
-        _ -> block answer(gate, context, kernel::BUSY)
+        _ -> block answer(gate, context, |kernel|::BUSY)
     }
-    machine held(context: &mut State) -> u64 {
+    machine held(context: &mut |shared_state|::State) -> u64 {
         context.configure_held = true;
         0u64
     }
 }
-machine answer(gate: &Gate, context: &mut State, status: u64) -> u64 reaches Kernel {
+machine answer(gate: &|kernel|::Gate, context: &mut |shared_state|::State, status: u64) -> u64 reaches |kernel|::Kernel {
     context.configure_held = false;
     let mut words: [u64; 8];
     words[0] = status;
-    let issued: runtime::server::main::Ticket = context.configure_ticket;
-    let replied: u64 = block runtime::server::main::reply_to(gate, &mut context.owner, issued, &words);
+    let issued: |server_main|::Ticket = context.configure_ticket;
+    let replied: u64 = block |server_main|::reply_to(gate, &mut context.owner, issued, &words);
     0u64
 }
 // Begin a job on a fresh frame above the others.
-machine push(context: &mut State, job: u64) -> bool {
+machine push(context: &mut |shared_state|::State, job: u64) -> bool {
     transition context.frame_count < 3u64 {
         true -> fresh(context, job, context.frame_count)
         _ -> (false)
     }
-    machine fresh(context: &mut State, job: u64, index: u64 [0..=2]) -> bool {
-        let empty: Frame;
+    machine fresh(context: &mut |shared_state|::State, job: u64, index: u64 [0..=2]) -> bool {
+        let empty: |shared_state|::Frame;
         context.frames[index] = empty;
         context.frames[index].job = job;
-        let facts: Context = facts_for(context, job);
+        let facts: |operations|::Context = facts_for(context, job);
         let admissible: bool = job != PICKER || (context.picker_object != 0u64 && context.users_object != 0u64);
-        let started: bool = begin(&mut context.frames[index].setup, kind_of(job), &facts);
+        let started: bool = |realm_main|::begin(&mut context.frames[index].setup, kind_of(job), &facts);
         transition started && admissible {
             true -> counted(context, index)
             _ -> (false)
         }
     }
-    machine counted(context: &mut State, index: u64 [0..=2]) -> bool {
+    machine counted(context: &mut |shared_state|::State, index: u64 [0..=2]) -> bool {
         context.frame_count = index + 1u64;
         true
     }
 }
-machine facts_for(context: &State, job: u64) -> Context {
+machine facts_for(context: &|shared_state|::State, job: u64) -> |operations|::Context {
     transition {
-        job == DISCOVERY -> (Context { configured: false, busy: false, discover: context.has_parent && !context.hosted })
-        job == CONFIGURATION -> (Context { configured: context.desktop, busy: occupied(context), discover: false })
-        _ -> (Context { configured: false, busy: false, discover: false })
+        job == DISCOVERY -> (|operations|::Context { configured: false, busy: false, discover: context.has_parent && !context.hosted })
+        job == CONFIGURATION -> (|operations|::Context { configured: context.desktop, busy: occupied(context), discover: false })
+        _ -> (|operations|::Context { configured: false, busy: false, discover: false })
     }
 }
-machine kind_of(job: u64) -> Job {
+machine kind_of(job: u64) -> |operations|::Job {
     transition {
-        job == DISCOVERY -> (Job::Discovery)
-        job == CONFIGURATION -> (Job::Configuration)
-        job == BACKGROUND -> (Job::Background)
-        _ -> (Job::Picker)
+        job == DISCOVERY -> (|operations|::Job::Discovery)
+        job == CONFIGURATION -> (|operations|::Job::Configuration)
+        job == BACKGROUND -> (|operations|::Job::Background)
+        _ -> (|operations|::Job::Picker)
     }
 }
 // The innermost frame's next command, executed by the job it belongs to.
-machine advance(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+machine advance(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64) -> u64 reaches |kernel|::Kernel {
     transition context.frame_count >= 1u64 && context.frame_count <= 3u64 {
         true -> block topmost(gate, context, now, context.frame_count - 1u64)
         _ -> (0u64)
     }
-    machine topmost(gate: &Gate, context: &mut State, now: u64, top: u64 [0..=2]) -> u64 reaches Kernel {
-        let dispatch: Dispatch = next(&mut context.frames[top].setup);
+    machine topmost(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, top: u64 [0..=2]) -> u64 reaches |kernel|::Kernel {
+        let dispatch: |operations|::Dispatch = |realm_main|::next(&mut context.frames[top].setup);
         transition dispatch {
-            Dispatch::Issue { command } -> block issued(gate, context, now, top, command)
-            Dispatch::Wait -> block finished(gate, context, top, status_of(context.frames[top].setup.outcome))
+            |operations|::Dispatch::Issue { command } -> block issued(gate, context, now, top, command)
+            |operations|::Dispatch::Wait -> block finished(gate, context, top, status_of(context.frames[top].setup.outcome))
         }
     }
-    machine issued(gate: &Gate, context: &mut State, now: u64, top: u64 [0..=2], command: Command) -> u64 reaches Kernel {
+    machine issued(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, top: u64 [0..=2], command: |operations|::Command) -> u64 reaches |kernel|::Kernel {
         let job: u64 = context.frames[top].job;
         let step: Step = block execute_for(gate, context, now, job, command);
         transition step {
@@ -181,7 +166,7 @@ machine advance(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kerne
             Step::Nested { job } -> block nested(gate, context, top, command, job)
         }
     }
-    machine nested(gate: &Gate, context: &mut State, top: u64 [0..=2], command: Command, job: u64) -> u64 reaches Kernel {
+    machine nested(gate: &|kernel|::Gate, context: &mut |shared_state|::State, top: u64 [0..=2], command: |operations|::Command, job: u64) -> u64 reaches |kernel|::Kernel {
         context.frames[top].waiting = true;
         context.frames[top].command = command;
         let started: bool = push(context, job);
@@ -190,33 +175,33 @@ machine advance(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kerne
             _ -> block unstarted(gate, context, top, command)
         }
     }
-    machine unstarted(gate: &Gate, context: &mut State, top: u64 [0..=2], command: Command) -> u64 reaches Kernel {
+    machine unstarted(gate: &|kernel|::Gate, context: &mut |shared_state|::State, top: u64 [0..=2], command: |operations|::Command) -> u64 reaches |kernel|::Kernel {
         context.frames[top].waiting = false;
-        block completed_step(gate, context, top, command, completed(command, kernel::BUSY))
+        block completed_step(gate, context, top, command, completed(command, |kernel|::BUSY))
     }
 }
-machine execute_for(gate: &Gate, context: &mut State, now: u64, job: u64, command: Command) -> Step reaches Kernel {
+machine execute_for(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, job: u64, command: |operations|::Command) -> Step reaches |kernel|::Kernel {
     transition {
         job == DISCOVERY -> block execute(gate, context, now, command)
-        job == CONFIGURATION -> block configuration::execute(gate, context, now, command)
-        job == BACKGROUND -> block background::execute(gate, context, now, command)
-        _ -> block picker::execute(gate, context, now, command)
+        job == CONFIGURATION -> block |configuration|::execute(gate, context, now, command)
+        job == BACKGROUND -> block |background|::execute(gate, context, now, command)
+        _ -> block |picker|::execute(gate, context, now, command)
     }
 }
 // The policy takes the command's completion; a refused completion or the
 // job's last command ends the frame.
-machine completed_step(gate: &Gate, context: &mut State, top: u64 [0..=2], command: Command, completion: Completion) -> u64 reaches Kernel {
-    let accepted: bool = complete(&mut context.frames[top].setup, completion);
+machine completed_step(gate: &|kernel|::Gate, context: &mut |shared_state|::State, top: u64 [0..=2], command: |operations|::Command, completion: |operations|::Completion) -> u64 reaches |kernel|::Kernel {
+    let accepted: bool = |realm_main|::complete(&mut context.frames[top].setup, completion);
     transition {
-        !accepted -> block finished(gate, context, top, kernel::IO_ERROR)
-        command == Command::Finish -> block finished(gate, context, top, status_of(context.frames[top].setup.outcome))
+        !accepted -> block finished(gate, context, top, |kernel|::IO_ERROR)
+        command == |operations|::Command::Finish -> block finished(gate, context, top, status_of(context.frames[top].setup.outcome))
         _ -> (0u64)
     }
 }
 // A job's end: its result answers the command waiting on it, or the owner's
 // CONFIGURE that started it. A background retried by recovery is not that
 // recovery's failure.
-machine finished(gate: &Gate, context: &mut State, top: u64 [0..=2], status: u64) -> u64 reaches Kernel {
+machine finished(gate: &|kernel|::Gate, context: &mut |shared_state|::State, top: u64 [0..=2], status: u64) -> u64 reaches |kernel|::Kernel {
     let job: u64 = context.frames[top].job;
     context.frame_count = top;
     transition {
@@ -224,124 +209,124 @@ machine finished(gate: &Gate, context: &mut State, top: u64 [0..=2], status: u64
         context.configure_held -> block answer(gate, context, status)
         _ -> (0u64)
     }
-    machine resumed(gate: &Gate, context: &mut State, parent: u64 [0..=2], job: u64, status: u64) -> u64 reaches Kernel {
-        let command: Command = context.frames[parent].command;
+    machine resumed(gate: &|kernel|::Gate, context: &mut |shared_state|::State, parent: u64 [0..=2], job: u64, status: u64) -> u64 reaches |kernel|::Kernel {
+        let command: |operations|::Command = context.frames[parent].command;
         context.frames[parent].waiting = false;
-        let recovered: bool = command == Command::RecoverStartup && job == BACKGROUND;
+        let recovered: bool = command == |operations|::Command::RecoverStartup && job == BACKGROUND;
         transition recovered {
             true -> block completed_step(gate, context, parent, command, completed(command, 0u64))
             _ -> block completed_step(gate, context, parent, command, completed(command, status))
         }
     }
 }
-machine execute(gate: &Gate, context: &mut State, now: u64, command: Command) -> Step reaches Kernel {
+machine execute(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, command: |operations|::Command) -> Step reaches |kernel|::Kernel {
     transition command {
-        Command::ConfigureRealm -> (Step::Nested { job: CONFIGURATION })
-        Command::StartPicker -> (Step::Nested { job: PICKER })
-        Command::RecoverStartup -> (recovered(gate, context))
+        |operations|::Command::ConfigureRealm -> (Step::Nested { job: CONFIGURATION })
+        |operations|::Command::StartPicker -> (Step::Nested { job: PICKER })
+        |operations|::Command::RecoverStartup -> (recovered(gate, context))
         _ -> block done_with(gate, context, now, command)
     }
-    machine done_with(gate: &Gate, context: &mut State, now: u64, command: Command) -> Step reaches Kernel {
-        let completion: Completion = block run_command(gate, context, now, command);
+    machine done_with(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, command: |operations|::Command) -> Step reaches |kernel|::Kernel {
+        let completion: |operations|::Completion = block run_command(gate, context, now, command);
         Step::Done { completion: completion }
     }
 }
-machine run_command(gate: &Gate, context: &mut State, now: u64, command: Command) -> Completion reaches Kernel {
+machine run_command(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, command: |operations|::Command) -> |operations|::Completion reaches |kernel|::Kernel {
     transition command {
-        Command::Refresh -> block refreshed(gate, context, now)
-        Command::InspectRealm -> block inspected(gate, context, now)
-        Command::MarkHosted -> (hosted(context))
+        |operations|::Command::Refresh -> block refreshed(gate, context, now)
+        |operations|::Command::InspectRealm -> block inspected(gate, context, now)
+        |operations|::Command::MarkHosted -> (hosted(context))
         _ -> (completed(command, 0u64))
     }
 }
 // Take the parent's snapshot; a view it has not granted yet retries next turn.
-machine refreshed(gate: &Gate, context: &mut State, now: u64) -> Completion reaches Kernel {
-    let status: u64 = block upstream::refresh(gate, context, now);
-    let placed: bool = geometry::valid_grant(context.world.parent);
-    Completion { command: Command::Refresh, outcome: outcome_of(status), placed: placed, entries: no_entries() }
+machine refreshed(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64) -> |operations|::Completion reaches |kernel|::Kernel {
+    let status: u64 = block |upstream|::refresh(gate, context, now);
+    let placed: bool = |geometry|::valid_grant(context.world.parent);
+    |operations|::Completion { command: |operations|::Command::Refresh, outcome: outcome_of(status), placed: placed, entries: no_entries() }
 }
 // What the realm holds: refused when this matrix has no binding of its own,
 // which leaves setup to the owner.
-machine inspected(gate: &Gate, context: &mut State, now: u64) -> Completion reaches Kernel {
-    let status: u64 = block storage::learn(gate, context, now);
+machine inspected(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64) -> |operations|::Completion reaches |kernel|::Kernel {
+    let status: u64 = block |storage|::learn(gate, context, now);
     transition status == 0u64 {
         true -> block looking(gate, context, now)
-        _ -> (completed(Command::InspectRealm, status))
+        _ -> (completed(|operations|::Command::InspectRealm, status))
     }
 }
-machine looking(gate: &Gate, context: &mut State, now: u64) -> Completion reaches Kernel {
-    let parent: u64 = listing::realm(context);
-    let matrix_name: [u64; 4] = realm_names::matrix();
-    let matrix: u64 = block listing::find(gate, context, now, parent, &matrix_name);
-    let login_name: [u64; 4] = realm_names::login();
-    let login: u64 = block listing::find(gate, context, now, parent, &login_name);
-    let users_name: [u64; 4] = realm_names::users();
-    let users: u64 = block listing::find(gate, context, now, parent, &users_name);
+machine looking(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64) -> |operations|::Completion reaches |kernel|::Kernel {
+    let parent: u64 = |listing|::realm(context);
+    let matrix_name: [u64; 4] = |realm_names|::matrix();
+    let matrix: u64 = block |listing|::find(gate, context, now, parent, &matrix_name);
+    let login_name: [u64; 4] = |realm_names|::login();
+    let login: u64 = block |listing|::find(gate, context, now, parent, &login_name);
+    let users_name: [u64; 4] = |realm_names|::users();
+    let users: u64 = block |listing|::find(gate, context, now, parent, &users_name);
     context.config_object = matrix;
     context.picker_object = login;
     context.users_object = users;
-    Completion { command: Command::InspectRealm, outcome: Outcome::Success, placed: false,
-        entries: Entries { matrix: matrix != 0u64, login: login != 0u64, users: users != 0u64 } }
+    |operations|::Completion { command: |operations|::Command::InspectRealm, outcome: |operations|::Outcome::Success, placed: false,
+        entries: |operations|::Entries { matrix: matrix != 0u64, login: login != 0u64, users: users != 0u64 } }
 }
-machine hosted(context: &mut State) -> Completion {
+machine hosted(context: &mut |shared_state|::State) -> |operations|::Completion {
     context.hosted = true;
-    completed(Command::MarkHosted, 0u64)
+    completed(|operations|::Command::MarkHosted, 0u64)
 }
 // Pending recovery work within the policy's budget, one job per command: a
 // picker to restart, else a background to retry; a turn with a routed word in
 // flight keeps it pending, and what remains runs on a later turn.
-machine recovered(gate: &Gate, context: &mut State) -> Step reaches Kernel invokes Kernel {
-    let blocked: bool = forward::busy(context);
-    let action: PickerAction = take_picker(&mut context.startup, blocked);
+machine recovered(gate: &|kernel|::Gate, context: &mut |shared_state|::State) -> Step reaches |kernel|::Kernel invokes |kernel|::Kernel {
+    let blocked: bool = |forward|::busy(context);
+    let action: |startup_main|::PickerAction = |startup_main|::take_picker(&mut context.startup, blocked);
     transition action {
-        PickerAction::Wait -> (background_retry(context, blocked))
-        PickerAction::Restart -> (restarting(gate))
-        PickerAction::Exhausted -> (exhausted(gate))
+        |startup_main|::PickerAction::Wait -> (background_retry(context, blocked))
+        |startup_main|::PickerAction::Restart -> (restarting(gate))
+        |startup_main|::PickerAction::Exhausted -> (exhausted(gate))
     }
-    machine restarting(gate: &Gate) -> Step reaches Kernel {
-        report::picker_restored(gate);
+    machine restarting(gate: &|kernel|::Gate) -> Step reaches |kernel|::Kernel {
+        |report|::picker_restored(gate);
         Step::Nested { job: PICKER }
     }
     // The owner sees a failed nested desktop; another launch is an explicit attempt.
-    machine exhausted(gate: &Gate) -> Step reaches Kernel {
-        report::picker_exhausted(gate);
-        Step::Done { completion: completed(Command::RecoverStartup, kernel::IO_ERROR) }
+    machine exhausted(gate: &|kernel|::Gate) -> Step reaches |kernel|::Kernel {
+        |report|::picker_exhausted(gate);
+        Step::Done { completion: completed(|operations|::Command::RecoverStartup, |kernel|::IO_ERROR) }
     }
-    machine background_retry(context: &mut State, blocked: bool) -> Step {
-        let retry: bool = take_background(&mut context.startup, blocked);
+    machine background_retry(context: &mut |shared_state|::State, blocked: bool) -> Step {
+        let retry: bool = |startup_main|::take_background(&mut context.startup, blocked);
         transition retry {
             true -> (Step::Nested { job: BACKGROUND })
-            _ -> (Step::Done { completion: completed(Command::RecoverStartup, 0u64) })
+            _ -> (Step::Done { completion: completed(|operations|::Command::RecoverStartup, 0u64) })
         }
     }
 }
 // A completion that reports only a status.
-public machine completed(command: Command, status: u64) -> Completion {
-    Completion { command: command, outcome: outcome_of(status), placed: false, entries: no_entries() }
+public machine completed(command: |operations|::Command, status: u64) -> |operations|::Completion {
+    |operations|::Completion { command: command, outcome: outcome_of(status), placed: false, entries: no_entries() }
 }
-public machine no_entries() -> Entries {
-    Entries { matrix: false, login: false, users: false }
+public machine no_entries() -> |operations|::Entries {
+    |operations|::Entries { matrix: false, login: false, users: false }
 }
-public machine outcome_of(status: u64) -> Outcome {
+public machine outcome_of(status: u64) -> |operations|::Outcome {
     transition {
-        status == 0u64 -> (Outcome::Success)
-        status == kernel::BUSY -> (Outcome::Busy)
-        status == kernel::DENIED -> (Outcome::Denied)
-        status == kernel::PEER_CLOSED -> (Outcome::PeerClosed)
-        _ -> (Outcome::Failed { status: status })
+        status == 0u64 -> (|operations|::Outcome::Success)
+        status == |kernel|::BUSY -> (|operations|::Outcome::Busy)
+        status == |kernel|::DENIED -> (|operations|::Outcome::Denied)
+        status == |kernel|::PEER_CLOSED -> (|operations|::Outcome::PeerClosed)
+        _ -> (|operations|::Outcome::Failed { status: status })
     }
 }
-public machine status_of(outcome: Outcome) -> u64 {
+public machine status_of(outcome: |operations|::Outcome) -> u64 {
     transition outcome {
-        Outcome::Success -> (0u64)
-        Outcome::Busy -> (kernel::BUSY)
-        Outcome::Denied -> (kernel::DENIED)
-        Outcome::PeerClosed -> (kernel::PEER_CLOSED)
-        Outcome::Failed { status } -> (status)
+        |operations|::Outcome::Success -> (0u64)
+        |operations|::Outcome::Busy -> (|kernel|::BUSY)
+        |operations|::Outcome::Denied -> (|kernel|::DENIED)
+        |operations|::Outcome::PeerClosed -> (|kernel|::PEER_CLOSED)
+        |operations|::Outcome::Failed { status } -> (status)
     }
 }
 // Whether any slot holds a child.
-public machine occupied(context: &State) -> bool {
+public machine occupied(context: &|shared_state|::State) -> bool {
     context.slots[0].live || context.slots[1].live || context.slots[2].live || context.slots[3].live || context.slots[4].live
 }
 // A program's first argument: its object above the role it was launched in.

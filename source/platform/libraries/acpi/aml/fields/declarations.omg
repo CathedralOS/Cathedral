@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Compatibility entry into the canonical AML-owned field syntax.
-module declarations;
-use aml::field_declarations;
-use aml::model::Path;
-use aml::field_model::DeclarationResult;
-pub machine parse_declaration(input:&[u8;1024],end:u64,at:u64,unit:u64,scope:Path,bit_limit:u64,budget:u64)->DeclarationResult {
- let result:DeclarationResult=field_declarations::parse_declaration(input,end,at,unit,scope,bit_limit,budget);result
+use {aml}/field_declarations.omg;
+use {aml}/model.omg;
+use {aml}/field_model.omg;
+pub machine parse_declaration(input:&[u8;1024],end:u64,at:u64,unit:u64,scope:|model|::Path,bit_limit:u64,budget:u64)->|field_model|::DeclarationResult {
+ let result:|field_model|::DeclarationResult=|field_declarations|::parse_declaration(input,end,at,unit,scope,bit_limit,budget);result
 }

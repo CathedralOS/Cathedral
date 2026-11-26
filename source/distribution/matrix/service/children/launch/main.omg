@@ -1,71 +1,64 @@
-module children::launch::main;
-
 // Begin, issue once, accept only the outstanding ticket/command, then advance.
 // progress.omg owns the successful sequence and cleanup after partial failure.
-use children::launch::operation::Launch;
-use children::launch::operation::Plan;
-use children::launch::operation::Command;
-use children::launch::operation::Phase;
-use children::launch::operation::Dispatch;
-use children::launch::operation::Completion;
-use children::launch::progress;
+use children/launch/operation.omg;
+use children/launch/progress.omg;
 
-public machine begin(launch: &mut Launch, ticket: u64, plan: Plan) -> bool {
-    transition (launch.phase in Phase::Dormant) && ticket != 0u64 {
+public machine begin(launch: &mut |operation|::Launch, ticket: u64, plan: |operation|::Plan) -> bool {
+    transition (launch.phase in |operation|::Phase::Dormant) && ticket != 0u64 {
         true -> start(launch, ticket, plan)
         _ -> (false)
     }
-    machine start(launch: &mut Launch, ticket: u64, plan: Plan) -> bool {
-        launch.phase = Phase::Ready { command: Command::Read };
+    machine start(launch: &mut |operation|::Launch, ticket: u64, plan: |operation|::Plan) -> bool {
+        launch.phase = |operation|::Phase::Ready { command: |operation|::Command::Read };
         launch.ticket = ticket;
         launch.plan = plan;
         true
     }
 }
 
-public machine next(launch: &mut Launch) -> Dispatch {
+public machine next(launch: &mut |operation|::Launch) -> |operation|::Dispatch {
     transition launch.phase {
-        Phase::Ready { command } -> issue(launch, command)
-        _ -> (Dispatch::Wait)
+        |operation|::Phase::Ready { command } -> issue(launch, command)
+        _ -> (|operation|::Dispatch::Wait)
     }
-    machine issue(launch: &mut Launch, command: Command) -> Dispatch {
-        launch.phase = Phase::Waiting { command: command };
-        Dispatch::Issue { command: command }
+    machine issue(launch: &mut |operation|::Launch, command: |operation|::Command) -> |operation|::Dispatch {
+        launch.phase = |operation|::Phase::Waiting { command: command };
+        |operation|::Dispatch::Issue { command: command }
     }
 }
 
 // A held reply remains usable only while this exact work is outstanding.
-public machine accepts(launch: &Launch, ticket: u64, requested: Command) -> bool {
+public machine accepts(launch: &|operation|::Launch, ticket: u64, requested: |operation|::Command) -> bool {
     transition launch.phase {
-        Phase::Waiting { command } -> (launch.ticket == ticket && command == requested)
+        |operation|::Phase::Waiting { command } -> (launch.ticket == ticket && command == requested)
         _ -> (false)
     }
 }
 
-public machine complete(launch: &mut Launch, completion: Completion) -> bool {
+public machine complete(launch: &mut |operation|::Launch, completion: |operation|::Completion) -> bool {
     transition accepts(launch, completion.ticket, completion.command) {
         true -> outcome(launch, completion)
         _ -> (false)
     }
-    machine outcome(launch: &mut Launch, completion: Completion) -> bool {
+    machine outcome(launch: &mut |operation|::Launch, completion: |operation|::Completion) -> bool {
         transition completion.status == 0u64 {
-            true -> children::launch::progress::completed(launch, completion.command, completion.requires_storage)
+            true -> |progress|::completed(launch, completion.command, completion.requires_storage)
             _ -> failed(launch, completion.status)
         }
     }
-    machine failed(launch: &mut Launch, status: u64) -> bool {
+    machine failed(launch: &mut |operation|::Launch, status: u64) -> bool {
         launch.status = status;
-        children::launch::progress::cleanup(launch)
+        |progress|::cleanup(launch)
     }
 }
 
-public machine cancel(launch: &mut Launch, status: u64) -> bool {
-    transition !(launch.phase in Phase::Dormant) && launch.status == 0u64 && status != 0u64 {
+public machine cancel(launch: &mut |operation|::Launch, status: u64) -> bool {
+    transition !(launch.phase in |operation|::Phase::Dormant) && launch.status == 0u64 && status != 0u64 {
         true -> cancelled(launch, status)
         _ -> (false)
     }
-    machine cancelled(launch: &mut Launch, status: u64) -> bool {
+    machine cancelled(launch: &mut |operation|::Launch, status: u64) -> bool {
         launch.status = status;
-        children::launch::progress::cleanup(launch)
+        |progress|::cleanup(launch)
     }
 }

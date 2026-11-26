@@ -1,17 +1,16 @@
-module input::main;
 // Admit supplied stream names and bind them to focus groups. Each stream keeps
 // its own pointer capture, held keys, description and last position; a group
 // shares one keyboard selection. Names are admitted within authenticated
 // authority; they are not capabilities.
-use protocol::main;
-use names::Name;
-use description::Description;
+use {protocol}/main.omg;
+use names.omg;
+use description.omg;
 
 public data Stream [copy] {
-    id: Name;
+    id: |names|::Name;
     group: u64 [0..=3];
     retiring: bool;
-    described: Description;
+    described: |description|::Description;
     // Set once a recipient holds this stream's name; the description is then fixed.
     describe_locked: bool;
     // Captured child slot plus one; zero means no capture.
@@ -28,7 +27,7 @@ public data Stream [copy] {
     suppressed: u64;
 }
 public data Group [copy] {
-    id: Name;
+    id: |names|::Name;
     // Focused child slot plus one; zero means none.
     focus: u64;
     retained: bool;
@@ -46,81 +45,81 @@ public data Admitted [copy] {
 }
 
 // A stream named for the first time joins a group of its own name.
-public machine admit(input: &mut Input, id: Name) -> Admitted {
-    transition names::valid(id) {
+public machine admit(input: &mut Input, id: |names|::Name) -> Admitted {
+    transition |names|::valid(id) {
         true -> existing(input, id, 0u64)
-        _ -> (Admitted::Failed { code: INVALID_ARGUMENT })
+        _ -> (Admitted::Failed { code: |main|::INVALID_ARGUMENT })
     }
-    machine existing(input: &mut Input, id: Name, index: u64) -> Admitted requires index <= 4u64 {
+    machine existing(input: &mut Input, id: |names|::Name, index: u64) -> Admitted requires index <= 4u64 {
         transition index < 4u64 {
             true -> compared(input, id, index)
             _ -> bind(input, id, id)
         }
     }
-    machine compared(input: &mut Input, id: Name, index: u64) -> Admitted requires index < 4u64 {
-        transition names::same(input.streams[index].id, id) {
+    machine compared(input: &mut Input, id: |names|::Name, index: u64) -> Admitted requires index < 4u64 {
+        transition |names|::same(input.streams[index].id, id) {
             true -> found(input, index)
             _ -> existing(input, id, index + 1u64)
         }
     }
     machine found(input: &Input, index: u64) -> Admitted requires index < 4u64 {
         transition input.streams[index].retiring {
-            true -> (Admitted::Failed { code: PEER_CLOSED })
+            true -> (Admitted::Failed { code: |main|::PEER_CLOSED })
             _ -> (Admitted::Slot { index: index })
         }
     }
 }
 // Local admission allocates monotonically, so a stale local name cannot recreate
 // a retired channel. A live stream keeps its group; rebinding elsewhere is BUSY.
-public machine bind(input: &mut Input, id: Name, group: Name) -> Admitted {
-    transition names::valid(id) && names::valid(group) {
+public machine bind(input: &mut Input, id: |names|::Name, group: |names|::Name) -> Admitted {
+    transition |names|::valid(id) && |names|::valid(group) {
         true -> existing(input, id, group, 0u64)
-        _ -> (Admitted::Failed { code: INVALID_ARGUMENT })
+        _ -> (Admitted::Failed { code: |main|::INVALID_ARGUMENT })
     }
-    machine existing(input: &mut Input, id: Name, group: Name, index: u64) -> Admitted requires index <= 4u64 {
+    machine existing(input: &mut Input, id: |names|::Name, group: |names|::Name, index: u64) -> Admitted requires index <= 4u64 {
         transition index < 4u64 {
             true -> compared(input, id, group, index)
             _ -> fresh(input, id, group)
         }
     }
-    machine compared(input: &mut Input, id: Name, group: Name, index: u64) -> Admitted requires index < 4u64 {
-        transition names::same(input.streams[index].id, id) {
+    machine compared(input: &mut Input, id: |names|::Name, group: |names|::Name, index: u64) -> Admitted requires index < 4u64 {
+        transition |names|::same(input.streams[index].id, id) {
             true -> found(input, group, index)
             _ -> existing(input, id, group, index + 1u64)
         }
     }
-    machine found(input: &Input, group: Name, index: u64) -> Admitted requires index < 4u64 {
+    machine found(input: &Input, group: |names|::Name, index: u64) -> Admitted requires index < 4u64 {
         transition {
-            input.streams[index].retiring -> (Admitted::Failed { code: PEER_CLOSED })
-            names::same(input.groups[input.streams[index].group].id, group) -> (Admitted::Slot { index: index })
-            _ -> (Admitted::Failed { code: BUSY })
+            input.streams[index].retiring -> (Admitted::Failed { code: |main|::PEER_CLOSED })
+            |names|::same(input.groups[input.streams[index].group].id, group) -> (Admitted::Slot { index: index })
+            _ -> (Admitted::Failed { code: |main|::BUSY })
         }
     }
-    machine fresh(input: &mut Input, id: Name, group: Name) -> Admitted {
+    machine fresh(input: &mut Input, id: |names|::Name, group: |names|::Name) -> Admitted {
         transition !id.inherited && id.value <= input.last_local_stream {
-            true -> (Admitted::Failed { code: PEER_CLOSED })
+            true -> (Admitted::Failed { code: |main|::PEER_CLOSED })
             _ -> slotted(input, id, group, free_stream(input, 0u64))
         }
     }
-    machine slotted(input: &mut Input, id: Name, group: Name, slot: u64) -> Admitted {
+    machine slotted(input: &mut Input, id: |names|::Name, group: |names|::Name, slot: u64) -> Admitted {
         transition slot < 4u64 {
             true -> grouped(input, id, group, slot, group_slot(input, group))
-            _ -> (Admitted::Failed { code: NO_MEMORY })
+            _ -> (Admitted::Failed { code: |main|::NO_MEMORY })
         }
     }
-    machine grouped(input: &mut Input, id: Name, group: Name, slot: u64, group_slot: u64) -> Admitted requires slot < 4u64 {
+    machine grouped(input: &mut Input, id: |names|::Name, group: |names|::Name, slot: u64, group_slot: u64) -> Admitted requires slot < 4u64 {
         transition group_slot < 4u64 {
             true -> checked(input, id, group, slot, group_slot)
-            _ -> (Admitted::Failed { code: NO_MEMORY })
+            _ -> (Admitted::Failed { code: |main|::NO_MEMORY })
         }
     }
-    machine checked(input: &mut Input, id: Name, group: Name, slot: u64, group_slot: u64) -> Admitted requires slot < 4u64 && group_slot < 4u64 {
+    machine checked(input: &mut Input, id: |names|::Name, group: |names|::Name, slot: u64, group_slot: u64) -> Admitted requires slot < 4u64 && group_slot < 4u64 {
         transition input.groups[group_slot].retiring {
-            true -> (Admitted::Failed { code: PEER_CLOSED })
+            true -> (Admitted::Failed { code: |main|::PEER_CLOSED })
             _ -> bound(input, id, group, slot, group_slot)
         }
     }
-    machine bound(input: &mut Input, id: Name, group: Name, slot: u64, group_slot: u64) -> Admitted requires slot < 4u64 && group_slot < 4u64 {
+    machine bound(input: &mut Input, id: |names|::Name, group: |names|::Name, slot: u64, group_slot: u64) -> Admitted requires slot < 4u64 && group_slot < 4u64 {
         input.groups[group_slot].id = group;
         // Only an explicit upstream retirement ends an inherited route.
         input.groups[group_slot].retained = input.groups[group_slot].retained || group.inherited;
@@ -132,14 +131,14 @@ public machine bind(input: &mut Input, id: Name, group: Name) -> Admitted {
         input.streams[slot] = stream;
         Admitted::Slot { index: slot }
     }
-    machine remember(input: &mut Input, id: Name, group: Name) {
+    machine remember(input: &mut Input, id: |names|::Name, group: |names|::Name) {
         transition !id.inherited { true -> local_stream(input, id, group) _ -> local_group(input, group) }
     }
-    machine local_stream(input: &mut Input, id: Name, group: Name) {
+    machine local_stream(input: &mut Input, id: |names|::Name, group: |names|::Name) {
         input.last_local_stream = id.value;
         transition { _ -> local_group(input, group) }
     }
-    machine local_group(input: &mut Input, group: Name) {
+    machine local_group(input: &mut Input, group: |names|::Name) {
         transition !group.inherited && group.value > input.last_local_group {
             true -> newest(input, group.value)
             _ -> done()
@@ -148,21 +147,21 @@ public machine bind(input: &mut Input, id: Name, group: Name) -> Admitted {
     machine newest(input: &mut Input, value: u64) { input.last_local_group = value; }
 }
 // The routing slot holding stream `id`, or 4.
-public machine stream_of(input: &Input, id: Name) -> u64 { stream_at(input, id, 0u64) }
-machine stream_at(input: &Input, id: Name, index: u64) -> u64 requires index <= 4u64 {
+public machine stream_of(input: &Input, id: |names|::Name) -> u64 { stream_at(input, id, 0u64) }
+machine stream_at(input: &Input, id: |names|::Name, index: u64) -> u64 requires index <= 4u64 {
     transition index < 4u64 {
         true -> checked(input, id, index)
         _ -> (4u64)
     }
-    machine checked(input: &Input, id: Name, index: u64) -> u64 requires index < 4u64 {
-        transition names::same(input.streams[index].id, id) {
+    machine checked(input: &Input, id: |names|::Name, index: u64) -> u64 requires index < 4u64 {
+        transition |names|::same(input.streams[index].id, id) {
             true -> (index)
             _ -> stream_at(input, id, index + 1u64)
         }
     }
 }
 // The group slot holding group `id`, or 4.
-public machine group_of(input: &Input, id: Name) -> u64 { holding(input, id, 0u64) }
+public machine group_of(input: &Input, id: |names|::Name) -> u64 { holding(input, id, 0u64) }
 // First free group slot, or 4.
 public machine free_group_slot(input: &Input) -> u64 { free_group(input, 0u64) }
 // Does any bound stream route through group slot `group`?
@@ -173,7 +172,7 @@ machine using(input: &Input, group: u64 [0..=3], index: u64) -> bool requires in
         _ -> (false)
     }
     machine checked(input: &Input, group: u64 [0..=3], index: u64) -> bool requires index < 4u64 {
-        transition names::valid(input.streams[index].id) && input.streams[index].group == group {
+        transition |names|::valid(input.streams[index].id) && input.streams[index].group == group {
             true -> (true)
             _ -> using(input, group, index + 1u64)
         }
@@ -186,8 +185,8 @@ public const LOCAL: u64 = 2u64;
 public const FREE: u64 = 3u64;
 public machine streams_counted(input: &Input, mode: u64) -> u64 { counting_streams(input, mode, 0u64, 0u64) }
 public machine groups_counted(input: &Input, mode: u64) -> u64 { counting_groups(input, mode, 0u64, 0u64) }
-machine name_matches(id: Name, mode: u64) -> bool {
-    let valid: bool = names::valid(id);
+machine name_matches(id: |names|::Name, mode: u64) -> bool {
+    let valid: bool = |names|::valid(id);
     transition {
         mode == BOUND -> (valid)
         mode == INHERITED -> (valid && id.inherited)
@@ -226,24 +225,24 @@ machine free_stream(input: &Input, index: u64) -> u64 requires index <= 4u64 {
         _ -> (4u64)
     }
     machine checked(input: &Input, index: u64) -> u64 requires index < 4u64 {
-        transition names::valid(input.streams[index].id) {
+        transition |names|::valid(input.streams[index].id) {
             true -> free_stream(input, index + 1u64)
             _ -> (index)
         }
     }
 }
 // The slot already holding this group, else the first empty one, else 4.
-machine group_slot(input: &Input, group: Name) -> u64 {
+machine group_slot(input: &Input, group: |names|::Name) -> u64 {
     let held: u64 = holding(input, group, 0u64);
     transition held < 4u64 { true -> (held) _ -> (free_group(input, 0u64)) }
 }
-machine holding(input: &Input, group: Name, index: u64) -> u64 requires index <= 4u64 {
+machine holding(input: &Input, group: |names|::Name, index: u64) -> u64 requires index <= 4u64 {
     transition index < 4u64 {
         true -> checked(input, group, index)
         _ -> (4u64)
     }
-    machine checked(input: &Input, group: Name, index: u64) -> u64 requires index < 4u64 {
-        transition names::same(input.groups[index].id, group) {
+    machine checked(input: &Input, group: |names|::Name, index: u64) -> u64 requires index < 4u64 {
+        transition |names|::same(input.groups[index].id, group) {
             true -> (index)
             _ -> holding(input, group, index + 1u64)
         }
@@ -255,7 +254,7 @@ machine free_group(input: &Input, index: u64) -> u64 requires index <= 4u64 {
         _ -> (4u64)
     }
     machine checked(input: &Input, index: u64) -> u64 requires index < 4u64 {
-        transition names::valid(input.groups[index].id) {
+        transition |names|::valid(input.groups[index].id) {
             true -> free_group(input, index + 1u64)
             _ -> (index)
         }

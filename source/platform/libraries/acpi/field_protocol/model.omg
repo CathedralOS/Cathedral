@@ -1,20 +1,16 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified pure decomposition of rust-osdev/acpi do_field_read/do_field_write,
 // 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5; copyright 2018 Isaac Woods.
-module model;
-use access::model::Plan;
-use access::model::Error;
-use access::model::LockRequirement;
-use aml::field_model::Field;
-use aml::field_model::DeclarationKind;
-use integers::integers::IntegerSize;
+use {access}/model.omg;
+use {aml}/field_model.omg;
+use {integers}/integers.omg;
 pub data Direction [copy] {case Read;case Write;}
 pub data Component [copy] {case Field;case Selector;case Data;}
 // Descriptions only: no namespace identity, physical address or access grant.
-pub data Register [copy] {kind:DeclarationKind;field:Field;region_bytes:u64;}
+pub data Register [copy] {kind:|field_model|::DeclarationKind;field:|field_model|::Field;region_bytes:u64;}
 pub data Request [copy] {
- kind:DeclarationKind;direction:Direction;size:IntegerSize;
- field:Field;region_bytes:u64;selector:Register;data:Register;bank_value:u64;
+ kind:|field_model|::DeclarationKind;direction:Direction;size:|integers|::IntegerSize;
+ field:|field_model|::Field;region_bytes:u64;selector:Register;data:Register;bank_value:u64;
 }
 pub data Action [copy] {
  case None;
@@ -26,11 +22,11 @@ pub data Action [copy] {
 // Its logical result/source is zero-extended or truncated to/from outer.width.
 // Bank data actions use the corresponding native outer chunk directly.
 pub data Recipe [copy] {
- kind:DeclarationKind;direction:Direction;outer:Plan;selector:Plan;data:Plan;
- bank_value:u64;lock:LockRequirement;count:u64;actions:[Action;1028];
+ kind:|field_model|::DeclarationKind;direction:Direction;outer:|model|::Plan;selector:|model|::Plan;data:|model|::Plan;
+ bank_value:u64;lock:|model|::LockRequirement;count:u64;actions:[Action;1028];
 }
 pub data ProtocolResult [copy] {
- case Failure(component:Component,error:Error);
+ case Failure(component:Component,error:|model|::Error);
  case SelectorOverflow;
  case Ready(recipe:Recipe);
 }

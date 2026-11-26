@@ -4,16 +4,16 @@ import json,sys
 from pathlib import Path
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[2]
 HEAD='''// SPDX-License-Identifier: MIT OR Apache-2.0
-use x86::page_iterators;
-use x86::encrypted_frames::IteratorResult;
-use x86::addresses::NumberResult;
+use {x86}/page_iterators.omg;
+use {x86}/encrypted_frames.omg;
+use {x86}/addresses.omg;
 data Row [copy] {start:u64;end:u64;size:u64;inclusive:bool;index:u64;reverse:bool;ok:bool;value:u64;failed:bool;out_start:u64;out_end:u64;}
 data Rows [copy] {values:[Row;32];}
 machine compare(row:Row)->bool {
- let actual:IteratorResult=page_iterators::step(row.start,row.end,row.size,row.inclusive,row.index,row.reverse);
+ let actual:IteratorResult=|page_iterators|::step(row.start,row.end,row.size,row.inclusive,row.index,row.reverse);
  let cursor:bool=actual.start==row.out_start && actual.end==row.out_end && actual.failed==row.failed;
  transition actual.selection {
-  NumberResult::Value{value} -> (cursor && row.ok && value==row.value)
+  |addresses|::NumberResult::Value{value} -> (cursor && row.ok && value==row.value)
   _ -> (cursor && !row.ok)
  }
 }

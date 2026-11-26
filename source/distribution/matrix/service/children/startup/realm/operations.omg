@@ -1,5 +1,3 @@
-module children::startup::realm::operations;
-
 // One setup invocation. It records sequencing and outcomes, not resources or
 // identity: the host retains images, tasks, connections and cleanup custody.
 public data Job [copy] {

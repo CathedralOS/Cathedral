@@ -1,10 +1,9 @@
-module presentation;
 // One scene publication retains its child ticket and view through settlement.
 // Images own a backing here; transactions keep their payloads in the slot batch.
 // Scene mutations wait behind publication; input polling does not.
-use runtime::server::main::Ticket;
-use runtime::connection::main::Frame;
-use world::layout::Proposal;
+use {runtime}/server/main.omg;
+use {runtime}/connection/main.omg as connection_main;
+use {world}/layout.omg;
 
 public data Phase [copy] { case Begin; case Entry; case Commit; case Abort; case Finished; case Releasing; }
 public data Maintenance [copy] { case None; case Pointer; case Style; case Erase; }
@@ -26,8 +25,8 @@ public data Transfer [copy] {
     active: bool;
     submitted: bool;
     slot: u64 [0..=4];
-    ticket: Ticket;
-    frame: Frame;
+    ticket: |main|::Ticket;
+    frame: |connection_main|::Frame;
     packet: [u64; 8];
     object: u64;
     parent_epoch: u64;
@@ -36,7 +35,7 @@ public data Transfer [copy] {
 // after the current publication settles; do not execute it twice or answer BUSY.
 public data Queued {
     active: bool;
-    frame: Frame;
+    frame: |connection_main|::Frame;
 }
 
 // A workspace switch previews two retained scenes; local visibility and input
@@ -60,7 +59,7 @@ public data Switch [copy] {
 // Distribution policy owns the standing app placements. The World proposal
 // captures authority and predicts the scene without applying those placements.
 public data Arrangement [copy] {
-    proposal: Proposal;
+    proposal: |layout|::Proposal;
     remember: u64;
     rank: u64 [0..=320];
     restoring: bool;

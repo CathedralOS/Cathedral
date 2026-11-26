@@ -70,18 +70,15 @@ def write(path,text):
  if '--check'in sys.argv:assert path.read_text()==text,('stale',path)
  else:path.parent.mkdir(parents=True,exist_ok=True);path.write_text(text)
 prefix='''// SPDX-License-Identifier: MIT OR Apache-2.0
-use values::recursive_cleanup::begin;
-use values::recursive_cleanup::step;
-use values::recursive_cleanup::RecursiveCursor;
-use values::recursive_cleanup::RecursiveStep;
-use values::cleanup_ranges::RangeStatus;
-use values::cleanup_branch::CleanupOutcome;
+use {values}/recursive_cleanup.omg;
+use {values}/cleanup_ranges.omg;
+use {values}/cleanup_branch.omg;
 '''
 footer='\nconst RESULT:i32=test();\nmachine require_ok(value:i32) requires value==0;{}\ndata Main{}\nmachine Main::main(&mut self){require_ok(RESULT);}\n'
 for i,row in enumerate(rows):
- q=row;body=f'let words:[u64;4]={arr(q["words"])};let ids:[u64;4]={arr(q["ids"])};let others:[bool;4]={arr([str(x).lower()for x in q["others"]])};\nlet cursor:RecursiveCursor=begin({q["page"]},{q["last"]},{q["budget"]},{q["index"]});let value:RecursiveStep=step(cursor,&words,&ids,&others);\n'
- c=[f'value.has_plan=={str(q["has_plan"]).lower()}',f'value.cursor.range.status in RangeStatus::{q["status"]}',f'next=={q["next"]}',f'last=={q["last"]}',f'budget=={q["remaining"]}',f'value.cursor.recursive_index=={q["index"]}',f'value.branch.retire_count=={len(q["retired"])}',f'value.branch.write_mask=={q["write"]}',f'value.branch.visited=={q["visited"]}']
- if q['has_plan']:c+=['value.branch.outcome in CleanupOutcome::Ready']
+ q=row;body=f'let words:[u64;4]={arr(q["words"])};let ids:[u64;4]={arr(q["ids"])};let others:[bool;4]={arr([str(x).lower()for x in q["others"]])};\nlet cursor:|recursive_cleanup|::RecursiveCursor=|recursive_cleanup|::begin({q["page"]},{q["last"]},{q["budget"]},{q["index"]});let value:|recursive_cleanup|::RecursiveStep=|recursive_cleanup|::step(cursor,&words,&ids,&others);\n'
+ c=[f'value.has_plan=={str(q["has_plan"]).lower()}',f'value.cursor.range.status in |cleanup_ranges|::RangeStatus::{q["status"]}',f'next=={q["next"]}',f'last=={q["last"]}',f'budget=={q["remaining"]}',f'value.cursor.recursive_index=={q["index"]}',f'value.branch.retire_count=={len(q["retired"])}',f'value.branch.write_mask=={q["write"]}',f'value.branch.visited=={q["visited"]}']
+ if q['has_plan']:c+=['value.branch.outcome in |cleanup_branch|::CleanupOutcome::Ready']
  c += [f'value.branch.words[{j}]=={w}'for j,w in enumerate(q['out'])]+[f'value.branch.frames_to_retire[{j}]=={v}'for j,v in enumerate(q['retired']+[0]*(3-len(q['retired'])))]
  body+='let next:u64=value.cursor.range.next_page;let last:u64=value.cursor.range.last_page;let budget:u64=value.cursor.range.budget;\ntransition '+' && '.join(c)+' {true -> (0) _ -> (1)}'
  write(HERE/'cases'/f'step-{i:03}.omg',prefix+f'// {q["scenario"]}\nmachine test()->i32 {{\n{body}\n}}'+footer)

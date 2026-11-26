@@ -1,5 +1,3 @@
-module children::configuration::name;
-
 // Canonical nonempty, zero-padded UTF-8 field; same rules as storage metadata.
 public machine valid_name(bytes: &[u8; 104]) -> bool {
     transition bytes[8] != 0u8 {

@@ -1,12 +1,4 @@
-module motion;
-
-use types::add_i32;
-use types::clamp_i32;
-use types::max_i32;
-use types::min_i32;
-use types::mul_i32;
-use types::select_i32;
-use types::sub_i32;
+use types.omg;
 
 
 /*
@@ -20,7 +12,6 @@ The store holds 64 retained channels without allocation. Values are normalized
 still live, capacity overflow returns the target rather than losing input.
 The cubic easing is a bounded transition, not a physical spring simulation.
 */
-use types;
 
 public data MotionValue {
     identifier: i32;
@@ -39,8 +30,8 @@ public data UiMotion {
 }
 
 public machine target(animation: &mut UiMotion, identifier: i32, target: i32, duration: i32) -> i32 {
-    let bounded: i32 = clamp_i32(target, 0, 1000);
-    transition { _ -> find(animation, identifier, bounded, clamp_i32(duration, 1, 1000), 0) }
+    let bounded: i32 = |types|::clamp_i32(target, 0, 1000);
+    transition { _ -> find(animation, identifier, bounded, |types|::clamp_i32(duration, 1, 1000), 0) }
     machine find(animation: &mut UiMotion, identifier: i32, target: i32, duration: i32, index: i32) -> i32 {
         transition index >= 0 && index < animation.count && index < 64 {
             true -> compare(animation, identifier, target, duration, index)
@@ -101,7 +92,7 @@ public machine target(animation: &mut UiMotion, identifier: i32, target: i32, du
     machine store(animation: &mut UiMotion, identifier: i32, target: i32, duration: i32, index: i32) -> i32
     requires index >= 0 && index < 64 {
         animation.values[index] = MotionValue { identifier: identifier, start: target, target: target, current: target, elapsed: duration, duration: duration, unseen_frames: 0 };
-        animation.count = max_i32(animation.count, index + 1);
+        animation.count = |types|::max_i32(animation.count, index + 1);
         target
     }
     machine recycle(animation: &mut UiMotion, identifier: i32, target: i32, duration: i32, index: i32) -> i32 {
@@ -121,7 +112,7 @@ public machine target(animation: &mut UiMotion, identifier: i32, target: i32, du
 
 public machine advance(animation: &mut UiMotion, elapsed_ms: i32) -> bool {
     animation.animating = false;
-    transition { _ -> next(animation, clamp_i32(elapsed_ms, 0, 1000), 0, false) }
+    transition { _ -> next(animation, |types|::clamp_i32(elapsed_ms, 0, 1000), 0, false) }
     machine next(animation: &mut UiMotion, elapsed_ms: i32, index: i32, changed: bool) -> bool {
         transition index >= 0 && index < animation.count && index < 64 {
             true -> step(animation, elapsed_ms, index, changed)
@@ -130,9 +121,9 @@ public machine advance(animation: &mut UiMotion, elapsed_ms: i32) -> bool {
     }
     machine step(animation: &mut UiMotion, elapsed_ms: i32, index: i32, changed: bool) -> bool
     requires index >= 0 && index < 64 {
-        animation.values[index].unseen_frames = min_i32(add_i32(animation.values[index].unseen_frames, 1), 121);
-        let duration: i32 = clamp_i32(animation.values[index].duration, 1, 1000);
-        let elapsed: i32 = min_i32(add_i32(animation.values[index].elapsed, elapsed_ms), duration);
+        animation.values[index].unseen_frames = |types|::min_i32(|types|::add_i32(animation.values[index].unseen_frames, 1), 121);
+        let duration: i32 = |types|::clamp_i32(animation.values[index].duration, 1, 1000);
+        let elapsed: i32 = |types|::min_i32(|types|::add_i32(animation.values[index].elapsed, elapsed_ms), duration);
         transition duration > 0 {
             true -> interpolate(animation, elapsed_ms, index, changed, duration, elapsed)
             _ -> next(animation, elapsed_ms, index + 1, changed)
@@ -140,11 +131,11 @@ public machine advance(animation: &mut UiMotion, elapsed_ms: i32) -> bool {
     }
     machine interpolate(animation: &mut UiMotion, elapsed_ms: i32, index: i32, changed: bool, duration: i32, elapsed: i32) -> bool
     requires index >= 0 && index < 64 && duration > 0 {
-        let remaining: i32 = mul_i32(sub_i32(duration, elapsed), 1000) / duration;
-        let eased: i32 = sub_i32(1000, mul_i32(mul_i32(remaining, remaining), remaining) / 1000000);
+        let remaining: i32 = |types|::mul_i32(|types|::sub_i32(duration, elapsed), 1000) / duration;
+        let eased: i32 = |types|::sub_i32(1000, |types|::mul_i32(|types|::mul_i32(remaining, remaining), remaining) / 1000000);
         let old: i32 = animation.values[index].current;
-        let current: i32 = select_i32(animation.reduced || elapsed == duration, animation.values[index].target,
-            add_i32(animation.values[index].start, mul_i32(sub_i32(animation.values[index].target, animation.values[index].start), eased) / 1000));
+        let current: i32 = |types|::select_i32(animation.reduced || elapsed == duration, animation.values[index].target,
+            |types|::add_i32(animation.values[index].start, |types|::mul_i32(|types|::sub_i32(animation.values[index].target, animation.values[index].start), eased) / 1000));
         animation.values[index].current = current;
         animation.values[index].elapsed = elapsed;
         animation.animating = animation.animating || current != animation.values[index].target;

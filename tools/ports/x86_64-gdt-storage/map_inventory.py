@@ -10,7 +10,7 @@ source='source/platform/libraries/x86_64/gdt_storage.omg';tests='tools/ports/x86
 anchors={108:'pub data Table',115:'pub machine initialize_default',122:'pub machine initialize_default',130:'pub machine initialize(',137:'let words: [u64; 8192]',161:'pub machine import_words',185:'pub machine entry(',197:'pub machine append(',250:'state write_user(',258:'pub machine limit('}
 scenarios={555:'"mixed"',568:'"system_fits"',576:'"mixed"',589:'"full_import"',596:'"single_slot"',604:'"import"'}
 for file in m['files'].values():
- file.update(disposition='translated',reason='Detached owned storage component only; other declarations explicitly outside this narrow overlay.',targets=[{'path':source,'anchor':'module gdt_storage;'}])
+ file.update(disposition='translated',reason='Detached owned storage component only; other declarations explicitly outside this narrow overlay.',targets=[{'path':source,'anchor':'pub data Table'}])
  for key,row in file['symbols'].items():
   line=int(key.split(':',1)[0]);target=None
   if line in anchors:target=(source,anchors[line])

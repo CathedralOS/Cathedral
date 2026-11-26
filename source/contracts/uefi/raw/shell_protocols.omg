@@ -2,8 +2,7 @@
 // Modified translation of rust-osdev/uefi-rs at c0facddf9ba42b74906a37fca2869e6cdbc8da6a.
 // See shell.PORT.md. Inert carriers do not grant firmware, MMIO, DMA or I/O authority.
 // PORT-BLOCKED[omega:named-calling-policy]: native slots require admitted calling/ownership contracts.
-module shell_protocols;
-use scalars::Guid;
+use scalars.omg;
 
 // Upstream: uefi_raw::protocol::shell::ListEntry
 pub data ListEntry [copy] {
@@ -128,4 +127,4 @@ pub data ShellProtocol [copy] {
 
 pub const SHELL_DEVICE_NAME_FLAGS_USE_COMPONENT_NAME: ShellDeviceNameFlags = ShellDeviceNameFlags { raw: 1 };
 pub const SHELL_DEVICE_NAME_FLAGS_USE_DEVICE_PATH: ShellDeviceNameFlags = ShellDeviceNameFlags { raw: 2 };
-pub const SHELL_PROTOCOL_GUID: Guid = Guid { data1: 0x6302d008, data2: 0x7f9b, data3: 0x4f30, data4: [0x87, 0xac, 0x60, 0xc9, 0xfe, 0xf5, 0xda, 0x4e] };
+pub const SHELL_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x6302d008, data2: 0x7f9b, data3: 0x4f30, data4: [0x87, 0xac, 0x60, 0xc9, 0xfe, 0xf5, 0xda, 0x4e] };

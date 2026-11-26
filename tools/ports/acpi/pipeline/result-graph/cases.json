@@ -31,7 +31,7 @@
   },
   {
     "name": "default_nested_bad_owner",
-    "setup": "program.store.space.objects[1].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:2}};",
+    "setup": "program.store.space.objects[1].value=|model|::Value::Buffer {buffer_storage:|model|::BufferStorage::Owned {buffer_owner:2}};",
     "error": "InvalidState",
     "objects": 3,
     "bytes": 3,
@@ -46,7 +46,7 @@
   },
   {
     "name": "nested_invalid_string",
-    "setup": "program.store.space.objects[1].value=Value::String {string_storage:StringStorage::Owned {string_owner:1}};program.store.bytes.blocks[1]=ByteBlock {initialized:true,length:1};program.store.bytes.blocks[1].bytes[0]=255;",
+    "setup": "program.store.space.objects[1].value=|model|::Value::String {string_storage:|model|::StringStorage::Owned {string_owner:1}};program.store.bytes.blocks[1]=|model|::ByteBlock {initialized:true,length:1};program.store.bytes.blocks[1].bytes[0]=255;",
     "error": "InvalidState",
     "objects": 3,
     "bytes": 3,
@@ -61,7 +61,7 @@
   },
   {
     "name": "nested_bad_package",
-    "setup": "program.store.space.objects[1].value=Value::Package {first:2,count:2};",
+    "setup": "program.store.space.objects[1].value=|model|::Value::Package {first:2,count:2};",
     "error": "InvalidState",
     "objects": 3,
     "bytes": 3,
@@ -76,7 +76,7 @@
   },
   {
     "name": "empty_nested_package",
-    "setup": "program.store.space.objects[1].value=Value::Package {first:18446744073709551615,count:0};",
+    "setup": "program.store.space.objects[1].value=|model|::Value::Package {first:18446744073709551615,count:0};",
     "error": "Success",
     "objects": 3,
     "bytes": 0,
@@ -91,7 +91,7 @@
   },
   {
     "name": "shared_reference",
-    "setup": "program.store.space.objects[2].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:1};",
+    "setup": "program.store.space.objects[2].value=|model|::Value::Reference {kind:|model|::ReferenceKind::RefOf,object_id:1};",
     "error": "Success",
     "objects": 3,
     "bytes": 3,
@@ -106,7 +106,7 @@
   },
   {
     "name": "opaque_reference_cycle",
-    "setup": "program.store.space.objects[2].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:2};",
+    "setup": "program.store.space.objects[2].value=|model|::Value::Reference {kind:|model|::ReferenceKind::RefOf,object_id:2};",
     "error": "Success",
     "objects": 3,
     "bytes": 3,
@@ -121,7 +121,7 @@
   },
   {
     "name": "dangling_reference",
-    "setup": "program.store.space.objects[2].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:18446744073709551615};",
+    "setup": "program.store.space.objects[2].value=|model|::Value::Reference {kind:|model|::ReferenceKind::RefOf,object_id:18446744073709551615};",
     "error": "InvalidState",
     "objects": 3,
     "bytes": 3,
@@ -136,7 +136,7 @@
   },
   {
     "name": "lexical_forward",
-    "setup": "let mut forward:Path=Path {count:1};forward.segments[0]=1598314310;program.store.space.objects[2].value=Value::NameReference {name:forward,scope:Path {absolute:true}};",
+    "setup": "let mut forward:|model|::Path=|model|::Path {count:1};forward.segments[0]=1598314310;program.store.space.objects[2].value=|model|::Value::NameReference {name:forward,scope:|model|::Path {absolute:true}};",
     "error": "Success",
     "objects": 3,
     "bytes": 3,
@@ -151,7 +151,7 @@
   },
   {
     "name": "lexical_invalid",
-    "setup": "program.store.space.objects[2].value=Value::NameReference {name:Path {},scope:Path {}};",
+    "setup": "program.store.space.objects[2].value=|model|::Value::NameReference {name:|model|::Path {},scope:|model|::Path {}};",
     "error": "InvalidState",
     "objects": 3,
     "bytes": 3,
@@ -166,7 +166,7 @@
   },
   {
     "name": "padding_uninitialized",
-    "setup": "program.store.space.objects[2].value=Value::Uninitialized;",
+    "setup": "program.store.space.objects[2].value=|model|::Value::Uninitialized;",
     "error": "Success",
     "objects": 3,
     "bytes": 3,
@@ -181,7 +181,7 @@
   },
   {
     "name": "unsupported_nested_service",
-    "setup": "program.store.space.objects[2].value=Value::OperationRegion {};",
+    "setup": "program.store.space.objects[2].value=|model|::Value::OperationRegion {};",
     "error": "UnsupportedValue",
     "objects": 3,
     "bytes": 3,
@@ -346,7 +346,7 @@
   },
   {
     "name": "empty_buffer_zero_bytes",
-    "setup": "program.store.space.objects[1].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:1}};program.store.bytes.blocks[1]=ByteBlock {initialized:true};",
+    "setup": "program.store.space.objects[1].value=|model|::Value::Buffer {buffer_storage:|model|::BufferStorage::Owned {buffer_owner:1}};program.store.bytes.blocks[1]=|model|::ByteBlock {initialized:true};",
     "error": "Success",
     "objects": 3,
     "bytes": 0,
@@ -376,7 +376,7 @@
   },
   {
     "name": "failed_result_keeps_allocation",
-    "setup": "program.store.space.objects[1].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:2}};",
+    "setup": "program.store.space.objects[1].value=|model|::Value::Buffer {buffer_storage:|model|::BufferStorage::Owned {buffer_owner:2}};",
     "error": "InvalidState",
     "objects": 3,
     "bytes": 3,
@@ -391,7 +391,7 @@
   },
   {
     "name": "opaque_root_identity",
-    "setup": "program.store.space.objects[0].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:1};",
+    "setup": "program.store.space.objects[0].value=|model|::Value::Reference {kind:|model|::ReferenceKind::RefOf,object_id:1};",
     "error": "Success",
     "objects": 2,
     "bytes": 3,

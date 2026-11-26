@@ -1,56 +1,49 @@
-module rendering::panels;
-use state::State;
-use transport::add;
-use matrix_service::children::configuration::encoding;
-use rendering::rendering::normal_chrome;
-use rendering::rendering::footer_managed;
-use rendering::rendering::footer_status;
-use rendering::text::letter;
-use rendering::text::label_pixel;
-use rendering::text::centered_label;
-use rendering::text::name_pixel;
-use rendering::text::number_pixel;
-public machine settings_pixel(s: &State, x: u64, y: u64) -> u64 {
+use state.omg as local_state;
+use transport.omg;
+use {matrix_service}/children/configuration/encoding.omg;
+use rendering/rendering.omg;
+use rendering/text.omg;
+public machine settings_pixel(s: &|local_state|::State, x: u64, y: u64) -> u64 {
     let row: u64 = s.image_index;
-    transition label_pixel(add(10u64, row), x, y, 4u64, 2u64) { true -> (0xffffffu64) _ -> content(s, x, y, row) }
-    machine content(s: &State, x: u64, y: u64, row: u64) -> u64 { transition row < 2u64 { true -> numeric(s, x, y, row) _ -> save(s, x, y) } }
-    machine numeric(s: &State, x: u64, y: u64, row: u64) -> u64 {
-        transition number_pixel(setting_value(s, row), x, y) || (y >= 50u64 && y < 52u64 && ((x >= 34u64 && x < 46u64) || (x >= 114u64 && x < 126u64))) || (x >= 118u64 && x < 120u64 && y >= 46u64 && y < 58u64) { true -> (0xffffffu64) _ -> setting_background(s, x, y) }
+    transition |text|::label_pixel(|transport|::add(10u64, row), x, y, 4u64, 2u64) { true -> (0xffffffu64) _ -> content(s, x, y, row) }
+    machine content(s: &|local_state|::State, x: u64, y: u64, row: u64) -> u64 { transition row < 2u64 { true -> numeric(s, x, y, row) _ -> save(s, x, y) } }
+    machine numeric(s: &|local_state|::State, x: u64, y: u64, row: u64) -> u64 {
+        transition |text|::number_pixel(setting_value(s, row), x, y) || (y >= 50u64 && y < 52u64 && ((x >= 34u64 && x < 46u64) || (x >= 114u64 && x < 126u64))) || (x >= 118u64 && x < 120u64 && y >= 46u64 && y < 58u64) { true -> (0xffffffu64) _ -> setting_background(s, x, y) }
     }
-    machine save(s: &State, x: u64, y: u64) -> u64 { transition label_pixel(13u64, x, y, 10u64, 44u64) || label_pixel(14u64, x, y, 84u64, 44u64) { true -> (0xffffffu64) _ -> setting_background(s, x, y) } }
+    machine save(s: &|local_state|::State, x: u64, y: u64) -> u64 { transition |text|::label_pixel(13u64, x, y, 10u64, 44u64) || |text|::label_pixel(14u64, x, y, 84u64, 44u64) { true -> (0xffffffu64) _ -> setting_background(s, x, y) } }
 }
-machine setting_value(s: &State, row: u64) -> u64 { transition row == 0u64 { true -> matrix_service::children::configuration::encoding::word(&s.draft, 72u64) _ -> matrix_service::children::configuration::encoding::word(&s.draft, 64u64) } }
-machine setting_background(s: &State, x: u64, y: u64) -> u64 {
-    let action: u64 = add(((s.image_index as u64 in Saturating) * 2) as u64, (x >= 80u64) as u64);
+machine setting_value(s: &|local_state|::State, row: u64) -> u64 { transition row == 0u64 { true -> |encoding|::word(&s.draft, 72u64) _ -> |encoding|::word(&s.draft, 64u64) } }
+machine setting_background(s: &|local_state|::State, x: u64, y: u64) -> u64 {
+    let action: u64 = |transport|::add(((s.image_index as u64 in Saturating) * 2) as u64, (x >= 80u64) as u64);
     transition y >= 40u64 && s.setting_selected == action { true -> (0x53718au64) _ -> (0x202d43u64) }
 }
-public machine management_pixel(s: &State, x: u64, y: u64) -> u64 {
+public machine management_pixel(s: &|local_state|::State, x: u64, y: u64) -> u64 {
     transition s.image_index == 0u64 { true -> warning(x, y) _ -> button(s, x, y) }
-    machine warning(x: u64, y: u64) -> u64 { transition label_pixel(4u64, x, y, 18u64, 4u64) || label_pixel(21u64, x, y, 24u64, 26u64) { true -> (0xffffffu64) _ -> (0x202d43u64) } }
-    machine button(s: &State, x: u64, y: u64) -> u64 { transition centered_label(management_label(s), 180u64, x, y, 8u64) { true -> (0xffffffu64) _ -> background(s) } }
-    machine background(s: &State) -> u64 { transition (s.image_index == 2u64) == s.cancel { true -> (0x53718au64) _ -> (0x202d43u64) } }
+    machine warning(x: u64, y: u64) -> u64 { transition |text|::label_pixel(4u64, x, y, 18u64, 4u64) || |text|::label_pixel(21u64, x, y, 24u64, 26u64) { true -> (0xffffffu64) _ -> (0x202d43u64) } }
+    machine button(s: &|local_state|::State, x: u64, y: u64) -> u64 { transition |text|::centered_label(management_label(s), 180u64, x, y, 8u64) { true -> (0xffffffu64) _ -> background(s) } }
+    machine background(s: &|local_state|::State) -> u64 { transition (s.image_index == 2u64) == s.cancel { true -> (0x53718au64) _ -> (0x202d43u64) } }
 }
-machine management_label(s: &State) -> u64 { transition s.image_index == 1u64 { true -> (9u64) _ -> (14u64) } }
-public machine footer_pixel(s: &State, x: u64, y: u64) -> u64 {
-    let offset: u64 = (footer_managed(s) as u64) * 24u64;
-    transition (footer_managed(s) && label_pixel(9u64, x, y, 48u64, 0u64)) || label_pixel(footer_status(s), x, y, 0u64, offset) || (normal_chrome(s) && label_pixel(8u64, x, y, 42u64, offset + 24u64)) { true -> (0xffffffu64) _ -> (0x101827u64) }
+machine management_label(s: &|local_state|::State) -> u64 { transition s.image_index == 1u64 { true -> (9u64) _ -> (14u64) } }
+public machine footer_pixel(s: &|local_state|::State, x: u64, y: u64) -> u64 {
+    let offset: u64 = (|rendering|::footer_managed(s) as u64) * 24u64;
+    transition (|rendering|::footer_managed(s) && |text|::label_pixel(9u64, x, y, 48u64, 0u64)) || |text|::label_pixel(|rendering|::footer_status(s), x, y, 0u64, offset) || (|rendering|::normal_chrome(s) && |text|::label_pixel(8u64, x, y, 42u64, offset + 24u64)) { true -> (0xffffffu64) _ -> (0x101827u64) }
 }
-public machine task_pixel(s: &State, x: u64, y: u64) -> u64 {
+public machine task_pixel(s: &|local_state|::State, x: u64, y: u64) -> u64 {
     transition x / 144u64 < 3u64 { true -> task(s, x / 144u64, x % 144u64, y) _ -> (0x101827u64) }
-    machine task(s: &State, index: u64, x: u64, y: u64) -> u64 requires index < 3u64 {
+    machine task(s: &|local_state|::State, index: u64, x: u64, y: u64) -> u64 requires index < 3u64 {
         transition s.tasks[index][0] == 0u64 && s.tasks[index][1] != 0u64 { true -> active(s, index, x, y) _ -> (0x101827u64) }
     }
-    machine active(s: &State, index: u64, x: u64, y: u64) -> u64 requires index < 3u64 {
-        transition task_title(s, s.tasks[index][2], x, y) || number(index, x, y) || label_pixel(23u64, x, y, 128u64, 8u64) { true -> (0xffffffu64) _ -> background(s, index) }
+    machine active(s: &|local_state|::State, index: u64, x: u64, y: u64) -> u64 requires index < 3u64 {
+        transition task_title(s, s.tasks[index][2], x, y) || number(index, x, y) || |text|::label_pixel(23u64, x, y, 128u64, 8u64) { true -> (0xffffffu64) _ -> background(s, index) }
     }
-    machine background(s: &State, index: u64) -> u64 requires index < 3u64 { transition s.tasks[index][3] != 0u64 { true -> (0x31506cu64) _ -> (0x202d43u64) } }
+    machine background(s: &|local_state|::State, index: u64) -> u64 requires index < 3u64 { transition s.tasks[index][3] != 0u64 { true -> (0x31506cu64) _ -> (0x202d43u64) } }
 }
 machine number(index: u64, x: u64, y: u64) -> bool {
     transition x >= 108u64 && y >= 8u64 && index < 3u64 { true -> at(index, x - 108u64, y - 8u64) _ -> (false) }
-    machine at(index: u64, x: u64, y: u64) -> bool requires index < 3u64 { letter(49u64 + index, x / 2u64, y / 2u64) }
+    machine at(index: u64, x: u64, y: u64) -> bool requires index < 3u64 { |text|::letter(49u64 + index, x / 2u64, y / 2u64) }
 }
-machine task_title(s: &State, object: u64, x: u64, y: u64) -> bool {
+machine task_title(s: &|local_state|::State, object: u64, x: u64, y: u64) -> bool {
     transition { _ -> scan(s, object, x, y, 0u64) }
-    machine scan(s: &State, object: u64, x: u64, y: u64, i: u64) -> bool { transition i < s.entries.count && i < 6u64 { true -> match_id(s, object, x, y, i) _ -> label_pixel(22u64, x, y, 4u64, 8u64) } }
-    machine match_id(s: &State, object: u64, x: u64, y: u64, i: u64) -> bool requires i < 6u64 { transition s.entries.ids[i] == object { true -> name_pixel(s, i, 8u64, x, y, 4u64, 8u64) _ -> scan(s, object, x, y, i + 1u64) } }
+    machine scan(s: &|local_state|::State, object: u64, x: u64, y: u64, i: u64) -> bool { transition i < s.entries.count && i < 6u64 { true -> match_id(s, object, x, y, i) _ -> |text|::label_pixel(22u64, x, y, 4u64, 8u64) } }
+    machine match_id(s: &|local_state|::State, object: u64, x: u64, y: u64, i: u64) -> bool requires i < 6u64 { transition s.entries.ids[i] == object { true -> |text|::name_pixel(s, i, 8u64, x, y, 4u64, 8u64) _ -> scan(s, object, x, y, i + 1u64) } }
 }

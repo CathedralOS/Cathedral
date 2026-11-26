@@ -1,28 +1,25 @@
-module control;
 // Owner queries inspect state without advancing or replaying pending service work.
-use state::State;
-use state::Phase;
-use state::StorageStep;
-use operations::Report;
-use protocol::main;
+use state.omg as local_state;
+use operations.omg;
+use {protocol}/main.omg;
 
-public machine report(s: &State, loss: bool, cpu: u64) -> Report {
+public machine report(s: &|local_state|::State, loss: bool, cpu: u64) -> |operations|::Report {
     transition loss {
         true -> pending(s)
-        _ -> (Report::Health { paints: s.paints, wakes: s.wakes, cpu: cpu,
+        _ -> (|operations|::Report::Health { paints: s.paints, wakes: s.wakes, cpu: cpu,
             alternate: s.alternate, error: s.error, pointers: s.pointers, revision: s.revision })
     }
 }
-machine pending(s: &State) -> Report {
+machine pending(s: &|local_state|::State) -> |operations|::Report {
     transition s.phase {
-        Phase::Storage { step } -> storage(s, step)
-        _ -> (Report::Loss { error: s.error })
+        |local_state|::Phase::Storage { step } -> storage(s, step)
+        _ -> (|operations|::Report::Loss { error: s.error })
     }
-    machine storage(s: &State, step: StorageStep) -> Report {
+    machine storage(s: &|local_state|::State, step: |local_state|::StorageStep) -> |operations|::Report {
         transition step {
-            StorageStep::Saved -> (Report::Loss { error: BUSY })
-            StorageStep::Created -> (Report::Loss { error: BUSY })
-            _ -> (Report::Loss { error: s.error })
+            |local_state|::StorageStep::Saved -> (|operations|::Report::Loss { error: |main|::BUSY })
+            |local_state|::StorageStep::Created -> (|operations|::Report::Loss { error: |main|::BUSY })
+            _ -> (|operations|::Report::Loss { error: s.error })
         }
     }
 }

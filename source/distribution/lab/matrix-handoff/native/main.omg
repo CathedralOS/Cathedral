@@ -1,8 +1,7 @@
-use runtime::entry::Program;
-use fixture::main::ProgramProvider;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-machine main() reaches Program + Kernel {
-    let gate: Gate;
-    let result: u64 = block Program::run(&gate, 0u64, 0u64);
+use {runtime}/entry.omg;
+use {fixture}/main.omg;
+use {runtime}/kernel.omg;
+machine main() reaches |entry|::Program + |kernel|::Kernel {
+    let gate: |kernel|::Gate;
+    let result: u64 = block |entry|::Program::run(&gate, 0u64, 0u64);
 }

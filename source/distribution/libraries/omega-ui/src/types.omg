@@ -1,5 +1,3 @@
-module types;
-
 // Defines geometry, arithmetic helpers, styles, and resolved runtime theme roles.
 
 public machine select_i32(condition: bool, when_true: i32, when_false: i32) -> i32 {
@@ -292,7 +290,7 @@ public machine style_default_box() -> Style {
     Style {
         direction: UiAxis::Column,
         gap: 0,
-        padding: types::edges_all(0),
+        padding: edges_all(0),
         width_mode: UiSizing::Fit,
         width_px: 0,
         height_mode: UiSizing::Fit,

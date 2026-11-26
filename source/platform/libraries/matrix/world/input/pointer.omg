@@ -1,93 +1,93 @@
-module input::pointer;
 // Per-stream hit testing, selection and drag capture. A press selects the
 // stream's group onto the child under it and captures that child until release;
 // coordinates delivered to a child are relative to its own placement. The first
 // delivery to a recipient fixes the stream's description.
-use protocol::main;
-use level::World;
-use names::Name;
-use children::Pushed;
-use description::Description;
-use input::main::Admitted;
+use geometry.omg;
+use {protocol}/main.omg;
+use level.omg;
+use names.omg;
+use children.omg;
+use description.omg;
+use input/main.omg as input_main;
 
-public machine route(world: &mut World, channel: Name, x: u64, y: u64, buttons: u64, select: bool) -> u64 {
-    transition geometry::valid_grant(world.parent) && buttons <= 7u64 {
+public machine route(world: &mut |level|::World, channel: |names|::Name, x: u64, y: u64, buttons: u64, select: bool) -> u64 {
+    transition |geometry|::valid_grant(world.parent) && buttons <= 7u64 {
         true -> admitting(world, channel, x, y, buttons, select)
-        _ -> (DENIED)
+        _ -> (|main|::DENIED)
     }
-    machine admitting(world: &mut World, channel: Name, x: u64, y: u64, buttons: u64, select: bool) -> u64 {
-        let admitted: Admitted = input::main::admit(&mut world.input, channel);
+    machine admitting(world: &mut |level|::World, channel: |names|::Name, x: u64, y: u64, buttons: u64, select: bool) -> u64 {
+        let admitted: |input_main|::Admitted = |input_main|::admit(&mut world.input, channel);
         transition admitted {
-            Admitted::Slot { index } -> stream(world, channel, x, y, buttons, select, index)
-            Admitted::Failed { code } -> (code)
+            |input_main|::Admitted::Slot { index } -> stream(world, channel, x, y, buttons, select, index)
+            |input_main|::Admitted::Failed { code } -> (code)
         }
     }
     // A stream whose cursor cycle is exhausted cannot be observed and refuses.
     // One blocked by an interrupted hold stays silent until its release.
-    machine stream(world: &mut World, channel: Name, x: u64, y: u64, buttons: u64, select: bool, index: u64 [0..=3]) -> u64 {
+    machine stream(world: &mut |level|::World, channel: |names|::Name, x: u64, y: u64, buttons: u64, select: bool, index: u64 [0..=3]) -> u64 {
         transition {
-            world.input.streams[index].cursor_cycle == 0u64 -> (NO_MEMORY)
+            world.input.streams[index].cursor_cycle == 0u64 -> (|main|::NO_MEMORY)
             world.input.streams[index].blocked -> blocked(world, buttons, index)
-            _ -> clamped(world, channel, geometry::within(x, world.parent.width),
-                geometry::within(y, world.parent.height), buttons, select, index)
+            _ -> clamped(world, channel, |geometry|::within(x, world.parent.width),
+                |geometry|::within(y, world.parent.height), buttons, select, index)
         }
     }
-    machine blocked(world: &mut World, buttons: u64, index: u64 [0..=3]) -> u64 {
+    machine blocked(world: &mut |level|::World, buttons: u64, index: u64 [0..=3]) -> u64 {
         transition buttons == 0u64 { true -> unblocked(world, index) _ -> (0u64) }
     }
-    machine unblocked(world: &mut World, index: u64 [0..=3]) -> u64 {
+    machine unblocked(world: &mut |level|::World, index: u64 [0..=3]) -> u64 {
         world.input.streams[index].blocked = false;
         0u64
     }
-    machine clamped(world: &mut World, channel: Name, x: u64, y: u64, buttons: u64, select: bool, index: u64 [0..=3]) -> u64 {
-        let hit: u64 = level::hit_pointer(world, x, y);
+    machine clamped(world: &mut |level|::World, channel: |names|::Name, x: u64, y: u64, buttons: u64, select: bool, index: u64 [0..=3]) -> u64 {
+        let hit: u64 = |level|::hit_pointer(world, x, y);
         let target: u64 = captured_or(world, index, hit);
         transition target != 0u64 && target <= 5u64 {
             true -> preflight(world, channel, x, y, buttons, select, index, hit, target - 1u64)
             _ -> pressed(world, channel, x, y, buttons, select, index, hit, 0u64)
         }
     }
-    machine captured_or(world: &World, index: u64 [0..=3], hit: u64) -> u64 {
+    machine captured_or(world: &|level|::World, index: u64 [0..=3], hit: u64) -> u64 {
         transition world.input.streams[index].buttons != 0u64 {
             true -> (world.input.streams[index].capture)
             _ -> (hit)
         }
     }
-    machine preflight(world: &mut World, channel: Name, x: u64, y: u64, buttons: u64, select: bool, index: u64 [0..=3], hit: u64, slot: u64) -> u64 requires slot < 5u64 {
+    machine preflight(world: &mut |level|::World, channel: |names|::Name, x: u64, y: u64, buttons: u64, select: bool, index: u64 [0..=3], hit: u64, slot: u64) -> u64 requires slot < 5u64 {
         let group: u64 [0..=3] = world.input.streams[index].group;
-        let code: u64 = children::can_push(&world.children[slot], index, group, world.input.groups[group].id);
+        let code: u64 = |children|::can_push(&world.children[slot], index, group, world.input.groups[group].id);
         transition code == 0u64 {
             true -> locked(world, channel, x, y, buttons, select, index, hit, slot + 1u64)
             _ -> (code)
         }
     }
-    machine locked(world: &mut World, channel: Name, x: u64, y: u64, buttons: u64, select: bool, index: u64 [0..=3], hit: u64, target: u64) -> u64 {
+    machine locked(world: &mut |level|::World, channel: |names|::Name, x: u64, y: u64, buttons: u64, select: bool, index: u64 [0..=3], hit: u64, target: u64) -> u64 {
         world.input.streams[index].describe_locked = true;
         transition { _ -> pressed(world, channel, x, y, buttons, select, index, hit, target) }
     }
     // A fresh press selects and captures; the hit may be nothing at all.
-    machine pressed(world: &mut World, channel: Name, x: u64, y: u64, buttons: u64, select: bool, index: u64 [0..=3], hit: u64, target: u64) -> u64 {
+    machine pressed(world: &mut |level|::World, channel: |names|::Name, x: u64, y: u64, buttons: u64, select: bool, index: u64 [0..=3], hit: u64, target: u64) -> u64 {
         transition world.input.streams[index].buttons == 0u64 && buttons != 0u64 {
             true -> selecting(world, channel, x, y, buttons, select, index, hit, target)
             _ -> moved(world, channel, x, y, buttons, index, target)
         }
     }
-    machine selecting(world: &mut World, channel: Name, x: u64, y: u64, buttons: u64, select: bool, index: u64 [0..=3], hit: u64, target: u64) -> u64 {
+    machine selecting(world: &mut |level|::World, channel: |names|::Name, x: u64, y: u64, buttons: u64, select: bool, index: u64 [0..=3], hit: u64, target: u64) -> u64 {
         transition select {
             true -> selected(world, channel, x, y, buttons, index, hit, target)
             _ -> captured(world, channel, x, y, buttons, index, hit, target)
         }
     }
-    machine selected(world: &mut World, channel: Name, x: u64, y: u64, buttons: u64, index: u64 [0..=3], hit: u64, target: u64) -> u64 {
+    machine selected(world: &mut |level|::World, channel: |names|::Name, x: u64, y: u64, buttons: u64, index: u64 [0..=3], hit: u64, target: u64) -> u64 {
         let group: u64 [0..=3] = world.input.streams[index].group;
-        level::select_group(world, group, hit);
+        |level|::select_group(world, group, hit);
         transition { _ -> captured(world, channel, x, y, buttons, index, hit, target) }
     }
-    machine captured(world: &mut World, channel: Name, x: u64, y: u64, buttons: u64, index: u64 [0..=3], hit: u64, target: u64) -> u64 {
+    machine captured(world: &mut |level|::World, channel: |names|::Name, x: u64, y: u64, buttons: u64, index: u64 [0..=3], hit: u64, target: u64) -> u64 {
         world.input.streams[index].capture = hit;
         transition { _ -> moved(world, channel, x, y, buttons, index, target) }
     }
-    machine moved(world: &mut World, channel: Name, x: u64, y: u64, buttons: u64, index: u64 [0..=3], target: u64) -> u64 {
+    machine moved(world: &mut |level|::World, channel: |names|::Name, x: u64, y: u64, buttons: u64, index: u64 [0..=3], target: u64) -> u64 {
         world.input.streams[index].buttons = buttons;
         world.input.streams[index].pointed = true;
         world.input.streams[index].point_x = x;
@@ -97,34 +97,34 @@ public machine route(world: &mut World, channel: Name, x: u64, y: u64, buttons: 
             _ -> released(world, buttons, index)
         }
     }
-    machine delivering(world: &mut World, channel: Name, x: u64, y: u64, buttons: u64, index: u64 [0..=3], slot: u64) -> u64 requires slot < 5u64 {
-        transition geometry::valid_grant(world.children[slot].grant) {
+    machine delivering(world: &mut |level|::World, channel: |names|::Name, x: u64, y: u64, buttons: u64, index: u64 [0..=3], slot: u64) -> u64 requires slot < 5u64 {
+        transition |geometry|::valid_grant(world.children[slot].grant) {
             true -> translated(world, channel, x, y, buttons, index, slot)
             _ -> released(world, buttons, index)
         }
     }
-    machine translated(world: &mut World, channel: Name, x: u64, y: u64, buttons: u64, index: u64 [0..=3], slot: u64) -> u64 requires slot < 5u64 {
-        let local_x: u64 = geometry::within(past(x, world.children[slot].rect.x), world.children[slot].grant.width);
-        let local_y: u64 = geometry::within(past(y, world.children[slot].rect.y), world.children[slot].grant.height);
+    machine translated(world: &mut |level|::World, channel: |names|::Name, x: u64, y: u64, buttons: u64, index: u64 [0..=3], slot: u64) -> u64 requires slot < 5u64 {
+        let local_x: u64 = |geometry|::within(past(x, world.children[slot].rect.x), world.children[slot].grant.width);
+        let local_y: u64 = |geometry|::within(past(y, world.children[slot].rect.y), world.children[slot].grant.height);
         let group: u64 [0..=3] = world.input.streams[index].group;
-        let group_name: Name = world.input.groups[group].id;
-        let described: Description = world.input.streams[index].described;
-        let pushed: Pushed = children::push(&mut world.children[slot], index, channel, group, group_name, described, POINTER, local_x, local_y, buttons);
+        let group_name: |names|::Name = world.input.groups[group].id;
+        let described: |description|::Description = world.input.streams[index].described;
+        let pushed: |children|::Pushed = |children|::push(&mut world.children[slot], index, channel, group, group_name, described, |main|::POINTER, local_x, local_y, buttons);
         transition pushed {
-            Pushed::Delivered -> released(world, buttons, index)
+            |children|::Pushed::Delivered -> released(world, buttons, index)
             // This source may hold keys in another child; interrupt every recipient.
-            Pushed::Dropped -> cancelled(world, index)
-            Pushed::Refused { code } -> (code)
+            |children|::Pushed::Dropped -> cancelled(world, index)
+            |children|::Pushed::Refused { code } -> (code)
         }
     }
-    machine cancelled(world: &mut World, index: u64 [0..=3]) -> u64 {
-        level::cancel_stream(world, index);
+    machine cancelled(world: &mut |level|::World, index: u64 [0..=3]) -> u64 {
+        |level|::cancel_stream(world, index);
         0u64
     }
-    machine released(world: &mut World, buttons: u64, index: u64 [0..=3]) -> u64 {
+    machine released(world: &mut |level|::World, buttons: u64, index: u64 [0..=3]) -> u64 {
         transition buttons == 0u64 { true -> uncaptured(world, index) _ -> (0u64) }
     }
-    machine uncaptured(world: &mut World, index: u64 [0..=3]) -> u64 {
+    machine uncaptured(world: &mut |level|::World, index: u64 [0..=3]) -> u64 {
         world.input.streams[index].capture = 0u64;
         0u64
     }

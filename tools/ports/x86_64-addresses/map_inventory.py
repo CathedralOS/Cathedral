@@ -35,5 +35,5 @@ for key,row in doc['files']['src/addr.rs']['symbols'].items():
   target=(source,'machine '+machine+'(')
  row.update(disposition=disposition,reason=reason)
  if target:row['targets']=[dict(path=target[0],anchor=target[1])]
-file=doc['files']['src/addr.rs'];file.update(disposition='translated',reason='Complete reviewed numeric addr.rs slice; Rust wrapper/formatting/unsafe pointer/proof infrastructure omissions are explicit per symbol.',targets=[dict(path=source,anchor='module addresses;')])
+file=doc['files']['src/addr.rs'];file.update(disposition='translated',reason='Complete reviewed numeric addr.rs slice; Rust wrapper/formatting/unsafe pointer/proof infrastructure omissions are explicit per symbol.',targets=[dict(path=source,anchor='pub const VIRTUAL_LOW_MAX')])
 p.write_text(json.dumps(doc,indent=2)+'\n')

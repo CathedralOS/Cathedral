@@ -1,5 +1,3 @@
-module memory::extent;
-
 // Extent -- THE FIRST CAPABILITY: exclusive authority over a concrete address
 // span. Every later memory authority descends from a qualified Extent rooted
 // here at boot, so this is the origin of the authority graph
@@ -12,12 +10,12 @@ module memory::extent;
 // implementation; the build admission receipt, not a direct call to this
 // machine, establishes Extent::Granted on exactly one returned root.
 
-use omega::language::core::extent;
+use {omega}/language/core/extent.omg;
 
 public const PAGE_SIZE: u64 = 4096;
 
-public CathedralExtentRootProvider satisfies ExtentRootProvider {
-    machine grant(root: Extent) -> Extent {
+public CathedralExtentRootProvider satisfies |extent|::ExtentRootProvider {
+    machine grant(root: |extent|::Extent) -> |extent|::Extent {
         root
     }
 }

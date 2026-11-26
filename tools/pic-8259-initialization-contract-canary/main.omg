@@ -1,6 +1,6 @@
 // Compile-only acceptance root for the PIC remap/mask provider operations.
 
-use core::pic_8259;
+use {arch}/board/pc/timer/pic.omg;
 
 data Main {
 }

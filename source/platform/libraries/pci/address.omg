@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified translation of pci_types eff856b6bab81adbe1bda0ab750009f3786cb8d3.
 // See PORT.md for source mapping, upstream corrections, and authority boundary.
-module address;
 
 pub data PciAddress [copy] { raw: u32; }
 pub data AddressResult [copy] { ok: bool; value: PciAddress; }

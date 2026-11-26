@@ -1,62 +1,59 @@
-module session::cursors;
 // The keyboard toggles only known pointers in its scoped input group.
-use operations::Reply;
-use operations::Command;
-use protocol::main;
-use state::State;
-use state::Phase;
-use session::session;
-public machine cursor_next(s: &mut State) -> Command {
+use operations.omg;
+use {protocol}/main.omg;
+use state.omg as local_state;
+use session/session.omg;
+public machine cursor_next(s: &mut |local_state|::State) -> |operations|::Command {
     transition {
         _ -> scan(s)
     }
-    machine scan(s: &mut State) -> Command {
+    machine scan(s: &mut |local_state|::State) -> |operations|::Command {
         transition s.cursor_index < 4u64 {
             true -> pointer(s)
-            _ -> session::session::after_input(s)
+            _ -> |session|::after_input(s)
         }
     }
-    machine pointer(s: &mut State) -> Command requires s.cursor_index < 4u64 {
+    machine pointer(s: &mut |local_state|::State) -> |operations|::Command requires s.cursor_index < 4u64 {
         transition s.channels[s.cursor_index] != 0u64 && s.groups[s.cursor_index] == s.cursor_group {
             true -> request(s)
             _ -> next(s)
         }
     }
-    machine request(s: &mut State) -> Command requires s.cursor_index < 4u64 {
-        s.phase = Phase::CursorChanged;
-        Command::Cursor { epoch: s.epoch, channel: s.channels[s.cursor_index], hidden: !s.hidden[s.cursor_index] }
+    machine request(s: &mut |local_state|::State) -> |operations|::Command requires s.cursor_index < 4u64 {
+        s.phase = |local_state|::Phase::CursorChanged;
+        |operations|::Command::Cursor { epoch: s.epoch, channel: s.channels[s.cursor_index], hidden: !s.hidden[s.cursor_index] }
     }
-    machine next(s: &mut State) -> Command requires s.cursor_index < 4u64 {
+    machine next(s: &mut |local_state|::State) -> |operations|::Command requires s.cursor_index < 4u64 {
         s.cursor_index = s.cursor_index + 1u64;
         transition {
             _ -> scan(s)
         }
     }
 }
-public machine cursor_reply(s: &mut State, reply: Reply) -> Command {
+public machine cursor_reply(s: &mut |local_state|::State, reply: |operations|::Reply) -> |operations|::Command {
     transition reply {
-        Reply::Cursor { status } -> valid(s, status)
-        _ -> (Command::Exit)
+        |operations|::Reply::Cursor { status } -> valid(s, status)
+        _ -> (|operations|::Command::Exit)
     }
-    machine valid(s: &mut State, status: u64) -> Command {
+    machine valid(s: &mut |local_state|::State, status: u64) -> |operations|::Command {
         transition s.cursor_index < 4u64 {
             true -> response(s, status)
-            _ -> (Command::Exit)
+            _ -> (|operations|::Command::Exit)
         }
     }
-    machine response(s: &mut State, status: u64) -> Command requires s.cursor_index < 4u64 {
+    machine response(s: &mut |local_state|::State, status: u64) -> |operations|::Command requires s.cursor_index < 4u64 {
         transition status == 0u64 {
             true -> toggle(s)
             _ -> next(s)
         }
     }
-    machine toggle(s: &mut State) -> Command requires s.cursor_index < 4u64 {
+    machine toggle(s: &mut |local_state|::State) -> |operations|::Command requires s.cursor_index < 4u64 {
         s.hidden[s.cursor_index] = !s.hidden[s.cursor_index];
         transition {
             _ -> next(s)
         }
     }
-    machine next(s: &mut State) -> Command requires s.cursor_index < 4u64 {
+    machine next(s: &mut |local_state|::State) -> |operations|::Command requires s.cursor_index < 4u64 {
         s.cursor_index = s.cursor_index + 1u64;
         cursor_next(s)
     }

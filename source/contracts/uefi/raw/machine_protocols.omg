@@ -2,8 +2,7 @@
 // Modified translation of rust-osdev/uefi-rs at c0facddf9ba42b74906a37fca2869e6cdbc8da6a.
 // See machine.PORT.md. Inert carriers do not grant firmware, MMIO, DMA or I/O authority.
 // PORT-BLOCKED[omega:named-calling-policy]: native slots require admitted calling/ownership contracts.
-module machine_protocols;
-use scalars::Guid;
+use scalars.omg;
 
 // Upstream: uefi_raw::protocol::pci::root_bridge::PciRootBridgeIoProtocolWidth
 pub data PciRootBridgeIoProtocolWidth [copy] {
@@ -275,7 +274,7 @@ pub data EdkiiIommuAccess [copy] {
 
 // Upstream: uefi_raw::protocol::rng::RngAlgorithmType
 pub data RngAlgorithmType [copy] {
-    raw: Guid;
+    raw: |scalars|::Guid;
 }
 
 // Upstream: uefi_raw::protocol::rng::RngProtocol
@@ -418,7 +417,7 @@ pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_DUAL_ADDRESS_
 pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_ISA_IO_16: PciRootBridgeIoProtocolAttributes = PciRootBridgeIoProtocolAttributes { raw: 65536 };
 pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_VGA_PALETTE_IO_16: PciRootBridgeIoProtocolAttributes = PciRootBridgeIoProtocolAttributes { raw: 131072 };
 pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_ATTRIBUTES_EFI_PCI_ATTRIBUTE_VGA_IO_16: PciRootBridgeIoProtocolAttributes = PciRootBridgeIoProtocolAttributes { raw: 262144 };
-pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_GUID: Guid = Guid { data1: 0x2f707ebb, data2: 0x4a1a, data3: 0x11d4, data4: [0x9a, 0x38, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d] };
+pub const PCI_ROOT_BRIDGE_IO_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x2f707ebb, data2: 0x4a1a, data3: 0x11d4, data4: [0x9a, 0x38, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d] };
 pub const DATA_DIRECTION_DATA_IN: DataDirection = DataDirection { raw: 0 };
 pub const DATA_DIRECTION_DATA_OUT: DataDirection = DataDirection { raw: 1 };
 pub const DATA_DIRECTION_NO_DATA: DataDirection = DataDirection { raw: 2 };
@@ -432,7 +431,7 @@ pub const USB_TRANSFER_STATUS_TIMEOUT: UsbTransferStatus = UsbTransferStatus { r
 pub const USB_TRANSFER_STATUS_BIT_STUFF: UsbTransferStatus = UsbTransferStatus { raw: 128 };
 pub const USB_TRANSFER_STATUS_SYSTEM: UsbTransferStatus = UsbTransferStatus { raw: 256 };
 pub const USB_TRANSFER_STATUS_SUCCESS: UsbTransferStatus = UsbTransferStatus { raw: 0 };
-pub const USB_IO_PROTOCOL_GUID: Guid = Guid { data1: 0x2b2f68d6, data2: 0x0cd2, data3: 0x44cf, data4: [0x8e, 0x8b, 0xbb, 0xa2, 0x0b, 0x1b, 0x5b, 0x75] };
+pub const USB_IO_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x2b2f68d6, data2: 0x0cd2, data3: 0x44cf, data4: [0x8e, 0x8b, 0xbb, 0xa2, 0x0b, 0x1b, 0x5b, 0x75] };
 pub const SPEED_FULL: Speed = Speed { raw: 0 };
 pub const SPEED_LOW: Speed = Speed { raw: 1 };
 pub const SPEED_HIGH: Speed = Speed { raw: 2 };
@@ -469,7 +468,7 @@ pub const PORT_FEATURE_ENABLE_CHANGE: PortFeature = PortFeature { raw: 17 };
 pub const PORT_FEATURE_SUSPEND_CHANGE: PortFeature = PortFeature { raw: 18 };
 pub const PORT_FEATURE_OVER_CURRENT_CHARGE: PortFeature = PortFeature { raw: 19 };
 pub const PORT_FEATURE_RESET_CHANGE: PortFeature = PortFeature { raw: 20 };
-pub const USB2_HOST_CONTROLLER_PROTOCOL_GUID: Guid = Guid { data1: 0x3e745226, data2: 0x9818, data3: 0x45b6, data4: [0xa2, 0xac, 0xd7, 0xcd, 0x0e, 0x8b, 0xa2, 0xbc] };
+pub const USB2_HOST_CONTROLLER_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x3e745226, data2: 0x9818, data3: 0x45b6, data4: [0xa2, 0xac, 0xd7, 0xcd, 0x0e, 0x8b, 0xa2, 0xbc] };
 pub const EDKII_IOMMU_OPERATION_BUS_MASTER_READ: EdkiiIommuOperation = EdkiiIommuOperation { raw: 0 };
 pub const EDKII_IOMMU_OPERATION_BUS_MASTER_WRITE: EdkiiIommuOperation = EdkiiIommuOperation { raw: 1 };
 pub const EDKII_IOMMU_OPERATION_BUS_MASTER_COMMON_BUFFER: EdkiiIommuOperation = EdkiiIommuOperation { raw: 2 };
@@ -482,23 +481,23 @@ pub const EDKII_IOMMU_ATTRIBUTE_MEMORY_CACHED: EdkiiIommuAttribute = EdkiiIommuA
 pub const EDKII_IOMMU_ATTRIBUTE_DUAL_ADDRESS_CYCLE: EdkiiIommuAttribute = EdkiiIommuAttribute { raw: 32768 };
 pub const EDKII_IOMMU_ACCESS_READ: EdkiiIommuAccess = EdkiiIommuAccess { raw: 1 };
 pub const EDKII_IOMMU_ACCESS_WRITE: EdkiiIommuAccess = EdkiiIommuAccess { raw: 2 };
-pub const EDKII_IOMMU_PROTOCOL_GUID: Guid = Guid { data1: 0x4e939de9, data2: 0xd948, data3: 0x4b0f, data4: [0x88, 0xed, 0xe6, 0xe1, 0xce, 0x51, 0x7c, 0x1e] };
+pub const EDKII_IOMMU_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x4e939de9, data2: 0xd948, data3: 0x4b0f, data4: [0x88, 0xed, 0xe6, 0xe1, 0xce, 0x51, 0x7c, 0x1e] };
 pub const EDKII_IOMMU_PROTOCOL_REVISION: u64 = 65536;
 pub const EDKII_IOMMU_ATTRIBUTE_VALID_FOR_ALLOCATE_BUFFER: EdkiiIommuAttribute = EdkiiIommuAttribute { raw: 34944 };
 pub const EDKII_IOMMU_ATTRIBUTE_INVALID_FOR_ALLOCATE_BUFFER: EdkiiIommuAttribute = EdkiiIommuAttribute { raw: 18446744073709516671 };
-pub const RNG_ALGORITHM_TYPE_EMPTY_ALGORITHM: RngAlgorithmType = RngAlgorithmType { raw: Guid { data1: 0x00000000, data2: 0x0000, data3: 0x0000, data4: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] } };
-pub const RNG_ALGORITHM_TYPE_ALGORITHM_RAW: RngAlgorithmType = RngAlgorithmType { raw: Guid { data1: 0xe43176d7, data2: 0xb6e8, data3: 0x4827, data4: [0xb7, 0x84, 0x7f, 0xfd, 0xc4, 0xb6, 0x85, 0x61] } };
-pub const RNG_ALGORITHM_TYPE_ALGORITHM_SP800_90_HASH_256: RngAlgorithmType = RngAlgorithmType { raw: Guid { data1: 0xa7af67cb, data2: 0x603b, data3: 0x4d42, data4: [0xba, 0x21, 0x70, 0xbf, 0xb6, 0x29, 0x3f, 0x96] } };
-pub const RNG_ALGORITHM_TYPE_ALGORITHM_SP800_90_HMAC_256: RngAlgorithmType = RngAlgorithmType { raw: Guid { data1: 0xc5149b43, data2: 0xae85, data3: 0x4f53, data4: [0x99, 0x82, 0xb9, 0x43, 0x35, 0xd3, 0xa9, 0xe7] } };
-pub const RNG_ALGORITHM_TYPE_ALGORITHM_SP800_90_CTR_256: RngAlgorithmType = RngAlgorithmType { raw: Guid { data1: 0x44f0de6e, data2: 0x4d8c, data3: 0x4045, data4: [0xa8, 0xc7, 0x4d, 0xd1, 0x68, 0x85, 0x6b, 0x9e] } };
-pub const RNG_ALGORITHM_TYPE_ALGORITHM_X9_31_3DES: RngAlgorithmType = RngAlgorithmType { raw: Guid { data1: 0x63c4785a, data2: 0xca34, data3: 0x4012, data4: [0xa3, 0xc8, 0x0b, 0x6a, 0x32, 0x4f, 0x55, 0x46] } };
-pub const RNG_ALGORITHM_TYPE_ALGORITHM_X9_31_AES: RngAlgorithmType = RngAlgorithmType { raw: Guid { data1: 0xacd03321, data2: 0x777e, data3: 0x4d3d, data4: [0xb1, 0xc8, 0x20, 0xcf, 0xd8, 0x88, 0x20, 0xc9] } };
-pub const RNG_PROTOCOL_GUID: Guid = Guid { data1: 0x3152bca5, data2: 0xeade, data3: 0x433d, data4: [0x86, 0x2e, 0xc0, 0x1c, 0xdc, 0x29, 0x1f, 0x44] };
-pub const ACPI_TABLE_PROTOCOL_GUID: Guid = Guid { data1: 0xffe06bdd, data2: 0x6107, data3: 0x46a6, data4: [0x7b, 0xb2, 0x5a, 0x9c, 0x7e, 0xc5, 0x27, 0x5c] };
-pub const MEMORY_ATTRIBUTE_PROTOCOL_GUID: Guid = Guid { data1: 0xf4560cf6, data2: 0x40ec, data3: 0x4b4a, data4: [0xa1, 0x92, 0xbf, 0x1d, 0x57, 0xd0, 0xb1, 0x89] };
-pub const TIMESTAMP_PROTOCOL_GUID: Guid = Guid { data1: 0xafbfde41, data2: 0x2e6e, data3: 0x4262, data4: [0xba, 0x65, 0x62, 0xb9, 0x23, 0x6e, 0x54, 0x95] };
-pub const RESET_NOTIFICATION_PROTOCOL_GUID: Guid = Guid { data1: 0x9da34ae0, data2: 0xeaf9, data3: 0x4bbf, data4: [0x8e, 0xc3, 0xfd, 0x60, 0x22, 0x6c, 0x44, 0xbe] };
-pub const DRIVER_BINDING_PROTOCOL_GUID: Guid = Guid { data1: 0x18a031ab, data2: 0xb443, data3: 0x4d1a, data4: [0xa5, 0xc0, 0x0c, 0x09, 0x26, 0x1e, 0x9f, 0x71] };
-pub const COMPONENT_NAME2_PROTOCOL_GUID: Guid = Guid { data1: 0x6a7a5cff, data2: 0xe8d9, data3: 0x4f70, data4: [0xba, 0xda, 0x75, 0xab, 0x30, 0x25, 0xce, 0x14] };
-pub const COMPONENT_NAME2_PROTOCOL_DEPRECATED_COMPONENT_NAME_GUID: Guid = Guid { data1: 0x107a772c, data2: 0xd5e1, data3: 0x11d4, data4: [0x9a, 0x46, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d] };
-pub const UNICODE_COLLATION_PROTOCOL_GUID: Guid = Guid { data1: 0xa4c751fc, data2: 0x23ae, data3: 0x4c3e, data4: [0x92, 0xe9, 0x49, 0x64, 0xcf, 0x63, 0xf3, 0x49] };
+pub const RNG_ALGORITHM_TYPE_EMPTY_ALGORITHM: RngAlgorithmType = RngAlgorithmType { raw: |scalars|::Guid { data1: 0x00000000, data2: 0x0000, data3: 0x0000, data4: [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00] } };
+pub const RNG_ALGORITHM_TYPE_ALGORITHM_RAW: RngAlgorithmType = RngAlgorithmType { raw: |scalars|::Guid { data1: 0xe43176d7, data2: 0xb6e8, data3: 0x4827, data4: [0xb7, 0x84, 0x7f, 0xfd, 0xc4, 0xb6, 0x85, 0x61] } };
+pub const RNG_ALGORITHM_TYPE_ALGORITHM_SP800_90_HASH_256: RngAlgorithmType = RngAlgorithmType { raw: |scalars|::Guid { data1: 0xa7af67cb, data2: 0x603b, data3: 0x4d42, data4: [0xba, 0x21, 0x70, 0xbf, 0xb6, 0x29, 0x3f, 0x96] } };
+pub const RNG_ALGORITHM_TYPE_ALGORITHM_SP800_90_HMAC_256: RngAlgorithmType = RngAlgorithmType { raw: |scalars|::Guid { data1: 0xc5149b43, data2: 0xae85, data3: 0x4f53, data4: [0x99, 0x82, 0xb9, 0x43, 0x35, 0xd3, 0xa9, 0xe7] } };
+pub const RNG_ALGORITHM_TYPE_ALGORITHM_SP800_90_CTR_256: RngAlgorithmType = RngAlgorithmType { raw: |scalars|::Guid { data1: 0x44f0de6e, data2: 0x4d8c, data3: 0x4045, data4: [0xa8, 0xc7, 0x4d, 0xd1, 0x68, 0x85, 0x6b, 0x9e] } };
+pub const RNG_ALGORITHM_TYPE_ALGORITHM_X9_31_3DES: RngAlgorithmType = RngAlgorithmType { raw: |scalars|::Guid { data1: 0x63c4785a, data2: 0xca34, data3: 0x4012, data4: [0xa3, 0xc8, 0x0b, 0x6a, 0x32, 0x4f, 0x55, 0x46] } };
+pub const RNG_ALGORITHM_TYPE_ALGORITHM_X9_31_AES: RngAlgorithmType = RngAlgorithmType { raw: |scalars|::Guid { data1: 0xacd03321, data2: 0x777e, data3: 0x4d3d, data4: [0xb1, 0xc8, 0x20, 0xcf, 0xd8, 0x88, 0x20, 0xc9] } };
+pub const RNG_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x3152bca5, data2: 0xeade, data3: 0x433d, data4: [0x86, 0x2e, 0xc0, 0x1c, 0xdc, 0x29, 0x1f, 0x44] };
+pub const ACPI_TABLE_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0xffe06bdd, data2: 0x6107, data3: 0x46a6, data4: [0x7b, 0xb2, 0x5a, 0x9c, 0x7e, 0xc5, 0x27, 0x5c] };
+pub const MEMORY_ATTRIBUTE_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0xf4560cf6, data2: 0x40ec, data3: 0x4b4a, data4: [0xa1, 0x92, 0xbf, 0x1d, 0x57, 0xd0, 0xb1, 0x89] };
+pub const TIMESTAMP_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0xafbfde41, data2: 0x2e6e, data3: 0x4262, data4: [0xba, 0x65, 0x62, 0xb9, 0x23, 0x6e, 0x54, 0x95] };
+pub const RESET_NOTIFICATION_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x9da34ae0, data2: 0xeaf9, data3: 0x4bbf, data4: [0x8e, 0xc3, 0xfd, 0x60, 0x22, 0x6c, 0x44, 0xbe] };
+pub const DRIVER_BINDING_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x18a031ab, data2: 0xb443, data3: 0x4d1a, data4: [0xa5, 0xc0, 0x0c, 0x09, 0x26, 0x1e, 0x9f, 0x71] };
+pub const COMPONENT_NAME2_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x6a7a5cff, data2: 0xe8d9, data3: 0x4f70, data4: [0xba, 0xda, 0x75, 0xab, 0x30, 0x25, 0xce, 0x14] };
+pub const COMPONENT_NAME2_PROTOCOL_DEPRECATED_COMPONENT_NAME_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x107a772c, data2: 0xd5e1, data3: 0x11d4, data4: [0x9a, 0x46, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d] };
+pub const UNICODE_COLLATION_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0xa4c751fc, data2: 0x23ae, data3: 0x4c3e, data4: [0x92, 0xe9, 0x49, 0x64, 0xcf, 0x63, 0xf3, 0x49] };

@@ -1,6 +1,5 @@
-module storage::entries;
 // ENTRIES: ordered 80-byte rows, canonical metadata, and an exact final cursor.
-use storage::metadata;
+use storage/metadata.omg;
 public machine valid(words: &[u64; 510], count: u64, after: u64, last: u64) -> bool {
     transition count > 0u64 && count <= 51u64 && last > after {
         true -> row(words, count, after, last, 0u64)
@@ -22,7 +21,7 @@ machine ordered(words: &[u64; 510], count: u64, previous: u64, last: u64, i: u64
 machine field(words: &[u64; 510], offset: u64, name: bool) -> bool {
     let mut text: [u8; 32];
     unpack(words, &mut text, offset, 0u64);
-    storage::metadata::valid(&text, name)
+    |metadata|::valid(&text, name)
 }
 machine unpack(words: &[u64; 510], text: &mut [u8; 32], offset: u64, i: u64) {
     transition offset <= 506u64 && i < 32u64 {

@@ -1,44 +1,39 @@
-module transfers::transaction;
 // Begin -> translated entries -> commit, or abort on rejection/invalidation.
 // The original batch keeps every sealed payload until the remote transaction
 // settles. A reply advances one phase; it never reruns a published request.
-use shared::state::State;
-use shared::presentation::Transfer;
-use shared::presentation::Phase;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::kernel;
-use runtime::server::main::Ticket;
-use runtime::server::deferred;
-use protocol::main;
-use protocol::matrix;
-use world::surfaces;
-use world::surfaces::Updated;
-use world::level;
-use world::geometry;
-use transfers::backing;
-use transfers::transfer;
-use transfers::retirement;
-use presentation;
-use responses;
+use {shared}/state.omg as shared_state;
+use {shared}/presentation.omg;
+use {runtime}/kernel.omg;
+use {runtime}/server/main.omg;
+use {runtime}/server/deferred.omg;
+use {protocol}/main.omg as protocol_main;
+use {protocol}/matrix.omg;
+use {world}/surfaces.omg;
+use {world}/level.omg;
+use {world}/geometry.omg;
+use transfers/backing.omg;
+use transfers/transfer.omg;
+use transfers/retirement.omg;
+use presentation.omg as presentation_file;
+use responses.omg;
 
-public machine begin(context: &mut State, slot: u64 [0..=4], revision: u64, compact: bool) -> u64 {
-    let ticket: Ticket = runtime::server::main::ticket(&context.slots[slot].listener);
+public machine begin(context: &mut |shared_state|::State, slot: u64 [0..=4], revision: u64, compact: bool) -> u64 {
+    let ticket: |main|::Ticket = |main|::ticket(&context.slots[slot].listener);
     transition context.slots[slot].listener.peer.pipeline {
         true -> held(context, slot, ticket, revision, compact)
         _ -> retained(context, slot, ticket, revision, compact)
     }
-    machine held(context: &mut State, slot: u64 [0..=4], ticket: Ticket, revision: u64, compact: bool) -> u64 {
-        let status: u64 = responses::retain(context, slot, ticket);
+    machine held(context: &mut |shared_state|::State, slot: u64 [0..=4], ticket: |main|::Ticket, revision: u64, compact: bool) -> u64 {
+        let status: u64 = |responses|::retain(context, slot, ticket);
         transition status == 0u64 { true -> retained(context, slot, ticket, revision, compact) _ -> (status) }
     }
-    machine retained(context: &mut State, slot: u64 [0..=4], ticket: Ticket, revision: u64, compact: bool) -> u64 {
-        let mut work: Transfer;
+    machine retained(context: &mut |shared_state|::State, slot: u64 [0..=4], ticket: |main|::Ticket, revision: u64, compact: bool) -> u64 {
+        let mut work: |presentation|::Transfer;
         context.revision = ((context.revision as u64 in Wrapping) + 1u64) as u64;
         work.active = true;
         work.batch = true;
         work.compact = compact;
-        work.phase = Phase::Begin;
+        work.phase = |presentation|::Phase::Begin;
         work.slot = slot;
         work.ticket = ticket;
         work.frame.id = ticket.request;
@@ -50,188 +45,188 @@ public machine begin(context: &mut State, slot: u64 [0..=4], revision: u64, comp
         0u64
     }
 }
-public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
+public machine step(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     transition {
         !context.presentation_work.active -> done()
         context.answers[context.presentation_work.slot].active -> block draining(gate, context)
-        context.presentation_work.phase == Phase::Releasing -> block releasing(gate, context)
+        context.presentation_work.phase == |presentation|::Phase::Releasing -> block releasing(gate, context)
         context.presentation_work.submitted -> block receive(gate, context)
         _ -> block next(gate, context)
     }
 }
-machine draining(gate: &Gate, context: &mut State) reaches Kernel {
+machine draining(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
     let slot: u64 [0..=4] = context.presentation_work.slot;
-    let status: u64 = block responses::step(gate, context, slot);
+    let status: u64 = block |responses|::step(gate, context, slot);
 }
-machine receive(gate: &Gate, context: &mut State) reaches Kernel {
-    transition backing::ready(context) { true -> block received(gate, context) _ -> done() }
-    machine received(gate: &Gate, context: &mut State) reaches Kernel {
-        let status: u64 = backing::take(context);
+machine receive(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
+    transition |backing|::ready(context) { true -> block received(gate, context) _ -> done() }
+    machine received(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
+        let status: u64 = |backing|::take(context);
         context.presentation_work.submitted = false;
         block answered(gate, context, status);
         block next(gate, context);
     }
 }
-machine answered(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
+machine answered(gate: &|kernel|::Gate, context: &mut |shared_state|::State, status: u64) reaches |kernel|::Kernel {
     transition context.presentation_work.phase {
-        Phase::Begin -> begun(context, status)
-        Phase::Entry -> entry(context, status)
-        Phase::Commit -> committed(context, status)
-        Phase::Abort -> block aborted(gate, context, status)
-        _ -> completed(context, kernel::IO_ERROR)
+        |presentation|::Phase::Begin -> begun(context, status)
+        |presentation|::Phase::Entry -> entry(context, status)
+        |presentation|::Phase::Commit -> committed(context, status)
+        |presentation|::Phase::Abort -> block aborted(gate, context, status)
+        _ -> completed(context, |kernel|::IO_ERROR)
     }
-    machine begun(context: &mut State, status: u64) {
+    machine begun(context: &mut |shared_state|::State, status: u64) {
         transition status == 0u64 { true -> entering(context) _ -> completed(context, status) }
     }
-    machine entering(context: &mut State) { context.presentation_work.phase = Phase::Entry; }
-    machine entry(context: &mut State, status: u64) {
+    machine entering(context: &mut |shared_state|::State) { context.presentation_work.phase = |presentation|::Phase::Entry; }
+    machine entry(context: &mut |shared_state|::State, status: u64) {
         transition {
             status != 0u64 -> aborting(context, status)
             context.presentation_work.index < 64u64 -> advanced(context)
-            _ -> aborting(context, kernel::IO_ERROR)
+            _ -> aborting(context, |kernel|::IO_ERROR)
         }
     }
-    machine advanced(context: &mut State) requires context.presentation_work.index < 64u64 {
+    machine advanced(context: &mut |shared_state|::State) requires context.presentation_work.index < 64u64 {
         context.presentation_work.index = context.presentation_work.index + 1u64;
     }
-    machine committed(context: &mut State, status: u64) {
+    machine committed(context: &mut |shared_state|::State, status: u64) {
         transition status == 0u64 { true -> completed(context, 0u64) _ -> aborting(context, status) }
     }
 }
 // An abort denial after the parent epoch retired is already fenced by that
 // retirement. Otherwise a failed abort leaves unknown remote state: lose the
 // connection rather than interleave a new transaction with the old one.
-machine aborted(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
+machine aborted(gate: &|kernel|::Gate, context: &mut |shared_state|::State, status: u64) reaches |kernel|::Kernel {
     transition status == 0u64 || context.world.parent.epoch != context.presentation_work.parent_epoch {
         true -> finished(context)
         _ -> block lost(gate, context, status)
     }
 }
-machine next(gate: &Gate, context: &mut State) reaches Kernel {
+machine next(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
     transition {
-        context.presentation_work.phase == Phase::Finished -> block finish(gate, context)
-        context.presentation_work.phase == Phase::Abort -> block control(gate, context, PRESENT_ABORT)
-        !transfer::current(context) -> invalidated(context)
-        context.presentation_work.phase == Phase::Begin -> block control(gate, context, PRESENT_BEGIN)
-        context.presentation_work.phase == Phase::Commit -> block control(gate, context, PRESENT_COMMIT)
+        context.presentation_work.phase == |presentation|::Phase::Finished -> block finish(gate, context)
+        context.presentation_work.phase == |presentation|::Phase::Abort -> block control(gate, context, |matrix|::PRESENT_ABORT)
+        !|transfer|::current(context) -> invalidated(context)
+        context.presentation_work.phase == |presentation|::Phase::Begin -> block control(gate, context, |matrix|::PRESENT_BEGIN)
+        context.presentation_work.phase == |presentation|::Phase::Commit -> block control(gate, context, |matrix|::PRESENT_COMMIT)
         _ -> block entries(gate, context)
     }
 }
-machine invalidated(context: &mut State) {
-    transition context.presentation_work.phase == Phase::Begin {
-        true -> completed(context, kernel::DENIED)
-        _ -> aborting(context, kernel::DENIED)
+machine invalidated(context: &mut |shared_state|::State) {
+    transition context.presentation_work.phase == |presentation|::Phase::Begin {
+        true -> completed(context, |kernel|::DENIED)
+        _ -> aborting(context, |kernel|::DENIED)
     }
 }
-machine entries(gate: &Gate, context: &mut State) reaches Kernel {
+machine entries(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
     let index: u64 = context.presentation_work.index;
     transition index < 64u64 {
         true -> block entry(gate, context, index)
         _ -> block committing(gate, context)
     }
-    machine entry(gate: &Gate, context: &mut State, index: u64 [0..=63]) reaches Kernel {
+    machine entry(gate: &|kernel|::Gate, context: &mut |shared_state|::State, index: u64 [0..=63]) reaches |kernel|::Kernel {
         let slot: u64 [0..=4] = context.presentation_work.slot;
         transition context.batches[slot].entries[index].used {
             true -> block translated(gate, context, slot, index)
             _ -> block skipped(gate, context, index)
         }
     }
-    machine skipped(gate: &Gate, context: &mut State, index: u64 [0..=63]) reaches Kernel {
+    machine skipped(gate: &|kernel|::Gate, context: &mut |shared_state|::State, index: u64 [0..=63]) reaches |kernel|::Kernel {
         context.presentation_work.index = index + 1u64;
         transition { _ -> block entries(gate, context) }
     }
-    machine translated(gate: &Gate, context: &mut State, slot: u64 [0..=4], index: u64 [0..=63]) reaches Kernel {
+    machine translated(gate: &|kernel|::Gate, context: &mut |shared_state|::State, slot: u64 [0..=4], index: u64 [0..=63]) reaches |kernel|::Kernel {
         let words: [u64; 8] = context.batches[slot].entries[index].words;
         let object: u64 = context.batches[slot].entries[index].payload;
         let incarnation: u64 = context.presentation_work.ticket.incarnation;
-        let result: Updated = surfaces::update(&mut context.world, slot, incarnation, &words, false);
+        let result: |surfaces|::Updated = |surfaces|::update(&mut context.world, slot, incarnation, &words, false);
         transition result {
-            Updated::Packet { words } -> block submit(gate, context, words, object)
-            Updated::Refused { code } -> aborting(context, code)
+            |surfaces|::Updated::Packet { words } -> block submit(gate, context, words, object)
+            |surfaces|::Updated::Refused { code } -> aborting(context, code)
         }
     }
-    machine committing(gate: &Gate, context: &mut State) reaches Kernel {
-        context.presentation_work.phase = Phase::Commit;
-        block control(gate, context, PRESENT_COMMIT);
+    machine committing(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
+        context.presentation_work.phase = |presentation|::Phase::Commit;
+        block control(gate, context, |matrix|::PRESENT_COMMIT);
     }
 }
-machine control(gate: &Gate, context: &mut State, op: u64) reaches Kernel {
+machine control(gate: &|kernel|::Gate, context: &mut |shared_state|::State, op: u64) reaches |kernel|::Kernel {
     let words: [u64; 8] = [op, context.presentation_work.parent_epoch, context.presentation_work.upstream_revision,
         0u64, 0u64, 0u64, 0u64, 0u64];
     block submit(gate, context, words, 0u64);
 }
-machine submit(gate: &Gate, context: &mut State, words: [u64; 8], object: u64) reaches Kernel {
-    let status: u64 = block backing::submit(gate, context, words, object);
+machine submit(gate: &|kernel|::Gate, context: &mut |shared_state|::State, words: [u64; 8], object: u64) reaches |kernel|::Kernel {
+    let status: u64 = block |backing|::submit(gate, context, words, object);
     transition {
         status == 0u64 -> submitted(context)
-        status == kernel::WOULD_BLOCK -> done()
+        status == |kernel|::WOULD_BLOCK -> done()
         _ -> block lost(gate, context, status)
     }
-    machine submitted(context: &mut State) { context.presentation_work.submitted = true; }
+    machine submitted(context: &mut |shared_state|::State) { context.presentation_work.submitted = true; }
 }
-machine lost(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
-    block backing::close(gate, context);
-    level::inherit(&mut context.world, geometry::no_grant());
+machine lost(gate: &|kernel|::Gate, context: &mut |shared_state|::State, status: u64) reaches |kernel|::Kernel {
+    block |backing|::close(gate, context);
+    |level|::inherit(&mut context.world, |geometry|::no_grant());
     completed(context, status);
 }
-machine aborting(context: &mut State, status: u64) {
+machine aborting(context: &mut |shared_state|::State, status: u64) {
     context.presentation_work.status = status;
-    context.presentation_work.phase = Phase::Abort;
+    context.presentation_work.phase = |presentation|::Phase::Abort;
 }
-machine completed(context: &mut State, status: u64) { context.presentation_work.status = status; finished(context); }
-machine finished(context: &mut State) { context.presentation_work.phase = Phase::Finished; }
-machine finish(gate: &Gate, context: &mut State) reaches Kernel {
-    let valid: bool = transfer::current(context);
+machine completed(context: &mut |shared_state|::State, status: u64) { context.presentation_work.status = status; finished(context); }
+machine finished(context: &mut |shared_state|::State) { context.presentation_work.phase = |presentation|::Phase::Finished; }
+machine finish(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
+    let valid: bool = |transfer|::current(context);
     transition valid && context.presentation_work.status == 0u64 {
         true -> commit(context)
         _ -> block refused(gate, context, valid)
     }
-    machine commit(context: &mut State) {
-        let work: Transfer = context.presentation_work;
-        let answer: [u64; 8] = presentation::commit_batch(context, work.slot, work.ticket.incarnation, work.local_revision);
+    machine commit(context: &mut |shared_state|::State) {
+        let work: |presentation|::Transfer = context.presentation_work;
+        let answer: [u64; 8] = |presentation_file|::commit_batch(context, work.slot, work.ticket.incarnation, work.local_revision);
         retiring(context, answer[0]);
     }
-    machine refused(gate: &Gate, context: &mut State, valid: bool) reaches Kernel {
+    machine refused(gate: &|kernel|::Gate, context: &mut |shared_state|::State, valid: bool) reaches |kernel|::Kernel {
         transition context.presentation_work.compact || !valid {
             true -> discarded(context, valid)
             _ -> block rejected(gate, context, valid)
         }
     }
-    machine discarded(context: &mut State, valid: bool) {
+    machine discarded(context: &mut |shared_state|::State, valid: bool) {
         let slot: u64 [0..=4] = context.presentation_work.slot;
         let revision: u64 = context.presentation_work.local_revision;
-        retirement::discard_batch(context, slot, revision, !valid);
+        |retirement|::discard_batch(context, slot, revision, !valid);
         transition valid {
             true -> retiring(context, context.presentation_work.status)
-            _ -> retiring(context, kernel::DENIED)
+            _ -> retiring(context, |kernel|::DENIED)
         }
     }
-    machine rejected(gate: &Gate, context: &mut State, valid: bool) reaches Kernel {
-        transition valid { true -> block reply(gate, context, context.presentation_work.status) _ -> block reply(gate, context, kernel::DENIED) }
+    machine rejected(gate: &|kernel|::Gate, context: &mut |shared_state|::State, valid: bool) reaches |kernel|::Kernel {
+        transition valid { true -> block reply(gate, context, context.presentation_work.status) _ -> block reply(gate, context, |kernel|::DENIED) }
     }
 }
 // Commit/discard changes local bookkeeping once. Keep the scene barrier and
 // original ticket through retirement; an epoch change cannot revive that ticket.
-machine retiring(context: &mut State, status: u64) {
+machine retiring(context: &mut |shared_state|::State, status: u64) {
     context.presentation_work.status = status;
-    context.presentation_work.phase = Phase::Releasing;
+    context.presentation_work.phase = |presentation|::Phase::Releasing;
 }
-machine releasing(gate: &Gate, context: &mut State) reaches Kernel {
-    let complete: bool = block retirement::step(gate, context);
+machine releasing(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
+    let complete: bool = block |retirement|::step(gate, context);
     transition complete { true -> block released(gate, context) _ -> done() }
-    machine released(gate: &Gate, context: &mut State) reaches Kernel {
-        transition transfer::current(context) {
+    machine released(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
+        transition |transfer|::current(context) {
             true -> block reply(gate, context, context.presentation_work.status)
-            _ -> block reply(gate, context, kernel::DENIED)
+            _ -> block reply(gate, context, |kernel|::DENIED)
         }
     }
 }
-machine reply(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
-    let work: Transfer = context.presentation_work;
-    let empty: Transfer;
+machine reply(gate: &|kernel|::Gate, context: &mut |shared_state|::State, status: u64) reaches |kernel|::Kernel {
+    let work: |presentation|::Transfer = context.presentation_work;
+    let empty: |presentation|::Transfer;
     context.presentation_work = empty;
     context.next_child = (work.slot + 1u64) % 5u64;
-    let words: [u64; 8] = presentation::error(status);
-    let sent: u64 = block responses::send(gate, context, work.slot, work.ticket, words);
+    let words: [u64; 8] = |presentation_file|::error(status);
+    let sent: u64 = block |responses|::send(gate, context, work.slot, work.ticket, words);
 }
 machine done() {}

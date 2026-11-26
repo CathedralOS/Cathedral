@@ -1,84 +1,73 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // One owned initialized AML source snapshot and its transactional namespace.
 // Ordinary data, with no firmware, mapping or invocation authority.
-module program;
-use aml::model::Outcome;
-use aml::model::Namespace;
-use aml::model::ObjectStore;
-use aml::model::MethodDefinitions;
-use aml::model::ObservedLoad;
-use aml::model::Path;
-use aml::model::Value;
-use aml::namespace::empty;
-use aml::loader::load_with_definitions;
-use execution::engine::ExecutionResult;
-use execution::engine::run_method;
-use execution::execution_model::ExecutionOutcome;
-use execution::execution_model::Operand;
-use aml::result_graph::GraphResult;
-use aml::result_graph::check_graph;
-use aml::result_graph::limits_valid;
-use aml::object_conversions::ConversionFailure;
-use integer_helpers::integers::IntegerSize;
+use {aml}/model.omg;
+use {aml}/namespace.omg;
+use {aml}/loader.omg;
+use {execution}/engine.omg;
+use {execution}/execution_model.omg;
+use {aml}/result_graph.omg;
+use {aml}/object_conversions.omg;
+use {integer_helpers}/integers.omg;
 
 pub data Program {
     loaded: bool;
     source: [u8; 1024]; length: u64; unit: u64;
-    store: ObjectStore; definitions: MethodDefinitions;
+    store: |model|::ObjectStore; definitions: |model|::MethodDefinitions;
 }
-pub data Prepared { outcome: Outcome; offset: u64; program: Program; }
+pub data Prepared { outcome: |model|::Outcome; offset: u64; program: Program; }
 // Capture the entire initialized array by value. Later mutation of the caller's
 // array cannot replace bytes behind retained spans in this program snapshot.
 pub machine prepare_program(input: [u8; 1024], length: u64, unit: u64, term_budget: u64, value_budget: u64) -> Prepared {
-    let start: Namespace = empty();
-    let definitions: MethodDefinitions = MethodDefinitions {};
-    let observed: ObservedLoad = load_with_definitions(&input, length, unit, start, definitions, term_budget, value_budget);
-    let program: Program = Program { loaded: observed.load.outcome == Outcome::Success, source: input, length: length, unit: unit, store: ObjectStore {space:observed.load.space}, definitions: observed.definitions };
+    let start: |model|::Namespace = |namespace|::empty();
+    let definitions: |model|::MethodDefinitions = |model|::MethodDefinitions {};
+    let observed: |model|::ObservedLoad = |loader|::load_with_definitions(&input, length, unit, start, definitions, term_budget, value_budget);
+    let program: Program = Program { loaded: observed.load.outcome == |model|::Outcome::Success, source: input, length: length, unit: unit, store: |model|::ObjectStore {space:observed.load.space}, definitions: observed.definitions };
     Prepared { outcome: observed.load.outcome, offset: observed.load.offset, program: program }
 }
 // No replacement-source or reload parameter exists. All methods in this initial
 // wrapper must refer to this one retained unit. Multi-unit dispatch stays absent.
-pub machine run_program(program: &mut Program, path: Path, arguments: &[Value; 7], count: u64, size: IntegerSize, budget: u64) -> ExecutionResult {
-    let result:ExecutionResult=run_program_limited(program,path,arguments,count,size,budget,64,16384);result
+pub machine run_program(program: &mut Program, path: |model|::Path, arguments: &[|model|::Value; 7], count: u64, size: |integers|::IntegerSize, budget: u64) -> |engine|::ExecutionResult {
+    let result:|engine|::ExecutionResult=run_program_limited(program,path,arguments,count,size,budget,64,16384);result
 }
 // Result quotas are per public call and shared by the whole reachable graph.
 // Invalid quota requests fail before method execution or argument allocation.
-pub machine run_program_limited(program:&mut Program,path:Path,arguments:&[Value;7],count:u64,size:IntegerSize,budget:u64,result_objects:u64,result_bytes:u64)->ExecutionResult {
-    let valid:bool=limits_valid(result_objects,result_bytes);
-    transition { !program.loaded -> (ExecutionResult { outcome: ExecutionOutcome::InvalidState })
-        program.length > 1024 -> (ExecutionResult { outcome: ExecutionOutcome::Capacity })
-        !valid -> (ExecutionResult {outcome:ExecutionOutcome::Capacity})
+pub machine run_program_limited(program:&mut Program,path:|model|::Path,arguments:&[|model|::Value;7],count:u64,size:|integers|::IntegerSize,budget:u64,result_objects:u64,result_bytes:u64)->|engine|::ExecutionResult {
+    let valid:bool=|result_graph|::limits_valid(result_objects,result_bytes);
+    transition { !program.loaded -> (|engine|::ExecutionResult { outcome: |execution_model|::ExecutionOutcome::InvalidState })
+        program.length > 1024 -> (|engine|::ExecutionResult { outcome: |execution_model|::ExecutionOutcome::Capacity })
+        !valid -> (|engine|::ExecutionResult {outcome:|execution_model|::ExecutionOutcome::Capacity})
         _ -> execute(program, path, arguments, count, size, budget,result_objects,result_bytes) }
-    state execute(program: &mut Program, path: Path, arguments: &[Value; 7], count: u64, size: IntegerSize, budget: u64,result_objects:u64,result_bytes:u64) -> ExecutionResult {
-        let result: ExecutionResult = run_method(&program.source, program.length, program.unit, &mut program.store, &program.definitions.entries, path, arguments, count, size, budget);
-        transition result.outcome==ExecutionOutcome::Success && result.has_value {true -> returned(program,result,result_objects,result_bytes) _ -> (result)}
+    state execute(program: &mut Program, path: |model|::Path, arguments: &[|model|::Value; 7], count: u64, size: |integers|::IntegerSize, budget: u64,result_objects:u64,result_bytes:u64) -> |engine|::ExecutionResult {
+        let result: |engine|::ExecutionResult = |engine|::run_method(&program.source, program.length, program.unit, &mut program.store, &program.definitions.entries, path, arguments, count, size, budget);
+        transition result.outcome==|execution_model|::ExecutionOutcome::Success && result.has_value {true -> returned(program,result,result_objects,result_bytes) _ -> (result)}
     }
-    state returned(program:&Program,result:ExecutionResult,result_objects:u64,result_bytes:u64)->ExecutionResult {
-        transition result.operand {Operand::Integer {number} -> (result)
-            Operand::Object {object_id} -> graph(program,result,object_id,result_objects,result_bytes)
-            _ -> rejected(result,ExecutionOutcome::Uninitialized)}
+    state returned(program:&Program,result:|engine|::ExecutionResult,result_objects:u64,result_bytes:u64)->|engine|::ExecutionResult {
+        transition result.operand {|execution_model|::Operand::Integer {number} -> (result)
+            |execution_model|::Operand::Object {object_id} -> graph(program,result,object_id,result_objects,result_bytes)
+            _ -> rejected(result,|execution_model|::ExecutionOutcome::Uninitialized)}
     }
-    state graph(program:&Program,result:ExecutionResult,id:u64,result_objects:u64,result_bytes:u64)->ExecutionResult {
-        let checked:GraphResult=check_graph(&program.source,program.length,program.unit,&program.store,id,result_objects,result_bytes);
-        transition checked {GraphResult::Admitted {objects,bytes,visited} -> (result) GraphResult::Failure {reason} -> failure(result,reason)}
+    state graph(program:&Program,result:|engine|::ExecutionResult,id:u64,result_objects:u64,result_bytes:u64)->|engine|::ExecutionResult {
+        let checked:|result_graph|::GraphResult=|result_graph|::check_graph(&program.source,program.length,program.unit,&program.store,id,result_objects,result_bytes);
+        transition checked {|result_graph|::GraphResult::Admitted {objects,bytes,visited} -> (result) |result_graph|::GraphResult::Failure {reason} -> failure(result,reason)}
     }
-    state failure(result:ExecutionResult,reason:ConversionFailure)->ExecutionResult {
-        let outcome:ExecutionOutcome=result_failure(reason);let rejected:ExecutionResult=reject_result(result,outcome);rejected
+    state failure(result:|engine|::ExecutionResult,reason:|object_conversions|::ConversionFailure)->|engine|::ExecutionResult {
+        let outcome:|execution_model|::ExecutionOutcome=result_failure(reason);let rejected:|engine|::ExecutionResult=reject_result(result,outcome);rejected
     }
-    state rejected(result:ExecutionResult,outcome:ExecutionOutcome)->ExecutionResult {
-        let rejected:ExecutionResult=reject_result(result,outcome);rejected
+    state rejected(result:|engine|::ExecutionResult,outcome:|execution_model|::ExecutionOutcome)->|engine|::ExecutionResult {
+        let rejected:|engine|::ExecutionResult=reject_result(result,outcome);rejected
     }
 }
 // Match the existing generic execution admission outcomes. The standalone
 // GraphResult retains finer byte/source failure distinctions for direct callers.
-machine result_failure(reason:ConversionFailure)->ExecutionOutcome {
-    transition reason {ConversionFailure::Capacity -> (ExecutionOutcome::Capacity)
-        ConversionFailure::WorkLimit -> (ExecutionOutcome::WorkLimit)
-        ConversionFailure::UnsupportedValue -> (ExecutionOutcome::UnsupportedValue)
-        _ -> (ExecutionOutcome::InvalidState)}
+machine result_failure(reason:|object_conversions|::ConversionFailure)->|execution_model|::ExecutionOutcome {
+    transition reason {|object_conversions|::ConversionFailure::Capacity -> (|execution_model|::ExecutionOutcome::Capacity)
+        |object_conversions|::ConversionFailure::WorkLimit -> (|execution_model|::ExecutionOutcome::WorkLimit)
+        |object_conversions|::ConversionFailure::UnsupportedValue -> (|execution_model|::ExecutionOutcome::UnsupportedValue)
+        _ -> (|execution_model|::ExecutionOutcome::InvalidState)}
 }
-machine reject_result(result:ExecutionResult,outcome:ExecutionOutcome)->ExecutionResult {
+machine reject_result(result:|engine|::ExecutionResult,outcome:|execution_model|::ExecutionOutcome)->|engine|::ExecutionResult {
     // Earlier execution effects and diagnostic locations remain observable.
     // Failure exposes no purported result value or graph root.
-    ExecutionResult {outcome:outcome,steps:result.steps,fault_offset:result.fault_offset}
+    |engine|::ExecutionResult {outcome:outcome,steps:result.steps,fault_offset:result.fault_offset}
 }

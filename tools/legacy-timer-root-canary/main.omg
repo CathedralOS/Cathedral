@@ -1,8 +1,9 @@
 // Compile-only: lower the real PIC handler without executing privileged instructions.
-use arch::isa::x86_64::interrupts::entry::CathedralAcknowledgementRepresentation;
-use omega::language::core::interrupt;
-use arch::board::pc::timer::root::LegacyPicTimerRoot;
+use {omega}/language/core/assembly.omg;
+use {arch}/isa/x86_64/interrupts/entry.omg;
+use {omega}/language/core/interrupt.omg;
+use {arch}/board/pc/timer/root.omg;
 
-machine timer_entry(acknowledgement: InterruptAcknowledgement in Pending) reaches PortIo {
-    LegacyPicTimerRoot::enter(acknowledgement);
+machine timer_entry(acknowledgement: |interrupt|::InterruptAcknowledgement in |interrupt|::Pending) reaches |assembly|::PortIo {
+    |root|::LegacyPicTimerRoot::enter(acknowledgement);
 }

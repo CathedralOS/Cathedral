@@ -502,7 +502,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/network.omg",
-          "anchor": "module network;"
+          "anchor": "pub data Ipv4Address"
         }
       ]
     },
@@ -749,7 +749,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "status: Status;"
+              "anchor": "status: |status|::Status;"
             }
           ]
         },
@@ -760,7 +760,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "completion_event: Event;"
+              "anchor": "completion_event: |scalars|::Event;"
             }
           ]
         },
@@ -1398,7 +1398,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "server_name: [Char8; 64];"
+              "anchor": "server_name: [|scalars|::Char8; 64];"
             }
           ]
         },
@@ -1409,7 +1409,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "boot_file_name: [Char8; 128];"
+              "anchor": "boot_file_name: [|scalars|::Char8; 128];"
             }
           ]
         },
@@ -1850,7 +1850,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "local_addr_is_ipv6: Boolean;"
+              "anchor": "local_addr_is_ipv6: |scalars|::Boolean;"
             }
           ]
         },
@@ -2554,7 +2554,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "use_default_addr: Boolean;"
+              "anchor": "use_default_addr: |scalars|::Boolean;"
             }
           ]
         },
@@ -2691,7 +2691,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "event: Event;"
+              "anchor": "event: |scalars|::Event;"
             }
           ]
         },
@@ -2702,7 +2702,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "status: Status;"
+              "anchor": "status: |status|::Status;"
             }
           ]
         },
@@ -2809,7 +2809,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/network.omg",
-          "anchor": "module network;"
+          "anchor": "pub data Ipv4Address"
         }
       ]
     },
@@ -2847,7 +2847,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "is_started: Boolean;"
+              "anchor": "is_started: |scalars|::Boolean;"
             }
           ]
         },
@@ -2880,7 +2880,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "is_configured: Boolean;"
+              "anchor": "is_configured: |scalars|::Boolean;"
             }
           ]
         },
@@ -3012,7 +3012,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "accept_any_protocol: Boolean;"
+              "anchor": "accept_any_protocol: |scalars|::Boolean;"
             }
           ]
         },
@@ -3023,7 +3023,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "accept_icmp_errors: Boolean;"
+              "anchor": "accept_icmp_errors: |scalars|::Boolean;"
             }
           ]
         },
@@ -3034,7 +3034,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "accept_broadcast: Boolean;"
+              "anchor": "accept_broadcast: |scalars|::Boolean;"
             }
           ]
         },
@@ -3045,7 +3045,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "accept_promiscuous: Boolean;"
+              "anchor": "accept_promiscuous: |scalars|::Boolean;"
             }
           ]
         },
@@ -3056,7 +3056,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "use_default_address: Boolean;"
+              "anchor": "use_default_address: |scalars|::Boolean;"
             }
           ]
         },
@@ -3122,7 +3122,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "do_not_fragment: Boolean;"
+              "anchor": "do_not_fragment: |scalars|::Boolean;"
             }
           ]
         },
@@ -3133,7 +3133,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "raw_data: Boolean;"
+              "anchor": "raw_data: |scalars|::Boolean;"
             }
           ]
         },
@@ -3185,7 +3185,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/network.omg",
-          "anchor": "module network;"
+          "anchor": "pub data Ipv4Address"
         }
       ]
     },
@@ -3267,7 +3267,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "name: [Char16; 32];"
+              "anchor": "name: [|scalars|::Char16; 32];"
             }
           ]
         },
@@ -3517,7 +3517,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/network.omg",
-          "anchor": "module network;"
+          "anchor": "pub data Ipv4Address"
         }
       ]
     },
@@ -3570,7 +3570,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/network.omg",
-          "anchor": "module network;"
+          "anchor": "pub data Ipv4Address"
         }
       ]
     },
@@ -3971,7 +3971,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "use_m_cast: Boolean;"
+              "anchor": "use_m_cast: |scalars|::Boolean;"
             }
           ]
         },
@@ -3982,7 +3982,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "use_b_cast: Boolean;"
+              "anchor": "use_b_cast: |scalars|::Boolean;"
             }
           ]
         },
@@ -3993,7 +3993,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "use_u_cast: Boolean;"
+              "anchor": "use_u_cast: |scalars|::Boolean;"
             }
           ]
         },
@@ -4004,7 +4004,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "must_use_list: Boolean;"
+              "anchor": "must_use_list: |scalars|::Boolean;"
             }
           ]
         },
@@ -4092,7 +4092,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "accept_any_response: Boolean;"
+              "anchor": "accept_any_response: |scalars|::Boolean;"
             }
           ]
         },
@@ -4323,7 +4323,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "started: Boolean;"
+              "anchor": "started: |scalars|::Boolean;"
             }
           ]
         },
@@ -4334,7 +4334,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "ipv6_available: Boolean;"
+              "anchor": "ipv6_available: |scalars|::Boolean;"
             }
           ]
         },
@@ -4345,7 +4345,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "ipv6_supported: Boolean;"
+              "anchor": "ipv6_supported: |scalars|::Boolean;"
             }
           ]
         },
@@ -4356,7 +4356,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "using_ipv6: Boolean;"
+              "anchor": "using_ipv6: |scalars|::Boolean;"
             }
           ]
         },
@@ -4367,7 +4367,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "bis_supported: Boolean;"
+              "anchor": "bis_supported: |scalars|::Boolean;"
             }
           ]
         },
@@ -4378,7 +4378,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "bis_detected: Boolean;"
+              "anchor": "bis_detected: |scalars|::Boolean;"
             }
           ]
         },
@@ -4389,7 +4389,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "auto_arp: Boolean;"
+              "anchor": "auto_arp: |scalars|::Boolean;"
             }
           ]
         },
@@ -4400,7 +4400,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "send_guid: Boolean;"
+              "anchor": "send_guid: |scalars|::Boolean;"
             }
           ]
         },
@@ -4411,7 +4411,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "dhcp_discover_valid: Boolean;"
+              "anchor": "dhcp_discover_valid: |scalars|::Boolean;"
             }
           ]
         },
@@ -4422,7 +4422,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "dhcp_ack_received: Boolean;"
+              "anchor": "dhcp_ack_received: |scalars|::Boolean;"
             }
           ]
         },
@@ -4433,7 +4433,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "proxy_offer_received: Boolean;"
+              "anchor": "proxy_offer_received: |scalars|::Boolean;"
             }
           ]
         },
@@ -4444,7 +4444,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "pxe_discover_valid: Boolean;"
+              "anchor": "pxe_discover_valid: |scalars|::Boolean;"
             }
           ]
         },
@@ -4455,7 +4455,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "pxe_reply_received: Boolean;"
+              "anchor": "pxe_reply_received: |scalars|::Boolean;"
             }
           ]
         },
@@ -4466,7 +4466,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "pxe_bis_reply_received: Boolean;"
+              "anchor": "pxe_bis_reply_received: |scalars|::Boolean;"
             }
           ]
         },
@@ -4477,7 +4477,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "icmp_error_received: Boolean;"
+              "anchor": "icmp_error_received: |scalars|::Boolean;"
             }
           ]
         },
@@ -4488,7 +4488,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "tftp_error_received: Boolean;"
+              "anchor": "tftp_error_received: |scalars|::Boolean;"
             }
           ]
         },
@@ -4499,7 +4499,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "make_callbacks: Boolean;"
+              "anchor": "make_callbacks: |scalars|::Boolean;"
             }
           ]
         },
@@ -5515,7 +5515,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "error_string: [Char8; 127];"
+              "anchor": "error_string: [|scalars|::Char8; 127];"
             }
           ]
         },
@@ -6561,7 +6561,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "mac_address_changeable: Boolean;"
+              "anchor": "mac_address_changeable: |scalars|::Boolean;"
             }
           ]
         },
@@ -6572,7 +6572,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "multiple_tx_supported: Boolean;"
+              "anchor": "multiple_tx_supported: |scalars|::Boolean;"
             }
           ]
         },
@@ -6583,7 +6583,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "media_present_supported: Boolean;"
+              "anchor": "media_present_supported: |scalars|::Boolean;"
             }
           ]
         },
@@ -6594,7 +6594,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "media_present: Boolean;"
+              "anchor": "media_present: |scalars|::Boolean;"
             }
           ]
         },
@@ -6715,7 +6715,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "wait_for_packet: Event;"
+              "anchor": "wait_for_packet: |scalars|::Event;"
             }
           ]
         },
@@ -6800,7 +6800,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/network.omg",
-          "anchor": "module network;"
+          "anchor": "pub data Ipv4Address"
         }
       ]
     },
@@ -7124,7 +7124,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "use_default_address: Boolean;"
+              "anchor": "use_default_address: |scalars|::Boolean;"
             }
           ]
         },
@@ -7201,7 +7201,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "active_flag: Boolean;"
+              "anchor": "active_flag: |scalars|::Boolean;"
             }
           ]
         },
@@ -7333,7 +7333,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "enable_nagle: Boolean;"
+              "anchor": "enable_nagle: |scalars|::Boolean;"
             }
           ]
         },
@@ -7344,7 +7344,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "enable_time_stamp: Boolean;"
+              "anchor": "enable_time_stamp: |scalars|::Boolean;"
             }
           ]
         },
@@ -7355,7 +7355,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "enable_window_scaling: Boolean;"
+              "anchor": "enable_window_scaling: |scalars|::Boolean;"
             }
           ]
         },
@@ -7366,7 +7366,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "enable_selective_ack: Boolean;"
+              "anchor": "enable_selective_ack: |scalars|::Boolean;"
             }
           ]
         },
@@ -7377,7 +7377,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "enable_path_mtu_discovery: Boolean;"
+              "anchor": "enable_path_mtu_discovery: |scalars|::Boolean;"
             }
           ]
         },
@@ -7399,7 +7399,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "event: Event;"
+              "anchor": "event: |scalars|::Event;"
             }
           ]
         },
@@ -7410,7 +7410,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "status: Status;"
+              "anchor": "status: |status|::Status;"
             }
           ]
         },
@@ -7465,7 +7465,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "new_child_handle: Handle;"
+              "anchor": "new_child_handle: |scalars|::Handle;"
             }
           ]
         },
@@ -7531,7 +7531,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "abort_on_close: Boolean;"
+              "anchor": "abort_on_close: |scalars|::Boolean;"
             }
           ]
         },
@@ -7624,7 +7624,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "urgent: Boolean;"
+              "anchor": "urgent: |scalars|::Boolean;"
             }
           ]
         },
@@ -7679,7 +7679,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "push: Boolean;"
+              "anchor": "push: |scalars|::Boolean;"
             }
           ]
         },
@@ -7690,7 +7690,7 @@
           "targets": [
             {
               "path": "source/contracts/uefi/raw/network.omg",
-              "anchor": "urgent: Boolean;"
+              "anchor": "urgent: |scalars|::Boolean;"
             }
           ]
         },
@@ -7914,7 +7914,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/network.omg",
-          "anchor": "module network;"
+          "anchor": "pub data Ipv4Address"
         }
       ]
     }

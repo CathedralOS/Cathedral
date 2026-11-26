@@ -1,5 +1,3 @@
-module children::recovery::main;
-
 // One automatic retry, then owner-supplied fallback. Explicit retries never
 // replenish the automatic allowance. Tickets correlate work; they grant no access.
 public data Phase [copy] {

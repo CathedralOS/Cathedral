@@ -1,8 +1,14 @@
+use main.omg;
+
+use {component}/main.omg as component_main;
+use {runtime}/arch/x86_64/gate.omg;
+use {runtime}/entry.omg;
+use {runtime}/kernel.omg;
 machine build(builder: &mut Build) {
     Build::application(builder, "cathedral_background_failure_native");
     Build::depend_as(builder, "component", Source::Path { location: "../component" });
     Build::depend_as(builder, "runtime", Source::Path { location: "../../../../platform/libraries/user-runtime" });
-    Build::select_provider<runtime::entry::Program, component::main::ProgramProvider>(builder, linux_x86_64, CompositionMode::Independent);
-    Build::select_provider<runtime::kernel::Kernel, runtime::arch::x86_64::gate::NativeKernel>(builder, linux_x86_64);
-    Build::bind(builder, linux_x86_64::ProgramEntry, main);
+    Build::select_provider<|entry|::Program, |component_main|::ProgramProvider>(builder, linux_x86_64, CompositionMode::Independent);
+    Build::select_provider<|kernel|::Kernel, |gate|::NativeKernel>(builder, linux_x86_64);
+    Build::bind(builder, linux_x86_64::ProgramEntry, |main|::main);
 }

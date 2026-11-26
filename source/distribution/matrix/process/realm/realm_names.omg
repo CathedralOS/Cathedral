@@ -1,4 +1,3 @@
-module realm_names;
 // The realm entries the stock startup looks for, as the four little-endian
 // words of a 32-byte metadata name: the saved Matrix configuration, the
 // Login picker, the Users folder and the optional Background.

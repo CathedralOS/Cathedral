@@ -14,7 +14,7 @@ trap 'rm -rf "$SCRATCH_DIR"' EXIT
 mkdir -p "$PROJECT_DIR"
 install -m 0644 "$CANARY_ROOT/main.omg" "$PROJECT_DIR/main.omg"
 install -m 0644 "$CANARY_ROOT/build.omg" "$PROJECT_DIR/build.omg"
-ln -s "$REPO_ROOT/source/kernel/boot/uefi/own_machine.omg" "$PROJECT_DIR/own_machine.omg"
+ln -s "$REPO_ROOT/source/kernel/boot/uefi" "$PROJECT_DIR/boot"
 ln -s "$REPO_ROOT/source/contracts/uefi" "$PROJECT_DIR/uefi"
 ln -s "$REPO_ROOT/source/kernel/core" "$PROJECT_DIR/core"
 CANARY_MAIN="$PROJECT_DIR/main.omg"

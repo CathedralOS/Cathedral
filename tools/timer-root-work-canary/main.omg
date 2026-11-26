@@ -1,26 +1,25 @@
 // Expected exit: 0
 // A published timer wake is consumed once. Publications before consumption
 // coalesce to the latest observation, and unrelated storage remains intact.
-use core::timing::wake::TimerRootWakeState;
-use core::timing::wake::TimerRootWakeClaim;
+use {core}/timing/wake.omg;
 
 data WakeStorage {
     before: u64;
-    wake: TimerRootWakeState;
+    wake: |wake|::TimerRootWakeState;
     after: u64;
 }
 
-machine is_idle(wake: &TimerRootWakeState) -> bool {
-    match TimerRootWakeState::claim_pending(wake) {
-        TimerRootWakeClaim::Idle -> true,
-        TimerRootWakeClaim::Claimed { observed_time } -> false,
+machine is_idle(wake: &|wake|::TimerRootWakeState) -> bool {
+    match |wake|::TimerRootWakeState::claim_pending(wake) {
+        |wake|::TimerRootWakeClaim::Idle -> true,
+        |wake|::TimerRootWakeClaim::Claimed { observed_time } -> false,
     }
 }
 
-machine has_observation(wake: &TimerRootWakeState, expected: u64) -> bool {
-    match TimerRootWakeState::claim_pending(wake) {
-        TimerRootWakeClaim::Claimed { observed_time } -> observed_time == expected,
-        TimerRootWakeClaim::Idle -> false,
+machine has_observation(wake: &|wake|::TimerRootWakeState, expected: u64) -> bool {
+    match |wake|::TimerRootWakeState::claim_pending(wake) {
+        |wake|::TimerRootWakeClaim::Claimed { observed_time } -> observed_time == expected,
+        |wake|::TimerRootWakeClaim::Idle -> false,
     }
 }
 
@@ -29,14 +28,14 @@ machine start() crashes Trap {
     storage.before = 101;
     storage.after = 103;
     let initially_idle: bool = is_idle(&storage.wake);
-    TimerRootWakeState::record_and_publish(&storage.wake, 41);
+    |wake|::TimerRootWakeState::record_and_publish(&storage.wake, 41);
     let first: bool = has_observation(&storage.wake, 41);
     let first_cleared: bool = is_idle(&storage.wake);
-    TimerRootWakeState::record_and_publish(&storage.wake, 73);
-    TimerRootWakeState::record_and_publish(&storage.wake, 97);
+    |wake|::TimerRootWakeState::record_and_publish(&storage.wake, 73);
+    |wake|::TimerRootWakeState::record_and_publish(&storage.wake, 97);
     let latest: bool = has_observation(&storage.wake, 97);
     let latest_cleared: bool = is_idle(&storage.wake);
-    TimerRootWakeState::record_and_publish(&storage.wake, 113);
+    |wake|::TimerRootWakeState::record_and_publish(&storage.wake, 113);
     let next_round: bool = has_observation(&storage.wake, 113);
     let next_cleared: bool = is_idle(&storage.wake);
     transition initially_idle && first && first_cleared && latest && latest_cleared

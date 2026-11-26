@@ -1,13 +1,6 @@
-module workspace::catalogue;
-
 // Eight opaque words: ticket high-water mark, selection and three instance rows.
 // Packet layout and native query tags never enter the service's catalogue.
-use service::children::workspace::catalogue;
-use service::children::workspace::catalogue::Catalogue;
-use service::children::workspace::catalogue::Instance;
-use service::children::workspace::catalogue::Position;
-use service::children::workspace::catalogue::Entry;
-use service::children::workspace::catalogue::Selection;
+use {service}/children/workspace/catalogue.omg;
 
 const PUBLISH: u64 = 0u64;
 const RETIRE: u64 = 1u64;
@@ -19,7 +12,7 @@ const ACTIVE: u64 = 6u64;
 const CAPACITY: u64 = 7u64;
 
 public machine catalogue_decision(packet: &mut [u64; 128]) -> u64 {
-    let mut catalogue: Catalogue;
+    let mut catalogue: |catalogue|::Catalogue;
     catalogue.last_ticket = packet[16];
     catalogue.selected = decode_position(packet[17]);
     catalogue.instances[0] = decode_instance(packet[18], packet[19]);
@@ -34,69 +27,69 @@ public machine catalogue_decision(packet: &mut [u64; 128]) -> u64 {
     result
 }
 
-machine apply(packet: &mut [u64; 128], catalogue: &mut Catalogue) -> u64 {
+machine apply(packet: &mut [u64; 128], catalogue: &mut |catalogue|::Catalogue) -> u64 {
     transition packet[1] {
-        PUBLISH -> boolean(service::children::workspace::catalogue::publish(catalogue, packet[2], packet[3]))
-        RETIRE -> boolean(service::children::workspace::catalogue::retire(catalogue, packet[2]))
-        ACTIVATE -> boolean(service::children::workspace::catalogue::activate(catalogue, packet[2]))
+        PUBLISH -> boolean(|catalogue|::publish(catalogue, packet[2], packet[3]))
+        RETIRE -> boolean(|catalogue|::retire(catalogue, packet[2]))
+        ACTIVATE -> boolean(|catalogue|::activate(catalogue, packet[2]))
         ENTRY -> read_entry(packet, catalogue)
         SELECT -> selection(packet, catalogue)
         FALLBACK -> fallback(packet, catalogue)
         ACTIVE -> active(packet, catalogue)
-        CAPACITY -> boolean(service::children::workspace::catalogue::has_ticket_capacity(catalogue))
+        CAPACITY -> boolean(|catalogue|::has_ticket_capacity(catalogue))
         _ -> (0u64)
     }
-    machine read_entry(packet: &mut [u64; 128], catalogue: &Catalogue) -> u64 {
-        let entry: Entry = service::children::workspace::catalogue::entry(catalogue, packet[2]);
+    machine read_entry(packet: &mut [u64; 128], catalogue: &|catalogue|::Catalogue) -> u64 {
+        let entry: |catalogue|::Entry = |catalogue|::entry(catalogue, packet[2]);
         encode_entry(packet, entry)
     }
-    machine selection(packet: &mut [u64; 128], catalogue: &Catalogue) -> u64 {
-        let selection: Selection = service::children::workspace::catalogue::select(catalogue, packet[2], packet[3] != 0u64);
+    machine selection(packet: &mut [u64; 128], catalogue: &|catalogue|::Catalogue) -> u64 {
+        let selection: |catalogue|::Selection = |catalogue|::select(catalogue, packet[2], packet[3] != 0u64);
         encode_selection(packet, selection)
     }
-    machine fallback(packet: &mut [u64; 128], catalogue: &Catalogue) -> u64 {
-        let position: Position = service::children::workspace::catalogue::fallback(catalogue);
+    machine fallback(packet: &mut [u64; 128], catalogue: &|catalogue|::Catalogue) -> u64 {
+        let position: |catalogue|::Position = |catalogue|::fallback(catalogue);
         transition position {
-            Position::App { slot } -> found(packet, slot)
-            Position::None -> (0u64)
+            |catalogue|::Position::App { slot } -> found(packet, slot)
+            |catalogue|::Position::None -> (0u64)
         }
     }
     machine found(packet: &mut [u64; 128], slot: u64) -> u64 {
         packet[8] = slot;
         1u64
     }
-    machine active(packet: &mut [u64; 128], catalogue: &Catalogue) -> u64 {
+    machine active(packet: &mut [u64; 128], catalogue: &|catalogue|::Catalogue) -> u64 {
         packet[8] = encode_position(catalogue.selected);
         1u64
     }
 }
 
-machine decode_position(value: u64) -> Position {
+machine decode_position(value: u64) -> |catalogue|::Position {
     transition value == 0u64 {
-        true -> (Position::None)
-        _ -> (Position::App { slot: value })
+        true -> (|catalogue|::Position::None)
+        _ -> (|catalogue|::Position::App { slot: value })
     }
 }
 
-machine encode_position(position: Position) -> u64 {
+machine encode_position(position: |catalogue|::Position) -> u64 {
     transition position {
-        Position::App { slot } -> (slot)
-        Position::None -> (0u64)
+        |catalogue|::Position::App { slot } -> (slot)
+        |catalogue|::Position::None -> (0u64)
     }
 }
 
-machine decode_instance(ticket: u64, program: u64) -> Instance {
+machine decode_instance(ticket: u64, program: u64) -> |catalogue|::Instance {
     transition ticket == 0u64 {
-        true -> (Instance::Empty)
-        _ -> (Instance::Published { ticket: ticket, program: program })
+        true -> (|catalogue|::Instance::Empty)
+        _ -> (|catalogue|::Instance::Published { ticket: ticket, program: program })
     }
 }
 
-machine encode_instance(packet: &mut [u64; 128], offset: u64, instance: Instance)
+machine encode_instance(packet: &mut [u64; 128], offset: u64, instance: |catalogue|::Instance)
     requires offset < 127u64 {
     transition instance {
-        Instance::Published { ticket, program } -> populated(packet, offset, ticket, program)
-        Instance::Empty -> populated(packet, offset, 0u64, 0u64)
+        |catalogue|::Instance::Published { ticket, program } -> populated(packet, offset, ticket, program)
+        |catalogue|::Instance::Empty -> populated(packet, offset, 0u64, 0u64)
     }
     machine populated(packet: &mut [u64; 128], offset: u64, ticket: u64, program: u64)
         requires offset < 127u64 {
@@ -105,11 +98,11 @@ machine encode_instance(packet: &mut [u64; 128], offset: u64, instance: Instance
     }
 }
 
-machine encode_entry(packet: &mut [u64; 128], entry: Entry) -> u64 {
+machine encode_entry(packet: &mut [u64; 128], entry: |catalogue|::Entry) -> u64 {
     transition entry {
-        Entry::Outside -> (0u64)
-        Entry::Empty -> (1u64)
-        Entry::Present { ticket, program, selected } -> present(packet, ticket, program, selected)
+        |catalogue|::Entry::Outside -> (0u64)
+        |catalogue|::Entry::Empty -> (1u64)
+        |catalogue|::Entry::Present { ticket, program, selected } -> present(packet, ticket, program, selected)
     }
     machine present(packet: &mut [u64; 128], ticket: u64, program: u64, selected: bool) -> u64 {
         packet[8] = ticket;
@@ -119,12 +112,12 @@ machine encode_entry(packet: &mut [u64; 128], entry: Entry) -> u64 {
     }
 }
 
-machine encode_selection(packet: &mut [u64; 128], selection: Selection) -> u64 {
+machine encode_selection(packet: &mut [u64; 128], selection: |catalogue|::Selection) -> u64 {
     transition selection {
-        Selection::Missing -> (0u64)
-        Selection::Busy { slot } -> found(packet, slot, 1u64)
-        Selection::Current { slot } -> found(packet, slot, 2u64)
-        Selection::Switch { slot } -> found(packet, slot, 3u64)
+        |catalogue|::Selection::Missing -> (0u64)
+        |catalogue|::Selection::Busy { slot } -> found(packet, slot, 1u64)
+        |catalogue|::Selection::Current { slot } -> found(packet, slot, 2u64)
+        |catalogue|::Selection::Switch { slot } -> found(packet, slot, 3u64)
     }
     machine found(packet: &mut [u64; 128], slot: u64, kind: u64) -> u64 {
         packet[8] = slot;

@@ -1,36 +1,32 @@
-module server::setup;
-use server::opening;
+use server/opening.omg;
 // Synchronous convenience over the same incremental handshake used by services.
-use kernel::Gate;
-use kernel::Kernel;
-use kernel;
-use connection::main::Peer;
-use server::opening::Opening;
-use time::Tick;
-public machine accept(gate: &Gate, peer: &mut Peer, deadline: u64) -> u64
-    reaches Kernel blocks invokes Kernel {
-    let mut opening: Opening;
-    server::opening::start(&mut opening, deadline);
+use kernel.omg;
+use connection/main.omg;
+use time.omg;
+public machine accept(gate: &|kernel|::Gate, peer: &mut |main|::Peer, deadline: u64) -> u64
+    reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
+    let mut opening: |opening|::Opening;
+    |opening|::start(&mut opening, deadline);
     transition { _ -> block progress(gate, peer, &mut opening) }
 }
-machine progress(gate: &Gate, peer: &mut Peer, opening: &mut Opening) -> u64 reaches Kernel {
-    let tick: Tick = time::read(gate, Kernel::clock(gate));
+machine progress(gate: &|kernel|::Gate, peer: &mut |main|::Peer, opening: &mut |opening|::Opening) -> u64 reaches |kernel|::Kernel {
+    let tick: |time|::Tick = |time|::read(gate, |kernel|::Kernel::clock(gate));
     transition tick {
-        Tick::Read { value } -> block step(gate, peer, opening, value)
-        Tick::Failed { code } -> (code)
+        |time|::Tick::Read { value } -> block step(gate, peer, opening, value)
+        |time|::Tick::Failed { code } -> (code)
     }
 }
-machine step(gate: &Gate, peer: &mut Peer, opening: &mut Opening, now: u64) -> u64 reaches Kernel {
-    let status: u64 = block server::opening::poll(gate, peer, opening, now);
-    transition status == kernel::WOULD_BLOCK {
+machine step(gate: &|kernel|::Gate, peer: &mut |main|::Peer, opening: &mut |opening|::Opening, now: u64) -> u64 reaches |kernel|::Kernel {
+    let status: u64 = block |opening|::poll(gate, peer, opening, now);
+    transition status == |kernel|::WOULD_BLOCK {
         true -> block wait(gate, peer, opening)
         _ -> (status)
     }
 }
-machine wait(gate: &Gate, peer: &mut Peer, opening: &mut Opening) -> u64 reaches Kernel {
+machine wait(gate: &|kernel|::Gate, peer: &mut |main|::Peer, opening: &mut |opening|::Opening) -> u64 reaches |kernel|::Kernel {
     let mut interests: [u64; 8];
     interests[1] = peer.receiver;
-    let status: u64 = block Kernel::wait(gate, &interests, 1u64, opening.deadline);
+    let status: u64 = block |kernel|::Kernel::wait(gate, &interests, 1u64, opening.deadline);
     transition status == 0u64 {
         true -> block progress(gate, peer, opening)
         _ -> (status)

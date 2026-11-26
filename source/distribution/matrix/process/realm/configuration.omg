@@ -1,4 +1,3 @@
-module configuration;
 // The configuration job: read the realm's saved Matrix record and resolve
 // the launcher it names and the optional Background, validate the saved
 // geometry and keys against this matrix's view, admit the launcher from its
@@ -7,46 +6,33 @@ module configuration;
 // start the background, publish, and grant the launcher its chrome authority.
 // A launcher that did not acquire storage, or could not be bound or placed,
 // is taken down again on the policy's rollback path.
-use protocol::main;
-use protocol::matrix;
-use protocol::services::STORAGE;
-use shared::state::State;
-use shared::state::Saved;
-use shared::state::SlotPolicy;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::kernel;
-use runtime::memory::object::Object;
-use policy::children::startup::realm::operations::Command;
-use policy::children::startup::realm::operations::Completion;
-use policy::children::startup::main::background_failed;
-use policy::children::configuration::encoding;
-use policy::children::configuration::placement;
-use policy::children::configuration::placement::Geometry;
-use policy::children::configuration::placement::Extent;
-use policy::children::configuration::placement::Rectangle;
-use policy::children::configuration::placement::Placement;
-use policy::children::launch::resources::recipes;
-use policy::children::launch::resources::recipes::Role;
-use policy::children::launch::resources::recipes::Offer;
-use policy::children::launch::resources::recipes::OfferDecision;
-use world::level;
-use world::surfaces;
-use world::layout;
-use world::management;
-use world::geometry::Rect;
-use connections::storage::storage;
-use shared::storage::Outcome;
-use connections::listing;
-use realm_names;
-use children::stored;
-use children::lifecycle;
-use connections::presentation;
-use background;
-use jobs;
-use jobs::Step;
-use shared::report;
-use connections::upstream;
+use {protocol}/main.omg;
+use {protocol}/matrix.omg;
+use {protocol}/services.omg;
+use {shared}/state.omg as shared_state;
+use {runtime}/kernel.omg;
+use {runtime}/memory/object.omg;
+use {policy}/children/startup/realm/operations.omg;
+use {policy}/children/startup/main.omg as startup_main;
+use {policy}/children/configuration/encoding.omg;
+use {policy}/children/configuration/placement.omg;
+use {policy}/children/launch/resources/recipes.omg;
+use {world}/level.omg;
+use {world}/surfaces.omg;
+use {world}/layout.omg;
+use {world}/management.omg;
+use {world}/geometry.omg;
+use {connections}/storage/storage.omg;
+use {shared}/storage.omg as shared_storage;
+use {connections}/listing.omg;
+use realm_names.omg;
+use {children}/stored.omg;
+use {children}/lifecycle.omg;
+use {connections}/presentation.omg;
+use background.omg;
+use jobs.omg;
+use {shared}/report.omg;
+use {connections}/upstream.omg;
 
 public const RECORD_BYTES: u64 = 104u64;
 public const LAUNCHER_SLOT: u64 = 0u64;
@@ -54,141 +40,141 @@ public const FIRST_APP: u64 = 1u64;
 public const LAST_APP: u64 = 3u64;
 
 // One command of this job, for the job stack in [jobs.omg](jobs.omg).
-public machine execute(gate: &Gate, context: &mut State, now: u64, command: Command) -> Step reaches Kernel blocks invokes Kernel {
+public machine execute(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, command: |operations|::Command) -> |jobs|::Step reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     transition command {
-        Command::StartBackground -> (Step::Nested { job: jobs::BACKGROUND })
+        |operations|::Command::StartBackground -> (|jobs|::Step::Nested { job: |jobs|::BACKGROUND })
         _ -> block done_with(gate, context, now, command)
     }
-    machine done_with(gate: &Gate, context: &mut State, now: u64, command: Command) -> Step reaches Kernel {
-        let completion: Completion = block run_command(gate, context, now, command);
-        Step::Done { completion: completion }
+    machine done_with(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, command: |operations|::Command) -> |jobs|::Step reaches |kernel|::Kernel {
+        let completion: |operations|::Completion = block run_command(gate, context, now, command);
+        |jobs|::Step::Done { completion: completion }
     }
 }
-machine run_command(gate: &Gate, context: &mut State, now: u64, command: Command) -> Completion reaches Kernel {
+machine run_command(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, command: |operations|::Command) -> |operations|::Completion reaches |kernel|::Kernel {
     transition command {
-        Command::Refresh -> block refreshed(gate, context, now)
-        Command::ReadConfiguration -> block reading(gate, context, now)
-        Command::ValidateConfiguration -> (validated(context))
-        Command::AdmitLauncher -> block admitting(gate, context, now)
-        Command::ReleaseImage -> block releasing(gate, context)
-        Command::BindLauncher -> block binding(gate, context, now)
-        Command::InstallWorkspace -> (installed(context))
-        Command::PlaceLauncher -> (placed(context))
-        Command::BackgroundFailed -> (background_refused(context))
-        Command::Flush -> block flushing(gate, context)
-        Command::Notify -> (notifying(gate, context))
-        Command::GrantChrome -> (granting(context))
-        Command::RecordLauncher -> (recording(gate))
-        Command::StopLauncher -> block stopping(gate, context)
-        Command::ClearWorkspace -> (clearing(context))
-        Command::ResetSurfaces -> (resetting(context))
-        _ -> (jobs::completed(command, 0u64))
+        |operations|::Command::Refresh -> block refreshed(gate, context, now)
+        |operations|::Command::ReadConfiguration -> block reading(gate, context, now)
+        |operations|::Command::ValidateConfiguration -> (validated(context))
+        |operations|::Command::AdmitLauncher -> block admitting(gate, context, now)
+        |operations|::Command::ReleaseImage -> block releasing(gate, context)
+        |operations|::Command::BindLauncher -> block binding(gate, context, now)
+        |operations|::Command::InstallWorkspace -> (installed(context))
+        |operations|::Command::PlaceLauncher -> (placed(context))
+        |operations|::Command::BackgroundFailed -> (background_refused(context))
+        |operations|::Command::Flush -> block flushing(gate, context)
+        |operations|::Command::Notify -> (notifying(gate, context))
+        |operations|::Command::GrantChrome -> (granting(context))
+        |operations|::Command::RecordLauncher -> (recording(gate))
+        |operations|::Command::StopLauncher -> block stopping(gate, context)
+        |operations|::Command::ClearWorkspace -> (clearing(context))
+        |operations|::Command::ResetSurfaces -> (resetting(context))
+        _ -> (|jobs|::completed(command, 0u64))
     }
 }
-machine refreshed(gate: &Gate, context: &mut State, now: u64) -> Completion reaches Kernel {
+machine refreshed(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64) -> |operations|::Completion reaches |kernel|::Kernel {
     let status: u64 = block upstream_refresh(gate, context, now);
-    jobs::completed(Command::Refresh, status)
+    |jobs|::completed(|operations|::Command::Refresh, status)
 }
-machine upstream_refresh(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
+machine upstream_refresh(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64) -> u64 reaches |kernel|::Kernel {
     transition context.has_parent {
-        true -> block upstream::refresh(gate, context, now)
+        true -> block |upstream|::refresh(gate, context, now)
         _ -> (0u64)
     }
 }
 // The saved record: the object discovery found, or the one named Matrix in
 // the realm; then the launcher it names and the Background beside it, and
 // the launcher's image.
-machine reading(gate: &Gate, context: &mut State, now: u64) -> Completion reaches Kernel {
-    let parent: u64 = listing::realm(context);
+machine reading(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64) -> |operations|::Completion reaches |kernel|::Kernel {
+    let parent: u64 = |listing|::realm(context);
     let known: u64 = context.config_object;
-    let matrix_name: [u64; 4] = realm_names::matrix();
+    let matrix_name: [u64; 4] = |realm_names|::matrix();
     transition known != 0u64 {
         true -> block decoding(gate, context, now, known)
         _ -> block searching(gate, context, now, parent, matrix_name)
     }
-    machine searching(gate: &Gate, context: &mut State, now: u64, parent: u64, matrix_name: [u64; 4]) -> Completion reaches Kernel {
+    machine searching(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, parent: u64, matrix_name: [u64; 4]) -> |operations|::Completion reaches |kernel|::Kernel {
         let name: [u64; 4] = matrix_name;
-        let object: u64 = block listing::find(gate, context, now, parent, &name);
+        let object: u64 = block |listing|::find(gate, context, now, parent, &name);
         transition object != 0u64 {
             true -> block decoding(gate, context, now, object)
-            _ -> (jobs::completed(Command::ReadConfiguration, listing::MISSING))
+            _ -> (|jobs|::completed(|operations|::Command::ReadConfiguration, |listing|::MISSING))
         }
     }
-    machine decoding(gate: &Gate, context: &mut State, now: u64, object: u64) -> Completion reaches Kernel {
+    machine decoding(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, object: u64) -> |operations|::Completion reaches |kernel|::Kernel {
         context.config_object = object;
-        let outcome: Outcome = block storage::read_object(gate, context, now, object, 0u64);
+        let outcome: |shared_storage|::Outcome = block |storage|::read_object(gate, context, now, object, 0u64);
         transition outcome.words[0] == 0u64 && outcome.attachment != 0u64 && outcome.words[4] == RECORD_BYTES {
             true -> block decoded(gate, context, now, outcome.attachment)
-            _ -> block unread(gate, outcome, Command::ReadConfiguration)
+            _ -> block unread(gate, outcome, |operations|::Command::ReadConfiguration)
         }
     }
-    machine decoded(gate: &Gate, context: &mut State, now: u64, record: u64) -> Completion reaches Kernel {
+    machine decoded(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, record: u64) -> |operations|::Completion reaches |kernel|::Kernel {
         let mut bytes: [u8; 104];
         let status: u64 = block fill(gate, record, &mut bytes);
         block release(gate, record);
-        let valid: bool = encoding::normalize(&mut bytes);
+        let valid: bool = |encoding|::normalize(&mut bytes);
         transition status == 0u64 && valid {
             true -> block parsed(gate, context, now, &bytes)
-            _ -> (jobs::completed(Command::ReadConfiguration, kernel::INVALID_ARGUMENT))
+            _ -> (|jobs|::completed(|operations|::Command::ReadConfiguration, |kernel|::INVALID_ARGUMENT))
         }
     }
-    machine parsed(gate: &Gate, context: &mut State, now: u64, bytes: &[u8; 104]) -> Completion reaches Kernel {
-        let mut saved: Saved;
+    machine parsed(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, bytes: &[u8; 104]) -> |operations|::Completion reaches |kernel|::Kernel {
+        let mut saved: |shared_state|::Saved;
         saved.valid = true;
-        saved.launcher[0] = encoding::word(bytes, 8u64);
-        saved.launcher[1] = encoding::word(bytes, 16u64);
-        saved.launcher[2] = encoding::word(bytes, 24u64);
-        saved.launcher[3] = encoding::word(bytes, 32u64);
-        saved.launcher_pages = encoding::word(bytes, 40u64);
-        saved.app_pages = encoding::word(bytes, 48u64);
-        saved.app_readers = encoding::word(bytes, 56u64);
-        saved.margin = encoding::word(bytes, 64u64);
-        saved.launcher_height = encoding::word(bytes, 72u64);
-        saved.gap = encoding::word(bytes, 80u64);
-        saved.app_surfaces = encoding::word(bytes, 88u64);
-        saved.keys = encoding::word(bytes, 96u64);
+        saved.launcher[0] = |encoding|::word(bytes, 8u64);
+        saved.launcher[1] = |encoding|::word(bytes, 16u64);
+        saved.launcher[2] = |encoding|::word(bytes, 24u64);
+        saved.launcher[3] = |encoding|::word(bytes, 32u64);
+        saved.launcher_pages = |encoding|::word(bytes, 40u64);
+        saved.app_pages = |encoding|::word(bytes, 48u64);
+        saved.app_readers = |encoding|::word(bytes, 56u64);
+        saved.margin = |encoding|::word(bytes, 64u64);
+        saved.launcher_height = |encoding|::word(bytes, 72u64);
+        saved.gap = |encoding|::word(bytes, 80u64);
+        saved.app_surfaces = |encoding|::word(bytes, 88u64);
+        saved.keys = |encoding|::word(bytes, 96u64);
         context.saved = saved;
         let launcher_name: [u64; 4] = saved.launcher;
         transition { _ -> block naming(gate, context, now, launcher_name) }
     }
-    machine naming(gate: &Gate, context: &mut State, now: u64, launcher_name: [u64; 4]) -> Completion reaches Kernel {
-        let parent: u64 = listing::realm(context);
+    machine naming(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, launcher_name: [u64; 4]) -> |operations|::Completion reaches |kernel|::Kernel {
+        let parent: u64 = |listing|::realm(context);
         let name: [u64; 4] = launcher_name;
-        let launcher: u64 = block listing::find(gate, context, now, parent, &name);
-        let background_name: [u64; 4] = realm_names::background();
-        let found: u64 = block listing::find(gate, context, now, parent, &background_name);
+        let launcher: u64 = block |listing|::find(gate, context, now, parent, &name);
+        let background_name: [u64; 4] = |realm_names|::background();
+        let found: u64 = block |listing|::find(gate, context, now, parent, &background_name);
         context.launcher_object = launcher;
         context.background_object = found;
         transition launcher != 0u64 {
             true -> block loading(gate, context, now, launcher)
-            _ -> (jobs::completed(Command::ReadConfiguration, listing::MISSING))
+            _ -> (|jobs|::completed(|operations|::Command::ReadConfiguration, |listing|::MISSING))
         }
     }
-    machine loading(gate: &Gate, context: &mut State, now: u64, launcher: u64) -> Completion reaches Kernel {
-        let outcome: Outcome = block storage::read_object(gate, context, now, launcher, 0u64);
+    machine loading(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, launcher: u64) -> |operations|::Completion reaches |kernel|::Kernel {
+        let outcome: |shared_storage|::Outcome = block |storage|::read_object(gate, context, now, launcher, 0u64);
         transition outcome.words[0] == 0u64 && outcome.attachment != 0u64 {
             true -> (loaded(context, outcome))
-            _ -> block unread(gate, outcome, Command::ReadConfiguration)
+            _ -> block unread(gate, outcome, |operations|::Command::ReadConfiguration)
         }
     }
-    machine loaded(context: &mut State, outcome: Outcome) -> Completion {
+    machine loaded(context: &mut |shared_state|::State, outcome: |shared_storage|::Outcome) -> |operations|::Completion {
         context.image = outcome.attachment;
         context.image_length = outcome.words[4];
-        jobs::completed(Command::ReadConfiguration, 0u64)
+        |jobs|::completed(|operations|::Command::ReadConfiguration, 0u64)
     }
 }
 // The record's thirteen words, read eight and then five at a time.
-machine fill(gate: &Gate, record: u64, bytes: &mut [u8; 104]) -> u64 reaches Kernel {
-    let holder: Object = Object { handle: record };
+machine fill(gate: &|kernel|::Gate, record: u64, bytes: &mut [u8; 104]) -> u64 reaches |kernel|::Kernel {
+    let holder: |object|::Object = |object|::Object { handle: record };
     let mut words: [u64; 8];
-    let first: u64 = block runtime::memory::object::read(gate, &holder, 0u64, &mut words, 8u64);
+    let first: u64 = block |object|::read(gate, &holder, 0u64, &mut words, 8u64);
     place(&words, bytes, 0u64, 0u64, 64u64);
     let mut rest: [u64; 8];
-    let second: u64 = block runtime::memory::object::read(gate, &holder, 8u64, &mut rest, 5u64);
+    let second: u64 = block |object|::read(gate, &holder, 8u64, &mut rest, 5u64);
     place(&rest, bytes, 64u64, 0u64, 40u64);
     transition first == 0u64 && second == 0u64 {
         true -> (0u64)
-        _ -> (kernel::IO_ERROR)
+        _ -> (|kernel|::IO_ERROR)
     }
 }
 machine place(words: &[u64; 8], bytes: &mut [u8; 104], at: u64, index: u64, count: u64) requires at <= 64u64 && index <= 64u64 && count <= 64u64 {
@@ -202,163 +188,163 @@ machine place(words: &[u64; 8], bytes: &mut [u8; 104], at: u64, index: u64, coun
         transition { _ -> place(words, bytes, at, index + 1u64, count) }
     }
 }
-machine unread(gate: &Gate, outcome: Outcome, command: Command) -> Completion reaches Kernel {
+machine unread(gate: &|kernel|::Gate, outcome: |shared_storage|::Outcome, command: |operations|::Command) -> |operations|::Completion reaches |kernel|::Kernel {
     block release(gate, outcome.attachment);
     transition outcome.words[0] == 0u64 {
-        true -> (jobs::completed(command, kernel::IO_ERROR))
-        _ -> (jobs::completed(command, outcome.words[0]))
+        true -> (|jobs|::completed(command, |kernel|::IO_ERROR))
+        _ -> (|jobs|::completed(command, outcome.words[0]))
     }
 }
 // The saved keys may only narrow this matrix's view; the bar and workspace
 // come from the saved geometry over that view's extent.
-machine validated(context: &mut State) -> Completion {
-    let saved: Saved = context.saved;
+machine validated(context: &mut |shared_state|::State) -> |operations|::Completion {
+    let saved: |shared_state|::Saved = context.saved;
     let keys_fit: bool = (saved.keys & ~context.world.parent.keys) == 0u64;
-    let geometry: Geometry = Geometry { margin: saved.margin, bar_height: saved.launcher_height, gap: saved.gap };
-    let extent: Extent = Extent { width: context.world.parent.width, height: context.world.parent.height };
-    let plan: Placement = placement::place(&geometry, &extent);
+    let geometry: |placement|::Geometry = |placement|::Geometry { margin: saved.margin, bar_height: saved.launcher_height, gap: saved.gap };
+    let extent: |placement|::Extent = |placement|::Extent { width: context.world.parent.width, height: context.world.parent.height };
+    let plan: |placement|::Placement = |layout|::placement::place(&geometry, &extent);
     transition plan {
-        Placement::Placed { chrome, workspace } -> rects(context, keys_fit, chrome, workspace)
-        Placement::Invalid -> (jobs::completed(Command::ValidateConfiguration, kernel::INVALID_ARGUMENT))
+        |placement|::Placement::Placed { chrome, workspace } -> rects(context, keys_fit, chrome, workspace)
+        |placement|::Placement::Invalid -> (|jobs|::completed(|operations|::Command::ValidateConfiguration, |kernel|::INVALID_ARGUMENT))
     }
-    machine rects(context: &mut State, keys_fit: bool, chrome: Rectangle, workspace: Rectangle) -> Completion {
-        context.saved.chrome = Rect { x: chrome.x, y: chrome.y, width: chrome.width, height: chrome.height };
-        context.saved.workspace = Rect { x: workspace.x, y: workspace.y, width: workspace.width, height: workspace.height };
+    machine rects(context: &mut |shared_state|::State, keys_fit: bool, chrome: |placement|::Rectangle, workspace: |placement|::Rectangle) -> |operations|::Completion {
+        context.saved.chrome = |geometry|::Rect { x: chrome.x, y: chrome.y, width: chrome.width, height: chrome.height };
+        context.saved.workspace = |geometry|::Rect { x: workspace.x, y: workspace.y, width: workspace.width, height: workspace.height };
         transition keys_fit {
-            true -> (jobs::completed(Command::ValidateConfiguration, 0u64))
-            _ -> (jobs::completed(Command::ValidateConfiguration, kernel::DENIED))
+            true -> (|jobs|::completed(|operations|::Command::ValidateConfiguration, 0u64))
+            _ -> (|jobs|::completed(|operations|::Command::ValidateConfiguration, |kernel|::DENIED))
         }
     }
 }
 // The launcher from its retained image under the stock launcher offer; one
 // that cannot take storage is refused, and the policy takes it down.
-machine admitting(gate: &Gate, context: &mut State, now: u64) -> Completion reaches Kernel {
-    let decision: OfferDecision = recipes::offer(Role::Launcher { private_pages: context.saved.launcher_pages });
+machine admitting(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64) -> |operations|::Completion reaches |kernel|::Kernel {
+    let decision: |recipes|::OfferDecision = |recipes|::offer(|recipes|::Role::Launcher { private_pages: context.saved.launcher_pages });
     transition decision {
-        OfferDecision::Offered { offer } -> block offered(gate, context, now, offer)
-        OfferDecision::InsufficientBacking -> (jobs::completed(Command::AdmitLauncher, kernel::NO_MEMORY))
+        |recipes|::OfferDecision::Offered { offer } -> block offered(gate, context, now, offer)
+        |recipes|::OfferDecision::InsufficientBacking -> (|jobs|::completed(|operations|::Command::AdmitLauncher, |kernel|::NO_MEMORY))
     }
-    machine offered(gate: &Gate, context: &mut State, now: u64, offer: Offer) -> Completion reaches Kernel {
+    machine offered(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, offer: |recipes|::Offer) -> |operations|::Completion reaches |kernel|::Kernel {
         let image: u64 = context.image;
         let length: u64 = context.image_length;
-        let argument: u64 = jobs::launch_argument(0u64, context.launcher_object);
-        let status: u64 = block stored::admit_image(gate, context, now, LAUNCHER_SLOT, image, length, 0u64, argument, offer.channels,
+        let argument: u64 = |jobs|::launch_argument(0u64, context.launcher_object);
+        let status: u64 = block |stored|::admit_image(gate, context, now, LAUNCHER_SLOT, image, length, 0u64, argument, offer.channels,
             offer.descendants, offer.cpu, offer.private_pages, offer.reader_pages, 0u64, offer.imports, false, false);
-        let stored_too: bool = (context.last_granted & STORAGE) != 0u64;
+        let stored_too: bool = (context.last_granted & |services|::STORAGE) != 0u64;
         transition {
-            status != 0u64 -> (jobs::completed(Command::AdmitLauncher, status))
-            stored_too -> (jobs::completed(Command::AdmitLauncher, 0u64))
-            _ -> (jobs::completed(Command::AdmitLauncher, kernel::DENIED))
+            status != 0u64 -> (|jobs|::completed(|operations|::Command::AdmitLauncher, status))
+            stored_too -> (|jobs|::completed(|operations|::Command::AdmitLauncher, 0u64))
+            _ -> (|jobs|::completed(|operations|::Command::AdmitLauncher, |kernel|::DENIED))
         }
     }
 }
-machine releasing(gate: &Gate, context: &mut State) -> Completion reaches Kernel {
+machine releasing(gate: &|kernel|::Gate, context: &mut |shared_state|::State) -> |operations|::Completion reaches |kernel|::Kernel {
     let image: u64 = context.image;
     context.image = 0u64;
     context.image_length = 0u64;
     block release(gate, image);
-    jobs::completed(Command::ReleaseImage, 0u64)
+    |jobs|::completed(|operations|::Command::ReleaseImage, 0u64)
 }
 // The launcher sees the whole realm.
-machine binding(gate: &Gate, context: &mut State, now: u64) -> Completion reaches Kernel {
-    let status: u64 = block storage::bind(gate, context, now, LAUNCHER_SLOT, 0u64, 0u64);
+machine binding(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64) -> |operations|::Completion reaches |kernel|::Kernel {
+    let status: u64 = block |storage|::bind(gate, context, now, LAUNCHER_SLOT, 0u64, 0u64);
     transition status == 0u64 {
         true -> (bound(context))
-        _ -> (jobs::completed(Command::BindLauncher, status))
+        _ -> (|jobs|::completed(|operations|::Command::BindLauncher, status))
     }
-    machine bound(context: &mut State) -> Completion {
+    machine bound(context: &mut |shared_state|::State) -> |operations|::Completion {
         context.saved_source[0] = 0u64;
         context.saved_scope[0] = 0u64;
         context.saved_bound[0] = true;
-        jobs::completed(Command::BindLauncher, 0u64)
+        |jobs|::completed(|operations|::Command::BindLauncher, 0u64)
     }
 }
 // The app slots take the workspace offer and placement as their standing policy.
-machine installed(context: &mut State) -> Completion {
-    let saved: Saved = context.saved;
-    let decision: OfferDecision = recipes::offer(Role::Workspace { private_pages: saved.app_pages, reader_pages: saved.app_readers,
+machine installed(context: &mut |shared_state|::State) -> |operations|::Completion {
+    let saved: |shared_state|::Saved = context.saved;
+    let decision: |recipes|::OfferDecision = |recipes|::offer(|recipes|::Role::Workspace { private_pages: saved.app_pages, reader_pages: saved.app_readers,
         surfaces: saved.app_surfaces });
     transition decision {
-        OfferDecision::Offered { offer } -> install(context, saved, offer, FIRST_APP)
-        OfferDecision::InsufficientBacking -> (jobs::completed(Command::InstallWorkspace, kernel::NO_MEMORY))
+        |recipes|::OfferDecision::Offered { offer } -> install(context, saved, offer, FIRST_APP)
+        |recipes|::OfferDecision::InsufficientBacking -> (|jobs|::completed(|operations|::Command::InstallWorkspace, |kernel|::NO_MEMORY))
     }
-    machine install(context: &mut State, saved: Saved, offer: Offer, slot: u64) -> Completion requires slot >= 1u64 && slot <= 4u64 {
+    machine install(context: &mut |shared_state|::State, saved: |shared_state|::Saved, offer: |recipes|::Offer, slot: u64) -> |operations|::Completion requires slot >= 1u64 && slot <= 4u64 {
         transition slot <= LAST_APP {
             true -> standing(context, saved, offer, slot)
             _ -> workspace(context)
         }
     }
-    machine standing(context: &mut State, saved: Saved, offer: Offer, slot: u64) -> Completion requires slot >= 1u64 && slot <= 3u64 {
-        let policy: SlotPolicy = SlotPolicy { images: 0u64, private_pages: offer.private_pages, reader_pages: offer.reader_pages,
+    machine standing(context: &mut |shared_state|::State, saved: |shared_state|::Saved, offer: |recipes|::Offer, slot: u64) -> |operations|::Completion requires slot >= 1u64 && slot <= 3u64 {
+        let policy: |shared_state|::SlotPolicy = |shared_state|::SlotPolicy { images: 0u64, private_pages: offer.private_pages, reader_pages: offer.reader_pages,
             channels: offer.channels, descendants: offer.descendants, cpu: offer.cpu, surfaces: offer.surfaces, placed: true,
             x: saved.workspace.x, y: saved.workspace.y, width: saved.workspace.width, height: saved.workspace.height, keys: saved.keys,
             imports: offer.imports, imports_set: true, standing: true };
         context.policies[slot] = policy;
         transition { _ -> install(context, saved, offer, slot + 1u64) }
     }
-    machine workspace(context: &mut State) -> Completion {
+    machine workspace(context: &mut |shared_state|::State) -> |operations|::Completion {
         context.desktop = true;
-        jobs::completed(Command::InstallWorkspace, 0u64)
+        |jobs|::completed(|operations|::Command::InstallWorkspace, 0u64)
     }
 }
 // The launcher's ranks are the top of the allowance; it stands as the bottom bar.
-machine placed(context: &mut State) -> Completion {
+machine placed(context: &mut |shared_state|::State) -> |operations|::Completion {
     let allowance: u64 = context.world.allowance;
-    let decision: OfferDecision = recipes::offer(Role::Launcher { private_pages: context.saved.launcher_pages });
+    let decision: |recipes|::OfferDecision = |recipes|::offer(|recipes|::Role::Launcher { private_pages: context.saved.launcher_pages });
     transition decision {
-        OfferDecision::Offered { offer } -> ranked(context, allowance, offer.surfaces)
-        OfferDecision::InsufficientBacking -> (jobs::completed(Command::PlaceLauncher, kernel::NO_MEMORY))
+        |recipes|::OfferDecision::Offered { offer } -> ranked(context, allowance, offer.surfaces)
+        |recipes|::OfferDecision::InsufficientBacking -> (|jobs|::completed(|operations|::Command::PlaceLauncher, |kernel|::NO_MEMORY))
     }
-    machine ranked(context: &mut State, allowance: u64, count: u64) -> Completion {
+    machine ranked(context: &mut |shared_state|::State, allowance: u64, count: u64) -> |operations|::Completion {
         transition count <= allowance && count <= 16u64 {
             true -> positioned(context, allowance - count, count)
-            _ -> (jobs::completed(Command::PlaceLauncher, kernel::NO_MEMORY))
+            _ -> (|jobs|::completed(|operations|::Command::PlaceLauncher, |kernel|::NO_MEMORY))
         }
     }
-    machine positioned(context: &mut State, base: u64, count: u64) -> Completion {
-        let ranged: u64 = surfaces::range(&mut context.world, LAUNCHER_SLOT, base, count);
-        let chrome: Rect = context.saved.chrome;
+    machine positioned(context: &mut |shared_state|::State, base: u64, count: u64) -> |operations|::Completion {
+        let ranged: u64 = |surfaces|::range(&mut context.world, LAUNCHER_SLOT, base, count);
+        let chrome: |geometry|::Rect = context.saved.chrome;
         let keys: u64 = context.saved.keys;
         transition ranged == 0u64 {
-            true -> (jobs::completed(Command::PlaceLauncher, level::place(&mut context.world, LAUNCHER_SLOT, chrome, keys)))
-            _ -> (jobs::completed(Command::PlaceLauncher, ranged))
+            true -> (|jobs|::completed(|operations|::Command::PlaceLauncher, |level|::place(&mut context.world, LAUNCHER_SLOT, chrome, keys)))
+            _ -> (|jobs|::completed(|operations|::Command::PlaceLauncher, ranged))
         }
     }
 }
-machine background_refused(context: &mut State) -> Completion {
-    background_failed(&mut context.startup);
-    jobs::completed(Command::BackgroundFailed, 0u64)
+machine background_refused(context: &mut |shared_state|::State) -> |operations|::Completion {
+    |startup_main|::background_failed(&mut context.startup);
+    |jobs|::completed(|operations|::Command::BackgroundFailed, 0u64)
 }
-machine flushing(gate: &Gate, context: &mut State) -> Completion reaches Kernel {
-    let status: u64 = block presentation::flush(gate, context);
-    jobs::completed(Command::Flush, status)
+machine flushing(gate: &|kernel|::Gate, context: &mut |shared_state|::State) -> |operations|::Completion reaches |kernel|::Kernel {
+    let status: u64 = block |presentation|::flush(gate, context);
+    |jobs|::completed(|operations|::Command::Flush, status)
 }
-machine notifying(gate: &Gate, context: &mut State) -> Completion reaches Kernel {
-    lifecycle::notify(gate, context);
-    jobs::completed(Command::Notify, 0u64)
+machine notifying(gate: &|kernel|::Gate, context: &mut |shared_state|::State) -> |operations|::Completion reaches |kernel|::Kernel {
+    |lifecycle|::notify(gate, context);
+    |jobs|::completed(|operations|::Command::Notify, 0u64)
 }
 // The launcher may rearrange the workspace and manage the active app, and
 // holds the recovery authority the owner may later confirm.
-machine granting(context: &mut State) -> Completion {
+machine granting(context: &mut |shared_state|::State) -> |operations|::Completion {
     let incarnation: u64 = context.slots[LAUNCHER_SLOT].listener.incarnation;
-    let controlled: u64 = layout::grant(&mut context.world, LAUNCHER_SLOT, incarnation);
-    let managed: u64 = management::grant(&mut context.managers, LAUNCHER_SLOT, incarnation, FIRST_APP, 5u64);
+    let controlled: u64 = |layout|::layout::grant(&mut context.world, LAUNCHER_SLOT, incarnation);
+    let managed: u64 = |management|::grant(&mut context.managers, LAUNCHER_SLOT, incarnation, FIRST_APP, 5u64);
     context.recovery_grants = context.recovery_grants | 1u64;
     transition controlled == 0u64 && managed == 0u64 {
-        true -> (jobs::completed(Command::GrantChrome, 0u64))
-        _ -> (jobs::completed(Command::GrantChrome, kernel::DENIED))
+        true -> (|jobs|::completed(|operations|::Command::GrantChrome, 0u64))
+        _ -> (|jobs|::completed(|operations|::Command::GrantChrome, |kernel|::DENIED))
     }
 }
-machine recording(gate: &Gate) -> Completion reaches Kernel {
-    report::configured(gate);
-    report::budget(gate);
-    jobs::completed(Command::RecordLauncher, 0u64)
+machine recording(gate: &|kernel|::Gate) -> |operations|::Completion reaches |kernel|::Kernel {
+    |report|::configured(gate);
+    |report|::budget(gate);
+    |jobs|::completed(|operations|::Command::RecordLauncher, 0u64)
 }
-machine stopping(gate: &Gate, context: &mut State) -> Completion reaches Kernel {
-    block lifecycle::reclaim(gate, context, LAUNCHER_SLOT);
-    jobs::completed(Command::StopLauncher, 0u64)
+machine stopping(gate: &|kernel|::Gate, context: &mut |shared_state|::State) -> |operations|::Completion reaches |kernel|::Kernel {
+    block |lifecycle|::reclaim(gate, context, LAUNCHER_SLOT);
+    |jobs|::completed(|operations|::Command::StopLauncher, 0u64)
 }
-machine clearing(context: &mut State) -> Completion {
+machine clearing(context: &mut |shared_state|::State) -> |operations|::Completion {
     context.desktop = false;
     context.policies[1].standing = false;
     context.policies[1].placed = false;
@@ -366,18 +352,18 @@ machine clearing(context: &mut State) -> Completion {
     context.policies[2].placed = false;
     context.policies[3].standing = false;
     context.policies[3].placed = false;
-    jobs::completed(Command::ClearWorkspace, 0u64)
+    |jobs|::completed(|operations|::Command::ClearWorkspace, 0u64)
 }
-machine resetting(context: &mut State) -> Completion {
-    jobs::completed(Command::ResetSurfaces, surfaces::limit(&mut context.world, FIRST_APP, 0u64))
+machine resetting(context: &mut |shared_state|::State) -> |operations|::Completion {
+    |jobs|::completed(|operations|::Command::ResetSurfaces, |surfaces|::limit(&mut context.world, FIRST_APP, 0u64))
 }
-machine release(gate: &Gate, handle: u64) reaches Kernel {
+machine release(gate: &|kernel|::Gate, handle: u64) reaches |kernel|::Kernel {
     transition handle != 0u64 {
         true -> block releasing_handle(gate, handle)
         _ -> done()
     }
-    machine releasing_handle(gate: &Gate, handle: u64) reaches Kernel {
-        let ignored: u64 = block Kernel::memory_release(gate, handle);
+    machine releasing_handle(gate: &|kernel|::Gate, handle: u64) reaches |kernel|::Kernel {
+        let ignored: u64 = block |kernel|::Kernel::memory_release(gate, handle);
     }
 }
 machine done() {}

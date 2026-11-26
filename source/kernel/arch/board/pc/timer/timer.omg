@@ -1,18 +1,17 @@
-module board::pc::timer::timer;
-
-use board::pc::timer::pic::Pic8259;
-use board::pc::timer::pit::Pit8254;
-use isa::x86_64::interrupts::interrupts::X86EntryStackAssignment;
+use {omega}/language/core/assembly.omg;
+use board/pc/timer/pic.omg;
+use board/pc/timer/pit.omg;
+use isa/x86_64/interrupts/interrupts.omg;
 // Bounded preparation for Cathedral's first QEMU/PC timer provider. This
 // composes the checked PIC and PIT leaves while every interrupt input remains
 // masked. It neither installs an entry nor admits a live timer occurrence;
 // `Pic8259::unmask_timer` stays a separate, later operation ordered after the
 // complete exception floor and timer root have been installed.
 
-use facts::pit_8254;
-use facts::pic_8259;
-use facts::x86_interrupt_stacks;
-use facts::x86_idt_gate;
+use {facts}/pit_8254.omg;
+use {facts}/pic_8259.omg;
+use {facts}/x86_interrupt_stacks.omg;
+use {facts}/x86_idt_gate.omg;
 
 // First-provider policy only. The PC-compatible 1,193,182 Hz PIT input divided
 // by 11,932 yields approximately 99.9985 Hz, close to Cathedral's selected
@@ -35,7 +34,7 @@ public data LegacyPitBootstrapRatePolicy {
 
 public machine legacy_pit_bootstrap_rate_policy() -> LegacyPitBootstrapRatePolicy {
     LegacyPitBootstrapRatePolicy {
-        input_hz: PIT_INPUT_HZ,
+        input_hz: |pit_8254|::PIT_INPUT_HZ,
         target_hz: LEGACY_BOOTSTRAP_TIMER_HZ,
         divisor: LEGACY_BOOTSTRAP_PIT_DIVISOR,
         divisor_low: LEGACY_BOOTSTRAP_PIT_DIVISOR_LOW,
@@ -49,7 +48,7 @@ public machine legacy_pit_bootstrap_rate_policy() -> LegacyPitBootstrapRatePolic
 // it does not claim a gate, root, stack, controller state, acknowledgement,
 // installation, or hardware authority.
 public data LegacyBootstrapTimerRouteRatePolicy {
-    entry: X86EntryStackAssignment;
+    entry: |interrupts|::X86EntryStackAssignment;
     rate: LegacyPitBootstrapRatePolicy;
 }
 
@@ -67,7 +66,7 @@ public machine legacy_bootstrap_timer_route_rate_policy()
 // still vouch for `gate.entry` and `gate.selector` before materialization.
 public data LegacyBootstrapTimerGatePolicyCandidate {
     route_rate: LegacyBootstrapTimerRouteRatePolicy;
-    gate: X86IdtGate;
+    gate: |x86_idt_gate|::X86IdtGate;
 }
 
 public data LegacyBootstrapTimerGatePolicyCheck {
@@ -110,7 +109,7 @@ public machine legacy_validate_bootstrap_timer_gate_policy(
         candidate: LegacyBootstrapTimerGatePolicyCandidate
     ) -> LegacyBootstrapTimerGatePolicyCheck {
         transition candidate.gate.type_attributes ==
-            PRESENT_RING0_INTERRUPT_GATE {
+            |x86_idt_gate|::PRESENT_RING0_INTERRUPT_GATE {
             true -> check_timer_gate_reserved(candidate)
             _ -> reject_timer_gate_policy()
         }
@@ -119,7 +118,7 @@ public machine legacy_validate_bootstrap_timer_gate_policy(
     machine check_timer_gate_reserved(
         candidate: LegacyBootstrapTimerGatePolicyCandidate
     ) -> LegacyBootstrapTimerGatePolicyCheck {
-        transition candidate.gate.reserved == RESERVED_ZERO {
+        transition candidate.gate.reserved == |x86_idt_gate|::RESERVED_ZERO {
             true -> accept_timer_gate_policy(candidate)
             _ -> reject_timer_gate_policy()
         }
@@ -139,8 +138,8 @@ public machine legacy_validate_bootstrap_timer_gate_policy(
 }
 
 public data LegacyPicPitTimerProvider {
-    pic: Pic8259;
-    pit: Pit8254;
+    pic: |pic|::Pic8259;
+    pit: |pit|::Pit8254;
 }
 
 // Establish the legacy controllers' safe pre-installation state in one
@@ -150,10 +149,10 @@ public data LegacyPicPitTimerProvider {
 public machine LegacyPicPitTimerProvider::prepare_masked(
     provider: &mut LegacyPicPitTimerProvider
 )
-reaches PortIo
+reaches |assembly|::PortIo
 {
-    Pic8259::remap_masked(&mut provider.pic);
-    Pit8254::program_channel0_rate_generator(
+    |pic|::Pic8259::remap_masked(&mut provider.pic);
+    |pit|::Pit8254::program_channel0_rate_generator(
         &mut provider.pit,
         LEGACY_BOOTSTRAP_PIT_DIVISOR_LOW,
         LEGACY_BOOTSTRAP_PIT_DIVISOR_HIGH
@@ -163,9 +162,9 @@ reaches PortIo
 // The remapped legacy timer is the first member of the shared maskable-IRQ
 // class. Later PIC/APIC roots cite the same class while owning distinct vector
 // assignments.
-public machine x86_legacy_timer_entry_stack() -> X86EntryStackAssignment {
-    X86EntryStackAssignment {
-        vector: PROTECTED_MASTER_VECTOR_BASE,
-        stack: X86_MASKABLE_IRQ_STACK,
+public machine x86_legacy_timer_entry_stack() -> |interrupts|::X86EntryStackAssignment {
+    |interrupts|::X86EntryStackAssignment {
+        vector: |pic_8259|::PROTECTED_MASTER_VECTOR_BASE,
+        stack: |x86_interrupt_stacks|::X86_MASKABLE_IRQ_STACK,
     }
 }

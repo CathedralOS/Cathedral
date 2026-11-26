@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified rust-osdev/uefi-rs translation at c0facddf9ba42b74906a37fca2869e6cdbc8da6a.
 // See hii.PORT.md. Inert carriers; pointer/slot bits confer no authority.
-module hii;
-use scalars;
-use console;
+use scalars.omg;
+use console.omg;
 
 // Upstream: uefi_raw::protocol::hii::HiiPackageHeader
 // Required packed layout: alignment 1, no inter-field padding.
@@ -15,7 +14,7 @@ pub data HiiPackageHeader [copy] {
 // Upstream: uefi_raw::protocol::hii::HiiPackageListHeader
 // Required packed layout: alignment 1, no inter-field padding.
 pub data HiiPackageListHeader [copy] {
-    package_list_guid: scalars::Guid;
+    package_list_guid: |scalars|::Guid;
     package_length: u32;
 }
 
@@ -62,7 +61,7 @@ pub data HiiDate [copy] {
 pub data HiiRef [copy] {
     question_id: u16;
     form_id: u16;
-    guid: scalars::Guid;
+    guid: |scalars|::Guid;
     string_id: u16;
 }
 

@@ -1,6 +1,8 @@
+use main.omg;
+
 machine build(builder: &mut Build) {
     Build::package(builder, "cathedral_chooser_session_bridge");
     Build::depend_as(builder, "app", Source::Path { location: "../../app" });
-    Build::select_provider<ChooserApp, ChooserAppProvider>(builder, linux_x86_64);
-    Build::bind(builder, linux_x86_64::ProgramEntry, component_entry);
+    Build::select_provider<|main|::ChooserApp, |main|::ChooserAppProvider>(builder, linux_x86_64);
+    Build::bind(builder, linux_x86_64::ProgramEntry, |main|::component_entry);
 }

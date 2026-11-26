@@ -1,4 +1,4 @@
-module workspace;
+use {runtime}/server/main.omg as server_main;
 // The workspace's app instances under the stock catalogue: the three app
 // slots, the one that is active, and the chrome's words over them. A launch
 // into an app slot publishes the instance and activates it; activation hides
@@ -6,132 +6,120 @@ module workspace;
 // app the input routes and the chrome its management. When an app ends, the
 // chrome hears of it and the next instance, if any, becomes active. Only the
 // placed chrome of a workspace may list the instances or select one.
-use protocol::main;
-use shared::state::State;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::kernel;
-use world::level;
-use world::demand;
-use world::management;
-use world::geometry::zeros_from;
-use policy::children::workspace::catalogue;
-use policy::children::workspace::catalogue::Entry;
-use policy::children::workspace::catalogue::Position;
-use policy::children::workspace::catalogue::Selection;
-use policy::children::configuration::main::prepare;
-use policy::children::configuration::main::Facts;
-use policy::children::configuration::main::Decision;
-use policy::children::configuration::main::Plan;
-use policy::children::configuration::wire::decode;
-use policy::children::configuration::placement::Extent;
-use policy::children::configuration::placement::Rectangle;
-use world::layout;
-use world::geometry::Rect;
-use connections::presentation;
-use forward;
-use selection;
-use arrangement::arrangement;
-use world::layout::Proposed;
-use connections::presentation::Submission;
+use {protocol}/main.omg;
+use {shared}/state.omg as shared_state;
+use {runtime}/kernel.omg;
+use {world}/level.omg;
+use {world}/demand.omg;
+use {world}/management.omg;
+use {world}/geometry.omg;
+use {policy}/children/workspace/catalogue.omg;
+use {policy}/children/configuration/main.omg as configuration_main;
+use {policy}/children/configuration/wire.omg;
+use {policy}/children/configuration/placement.omg;
+use {world}/layout.omg;
+use {connections}/presentation.omg;
+use forward.omg;
+use selection.omg;
+use arrangement/arrangement.omg;
 
 const CHROME: u64 = 0u64;
 
 // The active app's slot, or zero.
-public machine active(context: &State) -> u64 {
+public machine active(context: &|shared_state|::State) -> u64 {
     transition context.catalogue.selected {
-        Position::App { slot } -> (slot)
-        Position::None -> (0u64)
+        |catalogue|::Position::App { slot } -> (slot)
+        |catalogue|::Position::None -> (0u64)
     }
 }
 
 // APP_ENTRY [23, index]: the instance at a catalogue position, as
 // [0, ticket, program, selected]; an empty position is all zeros.
-public machine entry(context: &State, slot: u64 [0..=4], incarnation: u64, words: [u64; 8]) -> [u64; 8] {
-    transition chrome(context, slot, incarnation) && zeros_from(&words, 2u64) {
-        true -> listed(catalogue::entry(&context.catalogue, words[1]))
-        _ -> (error(kernel::DENIED))
+public machine entry(context: &|shared_state|::State, slot: u64 [0..=4], incarnation: u64, words: [u64; 8]) -> [u64; 8] {
+    transition chrome(context, slot, incarnation) && |geometry|::zeros_from(&words, 2u64) {
+        true -> listed(|catalogue|::entry(&context.catalogue, words[1]))
+        _ -> (error(|kernel|::DENIED))
     }
-    machine listed(found: Entry) -> [u64; 8] {
+    machine listed(found: |catalogue|::Entry) -> [u64; 8] {
         transition found {
-            Entry::Present { ticket, program, selected } -> ([0u64, ticket, program, flag(selected), 0u64, 0u64, 0u64, 0u64])
-            Entry::Empty -> (error(0u64))
-            Entry::Outside -> (error(kernel::DENIED))
+            |catalogue|::Entry::Present { ticket, program, selected } -> ([0u64, ticket, program, flag(selected), 0u64, 0u64, 0u64, 0u64])
+            |catalogue|::Entry::Empty -> (error(0u64))
+            |catalogue|::Entry::Outside -> (error(|kernel|::DENIED))
         }
     }
 }
 
 // SELECT_APP [24, ticket]: make the instance with that ticket the active app.
-public machine select(context: &mut State, slot: u64 [0..=4], incarnation: u64, words: [u64; 8]) -> Submission {
-    transition chrome(context, slot, incarnation) && zeros_from(&words, 2u64) {
-        true -> chosen(context, slot, catalogue::select(&context.catalogue, words[1], forward::busy(context)))
-        _ -> (Submission::Answer { words: error(kernel::DENIED) })
+public machine select(context: &mut |shared_state|::State, slot: u64 [0..=4], incarnation: u64, words: [u64; 8]) -> |presentation|::Submission {
+    transition chrome(context, slot, incarnation) && |geometry|::zeros_from(&words, 2u64) {
+        true -> chosen(context, slot, |catalogue|::select(&context.catalogue, words[1], |forward|::busy(context)))
+        _ -> (|presentation|::Submission::Answer { words: error(|kernel|::DENIED) })
     }
-    machine chosen(context: &mut State, requester: u64 [0..=4], choice: Selection) -> Submission {
+    machine chosen(context: &mut |shared_state|::State, requester: u64 [0..=4], choice: |catalogue|::Selection) -> |presentation|::Submission {
         transition choice {
-            Selection::Switch { slot } -> started(context, requester, slot)
-            Selection::Current { slot } -> (Submission::Answer { words: error(0u64) })
-            Selection::Busy { slot } -> (Submission::Answer { words: error(kernel::BUSY) })
-            Selection::Missing -> (Submission::Answer { words: error(kernel::DENIED) })
+            |catalogue|::Selection::Switch { slot } -> started(context, requester, slot)
+            |catalogue|::Selection::Current { slot } -> (|presentation|::Submission::Answer { words: error(0u64) })
+            |catalogue|::Selection::Busy { slot } -> (|presentation|::Submission::Answer { words: error(|kernel|::BUSY) })
+            |catalogue|::Selection::Missing -> (|presentation|::Submission::Answer { words: error(|kernel|::DENIED) })
         }
     }
-    machine started(context: &mut State, requester: u64 [0..=4], slot: u64) -> Submission {
+    machine started(context: &mut |shared_state|::State, requester: u64 [0..=4], slot: u64) -> |presentation|::Submission {
         let previous: u64 = active(context);
-        let status: u64 = selection::begin(context, requester, previous, slot);
+        let status: u64 = |selection|::begin(context, requester, previous, slot);
         transition status == 0u64 {
-            true -> (Submission::Pending)
-            _ -> (Submission::Answer { words: error(status) })
+            true -> (|presentation|::Submission::Pending)
+            _ -> (|presentation|::Submission::Answer { words: error(status) })
         }
     }
 }
 
 // APPLY_LAYOUT: stock policy chooses places; the common World validates a
 // proposal without mutation. Arrangement owns publication and delayed acceptance.
-public machine apply_layout(context: &mut State, slot: u64 [0..=4], incarnation: u64, words: [u64; 8]) -> Submission {
-    let facts: Facts = Facts { authorized: layout::allowed(&context.world, slot, incarnation, words[1]), busy: forward::busy(context),
-        extent: Extent { width: context.world.parent.width, height: context.world.parent.height }, standing: standing(context) };
-    let decision: Decision = prepare(&facts, decode(&words));
+public machine apply_layout(context: &mut |shared_state|::State, slot: u64 [0..=4], incarnation: u64, words: [u64; 8]) -> |presentation|::Submission {
+    let facts: |configuration_main|::Facts = |configuration_main|::Facts { authorized: |layout|::layout::allowed(&context.world, slot, incarnation, words[1]), busy: |forward|::busy(context),
+        extent: |placement|::Extent { width: context.world.parent.width, height: context.world.parent.height }, standing: standing(context) };
+    let decision: |configuration_main|::Decision = |configuration_main|::prepare(&facts, |wire|::decode(&words));
     transition decision {
-        Decision::Ready { plan } -> planned(context, slot, incarnation, words[1], plan)
-        Decision::Denied -> (Submission::Answer { words: error(kernel::DENIED) })
-        Decision::Busy -> (Submission::Answer { words: error(kernel::BUSY) })
-        Decision::Invalid -> (Submission::Answer { words: error(kernel::INVALID_ARGUMENT) })
+        |configuration_main|::Decision::Ready { plan } -> planned(context, slot, incarnation, words[1], plan)
+        |configuration_main|::Decision::Denied -> (|presentation|::Submission::Answer { words: error(|kernel|::DENIED) })
+        |configuration_main|::Decision::Busy -> (|presentation|::Submission::Answer { words: error(|kernel|::BUSY) })
+        |configuration_main|::Decision::Invalid -> (|presentation|::Submission::Answer { words: error(|kernel|::INVALID_ARGUMENT) })
     }
-    machine planned(context: &mut State, slot: u64 [0..=4], incarnation: u64, epoch: u64, plan: Plan) -> Submission {
-        let rects: [Rect; 5] = [rect(plan.chrome), rect(plan.apps[0]), rect(plan.apps[1]), rect(plan.apps[2]), rect(plan.background)];
-        let proposed: Proposed = layout::prepare(&context.world, slot, incarnation, epoch, &rects);
+    machine planned(context: &mut |shared_state|::State, slot: u64 [0..=4], incarnation: u64, epoch: u64, plan: |configuration_main|::Plan) -> |presentation|::Submission {
+        let rects: [|geometry|::Rect; 5] = [rect(plan.chrome), rect(plan.apps[0]), rect(plan.apps[1]), rect(plan.apps[2]), rect(plan.background)];
+        let proposed: |layout|::Proposed = |layout|::layout::prepare(&context.world, slot, incarnation, epoch, &rects);
         transition proposed {
-            Proposed::Ready { proposal } -> begun(arrangement::arrangement::begin(context, slot, proposal, plan.remember))
-            Proposed::Refused { code } -> (Submission::Answer { words: error(code) })
+            |layout|::Proposed::Ready { proposal } -> begun(|arrangement|::begin(context, slot, proposal, plan.remember))
+            |layout|::Proposed::Refused { code } -> (|presentation|::Submission::Answer { words: error(code) })
         }
     }
-    machine begun(status: u64) -> Submission {
-        transition status == 0u64 { true -> (Submission::Pending) _ -> (Submission::Answer { words: error(status) }) }
+    machine begun(status: u64) -> |presentation|::Submission {
+        transition status == 0u64 { true -> (|presentation|::Submission::Pending) _ -> (|presentation|::Submission::Answer { words: error(status) }) }
     }
 }
-public machine remember_layout(context: &mut State, rects: &[Rect; 5], remember: u64) {
+public machine remember_layout(context: &mut |shared_state|::State, rects: &[|geometry|::Rect; 5], remember: u64) {
     remembered(context, 1u64, rects[1], remember);
     remembered(context, 2u64, rects[2], remember);
     remembered(context, 3u64, rects[3], remember);
 }
 // The app slots whose standing policy places their launches.
-machine standing(context: &State) -> u64 {
+machine standing(context: &|shared_state|::State) -> u64 {
     flag(context.policies[1].placed) * 2u64 + flag(context.policies[2].placed) * 4u64 + flag(context.policies[3].placed) * 8u64
 }
-machine remembered(context: &mut State, slot: u64 [0..=4], place: Rect, remember: u64) {
+machine remembered(context: &mut |shared_state|::State, slot: u64 [0..=4], place: |geometry|::Rect, remember: u64) {
     transition ((remember >> slot) & 1u64) == 1u64 {
         true -> kept(context, slot, place)
         _ -> done()
     }
-    machine kept(context: &mut State, slot: u64 [0..=4], place: Rect) {
+    machine kept(context: &mut |shared_state|::State, slot: u64 [0..=4], place: |geometry|::Rect) {
         context.policies[slot].x = place.x;
         context.policies[slot].y = place.y;
         context.policies[slot].width = place.width;
         context.policies[slot].height = place.height;
     }
 }
-machine rect(from: Rectangle) -> Rect {
-    Rect { x: from.x, y: from.y, width: from.width, height: from.height }
+machine rect(from: |placement|::Rectangle) -> |geometry|::Rect {
+    |geometry|::Rect { x: from.x, y: from.y, width: from.width, height: from.height }
 }
 // What a child's CLOSE gets: an answer now, or one held until the target
 // answers what it would lose.
@@ -141,18 +129,18 @@ public data Closing [copy] {
 }
 // CLOSE [15]: in a workspace the placed chrome closes the active app;
 // elsewhere either of the first two children closes the other.
-public machine close(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=4], incarnation: u64, request: runtime::server::main::Ticket,
-    words: [u64; 8]) -> Closing reaches Kernel blocks invokes Kernel {
+public machine close(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, slot: u64 [0..=4], incarnation: u64, request: |server_main|::Ticket,
+    words: [u64; 8]) -> Closing reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     let target: u64 = target_of(context, slot, incarnation);
     transition {
-        !zeros_from(&words, 1u64) || target == DENIED_TARGET -> (Closing::Answer { words: error(kernel::DENIED) })
-        target == NO_TARGET -> (Closing::Answer { words: error(kernel::PEER_CLOSED) })
+        !|geometry|::zeros_from(&words, 1u64) || target == DENIED_TARGET -> (Closing::Answer { words: error(|kernel|::DENIED) })
+        target == NO_TARGET -> (Closing::Answer { words: error(|kernel|::PEER_CLOSED) })
         target < 5u64 -> block asking(gate, context, now, target, slot, request)
-        _ -> (Closing::Answer { words: error(kernel::DENIED) })
+        _ -> (Closing::Answer { words: error(|kernel|::DENIED) })
     }
-    machine asking(gate: &Gate, context: &mut State, now: u64, target: u64 [0..=4], slot: u64, request: runtime::server::main::Ticket) -> Closing
-        reaches Kernel {
-        let status: u64 = block forward::close(gate, context, now, target, slot, request);
+    machine asking(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, target: u64 [0..=4], slot: u64, request: |server_main|::Ticket) -> Closing
+        reaches |kernel|::Kernel {
+        let status: u64 = block |forward|::close(gate, context, now, target, slot, request);
         transition status == 0u64 {
             true -> (Closing::Held)
             _ -> (Closing::Answer { words: error(status) })
@@ -161,7 +149,7 @@ public machine close(gate: &Gate, context: &mut State, now: u64, slot: u64 [0..=
 }
 const DENIED_TARGET: u64 = 6u64;
 const NO_TARGET: u64 = 7u64;
-machine target_of(context: &State, slot: u64, incarnation: u64) -> u64 {
+machine target_of(context: &|shared_state|::State, slot: u64, incarnation: u64) -> u64 {
     let active: u64 = active(context);
     transition {
         context.desktop && chrome(context, slot, incarnation) && active != 0u64 -> (active)
@@ -174,68 +162,68 @@ machine target_of(context: &State, slot: u64, incarnation: u64) -> u64 {
 // Reserve the new instance's catalogue ticket while keeping it hidden. The
 // scene barrier defers catalogue queries; commit_selection publishes visibility
 // and input only after the remote transaction succeeds. Reclaim removes failures.
-public machine prepare_launch(context: &mut State, slot: u64 [0..=4], program: u64) -> u64 {
-    transition catalogue::publish(&mut context.catalogue, slot, program) {
+public machine prepare_launch(context: &mut |shared_state|::State, slot: u64 [0..=4], program: u64) -> u64 {
+    transition |catalogue|::publish(&mut context.catalogue, slot, program) {
         true -> hidden(context, slot)
-        _ -> (kernel::NO_MEMORY)
+        _ -> (|kernel|::NO_MEMORY)
     }
-    machine hidden(context: &mut State, slot: u64 [0..=4]) -> u64 {
+    machine hidden(context: &mut |shared_state|::State, slot: u64 [0..=4]) -> u64 {
         // The first poll must not look like a new occupant during activation.
-        let identified: bool = level::identify(&mut context.world, slot, context.slots[slot].listener.incarnation);
-        demand::visible(&mut context.world, slot, false)
+        let identified: bool = |level|::identify(&mut context.world, slot, context.slots[slot].listener.incarnation);
+        |demand|::visible(&mut context.world, slot, false)
     }
 }
 
 // An app's end: it leaves the catalogue, the chrome hears of it, and the next
 // instance becomes active when none is.
-public machine retired(context: &mut State, slot: u64 [0..=4]) {
+public machine retired(context: &mut |shared_state|::State, slot: u64 [0..=4]) {
     transition context.desktop && slot >= 1u64 && slot <= 3u64 {
         true -> retiring(context, slot)
         _ -> done()
     }
-    machine retiring(context: &mut State, slot: u64 [0..=4]) {
-        let removed: bool = catalogue::retire(&mut context.catalogue, slot);
-        level::notify(&mut context.world, CHROME);
-        let fallback: Position = catalogue::fallback(&context.catalogue);
+    machine retiring(context: &mut |shared_state|::State, slot: u64 [0..=4]) {
+        let removed: bool = |catalogue|::retire(&mut context.catalogue, slot);
+        |level|::notify(&mut context.world, CHROME);
+        let fallback: |catalogue|::Position = |catalogue|::fallback(&context.catalogue);
         following(context, slot, fallback);
     }
-    machine following(context: &mut State, retiring: u64 [0..=4], fallback: Position) {
+    machine following(context: &mut |shared_state|::State, retiring: u64 [0..=4], fallback: |catalogue|::Position) {
         transition fallback {
-            Position::App { slot } -> selected(context, retiring, slot)
-            Position::None -> done()
+            |catalogue|::Position::App { slot } -> selected(context, retiring, slot)
+            |catalogue|::Position::None -> done()
         }
     }
-    machine selected(context: &mut State, retiring: u64 [0..=4], slot: u64) {
-        let status: u64 = selection::begin_retirement(context, retiring, slot);
+    machine selected(context: &mut |shared_state|::State, retiring: u64 [0..=4], slot: u64) {
+        let status: u64 = |selection|::begin_retirement(context, retiring, slot);
     }
 }
 // The asynchronous selection has committed its preview. Publish local visibility,
 // input retirement and chrome authority together, before serving more input.
-public machine commit_selection(context: &mut State, previous: u64, slot: u64 [0..=4]) -> u64 {
+public machine commit_selection(context: &mut |shared_state|::State, previous: u64, slot: u64 [0..=4]) -> u64 {
     shown(context, slot);
     committed(context, previous, slot)
 }
-machine shown(context: &mut State, slot: u64) {
-    let first: u64 = demand::visible(&mut context.world, 1u64, slot == 1u64);
-    let second: u64 = demand::visible(&mut context.world, 2u64, slot == 2u64);
-    let third: u64 = demand::visible(&mut context.world, 3u64, slot == 3u64);
+machine shown(context: &mut |shared_state|::State, slot: u64) {
+    let first: u64 = |demand|::visible(&mut context.world, 1u64, slot == 1u64);
+    let second: u64 = |demand|::visible(&mut context.world, 2u64, slot == 2u64);
+    let third: u64 = |demand|::visible(&mut context.world, 3u64, slot == 3u64);
 }
-machine committed(context: &mut State, previous: u64, slot: u64 [0..=4]) -> u64 {
+machine committed(context: &mut |shared_state|::State, previous: u64, slot: u64 [0..=4]) -> u64 {
     let quiet: u64 = deactivated(context, previous);
-    let activated: bool = catalogue::activate(&mut context.catalogue, slot);
+    let activated: bool = |catalogue|::activate(&mut context.catalogue, slot);
     let incarnation: u64 = context.slots[CHROME].listener.incarnation;
-    let managed: u64 = management::grant(&mut context.managers, CHROME, incarnation, slot, 5u64);
-    level::notify(&mut context.world, CHROME);
+    let managed: u64 = |management|::grant(&mut context.managers, CHROME, incarnation, slot, 5u64);
+    |level|::notify(&mut context.world, CHROME);
     0u64
 }
 // The former app keeps its view and grant, but its holds and routes end.
-machine deactivated(context: &mut State, previous: u64) -> u64 {
+machine deactivated(context: &mut |shared_state|::State, previous: u64) -> u64 {
     transition previous != 0u64 {
-        true -> (demand::deactivate_input(&mut context.world, previous))
+        true -> (|demand|::deactivate_input(&mut context.world, previous))
         _ -> (0u64)
     }
 }
-machine chrome(context: &State, slot: u64, incarnation: u64) -> bool {
+machine chrome(context: &|shared_state|::State, slot: u64, incarnation: u64) -> bool {
     context.desktop && slot == CHROME && context.slots[CHROME].live && context.slots[CHROME].listener.incarnation == incarnation
 }
 machine flag(set: bool) -> u64 {

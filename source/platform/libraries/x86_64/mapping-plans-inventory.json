@@ -322,7 +322,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/x86_64/mapping_plans.omg",
-          "anchor": "module mapping_plans;"
+          "anchor": "pub data FrameSupply"
         }
       ]
     },
@@ -546,7 +546,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/x86_64/mapping_plans.omg",
-          "anchor": "module mapping_plans;"
+          "anchor": "pub data FrameSupply"
         }
       ]
     }

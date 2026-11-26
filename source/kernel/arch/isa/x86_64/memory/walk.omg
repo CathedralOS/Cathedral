@@ -1,6 +1,4 @@
-module isa::x86_64::memory::walk;
-
-use facts::x86_page_table_entry;
+use {facts}/x86_page_table_entry.omg;
 
 // A route through one observed four-level paging word. This is numeric
 // interpretation only: a Link supplies no backing, grant or read permission.
@@ -17,13 +15,13 @@ public machine X86TableWalk::classify(word: u64, level: u64) -> X86TableEntryRou
         _ -> X86TableEntryRoute::Invalid
     }
     machine entry(word: u64, level: u64) -> X86TableEntryRoute {
-        let decoded: X86PageTableEntry = x86_decode_page_table_entry(word);
+        let decoded: |x86_page_table_entry|::X86PageTableEntry = |x86_page_table_entry|::x86_decode_page_table_entry(word);
         transition !decoded.present || level == 1 {
             true -> X86TableEntryRoute::End
             _ -> present(word, level, decoded)
         }
     }
-    machine present(word: u64, level: u64, decoded: X86PageTableEntry) -> X86TableEntryRoute {
+    machine present(word: u64, level: u64, decoded: |x86_page_table_entry|::X86PageTableEntry) -> X86TableEntryRoute {
         transition decoded.page_size_or_pat {
             true -> large(word, level)
             _ -> link(word)

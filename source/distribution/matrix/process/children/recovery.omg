@@ -1,38 +1,34 @@
-module recovery;
 // What a child's end means to the startup recovery policy: a picker, chosen
 // user or background that failed queues the policy's bounded replay, which
 // the next turn's realm step consumes; a clean exit, an owner's stop and an
 // owner-run login leave nothing to replay.
-use shared::state::State;
-use runtime::task::main::Exit;
-use policy::children::startup::main::ChildRole;
-use policy::children::startup::main::Context;
-use policy::children::startup::main::RetirementEffect;
-use policy::children::startup::main::child_retired;
+use {shared}/state.omg as shared_state;
+use {runtime}/task/main.omg;
+use {policy}/children/startup/main.omg as startup_main;
 
 public const USER_SLOT: u64 = 1u64;
 public const BACKGROUND_SLOT: u64 = 4u64;
 
-public machine retired(context: &mut State, slot: u64 [0..=4], exit: Exit) {
-    let role: ChildRole = role_of(context, slot);
+public machine retired(context: &mut |shared_state|::State, slot: u64 [0..=4], exit: |main|::Exit) {
+    let role: |startup_main|::ChildRole = role_of(context, slot);
     let failed: bool = failed_exit(exit);
-    let facts: Context = Context { login: context.login, entered: context.slots[USER_SLOT].live, workspace: context.desktop,
+    let facts: |startup_main|::Context = |startup_main|::Context { login: context.login, entered: context.slots[USER_SLOT].live, workspace: context.desktop,
         owner_recovers: !context.login };
-    let effect: RetirementEffect = child_retired(&mut context.startup, role, failed, &facts);
+    let effect: |startup_main|::RetirementEffect = |startup_main|::child_retired(&mut context.startup, role, failed, &facts);
 }
-machine role_of(context: &State, slot: u64 [0..=4]) -> ChildRole {
+machine role_of(context: &|shared_state|::State, slot: u64 [0..=4]) -> |startup_main|::ChildRole {
     transition {
-        slot == 0u64 && context.login -> (ChildRole::Picker)
-        slot == USER_SLOT && context.login -> (ChildRole::User)
-        slot == BACKGROUND_SLOT -> (ChildRole::Background)
-        _ -> (ChildRole::Other)
+        slot == 0u64 && context.login -> (|startup_main|::ChildRole::Picker)
+        slot == USER_SLOT && context.login -> (|startup_main|::ChildRole::User)
+        slot == BACKGROUND_SLOT -> (|startup_main|::ChildRole::Background)
+        _ -> (|startup_main|::ChildRole::Other)
     }
 }
-machine failed_exit(exit: Exit) -> bool {
+machine failed_exit(exit: |main|::Exit) -> bool {
     transition exit {
-        Exit::Returned { status } -> (status != 0u64)
-        Exit::Fault { vector, error, address, instruction } -> (true)
-        Exit::Cancelled -> (false)
-        Exit::Failed { code } -> (true)
+        |main|::Exit::Returned { status } -> (status != 0u64)
+        |main|::Exit::Fault { vector, error, address, instruction } -> (true)
+        |main|::Exit::Cancelled -> (false)
+        |main|::Exit::Failed { code } -> (true)
     }
 }

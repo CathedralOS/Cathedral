@@ -2,113 +2,100 @@
 // Modified Field/BankField/IndexField installation from rust-osdev/acpi
 // 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5, src/aml/mod.rs:1025,1412,1831.
 // Copyright 2018 Isaac Woods. Bounded inert metadata; no region handler.
-module field_namespace;
-use model::Outcome;
-use model::Read;
-use model::Value;
-use model::FieldBinding;
-use model::Entry;
-use model::Namespace;
-use model::Lookup;
-use model::LoadState;
-use field_model::DeclarationKind;
-use field_model::Declaration;
-use field_model::DeclarationResult;
-use field_model::ListState;
-use field_model::Field;
-use field_declarations::parse_declaration;
-use namespace::search;
-use namespace::allocate_mut;
-use namespace::bind_mut;
+use {omega}/language/core/nat.omg;
+use model.omg;
+use field_model.omg;
+use field_declarations.omg;
+use namespace.omg;
 
 // The loader owns this entry. Parse the complete declaration and resolve its
 // required identities once before installing names. Scope/source stay inert.
-machine load_field(input:&[u8;1024],load:&mut LoadState)->Outcome {
- let parsed:DeclarationResult=parse_declaration(input,load.end,load.at,load.unit,load.scope,18446744073709551615,load.value_budget);
- transition parsed.outcome==Outcome::Success {
+machine load_field(input:&[u8;1024],load:&mut |model|::LoadState)->|model|::Outcome {
+ let parsed:|field_model|::DeclarationResult=|field_declarations|::parse_declaration(input,load.end,load.at,load.unit,load.scope,18446744073709551615,load.value_budget);
+ transition parsed.outcome==|model|::Outcome::Success {
   true -> primary(load,parsed)
   _ -> fail(load,parsed.outcome,parsed.offset)
  }
- state primary(load:&mut LoadState,parsed:DeclarationResult)->Outcome {
-  let found:Lookup=search(load.space,parsed.declaration.primary_name,parsed.declaration.scope);
+ state primary(load:&mut |model|::LoadState,parsed:|field_model|::DeclarationResult)->|model|::Outcome {
+  let found:|model|::Lookup=|namespace|::search(load.space,parsed.declaration.primary_name,parsed.declaration.scope);
   let id:u64=found.object;let count:u64=load.space.object_count;
-  transition {found.outcome!=Outcome::Success -> fail(load,found.outcome,load.at)
+  transition {found.outcome!=|model|::Outcome::Success -> fail(load,found.outcome,load.at)
    id<count && id<64 && count<=64 -> primary_kind(load,parsed,id)
-   _ -> fail(load,Outcome::InvalidState,load.at)}
+   _ -> fail(load,|model|::Outcome::InvalidState,load.at)}
  }
- state primary_kind(load:&mut LoadState,parsed:DeclarationResult,id:u64)->Outcome {
-  transition parsed.declaration.kind {DeclarationKind::Index -> index_object(load,parsed,id) _ -> region_object(load,parsed,id)}
+ state primary_kind(load:&mut |model|::LoadState,parsed:|field_model|::DeclarationResult,id:u64)->|model|::Outcome {
+  transition parsed.declaration.kind {|field_model|::DeclarationKind::Index -> index_object(load,parsed,id) _ -> region_object(load,parsed,id)}
  }
- state index_object(load:&mut LoadState,parsed:DeclarationResult,id:u64)->Outcome {
+ state index_object(load:&mut |model|::LoadState,parsed:|field_model|::DeclarationResult,id:u64)->|model|::Outcome {
   transition load.space.objects[id].value {
-   Value::FieldUnit {binding,declaration,field} -> secondary(load,parsed,id)
-   _ -> fail(load,Outcome::UnsupportedSyntax,load.at)
+   |model|::Value::FieldUnit {binding,declaration,field} -> secondary(load,parsed,id)
+   _ -> fail(load,|model|::Outcome::UnsupportedSyntax,load.at)
   }
  }
- state region_object(load:&mut LoadState,parsed:DeclarationResult,id:u64)->Outcome {
+ state region_object(load:&mut |model|::LoadState,parsed:|field_model|::DeclarationResult,id:u64)->|model|::Outcome {
   transition load.space.objects[id].value {
-   Value::OperationRegion {space,base,length,scope} -> region_kind(load,parsed,id)
-   _ -> fail(load,Outcome::UnsupportedSyntax,load.at)
+   |model|::Value::OperationRegion {space,base,length,scope} -> region_kind(load,parsed,id)
+   _ -> fail(load,|model|::Outcome::UnsupportedSyntax,load.at)
   }
  }
- state region_kind(load:&mut LoadState,parsed:DeclarationResult,id:u64)->Outcome {
-  transition parsed.declaration.kind {DeclarationKind::Field -> stage(load,parsed,FieldBinding::Region {region_object:id}) _ -> secondary(load,parsed,id)}
+ state region_kind(load:&mut |model|::LoadState,parsed:|field_model|::DeclarationResult,id:u64)->|model|::Outcome {
+  transition parsed.declaration.kind {|field_model|::DeclarationKind::Field -> stage(load,parsed,|model|::FieldBinding::Region {region_object:id}) _ -> secondary(load,parsed,id)}
  }
- state secondary(load:&mut LoadState,parsed:DeclarationResult,primary:u64)->Outcome {
-  let found:Lookup=search(load.space,parsed.declaration.secondary_name,parsed.declaration.scope);
+ state secondary(load:&mut |model|::LoadState,parsed:|field_model|::DeclarationResult,primary:u64)->|model|::Outcome {
+  let found:|model|::Lookup=|namespace|::search(load.space,parsed.declaration.secondary_name,parsed.declaration.scope);
   let id:u64=found.object;let count:u64=load.space.object_count;
-  transition {found.outcome!=Outcome::Success -> fail(load,found.outcome,load.at)
+  transition {found.outcome!=|model|::Outcome::Success -> fail(load,found.outcome,load.at)
    id<count && id<64 && count<=64 -> secondary_object(load,parsed,primary,id)
-   _ -> fail(load,Outcome::InvalidState,load.at)}
+   _ -> fail(load,|model|::Outcome::InvalidState,load.at)}
  }
- state secondary_object(load:&mut LoadState,parsed:DeclarationResult,primary:u64,id:u64)->Outcome {
+ state secondary_object(load:&mut |model|::LoadState,parsed:|field_model|::DeclarationResult,primary:u64,id:u64)->|model|::Outcome {
   transition load.space.objects[id].value {
-   Value::FieldUnit {binding,declaration,field} -> complete_binding(load,parsed,primary,id)
-   _ -> fail(load,Outcome::UnsupportedSyntax,load.at)
+   |model|::Value::FieldUnit {binding,declaration,field} -> complete_binding(load,parsed,primary,id)
+   _ -> fail(load,|model|::Outcome::UnsupportedSyntax,load.at)
   }
  }
- state complete_binding(load:&mut LoadState,parsed:DeclarationResult,primary:u64,secondary:u64)->Outcome {
+ state complete_binding(load:&mut |model|::LoadState,parsed:|field_model|::DeclarationResult,primary:u64,secondary:u64)->|model|::Outcome {
   transition parsed.declaration.kind {
-   DeclarationKind::Bank -> stage(load,parsed,FieldBinding::Bank {region_object:primary,selector_object:secondary})
-   DeclarationKind::Index -> stage(load,parsed,FieldBinding::Index {index_object:primary,data_object:secondary})
-   _ -> fail(load,Outcome::InvalidState,load.at)
+   |field_model|::DeclarationKind::Bank -> stage(load,parsed,|model|::FieldBinding::Bank {region_object:primary,selector_object:secondary})
+   |field_model|::DeclarationKind::Index -> stage(load,parsed,|model|::FieldBinding::Index {index_object:primary,data_object:secondary})
+   _ -> fail(load,|model|::Outcome::InvalidState,load.at)
   }
  }
- state stage(load:&mut LoadState,parsed:DeclarationResult,binding:FieldBinding)->Outcome {
-  let mut candidate:Namespace=load.space;
-  let outcome:Outcome=install_fields(&mut candidate,binding,parsed.declaration,&parsed.list,0,parsed.list.count,Outcome::Success);
-  transition outcome==Outcome::Success {true -> commit(load,candidate,parsed.next) _ -> fail(load,outcome,load.at)}
+ state stage(load:&mut |model|::LoadState,parsed:|field_model|::DeclarationResult,binding:|model|::FieldBinding)->|model|::Outcome {
+  let mut candidate:|model|::Namespace=load.space;
+  let outcome:|model|::Outcome=install_fields(&mut candidate,binding,parsed.declaration,&parsed.list,0,parsed.list.count,|model|::Outcome::Success);
+  transition outcome==|model|::Outcome::Success {true -> commit(load,candidate,parsed.next) _ -> fail(load,outcome,load.at)}
  }
- state commit(load:&mut LoadState,candidate:Namespace,next:u64)->Outcome {
-  load.space=candidate;load.at=next;Outcome::Success
+ state commit(load:&mut |model|::LoadState,candidate:|model|::Namespace,next:u64)->|model|::Outcome {
+  load.space=candidate;load.at=next;|model|::Outcome::Success
  }
- state fail(load:&mut LoadState,outcome:Outcome,offset:u64)->Outcome {
+ state fail(load:&mut |model|::LoadState,outcome:|model|::Outcome,offset:u64)->|model|::Outcome {
   load.outcome=outcome;load.offset=offset;load.done=true;outcome
  }
 }
 
-machine install_fields(space:&mut Namespace,binding:FieldBinding,declaration:Declaration,list:&ListState,index:u64,count:u64,prior:Outcome)
-terminates by(index,count)->Nat::BoundedDistance;
-->Outcome {
- let outcome:Outcome=install_field_step(space,binding,declaration,list,index,count,prior);
- transition {outcome!=Outcome::Success -> (outcome)
+machine install_fields(space:&mut |model|::Namespace,binding:|model|::FieldBinding,declaration:|field_model|::Declaration,list:&|field_model|::ListState,index:u64,count:u64,prior:|model|::Outcome)
+terminates by(index,count)->|nat|::Nat::BoundedDistance;
+->|model|::Outcome {
+ let outcome:|model|::Outcome=install_field_step(space,binding,declaration,list,index,count,prior);
+ transition {outcome!=|model|::Outcome::Success -> (outcome)
   index<count -> install_fields(space,binding,declaration,list,index+1,count,outcome)
   _ -> (outcome)}
 }
-machine install_field_step(space:&mut Namespace,binding:FieldBinding,declaration:Declaration,list:&ListState,index:u64,count:u64,prior:Outcome)->Outcome {
- transition {prior!=Outcome::Success -> (prior)
-  count>32 -> (Outcome::Capacity)
+machine install_field_step(space:&mut |model|::Namespace,binding:|model|::FieldBinding,declaration:|field_model|::Declaration,list:&|field_model|::ListState,index:u64,count:u64,prior:|model|::Outcome)->|model|::Outcome {
+ transition {prior!=|model|::Outcome::Success -> (prior)
+  count>32 -> (|model|::Outcome::Capacity)
   index<count && index<32 -> selected(space,binding,declaration,list.fields[index])
-  _ -> (Outcome::Success)}
- state selected(space:&mut Namespace,binding:FieldBinding,declaration:Declaration,field:Field)->Outcome {
-  let value:Value=Value::FieldUnit {binding:binding,declaration:declaration,field:field};
-  let allocated:Read=allocate_mut(space,value);
-  transition allocated.outcome==Outcome::Success {true -> bind(space,field,allocated.value) _ -> (allocated.outcome)}
+  _ -> (|model|::Outcome::Success)}
+ state selected(space:&mut |model|::Namespace,binding:|model|::FieldBinding,declaration:|field_model|::Declaration,field:|field_model|::Field)->|model|::Outcome {
+  let value:|model|::Value=|model|::Value::FieldUnit {binding:binding,declaration:declaration,field:field};
+  let allocated:|model|::Read=|namespace|::allocate_mut(space,value);
+  transition allocated.outcome==|model|::Outcome::Success {true -> bind(space,field,allocated.value) _ -> (allocated.outcome)}
  }
- state bind(space:&mut Namespace,field:Field,id:u64)->Outcome {
+ state bind(space:&mut |model|::Namespace,field:|field_model|::Field,id:u64)->|model|::Outcome {
   // Preserve the existing loader's pinned replacement policy. A redefinition
   // allocates a fresh ID; aliases and earlier region bindings retain old IDs.
-  let entry:Entry=Entry {path:field.name,has_object:true,object:id};
-  let outcome:Outcome=bind_mut(space,entry,false);outcome
+  let entry:|model|::Entry=|model|::Entry {path:field.name,has_object:true,object:id};
+  let outcome:|model|::Outcome=|namespace|::bind_mut(space,entry,false);outcome
  }
 }

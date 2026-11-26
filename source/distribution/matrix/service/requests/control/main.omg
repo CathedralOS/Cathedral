@@ -1,89 +1,83 @@
-module requests::control::main;
-
 // Recognize owner work, preserve loss exclusion, then forward or validate locally.
 // wire.omg owns message syntax; local.omg owns operation-specific resource checks.
-use requests::control::operation::Facts;
-use requests::control::operation::Request;
-use requests::control::operation::Local;
-use requests::control::operation::Operation;
-use requests::control::operation::Decision;
-use requests::control::local;
-use protocol::matrix;
+use requests/control/operation.omg;
+use requests/control/local.omg;
+use {protocol}/matrix.omg;
 
-public machine decide(facts: &Facts, request: Request) -> Decision {
+public machine decide(facts: &|operation|::Facts, request: |operation|::Request) -> |operation|::Decision {
     transition facts.owner && facts.children > 0u64 && facts.children <= 7u64 {
         true -> recognized(facts, request)
-        _ -> result(Operation::Deny)
+        _ -> result(|operation|::Operation::Deny)
     }
-    machine recognized(facts: &Facts, request: Request) -> Decision {
+    machine recognized(facts: &|operation|::Facts, request: |operation|::Request) -> |operation|::Decision {
         transition request {
-            Request::Loss -> result(Operation::Survey)
-            Request::Unknown -> result(Operation::Unhandled)
+            |operation|::Request::Loss -> result(|operation|::Operation::Survey)
+            |operation|::Request::Unknown -> result(|operation|::Operation::Unhandled)
             _ -> available(facts, request)
         }
     }
-    machine available(facts: &Facts, request: Request) -> Decision {
+    machine available(facts: &|operation|::Facts, request: |operation|::Request) -> |operation|::Decision {
         transition facts.loss {
-            true -> result(Operation::Busy)
+            true -> result(|operation|::Operation::Busy)
             _ -> dispatch(facts, request)
         }
     }
-    machine dispatch(facts: &Facts, request: Request) -> Decision {
+    machine dispatch(facts: &|operation|::Facts, request: |operation|::Request) -> |operation|::Decision {
         transition request {
-            Request::Forward { hop, configuration, stored } -> forward(facts, hop, configuration, stored)
-            Request::Configure { canonical } -> canonical_operation(canonical, Operation::Configure)
-            Request::Restore { canonical } -> canonical_operation(canonical, Operation::Restore)
-            Request::Fallback { canonical } -> canonical_operation(canonical, Operation::Fallback)
-            Request::Child { slot, work } -> child(facts, slot, work)
-            _ -> result(Operation::Deny)
+            |operation|::Request::Forward { hop, configuration, stored } -> forward(facts, hop, configuration, stored)
+            |operation|::Request::Configure { canonical } -> canonical_operation(canonical, |operation|::Operation::Configure)
+            |operation|::Request::Restore { canonical } -> canonical_operation(canonical, |operation|::Operation::Restore)
+            |operation|::Request::Fallback { canonical } -> canonical_operation(canonical, |operation|::Operation::Fallback)
+            |operation|::Request::Child { slot, work } -> child(facts, slot, work)
+            _ -> result(|operation|::Operation::Deny)
         }
     }
 }
 
-machine forward(facts: &Facts, hop: u64, configuration: bool, stored: bool) -> Decision {
+machine forward(facts: &|operation|::Facts, hop: u64, configuration: bool, stored: bool) -> |operation|::Decision {
     transition hop > 0u64 && hop <= facts.children && hop <= 7u64 {
         true -> pending(facts, hop - 1u64, configuration, stored)
-        _ -> result(Operation::Deny)
+        _ -> result(|operation|::Operation::Deny)
     }
-    machine pending(facts: &Facts, slot: u64, configuration: bool, stored: bool) -> Decision requires slot < 7u64 {
+    machine pending(facts: &|operation|::Facts, slot: u64, configuration: bool, stored: bool) -> |operation|::Decision requires slot < 7u64 {
         transition (facts.pending & (1u64 << slot)) != 0u64 {
-            true -> result(Operation::Busy)
+            true -> result(|operation|::Operation::Busy)
             _ -> ready(facts, slot, configuration, stored)
         }
     }
     // The deadline covers the work the word names: configuration and a stored
     // launch read through storage hops; every other routed word is answered
     // from what the child already holds.
-    machine ready(facts: &Facts, slot: u64, configuration: bool, stored: bool) -> Decision {
+    machine ready(facts: &|operation|::Facts, slot: u64, configuration: bool, stored: bool) -> |operation|::Decision {
         transition {
             configuration -> issue(slot, facts.configure_deadline)
-            stored -> issue(slot, RUN_OBJECT_DEADLINE_TICKS)
+            stored -> issue(slot, |matrix|::RUN_OBJECT_DEADLINE_TICKS)
             _ -> issue(slot, 100u64)
         }
     }
-    machine issue(slot: u64, deadline: u64) -> Decision {
-        Decision { operation: Operation::Forward, slot: slot, deadline: deadline }
+    machine issue(slot: u64, deadline: u64) -> |operation|::Decision {
+        |operation|::Decision { operation: |operation|::Operation::Forward, slot: slot, deadline: deadline }
     }
 }
 
-machine child(facts: &Facts, slot: u64, work: Local) -> Decision {
+machine child(facts: &|operation|::Facts, slot: u64, work: |operation|::Local) -> |operation|::Decision {
     transition slot < facts.children && slot < 7u64 {
         true -> validate(facts, slot, work)
-        _ -> result(Operation::Deny)
+        _ -> result(|operation|::Operation::Deny)
     }
-    machine validate(facts: &Facts, slot: u64, work: Local) -> Decision requires slot < 7u64 {
-        let operation: Operation = requests::control::local::decide(facts, slot, work);
-        Decision { operation: operation, slot: slot, deadline: 0u64 }
+    machine validate(facts: &|operation|::Facts, slot: u64, work: |operation|::Local) -> |operation|::Decision requires slot < 7u64 {
+        let operation: |operation|::Operation = |local|::decide(facts, slot, work);
+        |operation|::Decision { operation: operation, slot: slot, deadline: 0u64 }
     }
 }
 
-machine canonical_operation(canonical: bool, operation: Operation) -> Decision {
+machine canonical_operation(canonical: bool, operation: |operation|::Operation) -> |operation|::Decision {
     transition canonical {
         true -> result(operation)
-        _ -> result(Operation::Deny)
+        _ -> result(|operation|::Operation::Deny)
     }
 }
 
-machine result(operation: Operation) -> Decision {
-    Decision { operation: operation, slot: 0u64, deadline: 0u64 }
+machine result(operation: |operation|::Operation) -> |operation|::Decision {
+    |operation|::Decision { operation: operation, slot: 0u64, deadline: 0u64 }
 }

@@ -1,8 +1,6 @@
-module ipc::main;
 // Copied IPC is the kernel's setup/typed-grant transport, not a replacement for
 // the platform shared mailbox. Handles are local names; bytes convey no rights.
-use kernel::Gate;
-use kernel::Kernel;
+use kernel.omg;
 
 public data Channel {
     sender: u64;
@@ -18,9 +16,9 @@ public data Received [copy] {
     case InvalidLength;
 }
 
-public machine open(gate: &Gate) -> Opened reaches Kernel invokes Kernel {
+public machine open(gate: &|kernel|::Gate) -> Opened reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let mut record: [u64; 8];
-    let status: u64 = Kernel::channel(gate, &mut record);
+    let status: u64 = |kernel|::Kernel::channel(gate, &mut record);
     transition status == 0u64 {
         true -> opened(record)
         _ -> (Opened::Failed { code: status })
@@ -30,14 +28,14 @@ public machine open(gate: &Gate) -> Opened reaches Kernel invokes Kernel {
     }
 }
 
-public machine send(gate: &Gate, sender: u64, message: &[u64; 8], bytes: u64 [0..=64]) -> u64
-    reaches Kernel invokes Kernel {
-    Kernel::send(gate, sender, message, bytes)
+public machine send(gate: &|kernel|::Gate, sender: u64, message: &[u64; 8], bytes: u64 [0..=64]) -> u64
+    reaches |kernel|::Kernel invokes |kernel|::Kernel {
+    |kernel|::Kernel::send(gate, sender, message, bytes)
 }
 
-public machine receive(gate: &Gate, receiver: u64, message: &mut [u64; 8]) -> Received
-    reaches Kernel blocks invokes Kernel {
-    let result: u64 = block Kernel::receive(gate, receiver, message);
+public machine receive(gate: &|kernel|::Gate, receiver: u64, message: &mut [u64; 8]) -> Received
+    reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
+    let result: u64 = block |kernel|::Kernel::receive(gate, receiver, message);
     transition result <= 64u64 {
         true -> (Received::Message { bytes: result })
         _ -> failure(result)
@@ -51,9 +49,9 @@ public machine receive(gate: &Gate, receiver: u64, message: &mut [u64; 8]) -> Re
 }
 
 // Consume the local pair. Releasing one endpoint never skips the other on error.
-public machine close(gate: &Gate, channel: Channel) -> u64 reaches Kernel invokes Kernel {
-    let first: u64 = Kernel::close(gate, channel.sender);
-    let second: u64 = Kernel::close(gate, channel.receiver);
+public machine close(gate: &|kernel|::Gate, channel: Channel) -> u64 reaches |kernel|::Kernel invokes |kernel|::Kernel {
+    let first: u64 = |kernel|::Kernel::close(gate, channel.sender);
+    let second: u64 = |kernel|::Kernel::close(gate, channel.receiver);
     transition first == 0u64 {
         true -> (second)
         _ -> (first)

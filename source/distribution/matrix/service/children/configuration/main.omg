@@ -1,30 +1,24 @@
-module children::configuration::main;
-
 // Live stock layout: authority, exclusion, syntax, geometry, then role placement.
 // The host rechecks exact incarnation/epoch and owns atomic local mutation.
 // Saved configuration bytes have their separate entrance in encoding.omg.
-use children::configuration::placement;
-use children::configuration::placement::Geometry;
-use children::configuration::placement::Extent;
-use children::configuration::placement::Rectangle;
-use children::configuration::placement::Placement;
+use children/configuration/placement.omg;
 
 public data Facts {
     authorized: bool;
     busy: bool;
-    extent: Extent;
+    extent: |placement|::Extent;
     standing: u64;
 }
 
 public data Request [copy] {
     case Malformed;
-    case Layout(geometry: Geometry);
+    case Layout(geometry: |placement|::Geometry);
 }
 
 public data Plan {
-    chrome: Rectangle;
-    apps: [Rectangle; 3];
-    background: Rectangle;
+    chrome: |placement|::Rectangle;
+    apps: [|placement|::Rectangle; 3];
+    background: |placement|::Rectangle;
     remember: u64;
 }
 
@@ -55,22 +49,22 @@ public machine prepare(facts: &Facts, request: Request) -> Decision {
             Request::Malformed -> (Decision::Invalid)
         }
     }
-    machine geometry_plan(facts: &Facts, geometry: &Geometry) -> Decision {
-        let placement: Placement = children::configuration::placement::place(geometry, &facts.extent);
+    machine geometry_plan(facts: &Facts, geometry: &|placement|::Geometry) -> Decision {
+        let placement: |placement|::Placement = |placement|::place(geometry, &facts.extent);
         transition placement {
-            Placement::Placed { chrome, workspace } -> roles(facts, chrome, workspace)
-            Placement::Invalid -> (Decision::Invalid)
+            |placement|::Placement::Placed { chrome, workspace } -> roles(facts, chrome, workspace)
+            |placement|::Placement::Invalid -> (Decision::Invalid)
         }
     }
 }
 
-machine roles(facts: &Facts, chrome: Rectangle, workspace: Rectangle) -> Decision {
+machine roles(facts: &Facts, chrome: |placement|::Rectangle, workspace: |placement|::Rectangle) -> Decision {
     let mut plan: Plan;
     plan.chrome = chrome;
     plan.apps[0] = workspace;
     plan.apps[1] = workspace;
     plan.apps[2] = workspace;
-    plan.background = Rectangle { x: 0u64, y: 0u64,
+    plan.background = |placement|::Rectangle { x: 0u64, y: 0u64,
         width: facts.extent.width, height: facts.extent.height };
     plan.remember = facts.standing & APP_POSITIONS;
     Decision::Ready { plan: plan }

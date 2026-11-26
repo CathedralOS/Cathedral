@@ -1,19 +1,19 @@
 {
   "extra-invalid-index": [
-    "RangeStatus::InvalidRange",
-    "RangeStatus::Done"
+    "|cleanup_ranges|::RangeStatus::InvalidRange",
+    "|cleanup_ranges|::RangeStatus::Done"
   ],
   "extra-invalid-address": [
-    "RangeStatus::InvalidRange",
-    "RangeStatus::Done"
+    "|cleanup_ranges|::RangeStatus::InvalidRange",
+    "|cleanup_ranges|::RangeStatus::Done"
   ],
   "extra-forged-active": [
-    "RangeStatus::InvalidRange",
-    "RangeStatus::Done"
+    "|cleanup_ranges|::RangeStatus::InvalidRange",
+    "|cleanup_ranges|::RangeStatus::Done"
   ],
   "extra-reversed": [
-    "RangeStatus::Done",
-    "RangeStatus::Active"
+    "|cleanup_ranges|::RangeStatus::Done",
+    "|cleanup_ranges|::RangeStatus::Active"
   ],
   "extra-zero-resume": [
     "result.cursor.recursive_index==0",

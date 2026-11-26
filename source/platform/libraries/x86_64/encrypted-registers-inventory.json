@@ -444,7 +444,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/x86_64/encrypted_register_operands.omg",
-          "anchor": "module encrypted_register_operands;"
+          "anchor": "pub data ObservedCr3"
         }
       ]
     },
@@ -890,7 +890,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/x86_64/encrypted_register_operands.omg",
-          "anchor": "module encrypted_register_operands;"
+          "anchor": "pub data ObservedCr3"
         }
       ]
     }

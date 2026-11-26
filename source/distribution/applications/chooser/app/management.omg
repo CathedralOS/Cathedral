@@ -1,39 +1,32 @@
-module management;
-use protocol::main;
+use {protocol}/main.omg;
 // Capture the exact delegated ticket. Refresh cancels confirmation if it changes.
-use operations::Command;
-use operations::Exchange;
-use state::State;
-use state::Phase;
-use transport::interaction;
-use transport::status;
-use transport::subtract;
-use transport::add;
-use session::session::cycle;
-use session::session::after_input;
-public machine management_input(s: &mut State, p: &mut Exchange) -> Command {
-    transition s.snapshot[5] & 255u64 { POINTER -> pointer(s, p) KEY -> keyboard(s, p) _ -> after_input(s, p) }
-    machine pointer(s: &mut State, p: &mut Exchange) -> Command {
-        transition s.clicked && s.snapshot[7] >= 16u64 && s.snapshot[7] < 48u64 { true -> hit(s, p, 1u64) _ -> after_input(s, p) }
+use operations.omg;
+use state.omg as local_state;
+use transport.omg;
+use session/session.omg;
+public machine management_input(s: &mut |local_state|::State, p: &mut |operations|::Exchange) -> |operations|::Command {
+    transition s.snapshot[5] & 255u64 { |main|::POINTER -> pointer(s, p) |main|::KEY -> keyboard(s, p) _ -> |session|::after_input(s, p) }
+    machine pointer(s: &mut |local_state|::State, p: &mut |operations|::Exchange) -> |operations|::Command {
+        transition s.clicked && s.snapshot[7] >= 16u64 && s.snapshot[7] < 48u64 { true -> hit(s, p, 1u64) _ -> |session|::after_input(s, p) }
     }
-    machine hit(s: &mut State, p: &mut Exchange, row: u64) -> Command { transition row < 3u64 { true -> button(s, p, row) _ -> after_input(s, p) } }
-    machine button(s: &mut State, p: &mut Exchange, row: u64) -> Command requires row < 3u64 {
-        let left: u64 = add(subtract(s.width, 572u64) / 2u64, row * 196u64);
-        transition s.snapshot[6] >= left && s.snapshot[6] < add(left, 180u64) { true -> choose(s, p, row == 2u64) _ -> hit(s, p, row + 1u64) }
+    machine hit(s: &mut |local_state|::State, p: &mut |operations|::Exchange, row: u64) -> |operations|::Command { transition row < 3u64 { true -> button(s, p, row) _ -> |session|::after_input(s, p) } }
+    machine button(s: &mut |local_state|::State, p: &mut |operations|::Exchange, row: u64) -> |operations|::Command requires row < 3u64 {
+        let left: u64 = |transport|::add(|transport|::subtract(s.width, 572u64) / 2u64, row * 196u64);
+        transition s.snapshot[6] >= left && s.snapshot[6] < |transport|::add(left, 180u64) { true -> choose(s, p, row == 2u64) _ -> hit(s, p, row + 1u64) }
     }
-    machine choose(s: &mut State, p: &mut Exchange, cancel: bool) -> Command { s.cancel = cancel; transition { _ -> activate(s, p) } }
-    machine keyboard(s: &mut State, p: &mut Exchange) -> Command { transition s.snapshot[7] == PRESS { true -> key(s, p) _ -> after_input(s, p) } }
-    machine key(s: &mut State, p: &mut Exchange) -> Command {
-        transition s.snapshot[6] { UP -> toggle(s, p) DOWN -> toggle(s, p) LEFT -> toggle(s, p) RIGHT -> toggle(s, p) ENTER -> activate(s, p) _ -> after_input(s, p) }
+    machine choose(s: &mut |local_state|::State, p: &mut |operations|::Exchange, cancel: bool) -> |operations|::Command { s.cancel = cancel; transition { _ -> activate(s, p) } }
+    machine keyboard(s: &mut |local_state|::State, p: &mut |operations|::Exchange) -> |operations|::Command { transition s.snapshot[7] == |main|::PRESS { true -> key(s, p) _ -> |session|::after_input(s, p) } }
+    machine key(s: &mut |local_state|::State, p: &mut |operations|::Exchange) -> |operations|::Command {
+        transition s.snapshot[6] { |main|::UP -> toggle(s, p) |main|::DOWN -> toggle(s, p) |main|::LEFT -> toggle(s, p) |main|::RIGHT -> toggle(s, p) |main|::ENTER -> activate(s, p) _ -> |session|::after_input(s, p) }
     }
-    machine toggle(s: &mut State, p: &mut Exchange) -> Command { s.cancel = !s.cancel; s.dirty = true; after_input(s, p) }
-    machine activate(s: &mut State, p: &mut Exchange) -> Command { s.dirty = true; transition s.cancel { true -> cancel(s, p) _ -> terminate(s, p) } }
-    machine cancel(s: &mut State, p: &mut Exchange) -> Command { s.confirming = 0u64; after_input(s, p) }
-    machine terminate(s: &mut State, p: &mut Exchange) -> Command { let ticket: u64 = s.confirming; interaction(s, p, Phase::Terminated, 19u64, ticket, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64) }
+    machine toggle(s: &mut |local_state|::State, p: &mut |operations|::Exchange) -> |operations|::Command { s.cancel = !s.cancel; s.dirty = true; |session|::after_input(s, p) }
+    machine activate(s: &mut |local_state|::State, p: &mut |operations|::Exchange) -> |operations|::Command { s.dirty = true; transition s.cancel { true -> cancel(s, p) _ -> terminate(s, p) } }
+    machine cancel(s: &mut |local_state|::State, p: &mut |operations|::Exchange) -> |operations|::Command { s.confirming = 0u64; |session|::after_input(s, p) }
+    machine terminate(s: &mut |local_state|::State, p: &mut |operations|::Exchange) -> |operations|::Command { let ticket: u64 = s.confirming; |transport|::interaction(s, p, |local_state|::Phase::Terminated, 19u64, ticket, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64) }
 }
-public machine terminated(s: &mut State, p: &mut Exchange) -> Command {
+public machine terminated(s: &mut |local_state|::State, p: &mut |operations|::Exchange) -> |operations|::Command {
     s.dirty = true; s.force_refresh = true;
-    transition status(p) == BUSY { true -> busy(s, p) _ -> closed(s, p) }
-    machine busy(s: &mut State, p: &mut Exchange) -> Command { s.management_status = 2u64; s.cancel = true; cycle(s, p) }
-    machine closed(s: &mut State, p: &mut Exchange) -> Command { s.confirming = 0u64; s.managed = 0u64; cycle(s, p) }
+    transition |transport|::status(p) == |main|::BUSY { true -> busy(s, p) _ -> closed(s, p) }
+    machine busy(s: &mut |local_state|::State, p: &mut |operations|::Exchange) -> |operations|::Command { s.management_status = 2u64; s.cancel = true; |session|::cycle(s, p) }
+    machine closed(s: &mut |local_state|::State, p: &mut |operations|::Exchange) -> |operations|::Command { s.confirming = 0u64; s.managed = 0u64; |session|::cycle(s, p) }
 }

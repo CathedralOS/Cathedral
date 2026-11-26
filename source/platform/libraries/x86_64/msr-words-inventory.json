@@ -444,7 +444,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/x86_64/msr_words.omg",
-          "anchor": "module msr_words;"
+          "anchor": "pub machine combine"
         }
       ]
     }

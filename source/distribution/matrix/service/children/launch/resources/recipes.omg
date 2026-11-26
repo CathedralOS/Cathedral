@@ -1,5 +1,3 @@
-module children::launch::resources::recipes;
-
 // Distribution-owned offers, never kernel grants. CPU zero inherits the ceiling.
 public data Role [copy] {
     case Launcher(private_pages: u64);

@@ -1,65 +1,60 @@
-module children::workspace::selection;
-
 // Observe the actual scene result before choosing activation or compensation.
 // Failed restoration is terminal failure, never successful release of custody.
-use children::workspace::operation::Switch;
-use children::workspace::operation::Command;
-use children::workspace::operation::Phase;
-use children::workspace::operation::Completion;
+use children/workspace/operation.omg;
 
-public machine completed(work: &mut Switch, completion: Completion) -> bool {
+public machine completed(work: &mut |operation|::Switch, completion: |operation|::Completion) -> bool {
     transition completion.command {
-        Command::BeginScene -> begun(work)
-        Command::AwaitScene -> observed(work, completion.committed)
-        Command::Activate -> activated(work, completion.status)
-        Command::BeginRestore -> restoring(work, completion.status)
-        Command::AwaitRestore -> restored(work, completion.status, completion.committed)
-        Command::Finish -> finished(work)
-        Command::Failed -> (false)
+        |operation|::Command::BeginScene -> begun(work)
+        |operation|::Command::AwaitScene -> observed(work, completion.committed)
+        |operation|::Command::Activate -> activated(work, completion.status)
+        |operation|::Command::BeginRestore -> restoring(work, completion.status)
+        |operation|::Command::AwaitRestore -> restored(work, completion.status, completion.committed)
+        |operation|::Command::Finish -> finished(work)
+        |operation|::Command::Failed -> (false)
     }
-    machine begun(work: &mut Switch) -> bool {
+    machine begun(work: &mut |operation|::Switch) -> bool {
         transition work.refusal == 0u64 {
-            true -> queue(work, Command::AwaitScene)
-            _ -> queue(work, Command::Finish)
+            true -> queue(work, |operation|::Command::AwaitScene)
+            _ -> queue(work, |operation|::Command::Finish)
         }
     }
-    machine observed(work: &mut Switch, committed: bool) -> bool {
+    machine observed(work: &mut |operation|::Switch, committed: bool) -> bool {
         transition committed {
             true -> after_commit(work)
-            _ -> queue(work, Command::Finish)
+            _ -> queue(work, |operation|::Command::Finish)
         }
     }
-    machine after_commit(work: &mut Switch) -> bool {
+    machine after_commit(work: &mut |operation|::Switch) -> bool {
         transition work.refusal == 0u64 {
-            true -> queue(work, Command::Activate)
-            _ -> queue(work, Command::BeginRestore)
+            true -> queue(work, |operation|::Command::Activate)
+            _ -> queue(work, |operation|::Command::BeginRestore)
         }
     }
-    machine activated(work: &mut Switch, status: u64) -> bool {
+    machine activated(work: &mut |operation|::Switch, status: u64) -> bool {
         transition status == 0u64 {
-            true -> queue(work, Command::Finish)
-            _ -> queue(work, Command::Failed)
+            true -> queue(work, |operation|::Command::Finish)
+            _ -> queue(work, |operation|::Command::Failed)
         }
     }
-    machine restoring(work: &mut Switch, status: u64) -> bool {
+    machine restoring(work: &mut |operation|::Switch, status: u64) -> bool {
         transition status == 0u64 {
-            true -> queue(work, Command::AwaitRestore)
-            _ -> queue(work, Command::Failed)
+            true -> queue(work, |operation|::Command::AwaitRestore)
+            _ -> queue(work, |operation|::Command::Failed)
         }
     }
-    machine restored(work: &mut Switch, status: u64, committed: bool) -> bool {
+    machine restored(work: &mut |operation|::Switch, status: u64, committed: bool) -> bool {
         transition status == 0u64 && committed {
-            true -> queue(work, Command::Finish)
-            _ -> queue(work, Command::Failed)
+            true -> queue(work, |operation|::Command::Finish)
+            _ -> queue(work, |operation|::Command::Failed)
         }
     }
-    machine finished(work: &mut Switch) -> bool {
-        work.phase = Phase::Dormant;
+    machine finished(work: &mut |operation|::Switch) -> bool {
+        work.phase = |operation|::Phase::Dormant;
         true
     }
 }
 
-machine queue(work: &mut Switch, command: Command) -> bool {
-    work.phase = Phase::Ready { command: command };
+machine queue(work: &mut |operation|::Switch, command: |operation|::Command) -> bool {
+    work.phase = |operation|::Phase::Ready { command: command };
     true
 }

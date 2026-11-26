@@ -2,11 +2,11 @@
 // preparation wrapper composes only pre-installation PIC/PIT work and does not
 // imply that an entry has been installed or an IRQ has been admitted.
 
-use core::legacy_timer_provider;
-use core::pic_8259;
-use core::pit_8254;
-use core::x86_interrupt_profile;
-use facts::x86_idt_gate;
+use {arch}/board/pc/timer/timer.omg;
+use {arch}/board/pc/timer/pic.omg;
+use {arch}/board/pc/timer/pit.omg;
+use {arch}/isa/x86_64/interrupts/interrupts.omg;
+use {facts}/x86_idt_gate.omg;
 
 data Main {
 }

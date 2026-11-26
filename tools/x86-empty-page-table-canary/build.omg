@@ -2,8 +2,8 @@
 
 machine build(builder: &mut Build) {
     builder.package("cathedral-x86-empty-page-table-canary");
-    builder.depend_as("core", Source::Path {
-        location: "core"
+    builder.depend_as("arch", Source::Path {
+        location: "arch"
     });
     builder.depend_as("facts", Source::Path {
         location: "facts"

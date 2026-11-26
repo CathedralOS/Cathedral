@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified rust-osdev/uefi-rs translation at c0facddf9ba42b74906a37fca2869e6cdbc8da6a.
 // See hii.PORT.md. Inert carriers; pointer/slot bits confer no authority.
-module hii_database;
-use scalars;
-use console;
+use scalars.omg;
+use console.omg;
 
 // Upstream: uefi_raw::protocol::hii::database::HiiKeyboardLayout
 // Required packed layout: alignment 1, no inter-field padding.
 pub data HiiKeyboardLayout [copy] {
     layout_length: u16;
-    guid: scalars::Guid;
+    guid: |scalars|::Guid;
     layout_descriptor_string_offset: u32;
     descriptor_count: u8;
     // PORT-BLOCKED[omega:runtime-layout-strides]: typed trailing descriptors ([KeyDescriptor; 0]) requires bounded runtime shape.
@@ -56,4 +55,4 @@ pub const HII_DATABASE_NOTIFY_TYPE_NEW_PACK: HiiDatabaseNotifyType = HiiDatabase
 pub const HII_DATABASE_NOTIFY_TYPE_REMOVE_PACK: HiiDatabaseNotifyType = HiiDatabaseNotifyType { raw: 2 };
 pub const HII_DATABASE_NOTIFY_TYPE_EXPORT_PACK: HiiDatabaseNotifyType = HiiDatabaseNotifyType { raw: 4 };
 pub const HII_DATABASE_NOTIFY_TYPE_ADD_PACK: HiiDatabaseNotifyType = HiiDatabaseNotifyType { raw: 8 };
-pub const HII_DATABASE_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0xef9fc172, data2: 0xa1b2, data3: 0x4693, data4: [0xb3, 0x27, 0x6d, 0x32, 0xfc, 0x41, 0x60, 0x42] };
+pub const HII_DATABASE_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0xef9fc172, data2: 0xa1b2, data3: 0x4693, data4: [0xb3, 0x27, 0x6d, 0x32, 0xfc, 0x41, 0x60, 0x42] };

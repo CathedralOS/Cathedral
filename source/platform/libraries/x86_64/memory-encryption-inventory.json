@@ -567,7 +567,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/x86_64/memory_encryption.omg",
-          "anchor": "module memory_encryption;"
+          "anchor": "pub data Configuration"
         }
       ]
     },
@@ -657,7 +657,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/x86_64/memory_encryption.omg",
-          "anchor": "module memory_encryption;"
+          "anchor": "pub data Configuration"
         }
       ]
     },
@@ -1143,7 +1143,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/x86_64/memory_encryption.omg",
-          "anchor": "module memory_encryption;"
+          "anchor": "pub data Configuration"
         }
       ]
     }

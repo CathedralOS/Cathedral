@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified translation of virtio-spec ad565bd701e93fa47bc288d45701e1ae53ac3c12; see PORT.md.
-module split;
 pub data Desc [copy] { addr: u64; len: u32; flags: u16; next: u16; }
 pub data AvailHeader [copy] { flags: u16; idx: u16; }
 pub data UsedHeader [copy] { flags: u16; idx: u16; }

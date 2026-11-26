@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Compatibility entries into the canonical AML-owned field flags.
-module flags;
-use aml::field_flags;
-use aml::model::Read;
-use aml::field_model::Access;
-use aml::field_model::AccessResult;
-pub machine decode_flags(raw:u8)->AccessResult {let result:AccessResult=field_flags::decode_flags(raw);result}
-pub machine nominal_width(raw:u8)->Read {let result:Read=field_flags::nominal_width(raw);result}
-pub machine change_access(current:Access,type_byte:u8,attribute:u8,extended:bool,length:u8)->AccessResult {
- let result:AccessResult=field_flags::change_access(current,type_byte,attribute,extended,length);result
+use {aml}/field_flags.omg;
+use {aml}/model.omg;
+use {aml}/field_model.omg;
+pub machine decode_flags(raw:u8)->|field_model|::AccessResult {let result:|field_model|::AccessResult=|field_flags|::decode_flags(raw);result}
+pub machine nominal_width(raw:u8)->|model|::Read {let result:|model|::Read=|field_flags|::nominal_width(raw);result}
+pub machine change_access(current:|field_model|::Access,type_byte:u8,attribute:u8,extended:bool,length:u8)->|field_model|::AccessResult {
+ let result:|field_model|::AccessResult=|field_flags|::change_access(current,type_byte,attribute,extended,length);result
 }

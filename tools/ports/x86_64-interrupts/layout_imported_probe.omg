@@ -1,6 +1,6 @@
-use facts::x86_idt_gate;
-use facts::x86_idt_gate_layout;
-use facts::x86_interrupts::RawInterruptStackFrame;
-use facts::interrupt_frame_layouts::RawInterruptStackFrameLayout;
-data Main { gate: X86IdtGateLayout<X86IdtGate>; frame: RawInterruptStackFrameLayout<RawInterruptStackFrame>; }
+use {facts}/x86_idt_gate.omg;
+use {facts}/x86_idt_gate_layout.omg;
+use {facts}/x86_interrupts.omg;
+use {facts}/interrupt_frame_layouts.omg;
+data Main { gate: |x86_idt_gate_layout|::X86IdtGateLayout<|x86_idt_gate|::X86IdtGate>; frame: |interrupt_frame_layouts|::RawInterruptStackFrameLayout<|x86_interrupts|::RawInterruptStackFrame>; }
 machine Main::main(&mut self) { self.gate.entry = 1; self.frame.instruction_pointer = 4096; }

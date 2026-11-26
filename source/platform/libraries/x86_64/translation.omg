@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified numeric Translate::translate from pinned mapped_page_table.rs.
 // Inputs are captured entry words, never references reconstructed from addresses.
-module translation;
-use addresses;
-use page_entries;
-use facts::x86_page_table_entry;
+use addresses.omg;
+use page_entries.omg;
+use {facts}/x86_page_table_entry.omg;
 
 pub data Translation {
     case NotMapped;
@@ -21,8 +20,8 @@ pub data CapturedWalk {
 // parent link where traversal actually needs that table. Numeric equality is
 // not proof that a snapshot came from physical memory at that address.
 pub machine walk_captured(va: u64,
-    p4: &[X86PageTableEntry; 512], p3: &[X86PageTableEntry; 512],
-    p2: &[X86PageTableEntry; 512], p1: &[X86PageTableEntry; 512],
+    p4: &[|x86_page_table_entry|::X86PageTableEntry; 512], p3: &[|x86_page_table_entry|::X86PageTableEntry; 512],
+    p2: &[|x86_page_table_entry|::X86PageTableEntry; 512], p1: &[|x86_page_table_entry|::X86PageTableEntry; 512],
     p3_address: u64, p2_address: u64, p1_address: u64) -> CapturedWalk {
     let a: u64 = (va >> 39) & 511;
     let b: u64 = (va >> 30) & 511;
@@ -32,26 +31,26 @@ pub machine walk_captured(va: u64,
     let w3: u64 = captured_word(p3, b);
     let w2: u64 = captured_word(p2, c);
     let w1: u64 = captured_word(p1, d);
-    let valid: bool = addresses::virtual_valid(va);
+    let valid: bool = |addresses|::virtual_valid(va);
     transition valid { true -> root_link(va, w4, w3, w2, w1, p3_address, p2_address, p1_address)
         _ -> (CapturedWalk::Result { value: Translation::InvalidVirtual }) }
     state root_link(va: u64, w4: u64, w3: u64, w2: u64, w1: u64, p3: u64, p2: u64, p1: u64) -> CapturedWalk {
         let need: bool = (w4 & 129) == 1;
-        let expected: u64 = page_entries::address(w4);
+        let expected: u64 = |page_entries|::address(w4);
         transition need && expected != p3 {
             true -> (CapturedWalk::MismatchedTable { level: 3, expected_address: expected, supplied_address: p3 })
             _ -> third_link(va, w4, w3, w2, w1, p2, p1, need) }
     }
     state third_link(va: u64, w4: u64, w3: u64, w2: u64, w1: u64, p2: u64, p1: u64, needed: bool) -> CapturedWalk {
         let need: bool = needed && (w3 & 129) == 1;
-        let expected: u64 = page_entries::address(w3);
+        let expected: u64 = |page_entries|::address(w3);
         transition need && expected != p2 {
             true -> (CapturedWalk::MismatchedTable { level: 2, expected_address: expected, supplied_address: p2 })
             _ -> second_link(va, w4, w3, w2, w1, p1, need) }
     }
     state second_link(va: u64, w4: u64, w3: u64, w2: u64, w1: u64, p1: u64, needed: bool) -> CapturedWalk {
         let need: bool = needed && (w2 & 129) == 1;
-        let expected: u64 = page_entries::address(w2);
+        let expected: u64 = |page_entries|::address(w2);
         transition need && expected != p1 {
             true -> (CapturedWalk::MismatchedTable { level: 1, expected_address: expected, supplied_address: p1 })
             _ -> finish(va, w4, w3, w2, w1) }
@@ -61,10 +60,10 @@ pub machine walk_captured(va: u64,
         CapturedWalk::Result { value: value }
     }
 }
-machine captured_word(table: &[X86PageTableEntry; 512], index: u64) -> u64 {
+machine captured_word(table: &[|x86_page_table_entry|::X86PageTableEntry; 512], index: u64) -> u64 {
     transition index < 512 { true -> read(table, index) _ -> (0) }
-    state read(table: &[X86PageTableEntry; 512], index: u64) -> u64 {
-        let word: u64 = page_entries::encode(&table[index]);
+    state read(table: &[|x86_page_table_entry|::X86PageTableEntry; 512], index: u64) -> u64 {
+        let word: u64 = |page_entries|::encode(&table[index]);
         word
     }
 }
@@ -74,7 +73,7 @@ machine captured_word(table: &[X86PageTableEntry; 512], index: u64) -> u64 {
 // a nonzero non-present PT word still produces its numeric mapping, huge-page
 // low address bits are truncated, and returned flags belong only to the leaf.
 pub machine translate_words(virtual_address: u64, p4: u64, p3: u64, p2: u64, p1: u64) -> Translation {
-    let valid: bool = addresses::virtual_valid(virtual_address);
+    let valid: bool = |addresses|::virtual_valid(virtual_address);
     transition valid { true -> level4(virtual_address, p4, p3, p2, p1) _ -> (Translation::InvalidVirtual) }
     state level4(va: u64, p4: u64, p3: u64, p2: u64, p1: u64) -> Translation {
         let present: bool = (p4 & 1) != 0;
@@ -101,30 +100,30 @@ pub machine translate_words(virtual_address: u64, p4: u64, p3: u64, p2: u64, p1:
         transition p1 == 0 { true -> (Translation::NotMapped) _ -> leaf(va, p1, 4096, 4095) }
     }
     state leaf(va: u64, word: u64, size: u64, mask: u64) -> Translation {
-        let address: u64 = page_entries::address(word);
-        let flags: u64 = page_entries::flags(word);
+        let address: u64 = |page_entries|::address(word);
+        let flags: u64 = |page_entries|::flags(word);
         Translation::Mapped { frame: address & ~mask, size: size, offset: va & mask, flags: flags }
     }
 }
 // Numeric convenience corresponding to Translate::translate_addr. No returned
 // value proves the mapping exists, that PRESENT was set, or that access is allowed.
-pub machine translated_address(value: Translation) -> addresses::NumberResult {
+pub machine translated_address(value: Translation) -> |addresses|::NumberResult {
     transition value {
         Translation::Mapped { frame, size, offset, flags } -> shape(frame, size, offset)
-        _ -> (addresses::NumberResult::Rejected)
+        _ -> (|addresses|::NumberResult::Rejected)
     }
-    state shape(frame: u64, size: u64, offset: u64) -> addresses::NumberResult {
+    state shape(frame: u64, size: u64, offset: u64) -> |addresses|::NumberResult {
         transition size > 0 && (size == 4096 || size == 2097152 || size == 1073741824) && offset < size {
-            true -> aligned(frame, size, offset) _ -> (addresses::NumberResult::Rejected)
+            true -> aligned(frame, size, offset) _ -> (|addresses|::NumberResult::Rejected)
         }
     }
-    state aligned(frame: u64, size: u64, offset: u64) -> addresses::NumberResult {
+    state aligned(frame: u64, size: u64, offset: u64) -> |addresses|::NumberResult {
         transition size > 0 && frame % size == 0 {
-            true -> add(frame, offset) _ -> (addresses::NumberResult::Rejected)
+            true -> add(frame, offset) _ -> (|addresses|::NumberResult::Rejected)
         }
     }
-    state add(frame: u64, offset: u64) -> addresses::NumberResult {
-        let result: addresses::NumberResult = addresses::physical_add(frame, offset, 0);
+    state add(frame: u64, offset: u64) -> |addresses|::NumberResult {
+        let result: |addresses|::NumberResult = |addresses|::physical_add(frame, offset, 0);
         result
     }
 }

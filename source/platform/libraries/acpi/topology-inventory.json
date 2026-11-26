@@ -10,7 +10,7 @@
           "disposition": "translated",
           "targets": [
             {
-              "anchor": "use madt::Polarity;",
+              "anchor": "use madt.omg;",
               "path": "source/platform/libraries/acpi/topology.omg"
             }
           ]

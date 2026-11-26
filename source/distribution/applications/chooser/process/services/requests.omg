@@ -1,78 +1,75 @@
-module services::requests;
 // Scope storage requests, transfer outgoing custody, then validate the reply.
-use main::Context;
-use app::state::State;
-use app::operations::Exchange;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::kernel;
-use runtime::time::Tick;
-use runtime::memory::object::Creation;
-use runtime::connection::call::CallReply;
-use runtime::storage::main;
-use services::exchange;
-use services::replies;
-use memory::payload;
-use presentation::images;
-public machine storage(gate: &Gate, context: &mut Context, state: &State, output: &mut Exchange) -> u64 reaches Kernel blocks invokes Kernel {
-    let tick: Tick = runtime::time::read(gate, context.clock);
+use main.omg;
+use {app}/state.omg as app_state;
+use {app}/operations.omg;
+use {runtime}/kernel.omg;
+use {runtime}/time.omg;
+use {runtime}/memory/object.omg;
+use {runtime}/connection/call.omg;
+use {runtime}/storage/main.omg as storage_main;
+use services/exchange.omg;
+use services/replies.omg;
+use memory/payload.omg;
+use presentation/images.omg;
+public machine storage(gate: &|kernel|::Gate, context: &mut |main|::Context, state: &|app_state|::State, output: &mut |operations|::Exchange) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
+    let tick: |time|::Tick = |time|::read(gate, context.clock);
     transition tick {
-        Tick::Read { value } -> block scoped(gate, context, state, output, value)
-        Tick::Failed { code } -> (code)
+        |time|::Tick::Read { value } -> block scoped(gate, context, state, output, value)
+        |time|::Tick::Failed { code } -> (code)
     }
-    machine scoped(gate: &Gate, context: &mut Context, state: &State, output: &mut Exchange, now: u64) -> u64 reaches Kernel {
+    machine scoped(gate: &|kernel|::Gate, context: &mut |main|::Context, state: &|app_state|::State, output: &mut |operations|::Exchange, now: u64) -> u64 reaches |kernel|::Kernel {
         let mut words: [u64; 8] = output.frame;
-        let status: u64 = runtime::storage::main::request(&context.storage, &mut words, now);
+        let status: u64 = |storage_main|::request(&context.storage, &mut words, now);
         transition status == 0u64 {
             true -> block outgoing(gate, context, state, output, true, &words)
             _ -> (status)
         }
     }
 }
-public machine interaction(gate: &Gate, context: &mut Context, state: &State, output: &mut Exchange) -> u64 reaches Kernel blocks invokes Kernel {
+public machine interaction(gate: &|kernel|::Gate, context: &mut |main|::Context, state: &|app_state|::State, output: &mut |operations|::Exchange) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     let words: [u64; 8] = output.frame;
     transition context.services.wake != 0u64 {
         true -> block outgoing(gate, context, state, output, false, &words)
-        _ -> (kernel::DENIED)
+        _ -> (|kernel|::DENIED)
     }
 }
-machine outgoing(gate: &Gate, context: &mut Context, state: &State, output: &mut Exchange, storage: bool, words: &[u64; 8]) -> u64 reaches Kernel {
+machine outgoing(gate: &|kernel|::Gate, context: &mut |main|::Context, state: &|app_state|::State, output: &mut |operations|::Exchange, storage: bool, words: &[u64; 8]) -> u64 reaches |kernel|::Kernel {
     transition !storage && words[0] == 8u64 && output.payload_bytes == 0u64 && context.ready_image != 0u64 {
         true -> block image(gate, context, state, output, words)
         _ -> block body(gate, context, state, output, storage, words)
     }
 }
-machine image(gate: &Gate, context: &mut Context, state: &State, output: &mut Exchange, words: &[u64; 8]) -> u64 reaches Kernel {
+machine image(gate: &|kernel|::Gate, context: &mut |main|::Context, state: &|app_state|::State, output: &mut |operations|::Exchange, words: &[u64; 8]) -> u64 reaches |kernel|::Kernel {
     let object: u64 = context.ready_image;
     context.ready_image = 0u64;
     transition { _ -> block call(gate, context, state, output, false, words, object, 0u64, 0u64) }
 }
-machine body(gate: &Gate, context: &mut Context, state: &State, output: &mut Exchange, storage: bool, words: &[u64; 8]) -> u64 reaches Kernel {
-    block presentation::images::discard(gate, context);
+machine body(gate: &|kernel|::Gate, context: &mut |main|::Context, state: &|app_state|::State, output: &mut |operations|::Exchange, storage: bool, words: &[u64; 8]) -> u64 reaches |kernel|::Kernel {
+    block |images|::discard(gate, context);
     transition output.payload_bytes == 0u64 {
         true -> block prepared(gate, context, state, output, storage, words, 0u64)
         _ -> block create(gate, context, state, output, storage, words)
     }
 }
-machine create(gate: &Gate, context: &mut Context, state: &State, output: &mut Exchange, storage: bool, words: &[u64; 8]) -> u64 reaches Kernel {
-    let result: Creation = block memory::payload::create(gate, output);
+machine create(gate: &|kernel|::Gate, context: &mut |main|::Context, state: &|app_state|::State, output: &mut |operations|::Exchange, storage: bool, words: &[u64; 8]) -> u64 reaches |kernel|::Kernel {
+    let result: |object|::Creation = block |payload|::create(gate, output);
     transition result {
-        Creation::Ready { object } -> block prepared(gate, context, state, output, storage, words, object.handle)
-        Creation::Failed { code } -> (code)
+        |object|::Creation::Ready { object } -> block prepared(gate, context, state, output, storage, words, object.handle)
+        |object|::Creation::Failed { code } -> (code)
     }
 }
-machine prepared(gate: &Gate, context: &mut Context, state: &State, output: &mut Exchange, storage: bool, words: &[u64; 8], object: u64) -> u64 reaches Kernel {
+machine prepared(gate: &|kernel|::Gate, context: &mut |main|::Context, state: &|app_state|::State, output: &mut |operations|::Exchange, storage: bool, words: &[u64; 8], object: u64) -> u64 reaches |kernel|::Kernel {
     let limit: u64 = output.receive_limit;
     transition storage && (words[0] & 255u64) == 19u64 {
         true -> block call(gate, context, state, output, storage, words, object, limit, words[3])
         _ -> block call(gate, context, state, output, storage, words, object, 0u64, 0u64)
     }
 }
-public machine call(gate: &Gate, context: &mut Context, state: &State, output: &mut Exchange, storage: bool,
-    words: &[u64; 8], object: u64, limit: u64, after: u64) -> u64 reaches Kernel blocks invokes Kernel {
+public machine call(gate: &|kernel|::Gate, context: &mut |main|::Context, state: &|app_state|::State, output: &mut |operations|::Exchange, storage: bool,
+    words: &[u64; 8], object: u64, limit: u64, after: u64) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     output.payload_bytes = 0u64; output.receive_limit = 0u64;
-    let result: CallReply = block services::exchange::request(gate, context, state, storage, words, object, deadline(storage, words));
-    let released: u64 = block Kernel::memory_release(gate, object);
-    block services::replies::accept(gate, context, output, result, limit, after)
+    let result: |call|::CallReply = block |exchange|::request(gate, context, state, storage, words, object, deadline(storage, words));
+    let released: u64 = block |kernel|::Kernel::memory_release(gate, object);
+    block |replies|::accept(gate, context, output, result, limit, after)
 }
 machine deadline(storage: bool, words: &[u64; 8]) -> u64 { transition storage { true -> (words[7]) _ -> (0u64) } }

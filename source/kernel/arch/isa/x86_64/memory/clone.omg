@@ -1,10 +1,5 @@
-module isa::x86_64::memory::clone;
-
-use isa::x86_64::memory::validation::geometry::X86BootstrapVirtualAddressCheck;
-use isa::x86_64::memory::validation::geometry::X86BootstrapVirtualAddressIndices;
-use isa::x86_64::memory::validation::geometry::x86_decompose_bootstrap_virtual_address;
-use isa::x86_64::memory::walk::X86TableEntryRoute;
-use isa::x86_64::memory::walk::X86TableWalk;
+use isa/x86_64/memory/validation/geometry.omg;
+use isa/x86_64/memory/walk.omg;
 
 // Numeric path-copying, not a grant or a hardware activation. The boot owner
 // supplies snapshots read through its retained firmware-table grants. Every
@@ -84,10 +79,10 @@ requires index < 512 && level >= 2 && level <= 4
 
 machine X86PageTableClone::child_available(parent: u64, level: u64,
                                          observed: &X86ObservedTablePage) -> bool {
-    transition X86TableWalk::classify(parent, level) {
-        X86TableEntryRoute::Invalid -> false
-        X86TableEntryRoute::End -> true
-        X86TableEntryRoute::Link { address } -> (observed.available && observed.address == address)
+    transition |walk|::X86TableWalk::classify(parent, level) {
+        |walk|::X86TableEntryRoute::Invalid -> false
+        |walk|::X86TableEntryRoute::End -> true
+        |walk|::X86TableEntryRoute::Link { address } -> (observed.available && observed.address == address)
     }
 }
 
@@ -150,8 +145,8 @@ public machine X86PageTableClone::prepare_range(source: &X86PagingPathSnapshot,
                    virtual_address: u64, pages: u64) -> X86PageTableCloneResult
     requires pages >= 1 && pages <= 512 && target <= 0x000FFFFFFFFFF000
     {
-        transition x86_decompose_bootstrap_virtual_address(virtual_address) {
-            X86BootstrapVirtualAddressCheck::Canonical { indices } -> capacity(source, new_root, target, virtual_address, pages, indices.pt_index)
+        transition |geometry|::x86_decompose_bootstrap_virtual_address(virtual_address) {
+            |geometry|::X86BootstrapVirtualAddressCheck::Canonical { indices } -> capacity(source, new_root, target, virtual_address, pages, indices.pt_index)
             _ -> X86PageTableCloneResult::Invalid
         }
     }
@@ -210,13 +205,13 @@ machine X86PageTableClone::clone_path(source: &X86PagingPathSnapshot,
         -> X86PageTableCloneResult
     requires new_root <= 0x000FFFFFFFFFC000
     {
-        transition x86_decompose_bootstrap_virtual_address(virtual_address) {
-            X86BootstrapVirtualAddressCheck::Canonical { indices } -> root(source, new_root, indices)
+        transition |geometry|::x86_decompose_bootstrap_virtual_address(virtual_address) {
+            |geometry|::X86BootstrapVirtualAddressCheck::Canonical { indices } -> root(source, new_root, indices)
             _ -> X86PageTableCloneResult::Invalid
         }
     }
     machine root(source: &X86PagingPathSnapshot, new_root: u64,
-               indices: X86BootstrapVirtualAddressIndices) -> X86PageTableCloneResult
+               indices: |geometry|::X86BootstrapVirtualAddressIndices) -> X86PageTableCloneResult
     requires new_root <= 0x000FFFFFFFFFC000
     {
         let parent: u64 = source.pml4.entries[indices.pml4_index];
@@ -226,7 +221,7 @@ machine X86PageTableClone::clone_path(source: &X86PagingPathSnapshot,
         }
     }
     machine directory_pointer(source: &X86PagingPathSnapshot, new_root: u64,
-                            indices: X86BootstrapVirtualAddressIndices, parent: u64)
+                            indices: |geometry|::X86BootstrapVirtualAddressIndices, parent: u64)
         -> X86PageTableCloneResult
     requires new_root <= 0x000FFFFFFFFFC000
     {
@@ -241,7 +236,7 @@ machine X86PageTableClone::clone_path(source: &X86PagingPathSnapshot,
         }
     }
     machine directory(source: &X86PagingPathSnapshot, new_root: u64,
-                    indices: X86BootstrapVirtualAddressIndices, tables: X86ClonedPageTables, parent: u64)
+                    indices: |geometry|::X86BootstrapVirtualAddressIndices, tables: X86ClonedPageTables, parent: u64)
         -> X86PageTableCloneResult
     requires new_root <= 0x000FFFFFFFFFC000
     {
@@ -255,7 +250,7 @@ machine X86PageTableClone::clone_path(source: &X86PagingPathSnapshot,
         }
     }
     machine leaves(source: &X86PagingPathSnapshot, new_root: u64,
-                 indices: X86BootstrapVirtualAddressIndices, tables: X86ClonedPageTables, parent: u64)
+                 indices: |geometry|::X86BootstrapVirtualAddressIndices, tables: X86ClonedPageTables, parent: u64)
         -> X86PageTableCloneResult
     requires new_root <= 0x000FFFFFFFFFC000
     {

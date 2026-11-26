@@ -1,75 +1,75 @@
-module services;
+use {runtime}/connection/main.omg as connection_main;
+use {runtime}/services/acquire.omg;
+use {runtime}/services/main.omg as services_main;
 // Resolve only the supplied broker's grants. Each received endpoint has exactly
 // one cleanup owner, including a refused second part and failed storage setup.
-use main::Context;
-use app::state::State;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::kernel;
-use runtime::time::Tick;
-use runtime::connection::call::CallReply;
-use runtime::services::endpoints::Part;
-use protocol::services::request;
-use exchange;
+use main.omg;
+use {app}/state.omg as app_state;
+use {runtime}/kernel.omg;
+use {runtime}/time.omg;
+use {runtime}/connection/call.omg;
+use {runtime}/services/endpoints.omg;
+use {protocol}/services.omg;
+use exchange.omg;
 
-public machine interaction(gate: &Gate, context: &mut Context, state: &State) -> u64 reaches Kernel blocks invokes Kernel {
-    let words: [u64; 8] = request(1u64, 1u64, 1u64, 0u64);
-    let reply: CallReply = block exchange::request(gate, context, state, false, &words, 0u64, 0u64);
+public machine interaction(gate: &|kernel|::Gate, context: &mut |main|::Context, state: &|app_state|::State) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
+    let words: [u64; 8] = |services|::request(1u64, 1u64, 1u64, 0u64);
+    let reply: |call|::CallReply = block |exchange|::request(gate, context, state, false, &words, 0u64, 0u64);
     transition reply {
-        CallReply::Received { frame, notification } -> block runtime::services::acquire::received(gate, &mut context.services, frame, notification)
-        CallReply::Object { frame, object } -> block invalid_object(gate, context, object)
-        CallReply::Endpoint { frame, endpoint } -> block invalid_endpoint(gate, context, endpoint)
-        CallReply::Failed { code } -> (code)
+        |call|::CallReply::Received { frame, notification } -> block |acquire|::received(gate, &mut context.services, frame, notification)
+        |call|::CallReply::Object { frame, object } -> block invalid_object(gate, context, object)
+        |call|::CallReply::Endpoint { frame, endpoint } -> block invalid_endpoint(gate, context, endpoint)
+        |call|::CallReply::Failed { code } -> (code)
     }
 }
-machine invalid_endpoint(gate: &Gate, context: &mut Context, endpoint: u64) -> u64 reaches Kernel {
-    let ignored: u64 = Kernel::close(gate, endpoint);
-    block runtime::services::main::close(gate, &mut context.services);
-    kernel::IO_ERROR
+machine invalid_endpoint(gate: &|kernel|::Gate, context: &mut |main|::Context, endpoint: u64) -> u64 reaches |kernel|::Kernel {
+    let ignored: u64 = |kernel|::Kernel::close(gate, endpoint);
+    block |services_main|::close(gate, &mut context.services);
+    |kernel|::IO_ERROR
 }
-public machine storage(gate: &Gate, context: &mut Context, state: &State) -> u64 reaches Kernel blocks invokes Kernel {
-    let first: Part = block part(gate, context, state, 0u64);
+public machine storage(gate: &|kernel|::Gate, context: &mut |main|::Context, state: &|app_state|::State) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
+    let first: |endpoints|::Part = block part(gate, context, state, 0u64);
     transition first {
-        Part::Granted { endpoint } -> block second(gate, context, state, endpoint)
-        Part::Refused { code } -> (code)
+        |endpoints|::Part::Granted { endpoint } -> block second(gate, context, state, endpoint)
+        |endpoints|::Part::Refused { code } -> (code)
     }
 }
-machine second(gate: &Gate, context: &mut Context, state: &State, sender: u64) -> u64 reaches Kernel {
-    let result: Part = block part(gate, context, state, 1u64);
+machine second(gate: &|kernel|::Gate, context: &mut |main|::Context, state: &|app_state|::State, sender: u64) -> u64 reaches |kernel|::Kernel {
+    let result: |endpoints|::Part = block part(gate, context, state, 1u64);
     transition result {
-        Part::Granted { endpoint } -> block connect(gate, context, sender, endpoint)
-        Part::Refused { code } -> partial(gate, sender, code)
+        |endpoints|::Part::Granted { endpoint } -> block connect(gate, context, sender, endpoint)
+        |endpoints|::Part::Refused { code } -> partial(gate, sender, code)
     }
 }
-machine partial(gate: &Gate, sender: u64, code: u64) -> u64 reaches Kernel {
-    let ignored: u64 = Kernel::close(gate, sender);
+machine partial(gate: &|kernel|::Gate, sender: u64, code: u64) -> u64 reaches |kernel|::Kernel {
+    let ignored: u64 = |kernel|::Kernel::close(gate, sender);
     code
 }
-machine connect(gate: &Gate, context: &mut Context, sender: u64, receiver: u64) -> u64 reaches Kernel {
-    let tick: Tick = runtime::time::read(gate, context.clock);
+machine connect(gate: &|kernel|::Gate, context: &mut |main|::Context, sender: u64, receiver: u64) -> u64 reaches |kernel|::Kernel {
+    let tick: |time|::Tick = |time|::read(gate, context.clock);
     transition tick {
-        Tick::Read { value } -> block runtime::connection::main::connect(gate, &mut context.storage.peer, sender, receiver, runtime::time::after(value, 300u64))
-        Tick::Failed { code } -> failed_clock(gate, sender, receiver, code)
+        |time|::Tick::Read { value } -> block |connection_main|::connect(gate, &mut context.storage.peer, sender, receiver, |time|::after(value, 300u64))
+        |time|::Tick::Failed { code } -> failed_clock(gate, sender, receiver, code)
     }
 }
-machine failed_clock(gate: &Gate, sender: u64, receiver: u64, code: u64) -> u64 reaches Kernel {
-    let a: u64 = Kernel::close(gate, sender);
-    let b: u64 = Kernel::close(gate, receiver);
+machine failed_clock(gate: &|kernel|::Gate, sender: u64, receiver: u64, code: u64) -> u64 reaches |kernel|::Kernel {
+    let a: u64 = |kernel|::Kernel::close(gate, sender);
+    let b: u64 = |kernel|::Kernel::close(gate, receiver);
     code
 }
-machine part(gate: &Gate, context: &mut Context, state: &State, part: u64) -> Part reaches Kernel {
-    let words: [u64; 8] = request(2u64, 1u64, 1u64, part);
-    let reply: CallReply = block exchange::request(gate, context, state, false, &words, 0u64, 0u64);
+machine part(gate: &|kernel|::Gate, context: &mut |main|::Context, state: &|app_state|::State, part: u64) -> |endpoints|::Part reaches |kernel|::Kernel {
+    let words: [u64; 8] = |services|::request(2u64, 1u64, 1u64, part);
+    let reply: |call|::CallReply = block |exchange|::request(gate, context, state, false, &words, 0u64, 0u64);
     transition reply {
-        CallReply::Object { frame, object } -> block runtime::services::endpoints::invalid_object(gate, &mut context.services, object)
-        CallReply::Endpoint { frame, endpoint } -> block runtime::services::endpoints::endpoint_reply(gate, &mut context.services, frame, endpoint)
-        CallReply::Received { frame, notification } -> block runtime::services::endpoints::plain_reply(gate, &mut context.services, frame, notification)
-        CallReply::Failed { code } -> (Part::Refused { code: code })
+        |call|::CallReply::Object { frame, object } -> block |endpoints|::invalid_object(gate, &mut context.services, object)
+        |call|::CallReply::Endpoint { frame, endpoint } -> block |endpoints|::endpoint_reply(gate, &mut context.services, frame, endpoint)
+        |call|::CallReply::Received { frame, notification } -> block |endpoints|::plain_reply(gate, &mut context.services, frame, notification)
+        |call|::CallReply::Failed { code } -> (|endpoints|::Part::Refused { code: code })
     }
 }
 
-machine invalid_object(gate: &Gate, context: &mut Context, object: u64) -> u64 reaches Kernel {
-    let ignored: u64 = block Kernel::memory_release(gate, object);
-    block runtime::services::main::close(gate, &mut context.services);
-    kernel::IO_ERROR
+machine invalid_object(gate: &|kernel|::Gate, context: &mut |main|::Context, object: u64) -> u64 reaches |kernel|::Kernel {
+    let ignored: u64 = block |kernel|::Kernel::memory_release(gate, object);
+    block |services_main|::close(gate, &mut context.services);
+    |kernel|::IO_ERROR
 }

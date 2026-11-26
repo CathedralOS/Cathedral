@@ -250,7 +250,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/x86_64/translation.omg",
-          "anchor": "module translation;"
+          "anchor": "pub data Translation"
         }
       ]
     },
@@ -510,7 +510,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/x86_64/translation.omg",
-          "anchor": "module translation;"
+          "anchor": "pub data Translation"
         }
       ]
     },
@@ -1350,7 +1350,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/x86_64/page_tables.omg",
-          "anchor": "module page_tables;"
+          "anchor": "pub const ENTRY_COUNT"
         }
       ]
     }

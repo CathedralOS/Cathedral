@@ -1,5 +1,3 @@
-module isa::x86_64::interrupts::interrupts;
-
 // Cathedral's first x86-64 vector-to-stack policy. This composes pure
 // architecture facts into kernel policy; it still grants no entry identity,
 // stack storage, root admission, table publication, or machine control.
@@ -8,10 +6,10 @@ module isa::x86_64::interrupts::interrupts;
 // side from selecting one analysis class while IDT/TSS materialization writes
 // a different IST index.
 
-use facts::x86_exception_vectors;
-use facts::x86_idt_gate;
-use facts::x86_interrupt_stacks;
-use std::calling;
+use {facts}/x86_exception_vectors.omg;
+use {facts}/x86_idt_gate.omg;
+use {facts}/x86_interrupt_stacks.omg;
+use {std}/calling.omg;
 
 // The complete pre-timer exception floor is deliberately fatal. Later
 // recovery policy may replace individual entries only through a fresh root
@@ -30,9 +28,9 @@ public data X86BootstrapExceptionDisposition {
 public data X86BootstrapExceptionEntryPolicy
 requires self.vector <= 31 && self.ist_index <= 7 {
     vector: u8;
-    stack: EntryStack;
+    stack: |calling|::EntryStack;
     ist_index: u8;
-    delivery: X86ExceptionDeliveryShape;
+    delivery: |x86_exception_vectors|::X86ExceptionDeliveryShape;
     disposition: X86BootstrapExceptionDisposition;
 }
 
@@ -43,8 +41,8 @@ requires self.vector <= 31 && self.ist_index <= 7 {
 public data X86BootstrapExceptionGateCandidate
 requires 0 <= self.vector && self.vector <= 31 {
     vector: u8;
-    gate: X86IdtGate;
-    delivery: X86ExceptionDeliveryShape;
+    gate: |x86_idt_gate|::X86IdtGate;
+    delivery: |x86_exception_vectors|::X86ExceptionDeliveryShape;
     disposition: X86BootstrapExceptionDisposition;
 }
 
@@ -79,37 +77,37 @@ public machine x86_bootstrap_exception_entry_policy(
     vector: u8
 ) -> X86BootstrapExceptionEntryPolicy
 requires 0 <= vector && vector <= 31 {
-    transition vector == X86_EXCEPTION_NON_MASKABLE_INTERRUPT {
-        true -> dedicated(vector, X86_NMI_STACK)
+    transition vector == |x86_exception_vectors|::X86_EXCEPTION_NON_MASKABLE_INTERRUPT {
+        true -> dedicated(vector, |x86_interrupt_stacks|::X86_NMI_STACK)
         _ -> double_fault(vector)
     }
 
     machine double_fault(vector: u8) -> X86BootstrapExceptionEntryPolicy
     requires 0 <= vector && vector <= 31 {
-        transition vector == X86_EXCEPTION_DOUBLE_FAULT {
-            true -> dedicated(vector, X86_DOUBLE_FAULT_STACK)
+        transition vector == |x86_exception_vectors|::X86_EXCEPTION_DOUBLE_FAULT {
+            true -> dedicated(vector, |x86_interrupt_stacks|::X86_DOUBLE_FAULT_STACK)
             _ -> machine_check(vector)
         }
     }
 
     machine machine_check(vector: u8) -> X86BootstrapExceptionEntryPolicy
     requires 0 <= vector && vector <= 31 {
-        transition vector == X86_EXCEPTION_MACHINE_CHECK {
-            true -> dedicated(vector, X86_MACHINE_CHECK_STACK)
+        transition vector == |x86_exception_vectors|::X86_EXCEPTION_MACHINE_CHECK {
+            true -> dedicated(vector, |x86_interrupt_stacks|::X86_MACHINE_CHECK_STACK)
             _ -> current_stack(vector)
         }
     }
 
     machine dedicated(
         vector: u8,
-        selected: X86IstStackClass
+        selected: |x86_interrupt_stacks|::X86IstStackClass
     ) -> X86BootstrapExceptionEntryPolicy
     requires 0 <= vector && vector <= 31 {
         X86BootstrapExceptionEntryPolicy {
             vector: vector,
-            stack: EntryStack::Dedicated { class: selected.stack_class },
+            stack: |calling|::EntryStack::Dedicated { class: selected.stack_class },
             ist_index: selected.ist_index,
-            delivery: x86_exception_delivery_shape(vector),
+            delivery: |x86_exception_vectors|::x86_exception_delivery_shape(vector),
             disposition: X86BootstrapExceptionDisposition::FatalDiagnostic,
         }
     }
@@ -118,9 +116,9 @@ requires 0 <= vector && vector <= 31 {
     requires 0 <= vector && vector <= 31 {
         X86BootstrapExceptionEntryPolicy {
             vector: vector,
-            stack: EntryStack::Interrupted,
+            stack: |calling|::EntryStack::Interrupted,
             ist_index: 0,
-            delivery: x86_exception_delivery_shape(vector),
+            delivery: |x86_exception_vectors|::x86_exception_delivery_shape(vector),
             disposition: X86BootstrapExceptionDisposition::FatalDiagnostic,
         }
     }
@@ -178,7 +176,7 @@ requires 0 <= expected_vector && expected_vector <= 31 {
     machine check_attributes(
         candidate: X86BootstrapExceptionGateCandidate
     ) -> X86BootstrapExceptionGatePolicyCheck {
-        transition candidate.gate.type_attributes == PRESENT_RING0_INTERRUPT_GATE {
+        transition candidate.gate.type_attributes == |x86_idt_gate|::PRESENT_RING0_INTERRUPT_GATE {
             true -> check_reserved(candidate)
             _ -> reject()
         }
@@ -187,7 +185,7 @@ requires 0 <= expected_vector && expected_vector <= 31 {
     machine check_reserved(
         candidate: X86BootstrapExceptionGateCandidate
     ) -> X86BootstrapExceptionGatePolicyCheck {
-        transition candidate.gate.reserved == RESERVED_ZERO {
+        transition candidate.gate.reserved == |x86_idt_gate|::RESERVED_ZERO {
             true -> accept(candidate)
             _ -> reject()
         }
@@ -238,8 +236,8 @@ terminates by remaining
         entry.gate.ist == policy.ist_index &&
         entry.disposition == policy.disposition &&
         entry.delivery == policy.delivery &&
-        entry.gate.type_attributes == PRESENT_RING0_INTERRUPT_GATE &&
-        entry.gate.reserved == RESERVED_ZERO;
+        entry.gate.type_attributes == |x86_idt_gate|::PRESENT_RING0_INTERRUPT_GATE &&
+        entry.gate.reserved == |x86_idt_gate|::RESERVED_ZERO;
     transition remaining > 1 {
         true -> x86_scan_bootstrap_exception_table_policy(
             candidate,
@@ -275,10 +273,10 @@ terminates by remaining
 // is a StackLease. WCSU and the selected target must still derive the actual
 // nonmoving storage provision for each coupled class/index.
 public data X86BootstrapStackClassSet {
-    double_fault: X86IstStackClass;
-    nmi: X86IstStackClass;
-    machine_check: X86IstStackClass;
-    maskable_irq: X86IstStackClass;
+    double_fault: |x86_interrupt_stacks|::X86IstStackClass;
+    nmi: |x86_interrupt_stacks|::X86IstStackClass;
+    machine_check: |x86_interrupt_stacks|::X86IstStackClass;
+    maskable_irq: |x86_interrupt_stacks|::X86IstStackClass;
 }
 
 public data X86BootstrapStackClassSetPolicyCheck {
@@ -291,10 +289,10 @@ public data X86BootstrapStackClassSetPolicyCheck {
 // pairing analysis classes with hardware IST indices.
 public machine x86_bootstrap_stack_class_set() -> X86BootstrapStackClassSet {
     X86BootstrapStackClassSet {
-        double_fault: X86_DOUBLE_FAULT_STACK,
-        nmi: X86_NMI_STACK,
-        machine_check: X86_MACHINE_CHECK_STACK,
-        maskable_irq: X86_MASKABLE_IRQ_STACK,
+        double_fault: |x86_interrupt_stacks|::X86_DOUBLE_FAULT_STACK,
+        nmi: |x86_interrupt_stacks|::X86_NMI_STACK,
+        machine_check: |x86_interrupt_stacks|::X86_MACHINE_CHECK_STACK,
+        maskable_irq: |x86_interrupt_stacks|::X86_MASKABLE_IRQ_STACK,
     }
 }
 
@@ -333,26 +331,26 @@ public machine x86_validate_bootstrap_stack_class_set(
 
 public data X86EntryStackAssignment {
     vector: u8;
-    stack: X86IstStackClass;
+    stack: |x86_interrupt_stacks|::X86IstStackClass;
 }
 
 public machine x86_double_fault_entry_stack() -> X86EntryStackAssignment {
     X86EntryStackAssignment {
-        vector: X86_EXCEPTION_DOUBLE_FAULT,
-        stack: X86_DOUBLE_FAULT_STACK,
+        vector: |x86_exception_vectors|::X86_EXCEPTION_DOUBLE_FAULT,
+        stack: |x86_interrupt_stacks|::X86_DOUBLE_FAULT_STACK,
     }
 }
 
 public machine x86_nmi_entry_stack() -> X86EntryStackAssignment {
     X86EntryStackAssignment {
-        vector: X86_EXCEPTION_NON_MASKABLE_INTERRUPT,
-        stack: X86_NMI_STACK,
+        vector: |x86_exception_vectors|::X86_EXCEPTION_NON_MASKABLE_INTERRUPT,
+        stack: |x86_interrupt_stacks|::X86_NMI_STACK,
     }
 }
 
 public machine x86_machine_check_entry_stack() -> X86EntryStackAssignment {
     X86EntryStackAssignment {
-        vector: X86_EXCEPTION_MACHINE_CHECK,
-        stack: X86_MACHINE_CHECK_STACK,
+        vector: |x86_exception_vectors|::X86_EXCEPTION_MACHINE_CHECK,
+        stack: |x86_interrupt_stacks|::X86_MACHINE_CHECK_STACK,
     }
 }

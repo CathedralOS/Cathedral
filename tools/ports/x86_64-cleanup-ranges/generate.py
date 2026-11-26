@@ -57,12 +57,12 @@ for name,first,last,entries,budget in scenarios:
 def write(path,text):
  if '--check'in sys.argv:assert path.read_text()==text,('stale',path)
  else:path.write_text(text)
-prefix='// SPDX-License-Identifier: MIT OR Apache-2.0\nuse x86::cleanup_ranges;\nuse x86::cleanup_ranges::Cursor;\nuse x86::cleanup_ranges::RangeStep;\nuse x86::cleanup_ranges::RangeStatus;\nuse x86::cleanup_branch::CleanupOutcome;\n'
+prefix='// SPDX-License-Identifier: MIT OR Apache-2.0\nuse {x86}/cleanup_ranges.omg;\nuse {x86}/cleanup_branch.omg;\n'
 blocks=[]
 for i,r in enumerate(rows):
  booleans=[str(x).lower()for x in r['others']]
- body=f'let words:[u64;4]={arr(r["words"])};let ids:[u64;4]={arr(r["ids"])};let others:[bool;4]={arr(booleans)};let cursor:Cursor=cleanup_ranges::begin({r["page"]},{r["last"]},{r["budget"]});let value:RangeStep=cleanup_ranges::step(cursor,&words,&ids,&others);'
- c=['value.has_plan','value.branch.outcome in CleanupOutcome::Ready',f'value.cursor.status in RangeStatus::{r["status"]}',f'value.cursor.next_page=={r["next"]}',f'value.cursor.last_page=={r["last"]}',f'value.cursor.budget=={r["remaining"]}',f'value.branch.retire_count=={len(r["retired"])}',f'value.branch.write_mask=={r["write"]}',f'value.branch.visited=={r["visited"]}']
+ body=f'let words:[u64;4]={arr(r["words"])};let ids:[u64;4]={arr(r["ids"])};let others:[bool;4]={arr(booleans)};let cursor:|cleanup_ranges|::Cursor=|cleanup_ranges|::begin({r["page"]},{r["last"]},{r["budget"]});let value:|cleanup_ranges|::RangeStep=|cleanup_ranges|::step(cursor,&words,&ids,&others);'
+ c=['value.has_plan','value.branch.outcome in |cleanup_branch|::CleanupOutcome::Ready',f'value.cursor.status in |cleanup_ranges|::RangeStatus::{r["status"]}',f'value.cursor.next_page=={r["next"]}',f'value.cursor.last_page=={r["last"]}',f'value.cursor.budget=={r["remaining"]}',f'value.branch.retire_count=={len(r["retired"])}',f'value.branch.write_mask=={r["write"]}',f'value.branch.visited=={r["visited"]}']
  c += [f'value.branch.words[{j}]=={w}'for j,w in enumerate(r['out'])]
  c += [f'value.branch.frames_to_retire[{j}]=={f}'for j,f in enumerate(r['retired']+[0]*(3-len(r['retired'])))]
  body+='transition '+' && '.join(c)+' { true -> (0) _ -> (1) }'

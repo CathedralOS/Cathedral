@@ -1,8 +1,7 @@
-module management;
 // Owner-delegated management of one sibling slot. A query mints a local ticket
 // for the exact task; revocation, regrant and task replacement invalidate it.
 // The program authenticates the manager's connection; the slot is owner policy.
-use protocol::main;
+use {protocol}/main.omg;
 
 public data Delegation [copy] {
     live: bool;
@@ -25,7 +24,7 @@ public data Target [copy] {
 public machine grant(managers: &mut Management, manager: u64, incarnation: u64, target: u64, slots: u64) -> u64 {
     transition manager < slots && target < slots && manager < 5u64 && target < 5u64 && manager != target && incarnation != 0u64 {
         true -> granted(managers, manager, incarnation, target)
-        _ -> (DENIED)
+        _ -> (|main|::DENIED)
     }
     machine granted(managers: &mut Management, manager: u64, incarnation: u64, target: u64) -> u64 requires manager < 5u64 && target < 5u64 {
         let mut delegation: Delegation;
@@ -79,12 +78,12 @@ machine forget_target(managers: &mut Management, slot: u64, index: u64) requires
 public machine target(managers: &Management, manager: u64, incarnation: u64) -> Target {
     transition manager < 5u64 {
         true -> checked(managers, manager, incarnation)
-        _ -> (Target::Refused { code: DENIED })
+        _ -> (Target::Refused { code: |main|::DENIED })
     }
     machine checked(managers: &Management, manager: u64, incarnation: u64) -> Target requires manager < 5u64 {
         transition managers.grants[manager].live && managers.grants[manager].incarnation == incarnation {
             true -> (Target::Slot { index: managers.grants[manager].target })
-            _ -> (Target::Refused { code: DENIED })
+            _ -> (Target::Refused { code: |main|::DENIED })
         }
     }
 }
@@ -93,7 +92,7 @@ public machine target(managers: &Management, manager: u64, incarnation: u64) -> 
 public machine query(managers: &mut Management, manager: u64, incarnation: u64, has_task: bool, task: u64) -> [u64; 8] {
     transition manager < 5u64 && managers.grants[manager].live && managers.grants[manager].incarnation == incarnation {
         true -> granted(managers, manager, has_task, task)
-        _ -> (error(DENIED))
+        _ -> (error(|main|::DENIED))
     }
     machine granted(managers: &mut Management, manager: u64, has_task: bool, task: u64) -> [u64; 8] requires manager < 5u64 {
         let serial: u64 = managers.next[manager];
@@ -101,7 +100,7 @@ public machine query(managers: &mut Management, manager: u64, incarnation: u64, 
             !has_task -> cleared(managers, manager)
             managers.grants[manager].observed && managers.grants[manager].task == task -> (ticketed(managers.grants[manager].ticket))
             serial < 0xffffffffffffffffu64 -> minted(managers, manager, task, serial + 1u64)
-            _ -> (error(NO_MEMORY))
+            _ -> (error(|main|::NO_MEMORY))
         }
     }
     machine cleared(managers: &mut Management, manager: u64) -> [u64; 8] requires manager < 5u64 {
@@ -122,7 +121,7 @@ public machine authorize(managers: &Management, manager: u64, incarnation: u64, 
         && managers.grants[manager].observed && managers.grants[manager].ticket == ticket && has_current
         && managers.grants[manager].task == current {
         true -> (slot_of(managers, manager))
-        _ -> (Target::Refused { code: DENIED })
+        _ -> (Target::Refused { code: |main|::DENIED })
     }
 }
 machine slot_of(managers: &Management, manager: u64) -> Target requires manager < 5u64 {

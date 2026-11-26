@@ -79,18 +79,18 @@ def has_granted_extent_parameter:
     $typed
     | ..
     | objects
-    | select(.name? == "Main::own_machine")
+    | select(.name? == "own_machine")
   ] as $machines
 | [
     $contracts
     | ..
     | objects
-    | select(.machine? == "Main::own_machine")
+    | select(.machine? == "own_machine")
   ] as $machine_contracts
 | require(($machines | length) == 1;
-    "expected exactly one typed Main::own_machine machine")
+    "expected exactly one typed own_machine machine")
 | require(($machine_contracts | length) == 1;
-    "expected exactly one Main::own_machine contract")
+    "expected exactly one own_machine contract")
 | first(
     $typed
     | ..
@@ -1436,7 +1436,7 @@ def has_granted_extent_parameter:
     "post-grant serial/report graph no longer carries exactly one qualified extent")
 | [
     $qualification.qualification_evidence[]
-    | select(.subject == "Main::own_machine::own::first_extent")
+    | select(.subject == "own_machine::own::first_extent")
   ] as $local_grants
 | require(($local_grants | length) == 1 and
           $local_grants[0].domain == "Extent::Granted" and
@@ -1447,10 +1447,10 @@ def has_granted_extent_parameter:
     "owned-machine first extent lost its admitted provider receipt")
 | [
     $qualification.qualification_evidence[]
-    | select(.origin == "propagated" and (.subject | startswith("Main::own_machine::")))
+    | select(.origin == "propagated" and (.subject | startswith("own_machine::")))
     | .source
   ] as $propagated_sources
-| [$expected_qualified_states[] | "Main::own_machine::" + .] as $expected_sources
+| [$expected_qualified_states[] | "own_machine::" + .] as $expected_sources
 | require($propagated_sources == $expected_sources;
     "qualification evidence no longer follows the complete post-grant graph")
 | require($machine_contract.contract.service_reach == {

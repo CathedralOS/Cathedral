@@ -1,6 +1,4 @@
-module isa::x86_64::interrupts::segments;
-
-use omega::language::core::assembly;
+use {omega}/language/core/assembly.omg;
 
 // Cathedral needs a resident segment table before it can install the task
 // state and interrupt stacks. This first operation checks the descriptor load
@@ -18,14 +16,14 @@ data BootstrapSegments {}
 public boundary trait SegmentTablePreparation {
     machine check_descriptor_load() -> bool
     requires address::Bound == 18446744073709551616
-    reaches MachineControl
+    reaches |assembly|::MachineControl
     crashes Abort;
 }
 
 public BootstrapSegmentPreparation satisfies SegmentTablePreparation {
     machine check_descriptor_load() -> bool
     requires address::Bound == 18446744073709551616
-    reaches MachineControl
+    reaches |assembly|::MachineControl
     crashes Abort
     { BootstrapSegments::check_descriptor_load() }
 }
@@ -47,7 +45,7 @@ data DescriptorBuffer {
 
 machine BootstrapSegments::check_descriptor_load() -> bool
 requires address::Bound == 18446744073709551616
-reaches MachineControl
+reaches |assembly|::MachineControl
 crashes Abort
 {
     let table: SegmentTable = SegmentTable {
@@ -62,7 +60,7 @@ crashes Abort
 // restoration. Exposing its address alone would not retain that loan.
 machine BootstrapSegments::exercise(table: &SegmentTable) -> bool
 requires address::Bound == 18446744073709551616
-reaches MachineControl
+reaches |assembly|::MachineControl
 crashes Abort
 {
     let base: u64 = address_of(&table.entries[0]) as u64;
@@ -89,7 +87,7 @@ crashes Abort
     machine checked(table: &SegmentTable, desired: &[u8; 10],
                     previous: &DescriptorBuffer, observed: &DescriptorBuffer,
                     restored: &DescriptorBuffer, saved_flags: u64) -> bool
-    reaches MachineControl
+    reaches |assembly|::MachineControl
     {
         let correct: bool = same_descriptor(desired, &observed.bytes)
             && intact(previous) && intact(observed) && intact(restored)

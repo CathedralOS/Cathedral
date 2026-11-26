@@ -12,40 +12,38 @@ def observed():
    values=obj[key];obj[key]={'length':len(values),'nonzero':{str(i):v for i,v in enumerate(values) if v}}
  return rows
 PREFIX='''// SPDX-License-Identifier: MIT OR Apache-2.0
-use x86::gdt_storage;
-use x86::gdt_storage::Table;
-use x86::gdt_storage::AppendResult;
-use x86::addresses::NumberResult;
-use facts::x86_descriptors::Descriptor;
-machine added(value: AppendResult, expected: u16) -> bool {
- transition value { AppendResult::Added { selector } -> (selector.raw == expected) _ -> (false) }
+use {x86}/gdt_storage.omg;
+use {x86}/addresses.omg;
+use {facts}/x86_descriptors.omg;
+machine added(value: |gdt_storage|::AppendResult, expected: u16) -> bool {
+ transition value { |gdt_storage|::AppendResult::Added { selector } -> (selector.raw == expected) _ -> (false) }
 }
-machine number(value: NumberResult, expected: u64) -> bool {
- transition value { NumberResult::Value { value } -> (value == expected) _ -> (false) }
+machine number(value: |addresses|::NumberResult, expected: u64) -> bool {
+ transition value { |addresses|::NumberResult::Value { value } -> (value == expected) _ -> (false) }
 }
 '''
 def fixture(row):
- lines=[PREFIX,'machine scenario() -> i32 {',' let mut table: Table;',' table.words[8191] = 16045690984833335023;']
+ lines=[PREFIX,'machine scenario() -> i32 {',' let mut table: |gdt_storage|::Table;',' table.words[8191] = 16045690984833335023;']
  initial=row['initial'];cap=row['capacity']
  if initial['length']:
   lines+=[' let mut input: [u64; 8192];']
   lines += [f' input[{i}] = {v};' for i,v in initial['nonzero'].items()]
-  lines+=[f" let initialized: bool = gdt_storage::import_words(&mut table, &input, {initial['length']}, {cap});"]
- else:lines+=[f' let initialized: bool = gdt_storage::initialize(&mut table, {cap});']
+  lines+=[f" let initialized: bool = |gdt_storage|::import_words(&mut table, &input, {initial['length']}, {cap});"]
+ else:lines+=[f' let initialized: bool = |gdt_storage|::initialize(&mut table, {cap});']
  checks=['initialized',f'table.capacity == {cap}']
  for n,action in enumerate(row['actions']):
-  low,hi=action['low'],action['high'];desc=f'Descriptor::UserSegment {{ low: {low} }}' if hi is None else f'Descriptor::SystemSegment {{ low: {low}, high: {hi} }}'
-  lines += [f' let result{n}: AppendResult = gdt_storage::append(&mut table, {desc});']
-  if action['selector']<0:lines += [f' let pass{n}: bool = result{n} in AppendResult::Full;']
+  low,hi=action['low'],action['high'];desc=f'|x86_descriptors|::Descriptor::UserSegment {{ low: {low} }}' if hi is None else f'|x86_descriptors|::Descriptor::SystemSegment {{ low: {low}, high: {hi} }}'
+  lines += [f' let result{n}: |gdt_storage|::AppendResult = |gdt_storage|::append(&mut table, {desc});']
+  if action['selector']<0:lines += [f' let pass{n}: bool = result{n} in |gdt_storage|::AppendResult::Full;']
   else:lines += [f" let pass{n}: bool = added(result{n}, {action['selector']});"]
   words=action['words'];length=words['length'];indices=set(range(min(length,9)))|{0,8191,length-1}
   if length<8192:indices.add(length)
   indices |= {int(i) for i in words['nonzero']}
   match=' && '.join(f"table.words[{i}] == {words['nonzero'].get(str(i),0)}" for i in sorted(indices))
-  lines += [f' let content{n}: bool = table.length == {length} && {match};',f' let limit{n}: NumberResult = gdt_storage::limit(&table);',f" let bound{n}: bool = number(limit{n}, {action['limit']});"]
+  lines += [f' let content{n}: bool = table.length == {length} && {match};',f' let limit{n}: |addresses|::NumberResult = |gdt_storage|::limit(&table);',f" let bound{n}: bool = number(limit{n}, {action['limit']});"]
   checks += [f'pass{n}',f'content{n}',f'bound{n}']
- lines += [f" let last: NumberResult = gdt_storage::entry(&table, {row['length']-1});",f" let projection: bool = number(last, {row['words']['nonzero'].get(str(row['length']-1),0)});",f" let outside: NumberResult = gdt_storage::entry(&table, {row['length']});"]
- checks+=['projection','outside in NumberResult::Rejected']
+ lines += [f" let last: |addresses|::NumberResult = |gdt_storage|::entry(&table, {row['length']-1});",f" let projection: bool = number(last, {row['words']['nonzero'].get(str(row['length']-1),0)});",f" let outside: |addresses|::NumberResult = |gdt_storage|::entry(&table, {row['length']});"]
+ checks+=['projection','outside in |addresses|::NumberResult::Rejected']
  lines+=[' transition '+' && '.join(checks)+' { true -> (0) _ -> (1) }','}','const RESULT: i32 = scenario();','machine require_success(value: i32) requires value == 0; {}','data Main {}','machine Main::main(&mut self) { require_success(RESULT); }']
  return '\n'.join(lines)+'\n'
 def main():

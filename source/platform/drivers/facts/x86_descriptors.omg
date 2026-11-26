@@ -2,7 +2,6 @@
 // Modified fixed x86_64 descriptor facts at cc35c876d3badb57df54a66e22f7768a52be95f2.
 // See x86_descriptors.PORT.md. Addresses are numeric and convey no backing.
 // Copyright 2017 Philipp Oppermann. See the README.md (upstream idt.rs).
-module x86_descriptors;
 
 public data DescriptorTablePointer [copy] { limit: u16; base: u64; }
 public data TaskStateSegment [copy] { reserved_1: u32; privilege_stack_table: [u64; 3]; reserved_2: u64; interrupt_stack_table: [u64; 7]; reserved_3: u64; reserved_4: u16; iomap_base: u16; }

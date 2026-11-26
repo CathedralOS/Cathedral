@@ -1,5 +1,5 @@
-use acpi::headers;
-use acpi::bytes;
-use acpi::parser;
+use {acpi}/headers.omg;
+use {acpi}/bytes.omg;
+use {acpi}/parser.omg;
 data Main {}
 machine Main::main(&mut self) {}

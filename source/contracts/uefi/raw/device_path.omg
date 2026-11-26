@@ -3,8 +3,7 @@
 // See console.PORT.md; reproduced by tools/ports/uefi-console/generate.py.
 // Inert x86-64 representation corpus. No pointer dereference or callable authority.
 // Layout vectors describe required foreign geometry, not default Omega layout.
-module device_path;
-use scalars;
+use scalars.omg;
 
 // Upstream: uefi_raw::protocol::device_path::DevicePathProtocol
 pub data DevicePathProtocol [copy] {
@@ -99,7 +98,7 @@ pub data HardwareMemoryMapped [copy] {
 // Required packed placement: alignment 1; no implicit inter-field padding.
 pub data HardwareVendor [copy] {
     header: DevicePathProtocol;
-    vendor_guid: scalars::Guid;
+    vendor_guid: |scalars|::Guid;
     // PORT-BLOCKED[omega:runtime-layout-strides]: typed trailing vendor_defined_data ([u8; 0usize]) needs runtime extent/stride contract.
 }
 
@@ -319,7 +318,7 @@ pub data MessagingUart [copy] {
 // Required packed placement: alignment 1; no implicit inter-field padding.
 pub data MessagingVendor [copy] {
     header: DevicePathProtocol;
-    vendor_guid: scalars::Guid;
+    vendor_guid: |scalars|::Guid;
     // PORT-BLOCKED[omega:runtime-layout-strides]: typed trailing vendor_defined_data ([u8; 0usize]) needs runtime extent/stride contract.
 }
 
@@ -526,7 +525,7 @@ pub data MediaCdRom [copy] {
 // Required packed placement: alignment 1; no implicit inter-field padding.
 pub data MediaVendor [copy] {
     header: DevicePathProtocol;
-    vendor_guid: scalars::Guid;
+    vendor_guid: |scalars|::Guid;
     // PORT-BLOCKED[omega:runtime-layout-strides]: typed trailing vendor_defined_data ([u8; 0usize]) needs runtime extent/stride contract.
 }
 
@@ -541,7 +540,7 @@ pub data MediaFilePath [copy] {
 // Required packed placement: alignment 1; no implicit inter-field padding.
 pub data MediaProtocol [copy] {
     header: DevicePathProtocol;
-    protocol_guid: scalars::Guid;
+    protocol_guid: |scalars|::Guid;
 }
 
 // Upstream: uefi_raw::protocol::device_path::media::PiwgFirmwareFile
@@ -584,7 +583,7 @@ pub data MediaPartitionFormat [copy] {
 
 // Upstream: uefi_raw::protocol::device_path::media::RamDiskType
 pub data MediaRamDiskType [copy] {
-    raw: scalars::Guid;
+    raw: |scalars|::Guid;
 }
 
 // Upstream: uefi_raw::protocol::device_path::bios_boot_spec::BootSpecification
@@ -602,7 +601,7 @@ pub const DEVICE_TYPE_MESSAGING: DeviceType = DeviceType { raw: 3 };
 pub const DEVICE_TYPE_MEDIA: DeviceType = DeviceType { raw: 4 };
 pub const DEVICE_TYPE_BIOS_BOOT_SPEC: DeviceType = DeviceType { raw: 5 };
 pub const DEVICE_TYPE_END: DeviceType = DeviceType { raw: 127 };
-pub const DEVICE_PATH_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x09576e91, data2: 0x6d3f, data3: 0x11d2, data4: [0x8e, 0x39, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
+pub const DEVICE_PATH_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x09576e91, data2: 0x6d3f, data3: 0x11d2, data4: [0x8e, 0x39, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
 pub const DEVICE_SUB_TYPE_HARDWARE_PCI: DeviceSubType = DeviceSubType { raw: 1 };
 pub const DEVICE_SUB_TYPE_HARDWARE_PCCARD: DeviceSubType = DeviceSubType { raw: 2 };
 pub const DEVICE_SUB_TYPE_HARDWARE_MEMORY_MAPPED: DeviceSubType = DeviceSubType { raw: 3 };
@@ -657,9 +656,9 @@ pub const DEVICE_SUB_TYPE_MEDIA_RAM_DISK: DeviceSubType = DeviceSubType { raw: 9
 pub const DEVICE_SUB_TYPE_BIOS_BOOT_SPECIFICATION: DeviceSubType = DeviceSubType { raw: 1 };
 pub const DEVICE_SUB_TYPE_END_INSTANCE: DeviceSubType = DeviceSubType { raw: 1 };
 pub const DEVICE_SUB_TYPE_END_ENTIRE: DeviceSubType = DeviceSubType { raw: 255 };
-pub const DEVICE_PATH_TO_TEXT_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x8b843e20, data2: 0x8132, data3: 0x4852, data4: [0x90, 0xcc, 0x55, 0x1a, 0x4e, 0x4a, 0x7f, 0x1c] };
-pub const DEVICE_PATH_FROM_TEXT_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x05c99a21, data2: 0xc70f, data3: 0x4ad2, data4: [0x8a, 0x5f, 0x35, 0xdf, 0x33, 0x43, 0xf5, 0x1e] };
-pub const DEVICE_PATH_UTILITIES_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x0379be4e, data2: 0xd706, data3: 0x437d, data4: [0xb0, 0x37, 0xed, 0xb8, 0x2f, 0xb7, 0x72, 0xa4] };
+pub const DEVICE_PATH_TO_TEXT_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x8b843e20, data2: 0x8132, data3: 0x4852, data4: [0x90, 0xcc, 0x55, 0x1a, 0x4e, 0x4a, 0x7f, 0x1c] };
+pub const DEVICE_PATH_FROM_TEXT_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x05c99a21, data2: 0xc70f, data3: 0x4ad2, data4: [0x8a, 0x5f, 0x35, 0xdf, 0x33, 0x43, 0xf5, 0x1e] };
+pub const DEVICE_PATH_UTILITIES_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x0379be4e, data2: 0xd706, data3: 0x437d, data4: [0xb0, 0x37, 0xed, 0xb8, 0x2f, 0xb7, 0x72, 0xa4] };
 pub const HARDWARE_BMC_INTERFACE_TYPE_UNKNOWN: HardwareBmcInterfaceType = HardwareBmcInterfaceType { raw: 0 };
 pub const HARDWARE_BMC_INTERFACE_TYPE_KEYBOARD_CONTROLLER_STYLE: HardwareBmcInterfaceType = HardwareBmcInterfaceType { raw: 1 };
 pub const HARDWARE_BMC_INTERFACE_TYPE_SERVER_MANAGEMENT_INTERFACE_CHIP: HardwareBmcInterfaceType = HardwareBmcInterfaceType { raw: 2 };
@@ -704,7 +703,7 @@ pub const MESSAGING_REST_SERVICE_ACCESS_MODE_IN_BAND: MessagingRestServiceAccess
 pub const MESSAGING_REST_SERVICE_ACCESS_MODE_OUT_OF_BAND: MessagingRestServiceAccessMode = MessagingRestServiceAccessMode { raw: 2 };
 pub const MEDIA_PARTITION_FORMAT_MBR: MediaPartitionFormat = MediaPartitionFormat { raw: 1 };
 pub const MEDIA_PARTITION_FORMAT_GPT: MediaPartitionFormat = MediaPartitionFormat { raw: 2 };
-pub const MEDIA_RAM_DISK_TYPE_VIRTUAL_DISK: MediaRamDiskType = MediaRamDiskType { raw: scalars::Guid { data1: 0x77ab535a, data2: 0x45fc, data3: 0x624b, data4: [0x55, 0x60, 0xf7, 0xb2, 0x81, 0xd1, 0xf9, 0x6e] } };
-pub const MEDIA_RAM_DISK_TYPE_VIRTUAL_CD: MediaRamDiskType = MediaRamDiskType { raw: scalars::Guid { data1: 0x3d5abd30, data2: 0x4175, data3: 0x87ce, data4: [0x6d, 0x64, 0xd2, 0xad, 0xe5, 0x23, 0xc4, 0xbb] } };
-pub const MEDIA_RAM_DISK_TYPE_PERSISTENT_VIRTUAL_DISK: MediaRamDiskType = MediaRamDiskType { raw: scalars::Guid { data1: 0x5cea02c9, data2: 0x4d07, data3: 0x69d3, data4: [0x26, 0x9f, 0x44, 0x96, 0xfb, 0xe0, 0x96, 0xf9] } };
-pub const MEDIA_RAM_DISK_TYPE_PERSISTENT_VIRTUAL_CD: MediaRamDiskType = MediaRamDiskType { raw: scalars::Guid { data1: 0x08018188, data2: 0x42cd, data3: 0xbb48, data4: [0x10, 0x0f, 0x53, 0x87, 0xd5, 0x3d, 0xed, 0x3d] } };
+pub const MEDIA_RAM_DISK_TYPE_VIRTUAL_DISK: MediaRamDiskType = MediaRamDiskType { raw: |scalars|::Guid { data1: 0x77ab535a, data2: 0x45fc, data3: 0x624b, data4: [0x55, 0x60, 0xf7, 0xb2, 0x81, 0xd1, 0xf9, 0x6e] } };
+pub const MEDIA_RAM_DISK_TYPE_VIRTUAL_CD: MediaRamDiskType = MediaRamDiskType { raw: |scalars|::Guid { data1: 0x3d5abd30, data2: 0x4175, data3: 0x87ce, data4: [0x6d, 0x64, 0xd2, 0xad, 0xe5, 0x23, 0xc4, 0xbb] } };
+pub const MEDIA_RAM_DISK_TYPE_PERSISTENT_VIRTUAL_DISK: MediaRamDiskType = MediaRamDiskType { raw: |scalars|::Guid { data1: 0x5cea02c9, data2: 0x4d07, data3: 0x69d3, data4: [0x26, 0x9f, 0x44, 0x96, 0xfb, 0xe0, 0x96, 0xf9] } };
+pub const MEDIA_RAM_DISK_TYPE_PERSISTENT_VIRTUAL_CD: MediaRamDiskType = MediaRamDiskType { raw: |scalars|::Guid { data1: 0x08018188, data2: 0x42cd, data3: 0xbb48, data4: [0x10, 0x0f, 0x53, 0x87, 0xd5, 0x3d, 0xed, 0x3d] } };

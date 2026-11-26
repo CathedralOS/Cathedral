@@ -1,134 +1,120 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // ObjectType operand-role integration over canonical object_queries::object_type.
 // ACPI 6.6 19.6.97 and 20.2.5.4; pinned acpi mod.rs ObjectType dispatch.
-module object_type_execution;
-use aml::model::ObjectStore;
-use aml::model::Namespace;
-use aml::model::Outcome;
-use aml::model::Read;
-use aml::model::Path;
-use aml::model::PathResult;
-use aml::model::Lookup;
-use aml::model::Entry;
-use aml::model::LevelKind;
-use aml::bytes::opcode;
-use aml::names::lead_char;
-use aml::names::namestring;
-use aml::names::resolve;
-use aml::names::parent;
-use aml::namespace::locate;
-use aml::object_queries::QueryResult;
-use aml::object_queries::object_type;
-use execution_model::ExecutionOutcome;
-use execution_model::Binding;
-use execution_model::Frame;
-use execution_names::decode_outcome;
+use {omega}/language/core/nat.omg;
+use {aml}/model.omg;
+use {aml}/bytes.omg;
+use {aml}/names.omg;
+use {aml}/namespace.omg;
+use {aml}/object_queries.omg;
+use execution_model.omg;
+use execution_names.omg;
 
-pub data ObjectTypeResult [copy] {outcome:ExecutionOutcome;number:u64;next:u64;}
+pub data ObjectTypeResult [copy] {outcome:|execution_model|::ExecutionOutcome;number:u64;next:u64;}
 // Metadata inspection is read-only. Cursor and operand publication belong to
 // decode_execution and occur only after this complete descriptor succeeds.
-pub machine inspect_object_type(input:&[u8;1024],store:&ObjectStore,frame:&Frame,at:u64)->ObjectTypeResult {
- let token:Read=opcode(input,frame.end,at);
- let outcome:ExecutionOutcome=decode_outcome(token.outcome);
- transition outcome==ExecutionOutcome::Success {true -> token(input,store,frame,at,token) _ -> (ObjectTypeResult {outcome:outcome})}
- state token(input:&[u8;1024],store:&ObjectStore,frame:&Frame,at:u64,token:Read)->ObjectTypeResult {
+pub machine inspect_object_type(input:&[u8;1024],store:&|model|::ObjectStore,frame:&|execution_model|::Frame,at:u64)->ObjectTypeResult {
+ let token:|model|::Read=|bytes|::opcode(input,frame.end,at);
+ let outcome:|execution_model|::ExecutionOutcome=|execution_names|::decode_outcome(token.outcome);
+ transition outcome==|execution_model|::ExecutionOutcome::Success {true -> token(input,store,frame,at,token) _ -> (ObjectTypeResult {outcome:outcome})}
+ state token(input:&[u8;1024],store:&|model|::ObjectStore,frame:&|execution_model|::Frame,at:u64,token:|model|::Read)->ObjectTypeResult {
   let code:u64=token.value;
-  let named:bool=lead_char(code) || code==0x5c || code==0x5e || code==0x2e || code==0x2f;
+  let named:bool=|names|::lead_char(code) || code==0x5c || code==0x5e || code==0x2e || code==0x2f;
   transition {
    code>=0x60 && code<=0x67 -> local(store,frame,code-0x60,token.next)
    code>=0x68 && code<=0x6e -> argument(store,frame,code-0x68,token.next)
    code==0x5b31 -> (ObjectTypeResult {number:16,next:token.next})
    named -> named(input,store,frame,at)
-   code==0 -> (ObjectTypeResult {outcome:ExecutionOutcome::InvalidTarget})
-   _ -> (ObjectTypeResult {outcome:ExecutionOutcome::UnsupportedOpcode})
+   code==0 -> (ObjectTypeResult {outcome:|execution_model|::ExecutionOutcome::InvalidTarget})
+   _ -> (ObjectTypeResult {outcome:|execution_model|::ExecutionOutcome::UnsupportedOpcode})
   }
  }
- state local(store:&ObjectStore,frame:&Frame,index:u64,next:u64)->ObjectTypeResult {
-  transition index<8 {true -> binding(store,frame.locals[index],next) _ -> (ObjectTypeResult {outcome:ExecutionOutcome::InvalidTarget})}
+ state local(store:&|model|::ObjectStore,frame:&|execution_model|::Frame,index:u64,next:u64)->ObjectTypeResult {
+  transition index<8 {true -> binding(store,frame.locals[index],next) _ -> (ObjectTypeResult {outcome:|execution_model|::ExecutionOutcome::InvalidTarget})}
  }
- state argument(store:&ObjectStore,frame:&Frame,index:u64,next:u64)->ObjectTypeResult {
-  transition index<7 {true -> binding(store,frame.arguments[index],next) _ -> (ObjectTypeResult {outcome:ExecutionOutcome::InvalidTarget})}
+ state argument(store:&|model|::ObjectStore,frame:&|execution_model|::Frame,index:u64,next:u64)->ObjectTypeResult {
+  transition index<7 {true -> binding(store,frame.arguments[index],next) _ -> (ObjectTypeResult {outcome:|execution_model|::ExecutionOutcome::InvalidTarget})}
  }
- state binding(store:&ObjectStore,value:Binding,next:u64)->ObjectTypeResult {let result:ObjectTypeResult=ote_binding(store,value,next);result}
- state named(input:&[u8;1024],store:&ObjectStore,frame:&Frame,at:u64)->ObjectTypeResult {
-  let name:PathResult=namestring(input,frame.end,at);
-  let outcome:ExecutionOutcome=decode_outcome(name.outcome);
-  transition outcome==ExecutionOutcome::Success {true -> lookup(store,frame.scope,name) _ -> (ObjectTypeResult {outcome:outcome})}
+ state binding(store:&|model|::ObjectStore,value:|execution_model|::Binding,next:u64)->ObjectTypeResult {let result:ObjectTypeResult=ote_binding(store,value,next);result}
+ state named(input:&[u8;1024],store:&|model|::ObjectStore,frame:&|execution_model|::Frame,at:u64)->ObjectTypeResult {
+  let name:|model|::PathResult=|names|::namestring(input,frame.end,at);
+  let outcome:|execution_model|::ExecutionOutcome=|execution_names|::decode_outcome(name.outcome);
+  transition outcome==|execution_model|::ExecutionOutcome::Success {true -> lookup(store,frame.scope,name) _ -> (ObjectTypeResult {outcome:outcome})}
  }
- state lookup(store:&ObjectStore,scope:Path,name:PathResult)->ObjectTypeResult {
-  let found:Lookup=ote_lookup(&store.space,name.value,scope);
-  let outcome:ExecutionOutcome=ote_resolution_outcome(found.outcome);
-  transition outcome==ExecutionOutcome::Success {true -> selected_entry(store,found.index,name.next) _ -> (ObjectTypeResult {outcome:outcome})}
+ state lookup(store:&|model|::ObjectStore,scope:|model|::Path,name:|model|::PathResult)->ObjectTypeResult {
+  let found:|model|::Lookup=ote_lookup(&store.space,name.value,scope);
+  let outcome:|execution_model|::ExecutionOutcome=ote_resolution_outcome(found.outcome);
+  transition outcome==|execution_model|::ExecutionOutcome::Success {true -> selected_entry(store,found.index,name.next) _ -> (ObjectTypeResult {outcome:outcome})}
  }
- state selected_entry(store:&ObjectStore,index:u64,next:u64)->ObjectTypeResult {
+ state selected_entry(store:&|model|::ObjectStore,index:u64,next:u64)->ObjectTypeResult {
   let count:u64=store.space.count;
-  transition count<=32 && index<count && index<32 {true -> selected(store,store.space.entries[index],next) _ -> (ObjectTypeResult {outcome:ExecutionOutcome::InvalidState})}
+  transition count<=32 && index<count && index<32 {true -> selected(store,store.space.entries[index],next) _ -> (ObjectTypeResult {outcome:|execution_model|::ExecutionOutcome::InvalidState})}
  }
- state selected(store:&ObjectStore,entry:Entry,next:u64)->ObjectTypeResult {
+ state selected(store:&|model|::ObjectStore,entry:|model|::Entry,next:u64)->ObjectTypeResult {
   transition {entry.has_object -> object(store,entry.object,next)
-   entry.has_level && entry.level==LevelKind::Scope -> (ObjectTypeResult {number:0,next:next})
-   _ -> (ObjectTypeResult {outcome:ExecutionOutcome::InvalidState})}
+   entry.has_level && entry.level==|model|::LevelKind::Scope -> (ObjectTypeResult {number:0,next:next})
+   _ -> (ObjectTypeResult {outcome:|execution_model|::ExecutionOutcome::InvalidState})}
  }
- state object(store:&ObjectStore,id:u64,next:u64)->ObjectTypeResult {let result:ObjectTypeResult=ote_object(store,id,next);result}
+ state object(store:&|model|::ObjectStore,id:u64,next:u64)->ObjectTypeResult {let result:ObjectTypeResult=ote_object(store,id,next);result}
 }
 // These are execution carriers with no canonical object slot. Object-backed
 // values, including all reference descriptors, use the one canonical mapping.
-machine ote_binding(store:&ObjectStore,value:Binding,next:u64)->ObjectTypeResult {
+machine ote_binding(store:&|model|::ObjectStore,value:|execution_model|::Binding,next:u64)->ObjectTypeResult {
  transition value {
-  Binding::Uninitialized -> (ObjectTypeResult {number:0,next:next})
-  Binding::Integer {number} -> (ObjectTypeResult {number:1,next:next})
-  Binding::Shared {shared_id} -> object(store,shared_id,next)
-  Binding::Cell {cell_id} -> object(store,cell_id,next)
+  |execution_model|::Binding::Uninitialized -> (ObjectTypeResult {number:0,next:next})
+  |execution_model|::Binding::Integer {number} -> (ObjectTypeResult {number:1,next:next})
+  |execution_model|::Binding::Shared {shared_id} -> object(store,shared_id,next)
+  |execution_model|::Binding::Cell {cell_id} -> object(store,cell_id,next)
  }
- state object(store:&ObjectStore,id:u64,next:u64)->ObjectTypeResult {let result:ObjectTypeResult=ote_object(store,id,next);result}
+ state object(store:&|model|::ObjectStore,id:u64,next:u64)->ObjectTypeResult {let result:ObjectTypeResult=ote_object(store,id,next);result}
 }
-machine ote_object(store:&ObjectStore,id:u64,next:u64)->ObjectTypeResult {
- let found:QueryResult=object_type(&store.space,id,64);
+machine ote_object(store:&|model|::ObjectStore,id:u64,next:u64)->ObjectTypeResult {
+ let found:|object_queries|::QueryResult=|object_queries|::object_type(&store.space,id,64);
  transition found {
-  QueryResult::Value {object,number} -> (ObjectTypeResult {number:number,next:next})
-  QueryResult::ResolutionFailure {resolution_error} -> failure(resolution_error)
-  QueryResult::UnsupportedValue -> (ObjectTypeResult {outcome:ExecutionOutcome::UnsupportedValue})
-  QueryResult::InvalidStorage {storage_error} -> (ObjectTypeResult {outcome:ExecutionOutcome::InvalidState})
+  |object_queries|::QueryResult::Value {object,number} -> (ObjectTypeResult {number:number,next:next})
+  |object_queries|::QueryResult::ResolutionFailure {resolution_error} -> failure(resolution_error)
+  |object_queries|::QueryResult::UnsupportedValue -> (ObjectTypeResult {outcome:|execution_model|::ExecutionOutcome::UnsupportedValue})
+  |object_queries|::QueryResult::InvalidStorage {storage_error} -> (ObjectTypeResult {outcome:|execution_model|::ExecutionOutcome::InvalidState})
  }
- state failure(reason:Outcome)->ObjectTypeResult {let outcome:ExecutionOutcome=ote_resolution_outcome(reason);ObjectTypeResult {outcome:outcome}}
+ state failure(reason:|model|::Outcome)->ObjectTypeResult {let outcome:|execution_model|::ExecutionOutcome=ote_resolution_outcome(reason);ObjectTypeResult {outcome:outcome}}
 }
 // Running method scopes need not be namespace levels. Search each canonical
 // resolved path with locate so a nearer typeless scope shadows outer objects.
-machine ote_lookup(space:&Namespace,name:Path,scope:Path)->Lookup {
+machine ote_lookup(space:&|model|::Namespace,name:|model|::Path,scope:|model|::Path)->|model|::Lookup {
  transition !name.absolute && name.parents==0 && name.count==1 {
   true -> ancestors(space,name,scope)
   _ -> exact(space,name,scope)
  }
- state ancestors(space:&Namespace,name:Path,scope:Path)->Lookup {let result:Lookup=ote_lookup_scan(space,name,scope,0,17);result}
- state exact(space:&Namespace,name:Path,scope:Path)->Lookup {let result:Lookup=ote_lookup_once(space,name,scope);result}
+ state ancestors(space:&|model|::Namespace,name:|model|::Path,scope:|model|::Path)->|model|::Lookup {let result:|model|::Lookup=ote_lookup_scan(space,name,scope,0,17);result}
+ state exact(space:&|model|::Namespace,name:|model|::Path,scope:|model|::Path)->|model|::Lookup {let result:|model|::Lookup=ote_lookup_once(space,name,scope);result}
 }
-machine ote_lookup_scan(space:&Namespace,name:Path,scope:Path,index:u64,limit:u64)
-terminates by(index,limit)->Nat::BoundedDistance;
-->Lookup {
- let found:Lookup=ote_lookup_once(space,name,scope);
- let upper:PathResult=parent(scope);
- transition {found.outcome!=Outcome::MissingLevel || scope.count==0 -> (found)
-  upper.outcome!=Outcome::Success -> (Lookup {outcome:Outcome::WorkLimit})
+machine ote_lookup_scan(space:&|model|::Namespace,name:|model|::Path,scope:|model|::Path,index:u64,limit:u64)
+terminates by(index,limit)->|nat|::Nat::BoundedDistance;
+->|model|::Lookup {
+ let found:|model|::Lookup=ote_lookup_once(space,name,scope);
+ let upper:|model|::PathResult=|names|::parent(scope);
+ transition {found.outcome!=|model|::Outcome::MissingLevel || scope.count==0 -> (found)
+  upper.outcome!=|model|::Outcome::Success -> (|model|::Lookup {outcome:|model|::Outcome::WorkLimit})
   index<limit -> ote_lookup_scan(space,name,upper.value,index+1,limit)
-  _ -> (Lookup {outcome:Outcome::WorkLimit})}
+  _ -> (|model|::Lookup {outcome:|model|::Outcome::WorkLimit})}
 }
-machine ote_lookup_once(space:&Namespace,name:Path,scope:Path)->Lookup {
- let path:PathResult=resolve(name,scope);
- transition path.outcome==Outcome::Success {true -> at_path(space,path.value) _ -> (Lookup {outcome:path.outcome})}
- state at_path(space:&Namespace,path:Path)->Lookup {
-  let copied:Namespace=Namespace {count:space.count,object_count:space.object_count,entries:space.entries,objects:space.objects};
-  let found:Lookup=locate(copied,path);found
+machine ote_lookup_once(space:&|model|::Namespace,name:|model|::Path,scope:|model|::Path)->|model|::Lookup {
+ let path:|model|::PathResult=|names|::resolve(name,scope);
+ transition path.outcome==|model|::Outcome::Success {true -> at_path(space,path.value) _ -> (|model|::Lookup {outcome:path.outcome})}
+ state at_path(space:&|model|::Namespace,path:|model|::Path)->|model|::Lookup {
+  let copied:|model|::Namespace=|model|::Namespace {count:space.count,object_count:space.object_count,entries:space.entries,objects:space.objects};
+  let found:|model|::Lookup=|namespace|::locate(copied,path);found
  }
 }
-machine ote_resolution_outcome(reason:Outcome)->ExecutionOutcome {
+machine ote_resolution_outcome(reason:|model|::Outcome)->|execution_model|::ExecutionOutcome {
  transition reason {
-  Outcome::Success -> (ExecutionOutcome::Success)
-  Outcome::MissingObject -> (ExecutionOutcome::MissingObject)
-  Outcome::MissingLevel -> (ExecutionOutcome::MissingObject)
-  Outcome::ReferenceCycle -> (ExecutionOutcome::ReferenceCycle)
-  Outcome::WorkLimit -> (ExecutionOutcome::WorkLimit)
-  Outcome::Capacity -> (ExecutionOutcome::Capacity)
-  Outcome::InvalidState -> (ExecutionOutcome::InvalidState)
-  _ -> (ExecutionOutcome::BadEncoding)
+  |model|::Outcome::Success -> (|execution_model|::ExecutionOutcome::Success)
+  |model|::Outcome::MissingObject -> (|execution_model|::ExecutionOutcome::MissingObject)
+  |model|::Outcome::MissingLevel -> (|execution_model|::ExecutionOutcome::MissingObject)
+  |model|::Outcome::ReferenceCycle -> (|execution_model|::ExecutionOutcome::ReferenceCycle)
+  |model|::Outcome::WorkLimit -> (|execution_model|::ExecutionOutcome::WorkLimit)
+  |model|::Outcome::Capacity -> (|execution_model|::ExecutionOutcome::Capacity)
+  |model|::Outcome::InvalidState -> (|execution_model|::ExecutionOutcome::InvalidState)
+  _ -> (|execution_model|::ExecutionOutcome::BadEncoding)
  }
 }

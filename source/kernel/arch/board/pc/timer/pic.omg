@@ -1,15 +1,13 @@
-module board::pc::timer::pic;
-
 // Checked legacy-PIC port sequences for Cathedral's first QEMU timer provider.
 // These helpers are intentionally narrower than an interrupt provider: they
 // expose no raw port primitive, install no entry, mint no acknowledgement, and
 // cannot enable CPU interrupts. Every call retains canonical PortIo reach from
 // the parsed `out` instruction contracts.
 
-use facts::pic_8259;
-use omega::language::core::assembly;
-use omega::language::core::assembly_model;
-use omega::language::core::interrupt;
+use {facts}/pic_8259.omg;
+use {omega}/language/core/assembly.omg;
+use {omega}/language/core/assembly_model.omg;
+use {omega}/language/core/interrupt.omg;
 
 public data Pic8259 {
 }
@@ -18,52 +16,52 @@ public data Pic8259 {
 // 8086 mode, and leave every IRQ masked. IDT/root publication must complete
 // before a separate provider operation unmasks the timer input.
 public machine Pic8259::remap_masked(controller: &mut Pic8259)
-reaches PortIo
+reaches |assembly|::PortIo
 {
     asm clobbers r10, r11, r15, rax, rdx {
-        out PIC_MASTER_COMMAND_PORT, ICW1_PC_CASCADE;
-        out PIC_SLAVE_COMMAND_PORT, ICW1_PC_CASCADE;
+        out |pic_8259|::PIC_MASTER_COMMAND_PORT, |pic_8259|::ICW1_PC_CASCADE;
+        out |pic_8259|::PIC_SLAVE_COMMAND_PORT, |pic_8259|::ICW1_PC_CASCADE;
 
-        out PIC_MASTER_DATA_PORT, PROTECTED_MASTER_VECTOR_BASE;
-        out PIC_SLAVE_DATA_PORT, PROTECTED_SLAVE_VECTOR_BASE;
+        out |pic_8259|::PIC_MASTER_DATA_PORT, |pic_8259|::PROTECTED_MASTER_VECTOR_BASE;
+        out |pic_8259|::PIC_SLAVE_DATA_PORT, |pic_8259|::PROTECTED_SLAVE_VECTOR_BASE;
 
-        out PIC_MASTER_DATA_PORT, MASTER_ICW3_SLAVE_ON_IRQ2;
-        out PIC_SLAVE_DATA_PORT, SLAVE_ICW3_CASCADE_ID;
+        out |pic_8259|::PIC_MASTER_DATA_PORT, |pic_8259|::MASTER_ICW3_SLAVE_ON_IRQ2;
+        out |pic_8259|::PIC_SLAVE_DATA_PORT, |pic_8259|::SLAVE_ICW3_CASCADE_ID;
 
-        out PIC_MASTER_DATA_PORT, ICW4_8086_MODE;
-        out PIC_SLAVE_DATA_PORT, ICW4_8086_MODE;
+        out |pic_8259|::PIC_MASTER_DATA_PORT, |pic_8259|::ICW4_8086_MODE;
+        out |pic_8259|::PIC_SLAVE_DATA_PORT, |pic_8259|::ICW4_8086_MODE;
 
-        out PIC_MASTER_DATA_PORT, OCW1_MASK_ALL;
-        out PIC_SLAVE_DATA_PORT, OCW1_MASK_ALL
+        out |pic_8259|::PIC_MASTER_DATA_PORT, |pic_8259|::OCW1_MASK_ALL;
+        out |pic_8259|::PIC_SLAVE_DATA_PORT, |pic_8259|::OCW1_MASK_ALL
     }
 }
 
 // First-provider policy: admit only the master timer input (IRQ0). Slave IRQs
 // remain masked, so the cascade input remains masked too.
 public machine Pic8259::unmask_timer(controller: &mut Pic8259)
-reaches PortIo
+reaches |assembly|::PortIo
 {
     asm clobbers r10, r11, r15, rax, rdx {
-        out PIC_MASTER_DATA_PORT, 0xFE;
-        out PIC_SLAVE_DATA_PORT, OCW1_MASK_ALL
+        out |pic_8259|::PIC_MASTER_DATA_PORT, 0xFE;
+        out |pic_8259|::PIC_SLAVE_DATA_PORT, |pic_8259|::OCW1_MASK_ALL
     }
 }
 
 // A returning timer handler must tell the PIC that its interrupt is finished.
 // Keep the actual port write in the selected completion body, so consuming the
 // acknowledgement cannot skip the controller operation.
-proposition timer_acknowledgement_completed(acknowledgement: InterruptAcknowledgement)
+proposition timer_acknowledgement_completed(acknowledgement: |interrupt|::InterruptAcknowledgement)
     = port_written(0x20, 0x20);
 
-public PicTimerAcknowledgement satisfies InterruptAcknowledgementCompletion {
-    machine complete(acknowledgement: InterruptAcknowledgement)
-    reaches PortIo
-    requires acknowledgement in InterruptAcknowledgement::Pending
+public PicTimerAcknowledgement satisfies |interrupt|::InterruptAcknowledgementCompletion {
+    machine complete(acknowledgement: |interrupt|::InterruptAcknowledgement)
+    reaches |assembly|::PortIo
+    requires acknowledgement in |interrupt|::InterruptAcknowledgement::Pending
     ensures timer_acknowledgement_completed(acknowledgement)
     {
         asm ensures timer_acknowledgement_completed(acknowledgement)
         clobbers r10, r11, r15, rax, rdx {
-            out PIC_MASTER_COMMAND_PORT, OCW2_END_OF_INTERRUPT
+            out |pic_8259|::PIC_MASTER_COMMAND_PORT, |pic_8259|::OCW2_END_OF_INTERRUPT
         }
     }
 }

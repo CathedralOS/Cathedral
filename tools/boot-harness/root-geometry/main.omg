@@ -1,21 +1,20 @@
 // Expected exit: 0. Exercise the actual boot geometry helper, not a test copy.
 // This validates numeric geometry only, not backing authority or UEFI handoff.
 
-use core::memory::geometry::BootGeometry;
-use core::memory::geometry::BootGeometryCheck;
-machine accepted(geometry: BootGeometry) -> bool {
-    let checked: BootGeometryCheck = BootGeometry::check(geometry);
+use {core}/memory/geometry.omg;
+machine accepted(geometry: |geometry|::BootGeometry) -> bool {
+    let checked: |geometry|::BootGeometryCheck = |geometry|::BootGeometry::check(geometry);
     transition checked {
-        BootGeometryCheck::Rejected -> (false)
-        BootGeometryCheck::Ready { geometry } -> (true)
+        |geometry|::BootGeometryCheck::Rejected -> (false)
+        |geometry|::BootGeometryCheck::Ready { geometry } -> (true)
     }
 }
 
-machine partition_matches(mapped: BootGeometry, retained_start: u64, expected_length: u64) -> bool {
-    let checked: BootGeometryCheck = BootGeometry::exclude_image_suffix(mapped, retained_start);
+machine partition_matches(mapped: |geometry|::BootGeometry, retained_start: u64, expected_length: u64) -> bool {
+    let checked: |geometry|::BootGeometryCheck = |geometry|::BootGeometry::exclude_image_suffix(mapped, retained_start);
     transition checked {
-        BootGeometryCheck::Rejected -> (expected_length == 0)
-        BootGeometryCheck::Ready { geometry } -> (
+        |geometry|::BootGeometryCheck::Rejected -> (expected_length == 0)
+        |geometry|::BootGeometryCheck::Ready { geometry } -> (
             expected_length != 0 && geometry.image_base == mapped.image_base &&
             geometry.image_length == expected_length &&
             geometry.storage_base == mapped.storage_base &&
@@ -25,18 +24,18 @@ machine partition_matches(mapped: BootGeometry, retained_start: u64, expected_le
 }
 
 machine main() crashes Trap {
-    let ordered: bool = accepted(BootGeometry { image_base: 4096, image_length: 4096, storage_base: 16384, storage_length: 8192 });
-    let reversed: bool = accepted(BootGeometry { image_base: 16384, image_length: 8192, storage_base: 4096, storage_length: 4096 });
-    let adjacent: bool = accepted(BootGeometry { image_base: 4096, image_length: 4096, storage_base: 8192, storage_length: 4096 });
-    let reversed_adjacent: bool = accepted(BootGeometry { image_base: 8192, image_length: 4096, storage_base: 4096, storage_length: 4096 });
-    let overlap: bool = accepted(BootGeometry { image_base: 4096, image_length: 8192, storage_base: 8192, storage_length: 4096 });
-    let contained: bool = accepted(BootGeometry { image_base: 4096, image_length: 8192, storage_base: 8192, storage_length: 1024 });
-    let equal: bool = accepted(BootGeometry { image_base: 4096, image_length: 4096, storage_base: 4096, storage_length: 4096 });
-    let empty: bool = accepted(BootGeometry { image_base: 4096, image_length: 0, storage_base: 8192, storage_length: 4096 });
-    let storage_empty: bool = accepted(BootGeometry { image_base: 4096, image_length: 4096, storage_base: 8192, storage_length: 0 });
-    let wrapped: bool = accepted(BootGeometry { image_base: 18446744073709551615, image_length: 1, storage_base: 8192, storage_length: 4096 });
-    let storage_wrapped: bool = accepted(BootGeometry { image_base: 4096, image_length: 4096, storage_base: 18446744073709551615, storage_length: 2 });
-    let last_endpoint: bool = accepted(BootGeometry { image_base: 0, image_length: 4096, storage_base: 18446744073709551614, storage_length: 1 });
+    let ordered: bool = accepted(|geometry|::BootGeometry { image_base: 4096, image_length: 4096, storage_base: 16384, storage_length: 8192 });
+    let reversed: bool = accepted(|geometry|::BootGeometry { image_base: 16384, image_length: 8192, storage_base: 4096, storage_length: 4096 });
+    let adjacent: bool = accepted(|geometry|::BootGeometry { image_base: 4096, image_length: 4096, storage_base: 8192, storage_length: 4096 });
+    let reversed_adjacent: bool = accepted(|geometry|::BootGeometry { image_base: 8192, image_length: 4096, storage_base: 4096, storage_length: 4096 });
+    let overlap: bool = accepted(|geometry|::BootGeometry { image_base: 4096, image_length: 8192, storage_base: 8192, storage_length: 4096 });
+    let contained: bool = accepted(|geometry|::BootGeometry { image_base: 4096, image_length: 8192, storage_base: 8192, storage_length: 1024 });
+    let equal: bool = accepted(|geometry|::BootGeometry { image_base: 4096, image_length: 4096, storage_base: 4096, storage_length: 4096 });
+    let empty: bool = accepted(|geometry|::BootGeometry { image_base: 4096, image_length: 0, storage_base: 8192, storage_length: 4096 });
+    let storage_empty: bool = accepted(|geometry|::BootGeometry { image_base: 4096, image_length: 4096, storage_base: 8192, storage_length: 0 });
+    let wrapped: bool = accepted(|geometry|::BootGeometry { image_base: 18446744073709551615, image_length: 1, storage_base: 8192, storage_length: 4096 });
+    let storage_wrapped: bool = accepted(|geometry|::BootGeometry { image_base: 4096, image_length: 4096, storage_base: 18446744073709551615, storage_length: 2 });
+    let last_endpoint: bool = accepted(|geometry|::BootGeometry { image_base: 0, image_length: 4096, storage_base: 18446744073709551614, storage_length: 1 });
     transition ordered && reversed && adjacent && reversed_adjacent &&
         !overlap && !contained && !equal && !empty && !storage_empty &&
         !wrapped && !storage_wrapped && last_endpoint {
@@ -44,7 +43,7 @@ machine main() crashes Trap {
         _ -> wrong()
     }
     machine image_partition() {
-        let mapped: BootGeometry = BootGeometry { image_base: 4096, image_length: 8192, storage_base: 16384, storage_length: 4096 };
+        let mapped: |geometry|::BootGeometry = |geometry|::BootGeometry { image_base: 4096, image_length: 8192, storage_base: 16384, storage_length: 4096 };
         let middle: bool = partition_matches(mapped, 8192, 4096);
         let first: bool = partition_matches(mapped, 4097, 1);
         let last: bool = partition_matches(mapped, 12287, 8191);
@@ -52,7 +51,7 @@ machine main() crashes Trap {
         let empty: bool = partition_matches(mapped, 4096, 0);
         let end: bool = partition_matches(mapped, 12288, 0);
         let beyond: bool = partition_matches(mapped, 12289, 0);
-        let overlapping_tail: bool = partition_matches(BootGeometry {
+        let overlapping_tail: bool = partition_matches(|geometry|::BootGeometry {
             image_base: 4096, image_length: 8192, storage_base: 8192, storage_length: 4096
         }, 8192, 0);
         transition middle && first && last && before && empty && end && beyond && overlapping_tail {

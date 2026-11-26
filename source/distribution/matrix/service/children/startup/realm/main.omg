@@ -1,97 +1,88 @@
-module children::startup::realm::main;
-
 // Begin one job, issue work once, and accept only its outstanding command.
 // Each job's sequence lives beside this entrance; the native codec lives outside.
-use children::startup::realm::operations::Setup;
-use children::startup::realm::operations::Job;
-use children::startup::realm::operations::Command;
-use children::startup::realm::operations::Phase;
-use children::startup::realm::operations::Outcome;
-use children::startup::realm::operations::Context;
-use children::startup::realm::operations::Completion;
-use children::startup::realm::operations::Dispatch;
-use children::startup::realm::configuration;
-use children::startup::realm::picker;
-use children::startup::realm::background;
-use children::startup::realm::discovery;
+use children/startup/realm/operations.omg;
+use children/startup/realm/configuration.omg;
+use children/startup/realm/picker.omg;
+use children/startup/realm/background.omg;
+use children/startup/realm/discovery.omg;
 
-public machine begin(setup: &mut Setup, job: Job, context: &Context) -> bool {
-    transition (setup.phase in Phase::Dormant) && job != Job::None {
+public machine begin(setup: &mut |operations|::Setup, job: |operations|::Job, context: &|operations|::Context) -> bool {
+    transition (setup.phase in |operations|::Phase::Dormant) && job != |operations|::Job::None {
         true -> start(setup, job, context)
         _ -> (false)
     }
-    machine start(setup: &mut Setup, job: Job, context: &Context) -> bool {
+    machine start(setup: &mut |operations|::Setup, job: |operations|::Job, context: &|operations|::Context) -> bool {
         setup.job = job;
-        setup.outcome = Outcome::Success;
-        setup.background_outcome = Outcome::Success;
+        setup.outcome = |operations|::Outcome::Success;
+        setup.background_outcome = |operations|::Outcome::Success;
         setup.reset_surfaces = false;
-        let command: Command = first(setup, job, context);
-        setup.phase = Phase::Ready { command: command };
+        let command: |operations|::Command = first(setup, job, context);
+        setup.phase = |operations|::Phase::Ready { command: command };
         true
     }
 }
 
-machine first(setup: &mut Setup, job: Job, context: &Context) -> Command {
+machine first(setup: &mut |operations|::Setup, job: |operations|::Job, context: &|operations|::Context) -> |operations|::Command {
     transition job {
-        Job::Configuration -> children::startup::realm::configuration::begin(setup, context)
-        Job::Picker -> (Command::PreparePicker)
-        Job::Background -> (Command::ReadBackground)
-        Job::Discovery -> children::startup::realm::discovery::begin(context)
-        Job::None -> (Command::Finish)
+        |operations|::Job::Configuration -> |configuration|::begin(setup, context)
+        |operations|::Job::Picker -> (|operations|::Command::PreparePicker)
+        |operations|::Job::Background -> (|operations|::Command::ReadBackground)
+        |operations|::Job::Discovery -> |discovery|::begin(context)
+        |operations|::Job::None -> (|operations|::Command::Finish)
     }
 }
 
-public machine next(setup: &mut Setup) -> Dispatch {
+public machine next(setup: &mut |operations|::Setup) -> |operations|::Dispatch {
     transition setup.phase {
-        Phase::Ready { command } -> issue(setup, command)
-        _ -> (Dispatch::Wait)
+        |operations|::Phase::Ready { command } -> issue(setup, command)
+        _ -> (|operations|::Dispatch::Wait)
     }
-    machine issue(setup: &mut Setup, command: Command) -> Dispatch {
-        setup.phase = Phase::Waiting { command: command };
-        Dispatch::Issue { command: command }
+    machine issue(setup: &mut |operations|::Setup, command: |operations|::Command) -> |operations|::Dispatch {
+        setup.phase = |operations|::Phase::Waiting { command: command };
+        |operations|::Dispatch::Issue { command: command }
     }
 }
 
-public machine complete(setup: &mut Setup, completion: Completion) -> bool {
+public machine complete(setup: &mut |operations|::Setup, completion: |operations|::Completion) -> bool {
     transition setup.phase {
-        Phase::Waiting { command } -> matching(setup, completion, command)
+        |operations|::Phase::Waiting { command } -> matching(setup, completion, command)
         _ -> (false)
     }
-    machine matching(setup: &mut Setup, completion: Completion, command: Command) -> bool {
+    machine matching(setup: &mut |operations|::Setup, completion: |operations|::Completion, command: |operations|::Command) -> bool {
         transition command == completion.command {
             true -> completed(setup, completion)
             _ -> (false)
         }
     }
-    machine completed(setup: &mut Setup, completion: Completion) -> bool {
-        transition completion.command == Command::Finish {
+    machine completed(setup: &mut |operations|::Setup, completion: |operations|::Completion) -> bool {
+        transition completion.command == |operations|::Command::Finish {
             true -> finish(setup)
             _ -> advance(setup, completion)
         }
     }
-    machine finish(setup: &mut Setup) -> bool {
-        setup.phase = Phase::Dormant;
+    machine finish(setup: &mut |operations|::Setup) -> bool {
+        setup.phase = |operations|::Phase::Dormant;
         true
     }
-    machine advance(setup: &mut Setup, completion: Completion) -> bool {
-        transition setup.job != Job::None {
+    machine advance(setup: &mut |operations|::Setup, completion: |operations|::Completion) -> bool {
+        transition setup.job != |operations|::Job::None {
             true -> queue(setup, completion)
             _ -> (false)
         }
     }
-    machine queue(setup: &mut Setup, completion: Completion) -> bool {
-        let command: Command = following(setup, completion);
-        setup.phase = Phase::Ready { command: command };
+    machine queue(setup: &mut |operations|::Setup, completion: |operations|::Completion) -> bool {
+        let command: |operations|::Command = following(setup, completion);
+        setup.phase = |operations|::Phase::Ready { command: command };
         true
     }
 }
 
-machine following(setup: &mut Setup, completion: Completion) -> Command {
+machine following(setup: &mut |operations|::Setup, completion: |operations|::Completion) -> |operations|::Command {
     transition setup.job {
-        Job::Configuration -> children::startup::realm::configuration::completed(setup, completion)
-        Job::Picker -> children::startup::realm::picker::completed(setup, completion)
-        Job::Background -> children::startup::realm::background::completed(setup, completion)
-        Job::Discovery -> children::startup::realm::discovery::completed(setup, completion)
-        Job::None -> (Command::Finish)
+        |operations|::Job::Configuration -> |configuration|::completed(setup, completion)
+        |operations|::Job::Picker -> |picker|::completed(setup, completion)
+        |operations|::Job::Background -> |background|::completed(setup, completion)
+        |operations|::Job::Discovery -> |discovery|::completed(setup, completion)
+        |operations|::Job::None -> (|operations|::Command::Finish)
     }
 }

@@ -1,5 +1,3 @@
-module rendering::font;
-
 // Cathedral 5x7 glyphs; same owned font as the reference bitmap-font library.
 public machine glyph(ch: u64) -> u64 {
     transition ch {

@@ -579,7 +579,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/x86_64/pages.omg",
-          "anchor": "module pages;"
+          "anchor": "pub const SIZE_4K"
         }
       ]
     },
@@ -1620,7 +1620,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/x86_64/pages.omg",
-          "anchor": "module pages;"
+          "anchor": "pub const SIZE_4K"
         }
       ]
     }

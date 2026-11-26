@@ -1,10 +1,8 @@
-module session::diagnostics;
-use state::State;
-use state::Phase;
-use operations::Command;
+use state.omg as local_state;
+use operations.omg;
 // The app reports its state; diagnostic text encoding belongs to the bridge.
-public machine loaded(s: &mut State) -> Command {
-    s.phase = Phase::LoadReported;
+public machine loaded(s: &mut |local_state|::State) -> |operations|::Command {
+    s.phase = |local_state|::Phase::LoadReported;
     s.loaded = true;
-    Command::Loaded { temporary: s.temporary }
+    |operations|::Command::Loaded { temporary: s.temporary }
 }

@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified pure orchestration of pinned MappedPageTable::clean_up_addr_range.
 // Caller supplies successive consistent detached snapshots and retains effects.
-module cleanup_ranges;
-use pages;
-use addresses;
-use cleanup_branch;
-use cleanup_branch::CleanupPlan;
-use cleanup_branch::CleanupOutcome;
+use pages.omg;
+use addresses.omg;
+use cleanup_branch.omg;
 
 pub data RangeStatus [copy] {
     case InvalidRange;
@@ -16,10 +13,10 @@ pub data RangeStatus [copy] {
     case CaptureMismatch(expected: u64, supplied: u64);
 }
 pub data Cursor [copy] { next_page: u64; last_page: u64; budget: u64; status: RangeStatus; }
-pub data RangeStep [copy] { cursor: Cursor; has_plan: bool; branch: CleanupPlan; }
+pub data RangeStep [copy] { cursor: Cursor; has_plan: bool; branch: |cleanup_branch|::CleanupPlan; }
 pub machine begin(first: u64, last: u64, budget: u64) -> Cursor {
-    let first_valid: bool = pages::start_valid(first, 4096, false);
-    let last_valid: bool = pages::start_valid(last, 4096, false);
+    let first_valid: bool = |pages|::start_valid(first, 4096, false);
+    let last_valid: bool = |pages|::start_valid(last, 4096, false);
     transition first_valid && last_valid {
         true -> order(first, last, budget)
         _ -> (Cursor {})
@@ -53,17 +50,17 @@ pub machine step(cursor: Cursor, words: &[u64; 4], table_ids: &[u64; 4], other_n
         }
     }
     state inspect(cursor: Cursor, words: &[u64; 4], table_ids: &[u64; 4], other_nonzero: &[bool; 4]) -> RangeStep {
-        let branch: CleanupPlan = cleanup_branch::plan(words, table_ids, other_nonzero, cursor.next_page);
+        let branch: |cleanup_branch|::CleanupPlan = |cleanup_branch|::plan(words, table_ids, other_nonzero, cursor.next_page);
         transition branch.outcome {
-            CleanupOutcome::Ready -> complete(cursor, branch, other_nonzero[0])
-            CleanupOutcome::CaptureMismatch { expected, supplied } -> (RangeStep {
+            |cleanup_branch|::CleanupOutcome::Ready -> complete(cursor, branch, other_nonzero[0])
+            |cleanup_branch|::CleanupOutcome::CaptureMismatch { expected, supplied } -> (RangeStep {
                 cursor: Cursor { next_page: cursor.next_page, last_page: cursor.last_page, budget: cursor.budget,
                     status: RangeStatus::CaptureMismatch { expected: expected, supplied: supplied } },
                 has_plan: true, branch: branch })
             _ -> (RangeStep { cursor: Cursor {}, has_plan: true, branch: branch })
         }
     }
-    state complete(cursor: Cursor, branch: CleanupPlan, root_has_other: bool) -> RangeStep {
+    state complete(cursor: Cursor, branch: |cleanup_branch|::CleanupPlan, root_has_other: bool) -> RangeStep {
         let span: u64 = covered_span(&branch.words, root_has_other);
         let next: Cursor = advance(cursor, span);
         RangeStep { cursor: next, has_plan: true, branch: branch }
@@ -103,7 +100,7 @@ machine advance(cursor: Cursor, span: u64) -> Cursor {
         }
     }
     state canonical(last: u64, dense: u64, remaining: u64) -> Cursor {
-        let address: u64 = addresses::virtual_truncate(dense);
+        let address: u64 = |addresses|::virtual_truncate(dense);
         transition remaining == 0 {
             true -> (Cursor { next_page: address, last_page: last, status: RangeStatus::Exhausted })
             _ -> (Cursor { next_page: address, last_page: last, budget: remaining, status: RangeStatus::Active })

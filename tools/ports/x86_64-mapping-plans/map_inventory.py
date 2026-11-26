@@ -17,7 +17,7 @@ for path,file in doc['files'].items():
    row.update(reason='Default parent flag selection extracted and tested; complete map call/allocator ownership remains pending.',targets=[dict(path=target,anchor='pub machine default_parent_flags(')])
   elif path.endswith('/mod.rs') and (name.startswith('self::') or name in {'mapped_page_table','offset_page_table','recursive_page_table','_ASSERT_OBJECT_SAFE','MapperAllSizes'}):
    row.update(disposition='omitted',reason='Rust re-export/module/trait-object or aggregate trait scaffolding does not define the pure decision API.')
- file.update(disposition='pending',reason='Pure child-creation and leaf decision components tested; complete mapper surface is not claimed.',targets=[dict(path=target,anchor='module mapping_plans;')])
+ file.update(disposition='pending',reason='Pure child-creation and leaf decision components tested; complete mapper surface is not claimed.',targets=[dict(path=target,anchor='pub data FrameSupply')])
 text=json.dumps(doc,indent=2)+'\n'
 if '--check' in sys.argv:assert p.read_text()==text,'stale reviewed mapping manifest'
 else:p.write_text(text)

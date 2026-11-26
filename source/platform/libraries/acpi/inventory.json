@@ -4024,7 +4024,7 @@
               "path": "source/platform/libraries/acpi/field_access/chunks.omg"
             },
             {
-              "anchor": "buffer_fields::copy_bits(",
+              "anchor": "|buffer_fields|::copy_bits(",
               "path": "source/platform/libraries/acpi/field_values/read.omg"
             },
             {
@@ -4032,15 +4032,15 @@
               "path": "source/platform/libraries/acpi/interpreter/buffer_fields.omg"
             },
             {
-              "anchor": "buffer_fields::field_to_integer(",
+              "anchor": "|buffer_fields|::field_to_integer(",
               "path": "source/platform/libraries/acpi/field_writes/write.omg"
             },
             {
-              "anchor": "chunks::merge(",
+              "anchor": "|chunks|::merge(",
               "path": "source/platform/libraries/acpi/field_writes/write.omg"
             },
             {
-              "anchor": "buffer_fields::copy_bits(",
+              "anchor": "|buffer_fields|::copy_bits(",
               "path": "source/platform/libraries/acpi/field_sources/sequence.omg"
             }
           ],
@@ -4066,7 +4066,7 @@
               "path": "source/platform/libraries/acpi/field_access/geometry.omg"
             },
             {
-              "anchor": "geometry::plan(",
+              "anchor": "|geometry|::plan(",
               "path": "source/platform/libraries/acpi/field_writes/write.omg"
             }
           ],
@@ -4471,7 +4471,7 @@
           ],
           "targets": [
             {
-              "anchor": "irq:Irq;",
+              "anchor": "irq:|resource_model|::Irq;",
               "path": "source/platform/libraries/acpi/pci_routing/model.omg"
             }
           ],
@@ -7770,7 +7770,7 @@
           ],
           "targets": [
             {
-              "anchor": "use madt::Polarity;",
+              "anchor": "use madt.omg;",
               "path": "source/platform/libraries/acpi/topology.omg"
             }
           ]

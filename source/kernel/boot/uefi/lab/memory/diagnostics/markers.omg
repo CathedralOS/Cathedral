@@ -1,10 +1,10 @@
 // Fixed serial marker bursts. The lab waits for COM1 before each call;
 // these leaves neither poll nor decide whether the memory step succeeded.
-use omega::language::core::assembly;
+use {omega}/language/core/assembly.omg;
 
 public data BootMarkers {}
 
-public machine BootMarkers::handoff_received() reaches PortIo {
+public machine BootMarkers::handoff_received() reaches |assembly|::PortIo {
     asm { out 1016, 66 } // Boot map ready
     asm { out 1016, 111 }
     asm { out 1016, 111 }
@@ -23,7 +23,7 @@ public machine BootMarkers::handoff_received() reaches PortIo {
     asm { out 1016, 10 }
 }
 
-public machine BootMarkers::entered() reaches PortIo {
+public machine BootMarkers::entered() reaches |assembly|::PortIo {
     asm { out 1016, 75 }   // K
     asm { out 1016, 101 }  // e
     asm { out 1016, 114 }  // r
@@ -42,7 +42,7 @@ public machine BootMarkers::entered() reaches PortIo {
     asm { out 1016, 10 }
 }
 
-public machine BootMarkers::partitioned() reaches PortIo {
+public machine BootMarkers::partitioned() reaches |assembly|::PortIo {
     asm { out 1016, 77 }  // M
     asm { out 1016, 101 } // e
     asm { out 1016, 109 } // m
@@ -59,7 +59,7 @@ public machine BootMarkers::partitioned() reaches PortIo {
     asm { out 1016, 10 }
 }
 
-public machine BootMarkers::memory_checked() reaches PortIo {
+public machine BootMarkers::memory_checked() reaches |assembly|::PortIo {
     asm { out 1016, 77 }  // M
     asm { out 1016, 101 } // e
     asm { out 1016, 109 } // m
@@ -78,7 +78,7 @@ public machine BootMarkers::memory_checked() reaches PortIo {
     asm { out 1016, 10 }
 }
 
-public machine BootMarkers::pair_checked() reaches PortIo {
+public machine BootMarkers::pair_checked() reaches |assembly|::PortIo {
     asm { out 1016, 77 }  // M
     asm { out 1016, 101 } // e
     asm { out 1016, 109 } // m
@@ -96,7 +96,7 @@ public machine BootMarkers::pair_checked() reaches PortIo {
     asm { out 1016, 10 }
 }
 
-public machine BootMarkers::page_ready() reaches PortIo {
+public machine BootMarkers::page_ready() reaches |assembly|::PortIo {
     asm { out 1016, 80 }  // P
     asm { out 1016, 97 }  // a
     asm { out 1016, 103 } // g
@@ -111,7 +111,7 @@ public machine BootMarkers::page_ready() reaches PortIo {
     asm { out 1016, 10 }
 }
 
-public machine BootMarkers::tables_ready() reaches PortIo {
+public machine BootMarkers::tables_ready() reaches |assembly|::PortIo {
     asm { out 1016, 84 } // T
     asm { out 1016, 97 } // a
     asm { out 1016, 98 } // b
@@ -128,7 +128,7 @@ public machine BootMarkers::tables_ready() reaches PortIo {
     asm { out 1016, 10 }
 }
 
-public machine BootMarkers::cpu_checked() reaches PortIo {
+public machine BootMarkers::cpu_checked() reaches |assembly|::PortIo {
     asm { out 1016, 67 } // CPU checked
     asm { out 1016, 80 }
     asm { out 1016, 85 }
@@ -144,7 +144,7 @@ public machine BootMarkers::cpu_checked() reaches PortIo {
     asm { out 1016, 10 }
 }
 
-public machine BootMarkers::root_located() reaches PortIo {
+public machine BootMarkers::root_located() reaches |assembly|::PortIo {
     asm { out 1016, 82 } // Root located
     asm { out 1016, 111 }
     asm { out 1016, 111 }
@@ -161,7 +161,7 @@ public machine BootMarkers::root_located() reaches PortIo {
     asm { out 1016, 10 }
 }
 
-public machine BootMarkers::root_read() reaches PortIo {
+public machine BootMarkers::root_read() reaches |assembly|::PortIo {
     asm { out 1016, 82 } // Root read
     asm { out 1016, 111 }
     asm { out 1016, 111 }
@@ -175,7 +175,7 @@ public machine BootMarkers::root_read() reaches PortIo {
     asm { out 1016, 10 }
 }
 
-public machine BootMarkers::tables_retained() reaches PortIo {
+public machine BootMarkers::tables_retained() reaches |assembly|::PortIo {
     asm { out 1016, 84 } // Tables retained
     asm { out 1016, 97 }
     asm { out 1016, 98 }
@@ -195,7 +195,7 @@ public machine BootMarkers::tables_retained() reaches PortIo {
     asm { out 1016, 10 }
 }
 
-public machine BootMarkers::mapping_retired() reaches PortIo {
+public machine BootMarkers::mapping_retired() reaches |assembly|::PortIo {
     asm { out 1016, 77 } // Mapping retired
     asm { out 1016, 97 }
     asm { out 1016, 112 }
@@ -215,7 +215,7 @@ public machine BootMarkers::mapping_retired() reaches PortIo {
     asm { out 1016, 10 }
 }
 
-public machine BootMarkers::mapping_checked() reaches PortIo {
+public machine BootMarkers::mapping_checked() reaches |assembly|::PortIo {
     asm { out 1016, 77 } // Mapping checked
     asm { out 1016, 97 }
     asm { out 1016, 112 }
@@ -235,7 +235,7 @@ public machine BootMarkers::mapping_checked() reaches PortIo {
     asm { out 1016, 10 }
 }
 
-public machine BootMarkers::segments_checked() reaches PortIo {
+public machine BootMarkers::segments_checked() reaches |assembly|::PortIo {
     asm { out 1016, 71 } // GDT checked
     asm { out 1016, 68 }
     asm { out 1016, 84 }
@@ -251,7 +251,7 @@ public machine BootMarkers::segments_checked() reaches PortIo {
     asm { out 1016, 10 }
 }
 
-public machine BootMarkers::task_state_checked() reaches PortIo {
+public machine BootMarkers::task_state_checked() reaches |assembly|::PortIo {
     // TSS checked
     asm { out 1016, 84 }
     asm { out 1016, 83 }
@@ -268,7 +268,7 @@ public machine BootMarkers::task_state_checked() reaches PortIo {
     asm { out 1016, 10 }
 }
 
-public machine BootMarkers::selectors_checked() reaches PortIo {
+public machine BootMarkers::selectors_checked() reaches |assembly|::PortIo {
     // Segments ready
     asm { out 1016, 83 }
     asm { out 1016, 101 }

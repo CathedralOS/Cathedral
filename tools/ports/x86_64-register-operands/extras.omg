@@ -1,16 +1,15 @@
-use x86_values::register_operands;
-use x86_values::register_operands::ObservedPriority;
-use x86_values::addresses::NumberResult;
-use facts::x86_registers::PriorityClass;
-use facts::x86_tlb_operands::Pcid;
-machine rejected(value: NumberResult) -> bool {
-    transition value { NumberResult::Rejected -> (true) _ -> (false) }
+use {x86_values}/register_operands.omg;
+use {x86_values}/addresses.omg;
+use {facts}/x86_registers.omg;
+use {facts}/x86_tlb_operands.omg;
+machine rejected(value: |addresses|::NumberResult) -> bool {
+    transition value { |addresses|::NumberResult::Rejected -> (true) _ -> (false) }
 }
 machine test_result() -> i32 {
-    let zero: NumberResult = register_operands::cr8_operand(ObservedPriority::Class { value: PriorityClass { raw: 0 } });
-    let large: NumberResult = register_operands::cr8_operand(ObservedPriority::Class { value: PriorityClass { raw: 16 } });
-    let maximum: NumberResult = register_operands::cr8_operand(ObservedPriority::Class { value: PriorityClass { raw: 255 } });
-    let invalid_frame: NumberResult = register_operands::cr3_pcid_operand(1, Pcid { value: 4095 }, true);
+    let zero: |addresses|::NumberResult = |register_operands|::cr8_operand(|register_operands|::ObservedPriority::Class { value: |x86_registers|::PriorityClass { raw: 0 } });
+    let large: |addresses|::NumberResult = |register_operands|::cr8_operand(|register_operands|::ObservedPriority::Class { value: |x86_registers|::PriorityClass { raw: 16 } });
+    let maximum: |addresses|::NumberResult = |register_operands|::cr8_operand(|register_operands|::ObservedPriority::Class { value: |x86_registers|::PriorityClass { raw: 255 } });
+    let invalid_frame: |addresses|::NumberResult = |register_operands|::cr3_pcid_operand(1, |x86_tlb_operands|::Pcid { value: 4095 }, true);
     transition rejected(zero) && rejected(large) && rejected(maximum) && rejected(invalid_frame) {
         true -> (0) _ -> (1)
     }

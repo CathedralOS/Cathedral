@@ -1,5 +1,3 @@
-module storage::record;
-
 // MC01 is the app's six-byte document, independent of transport serialization.
 public machine valid(length: u64, bytes: &[u8; 6]) -> bool {
     length == 6u64 && bytes[0] == 77u8 && bytes[1] == 67u8

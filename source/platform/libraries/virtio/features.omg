@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified translation of virtio-spec ad565bd701e93fa47bc288d45701e1ae53ac3c12; see PORT.md.
-module features;
 pub data Features [copy] { low: u64; high: u64; }
 pub const COMMON_INDIRECT_DESC: Features = Features { low: 268435456, high: 0 };
 pub const COMMON_EVENT_IDX: Features = Features { low: 536870912, high: 0 };

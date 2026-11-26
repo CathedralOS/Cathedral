@@ -1,135 +1,127 @@
-module background;
 // The background job: read the realm's Background, admit it into the last
 // slot with presentation only, and place it over the whole view with no keys.
 // Failed placement takes the admitted background down before the error returns.
-use protocol::main;
-use protocol::matrix;
-use shared::state::State;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::kernel;
-use policy::children::startup::realm::operations::Command;
-use policy::children::startup::realm::operations::Completion;
-use policy::children::launch::resources::recipes;
-use policy::children::launch::resources::recipes::Role;
-use policy::children::launch::resources::recipes::Offer;
-use policy::children::launch::resources::recipes::OfferDecision;
-use world::level;
-use world::surfaces;
-use world::geometry::Rect;
-use connections::storage::storage;
-use shared::storage::Outcome;
-use connections::listing;
-use realm_names;
-use children::stored;
-use children::lifecycle;
-use jobs;
-use jobs::Step;
-use shared::report;
+use {protocol}/main.omg;
+use {protocol}/matrix.omg;
+use {shared}/state.omg as shared_state;
+use {runtime}/kernel.omg;
+use {policy}/children/startup/realm/operations.omg;
+use {policy}/children/launch/resources/recipes.omg;
+use {world}/level.omg;
+use {world}/surfaces.omg;
+use {world}/geometry.omg;
+use {connections}/storage/storage.omg;
+use {shared}/storage.omg as shared_storage;
+use {connections}/listing.omg;
+use realm_names.omg;
+use {children}/stored.omg;
+use {children}/lifecycle.omg;
+use jobs.omg;
+use {shared}/report.omg;
 
 public const SLOT: u64 = 4u64;
 
 // One command of this job, for the job stack in [jobs.omg](jobs.omg).
-public machine execute(gate: &Gate, context: &mut State, now: u64, command: Command) -> Step reaches Kernel blocks invokes Kernel {
+public machine execute(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, command: |operations|::Command) -> |jobs|::Step reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     transition command {
         _ -> block done_with(gate, context, now, command)
     }
-    machine done_with(gate: &Gate, context: &mut State, now: u64, command: Command) -> Step reaches Kernel {
-        let completion: Completion = block run_command(gate, context, now, command);
-        Step::Done { completion: completion }
+    machine done_with(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, command: |operations|::Command) -> |jobs|::Step reaches |kernel|::Kernel {
+        let completion: |operations|::Completion = block run_command(gate, context, now, command);
+        |jobs|::Step::Done { completion: completion }
     }
 }
-machine run_command(gate: &Gate, context: &mut State, now: u64, command: Command) -> Completion reaches Kernel {
+machine run_command(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, command: |operations|::Command) -> |operations|::Completion reaches |kernel|::Kernel {
     transition command {
-        Command::ReadBackground -> block reading(gate, context, now)
-        Command::AdmitBackground -> block admitting(gate, context, now)
-        Command::PlaceBackground -> (placed(context))
-        Command::RecordBackground -> (recording(gate))
-        Command::StopBackground -> block stopping(gate, context)
-        _ -> (jobs::completed(command, 0u64))
+        |operations|::Command::ReadBackground -> block reading(gate, context, now)
+        |operations|::Command::AdmitBackground -> block admitting(gate, context, now)
+        |operations|::Command::PlaceBackground -> (placed(context))
+        |operations|::Command::RecordBackground -> (recording(gate))
+        |operations|::Command::StopBackground -> block stopping(gate, context)
+        _ -> (|jobs|::completed(command, 0u64))
     }
 }
 // The object configuration found, or the one named Background in the realm.
-machine reading(gate: &Gate, context: &mut State, now: u64) -> Completion reaches Kernel {
+machine reading(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64) -> |operations|::Completion reaches |kernel|::Kernel {
     let known: u64 = context.background_object;
-    let parent: u64 = listing::realm(context);
-    let background_name: [u64; 4] = realm_names::background();
+    let parent: u64 = |listing|::realm(context);
+    let background_name: [u64; 4] = |realm_names|::background();
     transition known != 0u64 {
         true -> block loading(gate, context, now, known)
         _ -> block searching(gate, context, now, parent, background_name)
     }
-    machine searching(gate: &Gate, context: &mut State, now: u64, parent: u64, background_name: [u64; 4]) -> Completion reaches Kernel {
+    machine searching(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, parent: u64, background_name: [u64; 4]) -> |operations|::Completion reaches |kernel|::Kernel {
         let name: [u64; 4] = background_name;
-        let object: u64 = block listing::find(gate, context, now, parent, &name);
+        let object: u64 = block |listing|::find(gate, context, now, parent, &name);
         transition object != 0u64 {
             true -> block loading(gate, context, now, object)
-            _ -> (jobs::completed(Command::ReadBackground, listing::MISSING))
+            _ -> (|jobs|::completed(|operations|::Command::ReadBackground, |listing|::MISSING))
         }
     }
-    machine loading(gate: &Gate, context: &mut State, now: u64, object: u64) -> Completion reaches Kernel {
+    machine loading(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, object: u64) -> |operations|::Completion reaches |kernel|::Kernel {
         context.background_object = object;
-        let outcome: Outcome = block storage::read_object(gate, context, now, object, 0u64);
+        let outcome: |shared_storage|::Outcome = block |storage|::read_object(gate, context, now, object, 0u64);
         transition outcome.words[0] == 0u64 && outcome.attachment != 0u64 {
             true -> (loaded(context, outcome))
             _ -> block unread(gate, outcome)
         }
     }
-    machine loaded(context: &mut State, outcome: Outcome) -> Completion {
+    machine loaded(context: &mut |shared_state|::State, outcome: |shared_storage|::Outcome) -> |operations|::Completion {
         context.image = outcome.attachment;
         context.image_length = outcome.words[4];
-        jobs::completed(Command::ReadBackground, 0u64)
+        |jobs|::completed(|operations|::Command::ReadBackground, 0u64)
     }
-    machine unread(gate: &Gate, outcome: Outcome) -> Completion reaches Kernel {
+    machine unread(gate: &|kernel|::Gate, outcome: |shared_storage|::Outcome) -> |operations|::Completion reaches |kernel|::Kernel {
         block release(gate, outcome.attachment);
         transition outcome.words[0] == 0u64 {
-            true -> (jobs::completed(Command::ReadBackground, kernel::IO_ERROR))
-            _ -> (jobs::completed(Command::ReadBackground, outcome.words[0]))
+            true -> (|jobs|::completed(|operations|::Command::ReadBackground, |kernel|::IO_ERROR))
+            _ -> (|jobs|::completed(|operations|::Command::ReadBackground, outcome.words[0]))
         }
     }
 }
 // Presentation only, under the stock background offer; the image goes either way.
-machine admitting(gate: &Gate, context: &mut State, now: u64) -> Completion reaches Kernel {
-    let decision: OfferDecision = recipes::offer(Role::Background);
+machine admitting(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64) -> |operations|::Completion reaches |kernel|::Kernel {
+    let decision: |recipes|::OfferDecision = |recipes|::offer(|recipes|::Role::Background);
     transition decision {
-        OfferDecision::Offered { offer } -> block offered(gate, context, now, offer)
-        OfferDecision::InsufficientBacking -> (jobs::completed(Command::AdmitBackground, kernel::NO_MEMORY))
+        |recipes|::OfferDecision::Offered { offer } -> block offered(gate, context, now, offer)
+        |recipes|::OfferDecision::InsufficientBacking -> (|jobs|::completed(|operations|::Command::AdmitBackground, |kernel|::NO_MEMORY))
     }
-    machine offered(gate: &Gate, context: &mut State, now: u64, offer: Offer) -> Completion reaches Kernel {
+    machine offered(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, offer: |recipes|::Offer) -> |operations|::Completion reaches |kernel|::Kernel {
         let image: u64 = context.image;
         let length: u64 = context.image_length;
-        let argument: u64 = jobs::launch_argument(0u64, context.background_object);
+        let argument: u64 = |jobs|::launch_argument(0u64, context.background_object);
         context.image = 0u64;
         context.image_length = 0u64;
-        let status: u64 = block stored::admit_image(gate, context, now, SLOT, image, length, 0u64, argument, offer.channels,
+        let status: u64 = block |stored|::admit_image(gate, context, now, SLOT, image, length, 0u64, argument, offer.channels,
             offer.descendants, offer.cpu, offer.private_pages, offer.reader_pages, 0u64, offer.imports, false, false);
         block release(gate, image);
-        jobs::completed(Command::AdmitBackground, status)
+        |jobs|::completed(|operations|::Command::AdmitBackground, status)
     }
 }
 // One rank at the bottom of the allowance, over the whole view, with no keys.
-machine placed(context: &mut State) -> Completion {
-    let ranged: u64 = surfaces::range(&mut context.world, SLOT, 0u64, 1u64);
-    let whole: Rect = Rect { x: 0u64, y: 0u64, width: context.world.parent.width, height: context.world.parent.height };
+machine placed(context: &mut |shared_state|::State) -> |operations|::Completion {
+    let ranged: u64 = |surfaces|::range(&mut context.world, SLOT, 0u64, 1u64);
+    let whole: |geometry|::Rect = |geometry|::Rect { x: 0u64, y: 0u64, width: context.world.parent.width, height: context.world.parent.height };
     transition ranged == 0u64 {
-        true -> (jobs::completed(Command::PlaceBackground, level::place(&mut context.world, SLOT, whole, 0u64)))
-        _ -> (jobs::completed(Command::PlaceBackground, ranged))
+        true -> (|jobs|::completed(|operations|::Command::PlaceBackground, |level|::place(&mut context.world, SLOT, whole, 0u64)))
+        _ -> (|jobs|::completed(|operations|::Command::PlaceBackground, ranged))
     }
 }
-machine recording(gate: &Gate) -> Completion reaches Kernel {
-    report::background_admitted(gate);
-    jobs::completed(Command::RecordBackground, 0u64)
+machine recording(gate: &|kernel|::Gate) -> |operations|::Completion reaches |kernel|::Kernel {
+    |report|::background_admitted(gate);
+    |jobs|::completed(|operations|::Command::RecordBackground, 0u64)
 }
-machine stopping(gate: &Gate, context: &mut State) -> Completion reaches Kernel {
-    block lifecycle::reclaim(gate, context, SLOT);
-    jobs::completed(Command::StopBackground, 0u64)
+machine stopping(gate: &|kernel|::Gate, context: &mut |shared_state|::State) -> |operations|::Completion reaches |kernel|::Kernel {
+    block |lifecycle|::reclaim(gate, context, SLOT);
+    |jobs|::completed(|operations|::Command::StopBackground, 0u64)
 }
-machine release(gate: &Gate, handle: u64) reaches Kernel {
+machine release(gate: &|kernel|::Gate, handle: u64) reaches |kernel|::Kernel {
     transition handle != 0u64 {
         true -> block releasing(gate, handle)
         _ -> done()
     }
-    machine releasing(gate: &Gate, handle: u64) reaches Kernel {
-        let ignored: u64 = block Kernel::memory_release(gate, handle);
+    machine releasing(gate: &|kernel|::Gate, handle: u64) reaches |kernel|::Kernel {
+        let ignored: u64 = block |kernel|::Kernel::memory_release(gate, handle);
     }
 }
 machine done() {}

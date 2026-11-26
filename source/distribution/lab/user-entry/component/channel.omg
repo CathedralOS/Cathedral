@@ -1,13 +1,8 @@
-module channel;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::ipc::main;
-use runtime::ipc::main::Channel;
-use runtime::ipc::main::Opened;
-use runtime::ipc::main::Received;
+use {runtime}/kernel.omg;
+use {runtime}/ipc/main.omg;
 
 // Two transport objects of quota; repeated exchange proves close refunded it.
-public machine check(gate: &Gate) -> u64 reaches Kernel blocks invokes Kernel {
+public machine check(gate: &|kernel|::Gate) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     let result: u64 = block once(gate);
     transition result == 0u64 {
         true -> block once(gate)
@@ -15,39 +10,39 @@ public machine check(gate: &Gate) -> u64 reaches Kernel blocks invokes Kernel {
     }
 }
 
-machine once(gate: &Gate) -> u64 reaches Kernel {
-    let opened: Opened = runtime::ipc::main::open(gate);
+machine once(gate: &|kernel|::Gate) -> u64 reaches |kernel|::Kernel {
+    let opened: |main|::Opened = |main|::open(gate);
     transition opened {
-        Opened::Ready { channel } -> block capacity(gate, channel)
+        |main|::Opened::Ready { channel } -> block capacity(gate, channel)
         _ -> (102u64)
     }
 }
 
-machine capacity(gate: &Gate, channel: Channel) -> u64 reaches Kernel {
-    let extra: Opened = runtime::ipc::main::open(gate);
+machine capacity(gate: &|kernel|::Gate, channel: |main|::Channel) -> u64 reaches |kernel|::Kernel {
+    let extra: |main|::Opened = |main|::open(gate);
     transition extra {
-        Opened::Failed { code } -> cleanup(gate, channel, 109u64)
-        Opened::Ready { channel as other } -> block exhausted(gate, channel, other)
+        |main|::Opened::Failed { code } -> cleanup(gate, channel, 109u64)
+        |main|::Opened::Ready { channel as other } -> block exhausted(gate, channel, other)
     }
 }
-machine exhausted(gate: &Gate, channel: Channel, other: Channel) -> u64 reaches Kernel {
-    let extra: Opened = runtime::ipc::main::open(gate);
-    let ignored: u64 = runtime::ipc::main::close(gate, other);
+machine exhausted(gate: &|kernel|::Gate, channel: |main|::Channel, other: |main|::Channel) -> u64 reaches |kernel|::Kernel {
+    let extra: |main|::Opened = |main|::open(gate);
+    let ignored: u64 = |main|::close(gate, other);
     transition extra {
-        Opened::Failed { code } -> block exchange(gate, channel)
-        Opened::Ready { channel as third } -> unexpected_capacity(gate, channel, third)
+        |main|::Opened::Failed { code } -> block exchange(gate, channel)
+        |main|::Opened::Ready { channel as third } -> unexpected_capacity(gate, channel, third)
     }
 }
-machine unexpected_capacity(gate: &Gate, channel: Channel, other: Channel) -> u64 reaches Kernel {
-    let ignored: u64 = runtime::ipc::main::close(gate, other);
+machine unexpected_capacity(gate: &|kernel|::Gate, channel: |main|::Channel, other: |main|::Channel) -> u64 reaches |kernel|::Kernel {
+    let ignored: u64 = |main|::close(gate, other);
     cleanup(gate, channel, 109u64)
 }
 
-machine exchange(gate: &Gate, channel: Channel) -> u64 reaches Kernel {
+machine exchange(gate: &|kernel|::Gate, channel: |main|::Channel) -> u64 reaches |kernel|::Kernel {
     let mut sent: [u64; 8];
     sent[0] = 0x123456789abcdef0u64;
     sent[7] = 0xfedcba9876543210u64;
-    let bytes: u64 = runtime::ipc::main::send(gate, channel.sender, &sent, 64u64);
+    let bytes: u64 = |main|::send(gate, channel.sender, &sent, 64u64);
     transition bytes == 64u64 && sent[0] == 0x123456789abcdef0u64
         && sent[7] == 0xfedcba9876543210u64 {
         true -> block receive(gate, channel)
@@ -55,15 +50,15 @@ machine exchange(gate: &Gate, channel: Channel) -> u64 reaches Kernel {
     }
 }
 
-machine receive(gate: &Gate, channel: Channel) -> u64 reaches Kernel {
+machine receive(gate: &|kernel|::Gate, channel: |main|::Channel) -> u64 reaches |kernel|::Kernel {
     let mut received: [u64; 8];
-    let result: Received = block runtime::ipc::main::receive(gate, channel.receiver, &mut received);
+    let result: |main|::Received = block |main|::receive(gate, channel.receiver, &mut received);
     transition result {
-        Received::Message { bytes } -> contents(gate, channel, bytes, received)
+        |main|::Received::Message { bytes } -> contents(gate, channel, bytes, received)
         _ -> cleanup(gate, channel, 104u64)
     }
 }
-machine contents(gate: &Gate, channel: Channel, bytes: u64, received: [u64; 8]) -> u64 reaches Kernel {
+machine contents(gate: &|kernel|::Gate, channel: |main|::Channel, bytes: u64, received: [u64; 8]) -> u64 reaches |kernel|::Kernel {
     transition bytes == 64u64 && received[0] == 0x123456789abcdef0u64
         && received[7] == 0xfedcba9876543210u64 {
         true -> cleanup(gate, channel, 0u64)
@@ -71,17 +66,17 @@ machine contents(gate: &Gate, channel: Channel, bytes: u64, received: [u64; 8]) 
     }
 }
 
-machine cleanup(gate: &Gate, channel: Channel, result: u64) -> u64 reaches Kernel {
+machine cleanup(gate: &|kernel|::Gate, channel: |main|::Channel, result: u64) -> u64 reaches |kernel|::Kernel {
     let sender: u64 = channel.sender;
-    let closed: u64 = runtime::ipc::main::close(gate, channel);
+    let closed: u64 = |main|::close(gate, channel);
     transition closed == 0u64 {
         true -> retired(gate, sender, result)
         _ -> (105u64)
     }
 }
-machine retired(gate: &Gate, sender: u64, result: u64) -> u64 reaches Kernel {
+machine retired(gate: &|kernel|::Gate, sender: u64, result: u64) -> u64 reaches |kernel|::Kernel {
     let message: [u64; 8];
-    let sent: u64 = runtime::ipc::main::send(gate, sender, &message, 0u64);
+    let sent: u64 = |main|::send(gate, sender, &message, 0u64);
     transition sent == 0xfffffffffffffff7u64 {
         true -> (result)
         _ -> (110u64)

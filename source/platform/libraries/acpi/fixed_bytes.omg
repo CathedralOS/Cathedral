@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Original bounded initialized-byte support for the fixed-table port.
-module fixed_bytes;
-use bytes::le32;
-use bytes::le64;
+use bytes.omg;
 pub data U8Result [copy] { error: u8; value: u8; }
 pub data U16Result [copy] { error: u8; value: u16; }
 pub data U32Result [copy] { error: u8; value: u32; }
@@ -36,7 +34,7 @@ pub machine read_u32(input: &[u8; 4096], length: u64, offset: u64) -> U32Result 
         transition length - offset >= 4 { true -> decode(input, offset) _ -> (U32Result { error: 2 }) }
     }
     state decode(input: &[u8; 4096], offset: u64) -> U32Result {
-        let value: u32 = le32(input, offset);
+        let value: u32 = |bytes|::le32(input, offset);
         U32Result { value: value }
     }
 }
@@ -48,7 +46,7 @@ pub machine read_u64(input: &[u8; 4096], length: u64, offset: u64) -> U64Result 
         transition length - offset >= 8 { true -> decode(input, offset) _ -> (U64Result { error: 2 }) }
     }
     state decode(input: &[u8; 4096], offset: u64) -> U64Result {
-        let value: u64 = le64(input, offset);
+        let value: u64 = |bytes|::le64(input, offset);
         U64Result { value: value }
     }
 }

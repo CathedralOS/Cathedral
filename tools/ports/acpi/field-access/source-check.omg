@@ -1,1 +1,6 @@
-use access::geometry;use access::chunks;use aml::field_model::Field;use aml::field_model::DeclarationKind;use integers::integers::IntegerSize;data Main{} machine Main::main(&mut self){let field:Field=Field {};_ = geometry::plan(DeclarationKind::Field,&field,4,IntegerSize::EightBytes);}
+use {aml}/field_model.omg;
+use {integers}/integers.omg;
+use {access}/geometry.omg;
+use {access}/chunks.omg;
+
+data Main{} machine Main::main(&mut self){let field:|field_model|::Field=|field_model|::Field {};_ = |geometry|::plan(|field_model|::DeclarationKind::Field,&field,4,|integers|::IntegerSize::EightBytes);}

@@ -1,21 +1,10 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Original Cathedral semantic fixture; no firmware or external example content.
-use aml::model::Outcome;
-use aml::model::Path;
-use aml::model::Span;
-use aml::model::Read;
-use aml::field_model::Access;
-use aml::field_model::AccessType;
-use aml::field_model::UpdateRule;
-use aml::field_model::AccessResult;
-use aml::field_model::Connection;
-use aml::field_model::ListState;
-use aml::field_model::DeclarationKind;
-use aml::field_model::DeclarationResult;
-use aml::field_model::Pending;
-use fields::field_list::parse_list;
-machine named(connection:Connection)->bool {transition connection {Connection::Name {connection_name} -> check(connection_name) _ -> (false)} state check(path:Path)->bool {path.parents==1 && path.count==1 && path.segments[0]==0x304e4f43}}
-machine buffered(connection:Connection)->bool {transition connection {Connection::Buffer {buffer_encoding,size_known,declared_size,initializer} -> check(buffer_encoding,size_known,declared_size,initializer) _ -> (false)} state check(span:Span,known:bool,size:u64,bytes:Span)->bool {span.unit==9 && known && size==2 && bytes.start==16 && bytes.end==18}}
+use {aml}/model.omg;
+use {aml}/field_model.omg;
+use {fields}/field_list.omg;
+machine named(connection:|field_model|::Connection)->bool {transition connection {|field_model|::Connection::Name {connection_name} -> check(connection_name) _ -> (false)} state check(path:|model|::Path)->bool {path.parents==1 && path.count==1 && path.segments[0]==0x304e4f43}}
+machine buffered(connection:|field_model|::Connection)->bool {transition connection {|field_model|::Connection::Buffer {buffer_encoding,size_known,declared_size,initializer} -> check(buffer_encoding,size_known,declared_size,initializer) _ -> (false)} state check(span:|model|::Span,known:bool,size:u64,bytes:|model|::Span)->bool {span.unit==9 && known && size==2 && bytes.start==16 && bytes.end==18}}
 
 machine test()->u64 {
 let mut input:[u8;1024];
@@ -42,8 +31,8 @@ input[19]=85;
 input[20]=70;
 input[21]=48;
 input[22]=16;
-let scope:Path=Path {absolute:true};let result:ListState=parse_list(&input,23,0,9,scope,0,1024,32);let one:bool=named(result.fields[0].connection);let two:bool=buffered(result.fields[1].connection);
- transition result.outcome==Outcome::Success && result.count==2 && result.bit_offset==24 && one && two {true -> (0) _ -> (1)}
+let scope:|model|::Path=|model|::Path {absolute:true};let result:|field_model|::ListState=|field_list|::parse_list(&input,23,0,9,scope,0,1024,32);let one:bool=named(result.fields[0].connection);let two:bool=buffered(result.fields[1].connection);
+ transition result.outcome==|model|::Outcome::Success && result.count==2 && result.bit_offset==24 && one && two {true -> (0) _ -> (1)}
 }
 
 const TEST_RESULT:u64=test();

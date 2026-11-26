@@ -31,7 +31,7 @@ for path,file in doc['files'].items():
   row.update(disposition=status,reason=reason)
   if anchor:row['targets']=[dict(path=dest,anchor=anchor)]
   else:row.pop('targets',None)
- file.update(disposition='pending',reason='PTE word/index/level slice implemented; complete detached table algorithms remain engineering.',targets=[dict(path=target,anchor='module page_entries;')])
+ file.update(disposition='pending',reason='PTE word/index/level slice implemented; complete detached table algorithms remain engineering.',targets=[dict(path=target,anchor='public const ADDRESS_MASK')])
 text=json.dumps(doc,indent=2)+'\n'
 if '--check' in sys.argv:assert p.read_text()==text,'stale reviewed source mapping'
 else:p.write_text(text)

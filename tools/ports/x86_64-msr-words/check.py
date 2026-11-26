@@ -22,13 +22,13 @@ def main():
  subprocess.run([sys.executable,str(HERE/'map_inventory.py'),'--check'],cwd=ROOT,check=True)
  if args.host_only:return
  compiler=args.omega.resolve();print('Omega SHA-256:',hashlib.sha256(compiler.read_bytes()).hexdigest(),flush=True)
- body='use x86::msr_words;\nmachine checks()->i32 {\n';checks=[]
+ body='use {x86}/msr_words.omg;\nmachine checks()->i32 {\n';checks=[]
  for n,row in enumerate(rows):
   mode,*nums=row;v,lo,hi=map(int,nums)
   if mode=='split':
-   body+=f'let low{n}:u32=msr_words::low_word({v});\nlet high{n}:u32=msr_words::high_word({v});\nlet both{n}:u64=msr_words::combine(low{n},high{n});\n';checks += [f'low{n}=={lo}',f'high{n}=={hi}',f'both{n}=={v}']
+   body+=f'let low{n}:u32=|msr_words|::low_word({v});\nlet high{n}:u32=|msr_words|::high_word({v});\nlet both{n}:u64=|msr_words|::combine(low{n},high{n});\n';checks += [f'low{n}=={lo}',f'high{n}=={hi}',f'both{n}=={v}']
   else:
-   body+=f'let joined{n}:u64=msr_words::combine({v},{lo});\n';checks+=[f'joined{n}=={hi}']
+   body+=f'let joined{n}:u64=|msr_words|::combine({v},{lo});\n';checks+=[f'joined{n}=={hi}']
  body+='transition '+' && '.join(checks)+' { true -> (0) _ -> (1) } }\nconst RESULT:i32=checks();\nmachine require_success(value:i32) requires value == 0; {}\ndata Main{}\nmachine Main::main(&mut self){require_success(RESULT);}\n'
  build=(HERE/'build.omg').read_text().replace('../../../source/',str(ROOT/'source')+'/')
  for mutation in [None,('low0==0','low0==1'),('high0==0','high0==1')]:

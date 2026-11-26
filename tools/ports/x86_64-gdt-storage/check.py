@@ -27,7 +27,7 @@ def main():
   for path in cases:evaluate(path)
   if not args.case:evaluate(HERE/'extras.omg')
  if not args.case:
-  for file,old,new in [('system_fits','table.words[2] == 18446744073709551615','table.words[2] == 0'),('single_slot','result0 in AppendResult::Full','result0 in AppendResult::InvalidTable'),('mixed','added(result1, 19)','added(result1, 16)')]:evaluate(HERE/'cases'/f'{file}.omg',(old,new))
+  for file,old,new in [('system_fits','table.words[2] == 18446744073709551615','table.words[2] == 0'),('single_slot','result0 in |gdt_storage|::AppendResult::Full','result0 in |gdt_storage|::AppendResult::InvalidTable'),('mixed','added(result1, 19)','added(result1, 16)')]:evaluate(HERE/'cases'/f'{file}.omg',(old,new))
  if not args.case:evaluate(HERE/'extras.omg',('table.words[8191] == 102','table.words[8191] == 0'))
  print('PASS selected GDT storage fixtures and controls',flush=True)
 if __name__=='__main__':main()

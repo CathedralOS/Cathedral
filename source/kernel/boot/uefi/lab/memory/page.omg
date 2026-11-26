@@ -1,7 +1,8 @@
-use omega::language::core::extent;
-use omega::language::core::layout;
-use lab::memory::mapping::firmware::root;
-use memory::profile;
+use {omega}/language/core/extent.omg;
+use {omega}/language/core/layout.omg;
+use {omega}/language/core/access/access.omg;
+use lab/memory/mapping/firmware/root.omg;
+use memory/profile.omg;
 
 // Boot owns this first page and all skipped bytes until a later kernel owner
 // takes them. Alignment is geometry, not authority: both splits conserve the
@@ -11,123 +12,123 @@ public data KernelPagePlacement {}
 data PageFrame {}
 
 data PreparedPage {
-    case Ready(storage: Extent in Granted & Resident<KernelPagePlacement, KernelPage>);
-    case Rejected(storage: Extent in Granted & Vacant);
+    case Ready(storage: |extent|::Extent in |extent|::Granted & |extent|::Resident<KernelPagePlacement, KernelPage>);
+    case Rejected(storage: |extent|::Extent in |extent|::Granted & |extent|::Vacant);
 }
 
 data PageReservation {
-    padding: Extent in Granted & Vacant;
+    padding: |extent|::Extent in |extent|::Granted & |extent|::Vacant;
     page: PreparedPage;
-    tail: Extent in Granted & Vacant;
+    tail: |extent|::Extent in |extent|::Granted & |extent|::Vacant;
     verified: bool;
 }
 
 data BootPage {
-    leading: Extent in Granted & Vacant;
+    leading: |extent|::Extent in |extent|::Granted & |extent|::Vacant;
     reservation: PageReservation;
 }
 
-machine KernelPagePlacement::plan(schema: Schema) -> AccessPlan {
-    let mut entries: [FieldEntry; 64];
-    entries[0] = FieldEntry {
-        key: schema.fields[0].key, representation: FieldPlan::At { offset: 0 },
+machine KernelPagePlacement::plan(schema: |layout|::Schema) -> |layout|::AccessPlan {
+    let mut entries: [|layout|::FieldEntry; 64];
+    entries[0] = |layout|::FieldEntry {
+        key: schema.fields[0].key, representation: |layout|::FieldPlan::At { offset: 0 },
     };
     let services: [u64; 32];
-    let layout: LayoutPlan = LayoutPlan {
+    let layout: |layout|::LayoutPlan = |layout|::LayoutPlan {
         entries: entries, entry_count: 1, size_fixed: 4096,
         size_is_dynamic: false, align: 4096,
     };
-    AccessPlan::with_reach(
-        AccessPlan::with(AccessPlan::inaccessible(layout), schema.fields[0].key,
-            FieldAccess::Stable { read: true, write: true, exposure: Exposure::Exported }),
-        BoundaryReach { services: services, service_count: 0 }
+    |layout|::AccessPlan::with_reach(
+        |layout|::AccessPlan::with(|layout|::AccessPlan::inaccessible(layout), schema.fields[0].key,
+            |layout|::FieldAccess::Stable { read: true, write: true, exposure: |layout|::Exposure::Exported }),
+        |layout|::BoundaryReach { services: services, service_count: 0 }
     )
 }
 
 // Worst-case padding is 4095 bytes. Subtract it before reserving the page;
 // never round an address up past its representable bound. The returned padding
 // remains owned even when it is empty. This is not allocator reset or mapping.
-machine PageFrame::prepare(storage: Extent in Granted & Vacant) -> PageReservation
+machine PageFrame::prepare(storage: |extent|::Extent in |extent|::Granted & |extent|::Vacant) -> PageReservation
 requires storage.length >= 8191 && address::Bound == 18446744073709551616
-reaches ResourceProfileSupply
+reaches |layout|::ResourceProfileSupply
 {
     let residue: u64 = (storage.base as u64) % 4096;
     let padding_length: u64 = (4096 - residue) % 4096;
-    let prefix: VacantExtentParts = split_vacant_extent(storage, padding_length);
-    let parts: VacantExtentParts = split_vacant_extent(prefix.rest, 4096);
+    let prefix: |extent|::VacantExtentParts = |extent|::split_vacant_extent(storage, padding_length);
+    let parts: |extent|::VacantExtentParts = |extent|::split_vacant_extent(prefix.rest, 4096);
     let geometry: bool = (parts.taken.base as u64) % 4096 == 0 && parts.taken.length == 4096;
     let mut words: [u64; 512];
     words[0] = 17;
     words[511] = 73;
-    transition NativeAccess<KernelPagePlacement, KernelPage, BootMemory>::initialize(
+    transition |layout|::NativeAccess<KernelPagePlacement, KernelPage, |profile|::BootMemory>::initialize(
         parts.taken, KernelPage { words: words }
     ) {
-        AccessOutcome::Ready { view } -> verify(prefix.taken, view, parts.rest, geometry)
-        AccessOutcome::Rejected { returned, reason } -> PageReservation {
+        |layout|::AccessOutcome::Ready { view } -> verify(prefix.taken, view, parts.rest, geometry)
+        |layout|::AccessOutcome::Rejected { returned, reason } -> PageReservation {
             padding: prefix.taken, page: PreparedPage::Rejected { storage: returned.source },
             tail: parts.rest, verified: false,
         }
     }
 
     machine verify(
-        padding: Extent in Granted & Vacant,
-        storage: Extent in Granted & Resident<KernelPagePlacement, KernelPage>,
-        tail: Extent in Granted & Vacant, geometry: bool
+        padding: |extent|::Extent in |extent|::Granted & |extent|::Vacant,
+        storage: |extent|::Extent in |extent|::Granted & |extent|::Resident<KernelPagePlacement, KernelPage>,
+        tail: |extent|::Extent in |extent|::Granted & |extent|::Vacant, geometry: bool
     ) -> PageReservation {
-        let mut retained: Extent in Granted & Resident<KernelPagePlacement, KernelPage> = storage;
+        let mut retained: |extent|::Extent in |extent|::Granted & |extent|::Resident<KernelPagePlacement, KernelPage> = storage;
         let indexed: bool = PageFrame::overwrite(
-            Access::view_resident_mut<KernelPagePlacement, KernelPage>(&mut retained)
+            |access|::view_resident_mut<KernelPagePlacement, KernelPage>(&mut retained)
         );
         // Exercise the same conservative External snapshot needed for the
         // active firmware root while its bytes still have a known oracle.
         // This borrows the existing grant; resident custody stays with retained.
-        let snapshot: FirmwareRootSnapshot = PagingHandoff::snapshot<BootMemory>(
-            (&retained) as &Extent in Granted
+        let snapshot: |root|::FirmwareRootSnapshot = |root|::PagingHandoff::snapshot<|profile|::BootMemory>(
+            (&retained) as &|extent|::Extent in |extent|::Granted
         );
         let copied: bool = PageFrame::check_snapshot(snapshot);
         // Both supply roles coexist over this exact known backing. A stronger
         // neighboring RAM profile must not satisfy a request made through the
         // read-only External role. No memory access follows the rejected view.
         let isolated: bool = PageFrame::reject_unstable_supply(
-            (&retained) as &Extent in Granted
+            (&retained) as &|extent|::Extent in |extent|::Granted
         );
-        transition NativeAccess<KernelPagePlacement, KernelPage, BootMemory>::move_out(retained) {
-            AccessExtraction::Moved { storage, value } -> clear(padding, storage, tail, geometry && indexed && copied && isolated, value)
+        transition |layout|::NativeAccess<KernelPagePlacement, KernelPage, |profile|::BootMemory>::move_out(retained) {
+            |layout|::AccessExtraction::Moved { storage, value } -> clear(padding, storage, tail, geometry && indexed && copied && isolated, value)
         }
     }
 
-    machine clear(padding: Extent in Granted & Vacant, storage: Extent in Granted & Vacant,
-                tail: Extent in Granted & Vacant, geometry: bool, observed: KernelPage) -> PageReservation {
+    machine clear(padding: |extent|::Extent in |extent|::Granted & |extent|::Vacant, storage: |extent|::Extent in |extent|::Granted & |extent|::Vacant,
+                tail: |extent|::Extent in |extent|::Granted & |extent|::Vacant, geometry: bool, observed: KernelPage) -> PageReservation {
         let valid: bool = geometry && PageFrame::check_image(&observed);
         let words: [u64; 512];
-        transition NativeAccess<KernelPagePlacement, KernelPage, BootMemory>::initialize(storage, KernelPage { words: words }) {
-            AccessOutcome::Ready { view } -> check_cleared(padding, view, tail, valid)
-            AccessOutcome::Rejected { returned, reason } -> PageReservation {
+        transition |layout|::NativeAccess<KernelPagePlacement, KernelPage, |profile|::BootMemory>::initialize(storage, KernelPage { words: words }) {
+            |layout|::AccessOutcome::Ready { view } -> check_cleared(padding, view, tail, valid)
+            |layout|::AccessOutcome::Rejected { returned, reason } -> PageReservation {
                 padding: padding, page: PreparedPage::Rejected { storage: returned.source },
                 tail: tail, verified: false,
             }
         }
     }
 
-    machine check_cleared(padding: Extent in Granted & Vacant,
-                        storage: Extent in Granted & Resident<KernelPagePlacement, KernelPage>,
-                        tail: Extent in Granted & Vacant, valid: bool) -> PageReservation {
-        transition NativeAccess<KernelPagePlacement, KernelPage, BootMemory>::move_out(storage) {
-            AccessExtraction::Moved { storage, value } -> retain(padding, storage, tail, valid, value)
+    machine check_cleared(padding: |extent|::Extent in |extent|::Granted & |extent|::Vacant,
+                        storage: |extent|::Extent in |extent|::Granted & |extent|::Resident<KernelPagePlacement, KernelPage>,
+                        tail: |extent|::Extent in |extent|::Granted & |extent|::Vacant, valid: bool) -> PageReservation {
+        transition |layout|::NativeAccess<KernelPagePlacement, KernelPage, |profile|::BootMemory>::move_out(storage) {
+            |layout|::AccessExtraction::Moved { storage, value } -> retain(padding, storage, tail, valid, value)
         }
     }
 
-    machine retain(padding: Extent in Granted & Vacant, storage: Extent in Granted & Vacant,
-                 tail: Extent in Granted & Vacant, valid: bool, value: KernelPage) -> PageReservation {
+    machine retain(padding: |extent|::Extent in |extent|::Granted & |extent|::Vacant, storage: |extent|::Extent in |extent|::Granted & |extent|::Vacant,
+                 tail: |extent|::Extent in |extent|::Granted & |extent|::Vacant, valid: bool, value: KernelPage) -> PageReservation {
         let cleared: bool = PageFrame::check_zero(&value, 0);
         // Reinstall the exact zero image just read back. Ready retains the
         // complete resident page; extraction never drops the original extent.
-        transition NativeAccess<KernelPagePlacement, KernelPage, BootMemory>::initialize(storage, value) {
-            AccessOutcome::Ready { view } -> PageReservation {
+        transition |layout|::NativeAccess<KernelPagePlacement, KernelPage, |profile|::BootMemory>::initialize(storage, value) {
+            |layout|::AccessOutcome::Ready { view } -> PageReservation {
                 padding: padding, page: PreparedPage::Ready { storage: view },
                 tail: tail, verified: valid && cleared,
             }
-            AccessOutcome::Rejected { returned, reason } -> PageReservation {
+            |layout|::AccessOutcome::Rejected { returned, reason } -> PageReservation {
                 padding: padding, page: PreparedPage::Rejected { storage: returned.source },
                 tail: tail, verified: false,
             }
@@ -135,25 +136,25 @@ reaches ResourceProfileSupply
     }
 }
 
-machine PageFrame::reject_unstable_supply(storage: &Extent in Granted) -> bool
-reaches ResourceProfileSupply
+machine PageFrame::reject_unstable_supply(storage: &|extent|::Extent in |extent|::Granted) -> bool
+reaches |layout|::ResourceProfileSupply
 {
-    transition Access::view_extent<KernelPagePlacement, KernelPage, FirmwareMemory>(storage) {
-        AccessOutcome::Ready { view } -> false
-        AccessOutcome::Rejected { returned, reason } -> rejected(reason)
+    transition |access|::view_extent<KernelPagePlacement, KernelPage, |root|::FirmwareMemory>(storage) {
+        |layout|::AccessOutcome::Ready { view } -> false
+        |layout|::AccessOutcome::Rejected { returned, reason } -> rejected(reason)
     }
-    machine rejected(reason: AccessInitializationFailure) -> bool {
+    machine rejected(reason: |layout|::AccessInitializationFailure) -> bool {
         transition reason {
-            AccessInitializationFailure::IncompatibleSupply -> true
+            |layout|::AccessInitializationFailure::IncompatibleSupply -> true
             _ -> false
         }
     }
 }
 
-machine PageFrame::check_snapshot(snapshot: FirmwareRootSnapshot) -> bool {
+machine PageFrame::check_snapshot(snapshot: |root|::FirmwareRootSnapshot) -> bool {
     transition snapshot {
-        FirmwareRootSnapshot::Ready { entries } -> check(entries)
-        FirmwareRootSnapshot::Unavailable -> false
+        |root|::FirmwareRootSnapshot::Ready { entries } -> check(entries)
+        |root|::FirmwareRootSnapshot::Unavailable -> false
     }
     machine check(entries: [u64; 512]) -> bool {
         let page: KernelPage = KernelPage { words: entries };
@@ -183,22 +184,22 @@ machine PageFrame::check_image(page: &KernelPage) -> bool {
 
 // Each indexed event borrows the same resident page. Read the first word again
 // after changing the last, then let whole extraction independently observe both.
-machine PageFrame::overwrite(view: &mut Access<KernelPagePlacement, KernelPage>) -> bool {
-    let first: u64 = omega::language::read(&view.words[0]);
-    let last: u64 = omega::language::read(&view.words[511]);
+machine PageFrame::overwrite(view: &mut |layout|::Access<KernelPagePlacement, KernelPage>) -> bool {
+    let first: u64 = |layout|::read(&view.words[0]);
+    let last: u64 = |layout|::read(&view.words[511]);
     PageFrame::write_word(view, 0, 29);
     PageFrame::write_word(view, 511, 97);
-    let updated_first: u64 = omega::language::read(&view.words[0]);
-    let updated_last: u64 = omega::language::read(&view.words[511]);
+    let updated_first: u64 = |layout|::read(&view.words[0]);
+    let updated_last: u64 = |layout|::read(&view.words[511]);
     first == 17 && last == 73 && updated_first == 29 && updated_last == 97
 }
 
 machine PageFrame::write_word(
-    view: &mut Access<KernelPagePlacement, KernelPage>, index: u64, value: u64
+    view: &mut |layout|::Access<KernelPagePlacement, KernelPage>, index: u64, value: u64
 )
 requires index < 512
 {
-    omega::language::write(&mut view.words[index], value);
+    |layout|::write(&mut view.words[index], value);
 }
 
 machine PageFrame::check_zero(page: &KernelPage, index: u64) -> bool

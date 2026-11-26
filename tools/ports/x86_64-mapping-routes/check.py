@@ -40,7 +40,7 @@ def main():
    evaluate(body);print('PASS extra',name,flush=True)
    if name=='mismatch':evaluate(body,('expected==4096','expected==8192'));print('PASS mismatch body mutation',flush=True)
    if name=='replaced_capture':evaluate(body,('value.edits.zero_mask==2','value.edits.zero_mask==0'));print('PASS zero request body mutation',flush=True)
-  for n,old,new in [(0,'value.edits.write_mask == 3','value.edits.write_mask == 0'),(1,'result in ChildPlan::AllocationFailed','result in ChildPlan::HugeParent')]:
+  for n,old,new in [(0,'value.edits.write_mask == 3','value.edits.write_mask == 0'),(1,'result in |mapping_plans|::ChildPlan::AllocationFailed','result in |mapping_plans|::ChildPlan::HugeParent')]:
    evaluate(fixture([n]),(old,new));print('PASS body mutation',n,flush=True)
  print('PASS selected complete-route scenarios and controls',flush=True)
 if __name__=='__main__':main()

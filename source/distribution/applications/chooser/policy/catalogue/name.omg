@@ -1,5 +1,3 @@
-module catalogue::name;
-
 // The current picker has at most three user slots beside its hidden template.
 public machine user_name(slot: u64, name: &mut [u64; 6]) -> bool {
     transition slot > 0u64 && slot < 4u64 {

@@ -1,1 +1,1 @@
-use scalar_helpers;
+use scalar_helpers.omg;

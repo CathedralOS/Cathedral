@@ -1,5 +1,5 @@
 // Local equivalent schema demands all fourteen existing policy field projections.
-use facts::x86_page_table_layout::X86PageTableEntryLayout;
+use {facts}/x86_page_table_layout.omg;
 data LocalPageTableEntry {
     present: bool;
     writable: bool;
@@ -16,7 +16,7 @@ data LocalPageTableEntry {
     protection_key: u8 [0..=15];
     no_execute: bool;
 }
-data Main { word: X86PageTableEntryLayout<LocalPageTableEntry>; }
+data Main { word: |x86_page_table_layout|::X86PageTableEntryLayout<LocalPageTableEntry>; }
 machine Main::main(&mut self) -> i32 {
     self.word.present = true;
     self.word.writable = true;

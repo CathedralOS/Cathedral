@@ -1,23 +1,19 @@
-module main;
-
 // Resume outstanding work. Storage owns recoverable uncertainty; service loss
 // elsewhere ends this app. Native packet translation is outside the app.
-use state::State;
-use state::Phase;
-use operations::Completion;
-use operations::Command;
-use session::session;
-use storage::storage;
+use state.omg as local_state;
+use operations.omg;
+use session/session.omg;
+use storage/storage.omg;
 
-public machine advance(s: &mut State, completion: &Completion) -> Command {
+public machine advance(s: &mut |local_state|::State, completion: &|operations|::Completion) -> |operations|::Command {
     transition completion.transport_status == 0u64 {
-        true -> session::session::resume(s, completion.reply)
+        true -> |session|::resume(s, completion.reply)
         _ -> failed(s, completion.transport_status)
     }
-    machine failed(s: &mut State, status: u64) -> Command {
+    machine failed(s: &mut |local_state|::State, status: u64) -> |operations|::Command {
         transition s.phase {
-            Phase::Storage { step } -> storage::storage::failed(s, status)
-            _ -> (Command::Exit)
+            |local_state|::Phase::Storage { step } -> |storage|::failed(s, status)
+            _ -> (|operations|::Command::Exit)
         }
     }
 }

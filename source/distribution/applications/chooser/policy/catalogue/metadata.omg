@@ -1,5 +1,3 @@
-module catalogue::metadata;
-
 public data Classification {
     executable: bool;
     template: bool;

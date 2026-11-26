@@ -1,142 +1,131 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Uses the existing AML NameString and namespace APIs. A running method opens a
 // search scope without inserting a namespace level; dynamic Name remains absent.
-module execution_names;
-use aml::model::Outcome;
-use aml::model::Path;
-use aml::model::PathResult;
-use aml::model::Lookup;
-use aml::model::Namespace;
-use aml::model::Read;
-use aml::names::resolve;
-use aml::names::parent;
-use aml::names::namestring;
-use aml::namespace::get;
-use aml::bytes::opcode;
-use execution_model::ExecutionOutcome;
-use execution_model::Frame;
-use execution_model::NameCache;
-use execution_model::Target;
-use execution_model::TargetResult;
-pub data NamedResult [copy] { outcome: ExecutionOutcome; object_id: u64; entry_index: u64; path: Path; next: u64; }
-pub machine decode_outcome(value: Outcome) -> ExecutionOutcome {
-    transition value { Outcome::Success -> (ExecutionOutcome::Success)
-        Outcome::Truncated -> (ExecutionOutcome::Truncated)
-        Outcome::Capacity -> (ExecutionOutcome::Capacity)
-        Outcome::MissingObject -> (ExecutionOutcome::MissingObject)
-        _ -> (ExecutionOutcome::BadEncoding) }
+use {omega}/language/core/nat.omg;
+use {aml}/model.omg;
+use {aml}/names.omg;
+use {aml}/namespace.omg;
+use {aml}/bytes.omg;
+use execution_model.omg;
+pub data NamedResult [copy] { outcome: |execution_model|::ExecutionOutcome; object_id: u64; entry_index: u64; path: |model|::Path; next: u64; }
+pub machine decode_outcome(value: |model|::Outcome) -> |execution_model|::ExecutionOutcome {
+    transition value { |model|::Outcome::Success -> (|execution_model|::ExecutionOutcome::Success)
+        |model|::Outcome::Truncated -> (|execution_model|::ExecutionOutcome::Truncated)
+        |model|::Outcome::Capacity -> (|execution_model|::ExecutionOutcome::Capacity)
+        |model|::Outcome::MissingObject -> (|execution_model|::ExecutionOutcome::MissingObject)
+        _ -> (|execution_model|::ExecutionOutcome::BadEncoding) }
 }
-pub machine find_named(input: &[u8; 1024], space: &Namespace, scope: Path, end: u64, at: u64) -> NamedResult {
-    let name: PathResult = namestring(input, end, at);
-    let outcome: ExecutionOutcome = decode_outcome(name.outcome);
-    transition outcome == ExecutionOutcome::Success { true -> search(space, scope, name) _ -> (NamedResult { outcome: outcome }) }
-    state search(space: &Namespace, scope: Path, name: PathResult) -> NamedResult {
-        let found: Lookup = execution_lookup(space, name.value, scope);
-        let outcome: ExecutionOutcome = decode_outcome(found.outcome);
-        transition outcome == ExecutionOutcome::Success && space.object_count <= 64 && found.object < space.object_count && found.object < 64 {
+pub machine find_named(input: &[u8; 1024], space: &|model|::Namespace, scope: |model|::Path, end: u64, at: u64) -> NamedResult {
+    let name: |model|::PathResult = |names|::namestring(input, end, at);
+    let outcome: |execution_model|::ExecutionOutcome = decode_outcome(name.outcome);
+    transition outcome == |execution_model|::ExecutionOutcome::Success { true -> search(space, scope, name) _ -> (NamedResult { outcome: outcome }) }
+    state search(space: &|model|::Namespace, scope: |model|::Path, name: |model|::PathResult) -> NamedResult {
+        let found: |model|::Lookup = execution_lookup(space, name.value, scope);
+        let outcome: |execution_model|::ExecutionOutcome = decode_outcome(found.outcome);
+        transition outcome == |execution_model|::ExecutionOutcome::Success && space.object_count <= 64 && found.object < space.object_count && found.object < 64 {
             true -> (NamedResult { object_id: found.object, entry_index: found.index, path: found.path, next: name.next })
-            _ -> (NamedResult { outcome: ExecutionOutcome::MissingObject })
+            _ -> (NamedResult { outcome: |execution_model|::ExecutionOutcome::MissingObject })
         }
     }
 }
-pub machine execution_lookup(space: &Namespace, name: Path, scope: Path) -> Lookup {
-    let full: PathResult = resolve(name, scope);
-    transition full.outcome == Outcome::Success {
-        true -> choose(space, name, scope, full.value) _ -> (Lookup { outcome: full.outcome })
+pub machine execution_lookup(space: &|model|::Namespace, name: |model|::Path, scope: |model|::Path) -> |model|::Lookup {
+    let full: |model|::PathResult = |names|::resolve(name, scope);
+    transition full.outcome == |model|::Outcome::Success {
+        true -> choose(space, name, scope, full.value) _ -> (|model|::Lookup { outcome: full.outcome })
     }
-    state choose(space: &Namespace, name: Path, scope: Path, full: Path) -> Lookup {
+    state choose(space: &|model|::Namespace, name: |model|::Path, scope: |model|::Path, full: |model|::Path) -> |model|::Lookup {
         transition !name.absolute && name.parents == 0 && name.count == 1 {
             true -> ancestors(space, name, scope) _ -> exact(space, full)
         }
     }
-    state ancestors(space: &Namespace, name: Path, scope: Path) -> Lookup {
-        let result: Lookup = execution_name_scan(space, name, scope, 0, 17, Lookup { outcome: Outcome::MissingObject }); result
+    state ancestors(space: &|model|::Namespace, name: |model|::Path, scope: |model|::Path) -> |model|::Lookup {
+        let result: |model|::Lookup = execution_name_scan(space, name, scope, 0, 17, |model|::Lookup { outcome: |model|::Outcome::MissingObject }); result
     }
-    state exact(space: &Namespace, full: Path) -> Lookup { let copied: Namespace = namespace_snapshot(space); let result: Lookup = get(copied, full); result }
+    state exact(space: &|model|::Namespace, full: |model|::Path) -> |model|::Lookup { let copied: |model|::Namespace = namespace_snapshot(space); let result: |model|::Lookup = |namespace|::get(copied, full); result }
 }
-machine execution_name_scan(space: &Namespace, name: Path, scope: Path, index: u64, limit: u64, found: Lookup)
-terminates by (index, limit) -> Nat::BoundedDistance;
--> Lookup {
-    let next: Lookup = execution_name_step(space, name, scope, found);
-    let upper: PathResult = parent(scope);
-    let next_scope: Path = execution_parent(scope, upper);
-    transition { next.outcome == Outcome::Success || scope.count == 0 -> (next)
+machine execution_name_scan(space: &|model|::Namespace, name: |model|::Path, scope: |model|::Path, index: u64, limit: u64, found: |model|::Lookup)
+terminates by (index, limit) -> |nat|::Nat::BoundedDistance;
+-> |model|::Lookup {
+    let next: |model|::Lookup = execution_name_step(space, name, scope, found);
+    let upper: |model|::PathResult = |names|::parent(scope);
+    let next_scope: |model|::Path = execution_parent(scope, upper);
+    transition { next.outcome == |model|::Outcome::Success || scope.count == 0 -> (next)
         index < limit -> execution_name_scan(space, name, next_scope, index + 1, limit, next) _ -> (next) }
 }
-machine execution_name_step(space: &Namespace, name: Path, scope: Path, found: Lookup) -> Lookup {
-    transition found.outcome == Outcome::Success { true -> (found) _ -> seek(space, name, scope) }
-    state seek(space: &Namespace, name: Path, scope: Path) -> Lookup {
-        let path: PathResult = resolve(name, scope);
-        transition path.outcome == Outcome::Success { true -> exact(space, path.value) _ -> (Lookup { outcome: path.outcome }) }
+machine execution_name_step(space: &|model|::Namespace, name: |model|::Path, scope: |model|::Path, found: |model|::Lookup) -> |model|::Lookup {
+    transition found.outcome == |model|::Outcome::Success { true -> (found) _ -> seek(space, name, scope) }
+    state seek(space: &|model|::Namespace, name: |model|::Path, scope: |model|::Path) -> |model|::Lookup {
+        let path: |model|::PathResult = |names|::resolve(name, scope);
+        transition path.outcome == |model|::Outcome::Success { true -> exact(space, path.value) _ -> (|model|::Lookup { outcome: path.outcome }) }
     }
-    state exact(space: &Namespace, path: Path) -> Lookup { let copied: Namespace = namespace_snapshot(space); let result: Lookup = get(copied, path); result }
+    state exact(space: &|model|::Namespace, path: |model|::Path) -> |model|::Lookup { let copied: |model|::Namespace = namespace_snapshot(space); let result: |model|::Lookup = |namespace|::get(copied, path); result }
 }
-machine execution_parent(scope: Path, upper: PathResult) -> Path {
-    transition upper.outcome == Outcome::Success { true -> (upper.value) _ -> (scope) }
+machine execution_parent(scope: |model|::Path, upper: |model|::PathResult) -> |model|::Path {
+    transition upper.outcome == |model|::Outcome::Success { true -> (upper.value) _ -> (scope) }
 }
-pub machine parse_target(input: &[u8; 1024], space: &Namespace, frame: &mut Frame) -> TargetResult {
-    let token: Read = opcode(input, frame.end, frame.pc);
-    let outcome: ExecutionOutcome = decode_outcome(token.outcome);
-    transition outcome == ExecutionOutcome::Success { true -> token(input, space, frame, token) _ -> (TargetResult { outcome: outcome }) }
-    state token(input: &[u8; 1024], space: &Namespace, frame: &mut Frame, token: Read) -> TargetResult {
-        transition { token.value == 0 -> (TargetResult { target: Target::Null, next: token.next })
-            token.value >= 0x60 && token.value <= 0x67 -> (TargetResult { target: Target::Local { local_index: token.value - 0x60 }, next: token.next })
-            token.value >= 0x68 && token.value <= 0x6e -> (TargetResult { target: Target::Argument { argument_index: token.value - 0x68 }, next: token.next })
-            token.value == 0x5b31 -> (TargetResult { target: Target::Debug, next: token.next })
+pub machine parse_target(input: &[u8; 1024], space: &|model|::Namespace, frame: &mut |execution_model|::Frame) -> |execution_model|::TargetResult {
+    let token: |model|::Read = |bytes|::opcode(input, frame.end, frame.pc);
+    let outcome: |execution_model|::ExecutionOutcome = decode_outcome(token.outcome);
+    transition outcome == |execution_model|::ExecutionOutcome::Success { true -> token(input, space, frame, token) _ -> (|execution_model|::TargetResult { outcome: outcome }) }
+    state token(input: &[u8; 1024], space: &|model|::Namespace, frame: &mut |execution_model|::Frame, token: |model|::Read) -> |execution_model|::TargetResult {
+        transition { token.value == 0 -> (|execution_model|::TargetResult { target: |execution_model|::Target::Null, next: token.next })
+            token.value >= 0x60 && token.value <= 0x67 -> (|execution_model|::TargetResult { target: |execution_model|::Target::Local { local_index: token.value - 0x60 }, next: token.next })
+            token.value >= 0x68 && token.value <= 0x6e -> (|execution_model|::TargetResult { target: |execution_model|::Target::Argument { argument_index: token.value - 0x68 }, next: token.next })
+            token.value == 0x5b31 -> (|execution_model|::TargetResult { target: |execution_model|::Target::Debug, next: token.next })
             _ -> named(input, space, frame) }
     }
-    state named(input: &[u8; 1024], space: &Namespace, frame: &mut Frame) -> TargetResult {
+    state named(input: &[u8; 1024], space: &|model|::Namespace, frame: &mut |execution_model|::Frame) -> |execution_model|::TargetResult {
         let found: NamedResult = cached_named(input, space, frame);
-        TargetResult { outcome: found.outcome, target: Target::Named { object_id: found.object_id }, next: found.next }
+        |execution_model|::TargetResult { outcome: found.outcome, target: |execution_model|::Target::Named { object_id: found.object_id }, next: found.next }
     }
 }
 
-machine namespace_snapshot(space: &Namespace) -> Namespace {
-    Namespace { count: space.count, object_count: space.object_count, entries: space.entries, objects: space.objects }
+machine namespace_snapshot(space: &|model|::Namespace) -> |model|::Namespace {
+    |model|::Namespace { count: space.count, object_count: space.object_count, entries: space.entries, objects: space.objects }
 }
 
 // Entries and aliases are immutable for this execution profile. Cache only the
 // resolved identity, never an object's value; Store still reads/writes live slots.
-data CacheHit [copy] { found: bool; value: NameCache; }
-pub machine cached_named(input: &[u8; 1024], space: &Namespace, frame: &mut Frame) -> NamedResult {
+data CacheHit [copy] { found: bool; value: |execution_model|::NameCache; }
+pub machine cached_named(input: &[u8; 1024], space: &|model|::Namespace, frame: &mut |execution_model|::Frame) -> NamedResult {
     transition frame.cache_count <= 16 {
-        true -> seek(input, space, frame) _ -> (NamedResult { outcome: ExecutionOutcome::InvalidState })
+        true -> seek(input, space, frame) _ -> (NamedResult { outcome: |execution_model|::ExecutionOutcome::InvalidState })
     }
-    state seek(input: &[u8; 1024], space: &Namespace, frame: &mut Frame) -> NamedResult {
+    state seek(input: &[u8; 1024], space: &|model|::Namespace, frame: &mut |execution_model|::Frame) -> NamedResult {
         let hit: CacheHit = name_cache_scan(frame, frame.pc, 0, frame.cache_count);
         transition hit.found { true -> cached(space, frame, hit.value) _ -> uncached(input, space, frame) }
     }
-    state cached(space: &Namespace, frame: &mut Frame, value: NameCache) -> NamedResult {
+    state cached(space: &|model|::Namespace, frame: &mut |execution_model|::Frame, value: |execution_model|::NameCache) -> NamedResult {
         let object: u64 = value.object_id; let entry: u64 = value.entry_index;
         transition value.next > frame.pc && value.next <= frame.end && object < space.object_count && space.object_count <= 64 && object < 64 && entry < space.count && space.count <= 32 && entry < 32 {
-            true -> identity(space, value, object, entry) _ -> (NamedResult { outcome: ExecutionOutcome::InvalidState })
+            true -> identity(space, value, object, entry) _ -> (NamedResult { outcome: |execution_model|::ExecutionOutcome::InvalidState })
         }
     }
-    state identity(space: &Namespace, value: NameCache, object: u64, entry: u64) -> NamedResult {
+    state identity(space: &|model|::Namespace, value: |execution_model|::NameCache, object: u64, entry: u64) -> NamedResult {
         transition space.entries[entry].has_object && space.entries[entry].object == object {
             true -> (NamedResult { object_id: object, entry_index: entry, path: space.entries[entry].path, next: value.next })
-            _ -> (NamedResult { outcome: ExecutionOutcome::InvalidState })
+            _ -> (NamedResult { outcome: |execution_model|::ExecutionOutcome::InvalidState })
         }
     }
-    state uncached(input: &[u8; 1024], space: &Namespace, frame: &mut Frame) -> NamedResult {
+    state uncached(input: &[u8; 1024], space: &|model|::Namespace, frame: &mut |execution_model|::Frame) -> NamedResult {
         let value: NamedResult = find_named(input, space, frame.scope, frame.end, frame.pc);
         let index: u64 = frame.cache_count;
-        transition value.outcome == ExecutionOutcome::Success && index < 16 {
+        transition value.outcome == |execution_model|::ExecutionOutcome::Success && index < 16 {
             true -> remember(frame, index, value) _ -> (value)
         }
     }
-    state remember(frame: &mut Frame, index: u64, value: NamedResult) -> NamedResult {
-        frame.lookup_cache[index] = NameCache { at: frame.pc, next: value.next, object_id: value.object_id, entry_index: value.entry_index };
+    state remember(frame: &mut |execution_model|::Frame, index: u64, value: NamedResult) -> NamedResult {
+        frame.lookup_cache[index] = |execution_model|::NameCache { at: frame.pc, next: value.next, object_id: value.object_id, entry_index: value.entry_index };
         frame.cache_count = index + 1; value
     }
 }
-machine name_cache_scan(frame: &Frame, at: u64, index: u64, limit: u64)
-terminates by (index, limit) -> Nat::BoundedDistance;
+machine name_cache_scan(frame: &|execution_model|::Frame, at: u64, index: u64, limit: u64)
+terminates by (index, limit) -> |nat|::Nat::BoundedDistance;
 -> CacheHit {
     let hit: CacheHit = name_cache_step(frame, at, index, limit);
     transition { hit.found -> (hit) index < limit -> name_cache_scan(frame, at, index + 1, limit) _ -> (CacheHit {}) }
 }
-machine name_cache_step(frame: &Frame, at: u64, index: u64, limit: u64) -> CacheHit {
+machine name_cache_step(frame: &|execution_model|::Frame, at: u64, index: u64, limit: u64) -> CacheHit {
     transition index < limit && index < 16 { true -> inspect(frame.lookup_cache[index], at) _ -> (CacheHit {}) }
-    state inspect(value: NameCache, at: u64) -> CacheHit { transition value.at == at { true -> (CacheHit { found: true, value: value }) _ -> (CacheHit {}) } }
+    state inspect(value: |execution_model|::NameCache, at: u64) -> CacheHit { transition value.at == at { true -> (CacheHit { found: true, value: value }) _ -> (CacheHit {}) } }
 }

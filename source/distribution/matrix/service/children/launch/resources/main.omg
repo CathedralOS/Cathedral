@@ -1,5 +1,3 @@
-module children::launch::resources::main;
-
 // Fit a program to its owner's offer before the host allocates any resources.
 // Explicit requirements refuse on excess; only undeclared defaults are capped.
 // What a workspace app gets when it declares no profile. A host with

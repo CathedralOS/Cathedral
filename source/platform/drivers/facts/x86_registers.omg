@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified x86_64 register translation at cc35c876d3badb57df54a66e22f7768a52be95f2.
 // See x86_registers.PORT.md. Raw bits only; no CPU validity or authority.
-module x86_registers;
-use local_apic;
+use local_apic.omg;
 
 pub data Cr0Flags [copy] { raw: u64; }
 pub const CR0_FLAGS_PROTECTED_MODE_ENABLE: Cr0Flags = Cr0Flags { raw: 1 };
@@ -100,9 +99,9 @@ pub const CET_FLAGS_IBT_TRACKED: CetFlags = CetFlags { raw: 2048 };
 pub const CET_FLAGS_KNOWN_BITS: u64 = 3135;
 
 pub data ApicBaseFlags [copy] { raw: u64; }
-pub const APIC_BASE_FLAGS_BSP: ApicBaseFlags = ApicBaseFlags { raw: (1 as u64) << IA32_APIC_BASE_BSP_BIT };
-pub const APIC_BASE_FLAGS_X2APIC_ENABLE: ApicBaseFlags = ApicBaseFlags { raw: (1 as u64) << IA32_APIC_BASE_X2APIC_ENABLE_BIT };
-pub const APIC_BASE_FLAGS_LAPIC_ENABLE: ApicBaseFlags = ApicBaseFlags { raw: (1 as u64) << IA32_APIC_BASE_GLOBAL_ENABLE_BIT };
+pub const APIC_BASE_FLAGS_BSP: ApicBaseFlags = ApicBaseFlags { raw: (1 as u64) << |local_apic|::IA32_APIC_BASE_BSP_BIT };
+pub const APIC_BASE_FLAGS_X2APIC_ENABLE: ApicBaseFlags = ApicBaseFlags { raw: (1 as u64) << |local_apic|::IA32_APIC_BASE_X2APIC_ENABLE_BIT };
+pub const APIC_BASE_FLAGS_LAPIC_ENABLE: ApicBaseFlags = ApicBaseFlags { raw: (1 as u64) << |local_apic|::IA32_APIC_BASE_GLOBAL_ENABLE_BIT };
 pub const APIC_BASE_FLAGS_KNOWN_BITS: u64 = 3328;
 
 pub data MxCsr [copy] { raw: u32; }
@@ -214,7 +213,7 @@ pub const LSTAR_MSR: Msr = Msr { raw: 3221225602 };
 pub const SFMASK_MSR: Msr = Msr { raw: 3221225604 };
 pub const UCET_MSR: Msr = Msr { raw: 1696 };
 pub const SCET_MSR: Msr = Msr { raw: 1698 };
-pub const APIC_BASE_MSR: Msr = Msr { raw: IA32_APIC_BASE_MSR };
+pub const APIC_BASE_MSR: Msr = Msr { raw: |local_apic|::IA32_APIC_BASE_MSR };
 
 pub const MXCSR_RESET_BITS: u32 = 8064;
 pub const DR7_VALID_BITS: u64 = 4294913023;

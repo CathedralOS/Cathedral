@@ -1,41 +1,34 @@
-module rendering::rendering;
 // Demand -> retained surfaces -> changed decorations + staged text -> ready.
-use operations::View;
-use operations::Reply;
-use operations::Decoration;
-use operations::Image;
-use operations::Command;
-use protocol::main;
-use state::State;
-use state::Phase;
-use state::RenderStep;
-use document::document;
-use session::session;
-use session::input;
-use rendering::pixels;
-public machine render(s: &mut State) -> Command {
+use operations.omg;
+use {protocol}/main.omg;
+use state.omg as local_state;
+use document/document.omg;
+use session/session.omg;
+use session/input.omg;
+use rendering/pixels.omg;
+public machine render(s: &mut |local_state|::State) -> |operations|::Command {
     s.ticket = 0u64;
     transition s.requested {
         true -> demand(s)
         _ -> scene(s)
     }
-    machine demand(s: &mut State) -> Command {
-        s.phase = Phase::Rendering { step: RenderStep::DemandReady };
-        Command::FrameDemand { epoch: s.epoch }
+    machine demand(s: &mut |local_state|::State) -> |operations|::Command {
+        s.phase = |local_state|::Phase::Rendering { step: |local_state|::RenderStep::DemandReady };
+        |operations|::Command::FrameDemand { epoch: s.epoch }
     }
 }
-machine scene(s: &mut State) -> Command {
+machine scene(s: &mut |local_state|::State) -> |operations|::Command {
     transition s.frames && s.dirty {
         true -> available(s)
         _ -> finished(s)
     }
-    machine available(s: &mut State) -> Command {
+    machine available(s: &mut |local_state|::State) -> |operations|::Command {
         transition s.scene {
             true -> base(s)
             _ -> allocate(s)
         }
     }
-    machine allocate(s: &mut State) -> Command {
+    machine allocate(s: &mut |local_state|::State) -> |operations|::Command {
         s.rank = 0u64;
         s.background = 0u64;
         s.close_width = 0u64;
@@ -43,74 +36,74 @@ machine scene(s: &mut State) -> Command {
         create(s)
     }
 }
-machine create(s: &mut State) -> Command {
-    s.phase = Phase::Rendering { step: RenderStep::SurfaceCreated };
-    Command::CreateSurface { epoch: s.epoch, rank: s.rank }
+machine create(s: &mut |local_state|::State) -> |operations|::Command {
+    s.phase = |local_state|::Phase::Rendering { step: |local_state|::RenderStep::SurfaceCreated };
+    |operations|::Command::CreateSurface { epoch: s.epoch, rank: s.rank }
 }
-public machine presentation(s: &mut State, step: RenderStep, reply: Reply) -> Command {
+public machine presentation(s: &mut |local_state|::State, step: |local_state|::RenderStep, reply: |operations|::Reply) -> |operations|::Command {
     transition step {
-        RenderStep::FrameSent -> session::session::wait(s)
-        RenderStep::TextStaged -> staged(s)
+        |local_state|::RenderStep::FrameSent -> |session|::wait(s)
+        |local_state|::RenderStep::TextStaged -> staged(s)
         _ -> response(s, step, reply)
     }
-    machine staged(s: &mut State) -> Command {
+    machine staged(s: &mut |local_state|::State) -> |operations|::Command {
         transition s.image_offset < 46080u64 {
             true -> chunk(s)
             _ -> publish(s)
         }
     }
-    machine publish(s: &mut State) -> Command {
-        s.phase = Phase::Rendering { step: RenderStep::TextReady };
-        Command::PublishText { image: Image { epoch: s.epoch, surface: s.surfaces[1], x: 10u64, y: 20u64, width: 180u64, height: 64u64 } }
+    machine publish(s: &mut |local_state|::State) -> |operations|::Command {
+        s.phase = |local_state|::Phase::Rendering { step: |local_state|::RenderStep::TextReady };
+        |operations|::Command::PublishText { image: |operations|::Image { epoch: s.epoch, surface: s.surfaces[1], x: 10u64, y: 20u64, width: 180u64, height: 64u64 } }
     }
 }
-machine response(s: &mut State, step: RenderStep, reply: Reply) -> Command {
+machine response(s: &mut |local_state|::State, step: |local_state|::RenderStep, reply: |operations|::Reply) -> |operations|::Command {
     transition reply {
-        Reply::View { view } -> recheck(s, view)
-        Reply::Demand { status, ticket } -> demand(s, status, ticket)
-        Reply::Surface { status, handle } -> surface(s, status, handle)
-        Reply::Presented { status } -> presented(s, step, status)
-        _ -> (Command::Exit)
+        |operations|::Reply::View { view } -> recheck(s, view)
+        |operations|::Reply::Demand { status, ticket } -> demand(s, status, ticket)
+        |operations|::Reply::Surface { status, handle } -> surface(s, status, handle)
+        |operations|::Reply::Presented { status } -> presented(s, step, status)
+        _ -> (|operations|::Command::Exit)
     }
 }
-machine demand(s: &mut State, status: u64, ticket: u64) -> Command {
+machine demand(s: &mut |local_state|::State, status: u64, ticket: u64) -> |operations|::Command {
     transition status == 0u64 {
         true -> accepted(s, ticket)
         _ -> scene(s)
     }
-    machine accepted(s: &mut State, ticket: u64) -> Command {
+    machine accepted(s: &mut |local_state|::State, ticket: u64) -> |operations|::Command {
         s.ticket = ticket;
         scene(s)
     }
 }
-machine recheck(s: &mut State, view: View) -> Command {
+machine recheck(s: &mut |local_state|::State, view: |operations|::View) -> |operations|::Command {
     transition view.status != 0u64 || view.epoch != s.epoch {
         true -> rebound(s)
-        _ -> (Command::Exit)
+        _ -> (|operations|::Command::Exit)
     }
-    machine rebound(s: &mut State) -> Command {
-        session::input::reset_channels(s);
+    machine rebound(s: &mut |local_state|::State) -> |operations|::Command {
+        |input|::reset_channels(s);
         s.scene = false;
         s.dirty = true;
-        session::session::poll(s)
+        |session|::poll(s)
     }
 }
-machine recheck_view(s: &mut State) -> Command {
-    s.phase = Phase::Rendering { step: RenderStep::ViewRechecked };
-    Command::View
+machine recheck_view(s: &mut |local_state|::State) -> |operations|::Command {
+    s.phase = |local_state|::Phase::Rendering { step: |local_state|::RenderStep::ViewRechecked };
+    |operations|::Command::View
 }
-machine surface(s: &mut State, status: u64, handle: u64) -> Command {
+machine surface(s: &mut |local_state|::State, status: u64, handle: u64) -> |operations|::Command {
     transition status == 0u64 {
         true -> created(s, handle)
         _ -> recheck_view(s)
     }
-    machine created(s: &mut State, handle: u64) -> Command {
+    machine created(s: &mut |local_state|::State, handle: u64) -> |operations|::Command {
         transition s.rank < 4u64 {
             true -> retain(s, handle)
-            _ -> (Command::Exit)
+            _ -> (|operations|::Command::Exit)
         }
     }
-    machine retain(s: &mut State, handle: u64) -> Command requires s.rank < 4u64 {
+    machine retain(s: &mut |local_state|::State, handle: u64) -> |operations|::Command requires s.rank < 4u64 {
         s.surfaces[s.rank] = handle;
         s.rank = s.rank + 1u64;
         transition s.rank < 4u64 {
@@ -118,120 +111,120 @@ machine surface(s: &mut State, status: u64, handle: u64) -> Command {
             _ -> ready(s)
         }
     }
-    machine ready(s: &mut State) -> Command {
+    machine ready(s: &mut |local_state|::State) -> |operations|::Command {
         s.scene = true;
         base(s)
     }
 }
-machine presented(s: &mut State, step: RenderStep, status: u64) -> Command {
+machine presented(s: &mut |local_state|::State, step: |local_state|::RenderStep, status: u64) -> |operations|::Command {
     transition status == 0u64 {
         true -> dispatch(s, step)
         _ -> recheck_view(s)
     }
-    machine dispatch(s: &mut State, step: RenderStep) -> Command {
+    machine dispatch(s: &mut |local_state|::State, step: |local_state|::RenderStep) -> |operations|::Command {
         transition step {
-            RenderStep::BaseReady -> text(s)
-            RenderStep::TextReady -> close(s)
-            RenderStep::CloseReady -> tabs(s)
-            RenderStep::TabsReady -> painted(s)
-            _ -> (Command::Exit)
+            |local_state|::RenderStep::BaseReady -> text(s)
+            |local_state|::RenderStep::TextReady -> close(s)
+            |local_state|::RenderStep::CloseReady -> tabs(s)
+            |local_state|::RenderStep::TabsReady -> painted(s)
+            _ -> (|operations|::Command::Exit)
         }
     }
 }
-machine color(s: &State) -> u64 {
+machine color(s: &|local_state|::State) -> u64 {
     transition s.error != 0u64 {
         true -> (0x993f46u64)
         _ -> dirty(s)
     }
-    machine dirty(s: &State) -> u64 {
-        transition document::document::changed(s) {
+    machine dirty(s: &|local_state|::State) -> u64 {
+        transition |document|::changed(s) {
             true -> (0x9b7028u64)
             _ -> storage(s)
         }
     }
-    machine storage(s: &State) -> u64 {
+    machine storage(s: &|local_state|::State) -> u64 {
         transition s.temporary {
             true -> (0x55447au64)
             _ -> (0x27664au64)
         }
     }
 }
-machine base(s: &mut State) -> Command {
+machine base(s: &mut |local_state|::State) -> |operations|::Command {
     let value: u64 = color(s);
     transition value != s.background || s.width != s.cached_width || s.height != s.cached_height {
         true -> paint(s, value)
         _ -> text(s)
     }
-    machine paint(s: &mut State, value: u64) -> Command {
+    machine paint(s: &mut |local_state|::State, value: u64) -> |operations|::Command {
         s.background = value;
         s.cached_width = s.width;
         s.cached_height = s.height;
-        s.phase = Phase::Rendering { step: RenderStep::BaseReady };
-        Command::Paint { epoch: s.epoch, surface: s.surfaces[0], width: s.width, height: s.height, color: value }
+        s.phase = |local_state|::Phase::Rendering { step: |local_state|::RenderStep::BaseReady };
+        |operations|::Command::Paint { epoch: s.epoch, surface: s.surfaces[0], width: s.width, height: s.height, color: value }
     }
 }
-machine text(s: &mut State) -> Command {
-    rendering::pixels::layout(s);
+machine text(s: &mut |local_state|::State) -> |operations|::Command {
+    |pixels|::layout(s);
     s.image_offset = 0u64;
     chunk(s)
 }
-machine chunk(s: &mut State) -> Command {
+machine chunk(s: &mut |local_state|::State) -> |operations|::Command {
     transition s.image_offset == 0u64 {
         true -> fill(s, 4080u64)
         _ -> fill(s, 1680u64)
     }
-    machine fill(s: &mut State, words: u64) -> Command {
+    machine fill(s: &mut |local_state|::State, words: u64) -> |operations|::Command {
         let offset: u64 = s.image_offset;
         s.image_offset = ((s.image_offset as u64 in Saturating) + ((words as u64 in Saturating) * 8)) as u64;
-        s.phase = Phase::Rendering { step: RenderStep::TextStaged };
-        Command::StageText { offset: offset, words: words }
+        s.phase = |local_state|::Phase::Rendering { step: |local_state|::RenderStep::TextStaged };
+        |operations|::Command::StageText { offset: offset, words: words }
     }
 }
-machine close(s: &mut State) -> Command {
+machine close(s: &mut |local_state|::State) -> |operations|::Command {
     transition s.close_width != s.width {
         true -> image(s)
         _ -> tabs(s)
     }
-    machine image(s: &mut State) -> Command {
+    machine image(s: &mut |local_state|::State) -> |operations|::Command {
         s.close_width = s.width;
-        s.phase = Phase::Rendering { step: RenderStep::CloseReady };
+        s.phase = |local_state|::Phase::Rendering { step: |local_state|::RenderStep::CloseReady };
         let left: u64 = ((s.width as u64 in Saturating) - 24) as u64;
-        Command::Decorate { image: Image { epoch: s.epoch, surface: s.surfaces[3], x: left, y: 2u64, width: 20u64, height: 16u64 }, decoration: Decoration::Close }
+        |operations|::Command::Decorate { image: |operations|::Image { epoch: s.epoch, surface: s.surfaces[3], x: left, y: 2u64, width: 20u64, height: 16u64 }, decoration: |operations|::Decoration::Close }
     }
 }
-machine tabs(s: &mut State) -> Command {
+machine tabs(s: &mut |local_state|::State) -> |operations|::Command {
     transition s.tabs_valid && s.cached_count == s.count && s.cached_current == s.current {
         true -> painted(s)
         _ -> image(s)
     }
-    machine image(s: &mut State) -> Command {
+    machine image(s: &mut |local_state|::State) -> |operations|::Command {
         s.tabs_valid = true;
         s.cached_count = s.count;
         s.cached_current = s.current;
-        s.phase = Phase::Rendering { step: RenderStep::TabsReady };
+        s.phase = |local_state|::Phase::Rendering { step: |local_state|::RenderStep::TabsReady };
         transition s.temporary {
             true -> temporary(s)
             _ -> stored(s)
         }
     }
-    machine temporary(s: &mut State) -> Command {
-        Command::Decorate { image: Image { epoch: s.epoch, surface: s.surfaces[2], x: 10u64, y: 88u64, width: 180u64, height: 16u64 }, decoration: Decoration::Temporary }
+    machine temporary(s: &mut |local_state|::State) -> |operations|::Command {
+        |operations|::Command::Decorate { image: |operations|::Image { epoch: s.epoch, surface: s.surfaces[2], x: 10u64, y: 88u64, width: 180u64, height: 16u64 }, decoration: |operations|::Decoration::Temporary }
     }
-    machine stored(s: &mut State) -> Command {
-        Command::Decorate { image: Image { epoch: s.epoch, surface: s.surfaces[2], x: 10u64, y: 88u64, width: 124u64, height: 8u64 }, decoration: Decoration::Tabs }
+    machine stored(s: &mut |local_state|::State) -> |operations|::Command {
+        |operations|::Command::Decorate { image: |operations|::Image { epoch: s.epoch, surface: s.surfaces[2], x: 10u64, y: 88u64, width: 124u64, height: 8u64 }, decoration: |operations|::Decoration::Tabs }
     }
 }
-machine painted(s: &mut State) -> Command {
+machine painted(s: &mut |local_state|::State) -> |operations|::Command {
     s.dirty = false;
     finished(s)
 }
-machine finished(s: &mut State) -> Command {
+machine finished(s: &mut |local_state|::State) -> |operations|::Command {
     transition s.frames && s.ticket != 0u64 {
         true -> ready(s)
-        _ -> session::session::wait(s)
+        _ -> |session|::wait(s)
     }
-    machine ready(s: &mut State) -> Command {
-        s.phase = Phase::Rendering { step: RenderStep::FrameSent };
-        Command::FrameReady { epoch: s.epoch, ticket: s.ticket }
+    machine ready(s: &mut |local_state|::State) -> |operations|::Command {
+        s.phase = |local_state|::Phase::Rendering { step: |local_state|::RenderStep::FrameSent };
+        |operations|::Command::FrameReady { epoch: s.epoch, ticket: s.ticket }
     }
 }

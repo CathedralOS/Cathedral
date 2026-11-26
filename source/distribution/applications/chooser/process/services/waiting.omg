@@ -1,17 +1,15 @@
-module services::waiting;
+use {runtime}/server/main.omg as server_main;
 // A periodic catalogue refresh is a real deadline; owner traffic cannot extend it.
-use main::Context;
-use app::state::State;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::kernel;
-use runtime::time::Tick;
-use services::control;
-public machine next(gate: &Gate, context: &mut Context, state: &State, refresh: u64) -> u64 reaches Kernel blocks invokes Kernel {
-    let tick: Tick = runtime::time::read(gate, context.clock);
+use main.omg;
+use {app}/state.omg as app_state;
+use {runtime}/kernel.omg;
+use {runtime}/time.omg;
+use services/control.omg;
+public machine next(gate: &|kernel|::Gate, context: &mut |main|::Context, state: &|app_state|::State, refresh: u64) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
+    let tick: |time|::Tick = |time|::read(gate, context.clock);
     transition tick {
-        Tick::Read { value } -> block poll(gate, context, state, runtime::time::after(value, duration(refresh)))
-        Tick::Failed { code } -> (code)
+        |time|::Tick::Read { value } -> block poll(gate, context, state, |time|::after(value, duration(refresh)))
+        |time|::Tick::Failed { code } -> (code)
     }
 }
 // Durations must stay below half the wrapping clock. An invalid app hint uses
@@ -22,24 +20,24 @@ machine duration(refresh: u64) -> u64 [0..=9223372036854775807] {
         _ -> (300u64)
     }
 }
-machine poll(gate: &Gate, context: &mut Context, state: &State, deadline: u64) -> u64 reaches Kernel {
-    let tick: Tick = runtime::time::read(gate, context.clock);
+machine poll(gate: &|kernel|::Gate, context: &mut |main|::Context, state: &|app_state|::State, deadline: u64) -> u64 reaches |kernel|::Kernel {
+    let tick: |time|::Tick = |time|::read(gate, context.clock);
     transition tick {
-        Tick::Read { value } -> block owner(gate, context, state, deadline, value)
-        Tick::Failed { code } -> (code)
+        |time|::Tick::Read { value } -> block owner(gate, context, state, deadline, value)
+        |time|::Tick::Failed { code } -> (code)
     }
 }
-machine owner(gate: &Gate, context: &mut Context, state: &State, deadline: u64, now: u64) -> u64 reaches Kernel {
-    block services::control::poll(gate, context, state, now);
-    let hint: u64 = block Kernel::notify_wait(gate, context.services.wake, now, 1u64);
+machine owner(gate: &|kernel|::Gate, context: &mut |main|::Context, state: &|app_state|::State, deadline: u64, now: u64) -> u64 reaches |kernel|::Kernel {
+    block |control|::poll(gate, context, state, now);
+    let hint: u64 = block |kernel|::Kernel::notify_wait(gate, context.services.wake, now, 1u64);
     transition {
-        hint == kernel::NOTIFY_SIGNALED -> (0u64)
-        hint != kernel::NOTIFY_TIMED_OUT -> (hint)
-        state.more || runtime::time::reached(now, deadline) -> (0u64)
+        hint == |kernel|::NOTIFY_SIGNALED -> (0u64)
+        hint != |kernel|::NOTIFY_TIMED_OUT -> (hint)
+        state.more || |time|::reached(now, deadline) -> (0u64)
         _ -> block park(gate, context, state, deadline)
     }
 }
-machine park(gate: &Gate, context: &mut Context, state: &State, deadline: u64) -> u64 reaches Kernel {
+machine park(gate: &|kernel|::Gate, context: &mut |main|::Context, state: &|app_state|::State, deadline: u64) -> u64 reaches |kernel|::Kernel {
     let mut interests: [u64; 8];
     interests[0] = 2u64; interests[1] = context.services.wake;
     transition context.owner.peer.fault == 0u64 {
@@ -47,25 +45,25 @@ machine park(gate: &Gate, context: &mut Context, state: &State, deadline: u64) -
         _ -> block wait(gate, context, state, &interests, 1u64, deadline)
     }
 }
-machine combined(gate: &Gate, context: &mut Context, state: &State, interests: &mut [u64; 8], deadline: u64) -> u64 reaches Kernel {
+machine combined(gate: &|kernel|::Gate, context: &mut |main|::Context, state: &|app_state|::State, interests: &mut [u64; 8], deadline: u64) -> u64 reaches |kernel|::Kernel {
     interests[2] = 2u64; interests[3] = context.owner.peer.bell.wait;
     interests[5] = context.owner.peer.receiver;
     transition { _ -> block wait(gate, context, state, interests, 3u64, deadline) }
 }
-machine wait(gate: &Gate, context: &mut Context, state: &State, interests: &[u64; 8], count: u64 [0..=4], deadline: u64) -> u64 reaches Kernel {
-    let status: u64 = block Kernel::wait(gate, interests, count, deadline);
-    transition status < count || status == kernel::TIMED_OUT || status == kernel::PEER_CLOSED {
+machine wait(gate: &|kernel|::Gate, context: &mut |main|::Context, state: &|app_state|::State, interests: &[u64; 8], count: u64 [0..=4], deadline: u64) -> u64 reaches |kernel|::Kernel {
+    let status: u64 = block |kernel|::Kernel::wait(gate, interests, count, deadline);
+    transition status < count || status == |kernel|::TIMED_OUT || status == |kernel|::PEER_CLOSED {
         true -> block poll(gate, context, state, deadline)
         _ -> block interrupted(gate, context, state, deadline, status)
     }
 }
-machine interrupted(gate: &Gate, context: &mut Context, state: &State, deadline: u64, code: u64) -> u64 reaches Kernel {
+machine interrupted(gate: &|kernel|::Gate, context: &mut |main|::Context, state: &|app_state|::State, deadline: u64, code: u64) -> u64 reaches |kernel|::Kernel {
     transition context.owner.peer.fault == 0u64 {
         true -> block detach(gate, context, state, deadline)
         _ -> (code)
     }
-    machine detach(gate: &Gate, context: &mut Context, state: &State, deadline: u64) -> u64 reaches Kernel {
-        block runtime::server::main::close(gate, &mut context.owner);
+    machine detach(gate: &|kernel|::Gate, context: &mut |main|::Context, state: &|app_state|::State, deadline: u64) -> u64 reaches |kernel|::Kernel {
+        block |server_main|::close(gate, &mut context.owner);
         transition { _ -> block poll(gate, context, state, deadline) }
     }
 }

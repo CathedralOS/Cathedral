@@ -1,19 +1,18 @@
 // Existing Cathedral paging-word policy, separated from the semantic carrier.
 // Same 14 bit placements and 8-byte geometry; modern stateless Layout witness.
-module x86_page_table_layout;
-use omega::language::core::layout;
+use {omega}/language/core/layout.omg;
 
 pub data X86PageTableEntryLayout {}
-pub X86PageTableEntryPolicy: X86PageTableEntryLayout satisfies Layout;
+pub X86PageTableEntryPolicy: X86PageTableEntryLayout satisfies |layout|::Layout;
 
 pub machine X86PageTableEntryLayout::plan(
-    schema: Schema
-) -> Plan satisfies Layout::plan
+    schema: |layout|::Schema
+) -> |layout|::Plan satisfies |layout|::Layout::plan
 {
-    let mut entries: [FieldEntry; 64];
-    entries[0] = FieldEntry {
+    let mut entries: [|layout|::FieldEntry; 64];
+    entries[0] = |layout|::FieldEntry {
         key: schema.fields[0].key,
-        placement: FieldPlan::Bits {
+        placement: |layout|::FieldPlan::Bits {
             container: 0,
             container_width: 64,
             destination_lsb: 0,
@@ -21,9 +20,9 @@ pub machine X86PageTableEntryLayout::plan(
             width: 1,
         },
     };
-    entries[1] = FieldEntry {
+    entries[1] = |layout|::FieldEntry {
         key: schema.fields[1].key,
-        placement: FieldPlan::Bits {
+        placement: |layout|::FieldPlan::Bits {
             container: 0,
             container_width: 64,
             destination_lsb: 1,
@@ -31,9 +30,9 @@ pub machine X86PageTableEntryLayout::plan(
             width: 1,
         },
     };
-    entries[2] = FieldEntry {
+    entries[2] = |layout|::FieldEntry {
         key: schema.fields[2].key,
-        placement: FieldPlan::Bits {
+        placement: |layout|::FieldPlan::Bits {
             container: 0,
             container_width: 64,
             destination_lsb: 2,
@@ -41,9 +40,9 @@ pub machine X86PageTableEntryLayout::plan(
             width: 1,
         },
     };
-    entries[3] = FieldEntry {
+    entries[3] = |layout|::FieldEntry {
         key: schema.fields[3].key,
-        placement: FieldPlan::Bits {
+        placement: |layout|::FieldPlan::Bits {
             container: 0,
             container_width: 64,
             destination_lsb: 3,
@@ -51,9 +50,9 @@ pub machine X86PageTableEntryLayout::plan(
             width: 1,
         },
     };
-    entries[4] = FieldEntry {
+    entries[4] = |layout|::FieldEntry {
         key: schema.fields[4].key,
-        placement: FieldPlan::Bits {
+        placement: |layout|::FieldPlan::Bits {
             container: 0,
             container_width: 64,
             destination_lsb: 4,
@@ -61,9 +60,9 @@ pub machine X86PageTableEntryLayout::plan(
             width: 1,
         },
     };
-    entries[5] = FieldEntry {
+    entries[5] = |layout|::FieldEntry {
         key: schema.fields[5].key,
-        placement: FieldPlan::Bits {
+        placement: |layout|::FieldPlan::Bits {
             container: 0,
             container_width: 64,
             destination_lsb: 5,
@@ -71,9 +70,9 @@ pub machine X86PageTableEntryLayout::plan(
             width: 1,
         },
     };
-    entries[6] = FieldEntry {
+    entries[6] = |layout|::FieldEntry {
         key: schema.fields[6].key,
-        placement: FieldPlan::Bits {
+        placement: |layout|::FieldPlan::Bits {
             container: 0,
             container_width: 64,
             destination_lsb: 6,
@@ -81,9 +80,9 @@ pub machine X86PageTableEntryLayout::plan(
             width: 1,
         },
     };
-    entries[7] = FieldEntry {
+    entries[7] = |layout|::FieldEntry {
         key: schema.fields[7].key,
-        placement: FieldPlan::Bits {
+        placement: |layout|::FieldPlan::Bits {
             container: 0,
             container_width: 64,
             destination_lsb: 7,
@@ -91,9 +90,9 @@ pub machine X86PageTableEntryLayout::plan(
             width: 1,
         },
     };
-    entries[8] = FieldEntry {
+    entries[8] = |layout|::FieldEntry {
         key: schema.fields[8].key,
-        placement: FieldPlan::Bits {
+        placement: |layout|::FieldPlan::Bits {
             container: 0,
             container_width: 64,
             destination_lsb: 8,
@@ -101,9 +100,9 @@ pub machine X86PageTableEntryLayout::plan(
             width: 1,
         },
     };
-    entries[9] = FieldEntry {
+    entries[9] = |layout|::FieldEntry {
         key: schema.fields[9].key,
-        placement: FieldPlan::Bits {
+        placement: |layout|::FieldPlan::Bits {
             container: 0,
             container_width: 64,
             destination_lsb: 9,
@@ -111,9 +110,9 @@ pub machine X86PageTableEntryLayout::plan(
             width: 3,
         },
     };
-    entries[10] = FieldEntry {
+    entries[10] = |layout|::FieldEntry {
         key: schema.fields[10].key,
-        placement: FieldPlan::Bits {
+        placement: |layout|::FieldPlan::Bits {
             container: 0,
             container_width: 64,
             destination_lsb: 12,
@@ -121,9 +120,9 @@ pub machine X86PageTableEntryLayout::plan(
             width: 40,
         },
     };
-    entries[11] = FieldEntry {
+    entries[11] = |layout|::FieldEntry {
         key: schema.fields[11].key,
-        placement: FieldPlan::Bits {
+        placement: |layout|::FieldPlan::Bits {
             container: 0,
             container_width: 64,
             destination_lsb: 52,
@@ -131,9 +130,9 @@ pub machine X86PageTableEntryLayout::plan(
             width: 7,
         },
     };
-    entries[12] = FieldEntry {
+    entries[12] = |layout|::FieldEntry {
         key: schema.fields[12].key,
-        placement: FieldPlan::Bits {
+        placement: |layout|::FieldPlan::Bits {
             container: 0,
             container_width: 64,
             destination_lsb: 59,
@@ -141,9 +140,9 @@ pub machine X86PageTableEntryLayout::plan(
             width: 4,
         },
     };
-    entries[13] = FieldEntry {
+    entries[13] = |layout|::FieldEntry {
         key: schema.fields[13].key,
-        placement: FieldPlan::Bits {
+        placement: |layout|::FieldPlan::Bits {
             container: 0,
             container_width: 64,
             destination_lsb: 63,
@@ -152,7 +151,7 @@ pub machine X86PageTableEntryLayout::plan(
         },
     };
 
-    Plan {
+    |layout|::Plan {
         entries: entries,
         entry_count: 14,
         size_fixed: 8,

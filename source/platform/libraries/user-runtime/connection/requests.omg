@@ -1,4 +1,3 @@
-module connection::requests;
 // Two bounded outstanding IDs. An empty slot is not a reusable request ID:
 // the connection's monotonic sequence remains the source of every new name.
 public data Window {

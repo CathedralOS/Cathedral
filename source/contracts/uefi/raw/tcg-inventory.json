@@ -28,7 +28,7 @@
       },
       "targets": [
         {
-          "anchor": "module tcg;",
+          "anchor": "pub data AlgorithmId",
           "path": "source/contracts/uefi/raw/tcg.omg"
         }
       ]
@@ -624,7 +624,7 @@
       },
       "targets": [
         {
-          "anchor": "module tcg;",
+          "anchor": "pub data AlgorithmId",
           "path": "source/contracts/uefi/raw/tcg.omg"
         }
       ]
@@ -846,7 +846,7 @@
       },
       "targets": [
         {
-          "anchor": "module tcg;",
+          "anchor": "pub data AlgorithmId",
           "path": "source/contracts/uefi/raw/tcg.omg"
         }
       ]
@@ -1315,7 +1315,7 @@
       },
       "targets": [
         {
-          "anchor": "module tcg;",
+          "anchor": "pub data AlgorithmId",
           "path": "source/contracts/uefi/raw/tcg.omg"
         }
       ]

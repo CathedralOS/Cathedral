@@ -3,8 +3,7 @@
 // See console.PORT.md; reproduced by tools/ports/uefi-console/generate.py.
 // Inert x86-64 representation corpus. No pointer dereference or callable authority.
 // Layout vectors describe required foreign geometry, not default Omega layout.
-module serial;
-use scalars;
+use scalars.omg;
 
 // Upstream: uefi_raw::protocol::console::serial::ControlBits
 pub data ControlBits [copy] {
@@ -87,5 +86,5 @@ pub const STOP_BITS_DEFAULT: StopBits = StopBits { raw: 0 };
 pub const STOP_BITS_ONE: StopBits = StopBits { raw: 1 };
 pub const STOP_BITS_ONE_FIVE: StopBits = StopBits { raw: 2 };
 pub const STOP_BITS_TWO: StopBits = StopBits { raw: 3 };
-pub const SERIAL_IO_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0xbb25cf6f, data2: 0xf1d4, data3: 0x11d2, data4: [0x9a, 0x0c, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0xfd] };
-pub const SERIAL_IO_PROTOCOL_1_1_GUID: scalars::Guid = SERIAL_IO_PROTOCOL_GUID;
+pub const SERIAL_IO_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0xbb25cf6f, data2: 0xf1d4, data3: 0x11d2, data4: [0x9a, 0x0c, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0xfd] };
+pub const SERIAL_IO_PROTOCOL_1_1_GUID: |scalars|::Guid = SERIAL_IO_PROTOCOL_GUID;

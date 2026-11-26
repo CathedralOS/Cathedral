@@ -743,7 +743,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/x86_64/tlb_operands.omg",
-          "anchor": "module tlb_operands;"
+          "anchor": "pub data PcidResult"
         }
       ]
     }

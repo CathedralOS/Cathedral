@@ -1,37 +1,21 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Retire a completed scalar/control operation. Divide writes remainder then
 // quotient in AML grammar order. Namespace side effects are not rolled back.
-module retire;
-use aml::model::ObjectStore;
-use aml::model::Value;
-use execution_model::Operand;
-use execution_model::ValueResult;
-use generic_values::validate_operand;
-use generic_values::integer_operand;
-use generic_values::normalized_operand;
-use generic_target_bridge::write_generic_target;
-use operands::contribute_operand;
-use aml::model::Read;
-use aml::model::Envelope;
-use aml::bytes::read_le;
-use aml::bytes::envelope;
-use execution_model::ExecutionOutcome;
-use execution_model::Frame;
-use execution_model::Operation;
-use execution_model::Target;
-use execution_model::SlotResult;
-use execution_names::decode_outcome;
-use operands::contribute_integer;
-use targets::read_target;
-use targets::store_target;
+use {aml}/model.omg;
+use execution_model.omg;
+use generic_values.omg;
+use generic_target_bridge.omg;
+use operands.omg;
+use {aml}/bytes.omg;
+use execution_names.omg;
+use targets.omg;
 
-use control::return_operand;
-use control::enter_block;
-use operator_specs::compute_integer;
-use to_integer_execution::retire_to_integer;
-use mid_execution::retire_mid;
-use integer_helpers::integers::IntegerResult;
-pub machine retire_operation(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,operation:Operation)->ExecutionOutcome {
+use control.omg;
+use operator_specs.omg;
+use to_integer_execution.omg;
+use mid_execution.omg;
+use {integer_helpers}/integers.omg;
+pub machine retire_operation(input:&[u8;1024],space:&mut |model|::ObjectStore,frame:&mut |execution_model|::Frame,operation:|execution_model|::Operation)->|execution_model|::ExecutionOutcome {
  transition operation.opcode {
   0xa4 -> returned(input,space,frame,operation.operands[0])
   0xa0 -> branch(input,space,frame,operation.opcode,operation.body_end,operation.parent_end,operation.predicate,operation.operands[0])
@@ -44,115 +28,115 @@ pub machine retire_operation(input:&[u8;1024],space:&mut ObjectStore,frame:&mut 
   0x76 -> increment(input,space,frame,operation.opcode,operation.target_arity,operation.first_target,operation.second_target)
   _ -> scalar_a(input,space,frame,operation.opcode,operation.value_arity,operation.target_arity,operation.first_target,operation.second_target,operation.operands[0],operation.operands[1])
  }
- state integer_conversion_retirement(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,operand:Operand,target:Target)->ExecutionOutcome {
-  let result:ExecutionOutcome=retire_to_integer(input,space,frame,operand,target);result
+ state integer_conversion_retirement(input:&[u8;1024],space:&mut |model|::ObjectStore,frame:&mut |execution_model|::Frame,operand:|execution_model|::Operand,target:|execution_model|::Target)->|execution_model|::ExecutionOutcome {
+  let result:|execution_model|::ExecutionOutcome=|to_integer_execution|::retire_to_integer(input,space,frame,operand,target);result
  }
- state mid_retirement(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,operation:Operation)->ExecutionOutcome {
-  let result:ExecutionOutcome=retire_mid(input,space,frame,operation.operands[0],operation.operands[1],operation.operands[2],operation.first_target);result
+ state mid_retirement(input:&[u8;1024],space:&mut |model|::ObjectStore,frame:&mut |execution_model|::Frame,operation:|execution_model|::Operation)->|execution_model|::ExecutionOutcome {
+  let result:|execution_model|::ExecutionOutcome=|mid_execution|::retire_mid(input,space,frame,operation.operands[0],operation.operands[1],operation.operands[2],operation.first_target);result
  }
- state returned(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,operand:Operand)->ExecutionOutcome {
-  let admitted:ExecutionOutcome=validate_operand(input,frame.source_length,frame.body.unit,space,operand);let normalized:Operand=normalized_operand(space,frame.size,operand);
-  transition admitted==ExecutionOutcome::Success {true -> return_value(frame,normalized) _ -> (admitted)}
+ state returned(input:&[u8;1024],space:&mut |model|::ObjectStore,frame:&mut |execution_model|::Frame,operand:|execution_model|::Operand)->|execution_model|::ExecutionOutcome {
+  let admitted:|execution_model|::ExecutionOutcome=|generic_values|::validate_operand(input,frame.source_length,frame.body.unit,space,operand);let normalized:|execution_model|::Operand=|generic_values|::normalized_operand(space,frame.size,operand);
+  transition admitted==|execution_model|::ExecutionOutcome::Success {true -> return_value(frame,normalized) _ -> (admitted)}
  }
- state return_value(frame:&mut Frame,operand:Operand)->ExecutionOutcome {let result:ExecutionOutcome=return_operand(frame,operand);result}
- state branch(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,opcode:u64,body_end:u64,parent_end:u64,predicate:u64,operand:Operand)->ExecutionOutcome {
-  let scalar:SlotResult=integer_operand(space,frame.size,operand);
-  transition scalar.outcome==ExecutionOutcome::Success {true -> branch_value(input,frame,opcode,body_end,parent_end,predicate,scalar.slot.number) _ -> (scalar.outcome)}
+ state return_value(frame:&mut |execution_model|::Frame,operand:|execution_model|::Operand)->|execution_model|::ExecutionOutcome {let result:|execution_model|::ExecutionOutcome=|control|::return_operand(frame,operand);result}
+ state branch(input:&[u8;1024],space:&mut |model|::ObjectStore,frame:&mut |execution_model|::Frame,opcode:u64,body_end:u64,parent_end:u64,predicate:u64,operand:|execution_model|::Operand)->|execution_model|::ExecutionOutcome {
+  let scalar:|execution_model|::SlotResult=|generic_values|::integer_operand(space,frame.size,operand);
+  transition scalar.outcome==|execution_model|::ExecutionOutcome::Success {true -> branch_value(input,frame,opcode,body_end,parent_end,predicate,scalar.slot.number) _ -> (scalar.outcome)}
  }
- state branch_value(input:&[u8;1024],frame:&mut Frame,opcode:u64,body_end:u64,parent_end:u64,predicate:u64,number:u64)->ExecutionOutcome {let result:ExecutionOutcome=retire_branch(input,frame,opcode,body_end,parent_end,predicate,number);result}
- state copy(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,target:Target,operand:Operand,is_copy:bool)->ExecutionOutcome {
-  let result:ExecutionOutcome=write_generic_target(input,space,frame,target,operand,is_copy);
-  transition result==ExecutionOutcome::Success {true -> copied(space,frame,target,operand,is_copy) _ -> (result)}
+ state branch_value(input:&[u8;1024],frame:&mut |execution_model|::Frame,opcode:u64,body_end:u64,parent_end:u64,predicate:u64,number:u64)->|execution_model|::ExecutionOutcome {let result:|execution_model|::ExecutionOutcome=retire_branch(input,frame,opcode,body_end,parent_end,predicate,number);result}
+ state copy(input:&[u8;1024],space:&mut |model|::ObjectStore,frame:&mut |execution_model|::Frame,target:|execution_model|::Target,operand:|execution_model|::Operand,is_copy:bool)->|execution_model|::ExecutionOutcome {
+  let result:|execution_model|::ExecutionOutcome=|generic_target_bridge|::write_generic_target(input,space,frame,target,operand,is_copy);
+  transition result==|execution_model|::ExecutionOutcome::Success {true -> copied(space,frame,target,operand,is_copy) _ -> (result)}
  }
  // ACPI 6.6 19.6.132: Store's expression result is the data written. Named
  // implicit conversion may change its type; CopyObject still contributes the
  // copied source. Arithmetic operators retain their own result contracts.
- state copied(space:&ObjectStore,frame:&mut Frame,target:Target,operand:Operand,is_copy:bool)->ExecutionOutcome {
+ state copied(space:&|model|::ObjectStore,frame:&mut |execution_model|::Frame,target:|execution_model|::Target,operand:|execution_model|::Operand,is_copy:bool)->|execution_model|::ExecutionOutcome {
   transition is_copy {true -> contribute(frame,operand) _ -> stored(space,frame,target,operand)}
  }
- state stored(space:&ObjectStore,frame:&mut Frame,target:Target,operand:Operand)->ExecutionOutcome {
-  transition target {Target::Named {object_id} -> named_result(space,frame,object_id) _ -> contribute(frame,operand)}
+ state stored(space:&|model|::ObjectStore,frame:&mut |execution_model|::Frame,target:|execution_model|::Target,operand:|execution_model|::Operand)->|execution_model|::ExecutionOutcome {
+  transition target {|execution_model|::Target::Named {object_id} -> named_result(space,frame,object_id) _ -> contribute(frame,operand)}
  }
- state named_result(space:&ObjectStore,frame:&mut Frame,id:u64)->ExecutionOutcome {
-  let operand:Operand=normalized_operand(space,frame.size,Operand::Object {object_id:id});
-  let result:ExecutionOutcome=contribute_operand(frame,operand);result
+ state named_result(space:&|model|::ObjectStore,frame:&mut |execution_model|::Frame,id:u64)->|execution_model|::ExecutionOutcome {
+  let operand:|execution_model|::Operand=|generic_values|::normalized_operand(space,frame.size,|execution_model|::Operand::Object {object_id:id});
+  let result:|execution_model|::ExecutionOutcome=|operands|::contribute_operand(frame,operand);result
  }
- state contribute(frame:&mut Frame,operand:Operand)->ExecutionOutcome {let result:ExecutionOutcome=contribute_operand(frame,operand);result}
- state increment(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,opcode:u64,targets:u64,first:Target,second:Target)->ExecutionOutcome {
-  let value:SlotResult=read_target(space,frame,first);
-  transition value.outcome==ExecutionOutcome::Success {true -> compute(input,space,frame,opcode,targets,first,second,value.slot.number,1) _ -> (value.outcome)}
+ state contribute(frame:&mut |execution_model|::Frame,operand:|execution_model|::Operand)->|execution_model|::ExecutionOutcome {let result:|execution_model|::ExecutionOutcome=|operands|::contribute_operand(frame,operand);result}
+ state increment(input:&[u8;1024],space:&mut |model|::ObjectStore,frame:&mut |execution_model|::Frame,opcode:u64,targets:u64,first:|execution_model|::Target,second:|execution_model|::Target)->|execution_model|::ExecutionOutcome {
+  let value:|execution_model|::SlotResult=|targets|::read_target(space,frame,first);
+  transition value.outcome==|execution_model|::ExecutionOutcome::Success {true -> compute(input,space,frame,opcode,targets,first,second,value.slot.number,1) _ -> (value.outcome)}
  }
- state scalar_a(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,opcode:u64,values:u64,targets:u64,first:Target,second:Target,a_operand:Operand,b_operand:Operand)->ExecutionOutcome {
-  let value:SlotResult=integer_operand(space,frame.size,a_operand);
-  transition value.outcome==ExecutionOutcome::Success {true -> scalar_b(input,space,frame,opcode,values,targets,first,second,value.slot.number,b_operand) _ -> (value.outcome)}
+ state scalar_a(input:&[u8;1024],space:&mut |model|::ObjectStore,frame:&mut |execution_model|::Frame,opcode:u64,values:u64,targets:u64,first:|execution_model|::Target,second:|execution_model|::Target,a_operand:|execution_model|::Operand,b_operand:|execution_model|::Operand)->|execution_model|::ExecutionOutcome {
+  let value:|execution_model|::SlotResult=|generic_values|::integer_operand(space,frame.size,a_operand);
+  transition value.outcome==|execution_model|::ExecutionOutcome::Success {true -> scalar_b(input,space,frame,opcode,values,targets,first,second,value.slot.number,b_operand) _ -> (value.outcome)}
  }
- state scalar_b(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,opcode:u64,values:u64,targets:u64,first:Target,second:Target,a:u64,b_operand:Operand)->ExecutionOutcome {
+ state scalar_b(input:&[u8;1024],space:&mut |model|::ObjectStore,frame:&mut |execution_model|::Frame,opcode:u64,values:u64,targets:u64,first:|execution_model|::Target,second:|execution_model|::Target,a:u64,b_operand:|execution_model|::Operand)->|execution_model|::ExecutionOutcome {
   transition values>1 {true -> scalar_second(input,space,frame,opcode,targets,first,second,a,b_operand) _ -> compute(input,space,frame,opcode,targets,first,second,a,0)}
  }
- state scalar_second(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,opcode:u64,targets:u64,first:Target,second:Target,a:u64,operand:Operand)->ExecutionOutcome {
-  let value:SlotResult=integer_operand(space,frame.size,operand);
-  transition value.outcome==ExecutionOutcome::Success {true -> compute(input,space,frame,opcode,targets,first,second,a,value.slot.number) _ -> (value.outcome)}
+ state scalar_second(input:&[u8;1024],space:&mut |model|::ObjectStore,frame:&mut |execution_model|::Frame,opcode:u64,targets:u64,first:|execution_model|::Target,second:|execution_model|::Target,a:u64,operand:|execution_model|::Operand)->|execution_model|::ExecutionOutcome {
+  let value:|execution_model|::SlotResult=|generic_values|::integer_operand(space,frame.size,operand);
+  transition value.outcome==|execution_model|::ExecutionOutcome::Success {true -> compute(input,space,frame,opcode,targets,first,second,a,value.slot.number) _ -> (value.outcome)}
  }
- state compute(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,opcode:u64,targets:u64,first:Target,second:Target,a:u64,b:u64)->ExecutionOutcome {
-  let result:IntegerResult=compute_integer(frame.size,opcode,a,b);
-  transition {result.error==1 -> (ExecutionOutcome::DivideByZero) result.error!=0 -> (ExecutionOutcome::BadEncoding) _ -> store(input,space,frame,opcode,targets,first,second,result)}
+ state compute(input:&[u8;1024],space:&mut |model|::ObjectStore,frame:&mut |execution_model|::Frame,opcode:u64,targets:u64,first:|execution_model|::Target,second:|execution_model|::Target,a:u64,b:u64)->|execution_model|::ExecutionOutcome {
+  let result:|integers|::IntegerResult=|operator_specs|::compute_integer(frame.size,opcode,a,b);
+  transition {result.error==1 -> (|execution_model|::ExecutionOutcome::DivideByZero) result.error!=0 -> (|execution_model|::ExecutionOutcome::BadEncoding) _ -> store(input,space,frame,opcode,targets,first,second,result)}
  }
- state store(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,opcode:u64,targets:u64,first:Target,second:Target,result:IntegerResult)->ExecutionOutcome {
-  let outcome:ExecutionOutcome=operation_stores(input,space,frame,opcode,targets,first,second,result);
-  transition outcome==ExecutionOutcome::Success {true -> integer(frame,result.value) _ -> (outcome)}
+ state store(input:&[u8;1024],space:&mut |model|::ObjectStore,frame:&mut |execution_model|::Frame,opcode:u64,targets:u64,first:|execution_model|::Target,second:|execution_model|::Target,result:|integers|::IntegerResult)->|execution_model|::ExecutionOutcome {
+  let outcome:|execution_model|::ExecutionOutcome=operation_stores(input,space,frame,opcode,targets,first,second,result);
+  transition outcome==|execution_model|::ExecutionOutcome::Success {true -> integer(frame,result.value) _ -> (outcome)}
  }
- state integer(frame:&mut Frame,number:u64)->ExecutionOutcome {let result:ExecutionOutcome=contribute_integer(frame,number);result}
+ state integer(frame:&mut |execution_model|::Frame,number:u64)->|execution_model|::ExecutionOutcome {let result:|execution_model|::ExecutionOutcome=|operands|::contribute_integer(frame,number);result}
 }
-machine operation_stores(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,opcode:u64,targets:u64,first:Target,second:Target,result:IntegerResult)->ExecutionOutcome {
- transition {targets==0 -> (ExecutionOutcome::Success) opcode==0x78 -> divide(input,space,frame,first,second,result) _ -> write_first(input,space,frame,first,result.value)}
- state write_first(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,target:Target,number:u64)->ExecutionOutcome {let result:ExecutionOutcome=store_target(input,space,frame,target,number);result}
- state divide(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,first:Target,second:Target,result:IntegerResult)->ExecutionOutcome {
-  let outcome:ExecutionOutcome=store_target(input,space,frame,first,result.remainder);
-  transition outcome==ExecutionOutcome::Success {true -> quotient(input,space,frame,second,result.value) _ -> (outcome)}
+machine operation_stores(input:&[u8;1024],space:&mut |model|::ObjectStore,frame:&mut |execution_model|::Frame,opcode:u64,targets:u64,first:|execution_model|::Target,second:|execution_model|::Target,result:|integers|::IntegerResult)->|execution_model|::ExecutionOutcome {
+ transition {targets==0 -> (|execution_model|::ExecutionOutcome::Success) opcode==0x78 -> divide(input,space,frame,first,second,result) _ -> write_first(input,space,frame,first,result.value)}
+ state write_first(input:&[u8;1024],space:&mut |model|::ObjectStore,frame:&mut |execution_model|::Frame,target:|execution_model|::Target,number:u64)->|execution_model|::ExecutionOutcome {let result:|execution_model|::ExecutionOutcome=|targets|::store_target(input,space,frame,target,number);result}
+ state divide(input:&[u8;1024],space:&mut |model|::ObjectStore,frame:&mut |execution_model|::Frame,first:|execution_model|::Target,second:|execution_model|::Target,result:|integers|::IntegerResult)->|execution_model|::ExecutionOutcome {
+  let outcome:|execution_model|::ExecutionOutcome=|targets|::store_target(input,space,frame,first,result.remainder);
+  transition outcome==|execution_model|::ExecutionOutcome::Success {true -> quotient(input,space,frame,second,result.value) _ -> (outcome)}
  }
- state quotient(input:&[u8;1024],space:&mut ObjectStore,frame:&mut Frame,target:Target,number:u64)->ExecutionOutcome {let result:ExecutionOutcome=store_target(input,space,frame,target,number);result}
+ state quotient(input:&[u8;1024],space:&mut |model|::ObjectStore,frame:&mut |execution_model|::Frame,target:|execution_model|::Target,number:u64)->|execution_model|::ExecutionOutcome {let result:|execution_model|::ExecutionOutcome=|targets|::store_target(input,space,frame,target,number);result}
 }
-pub data ElseBranch [copy] { outcome: ExecutionOutcome; present: bool; start: u64; end: u64; }
+pub data ElseBranch [copy] { outcome: |execution_model|::ExecutionOutcome; present: bool; start: u64; end: u64; }
 machine else_branch(input: &[u8; 1024], at: u64, end: u64) -> ElseBranch {
     transition at < end && end <= 1024 { true -> peek(input, at, end) _ -> (ElseBranch { end: at }) }
     state peek(input: &[u8; 1024], at: u64, end: u64) -> ElseBranch {
-        let byte: Read = read_le(input, end, at, 1);
+        let byte: |model|::Read = |bytes|::read_le(input, end, at, 1);
         transition byte.value == 0xa1 && at < 1024 { true -> package(input, at + 1, end) _ -> (ElseBranch { end: at }) }
     }
     state package(input: &[u8; 1024], at: u64, end: u64) -> ElseBranch {
-        let body: Envelope = envelope(input, end, at);
-        let outcome: ExecutionOutcome = decode_outcome(body.outcome);
+        let body: |model|::Envelope = |bytes|::envelope(input, end, at);
+        let outcome: |execution_model|::ExecutionOutcome = |execution_names|::decode_outcome(body.outcome);
         ElseBranch { outcome: outcome, present: true, start: body.body, end: body.end }
     }
 }
-machine retire_branch(input: &[u8; 1024], frame: &mut Frame, opcode:u64,body_end:u64,parent_end:u64,predicate:u64,condition:u64) -> ExecutionOutcome {
+machine retire_branch(input: &[u8; 1024], frame: &mut |execution_model|::Frame, opcode:u64,body_end:u64,parent_end:u64,predicate:u64,condition:u64) -> |execution_model|::ExecutionOutcome {
     transition frame.pc <= body_end && body_end <= parent_end && parent_end <= frame.body.end && frame.body.end <= 1024 {
-        true -> restore(input, frame,opcode,body_end,parent_end,predicate,condition) _ -> (ExecutionOutcome::BadEncoding)
+        true -> restore(input, frame,opcode,body_end,parent_end,predicate,condition) _ -> (|execution_model|::ExecutionOutcome::BadEncoding)
     }
-    state restore(input: &[u8; 1024], frame: &mut Frame, opcode:u64,body_end:u64,parent_end:u64,predicate:u64,condition:u64) -> ExecutionOutcome {
+    state restore(input: &[u8; 1024], frame: &mut |execution_model|::Frame, opcode:u64,body_end:u64,parent_end:u64,predicate:u64,condition:u64) -> |execution_model|::ExecutionOutcome {
         frame.end = parent_end;
         transition opcode == 0xa2 { true -> while_branch(frame,opcode,body_end,parent_end,predicate,condition) _ -> if_branch(input, frame,opcode,body_end,parent_end,predicate,condition) }
     }
-    state while_branch(frame: &mut Frame, opcode:u64,body_end:u64,parent_end:u64,predicate:u64,condition:u64) -> ExecutionOutcome {
+    state while_branch(frame: &mut |execution_model|::Frame, opcode:u64,body_end:u64,parent_end:u64,predicate:u64,condition:u64) -> |execution_model|::ExecutionOutcome {
         transition condition != 0 { true -> enter_while(frame,opcode,body_end,parent_end,predicate,condition) _ -> skip(frame, body_end) }
     }
-    state enter_while(frame: &mut Frame, opcode:u64,body_end:u64,parent_end:u64,predicate:u64,condition:u64) -> ExecutionOutcome {
-        let result: ExecutionOutcome = enter_block(frame, frame.pc, body_end, body_end, true, predicate); result
+    state enter_while(frame: &mut |execution_model|::Frame, opcode:u64,body_end:u64,parent_end:u64,predicate:u64,condition:u64) -> |execution_model|::ExecutionOutcome {
+        let result: |execution_model|::ExecutionOutcome = |control|::enter_block(frame, frame.pc, body_end, body_end, true, predicate); result
     }
-    state if_branch(input: &[u8; 1024], frame: &mut Frame, opcode:u64,body_end:u64,parent_end:u64,predicate:u64,condition:u64) -> ExecutionOutcome {
+    state if_branch(input: &[u8; 1024], frame: &mut |execution_model|::Frame, opcode:u64,body_end:u64,parent_end:u64,predicate:u64,condition:u64) -> |execution_model|::ExecutionOutcome {
         let otherwise: ElseBranch = else_branch(input, body_end, parent_end);
-        transition otherwise.outcome == ExecutionOutcome::Success { true -> choose(frame,opcode,body_end,parent_end,predicate,otherwise,condition) _ -> (otherwise.outcome) }
+        transition otherwise.outcome == |execution_model|::ExecutionOutcome::Success { true -> choose(frame,opcode,body_end,parent_end,predicate,otherwise,condition) _ -> (otherwise.outcome) }
     }
-    state choose(frame: &mut Frame, opcode:u64,body_end:u64,parent_end:u64,predicate:u64,otherwise:ElseBranch,condition:u64) -> ExecutionOutcome {
+    state choose(frame: &mut |execution_model|::Frame, opcode:u64,body_end:u64,parent_end:u64,predicate:u64,otherwise:ElseBranch,condition:u64) -> |execution_model|::ExecutionOutcome {
         transition { condition != 0 -> then(frame,opcode,body_end,parent_end,predicate,otherwise,condition)
             otherwise.present -> otherwise(frame, otherwise,condition)
             _ -> skip(frame, body_end) }
     }
-    state then(frame: &mut Frame, opcode:u64,body_end:u64,parent_end:u64,predicate:u64,otherwise:ElseBranch,condition:u64) -> ExecutionOutcome {
-        let result: ExecutionOutcome = enter_block(frame, frame.pc, body_end, otherwise.end, false, 0); result
+    state then(frame: &mut |execution_model|::Frame, opcode:u64,body_end:u64,parent_end:u64,predicate:u64,otherwise:ElseBranch,condition:u64) -> |execution_model|::ExecutionOutcome {
+        let result: |execution_model|::ExecutionOutcome = |control|::enter_block(frame, frame.pc, body_end, otherwise.end, false, 0); result
     }
-    state otherwise(frame: &mut Frame, otherwise: ElseBranch, condition:u64) -> ExecutionOutcome {
-        let result: ExecutionOutcome = enter_block(frame, otherwise.start, otherwise.end, otherwise.end, false, 0); result
+    state otherwise(frame: &mut |execution_model|::Frame, otherwise: ElseBranch, condition:u64) -> |execution_model|::ExecutionOutcome {
+        let result: |execution_model|::ExecutionOutcome = |control|::enter_block(frame, otherwise.start, otherwise.end, otherwise.end, false, 0); result
     }
-    state skip(frame: &mut Frame, next: u64) -> ExecutionOutcome { frame.pc = next; ExecutionOutcome::Success }
+    state skip(frame: &mut |execution_model|::Frame, next: u64) -> |execution_model|::ExecutionOutcome { frame.pc = next; |execution_model|::ExecutionOutcome::Success }
 }

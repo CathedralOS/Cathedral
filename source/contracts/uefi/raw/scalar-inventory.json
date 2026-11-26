@@ -287,7 +287,7 @@
       },
       "targets": [
         {
-          "anchor": "module capsule;",
+          "anchor": "pub data CapsuleFlags",
           "path": "source/contracts/uefi/raw/capsule.omg"
         }
       ]
@@ -631,7 +631,7 @@
       },
       "targets": [
         {
-          "anchor": "module scalars;",
+          "anchor": "pub data Handle",
           "path": "source/contracts/uefi/raw/scalars.omg"
         }
       ]
@@ -1108,7 +1108,7 @@
       },
       "targets": [
         {
-          "anchor": "module status;",
+          "anchor": "pub data Status",
           "path": "source/contracts/uefi/raw/status.omg"
         }
       ]
@@ -2113,7 +2113,7 @@
       },
       "targets": [
         {
-          "anchor": "module scalars;",
+          "anchor": "pub data Handle",
           "path": "source/contracts/uefi/raw/scalars.omg"
         }
       ]
@@ -2325,7 +2325,7 @@
       },
       "targets": [
         {
-          "anchor": "module revision;",
+          "anchor": "pub data Revision",
           "path": "source/contracts/uefi/raw/revision.omg"
         }
       ]
@@ -2542,7 +2542,7 @@
       },
       "targets": [
         {
-          "anchor": "module time;",
+          "anchor": "pub data Daylight",
           "path": "source/contracts/uefi/raw/time.omg"
         }
       ]

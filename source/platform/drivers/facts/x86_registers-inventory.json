@@ -125,7 +125,7 @@
       "targets": [
         {
           "path": "source/platform/drivers/facts/x86_registers.omg",
-          "anchor": "module x86_registers;"
+          "anchor": "pub data Cr0Flags"
         }
       ]
     },
@@ -786,7 +786,7 @@
       "targets": [
         {
           "path": "source/platform/drivers/facts/x86_registers.omg",
-          "anchor": "module x86_registers;"
+          "anchor": "pub data Cr0Flags"
         }
       ]
     },
@@ -1544,7 +1544,7 @@
       "targets": [
         {
           "path": "source/platform/drivers/facts/x86_registers.omg",
-          "anchor": "module x86_registers;"
+          "anchor": "pub data Cr0Flags"
         }
       ]
     },
@@ -2206,7 +2206,7 @@
       "targets": [
         {
           "path": "source/platform/drivers/facts/x86_registers.omg",
-          "anchor": "module x86_registers;"
+          "anchor": "pub data Cr0Flags"
         }
       ]
     },
@@ -2473,7 +2473,7 @@
       "targets": [
         {
           "path": "source/platform/drivers/facts/x86_registers.omg",
-          "anchor": "module x86_registers;"
+          "anchor": "pub data Cr0Flags"
         }
       ]
     },
@@ -2740,7 +2740,7 @@
       "targets": [
         {
           "path": "source/platform/drivers/facts/x86_registers.omg",
-          "anchor": "module x86_registers;"
+          "anchor": "pub data Cr0Flags"
         }
       ]
     },
@@ -2889,7 +2889,7 @@
       "targets": [
         {
           "path": "source/platform/drivers/facts/x86_registers.omg",
-          "anchor": "module x86_registers;"
+          "anchor": "pub data Cr0Flags"
         }
       ]
     },
@@ -3058,7 +3058,7 @@
       "targets": [
         {
           "path": "source/platform/drivers/facts/x86_registers.omg",
-          "anchor": "module x86_registers;"
+          "anchor": "pub data Cr0Flags"
         }
       ]
     }

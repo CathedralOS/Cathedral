@@ -95,33 +95,28 @@ for pi,p in enumerate(profiles):
    rust.append(f'if profile=={pi} {{let (tree,retired,empty,_)=observe({str(recursive).lower()},{first},{last},{r},&{tup(entries)});assert_eq!(tree,vec!{tup(final)},"{pi}/{recursive}/{name} final");assert_eq!(retired,vec!{arr(retired)},"{pi}/{recursive}/{name} retirement");assert_eq!(empty,{str(empty).lower()});}}')
 
 prefix='''// SPDX-License-Identifier: MIT OR Apache-2.0
-use x86::memory_encryption;
-use x86::memory_encryption::State;
-use x86::memory_encryption::Configuration;
-use x86::encrypted_cleanup_ranges;
-use x86::encrypted_cleanup_recursive;
-use x86::cleanup_ranges::Cursor;
-use x86::cleanup_ranges::RangeStep;
-use x86::cleanup_ranges::RangeStatus;
-use x86::cleanup_branch::CleanupOutcome;
-use x86::recursive_cleanup::RecursiveCursor;
-use x86::recursive_cleanup::RecursiveStep;
+use {x86}/memory_encryption.omg;
+use {x86}/encrypted_cleanup_ranges.omg;
+use {x86}/encrypted_cleanup_recursive.omg;
+use {x86}/cleanup_ranges.omg;
+use {x86}/cleanup_branch.omg;
+use {x86}/recursive_cleanup.omg;
 '''
 footer='\nconst TEST_RESULT:i32=test_result();\nmachine require_success(value:i32) requires value==0;{}\ndata Main{}\nmachine Main::main(&mut self){require_success(TEST_RESULT);}\n'
 fixtures=[];controls=[]
 for n,q in enumerate(rows):
- p=profiles[q['profile']];code='    let profile: State = memory_encryption::initial();\n'
- for bit,shared in p['configs']:code+=f'    _ = memory_encryption::configure(&mut profile, Configuration::{"SharedBit" if shared else "EncryptedBit"} {{ position: {bit} }});\n'
+ p=profiles[q['profile']];code='    let profile: |memory_encryption|::State = |memory_encryption|::initial();\n'
+ for bit,shared in p['configs']:code+=f'    _ = |memory_encryption|::configure(&mut profile, |memory_encryption|::Configuration::{"SharedBit" if shared else "EncryptedBit"} {{ position: {bit} }});\n'
  code+=f'    let words:[u64;4]={arr(q["words"])}; let ids:[u64;4]={arr(q["ids"])}; let others:[bool;4]={arr(q["others"])};\n'
  if q['recursive']:
-  code+=f'    let cursor:RecursiveCursor=encrypted_cleanup_recursive::begin({q["page"]},{q["last"]},{q["budget"]},{q["index"]});\n    let value:RecursiveStep=encrypted_cleanup_recursive::step(profile,cursor,&words,&ids,&others);\n'
+  code+=f'    let cursor:|recursive_cleanup|::RecursiveCursor=|encrypted_cleanup_recursive|::begin({q["page"]},{q["last"]},{q["budget"]},{q["index"]});\n    let value:|recursive_cleanup|::RecursiveStep=|encrypted_cleanup_recursive|::step(profile,cursor,&words,&ids,&others);\n'
   cursor='value.cursor.range';extra=[f'value.cursor.recursive_index=={q["index"]}']
  else:
-  code+=f'    let cursor:Cursor=encrypted_cleanup_ranges::begin({q["page"]},{q["last"]},{q["budget"]});\n    let value:RangeStep=encrypted_cleanup_ranges::step(profile,cursor,&words,&ids,&others);\n'
+  code+=f'    let cursor:|cleanup_ranges|::Cursor=|encrypted_cleanup_ranges|::begin({q["page"]},{q["last"]},{q["budget"]});\n    let value:|cleanup_ranges|::RangeStep=|encrypted_cleanup_ranges|::step(profile,cursor,&words,&ids,&others);\n'
   cursor='value.cursor';extra=[]
  code+=f'    let next:u64={cursor}.next_page; let last:u64={cursor}.last_page; let budget:u64={cursor}.budget;\n'
- checks=[f'value.has_plan=={str(q["has_plan"]).lower()}',f'{cursor}.status in RangeStatus::{q["status"]}',f'next=={q["next"]}',f'last=={q["last"]}',f'budget=={q["remaining"]}',f'value.branch.retire_count=={len(q["retired"])}',f'value.branch.write_mask=={q["write"]}',f'value.branch.visited=={q["visited"]}']+extra
- if q['has_plan']:checks+=['value.branch.outcome in CleanupOutcome::Ready']
+ checks=[f'value.has_plan=={str(q["has_plan"]).lower()}',f'{cursor}.status in |cleanup_ranges|::RangeStatus::{q["status"]}',f'next=={q["next"]}',f'last=={q["last"]}',f'budget=={q["remaining"]}',f'value.branch.retire_count=={len(q["retired"])}',f'value.branch.write_mask=={q["write"]}',f'value.branch.visited=={q["visited"]}']+extra
+ if q['has_plan']:checks+=['value.branch.outcome in |cleanup_branch|::CleanupOutcome::Ready']
  checks += [f'value.branch.words[{i}]=={w}'for i,w in enumerate(q['out'])]+[f'value.branch.frames_to_retire[{i}]=={v}'for i,v in enumerate(q['retired']+[0]*(3-len(q['retired'])))]
  code+='    transition '+' && '.join(checks)+' {true -> (0) _ -> (1)}\n'
  path=f'cases/step-{n:03}.omg';write(HERE/path,prefix+f'// {p["name"]} / {q["recursive"]} / {q["scenario"]}\nmachine test_result()->i32 {{\n'+code+'}\n'+footer)

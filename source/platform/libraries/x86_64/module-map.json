@@ -69,7 +69,7 @@
       "comparison_targets": [
         {
           "path": "source/kernel/arch/isa/x86_64/timer.omg",
-          "anchor": "reaches MachineControl"
+          "anchor": "reaches |assembly|::MachineControl"
         }
       ],
       "anchor_count": 11,
@@ -86,7 +86,7 @@
       "comparison_targets": [
         {
           "path": "source/kernel/arch/board/pc/timer/pic.omg",
-          "anchor": "reaches PortIo"
+          "anchor": "reaches |assembly|::PortIo"
         }
       ],
       "anchor_count": 27,
@@ -199,7 +199,7 @@
         },
         {
           "path": "source/kernel/arch/isa/x86_64/timer.omg",
-          "anchor": "reaches MachineControl"
+          "anchor": "reaches |assembly|::MachineControl"
         }
       ],
       "anchor_count": 78,
@@ -247,7 +247,7 @@
         },
         {
           "path": "source/kernel/arch/isa/x86_64/timer.omg",
-          "anchor": "reaches MachineControl"
+          "anchor": "reaches |assembly|::MachineControl"
         }
       ],
       "anchor_count": 83,
@@ -606,7 +606,7 @@
       "comparison_targets": [
         {
           "path": "source/kernel/arch/board/pc/timer/pic.omg",
-          "anchor": "reaches PortIo"
+          "anchor": "reaches |assembly|::PortIo"
         }
       ],
       "anchor_count": 4,
@@ -699,7 +699,7 @@
       "comparison_targets": [
         {
           "path": "source/kernel/arch/board/pc/timer/pic.omg",
-          "anchor": "reaches PortIo"
+          "anchor": "reaches |assembly|::PortIo"
         }
       ],
       "anchor_count": 3,
@@ -753,7 +753,7 @@
       "comparison_targets": [
         {
           "path": "source/kernel/arch/board/pc/timer/pic.omg",
-          "anchor": "reaches PortIo"
+          "anchor": "reaches |assembly|::PortIo"
         }
       ],
       "anchor_count": 6,

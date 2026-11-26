@@ -1,11 +1,8 @@
-module document::encoding;
-
 // NTS1 belongs to the document. This codec knows bytes, never native packets.
-use state::State;
-use state::LoadMode;
-use operations::Record;
-public machine encode(s: &State) -> Record {
-    let mut record: Record;
+use state.omg as local_state;
+use operations.omg;
+public machine encode(s: &|local_state|::State) -> |operations|::Record {
+    let mut record: |operations|::Record;
     record.length = ((s.length as u64 in Saturating) + 4) as u64;
     record.bytes[0] = 78u8;
     record.bytes[1] = 84u8;
@@ -14,12 +11,12 @@ public machine encode(s: &State) -> Record {
     copy(s, &mut record, 0u64);
     record
 }
-machine copy(s: &State, record: &mut Record, i: u64) {
+machine copy(s: &|local_state|::State, record: &mut |operations|::Record, i: u64) {
     transition i < s.length && i < 240u64 {
         true -> byte(s, record, i)
         _ -> done()
     }
-    machine byte(s: &State, record: &mut Record, i: u64) requires i < 240u64 {
+    machine byte(s: &|local_state|::State, record: &mut |operations|::Record, i: u64) requires i < 240u64 {
         record.bytes[i + 4u64] = s.draft[i];
         transition {
             _ -> copy(s, record, i + 1u64)
@@ -27,20 +24,20 @@ machine copy(s: &State, record: &mut Record, i: u64) {
     }
     machine done() {}
 }
-public machine valid(record: &Record) -> bool {
+public machine valid(record: &|operations|::Record) -> bool {
     transition record.length >= 4u64 && record.length <= 244u64
         && record.bytes[0] == 78u8 && record.bytes[1] == 84u8
         && record.bytes[2] == 83u8 && record.bytes[3] == 49u8 {
         true -> scan(record, 4u64)
         _ -> (false)
     }
-    machine scan(record: &Record, i: u64) -> bool {
+    machine scan(record: &|operations|::Record, i: u64) -> bool {
         transition i < record.length && i < 244u64 {
             true -> byte(record, i)
             _ -> (true)
         }
     }
-    machine byte(record: &Record, i: u64) -> bool requires i < 244u64 {
+    machine byte(record: &|operations|::Record, i: u64) -> bool requires i < 244u64 {
         let b: u8 = record.bytes[i];
         transition (b >= 97u8 && b <= 122u8) || (b >= 48u8 && b <= 57u8) || b == 32u8 || b == 10u8 {
             true -> scan(record, i + 1u64)
@@ -48,50 +45,50 @@ public machine valid(record: &Record) -> bool {
         }
     }
 }
-public machine empty(s: &mut State) {
-    let mut record: Record;
+public machine empty(s: &mut |local_state|::State) {
+    let mut record: |operations|::Record;
     record.length = 4u64;
     decode(s, &record);
 }
-public machine decode(s: &mut State, record: &Record) {
+public machine decode(s: &mut |local_state|::State, record: &|operations|::Record) {
     transition record.length >= 4u64 && record.length <= 244u64 {
         true -> start(s, record)
         _ -> done()
     }
-    machine start(s: &mut State, record: &Record) requires record.length >= 4u64 && record.length <= 244u64 {
+    machine start(s: &mut |local_state|::State, record: &|operations|::Record) requires record.length >= 4u64 && record.length <= 244u64 {
         s.saved_length = record.length - 4u64;
         transition s.loading {
-            LoadMode::ReplaceDraft -> draft(s, record)
+            |local_state|::LoadMode::ReplaceDraft -> draft(s, record)
             _ -> copy(s, record, 0u64)
         }
     }
-    machine draft(s: &mut State, record: &Record) {
+    machine draft(s: &mut |local_state|::State, record: &|operations|::Record) {
         s.length = s.saved_length;
         s.cursor = s.length;
         transition {
             _ -> copy(s, record, 0u64)
         }
     }
-    machine copy(s: &mut State, record: &Record, i: u64) {
+    machine copy(s: &mut |local_state|::State, record: &|operations|::Record, i: u64) {
         transition i < 240u64 {
             true -> byte(s, record, i)
             _ -> done()
         }
     }
-    machine byte(s: &mut State, record: &Record, i: u64) requires i < 240u64 {
+    machine byte(s: &mut |local_state|::State, record: &|operations|::Record, i: u64) requires i < 240u64 {
         transition i < s.saved_length {
             true -> write(s, record, i, record.bytes[i + 4u64])
             _ -> write(s, record, i, 0u8)
         }
     }
-    machine write(s: &mut State, record: &Record, i: u64, b: u8) requires i < 240u64 {
+    machine write(s: &mut |local_state|::State, record: &|operations|::Record, i: u64, b: u8) requires i < 240u64 {
         s.confirmed[i] = b;
         transition s.loading {
-            LoadMode::ReplaceDraft -> both(s, record, i, b)
+            |local_state|::LoadMode::ReplaceDraft -> both(s, record, i, b)
             _ -> copy(s, record, i + 1u64)
         }
     }
-    machine both(s: &mut State, record: &Record, i: u64, b: u8) requires i < 240u64 {
+    machine both(s: &mut |local_state|::State, record: &|operations|::Record, i: u64, b: u8) requires i < 240u64 {
         s.draft[i] = b;
         transition {
             _ -> copy(s, record, i + 1u64)

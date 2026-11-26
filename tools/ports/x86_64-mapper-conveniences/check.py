@@ -15,7 +15,7 @@ def main():
   run(omega,'--check',ROOT/'source/platform/libraries/x86_64/mapper_conveniences.omg')
   for file in ('main.omg','routes.omg','translate_route.omg'):run(omega,'--check',HERE/file)
  build=(HERE/'build.omg').read_text().replace('../../../source/',str(ROOT/'source')+'/')
- controls=[('main.omg','request_is(request, 12288, flags, 7)','request_is(request, 12288, flags, 6)'),('main.omg','number_is(result, 12288)','number_is(result, 12287)'),('main.omg','bad_identity in NumberResult::Rejected','bad_identity in NumberResult::Value'),('routes.omg','value.edits.write_mask == 15','value.edits.write_mask == 14')]
+ controls=[('main.omg','request_is(request, 12288, flags, 7)','request_is(request, 12288, flags, 6)'),('main.omg','number_is(result, 12288)','number_is(result, 12287)'),('main.omg','bad_identity in |addresses|::NumberResult::Rejected','bad_identity in |addresses|::NumberResult::Value'),('routes.omg','value.edits.write_mask == 15','value.edits.write_mask == 14')]
  for file,old,new in controls:
   with tempfile.TemporaryDirectory(prefix='cathedral-mapper-default-control-') as directory:
    d=Path(directory);body=(HERE/file).read_text();assert old in body;body=body.replace(old,new,1)

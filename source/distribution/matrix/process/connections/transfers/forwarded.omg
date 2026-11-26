@@ -1,42 +1,39 @@
-module transfers::forwarded;
 // One child update or image, at either backing: retain -> submit -> settle.
 // Connection correlation and deferred tickets are ordinary platform runtime
 // operations. This program owns the child's binding and scene serialization.
-use shared::state::State;
-use shared::presentation::Transfer;
-use transfers::transfer;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::kernel;
-use runtime::connection::main::Frame;
-use runtime::server::main::Ticket;
-use runtime::server::deferred;
-use transfers::backing;
-use protocol::main;
-use presentation;
-use responses;
+use {shared}/state.omg as shared_state;
+use {shared}/presentation.omg;
+use transfers/transfer.omg;
+use {runtime}/kernel.omg;
+use {runtime}/connection/main.omg;
+use {runtime}/server/main.omg as server_main;
+use {runtime}/server/deferred.omg;
+use transfers/backing.omg;
+use {protocol}/main.omg as protocol_main;
+use presentation.omg as presentation_file;
+use responses.omg;
 
-public machine begin(gate: &Gate, context: &mut State, slot: u64 [0..=4], frame: Frame, packet: [u64; 8], object: u64) -> u64
-    reaches Kernel blocks invokes Kernel {
-    let ticket: Ticket = runtime::server::main::ticket(&context.slots[slot].listener);
+public machine begin(gate: &|kernel|::Gate, context: &mut |shared_state|::State, slot: u64 [0..=4], frame: |main|::Frame, packet: [u64; 8], object: u64) -> u64
+    reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
+    let ticket: |server_main|::Ticket = |server_main|::ticket(&context.slots[slot].listener);
     transition context.slots[slot].listener.peer.pipeline {
         true -> block held(gate, context, slot, ticket, frame, packet, object)
         _ -> retained(context, slot, ticket, frame, packet, object)
     }
-    machine held(gate: &Gate, context: &mut State, slot: u64 [0..=4], ticket: Ticket, frame: Frame, packet: [u64; 8], object: u64)
-        -> u64 reaches Kernel {
-        let status: u64 = responses::retain(context, slot, ticket);
+    machine held(gate: &|kernel|::Gate, context: &mut |shared_state|::State, slot: u64 [0..=4], ticket: |server_main|::Ticket, frame: |main|::Frame, packet: [u64; 8], object: u64)
+        -> u64 reaches |kernel|::Kernel {
+        let status: u64 = |responses|::retain(context, slot, ticket);
         transition status == 0u64 {
             true -> retained(context, slot, ticket, frame, packet, object)
             _ -> block refused(gate, object, status)
         }
     }
-    machine refused(gate: &Gate, object: u64, status: u64) -> u64 reaches Kernel {
-        block presentation::release(gate, object);
+    machine refused(gate: &|kernel|::Gate, object: u64, status: u64) -> u64 reaches |kernel|::Kernel {
+        block |presentation_file|::release(gate, object);
         status
     }
-    machine retained(context: &mut State, slot: u64 [0..=4], ticket: Ticket, frame: Frame, packet: [u64; 8], object: u64) -> u64 {
-        let mut work: Transfer;
+    machine retained(context: &mut |shared_state|::State, slot: u64 [0..=4], ticket: |server_main|::Ticket, frame: |main|::Frame, packet: [u64; 8], object: u64) -> u64 {
+        let mut work: |presentation|::Transfer;
         work.active = true;
         work.slot = slot;
         work.ticket = ticket;
@@ -48,58 +45,58 @@ public machine begin(gate: &Gate, context: &mut State, slot: u64 [0..=4], frame:
         0u64
     }
 }
-public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
+public machine step(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     transition {
         !context.presentation_work.active -> done()
         context.answers[context.presentation_work.slot].active -> block draining(gate, context)
         context.presentation_work.submitted -> block waiting(gate, context)
-        !transfer::current(context) -> block finish(gate, context, kernel::DENIED)
+        !|transfer|::current(context) -> block finish(gate, context, |kernel|::DENIED)
         _ -> block submit(gate, context)
     }
 }
-machine draining(gate: &Gate, context: &mut State) reaches Kernel {
+machine draining(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
     let slot: u64 [0..=4] = context.presentation_work.slot;
-    let status: u64 = block responses::step(gate, context, slot);
+    let status: u64 = block |responses|::step(gate, context, slot);
 }
-machine submit(gate: &Gate, context: &mut State) reaches Kernel {
+machine submit(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
     let packet: [u64; 8] = context.presentation_work.packet;
     let object: u64 = context.presentation_work.object;
-    let status: u64 = block backing::submit(gate, context, packet, object);
+    let status: u64 = block |backing|::submit(gate, context, packet, object);
     transition {
         status == 0u64 -> submitted(context)
-        status == kernel::WOULD_BLOCK -> done()
+        status == |kernel|::WOULD_BLOCK -> done()
         _ -> block finish(gate, context, status)
     }
-    machine submitted(context: &mut State) { context.presentation_work.submitted = true; }
+    machine submitted(context: &mut |shared_state|::State) { context.presentation_work.submitted = true; }
 }
-machine waiting(gate: &Gate, context: &mut State) reaches Kernel {
+machine waiting(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
     // Leave a completed reply with this job while the child's previous plain
     // answer is backpressured. Never overwrite that answer or repeat the image.
-    transition backing::ready(context) && !context.answers[context.presentation_work.slot].active {
+    transition |backing|::ready(context) && !context.answers[context.presentation_work.slot].active {
         true -> block received(gate, context)
         _ -> done()
     }
-    machine received(gate: &Gate, context: &mut State) reaches Kernel {
-        let status: u64 = backing::take(context);
-        transition transfer::current(context) {
+    machine received(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
+        let status: u64 = |backing|::take(context);
+        transition |transfer|::current(context) {
             true -> block finish(gate, context, status)
-            _ -> block finish(gate, context, kernel::DENIED)
+            _ -> block finish(gate, context, |kernel|::DENIED)
         }
     }
 }
-machine finish(gate: &Gate, context: &mut State, status: u64) reaches Kernel {
-    let work: Transfer = context.presentation_work;
-    let empty: Transfer;
+machine finish(gate: &|kernel|::Gate, context: &mut |shared_state|::State, status: u64) reaches |kernel|::Kernel {
+    let work: |presentation|::Transfer = context.presentation_work;
+    let empty: |presentation|::Transfer;
     context.presentation_work = empty;
     context.next_child = (work.slot + 1u64) % 5u64;
     block settled(gate, context, work, status);
-    let reply: [u64; 8] = presentation::error(status);
-    let sent: u64 = block responses::send(gate, context, work.slot, work.ticket, reply);
+    let reply: [u64; 8] = |presentation_file|::error(status);
+    let sent: u64 = block |responses|::send(gate, context, work.slot, work.ticket, reply);
 }
-machine settled(gate: &Gate, context: &mut State, work: Transfer, status: u64) reaches Kernel {
-    transition work.frame.payload[0] == SURFACE_IMAGE {
-        true -> block presentation::finish_image(gate, context, work.slot, work.ticket.incarnation, work.frame, work.packet[2], work.object, status)
-        _ -> block presentation::finish_update(gate, context, work.slot, work.ticket.incarnation, work.frame, work.packet[2], status)
+machine settled(gate: &|kernel|::Gate, context: &mut |shared_state|::State, work: |presentation|::Transfer, status: u64) reaches |kernel|::Kernel {
+    transition work.frame.payload[0] == |protocol_main|::SURFACE_IMAGE {
+        true -> block |presentation_file|::finish_image(gate, context, work.slot, work.ticket.incarnation, work.frame, work.packet[2], work.object, status)
+        _ -> block |presentation_file|::finish_update(gate, context, work.slot, work.ticket.incarnation, work.frame, work.packet[2], status)
     }
 }
 machine done() {}

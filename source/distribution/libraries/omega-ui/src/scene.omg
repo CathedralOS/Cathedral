@@ -1,7 +1,5 @@
-module scene;
-
-use context::UiContext;
-use types::Rect;
+use context.omg;
+use types.omg;
 
 
 /*
@@ -13,9 +11,7 @@ storage logically: use it with the context that prepared it. Next rejects it
 after either frame or text generation changes, including context reinitialization.
 The scalar renderer and native gallery consume this same list and cursor.
 */
-use types;
-use context;
-use raster;
+use raster.omg;
 
 public data UiPaintCommand [copy] {
     source_node: i32;
@@ -35,23 +31,23 @@ public data UiScene {
     text_generation: u64 in Wrapping;
 }
 
-public machine prepare(active_scene: &mut UiScene, ui_context: &UiContext) {
+public machine prepare(active_scene: &mut UiScene, ui_context: &|context|::UiContext) {
     active_scene.count = 0;
     active_scene.frame = ui_context.frame;
     active_scene.text_generation = ui_context.text_store.generation;
     transition { _ -> scan(active_scene, ui_context, 0) }
-    machine scan(active_scene: &mut UiScene, ui_context: &UiContext, index: i32) {
+    machine scan(active_scene: &mut UiScene, ui_context: &|context|::UiContext, index: i32) {
         transition index >= 0 && index < ui_context.node_count && index < 128 { true -> node(active_scene, ui_context, index) _ -> done() }
     }
-    machine node(active_scene: &mut UiScene, ui_context: &UiContext, index: i32) requires index >= 0 && index < 128 {
+    machine node(active_scene: &mut UiScene, ui_context: &|context|::UiContext, index: i32) requires index >= 0 && index < 128 {
         let visible: bool = ui_context.nodes[index].style.background >= 0
             || (ui_context.nodes[index].style.border >= 0 && ui_context.nodes[index].style.border_width > 0)
             || ui_context.nodes[index].content_kind > 0;
         transition visible && active_scene.count >= 0 && active_scene.count < 128 { true -> record(active_scene, ui_context, index, active_scene.count) _ -> scan(active_scene, ui_context, index + 1) }
     }
-    machine record(active_scene: &mut UiScene, ui_context: &UiContext, index: i32, slot: i32)
+    machine record(active_scene: &mut UiScene, ui_context: &|context|::UiContext, index: i32, slot: i32)
     requires index >= 0 && index < 128 && slot >= 0 && slot < 128 {
-        let rectangle: Rect = context::paint_rect(ui_context, index);
+        let rectangle: |types|::Rect = |context|::paint_rect(ui_context, index);
         active_scene.commands[slot] = UiPaintCommand { source_node: index,
             x: rectangle.x, y: rectangle.y, width: rectangle.w, height: rectangle.h,
             background: ui_context.nodes[index].style.background, border: ui_context.nodes[index].style.border,
@@ -62,28 +58,28 @@ public machine prepare(active_scene: &mut UiScene, ui_context: &UiContext) {
     machine done() {}
 }
 
-public machine begin_band(active_scene: &UiScene, ui_context: &UiContext, pixels: &mut [i32; 4096], band_y: i32) {
-    raster::configure_for_context(ui_context, pixels, band_y);
-    let height: i32 in Saturating = raster::band_height(pixels, band_y);
+public machine begin_band(active_scene: &UiScene, ui_context: &|context|::UiContext, pixels: &mut [i32; 4096], band_y: i32) {
+    |raster|::configure_for_context(ui_context, pixels, band_y);
+    let height: i32 in Saturating = |raster|::band_height(pixels, band_y);
     transition height > 0 { true -> clear(ui_context, pixels, band_y, height) _ -> done() }
-    machine clear(ui_context: &UiContext, pixels: &mut [i32; 4096], band_y: i32, height: i32 in Saturating) requires height > 0 {
+    machine clear(ui_context: &|context|::UiContext, pixels: &mut [i32; 4096], band_y: i32, height: i32 in Saturating) requires height > 0 {
         pixels[4093] = (((band_y as i32 in Saturating) * ui_context.height) / height) as i32;
-        raster::clear_band_buffer(pixels, band_y, ui_context.theme.background);
+        |raster|::clear_band_buffer(pixels, band_y, ui_context.theme.background);
     }
     machine done() {}
 }
 
 // Paint a surface and return its foreground node; -1 means the band is complete.
-public machine next(active_scene: &UiScene, ui_context: &UiContext, pixels: &mut [i32; 4096], band_y: i32, cursor: &mut i32) -> i32 {
+public machine next(active_scene: &UiScene, ui_context: &|context|::UiContext, pixels: &mut [i32; 4096], band_y: i32, cursor: &mut i32) -> i32 {
     transition active_scene.frame == ui_context.frame && active_scene.text_generation == ui_context.text_store.generation {
         true -> scan(active_scene, ui_context, pixels, band_y, cursor)
         _ -> (-1)
     }
-    machine scan(active_scene: &UiScene, ui_context: &UiContext, pixels: &mut [i32; 4096], band_y: i32, cursor: &mut i32) -> i32 {
+    machine scan(active_scene: &UiScene, ui_context: &|context|::UiContext, pixels: &mut [i32; 4096], band_y: i32, cursor: &mut i32) -> i32 {
         let index: i32 = cursor;
         transition index >= 0 && index < active_scene.count && index < 128 { true -> command(active_scene, ui_context, pixels, band_y, cursor, index) _ -> (-1) }
     }
-    machine command(active_scene: &UiScene, ui_context: &UiContext, pixels: &mut [i32; 4096], band_y: i32, cursor: &mut i32, index: i32) -> i32
+    machine command(active_scene: &UiScene, ui_context: &|context|::UiContext, pixels: &mut [i32; 4096], band_y: i32, cursor: &mut i32, index: i32) -> i32
     requires index >= 0 && index < 128 {
         cursor = index + 1;
         let command: UiPaintCommand = active_scene.commands[index];
@@ -93,7 +89,7 @@ public machine next(active_scene: &UiScene, ui_context: &UiContext, pixels: &mut
         transition visible { true -> paint(pixels, band_y, command) _ -> scan(active_scene, ui_context, pixels, band_y, cursor) }
     }
     machine paint(pixels: &mut [i32; 4096], band_y: i32, command: UiPaintCommand) -> i32 {
-        raster::draw_box_band(pixels, band_y, Rect { x: command.x, y: command.y, w: command.width, h: command.height },
+        |raster|::draw_box_band(pixels, band_y, |types|::Rect { x: command.x, y: command.y, w: command.width, h: command.height },
             command.background, command.border, command.border_width, command.radius);
         command.source_node
     }

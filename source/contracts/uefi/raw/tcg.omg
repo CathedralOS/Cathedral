@@ -5,8 +5,7 @@
 // Modified for Cathedral: Rust repr/bitflags become explicit inert data and
 // constants; function pointers become address fields, with no invocation right.
 // See tcg.PORT.md and ../../../../THIRD_PARTY_NOTICES.md.
-module tcg;
-use scalars::Guid;
+use scalars.omg;
 
 pub data AlgorithmId [copy] { value: u16; }
 pub data EventType [copy] { value: u32; }
@@ -93,11 +92,11 @@ pub data Tcg2Protocol [copy] {
 // exact named Calling<C, Policy> conformance and checked pointer custody;
 // raw table data never confers TPM access or attestation authority.
 
-pub const TCG_PROTOCOL_GUID: Guid = Guid {
+pub const TCG_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid {
     data1: 0xf541796d, data2: 0xa62e, data3: 0x4954,
     data4: [0xa7, 0x75, 0x95, 0x84, 0xf6, 0x1b, 0x9c, 0xdd],
 };
-pub const TCG2_PROTOCOL_GUID: Guid = Guid {
+pub const TCG2_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid {
     data1: 0x607f766c, data2: 0x7455, data3: 0x42be,
     data4: [0x93, 0x0b, 0xe4, 0xd7, 0x6d, 0xb2, 0x72, 0x0f],
 };

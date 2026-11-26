@@ -1,8 +1,5 @@
-module frame;
-
-use context::UiContext;
-use types::add_i32;
-use types::select_i32;
+use context.omg;
+use types.omg;
 
 
 /*
@@ -13,8 +10,6 @@ result starts another build; false publishes the arranged tree for painting.
 Four passes bound an unstable view. This protocol is shared by native hosts
 and offscreen tests, without making layout depend on an operating system.
 */
-use types;
-use context;
 
 public data UiFrame {
     passes: i32;
@@ -22,29 +17,29 @@ public data UiFrame {
     frame_number: i32 in Saturating;
 }
 
-public machine begin(ui_context: &mut UiContext) -> UiFrame {
+public machine begin(ui_context: &mut |context|::UiContext) -> UiFrame {
     let active_frame: UiFrame = UiFrame { passes: 0, changed: false, frame_number: ui_context.frame };
-    context::begin_frame(ui_context);
+    |context|::begin_frame(ui_context);
     active_frame
 }
 
-public machine next_pass(active_frame: &mut UiFrame, ui_context: &mut UiContext) -> bool {
-    context::end_frame(ui_context);
-    active_frame.passes = add_i32(active_frame.passes, 1);
+public machine next_pass(active_frame: &mut UiFrame, ui_context: &mut |context|::UiContext) -> bool {
+    |context|::end_frame(ui_context);
+    active_frame.passes = |types|::add_i32(active_frame.passes, 1);
     active_frame.changed = active_frame.changed || ui_context.changed;
     ui_context.frame = active_frame.frame_number + (1 as i32 in Saturating);
     transition ui_context.frame_error == 0 && ui_context.changed && active_frame.passes < 4 {
         true -> rebuild(active_frame, ui_context)
         _ -> finish(active_frame, ui_context)
     }
-    machine rebuild(active_frame: &mut UiFrame, ui_context: &mut UiContext) -> bool {
-        context::begin_frame(ui_context);
+    machine rebuild(active_frame: &mut UiFrame, ui_context: &mut |context|::UiContext) -> bool {
+        |context|::begin_frame(ui_context);
         true
     }
-    machine finish(active_frame: &UiFrame, ui_context: &mut UiContext) -> bool {
+    machine finish(active_frame: &UiFrame, ui_context: &mut |context|::UiContext) -> bool {
         let unsettled: bool = ui_context.changed;
         ui_context.changed = active_frame.changed;
-        ui_context.frame_error = select_i32(ui_context.frame_error == 0 && unsettled && active_frame.passes >= 4, 6, ui_context.frame_error);
+        ui_context.frame_error = |types|::select_i32(ui_context.frame_error == 0 && unsettled && active_frame.passes >= 4, 6, ui_context.frame_error);
         false
     }
 }

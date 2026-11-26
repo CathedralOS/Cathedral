@@ -1,7 +1,7 @@
-use component::main::Background;
-use app::model::Session;
-machine main() reaches Background {
-    let mut s: Session;
+use {component}/main.omg;
+use {app}/model.omg;
+machine main() reaches |main|::Background {
+    let mut s: |model|::Session;
     let mut p: [u64; 4096];
-    let result: u64 = Background::step(&mut s, &mut p);
+    let result: u64 = |main|::Background::step(&mut s, &mut p);
 }

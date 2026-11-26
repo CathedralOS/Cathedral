@@ -1,12 +1,9 @@
-module task::main;
 // Child-task mechanisms over lent launch authority: name a launch, admit a child
 // with its startup endpoints and loans, open its owner control, stop and collect.
 // Which launch, how many children and any restart policy stay with the caller.
 // Launch, port and child values are kernel tickets scoped to this task.
-use kernel::Gate;
-use kernel::Kernel;
-use kernel;
-use ipc::main::Channel;
+use kernel.omg;
+use ipc/main.omg;
 
 public data Exit [copy] {
     case Returned(status: u64);
@@ -15,30 +12,30 @@ public data Exit [copy] {
     case Failed(code: u64);
 }
 public data Control {
-    case Ready(channel: Channel);
+    case Ready(channel: |main|::Channel);
     case Failed(code: u64);
 }
 
 // Index into this task's own and lent launches, in kernel order.
-public machine launch(gate: &Gate, index: u64) -> u64 reaches Kernel invokes Kernel {
-    Kernel::launch_at(gate, index)
+public machine launch(gate: &|kernel|::Gate, index: u64) -> u64 reaches |kernel|::Kernel invokes |kernel|::Kernel {
+    |kernel|::Kernel::launch_at(gate, index)
 }
 // Startup bundle: at most five endpoints move into the child; at most fourteen
 // idle launches are lent until the child's subtree is reclaimed. Entries beyond
 // each count must be zero. Returns the child ticket, or an error with nothing moved.
-public machine spawn(gate: &Gate, launch: u64, argument: u64, endpoints: &[u64; 5], endpoint_count: u64 [0..=5],
-    loans: &[u64; 14], loan_count: u64 [0..=14]) -> u64 reaches Kernel blocks invokes Kernel {
+public machine spawn(gate: &|kernel|::Gate, launch: u64, argument: u64, endpoints: &[u64; 5], endpoint_count: u64 [0..=5],
+    loans: &[u64; 14], loan_count: u64 [0..=14]) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     let record: [u64; 22] = spawn_record(argument, endpoints, endpoint_count, loans, loan_count);
-    block Kernel::spawn_tree(gate, launch, &record)
+    block |kernel|::Kernel::spawn_tree(gate, launch, &record)
 }
 
 // Submit the same startup bundle without parking the parent. Until completion,
 // keep endpoint/loan names valid or the kernel may refuse their final transfer.
 // The receipt is owner-scoped and single-use; a failed begin moves nothing.
-public machine begin_spawn(gate: &Gate, launch: u64, argument: u64, endpoints: &[u64; 5], endpoint_count: u64 [0..=5],
-    loans: &[u64; 14], loan_count: u64 [0..=14]) -> u64 reaches Kernel invokes Kernel {
+public machine begin_spawn(gate: &|kernel|::Gate, launch: u64, argument: u64, endpoints: &[u64; 5], endpoint_count: u64 [0..=5],
+    loans: &[u64; 14], loan_count: u64 [0..=14]) -> u64 reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let record: [u64; 22] = spawn_record(argument, endpoints, endpoint_count, loans, loan_count);
-    Kernel::spawn_begin(gate, launch, &record)
+    |kernel|::Kernel::spawn_begin(gate, launch, &record)
 }
 
 public data Admission [copy] {
@@ -51,15 +48,15 @@ public data Admission [copy] {
 // A cancellation request prevents a still-private child from committing. Keep
 // polling until rollback finishes. If commit already won, Started returns the
 // real child; cancelling/collecting it remains the caller's responsibility.
-public machine poll_spawn(gate: &Gate, receipt: u64, cancel: bool) -> Admission reaches Kernel invokes Kernel {
+public machine poll_spawn(gate: &|kernel|::Gate, receipt: u64, cancel: bool) -> Admission reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let mut record: [u64; 8];
-    let status: u64 = Kernel::spawn_result(gate, receipt, &mut record, cancel_word(cancel));
+    let status: u64 = |kernel|::Kernel::spawn_result(gate, receipt, &mut record, cancel_word(cancel));
     transition {
-        status == kernel::WOULD_BLOCK -> (Admission::Pending)
+        status == |kernel|::WOULD_BLOCK -> (Admission::Pending)
         status != 0u64 -> (Admission::Rejected { code: status })
         record[0] != 0u64 -> (Admission::Failed { code: record[0] })
-        record[1] != 0u64 && record[1] < kernel::ERROR_BASE -> (Admission::Started { ticket: record[1] })
-        _ -> (Admission::Failed { code: kernel::IO_ERROR })
+        record[1] != 0u64 && record[1] < |kernel|::ERROR_BASE -> (Admission::Started { ticket: record[1] })
+        _ -> (Admission::Failed { code: |kernel|::IO_ERROR })
     }
 }
 machine cancel_word(cancel: bool) -> u64 [0..=1] {
@@ -94,37 +91,37 @@ machine spawn_record(argument: u64, endpoints: &[u64; 5], endpoint_count: u64 [0
 }
 // The owner-side control pair for this launch's current child: a request sender
 // and a reply receiver. Connecting accepts the kernel-installed pair exactly once.
-public machine control(gate: &Gate, launch: u64) -> Control reaches Kernel invokes Kernel {
-    let port: u64 = Kernel::launch_port(gate, launch);
-    transition port < kernel::ERROR_BASE {
+public machine control(gate: &|kernel|::Gate, launch: u64) -> Control reaches |kernel|::Kernel invokes |kernel|::Kernel {
+    let port: u64 = |kernel|::Kernel::launch_port(gate, launch);
+    transition port < |kernel|::ERROR_BASE {
         true -> connect(gate, port)
         _ -> (Control::Failed { code: port })
     }
-    machine connect(gate: &Gate, port: u64) -> Control reaches Kernel {
-        let first: u64 = Kernel::task_connect(gate, port);
-        transition first < kernel::ERROR_BASE {
+    machine connect(gate: &|kernel|::Gate, port: u64) -> Control reaches |kernel|::Kernel {
+        let first: u64 = |kernel|::Kernel::task_connect(gate, port);
+        transition first < |kernel|::ERROR_BASE {
             true -> named(gate, first, first + 1u64)
             _ -> (Control::Failed { code: first })
         }
     }
-    machine named(gate: &Gate, first: u64, second: u64) -> Control reaches Kernel {
-        let sender: u64 = Kernel::bootstrap(gate, first);
-        let receiver: u64 = Kernel::bootstrap(gate, second);
-        transition sender < kernel::ERROR_BASE && receiver < kernel::ERROR_BASE {
-            true -> (Control::Ready { channel: Channel { sender: sender, receiver: receiver } })
-            _ -> (Control::Failed { code: kernel::BAD_HANDLE })
+    machine named(gate: &|kernel|::Gate, first: u64, second: u64) -> Control reaches |kernel|::Kernel {
+        let sender: u64 = |kernel|::Kernel::bootstrap(gate, first);
+        let receiver: u64 = |kernel|::Kernel::bootstrap(gate, second);
+        transition sender < |kernel|::ERROR_BASE && receiver < |kernel|::ERROR_BASE {
+            true -> (Control::Ready { channel: |main|::Channel { sender: sender, receiver: receiver } })
+            _ -> (Control::Failed { code: |kernel|::BAD_HANDLE })
         }
     }
 }
 // Stop and reclaim this exact child before returning; its outcome stays collectible.
-public machine cancel(gate: &Gate, child: u64) -> u64 reaches Kernel blocks invokes Kernel {
-    block Kernel::task_cancel(gate, child)
+public machine cancel(gate: &|kernel|::Gate, child: u64) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
+    block |kernel|::Kernel::task_cancel(gate, child)
 }
 // Returns only after address-space reclamation and consumes the outcome.
-public machine wait(gate: &Gate, child: u64) -> Exit reaches Kernel blocks invokes Kernel {
+public machine wait(gate: &|kernel|::Gate, child: u64) -> Exit reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     let mut record: [u64; 8];
-    let status: u64 = block Kernel::task_wait(gate, child, &mut record);
-    transition status < kernel::ERROR_BASE {
+    let status: u64 = block |kernel|::Kernel::task_wait(gate, child, &mut record);
+    transition status < |kernel|::ERROR_BASE {
         true -> decode_exit(record)
         _ -> (Exit::Failed { code: status })
     }
@@ -133,21 +130,21 @@ public machine wait(gate: &Gate, child: u64) -> Exit reaches Kernel blocks invok
 // Code authority and funded reservations for children this task funds itself.
 // An image grant comes from the owner's catalogue by index, or from a sealed
 // object the task can read, entered with `role` as its first argument.
-public machine image_at(gate: &Gate, index: u64) -> u64 reaches Kernel invokes Kernel {
-    Kernel::image_at(gate, index)
+public machine image_at(gate: &|kernel|::Gate, index: u64) -> u64 reaches |kernel|::Kernel invokes |kernel|::Kernel {
+    |kernel|::Kernel::image_at(gate, index)
 }
-public machine image_from_object(gate: &Gate, object: u64, role: u64) -> u64 reaches Kernel invokes Kernel {
-    Kernel::image_from_object(gate, object, role)
+public machine image_from_object(gate: &|kernel|::Gate, object: u64, role: u64) -> u64 reaches |kernel|::Kernel invokes |kernel|::Kernel {
+    |kernel|::Kernel::image_from_object(gate, object, role)
 }
 // Drop an unused object image grant; a reservation consumes it instead.
-public machine image_release(gate: &Gate, image: u64) -> u64 reaches Kernel invokes Kernel {
-    Kernel::image_release(gate, image)
+public machine image_release(gate: &|kernel|::Gate, image: u64) -> u64 reaches |kernel|::Kernel invokes |kernel|::Kernel {
+    |kernel|::Kernel::image_release(gate, image)
 }
 // Reserve a launch for an image: private pages, reader pages, channels, child
 // slots, the per-load admission ceiling and the physical frames behind it all.
 // Returns the launch ticket, or an error with nothing reserved.
-public machine reserve(gate: &Gate, executable: u64, private_pages: u64, reader_pages: u64, channels: u64,
-    slots: u64, admission_frames: u64, physical_frames: u64) -> u64 reaches Kernel invokes Kernel {
+public machine reserve(gate: &|kernel|::Gate, executable: u64, private_pages: u64, reader_pages: u64, channels: u64,
+    slots: u64, admission_frames: u64, physical_frames: u64) -> u64 reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let mut request: [u64; 6];
     request[0] = private_pages;
     request[1] = reader_pages;
@@ -155,33 +152,33 @@ public machine reserve(gate: &Gate, executable: u64, private_pages: u64, reader_
     request[3] = slots;
     request[4] = admission_frames;
     request[5] = physical_frames;
-    Kernel::task_reserve(gate, executable, &request)
+    |kernel|::Kernel::task_reserve(gate, executable, &request)
 }
 // Only idle dynamic launches; fails while retained backing pins their funding.
-public machine release(gate: &Gate, launch: u64) -> u64 reaches Kernel invokes Kernel {
-    Kernel::task_release(gate, launch)
+public machine release(gate: &|kernel|::Gate, launch: u64) -> u64 reaches |kernel|::Kernel invokes |kernel|::Kernel {
+    |kernel|::Kernel::task_release(gate, launch)
 }
-public machine assign_slots(gate: &Gate, launch: u64, count: u64) -> u64 reaches Kernel invokes Kernel {
-    Kernel::pool_assign(gate, launch, count)
+public machine assign_slots(gate: &|kernel|::Gate, launch: u64, count: u64) -> u64 reaches |kernel|::Kernel invokes |kernel|::Kernel {
+    |kernel|::Kernel::pool_assign(gate, launch, count)
 }
 // Grow a launch, live or idle, by five increments (private pages, reader
 // pages, channels, descendant slots, physical frames) out of this account's
 // own; all or nothing.
-public machine grow(gate: &Gate, launch: u64, delta: [u64; 5]) -> u64 reaches Kernel invokes Kernel {
+public machine grow(gate: &|kernel|::Gate, launch: u64, delta: [u64; 5]) -> u64 reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let amounts: [u64; 5] = delta;
-    Kernel::resource_grow(gate, launch, &amounts)
+    |kernel|::Kernel::resource_grow(gate, launch, &amounts)
 }
 // What this account can still lend, in the same five amounts.
 public data Spare [copy] {
     case Known(amounts: [u64; 5]);
     case Failed(code: u64);
 }
-public machine spare(gate: &Gate) -> Spare reaches Kernel invokes Kernel {
+public machine spare(gate: &|kernel|::Gate) -> Spare reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let mut budget: [u64; 8];
     let mut physical: [u64; 8];
-    let budgeted: u64 = Kernel::resource_budget(gate, &mut budget);
-    let measured: u64 = Kernel::physical_budget(gate, &mut physical);
-    let slots: u64 = Kernel::pool_available(gate);
+    let budgeted: u64 = |kernel|::Kernel::resource_budget(gate, &mut budget);
+    let measured: u64 = |kernel|::Kernel::physical_budget(gate, &mut physical);
+    let slots: u64 = |kernel|::Kernel::pool_available(gate);
     transition {
         budgeted >= 0x8000000000000000u64 -> (Spare::Failed { code: budgeted })
         measured >= 0x8000000000000000u64 -> (Spare::Failed { code: measured })
@@ -194,24 +191,24 @@ machine left(limit: u64, used: u64) -> u64 {
     transition limit > used { true -> (limit - used) _ -> (0u64) }
 }
 // Stage an executable the child may run from its own catalogue.
-public machine allow_image(gate: &Gate, launch: u64, image: u64) -> u64 reaches Kernel invokes Kernel {
-    Kernel::image_allow(gate, launch, image)
+public machine allow_image(gate: &|kernel|::Gate, launch: u64, image: u64) -> u64 reaches |kernel|::Kernel invokes |kernel|::Kernel {
+    |kernel|::Kernel::image_allow(gate, launch, image)
 }
-public machine assign_cpu(gate: &Gate, launch: u64, limit: u64) -> u64 reaches Kernel invokes Kernel {
-    Kernel::cpu_assign(gate, launch, limit)
+public machine assign_cpu(gate: &|kernel|::Gate, launch: u64, limit: u64) -> u64 reaches |kernel|::Kernel invokes |kernel|::Kernel {
+    |kernel|::Kernel::cpu_assign(gate, launch, limit)
 }
-public machine assign_frames(gate: &Gate, launch: u64, frames: u64) -> u64 reaches Kernel invokes Kernel {
-    Kernel::physical_assign(gate, launch, frames)
+public machine assign_frames(gate: &|kernel|::Gate, launch: u64, frames: u64) -> u64 reaches |kernel|::Kernel invokes |kernel|::Kernel {
+    |kernel|::Kernel::physical_assign(gate, launch, frames)
 }
 // Absolute child limits: private pages, reader pages, channels. Unused
 // capacity moves between owner and child atomically, never minted.
-public machine assign_limits(gate: &Gate, launch: u64, private_pages: u64, reader_pages: u64, channels: u64) -> u64
-    reaches Kernel invokes Kernel {
+public machine assign_limits(gate: &|kernel|::Gate, launch: u64, private_pages: u64, reader_pages: u64, channels: u64) -> u64
+    reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let mut limits: [u64; 3];
     limits[0] = private_pages;
     limits[1] = reader_pages;
     limits[2] = channels;
-    Kernel::resource_assign(gate, launch, &limits)
+    |kernel|::Kernel::resource_assign(gate, launch, &limits)
 }
 
 // Polling never registers a wait and requires no clock capability. A successful
@@ -221,15 +218,15 @@ public data Completion [copy] {
     case Ready(outcome: Exit);
     case Failed(code: u64);
 }
-public machine cancel_begin(gate: &Gate, child: u64) -> u64 reaches Kernel invokes Kernel {
-    Kernel::task_cancel_begin(gate, child)
+public machine cancel_begin(gate: &|kernel|::Gate, child: u64) -> u64 reaches |kernel|::Kernel invokes |kernel|::Kernel {
+    |kernel|::Kernel::task_cancel_begin(gate, child)
 }
-public machine try_wait(gate: &Gate, child: u64) -> Completion reaches Kernel invokes Kernel {
+public machine try_wait(gate: &|kernel|::Gate, child: u64) -> Completion reaches |kernel|::Kernel invokes |kernel|::Kernel {
     let mut record: [u64; 8];
-    let status: u64 = Kernel::task_try_wait(gate, child, &mut record);
+    let status: u64 = |kernel|::Kernel::task_try_wait(gate, child, &mut record);
     transition {
         status == 0u64 -> (Completion::Ready { outcome: decode_exit(record) })
-        status == kernel::WOULD_BLOCK -> (Completion::Pending)
+        status == |kernel|::WOULD_BLOCK -> (Completion::Pending)
         _ -> (Completion::Failed { code: status })
     }
 }
@@ -238,6 +235,6 @@ machine decode_exit(record: [u64; 8]) -> Exit {
         0u64 -> (Exit::Returned { status: record[1] })
         1u64 -> (Exit::Fault { vector: record[1], error: record[2], address: record[3], instruction: record[4] })
         2u64 -> (Exit::Cancelled)
-        _ -> (Exit::Failed { code: kernel::IO_ERROR })
+        _ -> (Exit::Failed { code: |kernel|::IO_ERROR })
     }
 }

@@ -1,37 +1,33 @@
-module main;
 // Independent matrix: admit three peers from lent launches, give each a third
 // of the granted area, offer them services, and route attenuated input. No stock
 // desktop, launcher, configuration object, taskbar or filesystem is involved.
 // One turn serves the owner, each slot and the relay probe, then parks on every
 // live interest. Three slots, equal regions and the probe are this proof's policy.
-use runtime::entry::Program;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::kernel;
-use runtime::server::main::Server;
-use runtime::admission::main::Admitted;
-use runtime::services::main::Services;
-use runtime::time::Tick;
-use runtime::waiting::Set;
-use world::level::World;
-use world::management::Management;
-use world::launches::Launches;
-use world::layout::Placement;
-use world::geometry::Rect;
-use startup;
-use commands;
-use slots;
-use probe;
-use probe::Probe;
-use rollback;
-use presentation;
+use {runtime}/entry.omg;
+use {runtime}/kernel.omg;
+use {runtime}/server/main.omg;
+use {runtime}/admission/main.omg as admission_main;
+use {runtime}/services/main.omg as services_main;
+use {runtime}/time.omg;
+use {runtime}/waiting.omg;
+use {world}/level.omg;
+use {world}/management.omg;
+use {world}/launches.omg;
+use {world}/layout.omg;
+use {world}/geometry.omg;
+use startup.omg;
+use commands.omg;
+use slots.omg;
+use probe.omg;
+use rollback.omg;
+use presentation.omg;
 public data State {
-    owner: Server;
-    slots: [Admitted; 3];
-    world: World;
-    parent: Services;
+    owner: |main|::Server;
+    slots: [|admission_main|::Admitted; 3];
+    world: |level|::World;
+    parent: |services_main|::Services;
     has_parent: bool;
-    probe: Probe;
+    probe: |probe|::Probe;
     clock: u64;
     deadline: u64;
     // The channel-exhaustion probe waits until every listener holds its bell.
@@ -44,70 +40,70 @@ public data State {
     keys: u64;
     // Delegated authority: management grants, launch observations, the owner's
     // one placement snapshot and the arrangement a controller stages row by row.
-    managers: Management;
-    observations: Launches;
-    saved_placement: Placement;
-    layout_rows: [Rect; 5];
+    managers: |management|::Management;
+    observations: |launches|::Launches;
+    saved_placement: |layout|::Placement;
+    layout_rows: [|geometry|::Rect; 5];
 }
-public ProgramProvider satisfies Program {
-    machine run(gate: &Gate, first: u64, second: u64) -> u64 reaches Kernel blocks invokes Kernel {
+public ProgramProvider satisfies |entry|::Program {
+    machine run(gate: &|kernel|::Gate, first: u64, second: u64) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
         let mut context: State;
-        let status: u64 = block startup::open(gate, &mut context);
+        let status: u64 = block |startup|::open(gate, &mut context);
         transition status == 0u64 {
             true -> block serve(gate, &mut context)
             _ -> block cleanup(gate, &mut context, status)
         }
     }
 }
-machine serve(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
-    let tick: Tick = runtime::time::read(gate, context.clock);
+machine serve(gate: &|kernel|::Gate, context: &mut State) -> u64 reaches |kernel|::Kernel {
+    let tick: |time|::Tick = |time|::read(gate, context.clock);
     transition tick {
-        Tick::Read { value } -> block turn(gate, context, value)
+        |time|::Tick::Read { value } -> block turn(gate, context, value)
         _ -> block cleanup(gate, context, 401u64)
     }
 }
-machine turn(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
-    transition runtime::time::reached(now, context.deadline) {
+machine turn(gate: &|kernel|::Gate, context: &mut State, now: u64) -> u64 reaches |kernel|::Kernel {
+    transition |time|::reached(now, context.deadline) {
         true -> block cleanup(gate, context, 402u64)
         _ -> block served(gate, context, now)
     }
 }
-machine served(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
-    let probed: u64 = block rollback::deferred(gate, context, now);
-    let commanded: u64 = block commands::step(gate, context, now);
-    let first: u64 = block slots::step(gate, context, 0u64, now);
-    let second: u64 = block slots::step(gate, context, 1u64, now);
-    let third: u64 = block slots::step(gate, context, 2u64, now);
-    let relayed: u64 = block probe::progress(gate, context, now);
-    let flushed: u64 = block presentation::flush(gate, context);
+machine served(gate: &|kernel|::Gate, context: &mut State, now: u64) -> u64 reaches |kernel|::Kernel {
+    let probed: u64 = block |rollback|::deferred(gate, context, now);
+    let commanded: u64 = block |commands|::step(gate, context, now);
+    let first: u64 = block |slots|::step(gate, context, 0u64, now);
+    let second: u64 = block |slots|::step(gate, context, 1u64, now);
+    let third: u64 = block |slots|::step(gate, context, 2u64, now);
+    let relayed: u64 = block |probe|::progress(gate, context, now);
+    let flushed: u64 = block |presentation|::flush(gate, context);
     transition probed == 0u64 && commanded == 0u64 && first == 0u64 && second == 0u64 && third == 0u64 && relayed == 0u64 && flushed == 0u64 {
         true -> block parked(gate, context)
         _ -> block cleanup(gate, context, 403u64)
     }
 }
-machine parked(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
-    let mut set: Set;
-    runtime::waiting::reset(&mut set, context.deadline);
-    runtime::server::main::watch(&context.owner, &mut set);
-    slots::watch(context, 0u64, &mut set);
-    slots::watch(context, 1u64, &mut set);
-    slots::watch(context, 2u64, &mut set);
-    probe::watch(context, &mut set);
-    let status: u64 = block runtime::waiting::wait(gate, &set);
-    transition status < kernel::ERROR_BASE || status == kernel::TIMED_OUT || status == kernel::PEER_CLOSED {
+machine parked(gate: &|kernel|::Gate, context: &mut State) -> u64 reaches |kernel|::Kernel {
+    let mut set: |waiting|::Set;
+    |waiting|::reset(&mut set, context.deadline);
+    |main|::watch(&context.owner, &mut set);
+    |slots|::watch(context, 0u64, &mut set);
+    |slots|::watch(context, 1u64, &mut set);
+    |slots|::watch(context, 2u64, &mut set);
+    |probe|::watch(context, &mut set);
+    let status: u64 = block |waiting|::wait(gate, &set);
+    transition status < |kernel|::ERROR_BASE || status == |kernel|::TIMED_OUT || status == |kernel|::PEER_CLOSED {
         true -> block serve(gate, context)
         _ -> block cleanup(gate, context, 404u64)
     }
 }
-machine cleanup(gate: &Gate, context: &mut State, status: u64) -> u64 reaches Kernel {
-    block slots::reclaim(gate, context, 0u64);
-    block slots::reclaim(gate, context, 1u64);
-    block slots::reclaim(gate, context, 2u64);
-    block runtime::server::main::close(gate, &mut context.owner);
-    block runtime::services::main::close(gate, &mut context.parent);
+machine cleanup(gate: &|kernel|::Gate, context: &mut State, status: u64) -> u64 reaches |kernel|::Kernel {
+    block |slots|::reclaim(gate, context, 0u64);
+    block |slots|::reclaim(gate, context, 1u64);
+    block |slots|::reclaim(gate, context, 2u64);
+    block |main|::close(gate, &mut context.owner);
+    block |services_main|::close(gate, &mut context.parent);
     status
 }
-public machine component_entry() reaches Program + Kernel blocks invokes Program invokes Kernel {
-    let gate: Gate;
-    let status: u64 = block Program::run(&gate, 0u64, 0u64);
+public machine component_entry() reaches |entry|::Program + |kernel|::Kernel blocks invokes |entry|::Program invokes |kernel|::Kernel {
+    let gate: |kernel|::Gate;
+    let status: u64 = block |entry|::Program::run(&gate, 0u64, 0u64);
 }

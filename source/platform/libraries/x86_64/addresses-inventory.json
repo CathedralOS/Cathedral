@@ -959,7 +959,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/x86_64/addresses.omg",
-          "anchor": "module addresses;"
+          "anchor": "pub const VIRTUAL_LOW_MAX"
         }
       ]
     }

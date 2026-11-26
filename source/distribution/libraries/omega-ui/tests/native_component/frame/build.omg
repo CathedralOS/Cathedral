@@ -1,6 +1,9 @@
+use {native}/main.omg as native_main;
+use main.omg;
+
 machine build(builder: &mut Build) {
  Build::application(builder, "omega_ui_native_frame");
  Build::depend_as(builder, "native", Source::Path { location: "../../../platform/native" });
- Build::select_provider<native::UiNativeFrame, native::UiNativeFrameProvider>(builder, linux_x86_64, CompositionMode::Independent);
- Build::bind(builder, linux_x86_64::ProgramEntry, main);
+ Build::select_provider<|native_main|::UiNativeFrame, |native_main|::UiNativeFrameProvider>(builder, linux_x86_64, CompositionMode::Independent);
+ Build::bind(builder, linux_x86_64::ProgramEntry, |main|::main);
 }

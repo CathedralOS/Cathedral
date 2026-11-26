@@ -87,23 +87,23 @@ def write(path,text):
  if '--check' in sys.argv:assert path.read_text()==text,('stale',path)
  else:path.write_text(text)
 def arr(values):return '['+','.join(map(str,values))+']'
-prefix='// SPDX-License-Identifier: MIT OR Apache-2.0\nuse x86::mapping_routes;\nuse x86::mapping_routes::CapturedPath;\nuse x86::mapping_routes::AllocationInputs;\nuse x86::mapping_routes::Request;\nuse x86::mapping_routes::RoutePlan;\nuse x86::mapping_routes::Outcome;\nuse x86::mapping_plans::FrameSupply;\nuse x86::mapping_plans::ChildPlan;\nuse x86::mapping_plans::LeafPlan;\n'
+prefix='// SPDX-License-Identifier: MIT OR Apache-2.0\nuse {x86}/mapping_routes.omg;\nuse {x86}/mapping_plans.omg;\n'
 blocks=[];rust=[]
 codes={'Ready':0,'ParentNotMapped':1,'PageNotMapped':1,'ParentHugePage':2,'HugeParent':2,'InvalidFrameAddress':3,'AlreadyMapped':4,'InvalidHugeInput':5,'AllocationFailed':6,'MissingPresent':7}
 for i,r in enumerate(rows):
  e=model(r);r['expected']=e
- req={'map':f'Request::Map {{ frame:{r["frame"]},flags:{r["flags"]},parent_flags:{r["parent"]} }}','unmap':'Request::Unmap','translate':'Request::Translate','update':f'Request::Update {{ new_flags:{r["flags"]} }}','parent':f'Request::SetParent {{ level:{r["level"]},table_flags:{r["flags"]} }}'}[r['op']]
- supplies=['FrameSupply::Unavailable' if n==0 else f'FrameSupply::Supplied {{ address:{n} }}' for n in r['frames']]
- body=f'let path:CapturedPath=CapturedPath {{ table_ids:[16384,4096,8192,12288],words:{arr(r["words"])} }}; let allocations:AllocationInputs=AllocationInputs {{ frames:[{",".join(supplies)}] }}; let value:RoutePlan=mapping_routes::plan(&path,&allocations,{r["page"]},{r["size"]},{req});\n'
+ req={'map':f'|mapping_routes|::Request::Map {{ frame:{r["frame"]},flags:{r["flags"]},parent_flags:{r["parent"]} }}','unmap':'|mapping_routes|::Request::Unmap','translate':'|mapping_routes|::Request::Translate','update':f'|mapping_routes|::Request::Update {{ new_flags:{r["flags"]} }}','parent':f'|mapping_routes|::Request::SetParent {{ level:{r["level"]},table_flags:{r["flags"]} }}'}[r['op']]
+ supplies=['|mapping_plans|::FrameSupply::Unavailable' if n==0 else f'|mapping_plans|::FrameSupply::Supplied {{ address:{n} }}' for n in r['frames']]
+ body=f'let path:|mapping_routes|::CapturedPath=|mapping_routes|::CapturedPath {{ table_ids:[16384,4096,8192,12288],words:{arr(r["words"])} }}; let allocations:|mapping_routes|::AllocationInputs=|mapping_routes|::AllocationInputs {{ frames:[{",".join(supplies)}] }}; let value:|mapping_routes|::RoutePlan=|mapping_routes|::plan(&path,&allocations,{r["page"]},{r["size"]},{req});\n'
  comparisons=[f'value.edits.words[{j}] == {n}' for j,n in enumerate(e['words'])]
  comparisons += [f'value.edits.{name} == {e[key]}' for name,key in [('write_mask','write'),('zero_mask','zero'),('allocation_calls','calls'),('visited','visited')]]
  comparisons += [f'value.edits.indices[{j}] == {(r["page"]>>shift)&511}' for j,shift in enumerate([39,30,21,12])]
  comparisons += [f'value.edits.table_ids[{j}] == {n}' for j,n in enumerate([16384,4096,8192,12288])]
  body+='let common:bool='+' && '.join(comparisons)+';\n'
- if e['where']=='parent':body+=f'transition common && value.outcome in Outcome::{e["kind"]} {{ true -> (0) _ -> (1) }}'
+ if e['where']=='parent':body+=f'transition common && value.outcome in |mapping_routes|::Outcome::{e["kind"]} {{ true -> (0) _ -> (1) }}'
  else:
-  typ='ChildPlan' if e['where']=='child' else 'LeafPlan';field='child' if e['where']=='child' else 'leaf';case='ChildFailure' if e['where']=='child' else 'Leaf'
-  body+=f'transition value.outcome {{ Outcome::{case} {{ {field} }} -> inspect(common,{field}) _ -> (1) }} state inspect(common:bool,result:{typ})->i32 {{ '
+  typ='|mapping_plans|::ChildPlan' if e['where']=='child' else '|mapping_plans|::LeafPlan';field='child' if e['where']=='child' else 'leaf';case='ChildFailure' if e['where']=='child' else 'Leaf'
+  body+=f'transition value.outcome {{ |mapping_routes|::Outcome::{case} {{ {field} }} -> inspect(common,{field}) _ -> (1) }} state inspect(common:bool,result:{typ})->i32 {{ '
   if e['kind'] in ['Ready','InvalidFrameAddress','AlreadyMapped']:
    payload={'Ready':'frame','InvalidFrameAddress':'address','AlreadyMapped':'requested_frame'}[e['kind']]
    body+=f'transition result {{ {typ}::{e["kind"]} {{ {payload} }} -> payload(common,{payload}) _ -> (1) }} }} state payload(common:bool,number:u64)->i32 {{ transition common && number == {e["payload"]} {{ true -> (0) _ -> (1) }} }}'

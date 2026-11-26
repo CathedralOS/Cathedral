@@ -1,45 +1,14 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Original inert topology semantic fixtures.
-use acpi::topology::TopologyHeader;
-use acpi::topology::topology_header;
-use acpi::topology::ObservedBootApic;
-use acpi::topology::Processor;
-use acpi::topology::processor;
-use acpi::topology::TopologyStep;
-use acpi::topology::TopologyFact;
-use acpi::topology::topology_fact;
-use acpi::topology::topology_next;
-use acpi::topology::NmiProcessor;
-use acpi::topology::LocalInterruptLine;
-use acpi::madt::MadtEntry;
-use acpi::fixed_types::LocalApicEntry;
-use acpi::fixed_types::LocalX2ApicEntry;
-use acpi::fixed_types::IoApicEntry;
-use acpi::fixed_types::InterruptSourceOverrideEntry;
-use acpi::fixed_types::NmiSourceEntry;
-use acpi::fixed_types::LocalApicNmiEntry;
-use acpi::fixed_types::X2ApicNmiEntry;
-use acpi::fixed_types::LocalApicAddressOverrideEntry;
-use acpi::fixed_types::MultiprocessorWakeupEntry;
-use acpi::fixed_types::GiccEntry;
-use acpi::fixed_types::GicdEntry;
-use acpi::fixed_types::GicMsiFrameEntry;
-use acpi::fixed_types::GicRedistributorEntry;
-use acpi::fixed_types::GicInterruptTranslationServiceEntry;
-use acpi::fixed_types::Fadt;
-use acpi::timers::pm_timer;
-use acpi::timers::PmTimerResult;
-use acpi::gas::OptionalRawGas;
-use acpi::gas::RawGenericAddress;
-use acpi::pci_regions::PciConfigRegion;
-use acpi::pci_regions::PciRegionResult;
-use acpi::pci_regions::PciAddressResult;
-use acpi::pci_regions::physical_address;
-use acpi::pci_regions::find_address;
-use acpi::pci_regions::pci_region;
+use {acpi}/topology.omg;
+use {acpi}/madt.omg;
+use {acpi}/fixed_types.omg;
+use {acpi}/timers.omg;
+use {acpi}/gas.omg;
+use {acpi}/pci_regions.omg;
 machine test_cpu_0_False_42() -> bool {
     let mut input: [u8; 4096];
-    let value: Processor = processor(4294967295, 42, 0, true, ObservedBootApic { known: false, id: 42 });
+    let value: |topology|::Processor = |topology|::processor(4294967295, 42, 0, true, |topology|::ObservedBootApic { known: false, id: 42 });
     value.processor_uid == 4294967295 &&
     value.local_apic_id == 42 &&
     value.x2apic &&
@@ -50,7 +19,7 @@ machine test_cpu_0_False_42() -> bool {
 }
 machine test_cpu_0_True_42() -> bool {
     let mut input: [u8; 4096];
-    let value: Processor = processor(4294967295, 42, 0, true, ObservedBootApic { known: true, id: 42 });
+    let value: |topology|::Processor = |topology|::processor(4294967295, 42, 0, true, |topology|::ObservedBootApic { known: true, id: 42 });
     value.processor_uid == 4294967295 &&
     value.local_apic_id == 42 &&
     value.x2apic &&
@@ -61,7 +30,7 @@ machine test_cpu_0_True_42() -> bool {
 }
 machine test_cpu_0_True_43() -> bool {
     let mut input: [u8; 4096];
-    let value: Processor = processor(4294967295, 42, 0, true, ObservedBootApic { known: true, id: 43 });
+    let value: |topology|::Processor = |topology|::processor(4294967295, 42, 0, true, |topology|::ObservedBootApic { known: true, id: 43 });
     value.processor_uid == 4294967295 &&
     value.local_apic_id == 42 &&
     value.x2apic &&
@@ -72,7 +41,7 @@ machine test_cpu_0_True_43() -> bool {
 }
 machine test_cpu_1_False_42() -> bool {
     let mut input: [u8; 4096];
-    let value: Processor = processor(4294967295, 42, 1, true, ObservedBootApic { known: false, id: 42 });
+    let value: |topology|::Processor = |topology|::processor(4294967295, 42, 1, true, |topology|::ObservedBootApic { known: false, id: 42 });
     value.processor_uid == 4294967295 &&
     value.local_apic_id == 42 &&
     value.x2apic &&
@@ -83,7 +52,7 @@ machine test_cpu_1_False_42() -> bool {
 }
 machine test_cpu_1_True_42() -> bool {
     let mut input: [u8; 4096];
-    let value: Processor = processor(4294967295, 42, 1, true, ObservedBootApic { known: true, id: 42 });
+    let value: |topology|::Processor = |topology|::processor(4294967295, 42, 1, true, |topology|::ObservedBootApic { known: true, id: 42 });
     value.processor_uid == 4294967295 &&
     value.local_apic_id == 42 &&
     value.x2apic &&
@@ -94,7 +63,7 @@ machine test_cpu_1_True_42() -> bool {
 }
 machine test_cpu_1_True_43() -> bool {
     let mut input: [u8; 4096];
-    let value: Processor = processor(4294967295, 42, 1, true, ObservedBootApic { known: true, id: 43 });
+    let value: |topology|::Processor = |topology|::processor(4294967295, 42, 1, true, |topology|::ObservedBootApic { known: true, id: 43 });
     value.processor_uid == 4294967295 &&
     value.local_apic_id == 42 &&
     value.x2apic &&
@@ -105,7 +74,7 @@ machine test_cpu_1_True_43() -> bool {
 }
 machine test_cpu_2_False_42() -> bool {
     let mut input: [u8; 4096];
-    let value: Processor = processor(4294967295, 42, 2, true, ObservedBootApic { known: false, id: 42 });
+    let value: |topology|::Processor = |topology|::processor(4294967295, 42, 2, true, |topology|::ObservedBootApic { known: false, id: 42 });
     value.processor_uid == 4294967295 &&
     value.local_apic_id == 42 &&
     value.x2apic &&
@@ -116,7 +85,7 @@ machine test_cpu_2_False_42() -> bool {
 }
 machine test_cpu_2_True_42() -> bool {
     let mut input: [u8; 4096];
-    let value: Processor = processor(4294967295, 42, 2, true, ObservedBootApic { known: true, id: 42 });
+    let value: |topology|::Processor = |topology|::processor(4294967295, 42, 2, true, |topology|::ObservedBootApic { known: true, id: 42 });
     value.processor_uid == 4294967295 &&
     value.local_apic_id == 42 &&
     value.x2apic &&
@@ -127,7 +96,7 @@ machine test_cpu_2_True_42() -> bool {
 }
 machine test_cpu_2_True_43() -> bool {
     let mut input: [u8; 4096];
-    let value: Processor = processor(4294967295, 42, 2, true, ObservedBootApic { known: true, id: 43 });
+    let value: |topology|::Processor = |topology|::processor(4294967295, 42, 2, true, |topology|::ObservedBootApic { known: true, id: 43 });
     value.processor_uid == 4294967295 &&
     value.local_apic_id == 42 &&
     value.x2apic &&
@@ -138,7 +107,7 @@ machine test_cpu_2_True_43() -> bool {
 }
 machine test_cpu_3_False_42() -> bool {
     let mut input: [u8; 4096];
-    let value: Processor = processor(4294967295, 42, 3, true, ObservedBootApic { known: false, id: 42 });
+    let value: |topology|::Processor = |topology|::processor(4294967295, 42, 3, true, |topology|::ObservedBootApic { known: false, id: 42 });
     value.processor_uid == 4294967295 &&
     value.local_apic_id == 42 &&
     value.x2apic &&
@@ -149,7 +118,7 @@ machine test_cpu_3_False_42() -> bool {
 }
 machine test_cpu_3_True_42() -> bool {
     let mut input: [u8; 4096];
-    let value: Processor = processor(4294967295, 42, 3, true, ObservedBootApic { known: true, id: 42 });
+    let value: |topology|::Processor = |topology|::processor(4294967295, 42, 3, true, |topology|::ObservedBootApic { known: true, id: 42 });
     value.processor_uid == 4294967295 &&
     value.local_apic_id == 42 &&
     value.x2apic &&
@@ -160,7 +129,7 @@ machine test_cpu_3_True_42() -> bool {
 }
 machine test_cpu_3_True_43() -> bool {
     let mut input: [u8; 4096];
-    let value: Processor = processor(4294967295, 42, 3, true, ObservedBootApic { known: true, id: 43 });
+    let value: |topology|::Processor = |topology|::processor(4294967295, 42, 3, true, |topology|::ObservedBootApic { known: true, id: 43 });
     value.processor_uid == 4294967295 &&
     value.local_apic_id == 42 &&
     value.x2apic &&
@@ -171,7 +140,7 @@ machine test_cpu_3_True_43() -> bool {
 }
 machine test_cpu_4294967295_False_42() -> bool {
     let mut input: [u8; 4096];
-    let value: Processor = processor(4294967295, 42, 4294967295, true, ObservedBootApic { known: false, id: 42 });
+    let value: |topology|::Processor = |topology|::processor(4294967295, 42, 4294967295, true, |topology|::ObservedBootApic { known: false, id: 42 });
     value.processor_uid == 4294967295 &&
     value.local_apic_id == 42 &&
     value.x2apic &&
@@ -182,7 +151,7 @@ machine test_cpu_4294967295_False_42() -> bool {
 }
 machine test_cpu_4294967295_True_42() -> bool {
     let mut input: [u8; 4096];
-    let value: Processor = processor(4294967295, 42, 4294967295, true, ObservedBootApic { known: true, id: 42 });
+    let value: |topology|::Processor = |topology|::processor(4294967295, 42, 4294967295, true, |topology|::ObservedBootApic { known: true, id: 42 });
     value.processor_uid == 4294967295 &&
     value.local_apic_id == 42 &&
     value.x2apic &&
@@ -193,7 +162,7 @@ machine test_cpu_4294967295_True_42() -> bool {
 }
 machine test_cpu_4294967295_True_43() -> bool {
     let mut input: [u8; 4096];
-    let value: Processor = processor(4294967295, 42, 4294967295, true, ObservedBootApic { known: true, id: 43 });
+    let value: |topology|::Processor = |topology|::processor(4294967295, 42, 4294967295, true, |topology|::ObservedBootApic { known: true, id: 43 });
     value.processor_uid == 4294967295 &&
     value.local_apic_id == 42 &&
     value.x2apic &&
@@ -202,223 +171,223 @@ machine test_cpu_4294967295_True_43() -> bool {
     value.boot_identity_known == true &&
     value.is_boot_processor == false
 }
-machine check_fact_LocalApic(fact: TopologyFact) -> bool { transition fact { TopologyFact::Cpu { cpu } -> (cpu.processor_uid == 3 && cpu.local_apic_id == 42 && !cpu.x2apic && cpu.enabled && cpu.online_capable && cpu.is_boot_processor) _ -> (false) } }
+machine check_fact_LocalApic(fact: |topology|::TopologyFact) -> bool { transition fact { |topology|::TopologyFact::Cpu { cpu } -> (cpu.processor_uid == 3 && cpu.local_apic_id == 42 && !cpu.x2apic && cpu.enabled && cpu.online_capable && cpu.is_boot_processor) _ -> (false) } }
 machine test_fact_LocalApic() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::LocalApic { decoded_local_apic_entry: LocalApicEntry { processor_id: 3, apic_id: 42, flags: 3 } }, ObservedBootApic { known: true, id: 42 });
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::LocalApic { decoded_local_apic_entry: |fixed_types|::LocalApicEntry { processor_id: 3, apic_id: 42, flags: 3 } }, |topology|::ObservedBootApic { known: true, id: 42 });
     let fields: bool = check_fact_LocalApic(result.fact);
     result.error == 0 &&
     fields
 }
-machine check_fact_LocalX2Apic(fact: TopologyFact) -> bool { transition fact { TopologyFact::Cpu { cpu } -> (cpu.processor_uid == 4294967295 && cpu.x2apic && cpu.enabled && !cpu.online_capable && cpu.is_boot_processor) _ -> (false) } }
+machine check_fact_LocalX2Apic(fact: |topology|::TopologyFact) -> bool { transition fact { |topology|::TopologyFact::Cpu { cpu } -> (cpu.processor_uid == 4294967295 && cpu.x2apic && cpu.enabled && !cpu.online_capable && cpu.is_boot_processor) _ -> (false) } }
 machine test_fact_LocalX2Apic() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::LocalX2Apic { decoded_local_x2_apic_entry: LocalX2ApicEntry { processor_uid: 4294967295, x2apic_id: 42, flags: 1 } }, ObservedBootApic { known: true, id: 42 });
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::LocalX2Apic { decoded_local_x2_apic_entry: |fixed_types|::LocalX2ApicEntry { processor_uid: 4294967295, x2apic_id: 42, flags: 1 } }, |topology|::ObservedBootApic { known: true, id: 42 });
     let fields: bool = check_fact_LocalX2Apic(result.fact);
     result.error == 0 &&
     fields
 }
-machine check_fact_IoApic(fact: TopologyFact) -> bool { transition fact { TopologyFact::IoController { controller } -> (controller.id == 255 && controller.address == 4294967295 && controller.global_system_interrupt_base == 0x12345678) _ -> (false) } }
+machine check_fact_IoApic(fact: |topology|::TopologyFact) -> bool { transition fact { |topology|::TopologyFact::IoController { controller } -> (controller.id == 255 && controller.address == 4294967295 && controller.global_system_interrupt_base == 0x12345678) _ -> (false) } }
 machine test_fact_IoApic() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::IoApic { decoded_io_apic_entry: IoApicEntry { io_apic_id: 255, io_apic_address: 4294967295, global_system_interrupt_base: 0x12345678 } }, ObservedBootApic { known: true, id: 42 });
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::IoApic { decoded_io_apic_entry: |fixed_types|::IoApicEntry { io_apic_id: 255, io_apic_address: 4294967295, global_system_interrupt_base: 0x12345678 } }, |topology|::ObservedBootApic { known: true, id: 42 });
     let fields: bool = check_fact_IoApic(result.fact);
     result.error == 0 &&
     fields
 }
-machine check_fact_InterruptSourceOverride(fact: TopologyFact) -> bool { transition fact { TopologyFact::Override { interrupt_override } -> (interrupt_override.isa_source == 255 && interrupt_override.global_system_interrupt == 4294967295) _ -> (false) } }
+machine check_fact_InterruptSourceOverride(fact: |topology|::TopologyFact) -> bool { transition fact { |topology|::TopologyFact::Override { interrupt_override } -> (interrupt_override.isa_source == 255 && interrupt_override.global_system_interrupt == 4294967295) _ -> (false) } }
 machine test_fact_InterruptSourceOverride() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::InterruptSourceOverride { decoded_interrupt_source_override_entry: InterruptSourceOverrideEntry { bus: 0, irq: 255, global_system_interrupt: 4294967295, flags: 15 } }, ObservedBootApic { known: true, id: 42 });
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::InterruptSourceOverride { decoded_interrupt_source_override_entry: |fixed_types|::InterruptSourceOverrideEntry { bus: 0, irq: 255, global_system_interrupt: 4294967295, flags: 15 } }, |topology|::ObservedBootApic { known: true, id: 42 });
     let fields: bool = check_fact_InterruptSourceOverride(result.fact);
     result.error == 0 &&
     fields
 }
-machine check_fact_NmiSource(fact: TopologyFact) -> bool { transition fact { TopologyFact::GlobalNmi { global_nmi } -> (global_nmi.global_system_interrupt == 4294967295) _ -> (false) } }
+machine check_fact_NmiSource(fact: |topology|::TopologyFact) -> bool { transition fact { |topology|::TopologyFact::GlobalNmi { global_nmi } -> (global_nmi.global_system_interrupt == 4294967295) _ -> (false) } }
 machine test_fact_NmiSource() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::NmiSource { decoded_nmi_source_entry: NmiSourceEntry { global_system_interrupt: 4294967295, flags: 15 } }, ObservedBootApic { known: true, id: 42 });
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::NmiSource { decoded_nmi_source_entry: |fixed_types|::NmiSourceEntry { global_system_interrupt: 4294967295, flags: 15 } }, |topology|::ObservedBootApic { known: true, id: 42 });
     let fields: bool = check_fact_NmiSource(result.fact);
     result.error == 0 &&
     fields
 }
-machine check_fact_LocalApicAddressOverride(fact: TopologyFact) -> bool { transition fact { TopologyFact::LocalApicAddress { local_apic_address } -> (local_apic_address == 18446744073709551615) _ -> (false) } }
+machine check_fact_LocalApicAddressOverride(fact: |topology|::TopologyFact) -> bool { transition fact { |topology|::TopologyFact::LocalApicAddress { local_apic_address } -> (local_apic_address == 18446744073709551615) _ -> (false) } }
 machine test_fact_LocalApicAddressOverride() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::LocalApicAddressOverride { decoded_local_apic_address_override_entry: LocalApicAddressOverrideEntry { local_apic_address: 18446744073709551615 } }, ObservedBootApic { known: true, id: 42 });
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::LocalApicAddressOverride { decoded_local_apic_address_override_entry: |fixed_types|::LocalApicAddressOverrideEntry { local_apic_address: 18446744073709551615 } }, |topology|::ObservedBootApic { known: true, id: 42 });
     let fields: bool = check_fact_LocalApicAddressOverride(result.fact);
     result.error == 0 &&
     fields
 }
-machine check_fact_MultiprocessorWakeup(fact: TopologyFact) -> bool { transition fact { TopologyFact::WakeMailbox { mailbox_address, mailbox_version } -> (mailbox_address == 18446744073709551615 && mailbox_version == 65535) _ -> (false) } }
+machine check_fact_MultiprocessorWakeup(fact: |topology|::TopologyFact) -> bool { transition fact { |topology|::TopologyFact::WakeMailbox { mailbox_address, mailbox_version } -> (mailbox_address == 18446744073709551615 && mailbox_version == 65535) _ -> (false) } }
 machine test_fact_MultiprocessorWakeup() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::MultiprocessorWakeup { decoded_multiprocessor_wakeup_entry: MultiprocessorWakeupEntry { mailbox_address: 18446744073709551615, mailbox_version: 65535 } }, ObservedBootApic { known: true, id: 42 });
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::MultiprocessorWakeup { decoded_multiprocessor_wakeup_entry: |fixed_types|::MultiprocessorWakeupEntry { mailbox_address: 18446744073709551615, mailbox_version: 65535 } }, |topology|::ObservedBootApic { known: true, id: 42 });
     let fields: bool = check_fact_MultiprocessorWakeup(result.fact);
     result.error == 0 &&
     fields
 }
-machine check_fact_Gicc(fact: TopologyFact) -> bool { transition fact { TopologyFact::GicCpu { gic_cpu } -> (gic_cpu.processor_uid == 42 && gic_cpu.mpidr == 18446744073709551615) _ -> (false) } }
+machine check_fact_Gicc(fact: |topology|::TopologyFact) -> bool { transition fact { |topology|::TopologyFact::GicCpu { gic_cpu } -> (gic_cpu.processor_uid == 42 && gic_cpu.mpidr == 18446744073709551615) _ -> (false) } }
 machine test_fact_Gicc() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::Gicc { decoded_gicc_entry: GiccEntry { processor_uid: 42, mpidr: 18446744073709551615 } }, ObservedBootApic { known: true, id: 42 });
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::Gicc { decoded_gicc_entry: |fixed_types|::GiccEntry { processor_uid: 42, mpidr: 18446744073709551615 } }, |topology|::ObservedBootApic { known: true, id: 42 });
     let fields: bool = check_fact_Gicc(result.fact);
     result.error == 0 &&
     fields
 }
-machine check_fact_Gicd(fact: TopologyFact) -> bool { transition fact { TopologyFact::GicDistributor { gic_distributor } -> (gic_distributor.gic_id == 42 && gic_distributor.physical_base_address == 18446744073709551615) _ -> (false) } }
+machine check_fact_Gicd(fact: |topology|::TopologyFact) -> bool { transition fact { |topology|::TopologyFact::GicDistributor { gic_distributor } -> (gic_distributor.gic_id == 42 && gic_distributor.physical_base_address == 18446744073709551615) _ -> (false) } }
 machine test_fact_Gicd() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::Gicd { decoded_gicd_entry: GicdEntry { gic_id: 42, physical_base_address: 18446744073709551615 } }, ObservedBootApic { known: true, id: 42 });
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::Gicd { decoded_gicd_entry: |fixed_types|::GicdEntry { gic_id: 42, physical_base_address: 18446744073709551615 } }, |topology|::ObservedBootApic { known: true, id: 42 });
     let fields: bool = check_fact_Gicd(result.fact);
     result.error == 0 &&
     fields
 }
-machine check_fact_GicMsiFrame(fact: TopologyFact) -> bool { transition fact { TopologyFact::GicMsi { gic_msi } -> (gic_msi.frame_id == 42 && gic_msi.physical_base_address == 18446744073709551615) _ -> (false) } }
+machine check_fact_GicMsiFrame(fact: |topology|::TopologyFact) -> bool { transition fact { |topology|::TopologyFact::GicMsi { gic_msi } -> (gic_msi.frame_id == 42 && gic_msi.physical_base_address == 18446744073709551615) _ -> (false) } }
 machine test_fact_GicMsiFrame() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::GicMsiFrame { decoded_gic_msi_frame_entry: GicMsiFrameEntry { frame_id: 42, physical_base_address: 18446744073709551615 } }, ObservedBootApic { known: true, id: 42 });
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::GicMsiFrame { decoded_gic_msi_frame_entry: |fixed_types|::GicMsiFrameEntry { frame_id: 42, physical_base_address: 18446744073709551615 } }, |topology|::ObservedBootApic { known: true, id: 42 });
     let fields: bool = check_fact_GicMsiFrame(result.fact);
     result.error == 0 &&
     fields
 }
-machine check_fact_GicRedistributor(fact: TopologyFact) -> bool { transition fact { TopologyFact::GicRedistributor { gic_redistributor } -> (gic_redistributor.discovery_range_base_address == 18446744073709551615 && gic_redistributor.discovery_range_length == 4294967295) _ -> (false) } }
+machine check_fact_GicRedistributor(fact: |topology|::TopologyFact) -> bool { transition fact { |topology|::TopologyFact::GicRedistributor { gic_redistributor } -> (gic_redistributor.discovery_range_base_address == 18446744073709551615 && gic_redistributor.discovery_range_length == 4294967295) _ -> (false) } }
 machine test_fact_GicRedistributor() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::GicRedistributor { decoded_gic_redistributor_entry: GicRedistributorEntry { discovery_range_base_address: 18446744073709551615, discovery_range_length: 4294967295 } }, ObservedBootApic { known: true, id: 42 });
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::GicRedistributor { decoded_gic_redistributor_entry: |fixed_types|::GicRedistributorEntry { discovery_range_base_address: 18446744073709551615, discovery_range_length: 4294967295 } }, |topology|::ObservedBootApic { known: true, id: 42 });
     let fields: bool = check_fact_GicRedistributor(result.fact);
     result.error == 0 &&
     fields
 }
-machine check_fact_GicInterruptTranslationService(fact: TopologyFact) -> bool { transition fact { TopologyFact::GicTranslation { gic_translation } -> (gic_translation.id == 42 && gic_translation.physical_base_address == 18446744073709551615) _ -> (false) } }
+machine check_fact_GicInterruptTranslationService(fact: |topology|::TopologyFact) -> bool { transition fact { |topology|::TopologyFact::GicTranslation { gic_translation } -> (gic_translation.id == 42 && gic_translation.physical_base_address == 18446744073709551615) _ -> (false) } }
 machine test_fact_GicInterruptTranslationService() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::GicInterruptTranslationService { decoded_gic_interrupt_translation_service_entry: GicInterruptTranslationServiceEntry { id: 42, physical_base_address: 18446744073709551615 } }, ObservedBootApic { known: true, id: 42 });
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::GicInterruptTranslationService { decoded_gic_interrupt_translation_service_entry: |fixed_types|::GicInterruptTranslationServiceEntry { id: 42, physical_base_address: 18446744073709551615 } }, |topology|::ObservedBootApic { known: true, id: 42 });
     let fields: bool = check_fact_GicInterruptTranslationService(result.fact);
     result.error == 0 &&
     fields
 }
 machine test_iso_flags_2() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::InterruptSourceOverride { decoded_interrupt_source_override_entry: InterruptSourceOverrideEntry { flags: 2 } }, ObservedBootApic {});
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::InterruptSourceOverride { decoded_interrupt_source_override_entry: |fixed_types|::InterruptSourceOverrideEntry { flags: 2 } }, |topology|::ObservedBootApic {});
     result.error == 15
 }
 machine test_iso_flags_8() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::InterruptSourceOverride { decoded_interrupt_source_override_entry: InterruptSourceOverrideEntry { flags: 8 } }, ObservedBootApic {});
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::InterruptSourceOverride { decoded_interrupt_source_override_entry: |fixed_types|::InterruptSourceOverrideEntry { flags: 8 } }, |topology|::ObservedBootApic {});
     result.error == 16
 }
 machine test_iso_flags_15() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::InterruptSourceOverride { decoded_interrupt_source_override_entry: InterruptSourceOverrideEntry { flags: 15 } }, ObservedBootApic {});
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::InterruptSourceOverride { decoded_interrupt_source_override_entry: |fixed_types|::InterruptSourceOverrideEntry { flags: 15 } }, |topology|::ObservedBootApic {});
     result.error == 0
 }
 machine test_iso_bus() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::InterruptSourceOverride { decoded_interrupt_source_override_entry: InterruptSourceOverrideEntry { bus: 1 } }, ObservedBootApic {});
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::InterruptSourceOverride { decoded_interrupt_source_override_entry: |fixed_types|::InterruptSourceOverrideEntry { bus: 1 } }, |topology|::ObservedBootApic {});
     result.error == 32
 }
-machine check_nmi_False_42_0(fact: TopologyFact) -> bool { transition fact { TopologyFact::LocalNmi { local_nmi } -> inspect(local_nmi.processor, local_nmi.line) _ -> (false) } state inspect(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let result: bool = check_target_nmi_False_42_0(processor, line); result } }
-machine check_target_nmi_False_42_0(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let correct_line: bool = line_nmi_False_42_0(line); transition processor { NmiProcessor::ProcessorUid { uid } -> (uid == 42 && correct_line) _ -> (false) } }
-machine line_nmi_False_42_0(line: LocalInterruptLine) -> bool { transition line { LocalInterruptLine::Lint0 -> (true) _ -> (false) } }
+machine check_nmi_False_42_0(fact: |topology|::TopologyFact) -> bool { transition fact { |topology|::TopologyFact::LocalNmi { local_nmi } -> inspect(local_nmi.processor, local_nmi.line) _ -> (false) } state inspect(processor: |topology|::NmiProcessor, line: |topology|::LocalInterruptLine) -> bool { let result: bool = check_target_nmi_False_42_0(|topology|::processor, line); result } }
+machine check_target_nmi_False_42_0(processor: |topology|::NmiProcessor, line: |topology|::LocalInterruptLine) -> bool { let correct_line: bool = line_nmi_False_42_0(line); transition |topology|::processor { |topology|::NmiProcessor::ProcessorUid { uid } -> (uid == 42 && correct_line) _ -> (false) } }
+machine line_nmi_False_42_0(line: |topology|::LocalInterruptLine) -> bool { transition line { |topology|::LocalInterruptLine::Lint0 -> (true) _ -> (false) } }
 machine test_nmi_False_42_0() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::LocalApicNmi { decoded_local_apic_nmi_entry: LocalApicNmiEntry { processor_id: 42, nmi_line: 0, flags: 15 } }, ObservedBootApic {});
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::LocalApicNmi { decoded_local_apic_nmi_entry: |fixed_types|::LocalApicNmiEntry { processor_id: 42, nmi_line: 0, flags: 15 } }, |topology|::ObservedBootApic {});
     let fields: bool = check_nmi_False_42_0(result.fact);
     result.error == 0 &&
     fields
 }
-machine check_nmi_False_42_1(fact: TopologyFact) -> bool { transition fact { TopologyFact::LocalNmi { local_nmi } -> inspect(local_nmi.processor, local_nmi.line) _ -> (false) } state inspect(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let result: bool = check_target_nmi_False_42_1(processor, line); result } }
-machine check_target_nmi_False_42_1(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let correct_line: bool = line_nmi_False_42_1(line); transition processor { NmiProcessor::ProcessorUid { uid } -> (uid == 42 && correct_line) _ -> (false) } }
-machine line_nmi_False_42_1(line: LocalInterruptLine) -> bool { transition line { LocalInterruptLine::Lint1 -> (true) _ -> (false) } }
+machine check_nmi_False_42_1(fact: |topology|::TopologyFact) -> bool { transition fact { |topology|::TopologyFact::LocalNmi { local_nmi } -> inspect(local_nmi.processor, local_nmi.line) _ -> (false) } state inspect(processor: |topology|::NmiProcessor, line: |topology|::LocalInterruptLine) -> bool { let result: bool = check_target_nmi_False_42_1(|topology|::processor, line); result } }
+machine check_target_nmi_False_42_1(processor: |topology|::NmiProcessor, line: |topology|::LocalInterruptLine) -> bool { let correct_line: bool = line_nmi_False_42_1(line); transition |topology|::processor { |topology|::NmiProcessor::ProcessorUid { uid } -> (uid == 42 && correct_line) _ -> (false) } }
+machine line_nmi_False_42_1(line: |topology|::LocalInterruptLine) -> bool { transition line { |topology|::LocalInterruptLine::Lint1 -> (true) _ -> (false) } }
 machine test_nmi_False_42_1() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::LocalApicNmi { decoded_local_apic_nmi_entry: LocalApicNmiEntry { processor_id: 42, nmi_line: 1, flags: 15 } }, ObservedBootApic {});
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::LocalApicNmi { decoded_local_apic_nmi_entry: |fixed_types|::LocalApicNmiEntry { processor_id: 42, nmi_line: 1, flags: 15 } }, |topology|::ObservedBootApic {});
     let fields: bool = check_nmi_False_42_1(result.fact);
     result.error == 0 &&
     fields
 }
 machine test_nmi_False_42_2() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::LocalApicNmi { decoded_local_apic_nmi_entry: LocalApicNmiEntry { processor_id: 42, nmi_line: 2, flags: 15 } }, ObservedBootApic {});
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::LocalApicNmi { decoded_local_apic_nmi_entry: |fixed_types|::LocalApicNmiEntry { processor_id: 42, nmi_line: 2, flags: 15 } }, |topology|::ObservedBootApic {});
     result.error == 33
 }
-machine check_nmi_False_255_0(fact: TopologyFact) -> bool { transition fact { TopologyFact::LocalNmi { local_nmi } -> inspect(local_nmi.processor, local_nmi.line) _ -> (false) } state inspect(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let result: bool = check_target_nmi_False_255_0(processor, line); result } }
-machine check_target_nmi_False_255_0(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let correct_line: bool = line_nmi_False_255_0(line); transition processor { NmiProcessor::All -> (correct_line) _ -> (false) } }
-machine line_nmi_False_255_0(line: LocalInterruptLine) -> bool { transition line { LocalInterruptLine::Lint0 -> (true) _ -> (false) } }
+machine check_nmi_False_255_0(fact: |topology|::TopologyFact) -> bool { transition fact { |topology|::TopologyFact::LocalNmi { local_nmi } -> inspect(local_nmi.processor, local_nmi.line) _ -> (false) } state inspect(processor: |topology|::NmiProcessor, line: |topology|::LocalInterruptLine) -> bool { let result: bool = check_target_nmi_False_255_0(|topology|::processor, line); result } }
+machine check_target_nmi_False_255_0(processor: |topology|::NmiProcessor, line: |topology|::LocalInterruptLine) -> bool { let correct_line: bool = line_nmi_False_255_0(line); transition |topology|::processor { |topology|::NmiProcessor::All -> (correct_line) _ -> (false) } }
+machine line_nmi_False_255_0(line: |topology|::LocalInterruptLine) -> bool { transition line { |topology|::LocalInterruptLine::Lint0 -> (true) _ -> (false) } }
 machine test_nmi_False_255_0() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::LocalApicNmi { decoded_local_apic_nmi_entry: LocalApicNmiEntry { processor_id: 255, nmi_line: 0, flags: 15 } }, ObservedBootApic {});
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::LocalApicNmi { decoded_local_apic_nmi_entry: |fixed_types|::LocalApicNmiEntry { processor_id: 255, nmi_line: 0, flags: 15 } }, |topology|::ObservedBootApic {});
     let fields: bool = check_nmi_False_255_0(result.fact);
     result.error == 0 &&
     fields
 }
-machine check_nmi_False_255_1(fact: TopologyFact) -> bool { transition fact { TopologyFact::LocalNmi { local_nmi } -> inspect(local_nmi.processor, local_nmi.line) _ -> (false) } state inspect(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let result: bool = check_target_nmi_False_255_1(processor, line); result } }
-machine check_target_nmi_False_255_1(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let correct_line: bool = line_nmi_False_255_1(line); transition processor { NmiProcessor::All -> (correct_line) _ -> (false) } }
-machine line_nmi_False_255_1(line: LocalInterruptLine) -> bool { transition line { LocalInterruptLine::Lint1 -> (true) _ -> (false) } }
+machine check_nmi_False_255_1(fact: |topology|::TopologyFact) -> bool { transition fact { |topology|::TopologyFact::LocalNmi { local_nmi } -> inspect(local_nmi.processor, local_nmi.line) _ -> (false) } state inspect(processor: |topology|::NmiProcessor, line: |topology|::LocalInterruptLine) -> bool { let result: bool = check_target_nmi_False_255_1(|topology|::processor, line); result } }
+machine check_target_nmi_False_255_1(processor: |topology|::NmiProcessor, line: |topology|::LocalInterruptLine) -> bool { let correct_line: bool = line_nmi_False_255_1(line); transition |topology|::processor { |topology|::NmiProcessor::All -> (correct_line) _ -> (false) } }
+machine line_nmi_False_255_1(line: |topology|::LocalInterruptLine) -> bool { transition line { |topology|::LocalInterruptLine::Lint1 -> (true) _ -> (false) } }
 machine test_nmi_False_255_1() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::LocalApicNmi { decoded_local_apic_nmi_entry: LocalApicNmiEntry { processor_id: 255, nmi_line: 1, flags: 15 } }, ObservedBootApic {});
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::LocalApicNmi { decoded_local_apic_nmi_entry: |fixed_types|::LocalApicNmiEntry { processor_id: 255, nmi_line: 1, flags: 15 } }, |topology|::ObservedBootApic {});
     let fields: bool = check_nmi_False_255_1(result.fact);
     result.error == 0 &&
     fields
 }
 machine test_nmi_False_255_2() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::LocalApicNmi { decoded_local_apic_nmi_entry: LocalApicNmiEntry { processor_id: 255, nmi_line: 2, flags: 15 } }, ObservedBootApic {});
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::LocalApicNmi { decoded_local_apic_nmi_entry: |fixed_types|::LocalApicNmiEntry { processor_id: 255, nmi_line: 2, flags: 15 } }, |topology|::ObservedBootApic {});
     result.error == 33
 }
-machine check_nmi_True_42_0(fact: TopologyFact) -> bool { transition fact { TopologyFact::LocalNmi { local_nmi } -> inspect(local_nmi.processor, local_nmi.line) _ -> (false) } state inspect(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let result: bool = check_target_nmi_True_42_0(processor, line); result } }
-machine check_target_nmi_True_42_0(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let correct_line: bool = line_nmi_True_42_0(line); transition processor { NmiProcessor::ProcessorUid { uid } -> (uid == 42 && correct_line) _ -> (false) } }
-machine line_nmi_True_42_0(line: LocalInterruptLine) -> bool { transition line { LocalInterruptLine::Lint0 -> (true) _ -> (false) } }
+machine check_nmi_True_42_0(fact: |topology|::TopologyFact) -> bool { transition fact { |topology|::TopologyFact::LocalNmi { local_nmi } -> inspect(local_nmi.processor, local_nmi.line) _ -> (false) } state inspect(processor: |topology|::NmiProcessor, line: |topology|::LocalInterruptLine) -> bool { let result: bool = check_target_nmi_True_42_0(|topology|::processor, line); result } }
+machine check_target_nmi_True_42_0(processor: |topology|::NmiProcessor, line: |topology|::LocalInterruptLine) -> bool { let correct_line: bool = line_nmi_True_42_0(line); transition |topology|::processor { |topology|::NmiProcessor::ProcessorUid { uid } -> (uid == 42 && correct_line) _ -> (false) } }
+machine line_nmi_True_42_0(line: |topology|::LocalInterruptLine) -> bool { transition line { |topology|::LocalInterruptLine::Lint0 -> (true) _ -> (false) } }
 machine test_nmi_True_42_0() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::X2ApicNmi { decoded_x2_apic_nmi_entry: X2ApicNmiEntry { processor_uid: 42, nmi_line: 0, flags: 15 } }, ObservedBootApic {});
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::X2ApicNmi { decoded_x2_apic_nmi_entry: |fixed_types|::X2ApicNmiEntry { processor_uid: 42, nmi_line: 0, flags: 15 } }, |topology|::ObservedBootApic {});
     let fields: bool = check_nmi_True_42_0(result.fact);
     result.error == 0 &&
     fields
 }
-machine check_nmi_True_42_1(fact: TopologyFact) -> bool { transition fact { TopologyFact::LocalNmi { local_nmi } -> inspect(local_nmi.processor, local_nmi.line) _ -> (false) } state inspect(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let result: bool = check_target_nmi_True_42_1(processor, line); result } }
-machine check_target_nmi_True_42_1(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let correct_line: bool = line_nmi_True_42_1(line); transition processor { NmiProcessor::ProcessorUid { uid } -> (uid == 42 && correct_line) _ -> (false) } }
-machine line_nmi_True_42_1(line: LocalInterruptLine) -> bool { transition line { LocalInterruptLine::Lint1 -> (true) _ -> (false) } }
+machine check_nmi_True_42_1(fact: |topology|::TopologyFact) -> bool { transition fact { |topology|::TopologyFact::LocalNmi { local_nmi } -> inspect(local_nmi.processor, local_nmi.line) _ -> (false) } state inspect(processor: |topology|::NmiProcessor, line: |topology|::LocalInterruptLine) -> bool { let result: bool = check_target_nmi_True_42_1(|topology|::processor, line); result } }
+machine check_target_nmi_True_42_1(processor: |topology|::NmiProcessor, line: |topology|::LocalInterruptLine) -> bool { let correct_line: bool = line_nmi_True_42_1(line); transition |topology|::processor { |topology|::NmiProcessor::ProcessorUid { uid } -> (uid == 42 && correct_line) _ -> (false) } }
+machine line_nmi_True_42_1(line: |topology|::LocalInterruptLine) -> bool { transition line { |topology|::LocalInterruptLine::Lint1 -> (true) _ -> (false) } }
 machine test_nmi_True_42_1() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::X2ApicNmi { decoded_x2_apic_nmi_entry: X2ApicNmiEntry { processor_uid: 42, nmi_line: 1, flags: 15 } }, ObservedBootApic {});
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::X2ApicNmi { decoded_x2_apic_nmi_entry: |fixed_types|::X2ApicNmiEntry { processor_uid: 42, nmi_line: 1, flags: 15 } }, |topology|::ObservedBootApic {});
     let fields: bool = check_nmi_True_42_1(result.fact);
     result.error == 0 &&
     fields
 }
 machine test_nmi_True_42_2() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::X2ApicNmi { decoded_x2_apic_nmi_entry: X2ApicNmiEntry { processor_uid: 42, nmi_line: 2, flags: 15 } }, ObservedBootApic {});
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::X2ApicNmi { decoded_x2_apic_nmi_entry: |fixed_types|::X2ApicNmiEntry { processor_uid: 42, nmi_line: 2, flags: 15 } }, |topology|::ObservedBootApic {});
     result.error == 33
 }
-machine check_nmi_True_4294967295_0(fact: TopologyFact) -> bool { transition fact { TopologyFact::LocalNmi { local_nmi } -> inspect(local_nmi.processor, local_nmi.line) _ -> (false) } state inspect(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let result: bool = check_target_nmi_True_4294967295_0(processor, line); result } }
-machine check_target_nmi_True_4294967295_0(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let correct_line: bool = line_nmi_True_4294967295_0(line); transition processor { NmiProcessor::All -> (correct_line) _ -> (false) } }
-machine line_nmi_True_4294967295_0(line: LocalInterruptLine) -> bool { transition line { LocalInterruptLine::Lint0 -> (true) _ -> (false) } }
+machine check_nmi_True_4294967295_0(fact: |topology|::TopologyFact) -> bool { transition fact { |topology|::TopologyFact::LocalNmi { local_nmi } -> inspect(local_nmi.processor, local_nmi.line) _ -> (false) } state inspect(processor: |topology|::NmiProcessor, line: |topology|::LocalInterruptLine) -> bool { let result: bool = check_target_nmi_True_4294967295_0(|topology|::processor, line); result } }
+machine check_target_nmi_True_4294967295_0(processor: |topology|::NmiProcessor, line: |topology|::LocalInterruptLine) -> bool { let correct_line: bool = line_nmi_True_4294967295_0(line); transition |topology|::processor { |topology|::NmiProcessor::All -> (correct_line) _ -> (false) } }
+machine line_nmi_True_4294967295_0(line: |topology|::LocalInterruptLine) -> bool { transition line { |topology|::LocalInterruptLine::Lint0 -> (true) _ -> (false) } }
 machine test_nmi_True_4294967295_0() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::X2ApicNmi { decoded_x2_apic_nmi_entry: X2ApicNmiEntry { processor_uid: 4294967295, nmi_line: 0, flags: 15 } }, ObservedBootApic {});
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::X2ApicNmi { decoded_x2_apic_nmi_entry: |fixed_types|::X2ApicNmiEntry { processor_uid: 4294967295, nmi_line: 0, flags: 15 } }, |topology|::ObservedBootApic {});
     let fields: bool = check_nmi_True_4294967295_0(result.fact);
     result.error == 0 &&
     fields
 }
-machine check_nmi_True_4294967295_1(fact: TopologyFact) -> bool { transition fact { TopologyFact::LocalNmi { local_nmi } -> inspect(local_nmi.processor, local_nmi.line) _ -> (false) } state inspect(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let result: bool = check_target_nmi_True_4294967295_1(processor, line); result } }
-machine check_target_nmi_True_4294967295_1(processor: NmiProcessor, line: LocalInterruptLine) -> bool { let correct_line: bool = line_nmi_True_4294967295_1(line); transition processor { NmiProcessor::All -> (correct_line) _ -> (false) } }
-machine line_nmi_True_4294967295_1(line: LocalInterruptLine) -> bool { transition line { LocalInterruptLine::Lint1 -> (true) _ -> (false) } }
+machine check_nmi_True_4294967295_1(fact: |topology|::TopologyFact) -> bool { transition fact { |topology|::TopologyFact::LocalNmi { local_nmi } -> inspect(local_nmi.processor, local_nmi.line) _ -> (false) } state inspect(processor: |topology|::NmiProcessor, line: |topology|::LocalInterruptLine) -> bool { let result: bool = check_target_nmi_True_4294967295_1(|topology|::processor, line); result } }
+machine check_target_nmi_True_4294967295_1(processor: |topology|::NmiProcessor, line: |topology|::LocalInterruptLine) -> bool { let correct_line: bool = line_nmi_True_4294967295_1(line); transition |topology|::processor { |topology|::NmiProcessor::All -> (correct_line) _ -> (false) } }
+machine line_nmi_True_4294967295_1(line: |topology|::LocalInterruptLine) -> bool { transition line { |topology|::LocalInterruptLine::Lint1 -> (true) _ -> (false) } }
 machine test_nmi_True_4294967295_1() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::X2ApicNmi { decoded_x2_apic_nmi_entry: X2ApicNmiEntry { processor_uid: 4294967295, nmi_line: 1, flags: 15 } }, ObservedBootApic {});
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::X2ApicNmi { decoded_x2_apic_nmi_entry: |fixed_types|::X2ApicNmiEntry { processor_uid: 4294967295, nmi_line: 1, flags: 15 } }, |topology|::ObservedBootApic {});
     let fields: bool = check_nmi_True_4294967295_1(result.fact);
     result.error == 0 &&
     fields
 }
 machine test_nmi_True_4294967295_2() -> bool {
     let mut input: [u8; 4096];
-    let result: TopologyStep = topology_fact(MadtEntry::X2ApicNmi { decoded_x2_apic_nmi_entry: X2ApicNmiEntry { processor_uid: 4294967295, nmi_line: 2, flags: 15 } }, ObservedBootApic {});
+    let result: |topology|::TopologyStep = |topology|::topology_fact(|madt|::MadtEntry::X2ApicNmi { decoded_x2_apic_nmi_entry: |fixed_types|::X2ApicNmiEntry { processor_uid: 4294967295, nmi_line: 2, flags: 15 } }, |topology|::ObservedBootApic {});
     result.error == 33
 }
-machine pipeline_cpu(fact: TopologyFact, expected: u32, boot: bool) -> bool { transition fact { TopologyFact::Cpu { cpu } -> (cpu.local_apic_id == expected && cpu.is_boot_processor == boot) _ -> (false) } }
+machine pipeline_cpu(fact: |topology|::TopologyFact, expected: u32, boot: bool) -> bool { transition fact { |topology|::TopologyFact::Cpu { cpu } -> (cpu.local_apic_id == expected && cpu.is_boot_processor == boot) _ -> (false) } }
 machine test_ordered_cpu_pipeline() -> bool {
     let mut input: [u8; 4096];
     input[0] = 65;
@@ -462,9 +431,9 @@ machine test_ordered_cpu_pipeline() -> bool {
     input[54] = 4;
     input[55] = 42;
     input[56] = 1;
-    let first: TopologyStep = topology_next(&input, 60, 44, ObservedBootApic { known: true, id: 42 });
-    let second: TopologyStep = topology_next(&input, 60, first.next_offset, ObservedBootApic { known: true, id: 42 });
-    let end: TopologyStep = topology_next(&input, 60, second.next_offset, ObservedBootApic {});
+    let first: |topology|::TopologyStep = |topology|::topology_next(&input, 60, 44, |topology|::ObservedBootApic { known: true, id: 42 });
+    let second: |topology|::TopologyStep = |topology|::topology_next(&input, 60, first.next_offset, |topology|::ObservedBootApic { known: true, id: 42 });
+    let end: |topology|::TopologyStep = |topology|::topology_next(&input, 60, second.next_offset, |topology|::ObservedBootApic {});
     let a: bool = pipeline_cpu(first.fact, 41, false);
     let b: bool = pipeline_cpu(second.fact, 42, true);
     first.error == 0 &&
@@ -511,11 +480,11 @@ machine test_topology_malformed() -> bool {
     input[34] = 101;
     input[35] = 135;
     input[44] = 128;
-    let result: TopologyStep = topology_next(&input, 46, 44, ObservedBootApic {});
+    let result: |topology|::TopologyStep = |topology|::topology_next(&input, 46, 44, |topology|::ObservedBootApic {});
     result.error == 14
 }
-machine unknown_kept(fact: TopologyFact) -> bool { transition fact { TopologyFact::Other { other_entry } -> inspect(other_entry) _ -> (false) } state inspect(entry: MadtEntry) -> bool { let result: bool = raw_unknown(entry); result } }
-machine raw_unknown(entry: MadtEntry) -> bool { transition entry { MadtEntry::Unknown { header } -> (header.entry_type == 128 && header.length == 2) _ -> (false) } }
+machine unknown_kept(fact: |topology|::TopologyFact) -> bool { transition fact { |topology|::TopologyFact::Other { other_entry } -> inspect(other_entry) _ -> (false) } state inspect(entry: |madt|::MadtEntry) -> bool { let result: bool = raw_unknown(entry); result } }
+machine raw_unknown(entry: |madt|::MadtEntry) -> bool { transition entry { |madt|::MadtEntry::Unknown { header } -> (header.entry_type == 128 && header.length == 2) _ -> (false) } }
 machine test_topology_unknown() -> bool {
     let mut input: [u8; 4096];
     input[0] = 65;
@@ -553,7 +522,7 @@ machine test_topology_unknown() -> bool {
     input[35] = 135;
     input[44] = 128;
     input[45] = 2;
-    let result: TopologyStep = topology_next(&input, 46, 44, ObservedBootApic {});
+    let result: |topology|::TopologyStep = |topology|::topology_next(&input, 46, 44, |topology|::ObservedBootApic {});
     let kept: bool = unknown_kept(result.fact);
     result.error == 0 &&
     result.next_offset == 46 &&
@@ -561,7 +530,7 @@ machine test_topology_unknown() -> bool {
 }
 machine test_pm_timer_0() -> bool {
     let mut input: [u8; 4096];
-    let result: PmTimerResult = pm_timer(Fadt { flags: 0, pm_timer_length: 4, pm_timer_block: 4660 });
+    let result: |timers|::PmTimerResult = |timers|::pm_timer(|fixed_types|::Fadt { flags: 0, pm_timer_length: 4, pm_timer_block: 4660 });
     result.error == 0 &&
     result.present == true &&
     result.hardware_reduced == false &&
@@ -570,7 +539,7 @@ machine test_pm_timer_0() -> bool {
 }
 machine test_pm_timer_256() -> bool {
     let mut input: [u8; 4096];
-    let result: PmTimerResult = pm_timer(Fadt { flags: 256, pm_timer_length: 4, pm_timer_block: 4660 });
+    let result: |timers|::PmTimerResult = |timers|::pm_timer(|fixed_types|::Fadt { flags: 256, pm_timer_length: 4, pm_timer_block: 4660 });
     result.error == 0 &&
     result.present == true &&
     result.hardware_reduced == false &&
@@ -579,150 +548,150 @@ machine test_pm_timer_256() -> bool {
 }
 machine test_pm_timer_1048576() -> bool {
     let mut input: [u8; 4096];
-    let result: PmTimerResult = pm_timer(Fadt { flags: 1048576, pm_timer_length: 4, pm_timer_block: 4660 });
+    let result: |timers|::PmTimerResult = |timers|::pm_timer(|fixed_types|::Fadt { flags: 1048576, pm_timer_length: 4, pm_timer_block: 4660 });
     result.error == 0 &&
     result.present == false &&
     result.hardware_reduced == true
 }
 machine test_pm_timer_1048832() -> bool {
     let mut input: [u8; 4096];
-    let result: PmTimerResult = pm_timer(Fadt { flags: 1048832, pm_timer_length: 4, pm_timer_block: 4660 });
+    let result: |timers|::PmTimerResult = |timers|::pm_timer(|fixed_types|::Fadt { flags: 1048832, pm_timer_length: 4, pm_timer_block: 4660 });
     result.error == 0 &&
     result.present == false &&
     result.hardware_reduced == true
 }
 machine test_pm_absent() -> bool {
     let mut input: [u8; 4096];
-    let result: PmTimerResult = pm_timer(Fadt {});
+    let result: |timers|::PmTimerResult = |timers|::pm_timer(|fixed_types|::Fadt {});
     !result.present &&
     result.error == 0
 }
 machine test_pm_reduced_invalid_ignored() -> bool {
     let mut input: [u8; 4096];
-    let result: PmTimerResult = pm_timer(Fadt { flags: 1048576, pm_timer_length: 4, x_pm_timer_block: OptionalRawGas { present: true, value: RawGenericAddress { address_space: 12, address: 1234 } } });
+    let result: |timers|::PmTimerResult = |timers|::pm_timer(|fixed_types|::Fadt { flags: 1048576, pm_timer_length: 4, x_pm_timer_block: |gas|::OptionalRawGas { present: true, value: |gas|::RawGenericAddress { address_space: 12, address: 1234 } } });
     !result.present &&
     result.error == 0 &&
     result.hardware_reduced
 }
 machine test_pm_invalid_gas() -> bool {
     let mut input: [u8; 4096];
-    let result: PmTimerResult = pm_timer(Fadt { pm_timer_length: 4, x_pm_timer_block: OptionalRawGas { present: true, value: RawGenericAddress { address_space: 12, address: 1234 } } });
+    let result: |timers|::PmTimerResult = |timers|::pm_timer(|fixed_types|::Fadt { pm_timer_length: 4, x_pm_timer_block: |gas|::OptionalRawGas { present: true, value: |gas|::RawGenericAddress { address_space: 12, address: 1234 } } });
     result.error == 11
 }
 machine test_ecam_0_0_0() -> bool {
     let mut input: [u8; 4096];
-    let result: PciAddressResult = physical_address(PciConfigRegion { base_address: 2147483648, segment: 4660, first_bus: 0, last_bus: 255 }, 4660, 0, 0, 0);
+    let result: |pci_regions|::PciAddressResult = |pci_regions|::physical_address(|pci_regions|::PciConfigRegion { base_address: 2147483648, segment: 4660, first_bus: 0, last_bus: 255 }, 4660, 0, 0, 0);
     result.error == 0 &&
     result.found &&
     result.address == 2147483648
 }
 machine test_ecam_128_0_0() -> bool {
     let mut input: [u8; 4096];
-    let result: PciAddressResult = physical_address(PciConfigRegion { base_address: 2147483648, segment: 4660, first_bus: 0, last_bus: 255 }, 4660, 128, 0, 0);
+    let result: |pci_regions|::PciAddressResult = |pci_regions|::physical_address(|pci_regions|::PciConfigRegion { base_address: 2147483648, segment: 4660, first_bus: 0, last_bus: 255 }, 4660, 128, 0, 0);
     result.error == 0 &&
     result.found &&
     result.address == 2281701376
 }
 machine test_ecam_255_31_7() -> bool {
     let mut input: [u8; 4096];
-    let result: PciAddressResult = physical_address(PciConfigRegion { base_address: 2147483648, segment: 4660, first_bus: 0, last_bus: 255 }, 4660, 255, 31, 7);
+    let result: |pci_regions|::PciAddressResult = |pci_regions|::physical_address(|pci_regions|::PciConfigRegion { base_address: 2147483648, segment: 4660, first_bus: 0, last_bus: 255 }, 4660, 255, 31, 7);
     result.error == 0 &&
     result.found &&
     result.address == 2415915008
 }
 machine test_ecam_1_32_0() -> bool {
     let mut input: [u8; 4096];
-    let result: PciAddressResult = physical_address(PciConfigRegion { base_address: 2147483648, segment: 4660, first_bus: 0, last_bus: 255 }, 4660, 1, 32, 0);
+    let result: |pci_regions|::PciAddressResult = |pci_regions|::physical_address(|pci_regions|::PciConfigRegion { base_address: 2147483648, segment: 4660, first_bus: 0, last_bus: 255 }, 4660, 1, 32, 0);
     result.error == 34
 }
 machine test_ecam_1_0_8() -> bool {
     let mut input: [u8; 4096];
-    let result: PciAddressResult = physical_address(PciConfigRegion { base_address: 2147483648, segment: 4660, first_bus: 0, last_bus: 255 }, 4660, 1, 0, 8);
+    let result: |pci_regions|::PciAddressResult = |pci_regions|::physical_address(|pci_regions|::PciConfigRegion { base_address: 2147483648, segment: 4660, first_bus: 0, last_bus: 255 }, 4660, 1, 0, 8);
     result.error == 35
 }
 machine test_ecam_nonzero_first() -> bool {
     let mut input: [u8; 4096];
-    let result: PciAddressResult = physical_address(PciConfigRegion { base_address: 2147483648, segment: 4660, first_bus: 128, last_bus: 255 }, 4660, 128, 0, 0);
+    let result: |pci_regions|::PciAddressResult = |pci_regions|::physical_address(|pci_regions|::PciConfigRegion { base_address: 2147483648, segment: 4660, first_bus: 128, last_bus: 255 }, 4660, 128, 0, 0);
     result.error == 0 &&
     result.address == 2281701376 &&
     result.found
 }
 machine test_ecam_overflow_18446744073709551615_0() -> bool {
     let mut input: [u8; 4096];
-    let result: PciAddressResult = physical_address(PciConfigRegion { base_address: 18446744073709551615, last_bus: 255 }, 0, 0, 0, 0);
+    let result: |pci_regions|::PciAddressResult = |pci_regions|::physical_address(|pci_regions|::PciConfigRegion { base_address: 18446744073709551615, last_bus: 255 }, 0, 0, 0, 0);
     result.error == 0 &&
     result.address == 18446744073709551615
 }
 machine test_ecam_overflow_18446744073709551615_1() -> bool {
     let mut input: [u8; 4096];
-    let result: PciAddressResult = physical_address(PciConfigRegion { base_address: 18446744073709551615, last_bus: 255 }, 0, 1, 0, 0);
+    let result: |pci_regions|::PciAddressResult = |pci_regions|::physical_address(|pci_regions|::PciConfigRegion { base_address: 18446744073709551615, last_bus: 255 }, 0, 1, 0, 0);
     result.error == 36
 }
 machine test_ecam_overflow_18446744073708503039_1() -> bool {
     let mut input: [u8; 4096];
-    let result: PciAddressResult = physical_address(PciConfigRegion { base_address: 18446744073708503039, last_bus: 255 }, 0, 1, 0, 0);
+    let result: |pci_regions|::PciAddressResult = |pci_regions|::physical_address(|pci_regions|::PciConfigRegion { base_address: 18446744073708503039, last_bus: 255 }, 0, 1, 0, 0);
     result.error == 0 &&
     result.address == 18446744073709551615
 }
 machine test_ecam_no_region_1_128() -> bool {
     let mut input: [u8; 4096];
-    let result: PciAddressResult = physical_address(PciConfigRegion { first_bus: 128, last_bus: 200 }, 1, 128, 0, 0);
+    let result: |pci_regions|::PciAddressResult = |pci_regions|::physical_address(|pci_regions|::PciConfigRegion { first_bus: 128, last_bus: 200 }, 1, 128, 0, 0);
     result.error == 0 &&
     !result.found
 }
 machine test_ecam_no_region_0_127() -> bool {
     let mut input: [u8; 4096];
-    let result: PciAddressResult = physical_address(PciConfigRegion { first_bus: 128, last_bus: 200 }, 0, 127, 0, 0);
+    let result: |pci_regions|::PciAddressResult = |pci_regions|::physical_address(|pci_regions|::PciConfigRegion { first_bus: 128, last_bus: 200 }, 0, 127, 0, 0);
     result.error == 0 &&
     !result.found
 }
 machine test_ecam_no_region_0_201() -> bool {
     let mut input: [u8; 4096];
-    let result: PciAddressResult = physical_address(PciConfigRegion { first_bus: 128, last_bus: 200 }, 0, 201, 0, 0);
+    let result: |pci_regions|::PciAddressResult = |pci_regions|::physical_address(|pci_regions|::PciConfigRegion { first_bus: 128, last_bus: 200 }, 0, 201, 0, 0);
     result.error == 0 &&
     !result.found
 }
 machine test_regions_count_0() -> bool {
     let mut input: [u8; 4096];
-    let mut regions: [PciConfigRegion; 253];
-    regions[0] = PciConfigRegion { base_address: 2147483648, last_bus: 255 };
-    regions[1] = PciConfigRegion { base_address: 4294967296, first_bus: 128, last_bus: 255 };
-    let result: PciAddressResult = find_address(&regions, 0, 0, 128, 0, 0);
+    let mut regions: [|pci_regions|::PciConfigRegion; 253];
+    regions[0] = |pci_regions|::PciConfigRegion { base_address: 2147483648, last_bus: 255 };
+    regions[1] = |pci_regions|::PciConfigRegion { base_address: 4294967296, first_bus: 128, last_bus: 255 };
+    let result: |pci_regions|::PciAddressResult = |pci_regions|::find_address(&regions, 0, 0, 128, 0, 0);
     result.error == 0 &&
     !result.found
 }
 machine test_regions_count_1() -> bool {
     let mut input: [u8; 4096];
-    let mut regions: [PciConfigRegion; 253];
-    regions[0] = PciConfigRegion { base_address: 2147483648, last_bus: 255 };
-    regions[1] = PciConfigRegion { base_address: 4294967296, first_bus: 128, last_bus: 255 };
-    let result: PciAddressResult = find_address(&regions, 1, 0, 128, 0, 0);
+    let mut regions: [|pci_regions|::PciConfigRegion; 253];
+    regions[0] = |pci_regions|::PciConfigRegion { base_address: 2147483648, last_bus: 255 };
+    regions[1] = |pci_regions|::PciConfigRegion { base_address: 4294967296, first_bus: 128, last_bus: 255 };
+    let result: |pci_regions|::PciAddressResult = |pci_regions|::find_address(&regions, 1, 0, 128, 0, 0);
     result.error == 0 &&
     result.address == 2281701376 &&
     result.found
 }
 machine test_regions_count_2() -> bool {
     let mut input: [u8; 4096];
-    let mut regions: [PciConfigRegion; 253];
-    regions[0] = PciConfigRegion { base_address: 2147483648, last_bus: 255 };
-    regions[1] = PciConfigRegion { base_address: 4294967296, first_bus: 128, last_bus: 255 };
-    let result: PciAddressResult = find_address(&regions, 2, 0, 128, 0, 0);
+    let mut regions: [|pci_regions|::PciConfigRegion; 253];
+    regions[0] = |pci_regions|::PciConfigRegion { base_address: 2147483648, last_bus: 255 };
+    regions[1] = |pci_regions|::PciConfigRegion { base_address: 4294967296, first_bus: 128, last_bus: 255 };
+    let result: |pci_regions|::PciAddressResult = |pci_regions|::find_address(&regions, 2, 0, 128, 0, 0);
     result.error == 37
 }
 machine test_regions_count_254() -> bool {
     let mut input: [u8; 4096];
-    let mut regions: [PciConfigRegion; 253];
-    regions[0] = PciConfigRegion { base_address: 2147483648, last_bus: 255 };
-    regions[1] = PciConfigRegion { base_address: 4294967296, first_bus: 128, last_bus: 255 };
-    let result: PciAddressResult = find_address(&regions, 254, 0, 128, 0, 0);
+    let mut regions: [|pci_regions|::PciConfigRegion; 253];
+    regions[0] = |pci_regions|::PciConfigRegion { base_address: 2147483648, last_bus: 255 };
+    regions[1] = |pci_regions|::PciConfigRegion { base_address: 4294967296, first_bus: 128, last_bus: 255 };
+    let result: |pci_regions|::PciAddressResult = |pci_regions|::find_address(&regions, 254, 0, 128, 0, 0);
     result.error == 1
 }
 machine test_regions_disjoint() -> bool {
     let mut input: [u8; 4096];
-    let mut regions: [PciConfigRegion; 253];
-    regions[0] = PciConfigRegion { base_address: 2147483648, last_bus: 127 };
-    regions[1] = PciConfigRegion { base_address: 4294967296, first_bus: 128, last_bus: 255 };
-    let result: PciAddressResult = find_address(&regions, 2, 0, 128, 0, 0);
+    let mut regions: [|pci_regions|::PciConfigRegion; 253];
+    regions[0] = |pci_regions|::PciConfigRegion { base_address: 2147483648, last_bus: 127 };
+    regions[1] = |pci_regions|::PciConfigRegion { base_address: 4294967296, first_bus: 128, last_bus: 255 };
+    let result: |pci_regions|::PciAddressResult = |pci_regions|::find_address(&regions, 2, 0, 128, 0, 0);
     result.error == 0 &&
     result.address == 4429185024 &&
     result.found
@@ -767,7 +736,7 @@ machine test_region_bytes() -> bool {
     input[53] = 18;
     input[54] = 128;
     input[55] = 255;
-    let result: PciRegionResult = pci_region(&input, 60, false, 0);
+    let result: |pci_regions|::PciRegionResult = |pci_regions|::pci_region(&input, 60, false, 0);
     result.error == 0 &&
     result.value.base_address == 2147483648 &&
     result.value.segment == 4660 &&
@@ -811,7 +780,7 @@ machine test_topology_header_0() -> bool {
     input[35] = 135;
     input[38] = 224;
     input[39] = 254;
-    let result: TopologyHeader = topology_header(&input, 44);
+    let result: |topology|::TopologyHeader = |topology|::topology_header(&input, 44);
     result.error == 0 &&
     result.initial_local_apic_address == 4276092928 &&
     result.revision == 6 &&
@@ -855,7 +824,7 @@ machine test_topology_header_1() -> bool {
     input[38] = 224;
     input[39] = 254;
     input[40] = 1;
-    let result: TopologyHeader = topology_header(&input, 44);
+    let result: |topology|::TopologyHeader = |topology|::topology_header(&input, 44);
     result.error == 0 &&
     result.initial_local_apic_address == 4276092928 &&
     result.revision == 6 &&
@@ -899,7 +868,7 @@ machine test_topology_header_2() -> bool {
     input[38] = 224;
     input[39] = 254;
     input[40] = 2;
-    let result: TopologyHeader = topology_header(&input, 44);
+    let result: |topology|::TopologyHeader = |topology|::topology_header(&input, 44);
     result.error == 0 &&
     result.initial_local_apic_address == 4276092928 &&
     result.revision == 6 &&
@@ -943,7 +912,7 @@ machine test_topology_header_3() -> bool {
     input[38] = 224;
     input[39] = 254;
     input[40] = 3;
-    let result: TopologyHeader = topology_header(&input, 44);
+    let result: |topology|::TopologyHeader = |topology|::topology_header(&input, 44);
     result.error == 0 &&
     result.initial_local_apic_address == 4276092928 &&
     result.revision == 6 &&
@@ -951,14 +920,14 @@ machine test_topology_header_3() -> bool {
 }
 machine test_empty_region_invalid_32_0() -> bool {
     let mut input: [u8; 4096];
-    let mut regions: [PciConfigRegion; 253];
-    let result: PciAddressResult = find_address(&regions, 0, 0, 0, 32, 0);
+    let mut regions: [|pci_regions|::PciConfigRegion; 253];
+    let result: |pci_regions|::PciAddressResult = |pci_regions|::find_address(&regions, 0, 0, 0, 32, 0);
     result.error == 34
 }
 machine test_empty_region_invalid_0_8() -> bool {
     let mut input: [u8; 4096];
-    let mut regions: [PciConfigRegion; 253];
-    let result: PciAddressResult = find_address(&regions, 0, 0, 0, 0, 8);
+    let mut regions: [|pci_regions|::PciConfigRegion; 253];
+    let result: |pci_regions|::PciAddressResult = |pci_regions|::find_address(&regions, 0, 0, 0, 0, 8);
     result.error == 35
 }
 data Main {}

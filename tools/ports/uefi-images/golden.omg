@@ -1,7 +1,6 @@
 // Complete fixed-image byte oracle; checks grouped to keep expression size bounded.
-module golden;
-use cathedral_uefi::table_images::BootServicesImage;
-machine chunk0(image: &BootServicesImage) -> bool {
+use {cathedral_uefi}/table_images.omg;
+machine chunk0(image: &|table_images|::BootServicesImage) -> bool {
     image.bytes[0] == 66 &&
     image.bytes[1] == 79 &&
     image.bytes[2] == 79 &&
@@ -19,7 +18,7 @@ machine chunk0(image: &BootServicesImage) -> bool {
     image.bytes[14] == 0 &&
     image.bytes[15] == 0
 }
-machine chunk16(image: &BootServicesImage) -> bool {
+machine chunk16(image: &|table_images|::BootServicesImage) -> bool {
     image.bytes[16] == 223 &&
     image.bytes[17] == 186 &&
     image.bytes[18] == 42 &&
@@ -37,7 +36,7 @@ machine chunk16(image: &BootServicesImage) -> bool {
     image.bytes[30] == 0 &&
     image.bytes[31] == 0
 }
-machine chunk32(image: &BootServicesImage) -> bool {
+machine chunk32(image: &|table_images|::BootServicesImage) -> bool {
     image.bytes[32] == 0 &&
     image.bytes[33] == 0 &&
     image.bytes[34] == 0 &&
@@ -55,7 +54,7 @@ machine chunk32(image: &BootServicesImage) -> bool {
     image.bytes[46] == 0 &&
     image.bytes[47] == 0
 }
-machine chunk48(image: &BootServicesImage) -> bool {
+machine chunk48(image: &|table_images|::BootServicesImage) -> bool {
     image.bytes[48] == 0 &&
     image.bytes[49] == 0 &&
     image.bytes[50] == 0 &&
@@ -73,7 +72,7 @@ machine chunk48(image: &BootServicesImage) -> bool {
     image.bytes[62] == 0 &&
     image.bytes[63] == 0
 }
-machine chunk64(image: &BootServicesImage) -> bool {
+machine chunk64(image: &|table_images|::BootServicesImage) -> bool {
     image.bytes[64] == 0 &&
     image.bytes[65] == 0 &&
     image.bytes[66] == 0 &&
@@ -91,7 +90,7 @@ machine chunk64(image: &BootServicesImage) -> bool {
     image.bytes[78] == 0 &&
     image.bytes[79] == 0
 }
-machine chunk80(image: &BootServicesImage) -> bool {
+machine chunk80(image: &|table_images|::BootServicesImage) -> bool {
     image.bytes[80] == 0 &&
     image.bytes[81] == 0 &&
     image.bytes[82] == 0 &&
@@ -109,7 +108,7 @@ machine chunk80(image: &BootServicesImage) -> bool {
     image.bytes[94] == 0 &&
     image.bytes[95] == 0
 }
-machine chunk96(image: &BootServicesImage) -> bool {
+machine chunk96(image: &|table_images|::BootServicesImage) -> bool {
     image.bytes[96] == 0 &&
     image.bytes[97] == 0 &&
     image.bytes[98] == 0 &&
@@ -127,7 +126,7 @@ machine chunk96(image: &BootServicesImage) -> bool {
     image.bytes[110] == 0 &&
     image.bytes[111] == 0
 }
-machine chunk112(image: &BootServicesImage) -> bool {
+machine chunk112(image: &|table_images|::BootServicesImage) -> bool {
     image.bytes[112] == 0 &&
     image.bytes[113] == 0 &&
     image.bytes[114] == 0 &&
@@ -145,7 +144,7 @@ machine chunk112(image: &BootServicesImage) -> bool {
     image.bytes[126] == 0 &&
     image.bytes[127] == 0
 }
-machine chunk128(image: &BootServicesImage) -> bool {
+machine chunk128(image: &|table_images|::BootServicesImage) -> bool {
     image.bytes[128] == 0 &&
     image.bytes[129] == 0 &&
     image.bytes[130] == 0 &&
@@ -163,7 +162,7 @@ machine chunk128(image: &BootServicesImage) -> bool {
     image.bytes[142] == 0 &&
     image.bytes[143] == 0
 }
-machine chunk144(image: &BootServicesImage) -> bool {
+machine chunk144(image: &|table_images|::BootServicesImage) -> bool {
     image.bytes[144] == 0 &&
     image.bytes[145] == 0 &&
     image.bytes[146] == 0 &&
@@ -181,7 +180,7 @@ machine chunk144(image: &BootServicesImage) -> bool {
     image.bytes[158] == 0 &&
     image.bytes[159] == 0
 }
-machine chunk160(image: &BootServicesImage) -> bool {
+machine chunk160(image: &|table_images|::BootServicesImage) -> bool {
     image.bytes[160] == 0 &&
     image.bytes[161] == 0 &&
     image.bytes[162] == 0 &&
@@ -199,7 +198,7 @@ machine chunk160(image: &BootServicesImage) -> bool {
     image.bytes[174] == 0 &&
     image.bytes[175] == 0
 }
-machine chunk176(image: &BootServicesImage) -> bool {
+machine chunk176(image: &|table_images|::BootServicesImage) -> bool {
     image.bytes[176] == 0 &&
     image.bytes[177] == 0 &&
     image.bytes[178] == 0 &&
@@ -217,7 +216,7 @@ machine chunk176(image: &BootServicesImage) -> bool {
     image.bytes[190] == 0 &&
     image.bytes[191] == 0
 }
-machine chunk192(image: &BootServicesImage) -> bool {
+machine chunk192(image: &|table_images|::BootServicesImage) -> bool {
     image.bytes[192] == 0 &&
     image.bytes[193] == 0 &&
     image.bytes[194] == 0 &&
@@ -235,7 +234,7 @@ machine chunk192(image: &BootServicesImage) -> bool {
     image.bytes[206] == 0 &&
     image.bytes[207] == 0
 }
-machine chunk208(image: &BootServicesImage) -> bool {
+machine chunk208(image: &|table_images|::BootServicesImage) -> bool {
     image.bytes[208] == 0 &&
     image.bytes[209] == 0 &&
     image.bytes[210] == 0 &&
@@ -253,7 +252,7 @@ machine chunk208(image: &BootServicesImage) -> bool {
     image.bytes[222] == 0 &&
     image.bytes[223] == 0
 }
-machine chunk224(image: &BootServicesImage) -> bool {
+machine chunk224(image: &|table_images|::BootServicesImage) -> bool {
     image.bytes[224] == 0 &&
     image.bytes[225] == 0 &&
     image.bytes[226] == 0 &&
@@ -271,7 +270,7 @@ machine chunk224(image: &BootServicesImage) -> bool {
     image.bytes[238] == 0 &&
     image.bytes[239] == 0
 }
-machine chunk240(image: &BootServicesImage) -> bool {
+machine chunk240(image: &|table_images|::BootServicesImage) -> bool {
     image.bytes[240] == 2 &&
     image.bytes[241] == 0 &&
     image.bytes[242] == 254 &&
@@ -289,7 +288,7 @@ machine chunk240(image: &BootServicesImage) -> bool {
     image.bytes[254] == 0 &&
     image.bytes[255] == 0
 }
-machine chunk256(image: &BootServicesImage) -> bool {
+machine chunk256(image: &|table_images|::BootServicesImage) -> bool {
     image.bytes[256] == 0 &&
     image.bytes[257] == 0 &&
     image.bytes[258] == 0 &&
@@ -307,7 +306,7 @@ machine chunk256(image: &BootServicesImage) -> bool {
     image.bytes[270] == 0 &&
     image.bytes[271] == 0
 }
-machine chunk272(image: &BootServicesImage) -> bool {
+machine chunk272(image: &|table_images|::BootServicesImage) -> bool {
     image.bytes[272] == 0 &&
     image.bytes[273] == 0 &&
     image.bytes[274] == 0 &&
@@ -325,7 +324,7 @@ machine chunk272(image: &BootServicesImage) -> bool {
     image.bytes[286] == 0 &&
     image.bytes[287] == 0
 }
-machine chunk288(image: &BootServicesImage) -> bool {
+machine chunk288(image: &|table_images|::BootServicesImage) -> bool {
     image.bytes[288] == 0 &&
     image.bytes[289] == 0 &&
     image.bytes[290] == 0 &&
@@ -343,7 +342,7 @@ machine chunk288(image: &BootServicesImage) -> bool {
     image.bytes[302] == 0 &&
     image.bytes[303] == 0
 }
-machine chunk304(image: &BootServicesImage) -> bool {
+machine chunk304(image: &|table_images|::BootServicesImage) -> bool {
     image.bytes[304] == 0 &&
     image.bytes[305] == 0 &&
     image.bytes[306] == 0 &&
@@ -361,7 +360,7 @@ machine chunk304(image: &BootServicesImage) -> bool {
     image.bytes[318] == 0 &&
     image.bytes[319] == 0
 }
-machine chunk320(image: &BootServicesImage) -> bool {
+machine chunk320(image: &|table_images|::BootServicesImage) -> bool {
     image.bytes[320] == 0 &&
     image.bytes[321] == 0 &&
     image.bytes[322] == 0 &&
@@ -379,7 +378,7 @@ machine chunk320(image: &BootServicesImage) -> bool {
     image.bytes[334] == 0 &&
     image.bytes[335] == 0
 }
-machine chunk336(image: &BootServicesImage) -> bool {
+machine chunk336(image: &|table_images|::BootServicesImage) -> bool {
     image.bytes[336] == 0 &&
     image.bytes[337] == 0 &&
     image.bytes[338] == 0 &&
@@ -397,7 +396,7 @@ machine chunk336(image: &BootServicesImage) -> bool {
     image.bytes[350] == 0 &&
     image.bytes[351] == 0
 }
-machine chunk352(image: &BootServicesImage) -> bool {
+machine chunk352(image: &|table_images|::BootServicesImage) -> bool {
     image.bytes[352] == 0 &&
     image.bytes[353] == 0 &&
     image.bytes[354] == 0 &&
@@ -415,7 +414,7 @@ machine chunk352(image: &BootServicesImage) -> bool {
     image.bytes[366] == 0 &&
     image.bytes[367] == 0
 }
-machine chunk368(image: &BootServicesImage) -> bool {
+machine chunk368(image: &|table_images|::BootServicesImage) -> bool {
     image.bytes[368] == 0 &&
     image.bytes[369] == 0 &&
     image.bytes[370] == 0 &&
@@ -425,7 +424,7 @@ machine chunk368(image: &BootServicesImage) -> bool {
     image.bytes[374] == 0 &&
     image.bytes[375] == 0
 }
-pub machine matches(image: &BootServicesImage) -> bool {
+pub machine matches(image: &|table_images|::BootServicesImage) -> bool {
     let part0: bool = chunk0(image);
     let part16: bool = chunk16(image);
     let part32: bool = chunk32(image);

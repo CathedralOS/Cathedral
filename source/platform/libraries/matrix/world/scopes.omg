@@ -1,4 +1,3 @@
-module scopes;
 // Subtree delegation of storage. The owner selects a source and a scope
 // object for a child's storage connection; the child sees only a local
 // binding revision. A whole source belongs to one child at a time; a subtree
@@ -10,10 +9,10 @@ module scopes;
 // remembers the successful proof: object parents never move and numbers are
 // never reused, so the proof stays true within the binding that checked it.
 // Wire owner: source-rs/platform/libraries/matrix/world/storage/.
-use protocol::main;
-use protocol::matrix;
-use protocol::storage::scope;
-use protocol::storage::operations;
+use {protocol}/main.omg;
+use {protocol}/matrix.omg;
+use {protocol}/storage/scope.omg;
+use {protocol}/storage/operations.omg;
 
 public const PROOFS: u64 = 4u64;
 public data Binding [copy] {
@@ -56,14 +55,14 @@ public data Prepared {
 public machine grant(scopes: &mut Scopes, slot: u64, incarnation: u64, source: u64, subtree: u64, available: u64) -> u64 {
     transition slot < 5u64 && incarnation != 0u64 && source < available {
         true -> free(scopes, slot, incarnation, source, subtree)
-        _ -> (DENIED)
+        _ -> (|main|::DENIED)
     }
     machine free(scopes: &mut Scopes, slot: u64, incarnation: u64, source: u64, subtree: u64) -> u64 requires slot < 5u64 {
         let held: bool = whole(scopes, source, 0u64);
         let next: u64 = ((scopes.revisions[slot] as u64 in Wrapping) + 1u64) as u64;
         transition {
-            scopes.bindings[slot].live || (subtree == 0u64 && held) -> (BUSY)
-            next == 0u64 || next > scope::MAX_REVISION -> (NO_MEMORY)
+            scopes.bindings[slot].live || (subtree == 0u64 && held) -> (|main|::BUSY)
+            next == 0u64 || next > |scope|::MAX_REVISION -> (|main|::NO_MEMORY)
             _ -> bound(scopes, slot, incarnation, source, subtree, next)
         }
     }
@@ -104,7 +103,7 @@ public machine binding(scopes: &Scopes, slot: u64, incarnation: u64) -> Bound {
         }
     }
 }
-machine refused() -> Bound { Bound { status: DENIED, source: 0u64, scope: 0u64 } }
+machine refused() -> Bound { Bound { status: |main|::DENIED, source: 0u64, scope: 0u64 } }
 // The binding's revision, or zero when the connection holds none.
 public machine revision_of(scopes: &Scopes, slot: u64, incarnation: u64) -> u64 {
     let bound: Bound = binding(scopes, slot, incarnation);
@@ -129,27 +128,27 @@ public machine authorize(scopes: &Scopes, slot: u64, incarnation: u64, revision:
 // child was granted, or the matrix's own realm under a scope of zero.
 public machine prepare(scopes: &Scopes, slot: u64, incarnation: u64, words: [u64; 8], realm: u64) -> Prepared {
     let bound: Bound = binding(scopes, slot, incarnation);
-    let info: bool = words[0] == STORAGE_INFO && words[1] == 0u64 && words[2] == 0u64 && words[3] == 0u64
+    let info: bool = words[0] == |matrix|::STORAGE_INFO && words[1] == 0u64 && words[2] == 0u64 && words[3] == 0u64
         && words[4] == 0u64 && words[5] == 0u64 && words[6] == 0u64;
     transition {
-        bound.status != 0u64 -> (Prepared::Refused { code: DENIED })
+        bound.status != 0u64 -> (Prepared::Refused { code: |main|::DENIED })
         info -> (Prepared::Reply { words: info_reply(scopes, slot, incarnation, bound.scope, realm) })
         _ -> authorized(scopes, slot, incarnation, words, bound)
     }
     machine authorized(scopes: &Scopes, slot: u64, incarnation: u64, words: [u64; 8], bound: Bound) -> Prepared {
         let current: u64 = revision_of(scopes, slot, incarnation);
-        let expected: u64 = scope::revision(words[0]);
-        let operation: u64 = scope::operation(words[0]);
-        let lowest: u64 = ((STORAGE_BASE as u64 in Wrapping) + (operations::HEAD as u64 in Wrapping)) as u64;
-        let highest: u64 = ((STORAGE_BASE as u64 in Wrapping) + (operations::LAST as u64 in Wrapping)) as u64;
+        let expected: u64 = |scope|::revision(words[0]);
+        let operation: u64 = |scope|::operation(words[0]);
+        let lowest: u64 = ((|matrix|::STORAGE_BASE as u64 in Wrapping) + (|operations|::HEAD as u64 in Wrapping)) as u64;
+        let highest: u64 = ((|matrix|::STORAGE_BASE as u64 in Wrapping) + (|operations|::LAST as u64 in Wrapping)) as u64;
         transition current == expected && operation >= lowest && operation <= highest {
             true -> stamping(scopes, slot, incarnation, words, bound)
-            _ -> (Prepared::Refused { code: DENIED })
+            _ -> (Prepared::Refused { code: |main|::DENIED })
         }
     }
     machine stamping(scopes: &Scopes, slot: u64, incarnation: u64, words: [u64; 8], bound: Bound) -> Prepared {
         let mut stamped: [u64; 8] = words;
-        let fits: bool = scope::stamp(&mut stamped, bound.scope);
+        let fits: bool = |scope|::stamp(&mut stamped, bound.scope);
         transition fits && slot < 5u64 {
             true -> (Prepared::Forward { source: bound.source, words: stamped })
             _ -> folding(scopes, slot, incarnation, words, bound)
@@ -161,7 +160,7 @@ public machine prepare(scopes: &Scopes, slot: u64, incarnation: u64, words: [u64
     machine folding(scopes: &Scopes, slot: u64, incarnation: u64, words: [u64; 8], bound: Bound) -> Prepared {
         transition slot < 5u64 {
             true -> folded(scopes, slot, incarnation, words, bound)
-            _ -> (Prepared::Refused { code: DENIED })
+            _ -> (Prepared::Refused { code: |main|::DENIED })
         }
     }
     machine folded(scopes: &Scopes, slot: u64, incarnation: u64, words: [u64; 8], bound: Bound) -> Prepared requires slot < 5u64 {
@@ -191,7 +190,7 @@ machine info_reply(scopes: &Scopes, slot: u64, incarnation: u64, scope: u64, rea
 // HEAD of the innermost scope, restricted by the outer one and this owner's.
 machine check_of(words: [u64; 8], scope: u64) -> [u64; 8] {
     let mut check: [u64; 8];
-    let head: u64 = ((STORAGE_BASE as u64 in Wrapping) + (operations::HEAD as u64 in Wrapping)) as u64;
+    let head: u64 = ((|matrix|::STORAGE_BASE as u64 in Wrapping) + (|operations|::HEAD as u64 in Wrapping)) as u64;
     check[0] = (words[0] & ~0xffffu64) | head;
     check[1] = words[5];
     check[5] = words[6];
@@ -218,7 +217,7 @@ public machine confirm(scopes: &mut Scopes, proof: Proof) -> u64 {
     let bound: Bound = authorize(scopes, proof.slot, proof.incarnation, proof.revision);
     transition bound.status == 0u64 && proof.slot < 5u64 {
         true -> remembered(scopes, proof.slot, proof)
-        _ -> (DENIED)
+        _ -> (|main|::DENIED)
     }
     machine remembered(scopes: &mut Scopes, slot: u64, proof: Proof) -> u64 requires slot < 5u64 {
         let known: bool = proven(&scopes.bindings[slot], proof.first, proof.second, 0u64);

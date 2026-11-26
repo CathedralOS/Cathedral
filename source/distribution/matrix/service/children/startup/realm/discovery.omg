@@ -1,72 +1,65 @@
-module children::startup::realm::discovery;
-
 // A scoped Matrix configuration wins; Login plus Users selects a picker.
 // Missing realm authority leaves setup to the owner. An unplaced view retries later.
-use children::startup::realm::operations::Setup;
-use children::startup::realm::operations::Command;
-use children::startup::realm::operations::Outcome;
-use children::startup::realm::operations::Completion;
-use children::startup::realm::operations::Context;
-use children::startup::realm::operations::Entries;
+use children/startup/realm/operations.omg;
 
-public machine begin(context: &Context) -> Command {
+public machine begin(context: &|operations|::Context) -> |operations|::Command {
     transition context.discover {
-        true -> (Command::Refresh)
-        _ -> (Command::RecoverStartup)
+        true -> (|operations|::Command::Refresh)
+        _ -> (|operations|::Command::RecoverStartup)
     }
 }
 
-public machine completed(setup: &mut Setup, completion: Completion) -> Command {
-    transition completion.command == Command::InspectRealm {
+public machine completed(setup: &mut |operations|::Setup, completion: |operations|::Completion) -> |operations|::Command {
+    transition completion.command == |operations|::Command::InspectRealm {
         true -> inspected(setup, completion)
         _ -> required(setup, completion)
     }
-    machine inspected(setup: &mut Setup, completion: Completion) -> Command {
+    machine inspected(setup: &mut |operations|::Setup, completion: |operations|::Completion) -> |operations|::Command {
         transition completion.outcome {
-            Outcome::Success -> shape(completion.entries)
-            Outcome::Denied -> (Command::MarkHosted)
-            Outcome::PeerClosed -> (Command::MarkHosted)
+            |operations|::Outcome::Success -> shape(completion.entries)
+            |operations|::Outcome::Denied -> (|operations|::Command::MarkHosted)
+            |operations|::Outcome::PeerClosed -> (|operations|::Command::MarkHosted)
             _ -> failed(setup, completion.outcome)
         }
     }
-    machine required(setup: &mut Setup, completion: Completion) -> Command {
+    machine required(setup: &mut |operations|::Setup, completion: |operations|::Completion) -> |operations|::Command {
         transition completion.outcome {
-            Outcome::Success -> succeeded(completion)
+            |operations|::Outcome::Success -> succeeded(completion)
             _ -> failed(setup, completion.outcome)
         }
     }
 }
 
-machine shape(entries: Entries) -> Command {
+machine shape(entries: |operations|::Entries) -> |operations|::Command {
     transition entries.matrix {
-        true -> (Command::ConfigureRealm)
+        true -> (|operations|::Command::ConfigureRealm)
         _ -> picker(entries)
     }
-    machine picker(entries: Entries) -> Command {
+    machine picker(entries: |operations|::Entries) -> |operations|::Command {
         transition entries.login && entries.users {
-            true -> (Command::StartPicker)
-            _ -> (Command::MarkHosted)
+            true -> (|operations|::Command::StartPicker)
+            _ -> (|operations|::Command::MarkHosted)
         }
     }
 }
 
-machine failed(setup: &mut Setup, outcome: Outcome) -> Command {
+machine failed(setup: &mut |operations|::Setup, outcome: |operations|::Outcome) -> |operations|::Command {
     setup.outcome = outcome;
-    Command::Finish
+    |operations|::Command::Finish
 }
 
-machine succeeded(completion: Completion) -> Command {
+machine succeeded(completion: |operations|::Completion) -> |operations|::Command {
     transition completion.command {
-        Command::Refresh -> placed(completion.placed)
-        Command::ConfigureRealm -> (Command::MarkHosted)
-        Command::StartPicker -> (Command::MarkHosted)
-        Command::MarkHosted -> (Command::RecoverStartup)
-        _ -> (Command::Finish)
+        |operations|::Command::Refresh -> placed(completion.placed)
+        |operations|::Command::ConfigureRealm -> (|operations|::Command::MarkHosted)
+        |operations|::Command::StartPicker -> (|operations|::Command::MarkHosted)
+        |operations|::Command::MarkHosted -> (|operations|::Command::RecoverStartup)
+        _ -> (|operations|::Command::Finish)
     }
-    machine placed(available: bool) -> Command {
+    machine placed(available: bool) -> |operations|::Command {
         transition available {
-            true -> (Command::InspectRealm)
-            _ -> (Command::Finish)
+            true -> (|operations|::Command::InspectRealm)
+            _ -> (|operations|::Command::Finish)
         }
     }
 }

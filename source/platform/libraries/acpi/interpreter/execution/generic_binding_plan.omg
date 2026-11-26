@@ -1,24 +1,22 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-module generic_binding_plan;
-use execution_model::Binding;
-use execution_model::Operand;
-use generic_target_model::TargetAction;
+use execution_model.omg;
+use generic_target_model.omg;
 // Prospective metadata only: this does not validate the source/destination or
 // allocate an object. The caller supplies normalized_operand's output from the
 // same store and IntegerSize, and publishes this binding only after the existing
 // mutation kernel succeeds. Failed writes never publish predicted metadata.
-pub machine prospective_binding(object_count:u64,action:TargetAction,normalized:Operand)->Binding {
+pub machine prospective_binding(object_count:u64,action:|generic_target_model|::TargetAction,normalized:|execution_model|::Operand)->|execution_model|::Binding {
  transition action {
-  TargetAction::NoWrite -> (Binding::Uninitialized)
-  TargetAction::Failure {outcome} -> (Binding::Uninitialized)
-  TargetAction::CopyTo {object_id,result_binding} -> (result_binding)
-  TargetAction::StoreNamed {object_id} -> (Binding::Uninitialized)
-  TargetAction::Replace {binding} -> replacement(object_count,binding,normalized)
+  |generic_target_model|::TargetAction::NoWrite -> (|execution_model|::Binding::Uninitialized)
+  |generic_target_model|::TargetAction::Failure {outcome} -> (|execution_model|::Binding::Uninitialized)
+  |generic_target_model|::TargetAction::CopyTo {object_id,result_binding} -> (result_binding)
+  |generic_target_model|::TargetAction::StoreNamed {object_id} -> (|execution_model|::Binding::Uninitialized)
+  |generic_target_model|::TargetAction::Replace {binding} -> replacement(object_count,binding,normalized)
  }
- state replacement(count:u64,binding:Binding,normalized:Operand)->Binding {
-  transition binding {Binding::Cell {cell_id} -> (binding) _ -> source(count,normalized)}
+ state replacement(count:u64,binding:|execution_model|::Binding,normalized:|execution_model|::Operand)->|execution_model|::Binding {
+  transition binding {|execution_model|::Binding::Cell {cell_id} -> (binding) _ -> source(count,normalized)}
  }
- state source(count:u64,normalized:Operand)->Binding {
-  transition normalized {Operand::Integer {number} -> (Binding::Integer {number:number}) _ -> (Binding::Cell {cell_id:count})}
+ state source(count:u64,normalized:|execution_model|::Operand)->|execution_model|::Binding {
+  transition normalized {|execution_model|::Operand::Integer {number} -> (|execution_model|::Binding::Integer {number:number}) _ -> (|execution_model|::Binding::Cell {cell_id:count})}
  }
 }

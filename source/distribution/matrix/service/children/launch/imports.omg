@@ -1,31 +1,29 @@
-module children::launch::imports;
-
 // Stock admission requires interaction and never supplies capture. A brokered
 // program may additionally receive input production when its owner offers it.
 // Common record validation and version matching belong to platform contracts.
-use services::main;
-use services::types;
+use {services}/main.omg;
+use {services}/types.omg;
 
 public const DEFAULT_IMPORT_COUNT: u64 = 2u64;
 
-public machine default_imports(entries: &mut [Import; 4]) {
-    entries[0] = Import {
-        contract: INTERACTION, minimum: 1u64, maximum: 1u64, required: true
+public machine default_imports(entries: &mut [|types|::Import; 4]) {
+    entries[0] = |types|::Import {
+        contract: |types|::INTERACTION, minimum: 1u64, maximum: 1u64, required: true
     };
-    entries[1] = Import {
-        contract: STORAGE, minimum: 1u64, maximum: 1u64, required: true
+    entries[1] = |types|::Import {
+        contract: |types|::STORAGE, minimum: 1u64, maximum: 1u64, required: true
     };
 }
 
-public machine select(entries: &[Import; 4], count: u64, brokered: bool, offered: u64) -> Binding {
+public machine select(entries: &[|types|::Import; 4], count: u64, brokered: bool, offered: u64) -> |types|::Binding {
     transition brokered {
-        true -> available(entries, count, offered & (INTERACTION | STORAGE | INPUT_PRODUCER))
-        _ -> available(entries, count, offered & (INTERACTION | STORAGE))
+        true -> available(entries, count, offered & (|types|::INTERACTION | |types|::STORAGE | |types|::INPUT_PRODUCER))
+        _ -> available(entries, count, offered & (|types|::INTERACTION | |types|::STORAGE))
     }
-    machine available(entries: &[Import; 4], count: u64, offered: u64) -> Binding {
-        let result: Binding = bind(entries, count, offered);
-        transition result.status == 0u64 && (result.mask & INTERACTION) == 0u64 {
-            true -> (Binding { status: MISSING, mask: 0u64, contract: INTERACTION })
+    machine available(entries: &[|types|::Import; 4], count: u64, offered: u64) -> |types|::Binding {
+        let result: |types|::Binding = |main|::bind(entries, count, offered);
+        transition result.status == 0u64 && (result.mask & |types|::INTERACTION) == 0u64 {
+            true -> (|types|::Binding { status: |types|::MISSING, mask: 0u64, contract: |types|::INTERACTION })
             _ -> (result)
         }
     }

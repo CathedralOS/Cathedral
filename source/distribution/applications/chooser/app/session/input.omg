@@ -1,115 +1,107 @@
-module session::input;
-use protocol::main;
-use decisions::outcomes;
+use {protocol}/main.omg;
+use {decisions}/outcomes.omg;
 // Keep pointer edges per scoped channel; the pure policy handles tile selection.
-use operations::Command;
-use operations::Exchange;
-use decisions::interaction::model::Input;
-use decisions::interaction::model::Context;
-use decisions::interaction::model::Selection;
-use decisions::interaction::model::Task;
-use decisions::interaction::model::TaskHit;
-use decisions::interaction::interaction;
-use decisions::interaction::tasks;
-use decisions::layout;
-use state::State;
-use state::Phase;
-use transport::interaction;
-use session::session::session;
-use session::session::after_input;
-use session::actions::act;
-use settings::settings::settings_input;
-use management::management_input;
-public machine input(s: &mut State, p: &mut Exchange) -> Command {
+use operations.omg;
+use {decisions}/interaction/model.omg;
+use {decisions}/interaction/interaction.omg;
+use {decisions}/interaction/tasks.omg;
+use {decisions}/layout.omg;
+use state.omg as local_state;
+use transport.omg;
+use session/session.omg;
+use session/actions.omg;
+use settings/settings.omg;
+use management.omg;
+public machine input(s: &mut |local_state|::State, p: &mut |operations|::Exchange) -> |operations|::Command {
     s.clicked = false;
     transition s.snapshot[5] & 255u64 {
-        POINTER -> pointer(s, p)
-        CANCEL -> clear(s, p)
-        RETIRED -> clear(s, p)
+        |main|::POINTER -> pointer(s, p)
+        |main|::CANCEL -> clear(s, p)
+        |main|::RETIRED -> clear(s, p)
         _ -> route(s, p)
     }
-    machine pointer(s: &mut State, p: &mut Exchange) -> Command {
+    machine pointer(s: &mut |local_state|::State, p: &mut |operations|::Exchange) -> |operations|::Command {
         let name: u64 = s.snapshot[5] >> 32u64;
         let slot: u64 = channel(s, name);
         transition name != 0u64 { true -> existing(s, p, name, slot) _ -> route(s, p) }
     }
-    machine existing(s: &mut State, p: &mut Exchange, name: u64, slot: u64) -> Command {
+    machine existing(s: &mut |local_state|::State, p: &mut |operations|::Exchange, name: u64, slot: u64) -> |operations|::Command {
         let empty: u64 = channel(s, 0u64);
         transition slot < 4u64 { true -> edge(s, p, name, slot) _ -> available(s, p, name, empty) }
     }
-    machine available(s: &mut State, p: &mut Exchange, name: u64, slot: u64) -> Command { transition slot < 4u64 { true -> edge(s, p, name, slot) _ -> route(s, p) } }
-    machine edge(s: &mut State, p: &mut Exchange, name: u64, slot: u64) -> Command requires slot < 4u64 {
+    machine available(s: &mut |local_state|::State, p: &mut |operations|::Exchange, name: u64, slot: u64) -> |operations|::Command { transition slot < 4u64 { true -> edge(s, p, name, slot) _ -> route(s, p) } }
+    machine edge(s: &mut |local_state|::State, p: &mut |operations|::Exchange, name: u64, slot: u64) -> |operations|::Command requires slot < 4u64 {
         let held: u64 = (s.snapshot[5] >> 8u64) & 7u64;
         s.clicked = held & 1u64 != 0u64 && s.buttons[slot] & 1u64 == 0u64;
         s.channels[slot] = name; s.buttons[slot] = held; transition { _ -> route(s, p) }
     }
-    machine clear(s: &mut State, p: &mut Exchange) -> Command { let slot: u64 = channel(s, s.snapshot[5] >> 32u64); transition slot < 4u64 { true -> reset(s, p, slot) _ -> route(s, p) } }
-    machine reset(s: &mut State, p: &mut Exchange, slot: u64) -> Command requires slot < 4u64 { s.channels[slot] = 0u64; s.buttons[slot] = 0u64; transition { _ -> route(s, p) } }
-    machine route(s: &mut State, p: &mut Exchange) -> Command {
-        transition s.confirming != 0u64 { true -> management_input(s, p) _ -> editor(s, p) }
+    machine clear(s: &mut |local_state|::State, p: &mut |operations|::Exchange) -> |operations|::Command { let slot: u64 = channel(s, s.snapshot[5] >> 32u64); transition slot < 4u64 { true -> reset(s, p, slot) _ -> route(s, p) } }
+    machine reset(s: &mut |local_state|::State, p: &mut |operations|::Exchange, slot: u64) -> |operations|::Command requires slot < 4u64 { s.channels[slot] = 0u64; s.buttons[slot] = 0u64; transition { _ -> route(s, p) } }
+    machine route(s: &mut |local_state|::State, p: &mut |operations|::Exchange) -> |operations|::Command {
+        transition s.confirming != 0u64 { true -> |management|::management_input(s, p) _ -> editor(s, p) }
     }
-    machine editor(s: &mut State, p: &mut Exchange) -> Command { transition s.editing { true -> settings_input(s, p) _ -> tasks(s, p) } }
-    machine tasks(s: &mut State, p: &mut Exchange) -> Command {
+    machine editor(s: &mut |local_state|::State, p: &mut |operations|::Exchange) -> |operations|::Command { transition s.editing { true -> |settings|::settings_input(s, p) _ -> tasks(s, p) } }
+    machine tasks(s: &mut |local_state|::State, p: &mut |operations|::Exchange) -> |operations|::Command {
         transition s.picker {
             true -> selection(s, p)
             _ -> hit_task(s, p)
         }
     }
-    machine hit_task(s: &mut State, p: &mut Exchange) -> Command {
-        let result: TaskHit = task_hit(s);
+    machine hit_task(s: &mut |local_state|::State, p: &mut |operations|::Exchange) -> |operations|::Command {
+        let result: |model|::TaskHit = task_hit(s);
         transition result.hit {
             true -> task(s, p, result)
             _ -> selection(s, p)
         }
     }
-    machine task(s: &mut State, p: &mut Exchange, result: TaskHit) -> Command {
+    machine task(s: &mut |local_state|::State, p: &mut |operations|::Exchange, result: |model|::TaskHit) -> |operations|::Command {
         s.dirty = true;
         s.force_refresh = true;
-        s.notice = decisions::outcomes::Notice::None;
+        s.notice = |outcomes|::Notice::None;
         transition result.ticket != 0u64 {
             true -> select_task(s, p, result)
-            _ -> after_input(s, p)
+            _ -> |session|::after_input(s, p)
         }
     }
-    machine select_task(s: &mut State, p: &mut Exchange, result: TaskHit) -> Command {
+    machine select_task(s: &mut |local_state|::State, p: &mut |operations|::Exchange, result: |model|::TaskHit) -> |operations|::Command {
         s.close_selected = result.close;
-        interaction(s, p, Phase::Selected, 24u64, result.ticket, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64)
+        |transport|::interaction(s, p, |local_state|::Phase::Selected, 24u64, result.ticket, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64)
     }
-    machine selection(s: &mut State, p: &mut Exchange) -> Command {
-        let context: Context = Context {
+    machine selection(s: &mut |local_state|::State, p: &mut |operations|::Exchange) -> |operations|::Command {
+        let context: |model|::Context = |model|::Context {
             picker: s.picker, count: s.entries.count, width: s.width, height: s.height,
             selected: s.selected, managed: s.managed != 0u64, retry: s.saves == 1u64
         };
-        let result: Selection = decisions::interaction::interaction::selection(&context, input_event(s));
+        let result: |model|::Selection = |interaction|::selection(&context, input_event(s));
         s.selected = result.selected;
         s.dirty = s.dirty || result.changed;
         transition result.activate {
-            true -> act(s, p)
-            _ -> after_input(s, p)
+            true -> |actions|::act(s, p)
+            _ -> |session|::after_input(s, p)
         }
     }
 }
 
-machine task_hit(s: &State) -> TaskHit {
-    let mut tasks: [Task; 3];
-    tasks[0] = Task { available: s.tasks[0][0] == 0u64, ticket: s.tasks[0][1] };
-    tasks[1] = Task { available: s.tasks[1][0] == 0u64, ticket: s.tasks[1][1] };
-    tasks[2] = Task { available: s.tasks[2][0] == 0u64, ticket: s.tasks[2][1] };
-    let result: TaskHit = decisions::interaction::tasks::task_click(decisions::layout::tasks_left(s.entries.count), s.height, input_event(s), &tasks);
+machine task_hit(s: &|local_state|::State) -> |model|::TaskHit {
+    let mut tasks: [|model|::Task; 3];
+    tasks[0] = |model|::Task { available: s.tasks[0][0] == 0u64, ticket: s.tasks[0][1] };
+    tasks[1] = |model|::Task { available: s.tasks[1][0] == 0u64, ticket: s.tasks[1][1] };
+    tasks[2] = |model|::Task { available: s.tasks[2][0] == 0u64, ticket: s.tasks[2][1] };
+    let result: |model|::TaskHit = |tasks|::task_click(|layout|::tasks_left(s.entries.count), s.height, input_event(s), &tasks);
     result
 }
 
 // Decode actual incoming Matrix wire fields once, at the app's input boundary.
-machine input_event(s: &State) -> Input {
+machine input_event(s: &|local_state|::State) -> |model|::Input {
     transition s.snapshot[5] & 255u64 {
-        POINTER -> (Input::Pointer { x: s.snapshot[6], y: s.snapshot[7], clicked: s.clicked })
-        KEY -> (Input::Key { code: s.snapshot[6], pressed: s.snapshot[7] == PRESS })
-        _ -> (Input::None)
+        |main|::POINTER -> (|model|::Input::Pointer { x: s.snapshot[6], y: s.snapshot[7], clicked: s.clicked })
+        |main|::KEY -> (|model|::Input::Key { code: s.snapshot[6], pressed: s.snapshot[7] == |main|::PRESS })
+        _ -> (|model|::Input::None)
     }
 }
 
-machine channel(s: &State, name: u64) -> u64 {
+machine channel(s: &|local_state|::State, name: u64) -> u64 {
     transition { _ -> scan(s, name, 0u64) }
-    machine scan(s: &State, name: u64, i: u64) -> u64 { transition i < 4u64 { true -> inspect(s, name, i) _ -> (4u64) } }
-    machine inspect(s: &State, name: u64, i: u64) -> u64 requires i < 4u64 { transition s.channels[i] == name { true -> (i) _ -> scan(s, name, i + 1u64) } }
+    machine scan(s: &|local_state|::State, name: u64, i: u64) -> u64 { transition i < 4u64 { true -> inspect(s, name, i) _ -> (4u64) } }
+    machine inspect(s: &|local_state|::State, name: u64, i: u64) -> u64 requires i < 4u64 { transition s.channels[i] == name { true -> (i) _ -> scan(s, name, i + 1u64) } }
 }

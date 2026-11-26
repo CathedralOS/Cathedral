@@ -1,6 +1,9 @@
+use main.omg;
+
+use {policy}/main.omg as policy_main;
 machine build(builder: &mut Build) {
     Build::application(builder, "cathedral_chooser_native");
     Build::depend_as(builder, "policy", Source::Path { location: "../policy" });
-    Build::select_provider<policy::main::Chooser, policy::main::ChooserProvider>(builder, linux_x86_64, CompositionMode::Independent);
-    Build::bind(builder, linux_x86_64::ProgramEntry, main);
+    Build::select_provider<|policy_main|::Chooser, |policy_main|::ChooserProvider>(builder, linux_x86_64, CompositionMode::Independent);
+    Build::bind(builder, linux_x86_64::ProgramEntry, |main|::main);
 }

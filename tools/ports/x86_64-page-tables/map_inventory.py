@@ -26,7 +26,7 @@ for path,file in doc['files'].items():
   else:
    row.update(disposition='pending',reason='Mapped/recursive hierarchy mutation, ownership adapters and related interface/error/flush/cleanup surfaces remain separate engineering or later authority design; this slice makes no completion/blocker claim.');row.pop('targets',None);continue
   row.update(disposition='translated',reason=reason,targets=[dict(path=target,anchor=anchor)])
- file.update(disposition='pending' if any(r['disposition']=='pending' for r in file['symbols'].values()) else 'translated',reason='Bounded numeric source overlay; remaining mapper interfaces and operations explicitly pending.',targets=[dict(path=table if path.endswith('/page_table.rs') else translation,anchor='module page_tables;' if path.endswith('/page_table.rs') else 'module translation;')])
+ file.update(disposition='pending' if any(r['disposition']=='pending' for r in file['symbols'].values()) else 'translated',reason='Bounded numeric source overlay; remaining mapper interfaces and operations explicitly pending.',targets=[dict(path=table if path.endswith('/page_table.rs') else translation,anchor='pub const ENTRY_COUNT' if path.endswith('/page_table.rs') else 'pub data Translation')])
 text=json.dumps(doc,indent=2)+'\n'
 if '--check' in sys.argv:assert p.read_text()==text,'stale reviewed table mapping'
 else:p.write_text(text)

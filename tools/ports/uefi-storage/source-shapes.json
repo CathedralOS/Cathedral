@@ -158,13 +158,13 @@
           "event",
           "event",
           "Event",
-          "Event"
+          "|scalars|::Event"
         ],
         [
           "status",
           "status",
           "Status",
-          "Status"
+          "|status|::Status"
         ],
         [
           "buffer_size",
@@ -212,19 +212,19 @@
           "create_time",
           "create_time",
           "Time",
-          "Time"
+          "|time|::Time"
         ],
         [
           "last_access_time",
           "last_access_time",
           "Time",
-          "Time"
+          "|time|::Time"
         ],
         [
           "modification_time",
           "modification_time",
           "Time",
-          "Time"
+          "|time|::Time"
         ],
         [
           "attribute",
@@ -236,7 +236,7 @@
           "file_name",
           "file_name",
           "[Char16; 0]",
-          "[Char16; 0]"
+          "[|scalars|::Char16; 0]"
         ]
       ],
       "packed": false,
@@ -264,7 +264,7 @@
           "read_only",
           "read_only",
           "Boolean",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "volume_size",
@@ -288,7 +288,7 @@
           "volume_label",
           "volume_label",
           "[Char16; 0]",
-          "[Char16; 0]"
+          "[|scalars|::Char16; 0]"
         ]
       ],
       "packed": false,
@@ -308,7 +308,7 @@
           "volume_label",
           "volume_label",
           "[Char16; 0]",
-          "[Char16; 0]"
+          "[|scalars|::Char16; 0]"
         ]
       ],
       "packed": false,
@@ -329,31 +329,31 @@
           "removable_media",
           "removable_media",
           "Boolean",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "media_present",
           "media_present",
           "Boolean",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "logical_partition",
           "logical_partition",
           "Boolean",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "read_only",
           "read_only",
           "Boolean",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "write_caching",
           "write_caching",
           "Boolean",
-          "Boolean"
+          "|scalars|::Boolean"
         ],
         [
           "block_size",
@@ -465,13 +465,13 @@
           "event",
           "event",
           "Event",
-          "Event"
+          "|scalars|::Event"
         ],
         [
           "transaction_status",
           "transaction_status",
           "Status",
-          "Status"
+          "|status|::Status"
         ]
       ],
       "packed": false,
@@ -559,13 +559,13 @@
           "event",
           "event",
           "Event",
-          "Event"
+          "|scalars|::Event"
         ],
         [
           "transaction_status",
           "transaction_status",
           "Status",
-          "Status"
+          "|status|::Status"
         ]
       ],
       "packed": false,
@@ -624,7 +624,7 @@
           "interface",
           "interface",
           "Guid",
-          "Guid"
+          "|scalars|::Guid"
         ],
         [
           "inquiry",
@@ -1613,7 +1613,7 @@
           "parent_handle",
           "parent_handle",
           "Handle",
-          "Handle"
+          "|scalars|::Handle"
         ],
         [
           "get_info",
@@ -1691,7 +1691,7 @@
           "parent_handle",
           "parent_handle",
           "Handle",
-          "Handle"
+          "|scalars|::Handle"
         ]
       ],
       "packed": false,
@@ -1755,7 +1755,7 @@
           "update_image_type_id",
           "update_image_type_id",
           "Guid",
-          "Guid"
+          "|scalars|::Guid"
         ],
         [
           "update_image_index",
@@ -1834,7 +1834,7 @@
           "image_type_id",
           "image_type_id",
           "Guid",
-          "Guid"
+          "|scalars|::Guid"
         ],
         [
           "image_id",
@@ -1997,7 +1997,7 @@
           "file_system_guid",
           "file_system_guid",
           "Guid",
-          "Guid"
+          "|scalars|::Guid"
         ],
         [
           "fv_length",

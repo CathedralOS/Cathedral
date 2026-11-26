@@ -1,8 +1,9 @@
-use omega::language::core::extent;
-use omega::language::core::layout;
+use {omega}/language/core/extent.omg;
+use {omega}/language/core/layout.omg;
+use {omega}/language/core/access/access.omg;
 
 public data FirmwareMemory {}
-public boundary trait FirmwareMemorySupply: ResourceProfileSupply<FirmwareMemory> {}
+public boundary trait FirmwareMemorySupply: |layout|::ResourceProfileSupply<FirmwareMemory> {}
 
 // Admission covers the actual CR3 root and its reachable table pages accepted
 // from this boot's complete final map, plus the known initial-storage page
@@ -13,23 +14,23 @@ public boundary trait FirmwareMemorySupply: ResourceProfileSupply<FirmwareMemory
 // may update accessed/dirty bits; no Stable access or CPU write is promised.
 // Selecting this role alone cannot turn arbitrary geometry into table access.
 FirmwareMemoryProfileProvider satisfies FirmwareMemorySupply {
-    machine profile(storage: &Extent in Granted) -> ResourceProfile {
+    machine profile(storage: &|extent|::Extent in |extent|::Granted) -> |layout|::ResourceProfile {
         let services: [u64; 32];
-        let mut transfers: [TransferRule; 16];
-        transfers[0] = TransferRule { width_bits: 64, alignment_bytes: 8 };
-        let mut regions: [ResourceRegion; 32];
-        regions[0] = ResourceRegion {
-            range: RelativeRange { offset: 0, length: storage.length },
-            peer: PeerWritability::HostileShared,
-            stable: StableCapability::None,
-            external: ExternalCapability::Access {
-                read: ExternalReadBehavior::Repeatable, write: false,
-                transfers: TransferRules { entries: transfers, rule_count: 1 },
+        let mut transfers: [|layout|::TransferRule; 16];
+        transfers[0] = |layout|::TransferRule { width_bits: 64, alignment_bytes: 8 };
+        let mut regions: [|layout|::ResourceRegion; 32];
+        regions[0] = |layout|::ResourceRegion {
+            range: |layout|::RelativeRange { offset: 0, length: storage.length },
+            peer: |layout|::PeerWritability::HostileShared,
+            stable: |layout|::StableCapability::None,
+            external: |layout|::ExternalCapability::Access {
+                read: |layout|::ExternalReadBehavior::Repeatable, write: false,
+                transfers: |layout|::TransferRules { entries: transfers, rule_count: 1 },
             },
-            atomic: AtomicCapability::None,
-            reach: BoundaryReach { services: services, service_count: 0 },
+            atomic: |layout|::AtomicCapability::None,
+            reach: |layout|::BoundaryReach { services: services, service_count: 0 },
         };
-        ResourceProfile { regions: regions, region_count: 1 }
+        |layout|::ResourceProfile { regions: regions, region_count: 1 }
     }
 }
 
@@ -69,37 +70,37 @@ machine PagingHandoff::has_present_entry(entries: &[u64; 512]) -> bool {
     }
 }
 
-machine FirmwarePageRootPlacement::plan(schema: Schema) -> AccessPlan {
-    let mut fields: [FieldEntry; 64];
-    fields[0] = FieldEntry {
-        key: schema.fields[0].key, representation: FieldPlan::At { offset: 0 },
+machine FirmwarePageRootPlacement::plan(schema: |layout|::Schema) -> |layout|::AccessPlan {
+    let mut fields: [|layout|::FieldEntry; 64];
+    fields[0] = |layout|::FieldEntry {
+        key: schema.fields[0].key, representation: |layout|::FieldPlan::At { offset: 0 },
     };
     let services: [u64; 32];
-    let layout: LayoutPlan = LayoutPlan {
+    let layout: |layout|::LayoutPlan = |layout|::LayoutPlan {
         entries: fields, entry_count: 1, size_fixed: 4096,
         size_is_dynamic: false, align: 4096,
     };
-    AccessPlan::with_reach(
-        AccessPlan::with(AccessPlan::inaccessible(layout), schema.fields[0].key,
-            FieldAccess::External {
-                read: ExternalRead::Read, write: false, exposure: Exposure::Exported,
+    |layout|::AccessPlan::with_reach(
+        |layout|::AccessPlan::with(|layout|::AccessPlan::inaccessible(layout), schema.fields[0].key,
+            |layout|::FieldAccess::External {
+                read: |layout|::ExternalRead::Read, write: false, exposure: |layout|::Exposure::Exported,
             }),
-        BoundaryReach { services: services, service_count: 0 }
+        |layout|::BoundaryReach { services: services, service_count: 0 }
     )
 }
 
-machine PagingHandoff::snapshot<Role>(root: &Extent in Granted) -> FirmwareRootSnapshot
-reaches ResourceProfileSupply
+machine PagingHandoff::snapshot<Role>(root: &|extent|::Extent in |extent|::Granted) -> FirmwareRootSnapshot
+reaches |layout|::ResourceProfileSupply
 {
     let entries: [u64; 512];
-    let opened: AccessOutcome<&Access<FirmwarePageRootPlacement, FirmwarePageRoot>, AccessBorrowReturn, AccessInitializationFailure> =
-        Access::view_extent<FirmwarePageRootPlacement, FirmwarePageRoot, Role>(root);
+    let opened: |layout|::AccessOutcome<&|layout|::Access<FirmwarePageRootPlacement, FirmwarePageRoot>, |layout|::AccessBorrowReturn, |layout|::AccessInitializationFailure> =
+        |access|::view_extent<FirmwarePageRootPlacement, FirmwarePageRoot, Role>(root);
     transition opened {
-        AccessOutcome::Ready { view } -> copy(view, 0, entries)
-        AccessOutcome::Rejected { returned, reason } -> FirmwareRootSnapshot::Unavailable
+        |layout|::AccessOutcome::Ready { view } -> copy(view, 0, entries)
+        |layout|::AccessOutcome::Rejected { returned, reason } -> FirmwareRootSnapshot::Unavailable
     }
 
-    machine copy(view: &Access<FirmwarePageRootPlacement, FirmwarePageRoot>,
+    machine copy(view: &|layout|::Access<FirmwarePageRootPlacement, FirmwarePageRoot>,
                next: u64, entries: [u64; 512]) -> FirmwareRootSnapshot
     requires next <= 512
     {
@@ -109,12 +110,12 @@ reaches ResourceProfileSupply
         }
     }
 
-    machine read(view: &Access<FirmwarePageRootPlacement, FirmwarePageRoot>,
+    machine read(view: &|layout|::Access<FirmwarePageRootPlacement, FirmwarePageRoot>,
                next: u64, entries: [u64; 512]) -> FirmwareRootSnapshot
     requires next < 512
     {
         let mut copied: [u64; 512] = entries;
-        copied[next] = omega::language::read(&view.entries[next]);
+        copied[next] = |layout|::read(&view.entries[next]);
         transition { _ -> copy(view, next + 1, copied) }
     }
 }

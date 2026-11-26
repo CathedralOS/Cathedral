@@ -1,52 +1,50 @@
-module stopping;
+use {runtime}/server/main.omg as server_main;
 // Owner STOP submits retirement once, then retains its exact reply until the
 // scene fence, collection and bookkeeping finish. Other connections keep turning.
-use shared::state::State;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::kernel;
-use runtime::connection::main::Frame;
-use world::geometry::zeros_from;
-use children::lifecycle;
+use {shared}/state.omg as shared_state;
+use {runtime}/kernel.omg;
+use {runtime}/connection/main.omg;
+use {world}/geometry.omg;
+use {children}/lifecycle.omg;
 
-public machine begin(gate: &Gate, context: &mut State, frame: Frame) -> u64 reaches Kernel blocks invokes Kernel {
-    transition frame.bytes == 64u64 && frame.payload[1] < 5u64 && zeros_from(&frame.payload, 2u64) {
+public machine begin(gate: &|kernel|::Gate, context: &mut |shared_state|::State, frame: |main|::Frame) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
+    transition frame.bytes == 64u64 && frame.payload[1] < 5u64 && |geometry|::zeros_from(&frame.payload, 2u64) {
         true -> block slotted(gate, context, frame.payload[1])
-        _ -> block refused(gate, context, kernel::DENIED)
+        _ -> block refused(gate, context, |kernel|::DENIED)
     }
-    machine slotted(gate: &Gate, context: &mut State, slot: u64 [0..=4]) -> u64 reaches Kernel {
+    machine slotted(gate: &|kernel|::Gate, context: &mut |shared_state|::State, slot: u64 [0..=4]) -> u64 reaches |kernel|::Kernel {
         transition context.slots[slot].live || context.slots[slot].pending != 0u64 {
             true -> retained(context, slot)
-            _ -> block refused(gate, context, kernel::PEER_CLOSED)
+            _ -> block refused(gate, context, |kernel|::PEER_CLOSED)
         }
     }
-    machine retained(context: &mut State, slot: u64 [0..=4]) -> u64 {
+    machine retained(context: &mut |shared_state|::State, slot: u64 [0..=4]) -> u64 {
         context.stopping.active = true;
         context.stopping.slot = slot;
-        context.stopping.ticket = runtime::server::main::ticket(&context.owner);
-        lifecycle::request_retirement(context, slot);
+        context.stopping.ticket = |server_main|::ticket(&context.owner);
+        |lifecycle|::request_retirement(context, slot);
         0u64
     }
 }
-public machine step(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel blocks invokes Kernel {
+public machine step(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     transition {
         context.retirement_failure != 0u64 -> (context.retirement_failure)
-        context.retire_after_present[context.stopping.slot] -> block runtime::server::main::maintain(gate, &mut context.owner, now)
+        context.retire_after_present[context.stopping.slot] -> block |server_main|::maintain(gate, &mut context.owner, now)
         _ -> block collected(gate, context)
     }
-    machine collected(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
+    machine collected(gate: &|kernel|::Gate, context: &mut |shared_state|::State) -> u64 reaches |kernel|::Kernel {
         let words: [u64; 8];
-        let status: u64 = block runtime::server::main::reply_to(gate, &mut context.owner, context.stopping.ticket, &words);
+        let status: u64 = block |server_main|::reply_to(gate, &mut context.owner, context.stopping.ticket, &words);
         transition {
-            status == kernel::WOULD_BLOCK -> (0u64)
+            status == |kernel|::WOULD_BLOCK -> (0u64)
             status == 0u64 -> settled(context)
             _ -> (status)
         }
     }
-    machine settled(context: &mut State) -> u64 { context.stopping.active = false; 0u64 }
+    machine settled(context: &mut |shared_state|::State) -> u64 { context.stopping.active = false; 0u64 }
 }
-machine refused(gate: &Gate, context: &mut State, code: u64) -> u64 reaches Kernel {
+machine refused(gate: &|kernel|::Gate, context: &mut |shared_state|::State, code: u64) -> u64 reaches |kernel|::Kernel {
     let mut words: [u64; 8];
     words[0] = code;
-    block runtime::server::main::reply(gate, &mut context.owner, &words)
+    block |server_main|::reply(gate, &mut context.owner, &words)
 }

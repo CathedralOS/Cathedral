@@ -1,15 +1,13 @@
-module isa::x86_64::interrupts::entry;
-
 // Source-level acceptance shape for Cathedral's first maskable x86 interrupt
 // root. This stops at the normalized entry/provider contract: it publishes no
 // IDT, owns no stack storage, unmasks no IRQ, and enables no CPU interrupts.
 // The later installer must bind this exact plan to the materialized gate and
 // provisioned stack before the existing PIC/PIT operations can make it live.
 
-use facts::x86_interrupt_stacks;
-use omega::language::core::interrupt;
-use omega::language::core::representation;
-use std::calling;
+use {facts}/x86_interrupt_stacks.omg;
+use {omega}/language/core/interrupt.omg;
+use {omega}/language/core/representation.omg;
+use {std}/calling.omg;
 
 // Installation carries the identity of one pending interrupt in five words.
 // Selecting this representation only fixes storage; it cannot construct an
@@ -22,48 +20,48 @@ public data CathedralAcknowledgementCarrier {
     acknowledgement: u64;
 }
 
-public CathedralAcknowledgementRepresentation satisfies OpaqueRepresentation<
-    InterruptAcknowledgement, CathedralAcknowledgementCarrier
+public CathedralAcknowledgementRepresentation satisfies |representation|::OpaqueRepresentation<
+    |interrupt|::InterruptAcknowledgement, CathedralAcknowledgementCarrier
 > {}
 
 // Cathedral owns the target policy. The core InterruptEntry requirement owns
 // the semantic acknowledgement parameter; this policy owns only the x86
 // arrival ABI and machine-state contract.
-public CathedralX86InterruptPolicy satisfies CallingPolicy {
+public CathedralX86InterruptPolicy satisfies |calling|::CallingPolicy {
     machine plan(
-        signature: BoundarySignature
-    ) -> BoundaryPlanResult
+        signature: |calling|::BoundarySignature
+    ) -> |calling|::BoundaryPlanResult
     {
         transition signature.parameter_count == 1 && !signature.has_result {
             true -> accept(signature, signature.parameters[0])
             _    -> reject()
         }
 
-        machine accept(signature: BoundarySignature, acknowledgement: u64) -> BoundaryPlanResult {
+        machine accept(signature: |calling|::BoundarySignature, acknowledgement: u64) -> |calling|::BoundaryPlanResult {
             transition acknowledgement < 256 {
                 true -> build(signature, acknowledgement)
                 _    -> reject()
             }
         }
 
-        machine build(signature: BoundarySignature, acknowledgement: u64) -> BoundaryPlanResult {
-            let mut output: BoundaryEntryPlan;
-            output.call.convention = CallingConvention::SystemVAMD64;
+        machine build(signature: |calling|::BoundarySignature, acknowledgement: u64) -> |calling|::BoundaryPlanResult {
+            let mut output: |calling|::BoundaryEntryPlan;
+            output.call.convention = |calling|::CallingConvention::SystemVAMD64;
             output.call.parameter_count = 1;
-            output.call.parameters[0].shape.class = AbiValueClass::Integer;
+            output.call.parameters[0].shape.class = |calling|::AbiValueClass::Integer;
             output.call.parameters[0].shape.byte_size = signature.shapes[acknowledgement].byte_size;
             output.call.parameters[0].shape.alignment = signature.shapes[acknowledgement].alignment;
             output.call.parameters[0].location_count = 1;
-            output.call.parameters[0].locations[0] = ValueLocation::Stack {
+            output.call.parameters[0].locations[0] = |calling|::ValueLocation::Stack {
                 stack_byte_offset: 0,
                 value_byte_offset: 0,
                 byte_size: signature.shapes[acknowledgement].byte_size,
                 alignment: 8,
             };
             output.call.stack_alignment = 16;
-            output.call.entry_control = EntryControl::InterruptReturn;
+            output.call.entry_control = |calling|::EntryControl::InterruptReturn;
 
-            output.state.initial_regime = MachineRegime::X86Long64;
+            output.state.initial_regime = |calling|::MachineRegime::X86Long64;
             output.state.interrupted_state.general_registers = true;
             output.state.interrupted_state.vector_registers = true;
             output.state.interrupted_state.flags = true;
@@ -85,16 +83,16 @@ public CathedralX86InterruptPolicy satisfies CallingPolicy {
             output.state.permitted_transitive_use.stack_pointer = true;
             // IRETQ restores the saved CS/SS selectors.
             output.state.permitted_transitive_use.segment_state = true;
-            output.state.stack = EntryStack::Dedicated {
-                class: X86_MASKABLE_IRQ_STACK.stack_class,
+            output.state.stack = |calling|::EntryStack::Dedicated {
+                class: |x86_interrupt_stacks|::X86_MASKABLE_IRQ_STACK.stack_class,
             };
-            output.state.preemption = Preemption::Masked;
-            BoundaryPlanResult::Accepted { plan: output }
+            output.state.preemption = |calling|::Preemption::Masked;
+            |calling|::BoundaryPlanResult::Accepted { plan: output }
         }
 
-        machine reject() -> BoundaryPlanResult {
-            BoundaryPlanResult::Rejected {
-                reason: CallingPolicyRejection {
+        machine reject() -> |calling|::BoundaryPlanResult {
+            |calling|::BoundaryPlanResult::Rejected {
+                reason: |calling|::CallingPolicyRejection {
                     reason: "Cathedral's x86 interrupt root requires one acknowledgement",
                 },
             }
@@ -105,6 +103,6 @@ public CathedralX86InterruptPolicy satisfies CallingPolicy {
 // The root schema stays PIC/LAPIC-neutral. Changing the acknowledgement
 // provider does not change this handler requirement or entry plan.
 public boundary trait CathedralTimerRoot:
-    InterruptEntry + Calling<CathedralX86InterruptPolicy>
+    |interrupt|::InterruptEntry + |calling|::Calling<CathedralX86InterruptPolicy>
 {
 }

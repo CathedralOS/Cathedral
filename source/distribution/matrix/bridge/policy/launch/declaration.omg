@@ -1,9 +1,7 @@
-module launch::declaration;
-
 // Private native adapter: raw length in 2, packed little-endian bytes in 16..36.
 // Publish decoded metadata in 64..72 and entries in 80..95 only after validation.
-use services::main;
-use services::types;
+use {services}/main.omg;
+use {services}/types.omg;
 
 public machine import_declaration(p: &mut [u64; 128]) -> u64 {
     let mut bytes: [u8; 168];
@@ -23,13 +21,13 @@ public machine import_declaration(p: &mut [u64; 128]) -> u64 {
         }
     }
     machine validate(p: &mut [u64; 128], bytes: &[u8; 168]) -> u64 {
-        let mut output: Declaration;
-        transition decode(bytes, p[2], &mut output) {
+        let mut output: |types|::Declaration;
+        transition |main|::decode(bytes, p[2], &mut output) {
             true -> publish(p, &output)
-            _ -> (MALFORMED)
+            _ -> (|types|::MALFORMED)
         }
     }
-    machine publish(p: &mut [u64; 128], output: &Declaration) -> u64 {
+    machine publish(p: &mut [u64; 128], output: &|types|::Declaration) -> u64 {
         p[64] = output.count;
         p[65] = output.brokered as u64;
         p[66] = output.funded as u64;
@@ -43,14 +41,14 @@ public machine import_declaration(p: &mut [u64; 128]) -> u64 {
             _ -> entries(p, output, 0u64)
         }
     }
-    machine entries(p: &mut [u64; 128], output: &Declaration, i: u64) -> u64 {
+    machine entries(p: &mut [u64; 128], output: &|types|::Declaration, i: u64) -> u64 {
         transition i < output.count && i < 4u64 {
             true -> item(p, output, i)
             _ -> (0u64)
         }
     }
-    machine item(p: &mut [u64; 128], output: &Declaration, i: u64) -> u64 requires i < 4u64 {
-        let item: Import = output.entries[i];
+    machine item(p: &mut [u64; 128], output: &|types|::Declaration, i: u64) -> u64 requires i < 4u64 {
+        let item: |types|::Import = output.entries[i];
         let at: u64 = 80u64 + i * 4u64;
         p[at] = item.contract;
         p[at + 1u64] = item.minimum;

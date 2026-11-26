@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified translation of pci_types eff856b6bab81adbe1bda0ab750009f3786cb8d3.
 // See PORT.md for source mapping, upstream corrections, and authority boundary.
-module snapshot;
-use address::PciAddress;
+use address.omg as pci_address;
 
 // Caller-supplied bytes are facts. This object cannot read config space.
-pub data ConfigSnapshot [copy] { address: PciAddress; length: u16; bytes: [u8; 4096]; }
+pub data ConfigSnapshot [copy] { address: |pci_address|::PciAddress; length: u16; bytes: [u8; 4096]; }
 pub data ReadResult [copy] { ok: bool; value: u32; }
 machine snapshot_byte(value: &ConfigSnapshot, index: u32) -> u8 {
     transition index < 4096 { true -> (value.bytes[index]) _ -> (0) }

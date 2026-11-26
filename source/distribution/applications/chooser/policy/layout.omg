@@ -1,5 +1,3 @@
-module layout;
-
 public data Geometry [copy] {
     count: u64;
     width: u64;

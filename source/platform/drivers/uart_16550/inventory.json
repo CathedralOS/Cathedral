@@ -1180,7 +1180,7 @@
           "targets": [
             {
               "path": "source/platform/drivers/uart_16550/enum_ordinals.omg",
-              "anchor": "module enum_ordinals"
+              "anchor": "pub const DIVISOR1"
             }
           ]
         },

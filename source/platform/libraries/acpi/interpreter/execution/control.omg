@@ -1,86 +1,83 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Bounded frame/saved control from pinned MethodContext. Targets are byte offsets
 // in one retained method span, not executable machine addresses.
-module control;
-use execution_model::ExecutionOutcome;
-use execution_model::Operand;
-use aml::model::Value;
-use execution_model::Frame;
-use execution_model::Block;
-use integer_helpers::integers::normalize;
-pub machine return_operand(frame:&mut Frame,value:Operand)->ExecutionOutcome {
+use {omega}/language/core/nat.omg;
+use execution_model.omg;
+use {aml}/model.omg;
+use {integer_helpers}/integers.omg;
+pub machine return_operand(frame:&mut |execution_model|::Frame,value:|execution_model|::Operand)->|execution_model|::ExecutionOutcome {
     frame.returned=true;frame.has_return_value=true;frame.return_value=value;
-    frame.operation_count=0;frame.block_count=0;ExecutionOutcome::Success
+    frame.operation_count=0;frame.block_count=0;|execution_model|::ExecutionOutcome::Success
 }
-pub machine enter_block(frame: &mut Frame, start: u64, end: u64, after: u64, looping: bool, predicate: u64) -> ExecutionOutcome {
-    transition frame.block_count < 8 { true -> bounds(frame, start, end, after, looping, predicate) _ -> (ExecutionOutcome::Depth) }
-    state bounds(frame: &mut Frame, start: u64, end: u64, after: u64, looping: bool, predicate: u64) -> ExecutionOutcome {
+pub machine enter_block(frame: &mut |execution_model|::Frame, start: u64, end: u64, after: u64, looping: bool, predicate: u64) -> |execution_model|::ExecutionOutcome {
+    transition frame.block_count < 8 { true -> bounds(frame, start, end, after, looping, predicate) _ -> (|execution_model|::ExecutionOutcome::Depth) }
+    state bounds(frame: &mut |execution_model|::Frame, start: u64, end: u64, after: u64, looping: bool, predicate: u64) -> |execution_model|::ExecutionOutcome {
     transition frame.body.start <= start && start <= end && end <= after && after <= frame.end && frame.end <= frame.body.end && frame.body.end <= 1024 {
         true -> loop_bounds(frame, start, end, after, looping, predicate)
-        _ -> (ExecutionOutcome::InvalidState)
+        _ -> (|execution_model|::ExecutionOutcome::InvalidState)
     }
     }
-    state loop_bounds(frame: &mut Frame, start: u64, end: u64, after: u64, looping: bool, predicate: u64) -> ExecutionOutcome {
+    state loop_bounds(frame: &mut |execution_model|::Frame, start: u64, end: u64, after: u64, looping: bool, predicate: u64) -> |execution_model|::ExecutionOutcome {
         transition !looping || (predicate >= frame.body.start && predicate < start) {
-            true -> push(frame, start, end, after, looping, predicate) _ -> (ExecutionOutcome::InvalidState)
+            true -> push(frame, start, end, after, looping, predicate) _ -> (|execution_model|::ExecutionOutcome::InvalidState)
         }
     }
-    state push(frame: &mut Frame, start: u64, end: u64, after: u64, looping: bool, predicate: u64) -> ExecutionOutcome {
+    state push(frame: &mut |execution_model|::Frame, start: u64, end: u64, after: u64, looping: bool, predicate: u64) -> |execution_model|::ExecutionOutcome {
         let index: u64 = frame.block_count;
-        transition index < 8 { true -> store(frame, index, start, end, after, looping, predicate) _ -> (ExecutionOutcome::Depth) }
+        transition index < 8 { true -> store(frame, index, start, end, after, looping, predicate) _ -> (|execution_model|::ExecutionOutcome::Depth) }
     }
-    state store(frame: &mut Frame, index: u64, start: u64, end: u64, after: u64, looping: bool, predicate: u64) -> ExecutionOutcome {
-        frame.blocks[index] = Block { looping: looping, parent_end: frame.end, after: after, predicate: predicate, end: end };
+    state store(frame: &mut |execution_model|::Frame, index: u64, start: u64, end: u64, after: u64, looping: bool, predicate: u64) -> |execution_model|::ExecutionOutcome {
+        frame.blocks[index] = |execution_model|::Block { looping: looping, parent_end: frame.end, after: after, predicate: predicate, end: end };
         frame.block_count = index + 1; frame.pc = start; frame.end = end;
-        ExecutionOutcome::Success
+        |execution_model|::ExecutionOutcome::Success
     }
 }
-pub machine finish_block(frame: &mut Frame) -> ExecutionOutcome {
-    transition { frame.operation_count != 0 -> (ExecutionOutcome::Truncated)
-        frame.pc != frame.end -> (ExecutionOutcome::InvalidState)
+pub machine finish_block(frame: &mut |execution_model|::Frame) -> |execution_model|::ExecutionOutcome {
+    transition { frame.operation_count != 0 -> (|execution_model|::ExecutionOutcome::Truncated)
+        frame.pc != frame.end -> (|execution_model|::ExecutionOutcome::InvalidState)
         frame.block_count == 0 -> finish_method(frame)
         frame.block_count <= 8 -> pop(frame, frame.block_count - 1)
-        _ -> (ExecutionOutcome::InvalidState) }
-    state finish_method(frame: &mut Frame) -> ExecutionOutcome {
-        frame.returned = true; frame.has_return_value=false;frame.return_value = Operand::Uninitialized; ExecutionOutcome::Success
+        _ -> (|execution_model|::ExecutionOutcome::InvalidState) }
+    state finish_method(frame: &mut |execution_model|::Frame) -> |execution_model|::ExecutionOutcome {
+        frame.returned = true; frame.has_return_value=false;frame.return_value = |execution_model|::Operand::Uninitialized; |execution_model|::ExecutionOutcome::Success
     }
-    state pop(frame: &mut Frame, index: u64) -> ExecutionOutcome {
-        transition index < 8 { true -> selected(frame, index) _ -> (ExecutionOutcome::InvalidState) }
+    state pop(frame: &mut |execution_model|::Frame, index: u64) -> |execution_model|::ExecutionOutcome {
+        transition index < 8 { true -> selected(frame, index) _ -> (|execution_model|::ExecutionOutcome::InvalidState) }
     }
-    state selected(frame: &mut Frame, index: u64) -> ExecutionOutcome {
-        let saved: Block = frame.blocks[index];
+    state selected(frame: &mut |execution_model|::Frame, index: u64) -> |execution_model|::ExecutionOutcome {
+        let saved: |execution_model|::Block = frame.blocks[index];
         transition saved.looping { true -> repeat(frame, index, saved) _ -> resume(frame, index, saved) }
     }
-    state repeat(frame: &mut Frame, index: u64, saved: Block) -> ExecutionOutcome {
-        frame.block_count = index; frame.pc = saved.predicate; frame.end = saved.parent_end; ExecutionOutcome::Success
+    state repeat(frame: &mut |execution_model|::Frame, index: u64, saved: |execution_model|::Block) -> |execution_model|::ExecutionOutcome {
+        frame.block_count = index; frame.pc = saved.predicate; frame.end = saved.parent_end; |execution_model|::ExecutionOutcome::Success
     }
-    state resume(frame: &mut Frame, index: u64, saved: Block) -> ExecutionOutcome {
-        frame.block_count = index; frame.pc = saved.after; frame.end = saved.parent_end; ExecutionOutcome::Success
+    state resume(frame: &mut |execution_model|::Frame, index: u64, saved: |execution_model|::Block) -> |execution_model|::ExecutionOutcome {
+        frame.block_count = index; frame.pc = saved.after; frame.end = saved.parent_end; |execution_model|::ExecutionOutcome::Success
     }
 }
-pub machine leave_loop(frame: &mut Frame, again: bool) -> ExecutionOutcome {
+pub machine leave_loop(frame: &mut |execution_model|::Frame, again: bool) -> |execution_model|::ExecutionOutcome {
     transition frame.operation_count == 0 && frame.block_count <= 8 {
-        true -> search(frame, again) _ -> (ExecutionOutcome::InvalidState)
+        true -> search(frame, again) _ -> (|execution_model|::ExecutionOutcome::InvalidState)
     }
-    state search(frame: &mut Frame, again: bool) -> ExecutionOutcome {
+    state search(frame: &mut |execution_model|::Frame, again: bool) -> |execution_model|::ExecutionOutcome {
         let found: u64 = loop_index(frame, 0, frame.block_count, 8);
-        transition found < 8 { true -> selected(frame, again, found) _ -> (ExecutionOutcome::ControlOutsideLoop) }
+        transition found < 8 { true -> selected(frame, again, found) _ -> (|execution_model|::ExecutionOutcome::ControlOutsideLoop) }
     }
-    state selected(frame: &mut Frame, again: bool, index: u64) -> ExecutionOutcome {
-        let saved: Block = frame.blocks[index];
+    state selected(frame: &mut |execution_model|::Frame, again: bool, index: u64) -> |execution_model|::ExecutionOutcome {
+        let saved: |execution_model|::Block = frame.blocks[index];
         frame.block_count = index; frame.end = saved.parent_end;
         transition again { true -> repeat(frame, saved) _ -> resume(frame, saved) }
     }
-    state repeat(frame: &mut Frame, saved: Block) -> ExecutionOutcome { frame.pc = saved.predicate; ExecutionOutcome::Success }
-    state resume(frame: &mut Frame, saved: Block) -> ExecutionOutcome { frame.pc = saved.after; ExecutionOutcome::Success }
+    state repeat(frame: &mut |execution_model|::Frame, saved: |execution_model|::Block) -> |execution_model|::ExecutionOutcome { frame.pc = saved.predicate; |execution_model|::ExecutionOutcome::Success }
+    state resume(frame: &mut |execution_model|::Frame, saved: |execution_model|::Block) -> |execution_model|::ExecutionOutcome { frame.pc = saved.after; |execution_model|::ExecutionOutcome::Success }
 }
-machine loop_index(frame: &Frame, index: u64, limit: u64, found: u64)
-terminates by (index, limit) -> Nat::BoundedDistance;
+machine loop_index(frame: &|execution_model|::Frame, index: u64, limit: u64, found: u64)
+terminates by (index, limit) -> |nat|::Nat::BoundedDistance;
 -> u64 {
     let next: u64 = loop_step(frame, index, limit, found);
     transition index < limit { true -> loop_index(frame, index + 1, limit, next) _ -> (found) }
 }
-machine loop_step(frame: &Frame, index: u64, limit: u64, found: u64) -> u64 {
+machine loop_step(frame: &|execution_model|::Frame, index: u64, limit: u64, found: u64) -> u64 {
     transition index < limit && index < 8 { true -> inspect(frame.blocks[index], index, found) _ -> (found) }
-    state inspect(saved: Block, index: u64, found: u64) -> u64 { transition saved.looping { true -> (index) _ -> (found) } }
+    state inspect(saved: |execution_model|::Block, index: u64, found: u64) -> u64 { transition saved.looping { true -> (index) _ -> (found) } }
 }

@@ -1,240 +1,229 @@
-module launch::launch;
 // A child asks -> reserve its request and policy -> read the scoped image over
 // later turns -> submit construction -> recheck authority -> bind and place.
 // The picker stays alive through construction, then retires before placement.
-use protocol::main;
-use protocol::matrix;
-use shared::state::State;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::kernel;
-use runtime::time::Tick;
-use world::geometry::zeros_from;
-use policy::children::launch::resources::main::Capacity;
-use policy::children::launch::admission;
-use policy::children::launch::admission::Facts;
-use policy::children::launch::admission::Decision;
-use policy::children::launch::admission::Refusal;
-use world::surfaces;
-use world::launches;
-use world::scopes;
-use world::scopes::Bound;
-use shared::storage::Outcome;
-use shared::report;
+use {protocol}/main.omg;
+use {protocol}/matrix.omg;
+use {shared}/state.omg as shared_state;
+use {runtime}/kernel.omg;
+use {runtime}/time.omg;
+use {world}/geometry.omg;
+use {policy}/children/launch/resources/main.omg as resources_main;
+use {policy}/children/launch/admission.omg;
+use {world}/surfaces.omg;
+use {world}/launches.omg;
+use {world}/scopes.omg;
+use {shared}/storage.omg;
+use {shared}/report.omg;
 
-use shared::state::Launch;
-use shared::state::SlotPolicy;
-use runtime::server::main::Ticket;
-use runtime::server::deferred;
-use connections::presentation::Submission;
-use connections::storage::reads;
-use connections::storage::binding;
-use shared::storage::Prepared;
-use construction::construction::poll_reserved;
-use runtime::admission::pending::Progress;
-use runtime::admission::retirement;
-use runtime::admission::retirement::Retirement;
-use protocol::services::STORAGE;
-use connections::storage::exchange;
-use connections::responses;
-use stored;
-use launch::completion;
-use launch::handoff;
-use launch::placement;
-use launch::authority;
-use launch::resources;
-use shared::admission::Plan;
-use funding;
-use construction::observation::defer_construction;
+use {runtime}/server/main.omg as server_main;
+use {runtime}/server/deferred.omg;
+use {connections}/presentation.omg;
+use {connections}/storage/reads.omg;
+use {connections}/storage/binding.omg;
+use construction/construction.omg;
+use {runtime}/admission/pending.omg;
+use {runtime}/admission/retirement.omg;
+use {protocol}/services.omg;
+use {connections}/storage/exchange.omg;
+use {connections}/responses.omg;
+use stored.omg;
+use launch/completion.omg;
+use launch/handoff.omg;
+use launch/placement.omg;
+use launch/authority.omg;
+use launch/resources.omg;
+use {shared}/admission.omg as shared_admission;
+use funding.omg;
+use construction/observation.omg;
 
-public machine begin(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarnation: u64,
-    words: [u64; 8]) -> Submission reaches Kernel invokes Kernel {
+public machine begin(gate: &|kernel|::Gate, context: &mut |shared_state|::State, requester: u64 [0..=4], incarnation: u64,
+    words: [u64; 8]) -> |presentation|::Submission reaches |kernel|::Kernel invokes |kernel|::Kernel {
     // Earlier owner/setup work may have waited. Accept against a fresh clock,
     // then retain that deadline; queueing must never extend it.
-    let tick: Tick = runtime::time::read(gate, context.clock);
+    let tick: |time|::Tick = |time|::read(gate, context.clock);
     transition tick {
-        Tick::Read { value } -> current(gate, context, value, requester, incarnation, words)
-        Tick::Failed { code } -> (Submission::Answer { words: error(code) })
+        |time|::Tick::Read { value } -> current(gate, context, value, requester, incarnation, words)
+        |time|::Tick::Failed { code } -> (|presentation|::Submission::Answer { words: error(code) })
     }
-    machine current(gate: &Gate, context: &mut State, now: u64, requester: u64 [0..=4], incarnation: u64,
-        words: [u64; 8]) -> Submission reaches Kernel {
-        transition zeros_from(&words, 3u64) {
+    machine current(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, requester: u64 [0..=4], incarnation: u64,
+        words: [u64; 8]) -> |presentation|::Submission reaches |kernel|::Kernel {
+        transition |geometry|::zeros_from(&words, 3u64) {
             true -> deciding(gate, context, now, requester, incarnation, words[1], words[2])
-            _ -> (Submission::Answer { words: error(kernel::DENIED) })
+            _ -> (|presentation|::Submission::Answer { words: error(|kernel|::DENIED) })
         }
     }
-    machine deciding(gate: &Gate, context: &mut State, now: u64, requester: u64 [0..=4], incarnation: u64,
-        object: u64, withhold: u64) -> Submission reaches Kernel {
-        let bound: Bound = scopes::binding(&context.store.scopes, requester, context.store.listeners[requester].incarnation);
-        let asked: admission::Request = admission::Request { program_present: object != 0u64, withheld_imports: withhold, supported_imports: 15u64 };
+    machine deciding(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, requester: u64 [0..=4], incarnation: u64,
+        object: u64, withhold: u64) -> |presentation|::Submission reaches |kernel|::Kernel {
+        let bound: |scopes|::Bound = |scopes|::binding(&context.store.scopes, requester, context.store.listeners[requester].incarnation);
+        let asked: |admission|::Request = |admission|::Request { program_present: object != 0u64, withheld_imports: withhold, supported_imports: 15u64 };
         // Executables and their new realms belong to this matrix's first source.
-        let facts: Facts = authority::facts(context, requester, bound.status == 0u64 && bound.source == 0u64);
-        let decision: Decision = admission::admit(&asked, &facts);
+        let facts: |admission|::Facts = |authority|::facts(context, requester, bound.status == 0u64 && bound.source == 0u64);
+        let decision: |admission|::Decision = |admission|::admit(&asked, &facts);
         transition decision {
-            Decision::Admitted { slot } -> targeted(context, now, requester, incarnation, object, withhold, bound.scope, slot)
-            Decision::TargetRefused { slot, reason } -> (Submission::Answer { words: refused(gate, code_of(reason)) })
-            Decision::Refused { reason } -> (Submission::Answer { words: refused(gate, code_of(reason)) })
+            |admission|::Decision::Admitted { slot } -> targeted(context, now, requester, incarnation, object, withhold, bound.scope, slot)
+            |admission|::Decision::TargetRefused { slot, reason } -> (|presentation|::Submission::Answer { words: refused(gate, code_of(reason)) })
+            |admission|::Decision::Refused { reason } -> (|presentation|::Submission::Answer { words: refused(gate, code_of(reason)) })
         }
     }
-    machine targeted(context: &mut State, now: u64, requester: u64 [0..=4], incarnation: u64, object: u64, withhold: u64,
-        stamp: u64, slot: u64) -> Submission {
+    machine targeted(context: &mut |shared_state|::State, now: u64, requester: u64 [0..=4], incarnation: u64, object: u64, withhold: u64,
+        stamp: u64, slot: u64) -> |presentation|::Submission {
         transition slot < 5u64 {
             true -> retained(context, now, requester, incarnation, object, withhold, stamp, slot)
-            _ -> (Submission::Answer { words: error(kernel::DENIED) })
+            _ -> (|presentation|::Submission::Answer { words: error(|kernel|::DENIED) })
         }
     }
-    machine retained(context: &mut State, now: u64, requester: u64 [0..=4], incarnation: u64, object: u64, withhold: u64,
-        stamp: u64, slot: u64 [0..=4]) -> Submission {
-        let ticket: Ticket = runtime::server::main::ticket(&context.slots[requester].listener);
+    machine retained(context: &mut |shared_state|::State, now: u64, requester: u64 [0..=4], incarnation: u64, object: u64, withhold: u64,
+        stamp: u64, slot: u64 [0..=4]) -> |presentation|::Submission {
+        let ticket: |server_main|::Ticket = |server_main|::ticket(&context.slots[requester].listener);
         let status: u64 = hold(context, requester, ticket);
         transition status == 0u64 {
             true -> reading(context, now, requester, incarnation, object, withhold, stamp, slot, ticket)
-            _ -> (Submission::Answer { words: error(status) })
+            _ -> (|presentation|::Submission::Answer { words: error(status) })
         }
     }
-    machine reading(context: &mut State, now: u64, requester: u64 [0..=4], incarnation: u64, object: u64, withhold: u64,
-        stamp: u64, slot: u64 [0..=4], ticket: Ticket) -> Submission {
-        let status: u64 = reads::begin(context, now, requester, object, stamp);
+    machine reading(context: &mut |shared_state|::State, now: u64, requester: u64 [0..=4], incarnation: u64, object: u64, withhold: u64,
+        stamp: u64, slot: u64 [0..=4], ticket: |server_main|::Ticket) -> |presentation|::Submission {
+        let status: u64 = |reads|::begin(context, now, requester, object, stamp);
         transition status == 0u64 {
             true -> started(context, requester, incarnation, object, withhold, slot, ticket)
-            _ -> (Submission::Answer { words: error(status) })
+            _ -> (|presentation|::Submission::Answer { words: error(status) })
         }
     }
-    machine started(context: &mut State, requester: u64 [0..=4], incarnation: u64, object: u64, withhold: u64,
-        slot: u64 [0..=4], ticket: Ticket) -> Submission {
-        let mut work: Launch;
+    machine started(context: &mut |shared_state|::State, requester: u64 [0..=4], incarnation: u64, object: u64, withhold: u64,
+        slot: u64 [0..=4], ticket: |server_main|::Ticket) -> |presentation|::Submission {
+        let mut work: |shared_state|::Launch;
         work.phase = 1u64; work.requester = requester; work.incarnation = incarnation; work.ticket = ticket;
         work.storage_incarnation = context.store.listeners[requester].incarnation;
         work.revision = context.store.scopes.revisions[requester];
-        work.slot = slot; work.object = object; work.offered = authority::offered(context, slot) & ~withhold;
+        work.slot = slot; work.object = object; work.offered = |authority|::offered(context, slot) & ~withhold;
         work.policy = context.policies[slot]; work.login = context.login; work.desktop = context.desktop;
         context.launch = work;
-        Submission::Pending
+        |presentation|::Submission::Pending
     }
 }
-machine hold(context: &mut State, slot: u64 [0..=4], ticket: Ticket) -> u64 {
+machine hold(context: &mut |shared_state|::State, slot: u64 [0..=4], ticket: |server_main|::Ticket) -> u64 {
     transition context.slots[slot].listener.peer.pipeline {
-        true -> (responses::retain(context, slot, ticket))
+        true -> (|responses|::retain(context, slot, ticket))
         _ -> (0u64)
     }
 }
-public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
+public machine step(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     transition {
         context.launch.phase == 1u64 -> block progress(gate, context)
         context.launch.phase == 2u64 -> block constructing(gate, context)
         context.launch.phase == 4u64 -> block funded(gate, context)
-        context.launch.phase == completion::PHASE -> block completion::step(gate, context)
-        context.launch.phase == handoff::PHASE -> block handing_off(gate, context)
+        context.launch.phase == |completion|::PHASE -> block |completion|::step(gate, context)
+        context.launch.phase == |handoff|::PHASE -> block handing_off(gate, context)
         _ -> done()
     }
-    machine progress(gate: &Gate, context: &mut State) reaches Kernel {
-        let valid: bool = authority::valid(context);
+    machine progress(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
+        let valid: bool = |authority|::valid(context);
         invalidate(context, valid);
         let requester: u64 [0..=4] = context.launch.requester;
-        transition reads::ready(context) && !context.presentation_work.active && !context.answers[requester].active {
+        transition |reads|::ready(context) && !context.presentation_work.active && !context.answers[requester].active {
             true -> block current(gate, context, valid)
             _ -> done()
         }
     }
-    machine current(gate: &Gate, context: &mut State, valid: bool) reaches Kernel {
-        let tick: Tick = runtime::time::read(gate, context.clock);
-        let image: Outcome = reads::take(context);
+    machine current(gate: &|kernel|::Gate, context: &mut |shared_state|::State, valid: bool) reaches |kernel|::Kernel {
+        let tick: |time|::Tick = |time|::read(gate, context.clock);
+        let image: |storage|::Outcome = |reads|::take(context);
         transition tick {
-            Tick::Read { value } -> block checked(gate, context, valid, image, value)
-            Tick::Failed { code } -> block failed(gate, context, image.attachment, code)
+            |time|::Tick::Read { value } -> block checked(gate, context, valid, image, value)
+            |time|::Tick::Failed { code } -> block failed(gate, context, image.attachment, code)
         }
     }
-    machine checked(gate: &Gate, context: &mut State, valid: bool, image: Outcome, now: u64) reaches Kernel {
+    machine checked(gate: &|kernel|::Gate, context: &mut |shared_state|::State, valid: bool, image: |storage|::Outcome, now: u64) reaches |kernel|::Kernel {
         transition {
-            !valid -> block failed(gate, context, image.attachment, kernel::DENIED)
+            !valid -> block failed(gate, context, image.attachment, |kernel|::DENIED)
             image.words[0] != 0u64 -> block failed(gate, context, image.attachment, image.words[0])
-            image.attachment == 0u64 -> block failed(gate, context, 0u64, kernel::IO_ERROR)
+            image.attachment == 0u64 -> block failed(gate, context, 0u64, |kernel|::IO_ERROR)
             _ -> block planned(gate, context, image, now)
         }
     }
-    machine failed(gate: &Gate, context: &mut State, image: u64, code: u64) reaches Kernel {
-        block exchange::release(gate, image);
+    machine failed(gate: &|kernel|::Gate, context: &mut |shared_state|::State, image: u64, code: u64) reaches |kernel|::Kernel {
+        block |exchange|::release(gate, image);
         let words: [u64; 8] = refused(gate, code);
-        block completion::answer(gate, context, words, false);
+        block |completion|::answer(gate, context, words, false);
     }
-    machine planned(gate: &Gate, context: &mut State, image: Outcome, now: u64) reaches Kernel {
-        let policy: SlotPolicy = context.launch.policy;
-        let capacity: Capacity = Capacity { private_pages: policy.private_pages, reader_pages: policy.reader_pages,
+    machine planned(gate: &|kernel|::Gate, context: &mut |shared_state|::State, image: |storage|::Outcome, now: u64) reaches |kernel|::Kernel {
+        let policy: |shared_state|::SlotPolicy = context.launch.policy;
+        let capacity: |resources_main|::Capacity = |resources_main|::Capacity { private_pages: policy.private_pages, reader_pages: policy.reader_pages,
             channels: policy.channels, descendants: policy.descendants };
         let desktop: bool = context.desktop && context.launch.slot >= 1u64 && context.launch.slot <= 3u64;
-        let plan: Plan = block resources::prepare(gate, image.attachment, image.words[4], context.launch.offered, capacity, 0u64, desktop);
+        let plan: |shared_admission|::Plan = block |resources|::prepare(gate, image.attachment, image.words[4], context.launch.offered, capacity, 0u64, desktop);
         transition plan.status == 0u64 {
             true -> block request_funding(gate, context, image, plan)
             _ -> block failed(gate, context, image.attachment, plan.status)
         }
     }
-    machine request_funding(gate: &Gate, context: &mut State, image: Outcome, plan: Plan) reaches Kernel {
-        let status: u64 = funding::begin(context, resources::needed(plan));
+    machine request_funding(gate: &|kernel|::Gate, context: &mut |shared_state|::State, image: |storage|::Outcome, plan: |shared_admission|::Plan) reaches |kernel|::Kernel {
+        let status: u64 = |funding|::begin(context, |resources|::needed(plan));
         transition status == 0u64 {
             true -> retained(context, image, plan)
             _ -> block failed(gate, context, image.attachment, status)
         }
     }
-    machine retained(context: &mut State, image: Outcome, plan: Plan) {
+    machine retained(context: &mut |shared_state|::State, image: |storage|::Outcome, plan: |shared_admission|::Plan) {
         context.launch.image = image.attachment;
         context.launch.plan = plan;
         context.launch.phase = 4u64;
     }
-    machine funded(gate: &Gate, context: &mut State) reaches Kernel {
-        let valid: bool = authority::valid(context);
+    machine funded(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
+        let valid: bool = |authority|::valid(context);
         cancel_funding(context, valid);
         let requester: u64 [0..=4] = context.launch.requester;
-        let available: bool = funding::ready(context);
+        let available: bool = |funding|::ready(context);
         transition available && !context.presentation_work.active && !context.answers[requester].active {
             true -> block ready(gate, context, valid)
             _ -> done()
         }
     }
-    machine cancel_funding(context: &mut State, valid: bool) {
-        transition valid { true -> done() _ -> funding::cancel(context) }
+    machine cancel_funding(context: &mut |shared_state|::State, valid: bool) {
+        transition valid { true -> done() _ -> |funding|::cancel(context) }
     }
-    machine ready(gate: &Gate, context: &mut State, valid: bool) reaches Kernel {
-        let status: u64 = funding::take(context);
-        let mut image: Outcome; image.attachment = context.launch.image;
+    machine ready(gate: &|kernel|::Gate, context: &mut |shared_state|::State, valid: bool) reaches |kernel|::Kernel {
+        let status: u64 = |funding|::take(context);
+        let mut image: |storage|::Outcome; image.attachment = context.launch.image;
         context.launch.image = 0u64;
         transition {
-            !valid -> block failed(gate, context, image.attachment, kernel::DENIED)
+            !valid -> block failed(gate, context, image.attachment, |kernel|::DENIED)
             status != 0u64 -> block failed(gate, context, image.attachment, status)
             _ -> block timed(gate, context, image)
         }
     }
-    machine timed(gate: &Gate, context: &mut State, image: Outcome) reaches Kernel {
-        let tick: Tick = runtime::time::read(gate, context.clock);
+    machine timed(gate: &|kernel|::Gate, context: &mut |shared_state|::State, image: |storage|::Outcome) reaches |kernel|::Kernel {
+        let tick: |time|::Tick = |time|::read(gate, context.clock);
         transition tick {
-            Tick::Read { value } -> block admitted(gate, context, image, value)
-            Tick::Failed { code } -> block failed(gate, context, image.attachment, code)
+            |time|::Tick::Read { value } -> block admitted(gate, context, image, value)
+            |time|::Tick::Failed { code } -> block failed(gate, context, image.attachment, code)
         }
     }
-    machine admitted(gate: &Gate, context: &mut State, image: Outcome, now: u64) reaches Kernel {
-        let prepared: Prepared = binding::prepare(context);
+    machine admitted(gate: &|kernel|::Gate, context: &mut |shared_state|::State, image: |storage|::Outcome, now: u64) reaches |kernel|::Kernel {
+        let prepared: |storage|::Prepared = |scopes|::binding::prepare(context);
         transition prepared.status == 0u64 {
             true -> block admitting(gate, context, image, now, prepared)
             _ -> block failed(gate, context, image.attachment, prepared.status)
         }
     }
-    machine admitting(gate: &Gate, context: &mut State, image: Outcome, now: u64, prepared: Prepared) reaches Kernel {
+    machine admitting(gate: &|kernel|::Gate, context: &mut |shared_state|::State, image: |storage|::Outcome, now: u64, prepared: |storage|::Prepared) reaches |kernel|::Kernel {
         let slot: u64 [0..=4] = context.launch.slot;
         let object: u64 = context.launch.object;
-        let policy: SlotPolicy = context.launch.policy;
+        let policy: |shared_state|::SlotPolicy = context.launch.policy;
         context.launch.binding = prepared;
         context.launch.phase = 2u64;
-        let plan: Plan = context.launch.plan;
-        let status: u64 = block stored::admit_plan(gate, context, now, slot, object, 0u64, policy.cpu, image.attachment, plan, false, true);
-        block exchange::release(gate, image.attachment);
+        let plan: |shared_admission|::Plan = context.launch.plan;
+        let status: u64 = block |stored|::admit_plan(gate, context, now, slot, object, 0u64, policy.cpu, image.attachment, plan, false, true);
+        block |exchange|::release(gate, image.attachment);
         transition status == 0u64 {
             true -> done()
-            _ -> completion::retire(context, status, false)
+            _ -> |completion|::retire(context, status, false)
         }
     }
-    machine constructing(gate: &Gate, context: &mut State) reaches Kernel {
+    machine constructing(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
         // Publication fences slot retirement. The pending bundle has no served
         // listener, so waiting for that fence cannot expose an unbound child.
-        let valid: bool = authority::constructed(context);
+        let valid: bool = |authority|::constructed(context);
         invalidate(context, valid);
         let requester: u64 [0..=4] = context.launch.requester;
         // A STOP or departed listener may already own this bundle's collection.
@@ -246,124 +235,124 @@ public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invo
             _ -> done()
         }
     }
-    machine construction_turn(gate: &Gate, context: &mut State, valid: bool) reaches Kernel {
+    machine construction_turn(gate: &|kernel|::Gate, context: &mut |shared_state|::State, valid: bool) reaches |kernel|::Kernel {
         let slot: u64 [0..=4] = context.launch.slot;
         transition valid {
             true -> block observe(gate, context)
             _ -> cancelling_construction(gate, context, slot)
         }
     }
-    machine cancelling_construction(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+    machine cancelling_construction(gate: &|kernel|::Gate, context: &mut |shared_state|::State, slot: u64 [0..=4]) reaches |kernel|::Kernel {
         // Keep the launch, bundle and reservation until rollback or collection.
         // A committed child is never served while this cancelled launch drains.
-        let result: Retirement = retirement::poll(gate, &mut context.slots[slot]);
+        let result: |retirement|::Retirement = |retirement|::poll(gate, &mut context.slots[slot]);
         transition result {
-            Retirement::Pending -> done()
-            Retirement::Ready { outcome } -> completion::retire(context, kernel::DENIED, false)
-            Retirement::Failed { code } -> retirement_failed(gate, context, code)
+            |retirement|::Retirement::Pending -> done()
+            |retirement|::Retirement::Ready { outcome } -> |completion|::retire(context, |kernel|::DENIED, false)
+            |retirement|::Retirement::Failed { code } -> retirement_failed(gate, context, code)
         }
     }
-    machine retirement_failed(gate: &Gate, context: &mut State, code: u64) reaches Kernel {
+    machine retirement_failed(gate: &|kernel|::Gate, context: &mut |shared_state|::State, code: u64) reaches |kernel|::Kernel {
         context.launch.failure = code;
-        report::launch_refused(gate, code);
+        |report|::launch_refused(gate, code);
     }
-    machine observe(gate: &Gate, context: &mut State) reaches Kernel {
-        let held: bool = defer_construction(gate, context);
+    machine observe(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
+        let held: bool = |observation|::defer_construction(gate, context);
         transition held { true -> done() _ -> block observed(gate, context) }
     }
-    machine observed(gate: &Gate, context: &mut State) reaches Kernel {
+    machine observed(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
         let slot: u64 [0..=4] = context.launch.slot;
-        let progress: Progress = block poll_reserved(gate, context, slot);
+        let progress: |pending|::Progress = block |construction|::poll_reserved(gate, context, slot);
         transition progress {
-            Progress::Pending -> done()
-            Progress::Failed { code } -> completion::retire(context, code, false)
-            Progress::Ready -> block constructed(gate, context)
+            |pending|::Progress::Pending -> done()
+            |pending|::Progress::Failed { code } -> |completion|::retire(context, code, false)
+            |pending|::Progress::Ready -> block constructed(gate, context)
         }
     }
-    machine constructed(gate: &Gate, context: &mut State) reaches Kernel {
-        transition authority::constructed(context) {
+    machine constructed(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
+        transition |authority|::constructed(context) {
             true -> block approved(gate, context)
-            _ -> completion::retire(context, kernel::DENIED, false)
+            _ -> |completion|::retire(context, |kernel|::DENIED, false)
         }
     }
-    machine approved(gate: &Gate, context: &mut State) reaches Kernel {
+    machine approved(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
         let login: bool = context.login && context.launch.requester == 0u64 && context.launch.slot == 1u64;
-        report::launch_stage(gate, context.launch.slot, 0u64, 0u64);
-        report::budget(gate);
+        |report|::launch_stage(gate, context.launch.slot, 0u64, 0u64);
+        |report|::budget(gate);
         transition login {
-            true -> handoff::begin(context)
+            true -> |handoff|::begin(context)
             _ -> block bound(gate, context, false)
         }
     }
-    machine handing_off(gate: &Gate, context: &mut State) reaches Kernel {
-        let ready: bool = handoff::advance(gate, context);
+    machine handing_off(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel {
+        let ready: bool = |handoff|::advance(gate, context);
         transition ready { true -> block bound(gate, context, true) _ -> done() }
     }
-    machine bound(gate: &Gate, context: &mut State, login: bool) reaches Kernel {
+    machine bound(gate: &|kernel|::Gate, context: &mut |shared_state|::State, login: bool) reaches |kernel|::Kernel {
         let requester: u64 [0..=4] = context.launch.requester;
         let incarnation: u64 = context.launch.incarnation;
         let slot: u64 [0..=4] = context.launch.slot;
         let object: u64 = context.launch.object;
-        let prepared: Prepared = context.launch.binding;
+        let prepared: |storage|::Prepared = context.launch.binding;
         let status: u64 = install(context, slot, object, prepared);
         transition status == 0u64 {
             true -> block placed(gate, context, requester, incarnation, slot, object, login)
-            _ -> completion::retire(context, status, login)
+            _ -> |completion|::retire(context, status, login)
         }
     }
-    machine install(context: &mut State, slot: u64 [0..=4], object: u64, prepared: Prepared) -> u64 {
-        transition (context.launch.plan.mask & STORAGE) != 0u64 {
-            true -> (binding::install(context, slot, object, prepared))
+    machine install(context: &mut |shared_state|::State, slot: u64 [0..=4], object: u64, prepared: |storage|::Prepared) -> u64 {
+        transition (context.launch.plan.mask & |services|::STORAGE) != 0u64 {
+            true -> (|scopes|::binding::install(context, slot, object, prepared))
             _ -> (0u64)
         }
     }
-    machine placed(gate: &Gate, context: &mut State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4], object: u64,
-        login: bool) reaches Kernel {
-        let result: Submission = block placement::place(gate, context, requester, incarnation, slot, object);
+    machine placed(gate: &|kernel|::Gate, context: &mut |shared_state|::State, requester: u64 [0..=4], incarnation: u64, slot: u64 [0..=4], object: u64,
+        login: bool) reaches |kernel|::Kernel {
+        let result: |presentation|::Submission = block |placement|::place(gate, context, requester, incarnation, slot, object);
         transition result {
-            Submission::Answer { words } -> block placed_answer(gate, context, words, login)
-            Submission::Pending -> done()
+            |presentation|::Submission::Answer { words } -> block placed_answer(gate, context, words, login)
+            |presentation|::Submission::Pending -> done()
         }
     }
 }
 // A placement failure queues cleanup; the exact launch request stays retained.
-machine placed_answer(gate: &Gate, context: &mut State, words: [u64; 8], login: bool) reaches Kernel {
+machine placed_answer(gate: &|kernel|::Gate, context: &mut |shared_state|::State, words: [u64; 8], login: bool) reaches |kernel|::Kernel {
     transition words[0] == 0u64 {
-        true -> block completion::answer(gate, context, words, login)
-        _ -> completion::retire(context, words[0], login)
+        true -> block |completion|::answer(gate, context, words, login)
+        _ -> |completion|::retire(context, words[0], login)
     }
 }
 // The shared workspace transaction has committed or restored its old scene.
 // Only now record success, or retain refusal until the new child is collected.
-public machine presented(gate: &Gate, context: &mut State, status: u64) reaches Kernel blocks invokes Kernel {
-    let words: [u64; 8] = placement::finish(gate, context, status);
+public machine presented(gate: &|kernel|::Gate, context: &mut |shared_state|::State, status: u64) reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
+    let words: [u64; 8] = |placement|::finish(gate, context, status);
     block placed_answer(gate, context, words, false);
 }
 // The sealed executable belongs to the launch while its funding reply waits.
-public machine discard(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
+public machine discard(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     let image: u64 = context.launch.image; context.launch.image = 0u64;
-    block exchange::release(gate, image);
+    block |exchange|::release(gate, image);
 }
-machine invalidate(context: &mut State, valid: bool) {
+machine invalidate(context: &mut |shared_state|::State, valid: bool) {
     transition valid { true -> done() _ -> cancelled(context) }
-    machine cancelled(context: &mut State) { context.launch.cancelled = true; reads::cancel(context); }
+    machine cancelled(context: &mut |shared_state|::State) { context.launch.cancelled = true; |reads|::cancel(context); }
 }
 // [LAUNCH_STATUS, receipt] -> [0, state] for the requester's own receipt.
-public machine status(context: &State, requester: u64 [0..=4], incarnation: u64, receipt: u64) -> [u64; 8] {
-    launches::query(&context.observations, requester, incarnation, receipt)
+public machine status(context: &|shared_state|::State, requester: u64 [0..=4], incarnation: u64, receipt: u64) -> [u64; 8] {
+    |launches|::query(&context.observations, requester, incarnation, receipt)
 }
 // The refusal goes to the console, where a proof can read why.
-machine refused(gate: &Gate, code: u64) -> [u64; 8] reaches Kernel invokes Kernel {
-    report::launch_refused(gate, code);
+machine refused(gate: &|kernel|::Gate, code: u64) -> [u64; 8] reaches |kernel|::Kernel invokes |kernel|::Kernel {
+    |report|::launch_refused(gate, code);
     error(code)
 }
-machine code_of(reason: Refusal) -> u64 {
+machine code_of(reason: |admission|::Refusal) -> u64 {
     transition reason {
-        Refusal::Busy -> (kernel::BUSY)
-        Refusal::Denied -> (kernel::DENIED)
-        Refusal::Capacity -> (kernel::NO_MEMORY)
-        Refusal::InvalidArguments -> (kernel::INVALID_ARGUMENT)
-        Refusal::AppPositionsFull -> (kernel::NO_MEMORY)
+        |admission|::Refusal::Busy -> (|kernel|::BUSY)
+        |admission|::Refusal::Denied -> (|kernel|::DENIED)
+        |admission|::Refusal::Capacity -> (|kernel|::NO_MEMORY)
+        |admission|::Refusal::InvalidArguments -> (|kernel|::INVALID_ARGUMENT)
+        |admission|::Refusal::AppPositionsFull -> (|kernel|::NO_MEMORY)
     }
 }
 machine error(code: u64) -> [u64; 8] {

@@ -1,5 +1,5 @@
 // Minimal plan-laid fixed-array header; no projection or firmware access.
-use cathedral_uefi_raw::device_path::DevicePathProtocol;
-use cathedral_uefi_raw::console_layouts::DevicePathProtocolX64Layout;
-data Main { header: DevicePathProtocolX64Layout<DevicePathProtocol>; }
+use {cathedral_uefi_raw}/device_path.omg;
+use {cathedral_uefi_raw}/console_layouts.omg;
+data Main { header: |console_layouts|::DevicePathProtocolX64Layout<|device_path|::DevicePathProtocol>; }
 machine Main::main(&mut self) -> i32 { 0 }

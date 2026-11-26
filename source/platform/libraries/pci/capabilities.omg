@@ -1,18 +1,15 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified translation of pci_types eff856b6bab81adbe1bda0ab750009f3786cb8d3; see PORT.md.
-module capabilities;
-use snapshot::ConfigSnapshot;
-use snapshot::ReadResult;
-use snapshot::snapshot_read;
-use address::PciAddress;
-pub data PciCapabilityAddress [copy] { address: PciAddress; offset: u16; }
+use snapshot.omg;
+use address.omg as pci_address;
+pub data PciCapabilityAddress [copy] { address: |pci_address|::PciAddress; offset: u16; }
 // Bounded one-step iterator: every step ends, advances, or permanently rejects.
 // status 1 entry, 2 null skipped, 3 end, 4 malformed. Raw unknown IDs survive.
 pub data CapabilityStep [copy] { status: u8; offset: u16; id: u16; version: u8; control: u16; next_offset: u16; }
 pub data CapabilityIterator [copy] { next_offset: u16; steps: u16; extended: bool; done: bool; visited: [u8; 1024]; }
 pub machine capability_iterator(first: u16) -> CapabilityIterator { CapabilityIterator { next_offset: first } }
 pub machine extended_capability_iterator() -> CapabilityIterator { CapabilityIterator { next_offset: 256, extended: true } }
-pub machine capability_next(snapshot: &ConfigSnapshot, cursor: &mut CapabilityIterator) -> CapabilityStep {
+pub machine capability_next(snapshot: &|snapshot|::ConfigSnapshot, cursor: &mut CapabilityIterator) -> CapabilityStep {
     transition cursor.done || cursor.next_offset == 0 {
       true -> end(cursor)
       _ -> validate(snapshot, cursor)
@@ -21,7 +18,7 @@ pub machine capability_next(snapshot: &ConfigSnapshot, cursor: &mut CapabilityIt
       cursor.done = true;
       CapabilityStep { status: 3 }
     }
-    state validate(snapshot: &ConfigSnapshot, cursor: &mut CapabilityIterator) -> CapabilityStep {
+    state validate(snapshot: &|snapshot|::ConfigSnapshot, cursor: &mut CapabilityIterator) -> CapabilityStep {
       transition (cursor.next_offset & 3) == 0 &&
         ((!cursor.extended && cursor.next_offset >= 64 && cursor.next_offset <= 252 && cursor.steps < 48) ||
         (cursor.extended && cursor.next_offset >= 256 && cursor.next_offset <= 4092 && cursor.steps < 960)) {
@@ -29,8 +26,8 @@ pub machine capability_next(snapshot: &ConfigSnapshot, cursor: &mut CapabilityIt
         _ -> malformed(cursor)
       }
     }
-    state read(snapshot: &ConfigSnapshot, cursor: &mut CapabilityIterator) -> CapabilityStep {
-      let word: ReadResult = snapshot_read(snapshot, cursor.next_offset, 4);
+    state read(snapshot: &|snapshot|::ConfigSnapshot, cursor: &mut CapabilityIterator) -> CapabilityStep {
+      let word: |snapshot|::ReadResult = |snapshot|::snapshot_read(snapshot, cursor.next_offset, 4);
       let index: u16 = cursor.next_offset >> 2;
       transition word.ok && index < 1024 {
         true -> visited(cursor, word.value, index)

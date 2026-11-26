@@ -3,22 +3,22 @@
 // the Build-selected kernel entry. See README.md for the fresh-image oracle
 // and the separate provider assumptions behind those grants.
 
-use core::memory::extent::CathedralExtentRootProvider; // selected by build.omg
-use uefi::uefi;            // EfiHandle, EfiStatus, EFI_SUCCESS, EfiSystemTable, TextOutputProtocol, SimpleTextOutput
-use uefi::boot_services;   // BootServices
-use uefi::loaded_image;
-use firmware::ownership::ownership;
-use omega::language::core::assembly; // PortIo, MachineControl
-use omega::language::core::extent;   // ExtentRootProvider
-use omega::language::core::program_image;
-use omega::language::core::layout;
+use {core}/memory/extent.omg; // selected by build.omg
+use {uefi}/uefi.omg;            // EfiHandle, EfiStatus, EFI_SUCCESS, EfiSystemTable, TextOutputProtocol, SimpleTextOutput
+use {uefi}/boot_services.omg;   // BootServices
+use {uefi}/loaded_image.omg;
+use firmware/ownership/ownership.omg;
+use {omega}/language/core/assembly.omg; // PortIo, MachineControl
+use {omega}/language/core/extent.omg as core_extent;   // ExtentRootProvider
+use {omega}/language/core/program_image.omg;
+use {omega}/language/core/layout.omg;
 
 // Invocation-owned storage. Provider implementations are selected in build.omg;
 // firmware handles and table borrows stay explicit arguments. Neither this
 // record nor provider selection grants authority to a firmware occurrence.
 data Main {
     msg:      [u16; 19];         // "Hello from Omega\r\n\0" as UTF-16 CHAR16 code units
-    map_buf:  UefiMemoryMapStorage; // aligned bounded map backing, no authority
+    map_buf:  |ownership|::UefiMemoryMapStorage; // aligned bounded map backing, no authority
     final_map_size: u64;
     final_descriptor_size: u64;
     image_base: address;
@@ -29,53 +29,53 @@ data Main {
 // Ordinary checked boot logic, not a physical firmware entry declaration.
 // Selecting PE's subsystem alone cannot install this function or establish
 // the validity of table. The target adapter must supply those premises.
-machine Main::run(context: &mut Main, handle: EfiHandle in LoadedApplication, table: &EfiSystemTable) -> EfiStatus
-reaches SimpleTextOutput + LoadedImageAccess + BootServices + ExtentRootProvider + ProgramStorageEntry + ProgramImage + ResourceProfileSupply + PortIo + MachineControl
-invokes SimpleTextOutput
-invokes LoadedImageAccess
-invokes BootServices
-invokes ExtentRootProvider
-invokes ProgramStorageEntry
-invokes ProgramImage
-invokes ResourceProfileSupply
+machine Main::run(context: &mut Main, handle: |uefi|::EfiHandle in |uefi|::LoadedApplication, table: &|uefi|::EfiSystemTable) -> |uefi|::EfiStatus
+reaches |uefi|::SimpleTextOutput + |loaded_image|::LoadedImageAccess + |boot_services|::BootServices + |core_extent|::ExtentRootProvider + |core_extent|::ProgramStorageEntry + |program_image|::ProgramImage + |layout|::ResourceProfileSupply + |assembly|::PortIo + |assembly|::MachineControl
+invokes |uefi|::SimpleTextOutput
+invokes |loaded_image|::LoadedImageAccess
+invokes |boot_services|::BootServices
+invokes |core_extent|::ExtentRootProvider
+invokes |core_extent|::ProgramStorageEntry
+invokes |program_image|::ProgramImage
+invokes |layout|::ResourceProfileSupply
 requires address::Bound == 18446744073709551616
 {
     context.msg = utf16"Hello from Omega\r\n\0";
     // Project con_out through a frame local (the reference-param deref), then
     // dispatch OutputString(con_out, &msg) through the firmware's own vtable.
     // This borrow must originate from the adapter's validated firmware input.
-    let con_out: &TextOutputProtocol = table.con_out;
-    let status: EfiStatus = SimpleTextOutput::output_string(con_out, &context.msg);
+    let con_out: &|uefi|::TextOutputProtocol = table.con_out;
+    let status: |uefi|::EfiStatus = |uefi|::SimpleTextOutput::output_string(con_out, &context.msg);
     // A failed greeting must not silently proceed into irreversible handoff.
     // Preserve the firmware status while Boot Services are still available.
     transition status.code == 0 {
         true -> discover_image(context, handle, table)
         _ -> (status)
     }
-    machine discover_image(context: &mut Main, handle: EfiHandle in LoadedApplication,
-                         table: &EfiSystemTable) -> EfiStatus
+    machine discover_image(context: &mut Main, handle: |uefi|::EfiHandle in |uefi|::LoadedApplication,
+                         table: &|uefi|::EfiSystemTable) -> |uefi|::EfiStatus
     requires address::Bound == 18446744073709551616
     {
-        let empty: EfiLoadedImage;
-        let mut output: LoadedImageOutput = LoadedImageOutput { image: &empty };
-        let status: EfiStatus = LoadedImageAccess::discover(
-            table.boot_services, handle, &LOADED_IMAGE_PROTOCOL_GUID, &mut output
+        let empty: |loaded_image|::EfiLoadedImage;
+        let mut output: |loaded_image|::LoadedImageOutput = |loaded_image|::LoadedImageOutput { image: &empty };
+        let status: |uefi|::EfiStatus = |loaded_image|::LoadedImageAccess::discover(
+            table.boot_services, handle, &|loaded_image|::LOADED_IMAGE_PROTOCOL_GUID, &mut output
         );
         context.image_base = output.image.image_base;
         context.image_size = output.image.image_size;
-        context.image_retained_start = ProgramImage::retained_suffix_start() as u64;
+        context.image_retained_start = |program_image|::ProgramImage::retained_suffix_start() as u64;
         transition status.code == 0 {
-            true -> take_ownership(context, handle as EfiHandle, table)
+            true -> take_ownership(context, handle as |uefi|::EfiHandle, table)
             _ -> (status)
         }
     }
 
-    machine take_ownership(context: &mut Main, handle: EfiHandle, table: &EfiSystemTable) -> EfiStatus
+    machine take_ownership(context: &mut Main, handle: |uefi|::EfiHandle, table: &|uefi|::EfiSystemTable) -> |uefi|::EfiStatus
     requires address::Bound == 18446744073709551616
     {
         // Walk the memory map, exit Boot Services, obtain the first qualified
         // Extent, then idle retaining it. The success route does not return.
-        Main::own_machine(context, handle, table);
-        transition { _ -> (EFI_SUCCESS) }
+        |ownership|::own_machine(context, handle, table);
+        transition { _ -> (|uefi|::EFI_SUCCESS) }
     }
 }

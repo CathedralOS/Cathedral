@@ -230,141 +230,123 @@ def indirect_cases():
  add('mixed_field_families_transaction',normalraw+bankraw+indexraw,ex,initial=base())
  return rows
 
-IMPORTS='''use aml::model::Outcome;
-use aml::model::Namespace;
-use aml::model::Entry;
-use aml::model::Object;
-use aml::model::Value;
-use aml::model::FieldBinding;
-use aml::model::ReferenceKind;
-use aml::model::Path;
-use aml::model::Span;
-use aml::model::LevelKind;
-use aml::model::LoadState;
-use aml::model::ObservedLoad;
-use aml::model::MethodDefinitions;
-use aml::model::MethodDefinition;
-use aml::loader::load_with_definitions;
-use aml::field_model::Field;
-use aml::field_model::Access;
-use aml::field_model::AccessType;
-use aml::field_model::UpdateRule;
-use aml::field_model::Connection;
-use aml::field_model::Declaration;
-use aml::field_model::DeclarationKind;
+IMPORTS='''use {omega}/language/core/nat.omg;
+use {aml}/model.omg;
+use {aml}/loader.omg;
+use {aml}/field_model.omg;
 '''
 
 def omega(v):
  if isinstance(v,bool):return str(v).lower()
  if isinstance(v,int):return str(v)
  raise TypeError(v)
-def span_expr(v):return 'Span {'+','.join(f'{k}:{v[k]}'for k in ['unit','start','end'])+'}'
+def span_expr(v):return '|model|::Span {'+','.join(f'{k}:{v[k]}'for k in ['unit','start','end'])+'}'
 def path_expr(v,bindings,name):
- bindings.append(f'let mut {name}:Path=Path {{absolute:{omega(v["absolute"])},parents:{v["parents"]},count:{len(v["segments"])}}};')
+ bindings.append(f'let mut {name}:|model|::Path=|model|::Path {{absolute:{omega(v["absolute"])},parents:{v["parents"]},count:{len(v["segments"])}}};')
  for i,s in enumerate(v['segments']):bindings.append(f'{name}.segments[{i}]={s};')
  return name
 
 def value_expr(v,bindings,key):
  kind=v['kind']
- if kind=='integer':return f'Value::Integer {{number:{v["number"]}}}'
+ if kind=='integer':return f'|model|::Value::Integer {{number:{v["number"]}}}'
  if kind=='region':
   scope=path_expr(path(v['scope'],True),bindings,key+'_scope')
-  return f'Value::OperationRegion {{space:{v["space"]},base:{v["base"]},length:{v["length"]},scope:{scope}}}'
- if kind=='reference':return f'Value::Reference {{kind:ReferenceKind::{v["reference_kind"]},object_id:{v["object_id"]}}}'
+  return f'|model|::Value::OperationRegion {{space:{v["space"]},base:{v["base"]},length:{v["length"]},scope:{scope}}}'
+ if kind=='reference':return f'|model|::Value::Reference {{kind:|model|::ReferenceKind::{v["reference_kind"]},object_id:{v["object_id"]}}}'
  if kind=='field':
   d=v['declaration'];f=v['field'];a=f['access'];c=f['connection']
   scope=path_expr(d['scope'],bindings,key+'_scope');primary=path_expr(d['primary_name'],bindings,key+'_primary');secondary=path_expr(d['secondary_name'],bindings,key+'_secondary');name=path_expr(f['name'],bindings,key+'_name')
-  declaration='Declaration {'+f'kind:DeclarationKind::{d["kind"]},scope:{scope},primary_name:{primary},secondary_name:{secondary},bank_value:{d["bank_value"]},flags:{d["flags"]},source:{span_expr(d["source"])},field_list:{span_expr(d["field_list"])}'+'}'
-  acc='Access {'+','.join(f'{k}:{("AccessType::"+val)if k=="kind" else ("UpdateRule::"+val)if k=="update" else omega(val)}'for k,val in a.items())+'}'
-  connection='Connection::'+c['kind']
+  declaration='|field_model|::Declaration {'+f'kind:|field_model|::DeclarationKind::{d["kind"]},scope:{scope},primary_name:{primary},secondary_name:{secondary},bank_value:{d["bank_value"]},flags:{d["flags"]},source:{span_expr(d["source"])},field_list:{span_expr(d["field_list"])}'+'}'
+  acc='|field_model|::Access {'+','.join(f'{k}:{("|field_model|::AccessType::"+val)if k=="kind" else ("|field_model|::UpdateRule::"+val)if k=="update" else omega(val)}'for k,val in a.items())+'}'
+  connection='|field_model|::Connection::'+c['kind']
   if c['kind']=='Name':connection+=' {connection_name:'+path_expr(c['connection_name'],bindings,key+'_connection')+'}'
   elif c['kind']=='Buffer':connection+=' {'+','.join(f'{k}:{span_expr(val)if isinstance(val,dict)else omega(val)}'for k,val in c.items()if k!='kind')+'}'
-  descriptor='Field {'+f'name:{name},bit_offset:{f["bit_offset"]},bit_length:{f["bit_length"]},access:{acc},connection:{connection},source:{span_expr(f["source"])}'+'}'
-  return 'Value::FieldUnit {'+f'binding:{binding_expr(v)},declaration:{declaration},field:{descriptor}'+'}'
+  descriptor='|field_model|::Field {'+f'name:{name},bit_offset:{f["bit_offset"]},bit_length:{f["bit_length"]},access:{acc},connection:{connection},source:{span_expr(f["source"])}'+'}'
+  return '|model|::Value::FieldUnit {'+f'binding:{binding_expr(v)},declaration:{declaration},field:{descriptor}'+'}'
  raise ValueError(kind)
 
 def binding_expr(v):
  kind=v.get('binding_kind','Region')
- if kind=='Region':return 'FieldBinding::Region {region_object:'+str(v['region'])+'}'
- if kind=='Bank':return 'FieldBinding::Bank {region_object:'+str(v['region'])+',selector_object:'+str(v['selector'])+'}'
- return 'FieldBinding::Index {index_object:'+str(v['index'])+',data_object:'+str(v['data'])+'}'
+ if kind=='Region':return '|model|::FieldBinding::Region {region_object:'+str(v['region'])+'}'
+ if kind=='Bank':return '|model|::FieldBinding::Bank {region_object:'+str(v['region'])+',selector_object:'+str(v['selector'])+'}'
+ return '|model|::FieldBinding::Index {index_object:'+str(v['index'])+',data_object:'+str(v['data'])+'}'
 
 def fixture_body(row,control=False):
  b=['let mut source:[u8;1024];']+[f'source[{i}]={v};'for i,v in enumerate(bytes.fromhex(row['wire']))if v]
- b+=['let mut initial:Namespace=initial_space();',f'initial.count={len(row["initial"]["entries"])};initial.object_count={row["initial"]["objects"]};']
+ b+=['let mut initial:|model|::Namespace=initial_space();',f'initial.count={len(row["initial"]["entries"])};initial.object_count={row["initial"]["objects"]};']
  for i,e in enumerate(row['initial']['entries']):
   p=path_expr(path(e['path'],True),b,'initial_path_'+str(i))
-  b.append(f'initial.entries[{i}]=Entry {{path:{p},has_level:{omega(e.get("level",False))},level:LevelKind::{e.get("level_kind","Scope")},has_object:{omega("object"in e)},object:{e.get("object",0)},alias:{omega(e.get("alias",False))}}};')
- for i,v in row['initial']['values'].items():b.append(f'initial.objects[{i}]=Object {{value:{value_expr(v,b,"initial_value_"+str(i))}}};')
- b.append('let mut expected:Namespace=initial;')
+  b.append(f'initial.entries[{i}]=|model|::Entry {{path:{p},has_level:{omega(e.get("level",False))},level:|model|::LevelKind::{e.get("level_kind","Scope")},has_object:{omega("object"in e)},object:{e.get("object",0)},alias:{omega(e.get("alias",False))}}};')
+ for i,v in row['initial']['values'].items():b.append(f'initial.objects[{i}]=|model|::Object {{value:{value_expr(v,b,"initial_value_"+str(i))}}};')
+ b.append('let mut expected:|model|::Namespace=initial;')
  entries=[e['path']for e in row['initial']['entries']];levels={e['path']:e.get('level_kind','Scope') for e in row['initial']['entries']if e.get('level',False)};count=row['initial']['objects']
  for item in row['expected']:
   value=value_expr(item['value'],b,'expected_'+str(count));p=path_expr(path(item['path'],True),b,'expected_path_'+str(count))
   if item['path'] in entries:index=entries.index(item['path'])
   else:index=len(entries);entries.append(item['path'])
-  level=levels.get(item['path']);b.append(f'expected.objects[{count}]=Object {{value:{value}}};expected.entries[{index}]=Entry {{path:{p},has_level:{omega(level is not None)},level:LevelKind::{level or "Scope"},has_object:true,object:{count}}};');count+=1
+  level=levels.get(item['path']);b.append(f'expected.objects[{count}]=|model|::Object {{value:{value}}};expected.entries[{index}]=|model|::Entry {{path:{p},has_level:{omega(level is not None)},level:|model|::LevelKind::{level or "Scope"},has_object:true,object:{count}}};');count+=1
  b.append(f'expected.count={len(entries)};expected.object_count={count};')
- b.append('let mut definitions:MethodDefinitions;definitions.entries[63]=MethodDefinition {present:true,object_id:63,flags:7,body:Span {unit:99,start:8,end:9}};')
- b.append(f'let observed:ObservedLoad=load_with_definitions(&source,{len(bytes.fromhex(row["wire"]))},7,initial,definitions,{row["terms"]},{row["values"]});')
+ b.append('let mut definitions:|model|::MethodDefinitions;definitions.entries[63]=|model|::MethodDefinition {present:true,object_id:63,flags:7,body:|model|::Span {unit:99,start:8,end:9}};')
+ b.append(f'let observed:|model|::ObservedLoad=|loader|::load_with_definitions(&source,{len(bytes.fromhex(row["wire"]))},7,initial,definitions,{row["terms"]},{row["values"]});')
  if control:b.append('expected.objects[63].next=expected.objects[63].next^1;')
- b.append(f'let result:i32=compare(&observed.load.space,&expected,&observed.definitions,&definitions,observed.load.outcome,Outcome::{row["error"]});result')
+ b.append(f'let result:i32=compare(&observed.load.space,&expected,&observed.definitions,&definitions,observed.load.outcome,|model|::Outcome::{row["error"]});result')
  return '\n'.join(b)
 
-HELPERS='''machine bindings(a:FieldBinding,b:FieldBinding)->bool {transition a {
- FieldBinding::Region {region_object} -> region(region_object,b)
- FieldBinding::Bank {region_object,selector_object} -> bank(region_object,selector_object,b)
- FieldBinding::Index {index_object,data_object} -> index(index_object,data_object,b)}
- state region(id:u64,b:FieldBinding)->bool {transition b {FieldBinding::Region {region_object} -> (id==region_object) _ -> (false)}}
- state bank(region:u64,selector:u64,b:FieldBinding)->bool {transition b {FieldBinding::Bank {region_object,selector_object} -> (region==region_object && selector==selector_object) _ -> (false)}}
- state index(index:u64,data:u64,b:FieldBinding)->bool {transition b {FieldBinding::Index {index_object,data_object} -> (index==index_object && data==data_object) _ -> (false)}}}
-machine initial_space()->Namespace {let mut s:Namespace;seed(&mut s,0,64);s}
-machine seed(s:&mut Namespace,index:u64,count:u64)
-terminates by(index,count)->Nat::BoundedDistance;
+HELPERS='''machine bindings(a:|model|::FieldBinding,b:|model|::FieldBinding)->bool {transition a {
+ |model|::FieldBinding::Region {region_object} -> region(region_object,b)
+ |model|::FieldBinding::Bank {region_object,selector_object} -> bank(region_object,selector_object,b)
+ |model|::FieldBinding::Index {index_object,data_object} -> index(index_object,data_object,b)}
+ state region(id:u64,b:|model|::FieldBinding)->bool {transition b {|model|::FieldBinding::Region {region_object} -> (id==region_object) _ -> (false)}}
+ state bank(region:u64,selector:u64,b:|model|::FieldBinding)->bool {transition b {|model|::FieldBinding::Bank {region_object,selector_object} -> (region==region_object && selector==selector_object) _ -> (false)}}
+ state index(index:u64,data:u64,b:|model|::FieldBinding)->bool {transition b {|model|::FieldBinding::Index {index_object,data_object} -> (index==index_object && data==data_object) _ -> (false)}}}
+machine initial_space()->|model|::Namespace {let mut s:|model|::Namespace;seed(&mut s,0,64);s}
+machine seed(s:&mut |model|::Namespace,index:u64,count:u64)
+terminates by(index,count)->|nat|::Nat::BoundedDistance;
 {seed_one(s,index);transition index<count {true -> seed(s,index+1,count) _ -> {}}}
-machine seed_one(s:&mut Namespace,index:u64) {transition index<64 {true -> put(s,index) _ -> {}}
- state put(s:&mut Namespace,index:u64) {s.objects[index]=Object {value:Value::Integer {number:1000+index},has_next:true,next:18446744073709551615-index};}}
-machine paths(a:Path,b:Path)->bool {let all:bool=segments(a,b,0,16,true);a.absolute==b.absolute && a.parents==b.parents && a.count==b.count && all}
-machine segments(a:Path,b:Path,index:u64,count:u64,prior:bool)
-terminates by(index,count)->Nat::BoundedDistance;
+machine seed_one(s:&mut |model|::Namespace,index:u64) {transition index<64 {true -> put(s,index) _ -> {}}
+ state put(s:&mut |model|::Namespace,index:u64) {s.objects[index]=|model|::Object {value:|model|::Value::Integer {number:1000+index},has_next:true,next:18446744073709551615-index};}}
+machine paths(a:|model|::Path,b:|model|::Path)->bool {let all:bool=segments(a,b,0,16,true);a.absolute==b.absolute && a.parents==b.parents && a.count==b.count && all}
+machine segments(a:|model|::Path,b:|model|::Path,index:u64,count:u64,prior:bool)
+terminates by(index,count)->|nat|::Nat::BoundedDistance;
 ->bool {let same:bool=segment(a,b,index);transition index<count {true -> segments(a,b,index+1,count,prior && same) _ -> (prior)}}
-machine segment(a:Path,b:Path,index:u64)->bool {transition index<16 {true -> (a.segments[index]==b.segments[index]) _ -> (true)}}
-machine spans(a:Span,b:Span)->bool {a.unit==b.unit && a.start==b.start && a.end==b.end}
-machine accesses(a:Access,b:Access)->bool {a.flags==b.flags && a.kind==b.kind && a.locked==b.locked && a.update==b.update && a.attribute==b.attribute && a.attribute_mode==b.attribute_mode && a.extended==b.extended && a.access_length==b.access_length}
-machine connections(a:Connection,b:Connection)->bool {transition a {
- Connection::None -> none(b) Connection::Name {connection_name} -> name(connection_name,b)
- Connection::Buffer {buffer_encoding,size_known,declared_size,initializer} -> buffer(buffer_encoding,size_known,declared_size,initializer,b)}
- state none(b:Connection)->bool {transition b {Connection::None -> (true) _ -> (false)}}
- state name(a:Path,b:Connection)->bool {transition b {Connection::Name {connection_name} -> name_same(a,connection_name) _ -> (false)}}
- state name_same(a:Path,b:Path)->bool {let result:bool=paths(a,b);result}
- state buffer(a:Span,known:bool,size:u64,bytes:Span,b:Connection)->bool {transition b {Connection::Buffer {buffer_encoding,size_known,declared_size,initializer} -> buffer_same(a,known,size,bytes,buffer_encoding,size_known,declared_size,initializer) _ -> (false)}}
- state buffer_same(a:Span,ak:bool,az:u64,ai:Span,b:Span,bk:bool,bz:u64,bi:Span)->bool {let encoding:bool=spans(a,b);let init:bool=spans(ai,bi);encoding && init && ak==bk && az==bz}}
-machine declarations(a:Declaration,b:Declaration)->bool {let scope:bool=paths(a.scope,b.scope);let primary:bool=paths(a.primary_name,b.primary_name);let secondary:bool=paths(a.secondary_name,b.secondary_name);let source:bool=spans(a.source,b.source);let list:bool=spans(a.field_list,b.field_list);scope && primary && secondary && source && list && a.kind==b.kind && a.bank_value==b.bank_value && a.flags==b.flags}
-machine fields(a:Field,b:Field)->bool {let name:bool=paths(a.name,b.name);let acc:bool=accesses(a.access,b.access);let connection:bool=connections(a.connection,b.connection);let source:bool=spans(a.source,b.source);name && acc && connection && source && a.bit_offset==b.bit_offset && a.bit_length==b.bit_length}
-machine values(a:Value,b:Value)->bool {transition a {
- Value::Integer {number} -> integer(number,b)
- Value::OperationRegion {space,base,length,scope} -> region(space,base,length,scope,b)
- Value::FieldUnit {binding,declaration,field} -> field(binding,declaration,field,b)
- Value::Reference {kind,object_id} -> reference(kind,object_id,b)
+machine segment(a:|model|::Path,b:|model|::Path,index:u64)->bool {transition index<16 {true -> (a.segments[index]==b.segments[index]) _ -> (true)}}
+machine spans(a:|model|::Span,b:|model|::Span)->bool {a.unit==b.unit && a.start==b.start && a.end==b.end}
+machine accesses(a:|field_model|::Access,b:|field_model|::Access)->bool {a.flags==b.flags && a.kind==b.kind && a.locked==b.locked && a.update==b.update && a.attribute==b.attribute && a.attribute_mode==b.attribute_mode && a.extended==b.extended && a.access_length==b.access_length}
+machine connections(a:|field_model|::Connection,b:|field_model|::Connection)->bool {transition a {
+ |field_model|::Connection::None -> none(b) |field_model|::Connection::Name {connection_name} -> name(connection_name,b)
+ |field_model|::Connection::Buffer {buffer_encoding,size_known,declared_size,initializer} -> buffer(buffer_encoding,size_known,declared_size,initializer,b)}
+ state none(b:|field_model|::Connection)->bool {transition b {|field_model|::Connection::None -> (true) _ -> (false)}}
+ state name(a:|model|::Path,b:|field_model|::Connection)->bool {transition b {|field_model|::Connection::Name {connection_name} -> name_same(a,connection_name) _ -> (false)}}
+ state name_same(a:|model|::Path,b:|model|::Path)->bool {let result:bool=paths(a,b);result}
+ state buffer(a:|model|::Span,known:bool,size:u64,bytes:|model|::Span,b:|field_model|::Connection)->bool {transition b {|field_model|::Connection::Buffer {buffer_encoding,size_known,declared_size,initializer} -> buffer_same(a,known,size,bytes,buffer_encoding,size_known,declared_size,initializer) _ -> (false)}}
+ state buffer_same(a:|model|::Span,ak:bool,az:u64,ai:|model|::Span,b:|model|::Span,bk:bool,bz:u64,bi:|model|::Span)->bool {let encoding:bool=spans(a,b);let init:bool=spans(ai,bi);encoding && init && ak==bk && az==bz}}
+machine declarations(a:|field_model|::Declaration,b:|field_model|::Declaration)->bool {let scope:bool=paths(a.scope,b.scope);let primary:bool=paths(a.primary_name,b.primary_name);let secondary:bool=paths(a.secondary_name,b.secondary_name);let source:bool=spans(a.source,b.source);let list:bool=spans(a.field_list,b.field_list);scope && primary && secondary && source && list && a.kind==b.kind && a.bank_value==b.bank_value && a.flags==b.flags}
+machine fields(a:|field_model|::Field,b:|field_model|::Field)->bool {let name:bool=paths(a.name,b.name);let acc:bool=accesses(a.access,b.access);let connection:bool=connections(a.connection,b.connection);let source:bool=spans(a.source,b.source);name && acc && connection && source && a.bit_offset==b.bit_offset && a.bit_length==b.bit_length}
+machine values(a:|model|::Value,b:|model|::Value)->bool {transition a {
+ |model|::Value::Integer {number} -> integer(number,b)
+ |model|::Value::OperationRegion {space,base,length,scope} -> region(space,base,length,scope,b)
+ |model|::Value::FieldUnit {binding,declaration,field} -> field(binding,declaration,field,b)
+ |model|::Value::Reference {kind,object_id} -> reference(kind,object_id,b)
  _ -> (false)}
- state integer(a:u64,b:Value)->bool {transition b {Value::Integer {number} -> (a==number) _ -> (false)}}
- state region(a:u8,base_a:u64,length_a:u64,scope_a:Path,b:Value)->bool {transition b {Value::OperationRegion {space,base,length,scope} -> region_same(a,base_a,length_a,scope_a,space,base,length,scope) _ -> (false)}}
- state region_same(a:u8,ab:u64,al:u64,ap:Path,b:u8,bb:u64,bl:u64,bp:Path)->bool {let same:bool=paths(ap,bp);a==b && ab==bb && al==bl && same}
- state field(a:FieldBinding,ad:Declaration,af:Field,b:Value)->bool {transition b {Value::FieldUnit {binding,declaration,field} -> field_same(a,ad,af,binding,declaration,field) _ -> (false)}}
- state field_same(a:FieldBinding,ad:Declaration,af:Field,b:FieldBinding,bd:Declaration,bf:Field)->bool {let bs:bool=bindings(a,b);let ds:bool=declarations(ad,bd);let fs:bool=fields(af,bf);bs && ds && fs}
- state reference(a:ReferenceKind,id:u64,b:Value)->bool {transition b {Value::Reference {kind,object_id} -> (a==kind && id==object_id) _ -> (false)}}}
-machine objects(a:&Namespace,b:&Namespace,index:u64,count:u64,prior:bool)
-terminates by(index,count)->Nat::BoundedDistance;
+ state integer(a:u64,b:|model|::Value)->bool {transition b {|model|::Value::Integer {number} -> (a==number) _ -> (false)}}
+ state region(a:u8,base_a:u64,length_a:u64,scope_a:|model|::Path,b:|model|::Value)->bool {transition b {|model|::Value::OperationRegion {space,base,length,scope} -> region_same(a,base_a,length_a,scope_a,space,base,length,scope) _ -> (false)}}
+ state region_same(a:u8,ab:u64,al:u64,ap:|model|::Path,b:u8,bb:u64,bl:u64,bp:|model|::Path)->bool {let same:bool=paths(ap,bp);a==b && ab==bb && al==bl && same}
+ state field(a:|model|::FieldBinding,ad:|field_model|::Declaration,af:|field_model|::Field,b:|model|::Value)->bool {transition b {|model|::Value::FieldUnit {binding,declaration,field} -> field_same(a,ad,af,binding,declaration,field) _ -> (false)}}
+ state field_same(a:|model|::FieldBinding,ad:|field_model|::Declaration,af:|field_model|::Field,b:|model|::FieldBinding,bd:|field_model|::Declaration,bf:|field_model|::Field)->bool {let bs:bool=bindings(a,b);let ds:bool=declarations(ad,bd);let fs:bool=fields(af,bf);bs && ds && fs}
+ state reference(a:|model|::ReferenceKind,id:u64,b:|model|::Value)->bool {transition b {|model|::Value::Reference {kind,object_id} -> (a==kind && id==object_id) _ -> (false)}}}
+machine objects(a:&|model|::Namespace,b:&|model|::Namespace,index:u64,count:u64,prior:bool)
+terminates by(index,count)->|nat|::Nat::BoundedDistance;
 ->bool {let same:bool=object_one(a,b,index);transition index<count {true -> objects(a,b,index+1,count,prior && same) _ -> (prior)}}
-machine object_one(a:&Namespace,b:&Namespace,index:u64)->bool {transition index<64 {true -> one(a.objects[index],b.objects[index]) _ -> (true)} state one(a:Object,b:Object)->bool {let same:bool=values(a.value,b.value);same && a.has_next==b.has_next && a.next==b.next}}
-machine entries(a:&Namespace,b:&Namespace,index:u64,count:u64,prior:bool)
-terminates by(index,count)->Nat::BoundedDistance;
+machine object_one(a:&|model|::Namespace,b:&|model|::Namespace,index:u64)->bool {transition index<64 {true -> one(a.objects[index],b.objects[index]) _ -> (true)} state one(a:|model|::Object,b:|model|::Object)->bool {let same:bool=values(a.value,b.value);same && a.has_next==b.has_next && a.next==b.next}}
+machine entries(a:&|model|::Namespace,b:&|model|::Namespace,index:u64,count:u64,prior:bool)
+terminates by(index,count)->|nat|::Nat::BoundedDistance;
 ->bool {let same:bool=entry_one(a,b,index);transition index<count {true -> entries(a,b,index+1,count,prior && same) _ -> (prior)}}
-machine entry_one(a:&Namespace,b:&Namespace,index:u64)->bool {transition index<32 {true -> one(a.entries[index],b.entries[index]) _ -> (true)} state one(a:Entry,b:Entry)->bool {let same:bool=paths(a.path,b.path);same && a.has_level==b.has_level && a.level==b.level && a.has_object==b.has_object && a.object==b.object && a.alias==b.alias}}
-machine definitions(a:&MethodDefinitions,b:&MethodDefinitions,index:u64,count:u64,prior:bool)
-terminates by(index,count)->Nat::BoundedDistance;
+machine entry_one(a:&|model|::Namespace,b:&|model|::Namespace,index:u64)->bool {transition index<32 {true -> one(a.entries[index],b.entries[index]) _ -> (true)} state one(a:|model|::Entry,b:|model|::Entry)->bool {let same:bool=paths(a.path,b.path);same && a.has_level==b.has_level && a.level==b.level && a.has_object==b.has_object && a.object==b.object && a.alias==b.alias}}
+machine definitions(a:&|model|::MethodDefinitions,b:&|model|::MethodDefinitions,index:u64,count:u64,prior:bool)
+terminates by(index,count)->|nat|::Nat::BoundedDistance;
 ->bool {let same:bool=definition_one(a,b,index);transition index<count {true -> definitions(a,b,index+1,count,prior && same) _ -> (prior)}}
-machine definition_one(a:&MethodDefinitions,b:&MethodDefinitions,index:u64)->bool {transition index<64 {true -> one(a.entries[index],b.entries[index]) _ -> (true)} state one(a:MethodDefinition,b:MethodDefinition)->bool {let scope:bool=paths(a.scope,b.scope);let body:bool=spans(a.body,b.body);scope && body && a.present==b.present && a.object_id==b.object_id && a.flags==b.flags}}
-machine compare(a:&Namespace,b:&Namespace,ad:&MethodDefinitions,bd:&MethodDefinitions,actual:Outcome,expected:Outcome)->i32 {let es:bool=entries(a,b,0,32,true);let os:bool=objects(a,b,0,64,true);let ds:bool=definitions(ad,bd,0,64,true);transition es && os && ds && a.count==b.count && a.object_count==b.object_count && actual==expected {true -> (0) _ -> (1)}}
+machine definition_one(a:&|model|::MethodDefinitions,b:&|model|::MethodDefinitions,index:u64)->bool {transition index<64 {true -> one(a.entries[index],b.entries[index]) _ -> (true)} state one(a:|model|::MethodDefinition,b:|model|::MethodDefinition)->bool {let scope:bool=paths(a.scope,b.scope);let body:bool=spans(a.body,b.body);scope && body && a.present==b.present && a.object_id==b.object_id && a.flags==b.flags}}
+machine compare(a:&|model|::Namespace,b:&|model|::Namespace,ad:&|model|::MethodDefinitions,bd:&|model|::MethodDefinitions,actual:|model|::Outcome,expected:|model|::Outcome)->i32 {let es:bool=entries(a,b,0,32,true);let os:bool=objects(a,b,0,64,true);let ds:bool=definitions(ad,bd,0,64,true);transition es && os && ds && a.count==b.count && a.object_count==b.object_count && actual==expected {true -> (0) _ -> (1)}}
 '''
 def render(rows):
  text=IMPORTS+HELPERS+'data Suite {}\n';names=[]

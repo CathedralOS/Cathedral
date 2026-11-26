@@ -11,7 +11,7 @@ text=(RAW/'network.omg').read_text()
 records={}
 for match in re.finditer(r'pub data (\w+) \[copy\] \{(.*?)\n\}',text,re.S):
  body=re.sub(r'//[^\n]*','',match[2])
- records[match[1]]=[(n,t.strip()) for n,t in re.findall(r'(\w+):\s*(\[[^\]]+\]|\w+)\s*;',body)]
+ records[match[1]]=[(n,t.strip()) for n,t in re.findall(r'(\w+):\s*(\[[^\]]+\]|(?:\|\w+\|::)?\w+)\s*;',body)]
 original={r['name']:r for r in schema['records']}
 assert set(records)==set(original)
 cache={}
@@ -55,8 +55,8 @@ for constant in schema['constants']:
 assert 'pub const DHCP_RFC2131_BROADCAST_BIT: u16 = 0x8000;' in text
 plans=(RAW/'network_layouts.omg').read_text()+(RAW/'network_large_layouts.omg').read_text()
 for name,fields in records.items():
- body=re.search(r'pub machine '+name+r'X64Layout::plan\(schema: Schema\) -> Plan satisfies Layout::plan \{(.*?)\n\}',plans,re.S)[1]
- found=re.findall(r'entries\[(\d+)\] = FieldEntry \{ key: schema.fields\[(\d+)\].key, placement: FieldPlan::At \{ offset: (\d+) \}',body)
+ body=re.search(r'pub machine '+name+r'X64Layout::plan\(schema: \|layout\|::Schema\) -> \|layout\|::Plan satisfies \|layout\|::Layout::plan \{(.*?)\n\}',plans,re.S)[1]
+ found=re.findall(r'entries\[(\d+)\] = \|layout\|::FieldEntry \{ key: schema.fields\[(\d+)\].key, placement: \|layout\|::FieldPlan::At \{ offset: (\d+) \}',body)
  expected=[(str(i),str(i),str(vector.get(name+'.'+f+'.offset',{'value':0})['value'])) for i,(f,_) in enumerate(fields)]
  assert found==expected,(name,'plan offsets')
  for spelling,kind in [('entry_count',None),('size_fixed','size'),('align','alignment')]:

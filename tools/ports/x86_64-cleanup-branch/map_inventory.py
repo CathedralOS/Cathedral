@@ -8,7 +8,7 @@ doc['files']={p:f for p,f in doc['files'].items()if p.endswith('/mapped_page_tab
 doc['upstream']['roots']=list(doc['files'])
 target='source/platform/libraries/x86_64/cleanup_branch.omg'
 for f in doc['files'].values():
- f.update(disposition='pending',reason='Only the single-page cleanup branch is translated here; arbitrary-range traversal, live custody and other mapper operations are outside this narrow slice.',targets=[dict(path=target,anchor='module cleanup_branch;')])
+ f.update(disposition='pending',reason='Only the single-page cleanup branch is translated here; arbitrary-range traversal, live custody and other mapper operations are outside this narrow slice.',targets=[dict(path=target,anchor='pub data CleanupPlan')])
  for key,row in f['symbols'].items():
   row.update(disposition='pending',reason='Outside the single-page cleanup branch slice; see the separate captured-route and table inventories.');row.pop('targets',None)
   if key.split(':',1)[1]in ['clean_up','clean_up_addr_range']:

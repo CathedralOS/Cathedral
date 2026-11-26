@@ -1,9 +1,7 @@
-use omega_ui_windows::windows_host::WindowsUiHost;
-module search;
+use {omega_ui_windows}/windows_host.omg;
 
-use omega_ui::types::add_i32;
-use omega_ui::types::select_i32;
-use omega_ui_windows::text_field::WindowsTextField;
+use {omega_ui}/types.omg;
+use {omega_ui_windows}/text_field.omg;
 
 
 /*
@@ -13,11 +11,9 @@ paint/filter snapshot; the visible menu uses our own surfaces and typography.
 The query belongs to the launcher, independently of the controls-page demo.
 */
 
-use omega_ui::types;
-use omega_ui_windows::text_field;
 
 public data GallerySearch {
-    field: WindowsTextField;
+    field: |text_field|::WindowsTextField;
     results: [i32; 6];
     count: i32;
 }
@@ -61,8 +57,8 @@ public machine matches(search_model: &GallerySearch, title: &[u8]) -> bool {
     requires offset < 128u64 && query < 256u64 && index < title.len {
         let typed: i32 = search_model.field.text[query] as i32;
         let letter: i32 = title[index] as i32;
-        let a: i32 = select_i32(typed >= 65 && typed <= 90, add_i32(typed, 32), typed);
-        let b: i32 = select_i32(letter >= 65 && letter <= 90, add_i32(letter, 32), letter);
+        let a: i32 = |types|::select_i32(typed >= 65 && typed <= 90, |types|::add_i32(typed, 32), typed);
+        let b: i32 = |types|::select_i32(letter >= 65 && letter <= 90, |types|::add_i32(letter, 32), letter);
         transition a == b {
             true -> character(search_model, title, offset, query + 1u64)
             _ -> start(search_model, title, offset + 1u64)
@@ -70,9 +66,9 @@ public machine matches(search_model: &GallerySearch, title: &[u8]) -> bool {
     }
 }
 
-public machine refresh(search_model: &mut GallerySearch) reaches WindowsUiHost invokes WindowsUiHost {
-    omega_ui_windows::text_field::refresh(&mut search_model.field);
-    search::update_results(search_model);
+public machine refresh(search_model: &mut GallerySearch) reaches |windows_host|::WindowsUiHost invokes |windows_host|::WindowsUiHost {
+    |text_field|::refresh(&mut search_model.field);
+    update_results(search_model);
 }
 
 public machine update_results(search_model: &mut GallerySearch) {
@@ -85,8 +81,8 @@ public machine update_results(search_model: &mut GallerySearch) {
         }
     }
     machine filter(search_model: &mut GallerySearch, identifier: i32) requires identifier >= 0 && identifier < 6 {
-        let title: GalleryCommand = search::title(identifier);
-        let matches: bool = search::matches(search_model, &title.label[0..title.length]);
+        let title: GalleryCommand = title(identifier);
+        let matches: bool = matches(search_model, &title.label[0..title.length]);
         let count: i32 = search_model.count;
         transition matches && count >= 0 && count < 6 {
             true -> include(search_model, identifier, count)
@@ -101,21 +97,21 @@ public machine update_results(search_model: &mut GallerySearch) {
     machine done() {}
 }
 
-public machine clear(search_model: &mut GallerySearch) reaches WindowsUiHost invokes WindowsUiHost {
-    omega_ui_windows::text_field::clear(&mut search_model.field);
-    search::update_results(search_model);
+public machine clear(search_model: &mut GallerySearch) reaches |windows_host|::WindowsUiHost invokes |windows_host|::WindowsUiHost {
+    |text_field|::clear(&mut search_model.field);
+    update_results(search_model);
 }
-public machine key(search_model: &mut GallerySearch, key: i32, control: bool, shift: bool) reaches WindowsUiHost invokes WindowsUiHost {
-    omega_ui_windows::text_field::key(&mut search_model.field, key, control, shift);
-    search::update_results(search_model);
+public machine key(search_model: &mut GallerySearch, key: i32, control: bool, shift: bool) reaches |windows_host|::WindowsUiHost invokes |windows_host|::WindowsUiHost {
+    |text_field|::key(&mut search_model.field, key, control, shift);
+    update_results(search_model);
 }
-public machine character(search_model: &mut GallerySearch, character: u64) reaches WindowsUiHost invokes WindowsUiHost {
-    omega_ui_windows::text_field::character(&mut search_model.field, character);
-    search::update_results(search_model);
+public machine character(search_model: &mut GallerySearch, character: u64) reaches |windows_host|::WindowsUiHost invokes |windows_host|::WindowsUiHost {
+    |text_field|::character(&mut search_model.field, character);
+    update_results(search_model);
 }
 public machine new(window: u64) -> GallerySearch {
-    GallerySearch { field: omega_ui_windows::text_field::new(window), results: [0, 1, 2, 3, 4, 5], count: 6 }
+    GallerySearch { field: |text_field|::new(window), results: [0, 1, 2, 3, 4, 5], count: 6 }
 }
 public machine boundary(search_model: &GallerySearch, index: i32) -> bool {
-    omega_ui_windows::text_field::boundary(&search_model.field, index)
+    |text_field|::boundary(&search_model.field, index)
 }

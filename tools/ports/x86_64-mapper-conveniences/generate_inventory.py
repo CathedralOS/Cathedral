@@ -8,7 +8,7 @@ checkout=ROOT/'reference_code/rust-osdev/x86_64';path='src/structures/paging/map
 m=i.snapshot(checkout,'cc35c876d3badb57df54a66e22f7768a52be95f2',[path],'https://github.com/rust-osdev/x86_64')
 helper='source/platform/libraries/x86_64/mapper_conveniences.omg';existing='source/platform/libraries/x86_64/translation.omg'
 anchors={28:(helper,'pub machine translate_address_from_words'),36:(existing,'pub machine translate_words'),45:(helper,'pub machine translated_address_pinned'),58:(existing,'pub data Translation'),80:(helper,'pub data MappedFrame'),91:(helper,'pub machine frame_start'),100:(helper,'pub machine frame_size'),179:(helper,'pub machine default_map('),353:(helper,'pub machine translate_page('),362:(helper,'pub machine identity_map(')}
-file=m['files'][path];file.update(disposition='translated',reason='Bounded defaults and numeric view overlay. Remaining interfaces already implemented elsewhere or deliberately excluded from this wrapper API.',targets=[{'path':helper,'anchor':'module mapper_conveniences;'}])
+file=m['files'][path];file.update(disposition='translated',reason='Bounded defaults and numeric view overlay. Remaining interfaces already implemented elsewhere or deliberately excluded from this wrapper API.',targets=[{'path':helper,'anchor':'pub data MappedFrame'}])
 for key,row in file['symbols'].items():
  line,name=key.split(':',1);n=int(line);target=anchors.get(n)
  if target:

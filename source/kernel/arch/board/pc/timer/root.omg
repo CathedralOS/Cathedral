@@ -1,18 +1,17 @@
-module board::pc::timer::root;
-
-use board::pc::timer::pic::PicTimerAcknowledgement;
-use isa::x86_64::interrupts::entry::CathedralTimerRoot;
-use omega::language::core::interrupt;
+use {omega}/language/core/assembly.omg;
+use board/pc/timer/pic.omg;
+use isa/x86_64/interrupts/entry.omg;
+use {omega}/language/core/interrupt.omg;
 
 // A timer arrival owes one acknowledgement to its controller. This handler
 // transfers that obligation to the PIC completion operation, then returns.
 // Recording time and waking ordinary work will extend this bounded body.
-public LegacyPicTimerRoot satisfies CathedralTimerRoot {
+public LegacyPicTimerRoot satisfies |entry|::CathedralTimerRoot {
     machine enter(
-        acknowledgement: InterruptAcknowledgement in Pending
+        acknowledgement: |interrupt|::InterruptAcknowledgement in |interrupt|::Pending
     )
-        reaches PortIo
+        reaches |assembly|::PortIo
     {
-        PicTimerAcknowledgement::complete(acknowledgement);
+        |pic|::PicTimerAcknowledgement::complete(acknowledgement);
     }
 }

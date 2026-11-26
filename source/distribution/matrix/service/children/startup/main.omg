@@ -1,5 +1,3 @@
-module children::startup::main;
-
 // Local startup recovery. The picker gets two admission attempts; the background
 // gets one retry. Owner-managed login recovery belongs to the owner instead.
 public data Startup {

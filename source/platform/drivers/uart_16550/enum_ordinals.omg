@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Pinned Rust convenience enum identities; these ordinals are NOT baud divisors.
-module enum_ordinals;
 pub const DIVISOR1: u16 = 0;
 pub const DIVISOR2: u16 = 1;
 pub const DIVISOR3: u16 = 2;

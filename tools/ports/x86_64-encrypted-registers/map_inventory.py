@@ -10,7 +10,7 @@ data=shared.snapshot(checkout,pin,paths,'https://github.com/rust-osdev/x86_64');
 selectors={'src/registers/control.rs':{348:'cr3_observed',376:'cr3_flags_operand',390:'cr3_pcid_operand',405:'cr3_pcid_operand',418:'cr3_raw_operand',423:'cr3_raw_operand'},'src/registers/model_specific.rs':{689:'apic_observed',705:'apic_preserving_operand',723:'apic_raw_operand'}}
 for name,file in data['files'].items():
  assert set(selectors[name]).issubset({int(key.split(':',1)[0]) for key in file['symbols']}),name
- file.update(disposition='pending',reason='Only pure profile-sensitive observation/operand expressions; live register APIs and unrelated components remain outside this overlay.',targets=[{'path':target,'anchor':'module encrypted_register_operands;'}])
+ file.update(disposition='pending',reason='Only pure profile-sensitive observation/operand expressions; live register APIs and unrelated components remain outside this overlay.',targets=[{'path':target,'anchor':'pub data ObservedCr3'}])
  for key,row in file['symbols'].items():
   line=int(key.split(':',1)[0]);machine=selectors[name].get(line)
   if machine:row.update(disposition='translated',reason='Encryption-aware numeric expression component only. Caller supplies raw observation/frame; no CPU read/write, support discovery or authority.',targets=[{'path':target,'anchor':'pub machine '+machine}])

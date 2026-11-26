@@ -1,31 +1,26 @@
-module children::startup::realm::background;
-
 // Background has presentation only. Failed placement reclaims the admitted task;
 // failed reclamation remains a failure, replacing the preceding placement error.
-use children::startup::realm::operations::Setup;
-use children::startup::realm::operations::Command;
-use children::startup::realm::operations::Outcome;
-use children::startup::realm::operations::Completion;
+use children/startup/realm/operations.omg;
 
-public machine completed(setup: &mut Setup, completion: Completion) -> Command {
+public machine completed(setup: &mut |operations|::Setup, completion: |operations|::Completion) -> |operations|::Command {
     transition completion.outcome {
-        Outcome::Success -> succeeded(completion.command)
+        |operations|::Outcome::Success -> succeeded(completion.command)
         _ -> failed(setup, completion)
     }
-    machine failed(setup: &mut Setup, completion: Completion) -> Command {
+    machine failed(setup: &mut |operations|::Setup, completion: |operations|::Completion) -> |operations|::Command {
         setup.outcome = completion.outcome;
         transition completion.command {
-            Command::PlaceBackground -> (Command::StopBackground)
-            _ -> (Command::Finish)
+            |operations|::Command::PlaceBackground -> (|operations|::Command::StopBackground)
+            _ -> (|operations|::Command::Finish)
         }
     }
 }
 
-machine succeeded(command: Command) -> Command {
+machine succeeded(command: |operations|::Command) -> |operations|::Command {
     transition command {
-        Command::ReadBackground -> (Command::AdmitBackground)
-        Command::AdmitBackground -> (Command::PlaceBackground)
-        Command::PlaceBackground -> (Command::RecordBackground)
-        _ -> (Command::Finish)
+        |operations|::Command::ReadBackground -> (|operations|::Command::AdmitBackground)
+        |operations|::Command::AdmitBackground -> (|operations|::Command::PlaceBackground)
+        |operations|::Command::PlaceBackground -> (|operations|::Command::RecordBackground)
+        _ -> (|operations|::Command::Finish)
     }
 }

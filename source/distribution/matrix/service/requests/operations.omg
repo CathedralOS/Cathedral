@@ -1,5 +1,3 @@
-module requests::operations;
-
 // Caller facts come from accepted host connections, never from request words.
 // Message names describe decoded syntax; Operation names select host work.
 public data Caller [copy] {

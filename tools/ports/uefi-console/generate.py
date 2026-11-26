@@ -81,7 +81,7 @@ def translated_type(t,module):
     if t in external:return external[t]
     if t=='usize':return 'u64'
     if t=='DevicePathHeader':return 'DevicePathProtocol'
-    if t=='Guid':return 'scalars::Guid'
+    if t=='Guid':return '|scalars|::Guid'
     if t.startswith('device_path::'):
         _,cat,name=t.split('::');return title(cat)+name
     if t.startswith('['):
@@ -90,14 +90,14 @@ def translated_type(t,module):
 
 def guid_value(value):
     u=uuid.UUID(value);a,b,c,_,_,_=u.fields
-    return f'scalars::Guid {{ data1: 0x{a:08x}, data2: 0x{b:04x}, data3: 0x{c:04x}, data4: ['+', '.join(f'0x{x:02x}' for x in u.bytes[8:])+'] }'
+    return f'|scalars|::Guid {{ data1: 0x{a:08x}, data2: 0x{b:04x}, data3: 0x{c:04x}, data4: ['+', '.join(f'0x{x:02x}' for x in u.bytes[8:])+'] }'
 
 outputs={m:['// SPDX-License-Identifier: MIT OR Apache-2.0',
     '// Modified Omega translation of rust-osdev/uefi-rs at '+PIN+'.',
     '// See console.PORT.md; reproduced by tools/ports/uefi-console/generate.py.',
     '// Inert x86-64 representation corpus. No pointer dereference or callable authority.',
     '// Layout vectors describe required foreign geometry, not default Omega layout.',
-    f'module {m};','use scalars;',''] for m in set(FILES.values())}
+    'use scalars.omg;',''] for m in set(FILES.values())}
 probe=['// SPDX-License-Identifier: MIT OR Apache-2.0','// Host-only measurements of pinned upstream, never Omega execution.',
 'use core::mem::{size_of, align_of, offset_of};','fn main() {']
 measures={};schema=[]
@@ -139,11 +139,11 @@ for module,owner,name,expr,rust,path in constants:
     expr=expr.replace('\n',' ')
     guid=re.search(r'guid\s*!\s*\(\s*"([0-9a-f-]+)"\s*\)',expr)
     if guid:
-        typ='scalars::Guid' if name=='GUID' else owner
+        typ='|scalars|::Guid' if name=='GUID' else owner
         raw=guid_value(guid[1]);val=raw if name=='GUID' else owner+' { raw: '+raw+' }'
         b=uuid.UUID(guid[1]).bytes_le.hex();measures[key]={'kind':'bytes','value':b}
     elif name=='GUID':
-        typ='scalars::Guid';val=upper(expr.split('::')[0])+'_GUID'
+        typ='|scalars|::Guid';val=upper(expr.split('::')[0])+'_GUID'
         # upstream equality checked as GUID bytes by probe below
         measures[key]={'kind':'bytes','value':'00'*16}
     else:
@@ -166,7 +166,7 @@ Path(__file__).with_name('src').joinpath('main.rs').write_text('\n'.join(probe)+
 # Refine lexical anchors with full-file source hashes and explicit target rows.
 for path,entry in manifest['files'].items():
     rel=path.removeprefix('uefi-raw/src/protocol/');module=FILES[rel];target='source/contracts/uefi/raw/'+module+'.omg'
-    entry.update(disposition='translated',targets=[{'path':target,'anchor':'module '+module+';'}]);entry.pop('reason',None)
+    entry.update(disposition='translated',targets=[{'path':target,'anchor':inventory.omega_file_anchor(ROOT/target)}]);entry.pop('reason',None)
     for key,row in entry['symbols'].items():
         line,name=key.split(':',1);anchor=row['anchor']
         if name in ['default','length']:
@@ -176,7 +176,7 @@ for path,entry in manifest['files'].items():
             row.update(disposition='omitted',reason={'default':'Rust Default ergonomic constructor; raw zero fields remain representable; no live behavior copied.', 'length':'Translated pure length decode is tracked in console_helpers.omg and its fixture cases.', '_':'Compile-time ABI assertions retained as measured geometry vectors.'}[name])
             continue
         if name=='serial' or name=='device_path_gen' or anchor.startswith('pub use') or anchor.startswith('pub mod'):
-            row.update(disposition='translated',targets=[{'path':target,'anchor':'module '+module+';'}],reason='Rust module/reexport organization flattened into named Omega modules/category prefixes.');continue
+            row.update(disposition='translated',targets=[{'path':target,'anchor':inventory.omega_file_anchor(ROOT/target)}],reason='Rust module/reexport organization flattened into named Omega modules/category prefixes.');continue
         # Match field or declaration exact token; compact macros additionally covered by constants vectors.
         choices=[]
         original=(CHECKOUT/path).read_text()
@@ -215,17 +215,17 @@ if vector_path.exists():
     plans=['// SPDX-License-Identifier: MIT OR Apache-2.0',
            '// Authored fixed geometry for UEFI-003, derived from pinned target-checked vectors.',
            '// Selecting a policy grants no backing, foreign call or runtime-tail authority.',
-           'module console_layouts;', 'use omega::language::core::layout;', '']
+           'use {omega}/language/core/layout.omg;', '']
     plan_records=schema+[{'module':m,'name':n,'fields':[('raw','address')],'tail_fields':[]} for m,n,t,p in aliases]
     for record in plan_records:
         name=record['name'];key=record['module']+'::'+name;policy=name+'X64Layout'
         if record['tail_fields']:
             plans.append('// Fixed prefix only; PORT-BLOCKED[omega:runtime-layout-strides]: typed tails require runtime extent/stride forms.')
-        plans.extend([f'pub data {policy} {{ }}',f'pub {name}X64Policy: {policy} satisfies Layout;',
-            f'pub machine {policy}::plan(schema: Schema) -> Plan satisfies Layout::plan {{',
-            '    let mut entries: [FieldEntry; 64];'])
+        plans.extend([f'pub data {policy} {{ }}',f'pub {name}X64Policy: {policy} satisfies |layout|::Layout;',
+            f'pub machine {policy}::plan(schema: |layout|::Schema) -> |layout|::Plan satisfies |layout|::Layout::plan {{',
+            '    let mut entries: [|layout|::FieldEntry; 64];'])
         for index,(field,typ) in enumerate(record['fields']):
             offset=measured.get(key+'.'+field+'.offset',{'value':0})['value']
-            plans.append(f'    entries[{index}] = FieldEntry {{ key: schema.fields[{index}].key, placement: FieldPlan::At {{ offset: {offset} }} }};')
-        plans.extend(['    Plan { entries: entries, entry_count: '+str(len(record['fields']))+', size_fixed: '+str(measured[key+'.size']['value'])+', size_is_dynamic: false, align: '+str(measured[key+'.alignment']['value'])+' }','}',''])
+            plans.append(f'    entries[{index}] = |layout|::FieldEntry {{ key: schema.fields[{index}].key, placement: |layout|::FieldPlan::At {{ offset: {offset} }} }};')
+        plans.extend(['    |layout|::Plan { entries: entries, entry_count: '+str(len(record['fields']))+', size_fixed: '+str(measured[key+'.size']['value'])+', size_is_dynamic: false, align: '+str(measured[key+'.alignment']['value'])+' }','}',''])
     (OUT/'console_layouts.omg').write_text('\n'.join(plans))

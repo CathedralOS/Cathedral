@@ -1,217 +1,210 @@
-module funding;
+use {runtime}/connection/main.omg as connection_main;
 // Retain each child's FUND while the single parent receiver dispatches its
 // reply beside input and scene work. Local admissions use the sixth work item.
 // An upstream grant belongs to this matrix: cancellation cannot undo that grant,
 // but must never grow a replacement child or admit an unauthorized launch.
-use protocol::matrix;
-use shared::state::State;
-use shared::funding::Work;
-use shared::funding::Phase;
-use runtime::kernel::Gate;
-use runtime::kernel::Kernel;
-use runtime::kernel;
-use runtime::task::main::Spare;
-use runtime::server::main::Ticket;
-use runtime::server::deferred;
-use runtime::time::Tick;
-use world::geometry::zeros_from;
-use policy::children::launch::resources::funding::Funding;
-use policy::children::launch::resources::funding::Increase;
-use policy::children::launch::resources::funding::increased;
-use policy::children::launch::resources::funding::shortfall;
-use policy::children::launch::resources::funding::nothing;
-use connections::parent::connection;
-use connections::presentation::Submission;
-use connections::responses;
-use shared::report;
-use lifecycle;
-use transport_funding;
+use {protocol}/matrix.omg;
+use {shared}/state.omg as shared_state;
+use {shared}/funding.omg;
+use {runtime}/kernel.omg;
+use {runtime}/task/main.omg;
+use {runtime}/server/main.omg as server_main;
+use {runtime}/server/deferred.omg;
+use {runtime}/time.omg;
+use {world}/geometry.omg;
+use {policy}/children/launch/resources/funding.omg as resources_funding;
+use {connections}/parent/connection.omg;
+use {connections}/presentation.omg;
+use {connections}/responses.omg;
+use {shared}/report.omg;
+use lifecycle.omg;
+use transport_funding.omg;
 
 public const LOCAL: u64 = 5u64;
-public machine begin(context: &mut State, needed: [u64; 5]) -> u64 {
-    transition context.funding_work[LOCAL].phase == Phase::Idle {
+public machine begin(context: &mut |shared_state|::State, needed: [u64; 5]) -> u64 {
+    transition context.funding_work[LOCAL].phase == |funding|::Phase::Idle {
         true -> retained(context, needed)
-        _ -> (kernel::BUSY)
+        _ -> (|kernel|::BUSY)
     }
-    machine retained(context: &mut State, needed: [u64; 5]) -> u64 {
-        let mut work: Work; work.phase = Phase::Cover; work.needed = needed;
+    machine retained(context: &mut |shared_state|::State, needed: [u64; 5]) -> u64 {
+        let mut work: |funding|::Work; work.phase = |funding|::Phase::Cover; work.needed = needed;
         context.funding_work[LOCAL] = work;
         0u64
     }
 }
-public machine cancel(context: &mut State) { context.funding_work[LOCAL].cancelled = true; }
-public machine ready(context: &State) -> bool { context.funding_work[LOCAL].phase == Phase::Finished }
-public machine take(context: &mut State) -> u64 {
+public machine cancel(context: &mut |shared_state|::State) { context.funding_work[LOCAL].cancelled = true; }
+public machine ready(context: &|shared_state|::State) -> bool { context.funding_work[LOCAL].phase == |funding|::Phase::Finished }
+public machine take(context: &mut |shared_state|::State) -> u64 {
     let status: u64 = context.funding_work[LOCAL].status;
-    let empty: Work; context.funding_work[LOCAL] = empty;
+    let empty: |funding|::Work; context.funding_work[LOCAL] = empty;
     status
 }
 // Owner/setup admission still uses a synchronous wrapper. It shares the same
 // request owner and receiver, so it cannot consume a child's retained reply.
-public machine ensure(gate: &Gate, context: &mut State, now: u64, needed: [u64; 5]) -> u64 reaches Kernel blocks invokes Kernel {
+public machine ensure(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64, needed: [u64; 5]) -> u64 reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     let status: u64 = begin(context, needed);
     transition status == 0u64 { true -> block waiting(gate, context) _ -> (status) }
-    machine waiting(gate: &Gate, context: &mut State) -> u64 reaches Kernel {
-        let tick: Tick = runtime::time::read(gate, context.clock);
-        transition tick { Tick::Read { value } -> block polled(gate, context, value) _ -> (kernel::IO_ERROR) }
+    machine waiting(gate: &|kernel|::Gate, context: &mut |shared_state|::State) -> u64 reaches |kernel|::Kernel {
+        let tick: |time|::Tick = |time|::read(gate, context.clock);
+        transition tick { |time|::Tick::Read { value } -> block polled(gate, context, value) _ -> (|kernel|::IO_ERROR) }
     }
-    machine polled(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
-        block connection::step(gate, context, now);
+    machine polled(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64) -> u64 reaches |kernel|::Kernel {
+        block |connection|::step(gate, context, now);
         block step(gate, context);
         transition ready(context) { true -> take(context) _ -> block parked(gate, context, now) }
     }
-    machine parked(gate: &Gate, context: &mut State, now: u64) -> u64 reaches Kernel {
-        let status: u64 = block runtime::connection::main::wait(gate, &context.parent.broker, runtime::time::after(now, 1u64));
+    machine parked(gate: &|kernel|::Gate, context: &mut |shared_state|::State, now: u64) -> u64 reaches |kernel|::Kernel {
+        let status: u64 = block |connection_main|::wait(gate, &context.parent.broker, |time|::after(now, 1u64));
         block waiting(gate, context)
     }
 }
-public machine fund(context: &mut State, slot: u64 [0..=4], words: [u64; 8]) -> Submission {
-    transition zeros_from(&words, 6u64) && context.slots[slot].live && context.reservations[slot] != 0u64 {
+public machine fund(context: &mut |shared_state|::State, slot: u64 [0..=4], words: [u64; 8]) -> |presentation|::Submission {
+    transition |geometry|::zeros_from(&words, 6u64) && context.slots[slot].live && context.reservations[slot] != 0u64 {
         true -> offered(context, slot, words)
-        _ -> (Submission::Answer { words: error(kernel::DENIED) })
+        _ -> (|presentation|::Submission::Answer { words: error(|kernel|::DENIED) })
     }
-    machine offered(context: &mut State, slot: u64 [0..=4], words: [u64; 8]) -> Submission {
+    machine offered(context: &mut |shared_state|::State, slot: u64 [0..=4], words: [u64; 8]) -> |presentation|::Submission {
         transition context.funding[slot] {
-            Funding::Growable { grant } -> checked(context, slot, words, increased(grant, [words[1],words[2],words[3],words[4],words[5]]))
-            _ -> (Submission::Answer { words: error(kernel::DENIED) })
+            |resources_funding|::Funding::Growable { grant } -> checked(context, slot, words, |resources_funding|::increased(grant, [words[1],words[2],words[3],words[4],words[5]]))
+            _ -> (|presentation|::Submission::Answer { words: error(|kernel|::DENIED) })
         }
     }
-    machine checked(context: &mut State, slot: u64 [0..=4], words: [u64; 8], increase: Increase) -> Submission {
+    machine checked(context: &mut |shared_state|::State, slot: u64 [0..=4], words: [u64; 8], increase: |resources_funding|::Increase) -> |presentation|::Submission {
         transition increase {
-            Increase::Granted { grant } -> retained(context, slot, words, grant)
-            _ -> (Submission::Answer { words: error(kernel::NO_MEMORY) })
+            |resources_funding|::Increase::Granted { grant } -> retained(context, slot, words, grant)
+            _ -> (|presentation|::Submission::Answer { words: error(|kernel|::NO_MEMORY) })
         }
     }
-    machine retained(context: &mut State, slot: u64 [0..=4], words: [u64; 8], grant: policy::children::launch::resources::funding::Grant) -> Submission {
-        transition context.funding_work[slot].phase == Phase::Idle {
+    machine retained(context: &mut |shared_state|::State, slot: u64 [0..=4], words: [u64; 8], grant: |resources_funding|::Grant) -> |presentation|::Submission {
+        transition context.funding_work[slot].phase == |funding|::Phase::Idle {
             true -> held(context, slot, words, grant)
-            _ -> (Submission::Answer { words: error(kernel::BUSY) })
+            _ -> (|presentation|::Submission::Answer { words: error(|kernel|::BUSY) })
         }
     }
-    machine held(context: &mut State, slot: u64 [0..=4], words: [u64; 8], grant: policy::children::launch::resources::funding::Grant) -> Submission {
-        let ticket: Ticket = runtime::server::main::ticket(&context.slots[slot].listener);
+    machine held(context: &mut |shared_state|::State, slot: u64 [0..=4], words: [u64; 8], grant: |resources_funding|::Grant) -> |presentation|::Submission {
+        let ticket: |server_main|::Ticket = |server_main|::ticket(&context.slots[slot].listener);
         let status: u64 = hold(context, slot, ticket);
-        transition status == 0u64 { true -> started(context, slot, words, grant, ticket) _ -> (Submission::Answer { words: error(status) }) }
+        transition status == 0u64 { true -> started(context, slot, words, grant, ticket) _ -> (|presentation|::Submission::Answer { words: error(status) }) }
     }
-    machine started(context: &mut State, slot: u64 [0..=4], words: [u64; 8], grant: policy::children::launch::resources::funding::Grant, ticket: Ticket) -> Submission {
-        let mut work: Work;
-        work.phase = Phase::Cover; work.ticket = ticket; work.reservation = context.reservations[slot]; work.grant = grant;
+    machine started(context: &mut |shared_state|::State, slot: u64 [0..=4], words: [u64; 8], grant: |resources_funding|::Grant, ticket: |server_main|::Ticket) -> |presentation|::Submission {
+        let mut work: |funding|::Work;
+        work.phase = |funding|::Phase::Cover; work.ticket = ticket; work.reservation = context.reservations[slot]; work.grant = grant;
         work.needed = [words[1],words[2],words[3],words[4],words[5]];
         context.funding_work[slot] = work;
-        Submission::Pending
+        |presentation|::Submission::Pending
     }
 }
-machine hold(context: &mut State, slot: u64 [0..=4], ticket: Ticket) -> u64 {
-    transition context.slots[slot].listener.peer.pipeline { true -> (responses::retain(context, slot, ticket)) _ -> (0u64) }
+machine hold(context: &mut |shared_state|::State, slot: u64 [0..=4], ticket: |server_main|::Ticket) -> u64 {
+    transition context.slots[slot].listener.peer.pipeline { true -> (|responses|::retain(context, slot, ticket)) _ -> (0u64) }
 }
-public machine step(gate: &Gate, context: &mut State) reaches Kernel blocks invokes Kernel {
+public machine step(gate: &|kernel|::Gate, context: &mut |shared_state|::State) reaches |kernel|::Kernel blocks invokes |kernel|::Kernel {
     block visit(gate, context, 0u64);
 }
-machine visit(gate: &Gate, context: &mut State, index: u64 [0..=6]) reaches Kernel {
+machine visit(gate: &|kernel|::Gate, context: &mut |shared_state|::State, index: u64 [0..=6]) reaches |kernel|::Kernel {
     transition index < 6u64 { true -> block one(gate, context, index) _ -> done() }
-    machine one(gate: &Gate, context: &mut State, index: u64 [0..=5]) reaches Kernel {
+    machine one(gate: &|kernel|::Gate, context: &mut |shared_state|::State, index: u64 [0..=5]) reaches |kernel|::Kernel {
         block advance(gate, context, index);
         transition { _ -> block visit(gate, context, index + 1u64) }
     }
 }
-machine current(context: &State, index: u64 [0..=5]) -> bool {
+machine current(context: &|shared_state|::State, index: u64 [0..=5]) -> bool {
     transition index < 5u64 { true -> child(context, index) _ -> (!context.funding_work[index].cancelled) }
-    machine child(context: &State, index: u64 [0..=4]) -> bool {
+    machine child(context: &|shared_state|::State, index: u64 [0..=4]) -> bool {
         context.slots[index].live && !context.retire_after_present[index]
             && context.reservations[index] == context.funding_work[index].reservation
-            && deferred::matches(&context.slots[index].listener, context.funding_work[index].ticket)
+            && |deferred|::matches(&context.slots[index].listener, context.funding_work[index].ticket)
     }
 }
-machine advance(gate: &Gate, context: &mut State, index: u64 [0..=5]) reaches Kernel {
-    let phase: Phase = context.funding_work[index].phase;
+machine advance(gate: &|kernel|::Gate, context: &mut |shared_state|::State, index: u64 [0..=5]) reaches |kernel|::Kernel {
+    let phase: |funding|::Phase = context.funding_work[index].phase;
     transition {
-        phase == Phase::Idle -> done()
-        phase == Phase::Finished -> block finish(gate, context, index)
-        phase == Phase::Waiting || phase == Phase::WaitingSlots -> receive(gate, context, index, phase == Phase::WaitingSlots)
-        !current(context, index) -> completed(context, index, kernel::DENIED)
-        phase == Phase::Slots -> block request(gate, context, index, [0u64,0u64,0u64,context.funding_work[index].needed[3],0u64], true)
+        phase == |funding|::Phase::Idle -> done()
+        phase == |funding|::Phase::Finished -> block finish(gate, context, index)
+        phase == |funding|::Phase::Waiting || phase == |funding|::Phase::WaitingSlots -> receive(gate, context, index, phase == |funding|::Phase::WaitingSlots)
+        !current(context, index) -> completed(context, index, |kernel|::DENIED)
+        phase == |funding|::Phase::Slots -> block request(gate, context, index, [0u64,0u64,0u64,context.funding_work[index].needed[3],0u64], true)
         _ -> block cover(gate, context, index)
     }
 }
-machine cover(gate: &Gate, context: &mut State, index: u64 [0..=5]) reaches Kernel {
-    lifecycle::settle(gate, context);
-    lifecycle::sweep_returned(gate, context);
-    let spare: Spare = runtime::task::main::spare(gate);
+machine cover(gate: &|kernel|::Gate, context: &mut |shared_state|::State, index: u64 [0..=5]) reaches |kernel|::Kernel {
+    |lifecycle|::settle(gate, context);
+    |lifecycle|::sweep_returned(gate, context);
+    let spare: |main|::Spare = |main|::spare(gate);
     transition spare {
-        Spare::Known { amounts } -> block short(gate, context, index, shortfall(amounts, transport_funding::owed(context, context.funding_work[index].needed)))
-        Spare::Failed { code } -> completed(context, index, code)
+        |main|::Spare::Known { amounts } -> block short(gate, context, index, |resources_funding|::shortfall(amounts, |transport_funding|::owed(context, context.funding_work[index].needed)))
+        |main|::Spare::Failed { code } -> completed(context, index, code)
     }
-    machine short(gate: &Gate, context: &mut State, index: u64 [0..=5], delta: [u64; 5]) reaches Kernel {
-        transition nothing(delta) { true -> funded(gate, context, index, false) _ -> block request(gate, context, index, delta, false) }
+    machine short(gate: &|kernel|::Gate, context: &mut |shared_state|::State, index: u64 [0..=5], delta: [u64; 5]) reaches |kernel|::Kernel {
+        transition |resources_funding|::nothing(delta) { true -> funded(gate, context, index, false) _ -> block request(gate, context, index, delta, false) }
     }
 }
-machine request(gate: &Gate, context: &mut State, index: u64 [0..=5], delta: [u64; 5], slots: bool) reaches Kernel {
+machine request(gate: &|kernel|::Gate, context: &mut |shared_state|::State, index: u64 [0..=5], delta: [u64; 5], slots: bool) reaches |kernel|::Kernel {
     transition context.has_parent {
         true -> block submitted(gate, context, index, delta, slots)
         _ -> refused_root(gate, context, index, delta)
     }
-    machine refused_root(gate: &Gate, context: &mut State, index: u64 [0..=5], delta: [u64; 5]) reaches Kernel {
-        report::funding_shortfall(gate, delta); completed(context, index, kernel::NO_MEMORY);
+    machine refused_root(gate: &|kernel|::Gate, context: &mut |shared_state|::State, index: u64 [0..=5], delta: [u64; 5]) reaches |kernel|::Kernel {
+        |report|::funding_shortfall(gate, delta); completed(context, index, |kernel|::NO_MEMORY);
     }
-    machine submitted(gate: &Gate, context: &mut State, index: u64 [0..=5], delta: [u64; 5], slots: bool) reaches Kernel {
-        let status: u64 = block connection::funding(gate, context, [FUND,delta[0],delta[1],delta[2],delta[3],delta[4],0u64,0u64]);
+    machine submitted(gate: &|kernel|::Gate, context: &mut |shared_state|::State, index: u64 [0..=5], delta: [u64; 5], slots: bool) reaches |kernel|::Kernel {
+        let status: u64 = block |connection|::funding(gate, context, [|matrix|::FUND,delta[0],delta[1],delta[2],delta[3],delta[4],0u64,0u64]);
         transition {
             status == 0u64 -> pending(gate, context, index, delta, slots)
-            status == kernel::BUSY || status == kernel::WOULD_BLOCK -> done()
+            status == |kernel|::BUSY || status == |kernel|::WOULD_BLOCK -> done()
             _ -> completed(context, index, status)
         }
     }
-    machine pending(gate: &Gate, context: &mut State, index: u64 [0..=5], delta: [u64; 5], slots: bool) reaches Kernel {
-        report::funding_asked(gate, delta);
+    machine pending(gate: &|kernel|::Gate, context: &mut |shared_state|::State, index: u64 [0..=5], delta: [u64; 5], slots: bool) reaches |kernel|::Kernel {
+        |report|::funding_asked(gate, delta);
         transition slots { true -> waiting_slots(context, index) _ -> waiting(context, index) }
     }
-    machine waiting(context: &mut State, index: u64 [0..=5]) { context.funding_work[index].phase = Phase::Waiting; }
-    machine waiting_slots(context: &mut State, index: u64 [0..=5]) { context.funding_work[index].phase = Phase::WaitingSlots; }
+    machine waiting(context: &mut |shared_state|::State, index: u64 [0..=5]) { context.funding_work[index].phase = |funding|::Phase::Waiting; }
+    machine waiting_slots(context: &mut |shared_state|::State, index: u64 [0..=5]) { context.funding_work[index].phase = |funding|::Phase::WaitingSlots; }
 }
-machine receive(gate: &Gate, context: &mut State, index: u64 [0..=5], slots: bool) reaches Kernel {
+machine receive(gate: &|kernel|::Gate, context: &mut |shared_state|::State, index: u64 [0..=5], slots: bool) reaches |kernel|::Kernel {
     transition context.parent_work.funding_ready { true -> received(gate, context, index, slots) _ -> done() }
-    machine received(gate: &Gate, context: &mut State, index: u64 [0..=5], slots: bool) reaches Kernel {
-        let words: [u64; 8] = connection::take_funding(context);
+    machine received(gate: &|kernel|::Gate, context: &mut |shared_state|::State, index: u64 [0..=5], slots: bool) reaches |kernel|::Kernel {
+        let words: [u64; 8] = |connection|::take_funding(context);
         transition {
-            !current(context, index) -> completed(context, index, kernel::DENIED)
+            !current(context, index) -> completed(context, index, |kernel|::DENIED)
             words[0] != 0u64 -> completed(context, index, words[0])
             _ -> funded(gate, context, index, slots)
         }
     }
 }
-machine funded(gate: &Gate, context: &mut State, index: u64 [0..=5], retried: bool) reaches Kernel {
+machine funded(gate: &|kernel|::Gate, context: &mut |shared_state|::State, index: u64 [0..=5], retried: bool) reaches |kernel|::Kernel {
     transition index < 5u64 { true -> growing(gate, context, index, retried) _ -> completed(context, index, 0u64) }
-    machine growing(gate: &Gate, context: &mut State, slot: u64 [0..=4], retried: bool) reaches Kernel {
-        let status: u64 = runtime::task::main::grow(gate, context.funding_work[slot].reservation, context.funding_work[slot].needed);
+    machine growing(gate: &|kernel|::Gate, context: &mut |shared_state|::State, slot: u64 [0..=4], retried: bool) reaches |kernel|::Kernel {
+        let status: u64 = |main|::grow(gate, context.funding_work[slot].reservation, context.funding_work[slot].needed);
         transition {
             status == 0u64 -> granted(context, slot)
-            !retried && status == kernel::NO_PROCESS_CAPACITY && context.funding_work[slot].needed[3] != 0u64 -> slots(context, slot)
-            _ -> completed(context, slot, kernel::NO_MEMORY)
+            !retried && status == |kernel|::NO_PROCESS_CAPACITY && context.funding_work[slot].needed[3] != 0u64 -> slots(context, slot)
+            _ -> completed(context, slot, |kernel|::NO_MEMORY)
         }
     }
-    machine granted(context: &mut State, slot: u64 [0..=4]) {
-        context.funding[slot] = Funding::Growable { grant: context.funding_work[slot].grant }; completed(context, slot, 0u64);
+    machine granted(context: &mut |shared_state|::State, slot: u64 [0..=4]) {
+        context.funding[slot] = |resources_funding|::Funding::Growable { grant: context.funding_work[slot].grant }; completed(context, slot, 0u64);
     }
-    machine slots(context: &mut State, slot: u64 [0..=4]) { context.funding_work[slot].phase = Phase::Slots; }
+    machine slots(context: &mut |shared_state|::State, slot: u64 [0..=4]) { context.funding_work[slot].phase = |funding|::Phase::Slots; }
 }
-machine completed(context: &mut State, index: u64 [0..=5], status: u64) {
-    context.funding_work[index].status = status; context.funding_work[index].phase = Phase::Finished;
+machine completed(context: &mut |shared_state|::State, index: u64 [0..=5], status: u64) {
+    context.funding_work[index].status = status; context.funding_work[index].phase = |funding|::Phase::Finished;
 }
-machine finish(gate: &Gate, context: &mut State, index: u64 [0..=5]) reaches Kernel {
+machine finish(gate: &|kernel|::Gate, context: &mut |shared_state|::State, index: u64 [0..=5]) reaches |kernel|::Kernel {
     transition index < 5u64 { true -> block child(gate, context, index) _ -> done() }
-    machine child(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
+    machine child(gate: &|kernel|::Gate, context: &mut |shared_state|::State, slot: u64 [0..=4]) reaches |kernel|::Kernel {
         transition context.answers[slot].active { true -> done() _ -> block reply(gate, context, slot) }
     }
-    machine reply(gate: &Gate, context: &mut State, slot: u64 [0..=4]) reaches Kernel {
-        let work: Work = context.funding_work[slot];
-        let empty: Work; context.funding_work[slot] = empty;
-        let status: u64 = block responses::send(gate, context, slot, work.ticket, error(work.status));
+    machine reply(gate: &|kernel|::Gate, context: &mut |shared_state|::State, slot: u64 [0..=4]) reaches |kernel|::Kernel {
+        let work: |funding|::Work = context.funding_work[slot];
+        let empty: |funding|::Work; context.funding_work[slot] = empty;
+        let status: u64 = block |responses|::send(gate, context, slot, work.ticket, error(work.status));
     }
 }
-public machine pending(context: &State) -> bool {
-    context.funding_work[0].phase != Phase::Idle || context.funding_work[1].phase != Phase::Idle
-        || context.funding_work[2].phase != Phase::Idle || context.funding_work[3].phase != Phase::Idle
-        || context.funding_work[4].phase != Phase::Idle || context.funding_work[5].phase != Phase::Idle
+public machine pending(context: &|shared_state|::State) -> bool {
+    context.funding_work[0].phase != |funding|::Phase::Idle || context.funding_work[1].phase != |funding|::Phase::Idle
+        || context.funding_work[2].phase != |funding|::Phase::Idle || context.funding_work[3].phase != |funding|::Phase::Idle
+        || context.funding_work[4].phase != |funding|::Phase::Idle || context.funding_work[5].phase != |funding|::Phase::Idle
 }
 machine error(code: u64) -> [u64; 8] { [code,0u64,0u64,0u64,0u64,0u64,0u64,0u64] }
 machine done() {}

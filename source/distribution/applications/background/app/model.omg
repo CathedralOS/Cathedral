@@ -1,4 +1,3 @@
-module model;
 // The app owns its continuation and presentation. Native packets live in bridge/.
 public data Phase [copy] {
     case Start;

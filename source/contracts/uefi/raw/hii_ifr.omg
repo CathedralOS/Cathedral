@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified rust-osdev/uefi-rs translation at c0facddf9ba42b74906a37fca2869e6cdbc8da6a.
 // See hii.PORT.md. Inert carriers; pointer/slot bits confer no authority.
-module hii_ifr;
-use scalars;
-use console;
+use scalars.omg;
+use console.omg;
 
 // Upstream: uefi_raw::protocol::hii::ifr::IfrType
 pub data IfrType [copy] {
@@ -280,7 +279,7 @@ pub data IfrForm [copy] {
 // Required packed layout: alignment 1, no inter-field padding.
 pub data IfrFormMapMethod [copy] {
     method_title: u16;
-    method_identifier: scalars::Guid;
+    method_identifier: |scalars|::Guid;
 }
 
 // Upstream: uefi_raw::protocol::hii::ifr::IfrFormMap
@@ -295,7 +294,7 @@ pub data IfrFormMap [copy] {
 // Required packed layout: alignment 1, no inter-field padding.
 pub data IfrFormSet [copy] {
     header: IfrOpHeader;
-    guid: scalars::Guid;
+    guid: |scalars|::Guid;
     formset_title: u16;
     help: u16;
     flags: u8;
@@ -334,7 +333,7 @@ pub data IfrGreaterThan [copy] {
 // Required packed layout: alignment 1, no inter-field padding.
 pub data IfrGuid [copy] {
     header: IfrOpHeader;
-    guid: scalars::Guid;
+    guid: |scalars|::Guid;
 }
 
 // Upstream: uefi_raw::protocol::hii::ifr::IfrImage
@@ -391,7 +390,7 @@ pub data IfrMatch [copy] {
 // Required packed layout: alignment 1, no inter-field padding.
 pub data IfrMatch2 [copy] {
     header: IfrOpHeader;
-    syntax_type: scalars::Guid;
+    syntax_type: |scalars|::Guid;
 }
 
 // Upstream: uefi_raw::protocol::hii::ifr::IfrMid
@@ -605,7 +604,7 @@ pub data IfrQuestionRef32 [copy] {
 pub data IfrQuestionRef33 [copy] {
     header: IfrOpHeader;
     device_path: u16;
-    guid: scalars::Guid;
+    guid: |scalars|::Guid;
 }
 
 // Upstream: uefi_raw::protocol::hii::ifr::IfrRead
@@ -641,7 +640,7 @@ pub data IfrRef3WireStorage [copy] {
     question_storage: IfrQuestionHeaderWireStorage;
     form_id: u16;
     question_id: u16;
-    formset_id: scalars::Guid;
+    formset_id: |scalars|::Guid;
 }
 
 // Upstream: uefi_raw::protocol::hii::ifr::IfrRef4
@@ -652,7 +651,7 @@ pub data IfrRef4WireStorage [copy] {
     question_storage: IfrQuestionHeaderWireStorage;
     form_id: u16;
     question_id: u16;
-    formset_id: scalars::Guid;
+    formset_id: |scalars|::Guid;
     device_path: u16;
 }
 
@@ -675,7 +674,7 @@ pub data IfrRefresh [copy] {
 // Required packed layout: alignment 1, no inter-field padding.
 pub data IfrRefreshId [copy] {
     header: IfrOpHeader;
-    refresh_event_group_id: scalars::Guid;
+    refresh_event_group_id: |scalars|::Guid;
 }
 
 // Upstream: uefi_raw::protocol::hii::ifr::IfrResetButton
@@ -704,7 +703,7 @@ pub data IfrRuleRef [copy] {
 // Required packed layout: alignment 1, no inter-field padding.
 pub data IfrSecurity [copy] {
     header: IfrOpHeader;
-    permissions: scalars::Guid;
+    permissions: |scalars|::Guid;
 }
 
 // Upstream: uefi_raw::protocol::hii::ifr::IfrSet
@@ -910,7 +909,7 @@ pub data IfrValue [copy] {
 // Required packed layout: alignment 1, no inter-field padding.
 pub data IfrVarstore [copy] {
     header: IfrOpHeader;
-    guid: scalars::Guid;
+    guid: |scalars|::Guid;
     varstore_id: u16;
     size: u16;
     // PORT-BLOCKED[omega:runtime-layout-strides]: typed trailing name ([u8; 0]) requires bounded runtime shape.
@@ -921,7 +920,7 @@ pub data IfrVarstore [copy] {
 pub data IfrVarstoreNameValue [copy] {
     header: IfrOpHeader;
     varstore_id: u16;
-    guid: scalars::Guid;
+    guid: |scalars|::Guid;
 }
 
 // Upstream: uefi_raw::protocol::hii::ifr::IfrVarstoreEfi
@@ -929,7 +928,7 @@ pub data IfrVarstoreNameValue [copy] {
 pub data IfrVarstoreEfi [copy] {
     header: IfrOpHeader;
     varstore_id: u16;
-    guid: scalars::Guid;
+    guid: |scalars|::Guid;
     attributes: u32;
     size: u16;
     // PORT-BLOCKED[omega:runtime-layout-strides]: typed trailing name ([u8; 0]) requires bounded runtime shape.

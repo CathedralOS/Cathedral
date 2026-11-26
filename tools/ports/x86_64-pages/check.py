@@ -27,7 +27,7 @@ def main():
    # Keep only selected test bodies: even unused aggregate bodies impose costly
    # proof work. Each original group is compiled and evaluated in its own batch.
    prefix=source[:source.index('machine group_0(')]
-   if 'extras::result' not in selected:prefix=prefix.replace('use extras;\n','')
+   if '|extras|::result' not in selected:prefix=prefix.replace('use extras.omg;\n','')
    bodies=re.findall(r'^machine (group_\d+)\(\)[\s\S]*?^}',source,re.M)
    blocks=re.findall(r'^machine group_\d+\(\)[\s\S]*?^}',source,re.M)
    body=prefix+'\n'.join(block for name,block in zip(bodies,blocks) if name in selected)
@@ -39,7 +39,7 @@ def main():
    statements=[f'    let case{i}: bool = {name}() == 0;' for i,name in enumerate(selected)]
    body+='\nmachine selected_result() -> i32 {\n'+'\n'.join(statements)+'\n    transition '+' && '.join(f'case{i}' for i in range(len(selected)))+' { true -> (0) _ -> (1) }\n}\n'
    (p/'main.omg').write_text(body)
-   if 'extras::result' in selected:(p/'extras.omg').write_text(additional)
+   if '|extras|::result' in selected:(p/'extras.omg').write_text(additional)
    (p/'build.omg').write_text(build)
    result=subprocess.run([str(compiler),'--check',str(p/'main.omg')],cwd=ROOT,capture_output=True,text=True)
    output=result.stdout+result.stderr
@@ -49,9 +49,9 @@ def main():
  for start in ([] if args.extras_only or args.numeric_controls_only else range(len(groups))):
   selected=groups[start:start+1];evaluate(selected);print('PASS semantic groups:',', '.join(selected),flush=True)
  if not args.numeric_controls_only:
-  evaluate(['extras::result']);print('PASS range and overflowing-step extras',flush=True)
+  evaluate(['|extras|::result']);print('PASS range and overflowing-step extras',flush=True)
  controls=[] if args.extras_only else [(['group_0'],('main.omg','equal(result0, 0)','equal(result0, 1)')),(['group_64'],('main.omg','equal(result65, 18446603336221196288)','equal(result65, 18446603336221196289)'))]
- if not args.numeric_controls_only:controls.append((['extras::result'],('extras.omg','let passed13: bool = overflow.overflow;','let passed13: bool = !overflow.overflow;')))
+ if not args.numeric_controls_only:controls.append((['|extras|::result'],('extras.omg','let passed13: bool = overflow.overflow;','let passed13: bool = !overflow.overflow;')))
  for selected,mutation in controls:
   evaluate(selected,mutation);print('PASS body mutation rejected:',mutation[1],flush=True)
  print('Selected semantic batches and controls passed; no native/ABI/mapping claims.')

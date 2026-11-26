@@ -11,7 +11,7 @@
           "reason": "Reuse canonical resources::resource_model::Irq; no competing IRQ representation.",
           "targets": [
             {
-              "anchor": "irq:Irq;",
+              "anchor": "irq:|resource_model|::Irq;",
               "path": "source/platform/libraries/acpi/pci_routing/model.omg"
             }
           ]

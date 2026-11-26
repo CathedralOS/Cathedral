@@ -1,5 +1,3 @@
-module state;
-
 public data StorageStep [copy] {
     case Bound;
     case Listed;

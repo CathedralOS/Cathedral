@@ -762,7 +762,7 @@
           "reason": "Reuses canonical interpreter/buffer_fields::copy_bits for one initialized, zero-extended logical payload; no independent helper rewrite.",
           "targets": [
             {
-              "anchor": "buffer_fields::copy_bits(",
+              "anchor": "|buffer_fields|::copy_bits(",
               "path": "source/platform/libraries/acpi/field_sources/sequence.omg"
             }
           ]

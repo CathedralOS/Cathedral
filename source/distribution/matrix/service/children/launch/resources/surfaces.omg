@@ -1,5 +1,3 @@
-module children::launch::resources::surfaces;
-
 // A preference is not an allocation. The host tries disjoint ranges from this
 // count down to the requested minimum; an empty range must refuse admission.
 public data Demand {

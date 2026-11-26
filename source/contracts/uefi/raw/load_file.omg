@@ -3,8 +3,7 @@
 // See console.PORT.md; reproduced by tools/ports/uefi-console/generate.py.
 // Inert x86-64 representation corpus. No pointer dereference or callable authority.
 // Layout vectors describe required foreign geometry, not default Omega layout.
-module load_file;
-use scalars;
+use scalars.omg;
 
 // Upstream: uefi_raw::protocol::media::LoadFileProtocol
 pub data LoadFileProtocol [copy] {
@@ -26,6 +25,6 @@ pub data StorageSecurityCommandProtocol [copy] {
     // Foreign carrier: unsafe extern "efiapi" fn( this: *mut Self, media_id: u32, timeout: u64, security_protocol: u8, security_protocol_specific_data: u16, buffer_size: usize, buffer: *const c_void, ) -> Status
 }
 
-pub const LOAD_FILE_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x56ec3091, data2: 0x954c, data3: 0x11d2, data4: [0x8e, 0x3f, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
-pub const LOAD_FILE2_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x4006c0c1, data2: 0xfcb3, data3: 0x403e, data4: [0x99, 0x6d, 0x4a, 0x6c, 0x87, 0x24, 0xe0, 0x6d] };
-pub const STORAGE_SECURITY_COMMAND_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0xc88b0b6d, data2: 0x0dfc, data3: 0x49a7, data4: [0x9c, 0xb4, 0x49, 0x07, 0x4b, 0x4c, 0x3a, 0x78] };
+pub const LOAD_FILE_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x56ec3091, data2: 0x954c, data3: 0x11d2, data4: [0x8e, 0x3f, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
+pub const LOAD_FILE2_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x4006c0c1, data2: 0xfcb3, data3: 0x403e, data4: [0x99, 0x6d, 0x4a, 0x6c, 0x87, 0x24, 0xe0, 0x6d] };
+pub const STORAGE_SECURITY_COMMAND_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0xc88b0b6d, data2: 0x0dfc, data3: 0x49a7, data4: [0x9c, 0xb4, 0x49, 0x07, 0x4b, 0x4c, 0x3a, 0x78] };

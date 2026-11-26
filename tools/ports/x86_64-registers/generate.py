@@ -51,14 +51,14 @@ enums={
 msrs=[];source=(CHECKOUT/'src/registers/model_specific.rs').read_text()
 for match in re.finditer(r'impl (\w+)\s*\{\s*/// The underlying model specific register\.\s*pub const MSR: Msr = Msr\((0x[0-9A-Fa-f_]+)\);',source):
  name,literal=match.groups();msrs.append({'name':prefix(name)+'_MSR','owner':name,'value':int(literal.replace('_',''),16),'path':'src/registers/model_specific.rs','line':source[:source.index('pub const MSR',match.start())].count('\n')+1})
-head=['// SPDX-License-Identifier: MIT OR Apache-2.0','// Modified x86_64 register translation at '+PIN+'.','// See x86_registers.PORT.md. Raw bits only; no CPU validity or authority.','module x86_registers;','use local_apic;','']
+head=['// SPDX-License-Identifier: MIT OR Apache-2.0','// Modified x86_64 register translation at '+PIN+'.','// See x86_registers.PORT.md. Raw bits only; no CPU validity or authority.','use local_apic.omg;','']
 for flag in flags:
  head.append('pub data '+flag['name']+' [copy] { raw: '+flag['width']+'; }')
  for member in flag['members']:
   value=str(member['value'])
   if flag['name']=='ApicBaseFlags':
    bit={'BSP':'IA32_APIC_BASE_BSP_BIT','X2APIC_ENABLE':'IA32_APIC_BASE_X2APIC_ENABLE_BIT','LAPIC_ENABLE':'IA32_APIC_BASE_GLOBAL_ENABLE_BIT'}[member['source_name']]
-   value='(1 as u64) << '+bit
+   value='(1 as u64) << |local_apic|::'+bit
   head.append('pub const '+member['name']+': '+flag['name']+' = '+flag['name']+' { raw: '+value+' };')
  head.append('pub const '+prefix(flag['name'])+'_KNOWN_BITS: '+flag['width']+' = '+str(flag['known_bits'])+';\n')
 for name,(width,members) in enums.items():
@@ -67,7 +67,7 @@ for name,(width,members) in enums.items():
  head.append('')
 head+=['pub data SegmentSelector [copy] { raw: u16; }','pub const SEGMENT_SELECTOR_NULL: SegmentSelector = SegmentSelector { raw: 0 };','pub data Msr [copy] { raw: u32; }','pub data Dr7Bits [copy] { raw: u64; }','']
 for msr in msrs:
- value='IA32_APIC_BASE_MSR' if msr['owner']=='ApicBase' else str(msr['value'])
+ value='|local_apic|::IA32_APIC_BASE_MSR' if msr['owner']=='ApicBase' else str(msr['value'])
  head.append(f'pub const {msr["name"]}: Msr = Msr {{ raw: {value} }};')
 head+=['','pub const MXCSR_RESET_BITS: u32 = 8064;','pub const DR7_VALID_BITS: u64 = 4294913023;','']
 # Validate the independent hand-derived mask against pinned flags.

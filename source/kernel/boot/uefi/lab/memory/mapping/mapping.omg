@@ -1,38 +1,36 @@
-use arch::isa::x86_64::memory::clone::X86ClonedPageTables;
-use arch::isa::x86_64::memory::memory::InactivePageTablePlacement;
-use arch::isa::x86_64::memory::memory::InactivePageTables;
-use arch::isa::x86_64::memory::memory::PageTableReservation;
-use arch::isa::x86_64::memory::memory::PreparedPageTables;
-use omega::language::core::extent;
-use omega::language::core::layout;
-use lab::memory::mapping::firmware::firmware;
-use lab::memory::page;
-use memory::profile;
-use lab::memory::mapping::custody;
-use lab::memory::mapping::activation;
-use lab::memory::mapping::region;
+use {omega}/language/core/assembly.omg;
+use {arch}/isa/x86_64/memory/clone.omg;
+use {arch}/isa/x86_64/memory/memory.omg;
+use {omega}/language/core/extent.omg;
+use {omega}/language/core/layout.omg;
+use lab/memory/mapping/firmware/firmware.omg;
+use lab/memory/page.omg;
+use memory/profile.omg;
+use lab/memory/mapping/custody.omg;
+use lab/memory/mapping/activation.omg;
+use lab/memory/mapping/region.omg;
 
 data BootPageTables {
-    leading: Extent in Granted & Vacant;
-    target_padding: Extent in Granted & Vacant;
-    target: Extent in Granted & Resident<KernelPagePlacement, KernelPage>;
-    reservation: PageTableReservation;
+    leading: |extent|::Extent in |extent|::Granted & |extent|::Vacant;
+    target_padding: |extent|::Extent in |extent|::Granted & |extent|::Vacant;
+    target: |extent|::Extent in |extent|::Granted & |extent|::Resident<|page|::KernelPagePlacement, |page|::KernelPage>;
+    reservation: |memory|::PageTableReservation;
 }
 
 data MappingPadding {
-    leading: Extent in Granted & Vacant;
-    target: Extent in Granted & Vacant;
-    baseline: Extent in Granted & Resident<KernelPagePlacement, KernelPage>;
-    tables: Extent in Granted & Vacant;
-    tail: Extent in Granted & Vacant;
+    leading: |extent|::Extent in |extent|::Granted & |extent|::Vacant;
+    target: |extent|::Extent in |extent|::Granted & |extent|::Vacant;
+    baseline: |extent|::Extent in |extent|::Granted & |extent|::Resident<|page|::KernelPagePlacement, |page|::KernelPage>;
+    tables: |extent|::Extent in |extent|::Granted & |extent|::Vacant;
+    tail: |extent|::Extent in |extent|::Granted & |extent|::Vacant;
 }
 
 data MappingAttempt {
-    case Unchanged(tables: BootPageTables, destination: Extent in Granted & BootVirtualDestination);
-    case SourceHeld(tables: BootPageTables, destination: Extent in Granted & BootVirtualDestination,
-                    source: MappingRegionPreparation);
-    case Prepared(padding: MappingPadding, mapping: BootMapping);
-    case Retired(padding: MappingPadding, mapping: BootMapping, verified: bool);
+    case Unchanged(tables: BootPageTables, destination: |extent|::Extent in |extent|::Granted & |activation|::BootVirtualDestination);
+    case SourceHeld(tables: BootPageTables, destination: |extent|::Extent in |extent|::Granted & |activation|::BootVirtualDestination,
+                    source: |region|::MappingRegionPreparation);
+    case Prepared(padding: MappingPadding, mapping: |activation|::BootMapping);
+    case Retired(padding: MappingPadding, mapping: |activation|::BootMapping, verified: bool);
 }
 
 data MappingExercise {}
@@ -51,11 +49,11 @@ machine MappingExercise::verified(attempt: &MappingAttempt) -> bool {
     }
 }
 
-machine MappingExercise::root(tables: &PreparedPageTables) -> u64
+machine MappingExercise::root(tables: &|memory|::PreparedPageTables) -> u64
 requires address::Bound == 18446744073709551616
 {
     transition tables {
-        PreparedPageTables::Ready { storage } -> (storage.base as u64)
+        |memory|::PreparedPageTables::Ready { storage } -> (storage.base as u64)
         _ -> 0
     }
 }
@@ -64,60 +62,60 @@ requires address::Bound == 18446744073709551616
 // Prepare from real retained snapshots; retire Stable construction; program
 // External tables; activate; exercise the virtual alias; restore CR3; then
 // read every physical page. Every recoverable refusal returns all claims.
-machine MappingExercise::run(tables: BootPageTables, destination: Extent in Granted & BootVirtualDestination,
-                             inventory: &FirmwareTableInventory, firmware_root: u64) -> MappingAttempt
+machine MappingExercise::run(tables: BootPageTables, destination: |extent|::Extent in |extent|::Granted & |activation|::BootVirtualDestination,
+                             inventory: &|firmware|::FirmwareTableInventory, firmware_root: u64) -> MappingAttempt
 requires address::Bound == 18446744073709551616
-reaches ResourceProfileSupply + MachineControl + BootTranslation
+reaches |layout|::ResourceProfileSupply + |assembly|::MachineControl + |activation|::BootTranslation
 crashes Abort
 {
     let root: u64 = MappingExercise::root(&tables.reservation.tables);
     transition tables.reservation.verified && root != 0 && tables.target.length == 4096 &&
-        destination.length == MAPPING_BYTE_COUNT &&
-        tables.reservation.tail.length >= MAPPING_BYTE_COUNT &&
+        destination.length == |region|::MAPPING_BYTE_COUNT &&
+        tables.reservation.tail.length >= |region|::MAPPING_BYTE_COUNT &&
         (tables.reservation.tail.base as u64) % 4096 == 0 {
         true -> allocate(tables, destination, inventory, firmware_root, root)
         _ -> (MappingAttempt::Unchanged { tables: tables, destination: destination })
     }
-    machine allocate(tables: BootPageTables, destination: Extent in Granted & BootVirtualDestination,
-                   inventory: &FirmwareTableInventory, firmware_root: u64, root: u64) -> MappingAttempt
-    requires address::Bound == 18446744073709551616 && tables.reservation.tail.length >= MAPPING_BYTE_COUNT
+    machine allocate(tables: BootPageTables, destination: |extent|::Extent in |extent|::Granted & |activation|::BootVirtualDestination,
+                   inventory: &|firmware|::FirmwareTableInventory, firmware_root: u64, root: u64) -> MappingAttempt
+    requires address::Bound == 18446744073709551616 && tables.reservation.tail.length >= |region|::MAPPING_BYTE_COUNT
     {
         let verified: bool = tables.reservation.verified;
-        let parts: VacantExtentParts = split_vacant_extent(tables.reservation.tail, MAPPING_BYTE_COUNT);
+        let parts: |extent|::VacantExtentParts = |extent|::split_vacant_extent(tables.reservation.tail, |region|::MAPPING_BYTE_COUNT);
         let retained: BootPageTables = BootPageTables {
             leading: tables.leading, target_padding: tables.target_padding, target: tables.target,
-            reservation: PageTableReservation {
+            reservation: |memory|::PageTableReservation {
                 padding: tables.reservation.padding, tables: tables.reservation.tables,
                 tail: parts.rest, verified: verified,
             },
         };
-        transition prepare_mapping_region(parts.taken) {
-            MappingRegionPreparation::Ready { storage } -> clone(retained, storage, destination, inventory, firmware_root, root)
-            MappingRegionPreparation::Rejected { storage } -> (MappingAttempt::SourceHeld {
+        transition |region|::prepare_mapping_region(parts.taken) {
+            |region|::MappingRegionPreparation::Ready { storage } -> clone(retained, storage, destination, inventory, firmware_root, root)
+            |region|::MappingRegionPreparation::Rejected { storage } -> (MappingAttempt::SourceHeld {
                 tables: retained, destination: destination,
-                source: MappingRegionPreparation::Rejected { storage: storage },
+                source: |region|::MappingRegionPreparation::Rejected { storage: storage },
             })
         }
     }
     machine clone(tables: BootPageTables,
-                source: Extent in Granted & Resident<MappingRegionPlacement, MappingRegion>,
-                destination: Extent in Granted & BootVirtualDestination,
-                inventory: &FirmwareTableInventory, firmware_root: u64, root: u64) -> MappingAttempt
+                source: |extent|::Extent in |extent|::Granted & |extent|::Resident<|region|::MappingRegionPlacement, |region|::MappingRegion>,
+                destination: |extent|::Extent in |extent|::Granted & |activation|::BootVirtualDestination,
+                inventory: &|firmware|::FirmwareTableInventory, firmware_root: u64, root: u64) -> MappingAttempt
     requires address::Bound == 18446744073709551616
     {
-        transition MappingHandoff::clone(inventory, firmware_root, root,
+        transition |custody|::MappingHandoff::clone(inventory, firmware_root, root,
             source.base as u64, destination.base as u64, source.length) {
-            MappingCloneResult::Ready { tables as image } -> extract(tables, source, destination, firmware_root, image)
+            |custody|::MappingCloneResult::Ready { tables as image } -> extract(tables, source, destination, firmware_root, image)
             _ -> (MappingAttempt::SourceHeld {
                 tables: tables, destination: destination,
-                source: MappingRegionPreparation::Ready { storage: source },
+                source: |region|::MappingRegionPreparation::Ready { storage: source },
             })
         }
     }
     machine extract(tables: BootPageTables,
-                  source: Extent in Granted & Resident<MappingRegionPlacement, MappingRegion>,
-                  destination: Extent in Granted & BootVirtualDestination,
-                  firmware_root: u64, image: X86ClonedPageTables) -> MappingAttempt
+                  source: |extent|::Extent in |extent|::Granted & |extent|::Resident<|region|::MappingRegionPlacement, |region|::MappingRegion>,
+                  destination: |extent|::Extent in |extent|::Granted & |activation|::BootVirtualDestination,
+                  firmware_root: u64, image: |clone|::X86ClonedPageTables) -> MappingAttempt
     requires address::Bound == 18446744073709551616
     {
         let padding: MappingPadding = MappingPadding {
@@ -126,51 +124,51 @@ crashes Abort
             tables: tables.reservation.padding, tail: tables.reservation.tail,
         };
         transition tables.reservation.tables {
-            PreparedPageTables::Ready { storage } -> retire_resident(padding, source, destination, storage, firmware_root, image)
-            PreparedPageTables::Rejected { storage } -> (MappingAttempt::Prepared {
+            |memory|::PreparedPageTables::Ready { storage } -> retire_resident(padding, source, destination, storage, firmware_root, image)
+            |memory|::PreparedPageTables::Rejected { storage } -> (MappingAttempt::Prepared {
                 padding: padding,
-                mapping: BootMapping { source: source, destination: destination, tables: storage, firmware_root: firmware_root },
+                mapping: |activation|::BootMapping { source: source, destination: destination, tables: storage, firmware_root: firmware_root },
             })
         }
     }
     machine retire_resident(padding: MappingPadding,
-                          source: Extent in Granted & Resident<MappingRegionPlacement, MappingRegion>,
-                          destination: Extent in Granted & BootVirtualDestination,
-                          tables: Extent in Granted & Resident<InactivePageTablePlacement, InactivePageTables>,
-                          firmware_root: u64, image: X86ClonedPageTables) -> MappingAttempt
+                          source: |extent|::Extent in |extent|::Granted & |extent|::Resident<|region|::MappingRegionPlacement, |region|::MappingRegion>,
+                          destination: |extent|::Extent in |extent|::Granted & |activation|::BootVirtualDestination,
+                          tables: |extent|::Extent in |extent|::Granted & |extent|::Resident<|memory|::InactivePageTablePlacement, |memory|::InactivePageTables>,
+                          firmware_root: u64, image: |clone|::X86ClonedPageTables) -> MappingAttempt
     requires address::Bound == 18446744073709551616
     {
-        transition NativeAccess<InactivePageTablePlacement, InactivePageTables, BootMemory>::move_out(tables) {
-            AccessExtraction::Moved { storage, value } -> program(padding, source, destination, storage, firmware_root, image)
+        transition |layout|::NativeAccess<|memory|::InactivePageTablePlacement, |memory|::InactivePageTables, |profile|::BootMemory>::move_out(tables) {
+            |layout|::AccessExtraction::Moved { storage, value } -> program(padding, source, destination, storage, firmware_root, image)
         }
     }
     machine program(padding: MappingPadding,
-                  source: Extent in Granted & Resident<MappingRegionPlacement, MappingRegion>,
-                  destination: Extent in Granted & BootVirtualDestination, tables: Extent in Granted & Vacant,
-                  firmware_root: u64, image: X86ClonedPageTables) -> MappingAttempt
+                  source: |extent|::Extent in |extent|::Granted & |extent|::Resident<|region|::MappingRegionPlacement, |region|::MappingRegion>,
+                  destination: |extent|::Extent in |extent|::Granted & |activation|::BootVirtualDestination, tables: |extent|::Extent in |extent|::Granted & |extent|::Vacant,
+                  firmware_root: u64, image: |clone|::X86ClonedPageTables) -> MappingAttempt
     requires address::Bound == 18446744073709551616
     {
-        let mut pending: BootMapping = BootMapping {
+        let mut pending: |activation|::BootMapping = |activation|::BootMapping {
             source: source, destination: destination, tables: tables,
             firmware_root: firmware_root,
         };
-        let programmed: bool = MappingHandoff::program(&mut pending.tables, &image);
+        let programmed: bool = |custody|::MappingHandoff::program(&mut pending.tables, &image);
         transition programmed && pending.tables.length == 16384 &&
             (pending.tables.base as u64) % 4096 == 0 && pending.tables.base as u64 <= 0x000FFFFFFFFFC000 &&
-            pending.source.length == MAPPING_BYTE_COUNT && pending.destination.length == MAPPING_BYTE_COUNT {
+            pending.source.length == |region|::MAPPING_BYTE_COUNT && pending.destination.length == |region|::MAPPING_BYTE_COUNT {
             true -> activate(padding, pending)
             _ -> dormant(padding, pending)
         }
     }
-    machine activate(padding: MappingPadding, pending: BootMapping) -> MappingAttempt
+    machine activate(padding: MappingPadding, pending: |activation|::BootMapping) -> MappingAttempt
     requires address::Bound == 18446744073709551616
     {
-        let mut retained: BootMapping = pending;
-        let mapped: bool = BootTranslation::exercise(&mut retained);
-        let physical: bool = check_mapping_region(&mut retained.source);
+        let mut retained: |activation|::BootMapping = pending;
+        let mapped: bool = |activation|::BootTranslation::exercise(&mut retained);
+        let physical: bool = |region|::check_mapping_region(&mut retained.source);
         MappingAttempt::Retired { padding: padding, mapping: retained, verified: mapped && physical }
     }
-    machine dormant(padding: MappingPadding, pending: BootMapping) -> MappingAttempt {
+    machine dormant(padding: MappingPadding, pending: |activation|::BootMapping) -> MappingAttempt {
         MappingAttempt::Prepared {
             padding: padding,
             mapping: pending,

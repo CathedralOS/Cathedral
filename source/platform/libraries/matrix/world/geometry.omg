@@ -1,5 +1,4 @@
-module geometry;
-use protocol::main;
+use {protocol}/main.omg;
 // Grants and placements. A grant is what a child may see: an epoch that changes
 // whenever its extent or keys change, and a key mask never wider than the parent's.
 
@@ -17,12 +16,12 @@ public data Rect [copy] {
 }
 public machine valid_grant(grant: Grant) -> bool {
     grant.epoch != 0u64 && grant.width > 0u64 && grant.height > 0u64
-        && grant.width <= MAX_EXTENT && grant.height <= MAX_EXTENT
-        && (grant.keys & ~VALID_KEY_MASK) == 0u64
+        && grant.width <= |main|::MAX_EXTENT && grant.height <= |main|::MAX_EXTENT
+        && (grant.keys & ~|main|::VALID_KEY_MASK) == 0u64
 }
 public machine valid_rect(rect: Rect) -> bool {
-    rect.width > 0u64 && rect.height > 0u64 && rect.x < MAX_EXTENT && rect.y < MAX_EXTENT
-        && rect.width <= MAX_EXTENT && rect.height <= MAX_EXTENT
+    rect.width > 0u64 && rect.height > 0u64 && rect.x < |main|::MAX_EXTENT && rect.y < |main|::MAX_EXTENT
+        && rect.width <= |main|::MAX_EXTENT && rect.height <= |main|::MAX_EXTENT
 }
 public machine same_grant(a: Grant, b: Grant) -> bool {
     a.epoch == b.epoch && a.width == b.width && a.height == b.height && a.keys == b.keys

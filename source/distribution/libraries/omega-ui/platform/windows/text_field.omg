@@ -1,16 +1,7 @@
-use windows_host::WindowsUiHost;
-use windows_host::WindowsUiTextExtent;
-module text_field;
+use windows_host.omg;
 
-use fonts::WindowsUiFonts;
-use omega_ui::types::Rect;
-use omega_ui::types::add_i32;
-use omega_ui::types::clamp_i32;
-use omega_ui::types::max_i32;
-use omega_ui::types::min_i32;
-use omega_ui::types::mul_i32;
-use omega_ui::types::select_i32;
-use omega_ui::types::sub_i32;
+use fonts.omg;
+use {omega_ui}/types.omg;
 
 
 /*
@@ -20,8 +11,6 @@ this bounded snapshot carries text and selection without owning a query model.
 The host creates and destroys the edit handle explicitly. No global editor state.
 */
 
-use omega_ui::types;
-use fonts;
 
 public data WindowsTextField {
     window: u64;
@@ -42,8 +31,8 @@ public machine new(window: u64) -> WindowsTextField {
     field.drag_anchor = -1;
     field
 }
-public machine refresh(field: &mut WindowsTextField) reaches WindowsUiHost invokes WindowsUiHost {
-    let length: u32 = WindowsUiHost::edit_read(field.window, &mut field.text);
+public machine refresh(field: &mut WindowsTextField) reaches |windows_host|::WindowsUiHost invokes |windows_host|::WindowsUiHost {
+    let length: u32 = |windows_host|::WindowsUiHost::edit_read(field.window, &mut field.text);
     transition length <= 255u32 {
         true -> captured(field, length as i32)
         _ -> captured(field, 0)
@@ -52,30 +41,30 @@ public machine refresh(field: &mut WindowsTextField) reaches WindowsUiHost invok
     field.length = length;
     let old_start: i32 = field.selection_start;
     let old_end: i32 = field.selection_end;
-    let selection: u64 = WindowsUiHost::edit_message(field.window, 176, 0, 0);
-    field.selection_start = clamp_i32((selection & 65535u64) as i32, 0, field.length);
-    field.selection_end = clamp_i32(((selection / 65536u64) & 65535u64) as i32, 0, field.length);
+    let selection: u64 = |windows_host|::WindowsUiHost::edit_message(field.window, 176, 0, 0);
+    field.selection_start = |types|::clamp_i32((selection & 65535u64) as i32, 0, field.length);
+    field.selection_end = |types|::clamp_i32(((selection / 65536u64) & 65535u64) as i32, 0, field.length);
     let unchanged: bool = old_start == field.selection_start && old_end == field.selection_end;
     let left: bool = old_end == field.selection_end && old_start != field.selection_start;
-    field.caret_index = select_i32(unchanged, field.caret_index, select_i32(left, field.selection_start, field.selection_end));
+    field.caret_index = |types|::select_i32(unchanged, field.caret_index, |types|::select_i32(left, field.selection_start, field.selection_end));
     }
 }
 
-public machine clear(field: &mut WindowsTextField) reaches WindowsUiHost invokes WindowsUiHost {
-    let selected: u64 = WindowsUiHost::edit_message(field.window, 177, 0, 65535);
-    let cleared: u64 = WindowsUiHost::edit_message(field.window, 771, 0, 0);
-    let history: u64 = WindowsUiHost::edit_message(field.window, 205, 0, 0);
-    text_field::refresh(field);
+public machine clear(field: &mut WindowsTextField) reaches |windows_host|::WindowsUiHost invokes |windows_host|::WindowsUiHost {
+    let selected: u64 = |windows_host|::WindowsUiHost::edit_message(field.window, 177, 0, 65535);
+    let cleared: u64 = |windows_host|::WindowsUiHost::edit_message(field.window, 771, 0, 0);
+    let history: u64 = |windows_host|::WindowsUiHost::edit_message(field.window, 205, 0, 0);
+    refresh(field);
 }
 
-public machine key(field: &mut WindowsTextField, key: i32, control: bool, shift: bool) reaches WindowsUiHost invokes WindowsUiHost {
+public machine key(field: &mut WindowsTextField, key: i32, control: bool, shift: bool) reaches |windows_host|::WindowsUiHost invokes |windows_host|::WindowsUiHost {
     transition control && key == 65 {
         true -> select_all(field)
         _ -> dispatch(field, key, control, shift)
     }
     machine select_all(field: &mut WindowsTextField) {
-        let selected: u64 = WindowsUiHost::edit_message(field.window, 177, 0, 65535);
-        text_field::refresh(field);
+        let selected: u64 = |windows_host|::WindowsUiHost::edit_message(field.window, 177, 0, 65535);
+        refresh(field);
         field.caret_index = field.selection_end;
     }
     machine dispatch(field: &mut WindowsTextField, key: i32, control: bool, shift: bool) {
@@ -83,18 +72,18 @@ public machine key(field: &mut WindowsTextField, key: i32, control: bool, shift:
     }
     machine done() {}
     machine send(field: &mut WindowsTextField, key: i32, control: bool, shift: bool) requires key >= 0 && key <= 255 {
-        let message: i32 = select_i32(control && key == 67, 769,
-            select_i32(control && key == 88, 768, select_i32(control && key == 86, 770,
-            select_i32(control && (key == 89 || (key == 90 && shift)), 1108,
-            select_i32(control && key == 90, 772, 256)))));
+        let message: i32 = |types|::select_i32(control && key == 67, 769,
+            |types|::select_i32(control && key == 88, 768, |types|::select_i32(control && key == 86, 770,
+            |types|::select_i32(control && (key == 89 || (key == 90 && shift)), 1108,
+            |types|::select_i32(control && key == 90, 772, 256)))));
         // Editing commands reserve wParam; only WM_KEYDOWN carries a key code.
         let word: u64 = match message { 256 -> key as u64 _ -> 0u64 };
-        let answer: u64 = WindowsUiHost::edit_message(field.window, message as u32, word, 0);
-        text_field::refresh(field);
+        let answer: u64 = |windows_host|::WindowsUiHost::edit_message(field.window, message as u32, word, 0);
+        refresh(field);
     }
 }
 
-public machine character(field: &mut WindowsTextField, character: u64) reaches WindowsUiHost invokes WindowsUiHost {
+public machine character(field: &mut WindowsTextField, character: u64) reaches |windows_host|::WindowsUiHost invokes |windows_host|::WindowsUiHost {
     // Control characters are already handled by key messages; ordinary WM_CHAR
     // keeps the keyboard layout, Shift/Caps Lock and UTF-16 surrogate pairs.
     transition character >= 32u64 && character <= 65535u64 {
@@ -102,8 +91,8 @@ public machine character(field: &mut WindowsTextField, character: u64) reaches W
         _ -> done()
     }
     machine insert(field: &mut WindowsTextField, character: u64) {
-        let inserted: u64 = WindowsUiHost::edit_message(field.window, 258, character, 0);
-        text_field::refresh(field);
+        let inserted: u64 = |windows_host|::WindowsUiHost::edit_message(field.window, 258, character, 0);
+        refresh(field);
     }
     machine done() {}
 }
@@ -121,73 +110,73 @@ public machine boundary(field: &WindowsTextField, index: i32) -> bool {
     }
 }
 
-public machine offset(field: &WindowsTextField, fonts: &WindowsUiFonts, logical_width: i32, index: i32) -> i32 reaches WindowsUiHost invokes WindowsUiHost {
+public machine offset(field: &WindowsTextField, fonts: &|fonts|::WindowsUiFonts, logical_width: i32, index: i32) -> i32 reaches |windows_host|::WindowsUiHost invokes |windows_host|::WindowsUiHost {
     let start: i32 = field.view_start;
     transition start >= 0 && index >= 0 && index >= start && index <= field.length && index <= 255 && fonts.width > 0 {
         true -> measure(field, fonts, logical_width, start as u64, index as u64)
         _ -> (0)
     }
-    machine measure(field: &WindowsTextField, fonts: &WindowsUiFonts, logical_width: i32, start: u64, index: u64) -> i32
+    machine measure(field: &WindowsTextField, fonts: &|fonts|::WindowsUiFonts, logical_width: i32, start: u64, index: u64) -> i32
     requires start <= index && index <= 255u64 && fonts.width > 0 {
-        let previous: u64 = WindowsUiHost::select_object(fonts.device, fonts.regular);
-        let mut extent: WindowsUiTextExtent;
-        let measured: i32 = WindowsUiHost::get_text_extent_wide(fonts.device, &field.text[start..index], &mut extent);
-        let restored: u64 = WindowsUiHost::select_object(fonts.device, previous);
-        mul_i32(extent.width, logical_width) / fonts.width
+        let previous: u64 = |windows_host|::WindowsUiHost::select_object(fonts.device, fonts.regular);
+        let mut extent: |windows_host|::WindowsUiTextExtent;
+        let measured: i32 = |windows_host|::WindowsUiHost::get_text_extent_wide(fonts.device, &field.text[start..index], &mut extent);
+        let restored: u64 = |windows_host|::WindowsUiHost::select_object(fonts.device, previous);
+        |types|::mul_i32(extent.width, logical_width) / fonts.width
     }
 }
 
-public machine prepare(field: &mut WindowsTextField, fonts: &WindowsUiFonts, logical_width: i32, visible_width: i32) reaches WindowsUiHost invokes WindowsUiHost {
-    field.view_start = clamp_i32(min_i32(field.view_start, field.caret_index), 0, field.length);
-    transition { _ -> fit(field, fonts, logical_width, max_i32(visible_width, 0), 0) }
-    machine fit(field: &mut WindowsTextField, fonts: &WindowsUiFonts, logical_width: i32, visible_width: i32, attempts: i32) {
-        let caret: i32 = text_field::offset(field, fonts, logical_width, field.caret_index);
+public machine prepare(field: &mut WindowsTextField, fonts: &|fonts|::WindowsUiFonts, logical_width: i32, visible_width: i32) reaches |windows_host|::WindowsUiHost invokes |windows_host|::WindowsUiHost {
+    field.view_start = |types|::clamp_i32(|types|::min_i32(field.view_start, field.caret_index), 0, field.length);
+    transition { _ -> fit(field, fonts, logical_width, |types|::max_i32(visible_width, 0), 0) }
+    machine fit(field: &mut WindowsTextField, fonts: &|fonts|::WindowsUiFonts, logical_width: i32, visible_width: i32, attempts: i32) {
+        let caret: i32 = offset(field, fonts, logical_width, field.caret_index);
         transition caret > visible_width && field.view_start < field.caret_index && attempts < 255 {
             true -> scroll(field, fonts, logical_width, visible_width, attempts)
             _ -> positions(field, fonts, logical_width, visible_width, caret)
         }
     }
-    machine scroll(field: &mut WindowsTextField, fonts: &WindowsUiFonts, logical_width: i32, visible_width: i32, attempts: i32) {
-        let next: i32 = add_i32(field.view_start, 1);
-        field.view_start = select_i32(text_field::boundary(field, next), next, add_i32(next, 1));
-        transition { _ -> fit(field, fonts, logical_width, visible_width, add_i32(attempts, 1)) }
+    machine scroll(field: &mut WindowsTextField, fonts: &|fonts|::WindowsUiFonts, logical_width: i32, visible_width: i32, attempts: i32) {
+        let next: i32 = |types|::add_i32(field.view_start, 1);
+        field.view_start = |types|::select_i32(boundary(field, next), next, |types|::add_i32(next, 1));
+        transition { _ -> fit(field, fonts, logical_width, visible_width, |types|::add_i32(attempts, 1)) }
     }
-    machine positions(field: &mut WindowsTextField, fonts: &WindowsUiFonts, logical_width: i32, visible_width: i32, caret: i32) {
-        field.caret_x = clamp_i32(caret, 0, visible_width);
-        field.selection_left_x = clamp_i32(text_field::offset(field, fonts, logical_width, field.selection_start), 0, visible_width);
-        field.selection_right_x = clamp_i32(text_field::offset(field, fonts, logical_width, field.selection_end), 0, visible_width);
+    machine positions(field: &mut WindowsTextField, fonts: &|fonts|::WindowsUiFonts, logical_width: i32, visible_width: i32, caret: i32) {
+        field.caret_x = |types|::clamp_i32(caret, 0, visible_width);
+        field.selection_left_x = |types|::clamp_i32(offset(field, fonts, logical_width, field.selection_start), 0, visible_width);
+        field.selection_right_x = |types|::clamp_i32(offset(field, fonts, logical_width, field.selection_end), 0, visible_width);
     }
 }
 
-public machine pointer(field: &mut WindowsTextField, fonts: &WindowsUiFonts, logical_width: i32, bounds: Rect, x: i32, y: i32, pressed: bool, down: bool) -> bool reaches WindowsUiHost invokes WindowsUiHost {
-    let inside: bool = omega_ui::types::rect_contains(&bounds, x, y);
-    let target: i32 = sub_i32(x, bounds.x as i32);
+public machine pointer(field: &mut WindowsTextField, fonts: &|fonts|::WindowsUiFonts, logical_width: i32, bounds: |types|::Rect, x: i32, y: i32, pressed: bool, down: bool) -> bool reaches |windows_host|::WindowsUiHost invokes |windows_host|::WindowsUiHost {
+    let inside: bool = |types|::rect_contains(&bounds, x, y);
+    let target: i32 = |types|::sub_i32(x, bounds.x as i32);
     transition down && ((pressed && inside) || field.drag_anchor >= 0) {
         true -> nearest(field, fonts, logical_width, target, pressed, field.view_start, field.view_start)
         _ -> release(field)
     }
-    machine nearest(field: &mut WindowsTextField, fonts: &WindowsUiFonts, logical_width: i32, target: i32, pressed: bool, index: i32, best: i32) -> bool {
+    machine nearest(field: &mut WindowsTextField, fonts: &|fonts|::WindowsUiFonts, logical_width: i32, target: i32, pressed: bool, index: i32, best: i32) -> bool {
         transition index >= 0 && index <= field.length && index < 256 {
             true -> boundary(field, fonts, logical_width, target, pressed, index, best)
             _ -> select(field, pressed, best)
         }
     }
-    machine boundary(field: &mut WindowsTextField, fonts: &WindowsUiFonts, logical_width: i32, target: i32, pressed: bool, index: i32, best: i32) -> bool {
-        transition text_field::boundary(field, index) {
+    machine boundary(field: &mut WindowsTextField, fonts: &|fonts|::WindowsUiFonts, logical_width: i32, target: i32, pressed: bool, index: i32, best: i32) -> bool {
+        transition boundary(field, index) {
             true -> compare(field, fonts, logical_width, target, pressed, index, best)
-            _ -> nearest(field, fonts, logical_width, target, pressed, add_i32(index, 1), best)
+            _ -> nearest(field, fonts, logical_width, target, pressed, |types|::add_i32(index, 1), best)
         }
     }
-    machine compare(field: &mut WindowsTextField, fonts: &WindowsUiFonts, logical_width: i32, target: i32, pressed: bool, index: i32, best: i32) -> bool {
-        let old: i32 = text_field::offset(field, fonts, logical_width, best);
-        let current: i32 = text_field::offset(field, fonts, logical_width, index);
-        let old_distance: i32 = max_i32(sub_i32(old, target), sub_i32(target, old));
-        let distance: i32 = max_i32(sub_i32(current, target), sub_i32(target, current));
-        transition { _ -> nearest(field, fonts, logical_width, target, pressed, add_i32(index, 1), select_i32(distance < old_distance, index, best)) }
+    machine compare(field: &mut WindowsTextField, fonts: &|fonts|::WindowsUiFonts, logical_width: i32, target: i32, pressed: bool, index: i32, best: i32) -> bool {
+        let old: i32 = offset(field, fonts, logical_width, best);
+        let current: i32 = offset(field, fonts, logical_width, index);
+        let old_distance: i32 = |types|::max_i32(|types|::sub_i32(old, target), |types|::sub_i32(target, old));
+        let distance: i32 = |types|::max_i32(|types|::sub_i32(current, target), |types|::sub_i32(target, current));
+        transition { _ -> nearest(field, fonts, logical_width, target, pressed, |types|::add_i32(index, 1), |types|::select_i32(distance < old_distance, index, best)) }
     }
     machine select(field: &mut WindowsTextField, pressed: bool, position: i32) -> bool {
-        field.drag_anchor = select_i32(pressed, position, field.drag_anchor);
-        let anchor: i32 = max_i32(field.drag_anchor, 0);
+        field.drag_anchor = |types|::select_i32(pressed, position, field.drag_anchor);
+        let anchor: i32 = |types|::max_i32(field.drag_anchor, 0);
         transition anchor >= 0 && anchor <= 255 && position >= 0 && position <= 255 {
             true -> apply(field, anchor, position)
             _ -> release(field)
@@ -195,8 +184,8 @@ public machine pointer(field: &mut WindowsTextField, fonts: &WindowsUiFonts, log
     }
     machine apply(field: &mut WindowsTextField, anchor: i32, position: i32) -> bool
     requires anchor >= 0 && anchor <= 255 && position >= 0 && position <= 255 {
-        let selected: u64 = WindowsUiHost::edit_message(field.window, 177, anchor as u64, position as u64);
-        text_field::refresh(field);
+        let selected: u64 = |windows_host|::WindowsUiHost::edit_message(field.window, 177, anchor as u64, position as u64);
+        refresh(field);
         field.caret_index = position;
         true
     }

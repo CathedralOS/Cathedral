@@ -3,7 +3,7 @@ from pathlib import Path
 import json,sys,re
 HERE=Path(__file__).resolve().parent
 schema=json.loads((HERE/'schema.json').read_text())
-lines=['// SPDX-License-Identifier: MIT OR Apache-2.0','// Independent literal expectations; evaluate actual translated machine bodies.','module cases;','use facts::x86_descriptors;','use facts::x86_descriptors::TaskStateSegment;','use facts::x86_descriptors::DescriptorTablePointer;','use facts::x86_descriptors::GdtEntry;','use facts::x86_descriptors::TssDescriptorWords;','use facts::x86_descriptors::SelectorErrorCode;','use x86_values::descriptors;','use facts::x86_descriptor_bytes;']
+lines=['// SPDX-License-Identifier: MIT OR Apache-2.0','// Independent literal expectations; evaluate actual translated machine bodies.','use {facts}/x86_descriptors.omg;','use {x86_values}/descriptors.omg;','use {facts}/x86_descriptor_bytes.omg;']
 def groups(label,checks):
  names=[]
  for start in range(0,len(checks),12):
@@ -15,16 +15,16 @@ def groups(label,checks):
    else:comparisons.append(check)
   lines.append(' &&\n'.join(comparisons)+' }')
  lines.append('pub machine '+label+'() -> bool { '+' && '.join(names)+' }')
-groups('constants_match',[f'x86_descriptors::DESCRIPTOR_{c["name"]}.raw == {c["value"]}' for c in schema['constants']])
+groups('constants_match',[f'|x86_descriptors|::DESCRIPTOR_{c["name"]}.raw == {c["value"]}' for c in schema['constants']])
 checks=[]
 for base in [0,1,0x1122334455667788,0xffffffffffffffff]:
  for limit in [0,103,104,65535]:
   low=limit|((base&0xffffff)<<16)|(((base>>24)&255)<<56)|0x890000000000;high=base>>32
-  checks.extend([f'descriptors::tss_descriptor({base}, {limit}).low == {low}',f'descriptors::tss_descriptor({base}, {limit}).high == {high}'])
+  checks.extend([f'|descriptors|::tss_descriptor({base}, {limit}).low == {low}',f'|descriptors|::tss_descriptor({base}, {limit}).high == {high}'])
 groups('descriptor_cases',checks)
-checks=['!descriptors::selector_error_valid(65536)','!descriptors::selector_error_valid(0xffffffffffffffff)','descriptors::selector_error_truncate(0xffffffffffffffff).raw == 65535']
+checks=['!|descriptors|::selector_error_valid(65536)','!|descriptors|::selector_error_valid(0xffffffffffffffff)','|descriptors|::selector_error_truncate(0xffffffffffffffff).raw == 65535']
 for raw in [0,1,2,3,4,5,6,7,8,9,65528,65529,65530,65531,65532,65533,65534,65535]:
- name='error'+str(raw);lines.append(f'machine {name}() -> bool {{ let value: SelectorErrorCode = SelectorErrorCode {{ raw: {raw} }}; '+f'descriptors::selector_error_valid({raw}) && descriptors::selector_error_external(&value) == '+str(bool(raw&1)).lower()+f' && descriptors::selector_error_table(&value) == '+str({0:0,1:1,2:2,3:1}[(raw>>1)&3])+f' && descriptors::selector_error_index(&value) == {raw>>3} && descriptors::selector_error_is_null(&value) == '+str(raw==0).lower()+' }');checks.append(name+'()')
+ name='error'+str(raw);lines.append(f'machine {name}() -> bool {{ let value: |x86_descriptors|::SelectorErrorCode = |x86_descriptors|::SelectorErrorCode {{ raw: {raw} }}; '+f'|descriptors|::selector_error_valid({raw}) && |descriptors|::selector_error_external(&value) == '+str(bool(raw&1)).lower()+f' && |descriptors|::selector_error_table(&value) == '+str({0:0,1:1,2:2,3:1}[(raw>>1)&3])+f' && |descriptors|::selector_error_index(&value) == {raw>>3} && |descriptors|::selector_error_is_null(&value) == '+str(raw==0).lower()+' }');checks.append(name+'()')
 groups('error_cases',checks)
 # Every field/byte gets a distinguishable initialized value, including reserved
 # fields; codecs preserve raw bits rather than falsely validate a live TSS.
@@ -38,17 +38,17 @@ for name,row in schema['records'].items():
   else:
    width=int(ty[1:])//8;v=int.from_bytes(bytes(range(offset+1,offset+1+width)),'little');field_values[field]=str(v);expected[offset:offset+width]=v.to_bytes(width,'little')
  fn='bytes_'+name;names.append(fn+'()');lines.append('machine '+fn+'() -> bool {')
- lines.append(f' let value: {name} = {name} {{ '+', '.join(f+': '+v for f,v in field_values.items())+' };')
- lines.append(f' let encoded: [u8; {row["size"]}] = x86_descriptor_bytes::encode_{name}(&value);')
+ lines.append(f' let value: |x86_descriptors|::{name} = |x86_descriptors|::{name} {{ '+', '.join(f+': '+v for f,v in field_values.items())+' };')
+ lines.append(f' let encoded: [u8; {row["size"]}] = |x86_descriptor_bytes|::encode_{name}(&value);')
  lines.append(f' let golden: [u8; {row["size"]}] = ['+', '.join(map(str,expected))+'];')
- lines.append(f' let decoded: {name} = x86_descriptor_bytes::decode_{name}(&golden);')
+ lines.append(f' let decoded: |x86_descriptors|::{name} = |x86_descriptor_bytes|::decode_{name}(&golden);')
  tests=[f'encoded[{i}] == {b}' for i,b in enumerate(expected)]
  for field,ty,offset in row['fields']:
   if ty.startswith('['):tests +=[f'decoded.{field}[{i}] == value.{field}[{i}]' for i in range(int(ty.split(';')[1].strip(' ]')))]
   else:tests.append(f'decoded.{field} == value.{field}')
  lines +=[' &&\n'.join(tests),'}']
-lines.append('machine tss_default() -> bool { let value: TaskStateSegment = descriptors::tss_new(); value.iomap_base == 104 && value.reserved_1 == 0 && value.reserved_2 == 0 && value.reserved_3 == 0 && value.reserved_4 == 0 && '+ ' && '.join(f'value.{name}[{i}] == 0' for name,count in [('privilege_stack_table',3),('interrupt_stack_table',7)] for i in range(count))+' }')
-lines.append('machine descriptor_roundtrip() -> bool { let value: TssDescriptorWords = descriptors::tss_descriptor(0x1122334455667788, 103); let bad: TssDescriptorWords = TssDescriptorWords { low: 0x890000000067, high: 0x100000000 }; descriptors::tss_descriptor_base(&value) == 0x1122334455667788 && descriptors::tss_descriptor_limit(&value) == 103 && descriptors::tss_descriptor_shape_valid(&value) && !descriptors::tss_descriptor_shape_valid(&bad) }')
+lines.append('machine tss_default() -> bool { let value: |x86_descriptors|::TaskStateSegment = |descriptors|::tss_new(); value.iomap_base == 104 && value.reserved_1 == 0 && value.reserved_2 == 0 && value.reserved_3 == 0 && value.reserved_4 == 0 && '+ ' && '.join(f'value.{name}[{i}] == 0' for name,count in [('privilege_stack_table',3),('interrupt_stack_table',7)] for i in range(count))+' }')
+lines.append('machine descriptor_roundtrip() -> bool { let value: |x86_descriptors|::TssDescriptorWords = |descriptors|::tss_descriptor(0x1122334455667788, 103); let bad: |x86_descriptors|::TssDescriptorWords = |x86_descriptors|::TssDescriptorWords { low: 0x890000000067, high: 0x100000000 }; |descriptors|::tss_descriptor_base(&value) == 0x1122334455667788 && |descriptors|::tss_descriptor_limit(&value) == 103 && |descriptors|::tss_descriptor_shape_valid(&value) && !|descriptors|::tss_descriptor_shape_valid(&bad) }')
 lines.append('pub machine byte_cases() -> bool { '+' && '.join(names+['tss_default()','descriptor_roundtrip()'])+' }')
 text='\n'.join(lines)+'\n'
 large=sorted({m.group() for m in re.finditer(r'\b[0-9]{19,}\b',text) if int(m.group()) > 9223372036854775807})
@@ -62,7 +62,7 @@ print('22 flag comparisons,16 TSS descriptor inputs,18 selector errors,4 complet
 
 probe=(HERE/'main.omg').read_text()
 for i,name in enumerate(['DOUBLE_FAULT','NMI','MACHINE_CHECK','MASKABLE_IRQ'],1):
- probe=probe.replace('= X86IstStackClass { stack_class: '+str(i)+', ist_index: '+str(i)+' };','= X86_'+name+'_STACK;')
+ probe=probe.replace('= |x86_interrupt_stacks|::X86IstStackClass { stack_class: '+str(i)+', ist_index: '+str(i)+' };','= |x86_interrupt_stacks|::X86_'+name+'_STACK;')
 probe='// Reproducer: positive fixture with actual imported legacy aggregate constants.\n'+probe
 p=HERE/'legacy_ist_constant_probe.omg'
 if '--check' in sys.argv:

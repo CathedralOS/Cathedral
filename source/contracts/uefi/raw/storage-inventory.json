@@ -684,7 +684,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/storage.omg",
-          "anchor": "module storage;"
+          "anchor": "pub data Lba"
         }
       ]
     },
@@ -1486,7 +1486,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/storage.omg",
-          "anchor": "module storage;"
+          "anchor": "pub data Lba"
         }
       ]
     },
@@ -1848,7 +1848,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/storage.omg",
-          "anchor": "module storage;"
+          "anchor": "pub data Lba"
         }
       ]
     },
@@ -2170,7 +2170,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/storage.omg",
-          "anchor": "module storage;"
+          "anchor": "pub data Lba"
         }
       ]
     },
@@ -2802,7 +2802,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/storage.omg",
-          "anchor": "module storage;"
+          "anchor": "pub data Lba"
         }
       ]
     },
@@ -3634,7 +3634,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/storage.omg",
-          "anchor": "module storage;"
+          "anchor": "pub data Lba"
         }
       ]
     },
@@ -4856,7 +4856,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/storage.omg",
-          "anchor": "module storage;"
+          "anchor": "pub data Lba"
         }
       ]
     },
@@ -5408,7 +5408,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/storage.omg",
-          "anchor": "module storage;"
+          "anchor": "pub data Lba"
         }
       ]
     },
@@ -6250,7 +6250,7 @@
       "targets": [
         {
           "path": "source/contracts/uefi/raw/storage.omg",
-          "anchor": "module storage;"
+          "anchor": "pub data Lba"
         }
       ]
     }

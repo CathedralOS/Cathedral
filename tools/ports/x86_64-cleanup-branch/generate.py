@@ -18,14 +18,14 @@ def arr(values):return '['+','.join(map(str,values))+']'
 def write(path,text):
  if '--check' in sys.argv:assert path.read_text()==text,('stale',path)
  else:path.write_text(text)
-prefix='// SPDX-License-Identifier: MIT OR Apache-2.0\nuse x86::cleanup_branch;\nuse x86::cleanup_branch::CleanupPlan;\nuse x86::cleanup_branch::CleanupOutcome;\n'
+prefix='// SPDX-License-Identifier: MIT OR Apache-2.0\nuse {x86}/cleanup_branch.omg;\n'
 blocks=[];rust=[]
 for i,r in enumerate(rows):
  others=[str(bool(r['others']&(1<<n))).lower() for n in range(4)]
  checks=[f'result.words[{j}]=={word}' for j,word in enumerate(r['out'])]
  checks += [f'result.frames_to_retire[{j}]=={frame}' for j,frame in enumerate(r['retired']+[0]*(3-len(r['retired']))) ]
- checks += [f'result.retire_count=={len(r["retired"])}',f'result.write_mask=={r["write"]}',f'result.visited=={r["visited"]}','result.outcome in CleanupOutcome::Ready']
- body=f'let words:[u64;4]={arr(r["words"])}; let ids:[u64;4]=[16384,4096,8192,12288]; let others:[bool;4]={arr(others)}; let result:CleanupPlan=cleanup_branch::plan(&words,&ids,&others,0); transition '+ ' && '.join(checks)+' { true -> (0) _ -> (1) }'
+ checks += [f'result.retire_count=={len(r["retired"])}',f'result.write_mask=={r["write"]}',f'result.visited=={r["visited"]}','result.outcome in |cleanup_branch|::CleanupOutcome::Ready']
+ body=f'let words:[u64;4]={arr(r["words"])}; let ids:[u64;4]=[16384,4096,8192,12288]; let others:[bool;4]={arr(others)}; let result:|cleanup_branch|::CleanupPlan=|cleanup_branch|::plan(&words,&ids,&others,0); transition '+ ' && '.join(checks)+' { true -> (0) _ -> (1) }'
  blocks.append(f'machine cleanup_{i}()->i32 {{ {body} }}')
  rust.append(f'assert_eq!(observe({arr(r["words"])},{r["others"]}),({arr(r["out"])},vec!{arr(r["retired"])}),"case {i}");')
 write(HERE/'cases.json',json.dumps(rows,indent=2)+'\n')

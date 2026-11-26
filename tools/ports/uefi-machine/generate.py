@@ -36,7 +36,7 @@ def upper(name):
 
 def guid_literal(spelling):
     value = uuid.UUID(spelling)
-    return 'Guid { data1: 0x%08x, data2: 0x%04x, data3: 0x%04x, data4: [' % value.fields[:3] + ', '.join('0x%02x' % byte for byte in value.bytes[8:]) + '] }'
+    return '|scalars|::Guid { data1: 0x%08x, data2: 0x%04x, data3: 0x%04x, data4: [' % value.fields[:3] + ', '.join('0x%02x' % byte for byte in value.bytes[8:]) + '] }'
 
 
 def main():
@@ -110,11 +110,11 @@ def main():
     output = ['// SPDX-License-Identifier: MIT OR Apache-2.0', '// Modified translation of rust-osdev/uefi-rs at ' + PIN + '.',
               '// See ' + SLICE + '.PORT.md. Inert carriers do not grant firmware, MMIO, DMA or I/O authority.',
               '// PORT-BLOCKED[omega:named-calling-policy]: native slots require admitted calling/ownership contracts.',
-              'module ' + SLICE + '_protocols;', 'use scalars::Guid;', '']
+              'use scalars.omg;', '']
     def mapped(typ):
         if '*' in typ or 'fn(' in typ or 'fn (' in typ:
             return 'address'
-        return {'Handle': 'address', 'usize': 'u64', 'isize': 'i64', 'Boolean': 'u8', 'ResetSystemFn': 'address', 'Status': 'u64', 'Event': 'address', 'ShellFileHandle': 'address'}.get(typ, typ)
+        return {'Guid': '|scalars|::Guid', 'Handle': 'address', 'usize': 'u64', 'isize': 'i64', 'Boolean': 'u8', 'ResetSystemFn': 'address', 'Status': 'u64', 'Event': 'address', 'ShellFileHandle': 'address'}.get(typ, typ)
     for record in records:
         output += ['// Upstream: ' + record['rust']]
         if record.get('alias'):
@@ -129,8 +129,8 @@ def main():
         owner = const['owner']
         if const['guid']:
             literal = guid_literal(const['spelling'])
-            typ = owner if owner and owners.get(owner, {}).get('base') == 'Guid' else 'Guid'
-            if typ != 'Guid':
+            typ = owner if owner and owners.get(owner, {}).get('base') == 'Guid' else '|scalars|::Guid'
+            if typ != '|scalars|::Guid':
                 literal = typ + ' { raw: ' + literal + ' }'
             values[const['name']] = {'kind': 'bytes', 'value': uuid.UUID(const['spelling']).bytes_le.hex()}
         else:
@@ -141,21 +141,21 @@ def main():
         output += ['pub const ' + const['name'] + ': ' + typ + ' = ' + literal + ';']
     (RAW / (SLICE + '_protocols.omg')).write_text('\n'.join(output) + '\n')
     plans = ['// SPDX-License-Identifier: MIT OR Apache-2.0', '// Required UEFI x64 geometry, not an observed Omega layout.',
-             'module ' + SLICE + '_layouts;', 'use omega::language::core::layout;', '']
+             'use {omega}/language/core/layout.omg;', '']
     for record in records:
         name = record['name']
         if len(record['fields']) > 32:
             plans += ['// PORT-BLOCKED[omega:layout-reflection-capacity]: complete named schema exceeds current 32-field reflection.']
-        plans += [f'pub data {name}X64Layout {{}}', f'pub {name}X64Policy: {name}X64Layout satisfies Layout;',
-                  f'pub machine {name}X64Layout::plan(schema: Schema) -> Plan satisfies Layout::plan {{', '    let mut entries: [FieldEntry; 64];']
+        plans += [f'pub data {name}X64Layout {{}}', f'pub {name}X64Policy: {name}X64Layout satisfies |layout|::Layout;',
+                  f'pub machine {name}X64Layout::plan(schema: |layout|::Schema) -> |layout|::Plan satisfies |layout|::Layout::plan {{', '    let mut entries: [|layout|::FieldEntry; 64];']
         for index, (field, typ) in enumerate(record['fields']):
             offset = measured.get(name + '.' + field + '.offset', 0)
-            plans += [f'    entries[{index}] = FieldEntry {{ key: schema.fields[{index}].key, placement: FieldPlan::At {{ offset: {offset} }} }};']
-        plans += ['    Plan { entries: entries, entry_count: ' + str(len(record['fields'])) + ', size_fixed: ' + str(measured[name + '.size']) + ', size_is_dynamic: false, align: ' + str(measured[name + '.alignment']) + ' }', '}', '']
+            plans += [f'    entries[{index}] = |layout|::FieldEntry {{ key: schema.fields[{index}].key, placement: |layout|::FieldPlan::At {{ offset: {offset} }} }};']
+        plans += ['    |layout|::Plan { entries: entries, entry_count: ' + str(len(record['fields'])) + ', size_fixed: ' + str(measured[name + '.size']) + ', size_is_dynamic: false, align: ' + str(measured[name + '.alignment']) + ' }', '}', '']
     (RAW / (SLICE + '_layouts.omg')).write_text('\n'.join(plans))
     target = 'source/contracts/uefi/raw/' + SLICE + '_protocols.omg'
     for path, entry in manifest['files'].items():
-        entry.update(disposition='translated', targets=[{'path': target, 'anchor': 'module ' + SLICE + '_protocols;'}]); entry.pop('reason', None)
+        entry.update(disposition='translated', targets=[{'path': target, 'anchor': inventory.omega_file_anchor(ROOT / target)}]); entry.pop('reason', None)
         for key, row in entry['symbols'].items():
             name = key.split(':', 1)[1]
             anchor = row['anchor']

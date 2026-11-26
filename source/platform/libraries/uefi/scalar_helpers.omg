@@ -1,62 +1,59 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified translation of uefi-raw scalar behavior at
 // c0facddf9ba42b74906a37fca2869e6cdbc8da6a; see contracts/uefi/raw/scalars.PORT.md.
-module scalar_helpers;
-use cathedral_uefi_raw::scalars::Boolean;
-use cathedral_uefi_raw::scalars::MemoryType;
-use cathedral_uefi_raw::scalars::MemoryDescriptor;
-use cathedral_uefi_raw::status::Status;
-use cathedral_uefi_raw::revision::Revision;
-use cathedral_uefi_raw::time::Time;
+use {cathedral_uefi_raw}/scalars.omg;
+use {cathedral_uefi_raw}/status.omg;
+use {cathedral_uefi_raw}/revision.omg;
+use {cathedral_uefi_raw}/time.omg;
 
-pub machine boolean_from_raw(value: u8) -> Boolean { Boolean { raw: value } }
-pub machine boolean_from_bool(value: bool) -> Boolean {
-    transition value { true -> (Boolean { raw: 1 }) _ -> (Boolean { raw: 0 }) }
+pub machine boolean_from_raw(value: u8) -> |scalars|::Boolean { |scalars|::Boolean { raw: value } }
+pub machine boolean_from_bool(value: bool) -> |scalars|::Boolean {
+    transition value { true -> (|scalars|::Boolean { raw: 1 }) _ -> (|scalars|::Boolean { raw: 0 }) }
 }
-pub machine boolean_is_true(value: Boolean) -> bool { value.raw != 0 }
-pub machine boolean_is_false(value: Boolean) -> bool { value.raw == 0 }
-pub machine boolean_equal(left: Boolean, right: Boolean) -> bool {
+pub machine boolean_is_true(value: |scalars|::Boolean) -> bool { value.raw != 0 }
+pub machine boolean_is_false(value: |scalars|::Boolean) -> bool { value.raw == 0 }
+pub machine boolean_equal(left: |scalars|::Boolean, right: |scalars|::Boolean) -> bool {
     (left.raw == 0) == (right.raw == 0)
 }
 // -1, 0, 1 replace Rust Ordering without comparing distinct nonzero byte values.
-pub machine boolean_compare(left: Boolean, right: Boolean) -> i32 {
+pub machine boolean_compare(left: |scalars|::Boolean, right: |scalars|::Boolean) -> i32 {
     transition left.raw == 0 {
         true -> left_false(right)
         _ -> left_true(right)
     }
-    state left_false(right: Boolean) -> i32 {
+    state left_false(right: |scalars|::Boolean) -> i32 {
         transition right.raw == 0 { true -> (0) _ -> (-1) }
     }
-    state left_true(right: Boolean) -> i32 {
+    state left_true(right: |scalars|::Boolean) -> i32 {
         transition right.raw == 0 { true -> (1) _ -> (0) }
     }
 }
 // This is the byte fed into any selected hasher, not a general hashing API.
-pub machine boolean_hash_byte(value: Boolean) -> u8 {
+pub machine boolean_hash_byte(value: |scalars|::Boolean) -> u8 {
     transition value.raw == 0 { true -> (0) _ -> (1) }
 }
-pub machine status_is_success(value: Status) -> bool { value.raw == 0 }
-pub machine status_is_warning(value: Status) -> bool {
+pub machine status_is_success(value: |status|::Status) -> bool { value.raw == 0 }
+pub machine status_is_warning(value: |status|::Status) -> bool {
     value.raw != 0 && (value.raw & 0x8000_0000_0000_0000) == 0
 }
-pub machine status_is_error(value: Status) -> bool {
+pub machine status_is_error(value: |status|::Status) -> bool {
     (value.raw & 0x8000_0000_0000_0000) != 0
 }
-pub machine revision_new(major: u16, minor: u16) -> Revision {
-    Revision { raw: ((major as u32) << 16) | (minor as u32) }
+pub machine revision_new(major: u16, minor: u16) -> |revision|::Revision {
+    |revision|::Revision { raw: ((major as u32) << 16) | (minor as u32) }
 }
-pub machine revision_major(value: Revision) -> u16 { (value.raw >> 16) as u16 }
-pub machine revision_minor(value: Revision) -> u16 { (value.raw & 0xffff) as u16 }
-pub machine revision_less(left: Revision, right: Revision) -> bool { left.raw < right.raw }
+pub machine revision_major(value: |revision|::Revision) -> u16 { (value.raw >> 16) as u16 }
+pub machine revision_minor(value: |revision|::Revision) -> u16 { (value.raw & 0xffff) as u16 }
+pub machine revision_less(left: |revision|::Revision, right: |revision|::Revision) -> bool { left.raw < right.raw }
 
-pub machine time_invalid() -> Time {
-    Time {
+pub machine time_invalid() -> |time|::Time {
+    |time|::Time {
         year: 0, month: 0, day: 0, hour: 0, minute: 0, second: 0, pad1: 0,
         nanosecond: 0, time_zone: 0, pad2: 0,
     }
 }
 // Exact upstream range predicate, not complete calendar/SetTime validation.
-pub machine time_is_valid(value: Time) -> bool {
+pub machine time_is_valid(value: |time|::Time) -> bool {
     value.year >= 1900 && value.year <= 9999 &&
     value.month >= 1 && value.month <= 12 &&
     value.day >= 1 && value.day <= 31 &&
@@ -64,16 +61,16 @@ pub machine time_is_valid(value: Time) -> bool {
     value.nanosecond <= 999999999 &&
     ((value.time_zone >= -1440 && value.time_zone <= 1440) || value.time_zone == 2047)
 }
-pub machine time_equal(left: Time, right: Time) -> bool {
+pub machine time_equal(left: |time|::Time, right: |time|::Time) -> bool {
     left.year == right.year && left.month == right.month && left.day == right.day &&
     left.hour == right.hour && left.minute == right.minute && left.second == right.second &&
     left.nanosecond == right.nanosecond && left.time_zone == right.time_zone &&
     left.daylight.raw == right.daylight.raw
 }
-pub machine memory_type_custom(value: u32) -> MemoryType
+pub machine memory_type_custom(value: u32) -> |scalars|::MemoryType
     requires value >= 0x80000000;
 {
-    MemoryType { raw: value }
+    |scalars|::MemoryType { raw: value }
 }
 
-pub machine memory_descriptor_default() -> MemoryDescriptor { MemoryDescriptor {} }
+pub machine memory_descriptor_default() -> |scalars|::MemoryDescriptor { |scalars|::MemoryDescriptor {} }

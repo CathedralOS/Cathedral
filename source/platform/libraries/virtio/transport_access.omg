@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Data-only replacement for pinned volatile.rs; see transport.PORT.md.
-module transport_access;
 pub data ByteResult [copy] { ok: bool; value: u8; }
 pub data HalfResult [copy] { ok: bool; value: u16; }
 pub data BoolResult [copy] { ok: bool; value: bool; }

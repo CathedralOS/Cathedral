@@ -1,5 +1,3 @@
-module requests::desktop;
-
 // Stock distribution wire bindings. Owner: source-rs/distribution/matrix/contracts/matrix.rs.
 public const LAUNCH: u64 = 14u64;
 public const CLOSE: u64 = 15u64;

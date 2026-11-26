@@ -8,13 +8,13 @@ def source(control):
  r=generate.rows()[352]
  expected=r['out_start']+(r['size'] if control else 0)
  return f'''// SPDX-License-Identifier: MIT OR Apache-2.0
-use x86::page_iterators;
-use x86::encrypted_frames::IteratorResult;
-use x86::addresses::NumberResult;
+use {{x86}}/page_iterators.omg;
+use {{x86}}/encrypted_frames.omg;
+use {{x86}}/addresses.omg;
 machine test_result()->i32 {{
- let actual:IteratorResult=page_iterators::step({r['start']},{r['end']},{r['size']},true,{r['index']},false);
+ let actual:|encrypted_frames|::IteratorResult=|page_iterators|::step({r['start']},{r['end']},{r['size']},true,{r['index']},false);
  let good:bool=actual.start=={expected} && actual.end=={r['out_end']} && actual.failed;
- transition actual.selection {{ NumberResult::Rejected -> result(good) _ -> (1) }}
+ transition actual.selection {{ |addresses|::NumberResult::Rejected -> result(good) _ -> (1) }}
  state result(good:bool)->i32 {{transition good {{true -> (0) _ -> (1)}}}}
 }}
 '''+generate.FOOT

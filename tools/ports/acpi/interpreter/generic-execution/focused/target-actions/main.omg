@@ -1,75 +1,67 @@
-use aml::model::ObjectStore;
-use aml::model::Value;
-use aml::model::ReferenceKind;
-use aml::model::BufferStorage;
-use execution::execution_model::Binding;
-use execution::execution_model::BindingResult;
-use execution::execution_model::Operand;
-use execution::execution_model::ExecutionOutcome;
-use execution::generic_target_model::TargetSelection;
-use execution::generic_target_model::TargetAction;
-use execution::generic_target_values::classify_target;
-use execution::generic_target_values::apply_target_action;
-use integer_helpers::integers::IntegerSize;
+use {aml}/model.omg;
+use {execution}/execution_model.omg;
+use {execution}/generic_target_model.omg;
+use {execution}/generic_target_values.omg;
+use {integer_helpers}/integers.omg;
 data Suite {}
 machine ta_classify(row:u64,wanted:u64)->i32 {
- let store:ObjectStore=ta_store(row);let selected:TargetSelection=ta_selection(row);let operand:Operand=ta_operand(row);let copying:bool=ta_copy(row);
- let action:TargetAction=classify_target(&store,selected,operand,copying);
+ let store:|model|::ObjectStore=ta_store(row);let selected:|generic_target_model|::TargetSelection=ta_selection(row);let operand:|execution_model|::Operand=ta_operand(row);let copying:bool=ta_copy(row);
+ let action:|generic_target_model|::TargetAction=|generic_target_values|::classify_target(&store,selected,operand,copying);
  let result:u64=ta_action(action);
  transition result==wanted {true -> (0) _ -> (1)}
 }
-machine ta_store(row:u64)->ObjectStore {
- let mut store:ObjectStore=ObjectStore {};store.space.object_count=4;store.space.objects[0].value=Value::Integer {number:11};store.space.objects[1].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:0};store.space.objects[3].value=Value::OperationRegion {};
+machine ta_store(row:u64)->|model|::ObjectStore {
+ let mut store:|model|::ObjectStore=|model|::ObjectStore {};store.space.object_count=4;store.space.objects[0].value=|model|::Value::Integer {number:11};store.space.objects[1].value=|model|::Value::Reference {kind:|model|::ReferenceKind::RefOf,object_id:0};store.space.objects[3].value=|model|::Value::OperationRegion {};
  transition row==19 {true -> invalid(store) _ -> (store)}
- state invalid(store:ObjectStore)->ObjectStore {let mut result:ObjectStore=store;result.space.object_count=18446744073709551615;result}
+ state invalid(store:|model|::ObjectStore)->|model|::ObjectStore {let mut result:|model|::ObjectStore=store;result.space.object_count=18446744073709551615;result}
 }
-machine ta_selection(row:u64)->TargetSelection {transition row {
- 0 -> (TargetSelection::Null) 1 -> (TargetSelection::Null) 2 -> (TargetSelection::Debug) 3 -> (TargetSelection::Debug)
- 4 -> (TargetSelection::Local {local_index:0,local_binding:Binding::Uninitialized})
- 5 -> (TargetSelection::Local {local_index:18446744073709551615,local_binding:Binding::Uninitialized})
- 6 -> (TargetSelection::Argument {argument_index:7,argument_binding:Binding::Uninitialized})
- 7 -> (TargetSelection::Argument {argument_index:0,argument_binding:Binding::Shared {shared_id:0}})
- 8 -> (TargetSelection::Argument {argument_index:0,argument_binding:Binding::Shared {shared_id:1}})
- 12 -> (TargetSelection::Named {object_id:2}) 13 -> (TargetSelection::Named {object_id:3})
- 14 -> (TargetSelection::Named {object_id:18446744073709551615}) 15 -> (TargetSelection::Named {object_id:18446744073709551615})
- 16 -> (TargetSelection::Failure {outcome:ExecutionOutcome::Capacity})
- _ -> (TargetSelection::Named {object_id:0})}}
-machine ta_operand(row:u64)->Operand {transition row {11 -> (Operand::Object {object_id:1}) 17 -> (Operand::Object {object_id:18446744073709551615}) 18 -> (Operand::Uninitialized) _ -> (Operand::Integer {number:22})}}
+machine ta_selection(row:u64)->|generic_target_model|::TargetSelection {transition row {
+ 0 -> (|generic_target_model|::TargetSelection::Null) 1 -> (|generic_target_model|::TargetSelection::Null) 2 -> (|generic_target_model|::TargetSelection::Debug) 3 -> (|generic_target_model|::TargetSelection::Debug)
+ 4 -> (|generic_target_model|::TargetSelection::Local {local_index:0,local_binding:|execution_model|::Binding::Uninitialized})
+ 5 -> (|generic_target_model|::TargetSelection::Local {local_index:18446744073709551615,local_binding:|execution_model|::Binding::Uninitialized})
+ 6 -> (|generic_target_model|::TargetSelection::Argument {argument_index:7,argument_binding:|execution_model|::Binding::Uninitialized})
+ 7 -> (|generic_target_model|::TargetSelection::Argument {argument_index:0,argument_binding:|execution_model|::Binding::Shared {shared_id:0}})
+ 8 -> (|generic_target_model|::TargetSelection::Argument {argument_index:0,argument_binding:|execution_model|::Binding::Shared {shared_id:1}})
+ 12 -> (|generic_target_model|::TargetSelection::Named {object_id:2}) 13 -> (|generic_target_model|::TargetSelection::Named {object_id:3})
+ 14 -> (|generic_target_model|::TargetSelection::Named {object_id:18446744073709551615}) 15 -> (|generic_target_model|::TargetSelection::Named {object_id:18446744073709551615})
+ 16 -> (|generic_target_model|::TargetSelection::Failure {outcome:|execution_model|::ExecutionOutcome::Capacity})
+ _ -> (|generic_target_model|::TargetSelection::Named {object_id:0})}}
+machine ta_operand(row:u64)->|execution_model|::Operand {transition row {11 -> (|execution_model|::Operand::Object {object_id:1}) 17 -> (|execution_model|::Operand::Object {object_id:18446744073709551615}) 18 -> (|execution_model|::Operand::Uninitialized) _ -> (|execution_model|::Operand::Integer {number:22})}}
 machine ta_copy(row:u64)->bool {row==1 || row==3 || row==9 || row==15}
-machine ta_action(action:TargetAction)->u64 {transition action {
- TargetAction::StoreNamed {object_id} -> (40)
- TargetAction::NoWrite -> (1)
- TargetAction::Replace {binding} -> replaced(binding)
- TargetAction::CopyTo {object_id,result_binding} -> copied(object_id,result_binding)
- TargetAction::Failure {outcome} -> failed(outcome)}
- state replaced(binding:Binding)->u64 {transition binding {Binding::Uninitialized -> (2) Binding::Shared {shared_id} -> shared_code(shared_id) _ -> (999)}}
- state copied(id:u64,binding:Binding)->u64 {transition binding {Binding::Uninitialized -> plain(id) Binding::Shared {shared_id} -> copied_code(id,shared_id) _ -> (999)}}
+machine ta_action(action:|generic_target_model|::TargetAction)->u64 {transition action {
+ |generic_target_model|::TargetAction::StoreNamed {object_id} -> (40)
+ |generic_target_model|::TargetAction::NoWrite -> (1)
+ |generic_target_model|::TargetAction::Replace {binding} -> replaced(binding)
+ |generic_target_model|::TargetAction::CopyTo {object_id,result_binding} -> copied(object_id,result_binding)
+ |generic_target_model|::TargetAction::Failure {outcome} -> failed(outcome)}
+ state replaced(binding:|execution_model|::Binding)->u64 {transition binding {|execution_model|::Binding::Uninitialized -> (2) |execution_model|::Binding::Shared {shared_id} -> shared_code(shared_id) _ -> (999)}}
+ state copied(id:u64,binding:|execution_model|::Binding)->u64 {transition binding {|execution_model|::Binding::Uninitialized -> plain(id) |execution_model|::Binding::Shared {shared_id} -> copied_code(id,shared_id) _ -> (999)}}
  state plain(id:u64)->u64 {transition {id==18446744073709551615 -> (29) id<64 -> (20+id) _ -> (998)}}
  state shared_code(id:u64)->u64 {transition id<64 {true -> (10+id) _ -> (998)}}
  state copied_code(id:u64,shared_id:u64)->u64 {transition id<64 && shared_id<64 {true -> (100+shared_id+id) _ -> (998)}}
- state failed(outcome:ExecutionOutcome)->u64 {transition outcome {ExecutionOutcome::InvalidTarget -> (30) ExecutionOutcome::UnresolvedService -> (31) ExecutionOutcome::MissingObject -> (32) ExecutionOutcome::UnsupportedValue -> (33) ExecutionOutcome::UnresolvedRegion -> (34) ExecutionOutcome::Capacity -> (35) ExecutionOutcome::InvalidState -> (36) _ -> (999)}}
+ state failed(outcome:|execution_model|::ExecutionOutcome)->u64 {transition outcome {|execution_model|::ExecutionOutcome::InvalidTarget -> (30) |execution_model|::ExecutionOutcome::UnresolvedService -> (31) |execution_model|::ExecutionOutcome::MissingObject -> (32) |execution_model|::ExecutionOutcome::UnsupportedValue -> (33) |execution_model|::ExecutionOutcome::UnresolvedRegion -> (34) |execution_model|::ExecutionOutcome::Capacity -> (35) |execution_model|::ExecutionOutcome::InvalidState -> (36) _ -> (999)}}
 }
 machine ta_dispatch(row:u64,wanted:u64)->i32 {
- let input:[u8;1024];let mut store:ObjectStore=ta_store(0);let action:TargetAction=ta_for_dispatch(row);
- let result:BindingResult=apply_target_action(&input,0,7,IntegerSize::EightBytes,&mut store,action,Operand::Integer {number:22});
+ let input:[u8;1024];let mut store:|model|::ObjectStore=ta_store(0);let action:|generic_target_model|::TargetAction=ta_for_dispatch(row);
+ let result:|execution_model|::BindingResult=|generic_target_values|::apply_target_action(&input,0,7,|integers|::IntegerSize::EightBytes,&mut store,action,|execution_model|::Operand::Integer {number:22});
  let valid:bool=ta_dispatched(result,row);let number:u64=ta_number(store.space.objects[0].value);
  transition valid && number==wanted && store.space.object_count==4 {true -> (0) _ -> (1)}
 }
-machine ta_for_dispatch(row:u64)->TargetAction {transition row {
- 0 -> (TargetAction::NoWrite) 1 -> (TargetAction::Replace {binding:Binding::Shared {shared_id:0}})
- 2 -> (TargetAction::CopyTo {object_id:0,result_binding:Binding::Shared {shared_id:1}})
- 3 -> (TargetAction::Failure {outcome:ExecutionOutcome::InvalidTarget})
- _ -> (TargetAction::CopyTo {object_id:18446744073709551615,result_binding:Binding::Shared {shared_id:1}})}}
-machine ta_dispatched(result:BindingResult,row:u64)->bool {transition row {
- 0 -> (result.outcome==ExecutionOutcome::Success)
+machine ta_for_dispatch(row:u64)->|generic_target_model|::TargetAction {transition row {
+ 0 -> (|generic_target_model|::TargetAction::NoWrite) 1 -> (|generic_target_model|::TargetAction::Replace {binding:|execution_model|::Binding::Shared {shared_id:0}})
+ 2 -> (|generic_target_model|::TargetAction::CopyTo {object_id:0,result_binding:|execution_model|::Binding::Shared {shared_id:1}})
+ 3 -> (|generic_target_model|::TargetAction::Failure {outcome:|execution_model|::ExecutionOutcome::InvalidTarget})
+ _ -> (|generic_target_model|::TargetAction::CopyTo {object_id:18446744073709551615,result_binding:|execution_model|::Binding::Shared {shared_id:1}})}}
+machine ta_dispatched(result:|execution_model|::BindingResult,row:u64)->bool {transition row {
+ 0 -> (result.outcome==|execution_model|::ExecutionOutcome::Success)
  1 -> integer(result.outcome,result.binding)
  2 -> reference(result.outcome,result.binding)
- 3 -> (result.outcome==ExecutionOutcome::InvalidTarget)
- _ -> (result.outcome==ExecutionOutcome::MissingObject)}
- state integer(outcome:ExecutionOutcome,binding:Binding)->bool {transition binding {Binding::Integer {number} -> (outcome==ExecutionOutcome::Success && number==22) _ -> (false)}}
- state reference(outcome:ExecutionOutcome,binding:Binding)->bool {transition binding {Binding::Shared {shared_id} -> (outcome==ExecutionOutcome::Success && shared_id==1) _ -> (false)}}
+ 3 -> (result.outcome==|execution_model|::ExecutionOutcome::InvalidTarget)
+ _ -> (result.outcome==|execution_model|::ExecutionOutcome::MissingObject)}
+ state integer(outcome:|execution_model|::ExecutionOutcome,binding:|execution_model|::Binding)->bool {transition binding {|execution_model|::Binding::Integer {number} -> (outcome==|execution_model|::ExecutionOutcome::Success && number==22) _ -> (false)}}
+ state reference(outcome:|execution_model|::ExecutionOutcome,binding:|execution_model|::Binding)->bool {transition binding {|execution_model|::Binding::Shared {shared_id} -> (outcome==|execution_model|::ExecutionOutcome::Success && shared_id==1) _ -> (false)}}
 }
-machine ta_number(value:Value)->u64 {transition value {Value::Integer {number} -> (number) _ -> (999)}}
+machine ta_number(value:|model|::Value)->u64 {transition value {|model|::Value::Integer {number} -> (number) _ -> (999)}}
 machine Suite::classify_0_0(&mut self)->i32 {let result:i32=ta_classify(0,1);result}
 machine Suite::classify_0_1(&mut self)->i32 {let result:i32=ta_classify(0,2);result}
 machine Suite::classify_1_0(&mut self)->i32 {let result:i32=ta_classify(1,30);result}

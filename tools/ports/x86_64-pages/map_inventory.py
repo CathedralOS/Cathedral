@@ -29,5 +29,5 @@ for path,file in doc['files'].items():
    else:raise ValueError((path,key))
   row.update(disposition=disposition,reason=reason)
   if anchor:row['targets']=[dict(path=target,anchor=anchor)]
- file.update(disposition='translated',reason='Reviewed numeric page/frame profile; iterator object/ABI/proof infrastructure adaptations and omissions are explicit per symbol and in pages.PORT.md.',targets=[dict(path=source,anchor='module pages;')])
+ file.update(disposition='translated',reason='Reviewed numeric page/frame profile; iterator object/ABI/proof infrastructure adaptations and omissions are explicit per symbol and in pages.PORT.md.',targets=[dict(path=source,anchor='pub const SIZE_4K')])
 p.write_text(json.dumps(doc,indent=2)+'\n')

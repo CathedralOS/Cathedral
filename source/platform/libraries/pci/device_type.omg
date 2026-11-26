@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified translation of pci_types eff856b6bab81adbe1bda0ab750009f3786cb8d3.
 // See PORT.md for source mapping, upstream corrections, and authority boundary.
-module device_type;
 pub data DeviceType [copy] { code: u32; }
 pub data UsbTypeResult [copy] { ok: bool; raw: u8; }
 pub const DEVICE_UNKNOWN: DeviceType = DeviceType { code: 65536 };

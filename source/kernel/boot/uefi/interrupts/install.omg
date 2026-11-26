@@ -1,59 +1,25 @@
-module install;
-use context::BootstrapInterruptContext;
-use table::RetainedIdt;
-use table::initialize_table;
-use entries::fatal::FatalHandler00;
-use entries::fatal::FatalHandler01;
-use entries::fatal::FatalHandler02;
-use entries::fatal::FatalHandler03;
-use entries::fatal::FatalHandler04;
-use entries::fatal::FatalHandler05;
-use entries::fatal::FatalHandler06;
-use entries::fatal::FatalHandler07;
-use entries::fatal::FatalHandler08;
-use entries::fatal::FatalHandler09;
-use entries::fatal::FatalHandler10;
-use entries::fatal::FatalHandler11;
-use entries::fatal::FatalHandler12;
-use entries::fatal::FatalHandler13;
-use entries::fatal::FatalHandler14;
-use entries::fatal::FatalHandler15;
-use entries::fatal::FatalHandler16;
-use entries::fatal::FatalHandler17;
-use entries::fatal::FatalHandler18;
-use entries::fatal::FatalHandler19;
-use entries::fatal::FatalHandler20;
-use entries::fatal::FatalHandler21;
-use entries::fatal::FatalHandler22;
-use entries::fatal::FatalHandler23;
-use entries::fatal::FatalHandler24;
-use entries::fatal::FatalHandler25;
-use entries::fatal::FatalHandler26;
-use entries::fatal::FatalHandler27;
-use entries::fatal::FatalHandler28;
-use entries::fatal::FatalHandler29;
-use entries::fatal::FatalHandler30;
-use entries::fatal::FatalHandler31;
-use timer::BootstrapTimerHandler;
-use registrar::BootstrapInterruptRegistrar;
-use arrivals::ProfileArrivalFrames;
-use arrivals::fatal_frames;
-use arch::isa::x86_64::interrupts::task_state::TaskStateStorage;
-use omega::language::core::assembly;
+use context.omg;
+use table.omg;
+use entries/fatal.omg;
+use timer.omg;
+use registrar.omg;
+use arrivals.omg;
+use {arch}/isa/x86_64/interrupts/task_state.omg;
+use {omega}/language/core/assembly.omg;
 
 // This call remains in Kernel's activation, which owns image, memory, mapping
 // roots and TaskStateStorage. Success never returns; refusal traps without
 // dropping any CPU-named storage. The original boot roots remain live.
-public machine install_bootstrap_interrupts(storage: &mut TaskStateStorage)
-reaches MachineControl + PortIo + BootstrapInterruptRegistrar
-invokes BootstrapInterruptRegistrar
+public machine install_bootstrap_interrupts(storage: &mut |task_state|::TaskStateStorage)
+reaches |assembly|::MachineControl + |assembly|::PortIo + |registrar|::BootstrapInterruptRegistrar
+invokes |registrar|::BootstrapInterruptRegistrar
 crashes Trap ensures false {
     asm { cli }
-    let mut retained: RetainedIdt;
+    let mut retained: |table|::RetainedIdt;
     retained.before = 0x1122334455667788u64;
     retained.after = 0x8877665544332211u64;
-    initialize_table(&mut retained.table);
-    let mut context: BootstrapInterruptContext;
+    |table|::initialize_table(&mut retained.table);
+    let mut context: |context|::BootstrapInterruptContext;
     context.before = 0x13579BDF2468ACE0u64;
     context.after = 0xFEDCBA9876543210u64;
     context.ticks.store(0, NoOrdering);
@@ -135,9 +101,9 @@ crashes Trap ensures false {
     storage.irq_stack[0] = 0xA1B2C3D4E5F60718u64;
     storage.irq_stack[512] = 0x81706F5E4D3C2B1Au64;
     storage.irq_stack[513] = 0x96A5B4C3D2E1F087u64;
-    let profile: ProfileArrivalFrames = fatal_frames();
-    let refused: bool = BootstrapInterruptRegistrar::install<
-        FatalHandler00::enter, FatalHandler01::enter, FatalHandler02::enter, FatalHandler03::enter, FatalHandler04::enter, FatalHandler05::enter, FatalHandler06::enter, FatalHandler07::enter, FatalHandler08::enter, FatalHandler09::enter, FatalHandler10::enter, FatalHandler11::enter, FatalHandler12::enter, FatalHandler13::enter, FatalHandler14::enter, FatalHandler15::enter, FatalHandler16::enter, FatalHandler17::enter, FatalHandler18::enter, FatalHandler19::enter, FatalHandler20::enter, FatalHandler21::enter, FatalHandler22::enter, FatalHandler23::enter, FatalHandler24::enter, FatalHandler25::enter, FatalHandler26::enter, FatalHandler27::enter, FatalHandler28::enter, FatalHandler29::enter, FatalHandler30::enter, FatalHandler31::enter, BootstrapTimerHandler::enter
+    let profile: |arrivals|::ProfileArrivalFrames = |arrivals|::fatal_frames();
+    let refused: bool = |registrar|::BootstrapInterruptRegistrar::install<
+        |fatal|::FatalHandler00::enter, |fatal|::FatalHandler01::enter, |fatal|::FatalHandler02::enter, |fatal|::FatalHandler03::enter, |fatal|::FatalHandler04::enter, |fatal|::FatalHandler05::enter, |fatal|::FatalHandler06::enter, |fatal|::FatalHandler07::enter, |fatal|::FatalHandler08::enter, |fatal|::FatalHandler09::enter, |fatal|::FatalHandler10::enter, |fatal|::FatalHandler11::enter, |fatal|::FatalHandler12::enter, |fatal|::FatalHandler13::enter, |fatal|::FatalHandler14::enter, |fatal|::FatalHandler15::enter, |fatal|::FatalHandler16::enter, |fatal|::FatalHandler17::enter, |fatal|::FatalHandler18::enter, |fatal|::FatalHandler19::enter, |fatal|::FatalHandler20::enter, |fatal|::FatalHandler21::enter, |fatal|::FatalHandler22::enter, |fatal|::FatalHandler23::enter, |fatal|::FatalHandler24::enter, |fatal|::FatalHandler25::enter, |fatal|::FatalHandler26::enter, |fatal|::FatalHandler27::enter, |fatal|::FatalHandler28::enter, |fatal|::FatalHandler29::enter, |fatal|::FatalHandler30::enter, |fatal|::FatalHandler31::enter, |timer|::BootstrapTimerHandler::enter
     >(&mut retained.table, storage, &context, &profile);
     crash Trap;
 }

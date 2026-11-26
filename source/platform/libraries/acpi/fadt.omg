@@ -1,21 +1,12 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified pinned acpi src/sdt/fadt.rs. Bounded bytes replace packed reference casts.
 // Address/register selection returns facts only; no access or firmware operation.
-module fadt;
-use headers::SdtResult;
-use headers::SIGNATURE_FADT;
-use parser::parse_sdt;
-use fixed_types::Fadt;
-use fixed_types::FadtResult;
-use fixed_decode::decode_fadt;
-use fixed_bytes::OptionalU64;
-use fixed_bytes::U64Result;
-use gas::RawGenericAddress;
-use gas::GenericAddress;
-use gas::GenericAddressResult;
-use gas::OptionalRawGas;
-use gas::GasSelection;
-use gas::gas_from_raw;
+use headers.omg;
+use parser.omg;
+use fixed_types.omg;
+use fixed_decode.omg;
+use fixed_bytes.omg;
+use gas.omg;
 pub data PowerProfile [copy] {
     case Unspecified; case Desktop; case Mobile; case Workstation; case EnterpriseServer;
     case SohoServer; case AppliancePc; case PerformanceServer; case Tablet; case Reserved(value: u8);
@@ -23,26 +14,26 @@ pub data PowerProfile [copy] {
 pub machine fadt_minimum_length(revision: u8) -> u32 {
     transition { revision == 0 -> (0) revision == 1 -> (116) revision == 2 -> (132) revision <= 4 -> (244) revision == 5 -> (268) _ -> (276) }
 }
-pub machine parse_fadt(input: &[u8; 4096], length: u64) -> FadtResult {
-    let header: SdtResult = parse_sdt(input, length, SIGNATURE_FADT);
-    transition header.error == 0 { true -> shape(input, header) _ -> (FadtResult { error: header.error }) }
-    state shape(input: &[u8; 4096], header: SdtResult) -> FadtResult {
+pub machine parse_fadt(input: &[u8; 4096], length: u64) -> |fixed_types|::FadtResult {
+    let header: |headers|::SdtResult = |parser|::parse_sdt(input, length, |headers|::SIGNATURE_FADT);
+    transition header.error == 0 { true -> shape(input, header) _ -> (|fixed_types|::FadtResult { error: header.error }) }
+    state shape(input: &[u8; 4096], header: |headers|::SdtResult) -> |fixed_types|::FadtResult {
         let minimum: u32 = fadt_minimum_length(header.value.revision);
-        transition { minimum == 0 -> (FadtResult { error: 4 })
-            header.value.length < minimum -> (FadtResult { error: 5 }) _ -> decode(input, header) }
+        transition { minimum == 0 -> (|fixed_types|::FadtResult { error: 4 })
+            header.value.length < minimum -> (|fixed_types|::FadtResult { error: 5 }) _ -> decode(input, header) }
     }
-    state decode(input: &[u8; 4096], header: SdtResult) -> FadtResult {
-        let result: FadtResult = decode_fadt(input, header.value.length as u64, 0, header.value);
+    state decode(input: &[u8; 4096], header: |headers|::SdtResult) -> |fixed_types|::FadtResult {
+        let result: |fixed_types|::FadtResult = |fixed_decode|::decode_fadt(input, header.value.length as u64, 0, header.value);
         result
     }
 }
-pub machine preferred_address(extended: OptionalU64, legacy: u32) -> U64Result {
-    transition { extended.present && extended.value != 0 -> (U64Result { value: extended.value })
-        legacy != 0 -> (U64Result { value: legacy as u64 }) _ -> (U64Result { error: 12 }) }
+pub machine preferred_address(extended: |fixed_bytes|::OptionalU64, legacy: u32) -> |fixed_bytes|::U64Result {
+    transition { extended.present && extended.value != 0 -> (|fixed_bytes|::U64Result { value: extended.value })
+        legacy != 0 -> (|fixed_bytes|::U64Result { value: legacy as u64 }) _ -> (|fixed_bytes|::U64Result { error: 12 }) }
 }
-pub machine facs_address(value: Fadt) -> U64Result { preferred_address(value.x_firmware_ctrl, value.firmware_ctrl) }
-pub machine dsdt_address(value: Fadt) -> U64Result { preferred_address(value.x_dsdt_address, value.dsdt_address) }
-pub machine power_profile(value: Fadt) -> PowerProfile {
+pub machine facs_address(value: |fixed_types|::Fadt) -> |fixed_bytes|::U64Result { preferred_address(value.x_firmware_ctrl, value.firmware_ctrl) }
+pub machine dsdt_address(value: |fixed_types|::Fadt) -> |fixed_bytes|::U64Result { preferred_address(value.x_dsdt_address, value.dsdt_address) }
+pub machine power_profile(value: |fixed_types|::Fadt) -> PowerProfile {
     transition value.preferred_pm_profile {
         0 -> (PowerProfile::Unspecified) 1 -> (PowerProfile::Desktop) 2 -> (PowerProfile::Mobile)
         3 -> (PowerProfile::Workstation) 4 -> (PowerProfile::EnterpriseServer) 5 -> (PowerProfile::SohoServer)
@@ -50,45 +41,45 @@ pub machine power_profile(value: Fadt) -> PowerProfile {
         _ -> (PowerProfile::Reserved { value: value.preferred_pm_profile })
     }
 }
-pub machine optional_generic(value: OptionalRawGas) -> GasSelection {
-    transition value.present { true -> decode(value.value) _ -> (GasSelection {}) }
-    state decode(value: RawGenericAddress) -> GasSelection {
-        let result: GenericAddressResult = gas_from_raw(value);
-        GasSelection { error: result.error, present: result.error == 0, value: result.value }
+pub machine optional_generic(value: |gas|::OptionalRawGas) -> |gas|::GasSelection {
+    transition value.present { true -> decode(value.value) _ -> (|gas|::GasSelection {}) }
+    state decode(value: |gas|::RawGenericAddress) -> |gas|::GasSelection {
+        let result: |gas|::GenericAddressResult = |gas|::gas_from_raw(value);
+        |gas|::GasSelection { error: result.error, present: result.error == 0, value: result.value }
     }
 }
-pub machine select_register(extended: OptionalRawGas, legacy: u32, length: u8, required: bool) -> GasSelection {
+pub machine select_register(extended: |gas|::OptionalRawGas, legacy: u32, length: u8, required: bool) -> |gas|::GasSelection {
     transition { extended.present && extended.value.address != 0 -> modern(extended)
-        !required && legacy == 0 -> (GasSelection {}) _ -> legacy_width(legacy, length) }
-    state modern(value: OptionalRawGas) -> GasSelection {
-        let result: GasSelection = optional_generic(value);
+        !required && legacy == 0 -> (|gas|::GasSelection {}) _ -> legacy_width(legacy, length) }
+    state modern(value: |gas|::OptionalRawGas) -> |gas|::GasSelection {
+        let result: |gas|::GasSelection = optional_generic(value);
         result
     }
-    state legacy_width(address: u32, length: u8) -> GasSelection {
-        transition length <= 31 { true -> legacy_value(address, length) _ -> (GasSelection { error: 11 }) }
+    state legacy_width(address: u32, length: u8) -> |gas|::GasSelection {
+        transition length <= 31 { true -> legacy_value(address, length) _ -> (|gas|::GasSelection { error: 11 }) }
     }
-    state legacy_value(address: u32, length: u8) -> GasSelection {
+    state legacy_value(address: u32, length: u8) -> |gas|::GasSelection {
         let width: u8 = ((length as u16) * 8) as u8;
-        GasSelection { present: true, value: GenericAddress { address_space: 1, bit_width: width, address: address as u64 } }
+        |gas|::GasSelection { present: true, value: |gas|::GenericAddress { address_space: 1, bit_width: width, address: address as u64 } }
     }
 }
-pub machine pm1a_event_block(value: Fadt) -> GasSelection { select_register(value.x_pm1a_event_block, value.pm1a_event_block, value.pm1_event_length, true) }
-pub machine pm1b_event_block(value: Fadt) -> GasSelection { select_register(value.x_pm1b_event_block, value.pm1b_event_block, value.pm1_event_length, false) }
-pub machine pm1a_control_block(value: Fadt) -> GasSelection { select_register(value.x_pm1a_control_block, value.pm1a_control_block, value.pm1_control_length, true) }
-pub machine pm1b_control_block(value: Fadt) -> GasSelection { select_register(value.x_pm1b_control_block, value.pm1b_control_block, value.pm1_control_length, false) }
-pub machine pm2_control_block(value: Fadt) -> GasSelection { select_register(value.x_pm2_control_block, value.pm2_control_block, value.pm2_control_length, false) }
-pub machine pm_timer_block(value: Fadt) -> GasSelection {
-    transition value.pm_timer_length == 4 { true -> select(value) _ -> (GasSelection {}) }
-    state select(value: Fadt) -> GasSelection {
-        let result: GasSelection = select_register(value.x_pm_timer_block, value.pm_timer_block, 4, false);
+pub machine pm1a_event_block(value: |fixed_types|::Fadt) -> |gas|::GasSelection { select_register(value.x_pm1a_event_block, value.pm1a_event_block, value.pm1_event_length, true) }
+pub machine pm1b_event_block(value: |fixed_types|::Fadt) -> |gas|::GasSelection { select_register(value.x_pm1b_event_block, value.pm1b_event_block, value.pm1_event_length, false) }
+pub machine pm1a_control_block(value: |fixed_types|::Fadt) -> |gas|::GasSelection { select_register(value.x_pm1a_control_block, value.pm1a_control_block, value.pm1_control_length, true) }
+pub machine pm1b_control_block(value: |fixed_types|::Fadt) -> |gas|::GasSelection { select_register(value.x_pm1b_control_block, value.pm1b_control_block, value.pm1_control_length, false) }
+pub machine pm2_control_block(value: |fixed_types|::Fadt) -> |gas|::GasSelection { select_register(value.x_pm2_control_block, value.pm2_control_block, value.pm2_control_length, false) }
+pub machine pm_timer_block(value: |fixed_types|::Fadt) -> |gas|::GasSelection {
+    transition value.pm_timer_length == 4 { true -> select(value) _ -> (|gas|::GasSelection {}) }
+    state select(value: |fixed_types|::Fadt) -> |gas|::GasSelection {
+        let result: |gas|::GasSelection = select_register(value.x_pm_timer_block, value.pm_timer_block, 4, false);
         result
     }
 }
-pub machine gpe0_block(value: Fadt) -> GasSelection { select_register(value.x_gpe0_block, value.gpe0_block, value.gpe0_block_length, false) }
-pub machine gpe1_block(value: Fadt) -> GasSelection { select_register(value.x_gpe1_block, value.gpe1_block, value.gpe1_block_length, false) }
-pub machine reset_register(value: Fadt) -> GasSelection { optional_generic(value.reset_reg) }
-pub machine sleep_control_register(value: Fadt) -> GasSelection { optional_generic(value.sleep_control_reg) }
-pub machine sleep_status_register(value: Fadt) -> GasSelection { optional_generic(value.sleep_status_reg) }
+pub machine gpe0_block(value: |fixed_types|::Fadt) -> |gas|::GasSelection { select_register(value.x_gpe0_block, value.gpe0_block, value.gpe0_block_length, false) }
+pub machine gpe1_block(value: |fixed_types|::Fadt) -> |gas|::GasSelection { select_register(value.x_gpe1_block, value.gpe1_block, value.gpe1_block_length, false) }
+pub machine reset_register(value: |fixed_types|::Fadt) -> |gas|::GasSelection { optional_generic(value.reset_reg) }
+pub machine sleep_control_register(value: |fixed_types|::Fadt) -> |gas|::GasSelection { optional_generic(value.sleep_control_reg) }
+pub machine sleep_status_register(value: |fixed_types|::Fadt) -> |gas|::GasSelection { optional_generic(value.sleep_status_reg) }
 // FixedFeatureFlags represented by its explicit underlying u32 carrier.
 pub machine supports_equivalent_to_wbinvd(flags: u32) -> bool { (flags & 1) != 0 }
 pub machine wbinvd_flushes_all_caches(flags: u32) -> bool { (flags & 2) != 0 }

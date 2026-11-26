@@ -1,7 +1,10 @@
+use main.omg;
+
+use {component}/main.omg as component_main;
 machine build(builder: &mut Build) {
     Build::application(builder, "cathedral_notes_native");
     Build::depend_as(builder, "component", Source::Path { location: "../component" });
     Build::depend_as(builder, "app", Source::Path { location: "../../app" });
-    Build::select_provider<component::main::Notes, component::main::NotesProvider>(builder, linux_x86_64, CompositionMode::Independent);
-    Build::bind(builder, linux_x86_64::ProgramEntry, main);
+    Build::select_provider<|component_main|::Notes, |component_main|::NotesProvider>(builder, linux_x86_64, CompositionMode::Independent);
+    Build::bind(builder, linux_x86_64::ProgramEntry, |main|::main);
 }

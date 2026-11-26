@@ -1,44 +1,40 @@
-module settings::settings;
-use protocol::main;
-use decisions::outcomes;
+use {protocol}/main.omg;
+use {decisions}/outcomes.omg;
 // Draft layout edits belong to the launcher; applying them is a separate grant.
-use operations::Command;
-use operations::Exchange;
-use state::State;
-use transport::subtract;
-use transport::add;
-use session::session::cycle;
-use session::session::after_input;
-use settings::persistence::save_settings;
-use matrix_service::children::configuration::encoding;
-public machine settings_dirty(s: &State) -> bool { s.uncertain || !matrix_service::children::configuration::encoding::equal(&s.saved, &s.draft) }
-public machine settings_input(s: &mut State, p: &mut Exchange) -> Command {
-    transition s.snapshot[5] & 255u64 { POINTER -> pointer(s, p) KEY -> keyboard(s, p) _ -> after_input(s, p) }
-    machine pointer(s: &mut State, p: &mut Exchange) -> Command { transition s.clicked { true -> hit(s, p, 0u64) _ -> after_input(s, p) } }
-    machine hit(s: &mut State, p: &mut Exchange, row: u64) -> Command { transition row < 3u64 { true -> panel(s, p, row) _ -> after_input(s, p) } }
-    machine panel(s: &mut State, p: &mut Exchange, row: u64) -> Command requires row < 3u64 {
-        let left: u64 = add(subtract(s.width, 512u64) / 2u64, row * 176u64);
-        let action: u64 = row * 2u64 + (s.snapshot[6] >= add(left, 80u64)) as u64;
-        transition s.snapshot[6] >= left && s.snapshot[6] < add(left, 160u64) && s.snapshot[7] >= 48u64 && s.snapshot[7] < 72u64 {
+use operations.omg;
+use state.omg as local_state;
+use transport.omg;
+use session/session.omg;
+use settings/persistence.omg;
+use {matrix_service}/children/configuration/encoding.omg;
+public machine settings_dirty(s: &|local_state|::State) -> bool { s.uncertain || !|encoding|::equal(&s.saved, &s.draft) }
+public machine settings_input(s: &mut |local_state|::State, p: &mut |operations|::Exchange) -> |operations|::Command {
+    transition s.snapshot[5] & 255u64 { |main|::POINTER -> pointer(s, p) |main|::KEY -> keyboard(s, p) _ -> |session|::after_input(s, p) }
+    machine pointer(s: &mut |local_state|::State, p: &mut |operations|::Exchange) -> |operations|::Command { transition s.clicked { true -> hit(s, p, 0u64) _ -> |session|::after_input(s, p) } }
+    machine hit(s: &mut |local_state|::State, p: &mut |operations|::Exchange, row: u64) -> |operations|::Command { transition row < 3u64 { true -> panel(s, p, row) _ -> |session|::after_input(s, p) } }
+    machine panel(s: &mut |local_state|::State, p: &mut |operations|::Exchange, row: u64) -> |operations|::Command requires row < 3u64 {
+        let left: u64 = |transport|::add(|transport|::subtract(s.width, 512u64) / 2u64, row * 176u64);
+        let action: u64 = row * 2u64 + (s.snapshot[6] >= |transport|::add(left, 80u64)) as u64;
+        transition s.snapshot[6] >= left && s.snapshot[6] < |transport|::add(left, 160u64) && s.snapshot[7] >= 48u64 && s.snapshot[7] < 72u64 {
             true -> choose(s, p, action) _ -> hit(s, p, row + 1u64)
         }
     }
-    machine keyboard(s: &mut State, p: &mut Exchange) -> Command { transition s.snapshot[7] == PRESS { true -> key(s, p) _ -> after_input(s, p) } }
-    machine key(s: &mut State, p: &mut Exchange) -> Command {
+    machine keyboard(s: &mut |local_state|::State, p: &mut |operations|::Exchange) -> |operations|::Command { transition s.snapshot[7] == |main|::PRESS { true -> key(s, p) _ -> |session|::after_input(s, p) } }
+    machine key(s: &mut |local_state|::State, p: &mut |operations|::Exchange) -> |operations|::Command {
         let selected: u64 = s.setting_selected;
-        transition s.snapshot[6] { UP -> move(s, p, 5u64) LEFT -> move(s, p, 5u64) DOWN -> move(s, p, 1u64) RIGHT -> move(s, p, 1u64) ENTER -> choose(s, p, selected) _ -> after_input(s, p) }
+        transition s.snapshot[6] { |main|::UP -> move(s, p, 5u64) |main|::LEFT -> move(s, p, 5u64) |main|::DOWN -> move(s, p, 1u64) |main|::RIGHT -> move(s, p, 1u64) |main|::ENTER -> choose(s, p, selected) _ -> |session|::after_input(s, p) }
     }
-    machine move(s: &mut State, p: &mut Exchange, delta: u64) -> Command { s.setting_selected = add(s.setting_selected, delta) % 6u64; s.dirty = true; cycle(s, p) }
-    machine choose(s: &mut State, p: &mut Exchange, action: u64) -> Command {
+    machine move(s: &mut |local_state|::State, p: &mut |operations|::Exchange, delta: u64) -> |operations|::Command { s.setting_selected = |transport|::add(s.setting_selected, delta) % 6u64; s.dirty = true; |session|::cycle(s, p) }
+    machine choose(s: &mut |local_state|::State, p: &mut |operations|::Exchange, action: u64) -> |operations|::Command {
         s.setting_selected = action; s.dirty = true;
-        transition action { 0u64 -> height(s, p, false) 1u64 -> height(s, p, true) 2u64 -> margin(s, p, false) 3u64 -> margin(s, p, true) 4u64 -> save_settings(s, p) 5u64 -> cancel(s, p) _ -> after_input(s, p) }
+        transition action { 0u64 -> height(s, p, false) 1u64 -> height(s, p, true) 2u64 -> margin(s, p, false) 3u64 -> margin(s, p, true) 4u64 -> |persistence|::save_settings(s, p) 5u64 -> cancel(s, p) _ -> |session|::after_input(s, p) }
     }
-    machine height(s: &mut State, p: &mut Exchange, increase: bool) -> Command { let value: u64 = adjusted(matrix_service::children::configuration::encoding::word(&s.draft, 72u64), increase, 80u64, 128u64); matrix_service::children::configuration::encoding::set_word(&mut s.draft, 72u64, value); s.setting_status = 15u64; cycle(s, p) }
-    machine margin(s: &mut State, p: &mut Exchange, increase: bool) -> Command { let value: u64 = adjusted(matrix_service::children::configuration::encoding::word(&s.draft, 64u64), increase, 8u64, 40u64); matrix_service::children::configuration::encoding::set_word(&mut s.draft, 64u64, value); s.setting_status = 15u64; cycle(s, p) }
-    machine cancel(s: &mut State, p: &mut Exchange) -> Command { s.editing = false; s.notice = decisions::outcomes::Notice::None; cycle(s, p) }
+    machine height(s: &mut |local_state|::State, p: &mut |operations|::Exchange, increase: bool) -> |operations|::Command { let value: u64 = adjusted(|encoding|::word(&s.draft, 72u64), increase, 80u64, 128u64); |encoding|::set_word(&mut s.draft, 72u64, value); s.setting_status = 15u64; |session|::cycle(s, p) }
+    machine margin(s: &mut |local_state|::State, p: &mut |operations|::Exchange, increase: bool) -> |operations|::Command { let value: u64 = adjusted(|encoding|::word(&s.draft, 64u64), increase, 8u64, 40u64); |encoding|::set_word(&mut s.draft, 64u64, value); s.setting_status = 15u64; |session|::cycle(s, p) }
+    machine cancel(s: &mut |local_state|::State, p: &mut |operations|::Exchange) -> |operations|::Command { s.editing = false; s.notice = |outcomes|::Notice::None; |session|::cycle(s, p) }
 }
 machine adjusted(value: u64, increase: bool, low: u64, high: u64) -> u64 {
-    transition increase { true -> clamp(add(value, 16u64), low, high) _ -> clamp(subtract(value, 16u64), low, high) }
+    transition increase { true -> clamp(|transport|::add(value, 16u64), low, high) _ -> clamp(|transport|::subtract(value, 16u64), low, high) }
     machine clamp(value: u64, low: u64, high: u64) -> u64 { transition value < low { true -> (low) _ -> upper(value, high) } }
     machine upper(value: u64, high: u64) -> u64 { transition value > high { true -> (high) _ -> (value) } }
 }

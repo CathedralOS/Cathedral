@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Modified pure algorithms from x86_64 cc35c876d3badb57df54a66e22f7768a52be95f2 src/addr.rs.
 // Numeric results carry no mapping, frame, pointer, or memory-access authority.
-module addresses;
 
 pub const VIRTUAL_LOW_MAX: u64 = 0x00007fffffffffff;
 pub const VIRTUAL_HIGH_MIN: u64 = 0xffff800000000000;

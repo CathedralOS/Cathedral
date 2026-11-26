@@ -1,96 +1,91 @@
-module codec;
 // ABI and protocol interpretation stay here; the app sees named events/commands.
-use app::model::Phase;
-use app::model::View;
-use app::model::Event;
-use app::model::Command;
-use app::model::Failure;
-use host::main;
-use protocol::main;
-use diagnostic;
+use {app}/model.omg;
+use {host}/main.omg;
+use {protocol}/main.omg as protocol_main;
+use diagnostic.omg;
 
-public machine decode(phase: Phase, p: &[u64; 4096]) -> Event {
+public machine decode(phase: |model|::Phase, p: &[u64; 4096]) -> |model|::Event {
     transition phase {
-        Phase::Start -> (Event::Complete)
-        Phase::Stopped -> (Event::Complete)
-        Phase::StorageProbe -> scope(p)
-        Phase::Waiting -> wake(p)
+        |model|::Phase::Start -> (|model|::Event::Complete)
+        |model|::Phase::Stopped -> (|model|::Event::Complete)
+        |model|::Phase::StorageProbe -> scope(p)
+        |model|::Phase::Waiting -> wake(p)
         _ -> completed(phase, p)
     }
 }
 
-machine completed(phase: Phase, p: &[u64; 4096]) -> Event {
+machine completed(phase: |model|::Phase, p: &[u64; 4096]) -> |model|::Event {
     transition p[9] == 0u64 {
         true -> reply(phase, p)
-        _ -> (Event::Failed { failure: Failure::Transport { code: p[9] } })
+        _ -> (|model|::Event::Failed { failure: |model|::Failure::Transport { code: p[9] } })
     }
-    machine reply(phase: Phase, p: &[u64; 4096]) -> Event {
+    machine reply(phase: |model|::Phase, p: &[u64; 4096]) -> |model|::Event {
         transition phase {
-            Phase::FirstView -> view(p)
-            Phase::View -> view(p)
-            Phase::Recheck { code } -> view(p)
-            Phase::Surface -> surface(p)
-            Phase::Paint -> painted(p)
-            _ -> (Event::Complete)
+            |model|::Phase::FirstView -> view(p)
+            |model|::Phase::View -> view(p)
+            |model|::Phase::Recheck { code } -> view(p)
+            |model|::Phase::Surface -> surface(p)
+            |model|::Phase::Paint -> painted(p)
+            _ -> (|model|::Event::Complete)
         }
     }
 }
 
-machine scope(p: &[u64; 4096]) -> Event {
+machine scope(p: &[u64; 4096]) -> |model|::Event {
     transition p[9] {
-        UNAVAILABLE -> (Event::StorageDenied)
-        0u64 -> (Event::Failed { failure: Failure::UnexpectedStorageGrant })
-        _ -> (Event::Failed { failure: Failure::Transport { code: p[9] } })
+        |protocol_main|::UNAVAILABLE -> (|model|::Event::StorageDenied)
+        0u64 -> (|model|::Event::Failed { failure: |model|::Failure::UnexpectedStorageGrant })
+        _ -> (|model|::Event::Failed { failure: |model|::Failure::Transport { code: p[9] } })
     }
 }
 
-machine view(p: &[u64; 4096]) -> Event {
+machine view(p: &[u64; 4096]) -> |model|::Event {
     transition p[0] == 0u64 {
-        true -> (Event::View { view: View { epoch: p[1], width: p[2], height: p[3] } })
-        _ -> (Event::NoView)
+        true -> (|model|::Event::View { view: |model|::View { epoch: p[1], width: p[2], height: p[3] } })
+        _ -> (|model|::Event::NoView)
     }
 }
 
-machine surface(p: &[u64; 4096]) -> Event {
+machine surface(p: &[u64; 4096]) -> |model|::Event {
     transition p[0] == 0u64 {
-        true -> (Event::Surface { handle: p[1] })
-        _ -> (Event::Failed { failure: Failure::Provider { code: p[0] } })
+        true -> (|model|::Event::Surface { handle: p[1] })
+        _ -> (|model|::Event::Failed { failure: |model|::Failure::Provider { code: p[0] } })
     }
 }
 
-machine painted(p: &[u64; 4096]) -> Event {
+machine painted(p: &[u64; 4096]) -> |model|::Event {
     transition p[0] == 0u64 {
-        true -> (Event::Complete)
-        _ -> (Event::Failed { failure: Failure::Provider { code: p[0] } })
+        true -> (|model|::Event::Complete)
+        _ -> (|model|::Event::Failed { failure: |model|::Failure::Provider { code: p[0] } })
     }
 }
 
-machine wake(p: &[u64; 4096]) -> Event {
+machine wake(p: &[u64; 4096]) -> |model|::Event {
     transition p[9] {
-        0u64 -> (Event::Wake)
+        0u64 -> (|model|::Event::Wake)
         1u64 -> control(p)
-        _ -> (Event::Failed { failure: Failure::Transport { code: p[9] } })
+        _ -> (|model|::Event::Failed { failure: |model|::Failure::Transport { code: p[9] } })
     }
-    machine control(p: &[u64; 4096]) -> Event {
-        Event::Control { accepted: (p[0] == HEALTH || p[0] == LOSS)
+    machine control(p: &[u64; 4096]) -> |model|::Event {
+        |model|::Event::Control { accepted: (p[0] == |protocol_main|::HEALTH || p[0] == |protocol_main|::LOSS)
             && p[1] == 0u64 && p[2] == 0u64 && p[3] == 0u64 && p[4] == 0u64
             && p[5] == 0u64 && p[6] == 0u64 && p[7] == 0u64 }
     }
 }
 
-public machine encode(command: Command, p: &mut [u64; 4096]) -> u64 {
-    message(p, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64);
+public machine encode(command: |model|::Command, p: &mut [u64; 4096]) -> u64 {
+    |main|::message(p, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64, 0u64);
     transition command {
-        Command::AcquireInteraction -> acquire(p, INTERACTION)
-        Command::ProbeStorage -> acquire(p, STORAGE)
-        Command::Poll -> poll(p)
-        Command::ReportScope -> diagnostic::scope(p)
-        Command::CreateSurface { epoch } -> create(p, epoch)
-        Command::Paint { view, surface, color } -> paint(p, view, surface, color)
-        Command::Wait { ticks } -> wait(p, ticks)
-        Command::ReplyControl { accepted } -> reply(p, accepted)
-        Command::Fail { failure } -> fail(p, failure)
-        Command::Exit -> (EXIT)
+        |model|::Command::AcquireInteraction -> acquire(p, |main|::INTERACTION)
+        |model|::Command::ProbeStorage -> acquire(p, |main|::STORAGE)
+        |model|::Command::Poll -> poll(p)
+        |model|::Command::ReportScope -> |diagnostic|::scope(p)
+        |model|::Command::CreateSurface { epoch } -> create(p, epoch)
+        |model|::Command::Paint { view, surface, color } -> paint(p, view, surface, color)
+        |model|::Command::Wait { ticks } -> wait(p, ticks)
+        |model|::Command::ReplyControl { accepted } -> reply(p, accepted)
+        |model|::Command::Fail { failure } -> fail(p, failure)
+        |model|::Command::Exit -> (|main|::EXIT)
     }
 }
 
@@ -101,48 +96,48 @@ machine acquire(p: &mut [u64; 4096], operation: u64) -> u64 {
 }
 
 machine poll(p: &mut [u64; 4096]) -> u64 {
-    p[0] = MATRIX_POLL;
-    EXCHANGE
+    p[0] = |protocol_main|::MATRIX_POLL;
+    |main|::EXCHANGE
 }
 
 machine create(p: &mut [u64; 4096], epoch: u64) -> u64 {
-    p[0] = SURFACE_CREATE;
+    p[0] = |protocol_main|::SURFACE_CREATE;
     p[1] = epoch;
-    EXCHANGE
+    |main|::EXCHANGE
 }
 
-machine paint(p: &mut [u64; 4096], view: View, surface: u64, color: u64) -> u64 {
-    message(p, MATRIX_PAINT, view.epoch, surface, 0u64, 0u64, view.width, view.height, color);
-    EXCHANGE
+machine paint(p: &mut [u64; 4096], view: |model|::View, surface: u64, color: u64) -> u64 {
+    |main|::message(p, |protocol_main|::MATRIX_PAINT, view.epoch, surface, 0u64, 0u64, view.width, view.height, color);
+    |main|::EXCHANGE
 }
 
 machine wait(p: &mut [u64; 4096], ticks: u64) -> u64 {
     p[13] = ticks;
-    WAIT
+    |main|::WAIT
 }
 
 machine reply(p: &mut [u64; 4096], accepted: bool) -> u64 {
     transition accepted {
-        true -> (CONTROL)
+        true -> (|main|::CONTROL)
         _ -> denied(p)
     }
     machine denied(p: &mut [u64; 4096]) -> u64 {
-        p[0] = DENIED;
-        CONTROL
+        p[0] = |protocol_main|::DENIED;
+        |main|::CONTROL
     }
 }
 
-machine fail(p: &mut [u64; 4096], failure: Failure) -> u64 {
+machine fail(p: &mut [u64; 4096], failure: |model|::Failure) -> u64 {
     let code: u64 = failure_code(failure);
     p[0] = code;
-    FAIL
+    |main|::FAIL
 }
 
-machine failure_code(failure: Failure) -> u64 {
+machine failure_code(failure: |model|::Failure) -> u64 {
     transition failure {
-        Failure::Transport { code } -> (code)
-        Failure::Provider { code } -> (code)
-        Failure::UnexpectedStorageGrant -> (DENIED)
-        Failure::UnexpectedReply -> (INVALID_ARGUMENT)
+        |model|::Failure::Transport { code } -> (code)
+        |model|::Failure::Provider { code } -> (code)
+        |model|::Failure::UnexpectedStorageGrant -> (|protocol_main|::DENIED)
+        |model|::Failure::UnexpectedReply -> (|protocol_main|::INVALID_ARGUMENT)
     }
 }

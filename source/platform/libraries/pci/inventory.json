@@ -117,7 +117,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/pci/msi.omg",
-              "anchor": "module msi;"
+              "anchor": "pub data MultipleMessageSupport"
             }
           ]
         },
@@ -151,7 +151,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/pci/msix.omg",
-              "anchor": "module msix;"
+              "anchor": "pub data MsixCapability"
             }
           ]
         },
@@ -162,7 +162,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/pci/msi.omg",
-              "anchor": "module msi;"
+              "anchor": "pub data MultipleMessageSupport"
             }
           ]
         },
@@ -184,7 +184,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/pci/msix.omg",
-              "anchor": "module msix;"
+              "anchor": "pub data MsixCapability"
             }
           ]
         }
@@ -192,7 +192,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/pci/capabilities.omg",
-          "anchor": "module capabilities;"
+          "anchor": "pub data PciCapabilityAddress"
         }
       ]
     },
@@ -536,7 +536,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/pci/msi.omg",
-          "anchor": "module msi;"
+          "anchor": "pub data MultipleMessageSupport"
         }
       ]
     },
@@ -689,7 +689,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/pci/msix.omg",
-          "anchor": "module msix;"
+          "anchor": "pub data MsixCapability"
         }
       ]
     },
@@ -757,7 +757,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/pci/device_type.omg",
-          "anchor": "module device_type;"
+          "anchor": "pub data DeviceType"
         }
       ]
     },
@@ -829,7 +829,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/pci/headers.omg",
-              "anchor": "address: PciAddress;"
+              "anchor": "address: |address|::PciAddress;"
             }
           ]
         },
@@ -1088,7 +1088,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/pci/capabilities.omg",
-              "anchor": "module capabilities;"
+              "anchor": "pub data PciCapabilityAddress"
             }
           ]
         },
@@ -1176,7 +1176,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/pci/device_type.omg",
-              "anchor": "module device_type;"
+              "anchor": "pub data DeviceType"
             }
           ]
         },
@@ -1379,7 +1379,7 @@
           "targets": [
             {
               "path": "source/platform/libraries/pci/registers.omg",
-              "anchor": "module registers;"
+              "anchor": "pub data StatusRegister"
             }
           ]
         },
@@ -1605,7 +1605,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/pci/headers.omg",
-          "anchor": "module headers;"
+          "anchor": "pub data PciHeader"
         }
       ]
     },
@@ -1991,7 +1991,7 @@
       "targets": [
         {
           "path": "source/platform/libraries/pci/registers.omg",
-          "anchor": "module registers;"
+          "anchor": "pub data StatusRegister"
         }
       ]
     }

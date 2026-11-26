@@ -1,38 +1,32 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Independent literal expectations; evaluate actual translated machine bodies.
-module cases;
-use facts::x86_descriptors;
-use facts::x86_descriptors::TaskStateSegment;
-use facts::x86_descriptors::DescriptorTablePointer;
-use facts::x86_descriptors::GdtEntry;
-use facts::x86_descriptors::TssDescriptorWords;
-use facts::x86_descriptors::SelectorErrorCode;
-use x86_values::descriptors;
-use facts::x86_descriptor_bytes;
+use {facts}/x86_descriptors.omg;
+use {x86_values}/descriptors.omg;
+use {facts}/x86_descriptor_bytes.omg;
 machine constants_match_0() -> bool {
-let actual0: u64 = x86_descriptors::DESCRIPTOR_ACCESSED.raw;
+let actual0: u64 = |x86_descriptors|::DESCRIPTOR_ACCESSED.raw;
 let expected0: u64 = 1099511627776;
-let actual1: u64 = x86_descriptors::DESCRIPTOR_WRITABLE.raw;
+let actual1: u64 = |x86_descriptors|::DESCRIPTOR_WRITABLE.raw;
 let expected1: u64 = 2199023255552;
-let actual2: u64 = x86_descriptors::DESCRIPTOR_CONFORMING.raw;
+let actual2: u64 = |x86_descriptors|::DESCRIPTOR_CONFORMING.raw;
 let expected2: u64 = 4398046511104;
-let actual3: u64 = x86_descriptors::DESCRIPTOR_EXECUTABLE.raw;
+let actual3: u64 = |x86_descriptors|::DESCRIPTOR_EXECUTABLE.raw;
 let expected3: u64 = 8796093022208;
-let actual4: u64 = x86_descriptors::DESCRIPTOR_USER_SEGMENT.raw;
+let actual4: u64 = |x86_descriptors|::DESCRIPTOR_USER_SEGMENT.raw;
 let expected4: u64 = 17592186044416;
-let actual5: u64 = x86_descriptors::DESCRIPTOR_DPL_RING_3.raw;
+let actual5: u64 = |x86_descriptors|::DESCRIPTOR_DPL_RING_3.raw;
 let expected5: u64 = 105553116266496;
-let actual6: u64 = x86_descriptors::DESCRIPTOR_PRESENT.raw;
+let actual6: u64 = |x86_descriptors|::DESCRIPTOR_PRESENT.raw;
 let expected6: u64 = 140737488355328;
-let actual7: u64 = x86_descriptors::DESCRIPTOR_AVAILABLE.raw;
+let actual7: u64 = |x86_descriptors|::DESCRIPTOR_AVAILABLE.raw;
 let expected7: u64 = 4503599627370496;
-let actual8: u64 = x86_descriptors::DESCRIPTOR_LONG_MODE.raw;
+let actual8: u64 = |x86_descriptors|::DESCRIPTOR_LONG_MODE.raw;
 let expected8: u64 = 9007199254740992;
-let actual9: u64 = x86_descriptors::DESCRIPTOR_DEFAULT_SIZE.raw;
+let actual9: u64 = |x86_descriptors|::DESCRIPTOR_DEFAULT_SIZE.raw;
 let expected9: u64 = 18014398509481984;
-let actual10: u64 = x86_descriptors::DESCRIPTOR_GRANULARITY.raw;
+let actual10: u64 = |x86_descriptors|::DESCRIPTOR_GRANULARITY.raw;
 let expected10: u64 = 36028797018963968;
-let actual11: u64 = x86_descriptors::DESCRIPTOR_LIMIT_0_15.raw;
+let actual11: u64 = |x86_descriptors|::DESCRIPTOR_LIMIT_0_15.raw;
 let expected11: u64 = 65535;
 actual0 == expected0 &&
 actual1 == expected1 &&
@@ -47,25 +41,25 @@ actual9 == expected9 &&
 actual10 == expected10 &&
 actual11 == expected11 }
 machine constants_match_1() -> bool {
-let actual0: u64 = x86_descriptors::DESCRIPTOR_LIMIT_16_19.raw;
+let actual0: u64 = |x86_descriptors|::DESCRIPTOR_LIMIT_16_19.raw;
 let expected0: u64 = 4222124650659840;
-let actual1: u64 = x86_descriptors::DESCRIPTOR_BASE_0_23.raw;
+let actual1: u64 = |x86_descriptors|::DESCRIPTOR_BASE_0_23.raw;
 let expected1: u64 = 1099511562240;
-let actual2: u64 = x86_descriptors::DESCRIPTOR_BASE_24_31.raw;
+let actual2: u64 = |x86_descriptors|::DESCRIPTOR_BASE_24_31.raw;
 let expected2: u64 = LARGE_0;
-let actual3: u64 = x86_descriptors::DESCRIPTOR_COMMON.raw;
+let actual3: u64 = |x86_descriptors|::DESCRIPTOR_COMMON.raw;
 let expected3: u64 = 40412549878972415;
-let actual4: u64 = x86_descriptors::DESCRIPTOR_KERNEL_DATA.raw;
+let actual4: u64 = |x86_descriptors|::DESCRIPTOR_KERNEL_DATA.raw;
 let expected4: u64 = 58426948388454399;
-let actual5: u64 = x86_descriptors::DESCRIPTOR_KERNEL_CODE32.raw;
+let actual5: u64 = |x86_descriptors|::DESCRIPTOR_KERNEL_CODE32.raw;
 let expected5: u64 = 58435744481476607;
-let actual6: u64 = x86_descriptors::DESCRIPTOR_KERNEL_CODE64.raw;
+let actual6: u64 = |x86_descriptors|::DESCRIPTOR_KERNEL_CODE64.raw;
 let expected6: u64 = 49428545226735615;
-let actual7: u64 = x86_descriptors::DESCRIPTOR_USER_DATA.raw;
+let actual7: u64 = |x86_descriptors|::DESCRIPTOR_USER_DATA.raw;
 let expected7: u64 = 58532501504720895;
-let actual8: u64 = x86_descriptors::DESCRIPTOR_USER_CODE32.raw;
+let actual8: u64 = |x86_descriptors|::DESCRIPTOR_USER_CODE32.raw;
 let expected8: u64 = 58541297597743103;
-let actual9: u64 = x86_descriptors::DESCRIPTOR_USER_CODE64.raw;
+let actual9: u64 = |x86_descriptors|::DESCRIPTOR_USER_CODE64.raw;
 let expected9: u64 = 49534098343002111;
 actual0 == expected0 &&
 actual1 == expected1 &&
@@ -79,29 +73,29 @@ actual8 == expected8 &&
 actual9 == expected9 }
 pub machine constants_match() -> bool { constants_match_0() && constants_match_1() }
 machine descriptor_cases_0() -> bool {
-let actual0: u64 = descriptors::tss_descriptor(0, 0).low;
+let actual0: u64 = |descriptors|::tss_descriptor(0, 0).low;
 let expected0: u64 = 150633093005312;
-let actual1: u64 = descriptors::tss_descriptor(0, 0).high;
+let actual1: u64 = |descriptors|::tss_descriptor(0, 0).high;
 let expected1: u64 = 0;
-let actual2: u64 = descriptors::tss_descriptor(0, 103).low;
+let actual2: u64 = |descriptors|::tss_descriptor(0, 103).low;
 let expected2: u64 = 150633093005415;
-let actual3: u64 = descriptors::tss_descriptor(0, 103).high;
+let actual3: u64 = |descriptors|::tss_descriptor(0, 103).high;
 let expected3: u64 = 0;
-let actual4: u64 = descriptors::tss_descriptor(0, 104).low;
+let actual4: u64 = |descriptors|::tss_descriptor(0, 104).low;
 let expected4: u64 = 150633093005416;
-let actual5: u64 = descriptors::tss_descriptor(0, 104).high;
+let actual5: u64 = |descriptors|::tss_descriptor(0, 104).high;
 let expected5: u64 = 0;
-let actual6: u64 = descriptors::tss_descriptor(0, 65535).low;
+let actual6: u64 = |descriptors|::tss_descriptor(0, 65535).low;
 let expected6: u64 = 150633093070847;
-let actual7: u64 = descriptors::tss_descriptor(0, 65535).high;
+let actual7: u64 = |descriptors|::tss_descriptor(0, 65535).high;
 let expected7: u64 = 0;
-let actual8: u64 = descriptors::tss_descriptor(1, 0).low;
+let actual8: u64 = |descriptors|::tss_descriptor(1, 0).low;
 let expected8: u64 = 150633093070848;
-let actual9: u64 = descriptors::tss_descriptor(1, 0).high;
+let actual9: u64 = |descriptors|::tss_descriptor(1, 0).high;
 let expected9: u64 = 0;
-let actual10: u64 = descriptors::tss_descriptor(1, 103).low;
+let actual10: u64 = |descriptors|::tss_descriptor(1, 103).low;
 let expected10: u64 = 150633093070951;
-let actual11: u64 = descriptors::tss_descriptor(1, 103).high;
+let actual11: u64 = |descriptors|::tss_descriptor(1, 103).high;
 let expected11: u64 = 0;
 actual0 == expected0 &&
 actual1 == expected1 &&
@@ -116,29 +110,29 @@ actual9 == expected9 &&
 actual10 == expected10 &&
 actual11 == expected11 }
 machine descriptor_cases_1() -> bool {
-let actual0: u64 = descriptors::tss_descriptor(1, 104).low;
+let actual0: u64 = |descriptors|::tss_descriptor(1, 104).low;
 let expected0: u64 = 150633093070952;
-let actual1: u64 = descriptors::tss_descriptor(1, 104).high;
+let actual1: u64 = |descriptors|::tss_descriptor(1, 104).high;
 let expected1: u64 = 0;
-let actual2: u64 = descriptors::tss_descriptor(1, 65535).low;
+let actual2: u64 = |descriptors|::tss_descriptor(1, 65535).low;
 let expected2: u64 = 150633093136383;
-let actual3: u64 = descriptors::tss_descriptor(1, 65535).high;
+let actual3: u64 = |descriptors|::tss_descriptor(1, 65535).high;
 let expected3: u64 = 0;
-let actual4: u64 = descriptors::tss_descriptor(1234605616436508552, 0).low;
+let actual4: u64 = |descriptors|::tss_descriptor(1234605616436508552, 0).low;
 let expected4: u64 = 6125046566408945664;
-let actual5: u64 = descriptors::tss_descriptor(1234605616436508552, 0).high;
+let actual5: u64 = |descriptors|::tss_descriptor(1234605616436508552, 0).high;
 let expected5: u64 = 287454020;
-let actual6: u64 = descriptors::tss_descriptor(1234605616436508552, 103).low;
+let actual6: u64 = |descriptors|::tss_descriptor(1234605616436508552, 103).low;
 let expected6: u64 = 6125046566408945767;
-let actual7: u64 = descriptors::tss_descriptor(1234605616436508552, 103).high;
+let actual7: u64 = |descriptors|::tss_descriptor(1234605616436508552, 103).high;
 let expected7: u64 = 287454020;
-let actual8: u64 = descriptors::tss_descriptor(1234605616436508552, 104).low;
+let actual8: u64 = |descriptors|::tss_descriptor(1234605616436508552, 104).low;
 let expected8: u64 = 6125046566408945768;
-let actual9: u64 = descriptors::tss_descriptor(1234605616436508552, 104).high;
+let actual9: u64 = |descriptors|::tss_descriptor(1234605616436508552, 104).high;
 let expected9: u64 = 287454020;
-let actual10: u64 = descriptors::tss_descriptor(1234605616436508552, 65535).low;
+let actual10: u64 = |descriptors|::tss_descriptor(1234605616436508552, 65535).low;
 let expected10: u64 = 6125046566409011199;
-let actual11: u64 = descriptors::tss_descriptor(1234605616436508552, 65535).high;
+let actual11: u64 = |descriptors|::tss_descriptor(1234605616436508552, 65535).high;
 let expected11: u64 = 287454020;
 actual0 == expected0 &&
 actual1 == expected1 &&
@@ -153,21 +147,21 @@ actual9 == expected9 &&
 actual10 == expected10 &&
 actual11 == expected11 }
 machine descriptor_cases_2() -> bool {
-let actual0: u64 = descriptors::tss_descriptor(LARGE_5, 0).low;
+let actual0: u64 = |descriptors|::tss_descriptor(LARGE_5, 0).low;
 let expected0: u64 = LARGE_1;
-let actual1: u64 = descriptors::tss_descriptor(LARGE_5, 0).high;
+let actual1: u64 = |descriptors|::tss_descriptor(LARGE_5, 0).high;
 let expected1: u64 = 4294967295;
-let actual2: u64 = descriptors::tss_descriptor(LARGE_5, 103).low;
+let actual2: u64 = |descriptors|::tss_descriptor(LARGE_5, 103).low;
 let expected2: u64 = LARGE_2;
-let actual3: u64 = descriptors::tss_descriptor(LARGE_5, 103).high;
+let actual3: u64 = |descriptors|::tss_descriptor(LARGE_5, 103).high;
 let expected3: u64 = 4294967295;
-let actual4: u64 = descriptors::tss_descriptor(LARGE_5, 104).low;
+let actual4: u64 = |descriptors|::tss_descriptor(LARGE_5, 104).low;
 let expected4: u64 = LARGE_3;
-let actual5: u64 = descriptors::tss_descriptor(LARGE_5, 104).high;
+let actual5: u64 = |descriptors|::tss_descriptor(LARGE_5, 104).high;
 let expected5: u64 = 4294967295;
-let actual6: u64 = descriptors::tss_descriptor(LARGE_5, 65535).low;
+let actual6: u64 = |descriptors|::tss_descriptor(LARGE_5, 65535).low;
 let expected6: u64 = LARGE_4;
-let actual7: u64 = descriptors::tss_descriptor(LARGE_5, 65535).high;
+let actual7: u64 = |descriptors|::tss_descriptor(LARGE_5, 65535).high;
 let expected7: u64 = 4294967295;
 actual0 == expected0 &&
 actual1 == expected1 &&
@@ -178,29 +172,29 @@ actual5 == expected5 &&
 actual6 == expected6 &&
 actual7 == expected7 }
 pub machine descriptor_cases() -> bool { descriptor_cases_0() && descriptor_cases_1() && descriptor_cases_2() }
-machine error0() -> bool { let value: SelectorErrorCode = SelectorErrorCode { raw: 0 }; descriptors::selector_error_valid(0) && descriptors::selector_error_external(&value) == false && descriptors::selector_error_table(&value) == 0 && descriptors::selector_error_index(&value) == 0 && descriptors::selector_error_is_null(&value) == true }
-machine error1() -> bool { let value: SelectorErrorCode = SelectorErrorCode { raw: 1 }; descriptors::selector_error_valid(1) && descriptors::selector_error_external(&value) == true && descriptors::selector_error_table(&value) == 0 && descriptors::selector_error_index(&value) == 0 && descriptors::selector_error_is_null(&value) == false }
-machine error2() -> bool { let value: SelectorErrorCode = SelectorErrorCode { raw: 2 }; descriptors::selector_error_valid(2) && descriptors::selector_error_external(&value) == false && descriptors::selector_error_table(&value) == 1 && descriptors::selector_error_index(&value) == 0 && descriptors::selector_error_is_null(&value) == false }
-machine error3() -> bool { let value: SelectorErrorCode = SelectorErrorCode { raw: 3 }; descriptors::selector_error_valid(3) && descriptors::selector_error_external(&value) == true && descriptors::selector_error_table(&value) == 1 && descriptors::selector_error_index(&value) == 0 && descriptors::selector_error_is_null(&value) == false }
-machine error4() -> bool { let value: SelectorErrorCode = SelectorErrorCode { raw: 4 }; descriptors::selector_error_valid(4) && descriptors::selector_error_external(&value) == false && descriptors::selector_error_table(&value) == 2 && descriptors::selector_error_index(&value) == 0 && descriptors::selector_error_is_null(&value) == false }
-machine error5() -> bool { let value: SelectorErrorCode = SelectorErrorCode { raw: 5 }; descriptors::selector_error_valid(5) && descriptors::selector_error_external(&value) == true && descriptors::selector_error_table(&value) == 2 && descriptors::selector_error_index(&value) == 0 && descriptors::selector_error_is_null(&value) == false }
-machine error6() -> bool { let value: SelectorErrorCode = SelectorErrorCode { raw: 6 }; descriptors::selector_error_valid(6) && descriptors::selector_error_external(&value) == false && descriptors::selector_error_table(&value) == 1 && descriptors::selector_error_index(&value) == 0 && descriptors::selector_error_is_null(&value) == false }
-machine error7() -> bool { let value: SelectorErrorCode = SelectorErrorCode { raw: 7 }; descriptors::selector_error_valid(7) && descriptors::selector_error_external(&value) == true && descriptors::selector_error_table(&value) == 1 && descriptors::selector_error_index(&value) == 0 && descriptors::selector_error_is_null(&value) == false }
-machine error8() -> bool { let value: SelectorErrorCode = SelectorErrorCode { raw: 8 }; descriptors::selector_error_valid(8) && descriptors::selector_error_external(&value) == false && descriptors::selector_error_table(&value) == 0 && descriptors::selector_error_index(&value) == 1 && descriptors::selector_error_is_null(&value) == false }
-machine error9() -> bool { let value: SelectorErrorCode = SelectorErrorCode { raw: 9 }; descriptors::selector_error_valid(9) && descriptors::selector_error_external(&value) == true && descriptors::selector_error_table(&value) == 0 && descriptors::selector_error_index(&value) == 1 && descriptors::selector_error_is_null(&value) == false }
-machine error65528() -> bool { let value: SelectorErrorCode = SelectorErrorCode { raw: 65528 }; descriptors::selector_error_valid(65528) && descriptors::selector_error_external(&value) == false && descriptors::selector_error_table(&value) == 0 && descriptors::selector_error_index(&value) == 8191 && descriptors::selector_error_is_null(&value) == false }
-machine error65529() -> bool { let value: SelectorErrorCode = SelectorErrorCode { raw: 65529 }; descriptors::selector_error_valid(65529) && descriptors::selector_error_external(&value) == true && descriptors::selector_error_table(&value) == 0 && descriptors::selector_error_index(&value) == 8191 && descriptors::selector_error_is_null(&value) == false }
-machine error65530() -> bool { let value: SelectorErrorCode = SelectorErrorCode { raw: 65530 }; descriptors::selector_error_valid(65530) && descriptors::selector_error_external(&value) == false && descriptors::selector_error_table(&value) == 1 && descriptors::selector_error_index(&value) == 8191 && descriptors::selector_error_is_null(&value) == false }
-machine error65531() -> bool { let value: SelectorErrorCode = SelectorErrorCode { raw: 65531 }; descriptors::selector_error_valid(65531) && descriptors::selector_error_external(&value) == true && descriptors::selector_error_table(&value) == 1 && descriptors::selector_error_index(&value) == 8191 && descriptors::selector_error_is_null(&value) == false }
-machine error65532() -> bool { let value: SelectorErrorCode = SelectorErrorCode { raw: 65532 }; descriptors::selector_error_valid(65532) && descriptors::selector_error_external(&value) == false && descriptors::selector_error_table(&value) == 2 && descriptors::selector_error_index(&value) == 8191 && descriptors::selector_error_is_null(&value) == false }
-machine error65533() -> bool { let value: SelectorErrorCode = SelectorErrorCode { raw: 65533 }; descriptors::selector_error_valid(65533) && descriptors::selector_error_external(&value) == true && descriptors::selector_error_table(&value) == 2 && descriptors::selector_error_index(&value) == 8191 && descriptors::selector_error_is_null(&value) == false }
-machine error65534() -> bool { let value: SelectorErrorCode = SelectorErrorCode { raw: 65534 }; descriptors::selector_error_valid(65534) && descriptors::selector_error_external(&value) == false && descriptors::selector_error_table(&value) == 1 && descriptors::selector_error_index(&value) == 8191 && descriptors::selector_error_is_null(&value) == false }
-machine error65535() -> bool { let value: SelectorErrorCode = SelectorErrorCode { raw: 65535 }; descriptors::selector_error_valid(65535) && descriptors::selector_error_external(&value) == true && descriptors::selector_error_table(&value) == 1 && descriptors::selector_error_index(&value) == 8191 && descriptors::selector_error_is_null(&value) == false }
+machine error0() -> bool { let value: |x86_descriptors|::SelectorErrorCode = |x86_descriptors|::SelectorErrorCode { raw: 0 }; |descriptors|::selector_error_valid(0) && |descriptors|::selector_error_external(&value) == false && |descriptors|::selector_error_table(&value) == 0 && |descriptors|::selector_error_index(&value) == 0 && |descriptors|::selector_error_is_null(&value) == true }
+machine error1() -> bool { let value: |x86_descriptors|::SelectorErrorCode = |x86_descriptors|::SelectorErrorCode { raw: 1 }; |descriptors|::selector_error_valid(1) && |descriptors|::selector_error_external(&value) == true && |descriptors|::selector_error_table(&value) == 0 && |descriptors|::selector_error_index(&value) == 0 && |descriptors|::selector_error_is_null(&value) == false }
+machine error2() -> bool { let value: |x86_descriptors|::SelectorErrorCode = |x86_descriptors|::SelectorErrorCode { raw: 2 }; |descriptors|::selector_error_valid(2) && |descriptors|::selector_error_external(&value) == false && |descriptors|::selector_error_table(&value) == 1 && |descriptors|::selector_error_index(&value) == 0 && |descriptors|::selector_error_is_null(&value) == false }
+machine error3() -> bool { let value: |x86_descriptors|::SelectorErrorCode = |x86_descriptors|::SelectorErrorCode { raw: 3 }; |descriptors|::selector_error_valid(3) && |descriptors|::selector_error_external(&value) == true && |descriptors|::selector_error_table(&value) == 1 && |descriptors|::selector_error_index(&value) == 0 && |descriptors|::selector_error_is_null(&value) == false }
+machine error4() -> bool { let value: |x86_descriptors|::SelectorErrorCode = |x86_descriptors|::SelectorErrorCode { raw: 4 }; |descriptors|::selector_error_valid(4) && |descriptors|::selector_error_external(&value) == false && |descriptors|::selector_error_table(&value) == 2 && |descriptors|::selector_error_index(&value) == 0 && |descriptors|::selector_error_is_null(&value) == false }
+machine error5() -> bool { let value: |x86_descriptors|::SelectorErrorCode = |x86_descriptors|::SelectorErrorCode { raw: 5 }; |descriptors|::selector_error_valid(5) && |descriptors|::selector_error_external(&value) == true && |descriptors|::selector_error_table(&value) == 2 && |descriptors|::selector_error_index(&value) == 0 && |descriptors|::selector_error_is_null(&value) == false }
+machine error6() -> bool { let value: |x86_descriptors|::SelectorErrorCode = |x86_descriptors|::SelectorErrorCode { raw: 6 }; |descriptors|::selector_error_valid(6) && |descriptors|::selector_error_external(&value) == false && |descriptors|::selector_error_table(&value) == 1 && |descriptors|::selector_error_index(&value) == 0 && |descriptors|::selector_error_is_null(&value) == false }
+machine error7() -> bool { let value: |x86_descriptors|::SelectorErrorCode = |x86_descriptors|::SelectorErrorCode { raw: 7 }; |descriptors|::selector_error_valid(7) && |descriptors|::selector_error_external(&value) == true && |descriptors|::selector_error_table(&value) == 1 && |descriptors|::selector_error_index(&value) == 0 && |descriptors|::selector_error_is_null(&value) == false }
+machine error8() -> bool { let value: |x86_descriptors|::SelectorErrorCode = |x86_descriptors|::SelectorErrorCode { raw: 8 }; |descriptors|::selector_error_valid(8) && |descriptors|::selector_error_external(&value) == false && |descriptors|::selector_error_table(&value) == 0 && |descriptors|::selector_error_index(&value) == 1 && |descriptors|::selector_error_is_null(&value) == false }
+machine error9() -> bool { let value: |x86_descriptors|::SelectorErrorCode = |x86_descriptors|::SelectorErrorCode { raw: 9 }; |descriptors|::selector_error_valid(9) && |descriptors|::selector_error_external(&value) == true && |descriptors|::selector_error_table(&value) == 0 && |descriptors|::selector_error_index(&value) == 1 && |descriptors|::selector_error_is_null(&value) == false }
+machine error65528() -> bool { let value: |x86_descriptors|::SelectorErrorCode = |x86_descriptors|::SelectorErrorCode { raw: 65528 }; |descriptors|::selector_error_valid(65528) && |descriptors|::selector_error_external(&value) == false && |descriptors|::selector_error_table(&value) == 0 && |descriptors|::selector_error_index(&value) == 8191 && |descriptors|::selector_error_is_null(&value) == false }
+machine error65529() -> bool { let value: |x86_descriptors|::SelectorErrorCode = |x86_descriptors|::SelectorErrorCode { raw: 65529 }; |descriptors|::selector_error_valid(65529) && |descriptors|::selector_error_external(&value) == true && |descriptors|::selector_error_table(&value) == 0 && |descriptors|::selector_error_index(&value) == 8191 && |descriptors|::selector_error_is_null(&value) == false }
+machine error65530() -> bool { let value: |x86_descriptors|::SelectorErrorCode = |x86_descriptors|::SelectorErrorCode { raw: 65530 }; |descriptors|::selector_error_valid(65530) && |descriptors|::selector_error_external(&value) == false && |descriptors|::selector_error_table(&value) == 1 && |descriptors|::selector_error_index(&value) == 8191 && |descriptors|::selector_error_is_null(&value) == false }
+machine error65531() -> bool { let value: |x86_descriptors|::SelectorErrorCode = |x86_descriptors|::SelectorErrorCode { raw: 65531 }; |descriptors|::selector_error_valid(65531) && |descriptors|::selector_error_external(&value) == true && |descriptors|::selector_error_table(&value) == 1 && |descriptors|::selector_error_index(&value) == 8191 && |descriptors|::selector_error_is_null(&value) == false }
+machine error65532() -> bool { let value: |x86_descriptors|::SelectorErrorCode = |x86_descriptors|::SelectorErrorCode { raw: 65532 }; |descriptors|::selector_error_valid(65532) && |descriptors|::selector_error_external(&value) == false && |descriptors|::selector_error_table(&value) == 2 && |descriptors|::selector_error_index(&value) == 8191 && |descriptors|::selector_error_is_null(&value) == false }
+machine error65533() -> bool { let value: |x86_descriptors|::SelectorErrorCode = |x86_descriptors|::SelectorErrorCode { raw: 65533 }; |descriptors|::selector_error_valid(65533) && |descriptors|::selector_error_external(&value) == true && |descriptors|::selector_error_table(&value) == 2 && |descriptors|::selector_error_index(&value) == 8191 && |descriptors|::selector_error_is_null(&value) == false }
+machine error65534() -> bool { let value: |x86_descriptors|::SelectorErrorCode = |x86_descriptors|::SelectorErrorCode { raw: 65534 }; |descriptors|::selector_error_valid(65534) && |descriptors|::selector_error_external(&value) == false && |descriptors|::selector_error_table(&value) == 1 && |descriptors|::selector_error_index(&value) == 8191 && |descriptors|::selector_error_is_null(&value) == false }
+machine error65535() -> bool { let value: |x86_descriptors|::SelectorErrorCode = |x86_descriptors|::SelectorErrorCode { raw: 65535 }; |descriptors|::selector_error_valid(65535) && |descriptors|::selector_error_external(&value) == true && |descriptors|::selector_error_table(&value) == 1 && |descriptors|::selector_error_index(&value) == 8191 && |descriptors|::selector_error_is_null(&value) == false }
 machine error_cases_0() -> bool {
-let actual2: u64 = descriptors::selector_error_truncate(0xffffffffffffffff).raw;
+let actual2: u64 = |descriptors|::selector_error_truncate(0xffffffffffffffff).raw;
 let expected2: u64 = 65535;
-!descriptors::selector_error_valid(65536) &&
-!descriptors::selector_error_valid(0xffffffffffffffff) &&
+!|descriptors|::selector_error_valid(65536) &&
+!|descriptors|::selector_error_valid(0xffffffffffffffff) &&
 actual2 == expected2 &&
 error0() &&
 error1() &&
@@ -223,10 +217,10 @@ error65534() &&
 error65535() }
 pub machine error_cases() -> bool { error_cases_0() && error_cases_1() }
 machine bytes_DescriptorTablePointer() -> bool {
- let value: DescriptorTablePointer = DescriptorTablePointer { limit: 513, base: 723118041428460547 };
- let encoded: [u8; 10] = x86_descriptor_bytes::encode_DescriptorTablePointer(&value);
+ let value: |x86_descriptors|::DescriptorTablePointer = |x86_descriptors|::DescriptorTablePointer { limit: 513, base: 723118041428460547 };
+ let encoded: [u8; 10] = |x86_descriptor_bytes|::encode_DescriptorTablePointer(&value);
  let golden: [u8; 10] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
- let decoded: DescriptorTablePointer = x86_descriptor_bytes::decode_DescriptorTablePointer(&golden);
+ let decoded: |x86_descriptors|::DescriptorTablePointer = |x86_descriptor_bytes|::decode_DescriptorTablePointer(&golden);
 encoded[0] == 1 &&
 encoded[1] == 2 &&
 encoded[2] == 3 &&
@@ -241,10 +235,10 @@ decoded.limit == value.limit &&
 decoded.base == value.base
 }
 machine bytes_TaskStateSegment() -> bool {
- let value: TaskStateSegment = TaskStateSegment { reserved_1: 67305985, privilege_stack_table: [72623859790382856, 651345242494996240, 1230066625199609624], reserved_2: 2603962535218454045, interrupt_stack_table: [72623859790382856, 651345242494996240, 1230066625199609624, 1808788007904223008, 2387509390608836392, 2966230773313449776, 3544952156018063160], reserved_3: 7233733596855361117, reserved_4: 26213, iomap_base: 26727 };
- let encoded: [u8; 104] = x86_descriptor_bytes::encode_TaskStateSegment(&value);
+ let value: |x86_descriptors|::TaskStateSegment = |x86_descriptors|::TaskStateSegment { reserved_1: 67305985, privilege_stack_table: [72623859790382856, 651345242494996240, 1230066625199609624], reserved_2: 2603962535218454045, interrupt_stack_table: [72623859790382856, 651345242494996240, 1230066625199609624, 1808788007904223008, 2387509390608836392, 2966230773313449776, 3544952156018063160], reserved_3: 7233733596855361117, reserved_4: 26213, iomap_base: 26727 };
+ let encoded: [u8; 104] = |x86_descriptor_bytes|::encode_TaskStateSegment(&value);
  let golden: [u8; 104] = [1, 2, 3, 4, 8, 7, 6, 5, 4, 3, 2, 1, 16, 15, 14, 13, 12, 11, 10, 9, 24, 23, 22, 21, 20, 19, 18, 17, 29, 30, 31, 32, 33, 34, 35, 36, 8, 7, 6, 5, 4, 3, 2, 1, 16, 15, 14, 13, 12, 11, 10, 9, 24, 23, 22, 21, 20, 19, 18, 17, 32, 31, 30, 29, 28, 27, 26, 25, 40, 39, 38, 37, 36, 35, 34, 33, 48, 47, 46, 45, 44, 43, 42, 41, 56, 55, 54, 53, 52, 51, 50, 49, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104];
- let decoded: TaskStateSegment = x86_descriptor_bytes::decode_TaskStateSegment(&golden);
+ let decoded: |x86_descriptors|::TaskStateSegment = |x86_descriptor_bytes|::decode_TaskStateSegment(&golden);
 encoded[0] == 1 &&
 encoded[1] == 2 &&
 encoded[2] == 3 &&
@@ -366,10 +360,10 @@ decoded.reserved_4 == value.reserved_4 &&
 decoded.iomap_base == value.iomap_base
 }
 machine bytes_GdtEntry() -> bool {
- let value: GdtEntry = GdtEntry { raw: 578437695752307201 };
- let encoded: [u8; 8] = x86_descriptor_bytes::encode_GdtEntry(&value);
+ let value: |x86_descriptors|::GdtEntry = |x86_descriptors|::GdtEntry { raw: 578437695752307201 };
+ let encoded: [u8; 8] = |x86_descriptor_bytes|::encode_GdtEntry(&value);
  let golden: [u8; 8] = [1, 2, 3, 4, 5, 6, 7, 8];
- let decoded: GdtEntry = x86_descriptor_bytes::decode_GdtEntry(&golden);
+ let decoded: |x86_descriptors|::GdtEntry = |x86_descriptor_bytes|::decode_GdtEntry(&golden);
 encoded[0] == 1 &&
 encoded[1] == 2 &&
 encoded[2] == 3 &&
@@ -381,10 +375,10 @@ encoded[7] == 8 &&
 decoded.raw == value.raw
 }
 machine bytes_TssDescriptorWords() -> bool {
- let value: TssDescriptorWords = TssDescriptorWords { low: 578437695752307201, high: 1157159078456920585 };
- let encoded: [u8; 16] = x86_descriptor_bytes::encode_TssDescriptorWords(&value);
+ let value: |x86_descriptors|::TssDescriptorWords = |x86_descriptors|::TssDescriptorWords { low: 578437695752307201, high: 1157159078456920585 };
+ let encoded: [u8; 16] = |x86_descriptor_bytes|::encode_TssDescriptorWords(&value);
  let golden: [u8; 16] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
- let decoded: TssDescriptorWords = x86_descriptor_bytes::decode_TssDescriptorWords(&golden);
+ let decoded: |x86_descriptors|::TssDescriptorWords = |x86_descriptor_bytes|::decode_TssDescriptorWords(&golden);
 encoded[0] == 1 &&
 encoded[1] == 2 &&
 encoded[2] == 3 &&
@@ -404,8 +398,8 @@ encoded[15] == 16 &&
 decoded.low == value.low &&
 decoded.high == value.high
 }
-machine tss_default() -> bool { let value: TaskStateSegment = descriptors::tss_new(); value.iomap_base == 104 && value.reserved_1 == 0 && value.reserved_2 == 0 && value.reserved_3 == 0 && value.reserved_4 == 0 && value.privilege_stack_table[0] == 0 && value.privilege_stack_table[1] == 0 && value.privilege_stack_table[2] == 0 && value.interrupt_stack_table[0] == 0 && value.interrupt_stack_table[1] == 0 && value.interrupt_stack_table[2] == 0 && value.interrupt_stack_table[3] == 0 && value.interrupt_stack_table[4] == 0 && value.interrupt_stack_table[5] == 0 && value.interrupt_stack_table[6] == 0 }
-machine descriptor_roundtrip() -> bool { let value: TssDescriptorWords = descriptors::tss_descriptor(0x1122334455667788, 103); let bad: TssDescriptorWords = TssDescriptorWords { low: 0x890000000067, high: 0x100000000 }; descriptors::tss_descriptor_base(&value) == 0x1122334455667788 && descriptors::tss_descriptor_limit(&value) == 103 && descriptors::tss_descriptor_shape_valid(&value) && !descriptors::tss_descriptor_shape_valid(&bad) }
+machine tss_default() -> bool { let value: |x86_descriptors|::TaskStateSegment = |descriptors|::tss_new(); value.iomap_base == 104 && value.reserved_1 == 0 && value.reserved_2 == 0 && value.reserved_3 == 0 && value.reserved_4 == 0 && value.privilege_stack_table[0] == 0 && value.privilege_stack_table[1] == 0 && value.privilege_stack_table[2] == 0 && value.interrupt_stack_table[0] == 0 && value.interrupt_stack_table[1] == 0 && value.interrupt_stack_table[2] == 0 && value.interrupt_stack_table[3] == 0 && value.interrupt_stack_table[4] == 0 && value.interrupt_stack_table[5] == 0 && value.interrupt_stack_table[6] == 0 }
+machine descriptor_roundtrip() -> bool { let value: |x86_descriptors|::TssDescriptorWords = |descriptors|::tss_descriptor(0x1122334455667788, 103); let bad: |x86_descriptors|::TssDescriptorWords = |x86_descriptors|::TssDescriptorWords { low: 0x890000000067, high: 0x100000000 }; |descriptors|::tss_descriptor_base(&value) == 0x1122334455667788 && |descriptors|::tss_descriptor_limit(&value) == 103 && |descriptors|::tss_descriptor_shape_valid(&value) && !|descriptors|::tss_descriptor_shape_valid(&bad) }
 pub machine byte_cases() -> bool { bytes_DescriptorTablePointer() && bytes_TaskStateSegment() && bytes_GdtEntry() && bytes_TssDescriptorWords() && tss_default() && descriptor_roundtrip() }
 const LARGE_0: u64 = (4278190080 as u64) << 32 | 0;
 const LARGE_1: u64 = (4278225407 as u64) << 32 | 4294901760;

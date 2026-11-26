@@ -1,18 +1,18 @@
 // Compile-only linear-carry canary for Cathedral's first memory root.
 
-use core::extent;
-use omega::language::core::extent;
+use {core}/memory/extent.omg as cathedral_extent;
+use {omega}/language/core/extent.omg;
 
 data Main {
-    memory: ExtentRootProvider;
+    memory: |extent|::ExtentRootProvider;
 }
 
 machine Main::main(&self) {
-    let geometry: Extent = Extent { base: 4096 as address, length: PAGE_SIZE };
-    let first_extent: Extent = self.memory.grant(geometry);
+    let geometry: |extent|::Extent = |extent|::Extent { base: 4096 as address, length: |cathedral_extent|::PAGE_SIZE };
+    let first_extent: |extent|::Extent = self.memory.grant(geometry);
     transition { _ -> retain(first_extent) }
 
-    state retain(extent: Extent in Granted) {
+    state retain(extent: |extent|::Extent in |extent|::Granted) {
         transition { _ -> retain(extent) }
     }
 }

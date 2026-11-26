@@ -1,8 +1,6 @@
-module children::launch::admission;
-
 // Select a target before checking its pressure, arguments and standing authority.
 // A free app position with a busy connection is not permission to skip that slot.
-use children::launch::roles::Requester;
+use children/launch/roles.omg;
 
 public data Request {
     program_present: bool;
@@ -14,7 +12,7 @@ public data Facts {
     busy: bool;
     desktop: bool;
     exact_chrome: bool;
-    requester: Requester;
+    requester: |roles|::Requester;
     occupied_slots: u64;
     unavailable_connections: u64;
     storing: bool;
@@ -69,8 +67,8 @@ public machine admit(request: &Request, facts: &Facts) -> Decision {
     }
     machine sibling(request: &Request, facts: &Facts) -> Decision {
         transition facts.requester {
-            Requester::Child { slot } -> pair(request, facts, slot)
-            Requester::Owner -> (Decision::Refused { reason: Refusal::Denied })
+            |roles|::Requester::Child { slot } -> pair(request, facts, slot)
+            |roles|::Requester::Owner -> (Decision::Refused { reason: Refusal::Denied })
         }
     }
     machine pair(request: &Request, facts: &Facts, requester: u64) -> Decision {

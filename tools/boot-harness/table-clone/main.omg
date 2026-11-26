@@ -1,18 +1,15 @@
 // Expected exit: 0. Path-copying preserves off-path translations and permissions.
 // This is numeric policy only; no address or snapshot grants memory authority.
 
-use arch::isa::x86_64::memory::clone::X86ClonedPageTables;
-use arch::isa::x86_64::memory::clone::X86PageTableClone;
-use arch::isa::x86_64::memory::clone::X86PageTableCloneResult;
-use arch::isa::x86_64::memory::clone::X86PagingPathSnapshot;
+use {arch}/isa/x86_64/memory/clone.omg;
 machine require(value: bool) crashes Trap {
     transition value { true -> done() false -> wrong() }
     machine done() {}
     machine wrong() { crash Trap; }
 }
 
-machine source(kind: u64, writable: bool) -> X86PagingPathSnapshot {
-    let mut snapshot: X86PagingPathSnapshot;
+machine source(kind: u64, writable: bool) -> |clone|::X86PagingPathSnapshot {
+    let mut snapshot: |clone|::X86PagingPathSnapshot;
     snapshot.pml4.available = true;
     snapshot.pml4.address = 0x1000;
     snapshot.pml4.entries[511] = 0x9003;
@@ -29,8 +26,8 @@ machine source(kind: u64, writable: bool) -> X86PagingPathSnapshot {
         true -> root(snapshot, kind, 0x2003)
         _ -> root(snapshot, kind, 0x2001)
     }
-    machine root(snapshot: X86PagingPathSnapshot, kind: u64, word: u64) -> X86PagingPathSnapshot {
-        let mut saved: X86PagingPathSnapshot = snapshot;
+    machine root(snapshot: |clone|::X86PagingPathSnapshot, kind: u64, word: u64) -> |clone|::X86PagingPathSnapshot {
+        let mut saved: |clone|::X86PagingPathSnapshot = snapshot;
         saved.pml4.entries[0] = word;
         transition kind {
             1 -> gigabyte(saved)
@@ -39,28 +36,28 @@ machine source(kind: u64, writable: bool) -> X86PagingPathSnapshot {
             _ -> absent(saved)
         }
     }
-    machine gigabyte(snapshot: X86PagingPathSnapshot) -> X86PagingPathSnapshot {
-        let mut saved: X86PagingPathSnapshot = snapshot;
+    machine gigabyte(snapshot: |clone|::X86PagingPathSnapshot) -> |clone|::X86PagingPathSnapshot {
+        let mut saved: |clone|::X86PagingPathSnapshot = snapshot;
         saved.pdpt.entries[1] = 0x40001083; // 1 GiB leaf, PAT set.
         saved.pd.available = false;
         saved.pt.available = false;
         saved
     }
-    machine megabyte(snapshot: X86PagingPathSnapshot) -> X86PagingPathSnapshot {
-        let mut saved: X86PagingPathSnapshot = snapshot;
+    machine megabyte(snapshot: |clone|::X86PagingPathSnapshot) -> |clone|::X86PagingPathSnapshot {
+        let mut saved: |clone|::X86PagingPathSnapshot = snapshot;
         saved.pdpt.entries[1] = 0x3003;
         saved.pd.entries[0] = 0x20001083; // 2 MiB leaf, PAT set.
         saved.pt.available = false;
         saved
     }
-    machine four_kilobyte(snapshot: X86PagingPathSnapshot) -> X86PagingPathSnapshot {
-        let mut saved: X86PagingPathSnapshot = snapshot;
+    machine four_kilobyte(snapshot: |clone|::X86PagingPathSnapshot) -> |clone|::X86PagingPathSnapshot {
+        let mut saved: |clone|::X86PagingPathSnapshot = snapshot;
         saved.pdpt.entries[1] = 0x3003;
         saved.pd.entries[0] = 0x4003;
         saved
     }
-    machine absent(snapshot: X86PagingPathSnapshot) -> X86PagingPathSnapshot {
-        let mut saved: X86PagingPathSnapshot = snapshot;
+    machine absent(snapshot: |clone|::X86PagingPathSnapshot) -> |clone|::X86PagingPathSnapshot {
+        let mut saved: |clone|::X86PagingPathSnapshot = snapshot;
         saved.pml4.entries[0] = 0;
         saved.pdpt.available = false;
         saved.pd.available = false;
@@ -72,13 +69,13 @@ machine source(kind: u64, writable: bool) -> X86PagingPathSnapshot {
 machine check(kind: u64, writable: bool, neighbor: u64, directory_neighbor: u64)
 crashes Trap
 {
-    let before: X86PagingPathSnapshot = source(kind, writable);
-    let result: X86PageTableCloneResult = X86PageTableClone::prepare(&before, 0x10000, 0x80000, 0x40000000);
+    let before: |clone|::X86PagingPathSnapshot = source(kind, writable);
+    let result: |clone|::X86PageTableCloneResult = |clone|::X86PageTableClone::prepare(&before, 0x10000, 0x80000, 0x40000000);
     transition result {
-        X86PageTableCloneResult::Ready { tables } -> inspect(before, tables, kind, writable, neighbor, directory_neighbor)
+        |clone|::X86PageTableCloneResult::Ready { tables } -> inspect(before, tables, kind, writable, neighbor, directory_neighbor)
         _ -> wrong()
     }
-    machine inspect(before: X86PagingPathSnapshot, tables: X86ClonedPageTables,
+    machine inspect(before: |clone|::X86PagingPathSnapshot, tables: |clone|::X86ClonedPageTables,
                   kind: u64, writable: bool, neighbor: u64, directory_neighbor: u64)
     {
         require(tables.pml4[0] == 0x11003 && tables.pdpt[1] == 0x12003 && tables.pd[0] == 0x13003);
@@ -89,7 +86,7 @@ crashes Trap
     machine wrong() { crash Trap; }
 }
 
-machine preserved(before: &X86PagingPathSnapshot, after: &X86ClonedPageTables,
+machine preserved(before: &|clone|::X86PagingPathSnapshot, after: &|clone|::X86ClonedPageTables,
                   kind: u64, writable: bool, next: u64)
 requires next <= 512
 crashes Trap
@@ -98,7 +95,7 @@ crashes Trap
         true -> inspect(before, after, kind, writable, next)
         _ -> done()
     }
-    machine inspect(before: &X86PagingPathSnapshot, after: &X86ClonedPageTables,
+    machine inspect(before: &|clone|::X86PagingPathSnapshot, after: &|clone|::X86ClonedPageTables,
                   kind: u64, writable: bool, next: u64)
     requires next < 512
     {
@@ -107,14 +104,14 @@ crashes Trap
             _ -> directory(before, after, kind, writable, next)
         }
     }
-    machine root(before: &X86PagingPathSnapshot, after: &X86ClonedPageTables,
+    machine root(before: &|clone|::X86PagingPathSnapshot, after: &|clone|::X86ClonedPageTables,
                kind: u64, writable: bool, next: u64)
     requires next < 512
     {
         require(before.pml4.entries[next] == after.pml4[next]);
         transition { _ -> directory(before, after, kind, writable, next) }
     }
-    machine directory(before: &X86PagingPathSnapshot, after: &X86ClonedPageTables,
+    machine directory(before: &|clone|::X86PagingPathSnapshot, after: &|clone|::X86ClonedPageTables,
                     kind: u64, writable: bool, next: u64)
     requires next < 512
     {
@@ -126,9 +123,9 @@ crashes Trap
     machine done() {}
 }
 
-machine rejected(result: X86PageTableCloneResult) crashes Trap {
+machine rejected(result: |clone|::X86PageTableCloneResult) crashes Trap {
     transition result {
-        X86PageTableCloneResult::Invalid -> done()
+        |clone|::X86PageTableCloneResult::Invalid -> done()
         _ -> wrong()
     }
     machine done() {}
@@ -136,18 +133,18 @@ machine rejected(result: X86PageTableCloneResult) crashes Trap {
 }
 
 machine restricted_parents() crashes Trap {
-    let mut before: X86PagingPathSnapshot = source(3, true);
+    let mut before: |clone|::X86PagingPathSnapshot = source(3, true);
     // A user-capable NX ancestor must retain both ceilings on the copied
     // pointer; a lower supervisor pointer must not gain user permission.
     before.pml4.entries[0] = 0x8000000000002007;
     before.pdpt.entries[1] = 0x8000000000003003;
     before.pd.entries[0] = 0x4007;
-    let result: X86PageTableCloneResult = X86PageTableClone::prepare(&before, 0x10000, 0x80000, 0x40000000);
+    let result: |clone|::X86PageTableCloneResult = |clone|::X86PageTableClone::prepare(&before, 0x10000, 0x80000, 0x40000000);
     transition result {
-        X86PageTableCloneResult::Ready { tables } -> inspect(tables)
+        |clone|::X86PageTableCloneResult::Ready { tables } -> inspect(tables)
         _ -> wrong()
     }
-    machine inspect(tables: X86ClonedPageTables) {
+    machine inspect(tables: |clone|::X86ClonedPageTables) {
         require(tables.pml4[0] == 0x8000000000011007);
         require(tables.pdpt[1] == 0x8000000000012003);
         require(tables.pd[0] == 0x13007);
@@ -157,20 +154,20 @@ machine restricted_parents() crashes Trap {
     machine wrong() { crash Trap; }
 }
 
-machine accepted(result: X86PageTableCloneResult) -> bool {
+machine accepted(result: |clone|::X86PageTableCloneResult) -> bool {
     transition result {
-        X86PageTableCloneResult::Ready { tables } -> true
+        |clone|::X86PageTableCloneResult::Ready { tables } -> true
         _ -> false
     }
 }
 
 machine check_range() crashes Trap {
-    let before: X86PagingPathSnapshot = source(3, true);
-    transition X86PageTableClone::prepare_range(&before, 0x10000, 0x80000, 0x40005000, 12288) {
-        X86PageTableCloneResult::Ready { tables } -> inspect(before, tables)
+    let before: |clone|::X86PagingPathSnapshot = source(3, true);
+    transition |clone|::X86PageTableClone::prepare_range(&before, 0x10000, 0x80000, 0x40005000, 12288) {
+        |clone|::X86PageTableCloneResult::Ready { tables } -> inspect(before, tables)
         _ -> wrong()
     }
-    machine inspect(before: X86PagingPathSnapshot, tables: X86ClonedPageTables) {
+    machine inspect(before: |clone|::X86PagingPathSnapshot, tables: |clone|::X86ClonedPageTables) {
         require(tables.pml4[0] == 0x11003 && tables.pdpt[1] == 0x12003 && tables.pd[0] == 0x13003);
         range_words(&before, &tables, 0);
     }
@@ -179,7 +176,7 @@ machine check_range() crashes Trap {
 
 // Exactly the requested three leaves change; every other leaf remains the
 // inherited translation. This checks the operation, not only a success tag.
-machine range_words(before: &X86PagingPathSnapshot, after: &X86ClonedPageTables, next: u64)
+machine range_words(before: &|clone|::X86PagingPathSnapshot, after: &|clone|::X86ClonedPageTables, next: u64)
 requires next <= 512
 crashes Trap
 {
@@ -187,7 +184,7 @@ crashes Trap
         true -> compare(before, after, next)
         _ -> done()
     }
-    machine compare(before: &X86PagingPathSnapshot, after: &X86ClonedPageTables, next: u64)
+    machine compare(before: &|clone|::X86PagingPathSnapshot, after: &|clone|::X86ClonedPageTables, next: u64)
     requires next < 512
     {
         let expected: u64 = match next >= 5 && next < 8 {
@@ -201,15 +198,15 @@ crashes Trap
 }
 
 machine range_boundaries() crashes Trap {
-    let original: X86PagingPathSnapshot = source(3, true);
-    require(accepted(X86PageTableClone::prepare_range(&original, 0x10000, 0x80000, 0x40000000, 2097152)));
-    require(accepted(X86PageTableClone::prepare_range(&original, 0x10000, 0x80000, 0x401FE000, 8192)));
-    require(accepted(X86PageTableClone::prepare_range(&original, 0x10000, 0x000FFFFFFFFFF000, 0x401FF000, 4096)));
-    rejected(X86PageTableClone::prepare_range(&original, 0x10000, 0x80000, 0x40000000, 0));
-    rejected(X86PageTableClone::prepare_range(&original, 0x10000, 0x80000, 0x40000000, 4097));
-    rejected(X86PageTableClone::prepare_range(&original, 0x10000, 0x80000, 0x40000000, 2101248));
-    rejected(X86PageTableClone::prepare_range(&original, 0x10000, 0x80000, 0x401FF000, 8192));
-    rejected(X86PageTableClone::prepare_range(&original, 0x10000, 0x000FFFFFFFFFF000, 0x40000000, 8192));
+    let original: |clone|::X86PagingPathSnapshot = source(3, true);
+    require(accepted(|clone|::X86PageTableClone::prepare_range(&original, 0x10000, 0x80000, 0x40000000, 2097152)));
+    require(accepted(|clone|::X86PageTableClone::prepare_range(&original, 0x10000, 0x80000, 0x401FE000, 8192)));
+    require(accepted(|clone|::X86PageTableClone::prepare_range(&original, 0x10000, 0x000FFFFFFFFFF000, 0x401FF000, 4096)));
+    rejected(|clone|::X86PageTableClone::prepare_range(&original, 0x10000, 0x80000, 0x40000000, 0));
+    rejected(|clone|::X86PageTableClone::prepare_range(&original, 0x10000, 0x80000, 0x40000000, 4097));
+    rejected(|clone|::X86PageTableClone::prepare_range(&original, 0x10000, 0x80000, 0x40000000, 2101248));
+    rejected(|clone|::X86PageTableClone::prepare_range(&original, 0x10000, 0x80000, 0x401FF000, 8192));
+    rejected(|clone|::X86PageTableClone::prepare_range(&original, 0x10000, 0x000FFFFFFFFFF000, 0x40000000, 8192));
     // No failure may mutate the shared input, including a refusal after
     // constructing and updating a private candidate's first leaf.
     require(original.pt.entries[0] == 0 && original.pt.entries[1] == 0x12345083);
@@ -225,16 +222,16 @@ machine main() crashes Trap {
     check(2, true, 0x20001083, 0);
     check(3, true, 0x12345083, 0);
     check(3, false, 0x12345081, 0);
-    let mut original: X86PagingPathSnapshot = source(1, true);
-    rejected(X86PageTableClone::prepare(&original, 0x10001, 0x80000, 0x40000000));
-    rejected(X86PageTableClone::prepare(&original, 0x10000, 0x80001, 0x40000000));
-    rejected(X86PageTableClone::prepare(&original, 0x10000, 0x80000, 0x800000000000));
+    let mut original: |clone|::X86PagingPathSnapshot = source(1, true);
+    rejected(|clone|::X86PageTableClone::prepare(&original, 0x10001, 0x80000, 0x40000000));
+    rejected(|clone|::X86PageTableClone::prepare(&original, 0x10000, 0x80001, 0x40000000));
+    rejected(|clone|::X86PageTableClone::prepare(&original, 0x10000, 0x80000, 0x800000000000));
     original.pdpt.address = 0x3000;
-    rejected(X86PageTableClone::prepare(&original, 0x10000, 0x80000, 0x40000000));
+    rejected(|clone|::X86PageTableClone::prepare(&original, 0x10000, 0x80000, 0x40000000));
     original.pdpt.address = 0x2000;
     original.pml4.entries[0] = 0x2083; // Reserved PS at PML4.
-    rejected(X86PageTableClone::prepare(&original, 0x10000, 0x80000, 0x40000000));
+    rejected(|clone|::X86PageTableClone::prepare(&original, 0x10000, 0x80000, 0x40000000));
     original.pml4.entries[0] = 0x2003;
     original.pdpt.entries[1] = 0x40002083; // Reserved 1 GiB alignment bit.
-    rejected(X86PageTableClone::prepare(&original, 0x10000, 0x80000, 0x40000000));
+    rejected(|clone|::X86PageTableClone::prepare(&original, 0x10000, 0x80000, 0x40000000));
 }

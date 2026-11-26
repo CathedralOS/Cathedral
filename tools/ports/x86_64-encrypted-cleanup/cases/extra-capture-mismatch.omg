@@ -1,30 +1,24 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
-use x86::memory_encryption;
-use x86::memory_encryption::State;
-use x86::memory_encryption::Configuration;
-use x86::encrypted_cleanup_branch;
-use x86::encrypted_cleanup_ranges;
-use x86::encrypted_cleanup_recursive;
-use x86::cleanup_branch::CleanupPlan;
-use x86::cleanup_branch::CleanupOutcome;
-use x86::cleanup_ranges::Cursor;
-use x86::cleanup_ranges::RangeStep;
-use x86::cleanup_ranges::RangeStatus;
-use x86::recursive_cleanup::RecursiveCursor;
-use x86::recursive_cleanup::RecursiveStep;
+use {x86}/memory_encryption.omg;
+use {x86}/encrypted_cleanup_branch.omg;
+use {x86}/encrypted_cleanup_ranges.omg;
+use {x86}/encrypted_cleanup_recursive.omg;
+use {x86}/cleanup_branch.omg;
+use {x86}/cleanup_ranges.omg;
+use {x86}/recursive_cleanup.omg;
 machine test_result()->i32 {
-let profile:State=memory_encryption::initial();
-_ = memory_encryption::configure(&mut profile,Configuration::EncryptedBit{position:47});
-_ = memory_encryption::configure(&mut profile,Configuration::SharedBit{position:48});
+let profile:|memory_encryption|::State=|memory_encryption|::initial();
+_ = |memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::EncryptedBit{position:47});
+_ = |memory_encryption|::configure(&mut profile,|memory_encryption|::Configuration::SharedBit{position:48});
 let mark:u64=422212465065984;
 let words:[u64;4]=[65537|mark,131073|mark,196609|mark,0];
 let ids:[u64;4]=[262144,65536,131072,196608|140737488355328]; let others:[bool;4]=[false,false,false,false];
-let value:CleanupPlan=encrypted_cleanup_branch::plan(profile,&words,&ids,&others,0);
+let value:|cleanup_branch|::CleanupPlan=|encrypted_cleanup_branch|::plan(profile,&words,&ids,&others,0);
 transition value.outcome {
- CleanupOutcome::CaptureMismatch{expected,supplied} -> tested(&value,expected,supplied)
+ |cleanup_branch|::CleanupOutcome::CaptureMismatch{expected,supplied} -> tested(&value,expected,supplied)
  _ -> (1)
 }
-state tested(value:&CleanupPlan,expected:u64,supplied:u64) {
+state tested(value:&|cleanup_branch|::CleanupPlan,expected:u64,supplied:u64) {
  transition expected==196608 && supplied==140737488551936 && value.retire_count==0 && value.write_mask==0 && value.visited==3 && value.words[0]==422212465131521 && value.words[1]==422212465197057 && value.words[2]==422212465262593 {true -> (0) _ -> (1)}
 }
 }

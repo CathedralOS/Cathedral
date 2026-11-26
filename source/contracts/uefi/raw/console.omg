@@ -3,8 +3,7 @@
 // See console.PORT.md; reproduced by tools/ports/uefi-console/generate.py.
 // Inert x86-64 representation corpus. No pointer dereference or callable authority.
 // Layout vectors describe required foreign geometry, not default Omega layout.
-module console;
-use scalars;
+use scalars.omg;
 
 // Upstream: uefi_raw::protocol::console::AbsolutePointerModeAttributes
 pub data AbsolutePointerModeAttributes [copy] {
@@ -257,10 +256,10 @@ pub const GRAPHICS_OUTPUT_BLT_OPERATION_BLT_VIDEO_TO_BLT_BUFFER: GraphicsOutputB
 pub const GRAPHICS_OUTPUT_BLT_OPERATION_BLT_BUFFER_TO_VIDEO: GraphicsOutputBltOperation = GraphicsOutputBltOperation { raw: 2 };
 pub const GRAPHICS_OUTPUT_BLT_OPERATION_BLT_VIDEO_TO_VIDEO: GraphicsOutputBltOperation = GraphicsOutputBltOperation { raw: 3 };
 pub const GRAPHICS_OUTPUT_BLT_OPERATION_GRAPHICS_OUTPUT_BLT_OPERATION_MAX: GraphicsOutputBltOperation = GraphicsOutputBltOperation { raw: 4 };
-pub const ABSOLUTE_POINTER_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x8d59d32b, data2: 0xc655, data3: 0x4ae9, data4: [0x9b, 0x15, 0xf2, 0x59, 0x04, 0x99, 0x2a, 0x43] };
-pub const SIMPLE_TEXT_INPUT_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x387477c1, data2: 0x69c7, data3: 0x11d2, data4: [0x8e, 0x39, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
-pub const SIMPLE_TEXT_INPUT_EX_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0xdd9e7534, data2: 0x7762, data3: 0x4698, data4: [0x8c, 0x14, 0xf5, 0x85, 0x17, 0xa6, 0x25, 0xaa] };
-pub const SIMPLE_TEXT_OUTPUT_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x387477c2, data2: 0x69c7, data3: 0x11d2, data4: [0x8e, 0x39, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
-pub const SIMPLE_POINTER_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x31878c87, data2: 0x0b75, data3: 0x11d5, data4: [0x9a, 0x4f, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d] };
-pub const GRAPHICS_OUTPUT_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x9042a9de, data2: 0x23dc, data3: 0x4a38, data4: [0x96, 0xfb, 0x7a, 0xde, 0xd0, 0x80, 0x51, 0x6a] };
-pub const EDID_DISCOVERED_PROTOCOL_GUID: scalars::Guid = scalars::Guid { data1: 0x1c0c34f6, data2: 0xd380, data3: 0x41fa, data4: [0xa0, 0x49, 0x8a, 0xd0, 0x6c, 0x1a, 0x66, 0xaa] };
+pub const ABSOLUTE_POINTER_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x8d59d32b, data2: 0xc655, data3: 0x4ae9, data4: [0x9b, 0x15, 0xf2, 0x59, 0x04, 0x99, 0x2a, 0x43] };
+pub const SIMPLE_TEXT_INPUT_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x387477c1, data2: 0x69c7, data3: 0x11d2, data4: [0x8e, 0x39, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
+pub const SIMPLE_TEXT_INPUT_EX_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0xdd9e7534, data2: 0x7762, data3: 0x4698, data4: [0x8c, 0x14, 0xf5, 0x85, 0x17, 0xa6, 0x25, 0xaa] };
+pub const SIMPLE_TEXT_OUTPUT_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x387477c2, data2: 0x69c7, data3: 0x11d2, data4: [0x8e, 0x39, 0x00, 0xa0, 0xc9, 0x69, 0x72, 0x3b] };
+pub const SIMPLE_POINTER_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x31878c87, data2: 0x0b75, data3: 0x11d5, data4: [0x9a, 0x4f, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d] };
+pub const GRAPHICS_OUTPUT_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x9042a9de, data2: 0x23dc, data3: 0x4a38, data4: [0x96, 0xfb, 0x7a, 0xde, 0xd0, 0x80, 0x51, 0x6a] };
+pub const EDID_DISCOVERED_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x1c0c34f6, data2: 0xd380, data3: 0x41fa, data4: [0xa0, 0x49, 0x8a, 0xd0, 0x6c, 0x1a, 0x66, 0xaa] };

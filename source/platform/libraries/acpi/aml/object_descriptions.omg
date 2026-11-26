@@ -2,34 +2,32 @@
 // Modified type-label component from rust-osdev/acpi do_concat/resolve_as_string,
 // pin 257aa561aa190f1cfe2de5d1a4f0af9d09ff1db5. Copyright 2018 Isaac Woods.
 // ACPI 6.6 Table 19.31; direct case names only, no payload evaluation or authority.
-module object_descriptions;
-use model::ObjectStore;
-use model::Value;
-use object_conversions::ConversionFailure;
+use model.omg;
+use object_conversions.omg;
 pub data Description [copy] {
- case Failure(reason:ConversionFailure);
+ case Failure(reason:|object_conversions|::ConversionFailure);
  case String(length:u64,bytes:[u8;256]);
 }
-pub machine describe(store:&ObjectStore,object:u64)->Description {
+pub machine describe(store:&|model|::ObjectStore,object:u64)->Description {
  let count:u64=store.space.object_count;
  transition count<=64 && object<count && object<64 {
   true -> selected(store,object)
-  _ -> (Description::Failure {reason:ConversionFailure::InvalidState})
+  _ -> (Description::Failure {reason:|object_conversions|::ConversionFailure::InvalidState})
  }
- state selected(store:&ObjectStore,object:u64)->Description {
+ state selected(store:&|model|::ObjectStore,object:u64)->Description {
   transition store.space.objects[object].value {
-   Value::Uninitialized -> label_uninitialized()
-   Value::Package {first,count} -> label_package()
-   Value::BufferField {backing_object,bit_offset,bit_length} -> label_bufferfield()
-   Value::Device -> label_device()
-   Value::Event -> label_event()
-   Value::Method {flags,body} -> label_method()
-   Value::Mutex {sync_level} -> label_mutex()
-   Value::OperationRegion {space,base,length,scope} -> label_operationregion()
-   Value::PowerResource {system_level,order} -> label_powerresource()
-   Value::Processor {id,address,length} -> label_processor()
-   Value::ThermalZone -> label_thermalzone()
-   _ -> (Description::Failure {reason:ConversionFailure::UnsupportedValue})
+   |model|::Value::Uninitialized -> label_uninitialized()
+   |model|::Value::Package {first,count} -> label_package()
+   |model|::Value::BufferField {backing_object,bit_offset,bit_length} -> label_bufferfield()
+   |model|::Value::Device -> label_device()
+   |model|::Value::Event -> label_event()
+   |model|::Value::Method {flags,body} -> label_method()
+   |model|::Value::Mutex {sync_level} -> label_mutex()
+   |model|::Value::OperationRegion {space,base,length,scope} -> label_operationregion()
+   |model|::Value::PowerResource {system_level,order} -> label_powerresource()
+   |model|::Value::Processor {id,address,length} -> label_processor()
+   |model|::Value::ThermalZone -> label_thermalzone()
+   _ -> (Description::Failure {reason:|object_conversions|::ConversionFailure::UnsupportedValue})
   }
  }
  state label_uninitialized()->Description {

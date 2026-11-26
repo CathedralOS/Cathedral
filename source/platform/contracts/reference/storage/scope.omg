@@ -1,4 +1,3 @@
-module storage::scope;
 // What a matrix adds to a child's request on the way to the provider: its
 // own scope in one of the two scope words, and an end-to-end deadline that
 // intermediaries never extend. A child's request word carries its binding

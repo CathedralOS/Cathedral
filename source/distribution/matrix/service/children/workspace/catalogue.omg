@@ -1,5 +1,3 @@
-module children::workspace::catalogue;
-
 // Three stock app positions; chrome/background never enter this catalogue.
 // Instance tickets are monotonic local names, not authority over host tasks.
 public const LAST_TICKET: u64 = 18446744073709551615u64;

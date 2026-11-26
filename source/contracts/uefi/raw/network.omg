@@ -3,14 +3,8 @@
 // See network.PORT.md; generator tools/ports/uefi-network/generate.py.
 // Inert raw x86-64 shapes. Addresses and function slots grant no authority.
 // Fixed foreign geometry is supplied separately, never inferred from native data.
-module network;
-use scalars::Boolean;
-use scalars::Char8;
-use scalars::Char16;
-use scalars::Event;
-use scalars::Guid;
-use scalars::Handle;
-use status::Status;
+use scalars.omg;
+use status.omg;
 
 // Pinned source: uefi_raw::Ipv4Address
 pub data Ipv4Address [copy] {
@@ -70,8 +64,8 @@ pub data Dhcp4Header [copy] {
     server_addr: Ipv4Address;
     gateway_addr: Ipv4Address;
     client_hw_addr: [u8; 16];
-    server_name: [Char8; 64];
-    boot_file_name: [Char8; 128];
+    server_name: [|scalars|::Char8; 64];
+    boot_file_name: [|scalars|::Char8; 128];
 }
 
 // Pinned source: uefi_raw::protocol::network::dhcp4::Dhcp4PacketOption
@@ -122,8 +116,8 @@ pub data Dhcp4ListenPoint [copy] {
 
 // Pinned source: uefi_raw::protocol::network::dhcp4::Dhcp4TransmitReceiveToken
 pub data Dhcp4TransmitReceiveToken [copy] {
-    status: Status;
-    completion_event: Event;
+    status: |status|::Status;
+    completion_event: |scalars|::Event;
     remote_address: Ipv4Address;
     remote_port: u16;
     gateway_address: Ipv4Address;
@@ -164,7 +158,7 @@ pub data Dhcp4Protocol [copy] {
 pub data HttpConfigData [copy] {
     http_version: HttpVersion;
     time_out_millisec: u32;
-    local_addr_is_ipv6: Boolean;
+    local_addr_is_ipv6: |scalars|::Boolean;
     access_point: HttpAccessPoint;
 }
 
@@ -175,7 +169,7 @@ pub data HttpVersion [copy] {
 
 // Pinned source: uefi_raw::protocol::network::http::HttpV4AccessPoint
 pub data HttpV4AccessPoint [copy] {
-    use_default_addr: Boolean;
+    use_default_addr: |scalars|::Boolean;
     local_address: Ipv4Address;
     local_subnet: Ipv4Address;
     local_port: u16;
@@ -198,8 +192,8 @@ pub data HttpAccessPoint [copy] {
 
 // Pinned source: uefi_raw::protocol::network::http::HttpToken
 pub data HttpToken [copy] {
-    event: Event;
-    status: Status;
+    event: |scalars|::Event;
+    status: |status|::Status;
     message: address;
     // Foreign carrier: *mut HttpMessage
 }
@@ -279,10 +273,10 @@ pub data Ip4RouteTable [copy] {
 
 // Pinned source: uefi_raw::protocol::network::ip4::Ip4ModeData
 pub data Ip4ModeData [copy] {
-    is_started: Boolean;
+    is_started: |scalars|::Boolean;
     max_packet_size: u32;
     config_data: Ip4ConfigData;
-    is_configured: Boolean;
+    is_configured: |scalars|::Boolean;
     group_count: u32;
     group_table: address;
     // Foreign carrier: *const Ipv4Address
@@ -303,17 +297,17 @@ pub data Ip4IcmpType [copy] {
 // Pinned source: uefi_raw::protocol::network::ip4::Ip4ConfigData
 pub data Ip4ConfigData [copy] {
     default_protocol: u8;
-    accept_any_protocol: Boolean;
-    accept_icmp_errors: Boolean;
-    accept_broadcast: Boolean;
-    accept_promiscuous: Boolean;
-    use_default_address: Boolean;
+    accept_any_protocol: |scalars|::Boolean;
+    accept_icmp_errors: |scalars|::Boolean;
+    accept_broadcast: |scalars|::Boolean;
+    accept_promiscuous: |scalars|::Boolean;
+    use_default_address: |scalars|::Boolean;
     station_address: Ipv4Address;
     subnet_mask: Ipv4Address;
     type_of_service: u8;
     time_to_live: u8;
-    do_not_fragment: Boolean;
-    raw_data: Boolean;
+    do_not_fragment: |scalars|::Boolean;
+    raw_data: |scalars|::Boolean;
     receive_timeout: u32;
     transmit_timeout: u32;
 }
@@ -325,7 +319,7 @@ pub data Ip4Config2DataType [copy] {
 
 // Pinned source: uefi_raw::protocol::network::ip4_config2::Ip4Config2InterfaceInfo
 pub data Ip4Config2InterfaceInfo [copy] {
-    name: [Char16; 32];
+    name: [|scalars|::Char16; 32];
     if_type: u8;
     hw_addr_size: u32;
     hw_addr: MacAddress;
@@ -402,10 +396,10 @@ pub data PxeBaseCodeTftpOpcode [copy] {
 
 // Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodeDiscoverInfo
 pub data PxeBaseCodeDiscoverInfo [copy] {
-    use_m_cast: Boolean;
-    use_b_cast: Boolean;
-    use_u_cast: Boolean;
-    must_use_list: Boolean;
+    use_m_cast: |scalars|::Boolean;
+    use_b_cast: |scalars|::Boolean;
+    use_u_cast: |scalars|::Boolean;
+    must_use_list: |scalars|::Boolean;
     server_m_cast_ip: IpAddress;
     ip_cnt: u16;
     // PORT-BLOCKED[omega:runtime-layout-strides]: srv_list: [PxeBaseCodeSrvlist; 0] needs a bounded runtime tail view.
@@ -414,7 +408,7 @@ pub data PxeBaseCodeDiscoverInfo [copy] {
 // Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodeSrvlist
 pub data PxeBaseCodeSrvlist [copy] {
     server_type: PxeBaseCodeBootType;
-    accept_any_response: Boolean;
+    accept_any_response: |scalars|::Boolean;
     reserved: u8;
     ip_addr: IpAddress;
 }
@@ -435,23 +429,23 @@ pub data PxeBaseCodeUdpOpFlags [copy] {
 
 // Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodeMode
 pub data PxeBaseCodeMode [copy] {
-    started: Boolean;
-    ipv6_available: Boolean;
-    ipv6_supported: Boolean;
-    using_ipv6: Boolean;
-    bis_supported: Boolean;
-    bis_detected: Boolean;
-    auto_arp: Boolean;
-    send_guid: Boolean;
-    dhcp_discover_valid: Boolean;
-    dhcp_ack_received: Boolean;
-    proxy_offer_received: Boolean;
-    pxe_discover_valid: Boolean;
-    pxe_reply_received: Boolean;
-    pxe_bis_reply_received: Boolean;
-    icmp_error_received: Boolean;
-    tftp_error_received: Boolean;
-    make_callbacks: Boolean;
+    started: |scalars|::Boolean;
+    ipv6_available: |scalars|::Boolean;
+    ipv6_supported: |scalars|::Boolean;
+    using_ipv6: |scalars|::Boolean;
+    bis_supported: |scalars|::Boolean;
+    bis_detected: |scalars|::Boolean;
+    auto_arp: |scalars|::Boolean;
+    send_guid: |scalars|::Boolean;
+    dhcp_discover_valid: |scalars|::Boolean;
+    dhcp_ack_received: |scalars|::Boolean;
+    proxy_offer_received: |scalars|::Boolean;
+    pxe_discover_valid: |scalars|::Boolean;
+    pxe_reply_received: |scalars|::Boolean;
+    pxe_bis_reply_received: |scalars|::Boolean;
+    icmp_error_received: |scalars|::Boolean;
+    tftp_error_received: |scalars|::Boolean;
+    make_callbacks: |scalars|::Boolean;
     ttl: u8;
     tos: u8;
     station_ip: IpAddress;
@@ -568,7 +562,7 @@ pub data PxeBaseCodeIcmpErrorEcho [copy] {
 // Pinned source: uefi_raw::protocol::network::pxe::PxeBaseCodeTftpError
 pub data PxeBaseCodeTftpError [copy] {
     error_code: u8;
-    error_string: [Char8; 127];
+    error_string: [|scalars|::Char8; 127];
 }
 
 // Pinned source: uefi_raw::protocol::network::snp::SimpleNetworkProtocol
@@ -600,7 +594,7 @@ pub data SimpleNetworkProtocol [copy] {
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, header_size: usize, buffer_size: usize, buffer: *const ffi::c_void, source_address: *const MacAddress, dest_address: *const MacAddress, protocol: *const u16, ) -> Status
     receive: address;
     // Foreign carrier: unsafe extern "efiapi" fn( this: *const Self, header_size: *mut usize, buffer_size: *mut usize, buffer: *mut ffi::c_void, source_address: *mut MacAddress, dest_address: *mut MacAddress, protocol: *mut u16, ) -> Status
-    wait_for_packet: Event;
+    wait_for_packet: |scalars|::Event;
     mode: address;
     // Foreign carrier: *const NetworkMode
 }
@@ -662,10 +656,10 @@ pub data NetworkMode [copy] {
     broadcast_address: MacAddress;
     permanent_address: MacAddress;
     if_type: u8;
-    mac_address_changeable: Boolean;
-    multiple_tx_supported: Boolean;
-    media_present_supported: Boolean;
-    media_present: Boolean;
+    mac_address_changeable: |scalars|::Boolean;
+    multiple_tx_supported: |scalars|::Boolean;
+    media_present_supported: |scalars|::Boolean;
+    media_present: |scalars|::Boolean;
 }
 
 // Pinned source: uefi_raw::protocol::network::snp::NetworkState
@@ -713,13 +707,13 @@ pub data Tcp4ConfigData [copy] {
 
 // Pinned source: uefi_raw::protocol::network::tcp4::Tcp4AccessPoint
 pub data Tcp4AccessPoint [copy] {
-    use_default_address: Boolean;
+    use_default_address: |scalars|::Boolean;
     station_address: Ipv4Address;
     subnet_mask: Ipv4Address;
     station_port: u16;
     remote_address: Ipv4Address;
     remote_port: u16;
-    active_flag: Boolean;
+    active_flag: |scalars|::Boolean;
 }
 
 // Pinned source: uefi_raw::protocol::network::tcp4::Tcp4Option
@@ -734,17 +728,17 @@ pub data Tcp4Option [copy] {
     keep_alive_probes: u32;
     keep_alive_time: u32;
     keep_alive_interval: u32;
-    enable_nagle: Boolean;
-    enable_time_stamp: Boolean;
-    enable_window_scaling: Boolean;
-    enable_selective_ack: Boolean;
-    enable_path_mtu_discovery: Boolean;
+    enable_nagle: |scalars|::Boolean;
+    enable_time_stamp: |scalars|::Boolean;
+    enable_window_scaling: |scalars|::Boolean;
+    enable_selective_ack: |scalars|::Boolean;
+    enable_path_mtu_discovery: |scalars|::Boolean;
 }
 
 // Pinned source: uefi_raw::protocol::network::tcp4::Tcp4CompletionToken
 pub data Tcp4CompletionToken [copy] {
-    event: Event;
-    status: Status;
+    event: |scalars|::Event;
+    status: |status|::Status;
 }
 
 // Pinned source: uefi_raw::protocol::network::tcp4::Tcp4ConnectionToken
@@ -755,7 +749,7 @@ pub data Tcp4ConnectionToken [copy] {
 // Pinned source: uefi_raw::protocol::network::tcp4::Tcp4ListenToken
 pub data Tcp4ListenToken [copy] {
     completion_token: Tcp4CompletionToken;
-    new_child_handle: Handle;
+    new_child_handle: |scalars|::Handle;
 }
 
 // Pinned source: uefi_raw::protocol::network::tcp4::Tcp4IoToken
@@ -767,7 +761,7 @@ pub data Tcp4IoToken [copy] {
 // Pinned source: uefi_raw::protocol::network::tcp4::Tcp4CloseToken
 pub data Tcp4CloseToken [copy] {
     completion_token: Tcp4CompletionToken;
-    abort_on_close: Boolean;
+    abort_on_close: |scalars|::Boolean;
 }
 
 // Pinned source: uefi_raw::protocol::network::tcp4::Tcp4Packet
@@ -788,7 +782,7 @@ pub data Tcp4FragmentData [copy] {
 
 // Pinned source: uefi_raw::protocol::network::tcp4::Tcp4ReceiveData
 pub data Tcp4ReceiveData [copy] {
-    urgent: Boolean;
+    urgent: |scalars|::Boolean;
     data_length: u32;
     fragment_count: u32;
     // PORT-BLOCKED[omega:runtime-layout-strides]: fragment_table: [Tcp4FragmentData; 0] needs a bounded runtime tail view.
@@ -796,8 +790,8 @@ pub data Tcp4ReceiveData [copy] {
 
 // Pinned source: uefi_raw::protocol::network::tcp4::Tcp4TransmitData
 pub data Tcp4TransmitData [copy] {
-    push: Boolean;
-    urgent: Boolean;
+    push: |scalars|::Boolean;
+    urgent: |scalars|::Boolean;
     data_length: u32;
     fragment_count: u32;
     // PORT-BLOCKED[omega:runtime-layout-strides]: fragment_table: [Tcp4FragmentData; 0] needs a bounded runtime tail view.
@@ -850,8 +844,8 @@ pub const DHCP4_STATE_RENEWING: Dhcp4State = Dhcp4State { raw: 5 };
 pub const DHCP4_STATE_REBINDING: Dhcp4State = Dhcp4State { raw: 6 };
 pub const DHCP4_STATE_INIT_REBOOT: Dhcp4State = Dhcp4State { raw: 7 };
 pub const DHCP4_STATE_REBOOTING: Dhcp4State = Dhcp4State { raw: 8 };
-pub const DHCP4_PROTOCOL_GUID: Guid = Guid { data1: 0x8a219718, data2: 0x4ef5, data3: 0x4761, data4: [0x91, 0xc8, 0xc0, 0xf0, 0x4b, 0xda, 0x9e, 0x56] };
-pub const DHCP4_PROTOCOL_SERVICE_BINDING_GUID: Guid = Guid { data1: 0x9d9a39d8, data2: 0xbd42, data3: 0x4a73, data4: [0xa4, 0xd5, 0x8e, 0xe9, 0x4b, 0xe1, 0x13, 0x80] };
+pub const DHCP4_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x8a219718, data2: 0x4ef5, data3: 0x4761, data4: [0x91, 0xc8, 0xc0, 0xf0, 0x4b, 0xda, 0x9e, 0x56] };
+pub const DHCP4_PROTOCOL_SERVICE_BINDING_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x9d9a39d8, data2: 0xbd42, data3: 0x4a73, data4: [0xa4, 0xd5, 0x8e, 0xe9, 0x4b, 0xe1, 0x13, 0x80] };
 pub const HTTP_VERSION_HTTP_VERSION_10: HttpVersion = HttpVersion { raw: 0 };
 pub const HTTP_VERSION_HTTP_VERSION_11: HttpVersion = HttpVersion { raw: 1 };
 pub const HTTP_VERSION_HTTP_VERSION_UNSUPPORTED: HttpVersion = HttpVersion { raw: 2 };
@@ -908,8 +902,8 @@ pub const HTTP_STATUS_CODE_STATUS_504_GATEWAY_TIME_OUT: HttpStatusCode = HttpSta
 pub const HTTP_STATUS_CODE_STATUS_505_VERSION_NOT_SUPPORTED: HttpStatusCode = HttpStatusCode { raw: 40 };
 pub const HTTP_STATUS_CODE_STATUS_308_PERMANENT_REDIRECT: HttpStatusCode = HttpStatusCode { raw: 41 };
 pub const HTTP_STATUS_CODE_STATUS_429_TOO_MANY_REQUESTS: HttpStatusCode = HttpStatusCode { raw: 42 };
-pub const HTTP_PROTOCOL_GUID: Guid = Guid { data1: 0x7a59b29b, data2: 0x910b, data3: 0x4171, data4: [0x82, 0x42, 0xa8, 0x5a, 0x0d, 0xf2, 0x5b, 0x5b] };
-pub const HTTP_PROTOCOL_SERVICE_BINDING_GUID: Guid = Guid { data1: 0xbdc8e6af, data2: 0xd9bc, data3: 0x4379, data4: [0xa7, 0x2a, 0xe0, 0xc4, 0xe7, 0x5d, 0xae, 0x1c] };
+pub const HTTP_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x7a59b29b, data2: 0x910b, data3: 0x4171, data4: [0x82, 0x42, 0xa8, 0x5a, 0x0d, 0xf2, 0x5b, 0x5b] };
+pub const HTTP_PROTOCOL_SERVICE_BINDING_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0xbdc8e6af, data2: 0xd9bc, data3: 0x4379, data4: [0xa7, 0x2a, 0xe0, 0xc4, 0xe7, 0x5d, 0xae, 0x1c] };
 pub const IP4_CONFIG2_DATA_TYPE_INTERFACE_INFO: Ip4Config2DataType = Ip4Config2DataType { raw: 0 };
 pub const IP4_CONFIG2_DATA_TYPE_POLICY: Ip4Config2DataType = Ip4Config2DataType { raw: 1 };
 pub const IP4_CONFIG2_DATA_TYPE_MANUAL_ADDRESS: Ip4Config2DataType = Ip4Config2DataType { raw: 2 };
@@ -919,7 +913,7 @@ pub const IP4_CONFIG2_DATA_TYPE_MAXIMUM: Ip4Config2DataType = Ip4Config2DataType
 pub const IP4_CONFIG2_POLICY_STATIC: Ip4Config2Policy = Ip4Config2Policy { raw: 0 };
 pub const IP4_CONFIG2_POLICY_DHCP: Ip4Config2Policy = Ip4Config2Policy { raw: 1 };
 pub const IP4_CONFIG2_POLICY_MAX: Ip4Config2Policy = Ip4Config2Policy { raw: 2 };
-pub const IP4_CONFIG2_PROTOCOL_GUID: Guid = Guid { data1: 0x5b446ed1, data2: 0xe30b, data3: 0x4faa, data4: [0x87, 0x1a, 0x36, 0x54, 0xec, 0xa3, 0x60, 0x80] };
+pub const IP4_CONFIG2_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x5b446ed1, data2: 0xe30b, data3: 0x4faa, data4: [0x87, 0x1a, 0x36, 0x54, 0xec, 0xa3, 0x60, 0x80] };
 pub const PXE_BASE_CODE_BOOT_TYPE_BOOTSTRAP: PxeBaseCodeBootType = PxeBaseCodeBootType { raw: 0 };
 pub const PXE_BASE_CODE_BOOT_TYPE_MS_WINNT_RIS: PxeBaseCodeBootType = PxeBaseCodeBootType { raw: 1 };
 pub const PXE_BASE_CODE_BOOT_TYPE_INTEL_LCM: PxeBaseCodeBootType = PxeBaseCodeBootType { raw: 2 };
@@ -958,7 +952,7 @@ pub const PXE_BASE_CODE_IP_FILTER_FLAGS_STATION_IP: PxeBaseCodeIpFilterFlags = P
 pub const PXE_BASE_CODE_IP_FILTER_FLAGS_BROADCAST: PxeBaseCodeIpFilterFlags = PxeBaseCodeIpFilterFlags { raw: 2 };
 pub const PXE_BASE_CODE_IP_FILTER_FLAGS_PROMISCUOUS: PxeBaseCodeIpFilterFlags = PxeBaseCodeIpFilterFlags { raw: 4 };
 pub const PXE_BASE_CODE_IP_FILTER_FLAGS_PROMISCUOUS_MULTICAST: PxeBaseCodeIpFilterFlags = PxeBaseCodeIpFilterFlags { raw: 8 };
-pub const PXE_BASE_CODE_PROTOCOL_GUID: Guid = Guid { data1: 0x03c4e603, data2: 0xac28, data3: 0x11d3, data4: [0x9a, 0x2d, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d] };
+pub const PXE_BASE_CODE_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x03c4e603, data2: 0xac28, data3: 0x11d3, data4: [0x9a, 0x2d, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d] };
 pub const PXE_BASE_CODE_DHCP_V4_PACKET_DHCP_MAGIK: u32 = 1669485411;
 pub const RECEIVE_FLAGS_UNICAST: ReceiveFlags = ReceiveFlags { raw: 1 };
 pub const RECEIVE_FLAGS_MULTICAST: ReceiveFlags = ReceiveFlags { raw: 2 };
@@ -973,7 +967,7 @@ pub const NETWORK_STATE_STOPPED: NetworkState = NetworkState { raw: 0 };
 pub const NETWORK_STATE_STARTED: NetworkState = NetworkState { raw: 1 };
 pub const NETWORK_STATE_INITIALIZED: NetworkState = NetworkState { raw: 2 };
 pub const NETWORK_STATE_MAX_STATE: NetworkState = NetworkState { raw: 3 };
-pub const SIMPLE_NETWORK_PROTOCOL_GUID: Guid = Guid { data1: 0xa19832b9, data2: 0xac25, data3: 0x11d3, data4: [0x9a, 0x2d, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d] };
+pub const SIMPLE_NETWORK_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0xa19832b9, data2: 0xac25, data3: 0x11d3, data4: [0x9a, 0x2d, 0x00, 0x90, 0x27, 0x3f, 0xc1, 0x4d] };
 pub const TCP4_CONNECTION_STATE_CLOSED: Tcp4ConnectionState = Tcp4ConnectionState { raw: 0 };
 pub const TCP4_CONNECTION_STATE_LISTEN: Tcp4ConnectionState = Tcp4ConnectionState { raw: 1 };
 pub const TCP4_CONNECTION_STATE_SYN_SENT: Tcp4ConnectionState = Tcp4ConnectionState { raw: 2 };
@@ -985,14 +979,14 @@ pub const TCP4_CONNECTION_STATE_CLOSING: Tcp4ConnectionState = Tcp4ConnectionSta
 pub const TCP4_CONNECTION_STATE_TIME_WAIT: Tcp4ConnectionState = Tcp4ConnectionState { raw: 8 };
 pub const TCP4_CONNECTION_STATE_CLOSE_WAIT: Tcp4ConnectionState = Tcp4ConnectionState { raw: 9 };
 pub const TCP4_CONNECTION_STATE_LAST_ACK: Tcp4ConnectionState = Tcp4ConnectionState { raw: 10 };
-pub const TCP4_PROTOCOL_GUID: Guid = Guid { data1: 0x65530bc7, data2: 0xa359, data3: 0x410f, data4: [0xb0, 0x10, 0x5a, 0xad, 0xc7, 0xec, 0x2b, 0x62] };
-pub const TCP4_PROTOCOL_SERVICE_BINDING_GUID: Guid = Guid { data1: 0x00720665, data2: 0x67eb, data3: 0x4a99, data4: [0xba, 0xf7, 0xd3, 0xc3, 0x3a, 0x1c, 0x7c, 0xc9] };
+pub const TCP4_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x65530bc7, data2: 0xa359, data3: 0x410f, data4: [0xb0, 0x10, 0x5a, 0xad, 0xc7, 0xec, 0x2b, 0x62] };
+pub const TCP4_PROTOCOL_SERVICE_BINDING_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x00720665, data2: 0x67eb, data3: 0x4a99, data4: [0xba, 0xf7, 0xd3, 0xc3, 0x3a, 0x1c, 0x7c, 0xc9] };
 pub const TLS_CONFIG_DATA_TYPE_HOST_PUBLIC_CERT: TlsConfigDataType = TlsConfigDataType { raw: 0 };
 pub const TLS_CONFIG_DATA_TYPE_HOST_PRIVATE_KEY: TlsConfigDataType = TlsConfigDataType { raw: 1 };
 pub const TLS_CONFIG_DATA_TYPE_CA_CERTIFICATE: TlsConfigDataType = TlsConfigDataType { raw: 2 };
 pub const TLS_CONFIG_DATA_TYPE_CERT_REVOCATION_LIST: TlsConfigDataType = TlsConfigDataType { raw: 3 };
 pub const TLS_CONFIG_DATA_TYPE_MAXIMUM: TlsConfigDataType = TlsConfigDataType { raw: 4 };
-pub const TLS_CONFIGURATION_PROTOCOL_GUID: Guid = Guid { data1: 0x1682fe44, data2: 0xbd7a, data3: 0x4407, data4: [0xb7, 0xc7, 0xdc, 0xa3, 0x7c, 0xa3, 0x92, 0x2d] };
-pub const TLS_CONFIGURATION_PROTOCOL_SERVICE_BINDING_GUID: Guid = Guid { data1: 0x952cb795, data2: 0xff36, data3: 0x48cf, data4: [0xa2, 0x49, 0x4d, 0xf4, 0x86, 0xd6, 0xab, 0x8d] };
+pub const TLS_CONFIGURATION_PROTOCOL_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x1682fe44, data2: 0xbd7a, data3: 0x4407, data4: [0xb7, 0xc7, 0xdc, 0xa3, 0x7c, 0xa3, 0x92, 0x2d] };
+pub const TLS_CONFIGURATION_PROTOCOL_SERVICE_BINDING_GUID: |scalars|::Guid = |scalars|::Guid { data1: 0x952cb795, data2: 0xff36, data3: 0x48cf, data4: [0xa2, 0x49, 0x4d, 0xf4, 0x86, 0xd6, 0xab, 0x8d] };
 // RFC2131 section2/Figure2; differs from pinned BROADCAST=1 (see network.PORT.md).
 pub const DHCP_RFC2131_BROADCAST_BIT: u16 = 0x8000;

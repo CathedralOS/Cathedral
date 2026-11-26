@@ -1,20 +1,8 @@
-module dock;
-
-use types::Rect;
-use types::add_i32;
-use types::clamp_i32;
-use types::max_i32;
-use types::max_sat;
-use types::min_i32;
-use types::select_i32;
-use types::select_rect;
-use types::select_sat;
-use types::sub_i32;
+use types.omg;
 
 
 // Solves a twelve-slot split and tab tree independently of drawing or operating-system windows.
 
-use types;
 
 // Node kinds:
 //   0 = Free
@@ -35,9 +23,9 @@ public data DockNode {
     ratio_b: i32;
     ratio_c: i32;
     is_visible: bool;
-    rect: Rect;
-    div1_rect: Rect;
-    div2_rect: Rect;
+    rect: |types|::Rect;
+    div1_rect: |types|::Rect;
+    div2_rect: |types|::Rect;
 }
 
 public machine dock_node_empty() -> DockNode {
@@ -54,9 +42,9 @@ public machine dock_node_empty() -> DockNode {
         ratio_b: 500,
         ratio_c: 0,
         is_visible: false,
-        rect: types::rect_zero(),
-        div1_rect: types::rect_zero(),
-        div2_rect: types::rect_zero()
+        rect: |types|::rect_zero(),
+        div1_rect: |types|::rect_zero(),
+        div2_rect: |types|::rect_zero()
     }
 }
 
@@ -74,9 +62,9 @@ public machine dock_node_window(parent: i32, window_id: i32) -> DockNode {
         ratio_b: 0,
         ratio_c: 0,
         is_visible: true,
-        rect: types::rect_zero(),
-        div1_rect: types::rect_zero(),
-        div2_rect: types::rect_zero()
+        rect: |types|::rect_zero(),
+        div1_rect: |types|::rect_zero(),
+        div2_rect: |types|::rect_zero()
     }
 }
 
@@ -94,9 +82,9 @@ public machine dock_node_split2(parent: i32, kind: i32, c0: i32, c1: i32, ra: i3
         ratio_b: rb,
         ratio_c: 0,
         is_visible: true,
-        rect: types::rect_zero(),
-        div1_rect: types::rect_zero(),
-        div2_rect: types::rect_zero()
+        rect: |types|::rect_zero(),
+        div1_rect: |types|::rect_zero(),
+        div2_rect: |types|::rect_zero()
     }
 }
 
@@ -114,9 +102,9 @@ public machine dock_node_split3(parent: i32, kind: i32, c0: i32, c1: i32, c2: i3
         ratio_b: rb,
         ratio_c: rc,
         is_visible: true,
-        rect: types::rect_zero(),
-        div1_rect: types::rect_zero(),
-        div2_rect: types::rect_zero()
+        rect: |types|::rect_zero(),
+        div1_rect: |types|::rect_zero(),
+        div2_rect: |types|::rect_zero()
     }
 }
 
@@ -134,9 +122,9 @@ public machine dock_node_tabs2(parent: i32, c0: i32, c1: i32, active_tab: i32) -
         ratio_b: 500,
         ratio_c: 0,
         is_visible: true,
-        rect: types::rect_zero(),
-        div1_rect: types::rect_zero(),
-        div2_rect: types::rect_zero()
+        rect: |types|::rect_zero(),
+        div1_rect: |types|::rect_zero(),
+        div2_rect: |types|::rect_zero()
     }
 }
 
@@ -168,18 +156,18 @@ public data DockTree {
 public machine workspace_preset() -> DockTree {
     DockTree {
         nodes: [
-            dock::dock_node_split3(-1, 1, 1, 4, 9, 260, 460, 280),
-            dock::dock_node_split2(0, 2, 2, 3, 520, 480),
-            dock::dock_node_tabs2(1, 5, 6, 0),
-            dock::dock_node_window(1, 3),
-            dock::dock_node_split2(0, 2, 7, 8, 550, 450),
-            dock::dock_node_window(2, 1),
-            dock::dock_node_window(2, 2),
-            dock::dock_node_window(4, 4),
-            dock::dock_node_window(4, 5),
-            dock::dock_node_window(0, 6),
-            dock::dock_node_empty(),
-            dock::dock_node_empty()
+            dock_node_split3(-1, 1, 1, 4, 9, 260, 460, 280),
+            dock_node_split2(0, 2, 2, 3, 520, 480),
+            dock_node_tabs2(1, 5, 6, 0),
+            dock_node_window(1, 3),
+            dock_node_split2(0, 2, 7, 8, 550, 450),
+            dock_node_window(2, 1),
+            dock_node_window(2, 2),
+            dock_node_window(4, 4),
+            dock_node_window(4, 5),
+            dock_node_window(0, 6),
+            dock_node_empty(),
+            dock_node_empty()
         ],
         node_count: 10,
         root: 0,
@@ -195,9 +183,9 @@ public machine workspace_preset() -> DockTree {
     }
 }
 
-public machine node_rect(tree: &DockTree, node_index: i32) -> Rect
+public machine node_rect(tree: &DockTree, node_index: i32) -> |types|::Rect
 requires node_index >= 0 && node_index < 12 {
-    Rect {
+    |types|::Rect {
         x: tree.nodes[node_index].rect.x,
         y: tree.nodes[node_index].rect.y,
         w: tree.nodes[node_index].rect.w,
@@ -205,9 +193,9 @@ requires node_index >= 0 && node_index < 12 {
     }
 }
 
-public machine div1_rect(tree: &DockTree, node_index: i32) -> Rect
+public machine div1_rect(tree: &DockTree, node_index: i32) -> |types|::Rect
 requires node_index >= 0 && node_index < 12 {
-    Rect {
+    |types|::Rect {
         x: tree.nodes[node_index].div1_rect.x,
         y: tree.nodes[node_index].div1_rect.y,
         w: tree.nodes[node_index].div1_rect.w,
@@ -215,9 +203,9 @@ requires node_index >= 0 && node_index < 12 {
     }
 }
 
-public machine div2_rect(tree: &DockTree, node_index: i32) -> Rect
+public machine div2_rect(tree: &DockTree, node_index: i32) -> |types|::Rect
 requires node_index >= 0 && node_index < 12 {
-    Rect {
+    |types|::Rect {
         x: tree.nodes[node_index].div2_rect.x,
         y: tree.nodes[node_index].div2_rect.y,
         w: tree.nodes[node_index].div2_rect.w,
@@ -261,7 +249,7 @@ public machine is_subtree_visible(tree: &DockTree, node_index: i32) -> bool {
         let k: i32 = tree.nodes[node_index].kind;
         transition k == 1 || k == 2 {
             true -> check_split(tree, node_index)
-            _ -> (dock::is_leaf_or_tab_visible(tree, node_index))
+            _ -> (is_leaf_or_tab_visible(tree, node_index))
         }
     }
     machine check_split(tree: &DockTree, node_index: i32) -> bool
@@ -269,9 +257,9 @@ public machine is_subtree_visible(tree: &DockTree, node_index: i32) -> bool {
         let c0: i32 = tree.nodes[node_index].first_child;
         let c1: i32 = tree.nodes[node_index].second_child;
         let c2: i32 = tree.nodes[node_index].third_child;
-        let first_visible: bool = dock::is_leaf_or_tab_visible(tree, c0);
-        let second_visible: bool = dock::is_leaf_or_tab_visible(tree, c1);
-        let v2: bool = dock::is_leaf_or_tab_visible(tree, c2);
+        let first_visible: bool = is_leaf_or_tab_visible(tree, c0);
+        let second_visible: bool = is_leaf_or_tab_visible(tree, c1);
+        let v2: bool = is_leaf_or_tab_visible(tree, c2);
         first_visible || second_visible || v2
     }
 }
@@ -283,9 +271,9 @@ public machine clear_subtree_rects(tree: &mut DockTree, node_index: i32) {
     }
     machine do_clear(tree: &mut DockTree, node_index: i32)
     requires node_index >= 0 && node_index < 12 {
-        tree.nodes[node_index].rect = types::rect_zero();
-        tree.nodes[node_index].div1_rect = types::rect_zero();
-        tree.nodes[node_index].div2_rect = types::rect_zero();
+        tree.nodes[node_index].rect = |types|::rect_zero();
+        tree.nodes[node_index].div1_rect = |types|::rect_zero();
+        tree.nodes[node_index].div2_rect = |types|::rect_zero();
         let c0: i32 = tree.nodes[node_index].first_child;
         let c1: i32 = tree.nodes[node_index].second_child;
         let c2: i32 = tree.nodes[node_index].third_child;
@@ -296,7 +284,7 @@ public machine clear_subtree_rects(tree: &mut DockTree, node_index: i32) {
     }
     machine clr0(tree: &mut DockTree, c0: i32, c1: i32, c2: i32)
     requires c0 >= 0 && c0 < 12 {
-        tree.nodes[c0].rect = types::rect_zero();
+        tree.nodes[c0].rect = |types|::rect_zero();
         transition c1 >= 0 && c1 < 12 {
             true -> clr1(tree, c1, c2)
             _ -> done()
@@ -304,7 +292,7 @@ public machine clear_subtree_rects(tree: &mut DockTree, node_index: i32) {
     }
     machine clr1(tree: &mut DockTree, c1: i32, c2: i32)
     requires c1 >= 0 && c1 < 12 {
-        tree.nodes[c1].rect = types::rect_zero();
+        tree.nodes[c1].rect = |types|::rect_zero();
         transition c2 >= 0 && c2 < 12 {
             true -> clr2(tree, c2)
             _ -> done()
@@ -312,18 +300,18 @@ public machine clear_subtree_rects(tree: &mut DockTree, node_index: i32) {
     }
     machine clr2(tree: &mut DockTree, c2: i32)
     requires c2 >= 0 && c2 < 12 {
-        tree.nodes[c2].rect = types::rect_zero();
+        tree.nodes[c2].rect = |types|::rect_zero();
     }
     machine done() {}
 }
 
 // Solve a TabGroup node: the TabGroup itself gets `r`, and its active visible child
 // window gets `r` (while inactive tab children get `types::rect_zero()`).
-public machine solve_tab_group(tree: &mut DockTree, node_index: i32, rectangle: Rect)
+public machine solve_tab_group(tree: &mut DockTree, node_index: i32, rectangle: |types|::Rect)
 requires node_index >= 0 && node_index < 12 {
-    tree.nodes[node_index].rect = types::rect_copy(&rectangle);
-    tree.nodes[node_index].div1_rect = types::rect_zero();
-    tree.nodes[node_index].div2_rect = types::rect_zero();
+    tree.nodes[node_index].rect = |types|::rect_copy(&rectangle);
+    tree.nodes[node_index].div1_rect = |types|::rect_zero();
+    tree.nodes[node_index].div2_rect = |types|::rect_zero();
     let c0: i32 = tree.nodes[node_index].first_child;
     let c1: i32 = tree.nodes[node_index].second_child;
     let c2: i32 = tree.nodes[node_index].third_child;
@@ -332,99 +320,99 @@ requires node_index >= 0 && node_index < 12 {
         true -> set_c0(tree, rectangle, c0, c1, c2, active_tab)
         _ -> done()
     }
-    machine set_c0(tree: &mut DockTree, rectangle: Rect, c0: i32, c1: i32, c2: i32, active_tab: i32)
+    machine set_c0(tree: &mut DockTree, rectangle: |types|::Rect, c0: i32, c1: i32, c2: i32, active_tab: i32)
     requires c0 >= 0 && c0 < 12 {
-        tree.nodes[c0].rect = select_rect(active_tab == 0 && tree.nodes[c0].is_visible, types::rect_copy(&rectangle), types::rect_zero());
+        tree.nodes[c0].rect = |types|::select_rect(active_tab == 0 && tree.nodes[c0].is_visible, |types|::rect_copy(&rectangle), |types|::rect_zero());
         transition c1 >= 0 && c1 < 12 {
             true -> set_c1(tree, rectangle, c1, c2, active_tab)
             _ -> done()
         }
     }
-    machine set_c1(tree: &mut DockTree, rectangle: Rect, c1: i32, c2: i32, active_tab: i32)
+    machine set_c1(tree: &mut DockTree, rectangle: |types|::Rect, c1: i32, c2: i32, active_tab: i32)
     requires c1 >= 0 && c1 < 12 {
-        tree.nodes[c1].rect = select_rect(active_tab == 1 && tree.nodes[c1].is_visible, types::rect_copy(&rectangle), types::rect_zero());
+        tree.nodes[c1].rect = |types|::select_rect(active_tab == 1 && tree.nodes[c1].is_visible, |types|::rect_copy(&rectangle), |types|::rect_zero());
         transition c2 >= 0 && c2 < 12 {
             true -> set_c2(tree, rectangle, c2, active_tab)
             _ -> done()
         }
     }
-    machine set_c2(tree: &mut DockTree, rectangle: Rect, c2: i32, active_tab: i32)
+    machine set_c2(tree: &mut DockTree, rectangle: |types|::Rect, c2: i32, active_tab: i32)
     requires c2 >= 0 && c2 < 12 {
-        tree.nodes[c2].rect = select_rect(active_tab == 2 && tree.nodes[c2].is_visible, rectangle, types::rect_zero());
+        tree.nodes[c2].rect = |types|::select_rect(active_tab == 2 && tree.nodes[c2].is_visible, rectangle, |types|::rect_zero());
     }
     machine done() {}
 }
 
 // A hidden sibling yields its whole rectangle; visible siblings divide the remaining pixels.
-public machine solve_split2(tree: &mut DockTree, node_index: i32, rectangle: Rect)
+public machine solve_split2(tree: &mut DockTree, node_index: i32, rectangle: |types|::Rect)
 requires node_index >= 0 && node_index < 12 {
-    tree.nodes[node_index].rect = types::rect_copy(&rectangle);
-    tree.nodes[node_index].div1_rect = types::rect_zero();
-    tree.nodes[node_index].div2_rect = types::rect_zero();
+    tree.nodes[node_index].rect = |types|::rect_copy(&rectangle);
+    tree.nodes[node_index].div1_rect = |types|::rect_zero();
+    tree.nodes[node_index].div2_rect = |types|::rect_zero();
     let c0: i32 = tree.nodes[node_index].first_child;
     let c1: i32 = tree.nodes[node_index].second_child;
-    let first_visible: bool = dock::is_subtree_visible(tree, c0);
-    let second_visible: bool = dock::is_subtree_visible(tree, c1);
+    let first_visible: bool = is_subtree_visible(tree, c0);
+    let second_visible: bool = is_subtree_visible(tree, c1);
     transition first_visible && second_visible {
         true -> both_vis(tree, node_index, rectangle, c0, c1)
         _ -> one_or_none(tree, rectangle, c0, c1, first_visible, second_visible)
     }
-    machine both_vis(tree: &mut DockTree, node_index: i32, rectangle: Rect, c0: i32, c1: i32)
+    machine both_vis(tree: &mut DockTree, node_index: i32, rectangle: |types|::Rect, c0: i32, c1: i32)
     requires node_index >= 0 && node_index < 12 {
         let is_vert_div: bool = tree.nodes[node_index].kind == 1;
         let d: i32 in Saturating = tree.divider_px;
-        let ra: i32 in Saturating = clamp_i32(tree.nodes[node_index].ratio_a, 150, 850) as i32 in Saturating;
-        let rb: i32 in Saturating = max_i32(tree.nodes[node_index].ratio_b, 1) as i32 in Saturating;
-        let total_ratio: i32 in Saturating = max_sat(ra + rb, 1);
+        let ra: i32 in Saturating = |types|::clamp_i32(tree.nodes[node_index].ratio_a, 150, 850) as i32 in Saturating;
+        let rb: i32 in Saturating = |types|::max_i32(tree.nodes[node_index].ratio_b, 1) as i32 in Saturating;
+        let total_ratio: i32 in Saturating = |types|::max_sat(ra + rb, 1);
         transition total_ratio > 0 && is_vert_div {
             true -> split_x(tree, node_index, rectangle, c0, c1, d, ra, total_ratio)
             _ -> check_split_y(tree, node_index, rectangle, c0, c1, d, ra, total_ratio)
         }
     }
-    machine check_split_y(tree: &mut DockTree, node_index: i32, rectangle: Rect, c0: i32, c1: i32, d: i32 in Saturating, ra: i32 in Saturating, total_ratio: i32 in Saturating)
+    machine check_split_y(tree: &mut DockTree, node_index: i32, rectangle: |types|::Rect, c0: i32, c1: i32, d: i32 in Saturating, ra: i32 in Saturating, total_ratio: i32 in Saturating)
     requires node_index >= 0 && node_index < 12 {
         transition total_ratio > 0 {
             true -> split_y(tree, node_index, rectangle, c0, c1, d, ra, total_ratio)
             _ -> one_or_none(tree, rectangle, c0, c1, false, false)
         }
     }
-    machine split_x(tree: &mut DockTree, node_index: i32, rectangle: Rect, c0: i32, c1: i32, d: i32 in Saturating, ra: i32 in Saturating, total_ratio: i32 in Saturating)
+    machine split_x(tree: &mut DockTree, node_index: i32, rectangle: |types|::Rect, c0: i32, c1: i32, d: i32 in Saturating, ra: i32 in Saturating, total_ratio: i32 in Saturating)
     requires node_index >= 0 && node_index < 12 && total_ratio > 0 {
-        let avail_w: i32 in Saturating = max_sat(rectangle.w - d, 0);
+        let avail_w: i32 in Saturating = |types|::max_sat(rectangle.w - d, 0);
         let w0: i32 in Saturating = (avail_w * ra) / total_ratio;
-        let w1: i32 in Saturating = max_sat(avail_w - w0, 0);
-        let r0: Rect = Rect { x: rectangle.x, y: rectangle.y, w: w0, h: rectangle.h };
-        let dv: Rect = Rect { x: rectangle.x + w0, y: rectangle.y, w: d, h: rectangle.h };
-        let r1: Rect = Rect { x: rectangle.x + w0 + d, y: rectangle.y, w: w1, h: rectangle.h };
+        let w1: i32 in Saturating = |types|::max_sat(avail_w - w0, 0);
+        let r0: |types|::Rect = |types|::Rect { x: rectangle.x, y: rectangle.y, w: w0, h: rectangle.h };
+        let dv: |types|::Rect = |types|::Rect { x: rectangle.x + w0, y: rectangle.y, w: d, h: rectangle.h };
+        let r1: |types|::Rect = |types|::Rect { x: rectangle.x + w0 + d, y: rectangle.y, w: w1, h: rectangle.h };
         tree.nodes[node_index].div1_rect = dv;
-        dock::solve_child(tree, c0, r0);
-        dock::solve_child(tree, c1, r1);
+        solve_child(tree, c0, r0);
+        solve_child(tree, c1, r1);
     }
-    machine split_y(tree: &mut DockTree, node_index: i32, rectangle: Rect, c0: i32, c1: i32, d: i32 in Saturating, ra: i32 in Saturating, total_ratio: i32 in Saturating)
+    machine split_y(tree: &mut DockTree, node_index: i32, rectangle: |types|::Rect, c0: i32, c1: i32, d: i32 in Saturating, ra: i32 in Saturating, total_ratio: i32 in Saturating)
     requires node_index >= 0 && node_index < 12 && total_ratio > 0 {
-        let avail_h: i32 in Saturating = max_sat(rectangle.h - d, 0);
+        let avail_h: i32 in Saturating = |types|::max_sat(rectangle.h - d, 0);
         let h0: i32 in Saturating = (avail_h * ra) / total_ratio;
-        let h1: i32 in Saturating = max_sat(avail_h - h0, 0);
-        let r0: Rect = Rect { x: rectangle.x, y: rectangle.y, w: rectangle.w, h: h0 };
-        let dv: Rect = Rect { x: rectangle.x, y: rectangle.y + h0, w: rectangle.w, h: d };
-        let r1: Rect = Rect { x: rectangle.x, y: rectangle.y + h0 + d, w: rectangle.w, h: h1 };
+        let h1: i32 in Saturating = |types|::max_sat(avail_h - h0, 0);
+        let r0: |types|::Rect = |types|::Rect { x: rectangle.x, y: rectangle.y, w: rectangle.w, h: h0 };
+        let dv: |types|::Rect = |types|::Rect { x: rectangle.x, y: rectangle.y + h0, w: rectangle.w, h: d };
+        let r1: |types|::Rect = |types|::Rect { x: rectangle.x, y: rectangle.y + h0 + d, w: rectangle.w, h: h1 };
         tree.nodes[node_index].div1_rect = dv;
-        dock::solve_child(tree, c0, r0);
-        dock::solve_child(tree, c1, r1);
+        solve_child(tree, c0, r0);
+        solve_child(tree, c1, r1);
     }
-    machine one_or_none(tree: &mut DockTree, rectangle: Rect, c0: i32, c1: i32, first_visible: bool, second_visible: bool) {
-        dock::solve_child(tree, c0, select_rect(first_visible, types::rect_copy(&rectangle), types::rect_zero()));
-        dock::solve_child(tree, c1, select_rect(!first_visible && second_visible, rectangle, types::rect_zero()));
+    machine one_or_none(tree: &mut DockTree, rectangle: |types|::Rect, c0: i32, c1: i32, first_visible: bool, second_visible: bool) {
+        solve_child(tree, c0, |types|::select_rect(first_visible, |types|::rect_copy(&rectangle), |types|::rect_zero()));
+        solve_child(tree, c1, |types|::select_rect(!first_visible && second_visible, rectangle, |types|::rect_zero()));
     }
 }
 
 // Solve a leaf or TabGroup child node `node_index` inside `rectangle`.
-public machine solve_child(tree: &mut DockTree, node_index: i32, rectangle: Rect) {
+public machine solve_child(tree: &mut DockTree, node_index: i32, rectangle: |types|::Rect) {
     transition node_index >= 0 && node_index < 12 {
         true -> check_vis(tree, node_index, rectangle)
         _ -> done()
     }
-    machine check_vis(tree: &mut DockTree, node_index: i32, rectangle: Rect)
+    machine check_vis(tree: &mut DockTree, node_index: i32, rectangle: |types|::Rect)
     requires node_index >= 0 && node_index < 12 {
         transition rectangle.w > 0 && rectangle.h > 0 {
             true -> dispatch(tree, node_index, rectangle)
@@ -432,9 +420,9 @@ public machine solve_child(tree: &mut DockTree, node_index: i32, rectangle: Rect
         }
     }
     machine clear(tree: &mut DockTree, node_index: i32) {
-        dock::clear_subtree_rects(tree, node_index);
+        clear_subtree_rects(tree, node_index);
     }
-    machine dispatch(tree: &mut DockTree, node_index: i32, rectangle: Rect)
+    machine dispatch(tree: &mut DockTree, node_index: i32, rectangle: |types|::Rect)
     requires node_index >= 0 && node_index < 12 {
         let k: i32 = tree.nodes[node_index].kind;
         transition k == 3 {
@@ -442,25 +430,25 @@ public machine solve_child(tree: &mut DockTree, node_index: i32, rectangle: Rect
             _ -> do_win(tree, node_index, rectangle)
         }
     }
-    machine do_tab(tree: &mut DockTree, node_index: i32, rectangle: Rect)
+    machine do_tab(tree: &mut DockTree, node_index: i32, rectangle: |types|::Rect)
     requires node_index >= 0 && node_index < 12 {
-        dock::solve_tab_group(tree, node_index, rectangle);
+        solve_tab_group(tree, node_index, rectangle);
     }
-    machine do_win(tree: &mut DockTree, node_index: i32, rectangle: Rect)
+    machine do_win(tree: &mut DockTree, node_index: i32, rectangle: |types|::Rect)
     requires node_index >= 0 && node_index < 12 {
         let vis: bool = tree.nodes[node_index].is_visible;
-        tree.nodes[node_index].rect = select_rect(vis, rectangle, types::rect_zero());
+        tree.nodes[node_index].rect = |types|::select_rect(vis, rectangle, |types|::rect_zero());
     }
     machine done() {}
 }
 
 // Solve a column node (`Node 1`, `Node 4`, or `Node 9`) under the 3-way root split.
-public machine solve_column(tree: &mut DockTree, node_index: i32, rectangle: Rect) {
+public machine solve_column(tree: &mut DockTree, node_index: i32, rectangle: |types|::Rect) {
     transition node_index >= 0 && node_index < 12 {
         true -> check_r(tree, node_index, rectangle)
         _ -> done()
     }
-    machine check_r(tree: &mut DockTree, node_index: i32, rectangle: Rect)
+    machine check_r(tree: &mut DockTree, node_index: i32, rectangle: |types|::Rect)
     requires node_index >= 0 && node_index < 12 {
         transition rectangle.w > 0 && rectangle.h > 0 {
             true -> dispatch(tree, node_index, rectangle)
@@ -468,9 +456,9 @@ public machine solve_column(tree: &mut DockTree, node_index: i32, rectangle: Rec
         }
     }
     machine clear(tree: &mut DockTree, node_index: i32) {
-        dock::clear_subtree_rects(tree, node_index);
+        clear_subtree_rects(tree, node_index);
     }
-    machine dispatch(tree: &mut DockTree, node_index: i32, rectangle: Rect)
+    machine dispatch(tree: &mut DockTree, node_index: i32, rectangle: |types|::Rect)
     requires node_index >= 0 && node_index < 12 {
         let k: i32 = tree.nodes[node_index].kind;
         transition k == 1 || k == 2 {
@@ -478,88 +466,88 @@ public machine solve_column(tree: &mut DockTree, node_index: i32, rectangle: Rec
             _ -> do_leaf(tree, node_index, rectangle)
         }
     }
-    machine do_split(tree: &mut DockTree, node_index: i32, rectangle: Rect)
+    machine do_split(tree: &mut DockTree, node_index: i32, rectangle: |types|::Rect)
     requires node_index >= 0 && node_index < 12 {
-        dock::solve_split2(tree, node_index, rectangle);
+        solve_split2(tree, node_index, rectangle);
     }
-    machine do_leaf(tree: &mut DockTree, node_index: i32, rectangle: Rect) {
-        dock::solve_child(tree, node_index, rectangle);
+    machine do_leaf(tree: &mut DockTree, node_index: i32, rectangle: |types|::Rect) {
+        solve_child(tree, node_index, rectangle);
     }
     machine done() {}
 }
 
 // Solve the entire docking hierarchy inside `canvas_rect` (0% rendering coupling).
 // and explicit `div1_rect` / `div2_rect` splitter bars.
-public machine solve_layout(tree: &mut DockTree, canvas_rect: Rect) {
-    tree.nodes[0].rect = types::rect_copy(&canvas_rect);
-    tree.nodes[0].div1_rect = types::rect_zero();
-    tree.nodes[0].div2_rect = types::rect_zero();
+public machine solve_layout(tree: &mut DockTree, canvas_rect: |types|::Rect) {
+    tree.nodes[0].rect = |types|::rect_copy(&canvas_rect);
+    tree.nodes[0].div1_rect = |types|::rect_zero();
+    tree.nodes[0].div2_rect = |types|::rect_zero();
 
     let c0: i32 = tree.nodes[0].first_child;
     let c1: i32 = tree.nodes[0].second_child;
     let c2: i32 = tree.nodes[0].third_child;
 
-    let first_visible: bool = dock::is_subtree_visible(tree, c0);
-    let second_visible: bool = dock::is_subtree_visible(tree, c1);
-    let v2: bool = dock::is_subtree_visible(tree, c2);
+    let first_visible: bool = is_subtree_visible(tree, c0);
+    let second_visible: bool = is_subtree_visible(tree, c1);
+    let v2: bool = is_subtree_visible(tree, c2);
 
-    let w0: i32 in Saturating = select_sat(first_visible, max_i32(tree.nodes[0].ratio_a, 140) as i32 in Saturating, 0);
-    let w1: i32 in Saturating = select_sat(second_visible, max_i32(tree.nodes[0].ratio_b, 140) as i32 in Saturating, 0);
-    let w2: i32 in Saturating = select_sat(v2, max_i32(tree.nodes[0].ratio_c, 140) as i32 in Saturating, 0);
-    let total_ratio: i32 in Saturating = max_sat(w0 + w1 + w2, 1);
+    let w0: i32 in Saturating = |types|::select_sat(first_visible, |types|::max_i32(tree.nodes[0].ratio_a, 140) as i32 in Saturating, 0);
+    let w1: i32 in Saturating = |types|::select_sat(second_visible, |types|::max_i32(tree.nodes[0].ratio_b, 140) as i32 in Saturating, 0);
+    let w2: i32 in Saturating = |types|::select_sat(v2, |types|::max_i32(tree.nodes[0].ratio_c, 140) as i32 in Saturating, 0);
+    let total_ratio: i32 in Saturating = |types|::max_sat(w0 + w1 + w2, 1);
     transition total_ratio > 0 {
         true -> solve_cols(tree, canvas_rect, c0, c1, c2, first_visible, second_visible, v2, w0, w1, total_ratio)
         _ -> done()
     }
-    machine solve_cols(tree: &mut DockTree, canvas_rect: Rect, c0: i32, c1: i32, c2: i32, first_visible: bool, second_visible: bool, v2: bool, w0: i32 in Saturating, w1: i32 in Saturating, total_ratio: i32 in Saturating)
+    machine solve_cols(tree: &mut DockTree, canvas_rect: |types|::Rect, c0: i32, c1: i32, c2: i32, first_visible: bool, second_visible: bool, v2: bool, w0: i32 in Saturating, w1: i32 in Saturating, total_ratio: i32 in Saturating)
     requires total_ratio > 0 {
         let d: i32 in Saturating = tree.divider_px;
-        let n_vis: i32 = add_i32(select_i32(first_visible, 1, 0), add_i32(select_i32(second_visible, 1, 0), select_i32(v2, 1, 0)));
-        let n_divs: i32 in Saturating = max_sat((n_vis - 1) as i32 in Saturating, 0);
-        let avail_w: i32 in Saturating = max_sat(canvas_rect.w - (d * n_divs), 0);
+        let n_vis: i32 = |types|::add_i32(|types|::select_i32(first_visible, 1, 0), |types|::add_i32(|types|::select_i32(second_visible, 1, 0), |types|::select_i32(v2, 1, 0)));
+        let n_divs: i32 in Saturating = |types|::max_sat((n_vis - 1) as i32 in Saturating, 0);
+        let avail_w: i32 in Saturating = |types|::max_sat(canvas_rect.w - (d * n_divs), 0);
 
-        let px0: i32 in Saturating = select_sat(first_visible, select_sat(!second_visible && !v2, avail_w, (avail_w * w0) / total_ratio), 0);
-        let rem_after_0: i32 in Saturating = max_sat(avail_w - px0, 0);
-        let px1: i32 in Saturating = select_sat(second_visible, select_sat(!v2, rem_after_0, (avail_w * w1) / total_ratio), 0);
-        let px2: i32 in Saturating = select_sat(v2, max_sat(rem_after_0 - px1, 0), 0);
+        let px0: i32 in Saturating = |types|::select_sat(first_visible, |types|::select_sat(!second_visible && !v2, avail_w, (avail_w * w0) / total_ratio), 0);
+        let rem_after_0: i32 in Saturating = |types|::max_sat(avail_w - px0, 0);
+        let px1: i32 in Saturating = |types|::select_sat(second_visible, |types|::select_sat(!v2, rem_after_0, (avail_w * w1) / total_ratio), 0);
+        let px2: i32 in Saturating = |types|::select_sat(v2, |types|::max_sat(rem_after_0 - px1, 0), 0);
 
         let x0: i32 in Saturating = canvas_rect.x;
-        let r0: Rect = select_rect(first_visible, Rect { x: x0, y: canvas_rect.y, w: px0, h: canvas_rect.h }, types::rect_zero());
+        let r0: |types|::Rect = |types|::select_rect(first_visible, |types|::Rect { x: x0, y: canvas_rect.y, w: px0, h: canvas_rect.h }, |types|::rect_zero());
 
         let has_div1: bool = first_visible && (second_visible || v2);
         let div1_x: i32 in Saturating = x0 + px0;
-        tree.nodes[0].div1_rect = select_rect(has_div1, Rect { x: div1_x, y: canvas_rect.y, w: d, h: canvas_rect.h }, types::rect_zero());
+        tree.nodes[0].div1_rect = |types|::select_rect(has_div1, |types|::Rect { x: div1_x, y: canvas_rect.y, w: d, h: canvas_rect.h }, |types|::rect_zero());
 
-        let x1: i32 in Saturating = div1_x + select_sat(has_div1, d, 0);
-        let r1: Rect = select_rect(second_visible, Rect { x: x1, y: canvas_rect.y, w: px1, h: canvas_rect.h }, types::rect_zero());
+        let x1: i32 in Saturating = div1_x + |types|::select_sat(has_div1, d, 0);
+        let r1: |types|::Rect = |types|::select_rect(second_visible, |types|::Rect { x: x1, y: canvas_rect.y, w: px1, h: canvas_rect.h }, |types|::rect_zero());
 
         let has_div2: bool = second_visible && v2;
         let div2_x: i32 in Saturating = x1 + px1;
-        tree.nodes[0].div2_rect = select_rect(has_div2, Rect { x: div2_x, y: canvas_rect.y, w: d, h: canvas_rect.h }, types::rect_zero());
+        tree.nodes[0].div2_rect = |types|::select_rect(has_div2, |types|::Rect { x: div2_x, y: canvas_rect.y, w: d, h: canvas_rect.h }, |types|::rect_zero());
 
-        let x2: i32 in Saturating = div2_x + select_sat(has_div2, d, 0);
-        let r2: Rect = select_rect(v2, Rect { x: x2, y: canvas_rect.y, w: px2, h: canvas_rect.h }, types::rect_zero());
+        let x2: i32 in Saturating = div2_x + |types|::select_sat(has_div2, d, 0);
+        let r2: |types|::Rect = |types|::select_rect(v2, |types|::Rect { x: x2, y: canvas_rect.y, w: px2, h: canvas_rect.h }, |types|::rect_zero());
 
-        dock::solve_column(tree, c0, r0);
-        dock::solve_column(tree, c1, r1);
-        dock::solve_column(tree, c2, r2);
+        solve_column(tree, c0, r0);
+        solve_column(tree, c1, r1);
+        solve_column(tree, c2, r2);
     }
     machine done() {}
 }
 
 // Lookup the solved bounding box of a window by `window_id` (`1..=6`), analogous to
-public machine window_rect(tree: &DockTree, window_id: i32) -> Rect {
+public machine window_rect(tree: &DockTree, window_id: i32) -> |types|::Rect {
     transition { _ -> loop_nodes(tree, window_id, 0) }
-    machine loop_nodes(tree: &DockTree, window_id: i32, node_index: i32) -> Rect {
+    machine loop_nodes(tree: &DockTree, window_id: i32, node_index: i32) -> |types|::Rect {
         transition node_index >= 0 && node_index < tree.node_count && node_index < 12 {
             true -> check_node(tree, window_id, node_index)
-            _ -> (types::rect_zero())
+            _ -> (|types|::rect_zero())
         }
     }
-    machine check_node(tree: &DockTree, window_id: i32, node_index: i32) -> Rect
+    machine check_node(tree: &DockTree, window_id: i32, node_index: i32) -> |types|::Rect
     requires node_index >= 0 && node_index < 12 {
         transition tree.nodes[node_index].kind == 4 && tree.nodes[node_index].window_id == window_id {
-            true -> (dock::node_rect(tree, node_index))
+            true -> (node_rect(tree, node_index))
             _ -> loop_nodes(tree, window_id, node_index + 1)
         }
     }
@@ -639,7 +627,7 @@ public machine toggle_reparent_struct_tab(tree: &mut DockTree) {
     machine split_below(tree: &mut DockTree) {
         tree.nodes[2].third_child = -1;
         tree.nodes[2].child_count = 2;
-        tree.nodes[2].active_tab = min_i32(tree.nodes[2].active_tab, 1);
+        tree.nodes[2].active_tab = |types|::min_i32(tree.nodes[2].active_tab, 1);
         tree.nodes[3].parent = 1;
         tree.nodes[1].second_child = 3;
         tree.nodes[1].child_count = 2;
@@ -667,31 +655,31 @@ public machine find_window_node(tree: &DockTree, window_id: i32) -> i32 {
 
 // Find which visible dock window (`1..=6`) contains `(mx, my)`, or `0` if none.
 public machine find_window_at(tree: &DockTree, mx: i32, my: i32) -> i32 {
-    let r1: Rect = dock::window_rect(tree, 1);
-    let r2: Rect = dock::window_rect(tree, 2);
-    let r3: Rect = dock::window_rect(tree, 3);
-    let r4: Rect = dock::window_rect(tree, 4);
-    let r5: Rect = dock::window_rect(tree, 5);
-    let r6: Rect = dock::window_rect(tree, 6);
-    let w1: i32 = select_i32(types::rect_contains(&r1, mx, my), 1, 0);
-    let w2: i32 = select_i32(types::rect_contains(&r2, mx, my), 2, w1);
-    let w3: i32 = select_i32(types::rect_contains(&r3, mx, my), 3, w2);
-    let w4: i32 = select_i32(types::rect_contains(&r4, mx, my), 4, w3);
-    let w5: i32 = select_i32(types::rect_contains(&r5, mx, my), 5, w4);
-    select_i32(types::rect_contains(&r6, mx, my), 6, w5)
+    let r1: |types|::Rect = window_rect(tree, 1);
+    let r2: |types|::Rect = window_rect(tree, 2);
+    let r3: |types|::Rect = window_rect(tree, 3);
+    let r4: |types|::Rect = window_rect(tree, 4);
+    let r5: |types|::Rect = window_rect(tree, 5);
+    let r6: |types|::Rect = window_rect(tree, 6);
+    let w1: i32 = |types|::select_i32(|types|::rect_contains(&r1, mx, my), 1, 0);
+    let w2: i32 = |types|::select_i32(|types|::rect_contains(&r2, mx, my), 2, w1);
+    let w3: i32 = |types|::select_i32(|types|::rect_contains(&r3, mx, my), 3, w2);
+    let w4: i32 = |types|::select_i32(|types|::rect_contains(&r4, mx, my), 4, w3);
+    let w5: i32 = |types|::select_i32(|types|::rect_contains(&r5, mx, my), 5, w4);
+    |types|::select_i32(|types|::rect_contains(&r6, mx, my), 6, w5)
 }
 
 // Check if `(mx, my)` is inside the 30px titlebar of any visible dock pane (`3..=6`).
 public machine find_header_window_at(tree: &DockTree, mx: i32, my: i32) -> i32 {
-    let r3: Rect = dock::window_rect(tree, 3);
-    let r4: Rect = dock::window_rect(tree, 4);
-    let r5: Rect = dock::window_rect(tree, 5);
-    let r6: Rect = dock::window_rect(tree, 6);
-    let h3: bool = !tree.struct_docked_as_tab && types::rect_contains(&r3, mx, my) && my < add_i32(r3.y as i32, 30);
-    let h4: bool = types::rect_contains(&r4, mx, my) && my < add_i32(r4.y as i32, 30);
-    let h5: bool = types::rect_contains(&r5, mx, my) && my < add_i32(r5.y as i32, 30);
-    let h6: bool = types::rect_contains(&r6, mx, my) && my < add_i32(r6.y as i32, 30);
-    select_i32(h3, 3, select_i32(h4, 4, select_i32(h5, 5, select_i32(h6, 6, 0))))
+    let r3: |types|::Rect = window_rect(tree, 3);
+    let r4: |types|::Rect = window_rect(tree, 4);
+    let r5: |types|::Rect = window_rect(tree, 5);
+    let r6: |types|::Rect = window_rect(tree, 6);
+    let h3: bool = !tree.struct_docked_as_tab && |types|::rect_contains(&r3, mx, my) && my < |types|::add_i32(r3.y as i32, 30);
+    let h4: bool = |types|::rect_contains(&r4, mx, my) && my < |types|::add_i32(r4.y as i32, 30);
+    let h5: bool = |types|::rect_contains(&r5, mx, my) && my < |types|::add_i32(r5.y as i32, 30);
+    let h6: bool = |types|::rect_contains(&r6, mx, my) && my < |types|::add_i32(r6.y as i32, 30);
+    |types|::select_i32(h3, 3, |types|::select_i32(h4, 4, |types|::select_i32(h5, 5, |types|::select_i32(h6, 6, 0))))
 }
 
 // Swap the `window_id` of two leaf nodes (`idx_a` and `idx_b`) so their dock panes
@@ -730,7 +718,7 @@ public machine complete_window_drop(tree: &mut DockTree, src_win: i32, dst_win: 
         }
     }
     machine toggle_tab_and_swap(tree: &mut DockTree, src_win: i32, dst_win: i32, from_tab: bool) {
-        dock::toggle_reparent_struct_tab(tree);
+        toggle_reparent_struct_tab(tree);
         transition from_tab && dst_win > 3 {
             true -> swap_panes(tree, src_win, dst_win)
             _ -> done()
@@ -739,11 +727,11 @@ public machine complete_window_drop(tree: &mut DockTree, src_win: i32, dst_win: 
     machine swap_panes(tree: &mut DockTree, src_win: i32, dst_win: i32) {
         // Map TabGroup windows (1, 2) onto leaf pane 3 if dragged onto a split pane,
         // or swap any two leaf windows (3..=6) directly.
-        let eff_src: i32 = select_i32(src_win <= 2, 3, src_win);
-        let eff_dst: i32 = select_i32(dst_win <= 2, 3, dst_win);
-        let ia: i32 = dock::find_window_node(tree, eff_src);
-        let ib: i32 = dock::find_window_node(tree, eff_dst);
-        dock::swap_leaf_nodes(tree, ia, ib);
+        let eff_src: i32 = |types|::select_i32(src_win <= 2, 3, src_win);
+        let eff_dst: i32 = |types|::select_i32(dst_win <= 2, 3, dst_win);
+        let ia: i32 = find_window_node(tree, eff_src);
+        let ib: i32 = find_window_node(tree, eff_dst);
+        swap_leaf_nodes(tree, ia, ib);
         tree.focused_window = src_win;
     }
     machine done() {}
@@ -752,19 +740,19 @@ public machine complete_window_drop(tree: &mut DockTree, src_win: i32, dst_win: 
 // Hit-test all splitter bars and handle live mouse drag resizing, plus window titlebar
 // drag-and-drop (`drag_window_id` -> `drop_target_window`), tab bar clicks, and pane focus.
 public machine handle_pointer(tree: &mut DockTree, mx: i32, my: i32, mouse_pressed: bool, mouse_down: bool, mouse_released: bool) -> bool {
-    let d0_1: Rect = dock::div1_rect(tree, 0);
-    let d0_2: Rect = dock::div2_rect(tree, 0);
-    let d1_1: Rect = dock::div1_rect(tree, 1);
-    let d4_1: Rect = dock::div1_rect(tree, 4);
+    let d0_1: |types|::Rect = div1_rect(tree, 0);
+    let d0_2: |types|::Rect = div2_rect(tree, 0);
+    let d1_1: |types|::Rect = div1_rect(tree, 1);
+    let d4_1: |types|::Rect = div1_rect(tree, 4);
 
     // Expand hit target by 5px on each side so splitters feel effortless to grab.
-    let h0_1: bool = d0_1.w > 0 && mx >= sub_i32(d0_1.x as i32, 5) && mx < add_i32((d0_1.x + d0_1.w) as i32, 5) && my >= (d0_1.y as i32) && my < ((d0_1.y + d0_1.h) as i32);
-    let h0_2: bool = d0_2.w > 0 && mx >= sub_i32(d0_2.x as i32, 5) && mx < add_i32((d0_2.x + d0_2.w) as i32, 5) && my >= (d0_2.y as i32) && my < ((d0_2.y + d0_2.h) as i32);
-    let h1_1: bool = d1_1.h > 0 && my >= sub_i32(d1_1.y as i32, 5) && my < add_i32((d1_1.y + d1_1.h) as i32, 5) && mx >= (d1_1.x as i32) && mx < ((d1_1.x + d1_1.w) as i32);
-    let h4_1: bool = d4_1.h > 0 && my >= sub_i32(d4_1.y as i32, 5) && my < add_i32((d4_1.y + d4_1.h) as i32, 5) && mx >= (d4_1.x as i32) && mx < ((d4_1.x + d4_1.w) as i32);
+    let h0_1: bool = d0_1.w > 0 && mx >= |types|::sub_i32(d0_1.x as i32, 5) && mx < |types|::add_i32((d0_1.x + d0_1.w) as i32, 5) && my >= (d0_1.y as i32) && my < ((d0_1.y + d0_1.h) as i32);
+    let h0_2: bool = d0_2.w > 0 && mx >= |types|::sub_i32(d0_2.x as i32, 5) && mx < |types|::add_i32((d0_2.x + d0_2.w) as i32, 5) && my >= (d0_2.y as i32) && my < ((d0_2.y + d0_2.h) as i32);
+    let h1_1: bool = d1_1.h > 0 && my >= |types|::sub_i32(d1_1.y as i32, 5) && my < |types|::add_i32((d1_1.y + d1_1.h) as i32, 5) && mx >= (d1_1.x as i32) && mx < ((d1_1.x + d1_1.w) as i32);
+    let h4_1: bool = d4_1.h > 0 && my >= |types|::sub_i32(d4_1.y as i32, 5) && my < |types|::add_i32((d4_1.y + d4_1.h) as i32, 5) && mx >= (d4_1.x as i32) && mx < ((d4_1.x + d4_1.w) as i32);
 
-    tree.hot_divider_node = select_i32(h0_1 || h0_2, 0, select_i32(h1_1, 1, select_i32(h4_1, 4, -1)));
-    tree.hot_divider_index = select_i32(h0_2, 2, select_i32(h0_1 || h1_1 || h4_1, 1, 0));
+    tree.hot_divider_node = |types|::select_i32(h0_1 || h0_2, 0, |types|::select_i32(h1_1, 1, |types|::select_i32(h4_1, 4, -1)));
+    tree.hot_divider_index = |types|::select_i32(h0_2, 2, |types|::select_i32(h0_1 || h1_1 || h4_1, 1, 0));
 
     transition mouse_released || !mouse_down {
         true -> finish_or_clear_drag(tree, mx, my, mouse_pressed)
@@ -783,7 +771,7 @@ public machine handle_pointer(tree: &mut DockTree, mx: i32, my: i32, mouse_press
         }
     }
     machine drop_win(tree: &mut DockTree, src_w: i32, dst_w: i32) -> bool {
-        dock::complete_window_drop(tree, src_w, dst_w);
+        complete_window_drop(tree, src_w, dst_w);
         true
     }
     machine check_press_after_clear(tree: &mut DockTree, mx: i32, my: i32, mouse_pressed: bool) -> bool {
@@ -824,7 +812,7 @@ public machine handle_pointer(tree: &mut DockTree, mx: i32, my: i32, mouse_press
         }
     }
     machine track_drop_target(tree: &mut DockTree, mx: i32, my: i32) -> bool {
-        let hovered_w: i32 = dock::find_window_at(tree, mx, my);
+        let hovered_w: i32 = find_window_at(tree, mx, my);
         tree.drop_target_window = hovered_w;
         true
     }
@@ -837,8 +825,8 @@ public machine handle_pointer(tree: &mut DockTree, mx: i32, my: i32, mouse_press
         }
     }
     machine drag_root(tree: &mut DockTree, mx: i32, di: i32) -> bool {
-        let r0: Rect = dock::node_rect(tree, 0);
-        let rw: i32 in Saturating = max_sat(r0.w, 100);
+        let r0: |types|::Rect = node_rect(tree, 0);
+        let rw: i32 in Saturating = |types|::max_sat(r0.w, 100);
         transition rw > 0 {
             true -> do_drag_root(tree, mx, di, r0.x, rw)
             _ -> (false)
@@ -847,17 +835,17 @@ public machine handle_pointer(tree: &mut DockTree, mx: i32, my: i32, mouse_press
     machine do_drag_root(tree: &mut DockTree, mx: i32, di: i32, rx0: i32 in Saturating, rw: i32 in Saturating) -> bool
     requires rw > 0 {
         let num: i32 in Saturating = ((mx as i32 in Saturating) - rx0) * (1000 as i32 in Saturating);
-        let rel_mille: i32 = clamp_i32((num / rw) as i32, 160, 840);
+        let rel_mille: i32 = |types|::clamp_i32((num / rw) as i32, 160, 840);
         let rc: i32 = tree.nodes[0].ratio_c;
         let ra: i32 = tree.nodes[0].ratio_a;
-        let new_a: i32 = clamp_i32(rel_mille, 160, sub_i32(820, rc));
-        let new_b1: i32 = max_i32(sub_i32(1000, add_i32(new_a, rc)), 180);
-        let new_ab: i32 = clamp_i32(rel_mille, add_i32(ra, 180), 840);
-        let new_b2: i32 = max_i32(sub_i32(new_ab, ra), 180);
-        let new_c2: i32 = max_i32(sub_i32(1000, new_ab), 160);
-        tree.nodes[0].ratio_a = select_i32(di == 1, new_a, ra);
-        tree.nodes[0].ratio_b = select_i32(di == 1, new_b1, new_b2);
-        tree.nodes[0].ratio_c = select_i32(di == 2, new_c2, rc);
+        let new_a: i32 = |types|::clamp_i32(rel_mille, 160, |types|::sub_i32(820, rc));
+        let new_b1: i32 = |types|::max_i32(|types|::sub_i32(1000, |types|::add_i32(new_a, rc)), 180);
+        let new_ab: i32 = |types|::clamp_i32(rel_mille, |types|::add_i32(ra, 180), 840);
+        let new_b2: i32 = |types|::max_i32(|types|::sub_i32(new_ab, ra), 180);
+        let new_c2: i32 = |types|::max_i32(|types|::sub_i32(1000, new_ab), 160);
+        tree.nodes[0].ratio_a = |types|::select_i32(di == 1, new_a, ra);
+        tree.nodes[0].ratio_b = |types|::select_i32(di == 1, new_b1, new_b2);
+        tree.nodes[0].ratio_c = |types|::select_i32(di == 2, new_c2, rc);
         true
     }
     machine drag_sub(tree: &mut DockTree, my: i32, dn: i32) -> bool {
@@ -868,8 +856,8 @@ public machine handle_pointer(tree: &mut DockTree, mx: i32, my: i32, mouse_press
     }
     machine check_sub_h(tree: &mut DockTree, my: i32, dn: i32) -> bool
     requires dn >= 0 && dn < 12 {
-        let rs: Rect = dock::node_rect(tree, dn);
-        let rh: i32 in Saturating = max_sat(rs.h, 80);
+        let rs: |types|::Rect = node_rect(tree, dn);
+        let rh: i32 in Saturating = |types|::max_sat(rs.h, 80);
         transition rh > 0 {
             true -> do_drag_sub(tree, my, dn, rs.y, rh)
             _ -> (false)
@@ -878,35 +866,35 @@ public machine handle_pointer(tree: &mut DockTree, mx: i32, my: i32, mouse_press
     machine do_drag_sub(tree: &mut DockTree, my: i32, dn: i32, ry0: i32 in Saturating, rh: i32 in Saturating) -> bool
     requires dn >= 0 && dn < 12 && rh > 0 {
         let num: i32 in Saturating = ((my as i32 in Saturating) - ry0) * (1000 as i32 in Saturating);
-        let pct_mille: i32 = clamp_i32((num / rh) as i32, 220, 780);
+        let pct_mille: i32 = |types|::clamp_i32((num / rh) as i32, 220, 780);
         tree.nodes[dn].ratio_a = pct_mille;
-        tree.nodes[dn].ratio_b = sub_i32(1000, pct_mille);
+        tree.nodes[dn].ratio_b = |types|::sub_i32(1000, pct_mille);
         true
     }
     machine click_pane_or_tab(tree: &mut DockTree, mx: i32, my: i32) -> bool {
-        let tab_r: Rect = dock::node_rect(tree, 2);
-        let in_tab_hdr: bool = types::rect_contains(&tab_r, mx, my) && my < add_i32(tab_r.y as i32, 30);
+        let tab_r: |types|::Rect = node_rect(tree, 2);
+        let in_tab_hdr: bool = |types|::rect_contains(&tab_r, mx, my) && my < |types|::add_i32(tab_r.y as i32, 30);
         transition in_tab_hdr {
             true -> switch_tab_hdr(tree, mx, tab_r.x as i32)
             _ -> focus_pane_at(tree, mx, my)
         }
     }
     machine switch_tab_hdr(tree: &mut DockTree, mx: i32, tx: i32) -> bool {
-        let relative_x: i32 = sub_i32(mx, tx);
+        let relative_x: i32 = |types|::sub_i32(mx, tx);
         let cnt: i32 = tree.nodes[2].child_count;
-        let picked: i32 = select_i32(relative_x < 92, 0, select_i32(relative_x < 164 || cnt < 3, 1, 2));
+        let picked: i32 = |types|::select_i32(relative_x < 92, 0, |types|::select_i32(relative_x < 164 || cnt < 3, 1, 2));
         tree.nodes[2].active_tab = picked;
-        let win_id: i32 = select_i32(picked == 0, 1, select_i32(picked == 1, 2, 3));
+        let win_id: i32 = |types|::select_i32(picked == 0, 1, |types|::select_i32(picked == 1, 2, 3));
         tree.focused_window = win_id;
         tree.drag_window_id = win_id;
         tree.drop_target_window = win_id;
         true
     }
     machine focus_pane_at(tree: &mut DockTree, mx: i32, my: i32) -> bool {
-        let hdr_w: i32 = dock::find_header_window_at(tree, mx, my);
-        let body_w: i32 = dock::find_window_at(tree, mx, my);
+        let hdr_w: i32 = find_header_window_at(tree, mx, my);
+        let body_w: i32 = find_window_at(tree, mx, my);
         let f0: i32 = tree.focused_window;
-        let f_next: i32 = select_i32(body_w > 0, body_w, f0);
+        let f_next: i32 = |types|::select_i32(body_w > 0, body_w, f0);
         tree.focused_window = f_next;
         tree.drag_window_id = hdr_w;
         tree.drop_target_window = hdr_w;

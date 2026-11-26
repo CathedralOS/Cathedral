@@ -23,6 +23,17 @@ def read_json(path):
     return json.loads(Path(path).read_text(), object_pairs_hook=unique)
 
 
+def omega_file_anchor(path):
+    """Anchor a whole-file translation at its first declared Omega name."""
+    declaration = re.search(
+        r"^(?:pub(?:lic)? )?(?:(?:boundary )?trait|data|machine|const|domain) [A-Za-z_]\w*",
+        Path(path).read_text(), re.MULTILINE,
+    )
+    if not declaration:
+        raise ValueError(f"no Omega declaration in {path}")
+    return declaration.group()
+
+
 def relative_path(value):
     path = PurePosixPath(value)
     if not value or path.is_absolute() or '..' in path.parts or '\\' in value or str(path) != value:

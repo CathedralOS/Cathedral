@@ -1,24 +1,7 @@
 // SPDX-License-Identifier: MIT OR Apache-2.0
 // Original Cathedral fixtures; no firmware or external uACPI fixture content.
-use aml::model::Outcome;
-use aml::model::Read;
-use aml::model::Envelope;
-use aml::model::Span;
-use aml::model::Path;
-use aml::model::PathResult;
-use aml::model::Value;
-use aml::model::Object;
-use aml::model::Namespace;
-use aml::model::NamespaceResult;
-use aml::model::Lookup;
-use aml::model::LevelKind;
-use aml::model::ValueState;
-use aml::model::LoadState;
-use aml::model::ReferenceState;
-use aml::bytes::read_le;
-use aml::bytes::pkg_length;
-use aml::bytes::envelope;
-use aml::bytes::opcode;
+use {aml}/model.omg;
+use {aml}/bytes.omg;
 
 machine test()->u64 {
 let mut input:[u8;1024];
@@ -26,8 +9,8 @@ input[0]=18;
 input[1]=52;
 input[2]=86;
 input[3]=120;
-let one:Read=read_le(&input,4,0,4);let truncated:Read=read_le(&input,3,0,4);
- transition one.outcome==Outcome::Success && one.value==0x78563412 && one.next==4 && truncated.outcome==Outcome::Truncated {true -> (0) _ -> (1)}
+let one:|model|::Read=|bytes|::read_le(&input,4,0,4);let truncated:|model|::Read=|bytes|::read_le(&input,3,0,4);
+ transition one.outcome==|model|::Outcome::Success && one.value==0x78563412 && one.next==4 && truncated.outcome==|model|::Outcome::Truncated {true -> (0) _ -> (1)}
 }
 const TEST_RESULT:u64=test();
 machine require_ok(result:u64) requires result==0; {}

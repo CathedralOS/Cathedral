@@ -1,17 +1,15 @@
-use x86::gdt_storage;
-use x86::gdt_storage::Table;
-use x86::gdt_storage::AppendResult;
-use x86::descriptors;
-use facts::x86_descriptors::Descriptor;
-machine is_added(result: AppendResult, expected: u16) -> bool {
-    transition result { AppendResult::Added { selector } -> (selector.raw == expected) _ -> (false) }
+use {x86}/gdt_storage.omg;
+use {x86}/descriptors.omg;
+use {facts}/x86_descriptors.omg;
+machine is_added(result: |gdt_storage|::AppendResult, expected: u16) -> bool {
+    transition result { |gdt_storage|::AppendResult::Added { selector } -> (selector.raw == expected) _ -> (false) }
 }
 machine storage_test() -> i32 {
-    let mut table: Table;
+    let mut table: |gdt_storage|::Table;
     table.words[8191] = 42;
-    let initialized: bool = gdt_storage::initialize_default(&mut table);
-    let descriptor: Descriptor = descriptors::system_segment(24577, 3735928559);
-    let result: AppendResult = gdt_storage::append(&mut table, descriptor);
+    let initialized: bool = |gdt_storage|::initialize_default(&mut table);
+    let descriptor: |x86_descriptors|::Descriptor = |descriptors|::system_segment(24577, 3735928559);
+    let result: |gdt_storage|::AppendResult = |gdt_storage|::append(&mut table, descriptor);
     let selected: bool = is_added(result, 8);
     transition initialized && selected && table.length == 3 && table.capacity == 8 && table.words[0] == 0 && table.words[1] == 24577 && table.words[2] == 3735928559 && table.words[8191] == 0 {
         true -> (0)

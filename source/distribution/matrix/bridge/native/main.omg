@@ -1,6 +1,6 @@
-use policy::main;
+use {policy}/main.omg;
 
-machine main() reaches Policy {
+machine main() reaches |main|::Policy {
     let mut p: [u64; 128];
-    let result: u64 = Policy::decide(&mut p);
+    let result: u64 = |main|::Policy::decide(&mut p);
 }

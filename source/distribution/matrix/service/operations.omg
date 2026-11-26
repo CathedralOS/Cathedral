@@ -1,5 +1,3 @@
-module operations;
-
 // Work performed by the current Rust host. Commands carry no task or IPC authority.
 public data Command [copy] {
     case Interaction;

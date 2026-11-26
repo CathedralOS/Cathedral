@@ -11,26 +11,21 @@ for r,o in zip(rows,observed):
  for j in range(1,4):
   if o['zero']&(1<<j):final_ids[j]=o['words'][j-1]&mask
  result_word=o['words'][o['visited']-1] if loc else 0;result_write=bool(o['write']&(1<<(o['visited']-1))) if loc else False
- req={'map':f'Request::Map {{ frame:{r["frame"]}, flags:{r["flags"]}, parent_flags:{r["parent"]} }}','unmap':'Request::Unmap','translate':'Request::Translate','update':f'Request::Update {{ new_flags:{r["flags"]} }}','parent':f'Request::SetParent {{ level:{r["level"]}, table_flags:{r["flags"]} }}'}[r['op']]
- frames=', '.join('FrameSupply::Unavailable' if v is None else f'FrameSupply::Supplied {{ address:{v} }}' for v in r['frames'])
- expected=f'Expected {{ words:{o["words"]}, ids:{final_ids}, indices:{[(r["page"]>>shift)&511 for shift in (39,30,21,12)]}, writes:{o["write"]}, zeros:{o["zero"]}, calls:{o["calls"]}, visited:{o["visited"]}, code:{o["code"]}, location:{loc}, payload:{payload}, result_word:{result_word}, result_write:{str(result_write).lower()} }}'
- expressions.append(f'checks::{"recursive" if r["recursive"] else "mapped"}_route(profile, CapturedPath {{ table_ids:{ids}, words:{r["words"]} }}, AllocationInputs {{ frames:[{frames}] }}, {r["page"]}, {r["size"]}, {req}, {expected})')
+ req={'map':f'|mapping_routes|::Request::Map {{ frame:{r["frame"]}, flags:{r["flags"]}, parent_flags:{r["parent"]} }}','unmap':'|mapping_routes|::Request::Unmap','translate':'|mapping_routes|::Request::Translate','update':f'|mapping_routes|::Request::Update {{ new_flags:{r["flags"]} }}','parent':f'|mapping_routes|::Request::SetParent {{ level:{r["level"]}, table_flags:{r["flags"]} }}'}[r['op']]
+ frames=', '.join('|mapping_plans|::FrameSupply::Unavailable' if v is None else f'|mapping_plans|::FrameSupply::Supplied {{ address:{v} }}' for v in r['frames'])
+ expected=f'|checks|::Expected {{ words:{o["words"]}, ids:{final_ids}, indices:{[(r["page"]>>shift)&511 for shift in (39,30,21,12)]}, writes:{o["write"]}, zeros:{o["zero"]}, calls:{o["calls"]}, visited:{o["visited"]}, code:{o["code"]}, location:{loc}, payload:{payload}, result_word:{result_word}, result_write:{str(result_write).lower()} }}'
+ expressions.append(f'|checks|::{"recursive" if r["recursive"] else "mapped"}_route(profile, |mapping_routes|::CapturedPath {{ table_ids:{ids}, words:{r["words"]} }}, |mapping_routes|::AllocationInputs {{ frames:[{frames}] }}, {r["page"]}, {r["size"]}, {req}, {expected})')
 outputs={};batches=[];case_file={}
 for pn,p in enumerate(profiles):
  selected=[j for j,r in enumerate(rows) if r['profile']==pn]
  for group,start in enumerate(range(0,len(selected),6)):
   name=f'profile_{pn:02}_{group:02}.omg';indices=selected[start:start+6];part=[expressions[j] for j in indices]
-  init='    let profile: State = memory_encryption::initial();\n'
-  for n,(bit,reverse) in enumerate(p['configs']):init+=f'    let configured{n}: bool = memory_encryption::configure(&mut profile, Configuration::{"SharedBit" if reverse else "EncryptedBit"} {{ position:{bit} }});\n'
-  s='''use checks;
-use checks::Expected;
-use x86::mapping_routes::CapturedPath;
-use x86::mapping_routes::AllocationInputs;
-use x86::mapping_routes::Request;
-use x86::mapping_plans::FrameSupply;
-use x86::memory_encryption;
-use x86::memory_encryption::State;
-use x86::memory_encryption::Configuration;
+  init='    let profile: |memory_encryption|::State = |memory_encryption|::initial();\n'
+  for n,(bit,reverse) in enumerate(p['configs']):init+=f'    let configured{n}: bool = |memory_encryption|::configure(&mut profile, |memory_encryption|::Configuration::{"SharedBit" if reverse else "EncryptedBit"} {{ position:{bit} }});\n'
+  s='''use checks.omg;
+use {x86}/mapping_routes.omg;
+use {x86}/mapping_plans.omg;
+use {x86}/memory_encryption.omg;
 '''
   for n,expr in enumerate(part):s+=f'machine row{n}() -> bool {{\n'+init+f'    let result: bool = {expr};\n    result\n}}\n'
   s+='machine test_result() -> i32 {\n'+''.join(f'    let check{n}: bool = row{n}();\n' for n in range(len(part)))+'    transition '+' && '.join(f'check{n}' for n in range(len(part)))+''' { true -> (0) _ -> (1) }
@@ -49,10 +44,10 @@ for profile,label,recursive,field,family in choices:
  old=expressions[n];o=observed[n]
  if field=='ids':
   # Change the first newly cleared child identity inside Expected, not the input.
-  before,expected=old.split('Expected {');expected=expected.replace('ids:[262144, 65536,','ids:[262144, 65537,');new=before+'Expected {'+expected
+  before,expected=old.split('|checks|::Expected {');expected=expected.replace('ids:[262144, 65536,','ids:[262144, 65537,');new=before+'|checks|::Expected {'+expected
  else:
   import re
-  before,expected=old.split('Expected {');m=re.search(r'\b'+field+r':(\d+)',expected);assert m;value=int(m[1]);expected=expected[:m.start(1)]+str(value^1)+expected[m.end(1):];new=before+'Expected {'+expected
+  before,expected=old.split('|checks|::Expected {');m=re.search(r'\b'+field+r':(\d+)',expected);assert m;value=int(m[1]);expected=expected[:m.start(1)]+str(value^1)+expected[m.end(1):];new=before+'|checks|::Expected {'+expected
  assert old!=new,(family,old)
  controls.append({'path':case_file[n],'old':old,'new':new,'family':family})
 outputs[HERE/'fixtures.json']=json.dumps({'case_count':len(rows),'batches':batches,'controls':controls},indent=2)+'\n'
