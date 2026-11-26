@@ -13,10 +13,10 @@ ROOT, LEGACY = base.ROOT, base.LEGACY
 
 def cases():
     original = next(row for row in base.cases() if row['name'] == 'exact_quotas')
-    setup = '''program.store.space.objects[2].value=Value::Reference {kind:ReferenceKind::RefOf,object_id:5};
-program.store.space.objects[5].value=Value::Reference {kind:ReferenceKind::Index,object_id:6};
-program.store.space.objects[6].value=Value::Buffer {buffer_storage:BufferStorage::Owned {buffer_owner:6}};
-program.store.bytes.blocks[6]=ByteBlock {initialized:true,length:4};
+    setup = '''program.store.space.objects[2].value=|model|::Value::Reference {kind:|model|::ReferenceKind::RefOf,object_id:5};
+program.store.space.objects[5].value=|model|::Value::Reference {kind:|model|::ReferenceKind::Index,object_id:6};
+program.store.space.objects[6].value=|model|::Value::Buffer {buffer_storage:|model|::BufferStorage::Owned {buffer_owner:6}};
+program.store.bytes.blocks[6]=|model|::ByteBlock {initialized:true,length:4};
 program.store.bytes.blocks[6].bytes[0]=68;program.store.bytes.blocks[6].bytes[1]=69;
 program.store.bytes.blocks[6].bytes[2]=70;program.store.bytes.blocks[6].bytes[3]=71;
 program.store.space.object_count=7;'''
@@ -34,16 +34,14 @@ program.store.space.object_count=7;'''
 
 def render(rows):
     source, names = base.render(rows)
-    source = source.replace('use execution::engine::ExecutionResult;',
-                            'use execution::engine::ExecutionResult;\nuse execution::engine::run_method;')
     # Observe the same loaded state through the engine before applying the public
     # result boundary. This independently establishes exact diagnostic retention.
-    baseline = '''let mut baseline:Program=program;
-let before:ExecutionResult=run_method(&baseline.source,baseline.length,baseline.unit,&mut baseline.store,&baseline.definitions.entries,path,&arguments,0,IntegerSize::EightBytes,256);
-let result:ExecutionResult='''
-    source = source.replace('let result:ExecutionResult=', baseline)
+    baseline = '''let mut baseline:|program|::Program=program;
+let before:|engine|::ExecutionResult=|engine|::run_method(&baseline.source,baseline.length,baseline.unit,&mut baseline.store,&baseline.definitions.entries,path,&arguments,0,|integers|::IntegerSize::EightBytes,256);
+let result:|engine|::ExecutionResult='''
+    source = source.replace('let result:|engine|::ExecutionResult=', baseline)
     source = source.replace(' && value && effect && ',
-        ' && value && effect && before.outcome==ExecutionOutcome::Success && before.has_value && result.steps==before.steps && result.fault_offset==before.fault_offset && ')
+        ' && value && effect && before.outcome==|execution_model|::ExecutionOutcome::Success && before.has_value && result.steps==before.steps && result.fault_offset==before.fault_offset && ')
     return source, names
 
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Execute the shared bridge's FieldBinding comparator with identity controls."""
+"""Execute the shared bridge's |model|::FieldBinding comparator with identity controls."""
 import argparse,hashlib,json,os,re,subprocess,tempfile,time
 from pathlib import Path
 HERE=Path(__file__).resolve().parent;ROOT=HERE.parents[5]
@@ -8,18 +8,16 @@ def sha(path):return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 def digest(text):return hashlib.sha256(text.encode()).hexdigest()
 def fixture():
  original=SHARED.read_text().split('machine ba_binding',1)[0]
- source='\n'.join(line for line in original.splitlines()if not line.startswith('use ')or line.startswith('use aml::'))+'\n'
- # DeclarationKind is not otherwise needed by the shared comparator imports.
- source='use aml::field_model::DeclarationKind;\n'+source
+ source='\n'.join(line for line in original.splitlines() if not line.startswith('use ') or line.startswith(('use {aml}/','use {omega}/'))) + '\n'
  names=[]
  for kind,first,other in [('Region','region_object:17','region_object:18'),('Bank','region_object:17,selector_object:31','region_object:17,selector_object:32'),('Index','index_object:17,data_object:31','index_object:17,data_object:32')]:
-  declaration='Declaration {kind:DeclarationKind::'+('Field'if kind=='Region'else kind)+',bank_value:42,source:Span {unit:7,start:10,end:20},field_list:Span {unit:7,start:15,end:20}}'
-  field='Field {bit_offset:5,bit_length:8,source:Span {unit:7,start:15,end:20}}'
+  declaration='|field_model|::Declaration {kind:|field_model|::DeclarationKind::'+('Field'if kind=='Region'else kind)+',bank_value:42,source:|model|::Span {unit:7,start:10,end:20},field_list:|model|::Span {unit:7,start:15,end:20}}'
+  field='|field_model|::Field {bit_offset:5,bit_length:8,source:|model|::Span {unit:7,start:15,end:20}}'
   for control in [False,True]:
    name='Suite::'+kind.lower()+('_control'if control else'_positive');names.append(name+'='+str(int(control)))
-   source+=f'machine {name}(&mut self)->i32 {{let mut a:ObjectStore;let mut b:ObjectStore;a.space.object_count=1;b.space.object_count=1;'
+   source+=f'machine {name}(&mut self)->i32 {{let mut a:|model|::ObjectStore;let mut b:|model|::ObjectStore;a.space.object_count=1;b.space.object_count=1;'
    for var,payload in [('a',first),('b',other if control else first)]:
-    source+=var+'.space.objects[0]=Object {value:Value::FieldUnit {binding:FieldBinding::'+kind+' {'+payload+'},declaration:'+declaration+',field:'+field+'}};'
+    source+=var+'.space.objects[0]=|model|::Object {value:|model|::Value::FieldUnit {binding:|model|::FieldBinding::'+kind+' {'+payload+'},declaration:'+declaration+',field:'+field+'}};'
    source+='let same:bool=fx_store(&a,&b);transition same {true -> (0) _ -> (1)}}\n'
  return source,names
 def build():return 'machine build(builder:&mut Build){builder.package("field-binding-comparator");builder.freestanding=true;builder.depend_as("aml",Source::Path {location:"'+str(ROOT/'source/platform/libraries/acpi/aml')+'"});}\n'
@@ -42,5 +40,5 @@ def main():
  assert record['exit_code']==0 and record['selections']==names,record['output']
  found=re.findall(r'^PASS (\S+) expected=(\d+) observed=(\d+) error=None usage=',record['output'],re.M)
  assert len(found)==len(names)and [n+'='+e for n,e,o in found if e==o]==names
- print('PASS three shared bridge FieldBinding comparator pairs'+(' (retained record only)'if a.verify else''))
+ print('PASS three shared bridge |model|::FieldBinding comparator pairs'+(' (retained record only)'if a.verify else''))
 if __name__=='__main__':main()
